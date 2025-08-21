@@ -12,8 +12,7 @@ use blockifier::execution::syscalls::vm_syscall_utils::{
     CallContractRequest, DeployRequest, DeployResponse, EmptyRequest, GetBlockHashRequest,
     GetBlockHashResponse, GetExecutionInfoResponse, LibraryCallRequest, MetaTxV0Request,
     MetaTxV0Response, StorageReadRequest, StorageReadResponse, StorageWriteRequest,
-    StorageWriteResponse, SyscallExecutorBaseError, SyscallResponse, SyscallSelector,
-    TryExtractRevert, WriteResponseResult,
+    StorageWriteResponse, SyscallResponse, SyscallSelector, TryExtractRevert, WriteResponseResult,
 };
 use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
 use blockifier::execution::{
