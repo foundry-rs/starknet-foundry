@@ -122,7 +122,7 @@ pub struct FeeSettings {
 
 impl FeeSettings {
     #[must_use]
-    pub fn resolve_tip(&self, tip: Option<u64>, estimate_tip: bool) -> FeeSettings {
+    pub fn with_resolved_tip(&self, tip: Option<u64>, estimate_tip: bool) -> FeeSettings {
         let tip = if estimate_tip {
             None // If we leave it as None, the tip will be estimated before sending the transaction
         } else {
