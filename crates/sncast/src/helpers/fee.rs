@@ -86,7 +86,7 @@ impl FeeArgs {
 
             let fee_settings = FeeSettings::try_from(fee_estimate.clone())
                 .expect("Failed to convert FeeEstimate to FeeSettings")
-                .resolve_tip(self.tip, self.estimate_tip);
+                .with_resolved_tip(self.tip, self.estimate_tip);
 
             Ok(fee_settings)
         } else {
@@ -159,7 +159,7 @@ impl From<FeeArgs> for FeeSettings {
             l1_data_gas_price: fee_args.l1_data_gas_price,
             tip: None,
         }
-        .resolve_tip(fee_args.tip, fee_args.estimate_tip)
+        .with_resolved_tip(fee_args.tip, fee_args.estimate_tip)
     }
 }
 
