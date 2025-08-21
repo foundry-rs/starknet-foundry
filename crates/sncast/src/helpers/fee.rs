@@ -143,7 +143,7 @@ fn parse_non_zero_felt(s: &str) -> Result<NonZeroFelt, String> {
 #[cfg(test)]
 mod tests {
     use super::FeeSettings;
-    use starknet::core::types::{FeeEstimate, PriceUnit};
+    use starknet::core::types::FeeEstimate;
     use std::convert::TryFrom;
 
     #[tokio::test]
@@ -155,7 +155,6 @@ mod tests {
             l2_gas_price: 4,
             l1_data_gas_consumed: 5,
             l1_data_gas_price: 6,
-            unit: PriceUnit::Fri,
             overall_fee: 44,
         };
         let settings = FeeSettings::try_from(mock_fee_estimate).unwrap();

@@ -18,7 +18,7 @@ use sncast::{
 };
 use starknet::accounts::{AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory};
 use starknet::accounts::{AccountFactoryError, ArgentAccountFactory};
-use starknet::core::types::BlockTag::Pending;
+use starknet::core::types::BlockTag::PreConfirmed;
 use starknet::core::types::{BlockId, StarknetError::ClassHashNotFound};
 use starknet::core::utils::get_contract_address;
 use starknet::providers::ProviderError::StarknetError;
@@ -131,7 +131,7 @@ async fn deploy_from_keystore(
     let address = compute_account_address(salt, &private_key, class_hash, account_type, chain_id);
 
     let result = if provider
-        .get_class_hash_at(BlockId::Tag(Pending), address)
+        .get_class_hash_at(BlockId::Tag(PreConfirmed), address)
         .await
         .is_ok()
     {
