@@ -5,10 +5,14 @@ use crate::runtime_extensions::forge_runtime_extension::{
 };
 use anyhow::{Context, Result};
 use blockifier::execution::contract_class::{CompiledClassV1, RunnableCompiledClass};
+use blockifier::execution::native::contract_class::NativeCompiledClassV1;
 use blockifier::state::{errors::StateError, state_api::State};
+use cairo_lang_starknet_classes::contract_class::ContractClass;
+use cairo_native::executor::AotContractExecutor;
 use conversions::IntoConv;
 use conversions::serde::serialize::CairoSerialize;
 use starknet::core::types::contract::SierraClass;
+use starknet_api::contract_class::SierraVersion;
 use starknet_api::core::{ClassHash, CompiledClassHash};
 
 #[derive(CairoSerialize)]
@@ -27,12 +31,41 @@ pub fn declare(
         .with_context(|| format!("Failed to get contract artifact for name = {contract_name}."))
         .map_err(EnhancedHintError::from)?;
 
+    let sierra_contract_class: ContractClass =
+        serde_json::from_str(&contract_artifact.sierra).unwrap();
+
+    let sierra_program = sierra_contract_class
+        .extract_sierra_program()
+        .expect("Cannot extract sierra program from sierra contract class");
+
+    let sierra_version_values = sierra_contract_class
+        .sierra_program
+        .iter()
+        .take(3)
+        .map(|x| x.value.clone())
+        .collect::<Vec<_>>();
+
+    let sierra_version = SierraVersion::extract_from_program(&sierra_version_values)
+        .expect("Cannot extract sierra version from sierra program");
+
+    let executor = AotContractExecutor::new(
+        &sierra_program,
+        &sierra_contract_class.entry_points_by_type,
+        sierra_version.clone().into(),
+        cairo_native::OptLevel::Default,
+        // `stats` - Passing a [cairo_native::statistics::Statistics] object enables collecting
+        // compilation statistics.
+        None,
+    )
+    .expect("Cannot compile sierra into native");
+
     let contract_class = CompiledClassV1::try_from_json_string(
         &contract_artifact.casm,
         get_current_sierra_version(),
     )
     .expect("Failed to read contract class from json");
-    let contract_class = RunnableCompiledClass::V1(contract_class);
+    let contract_class = NativeCompiledClassV1::new(executor, contract_class);
+    let contract_class = RunnableCompiledClass::V1Native(contract_class);
 
     let class_hash = *contracts_data
         .get_class_hash(contract_name)
