@@ -34,9 +34,13 @@ pub struct FeeArgs {
     #[arg(long)]
     pub l1_data_gas_price: Option<u128>,
 
-    /// Tip for the transaction. If not provided, it will be set to 0.
-    #[arg(long)]
+    /// Tip for the transaction. Defaults to 0 unless `--estimate-tip` is used.
+    #[arg(long, conflicts_with = "estimate_tip")]
     pub tip: Option<u64>,
+
+    /// If passed, an estimated tip will be added to pay for the transaction.
+    #[arg(long)]
+    pub estimate_tip: bool,
 }
 
 impl From<ScriptFeeSettings> for FeeArgs {
@@ -59,6 +63,7 @@ impl From<ScriptFeeSettings> for FeeArgs {
             l1_data_gas,
             l1_data_gas_price,
             tip: Some(0),
+            estimate_tip: false,
         }
     }
 }
@@ -81,7 +86,7 @@ impl FeeArgs {
 
             let fee_settings = FeeSettings::try_from(fee_estimate.clone())
                 .expect("Failed to convert FeeEstimate to FeeSettings")
-                .update_tip(self.tip.unwrap_or(0)); // If a tip is not provided, set it to 0
+                .with_resolved_tip(self.tip, self.estimate_tip);
 
             Ok(fee_settings)
         } else {
@@ -117,11 +122,14 @@ pub struct FeeSettings {
 
 impl FeeSettings {
     #[must_use]
-    pub fn update_tip(&self, tip: u64) -> FeeSettings {
-        FeeSettings {
-            tip: Some(tip),
-            ..*self
-        }
+    pub fn with_resolved_tip(self, tip: Option<u64>, estimate_tip: bool) -> FeeSettings {
+        let tip = if estimate_tip {
+            None // If we leave it as None, the tip will be estimated before sending the transaction
+        } else {
+            Some(tip.unwrap_or(0)) // If a tip is not provided, set it to 0
+        };
+
+        FeeSettings { tip, ..self }
     }
 }
 
@@ -149,8 +157,9 @@ impl From<FeeArgs> for FeeSettings {
             l2_gas_price: fee_args.l2_gas_price,
             l1_data_gas: fee_args.l1_data_gas,
             l1_data_gas_price: fee_args.l1_data_gas_price,
-            tip: Some(fee_args.tip.unwrap_or(0)),
+            tip: None,
         }
+        .with_resolved_tip(fee_args.tip, fee_args.estimate_tip)
     }
 }
 

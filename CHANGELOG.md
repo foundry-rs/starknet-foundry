@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `--test-files` flag to `verify` command to include test files under src/ for verification (only applies to voyager)
 - `--tip` flag to `invoke`, `declare`, `deploy`, `multicall run` and `account deploy` commands to set the transaction tip
+- `--estimate-tip` flag which automatically adds an estimated tip to the transaction. The tip is calculated based on the current network conditions and added to the transaction fee
 
 #### Changed
 
