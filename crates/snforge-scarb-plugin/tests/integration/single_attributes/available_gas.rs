@@ -47,12 +47,7 @@ fn fails_with_non_number_literal() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(formatdoc!(
-            "
-                All options failed
-                - variant: #[available_gas] <l2_gas> should be number literal
-                - variant: #[available_gas] can be used with unnamed arguments only
-                Resolve at least one of them
-            "
+            "#[available_gas] <l2_gas> should be number literal"
         ))],
     );
 }
@@ -131,55 +126,21 @@ fn is_used_once() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(formatdoc!(
-            "
-                All options failed
-                - variant: <l2_gas> argument was specified 2 times, expected to be used only once
-                - variant: #[available_gas] can be used with unnamed arguments only
-                Resolve at least one of them
-            "
+            "<l2_gas> argument was specified 2 times, expected to be used only once"
         ))],
     );
 }
 
 #[test]
-fn works_with_unnamed_number() {
+fn does_not_work_with_unnamed_number() {
     let args = quote!((3));
-
-    let result = available_gas(args, empty_function());
-
-    assert_output(
-        &result,
-        "
-            fn empty_fn() {
-                if snforge_std::_internals::is_config_run() {
-                    let mut data = array![];
-                    snforge_std::_internals::config_types::AvailableGasConfig::MaxGas(0x3)
-                    .serialize(ref data);
-                    starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
-                    return;
-                }
-            }
-        ",
-    );
-}
-
-// previously if some bonkers number was put into available_gas attribute, test always passed
-// this was because u64 overflow, so now we test with u64::MAX + 1 to make sure it does not happen
-#[test]
-fn handles_number_overflow_unnamed() {
-    let args = quote!((18446744073709551616));
 
     let result = available_gas(args, empty_function());
 
     assert_diagnostics(
         &result,
         &[Diagnostic::error(formatdoc!(
-            "
-                All options failed
-                - variant: #[available_gas] can be used with named arguments only
-                - variant: #[available_gas] max_gas it too large (max permissible value is 18446744073709551615)
-                Resolve at least one of them
-            "
+            "#[available_gas] can be used with named arguments only"
         ))],
     );
 }
@@ -193,12 +154,7 @@ fn handles_number_overflow_l1() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(formatdoc!(
-            "
-                All options failed
-                - variant: #[available_gas] l1_gas it too large (max permissible value is 18446744073709551615)
-                - variant: #[available_gas] can be used with unnamed arguments only
-                Resolve at least one of them
-            "
+            "#[available_gas] l1_gas it too large (max permissible value is 18446744073709551615)"
         ))],
     );
 }
@@ -212,12 +168,7 @@ fn handles_number_overflow_l1_data() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(formatdoc!(
-            "
-                All options failed
-                - variant: #[available_gas] l1_data_gas it too large (max permissible value is 18446744073709551615)
-                - variant: #[available_gas] can be used with unnamed arguments only
-                Resolve at least one of them
-            "
+            "#[available_gas] l1_data_gas it too large (max permissible value is 18446744073709551615)"
         ))],
     );
 }
@@ -231,12 +182,7 @@ fn handles_number_overflow_l2() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(formatdoc!(
-            "
-                All options failed
-                - variant: #[available_gas] l2_gas it too large (max permissible value is 18446744073709551615)
-                - variant: #[available_gas] can be used with unnamed arguments only
-                Resolve at least one of them
-            "
+            "#[available_gas] l2_gas it too large (max permissible value is 18446744073709551615)"
         ))],
     );
 }
