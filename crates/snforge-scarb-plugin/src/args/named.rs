@@ -24,6 +24,10 @@ impl DerefMut for NamedArgs {
 }
 
 impl NamedArgs {
+    pub fn new(map: &HashMap<SmolStr, Vec<Expr>>) -> Self {
+        Self(map.clone())
+    }
+
     pub fn as_once(&self, arg: &str) -> Result<&Expr, Diagnostic> {
         let exprs = self
             .0

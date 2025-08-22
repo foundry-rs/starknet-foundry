@@ -65,7 +65,7 @@ fn test_internal(
     let func_name = func.declaration(db).name(db).text(db);
 
     let name = if has_fuzzer {
-        format!("{}__fuzzer_generated", func_name)
+        format!("{func_name}__fuzzer_generated")
     } else {
         func_name.to_string().clone()
     };

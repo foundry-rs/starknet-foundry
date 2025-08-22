@@ -53,6 +53,13 @@ pub fn assert_output(result: &ProcMacroResult, expected: &str) {
             .to_string()
     };
 
+    println!("------");
+    println!(
+        "{}",
+        format_and_normalize_code(result.token_stream.to_string())
+    );
+    println!("------");
+
     assert_eq!(
         format_and_normalize_code(result.token_stream.to_string()),
         format_and_normalize_code(expected.to_string()),

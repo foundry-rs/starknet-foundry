@@ -80,7 +80,8 @@ fn from_file_args(db: &SimpleParserDatabase, args: &Arguments) -> Result<TokenSt
 fn overridden_args(db: &SimpleParserDatabase, args: &Arguments) -> Result<TokenStream, Diagnostic> {
     let &[arg] = args.unnamed().of_length::<1, ForkCollector>()?;
 
-    let block_id = args.named.one_of_once(&[
+    let named_args = args.named();
+    let block_id = named_args.one_of_once(&[
         BlockIdVariants::Hash,
         BlockIdVariants::Number,
         BlockIdVariants::Tag,

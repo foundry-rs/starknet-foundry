@@ -14,9 +14,9 @@ pub mod unnamed;
 
 #[derive(Debug, Default)]
 pub struct Arguments {
-    pub named: NamedArgs,
-    pub unnamed: HashMap<usize, Expr>,
-    pub shorthand: HashMap<usize, SmolStr>,
+    named: NamedArgs,
+    unnamed: HashMap<usize, Expr>,
+    shorthand: HashMap<usize, SmolStr>,
 }
 
 impl Arguments {
@@ -87,6 +87,11 @@ impl Arguments {
     #[inline]
     pub fn unnamed(&self) -> UnnamedArgs {
         UnnamedArgs::new(&self.unnamed)
+    }
+
+    #[inline]
+    pub fn named(&self) -> NamedArgs {
+        NamedArgs::new(&self.named)
     }
 
     #[inline]
