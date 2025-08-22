@@ -168,7 +168,7 @@ fn config_wrapper_work_without_args() {
     assert_output(
         &result,
         "
-            fn empty_fn() {
+            fn empty_fn__fuzzer_generated() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
@@ -180,15 +180,15 @@ fn config_wrapper_work_without_args() {
 
                     starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
-                    empty_fn_actual_body();
+                    empty_fn();
 
                     return;
                 }
-                empty_fn_actual_body();
+                empty_fn();
             }
 
             #[__internal_config_statement]
-            fn empty_fn_actual_body() {
+            fn empty_fn() {
             }
         ",
     );
@@ -233,7 +233,7 @@ fn config_wrapper_work_with_both_args() {
     assert_output(
         &result,
         "
-            fn empty_fn() {
+            fn empty_fn__fuzzer_generated() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
@@ -245,15 +245,15 @@ fn config_wrapper_work_with_both_args() {
 
                     starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
-                    empty_fn_actual_body();
+                    empty_fn();
 
                     return;
                 }
-                empty_fn_actual_body();
+                empty_fn();
             }
 
             #[__internal_config_statement]
-            fn empty_fn_actual_body() {
+            fn empty_fn() {
             }
         ",
     );
@@ -301,7 +301,7 @@ fn config_wrapper_work_with_fn_with_single_param() {
     assert_output(
         &result,
         "
-            fn empty_fn() {
+            fn empty_fn__fuzzer_generated() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
@@ -313,16 +313,16 @@ fn config_wrapper_work_with_fn_with_single_param() {
 
                     starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
-                    empty_fn_actual_body(snforge_std::fuzzable::Fuzzable::blank());
+                    empty_fn(snforge_std::fuzzable::Fuzzable::blank());
 
                     return;
                 }
                 let f: felt252 = snforge_std::fuzzable::Fuzzable::generate();
                 snforge_std::_internals::save_fuzzer_arg(@f);
-                empty_fn_actual_body(f);
+                empty_fn(f);
             }
             #[__internal_config_statement]
-            fn empty_fn_actual_body(f: felt252) {
+            fn empty_fn(f: felt252) {
             }
         ",
     );
@@ -370,7 +370,7 @@ fn config_wrapper_work_with_fn_with_params() {
     assert_output(
         &result,
         "
-            fn empty_fn() {
+            fn empty_fn__fuzzer_generated() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
@@ -382,7 +382,7 @@ fn config_wrapper_work_with_fn_with_params() {
 
                     starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
-                    empty_fn_actual_body(snforge_std::fuzzable::Fuzzable::blank(), snforge_std::fuzzable::Fuzzable::blank());
+                    empty_fn(snforge_std::fuzzable::Fuzzable::blank(), snforge_std::fuzzable::Fuzzable::blank());
 
                     return;
                 }
@@ -390,10 +390,10 @@ fn config_wrapper_work_with_fn_with_params() {
                 snforge_std::_internals::save_fuzzer_arg(@f);
                 let u: u32 = snforge_std::fuzzable::Fuzzable::generate();
                 snforge_std::_internals::save_fuzzer_arg(@u);
-                empty_fn_actual_body(f, u);
+                empty_fn(f, u);
             }
             #[__internal_config_statement]
-            fn empty_fn_actual_body(f: felt252, u: u32) {
+            fn empty_fn(f: felt252, u: u32) {
             }
         ",
     );
@@ -414,18 +414,18 @@ fn wrapper_handle_attributes() {
         &result,
         "
             #[test]
-            fn empty_fn() {
+            fn empty_fn__fuzzer_generated() {
                 if snforge_std::_internals::is_config_run() {
-                    empty_fn_actual_body();
+                    empty_fn();
 
                     return;
                 }
-                empty_fn_actual_body();
+                empty_fn();
             }
 
             #[available_gas(l2_gas: 40000)]
             #[__internal_config_statement]
-            fn empty_fn_actual_body() {
+            fn empty_fn() {
             }
         ",
     );

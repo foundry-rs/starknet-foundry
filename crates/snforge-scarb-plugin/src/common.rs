@@ -1,11 +1,9 @@
-use std::ops::Not;
-
 use crate::{
     args::Arguments,
-    asserts::assert_is_used_once,
     attributes::{
         AttributeInfo,
         fuzzer::{FuzzerCollector, FuzzerConfigCollector, wrapper::FuzzerWrapperCollector},
+        test_case::TestCaseCollector,
     },
     parse::{parse, parse_args},
 };
@@ -67,23 +65,28 @@ where
     handler(db, &func, args_db, args, warns)
 }
 
-pub fn no_fuzzer_attribute(db: &SimpleParserDatabase, func: &FunctionWithBody) -> bool {
+fn has_attributes(db: &SimpleParserDatabase, func: &FunctionWithBody, attr_names: &[&str]) -> bool {
+    func.attributes(db).elements(db).any(|attr| {
+        attr_names.contains(
+            &attr
+                .attr(db)
+                .as_syntax_node()
+                .get_text_without_trivia(db)
+                .as_str(),
+        )
+    })
+}
+
+pub fn has_fuzzer_attribute(db: &SimpleParserDatabase, func: &FunctionWithBody) -> bool {
     const FUZZER_ATTRIBUTES: [&str; 3] = [
         FuzzerCollector::ATTR_NAME,
         FuzzerWrapperCollector::ATTR_NAME,
         FuzzerConfigCollector::ATTR_NAME,
     ];
+    has_attributes(db, func, &FUZZER_ATTRIBUTES)
+}
 
-    func.attributes(db)
-        .elements(db)
-        .any(|attr| {
-            FUZZER_ATTRIBUTES.contains(
-                &attr
-                    .attr(db)
-                    .as_syntax_node()
-                    .get_text_without_trivia(db)
-                    .as_str(),
-            )
-        })
-        .not()
+pub fn has_test_case_attribute(db: &SimpleParserDatabase, func: &FunctionWithBody) -> bool {
+    const TEST_CASE_ATTRIBUTES: [&str; 1] = [TestCaseCollector::ATTR_NAME];
+    has_attributes(db, func, &TEST_CASE_ATTRIBUTES)
 }

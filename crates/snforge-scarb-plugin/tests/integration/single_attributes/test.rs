@@ -15,7 +15,7 @@ fn appends_internal_config_and_executable() {
         "
             #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
             #[snforge_internal_test_executable]
-            fn empty_fn(mut _data: Span<felt252>) -> Span::<felt252> {
+            fn empty_fn_return_wrapper(mut _data: Span<felt252>) -> Span::<felt252> {
                 core::internal::require_implicit::<System>();
                 core::internal::revoke_ap_tracking();
                 core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
@@ -23,14 +23,14 @@ fn appends_internal_config_and_executable() {
                 core::option::OptionTraitImpl::expect(
                     core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
                 );
-                empty_fn_return_wrapper();
+                empty_fn();
 
                 let mut arr = ArrayTrait::new();
                 core::array::ArrayTrait::span(@arr)
             }
 
             #[__internal_config_statement]
-            fn empty_fn_return_wrapper() {}
+            fn empty_fn() {}
         ",
     );
 }
@@ -75,7 +75,7 @@ fn fails_with_params() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(
-            "#[test] function with parameters must have #[fuzzer] attribute",
+            "#[test] function with parameters must have #[fuzzer] or #[test_case] attribute",
         )],
     );
 }

@@ -1,15 +1,12 @@
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, TokenTree, quote};
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::ast::{Expr, FunctionWithBody, OptionStructArgExpr, StructArg};
-use cairo_lang_syntax::node::helpers::QueryAttrs;
+use cairo_lang_syntax::node::ast::{Expr, OptionStructArgExpr, StructArg};
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
 use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode};
-use cairo_lang_utils::Upcast;
 
 use crate::args::unnamed::UnnamedArgs;
 use crate::attributes::{AttributeInfo, ErrorExt};
-use crate::common::{into_proc_macro_result, no_fuzzer_attribute, with_parsed_values};
-use crate::parse::parse;
+use crate::common::{has_fuzzer_attribute, into_proc_macro_result, with_parsed_values};
 use crate::utils::SyntaxNodeUtils;
 use crate::{create_single_token, format_ident};
 
@@ -20,12 +17,6 @@ fn hash8(s: &str) -> String {
         h = h.wrapping_mul(0x100000001b3);
     }
     format!("{:08x}", h)
-}
-
-#[test]
-fn xyz() {
-    let s = hash8("User { age: 10 }");
-    println!("s: {s}");
 }
 
 fn sanitize_ident_fragment(raw: &str) -> String {
@@ -62,7 +53,6 @@ fn struct_arg_label(struct_arg: StructArg, db: &SimpleParserDatabase, budget: us
     match struct_arg {
         StructArg::StructArgSingle(single) => {
             let arg_expr = single.arg_expr(db);
-            println!("arg_expr: {:?}", arg_expr);
             let label = match arg_expr {
                 OptionStructArgExpr::Empty(_) => "empty".to_string(),
                 OptionStructArgExpr::StructArgExpr(struct_arg_expr) => {
@@ -125,7 +115,7 @@ fn expr_label(expr: &Expr, db: &SimpleParserDatabase, budget: usize) -> String {
             parts.join("_")
         }
 
-        Expr::FunctionCall(call) => {
+        Expr::FunctionCall(_call) => {
             // TODO
             "function_call".to_string()
         }
@@ -148,7 +138,7 @@ fn expr_label(expr: &Expr, db: &SimpleParserDatabase, budget: usize) -> String {
             }
         }
 
-        Expr::Indexed(ix) => {
+        Expr::Indexed(_ix) => {
             // TODO
             "indexed".to_string()
         }
@@ -160,13 +150,10 @@ fn expr_label(expr: &Expr, db: &SimpleParserDatabase, budget: usize) -> String {
 }
 
 fn case_fn_name(
-    func: FunctionWithBody,
+    func_name: String,
     unnamed_args: UnnamedArgs,
     args_db: &SimpleParserDatabase,
-    func_db: &SimpleParserDatabase,
 ) -> String {
-    let base = func.declaration(func_db).name(func_db).text(func_db);
-
     let parts = unnamed_args
         .iter()
         .map(|(_, expr)| expr_label(expr, args_db, 32))
@@ -178,7 +165,7 @@ fn case_fn_name(
         parts.join("_")
     };
 
-    format!("{}_{}", base, suffix)
+    format!("{}_{}", func_name, suffix)
 }
 
 // fn case_fn_name(
@@ -216,18 +203,7 @@ pub fn vec_pairs_to_map<T>(pairs: Vec<(usize, T)>) -> HashMap<usize, T> {
     pairs.into_iter().collect()
 }
 
-fn to_test_case_name(
-    func: &FunctionWithBody,
-    expr: &Expr,
-    args_db: &SimpleParserDatabase,
-    func_db: &SimpleParserDatabase,
-) -> String {
-    let func_name = func
-        .declaration(func_db)
-        .name(func_db)
-        .as_syntax_node()
-        .get_text(func_db);
-
+fn to_test_case_name(func_name: String, expr: &Expr, args_db: &SimpleParserDatabase) -> String {
     let test_case_name = match expr {
         Expr::String(s) => s.as_syntax_node().get_text(args_db).to_string(),
         Expr::ShortString(s) => s.as_syntax_node().get_text(args_db).to_string(),
@@ -260,13 +236,7 @@ fn test_case_internal(
         args,
         item,
         warns,
-        |func_db, func, args_db, arguments, warns| {
-            if !no_fuzzer_attribute(func_db, func) {
-                return Err(Diagnostics::from(TestCaseCollector::error(format!(
-                    "The #[test_case(...)] attribute cannot be used with fuzzer",
-                ))));
-            }
-
+        |func_db, func, args_db, arguments, _warns| {
             let param_count = func
                 .declaration(func_db)
                 .signature(func_db)
@@ -281,7 +251,6 @@ fn test_case_internal(
             // the number of function parameters. n + 1 is when the last arg
             // is the test case name.
             if param_count != unnamed_args.len() && param_count != unnamed_args.len() - 1 {
-                println!("is_name_passed: {is_name_passed}");
                 let args_got = if is_name_passed {
                     unnamed_args.len() - 1
                 } else {
@@ -293,17 +262,24 @@ fn test_case_internal(
                 ))));
             }
 
+            let func_name = func.declaration(func_db).name(func_db).text(func_db);
+            let func_name_ident = format_ident!("{}", func_name);
+            let has_fuzzer = has_fuzzer_attribute(func_db, func);
+
             let (case_fn_name, call_args) = if is_name_passed {
                 let mut fn_args = unnamed_args.clone().into_iter().into_iter();
                 let fn_arg_with_test_case_name =
                     fn_args.next().expect("Failed to get first arument");
                 let fn_arg_with_test_case_name_expr = fn_arg_with_test_case_name.1;
-                let case_fn_name =
-                    to_test_case_name(func, &fn_arg_with_test_case_name_expr, args_db, func_db);
+                let case_fn_name = to_test_case_name(
+                    func_name.to_string(),
+                    &fn_arg_with_test_case_name_expr,
+                    args_db,
+                );
                 (case_fn_name, fn_args)
             } else {
                 let case_fn_name = case_fn_name(
-                    func.clone(),
+                    func_name.to_string(),
                     UnnamedArgs::new(&vec_pairs_to_map(
                         unnamed_args
                             .clone()
@@ -312,33 +288,65 @@ fn test_case_internal(
                             .collect::<Vec<_>>(),
                     )),
                     args_db,
-                    func_db,
                 );
                 (case_fn_name, unnamed_args.clone().into_iter())
             };
 
-            for attr in func
-                .attributes(func_db)
-                .attributes_elements(func_db)
-                .into_iter()
-            {
-                println!("xxx attr: {}", attr.as_syntax_node().get_text(func_db));
-            }
-
             let attr_list = func.attributes(func_db);
-            let other_fn_attrs = attr_list
+
+            let filtered_fn_attrs = attr_list
                 .elements(func_db)
                 .filter(|attr| {
-                    !attr
-                        .as_syntax_node()
-                        .get_text(func_db)
-                        .contains(TestCaseCollector::ATTR_NAME)
+                    let text = attr.as_syntax_node().get_text(func_db);
+                    if text.contains("#[test]") && !has_fuzzer {
+                        return false;
+                    }
+                    true
                 })
                 .map(|attr| attr.to_token_stream(func_db))
                 .fold(TokenStream::empty(), |mut acc, token| {
                     acc.extend(token);
                     acc
                 });
+
+            let signature = func
+                .declaration(func_db)
+                .signature(func_db)
+                .as_syntax_node();
+            let signature = SyntaxNodeWithDb::new(&signature, func_db);
+
+            let func_body_node = func.body(func_db).as_syntax_node();
+            let func_body = SyntaxNodeWithDb::new(&func_body_node, func_db);
+
+            let func_node = quote!(
+                #filtered_fn_attrs
+                fn #func_name_ident #signature
+                #func_body
+            );
+
+            // let other_fn_attrs = attr_list
+            //     .elements(func_db)
+            //     .filter(|attr| {
+            //         ![
+            //             TestCaseCollector::ATTR_NAME,
+            //             TestCollector::ATTR_NAME,
+            //             FuzzerCollector::ATTR_NAME,
+            //             FuzzerConfigCollector::ATTR_NAME,
+            //             FuzzerWrapperCollector::ATTR_NAME,
+            //         ]
+            //         .contains(
+            //             &attr
+            //                 .attr(func_db)
+            //                 .as_syntax_node()
+            //                 .get_text(func_db)
+            //                 .as_str(),
+            //         )
+            //     })
+            //     .map(|attr| attr.to_token_stream(func_db))
+            //     .fold(TokenStream::empty(), |mut acc, token| {
+            //         acc.extend(token);
+            //         acc
+            //     });
 
             let call_args = call_args
                 .into_iter()
@@ -349,27 +357,29 @@ fn test_case_internal(
 
             let call_args = format_ident!("({})", call_args);
 
-            let (db_any, _) = parse::<TestCaseCollector>(&item)?;
-            let db: &SimpleParserDatabase = db_any.upcast();
-
-            let base_ident = func.declaration(db).name(db).as_syntax_node();
-            let base_ident = SyntaxNodeWithDb::new(&base_ident, db);
-
-            let func = func.as_syntax_node();
-            let func = SyntaxNodeWithDb::new(&func, func_db);
-
-            let test_attr = create_single_token("test");
-
+            let case_fn_name = case_fn_name.replace("return_wrapper_actual_body_", "");
             let case_fn_name = format_ident!("{}", case_fn_name);
 
+            let out_of_gas = create_single_token("'Out of gas'");
+
             Ok(quote!(
-                #[#test_attr]
-                #other_fn_attrs
-                fn #case_fn_name() {
-                    #base_ident #call_args;
+                #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+                #[snforge_internal_test_executable]
+                fn #case_fn_name(mut _data: Span<felt252>) -> Span::<felt252> {
+                    core::internal::require_implicit::<System>();
+                    core::internal::revoke_ap_tracking();
+                    core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
+
+                    core::option::OptionTraitImpl::expect(
+                        core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
+                    );
+                    #func_name_ident #call_args;
+
+                    let mut arr = ArrayTrait::new();
+                    core::array::ArrayTrait::span(@arr)
                 }
 
-                #func
+                #func_node
             ))
         },
     )
