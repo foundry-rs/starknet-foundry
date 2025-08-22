@@ -19,30 +19,30 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt>> {
     )
     .expect("Could not create entry point panic_data matching regex");
 
-    if let Some(captures) = re_error_prefix.captures(err) {
-        if let Some(panic_data) = captures.get(1) {
-            let string_match_str = panic_data.as_str();
+    if let Some(captures) = re_error_prefix.captures(err)
+        && let Some(panic_data) = captures.get(1)
+    {
+        let string_match_str = panic_data.as_str();
 
-            // Matches panic_data when proxy contract panicked with `ByteArray`
-            if string_match_str.starts_with('\"') {
-                let error = string_match_str.trim_matches('"');
-                let panic_data_felts: Vec<Felt> = ByteArray::from(error).serialize_with_magic();
+        // Matches panic_data when proxy contract panicked with `ByteArray`
+        if string_match_str.starts_with('\"') {
+            let error = string_match_str.trim_matches('"');
+            let panic_data_felts: Vec<Felt> = ByteArray::from(error).serialize_with_magic();
 
-                return Some(panic_data_felts);
-            }
+            return Some(panic_data_felts);
+        }
 
-            // Matches `panic_data` when a proxy contract panics, either:
-            // - with a single Felt "Ox"
-            // - with an array of Felts "("
-            // The difference comes from the `format_panic_data` implementation in `blockifier`.
-            // https://github.com/starkware-libs/sequencer/blob/8211fbf1e2660884c4a9e67ddd93680495afde12/crates/starknet_api/src/execution_utils.rs
-            if string_match_str.starts_with("0x") || string_match_str.starts_with('(') {
-                let panic_data_felts: Vec<Felt> = re_hex
-                    .find_iter(string_match_str)
-                    .map(|s| Felt::from_hex(s.as_str()).unwrap())
-                    .collect();
-                return Some(panic_data_felts);
-            }
+        // Matches `panic_data` when a proxy contract panics, either:
+        // - with a single Felt "Ox"
+        // - with an array of Felts "("
+        // The difference comes from the `format_panic_data` implementation in `blockifier`.
+        // https://github.com/starkware-libs/sequencer/blob/8211fbf1e2660884c4a9e67ddd93680495afde12/crates/starknet_api/src/execution_utils.rs
+        if string_match_str.starts_with("0x") || string_match_str.starts_with('(') {
+            let panic_data_felts: Vec<Felt> = re_hex
+                .find_iter(string_match_str)
+                .map(|s| Felt::from_hex(s.as_str()).unwrap())
+                .collect();
+            return Some(panic_data_felts);
         }
     }
 

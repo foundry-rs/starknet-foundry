@@ -35,7 +35,8 @@ pub(crate) fn test_runner<T: AsRef<Path>>(temp_dir: T) -> SnapboxCommand {
     runner(temp_dir).arg("test")
 }
 
-pub(crate) static BASE_FILE_PATTERNS: &[&str] = &["**/*.cairo", "**/*.toml"];
+pub(crate) static BASE_FILE_PATTERNS: &[&str] =
+    &["**/*.cairo", "**/*.toml", "**/data/*.json", "**/data/*.txt"];
 
 fn is_package_from_docs_listings(package: &str) -> bool {
     let package_path = Path::new("../../docs/listings").join(package);

@@ -22,7 +22,7 @@ members = [
 exclude = ["crates/snforge-scarb-plugin", "crates/snforge-scarb-plugin-deprecated"]
 
 [workspace.package]
-version = "0.48.0"
+version = "0.48.1"
 edition = "2024"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
@@ -43,8 +43,9 @@ cairo-lang-syntax = "2.12.0"
 cairo-lang-test-plugin = "2.12.0"
 cairo-lang-starknet-classes = "2.12.0"
 cairo-lang-parser = "2.12.0"
+cairo-lang-sierra-to-casm = "2.12.0"
 cairo-vm = "2.2.0"
-cairo-annotations = "0.5.0"
+cairo-annotations = "=0.5.0"
 dirs = "6.0.0"
 dialoguer = "0.11.0"
 starknet-types-core = { version = "0.1.7", features = ["hash", "prime-bigint"] }
@@ -63,8 +64,8 @@ rayon = "1.10"
 regex = "1.11.1"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "a70f4ce" }
-starknet-crypto = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "a70f4ce" }
+starknet = "0.17.0-rc.3"
+starknet-crypto = "0.7.4"
 tempfile = "3.20.0"
 thiserror = "2.0.12"
 ctor = "0.4.1"
@@ -112,3 +113,7 @@ indicatif = "0.17.11"
 shell-words = "1.1.0"
 sanitize-filename = "0.6.0"
 derive_more = { version = "2.0.1", features = ["display"] }
+paste = "1.0.15"
+strum = "0.27"
+strum_macros = "0.27"
+scarb-oracle-hint-service = { git = "https://github.com/software-mansion/scarb", rev = "210da8dfd0b370f0f1970b33a373f1a7afe6ae33" }

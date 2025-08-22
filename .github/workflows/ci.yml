@@ -308,6 +308,14 @@ jobs:
       - name: Check formatting
         run: cargo fmt --check
 
+      - name: Check formatting snforge-scarb-plugin
+        run: cargo fmt --check
+        working-directory: crates/snforge-scarb-plugin
+
+      - name: Check formatting snforge-scarb-plugin-deprecated
+        run: cargo fmt --check
+        working-directory: crates/snforge-scarb-plugin-deprecated
+
   clippy:
     runs-on: ubuntu-latest
     env:
@@ -320,6 +328,14 @@ jobs:
           toolchain: stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       - run: cargo lint
+
+      - name: Lint snforge-scarb-plugin
+        run: cargo lint
+        working-directory: crates/snforge-scarb-plugin
+
+      - name: Lint snforge-scarb-plugin-deprecated
+        run: cargo lint
+        working-directory: crates/snforge-scarb-plugin-deprecated
 
   build-docs:
     name: Test Building Docs
@@ -337,6 +353,7 @@ jobs:
       - name: Install mdBook
         run: |
           cargo install --version ${MDBOOK_VERSION} mdbook
+          cargo install mdbook-variables
       - name: Install mdBook Link-Check
         run: |
           cargo install mdbook-linkcheck

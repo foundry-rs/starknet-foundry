@@ -88,6 +88,7 @@ pub async fn execute_calls(
         l2_gas_price,
         l1_data_gas,
         l1_data_gas_price,
+        tip,
     } = fee_settings.expect("Failed to convert to fee settings");
 
     let execution = apply_optional_fields!(
@@ -98,6 +99,7 @@ pub async fn execute_calls(
         l2_gas_price => ExecutionV3::l2_gas_price,
         l1_data_gas => ExecutionV3::l1_data_gas,
         l1_data_gas_price => ExecutionV3::l1_data_gas_price,
+        tip => ExecutionV3::tip,
         nonce => ExecutionV3::nonce
     );
     let result = execution.send().await;

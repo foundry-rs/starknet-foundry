@@ -1,15 +1,11 @@
 use crate::{
     args::Arguments,
-    attributes::{
-        AttributeInfo,
-        fuzzer::{FuzzerCollector, FuzzerConfigCollector, wrapper::FuzzerWrapperCollector},
-        test_case::TestCaseCollector,
-    },
+    attributes::AttributeInfo,
     parse::{parse, parse_args},
 };
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::{TypedSyntaxNode, ast::FunctionWithBody};
+use cairo_lang_syntax::node::{ast::FunctionWithBody, TypedSyntaxNode};
 use cairo_lang_utils::Upcast;
 
 #[expect(clippy::needless_pass_by_value)]
@@ -54,8 +50,6 @@ where
     let (db, func) = parse::<Collector>(item)?;
 
     let db = db.upcast();
-
-    // TODO: Restore assert_is_used_once::<Collector>(db, &func)?; in functions which require this check.
 
     let (args_db, args) = parse_args(args);
     let args_db = args_db.upcast();

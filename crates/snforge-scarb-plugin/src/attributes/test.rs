@@ -1,4 +1,5 @@
 use super::{AttributeInfo, ErrorExt, internal_config_statement::InternalConfigStatementCollector};
+use crate::asserts::assert_is_used_once;
 use crate::common::{has_fuzzer_attribute, has_test_case_attribute};
 use crate::utils::create_single_token;
 use crate::{
@@ -34,6 +35,7 @@ fn test_internal(
     args: Arguments,
     _warns: &mut Vec<Diagnostic>,
 ) -> Result<TokenStream, Diagnostics> {
+    assert_is_used_once::<TestCollector>(db, func)?;
     args.assert_is_empty::<TestCollector>()?;
     ensure_parameters_only_with_fuzzer_or_test_case_attribute(db, func)?;
 

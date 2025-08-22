@@ -148,7 +148,9 @@ impl From<StarknetError> for SNCastStarknetError {
                 SNCastStarknetError::TransactionExecutionError(err)
             }
             StarknetError::ClassAlreadyDeclared => SNCastStarknetError::ClassAlreadyDeclared,
-            StarknetError::InvalidTransactionNonce => SNCastStarknetError::InvalidTransactionNonce,
+            StarknetError::InvalidTransactionNonce(_) => {
+                SNCastStarknetError::InvalidTransactionNonce
+            }
             StarknetError::InsufficientResourcesForValidate => {
                 SNCastStarknetError::InsufficientResourcesForValidate
             }

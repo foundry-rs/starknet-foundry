@@ -8,7 +8,7 @@
 > using the appropriate version.
 >```toml
 > [dev-dependencies]
-> snforge_std = "0.37.0"
+> snforge_std = "{{snforge_std_version}}"
 > ```
 
 Using unit testing as much as possible is a good practice, as it makes your test suites run faster. However, when
@@ -173,3 +173,35 @@ You also could skip the de-serialization of the `panic_data`, and not use `try_d
 Sometimes the test code failing can be a desired behavior.
 Instead of manually handling it, you can simply mark your test as `#[should_panic(...)]`.
 [See here](./testing.md#expected-failures) for more details.
+
+## Passing Constructor Arguments
+
+The previous example was a basic one. However, sometimes you may need to pass arguments to contract's constructor. This can be done in two ways:
+- With manual serialization
+- With `deploy_for_test` function (available since Cairo 2.12)
+
+Let's compare both approaches.
+
+### Test Contract
+
+Below contract simulates a basic shopping cart. Its constructor takes initial products which are vector of `Product` structs.
+
+```rust
+{{#include ../../listings/deployment_with_constructor_args/src/lib.cairo}}
+```
+
+### Deployment with `deploy_for_test`
+
+`deploy_for_test` is an utility function that simplifies the deployment process by automatically handling serialization of constructor parameters.
+
+```rust
+{{#include ../../listings/deployment_with_constructor_args/tests/test_with_deploy_for_test.cairo}}
+```
+
+### Deployment with Manual Serialization
+
+In this case we need to manually serialize the constructor parameters and pass them as calldata to the `deploy` function.
+
+```rust
+{{#include ../../listings/deployment_with_constructor_args/tests/test_with_serialization.cairo}}
+```

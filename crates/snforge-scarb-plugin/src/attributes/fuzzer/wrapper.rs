@@ -7,6 +7,7 @@ use crate::format_ident;
 use crate::utils::{SyntaxNodeUtils, create_single_token, get_statements};
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
+use cairo_lang_syntax::node::ast::OptionTypeClause::{Empty, TypeClause};
 use cairo_lang_syntax::node::ast::{FunctionWithBody, Param};
 use cairo_lang_syntax::node::helpers::QueryAttrs;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
@@ -73,11 +74,14 @@ fn fuzzer_wrapper_internal(
         let name = param.name(db).as_syntax_node();
         let name = SyntaxNodeWithDb::new(&name, db);
 
-        let name_type = param.type_clause(db).as_syntax_node();
+        let name_type = match param.type_clause(db) {
+            TypeClause(type_clause) => type_clause.ty(db).as_syntax_node(),
+            Empty(option_type_clause) => option_type_clause.as_syntax_node(),
+        };
         let name_type = SyntaxNodeWithDb::new(&name_type, db);
 
         quote! {
-            let #name #name_type = snforge_std::fuzzable::Fuzzable::generate();
+            let #name = snforge_std::fuzzable::Fuzzable::<#name_type>::generate();
             snforge_std::_internals::save_fuzzer_arg(@#name);
         }
     });

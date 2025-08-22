@@ -34,9 +34,13 @@ fn build_transaction_status_response(status: &TransactionStatus) -> TransactionS
             finality_status: FinalityStatus::Received,
             execution_status: None,
         },
-        TransactionStatus::Rejected => TransactionStatusResponse {
-            finality_status: FinalityStatus::Rejected,
+        TransactionStatus::Candidate => TransactionStatusResponse {
+            finality_status: FinalityStatus::Candidate,
             execution_status: None,
+        },
+        TransactionStatus::PreConfirmed(tx_exec_result) => TransactionStatusResponse {
+            finality_status: FinalityStatus::PreConfirmed,
+            execution_status: Some(build_execution_status(tx_exec_result.status())),
         },
         TransactionStatus::AcceptedOnL2(tx_exec_result) => TransactionStatusResponse {
             finality_status: FinalityStatus::AcceptedOnL2,

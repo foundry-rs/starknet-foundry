@@ -15,7 +15,7 @@ use flate2::read::GzDecoder;
 use num_bigint::BigUint;
 use runtime::starknet::context::SerializableGasPrices;
 use starknet::core::types::{
-    ContractClass as ContractClassStarknet, MaybePendingBlockWithTxHashes, StarknetError,
+    ContractClass as ContractClassStarknet, MaybePreConfirmedBlockWithTxHashes, StarknetError,
 };
 use starknet::core::utils::parse_cairo_short_string;
 use starknet::providers::ProviderError;
@@ -54,7 +54,9 @@ impl ForkStateReader {
         Ok(ChainId::from(id))
     }
 
-    pub fn compiled_contract_class_map(&self) -> Ref<HashMap<ClassHash, ContractClassStarknet>> {
+    pub fn compiled_contract_class_map(
+        &self,
+    ) -> Ref<'_, HashMap<ClassHash, ContractClassStarknet>> {
         Ref::map(self.cache.borrow(), |cache| {
             cache.compiled_contract_class_map()
         })
@@ -81,7 +83,7 @@ impl BlockInfoReader for ForkStateReader {
         }
 
         match self.client.get_block_with_tx_hashes() {
-            Ok(MaybePendingBlockWithTxHashes::Block(block)) => {
+            Ok(MaybePreConfirmedBlockWithTxHashes::Block(block)) => {
                 let block_info = BlockInfo {
                     block_number: BlockNumber(block.block_number),
                     sequencer_address: block.sequencer_address.into_(),
@@ -96,8 +98,8 @@ impl BlockInfoReader for ForkStateReader {
 
                 Ok(block_info)
             }
-            Ok(MaybePendingBlockWithTxHashes::PendingBlock(_)) => {
-                unreachable!("Pending block is not be allowed at the configuration level")
+            Ok(MaybePreConfirmedBlockWithTxHashes::PreConfirmedBlock(_)) => {
+                unreachable!("Preconfirmed block is not be allowed at the configuration level")
             }
             Err(ProviderError::Other(boxed)) => other_provider_error(boxed),
             Err(err) => Err(StateReadError(format!(
