@@ -52,6 +52,27 @@ fn simple_package() {
 }
 
 #[test]
+fn simple_package_with_cheats() {
+    let temp = setup_package("simple_package_with_cheats");
+    let output = test_runner(&temp).assert().code(0);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+    [..]Compiling[..]
+    [..]Finished[..]
+
+
+    Collected 1 test(s) from simple_package_with_cheats package
+    Running 0 test(s) from src/
+    Running 1 test(s) from tests/
+    [PASS] simple_package_with_cheats_integrationtest::contract::call_and_invoke [..]
+    "},
+    );
+}
+
+
+#[test]
 fn simple_package_with_git_dependency() {
     let temp = setup_package("simple_package");
 
