@@ -67,7 +67,7 @@ pub use syscall_handler::syscall_handler_offset;
 pub fn run_test(
     case: Arc<TestCaseWithResolvedConfig>,
     _casm_program: Arc<AssembledProgramWithDebugInfo>,
-    _aot_executor: Arc<AotNativeExecutor>,
+    aot_executor: Arc<AotNativeExecutor>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -83,7 +83,7 @@ pub fn run_test(
 
         let run_result = run_native_test_case(
             &case,
-            &_aot_executor,
+            &aot_executor,
             &RuntimeConfig::from(&forge_config.test_runner_config),
             None,
         );
@@ -132,7 +132,7 @@ pub(crate) fn run_fuzz_test(
             &case,
             &aot_executor,
             &RuntimeConfig::from(&forge_config.test_runner_config),
-            Some(rng),
+            Some(&rng),
         );
 
         // TODO: code below is added to fix snforge tests
@@ -405,7 +405,7 @@ pub fn run_native_test_case(
     case: &TestCaseWithResolvedConfig,
     aot_executor: &AotNativeExecutor,
     runtime_config: &RuntimeConfig,
-    fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
+    fuzzer_rng: Option<&Arc<Mutex<StdRng>>>,
 ) -> Result<RunResult> {
     let function_id = FunctionId::new(case.test_details.sierra_function_id);
     let call = build_test_entry_point();
@@ -476,10 +476,10 @@ pub fn run_native_test_case(
     Ok(match result {
         Ok(result) => RunResult::Completed(Box::new(RunCompleted {
             status: {
-                if !result.failure_flag {
-                    RunStatus::Success(result.return_values)
-                } else {
+                if result.failure_flag {
                     RunStatus::Panic(result.return_values)
+                } else {
+                    RunStatus::Success(result.return_values)
                 }
             },
             call_trace,
