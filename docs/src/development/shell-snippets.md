@@ -36,3 +36,5 @@ account: https://sepolia.starkscan.co/contract/[..]
 - `ignored` - if set to `true`, the snippet will be ignored and not run.
 - `package_name` - the name of the Scarb package in which the snippet should be run.
 - `ignored_output` - if set to `true`, the output of executed command will be ignored.
+- `replace_network` - if set to `true`, the snippet will replace the `--network` argument with devnet used in tests.
+- `scarb_version` - specifies the Scarb version required to run the snippet. If the current Scarb version does not match, the snippet will be ignored. The version should be in the format compatible with [semver](https://semver.org/).

@@ -42,7 +42,9 @@ impl CairoExpression for BlockId {
                 "snforge_std_deprecated::_internals::config_types::BlockId::BlockNumber({})",
                 number.as_cairo_expression()
             ),
-            Self::Tag => "snforge_std_deprecated::_internals::config_types::BlockId::BlockTag".to_string(),
+            Self::Tag => {
+                "snforge_std_deprecated::_internals::config_types::BlockId::BlockTag".to_string()
+            }
         }
     }
 }
