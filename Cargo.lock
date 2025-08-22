@@ -2072,6 +2072,7 @@ version = "1.0.0"
 dependencies = [
  "blockifier",
  "cairo-lang-sierra",
+ "cairo-lang-sierra-to-casm",
  "cairo-lang-starknet-classes",
  "cheatnet",
  "console",
@@ -2083,6 +2084,7 @@ dependencies = [
  "starknet",
  "starknet-types-core",
  "starknet_api",
+ "thiserror 2.0.15",
 ]
 
 [[package]]
@@ -2293,6 +2295,8 @@ dependencies = [
  "anyhow",
  "camino",
  "regex",
+ "scarb-api",
+ "semver",
  "serde",
  "serde_json",
  "shell-words",

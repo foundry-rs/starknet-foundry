@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `--test-files` flag to `verify` command to include test files under src/ for verification (only applies to voyager)
+- `--tip` flag to `invoke`, `declare`, `deploy`, `multicall run` and `account deploy` commands to set the transaction tip
+
+#### Changed
+
+- The supported RPC version is now 0.9.0
 
 ### Cast
 
