@@ -86,6 +86,7 @@ Maximum L1 data gas unit price for the `deploy` transaction. When not used, defa
 
 ## `--tip <TIP>`
 Optional.
+Conflicts with: [`--estimate-tip`](#--estimate-tip-estimate_tip)
 
 Tip for the transaction. When not provided, defaults to 0 unless [`--estimate-tip`](#--estimate-tip-estimate_tip) is used.
 
