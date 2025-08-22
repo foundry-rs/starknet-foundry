@@ -38,11 +38,10 @@ use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
 use conversions::felt::{ToShortString, TryInferFormat};
 use conversions::serde::deserialize::BufferReader;
-use conversions::serde::serialize::raw::RawFeltVec;
-use conversions::serde::serialize::{CairoSerialize, SerializeToFeltVec};
+use conversions::serde::serialize::CairoSerialize;
 use data_transformer::cairo_types::CairoU256;
 use rand::prelude::StdRng;
-use runtime::native::{NativeExtendedRuntime, NativeExtensionLogic, NativeSyscallHandlingResult};
+use runtime::native::{NativeExtendedRuntime, NativeExtensionLogic};
 use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
@@ -571,42 +570,21 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
     }
 }
 
-impl<'a> ForgeExtension<'a> {
-    fn try_handle_cheatcode(
-        &mut self,
-        selector: Felt,
-        _input: &[Felt],
-        _runtime: &mut <Self as NativeExtensionLogic>::Runtime,
-    ) -> anyhow::Result<NativeSyscallHandlingResult<Vec<Felt>>> {
-        let selector_bytes = selector.to_bytes_be();
-        let selector = std::str::from_utf8(&selector_bytes)?.trim_start_matches('\0');
-
-        let result = match selector {
-            "is_config_mode" => false.serialize_to_vec(),
-            _ => return Ok(NativeSyscallHandlingResult::Forwarded),
-        };
-
-        Ok(NativeSyscallHandlingResult::Handled(result))
-    }
-}
-
 impl<'a> NativeExtensionLogic for ForgeExtension<'a> {
     type Runtime = &'a mut NativeExtendedRuntime<CallToBlockifierExtension<'a>>;
 
     fn handle_cheatcode(
         &mut self,
         selector: Felt,
-        input: &[Felt],
-        runtime: &mut Self::Runtime,
-    ) -> NativeSyscallHandlingResult<Vec<Felt>> {
-        match self.try_handle_cheatcode(selector, input, runtime) {
-            Ok(NativeSyscallHandlingResult::Forwarded) => NativeSyscallHandlingResult::Forwarded,
-            Ok(NativeSyscallHandlingResult::Handled(result)) => {
-                NativeSyscallHandlingResult::Handled(
-                    Ok::<_, ()>(RawFeltVec::new(result)).serialize_to_vec(),
-                )
-            }
-            Err(err) => NativeSyscallHandlingResult::Handled(Err::<(), _>(err).serialize_to_vec()),
+        _input: &[Felt],
+        _runtime: &mut Self::Runtime,
+    ) -> anyhow::Result<CheatcodeHandlingResult> {
+        let selector_bytes = selector.to_bytes_be();
+        let selector = std::str::from_utf8(&selector_bytes)?.trim_start_matches('\0');
+
+        match selector {
+            "is_config_mode" => Ok(CheatcodeHandlingResult::from_serializable(false)),
+            _ => Ok(CheatcodeHandlingResult::Forwarded),
         }
     }
 }

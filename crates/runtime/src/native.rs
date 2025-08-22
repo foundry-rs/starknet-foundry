@@ -5,7 +5,12 @@ use cairo_native::starknet::{
     SyscallResult, U256,
 };
 use cairo_vm::Felt252;
-use conversions::serde::serialize::SerializeToFeltVec;
+use conversions::{
+    byte_array::ByteArray,
+    serde::serialize::{SerializeToFeltVec, raw::RawFeltVec},
+};
+
+use crate::CheatcodeHandlingResult;
 
 pub struct NativeExtendedRuntime<E: NativeExtensionLogic> {
     pub extension: E,
@@ -25,8 +30,8 @@ pub trait NativeExtensionLogic {
         _selector: Felt252,
         _input: &[Felt252],
         _runtime: &mut Self::Runtime,
-    ) -> NativeSyscallHandlingResult<Vec<Felt252>> {
-        NativeSyscallHandlingResult::Forwarded
+    ) -> anyhow::Result<CheatcodeHandlingResult> {
+        Ok(CheatcodeHandlingResult::Forwarded)
     }
 
     fn handle_get_block_hash(
@@ -283,9 +288,13 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
             .extension
             .handle_cheatcode(selector, input, &mut self.runtime)
         {
-            NativeSyscallHandlingResult::Forwarded => self.runtime.cheatcode(selector, input),
-            NativeSyscallHandlingResult::Handled(result) => result,
+            Ok(CheatcodeHandlingResult::Forwarded) => {
+                return self.runtime.cheatcode(selector, input);
+            }
+            Ok(CheatcodeHandlingResult::Handled(result)) => Ok(RawFeltVec::new(result)),
+            Err(err) => Err(ByteArray::from(err.to_string().as_str())),
         }
+        .serialize_to_vec()
     }
 
     fn get_block_hash(
