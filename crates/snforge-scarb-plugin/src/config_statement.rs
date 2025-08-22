@@ -1,3 +1,4 @@
+use crate::asserts::assert_is_used_once;
 use crate::utils::{create_single_token, get_statements};
 use crate::{
     args::Arguments,
@@ -32,6 +33,8 @@ fn with_config_cheatcodes<Collector>(
 where
     Collector: AttributeCollector,
 {
+    assert_is_used_once::<Collector>(db, func)?;
+
     let value = Collector::args_into_config_expression(args_db, args, warns)?;
 
     let cheatcode_name = Collector::CHEATCODE_NAME;
