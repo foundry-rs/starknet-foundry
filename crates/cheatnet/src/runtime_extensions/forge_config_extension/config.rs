@@ -11,24 +11,6 @@ use url::Url;
 // available gas
 
 #[derive(Debug, Clone, Copy, CairoDeserialize, PartialEq)]
-pub enum RawAvailableGasConfig {
-    MaxGas(usize),
-    MaxResourceBounds(RawAvailableResourceBoundsConfig),
-}
-
-impl RawAvailableGasConfig {
-    #[must_use]
-    pub fn is_zero(&self) -> bool {
-        match self {
-            RawAvailableGasConfig::MaxGas(amount) => *amount == 0,
-            RawAvailableGasConfig::MaxResourceBounds(bounds) => {
-                bounds.to_gas_vector() == GasVector::ZERO
-            }
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, CairoDeserialize, PartialEq)]
 pub struct RawAvailableResourceBoundsConfig {
     pub l1_gas: usize,
     pub l1_data_gas: usize,
@@ -43,6 +25,11 @@ impl RawAvailableResourceBoundsConfig {
             l1_data_gas: GasAmount(self.l1_data_gas as u64),
             l2_gas: GasAmount(self.l2_gas as u64),
         }
+    }
+
+    #[must_use]
+    pub fn is_zero(&self) -> bool {
+        self.to_gas_vector() == GasVector::ZERO
     }
 }
 
@@ -179,7 +166,7 @@ pub struct RawPredeployedContractsConfig {
 #[derive(Debug, Default, Clone)]
 pub struct RawForgeConfig {
     pub fork: Option<RawForkConfig>,
-    pub available_gas: Option<RawAvailableGasConfig>,
+    pub available_gas: Option<RawAvailableResourceBoundsConfig>,
     pub ignore: Option<RawIgnoreConfig>,
     pub should_panic: Option<RawShouldPanicConfig>,
     pub fuzzer: Option<RawFuzzerConfig>,

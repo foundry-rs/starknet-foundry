@@ -3,7 +3,7 @@ use crate::expected_result::ExpectedTestResult;
 use anyhow::Result;
 use cairo_vm::types::program::Program;
 use cheatnet::runtime_extensions::forge_config_extension::config::{
-    RawAvailableGasConfig, RawFuzzerConfig,
+    RawAvailableResourceBoundsConfig, RawFuzzerConfig,
 };
 use starknet_api::block::BlockNumber;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
@@ -33,7 +33,7 @@ pub struct ResolvedForkConfig {
 ///     fetches block number
 #[derive(Debug, Clone, PartialEq)]
 pub struct TestCaseResolvedConfig {
-    pub available_gas: Option<RawAvailableGasConfig>,
+    pub available_gas: Option<RawAvailableResourceBoundsConfig>,
     pub ignored: bool,
     pub expected_result: ExpectedTestResult,
     pub fork_config: Option<ResolvedForkConfig>,

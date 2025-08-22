@@ -23,7 +23,7 @@ pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
             if case
                 .config
                 .available_gas
-                .as_ref().is_some_and(cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableGasConfig::is_zero)
+                .as_ref().is_some_and(cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableResourceBoundsConfig::is_zero)
                 && ScarbCommand::version().run()?.scarb <= Version::new(2, 4, 3)
             {
                 ui.println(&WarningMessage::new("`available_gas` attribute was probably specified when using Scarb ~2.4.3 \

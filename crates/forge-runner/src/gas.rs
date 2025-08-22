@@ -12,10 +12,9 @@ use blockifier::transaction::objects::HasRelatedFeeType;
 use blockifier::utils::u64_from_usize;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
-use cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableGasConfig;
+use cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableResourceBoundsConfig;
 use cheatnet::state::ExtendedStateReader;
 use foundry_ui::UI;
-use foundry_ui::components::warning::WarningMessage;
 use starknet_api::execution_resources::{GasAmount, GasVector};
 use starknet_api::transaction::EventContent;
 use starknet_api::transaction::fields::GasVectorComputationMode;
@@ -144,7 +143,7 @@ fn get_state_resources(
 }
 
 pub fn check_available_gas(
-    available_gas: Option<RawAvailableGasConfig>,
+    available_gas: Option<RawAvailableResourceBoundsConfig>,
     summary: TestCaseSummary<Single>,
     ui: &UI,
 ) -> TestCaseSummary<Single> {
@@ -154,25 +153,11 @@ pub fn check_available_gas(
             gas_info,
             debugging_trace,
             ..
-        } if available_gas.is_some_and(|available_gas| match available_gas {
-            RawAvailableGasConfig::MaxGas(gas) => {
-                // todo(3109): remove uunnamed argument in available_gas
-                ui.println(&WarningMessage::new(
-                    "Setting available_gas with unnamed argument is deprecated. \
-                Consider setting resource bounds (l1_gas, l1_data_gas and l2_gas) explicitly.",
-                ));
-                // convert resource bounds to classic l1_gas using formula
-                // l1_gas + l1_data_gas + (l2_gas / 40000)
-                // because 100 l2_gas = 0.0025 l1_gas
-                (gas_info.l1_gas + gas_info.l1_data_gas + (gas_info.l2_gas / 40000))
-                    > GasAmount(gas as u64)
-            }
-            RawAvailableGasConfig::MaxResourceBounds(bounds) => {
-                let av_gas = bounds.to_gas_vector();
-                gas_info.l1_gas > av_gas.l1_gas
-                    || gas_info.l1_data_gas > av_gas.l1_data_gas
-                    || gas_info.l2_gas > av_gas.l2_gas
-            }
+        } if available_gas.is_some_and(|available_gas| {
+            let av_gas = available_gas.to_gas_vector();
+            gas_info.l1_gas > av_gas.l1_gas
+                || gas_info.l1_data_gas > av_gas.l1_data_gas
+                || gas_info.l2_gas > av_gas.l2_gas
         }) =>
         {
             TestCaseSummary::Failed {
