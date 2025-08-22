@@ -9,12 +9,12 @@ use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::execution::entry_point_execution::{prepare_call_arguments, run_entry_point};
 use blockifier::execution::errors::EntryPointExecutionError;
+use blockifier::execution::native::syscall_handler::NativeSyscallHandler;
 use blockifier::state::cached_state::CachedState;
 use cairo_lang_sierra::ids::FunctionId;
 use cairo_native::Value;
 use cairo_native::execution_result::ContractExecutionResult;
 use cairo_native::executor::AotNativeExecutor;
-use cairo_native::starknet_stub::StubSyscallHandler;
 use cairo_vm::Felt252;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
@@ -36,6 +36,7 @@ use execution::finalize_execution;
 use foundry_ui::UI;
 use hints::hints_by_representation;
 use rand::prelude::StdRng;
+use runtime::native::{NativeExtendedRuntime, NativeStarknetRuntime};
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use scarb_oracle_hint_service::OracleHintService;
@@ -410,8 +411,6 @@ pub fn run_native_test_case(
     let function_id = FunctionId::new(case.test_details.sierra_function_id);
     let call = build_test_entry_point();
 
-    // The state reader is currently unused, as it requires support of the
-    // custom syscall handler.
     let mut state_reader = ExtendedStateReader {
         dict_state_reader: cheatnet_constants::build_testing_state(),
         fork_state_reader: get_fork_state_reader(
@@ -423,21 +422,46 @@ pub fn run_native_test_case(
         state_reader.predeploy_contracts();
     }
 
-    // The cheatnet state is currently unused, as it requires support of a
-    // custom syscall handler
     let block_info = state_reader.get_block_info()?;
+    let chain_id = state_reader.get_chain_id()?;
+    let tracked_resource = TrackedResource::from(runtime_config.tracked_resource);
+    let mut context = build_context(&block_info, chain_id, &tracked_resource);
+
+    let mut cached_state = CachedState::new(state_reader);
+
+    let starknet_runtime = NativeStarknetRuntime {
+        syscall_handler: NativeSyscallHandler::new(call.clone(), &mut cached_state, &mut context),
+    };
+
     let mut cheatnet_state = CheatnetState {
         block_info,
         ..Default::default()
     };
 
-    // TODO: Implement a proper syscall handler like `run_test_case`.
-    // Tracking issue: https://github.com/lambdaclass/starknet-foundry/issues/3.
-    let mut syscall_handler = StubSyscallHandler::default();
+    let mut cheatable_starknet_runtime = NativeExtendedRuntime {
+        extension: CheatableStarknetRuntimeExtension {
+            cheatnet_state: &mut cheatnet_state,
+        },
+        runtime: starknet_runtime,
+    };
 
-    // To implement fuzzing we need support of the syscall handler.
-    // Currently the argument is unused.
-    _ = fuzzer_rng;
+    let mut call_to_blockifier_runtime = NativeExtendedRuntime {
+        extension: CallToBlockifierExtension {
+            lifetime: &PhantomData,
+        },
+        runtime: &mut cheatable_starknet_runtime,
+    };
+
+    let mut forge_runtime = NativeExtendedRuntime {
+        extension: ForgeExtension {
+            environment_variables: runtime_config.environment_variables,
+            contracts_data: runtime_config.contracts_data,
+            fuzzer_rng,
+            experimental_oracles_enabled: runtime_config.experimental_oracles,
+            oracle_hint_service: OracleHintService::default(),
+        },
+        runtime: &mut call_to_blockifier_runtime,
+    };
 
     // Tests don't have any input arguments. Fuzzing tests actually take the
     // arguments through cheatcode syscalls.
@@ -453,22 +477,49 @@ pub fn run_native_test_case(
         &function_id,
         &args,
         Some(call.initial_gas),
-        &mut syscall_handler,
+        &mut forge_runtime,
     ) {
-        Ok(result) => ContractExecutionResult::from_execution_result(result),
+        Ok(result) => {
+            // TODO: Compute resource usage properly.
+            // It should be the same as when using the Cairo VM.
+
+            ContractExecutionResult::from_execution_result(result)
+        }
         Err(err) => Err(err),
     };
 
-    let call_trace = cheatnet_state.trace_data.current_call_stack.top();
-    let encountered_errors = cheatnet_state.encountered_errors;
-    let fuzzer_args = cheatnet_state.fuzzer_args;
+    let encountered_errors = forge_runtime
+        .runtime
+        .runtime
+        .extension
+        .cheatnet_state
+        .encountered_errors
+        .clone();
+
+    let call_trace_ref = forge_runtime
+        .runtime
+        .runtime
+        .extension
+        .cheatnet_state
+        .trace_data
+        .current_call_stack
+        .top();
+
+    let fuzzer_args = forge_runtime
+        .runtime
+        .runtime
+        .extension
+        .cheatnet_state
+        .fuzzer_args
+        .clone();
 
     // TODO: Compute resource usage properly.
     // It should be the same as when using the Cairo VM.
-    let used_resources = UsedResources::default();
-    let gas_used = GasVector::default();
+    let used_resources = Default::default();
+    let gas_used = Default::default();
 
-    let fork_data = state_reader
+    let fork_data = cached_state
+        .state
         .fork_state_reader
         .map(|fork_state_reader| ForkData::new(&fork_state_reader.compiled_contract_class_map()))
         .unwrap_or_default();
@@ -482,7 +533,7 @@ pub fn run_native_test_case(
                     RunStatus::Success(result.return_values)
                 }
             },
-            call_trace,
+            call_trace: call_trace_ref,
             gas_used,
             used_resources,
             encountered_errors,
@@ -499,7 +550,7 @@ pub fn run_native_test_case(
 
             RunResult::Error(RunError {
                 error,
-                call_trace,
+                call_trace: call_trace_ref,
                 encountered_errors,
                 fuzzer_args,
                 fork_data,

@@ -41,6 +41,7 @@ use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::CairoSerialize;
 use data_transformer::cairo_types::CairoU256;
 use rand::prelude::StdRng;
+use runtime::native::{NativeExtendedRuntime, NativeExtensionLogic};
 use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
@@ -55,6 +56,8 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
+
+use super::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 
 pub mod cheatcodes;
 pub mod contracts_data;
@@ -563,6 +566,25 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 "Replace class can't be used in tests",
             ))),
             _ => Ok(SyscallHandlingResult::Forwarded),
+        }
+    }
+}
+
+impl<'a> NativeExtensionLogic for ForgeExtension<'a> {
+    type Runtime = &'a mut NativeExtendedRuntime<CallToBlockifierExtension<'a>>;
+
+    fn handle_cheatcode(
+        &mut self,
+        selector: Felt,
+        _input: &[Felt],
+        _runtime: &mut Self::Runtime,
+    ) -> anyhow::Result<CheatcodeHandlingResult> {
+        let selector_bytes = selector.to_bytes_be();
+        let selector = std::str::from_utf8(&selector_bytes)?.trim_start_matches('\0');
+
+        match selector {
+            "is_config_mode" => Ok(CheatcodeHandlingResult::from_serializable(false)),
+            _ => Ok(CheatcodeHandlingResult::Forwarded),
         }
     }
 }

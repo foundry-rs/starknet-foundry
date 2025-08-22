@@ -31,6 +31,7 @@ use std::collections::HashMap;
 use std::io;
 use thiserror::Error;
 
+pub mod native;
 pub mod starknet;
 mod vm;
 
