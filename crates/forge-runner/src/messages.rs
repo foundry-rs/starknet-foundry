@@ -52,7 +52,7 @@ impl TestResultMessage {
             .expect("Test result must have a name")
             .to_string();
         let name = name
-            .replace("_return_wrapper", "")
+            .replace("__test_generated", "")
             .replace("__fuzzer_generated", "");
 
         let debugging_trace = test_result

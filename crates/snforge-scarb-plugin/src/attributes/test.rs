@@ -83,11 +83,10 @@ fn test_internal(
     let attributes = func.attributes(db).as_syntax_node();
     let attributes = SyntaxNodeWithDb::new(&attributes, db);
 
-    let name_return_wrapper =
-        format_ident!("{}_return_wrapper", func.declaration(db).name(db).text(db));
-
-    let mut return_wrapper = TokenStream::new(vec![format_ident!("{}", func_name)]);
-    return_wrapper.extend(signature);
+    let func_test_name =
+        format_ident!("{}__test_generated", func.declaration(db).name(db).text(db));
+    let mut func_ident = TokenStream::new(vec![format_ident!("{}", func_name)]);
+    func_ident.extend(signature);
 
     let out_of_gas = create_single_token("'Out of gas'");
 
@@ -95,7 +94,7 @@ fn test_internal(
         Ok(quote!(
             #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
             #[snforge_internal_test_executable]
-            fn #name_return_wrapper(mut _data: Span<felt252>) -> Span::<felt252> {
+            fn #func_test_name(mut _data: Span<felt252>) -> Span::<felt252> {
                 core::internal::require_implicit::<System>();
                 core::internal::revoke_ap_tracking();
                 core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
@@ -111,7 +110,7 @@ fn test_internal(
 
             #attributes
             #[#internal_config]
-            fn #return_wrapper
+            fn #func_ident
             #body
         ))
     } else {
