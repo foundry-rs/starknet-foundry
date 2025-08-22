@@ -3,11 +3,12 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::common::{get_relocated_vm_trace, get_syscalls_gas_consumed, sum_syscall_usage};
+use crate::runtime_extensions::forge_runtime_extension::{get_nested_calls_syscalls_sierra_gas, get_nested_calls_syscalls_vm_resources};
 use crate::state::CheatStatus;
 use blockifier::execution::call_info::{CallExecution, Retdata, StorageAccessTracker};
-use crate::runtime_extensions::forge_runtime_extension::{get_nested_calls_syscalls_sierra_gas, get_nested_calls_syscalls_vm_resources};
 use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
 
+use crate::runtime_extensions::native::execution::execute_entry_point_call_native;
 use blockifier::execution::entry_point::{EntryPointRevertInfo, ExecutableCallEntryPoint};
 use blockifier::execution::stack_trace::{
     Cairo1RevertHeader, extract_trailing_cairo1_revert_trace,
@@ -174,7 +175,27 @@ pub fn execute_call_entry_point(
             cheatnet_state,
             context,
         ),
-        RunnableCompiledClass::V1Native(_) => todo!(),
+        RunnableCompiledClass::V1Native(native_compiled_class_v1) => {
+            // if context.tracked_resource_stack.last() == Some(&TrackedResource::CairoSteps) {
+            //     // We cannot run native with cairo steps as the tracked resources (it's a vm
+            //     // resouorce).
+            //     panic!("We want to test execution of native entry only");
+            //     // execute_entry_point_call_cairo1(
+            //     //     call,
+            //     //     compiled_class.casm(),
+            //     //     state,
+            //     //     context,
+            //     // )
+            // } else {
+            println!("Executing native entry point");
+            execute_entry_point_call_native(
+                entry_point.clone(),
+                native_compiled_class_v1,
+                state,
+                cheatnet_state,
+                context,
+            )
+        } // }
     };
     context
         .tracked_resource_stack

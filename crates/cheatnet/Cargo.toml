@@ -44,6 +44,7 @@ shared.workspace = true
 rand.workspace = true
 foundry-ui = { path = "../foundry-ui" }
 scarb-oracle-hint-service.workspace =  true
+cairo-native.workspace = true
 
 [dev-dependencies]
 ctor.workspace = true
