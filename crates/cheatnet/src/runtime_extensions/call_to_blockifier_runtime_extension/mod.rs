@@ -1,24 +1,24 @@
 use std::marker::PhantomData;
 
+use crate::state::CheatnetState;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use blockifier::execution::execution_utils::felt_from_ptr;
-use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::execution::syscalls::hint_processor::{OUT_OF_GAS_ERROR, SyscallHintProcessor};
 use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
 use blockifier::execution::syscalls::vm_syscall_utils::{
     CallContractRequest, LibraryCallRequest, RevertData, SingleSegmentResponse,
-    SyscallRequestWrapper, SyscallSelector,
+    SyscallExecutorBaseError, SyscallRequestWrapper, SyscallSelector,
 };
 use blockifier::execution::{
     execution_utils::ReadOnlySegment,
     syscalls::vm_syscall_utils::{SyscallRequest, SyscallResponse, SyscallResponseWrapper},
 };
+use blockifier::utils::u64_from_usize;
 use cairo_vm::types::relocatable::MaybeRelocatable;
 use cairo_vm::vm::{errors::hint_errors::HintError, vm_core::VirtualMachine};
-use runtime::{ExtendedRuntime, ExtensionLogic, SyscallHandlingResult, SyscallPtrAccess};
+use runtime::{ExtendedRuntime, ExtensionLogic, SyscallHandlingResult};
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::ContractAddress;
-
-use crate::state::CheatnetState;
+use starknet_types_core::felt::Felt;
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     AddressOrClassHash, call_entry_point,
@@ -53,26 +53,14 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
         match selector {
             // We execute contract calls and library calls with modified blockifier
             // This is redirected to drop ForgeRuntimeExtension
-            // and to enable handling call errors with safe dispatchers in the test code
-            // since call errors cannot be handled on real starknet
-            // https://docs.starknet.io/architecture-and-concepts/smart-contracts/system-calls-cairo1/#call_contract
+            // and to enable executing outer calls in tests as non-revertible.
             SyscallSelector::CallContract => {
-                execute_syscall::<CallContractRequest>(vm, extended_runtime)?;
-
-                extended_runtime
-                    .extended_runtime
-                    .hint_handler
-                    .increment_syscall_count_by(&selector, 1);
+                execute_syscall::<CallContractRequest>(selector, vm, extended_runtime)?;
 
                 Ok(SyscallHandlingResult::Handled)
             }
             SyscallSelector::LibraryCall => {
-                execute_syscall::<LibraryCallRequest>(vm, extended_runtime)?;
-
-                extended_runtime
-                    .extended_runtime
-                    .hint_handler
-                    .increment_syscall_count_by(&selector, 1);
+                execute_syscall::<LibraryCallRequest>(selector, vm, extended_runtime)?;
 
                 Ok(SyscallHandlingResult::Handled)
             }
@@ -89,6 +77,7 @@ where
         self,
         syscall_handler: &mut SyscallHintProcessor,
         cheatnet_state: &mut CheatnetState,
+        remaining_gas: &mut u64,
     ) -> CallResult;
 }
 
@@ -97,6 +86,7 @@ impl ExecuteCall for CallContractRequest {
         self: CallContractRequest,
         syscall_handler: &mut SyscallHintProcessor,
         cheatnet_state: &mut CheatnetState,
+        remaining_gas: &mut u64,
     ) -> CallResult {
         let contract_address = self.contract_address;
 
@@ -109,7 +99,7 @@ impl ExecuteCall for CallContractRequest {
             storage_address: contract_address,
             caller_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
             call_type: CallType::Call,
-            initial_gas: i64::MAX as u64,
+            initial_gas: *remaining_gas,
         };
 
         call_entry_point(
@@ -126,6 +116,7 @@ impl ExecuteCall for LibraryCallRequest {
         self: LibraryCallRequest,
         syscall_handler: &mut SyscallHintProcessor,
         cheatnet_state: &mut CheatnetState,
+        remaining_gas: &mut u64,
     ) -> CallResult {
         let class_hash = self.class_hash;
 
@@ -138,7 +129,7 @@ impl ExecuteCall for LibraryCallRequest {
             storage_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
             caller_address: ContractAddress::default(),
             call_type: CallType::Delegate,
-            initial_gas: u64::MAX,
+            initial_gas: *remaining_gas,
         };
 
         call_entry_point(
@@ -150,25 +141,63 @@ impl ExecuteCall for LibraryCallRequest {
     }
 }
 
+// crates/blockifier/src/execution/syscalls/vm_syscall_utils.rs:677 (execute_syscall)
 fn execute_syscall<Request: ExecuteCall + SyscallRequest>(
+    selector: SyscallSelector,
     vm: &mut VirtualMachine,
     cheatable_starknet_runtime: &mut CheatableStarknetRuntime,
 ) -> Result<(), HintError> {
-    let _selector = felt_from_ptr(vm, cheatable_starknet_runtime.get_mut_syscall_ptr())?;
+    // region: Modified blockifier code
+    let syscall_handler = &mut cheatable_starknet_runtime.extended_runtime.hint_handler;
+    let cheatnet_state = &mut *cheatable_starknet_runtime.extension.cheatnet_state;
+
+    // Increment, since the selector was peeked into before
+    syscall_handler.syscall_ptr += 1;
+    syscall_handler.increment_syscall_count_by(&selector, 1);
+    // endregion
+
+    let syscall_gas_cost = syscall_handler
+        .get_gas_cost_from_selector(&selector)
+        .map_err(|error| SyscallExecutorBaseError::GasCost { error, selector })?;
 
     let SyscallRequestWrapper {
         gas_counter,
         request,
-    } = SyscallRequestWrapper::<Request>::read(
-        vm,
-        cheatable_starknet_runtime.get_mut_syscall_ptr(),
-    )?;
+    } = SyscallRequestWrapper::<Request>::read(vm, syscall_handler.get_mut_syscall_ptr())?;
 
-    let cheatnet_state = &mut *cheatable_starknet_runtime.extension.cheatnet_state;
-    let syscall_handler = &mut cheatable_starknet_runtime.extended_runtime.hint_handler;
+    let syscall_gas_cost =
+        syscall_gas_cost.get_syscall_cost(u64_from_usize(request.get_linear_factor_length()));
+    let syscall_base_cost = syscall_handler.get_syscall_base_gas_cost();
 
-    let call_result = request.execute_call(syscall_handler, cheatnet_state);
-    write_call_response(syscall_handler, vm, gas_counter, call_result)?;
+    // Sanity check for preventing underflow.
+    assert!(
+        syscall_gas_cost >= syscall_base_cost,
+        "Syscall gas cost must be greater than base syscall gas cost"
+    );
+
+    // Refund `SYSCALL_BASE_GAS_COST` as it was pre-charged.
+    let required_gas = syscall_gas_cost - syscall_base_cost;
+
+    if gas_counter < required_gas {
+        let out_of_gas_error =
+            Felt::from_hex(OUT_OF_GAS_ERROR).map_err(SyscallExecutorBaseError::from)?;
+        let response: SyscallResponseWrapper<SingleSegmentResponse> =
+            SyscallResponseWrapper::Failure {
+                gas_counter,
+                revert_data: RevertData::new_normal(vec![out_of_gas_error]),
+            };
+        response.write(vm, syscall_handler.get_mut_syscall_ptr())?;
+
+        return Ok(());
+    }
+
+    let mut remaining_gas = gas_counter - required_gas;
+
+    // region: Modified blockifier code
+    let call_result = request.execute_call(syscall_handler, cheatnet_state, &mut remaining_gas);
+    write_call_response(syscall_handler, vm, remaining_gas, call_result)?;
+    // endregion
+
     Ok(())
 }
 

@@ -154,7 +154,7 @@ fn get_syscall_cost(
 }
 
 impl CheatableStarknetRuntimeExtension<'_> {
-    // crates/blockifier/src/execution/syscalls/hint_processor.rs:280 (SyscallHintProcessor::execute_syscall)
+    // crates/blockifier/src/execution/syscalls/vm_syscall_utils.rs:677 (execute_syscall)
     fn execute_syscall<Request, Response, ExecuteCallback>(
         &mut self,
         syscall_handler: &mut SyscallHintProcessor,
