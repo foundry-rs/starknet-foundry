@@ -71,7 +71,6 @@ fn simple_package_with_cheats() {
     );
 }
 
-
 #[test]
 fn simple_package_with_git_dependency() {
     let temp = setup_package("simple_package");
