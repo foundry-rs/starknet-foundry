@@ -14,7 +14,6 @@ use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableResourceBoundsConfig;
 use cheatnet::state::ExtendedStateReader;
-use foundry_ui::UI;
 use starknet_api::execution_resources::{GasAmount, GasVector};
 use starknet_api::transaction::EventContent;
 use starknet_api::transaction::fields::GasVectorComputationMode;
@@ -145,7 +144,6 @@ fn get_state_resources(
 pub fn check_available_gas(
     available_gas: Option<RawAvailableResourceBoundsConfig>,
     summary: TestCaseSummary<Single>,
-    ui: &UI,
 ) -> TestCaseSummary<Single> {
     match summary {
         TestCaseSummary::Passed {

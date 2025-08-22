@@ -57,7 +57,6 @@ pub async fn run_for_test_target(
             forge_config.clone(),
             tests.sierra_program_path.clone(),
             send.clone(),
-            &ui.clone(),
         ));
     }
 
