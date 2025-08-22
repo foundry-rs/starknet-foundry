@@ -68,7 +68,7 @@ pub fn deploy_syscall(
 ) -> SyscallResult<DeployResponse> {
     // Increment the Deploy syscall's linear cost counter by the number of elements in the
     // constructor calldata
-    syscall_handler.increment_linear_factor_by(
+    syscall_handler.base.increment_syscall_linear_factor_by(
         &SyscallSelector::Deploy,
         request.constructor_calldata.0.len(),
     );

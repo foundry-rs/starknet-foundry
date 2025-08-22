@@ -172,6 +172,7 @@ pub fn execute_call_entry_point(
             cheatnet_state,
             context,
         ),
+        RunnableCompiledClass::V1Native(_) => todo!(),
     };
     context
         .tracked_resource_stack
