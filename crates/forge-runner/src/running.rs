@@ -66,8 +66,8 @@ pub use syscall_handler::syscall_handler_offset;
 #[must_use]
 pub fn run_test(
     case: Arc<TestCaseWithResolvedConfig>,
-    _casm_program: Arc<AssembledProgramWithDebugInfo>,
-    _aot_executor: Arc<AotNativeExecutor>,
+    casm_program: Arc<AssembledProgramWithDebugInfo>,
+    aot_executor: Arc<AotNativeExecutor>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -84,14 +84,14 @@ pub fn run_test(
         let run_result = if forge_config.test_runner_config.use_native {
             run_native_test_case(
                 &case,
-                &_aot_executor,
+                &aot_executor,
                 &RuntimeConfig::from(&forge_config.test_runner_config),
                 None,
             )
         } else {
             run_test_case(
                 &case,
-                &_casm_program,
+                &casm_program,
                 &RuntimeConfig::from(&forge_config.test_runner_config),
                 None,
             )
