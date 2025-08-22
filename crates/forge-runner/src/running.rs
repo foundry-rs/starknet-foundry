@@ -459,7 +459,7 @@ pub fn run_native_test_case(
         extension: ForgeExtension {
             environment_variables: runtime_config.environment_variables,
             contracts_data: runtime_config.contracts_data,
-            fuzzer_rng,
+            fuzzer_rng: fuzzer_rng.cloned(),
             experimental_oracles_enabled: runtime_config.experimental_oracles,
             oracle_hint_service: OracleHintService::default(),
         },
