@@ -11,6 +11,7 @@ mod deploy;
 mod generate_random_felt;
 mod get_class_hash;
 mod load;
+mod meta_tx_v0;
 mod mock_call;
 mod multiple_writes_same_storage;
 mod precalculate_address;
