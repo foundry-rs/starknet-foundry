@@ -144,12 +144,16 @@ fn test_case_internal(
 
             let attr_list = func.attributes(func_db);
             let has_fuzzer = has_fuzzer_attribute(func_db, func);
+
+            // We do not want to copy the `#[test]` attribute if there is no `#[fuzzer]` attribute.
             let filtered_fn_attrs = attr_list
                 .elements(func_db)
                 .filter(|attr| {
                     let test_attr_text = format!("#[{}]", TestCollector::ATTR_NAME);
                     let attr_text = attr.as_syntax_node().get_text(func_db);
+                    let attr_text = attr_text.trim();
                     let is_test_attr = attr_text == test_attr_text;
+
                     !is_test_attr || has_fuzzer
                 })
                 .map(|attr| attr.to_token_stream(func_db))
