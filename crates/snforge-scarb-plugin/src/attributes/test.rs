@@ -94,7 +94,7 @@ fn test_internal(
         Ok(quote!(
             #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
             #[snforge_internal_test_executable]
-            fn #func_test_name(mut _data: Span<felt252>) -> Span::<felt252> {
+            fn #name(mut _data: Span<felt252>) -> Span::<felt252> {
                 core::internal::require_implicit::<System>();
                 core::internal::revoke_ap_tracking();
                 core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
@@ -102,7 +102,7 @@ fn test_internal(
                 core::option::OptionTraitImpl::expect(
                     core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
                 );
-                #name();
+                #name_return_wrapper();
 
                 let mut arr = ArrayTrait::new();
                 core::array::ArrayTrait::span(@arr)
