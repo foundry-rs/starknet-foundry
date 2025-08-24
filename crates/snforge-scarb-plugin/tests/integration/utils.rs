@@ -1,5 +1,5 @@
 use cairo_lang_formatter::{CairoFormatter, FormatterConfig};
-use cairo_lang_macro::{Diagnostic, ProcMacroResult, TokenStream, quote};
+use cairo_lang_macro::{quote, Diagnostic, ProcMacroResult, TokenStream};
 use std::collections::HashSet;
 
 pub fn empty_function() -> TokenStream {
@@ -52,13 +52,6 @@ pub fn assert_output(result: &ProcMacroResult, expected: &str) {
             .trim()
             .to_string()
     };
-
-    println!("------");
-    println!(
-        "{}",
-        format_and_normalize_code(result.token_stream.to_string())
-    );
-    println!("------");
 
     assert_eq!(
         format_and_normalize_code(result.token_stream.to_string()),

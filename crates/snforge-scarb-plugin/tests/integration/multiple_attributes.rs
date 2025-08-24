@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, assert_output, empty_function};
-use cairo_lang_macro::{TokenStream, TokenTree, quote};
+use cairo_lang_macro::{quote, TokenStream, TokenTree};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::{ModuleItem, SyntaxFile};
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
@@ -128,7 +128,7 @@ fn works_with_few_attributes() {
             }
         ",
     );
-    println!("YYY");
+
     let item = result.token_stream;
     let args = quote!(("test"));
 
