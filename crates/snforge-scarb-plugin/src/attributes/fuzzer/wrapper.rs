@@ -67,8 +67,10 @@ fn fuzzer_wrapper_internal(
     let vis = func.visibility(db).as_syntax_node();
     let vis = SyntaxNodeWithDb::new(&vis, db);
 
-    let name = func.declaration(db).name(db).as_syntax_node();
-    let name = SyntaxNodeWithDb::new(&name, db);
+    let name = format_ident!(
+        "{}__fuzzer_generated",
+        func.declaration(db).name(db).text(db)
+    );
 
     let signature = func.declaration(db).signature(db).as_syntax_node();
     let signature = SyntaxNodeWithDb::new(&signature, db);
@@ -104,8 +106,7 @@ fn fuzzer_wrapper_internal(
         }
     });
 
-    let actual_body_fn_name =
-        format_ident!("{}_actual_body", func.declaration(db).name(db).text(db));
+    let actual_body_fn_name = format_ident!("{}", func.declaration(db).name(db).text(db));
 
     let (statements, if_content) = get_statements(db, func);
 

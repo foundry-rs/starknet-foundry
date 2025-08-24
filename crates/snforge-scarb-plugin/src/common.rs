@@ -1,11 +1,14 @@
 use crate::{
     args::Arguments,
-    attributes::AttributeInfo,
+    attributes::{
+        AttributeInfo,
+        fuzzer::{FuzzerCollector, FuzzerConfigCollector, wrapper::FuzzerWrapperCollector},
+    },
     parse::{parse, parse_args},
 };
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::ast::FunctionWithBody;
+use cairo_lang_syntax::node::{TypedSyntaxNode, ast::FunctionWithBody};
 use cairo_lang_utils::Upcast;
 
 #[expect(clippy::needless_pass_by_value)]
@@ -57,4 +60,25 @@ where
     let args = Arguments::new::<Collector>(args_db, args, warns);
 
     handler(db, &func, args_db, args, warns)
+}
+
+fn has_attributes(db: &SimpleParserDatabase, func: &FunctionWithBody, attr_names: &[&str]) -> bool {
+    func.attributes(db).elements(db).any(|attr| {
+        attr_names.contains(
+            &attr
+                .attr(db)
+                .as_syntax_node()
+                .get_text_without_trivia(db)
+                .as_str(),
+        )
+    })
+}
+
+pub fn has_fuzzer_attribute(db: &SimpleParserDatabase, func: &FunctionWithBody) -> bool {
+    const FUZZER_ATTRIBUTES: [&str; 3] = [
+        FuzzerCollector::ATTR_NAME,
+        FuzzerWrapperCollector::ATTR_NAME,
+        FuzzerConfigCollector::ATTR_NAME,
+    ];
+    has_attributes(db, func, &FUZZER_ATTRIBUTES)
 }

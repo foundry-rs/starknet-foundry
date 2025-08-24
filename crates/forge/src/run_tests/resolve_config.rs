@@ -23,24 +23,25 @@ pub async fn resolve_config(
     let env_ignore_fork_tests = env_ignore_fork_tests();
 
     for case in test_target.test_cases {
-        test_cases.push(TestCaseWithResolvedConfig {
-            name: case.name,
-            test_details: case.test_details,
-            config: TestCaseResolvedConfig {
-                available_gas: case.config.available_gas,
-                ignored: case.config.ignored
-                    || (env_ignore_fork_tests && case.config.fork_config.is_some()),
-                expected_result: case.config.expected_result,
-                fork_config: resolve_fork_config(
-                    case.config.fork_config,
-                    block_number_map,
-                    fork_targets,
-                )
-                .await?,
-                fuzzer_config: case.config.fuzzer_config,
-                disable_predeployed_contracts: case.config.disable_predeployed_contracts,
-            },
-        });
+        let config = TestCaseResolvedConfig {
+            available_gas: case.config.available_gas,
+            ignored: case.config.ignored
+                || (env_ignore_fork_tests && case.config.fork_config.is_some()),
+            expected_result: case.config.expected_result,
+            fork_config: resolve_fork_config(
+                case.config.fork_config,
+                block_number_map,
+                fork_targets,
+            )
+            .await?,
+            fuzzer_config: case.config.fuzzer_config,
+            disable_predeployed_contracts: case.config.disable_predeployed_contracts,
+        };
+        test_cases.push(TestCaseWithResolvedConfig::new(
+            &case.name,
+            case.test_details,
+            config,
+        ));
     }
 
     Ok(TestTargetWithResolvedConfig {
