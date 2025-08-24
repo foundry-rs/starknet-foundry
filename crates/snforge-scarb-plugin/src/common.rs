@@ -1,5 +1,6 @@
 use crate::{
     args::Arguments,
+    asserts::assert_is_used_once,
     attributes::{
         AttributeInfo,
         fuzzer::{FuzzerCollector, FuzzerConfigCollector, wrapper::FuzzerWrapperCollector},
@@ -53,6 +54,8 @@ where
     let (db, func) = parse::<Collector>(item)?;
 
     let db = db.upcast();
+
+    assert_is_used_once::<Collector>(db, &func)?;
 
     let (args_db, args) = parse_args(args);
     let args_db = args_db.upcast();
