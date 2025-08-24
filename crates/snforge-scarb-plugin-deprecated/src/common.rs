@@ -48,6 +48,8 @@ where
 
     let db = db.upcast();
 
+    assert_is_used_once::<Collector>(db, &func)?;
+
     let (args_db, args) = parse_args(&args.to_string());
     let args_db = args_db.upcast();
 
