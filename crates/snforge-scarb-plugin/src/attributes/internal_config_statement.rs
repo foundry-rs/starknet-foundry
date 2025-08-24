@@ -1,7 +1,6 @@
 use super::AttributeInfo;
 use crate::{
     args::Arguments,
-    asserts::assert_is_used_once,
     common::{into_proc_macro_result, with_parsed_values},
     config_statement::append_config_statements,
 };
@@ -38,7 +37,6 @@ fn internal_config_statement_internal(
     args: Arguments,
     _warns: &mut Vec<Diagnostic>,
 ) -> Result<TokenStream, Diagnostics> {
-    assert_is_used_once::<InternalConfigStatementCollector>(db, func)?;
     args.assert_is_empty::<InternalConfigStatementCollector>()?;
 
     Ok(append_config_statements(db, func, TokenStream::empty()))
