@@ -1,11 +1,11 @@
 use crate::args::Arguments;
-use crate::attributes::AttributeInfo;
 use crate::attributes::internal_config_statement::InternalConfigStatementCollector;
 use crate::attributes::test::TestCollector;
+use crate::attributes::AttributeInfo;
 use crate::common::{into_proc_macro_result, with_parsed_values};
 use crate::format_ident;
-use crate::utils::{SyntaxNodeUtils, create_single_token, get_statements};
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
+use crate::utils::{create_single_token, get_statements, SyntaxNodeUtils};
+use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::OptionTypeClause::{Empty, TypeClause};
 use cairo_lang_syntax::node::ast::{FunctionWithBody, Param};
@@ -67,8 +67,10 @@ fn fuzzer_wrapper_internal(
     let vis = func.visibility(db).as_syntax_node();
     let vis = SyntaxNodeWithDb::new(&vis, db);
 
-    let name = func.declaration(db).name(db).as_syntax_node();
-    let name = SyntaxNodeWithDb::new(&name, db);
+    let name = format_ident!(
+        "{}__fuzzer_generated",
+        func.declaration(db).name(db).text(db)
+    );
 
     let signature = func.declaration(db).signature(db).as_syntax_node();
     let signature = SyntaxNodeWithDb::new(&signature, db);
@@ -104,8 +106,7 @@ fn fuzzer_wrapper_internal(
         }
     });
 
-    let actual_body_fn_name =
-        format_ident!("{}_actual_body", func.declaration(db).name(db).text(db));
+    let actual_body_fn_name = format_ident!("{}", func.declaration(db).name(db).text(db));
 
     let (statements, if_content) = get_statements(db, func);
 

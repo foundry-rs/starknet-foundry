@@ -76,7 +76,7 @@ fn works_with_few_attributes() {
         "
             #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
             #[snforge_internal_test_executable]
-            fn empty_fn(mut _data: Span<felt252>) -> Span::<felt252> {
+            fn empty_fn__test_generated(mut _data: Span<felt252>) -> Span::<felt252> {
                 core::internal::require_implicit::<System>();
                 core::internal::revoke_ap_tracking();
                 core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
@@ -84,20 +84,20 @@ fn works_with_few_attributes() {
                 core::option::OptionTraitImpl::expect(
                     core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
                 );
-                empty_fn_return_wrapper();
+                empty_fn();
 
                 let mut arr = ArrayTrait::new();
                 core::array::ArrayTrait::span(@arr)
             }
 
             #[__internal_config_statement]
-            fn empty_fn_return_wrapper() {
+            fn empty_fn() {
 
             }
         ",
     );
 
-    let item = get_function(&result.token_stream, "empty_fn_return_wrapper", false);
+    let item = get_function(&result.token_stream, "empty_fn", false);
     let args = quote!((l1_gas: 1, l1_data_gas: 2, l2_gas: 3));
 
     let result = available_gas(args, item);
@@ -108,7 +108,7 @@ fn works_with_few_attributes() {
         &result,
         "
             #[__internal_config_statement]
-            fn empty_fn_return_wrapper() {
+            fn empty_fn() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
@@ -140,7 +140,7 @@ fn works_with_few_attributes() {
         &result,
         r#"
             #[__internal_config_statement]
-            fn empty_fn_return_wrapper() {
+            fn empty_fn() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
@@ -182,7 +182,7 @@ fn works_with_fuzzer() {
         "
             #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
             #[snforge_internal_test_executable]
-            fn empty_fn(mut _data: Span<felt252>) -> Span::<felt252> {
+            fn empty_fn__test_generated(mut _data: Span<felt252>) -> Span::<felt252> {
                 core::internal::require_implicit::<System>();
                 core::internal::revoke_ap_tracking();
                 core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
@@ -190,20 +190,20 @@ fn works_with_fuzzer() {
                 core::option::OptionTraitImpl::expect(
                     core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
                 );
-                empty_fn_return_wrapper();
+                empty_fn();
 
                 let mut arr = ArrayTrait::new();
                 core::array::ArrayTrait::span(@arr)
             }
 
             #[__internal_config_statement]
-            fn empty_fn_return_wrapper() {
+            fn empty_fn() {
 
             }
         ",
     );
 
-    let item = get_function(&result.token_stream, "empty_fn_return_wrapper", false);
+    let item = get_function(&result.token_stream, "empty_fn", false);
     let args = quote!((runs: 123, seed: 321));
 
     let result = fuzzer(args, item);
@@ -216,7 +216,7 @@ fn works_with_fuzzer() {
             #[__fuzzer_config(runs: 123, seed: 321)]
             #[__fuzzer_wrapper]
             #[__internal_config_statement]
-            fn empty_fn_return_wrapper() {}
+            fn empty_fn() {}
         ",
     );
 }
@@ -268,7 +268,7 @@ fn works_with_fuzzer_config_wrapper() {
         r"
             #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
             #[snforge_internal_test_executable]
-            fn empty_fn(mut _data: Span<felt252>) -> Span::<felt252> {
+            fn empty_fn__test_generated(mut _data: Span<felt252>) -> Span::<felt252> {
                 core::internal::require_implicit::<System>();
                 core::internal::revoke_ap_tracking();
                 core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
@@ -276,7 +276,7 @@ fn works_with_fuzzer_config_wrapper() {
                 core::option::OptionTraitImpl::expect(
                     core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
                 );
-                empty_fn_return_wrapper();
+                empty_fn__fuzzer_generated();
 
                 let mut arr = ArrayTrait::new();
                 core::array::ArrayTrait::span(@arr)
@@ -284,7 +284,7 @@ fn works_with_fuzzer_config_wrapper() {
 
             #[fuzzer]
             #[__internal_config_statement]
-            fn empty_fn_return_wrapper(f: felt252) {
+            fn empty_fn(f: felt252) {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
@@ -306,7 +306,7 @@ fn works_with_fuzzer_config_wrapper() {
     );
 
     // Skip all the lines including `#[fuzzer]` that was appended previously
-    let item = get_function(&result.token_stream, "empty_fn_return_wrapper", true);
+    let item = get_function(&result.token_stream, "empty_fn", true);
     let internal_config_statement =
         TokenStream::new(vec![create_single_token("__internal_config_statement")]);
     let item = quote! {
@@ -322,7 +322,7 @@ fn works_with_fuzzer_config_wrapper() {
         &result,
         r"
             #[__internal_config_statement]
-            fn empty_fn_return_wrapper(f: felt252) {
+            fn empty_fn(f: felt252) {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
@@ -364,7 +364,7 @@ fn works_with_fuzzer_config_wrapper() {
         &result,
         r"
             #[__internal_config_statement]
-            fn empty_fn_return_wrapper() {
+            fn empty_fn__fuzzer_generated() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
@@ -389,16 +389,16 @@ fn works_with_fuzzer_config_wrapper() {
 
                     starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
-                    empty_fn_return_wrapper_actual_body(snforge_std::fuzzable::Fuzzable::blank());
+                    empty_fn(snforge_std::fuzzable::Fuzzable::blank());
 
                     return;
                 }
                 let f = snforge_std::fuzzable::Fuzzable::<felt252>::generate();
                 snforge_std::_internals::save_fuzzer_arg(@f);
-                empty_fn_return_wrapper_actual_body(f);
+                empty_fn(f);
             }
             #[__internal_config_statement]
-            fn empty_fn_return_wrapper_actual_body(f: felt252) {
+            fn empty_fn(f: felt252) {
             }
         ",
     );

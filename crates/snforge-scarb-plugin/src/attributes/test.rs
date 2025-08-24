@@ -1,7 +1,6 @@
 use super::{AttributeInfo, ErrorExt, internal_config_statement::InternalConfigStatementCollector};
 use crate::asserts::assert_is_used_once;
-use crate::attributes::fuzzer::wrapper::FuzzerWrapperCollector;
-use crate::attributes::fuzzer::{FuzzerCollector, FuzzerConfigCollector};
+use crate::common::has_fuzzer_attribute;
 use crate::utils::create_single_token;
 use crate::{
     args::Arguments,
@@ -13,7 +12,6 @@ use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
 use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode, ast::FunctionWithBody};
 use std::env::{self, VarError};
-use std::ops::Not;
 
 pub struct TestCollector;
 
@@ -55,8 +53,15 @@ fn test_internal(
         None => true,
     };
 
-    let name = func.declaration(db).name(db).as_syntax_node();
-    let name = SyntaxNodeWithDb::new(&name, db);
+    let func_name = func.declaration(db).name(db).text(db);
+
+    let has_fuzzer = has_fuzzer_attribute(db, func);
+    let name = if has_fuzzer {
+        format!("{func_name}__fuzzer_generated")
+    } else {
+        func_name.to_string().clone()
+    };
+    let name_return_wrapper = format_ident!("{}", name);
 
     let signature = func.declaration(db).signature(db).as_syntax_node();
     let signature = SyntaxNodeWithDb::new(&signature, db);
@@ -68,11 +73,9 @@ fn test_internal(
     let attributes = func.attributes(db).as_syntax_node();
     let attributes = SyntaxNodeWithDb::new(&attributes, db);
 
-    let name_return_wrapper =
-        format_ident!("{}_return_wrapper", func.declaration(db).name(db).text(db));
-
-    let mut return_wrapper = TokenStream::new(vec![name_return_wrapper.clone()]);
-    return_wrapper.extend(signature);
+    let name = format_ident!("{}__test_generated", func.declaration(db).name(db).text(db));
+    let mut func_ident = TokenStream::new(vec![format_ident!("{}", func_name)]);
+    func_ident.extend(signature);
 
     let out_of_gas = create_single_token("'Out of gas'");
 
@@ -96,7 +99,7 @@ fn test_internal(
 
             #attributes
             #[#internal_config]
-            fn #return_wrapper
+            fn #func_ident
             #body
         ))
     } else {
@@ -115,7 +118,7 @@ fn ensure_parameters_only_with_fuzzer_attribute(
     db: &SimpleParserDatabase,
     func: &FunctionWithBody,
 ) -> Result<(), Diagnostic> {
-    if has_parameters(db, func) && no_fuzzer_attribute(db, func) {
+    if has_parameters(db, func) && !has_fuzzer_attribute(db, func) {
         Err(TestCollector::error(
             "function with parameters must have #[fuzzer] attribute",
         ))?;
@@ -131,25 +134,4 @@ fn has_parameters(db: &SimpleParserDatabase, func: &FunctionWithBody) -> bool {
         .elements(db)
         .len()
         != 0
-}
-
-fn no_fuzzer_attribute(db: &SimpleParserDatabase, func: &FunctionWithBody) -> bool {
-    const FUZZER_ATTRIBUTES: [&str; 3] = [
-        FuzzerCollector::ATTR_NAME,
-        FuzzerWrapperCollector::ATTR_NAME,
-        FuzzerConfigCollector::ATTR_NAME,
-    ];
-
-    func.attributes(db)
-        .elements(db)
-        .any(|attr| {
-            FUZZER_ATTRIBUTES.contains(
-                &attr
-                    .attr(db)
-                    .as_syntax_node()
-                    .get_text_without_trivia(db)
-                    .as_str(),
-            )
-        })
-        .not()
 }
