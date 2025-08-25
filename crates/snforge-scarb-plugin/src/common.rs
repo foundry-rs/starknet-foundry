@@ -3,6 +3,7 @@ use crate::{
     attributes::{
         AttributeInfo,
         fuzzer::{FuzzerCollector, FuzzerConfigCollector, wrapper::FuzzerWrapperCollector},
+        test_case::TestCaseCollector,
     },
     parse::{parse, parse_args},
 };
@@ -81,4 +82,9 @@ pub fn has_fuzzer_attribute(db: &SimpleParserDatabase, func: &FunctionWithBody) 
         FuzzerConfigCollector::ATTR_NAME,
     ];
     has_attributes(db, func, &FUZZER_ATTRIBUTES)
+}
+
+pub fn has_test_case_attribute(db: &SimpleParserDatabase, func: &FunctionWithBody) -> bool {
+    const TEST_CASE_ATTRIBUTES: [&str; 1] = [TestCaseCollector::ATTR_NAME];
+    has_attributes(db, func, &TEST_CASE_ATTRIBUTES)
 }
