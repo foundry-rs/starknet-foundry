@@ -5,7 +5,8 @@ use blockifier::execution::execution_utils::felt_from_ptr;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
 use blockifier::execution::syscalls::vm_syscall_utils::{
-    CallContractRequest, LibraryCallRequest, RevertData, SyscallRequestWrapper, SyscallSelector,
+    CallContractRequest, LibraryCallRequest, RevertData, SingleSegmentResponse,
+    SyscallRequestWrapper, SyscallSelector,
 };
 use blockifier::execution::{
     execution_utils::ReadOnlySegment,
@@ -22,9 +23,8 @@ use crate::state::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     AddressOrClassHash, call_entry_point,
 };
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::{
-    execution::cheated_syscalls::SingleSegmentResponse,
-    rpc::{CallFailure, CallResult},
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
+    CallFailure, CallResult,
 };
 
 use super::cheatable_starknet_runtime_extension::CheatableStarknetRuntime;
