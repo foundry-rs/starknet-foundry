@@ -399,12 +399,51 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
         calldata: &[Felt],
         remaining_gas: &mut u64,
     ) -> SyscallResult<Vec<Felt>> {
-        self.native_syscall_handler.library_call(
-            class_hash,
-            function_selector,
-            calldata,
+        self.pre_execute_syscall(
             remaining_gas,
-        )
+            self.native_syscall_handler
+                .gas_costs()
+                .syscalls
+                .library_call
+                .base_syscall_cost(),
+            SyscallSelector::LibraryCall,
+        )?;
+
+        let class_hash = ClassHash(class_hash);
+
+        let wrapper_calldata = Calldata(Arc::new(calldata.to_vec()));
+
+        let selector = EntryPointSelector(function_selector);
+
+        let mut entry_point = CallEntryPoint {
+            class_hash: Some(class_hash),
+            code_address: None,
+            entry_point_type: EntryPointType::External,
+            entry_point_selector: selector,
+            calldata: wrapper_calldata,
+            // The call context remains the same in a library call.
+            storage_address: self.native_syscall_handler.base.call.storage_address,
+            caller_address: self.native_syscall_handler.base.call.caller_address,
+            call_type: CallType::Delegate,
+            initial_gas: *remaining_gas,
+        };
+
+        let error_wrapper_function =
+            |e: SyscallExecutionError,
+             class_hash: ClassHash,
+             storage_address: ContractAddress,
+             selector: EntryPointSelector| {
+                e.as_lib_call_execution_error(class_hash, storage_address, selector)
+            };
+
+        Ok(self
+            .execute_inner_call(
+                &mut entry_point,
+                remaining_gas,
+                class_hash,
+                error_wrapper_function,
+            )?
+            .0)
     }
 
     fn call_contract(
