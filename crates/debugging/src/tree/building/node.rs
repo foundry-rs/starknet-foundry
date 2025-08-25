@@ -28,6 +28,13 @@ impl<'a> Node<'a> {
         tree_item.as_tree_node(self);
     }
 
+    /// Calls [`AsTreeNode::as_tree_node`] on the given item if it is not `None`.
+    pub fn as_tree_node_optional(&mut self, tree_item: Option<&impl AsTreeNode>) {
+        if let Some(tree_item) = tree_item {
+            self.as_tree_node(tree_item);
+        }
+    }
+
     /// Creates a child node which parent is the current node and returns handle to created node.
     #[must_use = "if you want to create a leaf node use leaf() instead"]
     pub fn child_node(&mut self, tree_item: &impl NodeDisplay) -> Node<'_> {
