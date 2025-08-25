@@ -5,6 +5,37 @@ pub trait IHelloStarknet<TContractState> {
     fn get_block_number(self: @TContractState) -> u64;
 }
 
+#[starknet::interface]
+pub trait IHelloStarknetProxy<TContractState> {
+    fn get_block_number(self: @TContractState) -> u64;
+}
+
+#[starknet::contract]
+pub mod HelloStarknetProxy {
+    use starknet::ContractAddress;
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use crate::{IHelloStarknetDispatcher, IHelloStarknetDispatcherTrait};
+
+    #[storage]
+    struct Storage {
+        address: ContractAddress,
+    }
+
+    #[constructor]
+    fn constructor(ref self: ContractState, address: ContractAddress) {
+        self.address.write(address);
+    }
+
+    #[abi(embed_v0)]
+    impl IHelloStarknetProxyImpl of super::IHelloStarknetProxy<ContractState> {
+        fn get_block_number(self: @ContractState) -> u64 {
+            let address = self.address.read();
+            let proxied = IHelloStarknetDispatcher { contract_address: address };
+            proxied.get_block_number()
+        }
+    }
+}
+
 #[starknet::contract]
 pub mod HelloStarknet {
     use core::array::ArrayTrait;
