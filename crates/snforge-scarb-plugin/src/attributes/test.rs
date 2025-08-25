@@ -41,6 +41,9 @@ fn test_internal(
 
     let has_test_case = has_test_case_attribute(db, func);
     let has_fuzzer = has_fuzzer_attribute(db, func);
+
+    // If the function has #[test] attribute and does not have #[fuzzer], we can
+    // safely skip #[test].
     if has_test_case && !has_fuzzer {
         let func_item = func.as_syntax_node();
         let func_item = SyntaxNodeWithDb::new(&func_item, db);
