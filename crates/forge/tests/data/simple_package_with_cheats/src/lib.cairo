@@ -5,6 +5,7 @@ pub trait IHelloStarknet<TContractState> {
     fn increase_balance(ref self: TContractState, amount: felt252);
     fn get_balance(self: @TContractState) -> felt252;
     fn get_block_number(self: @TContractState) -> u64;
+    fn get_block_hash(self: @TContractState) -> felt252;
 }
 
 #[starknet::interface]
@@ -91,8 +92,9 @@ pub mod HelloStarknetProxy {
 #[starknet::contract]
 pub mod HelloStarknet {
     use core::array::ArrayTrait;
-    use starknet::get_block_number;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::syscalls::get_block_hash_syscall;
+    use starknet::{SyscallResultTrait, get_block_number};
 
     #[storage]
     struct Storage {
@@ -113,6 +115,10 @@ pub mod HelloStarknet {
 
         fn get_block_number(self: @ContractState) -> u64 {
             get_block_number()
+        }
+
+        fn get_block_hash(self: @ContractState) -> felt252 {
+            get_block_hash_syscall(100).unwrap_syscall()
         }
     }
 }
