@@ -36,7 +36,16 @@ fn test_backtrace() {
         output,
         indoc! {
            "
-            [WARNING] To get accurate backtrace results, it is required to use the configuration available in the latest Cairo version. For more details, please visit https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/backtrace.html
+            [WARNING] Scarb version should be 2.12 or higher and `Scarb.toml` should have the following Cairo compiler configuration to run backtrace:
+
+            [profile.dev.cairo]
+            unstable-add-statements-functions-debug-info = true
+            unstable-add-statements-code-locations-debug-info = true
+            panic-backtrace = true # only for scarb 2.12.* or later
+            ... other entries ...
+
+            To get accurate backtrace results.
+
             [FAIL] backtrace_vm_error::Test::test_unwrapped_call_contract_syscall
             
             Failure data:
