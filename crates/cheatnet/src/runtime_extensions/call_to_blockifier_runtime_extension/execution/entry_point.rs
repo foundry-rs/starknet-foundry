@@ -189,8 +189,8 @@ pub fn execute_call_entry_point(
             // } else {
             println!("Executing native entry point");
             execute_entry_point_call_native(
-                entry_point.clone(),
-                native_compiled_class_v1,
+                &entry_point,
+                &native_compiled_class_v1,
                 state,
                 cheatnet_state,
                 context,
