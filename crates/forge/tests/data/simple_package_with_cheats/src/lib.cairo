@@ -8,13 +8,17 @@ pub trait IHelloStarknet<TContractState> {
 #[starknet::interface]
 pub trait IHelloStarknetProxy<TContractState> {
     fn get_block_number(self: @TContractState) -> u64;
+    fn get_block_number_library_call(self: @TContractState) -> u64;
 }
 
 #[starknet::contract]
 pub mod HelloStarknetProxy {
     use starknet::ContractAddress;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
-    use crate::{IHelloStarknetDispatcher, IHelloStarknetDispatcherTrait};
+    use starknet::syscalls::get_class_hash_at_syscall;
+    use crate::{
+        IHelloStarknetDispatcher, IHelloStarknetDispatcherTrait, IHelloStarknetLibraryDispatcher,
+    };
 
     #[storage]
     struct Storage {
@@ -32,6 +36,13 @@ pub mod HelloStarknetProxy {
             let address = self.address.read();
             let proxied = IHelloStarknetDispatcher { contract_address: address };
             proxied.get_block_number()
+        }
+
+        fn get_block_number_library_call(self: @ContractState) -> u64 {
+            let address = self.address.read();
+            let class_hash = get_class_hash_at_syscall(address).unwrap();
+            let library_dispatcher = IHelloStarknetLibraryDispatcher { class_hash };
+            library_dispatcher.get_block_number()
         }
     }
 }

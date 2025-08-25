@@ -63,12 +63,13 @@ fn simple_package_with_cheats() {
     [..]Finished[..]
 
 
-    Collected 2 test(s) from simple_package_with_cheats package
+    Collected 3 test(s) from simple_package_with_cheats package
     Running 0 test(s) from src/
-    Running 2 test(s) from tests/
+    Running 3 test(s) from tests/
     [PASS] simple_package_with_cheats_integrationtest::contract::call_and_invoke [..]
     [PASS] simple_package_with_cheats_integrationtest::contract::call_and_invoke_proxy [..]
-    Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
+    [PASS] simple_package_with_cheats_integrationtest::contract::call_and_invoke_library_call [..]
+    Tests: 3 passed, 0 failed, 0 ignored, 0 filtered out
     "},
     );
 }
