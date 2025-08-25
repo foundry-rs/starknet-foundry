@@ -1,4 +1,3 @@
-use crate::starknet_commands::class_hash::ClassHash;
 use crate::starknet_commands::deploy::DeployArguments;
 use crate::starknet_commands::multicall;
 use crate::starknet_commands::script::run_script_command;
@@ -125,9 +124,6 @@ enum Commands {
     /// Call a contract
     Call(Call),
 
-    /// Get contract class hash
-    ClassHash(ClassHash),
-
     /// Invoke a contract
     Invoke(Invoke),
 
@@ -231,7 +227,7 @@ fn main() -> Result<()> {
 #[expect(clippy::too_many_lines)]
 async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> {
     let wait_config = WaitForTx {
-        wait: cli.wait,
+        wait: cli.wait.clone(),
         wait_params: config.wait_params,
     };
 
@@ -374,30 +370,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             Ok(())
         }
 
-        Commands::ClassHash(class_hash) => {
-            let manifest_path = assert_manifest_path_exists()?;
-            let package_metadata = get_package_metadata(&manifest_path, &class_hash.package)?;
-
-            let artifacts = build_and_load_artifacts(
-                &package_metadata,
-                &BuildConfig {
-                    scarb_toml_path: manifest_path,
-                    json: cli.json,
-                    profile: cli.profile.unwrap_or("release".to_string()),
-                },
-                false,
-                ui,
-            )
-            .expect("Failed to build contract");
-
-            let result = starknet_commands::class_hash::get_class_hash(class_hash, &artifacts)
-                .map_err(handle_starknet_command_error);
-
-            process_command_result("class-hash", result, ui, None);
-
-            Ok(())
-        }
-
         Commands::Invoke(invoke) => {
             let Invoke {
                 contract_address,
@@ -448,7 +420,16 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             Ok(())
         }
 
-        Commands::Utils(utils) => utils::utils(utils, config, ui).await,
+        Commands::Utils(utils) => {
+            utils::utils(
+                utils,
+                config,
+                ui,
+                cli.json,
+                cli.profile.clone().unwrap_or("release".to_string()),
+            )
+            .await
+        }
 
         Commands::Multicall(multicall) => {
             multicall::multicall(multicall, config, ui, wait_config).await

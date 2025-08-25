@@ -12,7 +12,7 @@ use sncast::{
 use starknet::core::types::contract::SierraClass;
 use std::collections::HashMap;
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 #[command(about = "Generate the class hash of a contract", long_about = None)]
 pub struct ClassHash {
     /// Contract name
