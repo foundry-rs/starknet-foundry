@@ -18,7 +18,7 @@ jobs:
       versionIsValid: ${{ steps.validVersion.outputs.versionIsValid }}
       version: ${{ steps.validVersion.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v4
         with:
@@ -29,7 +29,7 @@ jobs:
 
       - name: Get version from Cargo.toml
         id: lookupVersion
-        uses: mikefarah/yq@8bf425b4d1344db7cd469a8d10a390876e0c77fd
+        uses: mikefarah/yq@f03c9dc599c37bfcaf533427211d05e51e6fee64
         with:
           cmd: yq -oy '.workspace.package.version' 'Cargo.toml'
 
@@ -121,10 +121,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ test-binary, verify-version ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: artifacts-dl
 
