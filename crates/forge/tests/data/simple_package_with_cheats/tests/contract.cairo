@@ -6,7 +6,9 @@ use simple_package_with_cheats::{
     IHelloStarknetProxyDispatcherTrait,
 };
 use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
-use snforge_std::{ContractClassTrait, declare, start_cheat_block_number_global};
+use snforge_std::{
+    ContractClassTrait, declare, start_cheat_block_hash_global, start_cheat_block_number_global,
+};
 use starknet::contract_address;
 
 #[test]
@@ -94,4 +96,20 @@ fn deploy_syscall() {
     let cheated_constructor_dispatcher = ICheatedConstructorDispatcher { contract_address };
     let block_number = cheated_constructor_dispatcher.get_stored_block_number();
     assert(block_number == 123, 'block_number == 123');
+}
+
+#[test]
+fn block_hash() {
+    let contract = declare("HelloStarknet").unwrap().contract_class();
+    let constructor_calldata = @ArrayTrait::new();
+    let (contract_address, _) = contract.deploy(constructor_calldata).unwrap();
+    let dispatcher = IHelloStarknetDispatcher { contract_address };
+
+    let block_hash = dispatcher.get_block_hash();
+    assert(block_hash == 0, 'bloch_hash == 0');
+
+    start_cheat_block_hash_global(100, 111);
+
+    let block_hash = dispatcher.get_block_hash();
+    assert(block_hash == 111, 'bloch_hash == 111');
 }
