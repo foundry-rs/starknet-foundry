@@ -2,13 +2,15 @@ use assertions::ClassHashAssert;
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::{
-    CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
+    CallEntryPoint, CallType, ConstructorContext, EntryPointExecutionContext,
+    EntryPointExecutionResult,
 };
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::state_api::State;
 use cairo_lang_casm::hints::Hint;
 use cairo_vm::types::relocatable::Relocatable;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::execution::cheated_syscalls;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     AddressOrClassHash, call_entry_point,
@@ -19,9 +21,7 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
 use cheatnet::runtime_extensions::common::create_execute_calldata;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
-    deploy, deploy_at,
-};
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy_at;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
@@ -36,8 +36,10 @@ use scarb_api::{
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
+use starknet_api::transaction::fields::Calldata;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 pub mod assertions;
 pub mod cache;
@@ -116,23 +118,23 @@ pub fn deploy_contract(
         &hints,
     );
 
-    let (contract_address, _retdata) = deploy(
+    let (contract_address, _) = deploy_helper(
         &mut syscall_hint_processor,
         cheatnet_state,
         &class_hash,
+        None,
         calldata,
-    )
-    .unwrap();
+    );
 
     contract_address
 }
 
-pub fn deploy_wrapper(
+pub fn deploy(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
     class_hash: &ClassHash,
     calldata: &[Felt],
-) -> Result<ContractAddress, CheatcodeError> {
+) -> ContractAddress {
     let mut entry_point_execution_context = build_context(
         &cheatnet_state.block_info,
         None,
@@ -147,14 +149,15 @@ pub fn deploy_wrapper(
         &hints,
     );
 
-    let (contract_address, _retdata) = deploy(
+    let (contract_address, _) = deploy_helper(
         &mut syscall_hint_processor,
         cheatnet_state,
         class_hash,
+        None,
         calldata,
-    )?;
+    );
 
-    Ok(contract_address)
+    contract_address
 }
 
 pub fn deploy_at_wrapper(
@@ -187,6 +190,41 @@ pub fn deploy_at_wrapper(
     )?;
 
     Ok(contract_address)
+}
+
+fn deploy_helper(
+    syscall_handler: &mut SyscallHintProcessor,
+    cheatnet_state: &mut CheatnetState,
+    class_hash: &ClassHash,
+    contract_address: Option<ContractAddress>,
+    calldata: &[Felt],
+) -> (ContractAddress, Vec<cairo_vm::Felt252>) {
+    let contract_address = contract_address
+        .unwrap_or_else(|| cheatnet_state.precalculate_address(class_hash, calldata));
+    let calldata = Calldata(Arc::new(calldata.to_vec()));
+
+    let ctor_context = ConstructorContext {
+        class_hash: *class_hash,
+        code_address: Some(contract_address),
+        storage_address: contract_address,
+        caller_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
+    };
+
+    let call_info = cheated_syscalls::execute_deployment(
+        syscall_handler.base.state,
+        cheatnet_state,
+        syscall_handler.base.context,
+        &ctor_context,
+        calldata,
+        i64::MAX as u64,
+    )
+    .unwrap();
+    cheatnet_state.increment_deploy_salt_base();
+
+    let retdata = call_info.execution.retdata.0.clone();
+    syscall_handler.base.inner_calls.push(call_info);
+
+    (contract_address, retdata)
 }
 
 // This does contract call without the transaction layer. This way `call_contract` can return data and modify state.
