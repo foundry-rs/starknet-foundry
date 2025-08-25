@@ -383,8 +383,33 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
         block_number: u64,
         remaining_gas: &mut u64,
     ) -> SyscallResult<Felt> {
-        self.native_syscall_handler
-            .get_block_hash(block_number, remaining_gas)
+        self.pre_execute_syscall(
+            remaining_gas,
+            self.native_syscall_handler
+                .gas_costs()
+                .syscalls
+                .get_block_hash
+                .base_syscall_cost(),
+            SyscallSelector::GetBlockHash,
+        )?;
+
+        let block_hash = self.cheatnet_state.get_cheated_block_hash_for_contract(
+            self.native_syscall_handler.base.call.storage_address,
+            block_number,
+        );
+
+        if let Some(block_hash) = block_hash {
+            Ok(block_hash.0)
+        } else {
+            match self
+                .native_syscall_handler
+                .base
+                .get_block_hash(block_number)
+            {
+                Ok(value) => Ok(value),
+                Err(e) => Err(self.handle_error(remaining_gas, e)),
+            }
+        }
     }
 
     fn get_execution_info(&mut self, remaining_gas: &mut u64) -> SyscallResult<ExecutionInfo> {
