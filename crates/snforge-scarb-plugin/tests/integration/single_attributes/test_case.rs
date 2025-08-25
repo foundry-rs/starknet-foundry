@@ -4,10 +4,7 @@ use snforge_scarb_plugin::attributes::test_case::test_case;
 
 pub fn function_with_params() -> TokenStream {
     quote!(
-        fn test_add(x: i128, y: i128, expected: i128) {
-            let actual = x + y;
-            assert!(actual == expected);
-        }
+        fn test_add(x: i128, y: i128, expected: i128) {}
     )
 }
 
@@ -35,10 +32,7 @@ fn works_with_args() {
                 let mut arr = ArrayTrait::new();
                 core::array::ArrayTrait::span(@arr)
             }
-            fn test_add(x: i128, y: i128, expected: i128) {
-                let actual = x + y;
-                assert!(actual == expected);
-            }
+            fn test_add(x: i128, y: i128, expected: i128) {}
         ",
     );
 }
@@ -67,10 +61,7 @@ fn works_with_name_and_args() {
                 let mut arr = ArrayTrait::new();
                 core::array::ArrayTrait::span(@arr)
             }
-            fn test_add(x: i128, y: i128, expected: i128) {
-                let actual = x + y;
-                assert!(actual == expected);
-            }
+            fn test_add(x: i128, y: i128, expected: i128) {}
         ",
     );
 }

@@ -74,11 +74,11 @@ pub fn get_test_case_name(
     if let Some(ref name) = test_case_name {
         let sanitized = sanitize_str(name);
         let test_case_name = format!("{func_name}_{sanitized}");
-        return Ok(test_case_name);
+        Ok(test_case_name)
     } else {
         let unnamed_args = arguments.unnamed();
         let name = case_fn_name(
-            func_name.as_ref(),
+            func_name,
             &UnnamedArgs::new(&vec_pairs_to_map(
                 unnamed_args
                     .clone()
@@ -88,6 +88,6 @@ pub fn get_test_case_name(
             )),
             args_db,
         );
-        return Ok(name);
+        Ok(name)
     }
 }
