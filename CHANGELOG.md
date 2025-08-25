@@ -1380,3 +1380,9 @@ snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v
 #### Added
 
 - Initial release
+
+### Cast
+
+#### Changed
+
+- Error in case of redeclaration was improved.

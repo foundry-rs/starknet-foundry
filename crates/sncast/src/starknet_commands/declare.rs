@@ -137,7 +137,9 @@ pub async fn declare(
                 class_hash: class_hash.into_(),
             }))
         }
-        Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
+        Err(Provider(ProviderError::StarknetError(StarknetError::ClassAlreadyDeclared))) => Err(
+            StarknetCommandError::ClassAlreadyDeclared(class_hash.into_()),
+        ),
         Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
     }
 }
