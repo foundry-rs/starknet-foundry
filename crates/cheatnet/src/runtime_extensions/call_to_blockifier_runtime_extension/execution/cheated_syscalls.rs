@@ -85,9 +85,7 @@ pub fn deploy_syscall(
         request.constructor_calldata.0.len(),
     );
 
-    // region: Modified blockifier code
-    let deployer_address = syscall_handler.storage_address();
-    // endregion
+    let deployer_address = syscall_handler.base.call.storage_address;
     let deployer_address_for_calculation = if request.deploy_from_zero {
         ContractAddress::default()
     } else {
