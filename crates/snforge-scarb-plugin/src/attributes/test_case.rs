@@ -41,7 +41,7 @@ fn test_case_handler(
 
             let func_name = func.declaration(func_db).name(func_db).text(func_db);
             let case_fn_name = get_test_case_name(&func_name, &arguments, args_db)?;
-            let filtered_fn_attrs = get_filtered_fn_attrs(func, func_db);
+            let filtered_fn_attrs = get_filtered_func_attributes(func, func_db);
 
             let signature = func
                 .declaration(func_db)
@@ -59,14 +59,13 @@ fn test_case_handler(
                 #func_body
             );
 
-            let call_args = unnamed_args.clone().into_iter();
-            let call_args = call_args
+            let call_args = unnamed_args
+                .clone()
                 .into_iter()
                 .map(|(_, expr)| expr.as_syntax_node().get_text(args_db))
                 .collect::<Vec<_>>()
                 .join(", ")
                 .to_string();
-
             let call_args = format_ident!("({})", call_args);
 
             let case_fn_name = format_ident!("{}", case_fn_name);
@@ -106,6 +105,7 @@ fn ensure_params_present(
         .parameters(db)
         .elements(db)
         .len();
+
     if param_count == 0 {
         return Err(Diagnostics::from(TestCaseCollector::error(
             "The function must have at least one parameter to use #[test_case] attribute",
@@ -136,11 +136,14 @@ fn ensure_args_count_valid(
     Ok(())
 }
 
-fn get_filtered_fn_attrs(func: &FunctionWithBody, func_db: &SimpleParserDatabase) -> TokenStream {
+fn get_filtered_func_attributes(
+    func: &FunctionWithBody,
+    func_db: &SimpleParserDatabase,
+) -> TokenStream {
     let attr_list = func.attributes(func_db);
     let has_fuzzer = has_fuzzer_attribute(func_db, func);
 
-    // We do not want to copy the `#[test]` attribute if there is no `#[fuzzer]` attribute.
+    // We do not want to copy the `#[test]` attribute if there is no `#[fuzzer]`
     attr_list
         .elements(func_db)
         .filter(|attr| {
