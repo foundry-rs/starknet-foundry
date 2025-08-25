@@ -19,11 +19,13 @@ use blockifier::utils::add_maps;
 use cairo_native::execution_result::{BuiltinStats, ContractExecutionResult};
 use cairo_native::utils::BuiltinCosts;
 use cairo_vm::types::builtin_name::BuiltinName;
+use std::collections::HashMap;
 use std::default::Default;
 
+#[expect(clippy::result_large_err)]
 pub(crate) fn execute_entry_point_call_native(
-    call: ExecutableCallEntryPoint,
-    native_compiled_class_v1: NativeCompiledClassV1,
+    call: &ExecutableCallEntryPoint,
+    native_compiled_class_v1: &NativeCompiledClassV1,
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState, // Added parameter
     context: &mut EntryPointExecutionContext,
@@ -39,8 +41,8 @@ pub(crate) fn execute_entry_point_call_native(
 
     Ok(CallInfoWithExecutionData {
         call_info,
-        syscall_usage_vm_resources: Default::default(),
-        syscall_usage_sierra_gas: Default::default(),
+        syscall_usage_vm_resources: HashMap::default(),
+        syscall_usage_sierra_gas: HashMap::default(),
         vm_trace: None,
     })
 }
@@ -49,8 +51,8 @@ pub(crate) fn execute_entry_point_call_native(
 // todo(rodrigo): add an `entry point not found` test for Native
 #[allow(clippy::result_large_err)]
 pub fn execute_entry_point_call(
-    call: ExecutableCallEntryPoint,
-    compiled_class: NativeCompiledClassV1,
+    call: &ExecutableCallEntryPoint,
+    compiled_class: &NativeCompiledClassV1,
     // state: &mut dyn State,
     // context: &mut EntryPointExecutionContext,
     mut syscall_handler: CheatableNativeSyscallHandler,
@@ -124,6 +126,7 @@ pub fn execute_entry_point_call(
 
 // Copied from blockifier
 #[allow(clippy::result_large_err)]
+#[expect(clippy::needless_pass_by_value)]
 fn create_callinfo(
     call_result: ContractExecutionResult,
     syscall_handler: CheatableNativeSyscallHandler<'_>,

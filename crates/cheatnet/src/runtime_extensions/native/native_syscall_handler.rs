@@ -96,6 +96,7 @@ impl CheatableNativeSyscallHandler<'_> {
         Ok(())
     }
 
+    // Copied from blockifer/src/exection/native/syscall_handler.rs
     #[allow(clippy::result_large_err)]
     fn execute_inner_call(
         &mut self,
@@ -110,9 +111,10 @@ impl CheatableNativeSyscallHandler<'_> {
         ) -> SyscallExecutionError,
     ) -> SyscallResult<Retdata> {
         let entry_point_clone = entry_point.clone();
+        // region: Modified blockifier code
         let raw_data = execute_inner_call(
             &mut self.native_syscall_handler.base,
-            &mut self.cheatnet_state,
+            self.cheatnet_state,
             entry_point,
             remaining_gas,
         )
@@ -131,6 +133,7 @@ impl CheatableNativeSyscallHandler<'_> {
                 )),
             )
         })?;
+        // endregion
         Ok(Retdata(raw_data))
     }
 
@@ -359,7 +362,7 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
 
         let (deployed_contract_address, call_info) = deploy(
             &mut self.native_syscall_handler.base,
-            &mut self.cheatnet_state,
+            self.cheatnet_state,
             ClassHash(class_hash),
             ContractAddressSalt(contract_address_salt),
             Calldata(Arc::new(calldata.to_vec())),
@@ -379,6 +382,7 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
             .replace_class(class_hash, remaining_gas)
     }
 
+    // Copied from blockifier/src/execution/native/syscall_handler.rs
     fn library_call(
         &mut self,
         class_hash: Felt,
@@ -433,6 +437,7 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
             .0)
     }
 
+    // Copied from blockifier/src/execution/native/syscall_handler.rs
     fn call_contract(
         &mut self,
         address: Felt,

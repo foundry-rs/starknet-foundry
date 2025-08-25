@@ -15,10 +15,14 @@ use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, ContractAddress, calculate_contract_address};
 use starknet_api::transaction::fields::{Calldata, ContractAddressSalt};
 
+// Copied from blockifer/src/execution/entry_point.rs
 #[allow(clippy::result_large_err)]
+#[expect(clippy::needless_pass_by_value)]
 pub fn execute_constructor_entry_point(
     state: &mut dyn State,
+    // region: Modified blockifer code
     cheatnet_state: &mut CheatnetState,
+    // endregion
     context: &mut EntryPointExecutionContext,
     ctor_context: ConstructorContext,
     calldata: Calldata,
@@ -54,6 +58,7 @@ pub fn execute_constructor_entry_point(
         initial_gas: *remaining_gas,
     };
 
+    // region: Modified blockifer code
     let call_info =
         execute_call_entry_point(&mut constructor_call, state, cheatnet_state, context, false)
             .map_err(|error| {
@@ -65,8 +70,11 @@ pub fn execute_constructor_entry_point(
             })?;
 
     Ok(call_info)
+    // endregion
 }
 
+#[expect(clippy::result_large_err)]
+// Copied from blockifer/src/execution/execution_utils.rs
 fn execute_deployment(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
@@ -108,6 +116,8 @@ fn execute_deployment(
     )
 }
 
+#[expect(clippy::match_bool, clippy::result_large_err)]
+// Copied from blockifer/src/execution/syscalls/syscall_base.rs
 pub fn deploy(
     syscall_handler_base: &mut SyscallHandlerBase,
     cheatnet_state: &mut CheatnetState,
@@ -150,6 +160,7 @@ pub fn deploy(
         storage_address: deployed_contract_address,
         caller_address: deployer_address,
     };
+    // region: Modified blockifer code
     let call_info = execute_deployment(
         syscall_handler_base.state,
         cheatnet_state,
@@ -158,5 +169,6 @@ pub fn deploy(
         constructor_calldata,
         remaining_gas,
     )?;
+    // endregion
     Ok((deployed_contract_address, call_info))
 }
