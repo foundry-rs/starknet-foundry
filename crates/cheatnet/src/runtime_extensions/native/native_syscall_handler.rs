@@ -1,14 +1,22 @@
 use crate::state::CheatnetState;
+use blockifier::execution::common_hints::ExecutionMode;
+use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::native::syscall_handler::NativeSyscallHandler;
-use blockifier::execution::syscalls::hint_processor::{SyscallExecutionError, OUT_OF_GAS_ERROR};
-use blockifier::execution::syscalls::vm_syscall_utils::SyscallSelector;
+use blockifier::execution::syscalls::hint_processor::{OUT_OF_GAS_ERROR, SyscallExecutionError};
+use blockifier::execution::syscalls::vm_syscall_utils::{
+    SyscallExecutorBaseError, SyscallSelector,
+};
 use cairo_native::starknet::{
     BlockInfo, ExecutionInfo, ExecutionInfoV2, ResourceBounds, Secp256k1Point, Secp256r1Point,
     StarknetSyscallHandler, SyscallResult, TxV2Info, U256,
 };
 use num_traits::ToPrimitive;
+use starknet_api::contract_class::EntryPointType;
+use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::execution_resources::GasAmount;
+use starknet_api::transaction::fields::Calldata;
 use starknet_types_core::felt::Felt;
+use std::sync::Arc;
 
 pub struct CheatableNativeSyscallHandler<'a> {
     pub native_syscall_handler: &'a mut NativeSyscallHandler<'a>,
@@ -123,9 +131,10 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
         let block_timestamp = cheated_data
             .block_timestamp
             .unwrap_or(original_data.block_info.block_timestamp);
-        let sequencer_address = cheated_data
-            .sequencer_address
-            .map_or(original_data.block_info.sequencer_address, std::convert::Into::into);
+        let sequencer_address = cheated_data.sequencer_address.map_or(
+            original_data.block_info.sequencer_address,
+            std::convert::Into::into,
+        );
 
         let version = cheated_data
             .tx_info
