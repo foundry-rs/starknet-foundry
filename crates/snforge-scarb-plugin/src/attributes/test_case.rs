@@ -1,6 +1,6 @@
 use crate::args::unnamed::UnnamedArgs;
 use crate::attributes::test::TestCollector;
-use crate::attributes::test_case::name::get_test_case_name;
+use crate::attributes::test_case::name::resolve_test_case_name;
 use crate::attributes::{AttributeInfo, ErrorExt};
 use crate::common::{has_fuzzer_attribute, into_proc_macro_result, with_parsed_values};
 use crate::utils::SyntaxNodeUtils;
@@ -40,7 +40,7 @@ fn test_case_handler(
             ensure_args_count_valid(func, &unnamed_args, func_db)?;
 
             let func_name = func.declaration(func_db).name(func_db).text(func_db);
-            let case_fn_name = get_test_case_name(&func_name, &arguments, args_db)?;
+            let case_fn_name = resolve_test_case_name(&func_name, &arguments, args_db)?;
             let filtered_fn_attrs = get_filtered_func_attributes(func, func_db);
 
             let signature = func
