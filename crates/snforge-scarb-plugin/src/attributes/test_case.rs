@@ -21,10 +21,10 @@ impl AttributeInfo for TestCaseCollector {
 
 #[must_use]
 pub fn test_case(args: TokenStream, item: TokenStream) -> ProcMacroResult {
-    into_proc_macro_result(args, item, test_case_internal)
+    into_proc_macro_result(args, item, test_case_handler)
 }
 
-fn test_case_internal(
+fn test_case_handler(
     args: &TokenStream,
     item: &TokenStream,
     warns: &mut Vec<Diagnostic>,
