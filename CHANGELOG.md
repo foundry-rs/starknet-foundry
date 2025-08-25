@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `class-hash` command to calculate and return the class hash for a contract
+- `class-hash` utils command to calculate and return the class hash for a contract
 
 ## [0.48.0] - 2025-08-05
 

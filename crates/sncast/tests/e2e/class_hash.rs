@@ -12,7 +12,7 @@ fn test_happy_case_get_class_hash() {
         "human_readable",
     );
 
-    let args = vec!["class-hash", "--contract-name", "Map"];
+    let args = vec!["utils", "class-hash", "--contract-name", "Map"];
 
     let snapbox = runner(&args).current_dir(contract_path.path());
 
