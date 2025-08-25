@@ -4,3 +4,4 @@ pub mod common;
 pub mod deprecated_cheatable_starknet_extension;
 pub mod forge_config_extension;
 pub mod forge_runtime_extension;
+mod native;

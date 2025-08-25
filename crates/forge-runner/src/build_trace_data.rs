@@ -156,6 +156,7 @@ pub fn build_profiler_execution_resources(
 }
 
 #[must_use]
+#[expect(clippy::needless_pass_by_value)]
 pub fn build_profiler_call_entry_point(
     value: CallEntryPoint,
     contracts_data: &ContractsData,
@@ -167,13 +168,12 @@ pub fn build_profiler_call_entry_point(
         entry_point_selector,
         storage_address,
         call_type,
-        calldata,
         ..
     } = value;
 
     let contract_name = get_contract_name(class_hash, contracts_data);
     let function_name = get_function_name(&entry_point_selector, contracts_data, fork_data);
-    let calldata_len = calldata.0.len();
+    // let calldata_len = calldata.0.len();
 
     ProfilerCallEntryPoint {
         class_hash: class_hash.map(|ch| cairo_annotations::trace_data::ClassHash(ch.0)),
@@ -183,7 +183,8 @@ pub fn build_profiler_call_entry_point(
         call_type: build_profiler_call_type(call_type),
         contract_name,
         function_name,
-        calldata_len: Some(calldata_len),
+        // TODO restore
+        // calldata_len: Some(calldata_len),
     }
 }
 

@@ -199,7 +199,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 syscall_handler.increment_syscall_count_by(&SyscallSelector::Deploy, 1);
                 syscall_handler
-                    .increment_linear_factor_by(&SyscallSelector::Deploy, calldata.len());
+                    .base
+                    .increment_syscall_linear_factor_by(&SyscallSelector::Deploy, calldata.len());
 
                 handle_declare_deploy_result(deploy(
                     syscall_handler,
@@ -217,7 +218,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 syscall_handler.increment_syscall_count_by(&SyscallSelector::Deploy, 1);
                 syscall_handler
-                    .increment_linear_factor_by(&SyscallSelector::Deploy, calldata.len());
+                    .base
+                    .increment_syscall_linear_factor_by(&SyscallSelector::Deploy, calldata.len());
 
                 handle_declare_deploy_result(deploy_at(
                     syscall_handler,
@@ -650,6 +652,7 @@ pub fn update_top_call_resources(
         .extended_runtime
         .extended_runtime
         .hint_handler
+        .base
         .syscalls_usage
         .clone();
 
