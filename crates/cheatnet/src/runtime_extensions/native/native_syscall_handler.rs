@@ -1,25 +1,15 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
+use crate::runtime_extensions::native::call::execute_inner_call;
+use crate::runtime_extensions::native::deploy::deploy;
 use crate::state::CheatnetState;
-use blockifier::execution::call_info::{CallInfo, Retdata};
+use blockifier::execution::call_info::Retdata;
 use blockifier::execution::common_hints::ExecutionMode;
-use blockifier::execution::entry_point::{
-    CallEntryPoint, CallType, ConstructorContext, ConstructorEntryPointExecutionResult,
-    EntryPointExecutionContext, handle_empty_constructor,
-};
-use blockifier::execution::errors::{
-    ConstructorEntryPointExecutionError, EntryPointExecutionError,
-};
-use blockifier::execution::execution_utils::update_remaining_gas;
+use blockifier::execution::entry_point::{CallEntryPoint, CallType};
+use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::execution::native::syscall_handler::NativeSyscallHandler;
-use blockifier::execution::syscalls::hint_processor::{
-    ENTRYPOINT_FAILED_ERROR, OUT_OF_GAS_ERROR, SyscallExecutionError,
-};
-use blockifier::execution::syscalls::syscall_base::SyscallHandlerBase;
+use blockifier::execution::syscalls::hint_processor::{OUT_OF_GAS_ERROR, SyscallExecutionError};
 use blockifier::execution::syscalls::vm_syscall_utils::{
     SelfOrRevert, SyscallExecutorBaseError, SyscallSelector, TryExtractRevert,
 };
-use blockifier::state::errors::StateError;
-use blockifier::state::state_api::State;
 use blockifier::utils::u64_from_usize;
 use cairo_native::starknet::{
     BlockInfo, ExecutionInfo, ExecutionInfoV2, ResourceBounds, Secp256k1Point, Secp256r1Point,
@@ -27,9 +17,7 @@ use cairo_native::starknet::{
 };
 use num_traits::ToPrimitive;
 use starknet_api::contract_class::EntryPointType;
-use starknet_api::core::{
-    ClassHash, ContractAddress, EntryPointSelector, calculate_contract_address,
-};
+use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::execution_resources::GasAmount;
 use starknet_api::transaction::fields::{Calldata, ContractAddressSalt};
 use starknet_types_core::felt::Felt;
@@ -41,207 +29,6 @@ pub struct CheatableNativeSyscallHandler<'a> {
 }
 
 pub type BaseSyscallResult<T> = Result<T, SyscallExecutionError>;
-
-#[allow(clippy::result_large_err)]
-pub fn execute_inner_call(
-    syscall_handler_base: &mut SyscallHandlerBase,
-    cheatnet_state: &mut CheatnetState,
-    call: &mut CallEntryPoint,
-    remaining_gas: &mut u64,
-) -> BaseSyscallResult<Vec<Felt>> {
-    let revert_idx = syscall_handler_base.context.revert_infos.0.len();
-
-    // region: Modified blockifier code
-    let call_info = execute_call_entry_point(
-        call,
-        syscall_handler_base.state,
-        cheatnet_state,
-        syscall_handler_base.context,
-        true,
-    )?;
-    // TODO not sure if to keep it
-    update_remaining_gas(remaining_gas, &call_info);
-    // endregion
-
-    let mut raw_retdata = call_info.execution.retdata.0.clone();
-    let failed = call_info.execution.failed;
-    syscall_handler_base.inner_calls.push(call_info);
-    if failed {
-        syscall_handler_base
-            .context
-            .revert(revert_idx, syscall_handler_base.state)?;
-
-        // Delete events and l2_to_l1_messages from the reverted call.
-        let reverted_call = &mut syscall_handler_base.inner_calls.last_mut().unwrap();
-        let mut stack: Vec<&mut CallInfo> = vec![reverted_call];
-        while let Some(call_info) = stack.pop() {
-            call_info.execution.events.clear();
-            call_info.execution.l2_to_l1_messages.clear();
-            // Add inner calls that did not fail to the stack.
-            // The events and l2_to_l1_messages of the failed calls were already cleared.
-            stack.extend(
-                call_info
-                    .inner_calls
-                    .iter_mut()
-                    .filter(|call_info| !call_info.execution.failed),
-            );
-        }
-
-        raw_retdata
-            .push(Felt::from_hex(ENTRYPOINT_FAILED_ERROR).map_err(SyscallExecutionError::from)?);
-        return Err(SyscallExecutionError::Revert {
-            error_data: raw_retdata,
-        });
-    }
-
-    Ok(raw_retdata)
-}
-
-#[allow(clippy::result_large_err)]
-pub fn execute_constructor_entry_point(
-    state: &mut dyn State,
-    cheatnet_state: &mut CheatnetState,
-    context: &mut EntryPointExecutionContext,
-    ctor_context: ConstructorContext,
-    calldata: Calldata,
-    remaining_gas: &mut u64,
-) -> ConstructorEntryPointExecutionResult<CallInfo> {
-    // Ensure the class is declared (by reading it).
-    let compiled_class = state
-        .get_compiled_class(ctor_context.class_hash)
-        .map_err(|error| {
-            ConstructorEntryPointExecutionError::new(error.into(), &ctor_context, None)
-        })?;
-    let Some(constructor_selector) = compiled_class.constructor_selector() else {
-        // Contract has no constructor.
-        return handle_empty_constructor(
-            compiled_class,
-            context,
-            &ctor_context,
-            calldata,
-            *remaining_gas,
-        )
-        .map_err(|error| ConstructorEntryPointExecutionError::new(error, &ctor_context, None));
-    };
-
-    let mut constructor_call = CallEntryPoint {
-        class_hash: None,
-        code_address: ctor_context.code_address,
-        entry_point_type: EntryPointType::Constructor,
-        entry_point_selector: constructor_selector,
-        calldata,
-        storage_address: ctor_context.storage_address,
-        caller_address: ctor_context.caller_address,
-        call_type: CallType::Call,
-        initial_gas: *remaining_gas,
-    };
-
-    let call_info =
-        execute_call_entry_point(&mut constructor_call, state, cheatnet_state, context, false)
-            .map_err(|error| {
-                ConstructorEntryPointExecutionError::new(
-                    error,
-                    &ctor_context,
-                    Some(constructor_selector),
-                )
-            })?;
-
-    Ok(call_info)
-}
-
-pub fn execute_deployment(
-    state: &mut dyn State,
-    cheatnet_state: &mut CheatnetState,
-    context: &mut EntryPointExecutionContext,
-    ctor_context: ConstructorContext,
-    constructor_calldata: Calldata,
-    remaining_gas: &mut u64,
-) -> ConstructorEntryPointExecutionResult<CallInfo> {
-    // Address allocation in the state is done before calling the constructor, so that it is
-    // visible from it.
-    let deployed_contract_address = ctor_context.storage_address;
-    let current_class_hash =
-        state
-            .get_class_hash_at(deployed_contract_address)
-            .map_err(|error| {
-                ConstructorEntryPointExecutionError::new(error.into(), &ctor_context, None)
-            })?;
-    if current_class_hash != ClassHash::default() {
-        return Err(ConstructorEntryPointExecutionError::new(
-            StateError::UnavailableContractAddress(deployed_contract_address).into(),
-            &ctor_context,
-            None,
-        ));
-    }
-
-    state
-        .set_class_hash_at(deployed_contract_address, ctor_context.class_hash)
-        .map_err(|error| {
-            ConstructorEntryPointExecutionError::new(error.into(), &ctor_context, None)
-        })?;
-
-    execute_constructor_entry_point(
-        state,
-        cheatnet_state,
-        context,
-        ctor_context,
-        constructor_calldata,
-        remaining_gas,
-    )
-}
-
-fn deploy(
-    syscall_handler_base: &mut SyscallHandlerBase,
-    cheatnet_state: &mut CheatnetState,
-    class_hash: ClassHash,
-    contract_address_salt: ContractAddressSalt,
-    constructor_calldata: Calldata,
-    deploy_from_zero: bool,
-    remaining_gas: &mut u64,
-) -> BaseSyscallResult<(ContractAddress, CallInfo)> {
-    syscall_handler_base
-        .increment_syscall_linear_factor_by(&SyscallSelector::Deploy, constructor_calldata.0.len());
-    // let versioned_constants = &syscall_handler_base
-    //     .context
-    //     .tx_context
-    //     .block_context
-    //     .versioned_constants;
-    // TODO support for reject
-    // if should_reject_deploy(
-    //     versioned_constants.disable_deploy_in_validation_mode,
-    //     syscall_handler_base.context.execution_mode,
-    // ) {
-    //     syscall_handler_base.reject_syscall_in_validate_mode("deploy")?;
-    // }
-
-    let deployer_address = syscall_handler_base.call.storage_address;
-    let deployer_address_for_calculation = match deploy_from_zero {
-        true => ContractAddress::default(),
-        false => deployer_address,
-    };
-    let deployed_contract_address = calculate_contract_address(
-        contract_address_salt,
-        class_hash,
-        &constructor_calldata,
-        deployer_address_for_calculation,
-    )?;
-
-    let ctor_context = ConstructorContext {
-        class_hash,
-        code_address: Some(deployed_contract_address),
-        storage_address: deployed_contract_address,
-        caller_address: deployer_address,
-    };
-    let call_info = execute_deployment(
-        syscall_handler_base.state,
-        cheatnet_state,
-        syscall_handler_base.context,
-        ctor_context,
-        constructor_calldata,
-        remaining_gas,
-    )?;
-    Ok((deployed_contract_address, call_info))
-}
 
 impl CheatableNativeSyscallHandler<'_> {
     // TODO consider modifying this so it doesn't use take
