@@ -3,14 +3,12 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 };
 use crate::state::CheatnetState;
 use anyhow::Result;
-use blockifier::blockifier_versioned_constants::SyscallGasCost;
-use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::execution::syscalls::hint_processor::OUT_OF_GAS_ERROR;
 use blockifier::execution::syscalls::syscall_base::SyscallResult;
 use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
 use blockifier::execution::syscalls::vm_syscall_utils::{
-    RevertData, SyscallRequest, SyscallRequestWrapper, SyscallResponse, SyscallResponseWrapper,
-    SyscallSelector,
+    RevertData, SyscallExecutorBaseError, SyscallRequest, SyscallRequestWrapper, SyscallResponse,
+    SyscallResponseWrapper, SyscallSelector,
 };
 use blockifier::execution::{
     common_hints::HintExecutionResult,
@@ -136,23 +134,6 @@ pub fn felt_from_ptr_immutable(
     Ok(felt)
 }
 
-fn get_syscall_cost(
-    syscall_selector: SyscallSelector,
-    context: &EntryPointExecutionContext,
-) -> SyscallGasCost {
-    let gas_costs = context.gas_costs();
-    match syscall_selector {
-        SyscallSelector::LibraryCall => gas_costs.syscalls.library_call,
-        SyscallSelector::CallContract => gas_costs.syscalls.call_contract,
-        SyscallSelector::Deploy => gas_costs.syscalls.deploy,
-        SyscallSelector::GetExecutionInfo => gas_costs.syscalls.get_execution_info,
-        SyscallSelector::GetBlockHash => gas_costs.syscalls.get_block_hash,
-        SyscallSelector::StorageRead => gas_costs.syscalls.storage_read,
-        SyscallSelector::StorageWrite => gas_costs.syscalls.storage_write,
-        _ => unreachable!("Syscall has no associated cost"),
-    }
-}
-
 impl CheatableStarknetRuntimeExtension<'_> {
     // crates/blockifier/src/execution/syscalls/vm_syscall_utils.rs:677 (execute_syscall)
     fn execute_syscall<Request, Response, ExecuteCallback>(
@@ -177,20 +158,18 @@ impl CheatableStarknetRuntimeExtension<'_> {
         syscall_handler.syscall_ptr += 1;
         syscall_handler.increment_syscall_count_by(&selector, 1);
 
+        let syscall_gas_cost = syscall_handler
+            .get_gas_cost_from_selector(&selector)
+            .map_err(|error| SyscallExecutorBaseError::GasCost { error, selector })?;
+
         let SyscallRequestWrapper {
             gas_counter,
             request,
         } = SyscallRequestWrapper::<Request>::read(vm, &mut syscall_handler.syscall_ptr)?;
 
-        let syscall_gas_cost = get_syscall_cost(selector, syscall_handler.base.context);
         let syscall_gas_cost =
             syscall_gas_cost.get_syscall_cost(u64_from_usize(request.get_linear_factor_length()));
-        let syscall_base_cost = syscall_handler
-            .base
-            .context
-            .gas_costs()
-            .base
-            .syscall_base_gas_cost;
+        let syscall_base_cost = syscall_handler.get_syscall_base_gas_cost();
 
         // Sanity check for preventing underflow.
         assert!(
@@ -199,6 +178,7 @@ impl CheatableStarknetRuntimeExtension<'_> {
         );
 
         // Refund `SYSCALL_BASE_GAS_COST` as it was pre-charged.
+        // Note: It is pre-charged by the compiler: https://github.com/starkware-libs/sequencer/blob/v0.15.0-rc.2/crates/blockifier/src/blockifier_versioned_constants.rs#L1057
         let required_gas = syscall_gas_cost - syscall_base_cost;
 
         if gas_counter < required_gas {

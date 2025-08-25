@@ -176,6 +176,7 @@ fn execute_syscall<Request: ExecuteCall + SyscallRequest>(
     );
 
     // Refund `SYSCALL_BASE_GAS_COST` as it was pre-charged.
+    // Note: It is pre-charged by the compiler: https://github.com/starkware-libs/sequencer/blob/v0.15.0-rc.2/crates/blockifier/src/blockifier_versioned_constants.rs#L1057
     let required_gas = syscall_gas_cost - syscall_base_cost;
 
     if gas_counter < required_gas {
