@@ -1,10 +1,17 @@
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
 use crate::state::CheatnetState;
+use blockifier::execution::call_info::{CallInfo, Retdata};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
+use blockifier::execution::errors::EntryPointExecutionError;
+use blockifier::execution::execution_utils::update_remaining_gas;
 use blockifier::execution::native::syscall_handler::NativeSyscallHandler;
-use blockifier::execution::syscalls::hint_processor::{OUT_OF_GAS_ERROR, SyscallExecutionError};
+use blockifier::execution::syscalls::hint_processor::{
+    ENTRYPOINT_FAILED_ERROR, OUT_OF_GAS_ERROR, SyscallExecutionError,
+};
+use blockifier::execution::syscalls::syscall_base::SyscallHandlerBase;
 use blockifier::execution::syscalls::vm_syscall_utils::{
-    SyscallExecutorBaseError, SyscallSelector,
+    SelfOrRevert, SyscallExecutorBaseError, SyscallSelector, TryExtractRevert,
 };
 use cairo_native::starknet::{
     BlockInfo, ExecutionInfo, ExecutionInfoV2, ResourceBounds, Secp256k1Point, Secp256r1Point,
@@ -21,6 +28,63 @@ use std::sync::Arc;
 pub struct CheatableNativeSyscallHandler<'a> {
     pub native_syscall_handler: &'a mut NativeSyscallHandler<'a>,
     pub cheatnet_state: &'a mut CheatnetState,
+}
+
+pub type BaseSyscallResult<T> = Result<T, SyscallExecutionError>;
+
+#[allow(clippy::result_large_err)]
+pub fn execute_inner_call(
+    syscall_handler_base: &mut SyscallHandlerBase,
+    cheatnet_state: &mut CheatnetState,
+    call: &mut CallEntryPoint,
+    remaining_gas: &mut u64,
+) -> BaseSyscallResult<Vec<Felt>> {
+    let revert_idx = syscall_handler_base.context.revert_infos.0.len();
+
+    // region: Modified blockifier code
+    let call_info = execute_call_entry_point(
+        call,
+        syscall_handler_base.state,
+        cheatnet_state,
+        syscall_handler_base.context,
+        true,
+    )?;
+    // TODO not sure if to keep it
+    update_remaining_gas(remaining_gas, &call_info);
+    // endregion
+
+    let mut raw_retdata = call_info.execution.retdata.0.clone();
+    let failed = call_info.execution.failed;
+    syscall_handler_base.inner_calls.push(call_info);
+    if failed {
+        syscall_handler_base
+            .context
+            .revert(revert_idx, syscall_handler_base.state)?;
+
+        // Delete events and l2_to_l1_messages from the reverted call.
+        let reverted_call = &mut syscall_handler_base.inner_calls.last_mut().unwrap();
+        let mut stack: Vec<&mut CallInfo> = vec![reverted_call];
+        while let Some(call_info) = stack.pop() {
+            call_info.execution.events.clear();
+            call_info.execution.l2_to_l1_messages.clear();
+            // Add inner calls that did not fail to the stack.
+            // The events and l2_to_l1_messages of the failed calls were already cleared.
+            stack.extend(
+                call_info
+                    .inner_calls
+                    .iter_mut()
+                    .filter(|call_info| !call_info.execution.failed),
+            );
+        }
+
+        raw_retdata
+            .push(Felt::from_hex(ENTRYPOINT_FAILED_ERROR).map_err(SyscallExecutionError::from)?);
+        return Err(SyscallExecutionError::Revert {
+            error_data: raw_retdata,
+        });
+    }
+
+    Ok(raw_retdata)
 }
 
 impl CheatableNativeSyscallHandler<'_> {
@@ -87,6 +151,73 @@ impl CheatableNativeSyscallHandler<'_> {
             .update_revert_gas_with_next_remaining_gas(GasAmount(*remaining_gas));
 
         Ok(())
+    }
+
+    #[allow(clippy::result_large_err)]
+    fn execute_inner_call(
+        &mut self,
+        entry_point: &mut CallEntryPoint,
+        remaining_gas: &mut u64,
+        class_hash: ClassHash,
+        error_wrapper_fn: impl Fn(
+            SyscallExecutionError,
+            ClassHash,
+            ContractAddress,
+            EntryPointSelector,
+        ) -> SyscallExecutionError,
+    ) -> SyscallResult<Retdata> {
+        let entry_point_clone = entry_point.clone();
+        let raw_data = execute_inner_call(
+            &mut self.native_syscall_handler.base,
+            &mut self.cheatnet_state,
+            entry_point,
+            remaining_gas,
+        )
+        .map_err(|e| {
+            self.handle_error(
+                remaining_gas,
+                SyscallExecutionError::from_self_or_revert(e.try_extract_revert().map_original(
+                    |error| {
+                        error_wrapper_fn(
+                            error,
+                            class_hash,
+                            entry_point_clone.storage_address,
+                            entry_point_clone.entry_point_selector,
+                        )
+                    },
+                )),
+            )
+        })?;
+        Ok(Retdata(raw_data))
+    }
+
+    fn handle_error(&mut self, remaining_gas: &mut u64, error: SyscallExecutionError) -> Vec<Felt> {
+        // In case of more than one inner call and because each inner call has their own
+        // syscall handler, if there is an unrecoverable error at call `n` it will create a
+        // `NativeExecutionError`. When rolling back, each call from `n-1` to `1` will also
+        // store the result of a previous `NativeExecutionError` in a `NativeExecutionError`
+        // creating multiple wraps around the same error. This function is meant to prevent that.
+        fn unwrap_native_error(error: SyscallExecutionError) -> SyscallExecutionError {
+            match error {
+                SyscallExecutionError::EntryPointExecutionError(
+                    EntryPointExecutionError::NativeUnrecoverableError(e),
+                ) => *e,
+                _ => error,
+            }
+        }
+
+        match error.try_extract_revert() {
+            SelfOrRevert::Revert(revert_error) => revert_error.error_data,
+            SelfOrRevert::Original(error) => {
+                assert!(
+                    self.native_syscall_handler.unrecoverable_error.is_none(),
+                    "Trying to set an unrecoverable error twice in Native Syscall Handler"
+                );
+                self.native_syscall_handler.unrecoverable_error = Some(unwrap_native_error(error));
+                *remaining_gas = 0;
+                vec![]
+            }
+        }
     }
 }
 
@@ -283,12 +414,72 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
         calldata: &[Felt],
         remaining_gas: &mut u64,
     ) -> SyscallResult<Vec<Felt>> {
-        self.native_syscall_handler.call_contract(
-            address,
-            entry_point_selector,
-            calldata,
+        self.pre_execute_syscall(
             remaining_gas,
-        )
+            self.native_syscall_handler
+                .gas_costs()
+                .syscalls
+                .call_contract
+                .base_syscall_cost(),
+            SyscallSelector::CallContract,
+        )?;
+
+        let contract_address = ContractAddress::try_from(address)
+            .map_err(|error| self.handle_error(remaining_gas, error.into()))?;
+
+        let class_hash = self
+            .native_syscall_handler
+            .base
+            .state
+            .get_class_hash_at(contract_address)
+            .map_err(|e| self.handle_error(remaining_gas, e.into()))?;
+        if self.native_syscall_handler.base.context.execution_mode == ExecutionMode::Validate
+            && self.native_syscall_handler.base.call.storage_address != contract_address
+        {
+            let err = SyscallExecutorBaseError::InvalidSyscallInExecutionMode {
+                syscall_name: "call_contract".to_string(),
+                execution_mode: self.native_syscall_handler.base.context.execution_mode,
+            };
+            return Err(self.handle_error(remaining_gas, err.into()));
+        }
+        let selector = EntryPointSelector(entry_point_selector);
+        // TODO restore blocking
+        // self
+        //     .native_syscall_handler
+        //     .base
+        //     .maybe_block_direct_execute_call(selector)
+        //     .map_err(|e| self.handle_error(remaining_gas, e))?;
+
+        let wrapper_calldata = Calldata(Arc::new(calldata.to_vec()));
+
+        let mut entry_point = CallEntryPoint {
+            class_hash: None,
+            code_address: Some(contract_address),
+            entry_point_type: EntryPointType::External,
+            entry_point_selector: selector,
+            calldata: wrapper_calldata,
+            storage_address: contract_address,
+            caller_address: self.native_syscall_handler.base.call.storage_address,
+            call_type: CallType::Call,
+            initial_gas: *remaining_gas,
+        };
+
+        let error_wrapper_function =
+            |e: SyscallExecutionError,
+             class_hash: ClassHash,
+             storage_address: ContractAddress,
+             selector: EntryPointSelector| {
+                e.as_call_contract_execution_error(class_hash, storage_address, selector)
+            };
+
+        Ok(self
+            .execute_inner_call(
+                &mut entry_point,
+                remaining_gas,
+                class_hash,
+                error_wrapper_function,
+            )?
+            .0)
     }
 
     fn storage_read(
