@@ -63,14 +63,15 @@ fn simple_package_with_cheats() {
     [..]Finished[..]
 
 
-    Collected 4 test(s) from simple_package_with_cheats package
+    Collected 5 test(s) from simple_package_with_cheats package
     Running 0 test(s) from src/
-    Running 4 test(s) from tests/
+    Running 5 test(s) from tests/
     [PASS] simple_package_with_cheats_integrationtest::contract::call_and_invoke [..]
     [PASS] simple_package_with_cheats_integrationtest::contract::call_and_invoke_proxy [..]
     [PASS] simple_package_with_cheats_integrationtest::contract::call_and_invoke_library_call [..]
     [PASS] simple_package_with_cheats_integrationtest::contract::deploy_syscall [..]
-    Tests: 4 passed, 0 failed, 0 ignored, 0 filtered out
+    [PASS] simple_package_with_cheats_integrationtest::contract::block_hash [..]
+    Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
     "},
     );
 }
