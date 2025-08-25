@@ -112,7 +112,7 @@ fn function_without_params() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(
-            "#[test_case] The function must have at least one parameter to use",
+            "#[test_case] The function must have at least one parameter to use #[test_case] attribute",
         )],
     );
 }
