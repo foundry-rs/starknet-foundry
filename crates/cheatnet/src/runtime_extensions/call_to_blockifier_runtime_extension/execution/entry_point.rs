@@ -77,7 +77,7 @@ pub fn execute_call_entry_point(
     // We skip recursion depth validation here.
     cheatnet_state
         .trace_data
-        .enter_nested_call(entry_point.clone(), cheated_data);
+        .enter_nested_call(entry_point.clone(), cheated_data.clone());
 
     if let Some(cheat_status) = get_mocked_function_cheat_status(entry_point, cheatnet_state)
         && let CheatStatus::Cheated(ret_data, _) = (*cheat_status).clone()
@@ -94,6 +94,8 @@ pub fn execute_call_entry_point(
             },
             &[],
             None,
+            vec![],
+            vec![],
         );
         let tracked_resource = *context
             .tracked_resource_stack
@@ -199,6 +201,7 @@ pub fn execute_call_entry_point(
                 context,
                 cheatnet_state,
                 vm_trace,
+                cheated_data.tx_info.signature.unwrap_or_default(),
             );
             Ok(call_info)
         }
@@ -302,6 +305,7 @@ fn remove_syscall_resources_and_exit_non_error_call(
     context: &mut EntryPointExecutionContext,
     cheatnet_state: &mut CheatnetState,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
+    signature: Vec<Felt>,
 ) {
     let versioned_constants = context.tx_context.block_context.versioned_constants();
     // We don't want the syscall resources to pollute the results
@@ -341,6 +345,8 @@ fn remove_syscall_resources_and_exit_non_error_call(
         CallResult::from_non_error(call_info),
         &call_info.execution.l2_to_l1_messages,
         vm_trace,
+        signature,
+        call_info.execution.events.clone(),
     );
 }
 
@@ -362,6 +368,8 @@ fn exit_error_call(
         CallResult::from_err(error, &identifier),
         &[],
         vm_trace,
+        vec![],
+        vec![],
     );
 }
 
