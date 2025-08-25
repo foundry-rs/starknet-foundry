@@ -66,9 +66,11 @@ impl ContractClassImpl of ContractClassTrait {
     fn deploy(
         self: @ContractClass, constructor_calldata: @Array::<felt252>,
     ) -> SyscallResult<(ContractAddress, Span<felt252>)> {
-        let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
+        let salt: felt252 = execute_cheatcode_and_deserialize::<'get_salt'>(array![].span());
 
-        execute_cheatcode_and_deserialize::<'deploy'>(inputs.span())
+        starknet::syscalls::deploy_syscall(
+            *self.class_hash, salt, constructor_calldata.span(), false,
+        )
     }
 
     fn deploy_at(
