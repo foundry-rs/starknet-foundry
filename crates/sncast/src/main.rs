@@ -227,7 +227,7 @@ fn main() -> Result<()> {
 #[expect(clippy::too_many_lines)]
 async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> {
     let wait_config = WaitForTx {
-        wait: cli.wait.clone(),
+        wait: cli.wait,
         wait_params: config.wait_params,
     };
 
