@@ -1,5 +1,6 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
     CallInfoWithExecutionData, ContractClassEntryPointExecutionResult,
+    EntryPointExecutionErrorWithTrace,
 };
 use crate::runtime_extensions::native::native_syscall_handler::CheatableNativeSyscallHandler;
 use crate::state::CheatnetState;
@@ -35,9 +36,11 @@ pub(crate) fn execute_entry_point_call_native(
         native_syscall_handler: &mut NativeSyscallHandler::new(call.clone(), state, context),
     };
 
-    // TODO error handling
     let call_info = execute_entry_point_call(call, native_compiled_class_v1, syscall_handler)
-        .expect("Native execution failed");
+        .map_err(|err| EntryPointExecutionErrorWithTrace {
+            source: err,
+            trace: None,
+        })?;
 
     Ok(CallInfoWithExecutionData {
         call_info,
