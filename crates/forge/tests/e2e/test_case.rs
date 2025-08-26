@@ -80,14 +80,14 @@ fn with_multiple_attributes() {
         [FAIL] test_case_integrationtest::multiple_attributes::with_available_gas_exceed_limit_3_4
 
         Failure data:
-         Test cost exceeded the available gas. Consumed [..]
+            Test cost exceeded the available gas. Consumed [..]
         [PASS] test_case_integrationtest::multiple_attributes::with_available_gas_1_2 [..]
         [PASS] test_case_integrationtest::multiple_attributes::with_should_panic_3_4 [..]
         [PASS] test_case_integrationtest::multiple_attributes::with_should_panic_1_2 [..]
         [FAIL] test_case_integrationtest::multiple_attributes::with_available_gas_exceed_limit_1_2
 
         Failure data:
-         Test cost exceeded the available gas. Consumed [..]
+            Test cost exceeded the available gas. Consumed [..]
         [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_1_2 [..]
         [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer [..]
         Running 0 test(s) from src/
