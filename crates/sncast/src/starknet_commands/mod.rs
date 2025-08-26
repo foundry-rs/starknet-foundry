@@ -1,6 +1,5 @@
 pub mod account;
 pub mod call;
-pub mod class_hash;
 pub mod declare;
 pub mod deploy;
 pub mod invoke;

@@ -13,9 +13,13 @@ use sncast::{
 
 use crate::{
     process_command_result,
-    starknet_commands::{self, class_hash::ClassHash, utils::serialize::Serialize},
+    starknet_commands::{
+        self,
+        utils::{class_hash::ClassHash, serialize::Serialize},
+    },
 };
 
+pub mod class_hash;
 pub mod serialize;
 
 #[derive(Args)]
@@ -65,7 +69,7 @@ pub async fn utils(
             )
             .expect("Failed to build contract");
 
-            let result = starknet_commands::class_hash::get_class_hash(class_hash, &artifacts)
+            let result = class_hash::get_class_hash(class_hash, &artifacts)
                 .map_err(handle_starknet_command_error);
 
             process_command_result("class-hash", result, ui, None);
