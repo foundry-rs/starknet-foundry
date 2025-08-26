@@ -31,21 +31,25 @@ pub(crate) fn execute_entry_point_call_native(
     cheatnet_state: &mut CheatnetState, // Added parameter
     context: &mut EntryPointExecutionContext,
 ) -> ContractClassEntryPointExecutionResult {
-    let syscall_handler = CheatableNativeSyscallHandler {
+    let mut syscall_handler = CheatableNativeSyscallHandler {
         cheatnet_state,
         native_syscall_handler: &mut NativeSyscallHandler::new(call.clone(), state, context),
     };
 
-    let call_info = execute_entry_point_call(call, native_compiled_class_v1, syscall_handler)
+    let call_info = execute_entry_point_call(call, native_compiled_class_v1, &mut syscall_handler)
         .map_err(|err| EntryPointExecutionErrorWithTrace {
             source: err,
             trace: None,
         })?;
 
+    let syscall_usage = &syscall_handler.native_syscall_handler.base.syscalls_usage;
+
     Ok(CallInfoWithExecutionData {
         call_info,
+        // Native execution doesn't support VM resources.
+        // If we got to this point, it means tracked resources are SierraGas.
         syscall_usage_vm_resources: HashMap::default(),
-        syscall_usage_sierra_gas: HashMap::default(),
+        syscall_usage_sierra_gas: syscall_usage.clone(),
         vm_trace: None,
     })
 }
@@ -58,7 +62,7 @@ pub fn execute_entry_point_call(
     compiled_class: &NativeCompiledClassV1,
     // state: &mut dyn State,
     // context: &mut EntryPointExecutionContext,
-    mut syscall_handler: CheatableNativeSyscallHandler,
+    syscall_handler: &mut CheatableNativeSyscallHandler,
 ) -> EntryPointExecutionResult<CallInfo> {
     let entry_point = compiled_class.get_entry_point(&call.type_and_selector())?;
 
@@ -110,7 +114,7 @@ pub fn execute_entry_point_call(
             .clone(),
         call_initial_gas,
         Some(builtin_costs),
-        &mut syscall_handler,
+        &mut *syscall_handler,
     );
 
     syscall_handler.native_syscall_handler.finalize();
@@ -129,10 +133,9 @@ pub fn execute_entry_point_call(
 
 // Copied from blockifier
 #[allow(clippy::result_large_err)]
-#[expect(clippy::needless_pass_by_value)]
 fn create_callinfo(
     call_result: ContractExecutionResult,
-    syscall_handler: CheatableNativeSyscallHandler<'_>,
+    syscall_handler: &mut CheatableNativeSyscallHandler<'_>,
 ) -> Result<CallInfo, EntryPointExecutionError> {
     let remaining_gas = call_result.remaining_gas;
 
