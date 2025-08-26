@@ -1,11 +1,11 @@
-use crate::args::unnamed::UnnamedArgs;
 use crate::args::Arguments;
-use crate::attributes::test_case::TestCaseCollector;
+use crate::args::unnamed::UnnamedArgs;
 use crate::attributes::ErrorExt;
+use crate::attributes::test_case::TestCaseCollector;
 use cairo_lang_macro::Diagnostics;
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::ast::Expr;
 use cairo_lang_syntax::node::TypedSyntaxNode;
+use cairo_lang_syntax::node::ast::Expr;
 use regex::Regex;
 use std::sync::LazyLock;
 
@@ -18,11 +18,7 @@ fn sanitize_ident(raw: &str) -> String {
         .to_lowercase()
         .trim_matches('_')
         .to_string();
-    if s.is_empty() {
-        "_empty".into()
-    } else {
-        s
-    }
+    if s.is_empty() { "_empty".into() } else { s }
 }
 
 fn generate_case_suffix(unnamed_args: &UnnamedArgs, args_db: &SimpleParserDatabase) -> String {
