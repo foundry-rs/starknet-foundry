@@ -70,9 +70,9 @@ pub async fn utils(
             .expect("Failed to build contract");
 
             let result = class_hash::get_class_hash(&class_hash, &artifacts)
-                .map_err(handle_starknet_command_error);
+                .map_err(handle_starknet_command_error)?;
 
-            process_command_result("class-hash", result, ui, None);
+            process_command_result("class-hash", Ok(result), ui, None);
         }
     }
 
