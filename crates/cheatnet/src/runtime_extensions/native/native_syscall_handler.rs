@@ -211,15 +211,8 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
 
     #[expect(clippy::too_many_lines)]
     fn get_execution_info_v2(&mut self, remaining_gas: &mut u64) -> SyscallResult<ExecutionInfoV2> {
-        self.pre_execute_syscall(
-            remaining_gas,
-            self.native_syscall_handler
-                .gas_costs()
-                .syscalls
-                .get_execution_info
-                .base_syscall_cost(),
-            SyscallSelector::GetBlockHash,
-        )?;
+        // We don't need to call pre_execute_syscall here because the call to `get_execution_info_v2`
+        // on the native syscall handler is does that internally, and we don't want to do it twice.
 
         let original_data = self
             .native_syscall_handler
