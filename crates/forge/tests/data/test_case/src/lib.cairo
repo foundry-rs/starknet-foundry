@@ -1,3 +1,10 @@
+#[starknet::contract]
+pub mod HelloStarknet {
+    #[storage]
+    struct Storage {}
+}
+
+
 pub fn add(a: felt252, b: felt252) -> felt252 {
     a + b
 }
