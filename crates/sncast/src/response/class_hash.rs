@@ -8,7 +8,7 @@ use crate::response::{cast_message::SncastMessage, command::CommandResponse};
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct ClassHashResponse {
-    pub class_hash: Felt252,
+    pub class_hash: PaddedFelt,
 }
 
 impl CommandResponse for ClassHashResponse {}
