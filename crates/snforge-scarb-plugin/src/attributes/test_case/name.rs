@@ -21,11 +21,7 @@ fn sanitize_ident(raw: &str) -> String {
     if s.is_empty() { "_empty".into() } else { s }
 }
 
-fn generate_case_name(
-    func_name: &str,
-    unnamed_args: &UnnamedArgs,
-    args_db: &SimpleParserDatabase,
-) -> String {
+fn generate_case_suffix(unnamed_args: &UnnamedArgs, args_db: &SimpleParserDatabase) -> String {
     let parts = unnamed_args
         .iter()
         .map(|(_, expr)| {
@@ -40,7 +36,7 @@ fn generate_case_name(
         parts.join("_")
     };
 
-    format!("{func_name}_{suffix}")
+    suffix
 }
 
 pub fn resolve_test_case_name(
@@ -60,8 +56,7 @@ pub fn resolve_test_case_name(
             }
         }
     } else {
-        generate_case_name(
-            func_name,
+        generate_case_suffix(
             &UnnamedArgs::new(
                 &arguments
                     .unnamed()
@@ -74,6 +69,6 @@ pub fn resolve_test_case_name(
             args_db,
         )
     };
-
+    eprintln!("XXX {}", suffix);
     Ok(format!("{func_name}_{suffix}"))
 }
