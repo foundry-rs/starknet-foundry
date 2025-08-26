@@ -1,3 +1,5 @@
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
 use crate::runtime_extensions::native::call::execute_inner_call;
 use crate::runtime_extensions::native::deploy::deploy;
 use crate::state::CheatnetState;
@@ -540,8 +542,30 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
         data: &[Felt],
         remaining_gas: &mut u64,
     ) -> SyscallResult<()> {
-        self.native_syscall_handler
-            .emit_event(keys, data, remaining_gas)
+        let syscall_result = self
+            .native_syscall_handler
+            .emit_event(keys, data, remaining_gas);
+
+        if syscall_result.is_ok() {
+            let contract_address = self
+                .native_syscall_handler
+                .base
+                .call
+                // TODO why we default to code_address??
+                .code_address
+                .unwrap_or(self.native_syscall_handler.base.call.storage_address);
+            let event = self
+                .native_syscall_handler
+                .base
+                .events
+                .last()
+                .expect("Event must have been emitted");
+            self.cheatnet_state
+                .detected_events
+                .push(Event::from_ordered_event(event, contract_address));
+        }
+
+        syscall_result
     }
 
     fn send_message_to_l1(
@@ -550,8 +574,30 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
         payload: &[Felt],
         remaining_gas: &mut u64,
     ) -> SyscallResult<()> {
-        self.native_syscall_handler
-            .send_message_to_l1(to_address, payload, remaining_gas)
+        let syscall_result =
+            self.native_syscall_handler
+                .send_message_to_l1(to_address, payload, remaining_gas);
+
+        if syscall_result.is_ok() {
+            let contract_address = self
+                .native_syscall_handler
+                .base
+                .call
+                // TODO why we default to code_address??
+                .code_address
+                .unwrap_or(self.native_syscall_handler.base.call.storage_address);
+            let message = self
+                .native_syscall_handler
+                .base
+                .l2_to_l1_messages
+                .last()
+                .expect("Message must have been sent");
+            self.cheatnet_state
+                .detected_messages_to_l1
+                .push(MessageToL1::from_ordered_message(message, contract_address));
+        }
+
+        syscall_result
     }
 
     fn keccak(&mut self, input: &[u64], remaining_gas: &mut u64) -> SyscallResult<U256> {
