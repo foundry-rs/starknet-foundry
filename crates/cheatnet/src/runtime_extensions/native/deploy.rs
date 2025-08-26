@@ -35,6 +35,11 @@ pub fn execute_constructor_entry_point(
             ConstructorEntryPointExecutionError::new(error.into(), &ctor_context, None)
         })?;
     let Some(constructor_selector) = compiled_class.constructor_selector() else {
+        // region: Modified blockifer code
+        cheatnet_state
+            .trace_data
+            .add_deploy_without_constructor_node();
+        // endregion
         // Contract has no constructor.
         return handle_empty_constructor(
             compiled_class,
