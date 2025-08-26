@@ -38,6 +38,7 @@
 * [Direct Storage Access](snforge-advanced-features/storage-cheatcodes.md)
 * [Profiling](snforge-advanced-features/profiling.md)
 * [Debugging](snforge-advanced-features/debugging.md)
+* [Oracles](snforge-advanced-features/oracles.md)
 
 ---
 

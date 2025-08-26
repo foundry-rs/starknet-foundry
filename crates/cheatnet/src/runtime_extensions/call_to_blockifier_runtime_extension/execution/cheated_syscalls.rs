@@ -7,15 +7,12 @@ use blockifier::execution::syscalls::hint_processor::{
 };
 use blockifier::execution::syscalls::syscall_base::SyscallResult;
 use blockifier::execution::syscalls::vm_syscall_utils::{
-    CallContractRequest, DeployRequest, DeployResponse, EmptyRequest, GetBlockHashRequest,
-    GetBlockHashResponse, GetExecutionInfoResponse, LibraryCallRequest, StorageReadRequest,
-    StorageReadResponse, StorageWriteRequest, StorageWriteResponse, SyscallResponse,
-    SyscallSelector, WriteResponseResult,
+    CallContractRequest, CallContractResponse, DeployRequest, DeployResponse, EmptyRequest,
+    GetBlockHashRequest, GetBlockHashResponse, GetExecutionInfoResponse, LibraryCallRequest,
+    LibraryCallResponse, StorageReadRequest, StorageReadResponse, StorageWriteRequest,
+    StorageWriteResponse, SyscallSelector,
 };
 use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
-use blockifier::execution::{
-    execution_utils::ReadOnlySegment, syscalls::hint_processor::write_segment,
-};
 use blockifier::state::errors::StateError;
 use blockifier::{
     execution::entry_point::{
@@ -27,7 +24,6 @@ use blockifier::{
     execution::execution_utils::update_remaining_gas,
     execution::syscalls::hint_processor::create_retdata_segment,
 };
-use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::TEST_ADDRESS;
@@ -156,7 +152,7 @@ pub fn library_call_syscall(
     syscall_handler: &mut SyscallHintProcessor<'_>,
     cheatnet_state: &mut CheatnetState,
     remaining_gas: &mut u64,
-) -> SyscallResult<SingleSegmentResponse> {
+) -> SyscallResult<LibraryCallResponse> {
     let call_to_external = true;
     let retdata_segment = execute_library_call(
         syscall_handler,
@@ -177,7 +173,7 @@ pub fn library_call_syscall(
         ),
     })?;
 
-    Ok(SingleSegmentResponse {
+    Ok(LibraryCallResponse {
         segment: retdata_segment,
     })
 }
@@ -190,7 +186,7 @@ pub fn call_contract_syscall(
     syscall_handler: &mut SyscallHintProcessor<'_>,
     cheatnet_state: &mut CheatnetState,
     remaining_gas: &mut u64,
-) -> SyscallResult<SingleSegmentResponse> {
+) -> SyscallResult<CallContractResponse> {
     let storage_address = request.contract_address;
     let class_hash = syscall_handler
         .base
@@ -222,7 +218,7 @@ pub fn call_contract_syscall(
     })?;
 
     // region: Modified blockifier code
-    Ok(SingleSegmentResponse {
+    Ok(CallContractResponse {
         segment: retdata_segment,
     })
     // endregion
@@ -330,18 +326,4 @@ fn maybe_modify_storage_address(
     }
 
     Ok(())
-}
-
-#[derive(Debug)]
-// crates/blockifier/src/execution/syscalls/mod.rs:127 (SingleSegmentResponse)
-// It is created here because fields in the original structure are private
-// so we cannot create it in call_contract_syscall
-pub struct SingleSegmentResponse {
-    pub segment: ReadOnlySegment,
-}
-// crates/blockifier/src/execution/syscalls/mod.rs:131 (SyscallResponse for SingleSegmentResponse)
-impl SyscallResponse for SingleSegmentResponse {
-    fn write(self, vm: &mut VirtualMachine, ptr: &mut Relocatable) -> WriteResponseResult {
-        write_segment(vm, ptr, self.segment)
-    }
 }

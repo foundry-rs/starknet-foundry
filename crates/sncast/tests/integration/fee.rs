@@ -12,6 +12,8 @@ async fn test_happy_case() {
         l2_gas_price: Some(200),
         l1_data_gas: Some(100),
         l1_data_gas_price: Some(200),
+        tip: None,
+        estimate_tip: false,
     };
 
     let settings = args.try_into_fee_settings(None).unwrap();
@@ -25,6 +27,7 @@ async fn test_happy_case() {
             l2_gas_price: Some(200),
             l1_data_gas: Some(100),
             l1_data_gas_price: Some(200),
+            tip: Some(0),
         }
     );
 }
@@ -39,6 +42,8 @@ async fn test_max_fee_none() {
         l2_gas_price: Some(100),
         l1_data_gas: Some(100),
         l1_data_gas_price: Some(100),
+        tip: Some(100),
+        estimate_tip: false,
     };
 
     let settings = args.try_into_fee_settings(None).unwrap();
@@ -52,6 +57,7 @@ async fn test_max_fee_none() {
             l2_gas_price: Some(100),
             l1_data_gas: Some(100),
             l1_data_gas_price: Some(100),
+            tip: Some(100),
         }
     );
 }
@@ -76,6 +82,8 @@ async fn test_max_fee_set() {
         l2_gas_price: None,
         l1_data_gas: None,
         l1_data_gas_price: None,
+        tip: None,
+        estimate_tip: false,
     };
 
     let settings = args
@@ -91,6 +99,7 @@ async fn test_max_fee_set() {
             l2_gas_price: Some(4),
             l1_data_gas: Some(5),
             l1_data_gas_price: Some(6),
+            tip: Some(0),
         }
     );
 }
@@ -115,6 +124,8 @@ async fn test_max_fee_set_and_fee_estimate_higher() {
         l2_gas_price: None,
         l1_data_gas: None,
         l1_data_gas_price: None,
+        tip: None,
+        estimate_tip: false,
     };
 
     let err = args
@@ -142,6 +153,8 @@ async fn test_max_fee_set_and_fee_estimate_none() {
         l2_gas_price: None,
         l1_data_gas: None,
         l1_data_gas_price: None,
+        tip: None,
+        estimate_tip: false,
     };
 
     args.try_into_fee_settings(None).unwrap();
@@ -157,6 +170,8 @@ async fn test_all_args_none() {
         l2_gas_price: None,
         l1_data_gas: None,
         l1_data_gas_price: None,
+        tip: None,
+        estimate_tip: false,
     };
 
     let settings = args.try_into_fee_settings(None).unwrap();
@@ -170,6 +185,37 @@ async fn test_all_args_none() {
             l2_gas_price: None,
             l1_data_gas: None,
             l1_data_gas_price: None,
+            tip: Some(0),
+        }
+    );
+}
+
+#[tokio::test]
+async fn test_estimate_tip() {
+    let args = FeeArgs {
+        max_fee: None,
+        l1_gas: None,
+        l1_gas_price: None,
+        l2_gas: None,
+        l2_gas_price: None,
+        l1_data_gas: None,
+        l1_data_gas_price: None,
+        tip: None,
+        estimate_tip: true,
+    };
+
+    let settings = args.try_into_fee_settings(None).unwrap();
+
+    assert_eq!(
+        settings,
+        FeeSettings {
+            l1_gas: None,
+            l1_gas_price: None,
+            l2_gas: None,
+            l2_gas_price: None,
+            l1_data_gas: None,
+            l1_data_gas_price: None,
+            tip: None,
         }
     );
 }

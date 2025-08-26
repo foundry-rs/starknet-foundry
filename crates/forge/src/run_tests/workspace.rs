@@ -1,5 +1,6 @@
 use super::package::RunForPackageArgs;
 use super::structs::{LatestBlocksNumbersMessage, TestsFailureSummaryMessage};
+use crate::profile_validation::check_profile_compatibility;
 use crate::run_tests::structs::OverallSummaryMessage;
 use crate::warn::{
     error_if_snforge_std_deprecated_missing, error_if_snforge_std_deprecated_not_compatible,
@@ -13,10 +14,8 @@ use crate::{
     warn::warn_if_snforge_std_does_not_match_package_version,
 };
 use anyhow::{Context, Result};
+use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
-use forge_runner::{
-    coverage_api::can_coverage_be_generated, test_case_summary::AnyTestCaseSummary,
-};
 use foundry_ui::UI;
 use scarb_api::{
     ScarbCommand,
@@ -43,9 +42,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     }
     let scarb_metadata = metadata_command.inherit_stderr().run()?;
 
-    if args.coverage {
-        can_coverage_be_generated(&scarb_metadata)?;
-    }
+    check_profile_compatibility(&args, &scarb_metadata)?;
 
     let scarb_version = ScarbCommand::version().run()?.scarb;
     if scarb_version >= MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT {

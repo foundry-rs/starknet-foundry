@@ -304,6 +304,7 @@ where
         l2_gas_price,
         l1_data_gas,
         l1_data_gas_price,
+        tip,
     } = fee_settings.expect("Failed to convert to fee settings");
 
     let deployment = apply_optional_fields!(
@@ -313,7 +314,8 @@ where
         l2_gas => AccountDeploymentV3::l2_gas,
         l2_gas_price => AccountDeploymentV3::l2_gas_price,
         l1_data_gas => AccountDeploymentV3::l1_data_gas,
-        l1_data_gas_price => AccountDeploymentV3::l1_data_gas_price
+        l1_data_gas_price => AccountDeploymentV3::l1_data_gas_price,
+        tip => AccountDeploymentV3::tip
     );
     let result = deployment.send().await;
 

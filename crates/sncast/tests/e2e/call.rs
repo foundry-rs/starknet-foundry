@@ -72,6 +72,7 @@ async fn test_call_after_storage_changed() {
         l2_gas_price: Some(100_000_000_000_000_000),
         l1_data_gas: Some(100_000),
         l1_data_gas_price: Some(10_000_000_000_000),
+        tip: Some(100_000),
     };
     invoke_contract(
         "user2",

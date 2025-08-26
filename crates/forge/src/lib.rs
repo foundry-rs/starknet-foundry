@@ -27,6 +27,7 @@ mod combine_configs;
 mod compatibility_check;
 mod init;
 mod new;
+mod profile_validation;
 pub mod run_tests;
 pub mod scarb;
 pub mod shared_cache;
@@ -37,7 +38,7 @@ pub const CAIRO_EDITION: &str = "2024_07";
 
 const MINIMAL_RUST_VERSION: Version = Version::new(1, 87, 0);
 const MINIMAL_SCARB_VERSION: Version = Version::new(2, 9, 1);
-const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 9, 4);
+const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 10, 0);
 const MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN: Version = Version::new(2, 10, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
 const MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS: Version = Version::new(2, 10, 0);
@@ -215,6 +216,10 @@ pub struct TestArgs {
     /// Additional arguments for cairo-coverage or cairo-profiler
     #[arg(last = true)]
     additional_args: Vec<OsString>,
+
+    /// Enable experimental oracles support.
+    #[arg(long, default_value_t = false, env = "SNFORGE_EXPERIMENTAL_ORACLES")]
+    experimental_oracles: bool,
 
     #[command(flatten)]
     scarb_args: ScarbArgs,

@@ -38,6 +38,11 @@ impl BufferReader<'_> {
         felt.ok_or(BufferReadError::EndOfBuffer)
     }
 
+    #[must_use]
+    pub fn into_remaining(self) -> &'a [Felt] {
+        self.buffer
+    }
+
     pub fn read<T>(&mut self) -> BufferReadResult<T>
     where
         T: CairoDeserialize,
