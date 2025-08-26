@@ -4,10 +4,7 @@ use conversions::{IntoConv, byte_array::ByteArray};
 use scarb_api::StarknetContractArtifacts;
 use sncast::{
     ErrorData,
-    response::{
-        class_hash::{ClassHashGeneratedResponse, ClassHashResponse},
-        errors::StarknetCommandError,
-    },
+    response::{class_hash::ClassHashResponse, errors::StarknetCommandError},
 };
 use starknet::core::types::contract::SierraClass;
 use std::collections::HashMap;
@@ -41,7 +38,7 @@ pub fn get_class_hash(
         .class_hash()
         .map_err(anyhow::Error::from)?;
 
-    Ok(ClassHashResponse::Success(ClassHashGeneratedResponse {
+    Ok(ClassHashResponse {
         class_hash: class_hash.into_(),
-    }))
+    })
 }
