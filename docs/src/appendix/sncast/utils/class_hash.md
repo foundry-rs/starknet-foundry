@@ -1,14 +1,14 @@
 # Calculate contract class hash
 
 ## Overview
-Use `sncast`'s `class-hash` command to calculate the class hash of a contract.
+Use `sncast utils`'s `class-hash` command to calculate the class hash of a contract.
 
 ## Examples
 
 ### General Example
 
 ```shell
-$ sncast \
+$ sncast utils \
   class-hash \
   --contract-name CheatcodeChecker
 ```
@@ -17,8 +17,6 @@ $ sncast \
 <summary>Output:</summary>
 
 ```shell
-Success: Class Hash generated
-
 Class Hash: 0x0[..]
 ```
 </details>
