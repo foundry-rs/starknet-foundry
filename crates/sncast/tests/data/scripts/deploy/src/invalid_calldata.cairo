@@ -11,7 +11,7 @@ fn main() {
         .try_into()
         .expect('Invalid class hash value');
 
-    let deploy_nonce = get_nonce('pending');
+    let deploy_nonce = get_nonce('pre_confirmed');
     let deploy_result = deploy(
         class_hash, array![0x2], Option::Some(salt), true, fee_settings, Option::Some(deploy_nonce),
     )

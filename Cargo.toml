@@ -45,7 +45,7 @@ cairo-lang-starknet-classes = "2.12.0"
 cairo-lang-parser = "2.12.0"
 cairo-lang-sierra-to-casm = "2.12.0"
 cairo-vm = "2.2.0"
-cairo-annotations = "=0.5.0"
+cairo-annotations = "0.5.1"
 dirs = "6.0.0"
 dialoguer = "0.11.0"
 starknet-types-core = { version = "0.1.7", features = ["hash", "prime-bigint"] }
@@ -64,8 +64,8 @@ rayon = "1.10"
 regex = "1.11.1"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "a70f4ce" }
-starknet-crypto = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "a70f4ce" }
+starknet = "0.17.0-rc.3"
+starknet-crypto = "0.7.4"
 tempfile = "3.20.0"
 thiserror = "2.0.12"
 ctor = "0.4.1"
