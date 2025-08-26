@@ -65,7 +65,7 @@ fn with_multiple_attributes() {
     let temp = setup_package("test_case");
 
     let output = test_runner(&temp)
-        .arg("test_fib_with_threshold")
+        .arg("multiple_attributes")
         .assert()
         .code(1);
 
