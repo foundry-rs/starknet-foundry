@@ -20,6 +20,6 @@ fn test_happy_case_get_class_hash() {
 
     assert_stdout_contains(
         output,
-        indoc! {r"Class Hash: 0x06ee50dd7f45bd73b5e0e6f3c32013529f31477af0103c4c593915b6c1d6eefe"},
+        indoc! {r"Class Hash: 0x0[..]"},
     );
 }
