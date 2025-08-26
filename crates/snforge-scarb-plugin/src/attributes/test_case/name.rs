@@ -69,6 +69,6 @@ pub fn resolve_test_case_name(
             args_db,
         )
     };
-    eprintln!("XXX {}", suffix);
+
     Ok(format!("{func_name}_{suffix}"))
 }
