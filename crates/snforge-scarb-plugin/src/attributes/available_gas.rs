@@ -61,13 +61,11 @@ fn from_resource_bounds(
     let l2_gas_expr = l2_gas.as_cairo_expression();
 
     Ok(quote!(
-        snforge_std::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
-             snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
-                 l1_gas: #l1_gas_expr,
-                 l1_data_gas: #l1_data_gas_expr,
-                 l2_gas: #l2_gas_expr,
-             }
-         )
+        snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
+            l1_gas: #l1_gas_expr,
+            l1_data_gas: #l1_data_gas_expr,
+            l2_gas: #l2_gas_expr,
+        }
     ))
 }
 
