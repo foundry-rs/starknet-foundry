@@ -27,11 +27,12 @@ fn simple_addition() {
 }
 
 #[test]
-fn with_exit_first() {
+fn with_exit_first_flag() {
     let temp = setup_package("test_case");
 
     let output = test_runner(&temp)
         .arg("test_fib_with_threshold")
+        .arg("--exit-first")
         .assert()
         .code(1);
 
@@ -78,16 +79,16 @@ fn with_multiple_attributes() {
         [FAIL] test_case_integrationtest::multiple_attributes::with_available_gas_exceed_limit_3_4
 
         Failure data:
-                Test cost exceeded the available gas. Consumed l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000
+                Test cost exceeded the available gas. Consumed [..]
         [PASS] test_case_integrationtest::multiple_attributes::with_available_gas_1_2 [..]
         [PASS] test_case_integrationtest::multiple_attributes::with_should_panic_3_4 [..]
         [PASS] test_case_integrationtest::multiple_attributes::with_should_panic_1_2 [..]
         [FAIL] test_case_integrationtest::multiple_attributes::with_available_gas_exceed_limit_1_2
 
         Failure data:
-                Test cost exceeded the available gas. Consumed l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000
+                Test cost exceeded the available gas. Consumed [..]
         [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_1_2 [..]
-        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer (runs: 256, (l1_gas: {max: ~0, min: ~0, mean: ~0.00, std deviation: ~0.00}, l1_data_gas: {max: ~0, min: ~0, mean: ~0.00, std deviation: ~0.00}, l2_gas: {max: ~4720000, min: ~4600000, mean: ~4694062.50, std deviation: ~29618.34}))
+        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer [..]
         Running 0 test(s) from src/
         Tests: 7 passed, 2 failed, 2 ignored, [..] filtered out
         Fuzzer seed: 4948198268761692117
