@@ -31,7 +31,7 @@ fn with_exit_first() {
     let temp = setup_package("test_case");
 
     let output = test_runner(&temp)
-        .arg("test_fib_with_treshold")
+        .arg("test_fib_with_threshold")
         .assert()
         .code(1);
 
@@ -45,16 +45,16 @@ fn with_exit_first() {
         Collected 2 test(s) from test_case package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [FAIL] test_case_integrationtest::exit_first::test_fib_with_treshold_0_1_3
+        [FAIL] test_case_integrationtest::exit_first::test_fib_with_threshold_0_1_3
 
         Failure data:
-            "result should be greater than treshold"
+            "result should be greater than threshold"
 
         Tests: 0 passed, 1 failed, 0 ignored, 14 filtered out
         Interrupted execution of 1 test(s).
 
         Failures:
-            test_case_integrationtest::exit_first::test_fib_with_treshold_0_1_3
+            test_case_integrationtest::exit_first::test_fib_with_threshold_0_1_3
         """#},
     );
 }
@@ -64,7 +64,7 @@ fn with_multiple_attributes() {
     let temp = setup_package("test_case");
 
     let output = test_runner(&temp)
-        .arg("test_fib_with_treshold")
+        .arg("test_fib_with_threshold")
         .assert()
         .code(1);
 
