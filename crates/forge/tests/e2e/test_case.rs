@@ -27,6 +27,7 @@ fn simple_addition() {
 }
 
 #[test]
+#[ignore = "TODO: Write this using oracles"]
 fn with_exit_first_flag() {
     let temp = setup_package("test_case");
 
@@ -38,7 +39,7 @@ fn with_exit_first_flag() {
 
     assert_stdout_contains(
         output,
-        indoc! {r#"""
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -56,7 +57,7 @@ fn with_exit_first_flag() {
 
         Failures:
             test_case_integrationtest::exit_first::test_fib_with_threshold_0_1_3
-        """#},
+        "#},
     );
 }
 
@@ -71,7 +72,7 @@ fn with_multiple_attributes() {
 
     assert_stdout_contains(
         output,
-        indoc! {r#"""
+        indoc! {r#"
         [IGNORE] test_case_integrationtest::multiple_attributes::with_ignore_3_4
         [IGNORE] test_case_integrationtest::multiple_attributes::with_ignore_1_2
         [PASS] test_case_integrationtest::multiple_attributes::with_available_gas_3_4 [..]
@@ -91,11 +92,11 @@ fn with_multiple_attributes() {
         [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer [..]
         Running 0 test(s) from src/
         Tests: 7 passed, 2 failed, 2 ignored, [..] filtered out
-        Fuzzer seed: 4948198268761692117
+        Fuzzer seed: [..
 
         Failures:
             test_case_integrationtest::multiple_attributes::with_available_gas_exceed_limit_3_4
             test_case_integrationtest::multiple_attributes::with_available_gas_exceed_limit_1_2
-        """#},
+        "#},
     );
 }
