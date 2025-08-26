@@ -18,7 +18,7 @@ impl Message for SncastMessage<ClassHashResponse> {
         styling::OutputBuilder::new()
             .field(
                 "Class Hash",
-                &self.command_response.class_hash.into_hex_string(),
+                &self.command_response.class_hash.into_padded_hex_str(),
             )
             .build()
     }
