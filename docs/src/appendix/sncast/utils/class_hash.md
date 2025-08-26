@@ -1,7 +1,7 @@
 # Calculate contract class hash
 
 ## Overview
-Use `sncast utils`'s `class-hash` command to calculate the class hash of a contract.
+Use the `sncast utils class-hash` command to calculate the class hash of a contract.
 
 ## Examples
 
