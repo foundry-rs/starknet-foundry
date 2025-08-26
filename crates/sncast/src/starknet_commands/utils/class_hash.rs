@@ -22,7 +22,7 @@ pub struct ClassHash {
 }
 
 pub fn get_class_hash(
-    class_hash: ClassHash,
+    class_hash: &ClassHash,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<ClassHashResponse, StarknetCommandError> {
     let contract_artifacts = artifacts.get(&class_hash.contract).ok_or(
