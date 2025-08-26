@@ -16,8 +16,6 @@ impl CommandResponse for ClassHashResponse {}
 impl Message for SncastMessage<ClassHashResponse> {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
-            .success_message("Class hash generated")
-            .blank_line()
             .field(
                 "Class Hash",
                 &self.command_response.class_hash.into_hex_string(),
