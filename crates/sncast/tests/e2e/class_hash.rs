@@ -18,8 +18,5 @@ fn test_happy_case_get_class_hash() {
 
     let output = snapbox.assert().success();
 
-    assert_stdout_contains(
-        output,
-        indoc! {r"Class Hash: 0x0[..]"},
-    );
+    assert_stdout_contains(output, indoc! {r"Class Hash: 0x0[..]"});
 }
