@@ -1,5 +1,5 @@
-use cairo_vm::Felt252;
-use conversions::{serde::serialize::CairoSerialize, string::IntoHexStr};
+use conversions::padded_felt::PaddedFelt;
+use conversions::{serde::serialize::CairoSerialize, string::IntoPaddedHexStr};
 use foundry_ui::{Message, styling};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
