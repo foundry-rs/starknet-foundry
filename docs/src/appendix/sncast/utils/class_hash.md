@@ -10,7 +10,7 @@ Use the `sncast utils class-hash` command to calculate the class hash of a contr
 ```shell
 $ sncast utils \
   class-hash \
-  --contract-name CheatcodeChecker
+  --contract-name HelloSncast
 ```
 
 <details>
