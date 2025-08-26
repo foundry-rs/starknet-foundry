@@ -72,7 +72,7 @@ fn with_multiple_attributes() {
 
     assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         [IGNORE] test_case_integrationtest::multiple_attributes::with_ignore_3_4
         [IGNORE] test_case_integrationtest::multiple_attributes::with_ignore_1_2
         [PASS] test_case_integrationtest::multiple_attributes::with_available_gas_3_4 [..]
@@ -97,6 +97,6 @@ fn with_multiple_attributes() {
         Failures:
             test_case_integrationtest::multiple_attributes::with_available_gas_exceed_limit_3_4
             test_case_integrationtest::multiple_attributes::with_available_gas_exceed_limit_1_2
-        "#},
+        "},
     );
 }
