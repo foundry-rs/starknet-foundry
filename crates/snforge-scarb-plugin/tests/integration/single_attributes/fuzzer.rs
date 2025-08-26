@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, assert_output, empty_function};
-use cairo_lang_macro::{quote, Diagnostic, TextSpan, Token, TokenStream, TokenTree};
+use cairo_lang_macro::{Diagnostic, TextSpan, Token, TokenStream, TokenTree, quote};
 use snforge_scarb_plugin::attributes::fuzzer::wrapper::fuzzer_wrapper;
 use snforge_scarb_plugin::attributes::fuzzer::{fuzzer, fuzzer_config};
 
@@ -317,7 +317,7 @@ fn config_wrapper_work_with_fn_with_single_param() {
 
                     return;
                 }
-                let f: felt252 = snforge_std::fuzzable::Fuzzable::generate();
+                let f = snforge_std::fuzzable::Fuzzable::<felt252>::generate();
                 snforge_std::_internals::save_fuzzer_arg(@f);
                 empty_fn_actual_body(f);
             }
@@ -386,9 +386,9 @@ fn config_wrapper_work_with_fn_with_params() {
 
                     return;
                 }
-                let f: felt252 = snforge_std::fuzzable::Fuzzable::generate();
+                let f = snforge_std::fuzzable::Fuzzable::<felt252>::generate();
                 snforge_std::_internals::save_fuzzer_arg(@f);
-                let u: u32 = snforge_std::fuzzable::Fuzzable::generate();
+                let u = snforge_std::fuzzable::Fuzzable::<u32>::generate();
                 snforge_std::_internals::save_fuzzer_arg(@u);
                 empty_fn_actual_body(f, u);
             }

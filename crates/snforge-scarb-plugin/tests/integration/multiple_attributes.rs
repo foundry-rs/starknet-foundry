@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, assert_output, empty_function};
-use cairo_lang_macro::{quote, TokenStream, TokenTree};
+use cairo_lang_macro::{TokenStream, TokenTree, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::{ModuleItem, SyntaxFile};
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
@@ -393,7 +393,7 @@ fn works_with_fuzzer_config_wrapper() {
 
                     return;
                 }
-                let f: felt252 = snforge_std::fuzzable::Fuzzable::generate();
+                let f = snforge_std::fuzzable::Fuzzable::<felt252>::generate();
                 snforge_std::_internals::save_fuzzer_arg(@f);
                 empty_fn_return_wrapper_actual_body(f);
             }

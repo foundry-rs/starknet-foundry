@@ -1,6 +1,6 @@
 [package]
 name = "snforge_scarb_plugin_deprecated"
-version = "0.47.0"
+version = "0.48.1"
 edition = "2021"
 publish = false
 rust-version = "1.80.1"

@@ -60,6 +60,18 @@ Optional.
 
 Maximum L1 data gas unit price for the `invoke` transaction. When not used, defaults to auto-estimation.
 
+## `--tip <TIP>`
+Optional.
+Conflicts with: [`--estimate-tip`](#--estimate-tip-estimate_tip)
+
+Tip for the transaction. When not provided, defaults to 0 unless [`--estimate-tip`](#--estimate-tip-estimate_tip) is used.
+
+## `--estimate-tip <ESTIMATE_TIP>`
+Optional.
+Conflicts with: [`--tip`](#--tip-tip)
+
+If passed, an estimated tip will be added to pay for the transaction. The tip is estimated based on the current network conditions and added to the transaction fee.
+
 File example:
 
 ```toml

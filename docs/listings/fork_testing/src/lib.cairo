@@ -8,6 +8,7 @@ pub struct Pokemon {
 
 #[derive(Copy, Debug, PartialEq, Drop, Serde, starknet::Store)]
 pub enum Element {
+    #[default]
     Fire,
     Water,
     Grass,

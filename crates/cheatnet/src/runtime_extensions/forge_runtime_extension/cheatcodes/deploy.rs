@@ -30,12 +30,11 @@ pub fn deploy_at(
         .base
         .state
         .get_class_hash_at(contract_address)
+        && class_hash != ClassHash::default()
     {
-        if class_hash != ClassHash::default() {
-            return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
-                CustomHint(Box::from("Address is already taken")),
-            )));
-        }
+        return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
+            CustomHint(Box::from("Address is already taken")),
+        )));
     }
 
     let ctor_context = ConstructorContext {

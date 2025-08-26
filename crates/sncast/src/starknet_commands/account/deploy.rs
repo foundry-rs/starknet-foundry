@@ -18,7 +18,7 @@ use sncast::{
 };
 use starknet::accounts::{AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory};
 use starknet::accounts::{AccountFactoryError, ArgentAccountFactory};
-use starknet::core::types::BlockTag::Pending;
+use starknet::core::types::BlockTag::PreConfirmed;
 use starknet::core::types::{BlockId, StarknetError::ClassHashNotFound};
 use starknet::core::utils::get_contract_address;
 use starknet::providers::ProviderError::StarknetError;
@@ -131,7 +131,7 @@ async fn deploy_from_keystore(
     let address = compute_account_address(salt, &private_key, class_hash, account_type, chain_id);
 
     let result = if provider
-        .get_class_hash_at(BlockId::Tag(Pending), address)
+        .get_class_hash_at(BlockId::Tag(PreConfirmed), address)
         .await
         .is_ok()
     {
@@ -304,6 +304,7 @@ where
         l2_gas_price,
         l1_data_gas,
         l1_data_gas_price,
+        tip,
     } = fee_settings.expect("Failed to convert to fee settings");
 
     let deployment = apply_optional_fields!(
@@ -313,7 +314,8 @@ where
         l2_gas => AccountDeploymentV3::l2_gas,
         l2_gas_price => AccountDeploymentV3::l2_gas_price,
         l1_data_gas => AccountDeploymentV3::l1_data_gas,
-        l1_data_gas_price => AccountDeploymentV3::l1_data_gas_price
+        l1_data_gas_price => AccountDeploymentV3::l1_data_gas_price,
+        tip => AccountDeploymentV3::tip
     );
     let result = deployment.send().await;
 

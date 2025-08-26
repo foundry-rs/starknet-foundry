@@ -2,6 +2,7 @@ use anyhow::{Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args, ValueEnum};
 use foundry_ui::UI;
+use foundry_ui::components::warning::WarningMessage;
 use promptly::prompt;
 use scarb_api::StarknetContractArtifacts;
 use sncast::get_provider;
@@ -60,6 +61,10 @@ pub struct Verify {
     /// RPC provider url address; overrides url from snfoundry.toml. Will use public provider if not set.
     #[arg(long)]
     pub url: Option<Url>,
+
+    /// Include test files under src/ for verification (only applies to voyager)
+    #[arg(long, default_value = "false")]
+    pub test_files: bool,
 }
 
 #[derive(ValueEnum, Clone, Debug)]
@@ -93,6 +98,7 @@ pub async fn verify(
         confirm_verification,
         package,
         url,
+        test_files,
     } = args;
 
     let url_provided = url.is_some();
@@ -162,6 +168,11 @@ pub async fn verify(
 
     match verifier {
         Verifier::Walnut => {
+            if test_files {
+                ui.println(&WarningMessage::new(
+                    "The `--test-files` option is ignored for Walnut verifier",
+                ));
+            }
             let walnut = WalnutVerificationInterface::new(
                 network,
                 workspace_dir.to_path_buf(),
@@ -169,13 +180,13 @@ pub async fn verify(
                 ui,
             )?;
             walnut
-                .verify(contract_identifier, contract_name, package, ui)
+                .verify(contract_identifier, contract_name, package, false, ui)
                 .await
         }
         Verifier::Voyager => {
             let voyager = Voyager::new(network, workspace_dir.to_path_buf(), &provider, ui)?;
             voyager
-                .verify(contract_identifier, contract_name, package, ui)
+                .verify(contract_identifier, contract_name, package, test_files, ui)
                 .await
         }
     }

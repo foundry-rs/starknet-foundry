@@ -1,9 +1,9 @@
 [package]
 name = "snforge_scarb_plugin"
-version = "0.47.0"
-edition = "2021"
+version = "0.48.1"
+edition = "2024"
 publish = false
-rust-version = "1.80.1"
+rust-version = "1.87.0"
 
 [lib]
 crate-type = ["rlib", "cdylib"]

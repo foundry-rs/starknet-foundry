@@ -3,8 +3,8 @@ use crate::attributes::{AttributeInfo, ErrorExt};
 use cairo_lang_macro::Diagnostic;
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::{
-    ast::{ArgClause, Expr, OptionArgListParenthesized},
     Terminal,
+    ast::{ArgClause, Expr, OptionArgListParenthesized},
 };
 use smol_str::SmolStr;
 use std::collections::HashMap;
@@ -76,7 +76,7 @@ impl Arguments {
     }
 
     #[inline]
-    pub fn unnamed_only<T: AttributeInfo>(&self) -> Result<UnnamedArgs, Diagnostic> {
+    pub fn unnamed_only<T: AttributeInfo>(&self) -> Result<UnnamedArgs<'_>, Diagnostic> {
         if self.shorthand.is_empty() && self.named.is_empty() {
             Ok(UnnamedArgs::new(&self.unnamed))
         } else {
@@ -85,7 +85,7 @@ impl Arguments {
     }
 
     #[inline]
-    pub fn unnamed(&self) -> UnnamedArgs {
+    pub fn unnamed(&self) -> UnnamedArgs<'_> {
         UnnamedArgs::new(&self.unnamed)
     }
 

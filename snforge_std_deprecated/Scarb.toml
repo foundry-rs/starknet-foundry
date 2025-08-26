@@ -1,6 +1,6 @@
 [package]
 name = "snforge_std_deprecated"
-version = "0.47.0"
+version = "0.48.1"
 edition = "2024_07"
 description = "Cairo testing library"
 documentation = "https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library.html"

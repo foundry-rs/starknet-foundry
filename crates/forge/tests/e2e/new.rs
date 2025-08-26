@@ -49,8 +49,7 @@ fn init_new_project() {
 
 #[test_case(&Template::CairoProgram; "cairo-program")]
 #[test_case(&Template::BalanceContract; "balance-contract")]
-// TODO restore this test case after stable release
-// #[test_case(&Template::Erc20Contract; "erc20-contract")]
+#[test_case(&Template::Erc20Contract; "erc20-contract")]
 fn create_new_project_dir_not_exist(template: &Template) {
     let temp = tempdir_with_tool_versions().unwrap();
     let project_path = temp.join("new").join("project");
