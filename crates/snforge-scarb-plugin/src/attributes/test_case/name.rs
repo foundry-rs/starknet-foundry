@@ -12,60 +12,53 @@ use std::sync::LazyLock;
 static RE_SANITIZE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"[^a-zA-Z0-9]+").expect("Failed to create regex"));
 
-fn sanitize_ident(raw: &str) -> String {
-    let s = RE_SANITIZE
-        .replace_all(raw, "_")
+// TODO: Change this to generate more specific and accurate test case name.
+// We should check each expr variant and generate more descriptive name.
+fn sanitize_expr(expr: &Expr, db: &SimpleParserDatabase) -> String {
+    let expr_text = &expr.as_syntax_node().get_text(db);
+    let expr_sanitized = RE_SANITIZE
+        .replace_all(expr_text, "_")
         .to_lowercase()
         .trim_matches('_')
         .to_string();
-    if s.is_empty() { "_empty".into() } else { s }
+
+    if expr_sanitized.is_empty() {
+        "_empty".into()
+    } else {
+        expr_sanitized
+    }
 }
 
-fn generate_case_suffix(unnamed_args: &UnnamedArgs, args_db: &SimpleParserDatabase) -> String {
-    let parts = unnamed_args
+fn generate_case_suffix(
+    unnamed_args: &UnnamedArgs,
+    db: &SimpleParserDatabase,
+) -> Result<String, Diagnostics> {
+    if unnamed_args.is_empty() {
+        return Err(Diagnostics::from(TestCaseCollector::error(
+            "At least one argument is required if 'name' is not provided.",
+        )));
+    }
+
+    let exprs = unnamed_args
         .iter()
-        .map(|(_, expr)| {
-            let expr_text = &expr.as_syntax_node().get_text(args_db);
-            sanitize_ident(expr_text)
-        })
+        .map(|(_, expr)| sanitize_expr(&expr, &db))
         .collect::<Vec<_>>();
 
-    if parts.is_empty() {
-        "case".to_string()
-    } else {
-        parts.join("_")
-    }
+    Ok(exprs.join("_"))
 }
 
 pub fn resolve_test_case_name(
     func_name: &str,
     arguments: &Arguments,
-    args_db: &SimpleParserDatabase,
+    db: &SimpleParserDatabase,
 ) -> Result<String, Diagnostics> {
-    let suffix = if let Some(expr) = arguments.named().as_once_optional("name")? {
-        match expr {
-            Expr::String(_) | Expr::ShortString(_) => {
-                sanitize_ident(&expr.as_syntax_node().get_text(args_db))
-            }
-            _ => {
-                return Err(Diagnostics::from(TestCaseCollector::error(
-                    "The 'name' argument must be a string literal.",
-                )));
-            }
-        }
+    let named_args = arguments.named();
+    let test_case_name = named_args.as_once_optional("name")?;
+
+    let suffix = if let Some(expr) = test_case_name {
+        sanitize_expr(&expr, db)
     } else {
-        generate_case_suffix(
-            &UnnamedArgs::new(
-                &arguments
-                    .unnamed()
-                    .iter()
-                    .map(|(i, expr)| (*i, (*expr).clone()))
-                    .collect::<Vec<_>>()
-                    .into_iter()
-                    .collect(),
-            ),
-            args_db,
-        )
+        generate_case_suffix(&arguments.unnamed(), db)?
     };
 
     Ok(format!("{func_name}_{suffix}"))
