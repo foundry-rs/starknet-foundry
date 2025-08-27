@@ -12,8 +12,6 @@ use std::sync::LazyLock;
 static RE_SANITIZE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"[^a-zA-Z0-9]+").expect("Failed to create regex"));
 
-// TODO: Change this to generate more specific and accurate test case name.
-// We should check each expr variant and generate more descriptive name.
 fn sanitize_expr(expr: &Expr, db: &SimpleParserDatabase) -> String {
     let expr_text = &expr.as_syntax_node().get_text(db);
     let expr_sanitized = RE_SANITIZE

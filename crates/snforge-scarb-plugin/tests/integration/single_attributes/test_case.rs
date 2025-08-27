@@ -107,6 +107,3 @@ fn function_without_params() {
         )],
     );
 }
-
-// TODO: Add tests for default test case name generation, with different
-// expression types.
