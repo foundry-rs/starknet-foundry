@@ -1,11 +1,11 @@
-use crate::args::Arguments;
 use crate::args::unnamed::UnnamedArgs;
-use crate::attributes::ErrorExt;
+use crate::args::Arguments;
 use crate::attributes::test_case::TestCaseCollector;
+use crate::attributes::ErrorExt;
 use cairo_lang_macro::Diagnostics;
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::TypedSyntaxNode;
 use cairo_lang_syntax::node::ast::Expr;
+use cairo_lang_syntax::node::TypedSyntaxNode;
 use regex::Regex;
 use std::sync::LazyLock;
 
@@ -41,7 +41,7 @@ fn generate_case_suffix(
 
     let exprs = unnamed_args
         .iter()
-        .map(|(_, expr)| sanitize_expr(&expr, &db))
+        .map(|(_, expr)| sanitize_expr(expr, db))
         .collect::<Vec<_>>();
 
     Ok(exprs.join("_"))
@@ -56,7 +56,7 @@ pub fn resolve_test_case_name(
     let test_case_name = named_args.as_once_optional("name")?;
 
     let suffix = if let Some(expr) = test_case_name {
-        sanitize_expr(&expr, db)
+        sanitize_expr(expr, db)
     } else {
         generate_case_suffix(&arguments.unnamed(), db)?
     };
