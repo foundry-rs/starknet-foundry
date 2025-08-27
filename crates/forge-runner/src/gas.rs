@@ -47,9 +47,9 @@ pub fn calculate_used_gas(
         // as they are not relevant for test execution (see documentation for details):
         // https://github.com/foundry-rs/starknet-foundry/blob/979caf23c5d1085349e253d75682dd0e2527e321/docs/src/testing/gas-and-resource-estimation.md?plain=1#L75
         os_vm_resources: ExecutionResources::default(),
-        n_reverted_steps: 0,
+        n_reverted_steps: 0, // TODO(#3681)
         sierra_gas: resources.gas_consumed,
-        reverted_sierra_gas: GasAmount::ZERO,
+        reverted_sierra_gas: GasAmount::ZERO, // TODO(#3681)
     };
 
     let transaction_resources = TransactionResources {

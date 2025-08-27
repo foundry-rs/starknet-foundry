@@ -23,6 +23,7 @@ use cairo_vm::{
     },
 };
 use runtime::{ExtendedRuntime, ExtensionLogic, StarknetRuntime, SyscallHandlingResult};
+use starknet_api::execution_resources::GasAmount;
 use starknet_types_core::felt::Felt;
 
 pub struct CheatableStarknetRuntimeExtension<'a> {
@@ -196,6 +197,10 @@ impl CheatableStarknetRuntimeExtension<'_> {
 
         // Execute.
         let mut remaining_gas = gas_counter - required_gas;
+
+        // TODO(#3681)
+        syscall_handler.update_revert_gas_with_next_remaining_gas(GasAmount(remaining_gas));
+
         let original_response = execute_callback(
             request,
             vm,

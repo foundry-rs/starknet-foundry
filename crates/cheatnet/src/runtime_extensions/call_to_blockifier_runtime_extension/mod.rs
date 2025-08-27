@@ -18,6 +18,7 @@ use cairo_vm::vm::{errors::hint_errors::HintError, vm_core::VirtualMachine};
 use runtime::{ExtendedRuntime, ExtensionLogic, SyscallHandlingResult};
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::ContractAddress;
+use starknet_api::execution_resources::GasAmount;
 use starknet_types_core::felt::Felt;
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
@@ -193,6 +194,9 @@ fn execute_syscall<Request: ExecuteCall + SyscallRequest>(
     }
 
     let mut remaining_gas = gas_counter - required_gas;
+
+    // TODO(#3681)
+    syscall_handler.update_revert_gas_with_next_remaining_gas(GasAmount(remaining_gas));
 
     // region: Modified blockifier code
     let call_result = request.execute_call(syscall_handler, cheatnet_state, &mut remaining_gas);
