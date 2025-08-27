@@ -127,7 +127,7 @@ fn is_used_once() {
 }
 
 #[test]
-fn does_not_work_with_unnamed_number() {
+fn does_not_work_with_unnamed_arg() {
     let args = quote!((3));
 
     let result = available_gas(args, empty_function());

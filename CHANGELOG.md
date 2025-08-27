@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Removed
 
-- Unnamed arguments in `#[available_gas]`. Use named arguments instead, e.g. `#[available_gas(l2_gas: 5)]`.
+- Possibility to use `#[available_gas]` with unnamed argument. Use named arguments instead, e.g. `#[available_gas(l2_gas: 5)]`.
 
 ### Cast
 
