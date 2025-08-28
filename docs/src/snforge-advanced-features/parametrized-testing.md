@@ -105,7 +105,7 @@ Below is an example of a parameterized test that also uses the fuzzer.
 Now run:
 
 ```shell
-$ snforge test test_basic_sum_with_fuzzer
+$ snforge test sum_with_fuzzer
 ```
 
 <details>
