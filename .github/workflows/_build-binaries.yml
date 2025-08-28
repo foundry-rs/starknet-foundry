@@ -74,9 +74,9 @@ jobs:
       - name: Setup LLVM envs
         run: |
           LLVM_PATH_ABSOLUTE=$(readlink -f ./llvm)
-          export MLIR_SYS_190_PREFIX=${LLVM_PATH_ABSOLUTE}
-          export LLVM_SYS_191_PREFIX=${LLVM_PATH_ABSOLUTE}
-          export TABLEGEN_190_PREFIX=${LLVM_PATH_ABSOLUTE}
+          echo "MLIR_SYS_190_PREFIX=${LLVM_PATH_ABSOLUTE}" >> $GITHUB_ENV
+          echo "LLVM_SYS_191_PREFIX=${LLVM_PATH_ABSOLUTE}" >> $GITHUB_ENV
+          echo "TABLEGEN_190_PREFIX=${LLVM_PATH_ABSOLUTE}" >> $GITHUB_ENV
 
       - name: Install cross
         if: matrix.cross
