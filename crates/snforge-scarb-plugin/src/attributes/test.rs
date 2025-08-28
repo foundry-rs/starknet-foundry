@@ -1,6 +1,6 @@
 use super::{AttributeInfo, ErrorExt, internal_config_statement::InternalConfigStatementCollector};
 use crate::asserts::assert_is_used_once;
-use crate::common::has_fuzzer_attribute;
+use crate::common::{has_fuzzer_attribute, has_test_case_attribute};
 use crate::utils::create_single_token;
 use crate::{
     args::Arguments,
@@ -37,7 +37,21 @@ fn test_internal(
 ) -> Result<TokenStream, Diagnostics> {
     assert_is_used_once::<TestCollector>(db, func)?;
     args.assert_is_empty::<TestCollector>()?;
-    ensure_parameters_only_with_fuzzer_attribute(db, func)?;
+    ensure_parameters_only_with_fuzzer_or_test_case_attribute(db, func)?;
+
+    let has_test_case = has_test_case_attribute(db, func);
+    let has_fuzzer = has_fuzzer_attribute(db, func);
+
+    // If the function has #[test] attribute and does not have #[fuzzer], we can
+    // safely skip #[test].
+    if has_test_case && !has_fuzzer {
+        let func_item = func.as_syntax_node();
+        let func_item = SyntaxNodeWithDb::new(&func_item, db);
+
+        return Ok(quote!(
+            #func_item
+        ));
+    }
 
     let internal_config = create_single_token(InternalConfigStatementCollector::ATTR_NAME);
 
@@ -114,13 +128,16 @@ fn get_forge_test_filter() -> Result<String, VarError> {
     env::var("SNFORGE_TEST_FILTER")
 }
 
-fn ensure_parameters_only_with_fuzzer_attribute(
+fn ensure_parameters_only_with_fuzzer_or_test_case_attribute(
     db: &SimpleParserDatabase,
     func: &FunctionWithBody,
 ) -> Result<(), Diagnostic> {
-    if has_parameters(db, func) && !has_fuzzer_attribute(db, func) {
+    if has_parameters(db, func)
+        && !has_fuzzer_attribute(db, func)
+        && !has_test_case_attribute(db, func)
+    {
         Err(TestCollector::error(
-            "function with parameters must have #[fuzzer] attribute",
+            "function with parameters must have #[fuzzer] or #[test_case] attribute",
         ))?;
     }
 
