@@ -46,14 +46,20 @@ Each parameterized test gets its own generated name. There are two ways to contr
  - **Unnamed test case** - the name is generated based on the function   name and the arguments provided.
 
     ```rust
-    #[test_case(1, 2)]
+    #[test_case(1, 2, 3)]
+    fn test_basic_sum(x: felt252, y: felt252, expected: felt252) {
+        assert_eq!(sum(x, y), expected);
+    }
     ``` 
-    This will generate a test named `test_basic_sum_1_2`.
+    This will generate a test named `test_basic_sum_1_2_3`.
 
  - **Named test case** - you can provide a custom name for the test case using the `name` parameter.
 
     ```rust
-    #[test_case(name: "one_plus_two", 1, 2)]
+    #[test_case(name: "one_plus_two", 1, 2, 3)]
+    fn test_basic_sum(x: felt252, y: felt252, expected: felt252) {
+        assert_eq!(sum(x, y), expected);
+    }
     ```
     This will generate a test named `test_basic_sum_one_plus_two`.
 
