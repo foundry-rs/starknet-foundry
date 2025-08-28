@@ -226,10 +226,8 @@ pub async fn verify(
 
             // Gather and format files for display
             let (_, files) = voyager.gather_files(test_files)?;
-            let files_to_display: Vec<String> = files
-                .iter()
-                .map(|(name, path)| format!("{name}: \n{path}"))
-                .collect();
+            let files_to_display: Vec<String> =
+                files.keys().map(|name| format!("  {name}")).collect();
 
             // Display files and confirm
             display_files_and_confirm(
