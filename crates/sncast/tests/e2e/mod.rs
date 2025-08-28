@@ -1,5 +1,6 @@
 mod account;
 mod call;
+mod class_hash;
 mod completions;
 mod declare;
 mod deploy;
