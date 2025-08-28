@@ -34,7 +34,7 @@ Running 0 test(s) from src/
 Running 2 test(s) from tests/
 [PASS] parametrized_testing_integrationtest::basic_example::test_basic_sum_3_4 ([..])
 [PASS] parametrized_testing_integrationtest::basic_example::test_basic_sum_1_2 ([..])
-Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
+Tests: 2 passed, 0 failed, 0 ignored, [..] filtered out
 ```
 </details>
 <br>
