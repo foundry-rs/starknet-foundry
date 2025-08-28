@@ -21,6 +21,7 @@ Below is a simple example which checks addition of two numbers.
 
 Now run:
 
+<!-- { "package_name": "parametrized_testing" } -->
 ```shell
 $ snforge test test_basic_sum
 ```
@@ -73,6 +74,7 @@ Now let's look at a more complex example which uses structs as parameters.
 
 Now run:
 
+<!-- { "package_name": "parametrized_testing" } -->
 ```shell
 $ snforge test test_is_adult
 ```
@@ -104,6 +106,7 @@ Below is an example of a parameterized test that also uses the fuzzer.
 
 Now run:
 
+<!-- { "package_name": "parametrized_testing" } -->
 ```shell
 $ snforge test sum_with_fuzzer
 ```
