@@ -32,8 +32,8 @@ $ snforge test test_basic_sum
 Collected 2 test(s) from parametrized_testing package
 Running 0 test(s) from src/
 Running 2 test(s) from tests/
-[PASS] parametrized_testing_integrationtest::basic_example::test_basic_sum_3_4 ([..])
-[PASS] parametrized_testing_integrationtest::basic_example::test_basic_sum_1_2 ([..])
+[PASS] parametrized_testing_integrationtest::basic_example::test_basic_sum_1_2_3 ([..])
+[PASS] parametrized_testing_integrationtest::basic_example::test_basic_sum_3_4_7([..])
 Tests: 2 passed, 0 failed, 0 ignored, [..] filtered out
 ```
 </details>
@@ -108,8 +108,8 @@ $ snforge test test_basic_sum_with_fuzzer
 ```shell
 Collected 3 test(s) from parametrized_testing package
 Running 3 test(s) from tests/
-[PASS] parametrized_testing_integrationtest::example_with_fuzzer::sum_with_fuzzer_3_4 ([..])
-[PASS] parametrized_testing_integrationtest::example_with_fuzzer::sum_with_fuzzer_1_2 ([..])
+[PASS] parametrized_testing_integrationtest::example_with_fuzzer::sum_with_fuzzer_1_2_3 ([..])
+[PASS] parametrized_testing_integrationtest::example_with_fuzzer::sum_with_fuzzer_3_4_7 ([..])
 [PASS] parametrized_testing_integrationtest::example_with_fuzzer::sum_with_fuzzer ([..])
 Running 0 test(s) from src/
 Tests: 3 passed, 0 failed, 0 ignored, [..] filtered out

@@ -3,9 +3,9 @@ fn sum(x: felt252, y: felt252) -> felt252 {
 }
 
 #[test]
-#[test_case(1, 2)]
-#[test_case(3, 4)]
+#[test_case(1, 2, 3)]
+#[test_case(3, 4, 7)]
 #[fuzzer(runs: 10)]
-fn sum_with_fuzzer(x: felt252, y: felt252) {
-    assert_eq!(sum(x, y), x + y);
+fn sum_with_fuzzer(x: felt252, y: felt252, expected: felt252) {
+    assert_eq!(sum(x, y), expected);
 }
