@@ -65,6 +65,19 @@ jobs:
         with:
           workspaces: starknet-foundry
 
+
+      - name: Setup LLVM
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "19"
+
+      - name: Setup LLVM envs
+        run: |
+          LLVM_PATH_ABSOLUTE=$(readlink -f ./llvm)
+          export MLIR_SYS_190_PREFIX=${LLVM_PATH_ABSOLUTE}
+          export LLVM_SYS_191_PREFIX=${LLVM_PATH_ABSOLUTE}
+          export TABLEGEN_190_PREFIX=${LLVM_PATH_ABSOLUTE}
+
       - name: Install cross
         if: matrix.cross
         uses: taiki-e/install-action@cross
