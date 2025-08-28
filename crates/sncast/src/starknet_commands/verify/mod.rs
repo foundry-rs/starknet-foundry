@@ -91,7 +91,7 @@ fn display_files_and_confirm(
     contract_name: &str,
 ) -> Result<()> {
     // Display files that will be uploaded
-    ui.println(&"The following files will be transferred:");
+    ui.println(&"The following files will be uploaded to verifier:");
     for file_path in files_to_display {
         ui.println(&file_path);
     }
@@ -184,14 +184,16 @@ pub async fn verify(
         }
     };
 
-    // Create verifier and display files before prompting
+    // Handle test_files warning for Walnut
+    if matches!(verifier, Verifier::Walnut) && test_files {
+        ui.println(&WarningMessage::new(
+            "The `--test-files` option is ignored for Walnut verifier",
+        ));
+    }
+
+    // Create verifier instance, gather files, and perform verification
     match verifier {
         Verifier::Walnut => {
-            if test_files {
-                ui.println(&WarningMessage::new(
-                    "The `--test-files` option is ignored for Walnut verifier",
-                ));
-            }
             let walnut = WalnutVerificationInterface::new(
                 network,
                 workspace_dir.to_path_buf(),
@@ -199,10 +201,12 @@ pub async fn verify(
                 ui,
             )?;
 
-            // Gather and display files
+            // Gather and format files for display
             let files = walnut.gather_files()?;
             let files_to_display: Vec<String> =
                 files.iter().map(|(path, _)| format!("  {path}")).collect();
+
+            // Display files and confirm
             display_files_and_confirm(
                 &verifier,
                 files_to_display,
@@ -212,6 +216,7 @@ pub async fn verify(
                 &contract_name,
             )?;
 
+            // Perform verification
             walnut
                 .verify(contract_identifier, contract_name, package, false, ui)
                 .await
@@ -219,12 +224,14 @@ pub async fn verify(
         Verifier::Voyager => {
             let voyager = Voyager::new(network, workspace_dir.to_path_buf(), &provider, ui)?;
 
-            // Gather and display files
+            // Gather and format files for display
             let (_, files) = voyager.gather_files(test_files)?;
             let files_to_display: Vec<String> = files
                 .iter()
                 .map(|(name, path)| format!("{name}: \n{path}"))
                 .collect();
+
+            // Display files and confirm
             display_files_and_confirm(
                 &verifier,
                 files_to_display,
@@ -234,6 +241,7 @@ pub async fn verify(
                 &contract_name,
             )?;
 
+            // Perform verification
             voyager
                 .verify(contract_identifier, contract_name, package, test_files, ui)
                 .await
