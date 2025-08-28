@@ -33,7 +33,7 @@ Collected 2 test(s) from parametrized_testing package
 Running 0 test(s) from src/
 Running 2 test(s) from tests/
 [PASS] parametrized_testing_integrationtest::example_basic::test_basic_sum_1_2_3 ([..])
-[PASS] parametrized_testing_integrationtest::example_basic::test_basic_sum_3_4_7([..])
+[PASS] parametrized_testing_integrationtest::example_basic::test_basic_sum_3_4_7 ([..])
 Tests: 2 passed, 0 failed, 0 ignored, [..] filtered out
 ```
 </details>
