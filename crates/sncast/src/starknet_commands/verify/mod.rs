@@ -82,6 +82,40 @@ impl fmt::Display for Verifier {
     }
 }
 
+fn display_files_and_confirm(
+    verifier: &Verifier,
+    files_to_display: Vec<String>,
+    confirm_verification: bool,
+    ui: &UI,
+    artifacts: &HashMap<String, StarknetContractArtifacts>,
+    contract_name: &str,
+) -> Result<()> {
+    // Display files that will be uploaded
+    ui.println(&"The following files will be transferred:");
+    for file_path in files_to_display {
+        ui.println(&file_path);
+    }
+
+    // Ask for confirmation after showing files
+    if !confirm_verification {
+        let prompt_text = format!(
+            "\n\tYou are about to submit the above files to the third-party verifier at {verifier}.\n\n\tImportant: Make sure your project's Scarb.toml does not include sensitive information like private keys.\n\n\tAre you sure you want to proceed? (Y/n)"
+        );
+        let input: String = prompt(prompt_text)?;
+
+        if !input.starts_with('Y') {
+            bail!("Verification aborted");
+        }
+    }
+
+    // Check contract exists after confirmation
+    if !artifacts.contains_key(contract_name) {
+        return Err(anyhow!("Contract named '{contract_name}' was not found"));
+    }
+
+    Ok(())
+}
+
 pub async fn verify(
     args: Verify,
     manifest_path: &Utf8PathBuf,
@@ -117,22 +151,6 @@ pub async fn verify(
     };
     let provider = get_provider(rpc_url.as_str())?;
 
-    // Let's ask confirmation
-    if !confirm_verification {
-        let prompt_text = format!(
-            "\n\tYou are about to submit the entire workspace code to the third-party verifier at {verifier}.\n\n\tImportant: Make sure your project's Scarb.toml does not include sensitive information like private keys.\n\n\tAre you sure you want to proceed? (Y/n)"
-        );
-        let input: String = prompt(prompt_text)?;
-
-        if !input.starts_with('Y') {
-            bail!("Verification aborted");
-        }
-    }
-
-    if !artifacts.contains_key(&contract_name) {
-        return Err(anyhow!("Contract named '{contract_name}' was not found"));
-    }
-
     // Build JSON Payload for the verification request
     // get the parent dir of the manifest path
     let workspace_dir = manifest_path
@@ -166,6 +184,7 @@ pub async fn verify(
         }
     };
 
+    // Create verifier and display files before prompting
     match verifier {
         Verifier::Walnut => {
             if test_files {
@@ -179,12 +198,42 @@ pub async fn verify(
                 &provider,
                 ui,
             )?;
+
+            // Gather and display files
+            let files = walnut.gather_files()?;
+            let files_to_display: Vec<String> =
+                files.iter().map(|(path, _)| format!("  {path}")).collect();
+            display_files_and_confirm(
+                &verifier,
+                files_to_display,
+                confirm_verification,
+                ui,
+                artifacts,
+                &contract_name,
+            )?;
+
             walnut
                 .verify(contract_identifier, contract_name, package, false, ui)
                 .await
         }
         Verifier::Voyager => {
             let voyager = Voyager::new(network, workspace_dir.to_path_buf(), &provider, ui)?;
+
+            // Gather and display files
+            let (_, files) = voyager.gather_files(test_files)?;
+            let files_to_display: Vec<String> = files
+                .iter()
+                .map(|(name, path)| format!("{name}: \n{path}"))
+                .collect();
+            display_files_and_confirm(
+                &verifier,
+                files_to_display,
+                confirm_verification,
+                ui,
+                artifacts,
+                &contract_name,
+            )?;
+
             voyager
                 .verify(contract_identifier, contract_name, package, test_files, ui)
                 .await
