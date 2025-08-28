@@ -35,6 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A bug that caused `#[fuzzer]` attribute to fail when used with generic structs
 
+### Cast
+
+#### Added
+
+- `utils class-hash` command to calculate the class hash for a contract
+
 ## [0.48.0] - 2025-08-05
 
 ### Forge
