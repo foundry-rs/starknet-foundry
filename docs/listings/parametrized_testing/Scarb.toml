@@ -1,0 +1,14 @@
+[package]
+name = "parametrized_testing"
+version = "0.1.0"
+edition = "2024_07"
+
+[dependencies]
+starknet = "2.8.5"
+assert_macros = "2.8.5"
+
+[dev-dependencies]
+snforge_std = { path = "../../../snforge_std" }
+
+[scripts]
+test = "snforge test"

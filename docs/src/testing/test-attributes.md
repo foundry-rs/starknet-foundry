@@ -11,6 +11,7 @@ Currently, those attributes are supported:
 - `#[fork]`
 - `#[fuzzer]`
 - `#[disable_predeployed_contracts]`
+- `#[test_case]`
 
 > 📝 **Note**
 >
@@ -160,3 +161,33 @@ Disables predeployment of default contracts in the test case.
 Currently predeployed contracts are:
 - `STRK`
 - `ETH`
+
+### `#[test_case]`
+
+Generates multiple test cases from a single function by providing different sets of arguments.
+
+Read more about parametrized tests [here](../snforge-advanced-features/parametrized-testing.md).
+
+#### Usage
+
+You can define multiple test cases by specifying different sets of arguments using the `#[test_case]` attribute.
+
+```rust
+#[test]
+#[test_case(1, 2)]
+#[test_case(3, 4)]
+fn test_small_sum(a: u32, b: u32) {
+    assert_eq!(a + b, 3); // This will pass for the first case
+}
+```
+
+Test cases can also be named for better identification in the test reports.
+
+```rust
+#[test]
+#[test_case(1, 2; name: "one_plus_two")]
+#[test_case(3, 4; name: "three_plus_four")]
+fn test_small_sum(a: u32, b: u32) {
+    assert_eq!(a + b, 3);
+}
+```
