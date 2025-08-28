@@ -86,7 +86,11 @@ jobs:
           echo "CARGO=cross" >> $GITHUB_ENV
 
       - name: Build
-        run: ${{ env.CARGO }} build --release --locked --target ${{ matrix.target }}
+        run: |
+          export MLIR_SYS_190_PREFIX=${{ env.MLIR_SYS_190_PREFIX }}
+          export LLVM_SYS_191_PREFIX=${{ env.LLVM_SYS_191_PREFIX }}
+          export TABLEGEN_190_PREFIX=${{ env.TABLEGEN_190_PREFIX }}
+          ${{ env.CARGO }} build --release --locked --target ${{ matrix.target }}
 
       - name: Package
         shell: bash
