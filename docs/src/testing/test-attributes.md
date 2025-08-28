@@ -174,10 +174,10 @@ You can define multiple test cases by specifying different sets of arguments usi
 
 ```rust
 #[test]
-#[test_case(1, 2)]
-#[test_case(3, 4)]
-fn test_small_sum(a: u32, b: u32) {
-    assert_eq!(a + b, 3); // This will pass for the first case
+#[test_case(1, 2, 3)]
+#[test_case(3, 4, 7)]
+fn test_small_sum(a: felt252, b: felt252, expected: felt252) {
+    assert_eq!(a + b, expected);
 }
 ```
 
@@ -185,9 +185,9 @@ Test cases can also be named for better identification in the test reports.
 
 ```rust
 #[test]
-#[test_case(1, 2; name: "one_plus_two")]
-#[test_case(3, 4; name: "three_plus_four")]
-fn test_small_sum(a: u32, b: u32) {
-    assert_eq!(a + b, 3);
+#[test_case(name: "one_plus_two", 1, 2, 3)]
+#[test_case(name: "three_plus_four", 3, 4, 7)]
+fn test_small_sum(a: u32, b: u32, expected: u32) {
+    assert_eq!(a + b, expected);
 }
 ```
