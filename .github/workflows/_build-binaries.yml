@@ -62,9 +62,6 @@ jobs:
           rustup target add ${{ matrix.target }}
 
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
-        with:
-          workspaces: starknet-foundry
-
 
       - name: Setup LLVM
         uses: KyleMayes/install-llvm-action@v2
