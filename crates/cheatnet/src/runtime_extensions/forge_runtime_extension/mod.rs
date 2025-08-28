@@ -187,7 +187,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 let contract_name: String = input_reader.read::<ByteArray>()?.to_string();
 
-                handle_declare_deploy_result(declare(*state, &contract_name, self.contracts_data))
+                handle_declare_result(declare(*state, &contract_name, self.contracts_data))
             }
             // Internal cheatcode used to pass a contract address when calling `deploy_at`.
             "set_deploy_at_address" => {
@@ -554,7 +554,7 @@ enum SignError {
     HashOutOfRange,
 }
 
-fn handle_declare_deploy_result<T: CairoSerialize>(
+fn handle_declare_result<T: CairoSerialize>(
     declare_result: Result<T, CheatcodeError>,
 ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
     let result = match declare_result {
