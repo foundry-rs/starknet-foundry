@@ -23,28 +23,28 @@ jobs:
     strategy:
       matrix:
         include:
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-            # Use cross to link oldest GLIBC possible.
-            cross: true
-
-          - target: x86_64-unknown-linux-musl
-            os: ubuntu-latest
-            cross: true
-
-          - target: aarch64-unknown-linux-gnu
-            os: ubuntu-latest
-            cross: true
-
-          - target: aarch64-unknown-linux-musl
-            os: ubuntu-latest
-            cross: true
+#          - target: x86_64-unknown-linux-gnu
+#            os: ubuntu-latest
+#            # Use cross to link oldest GLIBC possible.
+#            cross: true
+#
+#          - target: x86_64-unknown-linux-musl
+#            os: ubuntu-latest
+#            cross: true
+#
+#          - target: aarch64-unknown-linux-gnu
+#            os: ubuntu-latest
+#            cross: true
+#
+#          - target: aarch64-unknown-linux-musl
+#            os: ubuntu-latest
+#            cross: true
 
           - target: x86_64-apple-darwin
             os: macos-latest
 
-          - target: aarch64-apple-darwin
-            os: macos-latest
+#          - target: aarch64-apple-darwin
+#            os: macos-latest
 
     steps:
       - name: Checkout with ref
@@ -63,17 +63,15 @@ jobs:
 
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
 
-      - name: Setup LLVM
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "19"
-
-      - name: Setup LLVM envs
+      - name: Setup LLVM on MacOS
+        if: matrix.os == 'macos-latest'
         run: |
-          LLVM_PATH_ABSOLUTE=$(readlink -f ./llvm)
-          echo "MLIR_SYS_190_PREFIX=${LLVM_PATH_ABSOLUTE}" >> $GITHUB_ENV
-          echo "LLVM_SYS_191_PREFIX=${LLVM_PATH_ABSOLUTE}" >> $GITHUB_ENV
-          echo "TABLEGEN_190_PREFIX=${LLVM_PATH_ABSOLUTE}" >> $GITHUB_ENV
+          brew install llvm@19
+          brew reinstall zstd
+          echo "MLIR_SYS_190_PREFIX=$(brew --prefix llvm@19)" >> $GITHUB_ENV
+          echo "LLVM_SYS_191_PREFIX=$(brew --prefix llvm@19)" >> $GITHUB_ENV
+          echo "TABLEGEN_190_PREFIX=$(brew --prefix llvm@19)" >> $GITHUB_ENV
+          echo "LIBRARY_PATH=/opt/homebrew/lib" >> $GITHUB_ENV
 
       - name: Install cross
         if: matrix.cross
@@ -90,6 +88,7 @@ jobs:
           export MLIR_SYS_190_PREFIX=${{ env.MLIR_SYS_190_PREFIX }}
           export LLVM_SYS_191_PREFIX=${{ env.LLVM_SYS_191_PREFIX }}
           export TABLEGEN_190_PREFIX=${{ env.TABLEGEN_190_PREFIX }}
+          export LIBRARY_PATH=${{ env.LIBRARY_PATH }}
           ${{ env.CARGO }} build --release --locked --target ${{ matrix.target }}
 
       - name: Package
