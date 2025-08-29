@@ -60,6 +60,11 @@ pub fn get_call_result(
         TrackedResource::CairoSteps => 0,
         TrackedResource::SierraGas => syscall_handler.base.call.initial_gas - gas,
     };
+
+    // let remaining = gas - gas_consumed;
+    // dbg!(remaining);
+    // dbg!((i64::MAX as u64) - remaining);
+
     Ok(CallResult {
         failed,
         retdata: read_execution_retdata(runner, retdata_size, retdata_start)?,

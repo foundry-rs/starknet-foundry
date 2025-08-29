@@ -273,7 +273,7 @@ pub fn run_test_case(
         program_segment_size,
     ) {
         Ok(()) => {
-            let call_info = finalize_execution(
+            let mut call_info = finalize_execution(
                 &mut runner,
                 &mut forge_runtime
                     .extended_runtime
@@ -285,7 +285,12 @@ pub fn run_test_case(
                 tracked_resource,
             )?;
 
-            // TODO(#3292) this can be done better, we can take gas directly from call info
+            // TODO: Investigate why top call gas consumed is not always aggregated from inner calls
+            update_top_call_gas_consumed(&mut call_info);
+
+            // dbg!(&call_info);
+
+            // TODO(#3292): Confirm if this is needed for the profiler
             let vm_resources_without_inner_calls = runner
                 .get_execution_resources()
                 .expect("Execution resources missing")
@@ -332,34 +337,38 @@ pub fn run_test_case(
         .clone();
 
     let transaction_context = get_context(&forge_runtime).tx_context.clone();
-    let used_resources =
-        get_all_used_resources(forge_runtime, &transaction_context, tracked_resource);
-    let gas_used = calculate_used_gas(
-        &transaction_context,
-        &mut cached_state,
-        used_resources.clone(),
-    )?;
 
     let fork_data = cached_state
         .state
         .fork_state_reader
+        .as_ref()
         .map(|fork_state_reader| ForkData::new(&fork_state_reader.compiled_contract_class_map()))
         .unwrap_or_default();
 
     Ok(match result {
-        Ok(result) => RunResult::Completed(Box::new(RunCompleted {
-            status: if result.execution.failed {
-                RunStatus::Panic(result.execution.retdata.0)
-            } else {
-                RunStatus::Success(result.execution.retdata.0)
-            },
-            call_trace: call_trace_ref,
-            gas_used,
-            used_resources,
-            encountered_errors,
-            fuzzer_args,
-            fork_data,
-        })),
+        Ok(result) => {
+            let used_resources =
+                get_all_used_resources(&result, &call_trace_ref, &transaction_context);
+            let gas_used = calculate_used_gas(
+                &transaction_context,
+                &mut cached_state,
+                used_resources.clone(),
+            )?;
+
+            RunResult::Completed(Box::new(RunCompleted {
+                status: if result.execution.failed {
+                    RunStatus::Panic(result.execution.retdata.0)
+                } else {
+                    RunStatus::Success(result.execution.retdata.0)
+                },
+                call_trace: call_trace_ref,
+                gas_used,
+                used_resources,
+                encountered_errors,
+                fuzzer_args,
+                fork_data,
+            }))
+        }
         Err(error) => RunResult::Error(RunError {
             error: Box::new(error),
             call_trace: call_trace_ref,
@@ -461,4 +470,10 @@ fn get_call_trace_ref(runtime: &mut ForgeRuntime) -> Rc<RefCell<CallTrace>> {
         .trace_data
         .current_call_stack
         .top()
+}
+
+fn update_top_call_gas_consumed(call_info: &mut CallInfo) {
+    for call in call_info.inner_calls.clone() {
+        call_info.execution.gas_consumed += call.execution.gas_consumed;
+    }
 }
