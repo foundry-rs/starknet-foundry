@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - The supported RPC version is now 0.9.0
+- [New UDC](https://starkscan.co/contract/0x02ceed65a4bd731034c01113685c831b01c15d7d432f71afb1cf1634b53a2125) is now used during deployment
 
 ## [0.48.1] - 2025-08-14
 
@@ -34,6 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - A bug that caused `#[fuzzer]` attribute to fail when used with generic structs
+
+### Cast
+
+#### Added
+
+- `utils class-hash` command to calculate the class hash for a contract
 
 ## [0.48.0] - 2025-08-05
 

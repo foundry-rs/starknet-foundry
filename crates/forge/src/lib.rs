@@ -27,6 +27,7 @@ mod combine_configs;
 mod compatibility_check;
 mod init;
 mod new;
+mod profile_validation;
 pub mod run_tests;
 pub mod scarb;
 pub mod shared_cache;
