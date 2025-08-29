@@ -71,20 +71,3 @@ pub fn deploy_at(
         }
     }
 }
-
-pub fn deploy(
-    syscall_handler: &mut SyscallHintProcessor,
-    cheatnet_state: &mut CheatnetState,
-    class_hash: &ClassHash,
-    calldata: &[Felt],
-) -> Result<(ContractAddress, Vec<Felt>), CheatcodeError> {
-    let contract_address = cheatnet_state.precalculate_address(class_hash, calldata);
-
-    deploy_at(
-        syscall_handler,
-        cheatnet_state,
-        class_hash,
-        calldata,
-        contract_address,
-    )
-}
