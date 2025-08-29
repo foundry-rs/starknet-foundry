@@ -100,6 +100,14 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                     SyscallSelector::StorageWrite,
                 )
                 .map(|()| SyscallHandlingResult::Handled),
+            SyscallSelector::MetaTxV0 => self
+                .execute_syscall(
+                    syscall_handler,
+                    vm,
+                    cheated_syscalls::meta_tx_v0_syscall,
+                    SyscallSelector::MetaTxV0,
+                )
+                .map(|()| SyscallHandlingResult::Handled),
             _ => Ok(SyscallHandlingResult::Forwarded),
         }
     }
