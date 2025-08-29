@@ -4,6 +4,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetSta
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_constructor_entry_point;
 use blockifier::context::TransactionContext;
 use blockifier::execution::common_hints::ExecutionMode;
+use blockifier::execution::execution_utils::ReadOnlySegment;
 use blockifier::execution::syscalls::hint_processor::{
     INVALID_ARGUMENT, SyscallExecutionError, SyscallHintProcessor,
 };
@@ -31,7 +32,6 @@ use blockifier::{
     execution::syscalls::hint_processor::create_retdata_segment,
 };
 use cairo_vm::Felt252;
-use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::TEST_ADDRESS;
