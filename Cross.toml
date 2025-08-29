@@ -1,0 +1,7 @@
+[build]
+pre-build = [
+    "sudo apt-get install llvm-19 llvm-19-dev llvm-19-runtime clang-19 clang-tools-19 lld-19 libpolly-19-dev libmlir-19-dev mlir-19-tools",
+    "export MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
+    "export LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
+    "export TABLEGEN_190_PREFIX=/usr/lib/llvm-19"
+]
