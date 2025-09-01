@@ -10,16 +10,10 @@ use test_utils::test_case;
 // TODO(#3704) Remove scarb version check
 fn skip_if_scarb_lt_2_11_0() -> Option<String> {
     match ScarbCommand::version().run() {
-        Ok(version_info) => {
-            if version_info.scarb < Version::new(2, 11, 0) {
-                Some(
-                    "[IGNORED] `meta_tx_v0` syscall is not supported in Scarb < 2.11.0".to_string(),
-                )
-            } else {
-                None
-            }
+        Ok(version_info) if version_info.scarb < Version::new(2, 11, 0) => {
+            Some("[IGNORED] `meta_tx_v0` syscall is not supported in Scarb < 2.11.0".to_string())
         }
-        Err(_) => None,
+        _ => None,
     }
 }
 
