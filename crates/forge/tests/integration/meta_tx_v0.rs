@@ -1,12 +1,32 @@
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
+use scarb_api::ScarbCommand;
+use semver::Version;
 use std::path::Path;
 use test_utils::runner::{Contract, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
+fn should_skip_for_scarb_2_10_1() -> Option<String> {
+    match ScarbCommand::version().run() {
+        Ok(version_info) => {
+            if version_info.scarb == Version::new(2, 10, 1) {
+                Some("[IGNORED] `meta_tx_v0` syscall is not supported in Scarb 2.10.1".to_string())
+            } else {
+                None
+            }
+        }
+        Err(_) => None,
+    }
+}
+
 #[test]
 fn meta_tx_v0_with_cheat_caller_address() {
+    if let Some(skip_message) = should_skip_for_scarb_2_10_1() {
+        eprintln!("{skip_message}");
+        return;
+    }
+
     let test = test_case!(
         indoc!(
             r#"
@@ -76,6 +96,11 @@ fn meta_tx_v0_with_cheat_caller_address() {
 
 #[test]
 fn meta_tx_v0_with_cheat_block_hash() {
+    if let Some(skip_message) = should_skip_for_scarb_2_10_1() {
+        eprintln!("{skip_message}");
+        return;
+    }
+
     let test = test_case!(
         indoc!(
             r#"
@@ -145,6 +170,11 @@ fn meta_tx_v0_with_cheat_block_hash() {
 
 #[test]
 fn meta_tx_v0_verify_tx_context_modification() {
+    if let Some(skip_message) = should_skip_for_scarb_2_10_1() {
+        eprintln!("{skip_message}");
+        return;
+    }
+
     let test = test_case!(
         indoc!(
             r#"
