@@ -44,30 +44,30 @@ cairo-lang-test-plugin = "2.12.0"
 cairo-lang-starknet-classes = "2.12.0"
 cairo-lang-parser = "2.12.0"
 cairo-lang-sierra-to-casm = "2.12.0"
-cairo-vm = "2.2.0"
+cairo-vm = "2.4.0"
 cairo-annotations = "0.5.1"
 dirs = "6.0.0"
 dialoguer = "0.11.0"
-starknet-types-core = { version = "0.1.7", features = ["hash", "prime-bigint"] }
+starknet-types-core = { version = "0.2.0", features = ["hash", "prime-bigint"] }
 anyhow = "1.0.97"
 assert_fs = "1.1.2"
-camino = { version = "1.1.9", features = ["serde1"] }
-clap = { version = "4.5.39", features = ["derive", "deprecated"] }
+camino = { version = "1.1.12", features = ["serde1"] }
+clap = { version = "4.5.46", features = ["derive", "deprecated"] }
 clap_complete = "4.5.52"
 console = "0.15.11"
 include_dir = "0.7.4"
 indoc = "2"
 itertools = "0.14.0"
-indexmap = "2.9.0"
+indexmap = "2.11.0"
 num-traits = "0.2.19"
 rayon = "1.10"
-regex = "1.11.1"
+regex = "1.11.2"
 serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
-starknet = "0.17.0-rc.3"
-starknet-crypto = "0.7.4"
-tempfile = "3.20.0"
-thiserror = "2.0.12"
+serde_json = "1.0.143"
+starknet = "0.17.0"
+starknet-crypto = "0.8.1"
+tempfile = "3.21.0"
+thiserror = "2.0.16"
 ctor = "0.4.1"
 url = { "version" = "2.5.4", "features" = ["serde"] }
 tokio = { version = "1.44.0", features = ["full"] }
@@ -107,8 +107,8 @@ sha3 = "0.10.8"
 base16ct = { version = "0.2.0", features = ["alloc"] }
 async-trait = "0.1.87"
 serde_path_to_error = "0.1.17"
-wiremock = "0.6.3"
-const-hex = "1.14.1"
+wiremock = "0.6.5"
+const-hex = "1.15.0"
 indicatif = "0.17.11"
 shell-words = "1.1.0"
 sanitize-filename = "0.6.0"
