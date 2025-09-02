@@ -31,7 +31,7 @@ use forge_runner::{
     test_target_summary::TestTargetSummary,
 };
 use foundry_ui::{UI, components::labeled::LabeledMessage};
-use scarb_api::get_contracts_artifacts_and_source_sierra_paths;
+use scarb_api::{CompilationOpts, get_contracts_artifacts_and_source_sierra_paths};
 use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
 
@@ -82,11 +82,14 @@ impl RunForPackageArgs {
         let contracts = get_contracts_artifacts_and_source_sierra_paths(
             artifacts_dir,
             &package,
-            !should_compile_starknet_contract_target(
-                &scarb_metadata.app_version_info.version,
-                args.no_optimization,
-            ),
             ui,
+            CompilationOpts {
+                use_test_target_contracts: !should_compile_starknet_contract_target(
+                    &scarb_metadata.app_version_info.version,
+                    args.no_optimization,
+                ),
+                run_native: true,
+            },
         )?;
         let contracts_data = ContractsData::try_from(contracts)?;
 
