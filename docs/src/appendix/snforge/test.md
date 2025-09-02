@@ -32,6 +32,12 @@ Available components:
 - `call-type`
 - `call-result`
 
+## `--rub-native`
+
+Run contracts on [`cairo-native`](https://github.com/lambdaclass/cairo_native) instead of the default `cairo-vm`.
+
+Note: Only contracts are supported, test itself will still run on `cairo-vm`.
+
 ## `-e`, `--exact`
 
 Will only run a test with a name exactly matching the test filter.
