@@ -29,7 +29,7 @@ license = "MIT"
 license-file = "LICENSE"
 
 [workspace.dependencies]
-blockifier = { version = "0.15.0-rc.2", features = ["testing", "tracing"]}
+blockifier = { version = "0.15.0-rc.3", features = ["testing", "tracing"]}
 bigdecimal = "0.4.8"
 starknet_api = "0.15.0-rc.2"
 cairo-lang-casm = { version = "2.12.0", features = ["serde"] }

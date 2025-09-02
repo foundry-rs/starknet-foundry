@@ -80,7 +80,7 @@ pub fn deploy_syscall(
 ) -> SyscallResult<DeployResponse> {
     // Increment the Deploy syscall's linear cost counter by the number of elements in the
     // constructor calldata
-    syscall_handler.increment_linear_factor_by(
+    syscall_handler.base.increment_syscall_linear_factor_by(
         &SyscallSelector::Deploy,
         request.constructor_calldata.0.len(),
     );
@@ -282,7 +282,9 @@ fn meta_tx_v0(
     signature: TransactionSignature,
     remaining_gas: &mut u64,
 ) -> SyscallResult<ReadOnlySegment> {
-    syscall_handler.increment_linear_factor_by(&SyscallSelector::MetaTxV0, calldata.0.len());
+    syscall_handler
+        .base
+        .increment_syscall_linear_factor_by(&SyscallSelector::MetaTxV0, calldata.0.len());
 
     if syscall_handler.base.context.execution_mode == ExecutionMode::Validate {
         //region: Modified blockifier code
