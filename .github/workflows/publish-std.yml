@@ -39,7 +39,7 @@ jobs:
       snforge_std_deprecated_uploaded: ${{ steps.check-uploaded.outputs.snforge_std_deprecated_uploaded }}
       sncast_std_uploaded: ${{ steps.check-uploaded.outputs.sncast_std_uploaded }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Check version
         id: check-uploaded
         run: |
@@ -67,9 +67,9 @@ jobs:
     env:
       SCARB_REGISTRY_AUTH_TOKEN: ${{ inputs.prod_registry == true && secrets.SCARB_REGISTRY_AUTH_TOKEN || secrets.DEV_SCARB_REGISTRY_AUTH_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
+      - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: stable
 

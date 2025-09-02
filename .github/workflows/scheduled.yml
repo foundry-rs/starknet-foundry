@@ -17,7 +17,7 @@ jobs:
       versions: ${{ steps.get_versions.outputs.versions }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
         with:
           tool_versions: |
@@ -40,9 +40,9 @@ jobs:
         version: ${{ fromJSON(needs.get-scarb-versions.outputs.versions) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
@@ -77,9 +77,9 @@ jobs:
         if: github.event_name == 'pull_request'
         run: echo "REPO_NAME=$(echo ${{ github.event.pull_request.head.repo.full_name }}.git)" >> $GITHUB_ENV
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
@@ -103,9 +103,9 @@ jobs:
         version: ${{ fromJSON(needs.get-scarb-versions.outputs.versions) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
@@ -130,11 +130,11 @@ jobs:
     outputs:
       version: ${{ steps.validVersion.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Get version from Cargo.toml
         id: lookupVersion
-        uses: mikefarah/yq@8bf425b4d1344db7cd469a8d10a390876e0c77fd
+        uses: mikefarah/yq@f03c9dc599c37bfcaf533427211d05e51e6fee64
         with:
           cmd: yq -oy '.workspace.package.version' 'Cargo.toml'
 
@@ -207,7 +207,7 @@ jobs:
     needs: [ test-forge-unit-and-integration, test-forge-e2e, test-cast , build-plugin-binaries, build-binaries, publish-plugin, publish-std, test-binary ]
     steps:
       - name: Notify that the workflow has failed
-        uses: slackapi/slack-github-action@v2.0.0
+        uses: slackapi/slack-github-action@v2.1.1
         with:
           webhook: ${{ secrets.SLACK_SCHEDULED_TESTS_FAILURE_WEBHOOK_URL }}
           webhook-type: webhook-trigger
