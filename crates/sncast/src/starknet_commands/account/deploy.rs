@@ -18,7 +18,7 @@ use sncast::{
 };
 use starknet::accounts::{AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory};
 use starknet::accounts::{AccountFactoryError, ArgentAccountFactory};
-use starknet::core::types::BlockTag::Pending;
+use starknet::core::types::BlockTag::PreConfirmed;
 use starknet::core::types::{BlockId, StarknetError::ClassHashNotFound};
 use starknet::core::utils::get_contract_address;
 use starknet::providers::ProviderError::StarknetError;
@@ -48,7 +48,7 @@ pub struct Deploy {
 #[expect(clippy::too_many_arguments)]
 pub async fn deploy(
     provider: &JsonRpcClient<HttpTransport>,
-    accounts_file: Utf8PathBuf,
+    accounts_file: &Utf8PathBuf,
     deploy_args: &Deploy,
     chain_id: Felt,
     wait_config: WaitForTx,
@@ -74,7 +74,7 @@ pub async fn deploy(
             .name
             .clone()
             .ok_or_else(|| anyhow!("Required argument `--name` not provided"))?;
-        check_account_file_exists(&accounts_file)?;
+        check_account_file_exists(accounts_file)?;
         deploy_from_accounts_file(
             provider,
             accounts_file,
@@ -131,7 +131,7 @@ async fn deploy_from_keystore(
     let address = compute_account_address(salt, &private_key, class_hash, account_type, chain_id);
 
     let result = if provider
-        .get_class_hash_at(BlockId::Tag(Pending), address)
+        .get_class_hash_at(BlockId::Tag(PreConfirmed), address)
         .await
         .is_ok()
     {
@@ -160,14 +160,14 @@ async fn deploy_from_keystore(
 
 async fn deploy_from_accounts_file(
     provider: &JsonRpcClient<HttpTransport>,
-    accounts_file: Utf8PathBuf,
+    accounts_file: &Utf8PathBuf,
     name: String,
     chain_id: Felt,
     fee_args: FeeArgs,
     wait_config: WaitForTx,
     ui: &UI,
 ) -> Result<InvokeResponse> {
-    let account_data = get_account_data_from_accounts_file(&name, chain_id, &accounts_file)?;
+    let account_data = get_account_data_from_accounts_file(&name, chain_id, accounts_file)?;
 
     let private_key = SigningKey::from_secret_scalar(account_data.private_key);
 
@@ -304,6 +304,7 @@ where
         l2_gas_price,
         l1_data_gas,
         l1_data_gas_price,
+        tip,
     } = fee_settings.expect("Failed to convert to fee settings");
 
     let deployment = apply_optional_fields!(
@@ -313,7 +314,8 @@ where
         l2_gas => AccountDeploymentV3::l2_gas,
         l2_gas_price => AccountDeploymentV3::l2_gas_price,
         l1_data_gas => AccountDeploymentV3::l1_data_gas,
-        l1_data_gas_price => AccountDeploymentV3::l1_data_gas_price
+        l1_data_gas_price => AccountDeploymentV3::l1_data_gas_price,
+        tip => AccountDeploymentV3::tip
     );
     let result = deployment.send().await;
 
@@ -348,13 +350,13 @@ where
 }
 
 fn update_account_in_accounts_file(
-    accounts_file: Utf8PathBuf,
+    accounts_file: &Utf8PathBuf,
     account_name: &str,
     chain_id: Felt,
 ) -> Result<()> {
     let network_name = chain_id_to_network_name(chain_id);
 
-    let mut items = load_accounts(&accounts_file)?;
+    let mut items = load_accounts(accounts_file)?;
     items[&network_name][account_name]["deployed"] = serde_json::Value::from(true);
     std::fs::write(accounts_file, serde_json::to_string_pretty(&items).unwrap())
         .context("Failed to write to accounts file")?;

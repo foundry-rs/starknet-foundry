@@ -1,10 +1,11 @@
 use core::array::ArrayTrait;
 use core::result::ResultTrait;
-use starknet::{ContractAddress, SyscallResultTrait, syscalls::emit_event_syscall};
 use snforge_std::{
-    declare, ContractClassTrait, spy_events, EventSpy, EventSpyTrait, EventSpyAssertionsTrait,
-    Event, test_address,
+    ContractClassTrait, Event, EventSpy, EventSpyAssertionsTrait, EventSpyTrait, declare,
+    spy_events, test_address,
 };
+use starknet::syscalls::emit_event_syscall;
+use starknet::{ContractAddress, SyscallResultTrait};
 
 #[test]
 fn test_expect_event() {

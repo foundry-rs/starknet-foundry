@@ -1,24 +1,13 @@
 use anyhow::{Context, Result, ensure};
-use indoc::{formatdoc, indoc};
-use scarb_api::metadata::Metadata;
-use semver::Version;
+use indoc::indoc;
 use shared::command::CommandExt;
 use std::ffi::OsString;
 use std::process::Stdio;
 use std::{env, fs, path::PathBuf, process::Command};
-use toml_edit::{DocumentMut, Table};
 use which::which;
 
 pub const COVERAGE_DIR: &str = "coverage";
 pub const OUTPUT_FILE_NAME: &str = "coverage.lcov";
-
-const MINIMAL_SCARB_VERSION: Version = Version::new(2, 8, 0);
-
-const CAIRO_COVERAGE_REQUIRED_ENTRIES: [(&str, &str); 3] = [
-    ("unstable-add-statements-functions-debug-info", "true"),
-    ("unstable-add-statements-code-locations-debug-info", "true"),
-    ("inlining-strategy", "avoid"),
-];
 
 pub fn run_coverage(saved_trace_data_paths: &[PathBuf], coverage_args: &[OsString]) -> Result<()> {
     let coverage = env::var("CAIRO_COVERAGE")
@@ -66,55 +55,4 @@ pub fn run_coverage(saved_trace_data_paths: &[PathBuf], coverage_args: &[OsStrin
         })?;
 
     Ok(())
-}
-
-pub fn can_coverage_be_generated(scarb_metadata: &Metadata) -> Result<()> {
-    let manifest = fs::read_to_string(&scarb_metadata.runtime_manifest)?.parse::<DocumentMut>()?;
-
-    ensure!(
-        scarb_metadata.app_version_info.version >= MINIMAL_SCARB_VERSION,
-        "Coverage generation requires scarb version >= {MINIMAL_SCARB_VERSION}",
-    );
-
-    let has_needed_entries = manifest
-        .get("profile")
-        .and_then(|profile| profile.get(&scarb_metadata.current_profile))
-        .and_then(|profile| profile.get("cairo"))
-        .and_then(|cairo| cairo.as_table())
-        .is_some_and(|profile_cairo| {
-            CAIRO_COVERAGE_REQUIRED_ENTRIES
-                .iter()
-                .all(|(key, value)| contains_entry_with_value(profile_cairo, key, value))
-        });
-
-    ensure!(
-        has_needed_entries,
-        formatdoc! {
-            "Scarb.toml must have the following Cairo compiler configuration to run coverage:
-
-            [profile.{profile}.cairo]
-            unstable-add-statements-functions-debug-info = true
-            unstable-add-statements-code-locations-debug-info = true
-            inlining-strategy = \"avoid\"
-            ... other entries ...
-            ",
-            profile = scarb_metadata.current_profile
-        },
-    );
-
-    Ok(())
-}
-
-/// Check if the table contains an entry with the given key and value.
-/// Accepts only bool and string values.
-fn contains_entry_with_value(table: &Table, key: &str, value: &str) -> bool {
-    table.get(key).is_some_and(|entry| {
-        if let Some(entry) = entry.as_bool() {
-            entry.to_string() == value
-        } else if let Some(entry) = entry.as_str() {
-            entry == value
-        } else {
-            false
-        }
-    })
 }

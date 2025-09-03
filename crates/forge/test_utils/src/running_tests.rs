@@ -9,6 +9,7 @@ use forge::{
     test_filter::TestsFilter,
 };
 use forge_runner::CACHE_DIR;
+use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, ForgeTrackedResource, OutputConfig, TestRunnerConfig,
 };
@@ -44,8 +45,11 @@ pub fn run_test_case(
         .unwrap();
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
-    let raw_test_targets =
-        load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
+    let raw_test_targets = if false {
+        load_test_artifacts(&test.path().unwrap().join("target/release"), package).unwrap()
+    } else {
+        load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap()
+    };
 
     let ui = Arc::new(UI::default());
     rt.block_on(run_for_package(
@@ -74,16 +78,17 @@ pub fn run_test_case(
                     contracts_data: ContractsData::try_from(test.contracts(&ui).unwrap()).unwrap(),
                     tracked_resource,
                     environment_variables: test.env().clone(),
+                    experimental_oracles: false,
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: false,
                     execution_data_to_save: ExecutionDataToSave::default(),
+                    trace_args: TraceArgs::default(),
                 }),
             }),
             fork_targets: vec![],
         },
         &mut BlockNumberMap::default(),
-        Option::default(),
         ui,
     ))
     .expect("Runner fail")

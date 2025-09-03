@@ -18,6 +18,7 @@ use forge::run_tests::package::RunForPackageArgs;
 use forge::scarb::load_test_artifacts;
 use forge::shared_cache::FailedTestsCache;
 use forge_runner::CACHE_DIR;
+use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
@@ -159,10 +160,12 @@ fn fork_aliased_decorator() {
                             .unwrap(),
                         tracked_resource: ForgeTrackedResource::CairoSteps,
                         environment_variables: test.env().clone(),
+                        experimental_oracles: false,
                     }),
                     output_config: Arc::new(OutputConfig {
                         detailed_resources: false,
                         execution_data_to_save: ExecutionDataToSave::default(),
+                        trace_args: TraceArgs::default(),
                     }),
                 }),
                 fork_targets: vec![ForkTarget {
@@ -172,7 +175,6 @@ fn fork_aliased_decorator() {
                 }],
             },
             &mut BlockNumberMap::default(),
-            Option::default(),
             ui,
         ))
         .expect("Runner fail")
@@ -251,10 +253,12 @@ fn fork_aliased_decorator_overrding() {
                             .unwrap(),
                         tracked_resource: ForgeTrackedResource::CairoSteps,
                         environment_variables: test.env().clone(),
+                        experimental_oracles: false,
                     }),
                     output_config: Arc::new(OutputConfig {
                         detailed_resources: false,
                         execution_data_to_save: ExecutionDataToSave::default(),
+                        trace_args: TraceArgs::default(),
                     }),
                 }),
                 fork_targets: vec![ForkTarget {
@@ -264,7 +268,6 @@ fn fork_aliased_decorator_overrding() {
                 }],
             },
             &mut BlockNumberMap::default(),
-            Option::default(),
             ui,
         ))
         .expect("Runner fail")

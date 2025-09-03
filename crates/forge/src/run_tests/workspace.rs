@@ -1,17 +1,21 @@
 use super::package::RunForPackageArgs;
 use super::structs::{LatestBlocksNumbersMessage, TestsFailureSummaryMessage};
+use crate::profile_validation::check_profile_compatibility;
 use crate::run_tests::structs::OverallSummaryMessage;
-use crate::warn::{error_if_snforge_std_not_compatible, warn_if_backtrace_without_panic_hint};
+use crate::warn::{
+    error_if_snforge_std_deprecated_missing, error_if_snforge_std_deprecated_not_compatible,
+    error_if_snforge_std_not_compatible, warn_if_backtrace_without_panic_hint,
+    warn_if_snforge_std_deprecated_does_not_match_package_version,
+};
 use crate::{
-    ColorOption, ExitStatus, TestArgs, block_number_map::BlockNumberMap,
-    run_tests::package::run_for_package, scarb::build_artifacts_with_scarb,
-    shared_cache::FailedTestsCache, warn::warn_if_snforge_std_not_compatible,
+    ColorOption, ExitStatus, MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT, TestArgs,
+    block_number_map::BlockNumberMap, run_tests::package::run_for_package,
+    scarb::build_artifacts_with_scarb, shared_cache::FailedTestsCache,
+    warn::warn_if_snforge_std_does_not_match_package_version,
 };
 use anyhow::{Context, Result};
+use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
-use forge_runner::{
-    coverage_api::can_coverage_be_generated, test_case_summary::AnyTestCaseSummary,
-};
 use foundry_ui::UI;
 use scarb_api::{
     ScarbCommand,
@@ -38,12 +42,18 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     }
     let scarb_metadata = metadata_command.inherit_stderr().run()?;
 
-    if args.coverage {
-        can_coverage_be_generated(&scarb_metadata)?;
+    check_profile_compatibility(&args, &scarb_metadata)?;
+
+    let scarb_version = ScarbCommand::version().run()?.scarb;
+    if scarb_version >= MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT {
+        error_if_snforge_std_not_compatible(&scarb_metadata)?;
+        warn_if_snforge_std_does_not_match_package_version(&scarb_metadata, &ui)?;
+    } else {
+        error_if_snforge_std_deprecated_missing(&scarb_metadata)?;
+        error_if_snforge_std_deprecated_not_compatible(&scarb_metadata)?;
+        warn_if_snforge_std_deprecated_does_not_match_package_version(&scarb_metadata, &ui)?;
     }
 
-    error_if_snforge_std_not_compatible(&scarb_metadata)?;
-    warn_if_snforge_std_not_compatible(&scarb_metadata, &ui)?;
     warn_if_backtrace_without_panic_hint(&scarb_metadata, &ui);
 
     let artifacts_dir_path =
@@ -80,7 +90,6 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
 
     let workspace_root = &scarb_metadata.workspace.root;
     let cache_dir = workspace_root.join(CACHE_DIR);
-    let trace_verbosity = args.trace_verbosity;
     let packages_len = packages.len();
 
     for package in packages {
@@ -95,8 +104,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
             &ui,
         )?;
 
-        let result =
-            run_for_package(args, &mut block_number_map, trace_verbosity, ui.clone()).await?;
+        let result = run_for_package(args, &mut block_number_map, ui.clone()).await?;
 
         let filtered = result.filtered();
         all_tests.extend(result.summaries());

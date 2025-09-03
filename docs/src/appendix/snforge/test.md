@@ -8,6 +8,30 @@ Passing a test filter will only run tests with
 an [absolute module tree path](https://book.cairo-lang.org/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html#paths-for-referring-to-an-item-in-the-module-tree)
 containing this filter.
 
+## `--trace-verbosity <TRACE_VERBOSITY>`
+
+Sets the level of detail shown in execution traces.
+
+Valid values:
+
+- `minimal`: Only test name, contract name, and selector
+- `standard`: Includes calldata and call result
+- `detailed`: Full trace, including nested calls, caller address, and panic reasons
+
+## `--trace-components <TRACE_COMPONENTS>...`
+
+Selects specific trace elements to include in the execution flow output.
+
+Available components:
+
+- `contract-name`
+- `entry-point-type`
+- `calldata`
+- `contract-address`
+- `caller-address`
+- `call-type`
+- `call-result`
+
 ## `-e`, `--exact`
 
 Will only run a test with a name exactly matching the test filter.
@@ -106,6 +130,10 @@ Use Scarb release profile.
 
 ## `--dev`
 Use Scarb dev profile.
+
+## `--experimental-oracles`
+
+Enable experimental [oracles](../../snforge-advanced-features/oracles.md) support.
 
 ## `-h`, `--help`
 

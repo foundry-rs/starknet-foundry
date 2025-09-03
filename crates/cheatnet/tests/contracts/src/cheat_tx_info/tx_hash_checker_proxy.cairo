@@ -15,12 +15,11 @@ trait ITxHashCheckerProxy<TContractState> {
 
 #[starknet::contract]
 mod TxHashCheckerProxy {
-    use starknet::ContractAddress;
-    use super::ICheatTxInfoCheckerDispatcherTrait;
-    use super::ICheatTxInfoCheckerDispatcher;
-    use super::ITxHashCheckerProxyDispatcherTrait;
-    use super::ITxHashCheckerProxyDispatcher;
-    use starknet::get_contract_address;
+    use starknet::{ContractAddress, get_contract_address};
+    use super::{
+        ICheatTxInfoCheckerDispatcher, ICheatTxInfoCheckerDispatcherTrait,
+        ITxHashCheckerProxyDispatcher, ITxHashCheckerProxyDispatcherTrait,
+    };
 
     #[storage]
     struct Storage {}

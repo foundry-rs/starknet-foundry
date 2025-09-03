@@ -5,15 +5,16 @@ use blockifier::execution::syscalls::vm_syscall_utils::{
     SyscallSelector, SyscallUsage, SyscallUsageMap,
 };
 
+use blockifier::execution::call_info::OrderedEvent;
 use cairo_annotations::trace_data::{
     CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint,
     CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
     CallType as ProfilerCallType, CasmLevelInfo, ContractAddress,
     DeprecatedSyscallSelector as ProfilerDeprecatedSyscallSelector,
     EntryPointSelector as ProfilerEntryPointSelector, EntryPointType as ProfilerEntryPointType,
-    ExecutionResources as ProfilerExecutionResources, SyscallUsage as ProfilerSyscallUsage,
-    TraceEntry as ProfilerTraceEntry, VersionedCallTrace as VersionedProfilerCallTrace,
-    VmExecutionResources,
+    ExecutionResources as ProfilerExecutionResources, SummedUpEvent,
+    SyscallUsage as ProfilerSyscallUsage, TraceEntry as ProfilerTraceEntry,
+    VersionedCallTrace as VersionedProfilerCallTrace, VmExecutionResources,
 };
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
@@ -27,6 +28,7 @@ use runtime::starknet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SE
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, EntryPointSelector};
+use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::fs;
 use std::path::PathBuf;
@@ -45,8 +47,13 @@ pub fn build_profiler_call_trace(
 ) -> ProfilerCallTrace {
     let value = value.borrow();
 
-    let entry_point =
-        build_profiler_call_entry_point(value.entry_point.clone(), contracts_data, fork_data);
+    let entry_point = build_profiler_call_entry_point(
+        value.entry_point.clone(),
+        contracts_data,
+        fork_data,
+        &value.events,
+        &value.signature,
+    );
     let vm_trace = value
         .vm_trace
         .as_ref()
@@ -156,11 +163,12 @@ pub fn build_profiler_execution_resources(
 }
 
 #[must_use]
-#[expect(clippy::needless_pass_by_value)]
 pub fn build_profiler_call_entry_point(
     value: CallEntryPoint,
     contracts_data: &ContractsData,
     fork_data: &ForkData,
+    events: &[OrderedEvent],
+    signature: &[Felt],
 ) -> ProfilerCallEntryPoint {
     let CallEntryPoint {
         class_hash,
@@ -168,11 +176,14 @@ pub fn build_profiler_call_entry_point(
         entry_point_selector,
         storage_address,
         call_type,
+        calldata,
         ..
     } = value;
 
     let contract_name = get_contract_name(class_hash, contracts_data);
     let function_name = get_function_name(&entry_point_selector, contracts_data, fork_data);
+    let calldata_len = calldata.0.len();
+    let signature_len = signature.len();
 
     ProfilerCallEntryPoint {
         class_hash: class_hash.map(|ch| cairo_annotations::trace_data::ClassHash(ch.0)),
@@ -182,6 +193,9 @@ pub fn build_profiler_call_entry_point(
         call_type: build_profiler_call_type(call_type),
         contract_name,
         function_name,
+        calldata_len: Some(calldata_len),
+        events_summary: Some(to_summed_up_events(events)),
+        signature_len: Some(signature_len),
     }
 }
 
@@ -341,4 +355,14 @@ pub fn save_trace_data(
     fs::write(dir_to_save_trace.join(&filename), serialized_trace)
         .context("Failed to write call trace to a file")?;
     Ok(dir_to_save_trace.join(&filename))
+}
+
+fn to_summed_up_events(events: &[OrderedEvent]) -> Vec<SummedUpEvent> {
+    events
+        .iter()
+        .map(|ev| SummedUpEvent {
+            keys_len: ev.event.keys.len(),
+            data_len: ev.event.data.0.len(),
+        })
+        .collect()
 }

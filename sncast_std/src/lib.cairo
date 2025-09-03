@@ -1,7 +1,8 @@
 use core::array::ArrayTrait;
-use core::serde::Serde;
-use starknet::{testing::cheatcode, ContractAddress, ClassHash};
 use core::fmt::{Debug, Display, Error, Formatter};
+use core::serde::Serde;
+use starknet::testing::cheatcode;
+use starknet::{ClassHash, ContractAddress};
 
 #[derive(Drop, PartialEq, Serde, Debug)]
 pub struct ErrorData {
@@ -161,7 +162,6 @@ pub enum ProviderError {
 
 #[derive(Drop, Serde, PartialEq, Debug)]
 pub enum TransactionError {
-    Rejected,
     Reverted: ErrorData,
 }
 
@@ -196,7 +196,7 @@ pub impl DisplayContractAddress of Display<ContractAddress> {
 
 #[derive(Drop, Clone, Debug, Serde)]
 pub struct CallResult {
-    pub data: Array::<felt252>,
+    pub data: Array<felt252>,
 }
 
 impl DisplayCallResult of Display<CallResult> {
@@ -206,7 +206,7 @@ impl DisplayCallResult of Display<CallResult> {
 }
 
 pub fn call(
-    contract_address: ContractAddress, function_selector: felt252, calldata: Array::<felt252>,
+    contract_address: ContractAddress, function_selector: felt252, calldata: Array<felt252>,
 ) -> Result<CallResult, ScriptCommandError> {
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
@@ -376,7 +376,7 @@ pub impl FeeSettingsImpl of FeeSettingsTrait {
 
 pub fn deploy(
     class_hash: ClassHash,
-    constructor_calldata: Array::<felt252>,
+    constructor_calldata: Array<felt252>,
     salt: Option<felt252>,
     unique: bool,
     fee_settings: FeeSettings,
@@ -428,7 +428,7 @@ impl DisplayInvokeResult of Display<InvokeResult> {
 pub fn invoke(
     contract_address: ContractAddress,
     entry_point_selector: felt252,
-    calldata: Array::<felt252>,
+    calldata: Array<felt252>,
     fee_settings: FeeSettings,
     nonce: Option<felt252>,
 ) -> Result<InvokeResult, ScriptCommandError> {
@@ -468,7 +468,8 @@ pub fn get_nonce(block_tag: felt252) -> felt252 {
 #[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub enum FinalityStatus {
     Received,
-    Rejected,
+    Candidate,
+    PreConfirmed,
     AcceptedOnL2,
     AcceptedOnL1,
 }
@@ -477,7 +478,8 @@ pub impl DisplayFinalityStatus of Display<FinalityStatus> {
     fn fmt(self: @FinalityStatus, ref f: Formatter) -> Result<(), Error> {
         let finality_status: ByteArray = match self {
             FinalityStatus::Received => "Received",
-            FinalityStatus::Rejected => "Rejected",
+            FinalityStatus::Candidate => "Candidate",
+            FinalityStatus::PreConfirmed => "PreConfirmed",
             FinalityStatus::AcceptedOnL2 => "AcceptedOnL2",
             FinalityStatus::AcceptedOnL1 => "AcceptedOnL1",
         };

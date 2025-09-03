@@ -9,7 +9,7 @@ use camino::Utf8PathBuf;
 use conversions::string::IntoHexStr;
 use serde_json::{json, to_string_pretty};
 use shared::test_utils::output_assert::{
-    assert_stderr_contains, assert_stdout, assert_stdout_contains,
+    AsOutput, assert_stderr_contains, assert_stdout, assert_stdout_contains,
 };
 use snapbox::assert_matches;
 use sncast::AccountType;
@@ -43,7 +43,9 @@ pub async fn test_happy_case(account_type: &str) {
         account_type,
     ];
 
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(temp_dir.path());
     let output = snapbox.assert().success();
 
     assert_stdout_contains(
@@ -107,7 +109,9 @@ pub async fn test_happy_case_argent_with_deprecation_warning() {
         "argent",
     ];
 
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(temp_dir.path());
     let output = snapbox.assert().success();
 
     assert_stdout(
@@ -206,7 +210,9 @@ pub async fn test_happy_case_generate_salt() {
         "oz",
     ];
 
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(temp_dir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         Success: Account created
@@ -292,7 +298,9 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         "0x1",
     ];
 
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(temp_dir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         Success: Account created
@@ -424,7 +432,9 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         account_type,
     ];
 
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(temp_dir.path());
 
     snapbox.assert().stdout_matches(formatdoc! {r"
         Success: Account created
@@ -472,7 +482,9 @@ pub async fn test_happy_case_keystore_argent_with_deprecation_warning() {
         "argent",
     ];
 
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(temp_dir.path());
 
     snapbox.assert().stdout_matches(formatdoc! {r"
         [WARNING] Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account create` is deprecated, please use `ready` instead.
@@ -676,7 +688,9 @@ pub async fn test_happy_case_keystore_int_format() {
         "oz",
     ];
 
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(temp_dir.path());
 
     snapbox.assert().stdout_matches(formatdoc! {r"
         Success: Account created
@@ -727,32 +741,45 @@ pub async fn test_happy_case_default_name_generation() {
         "sepolia",
     ];
 
+    let assert_account_created = |id: usize| {
+        runner(&create_args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path())
+        .assert()
+        .stdout_matches(formatdoc! {r"
+            Success: Account created
+
+            Address: 0x0[..]
+            
+            Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
+
+            After prefunding the account, run:
+            sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name account-{id}
+
+            To see account creation details, visit:
+            account: [..]
+        ", id = id});
+    };
+
     for i in 0..3 {
-        let snapbox = runner(&create_args).current_dir(tempdir.path());
-        snapbox.assert().stdout_matches(formatdoc! {r"
-        Success: Account created
-
-        Address: 0x0[..]
-        
-        Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
-
-        After prefunding the account, run:
-        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name account-{id}
-
-        To see account creation details, visit:
-        account: [..]
-    ", id = i + 1});
+        assert_account_created(i + 1);
     }
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
         .expect("Unable to read created file");
 
-    assert!(contents.contains("account-1"));
-    assert!(contents.contains("account-2"));
-    assert!(contents.contains("account-3"));
+    assert!(
+        ["account-1", "account-2", "account-3"]
+            .iter()
+            .all(|a| contents.contains(a))
+    );
 
-    let snapbox = runner(&delete_args).current_dir(tempdir.path()).stdin("Y");
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    runner(&delete_args)
+        .current_dir(tempdir.path())
+        .stdin("Y")
+        .assert()
+        .success()
+        .stdout_matches(indoc! {r"
         Success: Account deleted
 
         Account successfully removed
@@ -763,20 +790,7 @@ pub async fn test_happy_case_default_name_generation() {
 
     assert!(!contents_after_delete.contains("account-2"));
 
-    let snapbox = runner(&create_args).current_dir(tempdir.path());
-    snapbox.assert().stdout_matches(indoc! {r"
-        Success: Account created
-
-        Address: 0x0[..]
-        
-        Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
-
-        After prefunding the account, run:
-        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name account-2
-
-        To see account creation details, visit:
-        account: [..]
-    "});
+    assert_account_created(2);
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
         .expect("Unable to read created file");
@@ -914,7 +928,7 @@ pub async fn test_happy_case_deployment_fee_message() {
 
     assert_stdout_contains(
         output,
-        "Account successfully created but it needs to be deployed. The estimated deployment fee is 0.000836288000000000 STRK. Prefund the account to cover deployment transaction fee",
+        "Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee",
     );
 }
 
@@ -993,9 +1007,41 @@ pub async fn test_json_output_format() {
         "my_account",
     ];
 
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(temp_dir.path());
     snapbox.assert().stdout_matches(indoc! {r#"
         {"add_profile":"Profile my_account successfully added to [..]/snfoundry.toml","address":"0x[..]","estimated_fee":"[..]","message":"Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee/n/nAfter prefunding the account, run:/nsncast --accounts-file accounts.json account deploy --url [..] --name my_account"}
         {"links":"account: https://sepolia.starkscan.co/contract/0x[..]","title":"account creation"}
     "#});
+}
+
+#[tokio::test]
+pub async fn test_no_explorer_links_on_localhost() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--url",
+        "http://127.0.0.1:5055/rpc",
+        "--name",
+        "my_account",
+        "--salt",
+        "0x1",
+        "--type",
+        "oz",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
+
+    assert!(
+        !output
+            .as_stdout()
+            .contains("To see account creation details, visit:")
+    );
 }

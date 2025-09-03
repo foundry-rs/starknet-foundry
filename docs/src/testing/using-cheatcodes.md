@@ -7,7 +7,7 @@
 >
 > ```toml
 > [dev-dependencies]
-> snforge_std = "0.33.0"
+> snforge_std = "{{snforge_std_version}}"
 > ```
 
 When testing smart contracts, often there are parts of code that are dependent on a specific blockchain state.

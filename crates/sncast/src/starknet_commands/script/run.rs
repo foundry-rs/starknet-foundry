@@ -48,7 +48,7 @@ use sncast::state::hashing::{
 };
 use sncast::state::state_file::StateManager;
 use starknet::accounts::{Account, SingleOwnerAccount};
-use starknet::core::types::{BlockId, BlockTag::Pending};
+use starknet::core::types::{BlockId, BlockTag::PreConfirmed};
 use starknet::providers::JsonRpcClient;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::signers::LocalWallet;
@@ -118,7 +118,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     function_selector,
                     calldata_felts,
                     self.provider,
-                    &BlockId::Tag(Pending),
+                    &BlockId::Tag(PreConfirmed),
                 ));
                 Ok(CheatcodeHandlingResult::from_serializable(call_result))
             }
@@ -368,7 +368,7 @@ pub fn run(
             &config.account,
             &config.accounts_file,
             provider,
-            config.keystore.clone(),
+            config.keystore.as_ref(),
         ))?)
     };
     let state = StateManager::from(state_file_path)?;

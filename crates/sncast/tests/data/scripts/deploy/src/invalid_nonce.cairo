@@ -1,8 +1,7 @@
 use sncast_std::{
-    get_nonce, deploy, ScriptCommandError, ProviderError, StarknetError, FeeSettingsTrait,
+    FeeSettingsTrait, ProviderError, ScriptCommandError, StarknetError, deploy, get_nonce,
 };
-
-use starknet::{ClassHash};
+use starknet::ClassHash;
 
 fn main() {
     let fee_settings = FeeSettingsTrait::resource_bounds(
@@ -14,7 +13,7 @@ fn main() {
         .try_into()
         .expect('Invalid class hash value');
 
-    let deploy_nonce = get_nonce('pending') + 100;
+    let deploy_nonce = get_nonce('pre_confirmed') + 100;
     let deploy_result = deploy(
         class_hash,
         array![0x2, 0x2, 0x0],

@@ -9,9 +9,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- Support for `meta_tx_v0` syscall with cheatcode compatibility
+- `snforge` now supports [oracles](https://docs.swmansion.com/cairo-oracle/) with `--experimental-oracles` flag.
+- `--trace-components` flag to allow selecting which components of the trace to do display. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#trace-components)
+
+### Cast
+
+#### Added
+
+- `--test-files` flag to `verify` command to include test files under src/ for verification (only applies to voyager)
+- `--tip` flag to `invoke`, `declare`, `deploy`, `multicall run` and `account deploy` commands to set the transaction tip
+- `--estimate-tip` flag which automatically adds an estimated tip to the transaction. The tip is calculated based on the current network conditions and added to the transaction fee
+
 #### Changed
 
-- Max steps in tests (configured via the `--max-n-steps` argument) now defaults to `usize::MAX` when not specified (previously 10 million).
+- The supported RPC version is now 0.9.0
+- [New UDC](https://starkscan.co/contract/0x02ceed65a4bd731034c01113685c831b01c15d7d432f71afb1cf1634b53a2125) is now used during deployment
+
+## [0.48.1] - 2025-08-14
+
+### Forge
+
+#### Fixed
+
+- A bug that caused `#[fuzzer]` attribute to fail when used with generic structs
+
+### Cast
+
+#### Added
+
+- `utils class-hash` command to calculate the class hash for a contract
+
+## [0.48.0] - 2025-08-05
+
+### Forge
+
+#### Added
+
+- `snforge_std` is now compatible with Scarb procedural macros V2. Migration is required if using Scarb versions before `2.12.0`. See [migration guide](https://foundry-rs.github.io/starknet-foundry/getting-started/0-47-0-migration-guide.html).
+
+#### Changed
+
+- If using a Scarb version before `2.10.0` or not using `allow-prebuild-plugins`, the minimal required rust version to run `snforge` is now `1.87.0`
+
+### Cast
+
+#### Fixed
+
+- Block explorer links are now hidden by default when using [`starknet-devnet`](https://github.com/0xSpaceShard/starknet-devnet). Set `SNCAST_FORCE_SHOW_EXPLORER_LINKS=1` env variable to display them.
 
 ## [0.47.0] - 2025-07-28
 
@@ -38,7 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- Braavos accounts with all class hashes are now supported 
+- Braavos accounts with all class hashes are now supported
 
 #### Deprecated
 
@@ -124,7 +171,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
-#### Added 
+#### Added
 
 - Displaying the path of the config file when adding a new profile
 
@@ -320,7 +367,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Rust is no longer required to use `snforge` if using Scarb >= 2.10.0 on supported platforms - precompiled `snforge_scarb_plugin` plugin binaries are now published to [package registry](https://scarbs.xyz) for new versions. 
+- Rust is no longer required to use `snforge` if using Scarb >= 2.10.0 on supported platforms - precompiled `snforge_scarb_plugin` plugin binaries are now published to [package registry](https://scarbs.xyz) for new versions.
 - Added a suggestion for using the `--max-n-steps` flag when the Cairo VM returns the error: `Could not reach the end of the program. RunResources has no remaining steps`.
 
 #### Fixed

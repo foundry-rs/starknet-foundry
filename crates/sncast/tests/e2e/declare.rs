@@ -2,17 +2,18 @@ use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL
 use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
     copy_directory_to_tempdir, create_and_deploy_account, create_and_deploy_oz_account,
-    duplicate_contract_directory_with_salt, get_accounts_path, get_transaction_hash,
-    get_transaction_receipt, join_tempdirs,
+    duplicate_contract_directory_with_salt, get_accounts_path, get_transaction_by_hash,
+    get_transaction_hash, get_transaction_receipt, join_tempdirs,
 };
 use crate::helpers::runner::runner;
 use configuration::CONFIG_FILENAME;
 use indoc::indoc;
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
 use sncast::AccountType;
 use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
 use sncast::helpers::fee::FeeArgs;
 use starknet::core::types::TransactionReceipt::Declare;
+use starknet::core::types::{DeclareTransaction, Transaction, TransactionExecutionStatus};
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 use std::fs;
 use test_case::test_case;
@@ -40,7 +41,9 @@ async fn test_happy_case_human_readable() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
     assert_stdout_contains(
@@ -103,6 +106,8 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     l1_gas_price:  None,
     l2_gas:  None,
     l2_gas_price:  None,
+    tip: Some(100_000),
+    estimate_tip: false,
 }; "max_fee")]
 #[test_case(FeeArgs{
     max_fee: None,
@@ -112,6 +117,8 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     l1_gas_price: Some(10_000_000_000_000),
     l2_gas: Some(1_000_000_000),
     l2_gas_price: Some(100_000_000_000_000_000_000),
+    tip: None,
+    estimate_tip: false,
 }; "resource_bounds")]
 #[tokio::test]
 async fn test_happy_case_different_fees(fee_args: FeeArgs) {
@@ -164,6 +171,7 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
             "--l2-gas-price",
             fee_args.l2_gas_price.map(|x| x.to_string()),
         ),
+        ("--tip", fee_args.tip.map(|x| x.to_string())),
     ];
 
     for &(key, ref value) in &options {
@@ -174,14 +182,22 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
     }
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
-
-    let output = output.get_output().stdout.clone();
+    let output = snapbox.assert().success().get_output().stdout.clone();
 
     let hash = get_transaction_hash(&output);
-    let receipt = get_transaction_receipt(hash).await;
+    let Declare(receipt) = get_transaction_receipt(hash).await else {
+        panic!("Should be Declare receipt");
+    };
+    assert_eq!(
+        receipt.execution_result.status(),
+        TransactionExecutionStatus::Succeeded
+    );
 
-    assert!(matches!(receipt, Declare(_)));
+    let Transaction::Declare(DeclareTransaction::V3(tx)) = get_transaction_by_hash(hash).await
+    else {
+        panic!("Expected Declare V3 transaction")
+    };
+    assert_eq!(tx.tip, fee_args.tip.unwrap_or(0));
 }
 
 #[tokio::test]
@@ -509,7 +525,7 @@ async fn test_many_packages_default() {
 }
 
 #[tokio::test]
-async fn test_worskpaces_package_specified_virtual_fibonacci() {
+async fn test_workspaces_package_specified_virtual_fibonacci() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
@@ -528,7 +544,9 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
 
     let output = snapbox.assert().success().get_output().clone();
     let output = output.stdout.clone();
@@ -538,7 +556,7 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
 }
 
 #[tokio::test]
-async fn test_worskpaces_package_no_contract() {
+async fn test_workspaces_package_no_contract() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
@@ -591,7 +609,9 @@ async fn test_no_scarb_profile() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(contract_path.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(contract_path.path());
     let output = snapbox.assert().success();
 
     assert_stdout_contains(
@@ -608,5 +628,38 @@ async fn test_no_scarb_profile() {
             class: [..]
             transaction: [..]
         "},
+    );
+}
+
+#[tokio::test]
+async fn test_no_explorer_links_on_localhost() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "localhost_test",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "declare",
+        "--url",
+        "http://localhost:5055/rpc",
+        "--contract-name",
+        "Map",
+    ];
+    let args = apply_test_resource_bounds_flags(args);
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert!(
+        !output
+            .as_stdout()
+            .contains("To see declaration details, visit:")
     );
 }
