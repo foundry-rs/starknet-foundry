@@ -42,6 +42,7 @@ jobs:
 
           - target: x86_64-apple-darwin
             os: macos-14-large
+            system: macos
 
 #          - target: aarch64-apple-darwin
 #            os: macos-latest
@@ -64,7 +65,7 @@ jobs:
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
 
       - name: Setup LLVM on MacOS
-        if: matrix.os == 'macos-latest'
+        if: matrix.system == 'macos'
         run: |
           brew install llvm@19
           brew reinstall zstd
