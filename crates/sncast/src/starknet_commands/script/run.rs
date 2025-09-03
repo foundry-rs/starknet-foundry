@@ -460,6 +460,7 @@ fn inject_lib_artifact(
     let lib_artifacts = ScriptStarknetContractArtifacts {
         sierra: fs::read_to_string(sierra_path)?,
         casm: String::new(),
+        executor: None,
     };
 
     artifacts.insert(SCRIPT_LIB_ARTIFACT_NAME.to_string(), lib_artifacts);

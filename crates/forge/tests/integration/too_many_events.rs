@@ -65,7 +65,7 @@ fn ok_events() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
 }
@@ -133,7 +133,7 @@ fn too_many_events() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_failed(&result);
     assert_case_output_contains(

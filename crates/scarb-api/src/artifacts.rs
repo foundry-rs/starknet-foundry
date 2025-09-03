@@ -1,6 +1,7 @@
 use anyhow::Result;
 
 use crate::artifacts::representation::StarknetArtifactsRepresentation;
+use cairo_native::executor::AotContractExecutor;
 use camino::{Utf8Path, Utf8PathBuf};
 use itertools::Itertools;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
@@ -12,18 +13,31 @@ mod deserialized;
 mod representation;
 
 /// Contains compiled Starknet artifacts
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone)]
 pub struct StarknetContractArtifacts {
     /// Compiled sierra code
     pub sierra: String,
     /// Compiled casm code
     pub casm: String,
+
+    /// Optional AOT compiled native executor
+    pub executor: Option<AotContractExecutor>,
+}
+
+impl PartialEq for StarknetContractArtifacts {
+    fn eq(&self, other: &Self) -> bool {
+        self.sierra == other.sierra
+            && self.casm == other.casm
+            // We only check if both have an executor or not, as the actual executor does not implement PartialEq
+            && self.executor.is_some() == other.executor.is_some()
+    }
 }
 
 #[derive(PartialEq, Debug)]
 pub(crate) struct StarknetArtifactsFiles {
     base: Utf8PathBuf,
     other: Vec<Utf8PathBuf>,
+    compile_native: bool,
 }
 
 impl StarknetArtifactsFiles {
@@ -31,15 +45,21 @@ impl StarknetArtifactsFiles {
         Self {
             base: base_file,
             other: other_files,
+            compile_native: false,
         }
+    }
+
+    pub(crate) fn compile_native(mut self, compile_native: bool) -> Self {
+        self.compile_native = compile_native;
+        self
     }
 
     pub(crate) fn load_contracts_artifacts(
         self,
     ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
         // TODO(#2626) handle duplicates
-        let mut base_artifacts: HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)> =
-            compile_artifacts(
+        let mut base_artifacts: HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)> = self
+            .compile_artifacts(
                 StarknetArtifactsRepresentation::try_from_path(self.base.as_path())?.artifacts(),
             )?;
 
@@ -52,11 +72,48 @@ impl StarknetArtifactsFiles {
         let other_artifacts: Vec<(String, Utf8PathBuf)> =
             unique_artifacts(other_artifact_representations, &base_artifacts);
 
-        let compiled_artifacts = compile_artifacts(other_artifacts)?;
+        let compiled_artifacts = self.compile_artifacts(other_artifacts)?;
 
         base_artifacts.extend(compiled_artifacts);
 
         Ok(base_artifacts)
+    }
+
+    fn compile_artifacts(
+        &self,
+        artifacts: Vec<(String, Utf8PathBuf)>,
+    ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
+        artifacts
+            .into_par_iter()
+            .map(|(name, path)| {
+                self.compile_artifact_at_path(&path)
+                    .map(|artifact| (name.to_string(), (artifact, path)))
+            })
+            .collect::<Result<_>>()
+    }
+
+    fn compile_artifact_at_path(&self, path: &Utf8Path) -> Result<StarknetContractArtifacts> {
+        let sierra = fs::read_to_string(path)?;
+
+        let casm = compile_sierra_at_path(path, &SierraType::Contract)?;
+
+        let executor = self.compile_to_native(&sierra)?;
+
+        Ok(StarknetContractArtifacts {
+            sierra,
+            casm,
+            executor,
+        })
+    }
+
+    fn compile_to_native(&self, sierra: &str) -> Result<Option<AotContractExecutor>> {
+        Ok(if self.compile_native {
+            Some(native_api::compile_contract_class(&serde_json::from_str(
+                sierra,
+            )?))
+        } else {
+            None
+        })
     }
 }
 
@@ -70,25 +127,6 @@ fn unique_artifacts(
         .unique_by(|(name, _)| name.to_string())
         .filter(|(name, _)| !current_artifacts.contains_key(name))
         .collect()
-}
-
-fn compile_artifacts(
-    artifacts: Vec<(String, Utf8PathBuf)>,
-) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
-    artifacts
-        .into_par_iter()
-        .map(|(name, path)| {
-            compile_artifact_at_path(&path).map(|artifact| (name.to_string(), (artifact, path)))
-        })
-        .collect::<Result<_>>()
-}
-
-fn compile_artifact_at_path(path: &Utf8Path) -> Result<StarknetContractArtifacts> {
-    let sierra = fs::read_to_string(path)?;
-
-    let casm = compile_sierra_at_path(path, &SierraType::Contract)?;
-
-    Ok(StarknetContractArtifacts { sierra, casm })
 }
 
 #[cfg(test)]
@@ -109,6 +147,7 @@ mod tests {
                 StarknetContractArtifacts {
                     sierra: "sierra1".to_string(),
                     casm: "casm1".to_string(),
+                    executor: None,
                 },
                 Utf8PathBuf::from("path1"),
             ),

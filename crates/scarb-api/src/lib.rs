@@ -93,12 +93,21 @@ fn get_starknet_artifacts_path(
     path.map(|path| StarknetArtifactsFiles::new(path, vec![]))
 }
 
+#[derive(Default)]
+pub struct CompilationOpts {
+    pub use_test_target_contracts: bool,
+    pub run_native: bool,
+}
+
 /// Get the map with `StarknetContractArtifacts` for the given package
 pub fn get_contracts_artifacts_and_source_sierra_paths(
     artifacts_dir: &Utf8Path,
     package: &PackageMetadata,
-    use_test_target_contracts: bool,
     ui: &UI,
+    CompilationOpts {
+        use_test_target_contracts,
+        run_native,
+    }: CompilationOpts,
 ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
     let starknet_artifact_files = if use_test_target_contracts {
         let test_targets = test_targets_by_name(package);
@@ -115,7 +124,9 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
     };
 
     if let Some(starknet_artifact_files) = starknet_artifact_files {
-        starknet_artifact_files.load_contracts_artifacts()
+        starknet_artifact_files
+            .compile_native(run_native)
+            .load_contracts_artifacts()
     } else {
         Ok(HashMap::default())
     }
@@ -577,8 +588,8 @@ mod tests {
         let contracts = get_contracts_artifacts_and_source_sierra_paths(
             target_dir.as_path(),
             package,
-            false,
             &ui,
+            CompilationOpts::default(),
         )
         .unwrap();
 

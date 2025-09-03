@@ -31,7 +31,8 @@ use runtime::starknet::constants::TEST_ADDRESS;
 use runtime::starknet::context::build_context;
 use scarb_api::metadata::MetadataCommandExt;
 use scarb_api::{
-    ScarbCommand, get_contracts_artifacts_and_source_sierra_paths, target_dir_for_workspace,
+    CompilationOpts, ScarbCommand, get_contracts_artifacts_and_source_sierra_paths,
+    target_dir_for_workspace,
 };
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::contract_class::EntryPointType;
@@ -85,8 +86,13 @@ pub fn get_contracts() -> ContractsData {
     let package = scarb_metadata.packages.first().unwrap();
 
     let ui = UI::default();
-    let contracts =
-        get_contracts_artifacts_and_source_sierra_paths(&target_dir, package, false, &ui).unwrap();
+    let contracts = get_contracts_artifacts_and_source_sierra_paths(
+        &target_dir,
+        package,
+        &ui,
+        CompilationOpts::default(),
+    )
+    .unwrap();
     ContractsData::try_from(contracts).unwrap()
 }
 

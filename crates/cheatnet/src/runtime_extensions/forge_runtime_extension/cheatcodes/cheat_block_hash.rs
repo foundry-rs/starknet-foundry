@@ -78,13 +78,11 @@ impl CheatnetState {
         self.cheat_block_hash(block_number, Operation::StopGlobal);
     }
 
-    #[expect(clippy::result_large_err)]
-    pub fn get_block_hash_for_contract(
+    pub fn get_cheated_block_hash_for_contract(
         &mut self,
         contract_address: ContractAddress,
         block_number: u64,
-        syscall_handler: &mut SyscallHintProcessor,
-    ) -> SyscallResult<BlockHash> {
+    ) -> Option<BlockHash> {
         if let Some((cheat_span, block_hash)) = self
             .block_hash_contracts
             .get(&(contract_address, block_number))
@@ -110,17 +108,33 @@ impl CheatnetState {
                 }
                 CheatSpan::Indefinite => {}
             }
-            return Ok(BlockHash(StarkHash::from(block_hash)));
+            return Some(BlockHash(StarkHash::from(block_hash)));
         }
 
         if let Some((block_hash, except)) = self.global_block_hash.get(&block_number)
             && !except.contains(&contract_address)
         {
-            return Ok(BlockHash(StarkHash::from(*block_hash)));
+            return Some(BlockHash(StarkHash::from(*block_hash)));
         }
 
-        Ok(BlockHash(
-            syscall_handler.base.get_block_hash(block_number)?,
-        ))
+        None
+    }
+
+    #[expect(clippy::result_large_err)]
+    pub fn get_block_hash_for_contract(
+        &mut self,
+        contract_address: ContractAddress,
+        block_number: u64,
+        syscall_handler: &mut SyscallHintProcessor,
+    ) -> SyscallResult<BlockHash> {
+        let cheated_block_hash =
+            self.get_cheated_block_hash_for_contract(contract_address, block_number);
+        if let Some(cheated_block_hash) = cheated_block_hash {
+            Ok(cheated_block_hash)
+        } else {
+            Ok(BlockHash(
+                syscall_handler.base.get_block_hash(block_number)?,
+            ))
+        }
     }
 }
