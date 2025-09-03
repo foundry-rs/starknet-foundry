@@ -2,7 +2,7 @@ use anyhow::{Context, Result, anyhow};
 use camino::{Utf8Path, Utf8PathBuf};
 use foundry_ui::{UI, components::warning::WarningMessage};
 use scarb_api::{
-    ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
+    CompilationOpts, ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
     get_contracts_artifacts_and_source_sierra_paths,
     metadata::{Metadata, MetadataCommand, PackageMetadata},
     target_dir_for_workspace,
@@ -170,8 +170,8 @@ pub fn build_and_load_artifacts(
         Ok(get_contracts_artifacts_and_source_sierra_paths(
             &target_dir.join(&config.profile),
             package,
-            false,
-            ui
+            ui,
+            CompilationOpts::default()
         ).context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")?
         .into_iter()
         .map(|(name, (artifacts, _))| (name, artifacts))
@@ -184,8 +184,8 @@ pub fn build_and_load_artifacts(
         Ok(get_contracts_artifacts_and_source_sierra_paths(
             &target_dir.join(default_profile),
             package,
-            false,
-            ui
+            ui,
+            CompilationOpts::default(),
         ).context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")?
         .into_iter()
         .map(|(name, (artifacts, _))| (name, artifacts))
