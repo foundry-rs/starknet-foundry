@@ -153,7 +153,7 @@ pub struct TestArgs {
 
     /// Run contracts on `cairo-native` instead of the default `cairo-vm`.
     ///
-    /// Note: Only contracts are supported, test itself will still run on `cairo-vm`.
+    /// Note: Only contracts execution through native is supported, test code itself will still run on `cairo-vm`.
     #[arg(long)]
     run_native: bool,
 
