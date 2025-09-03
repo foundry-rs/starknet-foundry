@@ -25,7 +25,6 @@ pub mod block_number_map;
 mod clean;
 mod combine_configs;
 mod compatibility_check;
-mod init;
 mod new;
 mod profile_validation;
 pub mod run_tests;
@@ -89,11 +88,6 @@ enum ForgeSubcommand {
     Test {
         #[command(flatten)]
         args: TestArgs,
-    },
-    /// Create a new directory with a Forge project
-    Init {
-        /// Name of a new project
-        name: String,
     },
     /// Create a new Forge project at <PATH>
     New {
@@ -277,10 +271,6 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
     let cli = Cli::parse();
 
     match cli.subcommand {
-        ForgeSubcommand::Init { name } => {
-            init::init(name.as_str(), &ui)?;
-            Ok(ExitStatus::Success)
-        }
         ForgeSubcommand::New { args } => {
             new::new(args)?;
             Ok(ExitStatus::Success)
