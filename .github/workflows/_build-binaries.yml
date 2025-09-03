@@ -44,8 +44,9 @@ jobs:
             os: macos-14-large
             system: macos
 
-#          - target: aarch64-apple-darwin
-#            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            system: macos
 
     steps:
       - name: Checkout with ref
