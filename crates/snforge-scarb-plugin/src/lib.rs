@@ -12,6 +12,7 @@ pub mod attributes;
 mod cairo_expression;
 mod common;
 mod config_statement;
+mod external_inputs;
 mod parse;
 mod types;
 mod utils;

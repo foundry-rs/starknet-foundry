@@ -18,6 +18,7 @@ url = "=2.5.4"
 indoc = "=2.0.5"
 smol_str = "=0.3.2"
 num-bigint = "=0.4.6"
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
 
 [dev-dependencies]
 cairo-lang-formatter = "2.12.0"
