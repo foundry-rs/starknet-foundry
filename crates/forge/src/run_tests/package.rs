@@ -88,7 +88,7 @@ impl RunForPackageArgs {
                     &scarb_metadata.app_version_info.version,
                     args.no_optimization,
                 ),
-                run_native: true,
+                run_native: args.run_native,
             },
         )?;
         let contracts_data = ContractsData::try_from(contracts)?;
