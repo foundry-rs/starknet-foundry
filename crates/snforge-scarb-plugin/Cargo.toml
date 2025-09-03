@@ -9,7 +9,7 @@ rust-version = "1.87.0"
 crate-type = ["rlib", "cdylib"]
 
 [dependencies]
-cairo-lang-macro = "0.2.0"
+cairo-lang-macro = "0.2.1"
 cairo-lang-parser = "2.12.0"
 cairo-lang-utils = "2.12.0"
 cairo-lang-syntax = "2.12.0"
