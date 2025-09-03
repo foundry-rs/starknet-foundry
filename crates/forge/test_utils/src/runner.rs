@@ -17,8 +17,9 @@ use forge_runner::{
 use foundry_ui::UI;
 use indoc::formatdoc;
 use scarb_api::{
-    ScarbCommand, StarknetContractArtifacts, get_contracts_artifacts_and_source_sierra_paths,
-    metadata::MetadataCommandExt, target_dir_for_workspace,
+    CompilationOpts, ScarbCommand, StarknetContractArtifacts,
+    get_contracts_artifacts_and_source_sierra_paths, metadata::MetadataCommandExt,
+    target_dir_for_workspace,
 };
 use shared::command::CommandExt;
 use starknet_api::execution_resources::{GasAmount, GasVector};
@@ -104,12 +105,16 @@ impl Contract {
             .unwrap();
         let artifacts_dir = target_dir_for_workspace(&scarb_metadata).join("dev");
 
-        let contract =
-            get_contracts_artifacts_and_source_sierra_paths(&artifacts_dir, package, false, ui)
-                .unwrap()
-                .remove(&self.name)
-                .ok_or(anyhow!("there is no contract with name {}", self.name))?
-                .0;
+        let contract = get_contracts_artifacts_and_source_sierra_paths(
+            &artifacts_dir,
+            package,
+            ui,
+            CompilationOpts::default(),
+        )
+        .unwrap()
+        .remove(&self.name)
+        .ok_or(anyhow!("there is no contract with name {}", self.name))?
+        .0;
 
         Ok((contract.sierra, contract.casm))
     }
@@ -221,7 +226,11 @@ impl<'a> TestCase {
                 Ok((
                     name,
                     (
-                        StarknetContractArtifacts { sierra, casm },
+                        StarknetContractArtifacts {
+                            sierra,
+                            casm,
+                            executor: None,
+                        },
                         Utf8PathBuf::default(),
                     ),
                 ))

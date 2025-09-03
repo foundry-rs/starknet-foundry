@@ -19,6 +19,8 @@ rayon.workspace = true
 itertools.workspace = true
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 foundry-ui = { path = "../foundry-ui" }
+cairo-native.workspace = true
+native-api = { path = "../native-api" }
 
 [dev-dependencies]
 assert_fs.workspace = true
