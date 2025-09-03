@@ -128,9 +128,9 @@ checksum = "b0674a1ddeecb70197781e945de4b3b8ffb61fa939a5597bcf48503737663100"
 
 [[package]]
 name = "apollo_compile_to_native_types"
-version = "0.15.0-rc.3"
+version = "0.15.0-rc.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3941d3477c65251d88c5f2e30cf37f4519c0f9cf5332042f7a75ade4dcad2885"
+checksum = "389c8e9ea0c68822b179c75ac3aae646b101c390d01095d993e1ae41287d41d5"
 dependencies = [
  "apollo_config",
  "serde",
@@ -139,9 +139,9 @@ dependencies = [
 
 [[package]]
 name = "apollo_config"
-version = "0.15.0-rc.3"
+version = "0.15.0-rc.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "483cc6b6cb527b70d759431e8afa4e77228de139eb7a4fc07e200a25e5ff46ce"
+checksum = "b63c97b0be7573c6e0191c8b34776c64ed1bb621148f7d14d14fef4422d630a4"
 dependencies = [
  "apollo_infra_utils",
  "clap",
@@ -158,9 +158,9 @@ dependencies = [
 
 [[package]]
 name = "apollo_infra_utils"
-version = "0.15.0-rc.3"
+version = "0.15.0-rc.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc215a265d7e1120532f86a0a92b6118b975ea776d313a2203fbef9294c9d8ef"
+checksum = "171220821a924e7c170341fc564553163488a17496194ea5f7d2039f294bc2e4"
 dependencies = [
  "apollo_proc_macros",
  "assert-json-diff",
@@ -190,9 +190,9 @@ dependencies = [
 
 [[package]]
 name = "apollo_proc_macros"
-version = "0.15.0-rc.3"
+version = "0.15.0-rc.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26c08dffd7cc954176640782fd55ce45724412dbedc77ea0b6b27330b95ffd92"
+checksum = "a7989de6d0cf43a44d6c69c20f183e23af6959fc2be53f65554e4efaf8e6cb5b"
 dependencies = [
  "lazy_static 1.5.0",
  "proc-macro2",
@@ -1534,7 +1534,7 @@ checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 
 [[package]]
 name = "cheatnet"
-version = "0.48.1"
+version = "0.49.0"
 dependencies = [
  "anyhow",
  "bimap",
@@ -2295,7 +2295,7 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
 name = "docs"
-version = "0.48.1"
+version = "0.49.0"
 dependencies = [
  "anyhow",
  "camino",
@@ -2637,7 +2637,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.48.1"
+version = "0.49.0"
 dependencies = [
  "anyhow",
  "assert_fs",
@@ -2690,7 +2690,7 @@ dependencies = [
 
 [[package]]
 name = "forge_runner"
-version = "0.48.1"
+version = "0.49.0"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -2747,7 +2747,7 @@ dependencies = [
 
 [[package]]
 name = "foundry-ui"
-version = "0.48.1"
+version = "0.49.0"
 dependencies = [
  "anyhow",
  "console",
@@ -5832,7 +5832,7 @@ dependencies = [
 
 [[package]]
 name = "sncast"
-version = "0.48.1"
+version = "0.49.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6177,9 +6177,9 @@ dependencies = [
 
 [[package]]
 name = "starknet_api"
-version = "0.15.0-rc.3"
+version = "0.15.0-rc.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "649b7ef2bacdcef1ce3e0b474cafd206e3f8d8050e9e0a7eec69f291a2748e80"
+checksum = "5d8aab893c06cdba387b8ef61a079ae0ccdcb926d6ecca11107f536d788e62a8"
 dependencies = [
  "apollo_infra_utils",
  "base64 0.13.1",
