@@ -860,6 +860,7 @@ dependencies = [
  "num-bigint",
  "smol_str",
  "url",
+ "xxhash-rust",
 ]
 
 [[package]]
