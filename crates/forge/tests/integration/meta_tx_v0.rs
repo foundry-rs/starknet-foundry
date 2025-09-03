@@ -8,20 +8,23 @@ use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
 // TODO(#3704) Remove scarb version check
-fn skip_if_scarb_lt_2_11_0() -> Option<String> {
-    match ScarbCommand::version().run() {
-        Ok(version_info) if version_info.scarb < Version::new(2, 11, 0) => {
-            Some("[IGNORED] `meta_tx_v0` syscall is not supported in Scarb < 2.11.0".to_string())
-        }
-        _ => None,
+fn skip_scarb_lt_2_11_0() -> bool {
+    let version_info = ScarbCommand::version()
+        .run()
+        .expect("Failed to get Scarb version");
+
+    if version_info.scarb < Version::new(2, 11, 0) {
+        eprintln!("[IGNORED] `meta_tx_v0` syscall is not supported in Scarb < 2.11.0");
+        true
+    } else {
+        false
     }
 }
 
 #[test]
 fn meta_tx_v0_with_cheat_caller_address() {
     // TODO(#3704) Remove scarb version check
-    if let Some(skip_message) = skip_if_scarb_lt_2_11_0() {
-        eprintln!("{skip_message}");
+    if skip_scarb_lt_2_11_0() {
         return;
     }
 
@@ -95,8 +98,7 @@ fn meta_tx_v0_with_cheat_caller_address() {
 #[test]
 fn meta_tx_v0_with_cheat_block_hash() {
     // TODO(#3704) Remove scarb version check
-    if let Some(skip_message) = skip_if_scarb_lt_2_11_0() {
-        eprintln!("{skip_message}");
+    if skip_scarb_lt_2_11_0() {
         return;
     }
 
@@ -170,8 +172,7 @@ fn meta_tx_v0_with_cheat_block_hash() {
 #[test]
 fn meta_tx_v0_verify_tx_context_modification() {
     // TODO(#3704) Remove scarb version check
-    if let Some(skip_message) = skip_if_scarb_lt_2_11_0() {
-        eprintln!("{skip_message}");
+    if skip_scarb_lt_2_11_0() {
         return;
     }
 
