@@ -66,9 +66,9 @@ jobs:
       - name: Setup LLVM on Linux (cross)
         if: matrix.cross
         run: |
-          echo "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19" >> $GITHUB_ENV
-          echo "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19" >> $GITHUB_ENV
-          echo "TABLEGEN_190_PREFIX=/usr/lib/llvm-19" >> $GITHUB_ENV
+          echo "MLIR_SYS_190_PREFIX=/opt/llvm-19" >> $GITHUB_ENV
+          echo "LLVM_SYS_191_PREFIX=/opt/llvm-19" >> $GITHUB_ENV
+          echo "TABLEGEN_190_PREFIX=/opt/llvm-19" >> $GITHUB_ENV
 
       - name: Setup LLVM on MacOS
         if: matrix.system == 'macos'
