@@ -7,12 +7,13 @@ use crate::{
     common::{into_proc_macro_result, with_parsed_values},
     format_ident,
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, fingerprint, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
 use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode, ast::FunctionWithBody};
 use std::env::{self, VarError};
 use std::ops::Not;
+use xxhash_rust::xxh3::xxh3_64;
 
 pub struct TestCollector;
 
@@ -107,6 +108,22 @@ fn test_internal(
 
 fn get_forge_test_filter() -> Result<String, VarError> {
     env::var("SNFORGE_TEST_FILTER")
+}
+
+/// This function implements a callback, that will be used by Scarb to determine,
+/// whether Cairo code depending on this macro should be recompiled.
+/// The callback is concerned with informing Scarb about changes to inputs that don't come from Scarb directly,
+/// like the `SNFORGE_TEST_FILTER` environmental variable.
+///
+/// Warning: Removing this callback can break incremental compilation with this macro!
+#[fingerprint]
+fn test_filter_fingerprint() -> u64 {
+    get_forge_test_filter()
+        .ok()
+        // The hashes need to be consistent across different runs.
+        // Thus we cannot use the default hasher, which is rng-seeded.
+        .map(|filter| xxh3_64(filter.as_bytes()))
+        .unwrap_or_default()
 }
 
 fn ensure_parameters_only_with_fuzzer_attribute(
