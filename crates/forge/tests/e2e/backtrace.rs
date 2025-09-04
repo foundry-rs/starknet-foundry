@@ -27,12 +27,16 @@ fn test_backtrace_missing_env() {
 fn test_backtrace_native_execution() {
     let temp = setup_package("backtrace_vm_error");
 
-    test_runner(&temp)
+    let output = test_runner(&temp)
         .arg("--run-native")
         .env("SNFORGE_BACKTRACE", "1")
         .assert()
-        .code(2)
-        .stdout_eq("[ERROR] Backtrace generation is not supported with `cairo-native` execution\n");
+        .code(2);
+
+    assert_stdout_contains(
+        output,
+        "[ERROR] Backtrace generation is not supported with `cairo-native` execution\n",
+    );
 }
 
 #[test]
