@@ -131,8 +131,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: ./.github/actions/setup-rust-llvm
       - uses: software-mansion/setup-universal-sierra-compiler@v1
 
       - run: cargo test --package forge --features no_scarb_installed --lib compatibility_check::tests::failing_tool_not_installed
@@ -152,8 +151,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: ./.github/actions/setup-rust-llvm
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
 
@@ -185,8 +183,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: ./.github/actions/setup-rust-llvm
       - name: Run Data Transformer tests
         run: cargo test --release -p data-transformer
 
