@@ -23,30 +23,28 @@ jobs:
     strategy:
       matrix:
         include:
-#          - target: x86_64-unknown-linux-gnu
-#            os: ubuntu-latest
-#            # Use cross to link oldest GLIBC possible.
-#            cross: true
-#
-#          - target: x86_64-unknown-linux-musl
-#            os: ubuntu-latest
-#            cross: true
-#
-#          - target: aarch64-unknown-linux-gnu
-#            os: ubuntu-latest
-#            cross: true
-#
-#          - target: aarch64-unknown-linux-musl
-#            os: ubuntu-latest
-#            cross: true
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            # Use cross to link oldest GLIBC possible.
+            cross: true
 
-          - target: x86_64-apple-darwin
-            os: macos-14-large
-            system: macos
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            cross: true
 
-          - target: aarch64-apple-darwin
-            os: macos-latest
-            system: macos
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            cross: true
+
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
+            cross: true
+
+          # - target: x86_64-apple-darwin
+          #   os: macos-latest
+
+          # - target: aarch64-apple-darwin
+          #   os: macos-latest
 
     steps:
       - name: Checkout with ref
@@ -64,6 +62,13 @@ jobs:
           rustup target add ${{ matrix.target }}
 
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+
+      - name: Setup LLVM on Linux (cross)
+        if: matrix.cross
+        run: |
+          echo "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19" >> $GITHUB_ENV
+          echo "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19" >> $GITHUB_ENV
+          echo "TABLEGEN_190_PREFIX=/usr/lib/llvm-19" >> $GITHUB_ENV
 
       - name: Setup LLVM on MacOS
         if: matrix.system == 'macos'
