@@ -2,20 +2,12 @@
 pre-build = [
     # Install LLVM 19 using apt as recommended by cairo_native
     "apt-get update",
-    "apt-get install -y wget lsb-release software-properties-common gnupg",
-    "wget https://apt.llvm.org/llvm.sh",
-    "chmod +x llvm.sh",
-    "./llvm.sh 19 all",
     "apt-get install -y llvm-19 llvm-19-dev llvm-19-runtime clang-19 clang-tools-19 lld-19 libpolly-19-dev libmlir-19-dev mlir-19-tools",
-    "apt-get install -y zlib1g-dev libzstd-dev libxml2-dev",
     # Create cargo home directory with proper permissions
-    "mkdir -p /root/.cargo/bin",
-    "chmod -R 755 /root/.cargo",
     # Set LLVM environment variables for build scripts
     "export MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
     "export LLVM_SYS_191_PREFIX=/usr/lib/llvm-19", 
     "export TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
-    "rm llvm.sh"
 ]
 
 [build.env]
