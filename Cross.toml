@@ -1,13 +1,14 @@
 [build]
 pre-build = [
-    # Install prerequisites and add the official LLVM apt repository
+    # Install prerequisites and add the official LLVM apt repository (mirror Dockerfile)
+    "dpkg --add-architecture $CROSS_DEB_ARCH",
     "apt-get update",
     "apt-get install -y --no-install-recommends ca-certificates gnupg wget software-properties-common lsb-release",
-    # Install LLVM 19 and all related tooling using apt.llvm.org script
-    "wget https://apt.llvm.org/llvm.sh",
-    "chmod +x llvm.sh",
-    "./llvm.sh 19 all",
-    "rm -f llvm.sh",
+    "echo \"deb http://apt.llvm.org/focal/ llvm-toolchain-focal-19 main\" > /etc/apt/sources.list.d/llvm-toolchain-focal.list",
+    "echo \"deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-19 main\" >> /etc/apt/sources.list.d/llvm-toolchain-focal.list",
+    "wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -",
+    "apt-get update",
+    "apt-get install -y --no-install-recommends llvm-19:$CROSS_DEB_ARCH llvm-19-dev:$CROSS_DEB_ARCH llvm-19-runtime:$CROSS_DEB_ARCH clang-19:$CROSS_DEB_ARCH clang-tools-19:$CROSS_DEB_ARCH lld-19:$CROSS_DEB_ARCH libpolly-19-dev:$CROSS_DEB_ARCH libmlir-19-dev:$CROSS_DEB_ARCH mlir-19-tools:$CROSS_DEB_ARCH",
     # Cleanup apt lists
     "rm -rf /var/lib/apt/lists/*"
 ]
