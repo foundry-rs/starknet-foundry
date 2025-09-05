@@ -260,12 +260,12 @@ jobs:
         with:
           tool: nextest@0.9.98
       - name: Build and archive tests
-        run: cargo nextest archive --release -p sncast --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
+        run: cargo nextest archive --release -p sncast --archive-file 'sncast-nextest-archive-${{ runner.os }}.tar.zst'
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v4
         with:
-          name: nextest-archive-${{ runner.os }}
-          path: nextest-archive-${{ runner.os }}.tar.zst
+          name: sncast-nextest-archive-${{ runner.os }}
+          path: sncast-nextest-archive-${{ runner.os }}.tar.zst
 
   test-sncast:
     name: Test sncast
