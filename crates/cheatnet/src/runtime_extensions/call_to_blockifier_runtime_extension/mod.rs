@@ -54,6 +54,9 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
         // This match must remain exhaustive so that if a new syscall is introduced,
         // we will explicitly add support for it.
         match selector {
+            // We execute contract calls and library calls with modified blockifier
+            // This is redirected to drop ForgeRuntimeExtension
+            // and to enable executing outer calls in tests as non-revertible.
             SyscallSelector::CallContract => {
                 execute_syscall::<CallContractRequest>(selector, vm, extended_runtime)?;
 
