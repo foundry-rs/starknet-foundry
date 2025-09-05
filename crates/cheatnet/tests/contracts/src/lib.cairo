@@ -1,3 +1,4 @@
+mod cheat_account_contract_address;
 mod bytearray_string_panic_call;
 mod cheat_block_hash;
 mod cheat_block_number;
