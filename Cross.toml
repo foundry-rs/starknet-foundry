@@ -4,6 +4,7 @@ pre-build = [
     "dpkg --add-architecture $CROSS_DEB_ARCH",
     "apt-get update",
     "apt-get install -y --no-install-recommends ca-certificates gnupg wget software-properties-common lsb-release",
+    "apt-get install -y --no-install-recommends zlib1g-dev libzstd-dev zlib1g-dev:$CROSS_DEB_ARCH libzstd-dev:$CROSS_DEB_ARCH",
     "echo \"deb http://apt.llvm.org/focal/ llvm-toolchain-focal-19 main\" > /etc/apt/sources.list.d/llvm-toolchain-focal.list",
     "echo \"deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-19 main\" >> /etc/apt/sources.list.d/llvm-toolchain-focal.list",
     "wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -",
