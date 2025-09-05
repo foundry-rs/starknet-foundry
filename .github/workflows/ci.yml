@@ -289,7 +289,7 @@ jobs:
           tool: nextest@0.9.98
       - uses: actions/download-artifact@v4
         with:
-          name: nextest-archive-${{ runner.os }}
+          name: sncast-nextest-archive-${{ runner.os }}
       - name: Get Devnet version from .tool-versions
         id: get-devnet-version
         run: |
@@ -305,11 +305,11 @@ jobs:
           PARTITION: ${{ matrix.partition }}
         run: |
           PORT=$((5050 + PARTITION)) 
-          echo "DEVNET_URL=http://127.0.0.1:${PORT}/rpc" >> "$GITHUB_ENV"
-          echo ${DEVNET_URL}
+          DEVNET_URL="http://127.0.0.1:${PORT}/rpc"
+          echo $DEVNET_URL
       # - run: cargo test --release -p sncast
       # - name: sncast nextest partition ${{ matrix.partition }}/3
-      #   run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}.tar.zst' integration
+      #   run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'sncast-nextest-archive-${{ runner.os }}.tar.zst' integration
 
   test-conversions:
     name: Test Conversions
