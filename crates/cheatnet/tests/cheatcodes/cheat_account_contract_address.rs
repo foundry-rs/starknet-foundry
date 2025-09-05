@@ -1,7 +1,7 @@
+use crate::{cheatcodes::test_environment::TestEnvironment, common::assertions::assert_success};
 use cheatnet::state::CheatSpan;
 use starknet_api::core::ContractAddress;
-
-use crate::cheatcodes::test_environment::TestEnvironment;
+use starknet_types_core::felt::Felt;
 
 trait CheatAccountContractAddressTrait {
     fn cheat_account_contract_address(
@@ -25,7 +25,8 @@ impl CheatAccountContractAddressTrait for TestEnvironment {
         account_contract_address: ContractAddress,
         span: CheatSpan,
     ) {
-        todo!()
+        self.cheatnet_state
+            .cheat_account_contract_address(target, account_contract_address, span);
     }
 
     fn start_cheat_account_contract_address(
@@ -33,10 +34,22 @@ impl CheatAccountContractAddressTrait for TestEnvironment {
         target: ContractAddress,
         account_contract_address: ContractAddress,
     ) {
-        todo!()
+        self.cheatnet_state
+            .start_cheat_account_contract_address(target, account_contract_address);
     }
 
     fn stop_cheat_account_contract_address(&mut self, target: ContractAddress) {
-        todo!()
+        self.cheatnet_state
+            .stop_cheat_account_contract_address(target);
     }
+}
+
+#[test]
+fn cheat_account_contract_address_simple() {
+    let mut test_env = TestEnvironment::new();
+
+    let contract_address = test_env.deploy("CheatAccountContractAddressChecker", &[]);
+
+    let output = test_env.call_contract(&contract_address, "get_account_contract_address", &[]);
+    assert_success(output, &[Felt::from(0)]);
 }
