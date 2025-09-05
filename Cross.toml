@@ -1,63 +1,63 @@
-[build]
-pre-build = [
-    # Install prerequisites and add the official LLVM apt repository (mirror Dockerfile)
-    "dpkg --add-architecture $CROSS_DEB_ARCH",
-    "apt-get update",
-    "apt-get install -y --no-install-recommends ca-certificates gnupg wget software-properties-common lsb-release",
-    "echo \"deb http://apt.llvm.org/focal/ llvm-toolchain-focal-19 main\" > /etc/apt/sources.list.d/llvm-toolchain-focal.list",
-    "echo \"deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-19 main\" >> /etc/apt/sources.list.d/llvm-toolchain-focal.list",
-    "wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -",
-    "apt-get update",
-    "apt-get install -y --no-install-recommends llvm-19 llvm-19-dev llvm-19-runtime clang-19 clang-tools-19 lld-19 libpolly-19-dev libmlir-19-dev mlir-19-tools",
-    # Cleanup apt lists
-    "rm -rf /var/lib/apt/lists/*"
-]
-
-[build.env]
-passthrough = [
-    "TMPDIR=/tmp",
-    "TMP=/tmp",
-    "TEMP=/tmp",
-    "PATH=/usr/lib/llvm-19/bin:${PATH}",
-]
-
-# Set environment variables for all Linux targets as per cairo_native docs
-[target.x86_64-unknown-linux-gnu.env]
-passthrough = [
-    "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
-    "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
-    "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
-    "TMPDIR=/tmp",
-    "TMP=/tmp",
-    "TEMP=/tmp",
-]
-
-[target.x86_64-unknown-linux-musl.env]
-passthrough = [
-    "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
-    "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
-    "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
-    "TMPDIR=/tmp",
-    "TMP=/tmp",
-    "TEMP=/tmp",
-]
-
-[target.aarch64-unknown-linux-gnu.env]
-passthrough = [
-    "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
-    "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
-    "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
-    "TMPDIR=/tmp",
-    "TMP=/tmp",
-    "TEMP=/tmp",
-]
-
-[target.aarch64-unknown-linux-musl.env]
-passthrough = [
-    "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
-    "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
-    "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
-    "TMPDIR=/tmp",
-    "TMP=/tmp",
-    "TEMP=/tmp",
-]
+#[build]
+#pre-build = [
+#    # Install prerequisites and add the official LLVM apt repository (mirror Dockerfile)
+#    "dpkg --add-architecture $CROSS_DEB_ARCH",
+#    "apt-get update",
+#    "apt-get install -y --no-install-recommends ca-certificates gnupg wget software-properties-common lsb-release",
+#    "echo \"deb http://apt.llvm.org/focal/ llvm-toolchain-focal-19 main\" > /etc/apt/sources.list.d/llvm-toolchain-focal.list",
+#    "echo \"deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-19 main\" >> /etc/apt/sources.list.d/llvm-toolchain-focal.list",
+#    "wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -",
+#    "apt-get update",
+#    "apt-get install -y --no-install-recommends llvm-19 llvm-19-dev llvm-19-runtime clang-19 clang-tools-19 lld-19 libpolly-19-dev libmlir-19-dev mlir-19-tools",
+#    # Cleanup apt lists
+#    "rm -rf /var/lib/apt/lists/*"
+#]
+#
+#[build.env]
+#passthrough = [
+#    "TMPDIR=/tmp",
+#    "TMP=/tmp",
+#    "TEMP=/tmp",
+#    "PATH=/usr/lib/llvm-19/bin:${PATH}",
+#]
+#
+## Set environment variables for all Linux targets as per cairo_native docs
+#[target.x86_64-unknown-linux-gnu.env]
+#passthrough = [
+#    "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
+#    "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
+#    "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
+#    "TMPDIR=/tmp",
+#    "TMP=/tmp",
+#    "TEMP=/tmp",
+#]
+#
+#[target.x86_64-unknown-linux-musl.env]
+#passthrough = [
+#    "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
+#    "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
+#    "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
+#    "TMPDIR=/tmp",
+#    "TMP=/tmp",
+#    "TEMP=/tmp",
+#]
+#
+#[target.aarch64-unknown-linux-gnu.env]
+#passthrough = [
+#    "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
+#    "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
+#    "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
+#    "TMPDIR=/tmp",
+#    "TMP=/tmp",
+#    "TEMP=/tmp",
+#]
+#
+#[target.aarch64-unknown-linux-musl.env]
+#passthrough = [
+#    "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
+#    "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
+#    "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
+#    "TMPDIR=/tmp",
+#    "TMP=/tmp",
+#    "TEMP=/tmp",
+#]
