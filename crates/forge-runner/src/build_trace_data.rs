@@ -244,6 +244,9 @@ fn build_profiler_entry_point_type(value: EntryPointType) -> ProfilerEntryPointT
 fn build_profiler_deprecated_syscall_selector(
     value: SyscallSelector,
 ) -> ProfilerDeprecatedSyscallSelector {
+    // Warning: Do not add a default (`_`) arm here.
+    // This match must remain exhaustive so that if a new syscall is introduced,
+    // we will explicitly add support for it.
     match value {
         DeprecatedSyscallSelector::CallContract => ProfilerDeprecatedSyscallSelector::CallContract,
         DeprecatedSyscallSelector::DelegateCall => ProfilerDeprecatedSyscallSelector::DelegateCall,

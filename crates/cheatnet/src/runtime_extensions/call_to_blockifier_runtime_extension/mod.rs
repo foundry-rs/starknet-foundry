@@ -50,6 +50,9 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
         vm: &mut VirtualMachine,
         extended_runtime: &mut Self::Runtime,
     ) -> Result<SyscallHandlingResult, HintError> {
+        // Warning: Do not add a default (`_`) arm here.
+        // This match must remain exhaustive so that if a new syscall is introduced,
+        // we will explicitly add support for it.
         match selector {
             // We execute contract calls and library calls with modified blockifier
             // This is redirected to drop ForgeRuntimeExtension
@@ -64,7 +67,39 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
 
                 Ok(SyscallHandlingResult::Handled)
             }
-            _ => Ok(SyscallHandlingResult::Forwarded),
+            SyscallSelector::DelegateCall
+            | SyscallSelector::DelegateL1Handler
+            | SyscallSelector::Deploy
+            | SyscallSelector::EmitEvent
+            | SyscallSelector::GetBlockHash
+            | SyscallSelector::GetBlockNumber
+            | SyscallSelector::GetBlockTimestamp
+            | SyscallSelector::GetCallerAddress
+            | SyscallSelector::GetClassHashAt
+            | SyscallSelector::GetContractAddress
+            | SyscallSelector::GetExecutionInfo
+            | SyscallSelector::GetSequencerAddress
+            | SyscallSelector::GetTxInfo
+            | SyscallSelector::GetTxSignature
+            | SyscallSelector::Keccak
+            | SyscallSelector::KeccakRound
+            | SyscallSelector::Sha256ProcessBlock
+            | SyscallSelector::LibraryCallL1Handler
+            | SyscallSelector::MetaTxV0
+            | SyscallSelector::ReplaceClass
+            | SyscallSelector::Secp256k1Add
+            | SyscallSelector::Secp256k1GetPointFromX
+            | SyscallSelector::Secp256k1GetXy
+            | SyscallSelector::Secp256k1Mul
+            | SyscallSelector::Secp256k1New
+            | SyscallSelector::Secp256r1Add
+            | SyscallSelector::Secp256r1GetPointFromX
+            | SyscallSelector::Secp256r1GetXy
+            | SyscallSelector::Secp256r1Mul
+            | SyscallSelector::Secp256r1New
+            | SyscallSelector::SendMessageToL1
+            | SyscallSelector::StorageRead
+            | SyscallSelector::StorageWrite => Ok(SyscallHandlingResult::Forwarded),
         }
     }
 }
