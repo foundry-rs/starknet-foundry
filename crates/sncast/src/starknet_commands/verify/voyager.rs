@@ -215,7 +215,7 @@ fn longest_common_prefix<P: AsRef<Utf8Path> + Clone>(
 }
 
 impl Voyager<'_> {
-    fn gather_files(
+    pub fn gather_files(
         &self,
         include_test_files: bool,
     ) -> Result<(Utf8PathBuf, HashMap<String, Utf8PathBuf>)> {
@@ -332,11 +332,6 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
                     path
                 }
             })?;
-
-        ui.println(&"The following files will be transferred:");
-        for (name, path) in &files {
-            ui.println(&format!("{name}: \n{path}"));
-        }
 
         if selected.manifest_metadata.license.is_none() {
             ui.println(&WarningMessage::new("License not specified in Scarb.toml"));
