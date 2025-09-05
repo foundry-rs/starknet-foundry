@@ -8,7 +8,7 @@ pre-build = [
     "echo \"deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-19 main\" >> /etc/apt/sources.list.d/llvm-toolchain-focal.list",
     "wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -",
     "apt-get update",
-    "apt-get install -y --no-install-recommends llvm-19:$CROSS_DEB_ARCH llvm-19-dev:$CROSS_DEB_ARCH llvm-19-runtime:$CROSS_DEB_ARCH clang-19:$CROSS_DEB_ARCH clang-tools-19:$CROSS_DEB_ARCH lld-19:$CROSS_DEB_ARCH libpolly-19-dev:$CROSS_DEB_ARCH libmlir-19-dev:$CROSS_DEB_ARCH mlir-19-tools:$CROSS_DEB_ARCH",
+    "apt-get install -y --no-install-recommends llvm-19 llvm-19-dev llvm-19-runtime clang-19 clang-tools-19 lld-19 libpolly-19-dev libmlir-19-dev mlir-19-tools",
     # Cleanup apt lists
     "rm -rf /var/lib/apt/lists/*"
 ]
