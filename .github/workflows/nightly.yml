@@ -100,6 +100,7 @@ jobs:
   publish-plugin:
     needs: [ prepare, build-plugin-binaries ]
     uses: ./.github/workflows/_publish-plugin.yml
+    if: ${{ !(inputs.dry_run) }}
     secrets: inherit
     with:
       prod_registry: false
@@ -112,6 +113,7 @@ jobs:
     # the sake of consistency with the normal release workflow.
     needs: [ prepare, build-deprecated-plugin-binaries ]
     uses: ./.github/workflows/_publish-plugin.yml
+    if: ${{ !(inputs.dry_run) }}
     secrets: inherit
     with:
       prod_registry: false
@@ -122,6 +124,7 @@ jobs:
   publish-std:
     needs: [ prepare, publish-plugin, publish-deprecated-plugin ]
     uses: ./.github/workflows/publish-std.yml
+    if: ${{ !(inputs.dry_run) }}
     secrets: inherit
     with:
       prod_registry: false
