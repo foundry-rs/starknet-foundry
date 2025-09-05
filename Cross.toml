@@ -13,23 +13,12 @@ pre-build = [
     "rm -rf /var/lib/apt/lists/*"
 ]
 
-[build.env]
-passthrough = [
-    "TMPDIR=/tmp",
-    "TMP=/tmp",
-    "TEMP=/tmp",
-    "PATH=/usr/lib/llvm-19/bin:${PATH}",
-]
-
 # Set environment variables for all Linux targets as per cairo_native docs
 [target.x86_64-unknown-linux-gnu.env]
 passthrough = [
     "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
     "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
     "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
-    "TMPDIR=/tmp",
-    "TMP=/tmp",
-    "TEMP=/tmp",
 ]
 
 [target.x86_64-unknown-linux-musl.env]
@@ -37,9 +26,6 @@ passthrough = [
     "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
     "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
     "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
-    "TMPDIR=/tmp",
-    "TMP=/tmp",
-    "TEMP=/tmp",
 ]
 
 [target.aarch64-unknown-linux-gnu.env]
@@ -47,9 +33,6 @@ passthrough = [
     "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
     "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
     "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
-    "TMPDIR=/tmp",
-    "TMP=/tmp",
-    "TEMP=/tmp",
 ]
 
 [target.aarch64-unknown-linux-musl.env]
@@ -57,7 +40,4 @@ passthrough = [
     "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
     "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
     "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
-    "TMPDIR=/tmp",
-    "TMP=/tmp",
-    "TEMP=/tmp",
 ]
