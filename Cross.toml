@@ -1,30 +1,15 @@
 [build]
 pre-build = [
-    # Install LLVM 19 from source
+    # Install prerequisites and add the official LLVM apt repository
     "apt-get update",
-    "apt-get install -y wget build-essential cmake ninja-build clang clang++ lld zlib1g-dev libzstd-dev libxml2-dev",
-    # Download and extract LLVM 19.1.7 source
-    "wget https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/llvm-project-19.1.7.src.tar.xz",
-    "tar xf llvm-project-19.1.7.src.tar.xz",
-    "cd llvm-project-19.1.7.src",
-    "mkdir build",
-    "cd build",
-    "mkdir llvm",
-    "apt-get install -y ninja",
-    # Configure LLVM build
-    "cmake -G Ninja ../llvm -DLLVM_ENABLE_PROJECTS=\"mlir;clang;clang-tools-extra;lld;polly\" -DLLVM_BUILD_EXAMPLES=OFF -DLLVM_TARGETS_TO_BUILD=\"Native\" -DCMAKE_INSTALL_PREFIX=/opt/llvm-19 -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_PARALLEL_LINK_JOBS=4 -DLLVM_ENABLE_BINDINGS=OFF -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_ENABLE_LLD=ON -DLLVM_ENABLE_ASSERTIONS=OFF",
-    # Build and install LLVM
-    "ninja install",
-    # Create cargo home directory with proper permissions
-    "mkdir -p /root/.cargo/bin",
-    "chmod -R 755 /root/.cargo",
-    # Set LLVM environment variables for build scripts
-    "export MLIR_SYS_190_PREFIX=/opt/llvm-19",
-    "export LLVM_SYS_191_PREFIX=/opt/llvm-19", 
-    "export TABLEGEN_190_PREFIX=/opt/llvm-19",
-    # Cleanup
-    "cd /",
-    "rm -rf llvm-project-19.1.7.src*"
+    "apt-get install -y --no-install-recommends ca-certificates gnupg wget software-properties-common lsb-release",
+    # Install LLVM 19 and all related tooling using apt.llvm.org script
+    "wget https://apt.llvm.org/llvm.sh",
+    "chmod +x llvm.sh",
+    "./llvm.sh 19 all",
+    "rm -f llvm.sh",
+    # Cleanup apt lists
+    "rm -rf /var/lib/apt/lists/*"
 ]
 
 [build.env]
@@ -32,14 +17,15 @@ passthrough = [
     "TMPDIR=/tmp",
     "TMP=/tmp",
     "TEMP=/tmp",
+    "PATH=/usr/lib/llvm-19/bin:${PATH}",
 ]
 
 # Set environment variables for all Linux targets as per cairo_native docs
 [target.x86_64-unknown-linux-gnu.env]
 passthrough = [
-    "MLIR_SYS_190_PREFIX=/opt/llvm-19",
-    "LLVM_SYS_191_PREFIX=/opt/llvm-19",
-    "TABLEGEN_190_PREFIX=/opt/llvm-19",
+    "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
+    "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
+    "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
     "TMPDIR=/tmp",
     "TMP=/tmp",
     "TEMP=/tmp",
@@ -47,9 +33,9 @@ passthrough = [
 
 [target.x86_64-unknown-linux-musl.env]
 passthrough = [
-    "MLIR_SYS_190_PREFIX=/opt/llvm-19",
-    "LLVM_SYS_191_PREFIX=/opt/llvm-19",
-    "TABLEGEN_190_PREFIX=/opt/llvm-19",
+    "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
+    "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
+    "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
     "TMPDIR=/tmp",
     "TMP=/tmp",
     "TEMP=/tmp",
@@ -57,9 +43,9 @@ passthrough = [
 
 [target.aarch64-unknown-linux-gnu.env]
 passthrough = [
-    "MLIR_SYS_190_PREFIX=/opt/llvm-19",
-    "LLVM_SYS_191_PREFIX=/opt/llvm-19",
-    "TABLEGEN_190_PREFIX=/opt/llvm-19",
+    "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
+    "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
+    "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
     "TMPDIR=/tmp",
     "TMP=/tmp",
     "TEMP=/tmp",
@@ -67,9 +53,9 @@ passthrough = [
 
 [target.aarch64-unknown-linux-musl.env]
 passthrough = [
-    "MLIR_SYS_190_PREFIX=/opt/llvm-19",
-    "LLVM_SYS_191_PREFIX=/opt/llvm-19",
-    "TABLEGEN_190_PREFIX=/opt/llvm-19",
+    "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
+    "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
+    "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
     "TMPDIR=/tmp",
     "TMP=/tmp",
     "TEMP=/tmp",
