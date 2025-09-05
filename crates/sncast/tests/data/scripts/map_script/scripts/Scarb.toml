@@ -10,7 +10,6 @@ map1 = { path = "../contracts" }
 
 [lib]
 sierra = true
-casm = true
 
 [[target.starknet-contract]]
 build-external-contracts = ["map1::Mapa", "map1::Mapa2"]

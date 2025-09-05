@@ -45,7 +45,7 @@ impl Message for ResponseError {
 pub enum StarknetCommandError {
     #[error(transparent)]
     UnknownError(#[from] anyhow::Error),
-    #[error("Failed to find {} artifact in starknet_artifacts.json file. Please make sure you have specified correct package using `--package` flag and that you have enabled sierra and casm code generation in Scarb.toml.", .0.data)]
+    #[error("Failed to find {} artifact in starknet_artifacts.json file. Please make sure you have specified correct package using `--package` flag.", .0.data)]
     ContractArtifactsNotFound(ErrorData),
     #[error(transparent)]
     WaitForTransactionError(#[from] WaitForTransactionError),
