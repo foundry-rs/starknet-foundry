@@ -1,26 +1,16 @@
 [build]
-pre-build = [
-    # Install LLVM 19 using apt as recommended by cairo_native
-    "apt-get update",
-    "apt-get install -y wget gnupg ca-certificates",
-    # Add LLVM APT repository (equivalent to myci-actions/add-deb-repo@11)
-    "wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor -o /usr/share/keyrings/llvm-repo-keyring.gpg",
-    "echo 'deb [signed-by=/usr/share/keyrings/llvm-repo-keyring.gpg] http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main' > /etc/apt/sources.list.d/llvm-repo.list",
-    "apt-get update",
-    # Install LLVM 19 packages
-    "apt-get install -y llvm-19 llvm-19-dev llvm-19-runtime clang-19 clang-tools-19 lld-19 libpolly-19-dev libmlir-19-dev mlir-19-tools",
-    # Create cargo home directory with proper permissions
-    # Set LLVM environment variables for build scripts
-    "export MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
-    "export LLVM_SYS_191_PREFIX=/usr/lib/llvm-19", 
-    "export TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
-]
+dockerfile = "./Dockerfile"
 
 [build.env]
 passthrough = [
     "TMPDIR=/tmp",
     "TMP=/tmp",
     "TEMP=/tmp",
+    "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
+    "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
+    "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
+    "CPPFLAGS=-I/usr/lib/llvm-19/include",
+    "BINDGEN_EXTRA_CLANG_ARGS=-I/usr/lib/llvm-19/include",
 ]
 
 # Set environment variables for all Linux targets as per cairo_native docs
@@ -32,6 +22,8 @@ passthrough = [
     "TMPDIR=/tmp",
     "TMP=/tmp",
     "TEMP=/tmp",
+    "CPPFLAGS=-I/usr/lib/llvm-19/include",
+    "BINDGEN_EXTRA_CLANG_ARGS=-I/usr/lib/llvm-19/include",
 ]
 
 [target.x86_64-unknown-linux-musl.env]
@@ -42,6 +34,8 @@ passthrough = [
     "TMPDIR=/tmp",
     "TMP=/tmp",
     "TEMP=/tmp",
+    "CPPFLAGS=-I/usr/lib/llvm-19/include",
+    "BINDGEN_EXTRA_CLANG_ARGS=-I/usr/lib/llvm-19/include",
 ]
 
 [target.aarch64-unknown-linux-gnu.env]
@@ -52,6 +46,8 @@ passthrough = [
     "TMPDIR=/tmp",
     "TMP=/tmp",
     "TEMP=/tmp",
+    "CPPFLAGS=-I/usr/lib/llvm-19/include",
+    "BINDGEN_EXTRA_CLANG_ARGS=-I/usr/lib/llvm-19/include",
 ]
 
 [target.aarch64-unknown-linux-musl.env]
@@ -62,4 +58,6 @@ passthrough = [
     "TMPDIR=/tmp",
     "TMP=/tmp",
     "TEMP=/tmp",
+    "CPPFLAGS=-I/usr/lib/llvm-19/include",
+    "BINDGEN_EXTRA_CLANG_ARGS=-I/usr/lib/llvm-19/include",
 ]
