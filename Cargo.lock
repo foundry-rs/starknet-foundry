@@ -4192,6 +4192,7 @@ dependencies = [
  "cairo-lang-starknet-classes",
  "cairo-native",
  "starknet_api",
+ "thiserror 2.0.16",
 ]
 
 [[package]]
