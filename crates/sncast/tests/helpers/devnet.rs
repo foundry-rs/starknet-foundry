@@ -24,7 +24,7 @@ fn start_devnet() {
         return;
     }
     fn verify_devnet_availability(address: &str) -> bool {
-        println!("XXX {}", TcpStream::connect(address).is_ok());
+        // println!("XXX {}", TcpStream::connect(address).is_ok());
         TcpStream::connect(address).is_ok()
     }
 
@@ -35,9 +35,9 @@ fn start_devnet() {
         .expect("Can't parse devnet URL!")
         .to_string();
 
-    if !verify_devnet_availability(&format!("{host}:{port}")) {
-        return;
-    }
+    // if verify_devnet_availability(&format!("{host}:{port}")) {
+    //     return;
+    // }
 
     loop {
         if verify_devnet_availability(&format!("{host}:{port}")) {
@@ -47,7 +47,7 @@ fn start_devnet() {
         }
     }
 
-    Command::new("/Users/franciszekjob/Downloads/devnet4/starknet-devnet")
+    Command::new("starknet-devnet")
         .args([
             "--port",
             &port,

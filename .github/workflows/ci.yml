@@ -290,44 +290,8 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: sncast-nextest-archive-${{ runner.os }}
-      # - name: Get Devnet version from .tool-versions
-      #   id: get-devnet-version
-      #   run: |
-      #     devnet_version=$(grep starknet-devnet .tool-versions | cut -d " " -f 2)
-      #     echo "Devnet version: $devnet_version"
-      #     echo "version=$devnet_version" >> "$GITHUB_OUTPUT"
-      # - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
-      #   with:
-      #     tool_versions: |
-      #       starknet-devnet ${{ steps.get-devnet-version.outputs.version }}
-      # - name: Start devnet for partition ${{ matrix.partition }}
-        # env:
-        #   PARTITION: ${{ matrix.partition }}
-        # run: |
-        #   set -euo pipefail
-        #   DEVNET_PORT=$((5050 + PARTITION))
-        #   DEVNET_URL="http://127.0.0.1:${DEVNET_PORT}/rpc"
-
-        #   export DEVNET_PORT DEVNET_URL
-        #   echo "Using DEVNET_URL=$DEVNET_URL"
-
-        #   nohup starknet-devnet \
-        #     --port "$DEVNET_PORT" \
-        #     --seed 12345 \
-        #     --state-archive-capacity full \
-        #     --fork-network "http://188.34.188.184:7070/rpc/v0_9" \
-        #     --fork-block "721720" \
-        #     --accounts 20 \
-        #     --initial-balance 9999999999999999999999999999999 \
-        #     >/dev/null 2>&1 &
-        #   echo $! > devnet.pid
-      # - run: cargo test --release -p sncast
       - name: sncast nextest partition ${{ matrix.partition }}/3
-        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'sncast-nextest-archive-${{ runner.os }}.tar.zst' integration
-      # - name: Stop devnet
-      #   if: always()
-      #   run: |
-      #     if [ -f devnet.pid ]; then kill "$(cat devnet.pid)" 2>/dev/null || true; fi
+        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'sncast-nextest-archive-${{ runner.os }}.tar.zst'
 
   test-conversions:
     name: Test Conversions
