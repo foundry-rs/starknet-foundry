@@ -1,6 +1,6 @@
 use crate::helpers::constants::{
     ACCOUNT, ACCOUNT_FILE_PATH, CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
-    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
+    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL, devnet_url,
 };
 use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
@@ -25,6 +25,7 @@ use test_case::test_case;
 async fn test_happy_case_human_readable() {
     let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
 
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",
@@ -32,7 +33,7 @@ async fn test_happy_case_human_readable() {
         "my_account",
         "deploy",
         "--url",
-        URL,
+        &url,
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",
@@ -70,6 +71,7 @@ async fn test_happy_case_human_readable() {
 #[tokio::test]
 async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let tempdir = create_and_deploy_account(class_hash, account_type).await;
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",
@@ -78,7 +80,7 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         "--json",
         "deploy",
         "--url",
-        URL,
+        &url,
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",
@@ -121,6 +123,7 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
 async fn test_happy_case_different_fees(fee_args: FeeArgs) {
     let tempdir = create_and_deploy_oz_account().await;
 
+    let url = devnet_url();
     let mut args = vec![
         "--accounts-file",
         "accounts.json",
@@ -129,7 +132,7 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
         "--json",
         "deploy",
         "--url",
-        URL,
+        &url,
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",
@@ -186,6 +189,7 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
 
 #[tokio::test]
 async fn test_happy_case_with_constructor() {
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -194,7 +198,7 @@ async fn test_happy_case_with_constructor() {
         "--json",
         "deploy",
         "--url",
-        URL,
+        &url,
         "--constructor-calldata",
         "0x1",
         "0x1",
@@ -217,6 +221,7 @@ async fn test_happy_case_with_constructor() {
 async fn test_happy_case_with_constructor_cairo_expression_calldata() {
     let tempdir = create_and_deploy_oz_account().await;
 
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",
@@ -225,7 +230,7 @@ async fn test_happy_case_with_constructor_cairo_expression_calldata() {
         "--json",
         "deploy",
         "--url",
-        URL,
+        &url,
         "--arguments",
         "0x420, 0x2137_u256",
         "--class-hash",
@@ -244,6 +249,7 @@ async fn test_happy_case_with_constructor_cairo_expression_calldata() {
 
 #[test]
 fn test_wrong_calldata() {
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -251,7 +257,7 @@ fn test_wrong_calldata() {
         "user9",
         "deploy",
         "--url",
-        URL,
+        &url,
         "--class-hash",
         CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
         "--constructor-calldata",
@@ -272,6 +278,7 @@ fn test_wrong_calldata() {
 
 #[tokio::test]
 async fn test_contract_not_declared() {
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -279,7 +286,7 @@ async fn test_contract_not_declared() {
         ACCOUNT,
         "deploy",
         "--url",
-        URL,
+        &url,
         "--class-hash",
         "0x1",
     ];
@@ -295,6 +302,7 @@ async fn test_contract_not_declared() {
 
 #[test]
 fn test_contract_already_deployed() {
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -302,7 +310,7 @@ fn test_contract_already_deployed() {
         "user1",
         "deploy",
         "--url",
-        URL,
+        &url,
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",
@@ -323,6 +331,7 @@ fn test_contract_already_deployed() {
 
 #[test]
 fn test_too_low_gas() {
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -331,7 +340,7 @@ fn test_too_low_gas() {
         "--wait",
         "deploy",
         "--url",
-        URL,
+        &url,
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",
@@ -363,10 +372,11 @@ async fn test_happy_case_shell() {
     let binary_path = cargo_bin!("sncast");
     let command = os_specific_shell(&Utf8PathBuf::from("tests/shell/deploy"));
 
+    let url = devnet_url();
     let snapbox = command
         .current_dir(tempdir.path())
         .arg(binary_path)
-        .arg(URL)
+        .arg(url)
         .arg(CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA);
     snapbox.assert().success();
 }
@@ -375,6 +385,7 @@ async fn test_happy_case_shell() {
 async fn test_json_output_format() {
     let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
 
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",
@@ -383,7 +394,7 @@ async fn test_json_output_format() {
         "--json",
         "deploy",
         "--url",
-        URL,
+        &url,
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",

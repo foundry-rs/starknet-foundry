@@ -1,4 +1,4 @@
-use crate::helpers::constants::ACCOUNT_FILE_PATH;
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, devnet_url};
 use crate::helpers::runner::runner;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
@@ -10,6 +10,7 @@ async fn test_happy_case_file() {
     let tmp_dir = tempdir().expect("Failed to create temporary directory");
     let multicall_toml_file = "multicall.toml";
 
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -41,6 +42,7 @@ async fn test_happy_case_file() {
 
 #[tokio::test]
 async fn test_no_output_path_specified() {
+    let url = devnet_url();
     let args = vec!["--accounts-file", ACCOUNT_FILE_PATH, "multicall", "new"];
 
     let snapbox = runner(&args);
@@ -64,6 +66,7 @@ async fn test_directory_non_existent() {
     let tmp_dir = tempdir().expect("failed to create temporary directory");
     let multicall_toml_path = "non_existent_directory/multicall.toml";
 
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -96,6 +99,7 @@ async fn test_file_invalid_path() {
         .to_str()
         .expect("failed to convert path to string");
 
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,

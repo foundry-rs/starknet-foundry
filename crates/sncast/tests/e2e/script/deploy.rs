@@ -1,4 +1,4 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, SCRIPTS_DIR, URL};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, SCRIPTS_DIR, URL, devnet_url};
 use crate::helpers::fixtures::{copy_script_directory_to_tempdir, get_accounts_path};
 use crate::helpers::runner::runner;
 use indoc::indoc;
@@ -17,6 +17,7 @@ async fn test_with_calldata(account: &str) {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "with_calldata";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -26,7 +27,7 @@ async fn test_with_calldata(account: &str) {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -49,6 +50,7 @@ async fn test_with_fee_settings() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "fee_settings";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -58,7 +60,7 @@ async fn test_with_fee_settings() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -81,6 +83,7 @@ async fn test_same_salt_and_class_hash_deployed_twice() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "same_class_hash_and_salt";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -90,7 +93,7 @@ async fn test_same_salt_and_class_hash_deployed_twice() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -119,6 +122,7 @@ async fn test_invalid_class_hash() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "invalid_class_hash";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -128,7 +132,7 @@ async fn test_invalid_class_hash() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -157,6 +161,7 @@ async fn test_invalid_call_data() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "invalid_calldata";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -166,7 +171,7 @@ async fn test_invalid_call_data() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -197,6 +202,7 @@ async fn test_invalid_nonce() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "invalid_nonce";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -206,7 +212,7 @@ async fn test_invalid_nonce() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());

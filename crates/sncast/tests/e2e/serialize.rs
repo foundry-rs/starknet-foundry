@@ -1,6 +1,6 @@
 use crate::helpers::constants::{
     DATA_TRANSFORMER_CONTRACT_ABI_PATH, DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA,
-    DATA_TRANSFORMER_CONTRACT_CLASS_HASH_SEPOLIA, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
+    DATA_TRANSFORMER_CONTRACT_CLASS_HASH_SEPOLIA, MAP_CONTRACT_ADDRESS_SEPOLIA, devnet_url,
 };
 use crate::helpers::runner::runner;
 use crate::helpers::shell::os_specific_shell;
@@ -16,6 +16,7 @@ async fn test_happy_case() {
 
     let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
 
+    let url = devnet_url();
     let args = vec![
         "utils",
         "serialize",
@@ -26,7 +27,7 @@ async fn test_happy_case() {
         "--function",
         "nested_struct_fn",
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -42,6 +43,7 @@ async fn test_happy_case_class_hash() {
 
     let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
 
+    let url = devnet_url();
     let args = vec![
         "utils",
         "serialize",
@@ -52,7 +54,7 @@ async fn test_happy_case_class_hash() {
         "--function",
         "nested_struct_fn",
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -161,6 +163,7 @@ async fn test_happy_case_json() {
 
     let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
 
+    let url = devnet_url();
     let args = vec![
         "--json",
         "utils",
@@ -172,7 +175,7 @@ async fn test_happy_case_json() {
         "--function",
         "nested_struct_fn",
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -184,6 +187,7 @@ async fn test_happy_case_json() {
 
 #[tokio::test]
 async fn test_contract_does_not_exist() {
+    let url = devnet_url();
     let args = vec![
         "utils",
         "serialize",
@@ -194,7 +198,7 @@ async fn test_contract_does_not_exist() {
         "--function",
         "nested_struct_fn",
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args);
@@ -210,6 +214,7 @@ async fn test_contract_does_not_exist() {
 async fn test_wrong_function_name() {
     let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
 
+    let url = devnet_url();
     let args = vec![
         "utils",
         "serialize",
@@ -220,7 +225,7 @@ async fn test_wrong_function_name() {
         "--function",
         "nonexistent_function",
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args);
@@ -285,9 +290,10 @@ async fn test_happy_case_shell() {
     let binary_path = cargo_bin!("sncast");
     let command = os_specific_shell(&Utf8PathBuf::from("tests/shell/serialize"));
 
+    let url = devnet_url();
     let snapbox = command
         .arg(binary_path)
-        .arg(URL)
+        .arg(url)
         .arg(DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA);
     snapbox.assert().success();
 }

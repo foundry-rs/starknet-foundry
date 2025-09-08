@@ -1,5 +1,6 @@
 use crate::helpers::constants::{
-    ACCOUNT_FILE_PATH, DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
+    ACCOUNT_FILE_PATH, DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_ADDRESS_SEPOLIA,
+    URL, devnet_url,
 };
 use crate::helpers::fixtures::invoke_contract;
 use crate::helpers::runner::runner;
@@ -12,12 +13,13 @@ use sncast::helpers::fee::FeeSettings;
 
 #[test]
 fn test_happy_case() {
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "call",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -40,10 +42,11 @@ fn test_happy_case() {
 
 #[test]
 fn test_happy_case_cairo_expression_calldata() {
+    let url = devnet_url();
     let args = vec![
         "call",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -83,12 +86,13 @@ async fn test_call_after_storage_changed() {
     )
     .await;
 
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "call",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -109,12 +113,13 @@ async fn test_call_after_storage_changed() {
 
 #[tokio::test]
 async fn test_contract_does_not_exist() {
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "call",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         "0x1",
         "--function",
@@ -132,12 +137,13 @@ async fn test_contract_does_not_exist() {
 
 #[test]
 fn test_wrong_function_name() {
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "call",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -155,12 +161,13 @@ fn test_wrong_function_name() {
 
 #[test]
 fn test_wrong_calldata() {
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "call",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--calldata",
@@ -186,12 +193,13 @@ fn test_wrong_calldata() {
 
 #[tokio::test]
 async fn test_invalid_selector() {
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "call",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -216,12 +224,13 @@ async fn test_invalid_selector() {
 
 #[test]
 fn test_wrong_block_id() {
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "call",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -249,9 +258,10 @@ fn test_happy_case_shell() {
     let binary_path = cargo_bin!("sncast");
     let command = os_specific_shell(&Utf8PathBuf::from("tests/shell/call"));
 
+    let url = devnet_url();
     let snapbox = command
         .arg(binary_path)
-        .arg(URL)
+        .arg(url)
         .arg(DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA);
     snapbox.assert().success();
 }
@@ -261,22 +271,24 @@ fn test_leading_negative_values() {
     let binary_path = cargo_bin!("sncast");
     let command = os_specific_shell(&Utf8PathBuf::from("tests/shell/call_unsigned"));
 
+    let url = devnet_url();
     let snapbox = command
         .arg(binary_path)
-        .arg(URL)
+        .arg(url)
         .arg(DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA);
     snapbox.assert().success();
 }
 
 #[test]
 fn test_json_output_format() {
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "--json",
         "call",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",

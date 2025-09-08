@@ -4,7 +4,10 @@ use serde_json::{Value, json};
 use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
 use tempfile::tempdir;
 
-use crate::{e2e::account::helpers::create_tempdir_with_accounts_file, helpers::runner::runner};
+use crate::{
+    e2e::account::helpers::create_tempdir_with_accounts_file,
+    helpers::{constants::devnet_url, runner::runner},
+};
 
 #[test]
 fn test_happy_case() {
@@ -17,6 +20,7 @@ fn test_happy_case() {
         .expect("Unable to resolve a temporary directory path")
         .join(accounts_file_name);
 
+    let url = devnet_url();
     let args = vec!["--accounts-file", &accounts_file_name, "account", "list"];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -80,6 +84,7 @@ fn test_happy_case_with_private_keys() {
         .expect("Unable to resolve a temporary directory path")
         .join(accounts_file_name);
 
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         &accounts_file_name,
@@ -144,6 +149,7 @@ fn test_happy_case_json() {
     let accounts_file_name = "temp_accounts.json";
     let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
 
+    let url = devnet_url();
     let args = vec![
         "--json",
         "--accounts-file",
@@ -209,6 +215,7 @@ fn test_happy_case_with_private_keys_json() {
     let accounts_file_name = "temp_accounts.json";
     let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
 
+    let url = devnet_url();
     let args = vec![
         "--json",
         "--accounts-file",
@@ -280,6 +287,7 @@ fn test_accounts_file_does_not_exist() {
     let accounts_file_name = "some_inexistent_file.json";
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
+    let url = devnet_url();
     let args = vec!["--accounts-file", &accounts_file_name, "account", "list"];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -306,6 +314,7 @@ fn test_no_accounts_available() {
         .expect("Unable to resolve a temporary directory path")
         .join(accounts_file_name);
 
+    let url = devnet_url();
     let args = vec!["--accounts-file", &accounts_file_name, "account", "list"];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());

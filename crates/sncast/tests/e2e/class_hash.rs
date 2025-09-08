@@ -1,5 +1,7 @@
 use crate::helpers::{
-    constants::CONTRACTS_DIR, fixtures::duplicate_contract_directory_with_salt, runner::runner,
+    constants::{CONTRACTS_DIR, devnet_url},
+    fixtures::duplicate_contract_directory_with_salt,
+    runner::runner,
 };
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
@@ -12,6 +14,7 @@ fn test_happy_case_get_class_hash() {
         "human_readable",
     );
 
+    let url = devnet_url();
     let args = vec!["utils", "class-hash", "--contract-name", "Map"];
 
     let snapbox = runner(&args).current_dir(contract_path.path());

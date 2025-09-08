@@ -4,28 +4,33 @@ use crate::helpers::fixtures::{
     deploy_latest_oz_account, deploy_ready_account,
 };
 use ctor::{ctor, dtor};
-use std::net::TcpStream;
+use std::net::{TcpListener, TcpStream};
 use std::process::{Command, Stdio};
 use std::string::ToString;
 use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
 use url::Url;
 
+fn get_available_port() -> u16 {
+    // 0 means "give me free port"
+    let listener = TcpListener::bind("127.0.0.1:0").expect("failed to bind to address");
+    let port = listener.local_addr().unwrap().port();
+    port
+}
+
 #[expect(clippy::zombie_processes)]
 #[cfg(test)]
-// #[ctor]
+#[ctor]
 fn start_devnet() {
+    use crate::helpers::constants::devnet_url;
+
     fn verify_devnet_availability(address: &str) -> bool {
         TcpStream::connect(address).is_ok()
     }
 
-    let port = std::env::var("PARTITION")
-        .expect("PARTITION env variable not set")
-        .parse::<u16>()
-        .expect("PARTITION env variable is not a valid number")
-        + 5050;
-
-    let host = Url::parse(URL)
+    let port = get_available_port();
+    println!("XXX Starting devnet on port: {port}");
+    let host = Url::parse(&devnet_url())
         .unwrap()
         .host()
         .expect("Can't parse devnet URL!")
@@ -84,7 +89,13 @@ fn start_devnet() {
 #[cfg(test)]
 #[dtor]
 fn stop_devnet() {
-    let port = Url::parse(URL).unwrap().port().unwrap_or(80).to_string();
+    use crate::helpers::constants::devnet_url;
+
+    let port = Url::parse(&devnet_url())
+        .unwrap()
+        .port()
+        .unwrap_or(80)
+        .to_string();
     let pattern = format!("starknet-devnet.*{port}.*{SEED}");
 
     Command::new("pkill")

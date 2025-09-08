@@ -1,3 +1,5 @@
+use std::sync::OnceLock;
+
 use starknet::macros::felt;
 use starknet_types_core::felt::Felt;
 
@@ -6,7 +8,11 @@ pub const ACCOUNT_FILE_PATH: &str = "tests/data/accounts/accounts.json";
 
 pub const SEPOLIA_RPC_URL: &str = "http://188.34.188.184:7070/rpc/v0_9";
 
-pub const URL: &str = "http://127.0.0.1:5055/rpc";
+pub fn devnet_url() -> String {
+    URL.get().expect("URL not set").as_str().to_owned()
+}
+
+pub const URL: OnceLock<String> = OnceLock::new();
 pub const NETWORK: &str = "testnet";
 pub const SEED: u32 = 1_053_545_548;
 

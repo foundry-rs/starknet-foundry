@@ -1,5 +1,5 @@
 use crate::helpers::constants::{
-    DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, URL,
+    DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, URL, devnet_url,
 };
 use crate::helpers::fixtures::create_test_provider;
 
@@ -12,7 +12,7 @@ use url::ParseError;
 
 #[tokio::test]
 async fn test_get_provider() {
-    let provider = get_provider(URL);
+    let provider = get_provider(&devnet_url());
     assert!(provider.is_ok());
 }
 

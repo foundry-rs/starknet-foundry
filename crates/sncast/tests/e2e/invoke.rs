@@ -1,6 +1,6 @@
 use crate::helpers::constants::{
     ACCOUNT, ACCOUNT_FILE_PATH, DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA,
-    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
+    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_ADDRESS_SEPOLIA, URL, devnet_url,
 };
 use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
@@ -25,6 +25,7 @@ use test_case::test_case;
 async fn test_happy_case_human_readable() {
     let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
 
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",
@@ -32,7 +33,7 @@ async fn test_happy_case_human_readable() {
         "my_account",
         "invoke",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -69,6 +70,7 @@ async fn test_happy_case_human_readable() {
 #[tokio::test]
 async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let tempdir = create_and_deploy_account(class_hash, account_type).await;
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",
@@ -77,7 +79,7 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         "--json",
         "invoke",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -122,6 +124,7 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
 #[tokio::test]
 async fn test_happy_case_different_fees(fee_args: FeeArgs) {
     let tempdir = create_and_deploy_oz_account().await;
+    let url = devnet_url();
     let mut args = vec![
         "--accounts-file",
         "accounts.json",
@@ -130,7 +133,7 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
         "--json",
         "invoke",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -188,6 +191,7 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
 
 #[tokio::test]
 async fn test_contract_does_not_exist() {
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -195,7 +199,7 @@ async fn test_contract_does_not_exist() {
         ACCOUNT,
         "invoke",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         "0x1",
         "--function",
@@ -213,6 +217,7 @@ async fn test_contract_does_not_exist() {
 
 #[test]
 fn test_wrong_function_name() {
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -220,7 +225,7 @@ fn test_wrong_function_name() {
         "user2",
         "invoke",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -238,6 +243,7 @@ fn test_wrong_function_name() {
 
 #[test]
 fn test_wrong_calldata() {
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -245,7 +251,7 @@ fn test_wrong_calldata() {
         "user5",
         "invoke",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -268,6 +274,7 @@ fn test_wrong_calldata() {
 
 #[test]
 fn test_too_low_gas() {
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -276,7 +283,7 @@ fn test_too_low_gas() {
         "--wait",
         "invoke",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -316,6 +323,7 @@ async fn test_happy_case_cairo_expression_calldata() {
 
     let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
 
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",
@@ -324,7 +332,7 @@ async fn test_happy_case_cairo_expression_calldata() {
         "--json",
         "invoke",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -349,10 +357,11 @@ async fn test_happy_case_shell() {
     let binary_path = cargo_bin!("sncast");
     let command = os_specific_shell(&Utf8PathBuf::from("tests/shell/invoke"));
 
+    let url = devnet_url();
     let snapbox = command
         .current_dir(tempdir.path())
         .arg(binary_path)
-        .arg(URL)
+        .arg(url)
         .arg(DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA);
     snapbox.assert().success();
 }

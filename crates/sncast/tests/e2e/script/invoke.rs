@@ -1,4 +1,4 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, SCRIPTS_DIR, URL};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, SCRIPTS_DIR, URL, devnet_url};
 use crate::helpers::fixtures::{copy_script_directory_to_tempdir, get_accounts_path};
 use crate::helpers::runner::runner;
 use indoc::indoc;
@@ -17,6 +17,7 @@ async fn test_insufficient_resource_for_validate(account: &str) {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "max_fee_too_low";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -26,7 +27,7 @@ async fn test_insufficient_resource_for_validate(account: &str) {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -50,6 +51,7 @@ async fn test_contract_does_not_exist() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "contract_does_not_exist";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -59,7 +61,7 @@ async fn test_contract_does_not_exist() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -88,6 +90,7 @@ fn test_wrong_function_name() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "wrong_function_name";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -97,7 +100,7 @@ fn test_wrong_function_name() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -128,6 +131,7 @@ fn test_wrong_calldata() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "wrong_calldata";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -137,7 +141,7 @@ fn test_wrong_calldata() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());

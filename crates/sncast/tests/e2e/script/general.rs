@@ -1,4 +1,4 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, SCRIPTS_DIR, URL};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, SCRIPTS_DIR, URL, devnet_url};
 use crate::helpers::fixtures::{
     assert_tx_entry_failed, assert_tx_entry_success, copy_directory_to_tempdir,
     copy_script_directory_to_tempdir, copy_workspace_directory_to_tempdir,
@@ -33,6 +33,7 @@ async fn test_happy_case(account: &str) {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "map_script";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -42,7 +43,7 @@ async fn test_happy_case(account: &str) {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -61,6 +62,7 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "call_happy";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -70,7 +72,7 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -90,6 +92,7 @@ async fn test_fail_when_using_starknet_syscall() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "using_starknet_syscall";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -99,7 +102,7 @@ async fn test_fail_when_using_starknet_syscall() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -120,6 +123,7 @@ async fn test_incompatible_sncast_std_version() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "map_script";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -129,7 +133,7 @@ async fn test_incompatible_sncast_std_version() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -152,6 +156,7 @@ async fn test_multiple_packages_not_picked() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "script1";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -161,7 +166,7 @@ async fn test_multiple_packages_not_picked() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(workspace_dir.path());
@@ -183,6 +188,7 @@ async fn test_multiple_packages_happy_case() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "script1";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -194,7 +200,7 @@ async fn test_multiple_packages_happy_case() {
         &script_name,
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(workspace_dir.path());
@@ -222,6 +228,7 @@ async fn test_run_script_display_debug_traits() {
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let script_name = "display_debug_traits_for_subcommand_responses";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -231,7 +238,7 @@ async fn test_run_script_display_debug_traits() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -261,6 +268,7 @@ async fn test_run_script_display_debug_traits() {
 #[tokio::test]
 async fn test_nonexistent_account_address() {
     let script_name = "map_script";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "../../../accounts/faulty_accounts.json",
@@ -270,7 +278,7 @@ async fn test_nonexistent_account_address() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts");
@@ -288,7 +296,8 @@ async fn test_nonexistent_account_address() {
 #[tokio::test]
 async fn test_no_account_passed() {
     let script_name = "map_script";
-    let args = vec!["script", "run", &script_name, "--url", URL];
+    let url = devnet_url();
+    let args = vec!["script", "run", &script_name, "--url", &url];
 
     let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts");
     snapbox.assert().success().stdout_matches(indoc! {r#"
@@ -312,6 +321,7 @@ async fn test_missing_field() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "missing_field";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -321,7 +331,7 @@ async fn test_missing_field() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -347,6 +357,7 @@ async fn test_run_script_twice_with_state_file_enabled() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "state_script";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -356,7 +367,7 @@ async fn test_run_script_twice_with_state_file_enabled() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -410,6 +421,7 @@ async fn test_state_file_contains_all_failed_txs() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "all_tx_fail";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -419,7 +431,7 @@ async fn test_state_file_contains_all_failed_txs() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -498,6 +510,7 @@ async fn test_state_file_rerun_failed_tx() {
         vec!["Requested contract address", "is not deployed"],
     );
 
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -507,7 +520,7 @@ async fn test_state_file_rerun_failed_tx() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -541,6 +554,7 @@ async fn test_using_release_profile() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "map_script";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -552,7 +566,7 @@ async fn test_using_release_profile() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());

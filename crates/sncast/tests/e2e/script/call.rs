@@ -1,4 +1,4 @@
-use crate::helpers::constants::{SCRIPTS_DIR, URL};
+use crate::helpers::constants::{SCRIPTS_DIR, URL, devnet_url};
 use crate::helpers::fixtures::copy_script_directory_to_tempdir;
 use crate::helpers::runner::runner;
 use indoc::indoc;
@@ -10,7 +10,8 @@ async fn test_happy_case() {
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/misc", Vec::<String>::new());
 
     let script_name = "call_happy";
-    let args = vec!["script", "run", &script_name, "--url", URL];
+    let url = devnet_url();
+    let args = vec!["script", "run", &script_name, "--url", &url];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().success().stdout_matches(indoc! {r"
@@ -27,7 +28,8 @@ async fn test_failing() {
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/misc", Vec::<String>::new());
 
     let script_name = "call_fail";
-    let args = vec!["script", "run", &script_name, "--url", URL];
+    let url = devnet_url();
+    let args = vec!["script", "run", &script_name, "--url", &url];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -51,7 +53,8 @@ async fn test_call_invalid_entry_point() {
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/call", Vec::<String>::new());
 
     let script_name = "invalid_entry_point";
-    let args = vec!["script", "run", &script_name, "--url", URL];
+    let url = devnet_url();
+    let args = vec!["script", "run", &script_name, "--url", &url];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -73,7 +76,8 @@ async fn test_call_invalid_address() {
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/call", Vec::<String>::new());
 
     let script_name = "invalid_address";
-    let args = vec!["script", "run", &script_name, "--url", URL];
+    let url = devnet_url();
+    let args = vec!["script", "run", &script_name, "--url", &url];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -95,7 +99,8 @@ async fn test_call_invalid_calldata() {
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/call", Vec::<String>::new());
 
     let script_name = "invalid_calldata";
-    let args = vec!["script", "run", &script_name, "--url", URL];
+    let url = devnet_url();
+    let args = vec!["script", "run", &script_name, "--url", &url];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();

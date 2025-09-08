@@ -1,5 +1,5 @@
 use crate::helpers::constants::{
-    ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
+    ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA, URL, devnet_url,
 };
 use crate::helpers::env::set_keystore_password_env;
 use crate::helpers::fee::apply_test_resource_bounds_flags;
@@ -14,12 +14,13 @@ use shared::test_utils::output_assert::assert_stderr_contains;
 #[tokio::test]
 async fn test_happy_case_from_sncast_config() {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "call",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         "0x0",
         "--function",
@@ -38,6 +39,7 @@ async fn test_happy_case_from_sncast_config() {
 #[tokio::test]
 async fn test_happy_case_predefined_network() {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -64,6 +66,7 @@ async fn test_happy_case_predefined_network() {
 #[tokio::test]
 async fn test_url_with_network_args() {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -73,7 +76,7 @@ async fn test_url_with_network_args() {
         "--network",
         "sepolia",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         "0x0",
         "--function",
@@ -92,6 +95,7 @@ async fn test_url_with_network_args() {
 #[tokio::test]
 async fn test_network_with_url_defined_in_config_toml() {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -117,6 +121,7 @@ async fn test_network_with_url_defined_in_config_toml() {
 
 #[tokio::test]
 async fn test_happy_case_from_cli_no_scarb() {
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -124,7 +129,7 @@ async fn test_happy_case_from_cli_no_scarb() {
         ACCOUNT,
         "call",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         "0x0",
         "--function",
@@ -143,6 +148,7 @@ async fn test_happy_case_from_cli_no_scarb() {
 #[tokio::test]
 async fn test_happy_case_from_cli_with_sncast_config() {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -152,7 +158,7 @@ async fn test_happy_case_from_cli_with_sncast_config() {
         ACCOUNT,
         "call",
         "--url",
-        URL,
+        &url,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -176,6 +182,7 @@ async fn test_happy_case_from_cli_with_sncast_config() {
 #[tokio::test]
 async fn test_happy_case_mixed() {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -207,6 +214,7 @@ async fn test_nonexistent_account_address() {
     let contract_path =
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "dummy", "101");
     let accounts_json_path = get_accounts_path("tests/data/accounts/faulty_accounts.json");
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -214,7 +222,7 @@ async fn test_nonexistent_account_address() {
         "with_nonexistent_address",
         "declare",
         "--url",
-        URL,
+        &url,
         "--contract-name",
         "Map",
     ];
@@ -230,12 +238,13 @@ async fn test_nonexistent_account_address() {
 
 #[tokio::test]
 async fn test_missing_account_flag() {
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "declare",
         "--url",
-        URL,
+        &url,
         "--contract-name",
         "whatever",
     ];
@@ -251,12 +260,13 @@ async fn test_missing_account_flag() {
 
 #[tokio::test]
 async fn test_inexistent_keystore() {
+    let url = devnet_url();
     let args = vec![
         "--keystore",
         "inexistent_key.json",
         "declare",
         "--url",
-        URL,
+        &url,
         "--contract-name",
         "my_contract",
     ];
@@ -269,12 +279,13 @@ async fn test_inexistent_keystore() {
 
 #[tokio::test]
 async fn test_keystore_account_required() {
+    let url = devnet_url();
     let args = vec![
         "--keystore",
         "tests/data/keystore/my_key.json",
         "declare",
         "--url",
-        URL,
+        &url,
         "--contract-name",
         "my_contract",
     ];
@@ -290,6 +301,7 @@ async fn test_keystore_account_required() {
 
 #[tokio::test]
 async fn test_keystore_inexistent_account() {
+    let url = devnet_url();
     let args = vec![
         "--keystore",
         "tests/data/keystore/my_key.json",
@@ -297,7 +309,7 @@ async fn test_keystore_inexistent_account() {
         "inexistent_account",
         "declare",
         "--url",
-        URL,
+        &url,
         "--contract-name",
         "my_contract",
     ];
@@ -319,6 +331,7 @@ async fn test_keystore_undeployed_account() {
     let my_account_undeployed_path =
         get_keystores_path("tests/data/keystore/my_account_undeployed.json");
 
+    let url = devnet_url();
     let args = vec![
         "--keystore",
         my_key_path.as_str(),
@@ -326,7 +339,7 @@ async fn test_keystore_undeployed_account() {
         my_account_undeployed_path.as_str(),
         "declare",
         "--url",
-        URL,
+        &url,
         "--contract-name",
         "Map",
     ];
@@ -344,6 +357,7 @@ async fn test_keystore_declare() {
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "999");
     let my_key_path = get_keystores_path("tests/data/keystore/predeployed_key.json");
     let my_account_path = get_keystores_path("tests/data/keystore/predeployed_account.json");
+    let url = devnet_url();
     let args = vec![
         "--keystore",
         my_key_path.as_str(),
@@ -351,7 +365,7 @@ async fn test_keystore_declare() {
         my_account_path.as_str(),
         "declare",
         "--url",
-        URL,
+        &url,
         "--contract-name",
         "Map",
     ];

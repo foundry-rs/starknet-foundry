@@ -1,6 +1,6 @@
 use std::fs;
 
-use crate::helpers::constants::URL;
+use crate::helpers::constants::{URL, devnet_url};
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use docs::snippet::{Snippet, SnippetType};
@@ -70,24 +70,26 @@ fn test_docs_snippets() {
             continue;
         }
 
-        let args = snippet.to_command_args();
-        let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
+        let mut args: Vec<String> = snippet.to_command_args();
 
         // remove "sncast" from the args
         args.remove(0);
 
-        args.insert(0, "--accounts-file");
-        args.insert(1, target_accounts_json_path.to_str().unwrap());
+        args.insert(0, "--accounts-file".to_string());
+        args.insert(1, target_accounts_json_path.to_str().unwrap().to_string());
 
         if snippet.config.replace_network {
             let network_pos = args.iter().position(|arg| *arg == "--network");
             if let Some(network_pos) = network_pos {
-                args[network_pos] = "--url";
-                args[network_pos + 1] = URL;
+                args[network_pos] = "--url".to_string();
+                // let url = devnet_url();
+                args[network_pos + 1] = devnet_url();
             }
         }
 
-        let snapbox = runner(&args)
+        let arg_refs: Vec<&str> = args.iter().map(|s| &**s).collect();
+
+        let snapbox = runner(&arg_refs)
             .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
             .current_dir(tempdir.path());
         let output = snapbox.assert().success();

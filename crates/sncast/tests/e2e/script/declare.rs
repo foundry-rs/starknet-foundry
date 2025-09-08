@@ -1,4 +1,4 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, SCRIPTS_DIR, URL};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, SCRIPTS_DIR, URL, devnet_url};
 use crate::helpers::fixtures::duplicate_contract_directory_with_salt;
 use crate::helpers::fixtures::{copy_script_directory_to_tempdir, get_accounts_path};
 use crate::helpers::runner::runner;
@@ -25,6 +25,7 @@ async fn test_wrong_contract_name(account: &str) {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "no_contract";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -34,7 +35,7 @@ async fn test_wrong_contract_name(account: &str) {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -67,6 +68,7 @@ async fn test_same_contract_twice() {
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let script_name = "same_contract_twice";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -76,7 +78,7 @@ async fn test_same_contract_twice() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -105,6 +107,7 @@ async fn test_with_invalid_max_fee() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "with_invalid_max_fee";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -114,7 +117,7 @@ async fn test_with_invalid_max_fee() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -141,6 +144,7 @@ async fn test_with_invalid_nonce() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "with_invalid_nonce";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -150,7 +154,7 @@ async fn test_with_invalid_nonce() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -178,6 +182,7 @@ async fn test_insufficient_account_balance() {
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "insufficient_account_balance";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -187,7 +192,7 @@ async fn test_insufficient_account_balance() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -215,6 +220,7 @@ async fn test_sncast_timed_out() {
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let script_name = "time_out";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -228,7 +234,7 @@ async fn test_sncast_timed_out() {
         "run",
         &script_name,
         "--url",
-        URL,
+        &url,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -256,6 +262,7 @@ async fn test_fee_settings() {
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let script_name = "fee_settings";
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -264,7 +271,7 @@ async fn test_fee_settings() {
         "script",
         "run",
         "--url",
-        URL,
+        &url,
         &script_name,
     ];
 

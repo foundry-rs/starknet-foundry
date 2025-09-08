@@ -1,4 +1,4 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL, devnet_url};
 use crate::helpers::runner::runner;
 use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
@@ -88,7 +88,8 @@ pub async fn deploy_latest_oz_account() {
     .await;
 }
 pub async fn deploy_ready_account() {
-    let provider = get_provider(URL).expect("Failed to get the provider");
+    let url = devnet_url();
+    let provider = get_provider(&devnet_url()).expect("Failed to get the provider");
     let chain_id = get_chain_id(&provider)
         .await
         .expect("Failed to get chain id");
@@ -109,7 +110,8 @@ pub async fn deploy_ready_account() {
 }
 
 pub async fn deploy_braavos_account() {
-    let provider = get_provider(URL).expect("Failed to get the provider");
+    let url = devnet_url();
+    let provider = get_provider(&devnet_url()).expect("Failed to get the provider");
     let chain_id = get_chain_id(&provider)
         .await
         .expect("Failed to get chain id");
@@ -130,7 +132,8 @@ pub async fn deploy_braavos_account() {
 }
 
 async fn deploy_oz_account(address: &str, class_hash: &str, salt: &str, private_key: SigningKey) {
-    let provider = get_provider(URL).expect("Failed to get the provider");
+    let url = devnet_url();
+    let provider = get_provider(&devnet_url()).expect("Failed to get the provider");
     let chain_id = get_chain_id(&provider)
         .await
         .expect("Failed to get chain id");
@@ -198,7 +201,9 @@ pub async fn invoke_contract(
     fee_settings: FeeSettings,
     constructor_calldata: &[&str],
 ) -> InvokeTransactionResult {
-    let provider = get_provider(URL).expect("Could not get the provider");
+    let url = devnet_url();
+    let url = devnet_url();
+    let provider = get_provider(&devnet_url()).expect("Could not get the provider");
     let account = get_account(
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
@@ -260,8 +265,14 @@ pub async fn mint_token(recipient: &str, amount: u128) {
 }
 
 #[must_use]
-pub fn default_cli_args() -> Vec<&'static str> {
-    vec!["--url", URL, "--accounts-file", ACCOUNT_FILE_PATH]
+pub fn default_cli_args() -> Vec<String> {
+    let url = devnet_url();
+    vec![
+        "--url".to_string(),
+        url,
+        "--accounts-file".to_string(),
+        ACCOUNT_FILE_PATH.to_string(),
+    ]
 }
 
 fn parse_output<T: DeserializeOwned>(output: &[u8]) -> T {
@@ -305,9 +316,10 @@ pub async fn get_transaction_receipt(tx_hash: Felt) -> TransactionReceipt {
             "id": 0,
         }
     );
+    let url = devnet_url();
     let resp: Value = serde_json::from_str(
         &client
-            .post(URL)
+            .post(url)
             .header("Content-Type", "application/json")
             .body(json.to_string())
             .send()
@@ -340,7 +352,7 @@ pub async fn get_transaction_by_hash(tx_hash: Felt) -> Transaction {
     );
     let resp: Value = serde_json::from_str(
         &client
-            .post(URL)
+            .post(devnet_url())
             .header("Content-Type", "application/json")
             .body(json.to_string())
             .send()
@@ -360,7 +372,7 @@ pub async fn get_transaction_by_hash(tx_hash: Felt) -> Transaction {
 
 #[must_use]
 pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
-    let parsed_url = Url::parse(URL).unwrap();
+    let parsed_url = Url::parse(&devnet_url()).unwrap();
     JsonRpcClient::new(HttpTransport::new(parsed_url))
 }
 
@@ -630,13 +642,14 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
     let tempdir = tempdir().unwrap();
     let accounts_file = "accounts.json";
 
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "create",
         "--url",
-        URL,
+        &url,
         "--name",
         "my_account",
         "--class-hash",
@@ -658,6 +671,7 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
     )
     .await;
 
+    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
@@ -665,7 +679,7 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
         "account",
         "deploy",
         "--url",
-        URL,
+        &url,
         "--name",
         "my_account",
     ];
