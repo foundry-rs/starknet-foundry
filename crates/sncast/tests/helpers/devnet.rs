@@ -19,7 +19,6 @@ fn start_devnet() {
         TcpStream::connect(address).is_ok()
     }
 
-    // port should be env PARTITION + 5050
     let port = std::env::var("PARTITION")
         .expect("PARTITION env variable not set")
         .parse::<u16>()
@@ -43,7 +42,7 @@ fn start_devnet() {
     Command::new("starknet-devnet")
         .args([
             "--port",
-            &port,
+            &port.to_string(),
             "--seed",
             &SEED.to_string(),
             "--state-archive-capacity",
