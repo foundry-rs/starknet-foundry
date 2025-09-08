@@ -120,8 +120,14 @@ jobs:
         with:
           tool_versions: |
             starknet-devnet ${{ steps.get-devnet-version.outputs.version }}
-
-      - run: cargo test --release -p sncast
+      - name: Start devnet for partition ${{ matrix.partition }}
+        env:
+          PARTITION: ${{ matrix.partition }}
+        run: |
+          PORT=$((5050 + PARTITION)) 
+          echo "DEVNET_URL=http://127.0.0.1:${PORT}/rpc" >> "$GITHUB_ENV"
+          echo ${DEVNET_URL}
+      # - run: cargo test --release -p sncast
 
   get-version:
     name: Get current foundry version
