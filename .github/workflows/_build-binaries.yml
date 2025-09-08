@@ -97,7 +97,7 @@ jobs:
           export LLVM_SYS_191_PREFIX=${{ env.LLVM_SYS_191_PREFIX }}
           export TABLEGEN_190_PREFIX=${{ env.TABLEGEN_190_PREFIX }}
           export LIBRARY_PATH=${{ env.LIBRARY_PATH }}
-          ${{ env.CARGO }} build --release --locked --target ${{ matrix.target }} -vvv
+          ${{ env.CARGO }} build --release --locked --target ${{ matrix.target }}
 
       - name: Package
         shell: bash
