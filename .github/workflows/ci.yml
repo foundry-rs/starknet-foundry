@@ -306,9 +306,9 @@ jobs:
         run: |
           DEVNET_PORT=$((5050 + PARTITION)) 
           echo $DEVNET_PORT
-      - run: cargo test --release -p sncast
-      # - name: sncast nextest partition ${{ matrix.partition }}/3
-      #   run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'sncast-nextest-archive-${{ runner.os }}.tar.zst' integration
+      # - run: cargo test --release -p sncast
+      - name: sncast nextest partition ${{ matrix.partition }}/3
+        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'sncast-nextest-archive-${{ runner.os }}.tar.zst' integration
 
   test-conversions:
     name: Test Conversions
