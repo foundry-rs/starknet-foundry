@@ -1,4 +1,4 @@
-use crate::helpers::constants::{FORK_BLOCK_NUMBER, SEED, SEPOLIA_RPC_URL, URL};
+use crate::helpers::constants::{FORK_BLOCK_NUMBER, SEED, SEPOLIA_RPC_URL};
 use crate::helpers::fixtures::{
     deploy_braavos_account, deploy_cairo_0_account, deploy_keystore_account,
     deploy_latest_oz_account, deploy_ready_account,
@@ -30,7 +30,8 @@ fn start_devnet() {
 
     let port = get_available_port();
     println!("XXX Starting devnet on port: {port}");
-    let host = Url::parse(&devnet_url())
+
+    let host = Url::parse(format!("http://127.0.0.1:{port}/rpc").as_str())
         .unwrap()
         .host()
         .expect("Can't parse devnet URL!")
