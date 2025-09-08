@@ -1,4 +1,4 @@
-use crate::helpers::constants::{FORK_BLOCK_NUMBER, SEED, SEPOLIA_RPC_URL};
+use crate::helpers::constants::{FORK_BLOCK_NUMBER, SEED, SEPOLIA_RPC_URL, URL};
 use crate::helpers::fixtures::{
     deploy_braavos_account, deploy_cairo_0_account, deploy_keystore_account,
     deploy_latest_oz_account, deploy_ready_account,
@@ -44,6 +44,8 @@ fn start_devnet() {
             break;
         }
     }
+
+    URL.set(format!("{host}:{port}")).unwrap();
 
     Command::new("starknet-devnet")
         .args([
