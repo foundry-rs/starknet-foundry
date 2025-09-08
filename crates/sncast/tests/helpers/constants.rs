@@ -9,10 +9,18 @@ pub const ACCOUNT_FILE_PATH: &str = "tests/data/accounts/accounts.json";
 pub const SEPOLIA_RPC_URL: &str = "http://188.34.188.184:7070/rpc/v0_9";
 
 pub fn devnet_url() -> &'static str {
-    URL.get().expect("URL not set").as_str()
+    // URL.get().expect("URL not set").as_str()
+    URL
 }
 
-pub static URL: OnceLock<String> = OnceLock::new();
+// pub fn devnet_url() -> &'static str {
+//     URL.get()
+//         .map(|s| s.as_str())
+//         .unwrap_or("http://127.0.0.1:5050/rpc")
+// }
+
+// pub static URL: OnceLock<String> = OnceLock::new();
+pub const URL: &str = "http://127.0.0.1:5055/rpc";
 
 pub const NETWORK: &str = "testnet";
 pub const SEED: u32 = 1_053_545_548;

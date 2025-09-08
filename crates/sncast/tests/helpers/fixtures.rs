@@ -256,7 +256,7 @@ pub async fn mint_token(recipient: &str, amount: u128) {
         }
     );
     client
-        .post("http://127.0.0.1:5055/mint")
+        .post(devnet_url())
         .header("Content-Type", "application/json")
         .body(json.to_string())
         .send()
@@ -372,6 +372,7 @@ pub async fn get_transaction_by_hash(tx_hash: Felt) -> Transaction {
 
 #[must_use]
 pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
+    // eprintln!("XXX Using devnet_url: {}", devnet_url());
     let parsed_url = Url::parse(&devnet_url()).unwrap();
     JsonRpcClient::new(HttpTransport::new(parsed_url))
 }
