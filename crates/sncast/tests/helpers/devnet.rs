@@ -19,7 +19,11 @@ fn start_devnet() {
         TcpStream::connect(address).is_ok()
     }
 
-    let port = Url::parse(URL).unwrap().port().unwrap_or(80).to_string();
+    let port = std::env::var("PARTITION")
+        .map(|partition| 5050 + partition.parse::<u16>().unwrap_or(0))
+        .unwrap_or(5055)
+        .to_string();
+
     let host = Url::parse(URL)
         .unwrap()
         .host()
