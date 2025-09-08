@@ -3,14 +3,10 @@ dockerfile = "./Dockerfile"
 
 [build.env]
 passthrough = [
-    "TMPDIR=/tmp",
-    "TMP=/tmp",
-    "TEMP=/tmp",
     "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
     "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
     "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
-    "CPPFLAGS=-I/usr/lib/llvm-19/include",
-    "BINDGEN_EXTRA_CLANG_ARGS=-I/usr/lib/llvm-19/include",
+    "CARGO_TARGET_DIR=/usr/local/cargo-target",
 ]
 
 # Set environment variables for all Linux targets as per cairo_native docs
@@ -19,11 +15,6 @@ passthrough = [
     "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
     "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
     "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
-    "TMPDIR=/tmp",
-    "TMP=/tmp",
-    "TEMP=/tmp",
-    "CPPFLAGS=-I/usr/lib/llvm-19/include",
-    "BINDGEN_EXTRA_CLANG_ARGS=-I/usr/lib/llvm-19/include",
 ]
 
 [target.x86_64-unknown-linux-musl.env]
@@ -31,11 +22,6 @@ passthrough = [
     "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
     "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
     "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
-    "TMPDIR=/tmp",
-    "TMP=/tmp",
-    "TEMP=/tmp",
-    "CPPFLAGS=-I/usr/lib/llvm-19/include",
-    "BINDGEN_EXTRA_CLANG_ARGS=-I/usr/lib/llvm-19/include",
 ]
 
 [target.aarch64-unknown-linux-gnu.env]
@@ -43,11 +29,6 @@ passthrough = [
     "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
     "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
     "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
-    "TMPDIR=/tmp",
-    "TMP=/tmp",
-    "TEMP=/tmp",
-    "CPPFLAGS=-I/usr/lib/llvm-19/include",
-    "BINDGEN_EXTRA_CLANG_ARGS=-I/usr/lib/llvm-19/include",
 ]
 
 [target.aarch64-unknown-linux-musl.env]
@@ -55,9 +36,4 @@ passthrough = [
     "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
     "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
     "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
-    "TMPDIR=/tmp",
-    "TMP=/tmp",
-    "TEMP=/tmp",
-    "CPPFLAGS=-I/usr/lib/llvm-19/include",
-    "BINDGEN_EXTRA_CLANG_ARGS=-I/usr/lib/llvm-19/include",
 ]

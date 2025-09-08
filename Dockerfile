@@ -70,14 +70,13 @@ RUN apt-get update \
 RUN mkdir -p /root/.cargo/bin && \
     chmod -R 755 /root/.cargo
 
-# Set up proper permissions for build scripts and temp directories
-RUN chmod 1777 /tmp && \
-    mkdir -p /target && \
-    chmod -R 755 /target
+# Create a build directory that's accessible to all users
+RUN mkdir -p /build && \
+    chmod -R 777 /build && \
+    mkdir -p /usr/local/cargo-target && \
+    chmod -R 777 /usr/local/cargo-target
 
-# Set environment variables to ensure build scripts can execute
-ENV CARGO_BUILD_JOBS=1
-ENV CARGO_TARGET_DIR=/target
+ENV CARGO_TARGET_DIR=/usr/local/cargo-target
 
 # Ensure the filesystem supports executable permissions
 RUN mount | grep "exec\|noexec" || echo "No mount restrictions found"
