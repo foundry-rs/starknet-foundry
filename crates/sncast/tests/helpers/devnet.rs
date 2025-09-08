@@ -19,7 +19,7 @@ fn start_devnet() {
         TcpStream::connect(address).is_ok()
     }
 
-    let port = Url::parse(URL).unwrap().port().unwrap_or(80).to_string();
+    let port = std::env::var("DEVNET_PORT").expect("`DEVNET_PORT` env variable not set");
     let host = Url::parse(URL)
         .unwrap()
         .host()

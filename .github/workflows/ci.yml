@@ -304,9 +304,8 @@ jobs:
         env:
           PARTITION: ${{ matrix.partition }}
         run: |
-          PORT=$((5050 + PARTITION)) 
-          DEVNET_URL="http://127.0.0.1:${PORT}/rpc"
-          echo $DEVNET_URL
+          DEVNET_PORT=$((5050 + PARTITION)) 
+          echo $DEVNET_PORT
       # - run: cargo test --release -p sncast
       # - name: sncast nextest partition ${{ matrix.partition }}/3
       #   run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'sncast-nextest-archive-${{ runner.os }}.tar.zst' integration
