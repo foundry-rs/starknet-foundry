@@ -1,3 +1,7 @@
+// Disallows using methods that are not safed to be used.
+// See clippy.toml for the list of disallowed methods and reasoning behind them.
+#![deny(clippy::disallowed_methods)]
+
 use attributes::fuzzer;
 use attributes::{
     available_gas::available_gas, disable_predeployed_contracts::disable_predeployed_contracts,
@@ -12,6 +16,7 @@ pub mod attributes;
 mod cairo_expression;
 mod common;
 mod config_statement;
+mod external_inputs;
 mod parse;
 mod types;
 mod utils;
