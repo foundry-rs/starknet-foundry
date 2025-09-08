@@ -56,12 +56,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
 
 [[package]]
-name = "android-tzdata"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e999941b234f3131b00bc13c22d06e8c5ff726d1b6318ac7eb276997bbb4fef0"
-
-[[package]]
 name = "android_system_properties"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -131,7 +125,7 @@ name = "apollo_compilation_utils"
 version = "0.15.0-rc.3"
 source = "git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork#234d36c07c8229ac22e6de220042ae904a177fbd"
 dependencies = [
- "apollo_infra_utils 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
+ "apollo_infra_utils",
  "cairo-lang-sierra",
  "cairo-lang-starknet-classes",
  "cairo-lang-utils",
@@ -139,7 +133,7 @@ dependencies = [
  "serde",
  "serde_json",
  "starknet-types-core",
- "starknet_api 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
+ "starknet_api",
  "tempfile",
  "thiserror 1.0.69",
 ]
@@ -151,7 +145,7 @@ source = "git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fo
 dependencies = [
  "apollo_compilation_utils",
  "apollo_compile_to_native_types",
- "apollo_infra_utils 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
+ "apollo_infra_utils",
  "cairo-lang-starknet-classes",
  "cairo-native",
  "tempfile",
@@ -172,7 +166,7 @@ name = "apollo_config"
 version = "0.15.0-rc.3"
 source = "git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork#234d36c07c8229ac22e6de220042ae904a177fbd"
 dependencies = [
- "apollo_infra_utils 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
+ "apollo_infra_utils",
  "clap",
  "const_format",
  "itertools 0.12.1",
@@ -188,23 +182,9 @@ dependencies = [
 [[package]]
 name = "apollo_infra_utils"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
-dependencies = [
- "apollo_proc_macros 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
- "num_enum",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "apollo_infra_utils"
-version = "0.15.0-rc.3"
 source = "git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork#234d36c07c8229ac22e6de220042ae904a177fbd"
 dependencies = [
- "apollo_proc_macros 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
+ "apollo_proc_macros",
  "assert-json-diff",
  "colored 3.0.0",
  "num_enum",
@@ -227,17 +207,6 @@ dependencies = [
  "num-traits",
  "paste",
  "regex",
-]
-
-[[package]]
-name = "apollo_proc_macros"
-version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
-dependencies = [
- "lazy_static 1.5.0",
- "proc-macro2",
- "quote",
- "syn 2.0.106",
 ]
 
 [[package]]
@@ -833,7 +802,7 @@ dependencies = [
  "apollo_compile_to_native",
  "apollo_compile_to_native_types",
  "apollo_config",
- "apollo_infra_utils 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
+ "apollo_infra_utils",
  "apollo_metrics",
  "ark-ec 0.4.2",
  "ark-ff 0.4.2",
@@ -867,7 +836,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "starknet-types-core",
- "starknet_api 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
+ "starknet_api",
  "strum 0.25.0",
  "strum_macros 0.25.3",
  "thiserror 1.0.69",
@@ -878,13 +847,13 @@ name = "blockifier_test_utils"
 version = "0.15.0-rc.3"
 source = "git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork#234d36c07c8229ac22e6de220042ae904a177fbd"
 dependencies = [
- "apollo_infra_utils 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
+ "apollo_infra_utils",
  "cairo-lang-starknet-classes",
  "pretty_assertions",
  "rstest",
  "serde_json",
  "starknet-types-core",
- "starknet_api 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
+ "starknet_api",
  "strum 0.25.0",
  "strum_macros 0.25.3",
  "tempfile",
@@ -1662,9 +1631,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.35"
+version = "1.2.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "590f9024a68a8c40351881787f1934dc11afd69090f5edb6831464694d836ea3"
+checksum = "5252b3d2648e5eedbc1a6f501e3c795e07025c1e93bbf8bbdd6eef7f447a6d54"
 dependencies = [
  "find-msvc-tools",
  "shlex",
@@ -1730,7 +1699,7 @@ dependencies = [
  "shared",
  "starknet",
  "starknet-types-core",
- "starknet_api 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
+ "starknet_api",
  "tempfile",
  "test-case",
  "thiserror 2.0.16",
@@ -1741,15 +1710,14 @@ dependencies = [
 
 [[package]]
 name = "chrono"
-version = "0.4.41"
+version = "0.4.42"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c469d952047f47f91b68d1cba3f10d63c11d73e4636f24f08daf0278abf01c4d"
+checksum = "145052bdd345b87320e369255277e3fb5152762ad123a901ef5c262dd38fe8d2"
 dependencies = [
- "android-tzdata",
  "iana-time-zone",
  "num-traits",
  "serde",
- "windows-link",
+ "windows-link 0.2.0",
 ]
 
 [[package]]
@@ -1997,7 +1965,7 @@ dependencies = [
  "serde_json",
  "starknet",
  "starknet-types-core",
- "starknet_api 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
+ "starknet_api",
  "thiserror 2.0.16",
 ]
 
@@ -2292,7 +2260,7 @@ dependencies = [
  "serde_json",
  "starknet",
  "starknet-types-core",
- "starknet_api 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
+ "starknet_api",
  "thiserror 2.0.16",
 ]
 
@@ -2463,7 +2431,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users 0.5.2",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.0",
 ]
 
 [[package]]
@@ -2789,9 +2757,9 @@ dependencies = [
 
 [[package]]
 name = "find-msvc-tools"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e178e4fba8a2726903f6ba98a6d221e76f9c12c650d5dc0e6afdc50677b49650"
+checksum = "7fd99930f64d146689264c637b5af2f0233a933bef0d8570e2526bf9e083192d"
 
 [[package]]
 name = "fixed-hash"
@@ -2905,7 +2873,7 @@ dependencies = [
  "snapbox",
  "starknet",
  "starknet-types-core",
- "starknet_api 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
+ "starknet_api",
  "tempfile",
  "test-case",
  "test_utils",
@@ -2954,7 +2922,7 @@ dependencies = [
  "shared",
  "starknet",
  "starknet-types-core",
- "starknet_api 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
+ "starknet_api",
  "strum 0.27.2",
  "strum_macros 0.27.2",
  "tokio",
@@ -3163,7 +3131,7 @@ dependencies = [
  "js-sys",
  "libc",
  "r-efi",
- "wasi 0.14.3+wasi-0.2.4",
+ "wasi 0.14.4+wasi-0.2.4",
  "wasm-bindgen",
 ]
 
@@ -3843,9 +3811,9 @@ checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 
 [[package]]
 name = "js-sys"
-version = "0.3.77"
+version = "0.3.78"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1cfaf33c695fc6e08064efbc1f72ec937429614f25eef83af942d0e227c3a28f"
+checksum = "0c0b063578492ceec17683ef2f8c5e89121fbd0b172cbc280635ab7567db2738"
 dependencies = [
  "once_cell",
  "wasm-bindgen",
@@ -5460,7 +5428,7 @@ dependencies = [
  "shared",
  "starknet",
  "starknet-types-core",
- "starknet_api 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
+ "starknet_api",
  "thiserror 2.0.16",
 ]
 
@@ -5842,9 +5810,9 @@ dependencies = [
 
 [[package]]
 name = "security-framework-sys"
-version = "2.14.0"
+version = "2.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49db231d56a190491cb4aeda9527f1ad45345af50b0851622a7adb8c03b01c32"
+checksum = "cc1f0cbffaac4852523ce30d8bd3c5cdc873501d96ff467ca09b6767bb8cd5c0"
 dependencies = [
  "core-foundation-sys",
  "libc",
@@ -6043,7 +6011,7 @@ dependencies = [
  "snapbox",
  "starknet",
  "starknet-types-core",
- "starknet_api 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
+ "starknet_api",
  "url",
 ]
 
@@ -6521,44 +6489,9 @@ dependencies = [
 [[package]]
 name = "starknet_api"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
-dependencies = [
- "apollo_infra_utils 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
- "base64 0.13.1",
- "bitvec",
- "cached",
- "cairo-lang-runner",
- "cairo-lang-starknet-classes",
- "cairo-lang-utils",
- "derive_more 0.99.20",
- "flate2",
- "hex",
- "indexmap 2.11.0",
- "itertools 0.12.1",
- "num-bigint",
- "num-traits",
- "pretty_assertions",
- "primitive-types 0.12.2",
- "rand 0.8.5",
- "semver",
- "serde",
- "serde_json",
- "sha3",
- "size-of",
- "starknet-crypto 0.7.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "starknet-types-core",
- "strum 0.25.0",
- "strum_macros 0.25.3",
- "thiserror 1.0.69",
- "time",
-]
-
-[[package]]
-name = "starknet_api"
-version = "0.15.0-rc.3"
 source = "git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork#234d36c07c8229ac22e6de220042ae904a177fbd"
 dependencies = [
- "apollo_infra_utils 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
+ "apollo_infra_utils",
  "base64 0.13.1",
  "bitvec",
  "cached",
@@ -6836,7 +6769,7 @@ dependencies = [
  "scarb-api",
  "semver",
  "shared",
- "starknet_api 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
+ "starknet_api",
  "tempfile",
  "tokio",
  "walkdir",
@@ -7522,30 +7455,31 @@ checksum = "ccf3ec651a847eb01de73ccad15eb7d99f80485de043efb2f370cd654f4ea44b"
 
 [[package]]
 name = "wasi"
-version = "0.14.3+wasi-0.2.4"
+version = "0.14.4+wasi-0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a51ae83037bdd272a9e28ce236db8c07016dd0d50c27038b3f407533c030c95"
+checksum = "88a5f4a424faf49c3c2c344f166f0662341d470ea185e939657aaff130f0ec4a"
 dependencies = [
  "wit-bindgen",
 ]
 
 [[package]]
 name = "wasm-bindgen"
-version = "0.2.100"
+version = "0.2.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1edc8929d7499fc4e8f0be2262a241556cfc54a0bea223790e71446f2aab1ef5"
+checksum = "7e14915cadd45b529bb8d1f343c4ed0ac1de926144b746e2710f9cd05df6603b"
 dependencies = [
  "cfg-if",
  "once_cell",
  "rustversion",
  "wasm-bindgen-macro",
+ "wasm-bindgen-shared",
 ]
 
 [[package]]
 name = "wasm-bindgen-backend"
-version = "0.2.100"
+version = "0.2.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f0a0651a5c2bc21487bde11ee802ccaf4c51935d0d3d42a6101f98161700bc6"
+checksum = "e28d1ba982ca7923fd01448d5c30c6864d0a14109560296a162f80f305fb93bb"
 dependencies = [
  "bumpalo",
  "log",
@@ -7557,9 +7491,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-futures"
-version = "0.4.50"
+version = "0.4.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "555d470ec0bc3bb57890405e5d4322cc9ea83cebb085523ced7be4144dac1e61"
+checksum = "0ca85039a9b469b38336411d6d6ced91f3fc87109a2a27b0c197663f5144dffe"
 dependencies = [
  "cfg-if",
  "js-sys",
@@ -7570,9 +7504,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro"
-version = "0.2.100"
+version = "0.2.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fe63fc6d09ed3792bd0897b314f53de8e16568c2b3f7982f468c0bf9bd0b407"
+checksum = "7c3d463ae3eff775b0c45df9da45d68837702ac35af998361e2c84e7c5ec1b0d"
 dependencies = [
  "quote",
  "wasm-bindgen-macro-support",
@@ -7580,9 +7514,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro-support"
-version = "0.2.100"
+version = "0.2.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ae87ea40c9f689fc23f209965b6fb8a99ad69aeeb0231408be24920604395de"
+checksum = "7bb4ce89b08211f923caf51d527662b75bdc9c9c7aab40f86dcb9fb85ac552aa"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -7593,18 +7527,18 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-shared"
-version = "0.2.100"
+version = "0.2.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a05d73b933a847d6cccdda8f838a22ff101ad9bf93e33684f39c1f5f0eece3d"
+checksum = "f143854a3b13752c6950862c906306adb27c7e839f7414cec8fea35beab624c1"
 dependencies = [
  "unicode-ident",
 ]
 
 [[package]]
 name = "web-sys"
-version = "0.3.77"
+version = "0.3.78"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33b6dd2ef9186f1f2072e409e99cd22a975331a6b3591b12c764e0e55c60d5d2"
+checksum = "77e4b637749ff0d92b8fad63aa1f7cff3cbe125fd49c175cd6345e7272638b12"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
@@ -7659,11 +7593,11 @@ checksum = "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6"
 
 [[package]]
 name = "winapi-util"
-version = "0.1.10"
+version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0978bf7171b3d90bac376700cb56d606feb40f251a475a5d6634613564460b22"
+checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.0",
 ]
 
 [[package]]
@@ -7680,7 +7614,7 @@ checksum = "c0fdd3ddb90610c7638aa2b3a3ab2904fb9e5cdbecc643ddb3647212781c4ae3"
 dependencies = [
  "windows-implement",
  "windows-interface",
- "windows-link",
+ "windows-link 0.1.3",
  "windows-result",
  "windows-strings",
 ]
@@ -7714,12 +7648,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5e6ad25900d524eaabdbbb96d20b4311e1e7ae1699af4fb28c17ae66c80d798a"
 
 [[package]]
+name = "windows-link"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "45e46c0661abb7180e7b9c281db115305d49ca1709ab8242adf09666d2173c65"
+
+[[package]]
 name = "windows-registry"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b8a9ed28765efc97bbc954883f4e6796c33a06546ebafacbabee9696967499e"
 dependencies = [
- "windows-link",
+ "windows-link 0.1.3",
  "windows-result",
  "windows-strings",
 ]
@@ -7730,7 +7670,7 @@ version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56f42bd332cc6c8eac5af113fc0c1fd6a8fd2aa08a0119358686e5160d0586c6"
 dependencies = [
- "windows-link",
+ "windows-link 0.1.3",
 ]
 
 [[package]]
@@ -7739,7 +7679,7 @@ version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56e6c93f3a0c3b36176cb1327a4958a0353d5d166c2a35cb268ace15e91d3b57"
 dependencies = [
- "windows-link",
+ "windows-link 0.1.3",
 ]
 
 [[package]]
@@ -7779,6 +7719,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "windows-sys"
+version = "0.61.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e201184e40b2ede64bc2ea34968b28e33622acdbbf37104f0e4a33f7abe657aa"
+dependencies = [
+ "windows-link 0.2.0",
+]
+
+[[package]]
 name = "windows-targets"
 version = "0.48.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7815,7 +7764,7 @@ version = "0.53.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d5fe6031c4041849d7c496a8ded650796e7b6ecc19df1a431c1a363342e5dc91"
 dependencies = [
- "windows-link",
+ "windows-link 0.1.3",
  "windows_aarch64_gnullvm 0.53.0",
  "windows_aarch64_msvc 0.53.0",
  "windows_i686_gnu 0.53.0",
@@ -8004,9 +7953,9 @@ dependencies = [
 
 [[package]]
 name = "wit-bindgen"
-version = "0.45.0"
+version = "0.45.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "052283831dbae3d879dc7f51f3d92703a316ca49f91540417d38591826127814"
+checksum = "5c573471f125075647d03df72e026074b7203790d41351cd6edc96f46bcccd36"
 
 [[package]]
 name = "writeable"
@@ -8087,18 +8036,18 @@ dependencies = [
 
 [[package]]
 name = "zerocopy"
-version = "0.8.26"
+version = "0.8.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1039dd0d3c310cf05de012d8a39ff557cb0d23087fd44cad61df08fc31907a2f"
+checksum = "0894878a5fa3edfd6da3f88c4805f4c8558e2b996227a3d864f47fe11e38282c"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.8.26"
+version = "0.8.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ecf5b4cc5364572d7f4c329661bcc82724222973f2cab6f050a4e5c22f75181"
+checksum = "88d2b8d9c68ad2b9e4340d7832716a4d21a22a1154777ad56ea55c51a9cf3831"
 dependencies = [
  "proc-macro2",
  "quote",

@@ -28,23 +28,23 @@ jobs:
             # Use cross to link oldest GLIBC possible.
             cross: true
 
-#          - target: x86_64-unknown-linux-musl
-#            os: ubuntu-latest
-#            cross: true
+          #          - target: x86_64-unknown-linux-musl
+          #            os: ubuntu-latest
+          #            cross: true
 
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
             cross: true
 
-#          - target: aarch64-unknown-linux-musl
-#            os: ubuntu-latest
-#            cross: true
+    #          - target: aarch64-unknown-linux-musl
+    #            os: ubuntu-latest
+    #            cross: true
 
-          # - target: x86_64-apple-darwin
-          #   os: macos-latest
+    # - target: x86_64-apple-darwin
+    #   os: macos-latest
 
-          # - target: aarch64-apple-darwin
-          #   os: macos-latest
+    # - target: aarch64-apple-darwin
+    #   os: macos-latest
 
     steps:
       - name: Checkout with ref
@@ -97,7 +97,7 @@ jobs:
           export LLVM_SYS_191_PREFIX=${{ env.LLVM_SYS_191_PREFIX }}
           export TABLEGEN_190_PREFIX=${{ env.TABLEGEN_190_PREFIX }}
           export LIBRARY_PATH=${{ env.LIBRARY_PATH }}
-          ${{ env.CARGO }} build --release --locked --target ${{ matrix.target }}
+          ${{ env.CARGO }} build --release --locked --target ${{ matrix.target }} -vvv
 
       - name: Package
         shell: bash
