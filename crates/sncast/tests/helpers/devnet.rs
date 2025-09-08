@@ -19,10 +19,12 @@ fn start_devnet() {
         TcpStream::connect(address).is_ok()
     }
 
+    // port should be env PARTITION + 5050
     let port = std::env::var("PARTITION")
-        .map(|partition| 5050 + partition.parse::<u16>().unwrap_or(0))
-        .unwrap_or(5055)
-        .to_string();
+        .expect("PARTITION env variable not set")
+        .parse::<u16>()
+        .expect("PARTITION env variable is not a valid number")
+        + 5050;
 
     let host = Url::parse(URL)
         .unwrap()
