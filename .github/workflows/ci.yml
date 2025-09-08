@@ -304,11 +304,30 @@ jobs:
         env:
           PARTITION: ${{ matrix.partition }}
         run: |
-          DEVNET_PORT=$((5050 + PARTITION)) 
-          echo $DEVNET_PORT
+          set -euo pipefail
+          DEVNET_PORT=$((5050 + PARTITION))
+          DEVNET_URL="http://127.0.0.1:${DEVNET_PORT}/rpc"
+
+          export DEVNET_PORT DEVNET_URL DEVNET_MANAGED_EXTERNALLY=1
+          echo "Using DEVNET_URL=$DEVNET_URL"
+
+          nohup starknet-devnet \
+            --port "$DEVNET_PORT" \
+            --seed 12345 \
+            --state-archive-capacity full \
+            --fork-network "$SEPOLIA_RPC_URL" \
+            --fork-block "$FORK_BLOCK_NUMBER" \
+            --accounts 20 \
+            --initial-balance 9999999999999999999999999999999 \
+            >/dev/null 2>&1 &
+          echo $! > devnet.pid
       # - run: cargo test --release -p sncast
       - name: sncast nextest partition ${{ matrix.partition }}/3
         run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'sncast-nextest-archive-${{ runner.os }}.tar.zst' integration
+      - name: Stop devnet
+        if: always()
+        run: |
+          if [ -f devnet.pid ]; then kill "$(cat devnet.pid)" 2>/dev/null || true; fi
 
   test-conversions:
     name: Test Conversions
