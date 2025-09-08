@@ -18,11 +18,19 @@ fn get_available_port() -> u16 {
     port
 }
 
+fn is_list_mode() -> bool {
+    std::env::args().any(|a| a == "--list" || a.starts_with("--list"))
+}
+
 #[expect(clippy::zombie_processes)]
 #[cfg(test)]
 #[ctor]
 fn start_devnet() {
     use crate::helpers::constants::devnet_url;
+
+    if is_list_mode() {
+        return;
+    }
 
     fn verify_devnet_availability(address: &str) -> bool {
         TcpStream::connect(address).is_ok()
