@@ -308,15 +308,15 @@ jobs:
           DEVNET_PORT=$((5050 + PARTITION))
           DEVNET_URL="http://127.0.0.1:${DEVNET_PORT}/rpc"
 
-          export DEVNET_PORT DEVNET_URL DEVNET_MANAGED_EXTERNALLY=1
+          export DEVNET_PORT DEVNET_URL
           echo "Using DEVNET_URL=$DEVNET_URL"
 
           nohup starknet-devnet \
             --port "$DEVNET_PORT" \
             --seed 12345 \
             --state-archive-capacity full \
-            --fork-network "$SEPOLIA_RPC_URL" \
-            --fork-block "$FORK_BLOCK_NUMBER" \
+            --fork-network "http://188.34.188.184:7070/rpc/v0_9" \
+            --fork-block "721720" \
             --accounts 20 \
             --initial-balance 9999999999999999999999999999999 \
             >/dev/null 2>&1 &
