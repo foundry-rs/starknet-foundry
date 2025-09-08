@@ -35,7 +35,7 @@ async fn test_show_config_from_cli() {
         "1",
         "show-config",
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args);

@@ -83,7 +83,7 @@ fn test_docs_snippets() {
             if let Some(network_pos) = network_pos {
                 args[network_pos] = "--url".to_string();
                 // let url = devnet_url();
-                args[network_pos + 1] = devnet_url();
+                args[network_pos + 1] = devnet_url().to_owned();
             }
         }
 

@@ -29,7 +29,7 @@ async fn test_happy_case(account: &str) {
         "multicall",
         "run",
         "--url",
-        &url,
+        &devnet_url(),
         "--path",
         path,
     ];
@@ -73,7 +73,7 @@ async fn test_calldata_ids() {
         "multicall",
         "run",
         "--url",
-        &url,
+        &devnet_url(),
         "--path",
         path,
     ];
@@ -113,7 +113,7 @@ async fn test_invalid_path() {
         "multicall",
         "run",
         "--url",
-        &url,
+        &devnet_url(),
         "--path",
         "non-existent",
     ];
@@ -153,7 +153,7 @@ async fn test_deploy_fail() {
         "multicall",
         "run",
         "--url",
-        &url,
+        &devnet_url(),
         "--path",
         path,
     ];
@@ -189,7 +189,7 @@ async fn test_invoke_fail() {
         "multicall",
         "run",
         "--url",
-        &url,
+        &devnet_url(),
         "--path",
         path,
     ];
@@ -225,7 +225,7 @@ async fn test_deploy_success_invoke_fails() {
         "multicall",
         "run",
         "--url",
-        &url,
+        &devnet_url(),
         "--path",
         path,
     ];
@@ -261,7 +261,7 @@ async fn test_numeric_inputs() {
         "multicall",
         "run",
         "--url",
-        &url,
+        &devnet_url(),
         "--path",
         path,
     ];
@@ -307,7 +307,7 @@ async fn test_numeric_overflow() {
         "multicall",
         "run",
         "--url",
-        &url,
+        &devnet_url(),
         "--path",
         path,
     ];

@@ -14,7 +14,7 @@ fn test_max_fee_used_with_other_args() {
         "--wait",
         "invoke",
         "--url",
-        &url,
+        &devnet_url(),
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",

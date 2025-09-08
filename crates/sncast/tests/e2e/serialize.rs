@@ -27,7 +27,7 @@ async fn test_happy_case() {
         "--function",
         "nested_struct_fn",
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -54,7 +54,7 @@ async fn test_happy_case_class_hash() {
         "--function",
         "nested_struct_fn",
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -175,7 +175,7 @@ async fn test_happy_case_json() {
         "--function",
         "nested_struct_fn",
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -198,7 +198,7 @@ async fn test_contract_does_not_exist() {
         "--function",
         "nested_struct_fn",
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args);
@@ -225,7 +225,7 @@ async fn test_wrong_function_name() {
         "--function",
         "nonexistent_function",
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args);

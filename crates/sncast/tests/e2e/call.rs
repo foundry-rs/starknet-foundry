@@ -1,6 +1,6 @@
 use crate::helpers::constants::{
     ACCOUNT_FILE_PATH, DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_ADDRESS_SEPOLIA,
-    URL, devnet_url,
+    devnet_url,
 };
 use crate::helpers::fixtures::invoke_contract;
 use crate::helpers::runner::runner;
@@ -13,13 +13,12 @@ use sncast::helpers::fee::FeeSettings;
 
 #[test]
 fn test_happy_case() {
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "call",
         "--url",
-        &url,
+        &devnet_url(),
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -42,11 +41,10 @@ fn test_happy_case() {
 
 #[test]
 fn test_happy_case_cairo_expression_calldata() {
-    let url = devnet_url();
     let args = vec![
         "call",
         "--url",
-        &url,
+        &devnet_url(),
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -92,7 +90,7 @@ async fn test_call_after_storage_changed() {
         ACCOUNT_FILE_PATH,
         "call",
         "--url",
-        &url,
+        &devnet_url(),
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -119,7 +117,7 @@ async fn test_contract_does_not_exist() {
         ACCOUNT_FILE_PATH,
         "call",
         "--url",
-        &url,
+        &devnet_url(),
         "--contract-address",
         "0x1",
         "--function",
@@ -143,7 +141,7 @@ fn test_wrong_function_name() {
         ACCOUNT_FILE_PATH,
         "call",
         "--url",
-        &url,
+        &devnet_url(),
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -167,7 +165,7 @@ fn test_wrong_calldata() {
         ACCOUNT_FILE_PATH,
         "call",
         "--url",
-        &url,
+        &devnet_url(),
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--calldata",
@@ -199,7 +197,7 @@ async fn test_invalid_selector() {
         ACCOUNT_FILE_PATH,
         "call",
         "--url",
-        &url,
+        &devnet_url(),
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -230,7 +228,7 @@ fn test_wrong_block_id() {
         ACCOUNT_FILE_PATH,
         "call",
         "--url",
-        &url,
+        &devnet_url(),
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -288,7 +286,7 @@ fn test_json_output_format() {
         "--json",
         "call",
         "--url",
-        &url,
+        &devnet_url(),
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",

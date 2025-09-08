@@ -269,7 +269,7 @@ pub fn default_cli_args() -> Vec<String> {
     let url = devnet_url();
     vec![
         "--url".to_string(),
-        url,
+        url.to_string(),
         "--accounts-file".to_string(),
         ACCOUNT_FILE_PATH.to_string(),
     ]
@@ -649,7 +649,7 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
         "account",
         "create",
         "--url",
-        &url,
+        &devnet_url(),
         "--name",
         "my_account",
         "--class-hash",
@@ -679,7 +679,7 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
         "account",
         "deploy",
         "--url",
-        &url,
+        &devnet_url(),
         "--name",
         "my_account",
     ];

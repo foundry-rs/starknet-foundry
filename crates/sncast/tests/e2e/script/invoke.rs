@@ -27,7 +27,7 @@ async fn test_insufficient_resource_for_validate(account: &str) {
         "run",
         &script_name,
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -61,7 +61,7 @@ async fn test_contract_does_not_exist() {
         "run",
         &script_name,
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -100,7 +100,7 @@ fn test_wrong_function_name() {
         "run",
         &script_name,
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -141,7 +141,7 @@ fn test_wrong_calldata() {
         "run",
         &script_name,
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());

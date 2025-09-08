@@ -27,7 +27,7 @@ async fn test_with_calldata(account: &str) {
         "run",
         &script_name,
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -60,7 +60,7 @@ async fn test_with_fee_settings() {
         "run",
         &script_name,
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -93,7 +93,7 @@ async fn test_same_salt_and_class_hash_deployed_twice() {
         "run",
         &script_name,
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -132,7 +132,7 @@ async fn test_invalid_class_hash() {
         "run",
         &script_name,
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -171,7 +171,7 @@ async fn test_invalid_call_data() {
         "run",
         &script_name,
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -212,7 +212,7 @@ async fn test_invalid_nonce() {
         "run",
         &script_name,
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());

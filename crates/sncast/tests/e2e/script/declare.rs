@@ -35,7 +35,7 @@ async fn test_wrong_contract_name(account: &str) {
         "run",
         &script_name,
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -78,7 +78,7 @@ async fn test_same_contract_twice() {
         "run",
         &script_name,
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -117,7 +117,7 @@ async fn test_with_invalid_max_fee() {
         "run",
         &script_name,
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -154,7 +154,7 @@ async fn test_with_invalid_nonce() {
         "run",
         &script_name,
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -192,7 +192,7 @@ async fn test_insufficient_account_balance() {
         "run",
         &script_name,
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -234,7 +234,7 @@ async fn test_sncast_timed_out() {
         "run",
         &script_name,
         "--url",
-        &url,
+        &devnet_url(),
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -271,7 +271,7 @@ async fn test_fee_settings() {
         "script",
         "run",
         "--url",
-        &url,
+        &devnet_url(),
         &script_name,
     ];
 

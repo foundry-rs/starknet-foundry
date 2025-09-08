@@ -38,7 +38,7 @@ pub async fn test_happy_case(class_hash: &str, account_type: &str) {
         "account",
         "deploy",
         "--url",
-        &url,
+        &devnet_url(),
         "--name",
         "my_account",
     ];
@@ -77,7 +77,7 @@ pub async fn test_happy_case_max_fee() {
         "account",
         "deploy",
         "--url",
-        &url,
+        &devnet_url(),
         "--name",
         "my_account",
     ];
@@ -151,7 +151,7 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
         "account",
         "deploy",
         "--url",
-        &url,
+        &devnet_url(),
         "--name",
         "my_account",
     ];
@@ -208,7 +208,7 @@ pub async fn test_valid_no_max_fee() {
         "account",
         "deploy",
         "--url",
-        &url,
+        &devnet_url(),
         "--name",
         "my_account",
     ];
@@ -238,7 +238,7 @@ pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &
         "account",
         "create",
         "--url",
-        &url,
+        &devnet_url(),
         "--name",
         "my_account",
         "--class-hash",
@@ -309,7 +309,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         "account",
         "deploy",
         "--url",
-        &url,
+        &devnet_url(),
     ];
     let args = apply_test_resource_bounds_flags(args);
 
@@ -361,7 +361,7 @@ pub async fn test_keystore_already_deployed() {
         "account",
         "deploy",
         "--url",
-        &url,
+        &devnet_url(),
     ];
     let args = apply_test_resource_bounds_flags(args);
 
@@ -404,7 +404,7 @@ pub async fn test_keystore_key_mismatch() {
         "account",
         "deploy",
         "--url",
-        &url,
+        &devnet_url(),
     ];
     let args = apply_test_resource_bounds_flags(args);
 
@@ -442,7 +442,7 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
         "account",
         "deploy",
         "--url",
-        &url,
+        &devnet_url(),
     ];
     let args = apply_test_resource_bounds_flags(args);
 
@@ -480,7 +480,7 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
         "account",
         "deploy",
         "--url",
-        &url,
+        &devnet_url(),
     ];
     let args = apply_test_resource_bounds_flags(args);
 
@@ -522,7 +522,7 @@ pub async fn test_deploy_keystore_no_status() {
         "account",
         "deploy",
         "--url",
-        &url,
+        &devnet_url(),
     ];
     let args = apply_test_resource_bounds_flags(args);
 
@@ -579,7 +579,7 @@ pub async fn test_deploy_keystore_other_args() {
         "account",
         "deploy",
         "--url",
-        &url,
+        &devnet_url(),
         "--name",
         "some-name",
     ];
@@ -611,7 +611,7 @@ pub async fn test_json_output_format() {
         "account",
         "deploy",
         "--url",
-        &url,
+        &devnet_url(),
         "--name",
         "my_account",
     ];

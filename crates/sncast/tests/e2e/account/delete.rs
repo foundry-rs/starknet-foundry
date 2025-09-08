@@ -39,7 +39,7 @@ pub fn test_account_does_not_exist() {
         "account",
         "delete",
         "--url",
-        &url,
+        &devnet_url(),
         "--name",
         "user99",
     ];
@@ -129,7 +129,7 @@ pub fn test_happy_case_url() {
         "account",
         "delete",
         "--url",
-        &url,
+        &devnet_url(),
         "--name",
         "user0",
     ];
@@ -187,7 +187,7 @@ pub fn test_accept_only_one_network_type_argument() {
         "account",
         "delete",
         "--url",
-        &url,
+        &devnet_url(),
         "--name",
         "user3",
         "--network-name",
