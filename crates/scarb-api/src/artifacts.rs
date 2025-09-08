@@ -110,7 +110,7 @@ impl StarknetArtifactsFiles {
         Ok(if self.compile_native {
             Some(native_api::compile_contract_class(&serde_json::from_str(
                 sierra,
-            )?))
+            )?)?)
         } else {
             None
         })
