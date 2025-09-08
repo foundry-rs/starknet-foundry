@@ -35,9 +35,9 @@ fn start_devnet() {
         .expect("Can't parse devnet URL!")
         .to_string();
 
-    // if verify_devnet_availability(&format!("{host}:{port}")) {
-    //     return;
-    // }
+    if verify_devnet_availability(&format!("{host}:{port}")) {
+        return;
+    }
 
     loop {
         if verify_devnet_availability(&format!("{host}:{port}")) {
