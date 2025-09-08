@@ -13,7 +13,7 @@ use url::Url;
 
 #[expect(clippy::zombie_processes)]
 #[cfg(test)]
-#[ctor]
+// #[ctor]
 fn start_devnet() {
     fn verify_devnet_availability(address: &str) -> bool {
         TcpStream::connect(address).is_ok()
