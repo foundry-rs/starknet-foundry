@@ -1,3 +1,5 @@
+#![deny(clippy::disallowed_methods)]
+
 use attributes::fuzzer;
 use attributes::{
     available_gas::available_gas, disable_predeployed_contracts::disable_predeployed_contracts,

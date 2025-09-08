@@ -9,6 +9,7 @@ pub struct ExternalInput {
     pub forge_test_filter: Option<String>,
 }
 
+#[allow(clippy::disallowed_methods)]
 impl ExternalInput {
     pub fn get() -> Self {
         Self {
