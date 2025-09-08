@@ -129,9 +129,9 @@ checksum = "b0674a1ddeecb70197781e945de4b3b8ffb61fa939a5597bcf48503737663100"
 [[package]]
 name = "apollo_compilation_utils"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
+source = "git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork#234d36c07c8229ac22e6de220042ae904a177fbd"
 dependencies = [
- "apollo_infra_utils",
+ "apollo_infra_utils 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
  "cairo-lang-sierra",
  "cairo-lang-starknet-classes",
  "cairo-lang-utils",
@@ -139,7 +139,7 @@ dependencies = [
  "serde",
  "serde_json",
  "starknet-types-core",
- "starknet_api",
+ "starknet_api 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
  "tempfile",
  "thiserror 1.0.69",
 ]
@@ -147,11 +147,11 @@ dependencies = [
 [[package]]
 name = "apollo_compile_to_native"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
+source = "git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork#234d36c07c8229ac22e6de220042ae904a177fbd"
 dependencies = [
  "apollo_compilation_utils",
  "apollo_compile_to_native_types",
- "apollo_infra_utils",
+ "apollo_infra_utils 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
  "cairo-lang-starknet-classes",
  "cairo-native",
  "tempfile",
@@ -160,7 +160,7 @@ dependencies = [
 [[package]]
 name = "apollo_compile_to_native_types"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
+source = "git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork#234d36c07c8229ac22e6de220042ae904a177fbd"
 dependencies = [
  "apollo_config",
  "serde",
@@ -170,9 +170,9 @@ dependencies = [
 [[package]]
 name = "apollo_config"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
+source = "git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork#234d36c07c8229ac22e6de220042ae904a177fbd"
 dependencies = [
- "apollo_infra_utils",
+ "apollo_infra_utils 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
  "clap",
  "const_format",
  "itertools 0.12.1",
@@ -190,7 +190,21 @@ name = "apollo_infra_utils"
 version = "0.15.0-rc.3"
 source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
 dependencies = [
- "apollo_proc_macros",
+ "apollo_proc_macros 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
+ "num_enum",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "apollo_infra_utils"
+version = "0.15.0-rc.3"
+source = "git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork#234d36c07c8229ac22e6de220042ae904a177fbd"
+dependencies = [
+ "apollo_proc_macros 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
  "assert-json-diff",
  "colored 3.0.0",
  "num_enum",
@@ -206,7 +220,7 @@ dependencies = [
 [[package]]
 name = "apollo_metrics"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
+source = "git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork#234d36c07c8229ac22e6de220042ae904a177fbd"
 dependencies = [
  "indexmap 2.11.0",
  "metrics",
@@ -219,6 +233,17 @@ dependencies = [
 name = "apollo_proc_macros"
 version = "0.15.0-rc.3"
 source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
+dependencies = [
+ "lazy_static 1.5.0",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
+]
+
+[[package]]
+name = "apollo_proc_macros"
+version = "0.15.0-rc.3"
+source = "git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork#234d36c07c8229ac22e6de220042ae904a177fbd"
 dependencies = [
  "lazy_static 1.5.0",
  "proc-macro2",
@@ -801,14 +826,14 @@ dependencies = [
 [[package]]
 name = "blockifier"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
+source = "git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork#234d36c07c8229ac22e6de220042ae904a177fbd"
 dependencies = [
  "anyhow",
  "apollo_compilation_utils",
  "apollo_compile_to_native",
  "apollo_compile_to_native_types",
  "apollo_config",
- "apollo_infra_utils",
+ "apollo_infra_utils 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
  "apollo_metrics",
  "ark-ec 0.4.2",
  "ark-ff 0.4.2",
@@ -842,7 +867,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "starknet-types-core",
- "starknet_api",
+ "starknet_api 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
  "strum 0.25.0",
  "strum_macros 0.25.3",
  "thiserror 1.0.69",
@@ -851,15 +876,15 @@ dependencies = [
 [[package]]
 name = "blockifier_test_utils"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
+source = "git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork#234d36c07c8229ac22e6de220042ae904a177fbd"
 dependencies = [
- "apollo_infra_utils",
+ "apollo_infra_utils 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
  "cairo-lang-starknet-classes",
  "pretty_assertions",
  "rstest",
  "serde_json",
  "starknet-types-core",
- "starknet_api",
+ "starknet_api 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
  "strum 0.25.0",
  "strum_macros 0.25.3",
  "tempfile",
@@ -1705,7 +1730,7 @@ dependencies = [
  "shared",
  "starknet",
  "starknet-types-core",
- "starknet_api",
+ "starknet_api 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
  "tempfile",
  "test-case",
  "thiserror 2.0.16",
@@ -1972,7 +1997,7 @@ dependencies = [
  "serde_json",
  "starknet",
  "starknet-types-core",
- "starknet_api",
+ "starknet_api 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
  "thiserror 2.0.16",
 ]
 
@@ -2267,7 +2292,7 @@ dependencies = [
  "serde_json",
  "starknet",
  "starknet-types-core",
- "starknet_api",
+ "starknet_api 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
  "thiserror 2.0.16",
 ]
 
@@ -2880,7 +2905,7 @@ dependencies = [
  "snapbox",
  "starknet",
  "starknet-types-core",
- "starknet_api",
+ "starknet_api 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
  "tempfile",
  "test-case",
  "test_utils",
@@ -2929,7 +2954,7 @@ dependencies = [
  "shared",
  "starknet",
  "starknet-types-core",
- "starknet_api",
+ "starknet_api 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
  "strum 0.27.2",
  "strum_macros 0.27.2",
  "tokio",
@@ -5435,7 +5460,7 @@ dependencies = [
  "shared",
  "starknet",
  "starknet-types-core",
- "starknet_api",
+ "starknet_api 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
  "thiserror 2.0.16",
 ]
 
@@ -6018,7 +6043,7 @@ dependencies = [
  "snapbox",
  "starknet",
  "starknet-types-core",
- "starknet_api",
+ "starknet_api 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
  "url",
 ]
 
@@ -6498,7 +6523,42 @@ name = "starknet_api"
 version = "0.15.0-rc.3"
 source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
 dependencies = [
- "apollo_infra_utils",
+ "apollo_infra_utils 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
+ "base64 0.13.1",
+ "bitvec",
+ "cached",
+ "cairo-lang-runner",
+ "cairo-lang-starknet-classes",
+ "cairo-lang-utils",
+ "derive_more 0.99.20",
+ "flate2",
+ "hex",
+ "indexmap 2.11.0",
+ "itertools 0.12.1",
+ "num-bigint",
+ "num-traits",
+ "pretty_assertions",
+ "primitive-types 0.12.2",
+ "rand 0.8.5",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha3",
+ "size-of",
+ "starknet-crypto 0.7.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "starknet-types-core",
+ "strum 0.25.0",
+ "strum_macros 0.25.3",
+ "thiserror 1.0.69",
+ "time",
+]
+
+[[package]]
+name = "starknet_api"
+version = "0.15.0-rc.3"
+source = "git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork#234d36c07c8229ac22e6de220042ae904a177fbd"
+dependencies = [
+ "apollo_infra_utils 0.15.0-rc.3 (git+https://github.com/MKowalski8/sequencer.git?branch=main-v0.14.0-fork)",
  "base64 0.13.1",
  "bitvec",
  "cached",
@@ -6776,7 +6836,7 @@ dependencies = [
  "scarb-api",
  "semver",
  "shared",
- "starknet_api",
+ "starknet_api 0.15.0-rc.3 (git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork)",
  "tempfile",
  "tokio",
  "walkdir",
