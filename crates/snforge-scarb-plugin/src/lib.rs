@@ -1,3 +1,5 @@
+// Disallows using methods that are not safed to be used.
+// See clippy.toml for the list of disallowed methods and reasoning behind them.
 #![deny(clippy::disallowed_methods)]
 
 use attributes::fuzzer;
