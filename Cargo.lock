@@ -129,7 +129,7 @@ checksum = "b0674a1ddeecb70197781e945de4b3b8ffb61fa939a5597bcf48503737663100"
 [[package]]
 name = "apollo_compilation_utils"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
+source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork-fix#580f2bb9ae7e70694bdee6c102cf8e7fb855ca2d"
 dependencies = [
  "apollo_infra_utils",
  "cairo-lang-sierra",
@@ -147,7 +147,7 @@ dependencies = [
 [[package]]
 name = "apollo_compile_to_native"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
+source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork-fix#580f2bb9ae7e70694bdee6c102cf8e7fb855ca2d"
 dependencies = [
  "apollo_compilation_utils",
  "apollo_compile_to_native_types",
@@ -160,7 +160,7 @@ dependencies = [
 [[package]]
 name = "apollo_compile_to_native_types"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
+source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork-fix#580f2bb9ae7e70694bdee6c102cf8e7fb855ca2d"
 dependencies = [
  "apollo_config",
  "serde",
@@ -170,7 +170,7 @@ dependencies = [
 [[package]]
 name = "apollo_config"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
+source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork-fix#580f2bb9ae7e70694bdee6c102cf8e7fb855ca2d"
 dependencies = [
  "apollo_infra_utils",
  "clap",
@@ -188,7 +188,7 @@ dependencies = [
 [[package]]
 name = "apollo_infra_utils"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
+source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork-fix#580f2bb9ae7e70694bdee6c102cf8e7fb855ca2d"
 dependencies = [
  "apollo_proc_macros",
  "assert-json-diff",
@@ -206,7 +206,7 @@ dependencies = [
 [[package]]
 name = "apollo_metrics"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
+source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork-fix#580f2bb9ae7e70694bdee6c102cf8e7fb855ca2d"
 dependencies = [
  "indexmap 2.11.0",
  "metrics",
@@ -218,7 +218,7 @@ dependencies = [
 [[package]]
 name = "apollo_proc_macros"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
+source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork-fix#580f2bb9ae7e70694bdee6c102cf8e7fb855ca2d"
 dependencies = [
  "lazy_static 1.5.0",
  "proc-macro2",
@@ -801,7 +801,7 @@ dependencies = [
 [[package]]
 name = "blockifier"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
+source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork-fix#580f2bb9ae7e70694bdee6c102cf8e7fb855ca2d"
 dependencies = [
  "anyhow",
  "apollo_compilation_utils",
@@ -851,7 +851,7 @@ dependencies = [
 [[package]]
 name = "blockifier_test_utils"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
+source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork-fix#580f2bb9ae7e70694bdee6c102cf8e7fb855ca2d"
 dependencies = [
  "apollo_infra_utils",
  "cairo-lang-starknet-classes",
@@ -6496,7 +6496,7 @@ dependencies = [
 [[package]]
 name = "starknet_api"
 version = "0.15.0-rc.3"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork#152f6e659c845ac264f076790cea6f5be7ed0558"
+source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.14.0-fork-fix#580f2bb9ae7e70694bdee6c102cf8e7fb855ca2d"
 dependencies = [
  "apollo_infra_utils",
  "base64 0.13.1",
