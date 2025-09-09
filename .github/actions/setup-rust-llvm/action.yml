@@ -1,0 +1,32 @@
+name: Setup Rust + LLVM 19
+description: Installs Rust and LLVM 19 toolchain
+
+runs:
+  using: "composite"
+  steps:
+    - uses: dtolnay/rust-toolchain@stable
+
+    - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+
+    - name: Add LLVM APT repository
+      uses: myci-actions/add-deb-repo@11
+      with:
+        repo: deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main
+        repo-name: llvm-repo
+        keys-asc: https://apt.llvm.org/llvm-snapshot.gpg.key
+
+    - name: Install LLVM
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          llvm-19 llvm-19-dev llvm-19-runtime \
+          clang-19 clang-tools-19 \
+          lld-19 libpolly-19-dev libmlir-19-dev mlir-19-tools
+
+    - name: Set environment variables
+      shell: bash
+      run: |
+        echo "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19/" >> $GITHUB_ENV
+        echo "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19/" >> $GITHUB_ENV
+        echo "TABLEGEN_190_PREFIX=/usr/lib/llvm-19/" >> $GITHUB_ENV
