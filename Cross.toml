@@ -10,9 +10,13 @@ pre-build = [
     "wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -",
     "apt-get update",
     "apt-get install -y --no-install-recommends llvm-19 llvm-19-dev llvm-19-runtime clang-19 clang-tools-19 lld-19 libpolly-19-dev libmlir-19-dev mlir-19-tools",
+    "apt-get install -y llvm-19:$CROSS_DEB_ARCH llvm-19-dev:$CROSS_DEB_ARCH llvm-19-runtime:$CROSS_DEB_ARCH lld-19:$CROSS_DEB_ARCH libpolly-19-dev:$CROSS_DEB_ARCH libmlir-19-dev:$CROSS_DEB_ARCH mlir-19-tools:$CROSS_DEB_ARCH",
     # Cleanup apt lists
     "rm -rf /var/lib/apt/lists/*"
 ]
+
+#"apt-get install -y llvm-19:$CROSS_DEB_ARCH llvm-19-dev:$CROSS_DEB_ARCH llvm-19-runtime:$CROSS_DEB_ARCH lld-19:$CROSS_DEB_ARCH libpolly-19-dev:$CROSS_DEB_ARCH libmlir-19-dev:$CROSS_DEB_ARCH mlir-19-tools:$CROSS_DEB_ARCH",
+
 
 # Set environment variables for all Linux targets as per cairo_native docs
 [target.x86_64-unknown-linux-gnu.env]
