@@ -39,13 +39,13 @@ fn start_devnet() {
         return;
     }
 
-    loop {
-        if verify_devnet_availability(&format!("{host}:{port}")) {
-            stop_devnet();
-        } else {
-            break;
-        }
-    }
+    // loop {
+    //     if verify_devnet_availability(&format!("{host}:{port}")) {
+    //         stop_devnet();
+    //     } else {
+    //         break;
+    //     }
+    // }
 
     Command::new("starknet-devnet")
         .args([
@@ -89,14 +89,14 @@ fn start_devnet() {
     rt.block_on(deploy_braavos_account());
 }
 
-#[cfg(test)]
-#[dtor]
-fn stop_devnet() {
-    let port = Url::parse(URL).unwrap().port().unwrap_or(80).to_string();
-    let pattern = format!("starknet-devnet.*{port}.*{SEED}");
+// #[cfg(test)]
+// #[dtor]
+// fn stop_devnet() {
+//     let port = Url::parse(URL).unwrap().port().unwrap_or(80).to_string();
+//     let pattern = format!("starknet-devnet.*{port}.*{SEED}");
 
-    Command::new("pkill")
-        .args(["-f", &pattern])
-        .output()
-        .expect("Failed to kill devnet processes");
-}
+//     Command::new("pkill")
+//         .args(["-f", &pattern])
+//         .output()
+//         .expect("Failed to kill devnet processes");
+// }
