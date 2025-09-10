@@ -1,4 +1,4 @@
-use crate::helpers::{constants::devnet_url, runner::runner};
+use crate::helpers::{constants::URL, runner::runner};
 use configuration::copy_config_to_tempdir;
 use indoc::formatdoc;
 
@@ -9,7 +9,6 @@ async fn test_show_config_from_snfoundry_toml() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    let url = devnet_url();
     snapbox.assert().success().stdout_eq(formatdoc! {r"
         Chain ID:            alpha-sepolia
         RPC URL:             {}
@@ -18,12 +17,11 @@ async fn test_show_config_from_snfoundry_toml() {
         Wait Timeout:        300s
         Wait Retry Interval: 5s
         Show Explorer Links: true
-    ", url});
+    ", URL});
 }
 
 #[tokio::test]
 async fn test_show_config_from_cli() {
-    let url = devnet_url();
     let args = vec![
         "--account",
         "/path/to/account.json",
@@ -35,12 +33,11 @@ async fn test_show_config_from_cli() {
         "1",
         "show-config",
         "--url",
-        &devnet_url(),
+        URL,
     ];
 
     let snapbox = runner(&args);
 
-    let url = devnet_url();
     snapbox.assert().success().stdout_eq(formatdoc! {r"
         Chain ID:            alpha-sepolia
         RPC URL:             {}
@@ -49,7 +46,7 @@ async fn test_show_config_from_cli() {
         Wait Timeout:        2s
         Wait Retry Interval: 1s
         Show Explorer Links: true
-    ", url});
+    ", URL});
 }
 
 #[tokio::test]
@@ -59,7 +56,6 @@ async fn test_show_config_from_cli_and_snfoundry_toml() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    let url = devnet_url();
     snapbox.assert().success().stdout_eq(formatdoc! {r"
         Profile:             profile2
         Chain ID:            alpha-sepolia
@@ -69,7 +65,7 @@ async fn test_show_config_from_cli_and_snfoundry_toml() {
         Wait Timeout:        300s
         Wait Retry Interval: 5s
         Show Explorer Links: true
-    ", url});
+    ", URL});
 }
 
 #[tokio::test]
@@ -79,7 +75,6 @@ async fn test_show_config_when_no_keystore() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    let url = devnet_url();
     snapbox.assert().success().stdout_eq(formatdoc! {r"
         Profile:             profile4
         Chain ID:            alpha-sepolia
@@ -89,7 +84,7 @@ async fn test_show_config_when_no_keystore() {
         Wait Timeout:        300s
         Wait Retry Interval: 5s
         Show Explorer Links: true
-    ", url});
+    ", URL});
 }
 
 #[tokio::test]
@@ -99,7 +94,6 @@ async fn test_show_config_when_keystore() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    let url = devnet_url();
     snapbox.assert().success().stdout_eq(formatdoc! {r"
         Profile:             profile3
         Chain ID:            alpha-sepolia
@@ -109,7 +103,7 @@ async fn test_show_config_when_keystore() {
         Wait Timeout:        300s
         Wait Retry Interval: 5s
         Show Explorer Links: true
-    ", url});
+    ", URL});
 }
 
 #[tokio::test]

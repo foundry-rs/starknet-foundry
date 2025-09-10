@@ -1,4 +1,4 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL, devnet_url};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use crate::helpers::fixtures::copy_file;
 use crate::helpers::runner::runner;
 use configuration::copy_config_to_tempdir;
@@ -28,14 +28,13 @@ pub async fn test_happy_case(account_type: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account",
         "--salt",
@@ -95,14 +94,13 @@ pub async fn test_happy_case_argent_with_deprecation_warning() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account",
         "--salt",
@@ -163,14 +161,13 @@ pub async fn test_invalid_class_hash() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
         "--type",
         "oz",
         "--class-hash",
@@ -198,14 +195,13 @@ pub async fn test_happy_case_generate_salt() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account",
         "--class-hash",
@@ -250,14 +246,13 @@ pub async fn test_happy_case_add_profile() {
     let tempdir = tempdir().expect("Failed to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account",
         "--add-profile",
@@ -290,14 +285,13 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         "tests/data/accounts/accounts.json",
         temp_dir.path().join(accounts_file),
     );
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account",
         "--salt",
@@ -334,7 +328,6 @@ pub async fn test_add_profile_with_network() {
     let tempdir = tempdir().expect("Failed to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
@@ -364,14 +357,13 @@ pub async fn test_profile_already_exists() {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "myprofile",
         "--add-profile",
@@ -392,14 +384,13 @@ pub async fn test_profile_already_exists() {
 
 #[tokio::test]
 pub async fn test_account_already_exists() {
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "user1",
         "--salt",
@@ -428,7 +419,6 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     let account_file = "my_account.json";
     set_create_keystore_password_env();
 
-    let url = devnet_url();
     let args = vec![
         "--keystore",
         keystore_file,
@@ -437,7 +427,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
         "--type",
         account_type,
     ];
@@ -458,7 +448,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
 
         To see account creation details, visit:
         account: [..]
-    ", account_file, keystore_file, url});
+    ", account_file, keystore_file, URL});
 
     assert!(temp_dir.path().join(keystore_file).exists());
 
@@ -479,7 +469,6 @@ pub async fn test_happy_case_keystore_argent_with_deprecation_warning() {
     let account_file = "my_account.json";
     set_create_keystore_password_env();
 
-    let url = devnet_url();
     let args = vec![
         "--keystore",
         keystore_file,
@@ -488,7 +477,7 @@ pub async fn test_happy_case_keystore_argent_with_deprecation_warning() {
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
         "--type",
         "argent",
     ];
@@ -511,7 +500,7 @@ pub async fn test_happy_case_keystore_argent_with_deprecation_warning() {
 
         To see account creation details, visit:
         account: [..]
-    ", account_file, keystore_file, url});
+    ", account_file, keystore_file, URL});
 
     assert!(temp_dir.path().join(keystore_file).exists());
 
@@ -532,7 +521,6 @@ pub async fn test_happy_case_keystore_add_profile() {
     let accounts_json_file = "accounts.json";
     set_create_keystore_password_env();
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_file,
@@ -543,7 +531,7 @@ pub async fn test_happy_case_keystore_add_profile() {
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
         "--add-profile",
         "with_keystore",
     ];
@@ -583,14 +571,13 @@ pub async fn test_keystore_without_account() {
 
     set_create_keystore_password_env();
 
-    let url = devnet_url();
     let args = vec![
         "--keystore",
         keystore_file,
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -618,7 +605,6 @@ pub async fn test_keystore_file_already_exists() {
     );
     set_create_keystore_password_env();
 
-    let url = devnet_url();
     let args = vec![
         "--keystore",
         keystore_file,
@@ -627,7 +613,7 @@ pub async fn test_keystore_file_already_exists() {
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -656,7 +642,6 @@ pub async fn test_keystore_account_file_already_exists() {
 
     set_create_keystore_password_env();
 
-    let url = devnet_url();
     let args = vec![
         "--keystore",
         keystore_file,
@@ -665,7 +650,7 @@ pub async fn test_keystore_account_file_already_exists() {
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -688,7 +673,6 @@ pub async fn test_happy_case_keystore_int_format() {
 
     set_create_keystore_password_env();
 
-    let url = devnet_url();
     let args = vec![
         "--keystore",
         keystore_file,
@@ -697,7 +681,7 @@ pub async fn test_happy_case_keystore_int_format() {
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
         "--class-hash",
         DEVNET_OZ_CLASS_HASH_CAIRO_0,
         "--type",
@@ -720,7 +704,7 @@ pub async fn test_happy_case_keystore_int_format() {
 
         To see account creation details, visit:
         account: [..]
-    ", account_file, keystore_file, url});
+    ", account_file, keystore_file, URL});
 
     let contents = fs::read_to_string(temp_dir.path().join(account_file))
         .expect("Unable to read created file");
@@ -735,14 +719,13 @@ pub async fn test_happy_case_default_name_generation() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let create_args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
         "--salt",
         "0x1",
     ];
@@ -938,8 +921,7 @@ fn get_keystore_account_pattern(account_type: AccountType, class_hash: Option<&s
 pub async fn test_happy_case_deployment_fee_message() {
     let tempdir = tempdir().expect("Failed to create a temporary directory");
 
-    let url = devnet_url();
-    let args = vec!["account", "create", "--url", &url];
+    let args = vec!["account", "create", "--url", URL];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -957,14 +939,13 @@ pub async fn test_happy_case_default_name_generation_when_accounts_file_empty() 
     let accounts_path = temp_dir.path().join(accounts_file);
     std::fs::File::create(&accounts_path).expect("Failed to create empty accounts file");
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
         "--class-hash",
         DEVNET_OZ_CLASS_HASH_CAIRO_0,
         "--type",
@@ -983,14 +964,13 @@ pub async fn test_happy_case_accounts_file_empty() {
     let accounts_path = temp_dir.path().join(accounts_file);
     std::fs::File::create(&accounts_path).expect("Failed to create empty accounts file");
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account",
         "--class-hash",
@@ -1009,7 +989,6 @@ pub async fn test_json_output_format() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
@@ -1017,7 +996,7 @@ pub async fn test_json_output_format() {
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account",
         "--salt",
@@ -1042,7 +1021,6 @@ pub async fn test_no_explorer_links_on_localhost() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,

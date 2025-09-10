@@ -1,4 +1,4 @@
-use crate::helpers::constants::{URL, devnet_url};
+use crate::helpers::constants::URL;
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
@@ -9,8 +9,7 @@ const REVERTED_TX_HASH: &str = "0x00ae35dacba17cde62b8ceb12e3b18f4ab6e103fa2d5e3
 
 #[tokio::test]
 async fn test_incorrect_transaction_hash() {
-    let url = devnet_url();
-    let args = vec!["tx-status", "0x1", "--url", &url];
+    let args = vec!["tx-status", "0x1", "--url", URL];
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
 
@@ -25,8 +24,7 @@ async fn test_incorrect_transaction_hash() {
 
 #[tokio::test]
 async fn test_succeeded() {
-    let url = devnet_url();
-    let args = vec!["tx-status", SUCCEEDED_TX_HASH, "--url", &url];
+    let args = vec!["tx-status", SUCCEEDED_TX_HASH, "--url", URL];
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r"
@@ -39,8 +37,7 @@ async fn test_succeeded() {
 
 #[tokio::test]
 async fn test_reverted() {
-    let url = devnet_url();
-    let args = vec!["tx-status", REVERTED_TX_HASH, "--url", &url];
+    let args = vec!["tx-status", REVERTED_TX_HASH, "--url", URL];
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r"

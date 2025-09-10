@@ -1,4 +1,4 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, MULTICALL_CONFIGS_DIR, URL, devnet_url};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, MULTICALL_CONFIGS_DIR, URL};
 use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::create_and_deploy_oz_account;
 use crate::helpers::runner::runner;
@@ -20,7 +20,6 @@ async fn test_happy_case(account: &str) {
         .join("deploy_invoke.toml");
     let path = path.to_str().expect("failed converting path to str");
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -29,7 +28,7 @@ async fn test_happy_case(account: &str) {
         "multicall",
         "run",
         "--url",
-        &devnet_url(),
+        URL,
         "--path",
         path,
     ];
@@ -64,7 +63,6 @@ async fn test_calldata_ids() {
         .join("deploy_invoke_calldata_ids.toml");
     let path = path.to_str().expect("failed converting path to str");
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",
@@ -73,7 +71,7 @@ async fn test_calldata_ids() {
         "multicall",
         "run",
         "--url",
-        &devnet_url(),
+        URL,
         "--path",
         path,
     ];
@@ -104,7 +102,6 @@ async fn test_calldata_ids() {
 async fn test_invalid_path() {
     let tempdir = create_and_deploy_oz_account().await;
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",
@@ -113,7 +110,7 @@ async fn test_invalid_path() {
         "multicall",
         "run",
         "--url",
-        &devnet_url(),
+        URL,
         "--path",
         "non-existent",
     ];
@@ -144,7 +141,6 @@ async fn test_deploy_fail() {
         .join("deploy_invalid.toml");
     let path = path.to_str().expect("failed converting path to str");
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",
@@ -153,7 +149,7 @@ async fn test_deploy_fail() {
         "multicall",
         "run",
         "--url",
-        &devnet_url(),
+        URL,
         "--path",
         path,
     ];
@@ -180,7 +176,6 @@ async fn test_invoke_fail() {
         .join("invoke_invalid.toml");
     let path = path.to_str().expect("failed converting path to str");
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",
@@ -189,7 +184,7 @@ async fn test_invoke_fail() {
         "multicall",
         "run",
         "--url",
-        &devnet_url(),
+        URL,
         "--path",
         path,
     ];
@@ -216,7 +211,6 @@ async fn test_deploy_success_invoke_fails() {
         .join("deploy_succ_invoke_fail.toml");
     let path = path.to_str().expect("failed converting path to str");
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",
@@ -225,7 +219,7 @@ async fn test_deploy_success_invoke_fails() {
         "multicall",
         "run",
         "--url",
-        &devnet_url(),
+        URL,
         "--path",
         path,
     ];
@@ -252,7 +246,6 @@ async fn test_numeric_inputs() {
         .join("deploy_invoke_numeric_inputs.toml");
     let path = path.to_str().expect("failed converting path to str");
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",
@@ -261,7 +254,7 @@ async fn test_numeric_inputs() {
         "multicall",
         "run",
         "--url",
-        &devnet_url(),
+        URL,
         "--path",
         path,
     ];
@@ -298,7 +291,6 @@ async fn test_numeric_overflow() {
         .join("deploy_invoke_numeric_overflow.toml");
     let path = path.to_str().expect("failed converting path to str");
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",
@@ -307,7 +299,7 @@ async fn test_numeric_overflow() {
         "multicall",
         "run",
         "--url",
-        &devnet_url(),
+        URL,
         "--path",
         path,
     ];

@@ -1,11 +1,10 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, MAP_CONTRACT_ADDRESS_SEPOLIA, URL, devnet_url};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, MAP_CONTRACT_ADDRESS_SEPOLIA, URL};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
 
 #[test]
 fn test_max_fee_used_with_other_args() {
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -14,7 +13,7 @@ fn test_max_fee_used_with_other_args() {
         "--wait",
         "invoke",
         "--url",
-        &devnet_url(),
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",

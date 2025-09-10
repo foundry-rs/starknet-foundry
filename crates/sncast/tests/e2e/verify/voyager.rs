@@ -1,6 +1,5 @@
 use crate::helpers::constants::{
-    ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA,
-    MAP_CONTRACT_CLASS_HASH_SEPOLIA, devnet_url,
+    ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA,
 };
 use crate::helpers::fixtures::copy_directory_to_tempdir;
 use crate::helpers::runner::runner;
@@ -45,7 +44,6 @@ async fn test_happy_case_contract_address() {
         .mount(&mock_server)
         .await;
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -91,7 +89,6 @@ async fn test_happy_case_class_hash() {
         .mount(&mock_server)
         .await;
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -150,7 +147,6 @@ async fn test_happy_case_with_confirm_verification_flag() {
         .mount(&mock_server)
         .await;
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -207,7 +203,6 @@ async fn test_failed_verification_contract_address() {
         .mount(&mock_server)
         .await;
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -263,7 +258,6 @@ async fn test_failed_verification_class_hash() {
         .mount(&mock_server)
         .await;
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -335,7 +329,6 @@ async fn test_failed_class_hash_lookup() {
         .mount(&mock_server)
         .await;
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -403,7 +396,6 @@ async fn test_virtual_workspaces() {
         .mount(&mock_server)
         .await;
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -458,7 +450,6 @@ async fn test_contract_name_not_found() {
         .mount(&mock_server)
         .await;
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -498,7 +489,6 @@ async fn test_contract_name_not_found() {
 async fn test_error_when_neither_network_nor_url_provided() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -577,7 +567,6 @@ async fn test_test_files_flag_includes_test_files() {
         .mount(&mock_server)
         .await;
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -654,7 +643,6 @@ async fn test_without_test_files_flag_excludes_test_files() {
         .mount(&mock_server)
         .await;
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,

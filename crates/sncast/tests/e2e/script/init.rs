@@ -1,4 +1,3 @@
-use crate::helpers::constants::devnet_url;
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
@@ -109,7 +108,6 @@ fn test_init_twice_fails() {
     let script_name = "my_script";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
-    let url = devnet_url();
     let args = vec!["script", "init", script_name];
     runner(&args)
         .current_dir(temp_dir.path())

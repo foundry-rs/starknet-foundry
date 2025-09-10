@@ -1,6 +1,6 @@
 use crate::helpers::constants::{
     DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_OZ_CLASS_HASH_CAIRO_1, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
-    URL, devnet_url,
+    URL,
 };
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
@@ -21,14 +21,13 @@ pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "import",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account_import",
         "--address",
@@ -78,14 +77,13 @@ pub async fn test_happy_case_argent_with_deprecation_warning() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "import",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account_import",
         "--address",
@@ -136,14 +134,13 @@ pub async fn test_existent_account_address() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "import",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account_import",
         "--address",
@@ -184,14 +181,13 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "import",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account_import",
         "--address",
@@ -217,14 +213,13 @@ pub async fn test_nonexistent_account_address_and_nonexistent_class_hash() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "import",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account_import",
         "--address",
@@ -250,14 +245,13 @@ pub async fn test_nonexistent_account_address() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "import",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account_import",
         "--address",
@@ -281,14 +275,13 @@ pub async fn test_happy_case_add_profile() {
     let tempdir = tempdir().expect("Failed to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "import",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account_import",
         "--address",
@@ -342,7 +335,7 @@ pub async fn test_happy_case_add_profile() {
         .expect("Unable to read snfoundry.toml");
     assert!(contents.contains("[sncast.my_account_import]"));
     assert!(contents.contains("account = \"my_account_import\""));
-    assert!(contents.contains(&format!("url = \"{url}\"")));
+    assert!(contents.contains(&format!("url = \"{URL}\"")));
 }
 
 #[tokio::test]
@@ -387,14 +380,13 @@ pub async fn test_detect_deployed() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "import",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account_import",
         "--address",
@@ -438,12 +430,11 @@ pub async fn test_detect_deployed() {
 
 #[tokio::test]
 pub async fn test_missing_arguments() {
-    let url = devnet_url();
     let args = vec![
         "account",
         "import",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account_import",
     ];
@@ -469,14 +460,13 @@ pub async fn test_private_key_from_file() {
 
     fs::write(temp_dir.path().join(private_key_file), "0x456").unwrap();
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "import",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account_import",
         "--address",
@@ -546,12 +536,11 @@ pub async fn test_accept_only_one_private_key() {
 
 #[tokio::test]
 pub async fn test_invalid_private_key_file_path() {
-    let url = devnet_url();
     let args = vec![
         "account",
         "import",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account_import",
         "--address",
@@ -587,14 +576,13 @@ pub async fn test_invalid_private_key_in_file() {
     )
     .unwrap();
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",
         "account",
         "import",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account_import",
         "--address",
@@ -625,14 +613,13 @@ pub async fn test_private_key_as_int_in_file() {
 
     fs::write(temp_dir.path().join(private_key_file), "1110").unwrap();
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "import",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account_import",
         "--address",
@@ -677,14 +664,13 @@ pub async fn test_empty_config_add_profile() {
     File::create(tempdir.path().join(CONFIG_FILENAME)).unwrap();
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "import",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account_import",
         "--address",
@@ -714,7 +700,7 @@ pub async fn test_empty_config_add_profile() {
         .expect("Unable to read snfoundry.toml");
     assert!(contents.contains("[sncast.random]"));
     assert!(contents.contains("account = \"my_account_import\""));
-    assert!(contents.contains(&format!("url = \"{url}\"")));
+    assert!(contents.contains(&format!("url = \"{URL}\"")));
 }
 
 #[tokio::test]
@@ -722,14 +708,13 @@ pub async fn test_happy_case_valid_address_computation() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "import",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account_import",
         "--address",
@@ -781,14 +766,13 @@ pub async fn test_invalid_address_computation() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "import",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account_import",
         "--address",
@@ -816,14 +800,13 @@ pub async fn test_happy_case_default_name_generation() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let import_args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "import",
         "--url",
-        &devnet_url(),
+        URL,
         "--address",
         "0x123",
         "--private-key",

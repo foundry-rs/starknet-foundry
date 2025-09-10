@@ -1,4 +1,4 @@
-use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL, devnet_url};
+use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
     copy_directory_to_tempdir, create_and_deploy_account, create_and_deploy_oz_account,
@@ -28,7 +28,6 @@ async fn test_happy_case_human_readable() {
     let tempdir = create_and_deploy_oz_account().await;
     join_tempdirs(&contract_path, &tempdir);
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",
@@ -36,7 +35,7 @@ async fn test_happy_case_human_readable() {
         "my_account",
         "declare",
         "--url",
-        &devnet_url(),
+        URL,
         "--contract-name",
         "Map",
     ];
@@ -76,7 +75,6 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     );
     let tempdir = create_and_deploy_account(class_hash, account_type).await;
     join_tempdirs(&contract_path, &tempdir);
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",
@@ -85,7 +83,7 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         "--json",
         "declare",
         "--url",
-        &devnet_url(),
+        URL,
         "--contract-name",
         "Map",
     ];
@@ -140,8 +138,6 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
     );
     let tempdir = create_and_deploy_oz_account().await;
     join_tempdirs(&contract_path, &tempdir);
-
-    let url = devnet_url();
     let mut args = vec![
         "--accounts-file",
         "accounts.json",
@@ -150,7 +146,7 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
         "--json",
         "declare",
         "--url",
-        &devnet_url(),
+        URL,
         "--contract-name",
         "Map",
     ];
@@ -208,7 +204,6 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
 async fn test_happy_case_specify_package() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -217,7 +212,7 @@ async fn test_happy_case_specify_package() {
         "--json",
         "declare",
         "--url",
-        &devnet_url(),
+        URL,
         "--contract-name",
         "supercomplexcode",
         "--package",
@@ -244,7 +239,6 @@ async fn test_contract_already_declared() {
     );
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -252,7 +246,7 @@ async fn test_contract_already_declared() {
         "user1",
         "declare",
         "--url",
-        &devnet_url(),
+        URL,
         "--contract-name",
         "Map",
     ];
@@ -277,7 +271,6 @@ async fn test_invalid_nonce() {
     let contract_path =
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "1123");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -285,7 +278,7 @@ async fn test_invalid_nonce() {
         "user8",
         "declare",
         "--url",
-        &devnet_url(),
+        URL,
         "--contract-name",
         "Map",
         "--nonce",
@@ -314,7 +307,6 @@ async fn test_wrong_contract_name_passed() {
     );
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -322,7 +314,7 @@ async fn test_wrong_contract_name_passed() {
         "user1",
         "declare",
         "--url",
-        &devnet_url(),
+        URL,
         "--contract-name",
         "nonexistent",
     ];
@@ -343,7 +335,6 @@ fn test_scarb_build_fails_when_wrong_cairo_path() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/build_fails");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -351,7 +342,7 @@ fn test_scarb_build_fails_when_wrong_cairo_path() {
         "user1",
         "declare",
         "--url",
-        &devnet_url(),
+        URL,
         "--contract-name",
         "BuildFails",
     ];
@@ -370,7 +361,6 @@ fn test_scarb_build_fails_scarb_toml_does_not_exist() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR);
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -378,7 +368,7 @@ fn test_scarb_build_fails_scarb_toml_does_not_exist() {
         "user1",
         "declare",
         "--url",
-        &devnet_url(),
+        URL,
         "--contract-name",
         "BuildFails",
     ];
@@ -391,7 +381,6 @@ fn test_scarb_build_fails_manifest_does_not_exist() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR);
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -399,7 +388,7 @@ fn test_scarb_build_fails_manifest_does_not_exist() {
         "user1",
         "declare",
         "--url",
-        &devnet_url(),
+        URL,
         "--contract-name",
         "BuildFails",
     ];
@@ -424,7 +413,6 @@ fn test_too_low_gas() {
     );
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -433,7 +421,7 @@ fn test_too_low_gas() {
         "--wait",
         "declare",
         "--url",
-        &devnet_url(),
+        URL,
         "--contract-name",
         "Map",
         "--l1-gas",
@@ -462,7 +450,6 @@ fn test_scarb_no_sierra_artifact() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/no_sierra");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -470,7 +457,7 @@ fn test_scarb_no_sierra_artifact() {
         "user1",
         "declare",
         "--url",
-        &devnet_url(),
+        URL,
         "--contract-name",
         "minimal_contract",
     ];
@@ -483,7 +470,6 @@ fn test_scarb_no_casm_artifact() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/no_casm");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -491,7 +477,7 @@ fn test_scarb_no_casm_artifact() {
         "user1",
         "declare",
         "--url",
-        &devnet_url(),
+        URL,
         "--contract-name",
         "minimal_contract",
     ];
@@ -515,7 +501,6 @@ fn test_scarb_no_casm_artifact() {
 async fn test_many_packages_default() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -524,7 +509,7 @@ async fn test_many_packages_default() {
         "--json",
         "declare",
         "--url",
-        &devnet_url(),
+        URL,
         "--contract-name",
         "supercomplexcode2",
     ];
@@ -543,7 +528,6 @@ async fn test_many_packages_default() {
 async fn test_workspaces_package_specified_virtual_fibonacci() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -552,7 +536,7 @@ async fn test_workspaces_package_specified_virtual_fibonacci() {
         "--json",
         "declare",
         "--url",
-        &devnet_url(),
+        URL,
         "--package",
         "cast_fibonacci",
         "--contract-name",
@@ -575,7 +559,6 @@ async fn test_workspaces_package_specified_virtual_fibonacci() {
 async fn test_workspaces_package_no_contract() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -583,7 +566,7 @@ async fn test_workspaces_package_no_contract() {
         "user8",
         "declare",
         "--url",
-        &devnet_url(),
+        URL,
         "--package",
         "cast_addition",
         "--contract-name",
@@ -613,7 +596,6 @@ async fn test_no_scarb_profile() {
     )
     .expect("Failed to copy config file to temp dir");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -621,7 +603,7 @@ async fn test_no_scarb_profile() {
         "profile5",
         "declare",
         "--url",
-        &devnet_url(),
+        URL,
         "--contract-name",
         "Map",
     ];
@@ -659,7 +641,6 @@ async fn test_no_explorer_links_on_localhost() {
     let tempdir = create_and_deploy_oz_account().await;
     join_tempdirs(&contract_path, &tempdir);
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",

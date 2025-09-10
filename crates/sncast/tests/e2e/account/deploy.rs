@@ -1,4 +1,4 @@
-use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, devnet_url};
+use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use crate::helpers::env::set_keystore_password_env;
 use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::copy_file;
@@ -30,7 +30,6 @@ pub async fn test_happy_case(class_hash: &str, account_type: &str) {
     let tempdir = create_account(false, class_hash, account_type).await;
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
@@ -38,7 +37,7 @@ pub async fn test_happy_case(class_hash: &str, account_type: &str) {
         "account",
         "deploy",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account",
     ];
@@ -69,7 +68,6 @@ pub async fn test_happy_case_max_fee() {
     let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
@@ -77,7 +75,7 @@ pub async fn test_happy_case_max_fee() {
         "account",
         "deploy",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account",
     ];
@@ -144,14 +142,13 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
     let accounts_file = "accounts.json";
     fs::write(temp_dir.path().join(accounts_file), accounts_content).unwrap();
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "deploy",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account",
     ];
@@ -199,7 +196,6 @@ pub async fn test_valid_no_max_fee() {
     let tempdir = create_account(true, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--profile",
         "deploy_profile",
@@ -208,7 +204,7 @@ pub async fn test_valid_no_max_fee() {
         "account",
         "deploy",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account",
     ];
@@ -231,14 +227,13 @@ pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let mut args = vec![
         "--accounts-file",
         accounts_file,
         "account",
         "create",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account",
         "--class-hash",
@@ -300,7 +295,6 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     )
     .await;
 
-    let url = devnet_url();
     let args = vec![
         "--keystore",
         keystore_file,
@@ -309,7 +303,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         "account",
         "deploy",
         "--url",
-        &devnet_url(),
+        URL,
     ];
     let args = apply_test_resource_bounds_flags(args);
 
@@ -352,7 +346,6 @@ pub async fn test_keystore_already_deployed() {
     );
     set_keystore_password_env();
 
-    let url = devnet_url();
     let args = vec![
         "--keystore",
         keystore_file,
@@ -361,7 +354,7 @@ pub async fn test_keystore_already_deployed() {
         "account",
         "deploy",
         "--url",
-        &devnet_url(),
+        URL,
     ];
     let args = apply_test_resource_bounds_flags(args);
 
@@ -395,7 +388,6 @@ pub async fn test_keystore_key_mismatch() {
 
     set_keystore_password_env();
 
-    let url = devnet_url();
     let args = vec![
         "--keystore",
         keystore_file,
@@ -404,7 +396,7 @@ pub async fn test_keystore_key_mismatch() {
         "account",
         "deploy",
         "--url",
-        &devnet_url(),
+        URL,
     ];
     let args = apply_test_resource_bounds_flags(args);
 
@@ -433,7 +425,6 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
     );
     set_keystore_password_env();
 
-    let url = devnet_url();
     let args = vec![
         "--keystore",
         keystore_file,
@@ -442,7 +433,7 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
         "account",
         "deploy",
         "--url",
-        &devnet_url(),
+        URL,
     ];
     let args = apply_test_resource_bounds_flags(args);
 
@@ -471,7 +462,6 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
     );
     set_keystore_password_env();
 
-    let url = devnet_url();
     let args = vec![
         "--keystore",
         keystore_file,
@@ -480,7 +470,7 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
         "account",
         "deploy",
         "--url",
-        &devnet_url(),
+        URL,
     ];
     let args = apply_test_resource_bounds_flags(args);
 
@@ -513,7 +503,6 @@ pub async fn test_deploy_keystore_no_status() {
     );
     set_keystore_password_env();
 
-    let url = devnet_url();
     let args = vec![
         "--keystore",
         keystore_file,
@@ -522,7 +511,7 @@ pub async fn test_deploy_keystore_no_status() {
         "account",
         "deploy",
         "--url",
-        &devnet_url(),
+        URL,
     ];
     let args = apply_test_resource_bounds_flags(args);
 
@@ -568,7 +557,6 @@ pub async fn test_deploy_keystore_other_args() {
     )
     .await;
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         "accounts.json",
@@ -579,7 +567,7 @@ pub async fn test_deploy_keystore_other_args() {
         "account",
         "deploy",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "some-name",
     ];
@@ -603,7 +591,6 @@ pub async fn test_json_output_format() {
     let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
     let accounts_file = "accounts.json";
 
-    let url = devnet_url();
     let args = vec![
         "--accounts-file",
         accounts_file,
@@ -611,7 +598,7 @@ pub async fn test_json_output_format() {
         "account",
         "deploy",
         "--url",
-        &devnet_url(),
+        URL,
         "--name",
         "my_account",
     ];
