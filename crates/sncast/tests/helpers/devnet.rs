@@ -11,10 +11,18 @@ use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
 use url::Url;
 
+fn is_list_mode() -> bool {
+    std::env::args().any(|a| a == "--list" || a.starts_with("--list"))
+}
+
 #[expect(clippy::zombie_processes)]
 #[cfg(test)]
 #[ctor]
 fn start_devnet() {
+    if is_list_mode() {
+        return;
+    }
+
     fn verify_devnet_availability(address: &str) -> bool {
         TcpStream::connect(address).is_ok()
     }
