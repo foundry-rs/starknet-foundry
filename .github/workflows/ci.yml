@@ -308,6 +308,8 @@ jobs:
           echo $DEVNET_PORT
       # - run: cargo test --release -p sncast
       - name: sncast nextest partition ${{ matrix.partition }}/3
+        env:
+          PARTITION: ${{ matrix.partition }}
         run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'sncast-nextest-archive-${{ runner.os }}.tar.zst' integration
 
   test-conversions:
