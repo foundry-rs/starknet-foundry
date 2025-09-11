@@ -11,46 +11,38 @@ use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
 use url::Url;
 
-fn is_list_mode() -> bool {
-    // nextest i zwykłe `cargo test` wywołują binarkę z --list podczas zbierania testów
-    std::env::args().any(|a| a == "--list" || a.starts_with("--list"))
-}
-
 #[expect(clippy::zombie_processes)]
 #[cfg(test)]
 #[ctor]
 fn start_devnet() {
-    if is_list_mode() {
-        return;
-    }
     fn verify_devnet_availability(address: &str) -> bool {
-        // println!("XXX {}", TcpStream::connect(address).is_ok());
         TcpStream::connect(address).is_ok()
     }
 
-    let port = Url::parse(URL).unwrap().port().unwrap_or(80).to_string();
+    let port = std::env::var("PARTITION")
+        .expect("PARTITION env variable not set")
+        .parse::<u16>()
+        .expect("PARTITION env variable is not a valid number")
+        + 5050;
+
     let host = Url::parse(URL)
         .unwrap()
         .host()
         .expect("Can't parse devnet URL!")
         .to_string();
 
-    if verify_devnet_availability(&format!("{host}:{port}")) {
-        return;
+    loop {
+        if verify_devnet_availability(&format!("{host}:{port}")) {
+            stop_devnet();
+        } else {
+            break;
+        }
     }
-
-    // loop {
-    //     if verify_devnet_availability(&format!("{host}:{port}")) {
-    //         stop_devnet();
-    //     } else {
-    //         break;
-    //     }
-    // }
 
     Command::new("starknet-devnet")
         .args([
             "--port",
-            &port,
+            &port.to_string(),
             "--seed",
             &SEED.to_string(),
             "--state-archive-capacity",
@@ -89,14 +81,14 @@ fn start_devnet() {
     rt.block_on(deploy_braavos_account());
 }
 
-// #[cfg(test)]
-// #[dtor]
-// fn stop_devnet() {
-//     let port = Url::parse(URL).unwrap().port().unwrap_or(80).to_string();
-//     let pattern = format!("starknet-devnet.*{port}.*{SEED}");
+#[cfg(test)]
+#[dtor]
+fn stop_devnet() {
+    let port = Url::parse(URL).unwrap().port().unwrap_or(80).to_string();
+    let pattern = format!("starknet-devnet.*{port}.*{SEED}");
 
-//     Command::new("pkill")
-//         .args(["-f", &pattern])
-//         .output()
-//         .expect("Failed to kill devnet processes");
-// }
+    Command::new("pkill")
+        .args(["-f", &pattern])
+        .output()
+        .expect("Failed to kill devnet processes");
+}
