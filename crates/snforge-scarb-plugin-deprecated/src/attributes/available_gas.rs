@@ -1,12 +1,11 @@
 use crate::{
     args::Arguments,
     attributes::{AttributeCollector, AttributeInfo, AttributeTypeData},
-    branch,
     cairo_expression::CairoExpression,
     config_statement::extend_with_config_cheatcodes,
     types::{Number, ParseFromExpr},
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, Severity, TokenStream};
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_syntax::node::db::SyntaxGroup;
 use indoc::formatdoc;
 
@@ -26,8 +25,7 @@ impl AttributeCollector for AvailableGasCollector {
         args: Arguments,
         _warns: &mut Vec<Diagnostic>,
     ) -> Result<String, Diagnostics> {
-        let expr = branch!(from_resource_bounds(db, &args), from_max_gas(db, &args))?;
-        Ok(expr)
+        Ok(from_resource_bounds(db, &args)?)
     }
 }
 
@@ -63,31 +61,12 @@ fn from_resource_bounds(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String
 
     Ok(formatdoc!(
         "
-            snforge_std_deprecated::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
-                 snforge_std_deprecated::_internals::config_types::AvailableResourceBoundsConfig {{
-                     l1_gas: {l1_gas_expr},
-                     l1_data_gas: {l1_data_gas_expr},
-                     l2_gas: {l2_gas_expr}
-                 }}
-             )
+            snforge_std_deprecated::_internals::config_types::AvailableResourceBoundsConfig {{
+                l1_gas: {l1_gas_expr},
+                l1_data_gas: {l1_data_gas_expr},
+                l2_gas: {l2_gas_expr}
+            }}
         "
-    ))
-}
-
-fn from_max_gas(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnostic> {
-    let &[arg] = args
-        .unnamed_only::<AvailableGasCollector>()?
-        .of_length::<1, AvailableGasCollector>()?;
-
-    let gas =
-        Number::parse_from_expr::<AvailableGasCollector>(db, arg.1, arg.0.to_string().as_str())?;
-
-    gas.validate_in_gas_range::<AvailableGasCollector>("max_gas")?;
-
-    let gas = gas.as_cairo_expression();
-
-    Ok(format!(
-        "snforge_std_deprecated::_internals::config_types::AvailableGasConfig::MaxGas({gas})"
     ))
 }
 
