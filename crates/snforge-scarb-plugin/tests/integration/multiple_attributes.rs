@@ -227,9 +227,18 @@ fn works_with_fuzzer_before_test() {
     let fuzzer_res = fuzzer(fuzzer_args, empty_function());
     assert_diagnostics(&fuzzer_res, &[]);
 
-    let t_args = TokenStream::empty();
+    assert_output(
+        &fuzzer_res,
+        r"
+            #[__fuzzer_config(runs: 123, seed: 321)]
+            #[__fuzzer_wrapper]
+            fn empty_fn() {}
+        ",
+    );
+
+    let test_args = TokenStream::empty();
     let item = get_function(&fuzzer_res.token_stream, "empty_fn", false);
-    let result = test(t_args, item);
+    let result = test(test_args, item);
 
     assert_diagnostics(&result, &[]);
 
