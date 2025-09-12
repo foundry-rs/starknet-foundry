@@ -76,7 +76,8 @@ jobs:
 
       - name: Install cross
         if: matrix.system == 'linux'
-        uses: taiki-e/install-action@cross
+        run: |
+          cargo install cross --git https://github.com/cross-rs/cross
 
       - name: Build MacOS
         if: matrix.system == 'macos'
