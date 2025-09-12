@@ -67,27 +67,46 @@ pub async fn declare(
     let casm_contract_definition: CompiledClass =
         serde_json::from_str(&contract_artifacts.casm).context("Failed to parse casm artifact")?;
 
-    let casm_class_hash = casm_contract_definition
-        .class_hash()
-        .map_err(anyhow::Error::from)?;
+    declare_with_artifacts(
+        contract_definition,
+        casm_contract_definition,
+        declare.fee_args,
+        declare.nonce,
+        account,
+        wait_config,
+        skip_on_already_declared,
+        ui,
+    )
+    .await
+}
 
-    let class_hash = contract_definition
-        .class_hash()
-        .map_err(anyhow::Error::from)?;
+#[allow(clippy::too_many_arguments)]
+pub async fn declare_with_artifacts(
+    sierra_class: SierraClass,
+    compiled_casm: CompiledClass,
+    fee_args: FeeArgs,
+    nonce: Option<Felt>,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    wait_config: WaitForTx,
+    skip_on_already_declared: bool,
+    ui: &UI,
+) -> Result<DeclareResponse, StarknetCommandError> {
+    let casm_class_hash = compiled_casm.class_hash().map_err(anyhow::Error::from)?;
+    let class_hash = sierra_class.class_hash().map_err(anyhow::Error::from)?;
 
     let declaration = account.declare_v3(
-        Arc::new(contract_definition.flatten().map_err(anyhow::Error::from)?),
+        Arc::new(sierra_class.flatten().map_err(anyhow::Error::from)?),
         casm_class_hash,
     );
 
-    let fee_settings = if declare.fee_args.max_fee.is_some() {
+    let fee_settings = if fee_args.max_fee.is_some() {
         let fee_estimate = declaration
             .estimate_fee()
             .await
             .expect("Failed to estimate fee");
-        declare.fee_args.try_into_fee_settings(Some(&fee_estimate))
+        fee_args.try_into_fee_settings(Some(&fee_estimate))
     } else {
-        declare.fee_args.try_into_fee_settings(None)
+        fee_args.try_into_fee_settings(None)
     };
 
     let FeeSettings {
@@ -109,7 +128,7 @@ pub async fn declare(
         l1_data_gas => DeclarationV3::l1_data_gas,
         l1_data_gas_price => DeclarationV3::l1_data_gas_price,
         tip => DeclarationV3::tip,
-        declare.nonce => DeclarationV3::nonce
+        nonce => DeclarationV3::nonce
     );
 
     let declared = declaration.send().await;
