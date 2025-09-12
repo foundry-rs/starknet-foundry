@@ -217,7 +217,7 @@ pub(crate) fn setup_hello_workspace() -> TempDir {
                 
                 [dependencies]
                 starknet.workspace = true
-                fibonacci = {{ path = "crates/fibonacci" }}
+                fibonacci_tests = {{ path = "crates/fibonacci_tests" }}
                 addition_tests = {{ path = "crates/addition_tests" }}
 
                 [dev-dependencies]

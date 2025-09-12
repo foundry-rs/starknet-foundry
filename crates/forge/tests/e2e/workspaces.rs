@@ -73,7 +73,7 @@ fn root_workspace_specific_package2() {
     let temp = setup_hello_workspace();
 
     let output = test_runner(&temp)
-        .args(["--package", "fibonacci"])
+        .args(["--package", "fibonacci_tests"])
         .assert()
         .code(1);
 
@@ -85,15 +85,15 @@ fn root_workspace_specific_package2() {
         [..]Finished[..]
 
 
-        Collected 6 test(s) from fibonacci package
+        Collected 6 test(s) from fibonacci_tests package
         Running 2 test(s) from src/
-        [PASS] fibonacci::tests::it_works [..]
-        [PASS] fibonacci::tests::contract_test [..]
+        [PASS] fibonacci_tests::tests::it_works [..]
+        [PASS] fibonacci_tests::tests::contract_test [..]
         Running 4 test(s) from tests/
-        [PASS] fibonacci_tests::lib_test [..]
-        [PASS] fibonacci_tests::abc::abc_test [..]
-        [PASS] fibonacci_tests::abc::efg::efg_test [..]
-        [FAIL] fibonacci_tests::abc::efg::failing_test
+        [PASS] fibonacci_tests_tests::lib_test [..]
+        [PASS] fibonacci_tests_tests::abc::abc_test [..]
+        [PASS] fibonacci_tests_tests::abc::efg::efg_test [..]
+        [FAIL] fibonacci_tests_tests::abc::efg::failing_test
         
         Failure data:
             0x0 ('')
@@ -101,7 +101,7 @@ fn root_workspace_specific_package2() {
         Tests: 5 passed, 1 failed, 0 ignored, 0 filtered out
         
         Failures:
-            fibonacci_tests::abc::efg::failing_test
+            fibonacci_tests_tests::abc::efg::failing_test
         "},
     );
 }
@@ -229,15 +229,15 @@ fn root_workspace_for_entire_workspace() {
         Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
         
         
-        Collected 6 test(s) from fibonacci package
+        Collected 6 test(s) from fibonacci_tests package
         Running 2 test(s) from src/
-        [PASS] fibonacci::tests::it_works [..]
-        [PASS] fibonacci::tests::contract_test [..]
+        [PASS] fibonacci_tests::tests::it_works [..]
+        [PASS] fibonacci_tests::tests::contract_test [..]
         Running 4 test(s) from tests/
-        [PASS] fibonacci_tests::lib_test [..]
-        [PASS] fibonacci_tests::abc::abc_test [..]
-        [PASS] fibonacci_tests::abc::efg::efg_test [..]
-        [FAIL] fibonacci_tests::abc::efg::failing_test
+        [PASS] fibonacci_tests_tests::lib_test [..]
+        [PASS] fibonacci_tests_tests::abc::abc_test [..]
+        [PASS] fibonacci_tests_tests::abc::efg::efg_test [..]
+        [FAIL] fibonacci_tests_tests::abc::efg::failing_test
         
         Failure data:
             0x0 ('')
@@ -262,7 +262,7 @@ fn root_workspace_for_entire_workspace() {
         Tests: 1 passed, 2 failed, 0 ignored, 0 filtered out
         
         Failures:
-            fibonacci_tests::abc::efg::failing_test
+            fibonacci_tests_tests::abc::efg::failing_test
             hello_workspaces_tests_integrationtest::test_failing::test_failing
             hello_workspaces_tests_integrationtest::test_failing::test_another_failing
         
@@ -276,7 +276,7 @@ fn root_workspace_for_entire_workspace_inside_package() {
     let temp = setup_hello_workspace();
 
     let output = test_runner(&temp)
-        .current_dir(temp.join("crates/fibonacci"))
+        .current_dir(temp.join("crates/fibonacci_tests"))
         .arg("--workspace")
         .assert()
         .code(1);
@@ -303,15 +303,15 @@ fn root_workspace_for_entire_workspace_inside_package() {
         Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
         
         
-        Collected 6 test(s) from fibonacci package
+        Collected 6 test(s) from fibonacci_tests package
         Running 2 test(s) from src/
-        [PASS] fibonacci::tests::it_works [..]
-        [PASS] fibonacci::tests::contract_test [..]
+        [PASS] fibonacci_tests::tests::it_works [..]
+        [PASS] fibonacci_tests::tests::contract_test [..]
         Running 4 test(s) from tests/
-        [PASS] fibonacci_tests::lib_test [..]
-        [PASS] fibonacci_tests::abc::abc_test [..]
-        [PASS] fibonacci_tests::abc::efg::efg_test [..]
-        [FAIL] fibonacci_tests::abc::efg::failing_test
+        [PASS] fibonacci_tests_tests::lib_test [..]
+        [PASS] fibonacci_tests_tests::abc::abc_test [..]
+        [PASS] fibonacci_tests_tests::abc::efg::efg_test [..]
+        [FAIL] fibonacci_tests_tests::abc::efg::failing_test
         
         Failure data:
             0x0 ('')
@@ -336,7 +336,7 @@ fn root_workspace_for_entire_workspace_inside_package() {
         Tests: 1 passed, 2 failed, 0 ignored, 0 filtered out
         
         Failures:
-            fibonacci_tests::abc::efg::failing_test
+            fibonacci_tests_tests::abc::efg::failing_test
             hello_workspaces_tests_integrationtest::test_failing::test_failing
             hello_workspaces_tests_integrationtest::test_failing::test_another_failing
 
@@ -691,7 +691,7 @@ fn root_workspace_for_entire_workspace_with_filter() {
         Tests: 1 passed, 0 failed, 0 ignored, 4 filtered out
         
         
-        Collected 0 test(s) from fibonacci package
+        Collected 0 test(s) from fibonacci_tests package
         Running 0 test(s) from src/
         Running 0 test(s) from tests/
         Tests: 0 passed, 0 failed, 0 ignored, 6 filtered out
@@ -747,7 +747,7 @@ fn root_workspace_multiple_package_arguments() {
     let temp = setup_hello_workspace();
 
     let result = test_runner(&temp)
-        .args(["--package", "addition_tests", "--package", "fibonacci"])
+        .args(["--package", "addition_tests", "--package", "fibonacci_tests"])
         .assert()
         .code(1);
 
@@ -771,15 +771,15 @@ fn root_workspace_multiple_package_arguments() {
         Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
         
         
-        Collected 6 test(s) from fibonacci package
+        Collected 6 test(s) from fibonacci_tests package
         Running 2 test(s) from src/
-        [PASS] fibonacci::tests::it_works [..]
-        [PASS] fibonacci::tests::contract_test [..]
+        [PASS] fibonacci_tests::tests::it_works [..]
+        [PASS] fibonacci_tests::tests::contract_test [..]
         Running 4 test(s) from tests/
-        [PASS] fibonacci_tests::lib_test [..]
-        [PASS] fibonacci_tests::abc::abc_test [..]
-        [PASS] fibonacci_tests::abc::efg::efg_test [..]
-        [FAIL] fibonacci_tests::abc::efg::failing_test
+        [PASS] fibonacci_tests_tests::lib_test [..]
+        [PASS] fibonacci_tests_tests::abc::abc_test [..]
+        [PASS] fibonacci_tests_tests::abc::efg::efg_test [..]
+        [FAIL] fibonacci_tests_tests::abc::efg::failing_test
         
         Failure data:
             0x0 ('')
@@ -787,7 +787,7 @@ fn root_workspace_multiple_package_arguments() {
         Tests: 5 passed, 1 failed, 0 ignored, 0 filtered out
         
         Failures:
-            fibonacci_tests::abc::efg::failing_test
+            fibonacci_tests_tests::abc::efg::failing_test
         
         Tests summary: 10 passed, 1 failed, 0 ignored, 0 filtered out
         "},
@@ -876,7 +876,7 @@ fn root_workspace_for_entire_workspace_with_exact() {
         Tests: 0 passed, 0 failed, 0 ignored, other filtered out
         
         
-        Collected 0 test(s) from fibonacci package
+        Collected 0 test(s) from fibonacci_tests package
         Running 0 test(s) from src/
         Running 0 test(s) from tests/
         Tests: 0 passed, 0 failed, 0 ignored, other filtered out
