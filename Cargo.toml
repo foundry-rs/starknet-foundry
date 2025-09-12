@@ -30,9 +30,10 @@ license = "MIT"
 license-file = "LICENSE"
 
 [workspace.dependencies]
-blockifier = { git = "https://github.com/cptartur/sequencer.git", branch = "main-v0.14.0-fork", features = ["testing", "tracing", "cairo_native"] }
+# TODO do not use fork here, after apollo-compile-to-native dependency problem is resolved
+blockifier = { git = "https://github.com/cptartur/sequencer.git", branch = "main-v0.14.0-fork-fix", features = ["testing", "tracing", "cairo_native"] }
 bigdecimal = "0.4.8"
-starknet_api = { git = "https://github.com/cptartur/sequencer.git", branch = "main-v0.14.0-fork" }
+starknet_api = { git = "https://github.com/cptartur/sequencer.git", branch = "main-v0.14.0-fork-fix" }
 cairo-native = { git = "https://github.com/lambdaclass/cairo_native.git", rev = "d7f8352657a4c1228b227807b90aea10f97f746d" }
 cairo-lang-casm = { version = "2.12.0", features = ["serde"] }
 cairo-lang-sierra = "2.12.0"
