@@ -1,7 +1,19 @@
 [build]
 pre-build = [
-    "apt-get update && apt-get --assume-yes install llvm-19 llvm-19-dev llvm-19-runtime clang-19 clang-tools-19 lld-19 libpolly-19-dev libmlir-19-dev mlir-19-tools",
-    "export MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
-    "export LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
-    "export TABLEGEN_190_PREFIX=/usr/lib/llvm-19"
+    "dpkg --add-architecture $CROSS_DEB_ARCH",
+    "apt-get update",
+    "apt-get install -y --no-install-recommends ca-certificates gnupg wget software-properties-common lsb-release",
+    "apt-get install -y --no-install-recommends zlib1g-dev libzstd-dev zlib1g-dev:$CROSS_DEB_ARCH libzstd-dev:$CROSS_DEB_ARCH",
+    "echo \"deb http://apt.llvm.org/focal/ llvm-toolchain-focal-19 main\" > /etc/apt/sources.list.d/llvm-toolchain-focal.list",
+    "echo \"deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-19 main\" >> /etc/apt/sources.list.d/llvm-toolchain-focal.list",
+    "wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -",
+    "apt-get update",
+    "apt-get install -y --no-install-recommends llvm-19 llvm-19-dev llvm-19-runtime clang-19 clang-tools-19 lld-19 libpolly-19-dev libmlir-19-dev mlir-19-tools",
+]
+
+[target.x86_64-unknown-linux-gnu.env]
+passthrough = [
+    "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19",
+    "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19",
+    "TABLEGEN_190_PREFIX=/usr/lib/llvm-19",
 ]
