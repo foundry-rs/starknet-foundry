@@ -222,6 +222,45 @@ fn works_with_fuzzer() {
 }
 
 #[test]
+fn works_with_fuzzer_before_test() {
+    let fuzzer_args = quote!((runs: 123, seed: 321));
+    let fuzzer_res = fuzzer(fuzzer_args, empty_function());
+    assert_diagnostics(&fuzzer_res, &[]);
+
+    let t_args = TokenStream::empty();
+    let item = get_function(&fuzzer_res.token_stream, "empty_fn", false);
+    let result = test(t_args, item);
+
+    assert_diagnostics(&result, &[]);
+
+    assert_output(
+        &result,
+        r"
+            #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+            #[snforge_internal_test_executable]
+            fn empty_fn__test_generated(mut _data: Span<felt252>) -> Span::<felt252> {
+                core::internal::require_implicit::<System>();
+                core::internal::revoke_ap_tracking();
+                core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
+
+                core::option::OptionTraitImpl::expect(
+                    core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
+                );
+                empty_fn__fuzzer_generated();
+
+                let mut arr = ArrayTrait::new();
+                core::array::ArrayTrait::span(@arr)
+            }
+
+            #[__fuzzer_config(runs: 123, seed: 321)]
+            #[__fuzzer_wrapper]
+            #[__internal_config_statement]
+            fn empty_fn() {}
+        ",
+    );
+}
+
+#[test]
 #[expect(clippy::too_many_lines)]
 fn works_with_fuzzer_config_wrapper() {
     let item = quote!(
