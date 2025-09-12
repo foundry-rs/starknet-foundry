@@ -1,5 +1,5 @@
 [package]
-name = "addition"
+name = "addition_tests"
 version.workspace = true
 edition = "2024_07"
 

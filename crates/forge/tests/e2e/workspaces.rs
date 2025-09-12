@@ -43,7 +43,7 @@ fn root_workspace_specific_package() {
     let temp = setup_hello_workspace();
 
     let output = test_runner(&temp)
-        .args(["--package", "addition"])
+        .args(["--package", "addition_tests"])
         .assert()
         .success();
 
@@ -55,14 +55,14 @@ fn root_workspace_specific_package() {
         [..]Finished[..]
 
 
-        Collected 5 test(s) from addition package
+        Collected 5 test(s) from addition_tests package
         Running 1 test(s) from src/
-        [PASS] addition::tests::it_works [..]
+        [PASS] addition_tests::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] addition_integrationtest::nested::simple_case [..]
-        [PASS] addition_integrationtest::nested::contract_test [..]
-        [PASS] addition_integrationtest::nested::test_nested::test_two [..]
-        [PASS] addition_integrationtest::nested::test_nested::test_two_and_two [..]
+        [PASS] addition_tests_integrationtest::nested::simple_case [..]
+        [PASS] addition_tests_integrationtest::nested::contract_test [..]
+        [PASS] addition_tests_integrationtest::nested::test_nested::test_two [..]
+        [PASS] addition_tests_integrationtest::nested::test_nested::test_two_and_two [..]
         Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
         "},
     );
@@ -111,7 +111,7 @@ fn root_workspace_specific_package_and_name() {
     let temp = setup_hello_workspace();
 
     let output = test_runner(&temp)
-        .args(["simple", "--package", "addition"])
+        .args(["simple", "--package", "addition_tests"])
         .assert()
         .success();
 
@@ -123,10 +123,10 @@ fn root_workspace_specific_package_and_name() {
         [..]Finished[..]
 
 
-        Collected 1 test(s) from addition package
+        Collected 1 test(s) from addition_tests package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] addition_integrationtest::nested::simple_case [..]
+        [PASS] addition_tests_integrationtest::nested::simple_case [..]
         Tests: 1 passed, 0 failed, 0 ignored, 4 filtered out
         "},
     );
@@ -176,7 +176,7 @@ fn root_workspace_inside_nested_package() {
     let temp = setup_hello_workspace();
 
     let output = test_runner(&temp)
-        .current_dir(temp.join("crates/addition"))
+        .current_dir(temp.join("crates/addition_tests"))
         .assert()
         .success();
 
@@ -188,14 +188,14 @@ fn root_workspace_inside_nested_package() {
         [..]Finished[..]
 
 
-        Collected 5 test(s) from addition package
+        Collected 5 test(s) from addition_tests package
         Running 1 test(s) from src/
-        [PASS] addition::tests::it_works [..]
+        [PASS] addition_tests::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] addition_integrationtest::nested::simple_case [..]
-        [PASS] addition_integrationtest::nested::contract_test [..]
-        [PASS] addition_integrationtest::nested::test_nested::test_two [..]
-        [PASS] addition_integrationtest::nested::test_nested::test_two_and_two [..]
+        [PASS] addition_tests_integrationtest::nested::simple_case [..]
+        [PASS] addition_tests_integrationtest::nested::contract_test [..]
+        [PASS] addition_tests_integrationtest::nested::test_nested::test_two [..]
+        [PASS] addition_tests_integrationtest::nested::test_nested::test_two_and_two [..]
         Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
         "},
     );
@@ -218,14 +218,14 @@ fn root_workspace_for_entire_workspace() {
         [..]Finished[..]
         
         
-        Collected 5 test(s) from addition package
+        Collected 5 test(s) from addition_tests package
         Running 1 test(s) from src/
-        [PASS] addition::tests::it_works [..]
+        [PASS] addition_tests::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] addition_integrationtest::nested::simple_case [..]
-        [PASS] addition_integrationtest::nested::contract_test [..]
-        [PASS] addition_integrationtest::nested::test_nested::test_two [..]
-        [PASS] addition_integrationtest::nested::test_nested::test_two_and_two [..]
+        [PASS] addition_tests_integrationtest::nested::simple_case [..]
+        [PASS] addition_tests_integrationtest::nested::contract_test [..]
+        [PASS] addition_tests_integrationtest::nested::test_nested::test_two [..]
+        [PASS] addition_tests_integrationtest::nested::test_nested::test_two_and_two [..]
         Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
         
         
@@ -292,14 +292,14 @@ fn root_workspace_for_entire_workspace_inside_package() {
         [..]Finished[..]
         
         
-        Collected 5 test(s) from addition package
+        Collected 5 test(s) from addition_tests package
         Running 1 test(s) from src/
-        [PASS] addition::tests::it_works [..]
+        [PASS] addition_tests::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] addition_integrationtest::nested::simple_case [..]
-        [PASS] addition_integrationtest::nested::contract_test [..]
-        [PASS] addition_integrationtest::nested::test_nested::test_two [..]
-        [PASS] addition_integrationtest::nested::test_nested::test_two_and_two [..]
+        [PASS] addition_tests_integrationtest::nested::simple_case [..]
+        [PASS] addition_tests_integrationtest::nested::contract_test [..]
+        [PASS] addition_tests_integrationtest::nested::test_nested::test_two [..]
+        [PASS] addition_tests_integrationtest::nested::test_nested::test_two_and_two [..]
         Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
         
         
@@ -350,7 +350,7 @@ fn root_workspace_for_entire_workspace_and_specific_package() {
     let temp = setup_hello_workspace();
 
     let result = test_runner(&temp)
-        .args(["--workspace", "--package", "addition"])
+        .args(["--workspace", "--package", "addition_tests"])
         .assert()
         .code(2);
 
@@ -684,10 +684,10 @@ fn root_workspace_for_entire_workspace_with_filter() {
         [..]Finished[..]
         
         
-        Collected 1 test(s) from addition package
+        Collected 1 test(s) from addition_tests package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] addition_integrationtest::nested::simple_case [..]
+        [PASS] addition_tests_integrationtest::nested::simple_case [..]
         Tests: 1 passed, 0 failed, 0 ignored, 4 filtered out
         
         
@@ -747,7 +747,7 @@ fn root_workspace_multiple_package_arguments() {
     let temp = setup_hello_workspace();
 
     let result = test_runner(&temp)
-        .args(["--package", "addition", "--package", "fibonacci"])
+        .args(["--package", "addition_tests", "--package", "fibonacci"])
         .assert()
         .code(1);
 
@@ -760,14 +760,14 @@ fn root_workspace_multiple_package_arguments() {
         [..]Finished[..]
         
         
-        Collected 5 test(s) from addition package
+        Collected 5 test(s) from addition_tests package
         Running 1 test(s) from src/
-        [PASS] addition::tests::it_works [..]
+        [PASS] addition_tests::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] addition_integrationtest::nested::simple_case [..]
-        [PASS] addition_integrationtest::nested::contract_test [..]
-        [PASS] addition_integrationtest::nested::test_nested::test_two [..]
-        [PASS] addition_integrationtest::nested::test_nested::test_two_and_two [..]
+        [PASS] addition_tests_integrationtest::nested::simple_case [..]
+        [PASS] addition_tests_integrationtest::nested::contract_test [..]
+        [PASS] addition_tests_integrationtest::nested::test_nested::test_two [..]
+        [PASS] addition_tests_integrationtest::nested::test_nested::test_two_and_two [..]
         Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
         
         
@@ -870,7 +870,7 @@ fn root_workspace_for_entire_workspace_with_exact() {
         [..]Finished[..]
         
         
-        Collected 0 test(s) from addition package
+        Collected 0 test(s) from addition_tests package
         Running 0 test(s) from src/
         Running 0 test(s) from tests/
         Tests: 0 passed, 0 failed, 0 ignored, other filtered out
