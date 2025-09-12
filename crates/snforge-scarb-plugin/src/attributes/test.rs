@@ -56,12 +56,11 @@ fn test_internal(
     let func_name = func.declaration(db).name(db).text(db);
 
     let has_fuzzer = has_fuzzer_attribute(db, func);
-    let name = if has_fuzzer {
-        format!("{func_name}__fuzzer_generated")
+    let name_return_wrapper = if has_fuzzer {
+        format_ident!("{func_name}__fuzzer_generated")
     } else {
-        func_name.to_string().clone()
+        format_ident!("{}", name)
     };
-    let name_return_wrapper = format_ident!("{}", name);
 
     let signature = func.declaration(db).signature(db).as_syntax_node();
     let signature = SyntaxNodeWithDb::new(&signature, db);
@@ -73,7 +72,7 @@ fn test_internal(
     let attributes = func.attributes(db).as_syntax_node();
     let attributes = SyntaxNodeWithDb::new(&attributes, db);
 
-    let name = format_ident!("{}__test_generated", func.declaration(db).name(db).text(db));
+    let name = format_ident!("{}__test_generated", func_name);
     let mut func_ident = TokenStream::new(vec![format_ident!("{}", func_name)]);
     func_ident.extend(signature);
 

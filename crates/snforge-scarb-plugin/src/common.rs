@@ -62,7 +62,11 @@ where
     handler(db, &func, args_db, args, warns)
 }
 
-fn has_attributes(db: &SimpleParserDatabase, func: &FunctionWithBody, attr_names: &[&str]) -> bool {
+fn has_any_attribute(
+    db: &SimpleParserDatabase,
+    func: &FunctionWithBody,
+    attr_names: &[&str],
+) -> bool {
     func.attributes(db).elements(db).any(|attr| {
         attr_names.contains(
             &attr
@@ -80,5 +84,5 @@ pub fn has_fuzzer_attribute(db: &SimpleParserDatabase, func: &FunctionWithBody) 
         FuzzerWrapperCollector::ATTR_NAME,
         FuzzerConfigCollector::ATTR_NAME,
     ];
-    has_attributes(db, func, &FUZZER_ATTRIBUTES)
+    has_any_attribute(db, func, &FUZZER_ATTRIBUTES)
 }
