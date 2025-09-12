@@ -8,6 +8,7 @@ mod cheat_tx_info;
 mod common;
 mod events;
 mod get_class_hash;
+mod meta_tx_v0;
 mod mock;
 mod panic_call;
 mod replace_bytecode;

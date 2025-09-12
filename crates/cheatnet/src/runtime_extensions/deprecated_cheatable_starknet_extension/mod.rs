@@ -63,6 +63,7 @@ pub type DeprecatedCheatableStarknetRuntime<'a> =
 impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtension<'a> {
     type Runtime = DeprecatedStarknetRuntime<'a>;
 
+    #[allow(clippy::too_many_lines)]
     fn override_system_call(
         &mut self,
         selector: SyscallSelector,
@@ -71,6 +72,10 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
     ) -> Result<SyscallHandlingResult, HintError> {
         let syscall_handler = &mut extended_runtime.hint_handler;
         let contract_address = syscall_handler.storage_address;
+
+        // Warning: Do not add a default (`_`) arm here.
+        // This match must remain exhaustive so that if a new syscall is introduced,
+        // we will explicitly add support for it.
         match selector {
             SyscallSelector::GetCallerAddress => {
                 if let Some(caller_address) = self
@@ -176,7 +181,33 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
                 self.execute_syscall(vm, deploy, syscall_handler)?;
                 Ok(SyscallHandlingResult::Handled)
             }
-            _ => Ok(SyscallHandlingResult::Forwarded),
+            SyscallSelector::DelegateL1Handler
+            | SyscallSelector::EmitEvent
+            | SyscallSelector::GetBlockHash
+            | SyscallSelector::GetClassHashAt
+            | SyscallSelector::GetContractAddress
+            | SyscallSelector::GetExecutionInfo
+            | SyscallSelector::GetTxInfo
+            | SyscallSelector::GetTxSignature
+            | SyscallSelector::Keccak
+            | SyscallSelector::KeccakRound
+            | SyscallSelector::Sha256ProcessBlock
+            | SyscallSelector::LibraryCallL1Handler
+            | SyscallSelector::MetaTxV0
+            | SyscallSelector::ReplaceClass
+            | SyscallSelector::Secp256k1Add
+            | SyscallSelector::Secp256k1GetPointFromX
+            | SyscallSelector::Secp256k1GetXy
+            | SyscallSelector::Secp256k1Mul
+            | SyscallSelector::Secp256k1New
+            | SyscallSelector::Secp256r1Add
+            | SyscallSelector::Secp256r1GetPointFromX
+            | SyscallSelector::Secp256r1GetXy
+            | SyscallSelector::Secp256r1Mul
+            | SyscallSelector::Secp256r1New
+            | SyscallSelector::SendMessageToL1
+            | SyscallSelector::StorageRead
+            | SyscallSelector::StorageWrite => Ok(SyscallHandlingResult::Forwarded),
         }
     }
 
