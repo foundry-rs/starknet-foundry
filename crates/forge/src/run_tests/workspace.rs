@@ -14,6 +14,7 @@ use crate::{
     warn::warn_if_snforge_std_does_not_match_package_version,
 };
 use anyhow::{Context, Result};
+use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
 use foundry_ui::UI;
@@ -27,7 +28,7 @@ use shared::consts::SNFORGE_TEST_FILTER;
 use std::env;
 use std::sync::Arc;
 
-pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus> {
+pub async fn run_for_workspace(mut args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus> {
     match args.color {
         // SAFETY: This runs in a single-threaded environment.
         ColorOption::Always => unsafe { env::set_var("CLICOLOR_FORCE", "1") },
@@ -35,6 +36,8 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         ColorOption::Never => unsafe { env::set_var("CLICOLOR", "0") },
         ColorOption::Auto => (),
     }
+
+    args.tracked_resource = ForgeTrackedResource::SierraGas;
 
     let mut metadata_command = ScarbCommand::metadata();
     if let Some(profile) = &args.scarb_args.profile.specified() {

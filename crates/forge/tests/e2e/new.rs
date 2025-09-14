@@ -131,7 +131,7 @@ fn init_new_project_from_scarb() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_9_1"), ignore)]
+#[cfg_attr(any(not(feature = "scarb_2_9_1"), feature = "run-test-native"), ignore)]
 fn init_new_project_from_scarb_with_snforge_std_deprecated() {
     let temp = tempdir_with_tool_versions().unwrap();
     let tool_version_path = temp.join(".tool-versions");

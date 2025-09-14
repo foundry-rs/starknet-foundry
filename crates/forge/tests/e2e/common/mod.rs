@@ -1,11 +1,10 @@
-use cairo_annotations::trace_data::{
-    CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
-};
-
+#[cfg(not(feature = "run-test-native"))]
+use cairo_annotations::trace_data::*;
 pub mod runner;
 
-pub fn get_trace_from_trace_node(trace_node: &ProfilerCallTraceNode) -> &ProfilerCallTrace {
-    if let ProfilerCallTraceNode::EntryPointCall(trace) = trace_node {
+#[cfg(not(feature = "run-test-native"))]
+pub fn get_trace_from_trace_node(trace_node: &CallTraceNode) -> &CallTraceV1 {
+    if let CallTraceNode::EntryPointCall(trace) = trace_node {
         trace
     } else {
         panic!("Deploy without constructor node was not expected")

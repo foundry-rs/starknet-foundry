@@ -35,7 +35,7 @@ jobs:
         with:
           tool: nextest@0.9.98
       - name: Build and archive tests
-        run: cargo nextest archive --release -p forge --features skip_plugin_checks --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
+        run: cargo nextest archive --release -p forge --features skip_plugin_checks,run-test-native --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v4
         with:
@@ -195,7 +195,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@58146c4184fa6ec5e8aaf02309ab85e35f782ed0 # v1.0.0
       - name: Run Forge Debugging tests
-        run: cargo test --release -p forge --features debugging --test main e2e::debugging
+        run: cargo test --release -p forge --features debugging,run-test-native --test main e2e::debugging
 
   test-forge-scarb-plugin:
     name: Test Forge Scarb Plugin

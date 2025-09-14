@@ -93,7 +93,6 @@ fn get_starknet_artifacts_path(
     path.map(|path| StarknetArtifactsFiles::new(path, vec![]))
 }
 
-#[derive(Default)]
 pub struct CompilationOpts {
     pub use_test_target_contracts: bool,
     pub run_native: bool,
@@ -589,7 +588,10 @@ mod tests {
             target_dir.as_path(),
             package,
             &ui,
-            CompilationOpts::default(),
+            CompilationOpts {
+                use_test_target_contracts: false,
+                run_native: true,
+            },
         )
         .unwrap();
 

@@ -1,4 +1,6 @@
-use super::common::runner::{get_current_branch, get_remote_url, setup_package, test_runner};
+use super::common::runner::{
+    get_current_branch, get_remote_url, setup_package, test_runner, test_runner_native,
+};
 use assert_fs::fixture::{FileWriteStr, PathChild};
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::{AsOutput, assert_stdout, assert_stdout_contains};
@@ -54,7 +56,7 @@ fn simple_package() {
 #[test]
 fn simple_package_native() {
     let temp = setup_package("simple_package");
-    let output = test_runner(&temp).arg("--run-native").assert().code(1);
+    let output = test_runner_native(&temp).assert().code(1);
 
     assert_stdout_contains(
         output,
@@ -1056,6 +1058,10 @@ fn incompatible_snforge_std_version_error() {
 }
 
 #[test]
+#[cfg_attr(
+    feature = "run-test-native",
+    ignore = "Native runner does not support vm resources tracking"
+)]
 fn detailed_resources_flag() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)
@@ -1178,7 +1184,10 @@ fn call_nonexistent_selector() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_9_1"), ignore)]
+#[cfg_attr(
+    any(not(feature = "scarb_2_9_1"), feature = "run-test-native"),
+    ignore = "This test is specific to scarb 2.9.1 and doesn't work with native runner"
+)]
 fn sierra_gas_with_older_scarb() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)
@@ -1275,6 +1284,10 @@ fn exact_printing_mixed() {
 }
 
 #[test]
+#[cfg_attr(
+    feature = "run-test-native",
+    ignore = "Native runner does not support panic backtrace yet"
+)]
 fn dispatchers() {
     let temp = setup_package("dispatchers");
 

@@ -13,6 +13,7 @@ debugging = []
 assert_non_exact_gas = ["test_utils/assert_non_exact_gas"]
 skip_plugin_checks = []
 interact-with-state = []
+run-test-native = []
 
 [dependencies]
 anyhow.workspace = true

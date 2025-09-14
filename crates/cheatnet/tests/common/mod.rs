@@ -90,7 +90,10 @@ pub fn get_contracts() -> ContractsData {
         &target_dir,
         package,
         &ui,
-        CompilationOpts::default(),
+        CompilationOpts {
+            use_test_target_contracts: false,
+            run_native: true,
+        },
     )
     .unwrap();
     ContractsData::try_from(contracts).unwrap()
