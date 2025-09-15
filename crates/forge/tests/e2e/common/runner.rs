@@ -177,7 +177,7 @@ fn replace_node_rpc_url_placeholders(dir_path: &Path) {
 
 pub(crate) fn setup_hello_workspace() -> TempDir {
     let temp = setup_package_with_file_patterns(
-        Package::Path(Utf8PathBuf::from("hello_workspaces_tests")),
+        Package::Path(Utf8PathBuf::from("hello_workspaces2")),
         &["**/*.cairo", "**/*.toml"],
     );
 
@@ -206,7 +206,7 @@ pub(crate) fn setup_hello_workspace() -> TempDir {
                 version = "0.1.0"
                 
                 [package]
-                name = "hello_workspaces_tests"
+                name = "hello_workspaces2"
                 version.workspace = true
                 
                 [scripts]
