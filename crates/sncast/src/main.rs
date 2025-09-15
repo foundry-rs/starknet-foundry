@@ -119,7 +119,7 @@ enum Commands {
     /// Declare a contract
     Declare(Declare),
 
-    /// Declare a contract available in external network
+    /// Declare a contract available on a different network
     DeclareFrom(DeclareFrom),
 
     /// Deploy a contract

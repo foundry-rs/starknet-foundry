@@ -19,9 +19,9 @@ use starknet_types_core::felt::Felt;
 use universal_sierra_compiler_api::{SierraType, compile_sierra};
 
 #[derive(Args)]
-#[command(about = "Declare a contract available on separate network", long_about = None)]
+#[command(about = "Declare a contract available on a different network", long_about = None)]
 pub struct DeclareFrom {
-    /// Class hash of contract declared on separate network
+    /// Class hash of contract declared on a different network
     #[arg(short = 'g', long)]
     pub class_hash: Felt,
 
@@ -116,7 +116,6 @@ pub async fn declare_from(
         &SierraType::Contract,
     )
     .expect("Failed to compile sierra to casm");
-
     let casm: CompiledClass = serde_json::from_str(&casm_json)
         .expect("Failed to deserialize casm JSON into CompiledClass");
 
