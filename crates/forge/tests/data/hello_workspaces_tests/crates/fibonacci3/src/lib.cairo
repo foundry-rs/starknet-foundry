@@ -10,7 +10,7 @@ pub fn fib(a: felt252, b: felt252, n: felt252) -> felt252 {
 #[starknet::contract]
 mod FibonacciContract {
     use addition_tests::add;
-    use fibonacci_tests::fib;
+    use fibonacci3::fib;
 
     #[storage]
     struct Storage {}

@@ -1,5 +1,5 @@
 [package]
-name = "fibonacci_tests"
+name = "fibonacci3"
 version.workspace = true
 edition = "2024_07"
 
