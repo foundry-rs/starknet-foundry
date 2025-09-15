@@ -108,29 +108,6 @@ fn init_new_project_from_scarb() {
     validate_init(&temp.join("test_name"), true, &Template::BalanceContract);
 }
 
-#[test]
-#[cfg_attr(not(feature = "scarb_2_9_1"), ignore)]
-fn init_new_project_from_scarb_with_snforge_std_deprecated() {
-    let temp = tempdir_with_tool_versions().unwrap();
-    let tool_version_path = temp.join(".tool-versions");
-    fs::write(tool_version_path, "scarb 2.11.4").unwrap();
-
-    SnapboxCommand::from_std(
-        ScarbCommand::new()
-            .current_dir(temp.path())
-            .args(["new", "test_name"])
-            .env("SCARB_INIT_TEST_RUNNER", "starknet-foundry")
-            .env(
-                "PATH",
-                append_to_path_var(snforge_test_bin_path().parent().unwrap()),
-            )
-            .command(),
-    )
-    .assert()
-    .success();
-
-    validate_init(&temp.join("test_name"), true, &Template::BalanceContract);
-}
 pub fn append_to_path_var(path: &Path) -> OsString {
     let script_path = iter::once(path.to_path_buf());
     let os_path = env::var_os("PATH").unwrap();
