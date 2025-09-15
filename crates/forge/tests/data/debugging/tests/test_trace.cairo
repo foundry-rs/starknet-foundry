@@ -1,10 +1,10 @@
-use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
-use snforge_std::trace::get_call_trace;
-use snforge_std::{ContractClassTrait, declare};
 use debugging::{
     FailingDispatcher, FailingDispatcherTrait, RecursiveCall, RecursiveCallerDispatcher,
     RecursiveCallerDispatcherTrait,
 };
+use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
+use snforge_std::trace::get_call_trace;
+use snforge_std::{ContractClassTrait, declare};
 
 #[test]
 #[should_panic]
