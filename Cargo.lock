@@ -5891,6 +5891,7 @@ dependencies = [
  "tokio",
  "toml",
  "toml_edit",
+ "universal-sierra-compiler-api",
  "url",
  "walkdir",
  "wiremock",
