@@ -44,7 +44,6 @@ fn test_warning_on_scarb_version_below_recommended() {
         indoc! {r"
     Checking requirements
 
-    ✅ Rust [..]
     ⚠️  Scarb Version 2.10.0 doesn't satisfy minimal recommended [..]
     ✅ Universal Sierra Compiler [..]
     "},
