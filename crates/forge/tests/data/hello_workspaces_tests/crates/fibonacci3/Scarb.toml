@@ -10,7 +10,7 @@ test.workspace = true
 snforge.workspace = true
 
 [dependencies]
-addition_tests = { path = "../addition_tests" }
+addition2 = { path = "../addition2" }
 starknet.workspace = true
 
 [dev-dependencies]
@@ -18,6 +18,6 @@ snforge_std.workspace = true
 
 [[target.starknet-contract]]
 sierra = true
-build-external-contracts = ["addition_tests::AdditionContract"]
+build-external-contracts = ["addition2::AdditionContract"]
 
 [lib]

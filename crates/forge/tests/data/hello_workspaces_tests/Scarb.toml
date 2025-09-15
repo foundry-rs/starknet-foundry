@@ -29,7 +29,7 @@ snforge.workspace = true
 [dependencies]
 starknet.workspace = true
 fibonacci3 = { path = "crates/fibonacci3" }
-addition_tests = { path = "crates/addition_tests" }
+addition2 = { path = "crates/addition2" }
 
 [dev-dependencies]
 snforge_std.workspace = true

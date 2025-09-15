@@ -5,7 +5,7 @@ trait IFibContract<TContractState> {
 
 #[starknet::contract]
 mod FibContract {
-    use addition_tests::add;
+    use addition2::add;
     use fibonacci3::fib;
 
     #[storage]

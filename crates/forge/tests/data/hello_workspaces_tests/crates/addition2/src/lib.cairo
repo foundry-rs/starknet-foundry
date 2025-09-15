@@ -9,7 +9,7 @@ trait IAdditionContract<TContractState> {
 
 #[starknet::contract]
 mod AdditionContract {
-    use addition_tests::add;
+    use addition2::add;
 
     #[storage]
     struct Storage {}
