@@ -42,6 +42,7 @@ const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 10, 0);
 const MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN: Version = Version::new(2, 10, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
 const MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS: Version = Version::new(2, 10, 0);
+// TODO(#3723) Bump `MINIMAL_SNFORGE_STD_VERSION` to 0.50.0 and `MINIMAL_SNFORGE_STD_DEPRECATED_VERSION` to 0.50.0
 const MINIMAL_SNFORGE_STD_VERSION: Version = Version::new(0, 48, 0);
 const MINIMAL_SNFORGE_STD_DEPRECATED_VERSION: Version = Version::new(0, 48, 0);
 pub const MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT: Version = Version::new(2, 12, 0);
