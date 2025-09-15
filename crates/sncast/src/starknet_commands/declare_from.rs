@@ -116,7 +116,6 @@ pub async fn declare_from(
         &SierraType::Contract,
     )
     .expect("Failed to compile sierra to casm");
-
     let casm: CompiledClass = serde_json::from_str(&casm_json)
         .expect("Failed to deserialize casm JSON into CompiledClass");
 
