@@ -1,6 +1,7 @@
 use crate::starknet_commands::declare::declare_with_artifacts;
 use anyhow::{Context, Result};
 use clap::Args;
+use conversions::TryIntoConv;
 use foundry_ui::UI;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::helpers::fee::FeeArgs;
@@ -9,8 +10,8 @@ use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::{SNCastProviderError, StarknetCommandError};
 use sncast::{Network, WaitForTx, get_block_id, get_provider};
 use starknet::accounts::SingleOwnerAccount;
-use starknet::core::types::contract::{AbiEntry, CompiledClass, SierraClass, SierraClassDebugInfo};
-use starknet::core::types::{ContractClass, FlattenedSierraClass};
+use starknet::core::types::ContractClass;
+use starknet::core::types::contract::{CompiledClass, SierraClass};
 use starknet::providers::Provider;
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::signers::LocalWallet;
@@ -63,8 +64,8 @@ impl SourceRpcArgs {
             .context("Either `--source-network` or `--source-url` must be provided")?;
 
         assert!(!url.is_empty(), "url cannot be empty");
-        let provider = get_provider(&url)?;
 
+        let provider = get_provider(&url)?;
         verify_and_warn_if_incompatible_rpc_version(&provider, url, ui).await?;
 
         Ok(provider)
@@ -102,11 +103,12 @@ pub async fn declare_from(
         ContractClass::Sierra(class) => class,
         ContractClass::Legacy(_) => {
             return Err(StarknetCommandError::UnknownError(anyhow::anyhow!(
-                "Declaring from legacy contracts is not supported yet"
+                "Declaring from Cairo 0 (legacy) contracts is not supported"
             )));
         }
     };
-    let sierra = parse_flattened_sierra_class(flattened_sierra)
+    let sierra: SierraClass = flattened_sierra
+        .try_into_()
         .expect("Failed to parse flattened sierra class");
 
     let casm_json: String = compile_sierra(
@@ -129,18 +131,4 @@ pub async fn declare_from(
         ui,
     )
     .await
-}
-
-pub fn parse_flattened_sierra_class(class: FlattenedSierraClass) -> Result<SierraClass> {
-    Ok(SierraClass {
-        sierra_program: class.sierra_program,
-        sierra_program_debug_info: SierraClassDebugInfo {
-            type_names: vec![],
-            libfunc_names: vec![],
-            user_func_names: vec![],
-        },
-        contract_class_version: class.contract_class_version,
-        entry_points_by_type: class.entry_points_by_type,
-        abi: serde_json::from_str::<Vec<AbiEntry>>(&class.abi)?,
-    })
 }
