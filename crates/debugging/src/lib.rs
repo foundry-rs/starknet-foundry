@@ -7,6 +7,5 @@ mod contracts_data_store;
 mod trace;
 mod tree;
 
-pub use contracts_data_store::ContractsDataStore;
 pub use trace::components::{Component, Components};
-pub use trace::types::Trace;
+pub use trace::{context::Context, types::Trace};

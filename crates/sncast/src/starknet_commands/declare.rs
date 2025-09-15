@@ -97,6 +97,7 @@ pub async fn declare(
         l2_gas_price,
         l1_data_gas,
         l1_data_gas_price,
+        tip,
     } = fee_settings.expect("Failed to convert to fee settings");
 
     let declaration = apply_optional_fields!(
@@ -107,6 +108,7 @@ pub async fn declare(
         l2_gas_price => DeclarationV3::l2_gas_price,
         l1_data_gas => DeclarationV3::l1_data_gas,
         l1_data_gas_price => DeclarationV3::l1_data_gas_price,
+        tip => DeclarationV3::tip,
         declare.nonce => DeclarationV3::nonce
     );
 

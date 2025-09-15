@@ -10,7 +10,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execut
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
-use blockifier::execution::call_info::OrderedL2ToL1Message;
+use blockifier::execution::call_info::{OrderedEvent, OrderedL2ToL1Message};
 use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
@@ -219,6 +219,8 @@ pub struct CallTrace {
     pub used_syscalls_sierra_gas: SyscallUsageMap,
     pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
     pub gas_consumed: u64,
+    pub events: Vec<OrderedEvent>,
+    pub signature: Vec<Felt>,
 }
 
 impl CairoSerialize for CallTrace {
@@ -249,6 +251,8 @@ impl CallTrace {
             result: CallResult::Success { ret_data: vec![] },
             vm_trace: None,
             gas_consumed: u64::default(),
+            events: vec![],
+            signature: vec![],
         }
     }
 
@@ -563,6 +567,8 @@ impl TraceData {
         result: CallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
         vm_trace: Option<Vec<RelocatedTraceEntry>>,
+        signature: Vec<Felt>,
+        events: Vec<OrderedEvent>,
     ) {
         let CallStackElement {
             call_trace: last_call,
@@ -582,6 +588,8 @@ impl TraceData {
 
         last_call.result = result;
         last_call.vm_trace = vm_trace;
+        last_call.signature = signature;
+        last_call.events = events;
     }
 
     pub fn add_deploy_without_constructor_node(&mut self) {

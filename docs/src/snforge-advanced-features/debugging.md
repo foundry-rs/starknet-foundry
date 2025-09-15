@@ -148,14 +148,14 @@ to have:
 
 > 📝 **Note**
 >
-> If you are using `scarb nightly-2025-03-27` or later there is a way to improve backtrace for panic in contracts if
+> If you are using scarb 2.12 or later there is a way to improve backtrace for panic in contracts if
 > you set `panic-backtrace = true`
 
 ```toml
 [profile.dev.cairo]
 unstable-add-statements-code-locations-debug-info = true
 unstable-add-statements-functions-debug-info = true
-panic-backtrace = true # only for scarb nightly-2025-03-27 or later
+panic-backtrace = true # only for scarb 2.12 or later
 ```
 
 > 📝 **Note**

@@ -76,7 +76,7 @@ impl Arguments {
     }
 
     #[inline]
-    pub fn unnamed_only<T: AttributeInfo>(&self) -> Result<UnnamedArgs, Diagnostic> {
+    pub fn unnamed_only<T: AttributeInfo>(&self) -> Result<UnnamedArgs<'_>, Diagnostic> {
         if self.shorthand.is_empty() && self.named.is_empty() {
             Ok(UnnamedArgs::new(&self.unnamed))
         } else {
@@ -85,7 +85,7 @@ impl Arguments {
     }
 
     #[inline]
-    pub fn unnamed(&self) -> UnnamedArgs {
+    pub fn unnamed(&self) -> UnnamedArgs<'_> {
         UnnamedArgs::new(&self.unnamed)
     }
 

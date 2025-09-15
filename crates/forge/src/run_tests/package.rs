@@ -107,6 +107,7 @@ impl RunForPackageArgs {
             &forge_config_from_scarb,
             &args.additional_args,
             args.trace_args.clone(),
+            args.experimental_oracles,
         ));
 
         let test_filter = TestsFilter::from_flags(

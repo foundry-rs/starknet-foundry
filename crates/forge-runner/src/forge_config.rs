@@ -26,6 +26,7 @@ pub struct TestRunnerConfig {
     pub contracts_data: ContractsData,
     pub environment_variables: HashMap<String, String>,
     pub tracked_resource: ForgeTrackedResource,
+    pub experimental_oracles: bool,
 }
 
 #[derive(Debug, PartialEq)]
@@ -89,6 +90,7 @@ pub struct RuntimeConfig<'a> {
     pub contracts_data: &'a ContractsData,
     pub environment_variables: &'a HashMap<String, String>,
     pub tracked_resource: &'a ForgeTrackedResource,
+    pub experimental_oracles: bool,
 }
 
 impl<'a> RuntimeConfig<'a> {
@@ -101,6 +103,7 @@ impl<'a> RuntimeConfig<'a> {
             contracts_data: &value.contracts_data,
             environment_variables: &value.environment_variables,
             tracked_resource: &value.tracked_resource,
+            experimental_oracles: value.experimental_oracles,
         }
     }
 }

@@ -420,7 +420,16 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             Ok(())
         }
 
-        Commands::Utils(utils) => utils::utils(utils, config, ui).await,
+        Commands::Utils(utils) => {
+            utils::utils(
+                utils,
+                config,
+                ui,
+                cli.json,
+                cli.profile.clone().unwrap_or("release".to_string()),
+            )
+            .await
+        }
 
         Commands::Multicall(multicall) => {
             multicall::multicall(multicall, config, ui, wait_config).await
