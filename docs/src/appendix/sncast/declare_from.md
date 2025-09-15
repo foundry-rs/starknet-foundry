@@ -1,5 +1,5 @@
 # `declare`
-Declare a contract available on a separate network
+Declare a contract available on a different network
 
 ## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
 
@@ -8,7 +8,7 @@ Declare a contract available on a separate network
 ## `--class-hash, -c <CLASS_HASH>`
 Required.
 
-Class hash of contract declared on a separate network.
+Class hash of contract declared on a different network.
 
 ## `--url, -u <RPC_URL>`
 Optional.

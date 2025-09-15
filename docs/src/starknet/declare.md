@@ -53,7 +53,7 @@ transaction: https://starkscan.co/search/[..]
 > 💡 **Info**
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
 
-# Declaring Contract Available on a Separate Network
+# Declaring Contract Available on a Different Network
 
 In some cases, you may need to declare a contract that was already compiled elsewhere and reuse the exact same class hash across multiple networks.
 This is especially important for some contracts, e.g. Universal Deployer Contract (UDC), which must preserve the same class hash across mainnet, testnets, and appchains.
