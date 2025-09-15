@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+#### Changed
+
+- Minimal supported `Scarb` version is now `2.10.0` (updated from `2.9.1`)
+
+#### Removed
+
+- The deprecated command `snforge init`. Use `snforge new` to initialize new `Forge` projects
+
 ## [0.49.0] - 2025-09-03
 
 ### Forge
@@ -78,10 +86,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - Passing a cheatcode span of 0 was incorrectly treated as `CheatSpan::Indefinite`. This is now resolved by making `CheatSpan::TargetCalls` accept `NonZero<usize>` instead of just `usize` in `snforge_std`.
-
-#### Removed
-
-- The deprecated command `snforge init`. Use `snforge new` to initialize new `Forge` projects
 
 ### Cast
 
