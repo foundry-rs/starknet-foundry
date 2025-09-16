@@ -35,9 +35,7 @@ fn test_case_handler(
         warns,
         |func_db, func, args_db, arguments, _warns| {
             let unnamed_args = arguments.unnamed();
-
-            ensure_params_present(func, func_db)?;
-            ensure_args_count_valid(func, &unnamed_args, func_db)?;
+            ensure_params_valid(func, &arguments.unnamed(), func_db)?;
 
             let func_name = func.declaration(func_db).name(func_db).text(func_db);
             let case_fn_name = test_case_name(&func_name, &arguments, args_db)?;
@@ -95,8 +93,9 @@ fn test_case_handler(
     )
 }
 
-fn ensure_params_present(
+fn ensure_params_valid(
     func: &FunctionWithBody,
+    unnamed_args: &UnnamedArgs,
     db: &SimpleParserDatabase,
 ) -> Result<(), Diagnostics> {
     let param_count = func
@@ -111,20 +110,6 @@ fn ensure_params_present(
             "The function must have at least one parameter to use #[test_case] attribute",
         )));
     }
-    Ok(())
-}
-
-fn ensure_args_count_valid(
-    func: &FunctionWithBody,
-    unnamed_args: &UnnamedArgs,
-    db: &SimpleParserDatabase,
-) -> Result<(), Diagnostics> {
-    let param_count = func
-        .declaration(db)
-        .signature(db)
-        .parameters(db)
-        .elements(db)
-        .len();
 
     if param_count != unnamed_args.len() {
         return Err(Diagnostics::from(TestCaseCollector::error(format!(
@@ -133,6 +118,7 @@ fn ensure_args_count_valid(
             unnamed_args.len()
         ))));
     }
+
     Ok(())
 }
 
