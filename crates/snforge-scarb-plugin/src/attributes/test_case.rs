@@ -1,3 +1,4 @@
+use crate::args::Arguments;
 use crate::args::unnamed::UnnamedArgs;
 use crate::attributes::test::TestCollector;
 use crate::attributes::test_case::name::test_case_name;
@@ -21,76 +22,72 @@ impl AttributeInfo for TestCaseCollector {
 
 #[must_use]
 pub fn test_case(args: TokenStream, item: TokenStream) -> ProcMacroResult {
-    into_proc_macro_result(args, item, test_case_handler)
+    into_proc_macro_result(args, item, |args, item, warns| {
+        with_parsed_values::<TestCaseCollector>(args, item, warns, test_case_internal)
+    })
 }
 
-fn test_case_handler(
-    args: &TokenStream,
-    item: &TokenStream,
-    warns: &mut Vec<Diagnostic>,
+#[expect(clippy::ptr_arg)]
+#[expect(clippy::needless_pass_by_value)]
+fn test_case_internal(
+    db: &SimpleParserDatabase,
+    func: &FunctionWithBody,
+    args_db: &SimpleParserDatabase,
+    args: Arguments,
+    _warns: &mut Vec<Diagnostic>,
 ) -> Result<TokenStream, Diagnostics> {
-    with_parsed_values::<TestCaseCollector>(
-        args,
-        item,
-        warns,
-        |func_db, func, args_db, arguments, _warns| {
-            let unnamed_args = arguments.unnamed();
-            ensure_params_valid(func, &arguments.unnamed(), func_db)?;
+    let unnamed_args = args.unnamed();
+    ensure_params_valid(func, &args.unnamed(), db)?;
 
-            let func_name = func.declaration(func_db).name(func_db).text(func_db);
-            let case_fn_name = test_case_name(&func_name, &arguments, args_db)?;
-            let filtered_fn_attrs = get_filtered_func_attributes(func, func_db);
+    let func_name = func.declaration(db).name(db).text(db);
+    let case_fn_name = test_case_name(&func_name, &args, args_db)?;
+    let filtered_fn_attrs = get_filtered_func_attributes(func, db);
 
-            let signature = func
-                .declaration(func_db)
-                .signature(func_db)
-                .as_syntax_node();
-            let signature = SyntaxNodeWithDb::new(&signature, func_db);
+    let signature = func.declaration(db).signature(db).as_syntax_node();
+    let signature = SyntaxNodeWithDb::new(&signature, db);
 
-            let func_body = func.body(func_db).as_syntax_node();
-            let func_body = SyntaxNodeWithDb::new(&func_body, func_db);
+    let func_body = func.body(db).as_syntax_node();
+    let func_body = SyntaxNodeWithDb::new(&func_body, db);
 
-            let func_name = format_ident!("{}", func_name);
-            let func = quote!(
-                #filtered_fn_attrs
-                fn #func_name #signature
-                #func_body
+    let func_name = format_ident!("{}", func_name);
+    let func = quote!(
+        #filtered_fn_attrs
+        fn #func_name #signature
+        #func_body
+    );
+
+    let call_args = unnamed_args
+        .clone()
+        .into_iter()
+        .map(|(_, expr)| expr.as_syntax_node().get_text(args_db))
+        .collect::<Vec<_>>()
+        .join(", ")
+        .to_string();
+    let call_args = format_ident!("({})", call_args);
+
+    let case_fn_name = format_ident!("{}", case_fn_name);
+
+    let out_of_gas = create_single_token("'Out of gas'");
+
+    Ok(quote!(
+        #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+        #[snforge_internal_test_executable]
+        fn #case_fn_name(mut _data: Span<felt252>) -> Span::<felt252> {
+            core::internal::require_implicit::<System>();
+            core::internal::revoke_ap_tracking();
+            core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
+
+            core::option::OptionTraitImpl::expect(
+                core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
             );
+            #func_name #call_args;
 
-            let call_args = unnamed_args
-                .clone()
-                .into_iter()
-                .map(|(_, expr)| expr.as_syntax_node().get_text(args_db))
-                .collect::<Vec<_>>()
-                .join(", ")
-                .to_string();
-            let call_args = format_ident!("({})", call_args);
+            let mut arr = ArrayTrait::new();
+            core::array::ArrayTrait::span(@arr)
+        }
 
-            let case_fn_name = format_ident!("{}", case_fn_name);
-
-            let out_of_gas = create_single_token("'Out of gas'");
-
-            Ok(quote!(
-                #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
-                #[snforge_internal_test_executable]
-                fn #case_fn_name(mut _data: Span<felt252>) -> Span::<felt252> {
-                    core::internal::require_implicit::<System>();
-                    core::internal::revoke_ap_tracking();
-                    core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
-
-                    core::option::OptionTraitImpl::expect(
-                        core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
-                    );
-                    #func_name #call_args;
-
-                    let mut arr = ArrayTrait::new();
-                    core::array::ArrayTrait::span(@arr)
-                }
-
-                #func
-            ))
-        },
-    )
+        #func
+    ))
 }
 
 fn ensure_params_valid(
