@@ -29,4 +29,4 @@ enable = true
 level = 0
 
 [preprocessor.variables.variables]
-snforge_std_version = "0.48.0"
+snforge_std_version = "0.49.0"
