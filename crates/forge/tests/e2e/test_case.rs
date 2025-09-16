@@ -75,7 +75,7 @@ fn with_multiple_attributes() {
         [IGNORE] test_case_integrationtest::multiple_attributes::with_ignore_3_4_7
         [IGNORE] test_case_integrationtest::multiple_attributes::with_ignore_1_2_3
         [PASS] test_case_integrationtest::multiple_attributes::with_available_gas_3_4_7 [..]
-        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_3_4_7 [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_3_4 [..]
         [FAIL] test_case_integrationtest::multiple_attributes::with_available_gas_exceed_limit_3_4_7
 
         Failure data:

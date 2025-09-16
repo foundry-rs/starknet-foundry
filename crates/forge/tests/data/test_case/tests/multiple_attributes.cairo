@@ -29,12 +29,11 @@ fn with_should_panic(a: felt252, b: felt252, expected: felt252) {
 }
 
 #[test]
-#[test_case(1, 2, 3)]
-#[test_case(3, 4, 7)]
+#[test_case(1, 2)]
+#[test_case(3, 4)]
 #[fuzzer]
-fn with_fuzzer(a: felt252, b: felt252, expected: felt252) {
-    let result = add(a, b);
-    assert!(result == expected);
+fn with_fuzzer(a: felt252, b: felt252) {
+    add(a, b);
 }
 
 
