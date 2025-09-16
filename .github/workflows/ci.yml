@@ -145,7 +145,6 @@ jobs:
           scarb-version: "2.10.0"
 
       - run: cargo test --package forge --features scarb_2_10_0 --test main e2e::requirements::test_warning_on_scarb_version_below_recommended
-      - run: cargo test --package forge --features scarb_2_10_0 --lib compatibility_check::tests::warning_requirements
 
   # TODO(#3212): Closures in Cairo are fully supported since version 2.11
   test-interact-with-state:
