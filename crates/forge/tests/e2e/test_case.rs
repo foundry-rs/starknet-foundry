@@ -100,3 +100,30 @@ fn with_multiple_attributes() {
         "},
     );
 }
+
+#[test]
+fn addition_with_name_arg() {
+    let temp = setup_package("test_case");
+
+    let output = test_runner(&temp)
+        .arg("addition_with_name_arg")
+        .assert()
+        .code(0);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 3 test(s) from test_case package
+        Running 3 test(s) from tests/
+        [PASS] test_case_integrationtest::single_attribute::addition_with_name_arg_one_and_two [..]
+        [PASS] test_case_integrationtest::single_attribute::addition_with_name_arg_three_and_four [..]
+        [PASS] test_case_integrationtest::single_attribute::addition_with_name_arg_five_and_six [..]
+        Running 0 test(s) from src/
+        Tests: 3 passed, 0 failed, 0 ignored, [..] filtered out
+        "},
+    );
+}
