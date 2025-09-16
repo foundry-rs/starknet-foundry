@@ -87,7 +87,7 @@ fn with_multiple_attributes() {
 
         Failure data:
         	Test cost exceeded the available gas. Consumed [..]
-        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_1_2_3 [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_1_2 [..]
         [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer [..]
         Running 0 test(s) from src/
         Tests: 7 passed, 2 failed, 2 ignored, [..] filtered out
