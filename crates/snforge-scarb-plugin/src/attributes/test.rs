@@ -7,7 +7,7 @@ use crate::{
     common::{into_proc_macro_result, with_parsed_values},
     format_ident,
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, TokenTree, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
 use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode, ast::FunctionWithBody};
@@ -90,62 +90,25 @@ fn test_internal(
     let mut func_ident = TokenStream::new(vec![format_ident!("{}", func_name)]);
     func_ident.extend(signature);
 
-    let out_of_gas = create_single_token("'Out of gas'");
-
     if should_run_test {
-        // Ok(quote!(
-        //     #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
-        //     #[snforge_internal_test_executable]
-        //     fn #test_func_name_ident(mut _data: Span<felt252>) -> Span::<felt252> {
-        //         core::internal::require_implicit::<System>();
-        //         core::internal::revoke_ap_tracking();
-        //         core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
+        let call_args = format_ident!("()");
+        let test_func_with_attrs =
+            test_func_with_attrs(&test_func_name_ident, &called_func_name_ident, &call_args);
 
-        //         core::option::OptionTraitImpl::expect(
-        //             core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
-        //         );
-        //         #called_func_name_ident();
+        Ok(quote!(
+            #test_func_with_attrs
 
-        //         let mut arr = ArrayTrait::new();
-        //         core::array::ArrayTrait::span(@arr)
-        //     }
-
-        //     #attributes
-        //     #[#internal_config]
-        //     fn #func_ident
-        //     #body
-        // ))
-        let fn_call_ident = quote! { #called_func_name_ident() };
-        Ok(test_quote(func_ident, fn_call_ident))
+            #attributes
+            #[#internal_config]
+            fn #func_ident
+            #body
+        ))
     } else {
         Ok(quote!(
             #[#internal_config]
             #func_item
         ))
     }
-}
-
-pub fn test_quote(fn_name_ident: TokenStream, fn_call: TokenStream) -> TokenStream {
-    let out_of_gas = create_single_token("'Out of gas'");
-    quote!(
-        #[implicit_precedence(
-            core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp,
-            core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96,
-            core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System
-        )]
-        #[snforge_internal_test_executable]
-        fn #fn_name_ident(mut _data: Span<felt252>) -> Span::<felt252> {
-            core::internal::require_implicit::<System>();
-            core::internal::revoke_ap_tracking();
-            core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
-            core::option::OptionTraitImpl::expect(
-                core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
-            );
-            #fn_call;
-            let mut arr = ArrayTrait::new();
-            core::array::ArrayTrait::span(@arr)
-        }
-    )
 }
 
 fn get_forge_test_filter() -> Result<String, VarError> {
@@ -175,4 +138,33 @@ fn has_parameters(db: &SimpleParserDatabase, func: &FunctionWithBody) -> bool {
         .elements(db)
         .len()
         != 0
+}
+
+#[must_use]
+pub fn test_func_with_attrs(
+    test_fn_name_ident: &TokenTree,
+    fn_name_ident: &TokenTree,
+    call_args: &TokenTree,
+) -> TokenStream {
+    let test_fn_name_ident = test_fn_name_ident.clone();
+    let fn_name_ident = fn_name_ident.clone();
+    let call_args = call_args.clone();
+    let out_of_gas = create_single_token("'Out of gas'");
+    quote!(
+        #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+        #[snforge_internal_test_executable]
+        fn #test_fn_name_ident(mut _data: Span<felt252>) -> Span::<felt252> {
+            core::internal::require_implicit::<System>();
+            core::internal::revoke_ap_tracking();
+            core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
+
+            core::option::OptionTraitImpl::expect(
+                core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
+            );
+            #fn_name_ident #call_args;
+
+            let mut arr = ArrayTrait::new();
+            core::array::ArrayTrait::span(@arr)
+        }
+    )
 }
