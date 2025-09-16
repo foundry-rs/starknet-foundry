@@ -452,7 +452,7 @@ fn test_case() {
 
     assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         error: Plugin diagnostic: #[test_case] The function must have at least one parameter to use #[test_case] attribute
          --> [..]/tests/basic.cairo:2:1
         #[test_case(1, 2, 3)]
@@ -472,6 +472,6 @@ fn test_case() {
         note: this error originates in the attribute macro: `test`
 
         error: could not compile `test_case_integrationtest` due to previous error
-    "#},
+    "},
     );
 }
