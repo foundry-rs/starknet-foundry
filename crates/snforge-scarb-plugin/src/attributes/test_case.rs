@@ -41,7 +41,7 @@ fn test_case_internal(
 
     let func_name = func.declaration(db).name(db).text(db);
     let case_fn_name = test_case_name(&func_name, &args, args_db)?;
-    let filtered_fn_attrs = get_filtered_func_attributes(func, db);
+    let filtered_fn_attrs = collect_attrs_excluding_test_without_fuzzer(func, db);
 
     let signature = func.declaration(db).signature(db).as_syntax_node();
     let signature = SyntaxNodeWithDb::new(&signature, db);
@@ -119,7 +119,7 @@ fn ensure_params_valid(
     Ok(())
 }
 
-fn get_filtered_func_attributes(
+fn collect_attrs_excluding_test_without_fuzzer(
     func: &FunctionWithBody,
     func_db: &SimpleParserDatabase,
 ) -> TokenStream {
