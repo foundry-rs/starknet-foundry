@@ -70,12 +70,11 @@ fn test_internal(
     let func_name = func.declaration(db).name(db).text(db);
 
     let has_fuzzer = has_fuzzer_attribute(db, func);
-    let name = if has_fuzzer {
-        format!("{func_name}__fuzzer_generated")
+    let called_func_name_ident = if has_fuzzer {
+        format_ident!("{func_name}__fuzzer_generated")
     } else {
-        func_name.to_string().clone()
+        format_ident!("{}", name)
     };
-    let name_return_wrapper = format_ident!("{}", name);
 
     let signature = func.declaration(db).signature(db).as_syntax_node();
     let signature = SyntaxNodeWithDb::new(&signature, db);
@@ -87,7 +86,7 @@ fn test_internal(
     let attributes = func.attributes(db).as_syntax_node();
     let attributes = SyntaxNodeWithDb::new(&attributes, db);
 
-    let name = format_ident!("{}__test_generated", func.declaration(db).name(db).text(db));
+    let test_func_name_ident = format_ident!("{}__test_generated", func_name);
     let mut func_ident = TokenStream::new(vec![format_ident!("{}", func_name)]);
     func_ident.extend(signature);
 
@@ -97,7 +96,7 @@ fn test_internal(
         Ok(quote!(
             #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
             #[snforge_internal_test_executable]
-            fn #name(mut _data: Span<felt252>) -> Span::<felt252> {
+            fn #test_func_name_ident(mut _data: Span<felt252>) -> Span::<felt252> {
                 core::internal::require_implicit::<System>();
                 core::internal::revoke_ap_tracking();
                 core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
@@ -105,7 +104,7 @@ fn test_internal(
                 core::option::OptionTraitImpl::expect(
                     core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
                 );
-                #name_return_wrapper();
+                #called_func_name_ident();
 
                 let mut arr = ArrayTrait::new();
                 core::array::ArrayTrait::span(@arr)
