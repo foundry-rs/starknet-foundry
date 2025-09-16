@@ -15,7 +15,6 @@ use semver::Version;
 use shared::auto_completions::{Completions, generate_completions};
 use std::cell::RefCell;
 use std::ffi::OsString;
-use std::process::Command;
 use std::sync::Arc;
 use std::{fs, num::NonZeroU32, thread::available_parallelism};
 use tokio::runtime::Builder;
@@ -25,7 +24,6 @@ pub mod block_number_map;
 mod clean;
 mod combine_configs;
 mod compatibility_check;
-mod init;
 mod new;
 mod profile_validation;
 pub mod run_tests;
@@ -36,12 +34,9 @@ mod warn;
 
 pub const CAIRO_EDITION: &str = "2024_07";
 
-const MINIMAL_RUST_VERSION: Version = Version::new(1, 87, 0);
-const MINIMAL_SCARB_VERSION: Version = Version::new(2, 9, 1);
-const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 10, 0);
-const MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN: Version = Version::new(2, 10, 0);
+const MINIMAL_SCARB_VERSION: Version = Version::new(2, 10, 0);
+const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 10, 1);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
-const MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS: Version = Version::new(2, 10, 0);
 // TODO(#3723) Bump `MINIMAL_SNFORGE_STD_VERSION` to 0.50.0 and `MINIMAL_SNFORGE_STD_DEPRECATED_VERSION` to 0.50.0
 const MINIMAL_SNFORGE_STD_VERSION: Version = Version::new(0, 48, 0);
 const MINIMAL_SNFORGE_STD_DEPRECATED_VERSION: Version = Version::new(0, 48, 0);
@@ -90,11 +85,6 @@ enum ForgeSubcommand {
     Test {
         #[command(flatten)]
         args: TestArgs,
-    },
-    /// Create a new directory with a Forge project
-    Init {
-        /// Name of a new project
-        name: String,
     },
     /// Create a new Forge project at <PATH>
     New {
@@ -278,10 +268,6 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
     let cli = Cli::parse();
 
     match cli.subcommand {
-        ForgeSubcommand::Init { name } => {
-            init::init(name.as_str(), &ui)?;
-            Ok(ExitStatus::Success)
-        }
         ForgeSubcommand::New { args } => {
             new::new(args)?;
             Ok(ExitStatus::Success)
@@ -302,7 +288,7 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Test { args } => {
-            check_requirements(false, args.tracked_resource, &ui)?;
+            check_requirements(false, &ui)?;
             let cores = if let Ok(available_cores) = available_parallelism() {
                 available_cores.get()
             } else {
@@ -318,7 +304,7 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
             rt.block_on(run_for_workspace(args, ui))
         }
         ForgeSubcommand::CheckRequirements => {
-            check_requirements(true, ForgeTrackedResource::default(), &ui)?;
+            check_requirements(true, &ui)?;
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Completions(completions) => {
@@ -339,41 +325,18 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
     }
 }
 
-fn check_requirements(
-    output_on_success: bool,
-    forge_tracked_resource: ForgeTrackedResource,
-    ui: &UI,
-) -> Result<()> {
+fn check_requirements(output_on_success: bool, ui: &UI) -> Result<()> {
     let mut requirements_checker = RequirementsChecker::new(output_on_success);
-    match forge_tracked_resource {
-        ForgeTrackedResource::CairoSteps => {
-            requirements_checker.add_requirement(Requirement {
-                name: "Scarb".to_string(),
-                command: RefCell::new(ScarbCommand::new().arg("--version").command()),
-                minimal_version: MINIMAL_SCARB_VERSION,
-                minimal_recommended_version: Some(MINIMAL_RECOMMENDED_SCARB_VERSION),
-                helper_text:
-                    "Follow instructions from https://docs.swmansion.com/scarb/download.html"
-                        .to_string(),
-                version_parser: create_version_parser(
-                    "Scarb",
-                    r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)",
-                ),
-            });
-        }
-        ForgeTrackedResource::SierraGas => {
-            requirements_checker.add_requirement(Requirement {
-                name: "Scarb".to_string(),
-                command: RefCell::new(ScarbCommand::new().arg("--version").command()),
-                minimal_version: MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS,
-                minimal_recommended_version: None,
-                helper_text: format!("To track sierra gas, minimal required scarb version is {MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS} \
-                (it comes with sierra >= 1.7.0 support)\n\
-                Follow instructions from https://docs.swmansion.com/scarb/download.html"),
-                version_parser: create_version_parser("Scarb", r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)"),
-            });
-        }
-    }
+    requirements_checker.add_requirement(Requirement {
+        name: "Scarb".to_string(),
+        command: RefCell::new(ScarbCommand::new().arg("--version").command()),
+        minimal_version: MINIMAL_SCARB_VERSION,
+        minimal_recommended_version: Some(MINIMAL_RECOMMENDED_SCARB_VERSION),
+        helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
+            .to_string(),
+        version_parser: create_version_parser("Scarb", r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)"),
+    });
+
     requirements_checker.add_requirement(Requirement {
         name: "Universal Sierra Compiler".to_string(),
         command: RefCell::new(UniversalSierraCompilerCommand::new().arg("--version").command()),
@@ -386,29 +349,6 @@ fn check_requirements(
         ),
     });
     requirements_checker.check(ui)?;
-
-    let scarb_version = ScarbCommand::version().run()?.scarb;
-    if scarb_version < MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN {
-        let mut requirements_checker = RequirementsChecker::new(output_on_success);
-        requirements_checker.add_requirement(Requirement {
-            name: "Rust".to_string(),
-            command: RefCell::new({
-                let mut cmd = Command::new("rustc");
-                cmd.arg("--version");
-                cmd
-            }),
-            minimal_version: MINIMAL_RUST_VERSION,
-            minimal_recommended_version: None,
-            version_parser: create_version_parser(
-                "Rust",
-                r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)",
-            ),
-            helper_text: "Follow instructions from https://www.rust-lang.org/tools/install"
-                .to_string(),
-        });
-
-        requirements_checker.check(ui)?;
-    }
 
     Ok(())
 }
