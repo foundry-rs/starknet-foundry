@@ -11,7 +11,7 @@ use crate::runtime_extensions::{
     forge_runtime_extension::cheatcodes::{
         CheatcodeError,
         declare::declare,
-        deploy::{deploy, deploy_at},
+        deploy::deploy_at,
         generate_random_felt::generate_random_felt,
         get_class_hash::get_class_hash,
         l1_handler_execute::l1_handler_execute,
@@ -191,24 +191,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 handle_declare_deploy_result(declare(*state, &contract_name, self.contracts_data))
             }
-            "deploy" => {
-                let class_hash = input_reader.read()?;
-                let calldata: Vec<_> = input_reader.read()?;
-                let cheatnet_runtime = &mut extended_runtime.extended_runtime;
-                let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
-
-                syscall_handler.increment_syscall_count_by(&SyscallSelector::Deploy, 1);
-                syscall_handler
-                    .base
-                    .increment_syscall_linear_factor_by(&SyscallSelector::Deploy, calldata.len());
-
-                handle_declare_deploy_result(deploy(
-                    syscall_handler,
-                    cheatnet_runtime.extension.cheatnet_state,
-                    &class_hash,
-                    &calldata,
-                ))
-            }
             "deploy_at" => {
                 let class_hash = input_reader.read()?;
                 let calldata: Vec<_> = input_reader.read()?;
@@ -240,6 +222,16 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .precalculate_address(&class_hash, &calldata);
 
                 Ok(CheatcodeHandlingResult::from_serializable(contract_address))
+            }
+            // Internal cheat code to guarantee unique salts for each deployment
+            // when deploying via a method of the `ContractClass` struct.
+            "get_salt" => {
+                let state = &mut *extended_runtime.extended_runtime.extension.cheatnet_state;
+
+                let salt = state.get_salt();
+                state.increment_deploy_salt_base();
+
+                Ok(CheatcodeHandlingResult::from_serializable(salt))
             }
             "var" => {
                 let name: String = input_reader.read::<ByteArray>()?.to_string();

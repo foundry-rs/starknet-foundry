@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `snforge` now supports [oracles](https://docs.swmansion.com/cairo-oracle/) with `--experimental-oracles` flag.
 - `--trace-components` flag to allow selecting which components of the trace to do display. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#trace-components)
 
+### Changed
+
+- `deploy` method on `ContractClass` instance now fails immediately upon encountering an error, preventing the error from being caught. This change aligns with the behavior of the `deploy_syscall` on the network
+
 ### Cast
 
 #### Added
