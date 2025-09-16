@@ -4,7 +4,7 @@
 //!  - Compiling Sierra contract classes into `cairo-native` executors.
 
 use cairo_lang_starknet_classes::contract_class::ContractClass;
-use cairo_native::executor::AotContractExecutor;
+use cairo_native::executor::{AotContractExecutor, ContractExecutor};
 use starknet_api::contract_class::SierraVersion;
 
 #[derive(Debug, thiserror::Error)]

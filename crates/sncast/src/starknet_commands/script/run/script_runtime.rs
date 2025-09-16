@@ -15,6 +15,7 @@ use runtime::{SignalPropagator, StarknetRuntime, SyscallPtrAccess};
 use starknet_types_core::felt::Felt;
 use std::any::Any;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 pub struct CastScriptRuntime<'a> {
     pub starknet_runtime: StarknetRuntime<'a>,
@@ -63,7 +64,6 @@ impl HintProcessorLogic for CastScriptRuntime<'_> {
         vm: &mut VirtualMachine,
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt>,
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
 
@@ -102,7 +102,7 @@ impl HintProcessorLogic for CastScriptRuntime<'_> {
             }
             _ => self
                 .starknet_runtime
-                .execute_hint(vm, exec_scopes, hint_data, constants),
+                .execute_hint(vm, exec_scopes, hint_data),
         }
     }
 
@@ -112,9 +112,15 @@ impl HintProcessorLogic for CastScriptRuntime<'_> {
         ap_tracking_data: &ApTracking,
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
+        constants: Rc<HashMap<String, Felt>>,
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        self.starknet_runtime
-            .compile_hint(hint_code, ap_tracking_data, reference_ids, references)
+        self.starknet_runtime.compile_hint(
+            hint_code,
+            ap_tracking_data,
+            reference_ids,
+            references,
+            constants,
+        )
     }
 }
 

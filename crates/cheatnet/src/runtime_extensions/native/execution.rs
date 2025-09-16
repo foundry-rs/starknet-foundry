@@ -18,6 +18,7 @@ use blockifier::state::state_api::State;
 use blockifier::transaction::objects::ExecutionResourcesTraits;
 use blockifier::utils::add_maps;
 use cairo_native::execution_result::{BuiltinStats, ContractExecutionResult};
+use cairo_native::executor::ContractExecutor;
 use cairo_native::utils::BuiltinCosts;
 use cairo_vm::types::builtin_name::BuiltinName;
 use std::collections::HashMap;

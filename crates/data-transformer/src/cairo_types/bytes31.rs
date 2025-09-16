@@ -1,5 +1,4 @@
 use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
-use starknet::core::types::FromStrError;
 use starknet_types_core::felt::Felt;
 use std::str::FromStr;
 
@@ -24,17 +23,13 @@ pub enum ParseBytes31Error {
     Overflow,
 }
 
-impl From<FromStrError> for ParseBytes31Error {
-    fn from(_value: FromStrError) -> Self {
-        ParseBytes31Error::CairoFromStrError
-    }
-}
-
 impl FromStr for CairoBytes31 {
     type Err = ParseBytes31Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let inner = input.parse::<Felt>()?;
+        let inner = input
+            .parse::<Felt>()
+            .map_err(|_| ParseBytes31Error::CairoFromStrError)?;
 
         if inner > CairoBytes31::MAX.inner {
             return Err(ParseBytes31Error::Overflow);

@@ -31,27 +31,27 @@ license-file = "LICENSE"
 
 [workspace.dependencies]
 # TODO do not use fork here, after apollo-compile-to-native dependency problem is resolved
-blockifier = { git = "https://github.com/cptartur/sequencer.git", branch = "main-v0.14.0-fork-fix", features = ["testing", "tracing", "cairo_native"] }
+blockifier = { git = "https://github.com/cptartur/sequencer.git", branch = "09-15-starknet_os_update_to_new_vm_api-fork", features = ["testing", "tracing", "cairo_native"] }
 bigdecimal = "0.4.8"
-starknet_api = { git = "https://github.com/cptartur/sequencer.git", branch = "main-v0.14.0-fork-fix" }
-cairo-native = { git = "https://github.com/lambdaclass/cairo_native.git", rev = "d7f8352657a4c1228b227807b90aea10f97f746d" }
-cairo-lang-casm = { version = "2.12.0", features = ["serde"] }
-cairo-lang-sierra = "2.12.0"
-cairo-lang-utils = "2.12.0"
-cairo-lang-starknet = "2.12.0"
-cairo-lang-filesystem = "2.12.0"
-cairo-lang-diagnostics = "2.12.0"
-cairo-lang-sierra-type-size = "2.12.0"
-cairo-lang-syntax = "2.12.0"
-cairo-lang-test-plugin = "2.12.0"
-cairo-lang-starknet-classes = "2.12.0"
-cairo-lang-parser = "2.12.0"
-cairo-lang-sierra-to-casm = "2.12.0"
-cairo-vm = "=2.3.1"
-cairo-annotations = "0.5.2"
+starknet_api = { git = "https://github.com/cptartur/sequencer.git", branch = "09-15-starknet_os_update_to_new_vm_api-fork" }
+cairo-native = { git = "https://github.com/cptartur/cairo_native.git", branch = "executor-trait" }
+cairo-lang-casm = { version = "2.12.3", features = ["serde"] }
+cairo-lang-sierra = "2.12.3"
+cairo-lang-utils = "2.12.3"
+cairo-lang-starknet = "2.12.3"
+cairo-lang-filesystem = "2.12.3"
+cairo-lang-diagnostics = "2.12.3"
+cairo-lang-sierra-type-size = "2.12.3"
+cairo-lang-syntax = "2.12.3"
+cairo-lang-test-plugin = "2.12.3"
+cairo-lang-starknet-classes = "2.12.3"
+cairo-lang-parser = "2.12.3"
+cairo-lang-sierra-to-casm = "2.12.3"
+cairo-vm = "=2.5.0"
+cairo-annotations = { git = "https://github.com/cptartur/cairo-annotations.git", branch = "bump-cairo-and-types" }
 dirs = "6.0.0"
 dialoguer = "0.11.0"
-starknet-types-core = { version = "0.1.8", features = ["hash", "prime-bigint"] }
+starknet-types-core = { version = "0.2.1", features = ["hash", "prime-bigint"] }
 anyhow = "1.0.97"
 assert_fs = "1.1.2"
 camino = { version = "1.1.9", features = ["serde1"] }
@@ -67,8 +67,8 @@ rayon = "1.10"
 regex = "1.11.1"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "ea064f0b51655e4c7b3d382315f0d83cfa17393b"}
-starknet-crypto = "0.7.4"
+starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "85906137d634c86b07de20fa33071e5cf186ce21"}
+starknet-crypto = "0.8.1"
 tempfile = "3.20.0"
 thiserror = "2.0.12"
 ctor = "0.4.1"
@@ -119,4 +119,4 @@ derive_more = { version = "2.0.1", features = ["display"] }
 paste = "1.0.15"
 strum = "0.27"
 strum_macros = "0.27"
-scarb-oracle-hint-service = { git = "https://github.com/software-mansion/scarb", rev = "210da8dfd0b370f0f1970b33a373f1a7afe6ae33" }
+scarb-oracle-hint-service = { git = "https://github.com/software-mansion/scarb", rev = "5dbb173445a1a5941d5738d9e0dd3c2387b6a766" }
