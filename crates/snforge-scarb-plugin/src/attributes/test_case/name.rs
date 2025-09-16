@@ -45,7 +45,7 @@ fn generate_case_suffix(
     Ok(exprs.join("_"))
 }
 
-pub fn resolve_test_case_name(
+pub fn test_case_name(
     func_name: &str,
     arguments: &Arguments,
     db: &SimpleParserDatabase,
