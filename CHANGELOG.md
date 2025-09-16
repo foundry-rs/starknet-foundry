@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `snforge` now supports [oracles](https://docs.swmansion.com/cairo-oracle/) with `--experimental-oracles` flag.
 - `--trace-components` flag to allow selecting which components of the trace to do display. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#trace-components)
+- `mock_call_when`, `start_mock_call_when`, `stop_mock_call_when` cheatcodes.
 
 ### Cast
 
@@ -362,7 +363,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Rust is no longer required to use `snforge` if using Scarb >= 2.10.0 on supported platforms - precompiled `snforge_scarb_plugin` plugin binaries are now published to [package registry](https://scarbs.xyz) for new versions.
 - Added a suggestion for using the `--max-n-steps` flag when the Cairo VM returns the error: `Could not reach the end of the program. RunResources has no remaining steps`.
-- `mock_call_when`, `start_mock_call_when`, `stop_mock_call_when` cheatcodes.
 
 #### Fixed
 

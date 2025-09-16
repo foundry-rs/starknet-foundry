@@ -1,6 +1,6 @@
 # `mock_call_when`
 
-Cheatcodes mocking contract entry point calls:
+Cheatcodes mocking contract entry point calls based on calldata:
 
 ## `MockCalldata`
 
@@ -37,7 +37,6 @@ See `mock_call_when` for comprehensive definition of how it can be used.
 
 
 ### `stop_mock_call_when`
-
 > `fn stop_mock_call_when(contract_address: ContractAddress, function_selector: felt252, calldata: MockCalldata)`
 
 Cancels the `mock_call_when` / `start_mock_call_when` for the function `function_selector` of a contract at the given addressn with the given calldata
