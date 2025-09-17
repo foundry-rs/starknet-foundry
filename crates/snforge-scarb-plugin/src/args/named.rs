@@ -7,7 +7,7 @@ use std::{
 };
 
 #[derive(Debug, Default, Clone)]
-pub struct NamedArgs(pub HashMap<SmolStr, Vec<Expr>>);
+pub struct NamedArgs(HashMap<SmolStr, Vec<Expr>>);
 
 impl Deref for NamedArgs {
     type Target = HashMap<SmolStr, Vec<Expr>>;
