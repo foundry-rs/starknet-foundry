@@ -16,25 +16,25 @@ You can provide any valid Cairo expressions as arguments.
 Below is a simple example which checks addition of two numbers.
 
 ```rust
-{{#include ../../listings/parametrized_testing/tests/example_basic.cairo}}
+{{#include ../../listings/parametrized_testing_basic/tests/example.cairo}}
 ```
 
 Now run:
 
-<!-- { "package_name": "parametrized_testing" } -->
+<!-- { "package_name": "parametrized_testing_basic" } -->
 ```shell
-$ snforge test test_basic_sum
+$ snforge test
 ```
 
 <details>
 <summary>Output:</summary>
 
 ```shell
-Collected 2 test(s) from parametrized_testing package
+Collected 2 test(s) from parametrized_testing_basic package
 Running 0 test(s) from src/
 Running 2 test(s) from tests/
-[PASS] parametrized_testing_integrationtest::example_basic::test_basic_sum_1_2_3 ([..])
-[PASS] parametrized_testing_integrationtest::example_basic::test_basic_sum_3_4_7 ([..])
+[PASS] parametrized_testing_basic_integrationtest::example::test_sum_1_2_3 ([..])
+[PASS] parametrized_testing_basic_integrationtest::example::test_sum_3_4_7 ([..])
 Tests: 2 passed, 0 failed, 0 ignored, [..] filtered out
 ```
 </details>
@@ -44,50 +44,50 @@ Tests: 2 passed, 0 failed, 0 ignored, [..] filtered out
 
 Each parameterized test gets its own generated name. There are two ways to control it:
 
- - **Unnamed test case** - the name is generated based on the function   name and the arguments provided.
+ - **Unnamed test case** - the name is generated based on the function name and the arguments provided.
 
     ```rust
     #[test_case(1, 2, 3)]
-    fn test_basic_sum(x: felt252, y: felt252, expected: felt252) {
+    fn test_sum(x: felt252, y: felt252, expected: felt252) {
         assert_eq!(sum(x, y), expected);
     }
     ``` 
-    This will generate a test named `test_basic_sum_1_2_3`.
+    This will generate a test named `test_sum_1_2_3`.
 
  - **Named test case** - you can provide a custom name for the test case using the `name` parameter.
 
     ```rust
     #[test_case(name: "one_plus_two", 1, 2, 3)]
-    fn test_basic_sum(x: felt252, y: felt252, expected: felt252) {
+    fn test_sum(x: felt252, y: felt252, expected: felt252) {
         assert_eq!(sum(x, y), expected);
     }
     ```
-    This will generate a test named `test_basic_sum_one_plus_two`.
+    This will generate a test named `test_sum_one_plus_two`.
 
 ## More Complex Example
 
 Now let's look at a more complex example which uses structs as parameters.
 
 ```rust
-{{#include ../../listings/parametrized_testing/tests/example_complex.cairo}}
+{{#include ../../listings/parametrized_testing_complex/tests/example.cairo}}
 ```
 
 Now run:
 
-<!-- { "package_name": "parametrized_testing" } -->
+<!-- { "package_name": "parametrized_testing_complex" } -->
 ```shell
-$ snforge test test_is_adult
+$ snforge test
 ```
 
 <details>
 <summary>Output:</summary>
 
 ```shell
-Collected 3 test(s) from parametrized_testing package
+Collected 3 test(s) from parametrized_testing_complex package
 Running 3 test(s) from tests/
-[PASS] parametrized_testing_integrationtest::example_complex::test_is_adult_user_name_alice_age_20_true ([..])
-[PASS] parametrized_testing_integrationtest::example_complex::test_is_adult_user_name_josh_age_18_true ([..])
-[PASS] parametrized_testing_integrationtest::example_complex::test_is_adult_user_name_bob_age_14_false ([..])
+[PASS] parametrized_testing_complex_integrationtest::example::test_is_adult_user_name_alice_age_20_true ([..])
+[PASS] parametrized_testing_complex_integrationtest::example::test_is_adult_user_name_josh_age_18_true ([..])
+[PASS] parametrized_testing_complex_integrationtest::example::test_is_adult_user_name_bob_age_14_false ([..])
 Running 0 test(s) from src/
 Tests: 3 passed, 0 failed, 0 ignored, [..] filtered out
 ```
@@ -101,23 +101,25 @@ Tests: 3 passed, 0 failed, 0 ignored, [..] filtered out
 Below is an example of a parameterized test that also uses the fuzzer.
 
 ```rust
-{{#include ../../listings/parametrized_testing/tests/example_with_fuzzer.cairo}}
+{{#include ../../listings/parametrized_testing_fuzzer/tests/example.cairo}}
 ```
 
 Now run:
 
-<!-- { "package_name": "parametrized_testing" } -->
+<!-- { "package_name": "parametrized_testing_fuzzer" } -->
 ```shell
-$ snforge test sum_with_fuzzer
+$ snforge test
 ```
 
 <details>
 <summary>Output:</summary>
 
 ```shell
-[PASS] parametrized_testing_integrationtest::example_with_fuzzer::sum_with_fuzzer_1_2_3 ([..])
-[PASS] parametrized_testing_integrationtest::example_with_fuzzer::sum_with_fuzzer_3_4_7 ([..])
-[FAIL] parametrized_testing_integrationtest::example_with_fuzzer::sum_with_fuzzer ([..])
+Collected 3 test(s) from parametrized_testing_fuzzer package
+Running 3 test(s) from tests/
+[PASS] parametrized_testing_fuzzer_integrationtest::example_with_fuzzer::test_sum_1_2_3 ([..])
+[PASS] parametrized_testing_fuzzer_integrationtest::example_with_fuzzer::test_sum_3_4_7 ([..])
+[FAIL] parametrized_testing_fuzzer_integrationtest::example_with_fuzzer::test_sum ([..])
 
 Failure data:
     "assertion `sum(x, y) == expected` failed.
