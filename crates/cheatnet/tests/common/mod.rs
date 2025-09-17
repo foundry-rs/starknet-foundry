@@ -19,9 +19,7 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
 };
 use cheatnet::runtime_extensions::common::create_execute_calldata;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy_at;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
@@ -158,38 +156,6 @@ pub fn deploy(
     );
 
     contract_address
-}
-
-pub fn deploy_at_wrapper(
-    state: &mut dyn State,
-    cheatnet_state: &mut CheatnetState,
-    class_hash: &ClassHash,
-    calldata: &[Felt],
-    contract_address: ContractAddress,
-) -> Result<ContractAddress, CheatcodeError> {
-    let mut entry_point_execution_context = build_context(
-        &cheatnet_state.block_info,
-        None,
-        &TrackedResource::CairoSteps,
-    );
-    let hints = HashMap::new();
-
-    let mut syscall_hint_processor = build_syscall_hint_processor(
-        &CallEntryPoint::default(),
-        state,
-        &mut entry_point_execution_context,
-        &hints,
-    );
-
-    let (contract_address, _retdata) = deploy_at(
-        &mut syscall_hint_processor,
-        cheatnet_state,
-        class_hash,
-        calldata,
-        contract_address,
-    )?;
-
-    Ok(contract_address)
 }
 
 fn deploy_helper(
