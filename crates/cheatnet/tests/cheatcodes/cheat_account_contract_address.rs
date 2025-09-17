@@ -57,6 +57,27 @@ fn cheat_account_contract_address_simple() {
 }
 
 #[test]
+fn cheat_account_contract_address_top() {
+    let mut test_env = TestEnvironment::new();
+
+    let contract_address = test_env.deploy("CheatAccountContractAddressChecker", &[]);
+
+    test_env.start_cheat_account_contract_address(contract_address, 123);
+
+    assert_success(
+        test_env.call_contract(&contract_address, "get_account_contract_address", &[]),
+        &[Felt::from(123)],
+    );
+
+    test_env.stop_cheat_account_contract_address(contract_address);
+
+    assert_success(
+        test_env.call_contract(&contract_address, "get_account_contract_address", &[]),
+        &[Felt::from(0)],
+    );
+}
+
+#[test]
 fn cheat_account_contract_address_simple_with_span() {
     let mut test_env = TestEnvironment::new();
 
@@ -69,27 +90,15 @@ fn cheat_account_contract_address_simple_with_span() {
     );
 
     assert_success(
-        test_env.call_contract(
-            &contract_address,
-            "get_account_contract_address",
-            &[],
-        ),
+        test_env.call_contract(&contract_address, "get_account_contract_address", &[]),
         &[Felt::from(123)],
     );
     assert_success(
-        test_env.call_contract(
-            &contract_address,
-            "get_account_contract_address",
-            &[],
-        ),
+        test_env.call_contract(&contract_address, "get_account_contract_address", &[]),
         &[Felt::from(123)],
     );
     assert_success(
-        test_env.call_contract(
-            &contract_address,
-            "get_account_contract_address",
-            &[],
-        ),
+        test_env.call_contract(&contract_address, "get_account_contract_address", &[]),
         &[Felt::from(0)],
     );
 }
