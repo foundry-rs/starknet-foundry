@@ -1,15 +1,12 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::syscalls::hint_processor::ENTRYPOINT_FAILED_ERROR;
-use blockifier::{
-    execution::execution_utils::update_remaining_gas,
-    execution::{
-        entry_point::{CallEntryPoint, CallType},
-        execution_utils::ReadOnlySegment,
-        syscalls::{
-            hint_processor::{SyscallExecutionError, SyscallHintProcessor, create_retdata_segment},
-            syscall_base::SyscallResult,
-        },
+use blockifier::execution::{
+    entry_point::{CallEntryPoint, CallType},
+    execution_utils::ReadOnlySegment,
+    syscalls::{
+        hint_processor::{SyscallExecutionError, SyscallHintProcessor, create_retdata_segment},
+        syscall_base::SyscallResult,
     },
 };
 use cairo_vm::vm::vm_core::VirtualMachine;
@@ -40,8 +37,8 @@ pub fn execute_inner_call(
         cheatnet_state,
         syscall_handler.base.context,
         true,
+        remaining_gas,
     )?;
-    update_remaining_gas(remaining_gas, &call_info);
     // endregion
 
     let mut raw_retdata = call_info.execution.retdata.0.clone();

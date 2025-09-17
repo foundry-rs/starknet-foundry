@@ -9,6 +9,7 @@ use crate::runtime_extensions::forge_runtime_extension::{get_nested_calls_syscal
 use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
 
 use blockifier::execution::entry_point::{EntryPointRevertInfo, ExecutableCallEntryPoint};
+use blockifier::execution::execution_utils::update_remaining_gas;
 use blockifier::execution::stack_trace::{
     Cairo1RevertHeader, extract_trailing_cairo1_revert_trace,
 };
@@ -59,6 +60,7 @@ pub fn execute_call_entry_point(
     cheatnet_state: &mut CheatnetState,
     context: &mut EntryPointExecutionContext,
     is_revertable: bool,
+    remaining_gas: &mut u64,
 ) -> EntryPointExecutionResult<CallInfo> {
     let cheated_data = if let CallType::Delegate = entry_point.call_type {
         cheatnet_state
@@ -203,6 +205,7 @@ pub fn execute_call_entry_point(
                 vm_trace,
                 cheated_data.tx_info.signature.unwrap_or_default(),
             );
+            update_remaining_gas(remaining_gas, &call_info);
             Ok(call_info)
         }
         Err(EntryPointExecutionErrorWithTrace { source: err, trace }) => {
@@ -381,7 +384,7 @@ pub fn execute_constructor_entry_point(
     context: &mut EntryPointExecutionContext,
     ctor_context: &ConstructorContext,
     calldata: Calldata,
-    remaining_gas: u64,
+    remaining_gas: &mut u64,
 ) -> EntryPointExecutionResult<CallInfo> {
     // Ensure the class is declared (by reading it).
     let contract_class = state.get_compiled_class(ctor_context.class_hash)?;
@@ -395,7 +398,7 @@ pub fn execute_constructor_entry_point(
             context,
             ctor_context,
             calldata,
-            remaining_gas,
+            *remaining_gas,
         );
     };
 
@@ -408,10 +411,17 @@ pub fn execute_constructor_entry_point(
         storage_address: ctor_context.storage_address,
         caller_address: ctor_context.caller_address,
         call_type: CallType::Call,
-        initial_gas: remaining_gas,
+        initial_gas: *remaining_gas,
     };
     // region: Modified blockifier code
-    execute_call_entry_point(&mut constructor_call, state, cheatnet_state, context, false)
+    execute_call_entry_point(
+        &mut constructor_call,
+        state,
+        cheatnet_state,
+        context,
+        false,
+        remaining_gas,
+    )
     // endregion
 }
 
