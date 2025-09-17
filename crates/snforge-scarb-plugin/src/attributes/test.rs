@@ -1,6 +1,7 @@
 use super::{AttributeInfo, ErrorExt, internal_config_statement::InternalConfigStatementCollector};
 use crate::attributes::fuzzer::wrapper::FuzzerWrapperCollector;
 use crate::attributes::fuzzer::{FuzzerCollector, FuzzerConfigCollector};
+use crate::external_inputs::ExternalInput;
 use crate::utils::create_single_token;
 use crate::{
     args::Arguments,
@@ -11,7 +12,6 @@ use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, qu
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
 use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode, ast::FunctionWithBody};
-use std::env::{self, VarError};
 use std::ops::Not;
 
 pub struct TestCollector;
@@ -46,7 +46,7 @@ fn test_internal(
 
     let name = func.declaration(db).name(db).text(db).to_string();
 
-    let test_filter = get_forge_test_filter().ok();
+    let test_filter = ExternalInput::get().forge_test_filter;
 
     let should_run_test = match test_filter {
         Some(ref filter) => name.contains(filter),
@@ -103,10 +103,6 @@ fn test_internal(
             #func_item
         ))
     }
-}
-
-fn get_forge_test_filter() -> Result<String, VarError> {
-    env::var("SNFORGE_TEST_FILTER")
 }
 
 fn ensure_parameters_only_with_fuzzer_attribute(

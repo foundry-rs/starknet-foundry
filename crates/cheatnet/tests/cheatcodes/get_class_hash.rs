@@ -1,7 +1,7 @@
 use crate::common::assertions::ClassHashAssert;
 use crate::common::get_contracts;
 use crate::common::state::create_cached_state;
-use crate::common::{call_contract, deploy_wrapper};
+use crate::common::{call_contract, deploy};
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::get_class_hash::get_class_hash;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::selector_from_name;
@@ -17,8 +17,7 @@ fn get_class_hash_simple() {
     let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data)
         .unwrap()
         .unwrap_success();
-    let contract_address =
-        deploy_wrapper(&mut cached_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
+    let contract_address = deploy(&mut cached_state, &mut cheatnet_state, &class_hash, &[]);
 
     assert_eq!(
         class_hash,
@@ -35,8 +34,7 @@ fn get_class_hash_upgrade() {
     let class_hash = declare(&mut cached_state, "GetClassHashCheckerUpg", &contracts_data)
         .unwrap()
         .unwrap_success();
-    let contract_address =
-        deploy_wrapper(&mut cached_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
+    let contract_address = deploy(&mut cached_state, &mut cheatnet_state, &class_hash, &[]);
 
     assert_eq!(
         class_hash,

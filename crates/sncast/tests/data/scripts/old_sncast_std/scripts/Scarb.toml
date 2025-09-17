@@ -9,6 +9,5 @@ sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag =
 
 [lib]
 sierra = true
-casm = true
 
 [[target.starknet-contract]]
