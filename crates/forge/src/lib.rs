@@ -142,7 +142,7 @@ pub struct TestArgs {
     #[command(flatten)]
     trace_args: TraceArgs,
 
-    /// Run contracts on `cairo-native` instead of the default `cairo-vm`.
+    /// Run contracts on `cairo-native` instead of the default `cairo-vm`. This will set `tracked-resource` to `sierra-gas`.
     ///
     /// Note: Only contracts execution through native is supported, test code itself will still run on `cairo-vm`.
     #[arg(long)]
@@ -175,7 +175,7 @@ pub struct TestArgs {
     include_ignored: bool,
 
     /// Display more detailed info about used resources
-    #[arg(long, conflicts_with = "run_native")]
+    #[arg(long)]
     detailed_resources: bool,
 
     /// Control when colored output is used
@@ -220,6 +220,20 @@ pub struct TestArgs {
 
     #[command(flatten)]
     scarb_args: ScarbArgs,
+}
+
+impl TestArgs {
+    /// Adjust dependent arguments based on related flags.
+    ///
+    /// This function mutates the `TestArgs` instance to enforce logical coherence
+    /// between fields.
+    pub fn normalize(&mut self) {
+        // Force using `SierraGas` as tracked resource when running with `cairo-native`,
+        // as otherwise it would run on vm.
+        if self.run_native {
+            self.tracked_resource = ForgeTrackedResource::SierraGas;
+        }
+    }
 }
 
 #[derive(Parser, Debug)]
@@ -294,7 +308,8 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
 
             Ok(ExitStatus::Success)
         }
-        ForgeSubcommand::Test { args } => {
+        ForgeSubcommand::Test { mut args } => {
+            args.normalize();
             check_requirements(false, &ui)?;
             let cores = if let Ok(available_cores) = available_parallelism() {
                 available_cores.get()

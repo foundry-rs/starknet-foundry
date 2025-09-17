@@ -5,6 +5,7 @@ edition.workspace = true
 
 [features]
 testing = []
+run-native = []
 
 [dependencies]
 anyhow.workspace = true
