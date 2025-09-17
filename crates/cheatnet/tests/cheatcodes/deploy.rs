@@ -1,85 +1,15 @@
 use crate::common::assertions::{ClassHashAssert, assert_success};
 use crate::common::state::create_cached_state;
 use crate::common::{call_contract, deploy_at_wrapper, deploy_contract, get_contracts};
-use cairo_vm::vm::errors::hint_errors::HintError;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
 };
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::selector_from_name;
 use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
-use runtime::EnhancedHintError;
 use starknet_api::core::ContractAddress;
 use starknet_types_core::felt::Felt;
-
-#[test]
-fn deploy_at_predefined_address() {
-    let mut cached_state = create_cached_state();
-    let mut cheatnet_state = CheatnetState::default();
-
-    let contracts_data = get_contracts();
-
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data)
-        .unwrap()
-        .unwrap_success();
-    let contract_address = deploy_at_wrapper(
-        &mut cached_state,
-        &mut cheatnet_state,
-        &class_hash,
-        &[],
-        ContractAddress::from(1_u8),
-    )
-    .unwrap();
-
-    assert_eq!(contract_address, ContractAddress::from(1_u8));
-
-    let selector = selector_from_name("get_balance");
-    let output = call_contract(
-        &mut cached_state,
-        &mut cheatnet_state,
-        &contract_address,
-        selector,
-        &[],
-    );
-
-    assert_success(output, &[Felt::from(0)]);
-}
-
-#[test]
-fn deploy_two_at_the_same_address() {
-    let mut cached_state = create_cached_state();
-    let mut cheatnet_state = CheatnetState::default();
-
-    let contracts_data = get_contracts();
-
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data)
-        .unwrap()
-        .unwrap_success();
-    deploy_at_wrapper(
-        &mut cached_state,
-        &mut cheatnet_state,
-        &class_hash,
-        &[],
-        ContractAddress::from(1_u8),
-    )
-    .unwrap();
-
-    let result = deploy_at_wrapper(
-        &mut cached_state,
-        &mut cheatnet_state,
-        &class_hash,
-        &[],
-        ContractAddress::from(1_u8),
-    );
-
-    assert!(matches!(
-        result,
-        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(err))))
-        if err.as_ref() == "Address is already taken"
-    ));
-}
 
 #[test]
 fn call_predefined_contract_from_proxy_contract() {
@@ -95,6 +25,7 @@ fn call_predefined_contract_from_proxy_contract() {
     )
     .unwrap()
     .unwrap_success();
+
     let cheat_caller_address_checker_address = deploy_at_wrapper(
         &mut cached_state,
         &mut cheatnet_state,
@@ -180,31 +111,6 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
     );
 
     assert_success(output, &[]);
-}
-
-#[test]
-fn try_to_deploy_at_0() {
-    let mut cached_state = create_cached_state();
-    let mut cheatnet_state = CheatnetState::default();
-
-    let contracts_data = get_contracts();
-
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data)
-        .unwrap()
-        .unwrap_success();
-    let output = deploy_at_wrapper(
-        &mut cached_state,
-        &mut cheatnet_state,
-        &class_hash,
-        &[],
-        ContractAddress::from(0_u8),
-    );
-
-    assert!(match output {
-        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
-            msg.as_ref() == "Cannot deploy contract at address 0.",
-        _ => false,
-    });
 }
 
 #[test]

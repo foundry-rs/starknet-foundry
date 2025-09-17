@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `deploy` method on `ContractClass` instance now fails immediately upon encountering an error, preventing the error from being caught. This change aligns with the behavior of the `deploy_syscall` on the network
+- `deploy` and `deploy_at` methods on `ContractClass` instance now fail immediately upon encountering an error, preventing the error from being caught. This change aligns with the behavior of the `deploy_syscall` on the network
 
 ### Cast
 
