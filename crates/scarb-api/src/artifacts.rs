@@ -132,7 +132,10 @@ fn unique_artifacts(
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use crate::ScarbCommand;
+    use crate::tests::setup_package;
+    use assert_fs::TempDir;
     use assert_fs::fixture::{FileWriteStr, PathChild};
     use camino::Utf8PathBuf;
     use deserialized::{StarknetArtifacts, StarknetContract, StarknetContractArtifactPaths};
@@ -191,9 +194,8 @@ mod tests {
         assert_eq!(result[0].0, "contract2");
     }
 
-    #[test]
-    fn test_load_contracts_artifacts() {
-        let temp = crate::tests::setup_package("basic_package");
+    fn setup() -> (TempDir, StarknetArtifactsFiles) {
+        let temp = setup_package("basic_package");
         let tests_dir = temp.join("tests");
         fs::create_dir(&tests_dir).unwrap();
 
@@ -235,11 +237,33 @@ mod tests {
         // Create `StarknetArtifactsFiles`
         let artifacts_files = StarknetArtifactsFiles::new(base_file, other_files);
 
+        (temp, artifacts_files)
+    }
+
+    #[test]
+    fn test_load_contracts_artifacts() {
+        let (_temp, artifacts_files) = setup();
+
         // Load the contracts
         let result = artifacts_files.load_contracts_artifacts().unwrap();
 
         // Assert the Contract Artifacts are loaded.
         assert!(result.contains_key("ERC20"));
         assert!(result.contains_key("HelloStarknet"));
+    }
+
+    #[test]
+    fn test_load_contracts_artifacts_native() {
+        let (_temp, artifacts_files) = setup();
+
+        let artifacts_files = artifacts_files.compile_native(true);
+
+        // Load the contracts
+        let result = artifacts_files.load_contracts_artifacts().unwrap();
+
+        // Assert the Contract Artifacts are loaded.
+        assert!(result.contains_key("ERC20"));
+        assert!(result.contains_key("HelloStarknet"));
+        assert!(result.get("ERC20").unwrap().0.executor.is_some());
     }
 }

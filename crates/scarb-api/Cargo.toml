@@ -3,6 +3,9 @@ name = "scarb-api"
 version = "1.0.0"
 edition.workspace = true
 
+[features]
+run-native = []
+
 [dependencies]
 anyhow.workspace = true
 shared.workspace = true
