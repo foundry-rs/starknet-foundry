@@ -43,7 +43,7 @@ fn test_internal(
     let has_fuzzer = has_fuzzer_attribute(db, func);
 
     // If the function has `#[test]` attribute and does not have `#[fuzzer]`, we can
-    // safely skip `#[test]`.
+    // safely skip code generation from `#[test]`. It will be handled later by `#[test_case]`.
     if has_test_case && !has_fuzzer {
         let func_item = func.as_syntax_node();
         let func_item = SyntaxNodeWithDb::new(&func_item, db);
