@@ -171,6 +171,7 @@ pub fn build_and_load_artifacts(
             &target_dir.join(&config.profile),
             package,
             ui,
+            // TODO: Reconsider running sncast with native
             CompilationOpts::default()
         ).context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")?
         .into_iter()
@@ -185,6 +186,7 @@ pub fn build_and_load_artifacts(
             &target_dir.join(default_profile),
             package,
             ui,
+            // TODO: Reconsider running sncast with native
             CompilationOpts::default(),
         ).context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")?
         .into_iter()

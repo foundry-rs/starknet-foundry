@@ -109,7 +109,10 @@ impl Contract {
             &artifacts_dir,
             package,
             ui,
-            CompilationOpts::default(),
+            CompilationOpts {
+                use_test_target_contracts: false,
+                run_native: cfg!(feature = "run-native"),
+            },
         )
         .unwrap()
         .remove(&self.name)
