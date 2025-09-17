@@ -95,7 +95,7 @@ fn ensure_params_valid(
 
     if param_count != unnamed_args.len() {
         return Err(Diagnostics::from(TestCaseCollector::error(format!(
-            "Expected {} parameters, but got {}",
+            "Expected {} arguments, but got {}",
             param_count,
             unnamed_args.len()
         ))));

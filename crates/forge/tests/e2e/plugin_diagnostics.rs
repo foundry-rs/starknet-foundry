@@ -459,7 +459,7 @@ fn test_case() {
         ^^^^^^^^^^^^^^^^^^^^^
         note: this error originates in the attribute macro: `test`
 
-        error: Plugin diagnostic: #[test_case] Expected 2 parameters, but got 3
+        error: Plugin diagnostic: #[test_case] Expected 2 arguments, but got 3
          --> [..]/tests/basic.cairo:9:1
         #[test_case(1, 2, 3)]
         ^^^^^^^^^^^^^^^^^^^^^
