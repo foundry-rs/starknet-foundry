@@ -128,7 +128,7 @@ Tests: 2 passed, 1 failed, 0 ignored, [..] filtered out
 Fuzzer seed: [..]
 
 Failures:
-    parametrized_testing_integrationtest::example::test_sum
+    parametrized_testing_fuzzer_integrationtest::example::test_sum
 ```
 </details>
 <br>
