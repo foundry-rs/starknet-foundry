@@ -64,17 +64,17 @@ Each parameterized test gets its own generated name. There are two ways to contr
     ```
     This will generate a test named `test_sum_one_plus_two`.
 
-## More Complex Example
+## Advanced Example
 
-Now let's look at a more complex example which uses structs as parameters.
+Now let's look at an addvanced example which uses structs as parameters.
 
 ```rust
-{{#include ../../listings/parametrized_testing_complex/tests/example.cairo}}
+{{#include ../../listings/parametrized_testing_advanced/tests/example.cairo}}
 ```
 
 Now run:
 
-<!-- { "package_name": "parametrized_testing_complex" } -->
+<!-- { "package_name": "parametrized_testing_advanced" } -->
 ```shell
 $ snforge test
 ```
@@ -83,11 +83,11 @@ $ snforge test
 <summary>Output:</summary>
 
 ```shell
-Collected 3 test(s) from parametrized_testing_complex package
+Collected 3 test(s) from parametrized_testing_advanced package
 Running 3 test(s) from tests/
-[PASS] parametrized_testing_complex_integrationtest::example::test_is_adult_user_name_alice_age_20_true ([..])
-[PASS] parametrized_testing_complex_integrationtest::example::test_is_adult_user_name_josh_age_18_true ([..])
-[PASS] parametrized_testing_complex_integrationtest::example::test_is_adult_user_name_bob_age_14_false ([..])
+[PASS] parametrized_testing_advanced_integrationtest::example::test_is_adult_user_name_alice_age_20_true ([..])
+[PASS] parametrized_testing_advanced_integrationtest::example::test_is_adult_user_name_josh_age_18_true ([..])
+[PASS] parametrized_testing_advanced_integrationtest::example::test_is_adult_user_name_bob_age_14_false ([..])
 Running 0 test(s) from src/
 Tests: 3 passed, 0 failed, 0 ignored, [..] filtered out
 ```
