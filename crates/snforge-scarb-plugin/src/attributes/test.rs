@@ -7,7 +7,7 @@ use crate::{
     common::{into_proc_macro_result, with_parsed_values},
     format_ident,
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, TokenTree, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
 use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode, ast::FunctionWithBody};
@@ -42,8 +42,8 @@ fn test_internal(
     let has_test_case = has_test_case_attribute(db, func);
     let has_fuzzer = has_fuzzer_attribute(db, func);
 
-    // If the function has #[test] attribute and does not have #[fuzzer], we can
-    // safely skip #[test].
+    // If the function has `#[test]` attribute and does not have `#[fuzzer]`, we can
+    // safely skip code generation from `#[test]`. It will be handled later by `#[test_case]`.
     if has_test_case && !has_fuzzer {
         let func_item = func.as_syntax_node();
         let func_item = SyntaxNodeWithDb::new(&func_item, db);
@@ -70,12 +70,11 @@ fn test_internal(
     let func_name = func.declaration(db).name(db).text(db);
 
     let has_fuzzer = has_fuzzer_attribute(db, func);
-    let name = if has_fuzzer {
-        format!("{func_name}__fuzzer_generated")
+    let called_func_name_ident = if has_fuzzer {
+        format_ident!("{func_name}__fuzzer_generated")
     } else {
-        func_name.to_string().clone()
+        format_ident!("{}", name)
     };
-    let name_return_wrapper = format_ident!("{}", name);
 
     let signature = func.declaration(db).signature(db).as_syntax_node();
     let signature = SyntaxNodeWithDb::new(&signature, db);
@@ -87,29 +86,17 @@ fn test_internal(
     let attributes = func.attributes(db).as_syntax_node();
     let attributes = SyntaxNodeWithDb::new(&attributes, db);
 
-    let name = format_ident!("{}__test_generated", func.declaration(db).name(db).text(db));
+    let test_func_name_ident = format_ident!("{}__test_generated", func_name);
     let mut func_ident = TokenStream::new(vec![format_ident!("{}", func_name)]);
     func_ident.extend(signature);
 
-    let out_of_gas = create_single_token("'Out of gas'");
-
     if should_run_test {
+        let call_args = format_ident!("()");
+        let test_func_with_attrs =
+            test_func_with_attrs(&test_func_name_ident, &called_func_name_ident, &call_args);
+
         Ok(quote!(
-            #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
-            #[snforge_internal_test_executable]
-            fn #name(mut _data: Span<felt252>) -> Span::<felt252> {
-                core::internal::require_implicit::<System>();
-                core::internal::revoke_ap_tracking();
-                core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
-
-                core::option::OptionTraitImpl::expect(
-                    core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
-                );
-                #name_return_wrapper();
-
-                let mut arr = ArrayTrait::new();
-                core::array::ArrayTrait::span(@arr)
-            }
+            #test_func_with_attrs
 
             #attributes
             #[#internal_config]
@@ -151,4 +138,33 @@ fn has_parameters(db: &SimpleParserDatabase, func: &FunctionWithBody) -> bool {
         .elements(db)
         .len()
         != 0
+}
+
+#[must_use]
+pub fn test_func_with_attrs(
+    test_fn_name_ident: &TokenTree,
+    fn_name_ident: &TokenTree,
+    call_args: &TokenTree,
+) -> TokenStream {
+    let test_fn_name_ident = test_fn_name_ident.clone();
+    let fn_name_ident = fn_name_ident.clone();
+    let call_args = call_args.clone();
+    let out_of_gas = create_single_token("'Out of gas'");
+    quote!(
+        #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+        #[snforge_internal_test_executable]
+        fn #test_fn_name_ident(mut _data: Span<felt252>) -> Span::<felt252> {
+            core::internal::require_implicit::<System>();
+            core::internal::revoke_ap_tracking();
+            core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
+
+            core::option::OptionTraitImpl::expect(
+                core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
+            );
+            #fn_name_ident #call_args;
+
+            let mut arr = ArrayTrait::new();
+            core::array::ArrayTrait::span(@arr)
+        }
+    )
 }

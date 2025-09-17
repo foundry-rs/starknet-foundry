@@ -6,7 +6,7 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct NamedArgs(HashMap<SmolStr, Vec<Expr>>);
 
 impl Deref for NamedArgs {
@@ -24,9 +24,9 @@ impl DerefMut for NamedArgs {
 }
 
 impl NamedArgs {
-    pub fn new(map: &HashMap<SmolStr, Vec<Expr>>) -> Self {
-        Self(map.clone())
-    }
+    // pub fn new(map: &HashMap<SmolStr, Vec<Expr>>) -> Self {
+    //     Self(map.clone())
+    // }
 
     pub fn as_once(&self, arg: &str) -> Result<&Expr, Diagnostic> {
         let exprs = self

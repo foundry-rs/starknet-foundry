@@ -27,14 +27,9 @@ fn sanitize_expr(expr: &Expr, db: &SimpleParserDatabase) -> String {
     }
 }
 
-fn generate_case_suffix(
-    unnamed_args: &UnnamedArgs,
-    db: &SimpleParserDatabase,
-) -> Result<String, Diagnostics> {
+fn generate_case_suffix(unnamed_args: &UnnamedArgs, db: &SimpleParserDatabase) -> String {
     if unnamed_args.is_empty() {
-        return Err(Diagnostics::from(TestCaseCollector::error(
-            "At least one argument is required if 'name' is not provided.",
-        )));
+        unreachable!("Arguments cannot be empty for case name generation");
     }
 
     let exprs = unnamed_args
@@ -42,10 +37,10 @@ fn generate_case_suffix(
         .map(|(_, expr)| sanitize_expr(expr, db))
         .collect::<Vec<_>>();
 
-    Ok(exprs.join("_"))
+    exprs.join("_")
 }
 
-pub fn resolve_test_case_name(
+pub fn test_case_name(
     func_name: &str,
     arguments: &Arguments,
     db: &SimpleParserDatabase,
@@ -54,9 +49,17 @@ pub fn resolve_test_case_name(
     let test_case_name = named_args.as_once_optional("name")?;
 
     let suffix = if let Some(expr) = test_case_name {
+        match expr {
+            Expr::ShortString(_) | Expr::String(_) => {}
+            _ => {
+                return Err(Diagnostics::from(TestCaseCollector::error(
+                    "Only string literals are allowed for 'name' argument.",
+                )));
+            }
+        }
         sanitize_expr(expr, db)
     } else {
-        generate_case_suffix(&arguments.unnamed(), db)?
+        generate_case_suffix(&arguments.unnamed(), db)
     };
 
     Ok(format!("{func_name}_{suffix}"))

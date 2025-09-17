@@ -1,10 +1,11 @@
+use crate::args::Arguments;
 use crate::args::unnamed::UnnamedArgs;
-use crate::attributes::test::TestCollector;
-use crate::attributes::test_case::name::resolve_test_case_name;
+use crate::attributes::test::{TestCollector, test_func_with_attrs};
+use crate::attributes::test_case::name::test_case_name;
 use crate::attributes::{AttributeInfo, ErrorExt};
 use crate::common::{has_fuzzer_attribute, into_proc_macro_result, with_parsed_values};
+use crate::format_ident;
 use crate::utils::SyntaxNodeUtils;
-use crate::{create_single_token, format_ident};
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::FunctionWithBody;
@@ -21,82 +22,62 @@ impl AttributeInfo for TestCaseCollector {
 
 #[must_use]
 pub fn test_case(args: TokenStream, item: TokenStream) -> ProcMacroResult {
-    into_proc_macro_result(args, item, test_case_handler)
+    into_proc_macro_result(args, item, |args, item, warns| {
+        with_parsed_values::<TestCaseCollector>(args, item, warns, test_case_internal)
+    })
 }
 
-fn test_case_handler(
-    args: &TokenStream,
-    item: &TokenStream,
-    warns: &mut Vec<Diagnostic>,
-) -> Result<TokenStream, Diagnostics> {
-    with_parsed_values::<TestCaseCollector>(
-        args,
-        item,
-        warns,
-        |func_db, func, args_db, arguments, _warns| {
-            let unnamed_args = arguments.unnamed();
-
-            ensure_params_present(func, func_db)?;
-            ensure_args_count_valid(func, &unnamed_args, func_db)?;
-
-            let func_name = func.declaration(func_db).name(func_db).text(func_db);
-            let case_fn_name = resolve_test_case_name(&func_name, &arguments, args_db)?;
-            let filtered_fn_attrs = get_filtered_func_attributes(func, func_db);
-
-            let signature = func
-                .declaration(func_db)
-                .signature(func_db)
-                .as_syntax_node();
-            let signature = SyntaxNodeWithDb::new(&signature, func_db);
-
-            let func_body = func.body(func_db).as_syntax_node();
-            let func_body = SyntaxNodeWithDb::new(&func_body, func_db);
-
-            let func_name = format_ident!("{}", func_name);
-            let func = quote!(
-                #filtered_fn_attrs
-                fn #func_name #signature
-                #func_body
-            );
-
-            let call_args = unnamed_args
-                .clone()
-                .into_iter()
-                .map(|(_, expr)| expr.as_syntax_node().get_text(args_db))
-                .collect::<Vec<_>>()
-                .join(", ")
-                .to_string();
-            let call_args = format_ident!("({})", call_args);
-
-            let case_fn_name = format_ident!("{}", case_fn_name);
-
-            let out_of_gas = create_single_token("'Out of gas'");
-
-            Ok(quote!(
-                #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
-                #[snforge_internal_test_executable]
-                fn #case_fn_name(mut _data: Span<felt252>) -> Span::<felt252> {
-                    core::internal::require_implicit::<System>();
-                    core::internal::revoke_ap_tracking();
-                    core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
-
-                    core::option::OptionTraitImpl::expect(
-                        core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
-                    );
-                    #func_name #call_args;
-
-                    let mut arr = ArrayTrait::new();
-                    core::array::ArrayTrait::span(@arr)
-                }
-
-                #func
-            ))
-        },
-    )
-}
-
-fn ensure_params_present(
+#[expect(clippy::ptr_arg)]
+#[expect(clippy::needless_pass_by_value)]
+fn test_case_internal(
+    db: &SimpleParserDatabase,
     func: &FunctionWithBody,
+    args_db: &SimpleParserDatabase,
+    args: Arguments,
+    _warns: &mut Vec<Diagnostic>,
+) -> Result<TokenStream, Diagnostics> {
+    let unnamed_args = args.unnamed();
+    ensure_params_valid(func, &args.unnamed(), db)?;
+
+    let func_name = func.declaration(db).name(db).text(db);
+    let case_fn_name = test_case_name(&func_name, &args, args_db)?;
+    let filtered_fn_attrs = collect_attrs_excluding_test_without_fuzzer(func, db);
+
+    let signature = func.declaration(db).signature(db).as_syntax_node();
+    let signature = SyntaxNodeWithDb::new(&signature, db);
+
+    let func_body = func.body(db).as_syntax_node();
+    let func_body = SyntaxNodeWithDb::new(&func_body, db);
+
+    let func_name = format_ident!("{}", func_name);
+    let func = quote!(
+        #filtered_fn_attrs
+        fn #func_name #signature
+        #func_body
+    );
+
+    let call_args = unnamed_args
+        .clone()
+        .into_iter()
+        .map(|(_, expr)| expr.as_syntax_node().get_text(args_db))
+        .collect::<Vec<_>>()
+        .join(", ")
+        .to_string();
+    let call_args = format_ident!("({})", call_args);
+
+    let case_fn_name_ident = format_ident!("{}", case_fn_name);
+
+    let test_func_with_attrs = test_func_with_attrs(&case_fn_name_ident, &func_name, &call_args);
+    Ok(quote!(
+        #test_func_with_attrs
+
+        #func
+    ))
+}
+
+fn ensure_params_valid(
+    func: &FunctionWithBody,
+    unnamed_args: &UnnamedArgs,
     db: &SimpleParserDatabase,
 ) -> Result<(), Diagnostics> {
     let param_count = func
@@ -111,20 +92,6 @@ fn ensure_params_present(
             "The function must have at least one parameter to use #[test_case] attribute",
         )));
     }
-    Ok(())
-}
-
-fn ensure_args_count_valid(
-    func: &FunctionWithBody,
-    unnamed_args: &UnnamedArgs,
-    db: &SimpleParserDatabase,
-) -> Result<(), Diagnostics> {
-    let param_count = func
-        .declaration(db)
-        .signature(db)
-        .parameters(db)
-        .elements(db)
-        .len();
 
     if param_count != unnamed_args.len() {
         return Err(Diagnostics::from(TestCaseCollector::error(format!(
@@ -133,10 +100,11 @@ fn ensure_args_count_valid(
             unnamed_args.len()
         ))));
     }
+
     Ok(())
 }
 
-fn get_filtered_func_attributes(
+fn collect_attrs_excluding_test_without_fuzzer(
     func: &FunctionWithBody,
     func_db: &SimpleParserDatabase,
 ) -> TokenStream {

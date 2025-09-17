@@ -106,7 +106,7 @@ fn fuzzer_wrapper_internal(
         }
     });
 
-    let actual_body_fn_name = format_ident!("{}", func.declaration(db).name(db).text(db));
+    let func_ident = format_ident!("{}", func.declaration(db).name(db).text(db));
 
     let (statements, if_content) = get_statements(db, func);
 
@@ -118,17 +118,17 @@ fn fuzzer_wrapper_internal(
                 if snforge_std::_internals::is_config_run() {
                     #if_content
 
-                    #actual_body_fn_name(#blank_values_for_config_run);
+                    #func_ident(#blank_values_for_config_run);
 
                     return;
                 }
                 #fuzzer_assignments
-                #actual_body_fn_name(#arguments_list);
+                #func_ident(#arguments_list);
             }
 
             #actual_body_fn_attrs
             #[#internal_config_attr]
-            fn #actual_body_fn_name #signature {
+            fn #func_ident #signature {
                 #statements
             }
     ))
