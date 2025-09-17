@@ -21,11 +21,11 @@ $ tree . -L 3
 .
 ├── Scarb.toml
 ├── crates
-│   ├── addition
+│   ├── addition_docs
 │   │   ├── Scarb.toml
 │   │   ├── src
 │   │   └── tests
-│   └── fibonacci
+│   └── fibonacci_docs
 │       ├── Scarb.toml
 │       └── src
 ├── tests
@@ -74,21 +74,21 @@ You can also run `snforge test` from the package directory to achieve the same e
 
 <!-- { "package_name": "hello_workspaces_docs" }  -->
 ```shell
-$ snforge test --package addition
+$ snforge test --package addition_docs
 ```
 
 <details>
 <summary>Output:</summary>
 
 ```shell
-Collected 5 test(s) from addition package
+Collected 5 test(s) from addition_docs package
 Running 4 test(s) from tests/
-[PASS] addition_integrationtest::nested::test_nested::test_two (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-[PASS] addition_integrationtest::nested::test_nested::test_two_and_two (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-[PASS] addition_integrationtest::nested::simple_case (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-[PASS] addition_integrationtest::nested::contract_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] addition_docs_integrationtest::nested::test_nested::test_two (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] addition_docs_integrationtest::nested::test_nested::test_two_and_two (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] addition_docs_integrationtest::nested::simple_case (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] addition_docs_integrationtest::nested::contract_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Running 1 test(s) from src/
-[PASS] addition::tests::it_works (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] addition_docs::tests::it_works (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 </details>
@@ -104,30 +104,30 @@ $ snforge test --workspace
 <summary>Output:</summary>
 
 ```shell
-Collected 5 test(s) from addition package
+Collected 5 test(s) from addition_docs package
 Running 4 test(s) from tests/
-[PASS] addition_integrationtest::nested::test_nested::test_two (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-[PASS] addition_integrationtest::nested::simple_case (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-[PASS] addition_integrationtest::nested::test_nested::test_two_and_two (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-[PASS] addition_integrationtest::nested::contract_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] addition_docs_integrationtest::nested::test_nested::test_two (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] addition_docs_integrationtest::nested::simple_case (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] addition_docs_integrationtest::nested::test_nested::test_two_and_two (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] addition_docs_integrationtest::nested::contract_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Running 1 test(s) from src/
-[PASS] addition::tests::it_works (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] addition_docs::tests::it_works (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
 
 
-Collected 6 test(s) from fibonacci package
+Collected 6 test(s) from fibonacci_docs package
 Running 2 test(s) from src/
-[PASS] fibonacci::tests::it_works (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-[PASS] fibonacci::tests::contract_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] fibonacci_docs::tests::it_works (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] fibonacci_docs::tests::contract_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Running 4 test(s) from tests/
-[FAIL] fibonacci_tests::abc::efg::failing_test
+[FAIL] fibonacci_docs_tests::abc::efg::failing_test
 
 Failure data:
     0x0 ('')
 
-[PASS] fibonacci_tests::abc::efg::efg_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-[PASS] fibonacci_tests::lib_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-[PASS] fibonacci_tests::abc::abc_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] fibonacci_docs_tests::abc::efg::efg_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] fibonacci_docs_tests::lib_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] fibonacci_docs_tests::abc::abc_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Tests: 5 passed, 1 failed, 0 ignored, 0 filtered out
 
 
@@ -148,7 +148,7 @@ Failure data:
 Tests: 1 passed, 2 failed, 0 ignored, 0 filtered out
 
 Failures:
-    fibonacci_tests::abc::efg::failing_test
+    fibonacci_docs_tests::abc::efg::failing_test
     hello_workspaces_docs_integrationtest::test_failing::test_another_failing
     hello_workspaces_docs_integrationtest::test_failing::test_failing
 

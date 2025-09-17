@@ -23,8 +23,8 @@ test.workspace = true
 snforge.workspace = true
 
 [dependencies]
-fibonacci = { path = "crates/fibonacci" }
-addition = { path = "crates/addition" }
+fibonacci_docs = { path = "crates/fibonacci_docs" }
+addition_docs = { path = "crates/addition_docs" }
 starknet = "2.8.5"
 
 [dev-dependencies]
