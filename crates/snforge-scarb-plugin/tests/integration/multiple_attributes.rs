@@ -223,8 +223,11 @@ fn works_with_fuzzer() {
 
 #[test]
 fn works_with_fuzzer_before_test() {
+    let item = quote!(
+        fn empty_fn(f: felt252) {}
+    );
     let fuzzer_args = quote!((runs: 123, seed: 321));
-    let fuzzer_res = fuzzer(fuzzer_args, empty_function());
+    let fuzzer_res = fuzzer(fuzzer_args, item);
     assert_diagnostics(&fuzzer_res, &[]);
 
     assert_output(
@@ -232,7 +235,7 @@ fn works_with_fuzzer_before_test() {
         r"
             #[__fuzzer_config(runs: 123, seed: 321)]
             #[__fuzzer_wrapper]
-            fn empty_fn() {}
+            fn empty_fn(f: felt252) {}
         ",
     );
 
@@ -264,7 +267,42 @@ fn works_with_fuzzer_before_test() {
             #[__fuzzer_config(runs: 123, seed: 321)]
             #[__fuzzer_wrapper]
             #[__internal_config_statement]
-            fn empty_fn() {}
+            fn empty_fn(f: felt252) {}
+        ",
+    );
+
+    // We need to remove `#[__fuzzer_wrapper]` to be able to call `fuzzer_wrapper()` again
+    let item = get_function(&result.token_stream, "empty_fn", true);
+    let item = quote!(
+        #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+        #[snforge_internal_test_executable]
+        #item
+
+        #[__fuzzer_config(runs: 123, seed: 321)]
+        #[__internal_config_statement]
+        fn empty_fn() {}
+    );
+    let result = fuzzer_wrapper(TokenStream::empty(), item);
+
+    assert_diagnostics(&result, &[]);
+    assert_output(
+        &result,
+        r"
+            fn empty_fn__fuzzer_generated() {
+                if snforge_std::_internals::is_config_run() {
+                empty_fn(snforge_std::fuzzable::Fuzzable::blank());
+                return;
+                }
+                
+                let f = snforge_std::fuzzable::Fuzzable::<felt252>::generate();
+                snforge_std::_internals::save_fuzzer_arg(@f);
+                empty_fn(f);
+            }
+
+            #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+            #[snforge_internal_test_executable]
+            #[__internal_config_statement]
+            fn empty_fn(f: felt252) {}
         ",
     );
 }
