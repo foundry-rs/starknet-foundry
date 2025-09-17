@@ -94,9 +94,7 @@ Tests: 3 passed, 0 failed, 0 ignored, [..] filtered out
 </details>
 <br>
 
-## Combining With Other Attributes
-
-`#[test_case]` can be freely combined with other attributes.
+## Combining With Fuzzer Attributes
 
 Below is an example of a parameterized test that also uses the fuzzer.
 
