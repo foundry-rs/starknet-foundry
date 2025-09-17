@@ -15,16 +15,16 @@ fn root_workspace_without_arguments() {
         [..]Finished[..]
 
 
-        Collected 3 test(s) from hello_workspaces2 package
+        Collected 3 test(s) from hello_workspaces package
         Running 1 test(s) from src/
-        [PASS] hello_workspaces2::tests::test_simple [..]
+        [PASS] hello_workspaces::tests::test_simple [..]
         Running 2 test(s) from tests/
-        [FAIL] hello_workspaces2_integrationtest::test_failing::test_failing
+        [FAIL] hello_workspaces_integrationtest::test_failing::test_failing
         
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
         
-        [FAIL] hello_workspaces2_integrationtest::test_failing::test_another_failing
+        [FAIL] hello_workspaces_integrationtest::test_failing::test_another_failing
 
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
@@ -32,8 +32,8 @@ fn root_workspace_without_arguments() {
         Tests: 1 passed, 2 failed, 0 ignored, 0 filtered out
         
         Failures:
-            hello_workspaces2_integrationtest::test_failing::test_failing
-            hello_workspaces2_integrationtest::test_failing::test_another_failing
+            hello_workspaces_integrationtest::test_failing::test_failing
+            hello_workspaces_integrationtest::test_failing::test_another_failing
         "},
     );
 }
@@ -137,7 +137,7 @@ fn root_workspace_specify_root_package() {
     let temp = setup_hello_workspace();
 
     let output = test_runner(&temp)
-        .args(["--package", "hello_workspaces2"])
+        .args(["--package", "hello_workspaces"])
         .assert()
         .code(1);
 
@@ -148,16 +148,16 @@ fn root_workspace_specify_root_package() {
         [..]Finished[..]
 
 
-        Collected 3 test(s) from hello_workspaces2 package
+        Collected 3 test(s) from hello_workspaces package
         Running 1 test(s) from src/
-        [PASS] hello_workspaces2::tests::test_simple [..]
+        [PASS] hello_workspaces::tests::test_simple [..]
         Running 2 test(s) from tests/
-        [FAIL] hello_workspaces2_integrationtest::test_failing::test_failing
+        [FAIL] hello_workspaces_integrationtest::test_failing::test_failing
         
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
         
-        [FAIL] hello_workspaces2_integrationtest::test_failing::test_another_failing
+        [FAIL] hello_workspaces_integrationtest::test_failing::test_another_failing
 
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
@@ -165,8 +165,8 @@ fn root_workspace_specify_root_package() {
         Tests: 1 passed, 2 failed, 0 ignored, 0 filtered out
         
         Failures:
-            hello_workspaces2_integrationtest::test_failing::test_failing
-            hello_workspaces2_integrationtest::test_failing::test_another_failing
+            hello_workspaces_integrationtest::test_failing::test_failing
+            hello_workspaces_integrationtest::test_failing::test_another_failing
         "},
     );
 }
@@ -245,16 +245,16 @@ fn root_workspace_for_entire_workspace() {
         Tests: 5 passed, 1 failed, 0 ignored, 0 filtered out
         
         
-        Collected 3 test(s) from hello_workspaces2 package
+        Collected 3 test(s) from hello_workspaces package
         Running 1 test(s) from src/
-        [PASS] hello_workspaces2::tests::test_simple [..]
+        [PASS] hello_workspaces::tests::test_simple [..]
         Running 2 test(s) from tests/
-        [FAIL] hello_workspaces2_integrationtest::test_failing::test_failing
+        [FAIL] hello_workspaces_integrationtest::test_failing::test_failing
         
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
         
-        [FAIL] hello_workspaces2_integrationtest::test_failing::test_another_failing
+        [FAIL] hello_workspaces_integrationtest::test_failing::test_another_failing
 
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
@@ -263,8 +263,8 @@ fn root_workspace_for_entire_workspace() {
         
         Failures:
             fibonacci3_tests::abc::efg::failing_test
-            hello_workspaces2_integrationtest::test_failing::test_failing
-            hello_workspaces2_integrationtest::test_failing::test_another_failing
+            hello_workspaces_integrationtest::test_failing::test_failing
+            hello_workspaces_integrationtest::test_failing::test_another_failing
         
         Tests summary: 11 passed, 3 failed, 0 ignored, 0 filtered out
         "},
@@ -319,16 +319,16 @@ fn root_workspace_for_entire_workspace_inside_package() {
         Tests: 5 passed, 1 failed, 0 ignored, 0 filtered out
         
         
-        Collected 3 test(s) from hello_workspaces2 package
+        Collected 3 test(s) from hello_workspaces package
         Running 1 test(s) from src/
-        [PASS] hello_workspaces2::tests::test_simple [..]
+        [PASS] hello_workspaces::tests::test_simple [..]
         Running 2 test(s) from tests/
-        [FAIL] hello_workspaces2_integrationtest::test_failing::test_failing
+        [FAIL] hello_workspaces_integrationtest::test_failing::test_failing
         
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
         
-        [FAIL] hello_workspaces2_integrationtest::test_failing::test_another_failing
+        [FAIL] hello_workspaces_integrationtest::test_failing::test_another_failing
 
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
@@ -337,8 +337,8 @@ fn root_workspace_for_entire_workspace_inside_package() {
         
         Failures:
             fibonacci3_tests::abc::efg::failing_test
-            hello_workspaces2_integrationtest::test_failing::test_failing
-            hello_workspaces2_integrationtest::test_failing::test_another_failing
+            hello_workspaces_integrationtest::test_failing::test_failing
+            hello_workspaces_integrationtest::test_failing::test_another_failing
 
         Tests summary: 11 passed, 3 failed, 0 ignored, 0 filtered out
         "},
@@ -697,9 +697,9 @@ fn root_workspace_for_entire_workspace_with_filter() {
         Tests: 0 passed, 0 failed, 0 ignored, 6 filtered out
         
         
-        Collected 1 test(s) from hello_workspaces2 package
+        Collected 1 test(s) from hello_workspaces package
         Running 1 test(s) from src/
-        [PASS] hello_workspaces2::tests::test_simple [..]
+        [PASS] hello_workspaces::tests::test_simple [..]
         Running 0 test(s) from tests/
         Tests: 1 passed, 0 failed, 0 ignored, 2 filtered out
         
@@ -854,7 +854,7 @@ fn root_workspace_for_entire_workspace_with_exact() {
         .args([
             "--workspace",
             "--exact",
-            "hello_workspaces2::tests::test_simple",
+            "hello_workspaces::tests::test_simple",
         ])
         .assert()
         .success();
@@ -882,9 +882,9 @@ fn root_workspace_for_entire_workspace_with_exact() {
         Tests: 0 passed, 0 failed, 0 ignored, other filtered out
         
         
-        Collected 1 test(s) from hello_workspaces2 package
+        Collected 1 test(s) from hello_workspaces package
         Running 1 test(s) from src/
-        [PASS] hello_workspaces2::tests::test_simple [..]
+        [PASS] hello_workspaces::tests::test_simple [..]
         Running 0 test(s) from tests/
         Tests: 1 passed, 0 failed, 0 ignored, other filtered out
         

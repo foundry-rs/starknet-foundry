@@ -46,16 +46,16 @@ $ snforge test
 <summary>Output:</summary>
 
 ```shell
-Collected 3 test(s) from hello_workspaces package
+Collected 3 test(s) from hello_workspaces_docs package
 Running 1 test(s) from src/
-[PASS] hello_workspaces::tests::test_simple (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] hello_workspaces_docs::tests::test_simple (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Running 2 test(s) from tests/
-[FAIL] hello_workspaces_integrationtest::test_failing::test_failing
+[FAIL] hello_workspaces_docs_integrationtest::test_failing::test_failing
 
 Failure data:
     0x6661696c696e6720636865636b ('failing check')
 
-[FAIL] hello_workspaces_integrationtest::test_failing::test_another_failing
+[FAIL] hello_workspaces_docs_integrationtest::test_failing::test_another_failing
 
 Failure data:
     0x6661696c696e6720636865636b ('failing check')
@@ -63,8 +63,8 @@ Failure data:
 Tests: 1 passed, 2 failed, 0 ignored, 0 filtered out
 
 Failures:
-    hello_workspaces_integrationtest::test_failing::test_failing
-    hello_workspaces_integrationtest::test_failing::test_another_failing
+    hello_workspaces_docs_integrationtest::test_failing::test_failing
+    hello_workspaces_docs_integrationtest::test_failing::test_another_failing
 ```
 </details>
 <br>
@@ -72,7 +72,7 @@ Failures:
 To select the specific package to test, pass a `--package package_name` (or `-p package_name` for short) flag.
 You can also run `snforge test` from the package directory to achieve the same effect.
 
-<!-- { "package_name": "hello_workspaces" }  -->
+<!-- { "package_name": "hello_workspaces_docs" }  -->
 ```shell
 $ snforge test --package addition
 ```
@@ -131,16 +131,16 @@ Failure data:
 Tests: 5 passed, 1 failed, 0 ignored, 0 filtered out
 
 
-Collected 3 test(s) from hello_workspaces package
+Collected 3 test(s) from hello_workspaces_docs package
 Running 1 test(s) from src/
-[PASS] hello_workspaces::tests::test_simple (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] hello_workspaces_docs::tests::test_simple (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Running 2 test(s) from tests/
-[FAIL] hello_workspaces_integrationtest::test_failing::test_another_failing
+[FAIL] hello_workspaces_docs_integrationtest::test_failing::test_another_failing
 
 Failure data:
     0x6661696c696e6720636865636b ('failing check')
 
-[FAIL] hello_workspaces_integrationtest::test_failing::test_failing
+[FAIL] hello_workspaces_docs_integrationtest::test_failing::test_failing
 
 Failure data:
     0x6661696c696e6720636865636b ('failing check')
@@ -149,8 +149,8 @@ Tests: 1 passed, 2 failed, 0 ignored, 0 filtered out
 
 Failures:
     fibonacci_tests::abc::efg::failing_test
-    hello_workspaces_integrationtest::test_failing::test_another_failing
-    hello_workspaces_integrationtest::test_failing::test_failing
+    hello_workspaces_docs_integrationtest::test_failing::test_another_failing
+    hello_workspaces_docs_integrationtest::test_failing::test_failing
 
 Tests summary: 11 passed, 3 failed, 0 ignored, 0 filtered out
 ```
