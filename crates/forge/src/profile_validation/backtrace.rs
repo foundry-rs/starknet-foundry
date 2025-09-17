@@ -23,6 +23,7 @@ fn check_scarb_version(scarb_metadata: &Metadata) -> anyhow::Result<()> {
 
 /// Checks if the runtime profile settings in the provided from [`Metadata`] contain the required entries for backtrace generation.
 fn check_profile(scarb_metadata: &Metadata) -> anyhow::Result<()> {
+    // TODO(#3679): Add `panic-backtrace = true` entry when we decide to bump minimal scarb version to 2.12.
     const BACKTRACE_REQUIRED_ENTRIES: &[(&str, &str)] = &[
         ("unstable-add-statements-functions-debug-info", "true"),
         ("unstable-add-statements-code-locations-debug-info", "true"),

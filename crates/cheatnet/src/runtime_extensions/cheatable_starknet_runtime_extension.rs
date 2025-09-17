@@ -43,6 +43,9 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
     ) -> Result<SyscallHandlingResult, HintError> {
         let syscall_handler = &mut extended_runtime.hint_handler;
 
+        // Warning: Do not add a default (`_`) arm here.
+        // This match must remain exhaustive so that if a new syscall is introduced,
+        // we will explicitly add support for it.
         match selector {
             SyscallSelector::GetExecutionInfo => self
                 .execute_syscall(
@@ -52,7 +55,6 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                     SyscallSelector::GetExecutionInfo,
                 )
                 .map(|()| SyscallHandlingResult::Handled),
-
             SyscallSelector::CallContract => self
                 .execute_syscall(
                     syscall_handler,
@@ -101,7 +103,41 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                     SyscallSelector::StorageWrite,
                 )
                 .map(|()| SyscallHandlingResult::Handled),
-            _ => Ok(SyscallHandlingResult::Forwarded),
+            SyscallSelector::MetaTxV0 => self
+                .execute_syscall(
+                    syscall_handler,
+                    vm,
+                    cheated_syscalls::meta_tx_v0_syscall,
+                    SyscallSelector::MetaTxV0,
+                )
+                .map(|()| SyscallHandlingResult::Handled),
+            SyscallSelector::DelegateCall
+            | SyscallSelector::DelegateL1Handler
+            | SyscallSelector::EmitEvent
+            | SyscallSelector::GetBlockNumber
+            | SyscallSelector::GetBlockTimestamp
+            | SyscallSelector::GetCallerAddress
+            | SyscallSelector::GetClassHashAt
+            | SyscallSelector::GetContractAddress
+            | SyscallSelector::GetSequencerAddress
+            | SyscallSelector::GetTxInfo
+            | SyscallSelector::GetTxSignature
+            | SyscallSelector::Keccak
+            | SyscallSelector::KeccakRound
+            | SyscallSelector::Sha256ProcessBlock
+            | SyscallSelector::LibraryCallL1Handler
+            | SyscallSelector::ReplaceClass
+            | SyscallSelector::Secp256k1Add
+            | SyscallSelector::Secp256k1GetPointFromX
+            | SyscallSelector::Secp256k1GetXy
+            | SyscallSelector::Secp256k1Mul
+            | SyscallSelector::Secp256k1New
+            | SyscallSelector::Secp256r1Add
+            | SyscallSelector::Secp256r1GetPointFromX
+            | SyscallSelector::Secp256r1GetXy
+            | SyscallSelector::Secp256r1Mul
+            | SyscallSelector::Secp256r1New
+            | SyscallSelector::SendMessageToL1 => Ok(SyscallHandlingResult::Forwarded),
         }
     }
 

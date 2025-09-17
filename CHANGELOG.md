@@ -9,10 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Changed
+
+- Minimal supported `Scarb` version is now `2.10.0` (updated from `2.9.1`)
+
+#### Removed
+
+- Possibility to use `#[available_gas]` with unnamed argument. Use named arguments instead, e.g. `#[available_gas(l2_gas: 5)]`.
+- The deprecated command `snforge init`. Use `snforge new` to initialize new `Forge` projects
+
+## [0.49.0] - 2025-09-03
+
+### Forge
+
 #### Added
 
+- Support for `meta_tx_v0` syscall with cheatcode compatibility
 - `snforge` now supports [oracles](https://docs.swmansion.com/cairo-oracle/) with `--experimental-oracles` flag.
 - `--trace-components` flag to allow selecting which components of the trace to do display. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#trace-components)
+
+### Changed
+
+- `deploy` and `deploy_at` methods on `ContractClass` instance now fail immediately upon encountering an error, preventing the error from being caught. This change aligns with the behavior of the `deploy_syscall` on the network
 
 ### Cast
 
@@ -34,6 +52,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - A bug that caused `#[fuzzer]` attribute to fail when used with generic structs
+
+### Cast
+
+#### Added
+
+- `utils class-hash` command to calculate the class hash for a contract
 
 ## [0.48.0] - 2025-08-05
 
