@@ -91,7 +91,7 @@ impl Arguments {
 
     #[inline]
     pub fn named(&self) -> NamedArgs {
-        NamedArgs::new(&self.named)
+        self.named.clone()
     }
 
     #[inline]
