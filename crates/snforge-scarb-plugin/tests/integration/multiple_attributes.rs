@@ -451,3 +451,73 @@ fn works_with_fuzzer_config_wrapper() {
         ",
     );
 }
+
+use snforge_scarb_plugin::attributes::test_case::test_case;
+
+#[test]
+fn works_with_test_fuzzer_and_test_case() {
+    // Ad 1. We must add `#[test_case]` first so `#[test]` will not throw
+    // diagnostic error "function with parameters must have #[fuzzer] or #[test_case] attribute".
+    // It will be later removed (Ad 2.).
+    let item = quote!(
+        #[test_case(name: "one_and_two", 1, 2, 3)]
+        fn test_add(x: i128, y: i128, expected: i128) {}
+    );
+
+    let result = test(TokenStream::empty(), item.clone());
+    assert_diagnostics(&result, &[]);
+    assert_output(
+        &result,
+        r#"
+            #[test_case(name: "one_and_two", 1, 2, 3)]
+            fn test_add(x: i128, y: i128, expected: i128) {}
+        "#,
+    );
+
+    let item = get_function(&result.token_stream, "test_add", false);
+    let result = fuzzer(TokenStream::empty(), item);
+    assert_diagnostics(&result, &[]);
+    assert_output(
+        &result,
+        r#"
+            #[__fuzzer_config]
+            #[__fuzzer_wrapper]
+            #[test_case(name: "one_and_two", 1, 2, 3)]
+            fn test_add(x: i128, y: i128, expected: i128) {}
+        "#,
+    );
+
+    // Ad 2. Now, we need to remove `#[test_case]` before calling `test_case()`.
+    let item = get_function(&result.token_stream, "test_add", true);
+    let item = quote! {
+        #[__fuzzer_config]
+        #[__fuzzer_wrapper]
+        #item
+    };
+
+    let args = quote!((name: "one_and_two", 1, 2, 3));
+    let result = test_case(args, item);
+    assert_diagnostics(&result, &[]);
+    assert_output(
+        &result,
+        "
+            #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+            #[snforge_internal_test_executable]
+            fn test_add_one_and_two(mut _data: Span<felt252>) -> Span::<felt252> {
+                core::internal::require_implicit::<System>();
+                core::internal::revoke_ap_tracking();
+                core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
+                core::option::OptionTraitImpl::expect(
+                    core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
+                );
+                test_add(1, 2, 3);
+                let mut arr = ArrayTrait::new();
+                core::array::ArrayTrait::span(@arr)
+            }
+
+            #[__fuzzer_config]
+            #[__fuzzer_wrapper]
+            fn test_add(x: i128, y: i128, expected: i128) {}
+        ",
+    );
+}
