@@ -600,7 +600,7 @@ pub async fn test_invalid_private_key_in_file() {
         output,
         indoc! {r"
         Command: account import
-        Error: Failed to obtain private key from the file my_private_key: failed to create Felt from string: invalid dec string
+        Error: Failed to obtain private key from the file my_private_key: Failed to create Felt from string
         "},
     );
 }

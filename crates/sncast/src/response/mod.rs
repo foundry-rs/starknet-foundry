@@ -1,6 +1,7 @@
 pub mod account;
 pub mod call;
 pub mod cast_message;
+pub mod class_hash;
 pub mod command;
 pub mod declare;
 pub mod deploy;

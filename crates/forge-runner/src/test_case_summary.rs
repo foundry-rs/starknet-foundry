@@ -11,7 +11,6 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::Use
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use conversions::byte_array::ByteArray;
 use conversions::felt::ToShortString;
-use foundry_ui::UI;
 use num_traits::Pow;
 use shared::utils::build_readable_text;
 use starknet_api::execution_resources::GasVector;
@@ -325,7 +324,6 @@ impl TestCaseSummary<Single> {
         contracts_data: &ContractsData,
         versioned_program_path: &Utf8Path,
         trace_args: &TraceArgs,
-        ui: &UI,
     ) -> Self {
         let name = test_case.name.clone();
 
@@ -354,7 +352,7 @@ impl TestCaseSummary<Single> {
                         )),
                         debugging_trace,
                     };
-                    check_available_gas(test_case.config.available_gas, summary, ui)
+                    check_available_gas(test_case.config.available_gas, summary)
                 }
                 ExpectedTestResult::Panics(expected_panic_value) => TestCaseSummary::Failed {
                     name,

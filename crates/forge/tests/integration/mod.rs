@@ -20,6 +20,7 @@ mod get_class_hash;
 mod interact_with_state;
 mod l1_handler_executor;
 mod message_to_l1;
+mod meta_tx_v0;
 mod mock_call;
 mod precalculate_address;
 mod pure_cairo;

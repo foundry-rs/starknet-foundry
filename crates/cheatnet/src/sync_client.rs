@@ -1,4 +1,4 @@
-use starknet::core::types::{BlockId, ContractClass, MaybePendingBlockWithTxHashes};
+use starknet::core::types::{BlockId, ContractClass, MaybePreConfirmedBlockWithTxHashes};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider, ProviderError};
 use starknet_api::block::BlockNumber;
@@ -27,7 +27,9 @@ impl SyncClient {
         self.sync(self.client.chain_id())
     }
 
-    pub fn get_block_with_tx_hashes(&self) -> Result<MaybePendingBlockWithTxHashes, ProviderError> {
+    pub fn get_block_with_tx_hashes(
+        &self,
+    ) -> Result<MaybePreConfirmedBlockWithTxHashes, ProviderError> {
         self.sync(self.client.get_block_with_tx_hashes(self.block_id))
     }
 

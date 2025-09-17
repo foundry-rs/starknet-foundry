@@ -16,7 +16,7 @@ use shared::rpc::create_rpc_client;
 use starknet::accounts::{AccountFactory, AccountFactoryError};
 use starknet::core::types::{
     BlockId, BlockTag,
-    BlockTag::{Latest, Pending},
+    BlockTag::{Latest, PreConfirmed},
     ContractClass, ContractErrorData,
     StarknetError::{ClassHashNotFound, ContractNotFound, TransactionHashNotFound},
 };
@@ -305,7 +305,7 @@ async fn build_account(
     let mut account =
         SingleOwnerAccount::new(provider, signer, address, chain_id, account_encoding);
 
-    account.set_block_id(BlockId::Tag(Pending));
+    account.set_block_id(BlockId::Tag(PreConfirmed));
 
     Ok(account)
 }
@@ -315,7 +315,10 @@ async fn verify_account_address(
     chain_id: Felt,
     provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<()> {
-    match provider.get_nonce(BlockId::Tag(Pending), address).await {
+    match provider
+        .get_nonce(BlockId::Tag(PreConfirmed), address)
+        .await
+    {
         Ok(_) => Ok(()),
         Err(error) => {
             if let StarknetError(ContractNotFound) = error {
@@ -476,8 +479,16 @@ pub async fn check_if_legacy_contract(
     provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<bool> {
     let contract_class = match class_hash {
-        Some(class_hash) => provider.get_class(BlockId::Tag(Pending), class_hash).await,
-        None => provider.get_class_at(BlockId::Tag(Pending), address).await,
+        Some(class_hash) => {
+            provider
+                .get_class(BlockId::Tag(PreConfirmed), class_hash)
+                .await
+        }
+        None => {
+            provider
+                .get_class_at(BlockId::Tag(PreConfirmed), address)
+                .await
+        }
     }
     .map_err(handle_rpc_error)?;
 
@@ -489,7 +500,7 @@ pub async fn get_class_hash_by_address(
     address: Felt,
 ) -> Result<Felt> {
     let result = provider
-        .get_class_hash_at(BlockId::Tag(Pending), address)
+        .get_class_hash_at(BlockId::Tag(PreConfirmed), address)
         .await;
 
     if let Err(ProviderError::StarknetError(ContractNotFound)) = result {
@@ -528,13 +539,13 @@ fn map_encoding(legacy: bool) -> ExecutionEncoding {
 
 pub fn get_block_id(value: &str) -> Result<BlockId> {
     match value {
-        "pending" => Ok(BlockId::Tag(Pending)),
+        "pre_confirmed" => Ok(BlockId::Tag(PreConfirmed)),
         "latest" => Ok(BlockId::Tag(Latest)),
         _ if value.starts_with("0x") => Ok(BlockId::Hash(Felt::from_hex(value)?)),
         _ => match value.parse::<u64>() {
             Ok(value) => Ok(BlockId::Number(value)),
             Err(_) => Err(anyhow::anyhow!(
-                "Incorrect value passed for block_id = {value}. Possible values are pending, latest, block hash (hex) and block number (u64)"
+                "Incorrect value passed for block_id = {value}. Possible values are `pre_confirmed`, `latest`, block hash (hex) and block number (u64)"
             )),
         },
     }
@@ -547,8 +558,6 @@ pub struct ErrorData {
 
 #[derive(Error, Debug, CairoSerialize)]
 pub enum TransactionError {
-    #[error("Transaction has been rejected")]
-    Rejected,
     #[error("Transaction has been reverted = {}", .0.data)]
     Reverted(ErrorData),
 }
@@ -574,9 +583,13 @@ pub async fn wait_for_tx(
     let retries = wait_params.get_retries();
     for i in (1..retries).rev() {
         match provider.get_transaction_status(tx_hash).await {
-            Ok(starknet::core::types::TransactionStatus::Rejected) => {
+            Ok(starknet::core::types::TransactionStatus::PreConfirmed(
+                ExecutionResult::Reverted { reason },
+            )) => {
                 return Err(WaitForTransactionError::TransactionError(
-                    TransactionError::Rejected,
+                    TransactionError::Reverted(ErrorData {
+                        data: ByteArray::from(reason.as_str()),
+                    }),
                 ));
             }
             Ok(
@@ -594,7 +607,19 @@ pub async fn wait_for_tx(
                     }
                 };
             }
-            Ok(starknet::core::types::TransactionStatus::Received)
+            Ok(starknet::core::types::TransactionStatus::PreConfirmed(
+                ExecutionResult::Succeeded,
+            )) => {
+                let remaining_time = wait_params.remaining_time(i);
+                ui.println(&"Transaction status: PRE_CONFIRMED".to_string());
+                ui.println(&format!(
+                    "Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)"
+                ));
+            }
+            Ok(
+                starknet::core::types::TransactionStatus::Received
+                | starknet::core::types::TransactionStatus::Candidate,
+            )
             | Err(StarknetError(TransactionHashNotFound)) => {
                 let remaining_time = wait_params.remaining_time(i);
                 ui.println(&format!(
@@ -736,7 +761,7 @@ mod tests {
     use conversions::string::IntoHexStr;
     use starknet::core::types::{
         BlockId,
-        BlockTag::{Latest, Pending},
+        BlockTag::{Latest, PreConfirmed},
         Felt,
     };
     use starknet::core::utils::UdcUniqueSettings;
@@ -745,10 +770,10 @@ mod tests {
 
     #[test]
     fn test_get_block_id() {
-        let pending_block = get_block_id("pending").unwrap();
+        let pending_block = get_block_id("pre_confirmed").unwrap();
         let latest_block = get_block_id("latest").unwrap();
 
-        assert_eq!(pending_block, BlockId::Tag(Pending));
+        assert_eq!(pending_block, BlockId::Tag(PreConfirmed));
         assert_eq!(latest_block, BlockId::Tag(Latest));
     }
 
@@ -779,7 +804,7 @@ mod tests {
         let block = get_block_id("mariusz").unwrap_err();
         assert!(block
             .to_string()
-            .contains("Incorrect value passed for block_id = mariusz. Possible values are pending, latest, block hash (hex) and block number (u64)"));
+            .contains("Incorrect value passed for block_id = mariusz. Possible values are `pre_confirmed`, `latest`, block hash (hex) and block number (u64)"));
     }
 
     #[test]
