@@ -364,26 +364,46 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let curve: Felt = input_reader.read()?;
                 let curve = curve.to_short_string().ok();
 
-                let (signing_key_bytes, verifying_key_bytes) = {
+                let (signing_key_bytes, x_coordinate_bytes, y_coordinate_bytes) = {
+                    let extract_coordinates_from_verifying_key = |verifying_key: Box<[u8]>| {
+                        let verifying_key = verifying_key.iter().as_slice();
+                        (
+                            verifying_key[1..33].try_into().unwrap(),
+                            verifying_key[33..65].try_into().unwrap(),
+                        )
+                    };
+
                     match curve.as_deref() {
                         Some("Secp256k1") => {
                             let signing_key = k256::ecdsa::SigningKey::random(
                                 &mut k256::elliptic_curve::rand_core::OsRng,
                             );
-                            let verifying_key = signing_key.verifying_key();
+                            let verifying_key = signing_key
+                                .verifying_key()
+                                .to_encoded_point(false)
+                                .to_bytes();
+                            let (x_coordinate, y_coordinate) =
+                                extract_coordinates_from_verifying_key(verifying_key);
                             (
-                                signing_key.to_bytes(),
-                                verifying_key.to_encoded_point(false).to_bytes(),
+                                signing_key.to_bytes().as_slice()[0..32].try_into().unwrap(),
+                                x_coordinate,
+                                y_coordinate,
                             )
                         }
                         Some("Secp256r1") => {
                             let signing_key = p256::ecdsa::SigningKey::random(
                                 &mut p256::elliptic_curve::rand_core::OsRng,
                             );
-                            let verifying_key = signing_key.verifying_key();
+                            let verifying_key = signing_key
+                                .verifying_key()
+                                .to_encoded_point(false)
+                                .to_bytes();
+                            let (x_coordinate, y_coordinate) =
+                                extract_coordinates_from_verifying_key(verifying_key);
                             (
-                                signing_key.to_bytes(),
-                                verifying_key.to_encoded_point(false).to_bytes(),
+                                signing_key.to_bytes().as_slice()[0..32].try_into().unwrap(),
+                                x_coordinate,
+                                y_coordinate,
                             )
                         }
                         _ => return Ok(CheatcodeHandlingResult::Forwarded),
@@ -392,8 +412,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 Ok(CheatcodeHandlingResult::from_serializable((
                     CairoU256::from_bytes(&signing_key_bytes),
-                    CairoU256::from_bytes(&verifying_key_bytes[1..]), // bytes of public_key's x-coordinate
-                    CairoU256::from_bytes(&verifying_key_bytes[33..]), // bytes of public_key's y-coordinate
+                    CairoU256::from_bytes(&x_coordinate_bytes), // bytes of public_key's x-coordinate
+                    CairoU256::from_bytes(&y_coordinate_bytes), // bytes of public_key's y-coordinate
                 )))
             }
             "ecdsa_sign_message" => {
@@ -441,6 +461,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 };
 
                 let result = result.map(|(r_bytes, s_bytes)| {
+                    let r_bytes: [u8; 32] = r_bytes.as_slice()[0..32].try_into().unwrap();
+                    let s_bytes: [u8; 32] = s_bytes.as_slice()[0..32].try_into().unwrap();
                     (
                         CairoU256::from_bytes(&r_bytes),
                         CairoU256::from_bytes(&s_bytes),
