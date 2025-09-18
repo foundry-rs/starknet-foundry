@@ -365,14 +365,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let curve = curve.to_short_string().ok();
 
                 let (signing_key_bytes, x_coordinate_bytes, y_coordinate_bytes) = {
-                    let extract_coordinates_from_verifying_key =
-                        |verifying_key: Box<[u8]>| {
-                            let verifying_key = verifying_key.iter().as_slice();
-                            (
-                                verifying_key[1..33].try_into().unwrap(),
-                                verifying_key[33..65].try_into().unwrap(),
-                            )
-                        };
+                    let extract_coordinates_from_verifying_key = |verifying_key: Box<[u8]>| {
+                        let verifying_key = verifying_key.iter().as_slice();
+                        (
+                            verifying_key[1..33].try_into().unwrap(),
+                            verifying_key[33..65].try_into().unwrap(),
+                        )
+                    };
 
                     match curve.as_deref() {
                         Some("Secp256k1") => {
