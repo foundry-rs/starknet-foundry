@@ -7,6 +7,7 @@ edition.workspace = true
 
 [features]
 assert_non_exact_gas = []
+run-native = []
 
 [dependencies]
 walkdir.workspace = true
