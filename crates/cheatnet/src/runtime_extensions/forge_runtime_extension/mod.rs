@@ -11,7 +11,6 @@ use crate::runtime_extensions::{
     forge_runtime_extension::cheatcodes::{
         CheatcodeError,
         declare::declare,
-        deploy::{deploy, deploy_at},
         generate_random_felt::generate_random_felt,
         get_class_hash::get_class_hash,
         l1_handler_execute::l1_handler_execute,
@@ -26,7 +25,6 @@ use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::CallEntryPoint;
-use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
 use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, SyscallUsageMap};
 use blockifier::state::errors::StateError;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
@@ -189,43 +187,16 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 let contract_name: String = input_reader.read::<ByteArray>()?.to_string();
 
-                handle_declare_deploy_result(declare(*state, &contract_name, self.contracts_data))
+                handle_declare_result(declare(*state, &contract_name, self.contracts_data))
             }
-            "deploy" => {
-                let class_hash = input_reader.read()?;
-                let calldata: Vec<_> = input_reader.read()?;
-                let cheatnet_runtime = &mut extended_runtime.extended_runtime;
-                let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
-
-                syscall_handler.increment_syscall_count_by(&SyscallSelector::Deploy, 1);
-                syscall_handler
-                    .increment_linear_factor_by(&SyscallSelector::Deploy, calldata.len());
-
-                handle_declare_deploy_result(deploy(
-                    syscall_handler,
-                    cheatnet_runtime.extension.cheatnet_state,
-                    &class_hash,
-                    &calldata,
-                ))
-            }
-            "deploy_at" => {
-                let class_hash = input_reader.read()?;
-                let calldata: Vec<_> = input_reader.read()?;
+            // Internal cheatcode used to pass a contract address when calling `deploy_at`.
+            "set_deploy_at_address" => {
                 let contract_address = input_reader.read()?;
-                let cheatnet_runtime = &mut extended_runtime.extended_runtime;
-                let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
-                syscall_handler.increment_syscall_count_by(&SyscallSelector::Deploy, 1);
-                syscall_handler
-                    .increment_linear_factor_by(&SyscallSelector::Deploy, calldata.len());
+                let state = &mut *extended_runtime.extended_runtime.extension.cheatnet_state;
+                state.set_next_deploy_at_address(contract_address);
 
-                handle_declare_deploy_result(deploy_at(
-                    syscall_handler,
-                    cheatnet_runtime.extension.cheatnet_state,
-                    &class_hash,
-                    &calldata,
-                    contract_address,
-                ))
+                Ok(CheatcodeHandlingResult::from_serializable(()))
             }
             "precalculate_address" => {
                 let class_hash = input_reader.read()?;
@@ -238,6 +209,16 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .precalculate_address(&class_hash, &calldata);
 
                 Ok(CheatcodeHandlingResult::from_serializable(contract_address))
+            }
+            // Internal cheatcode to guarantee unique salts for each deployment
+            // when deploying via a method of the `ContractClass` struct.
+            "get_salt" => {
+                let state = &mut *extended_runtime.extended_runtime.extension.cheatnet_state;
+
+                let salt = state.get_salt();
+                state.increment_deploy_salt_base();
+
+                Ok(CheatcodeHandlingResult::from_serializable(salt))
             }
             "var" => {
                 let name: String = input_reader.read::<ByteArray>()?.to_string();
@@ -596,7 +577,7 @@ enum SignError {
     HashOutOfRange,
 }
 
-fn handle_declare_deploy_result<T: CairoSerialize>(
+fn handle_declare_result<T: CairoSerialize>(
     declare_result: Result<T, CheatcodeError>,
 ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
     let result = match declare_result {
@@ -673,6 +654,7 @@ pub fn update_top_call_resources(
         .extended_runtime
         .extended_runtime
         .hint_handler
+        .base
         .syscalls_usage
         .clone();
 

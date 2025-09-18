@@ -406,7 +406,7 @@ mod tests {
             [[tool.snforge.fork]]
             name = "SAME_NAME"
             url = "http://some.rpc.url"
-            block_id.tag = "Pending"
+            block_id.tag = "Preconfirmed"
             "#
         );
         temp.child("Scarb.toml").write_str(content).unwrap();

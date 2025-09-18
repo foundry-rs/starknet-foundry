@@ -74,6 +74,7 @@ async fn test_wait_for_reverted_transaction() {
         l2_gas_price: Some(1),
         l1_data_gas: Some(1),
         l1_data_gas_price: Some(1),
+        tip: None,
     };
     let transaction_hash = invoke_contract(
         ACCOUNT,
