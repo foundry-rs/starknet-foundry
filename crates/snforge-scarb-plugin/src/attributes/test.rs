@@ -69,6 +69,15 @@ fn test_internal(
 
     let has_fuzzer = has_fuzzer_attribute(db, func);
 
+    // If there is `#[fuzzer]` attribute, called function is suffixed with `__fuzzer_generated`
+    // `#[__fuzzer_wrapper]` is responsible for adding this suffix.
+    let func_name = func.declaration(db).name(db).to_token_stream(db);
+    let called_func = if has_fuzzer {
+        format_ident!("{func_name}__fuzzer_generated")
+    } else {
+        format_ident!("{}", name)
+    };
+
     let signature = func.declaration(db).signature(db).as_syntax_node();
     let signature = SyntaxNodeWithDb::new(&signature, db);
     let signature = quote! { #signature };
@@ -79,27 +88,15 @@ fn test_internal(
     let attributes = func.attributes(db).as_syntax_node();
     let attributes = SyntaxNodeWithDb::new(&attributes, db);
 
+    let test_func = TokenStream::new(vec![format_ident!("{}__test_generated", name)]);
     let func_ident = format_ident!("{}", name);
 
     if should_run_test {
-        let func_name = func.declaration(db).name(db).to_token_stream(db);
-
-        let test_func_ident = format_ident!("{}__test_generated", name);
-        let test_func_ident = TokenStream::new(vec![test_func_ident]);
-
-        // If there is `#[fuzzer]` attribute, called function is suffixed with `__fuzzer_generated`
-        // `#[__fuzzer_wrapper]` is responsible for adding this suffix.
-        let called_func_ident = if has_fuzzer {
-            format_ident!("{func_name}__fuzzer_generated")
-        } else {
-            format_ident!("{}", name)
-        };
-        let called_func_ident = TokenStream::new(vec![called_func_ident]);
+        let called_func = TokenStream::new(vec![called_func]);
 
         let call_args = TokenStream::new(vec![format_ident!("")]);
 
-        let test_func_with_attrs =
-            test_func_with_attrs(&test_func_ident, &called_func_ident, &call_args);
+        let test_func_with_attrs = test_func_with_attrs(&test_func, &called_func, &call_args);
 
         Ok(quote!(
             #test_func_with_attrs
