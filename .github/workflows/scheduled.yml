@@ -48,8 +48,8 @@ jobs:
           scarb-version: ${{ matrix.version }}
       - uses: software-mansion/setup-universal-sierra-compiler@v1
 
-      - run: cargo test --release --lib -p forge
-      - run: cargo test --release -p forge integration --features assert_non_exact_gas
+      - run: cargo test --profile ci --lib -p forge
+      - run: cargo test --profile ci -p forge integration --features assert_non_exact_gas
 
   test-forge-e2e:
     if: github.event.repository.fork == false
@@ -91,7 +91,7 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
-      - run: cargo test --release -p forge --features skip_plugin_checks e2e
+      - run: cargo test --profile ci -p forge --features skip_plugin_checks e2e
 
   test-cast:
     if: github.event.repository.fork == false
@@ -121,7 +121,7 @@ jobs:
           tool_versions: |
             starknet-devnet ${{ steps.get-devnet-version.outputs.version }}
 
-      - run: cargo test --release -p sncast
+      - run: cargo test --profile ci -p sncast
 
   get-version:
     name: Get current foundry version
