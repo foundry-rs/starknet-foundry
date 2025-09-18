@@ -43,6 +43,7 @@ pub(crate) fn execute_entry_point_call_native(
         })?;
 
     let syscall_usage = &syscall_handler.native_syscall_handler.base.syscalls_usage;
+    println!("GAS CONSUMED {:?} SYSCALL USAGE: {:?}", call_info.execution.gas_consumed, syscall_usage);
 
     Ok(CallInfoWithExecutionData {
         call_info,
@@ -150,6 +151,10 @@ fn create_callinfo(
     }
 
     let gas_consumed = syscall_handler.native_syscall_handler.base.call.initial_gas - remaining_gas;
+    println!(
+        "initial gas: {}, remianing gas: {}, gas consumed: {}",
+        syscall_handler.native_syscall_handler.base.call.initial_gas, remaining_gas, gas_consumed
+    );
     let vm_resources = CallInfo::summarize_vm_resources(
         syscall_handler
             .native_syscall_handler

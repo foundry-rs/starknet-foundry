@@ -5,13 +5,18 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 };
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use crate::runtime_extensions::common::get_relocated_vm_trace;
+use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::contract_class::{CompiledClassV1, TrackedResource};
 use blockifier::execution::entry_point::ExecutableCallEntryPoint;
 use blockifier::execution::entry_point_execution::{
-    ExecutionRunnerMode, VmExecutionContext, finalize_execution,
-    initialize_execution_context_with_runner_mode, prepare_call_arguments,
+    CallResult, ExecutionRunnerMode, VmExecutionContext, extract_vm_resources, finalize_runner,
+    initialize_execution_context_with_runner_mode, prepare_call_arguments, total_vm_resources,
 };
+use blockifier::execution::errors::PostExecutionError;
+use blockifier::execution::execution_utils::read_execution_retdata;
+use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
+use blockifier::transaction::objects::ExecutionResourcesTraits;
 use blockifier::{
     execution::{
         contract_class::EntryPointV1, entry_point::EntryPointExecutionContext,
@@ -19,12 +24,128 @@ use blockifier::{
     },
     state::state_api::State,
 };
+use cairo_vm::types::relocatable::MaybeRelocatable;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::{
     hint_processor::hint_processor_definition::HintProcessor,
     vm::runners::cairo_runner::{CairoArg, CairoRunner},
 };
+use num_traits::ToPrimitive;
 use runtime::{ExtendedRuntime, StarknetRuntime};
+
+pub fn finalize_execution(
+    mut runner: CairoRunner,
+    mut syscall_handler: SyscallHintProcessor<'_>,
+    n_total_args: usize,
+    program_extra_data_length: usize,
+    tracked_resource: TrackedResource,
+) -> Result<CallInfo, PostExecutionError> {
+    finalize_runner(&mut runner, n_total_args, program_extra_data_length)?;
+    syscall_handler
+        .read_only_segments
+        .mark_as_accessed(&mut runner)?;
+
+    let call_result = get_call_result(
+        &runner,
+        &syscall_handler,
+        &tracked_resource,
+    )?;
+
+    // Take into account the resources of the current call, without inner calls.
+    // Has to happen after marking holes in segments as accessed.
+    let vm_resources_without_inner_calls = extract_vm_resources(&runner, &syscall_handler)?;
+
+    let tracked_vm_resources_without_inner_calls = match tracked_resource {
+        TrackedResource::CairoSteps => &vm_resources_without_inner_calls,
+        TrackedResource::SierraGas => &ExecutionResources::default(),
+    };
+
+    syscall_handler.finalize();
+
+    let vm_resources = total_vm_resources(
+        tracked_vm_resources_without_inner_calls,
+        &syscall_handler.base.inner_calls,
+    );
+
+    let syscall_handler_base = syscall_handler.base;
+
+    Ok(CallInfo {
+        call: syscall_handler_base.call.into(),
+        execution: CallExecution {
+            retdata: call_result.retdata,
+            events: syscall_handler_base.events,
+            l2_to_l1_messages: syscall_handler_base.l2_to_l1_messages,
+            cairo_native: false,
+            failed: call_result.failed,
+            gas_consumed: call_result.gas_consumed,
+        },
+        inner_calls: syscall_handler_base.inner_calls,
+        tracked_resource,
+        resources: vm_resources,
+        storage_access_tracker: syscall_handler_base.storage_access_tracker,
+        builtin_counters: vm_resources_without_inner_calls.prover_builtins(),
+    })
+}
+
+pub fn get_call_result(
+    runner: &CairoRunner,
+    syscall_handler: &SyscallHintProcessor<'_>,
+    tracked_resource: &TrackedResource,
+) -> Result<CallResult, PostExecutionError> {
+    let return_result = runner.vm.get_return_values(5)?;
+    // Corresponds to the Cairo 1.0 enum:
+    // enum PanicResult<Array::<felt>> { Ok: Array::<felt>, Err: Array::<felt>, }.
+    let [failure_flag, retdata_start, retdata_end]: &[MaybeRelocatable; 3] = (&return_result[2..])
+        .try_into()
+        .expect("Return values must be of size 3.");
+
+    let failed = if *failure_flag == MaybeRelocatable::from(0) {
+        false
+    } else if *failure_flag == MaybeRelocatable::from(1) {
+        true
+    } else {
+        return Err(PostExecutionError::MalformedReturnData {
+            error_message: "Failure flag expected to be either 0 or 1.".to_string(),
+        });
+    };
+
+    let retdata_size = retdata_end.sub(retdata_start)?;
+    // TODO(spapini): Validate implicits.
+
+    let gas = &return_result[0];
+    let MaybeRelocatable::Int(gas) = gas else {
+        return Err(PostExecutionError::MalformedReturnData {
+            error_message: "Error extracting return data.".to_string(),
+        });
+    };
+    let gas = gas
+        .to_u64()
+        .ok_or(PostExecutionError::MalformedReturnData {
+            error_message: format!("Unexpected remaining gas: {gas}."),
+        })?;
+
+    if gas > syscall_handler.base.call.initial_gas {
+        return Err(PostExecutionError::MalformedReturnData {
+            error_message: format!("Unexpected remaining gas: {gas}."),
+        });
+    }
+
+    let gas_consumed = match tracked_resource {
+        // Do not count Sierra gas in CairoSteps mode.
+        TrackedResource::CairoSteps => 0,
+        TrackedResource::SierraGas => syscall_handler.base.call.initial_gas - gas,
+    };
+    println!(
+        "initial gas: {}, remianing gas: {}, gas consumed: {}",
+        syscall_handler.base.call.initial_gas, gas, gas_consumed
+    );
+    Ok(CallResult {
+        failed,
+        retdata: read_execution_retdata(runner, retdata_size, retdata_start)?,
+        gas_consumed,
+    })
+}
 
 // blockifier/src/execution/cairo1_execution.rs:48 (execute_entry_point_call)
 #[expect(clippy::result_large_err)]
@@ -133,6 +254,11 @@ pub(crate) fn execute_entry_point_call_cairo1(
         TrackedResource::CairoSteps => (syscall_usage, SyscallUsageMap::default()),
         TrackedResource::SierraGas => (SyscallUsageMap::default(), syscall_usage),
     };
+
+    println!(
+        "GAS CONSUMED {:?} SYSCALL USAGE: {:?}",
+        call_info.execution.gas_consumed, syscall_usage_sierra_gas
+    );
 
     Ok(CallInfoWithExecutionData {
         call_info,

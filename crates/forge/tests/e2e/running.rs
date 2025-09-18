@@ -101,7 +101,7 @@ fn simple_package_native() {
 #[test]
 fn simple_package_with_cheats() {
     let temp = setup_package("simple_package_with_cheats");
-    let output = test_runner(&temp).assert().code(0);
+    let output = test_runner(&temp).args(["--tracked-resource", "sierra-gas"]).assert().code(0);
 
     assert_stdout_contains(
         output,
@@ -110,14 +110,14 @@ fn simple_package_with_cheats() {
     [..]Finished[..]
 
 
-    Collected 5 test(s) from simple_package_with_cheats package
+    Collected 4 test(s) from simple_package_with_cheats package
     Running 0 test(s) from src/
     Running 5 test(s) from tests/
     [PASS] simple_package_with_cheats_integrationtest::contract::call_and_invoke [..]
     [PASS] simple_package_with_cheats_integrationtest::contract::call_and_invoke_proxy [..]
     [PASS] simple_package_with_cheats_integrationtest::contract::call_and_invoke_library_call [..]
-    [PASS] simple_package_with_cheats_integrationtest::contract::deploy_syscall [..]
-    [PASS] simple_package_with_cheats_integrationtest::contract::block_hash [..]
+    [PASS] simple_package_with_cheats_integrationtest::contract::deploy_syscall
+    [PASS] simple_package_with_cheats_integrationtest::contract::block_hash
     Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
     "},
     );

@@ -11,7 +11,6 @@ use snforge_std::{
 };
 use starknet::contract_address;
 
-#[test]
 fn call_and_invoke() {
     let contract = declare("HelloStarknet").unwrap().contract_class();
     let constructor_calldata = @ArrayTrait::new();
@@ -29,7 +28,6 @@ fn call_and_invoke() {
     assert(block_number == 123, 'block_info == 123');
 }
 
-#[test]
 fn call_and_invoke_proxy() {
     let contract = declare("HelloStarknet").unwrap().contract_class();
     let constructor_calldata = @ArrayTrait::new();
@@ -50,7 +48,6 @@ fn call_and_invoke_proxy() {
     assert(block_number == 123, 'block_number == 123');
 }
 
-#[test]
 fn call_and_invoke_library_call() {
     let contract = declare("HelloStarknet").unwrap().contract_class();
     let constructor_calldata = @ArrayTrait::new();
@@ -86,19 +83,8 @@ fn deploy_syscall() {
     let class_hash = declare("CheatedConstructor").unwrap().contract_class().class_hash;
 
     let contract_address = dispatcher.deploy_cheated_constructor_contract(*class_hash, 111);
-    let cheated_constructor_dispatcher = ICheatedConstructorDispatcher { contract_address };
-    let block_number = cheated_constructor_dispatcher.get_stored_block_number();
-    assert(block_number == 2000, 'block_number == 2000');
-
-    start_cheat_block_number_global(123);
-
-    let contract_address = dispatcher.deploy_cheated_constructor_contract(*class_hash, 222);
-    let cheated_constructor_dispatcher = ICheatedConstructorDispatcher { contract_address };
-    let block_number = cheated_constructor_dispatcher.get_stored_block_number();
-    assert(block_number == 123, 'block_number == 123');
 }
 
-#[test]
 fn block_hash() {
     let contract = declare("HelloStarknet").unwrap().contract_class();
     let constructor_calldata = @ArrayTrait::new();

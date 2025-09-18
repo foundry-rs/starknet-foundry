@@ -47,6 +47,7 @@ impl CheatableNativeSyscallHandler<'_> {
         total_gas_cost: u64,
         selector: SyscallSelector,
     ) -> SyscallResult<()> {
+        println!("preexecuting for selector: {:?}", selector);
         if self.native_syscall_handler.unrecoverable_error.is_some() {
             // An unrecoverable error was found in a previous syscall, we return immediately to
             // accelerate the end of the execution. The returned data is not important
@@ -68,6 +69,7 @@ impl CheatableNativeSyscallHandler<'_> {
                 .base
                 .syscall_base_gas_cost;
 
+        println!("required_gas: {}", required_gas);
         if *remaining_gas < required_gas {
             // Out of gas failure.
             return Err(vec![
@@ -76,7 +78,9 @@ impl CheatableNativeSyscallHandler<'_> {
             ]);
         }
 
+        println!("remaining_gas: {}", *remaining_gas);
         *remaining_gas -= required_gas;
+        println!("remaining_gas after subtract: {}", *remaining_gas);
 
         // To support sierra gas charge for blockifier revert flow, we track the remaining gas left
         // before executing a syscall if the current tracked resource is gas.

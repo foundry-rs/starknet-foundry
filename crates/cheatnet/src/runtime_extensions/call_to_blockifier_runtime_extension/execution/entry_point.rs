@@ -348,8 +348,12 @@ fn remove_syscall_resources_and_exit_non_error_call(
     // Remove resources consumed by syscalls from nested calls
     resources -= &versioned_constants
         .get_additional_os_syscall_resources(&nested_syscall_usage_vm_resources);
-    gas_consumed -=
-        get_syscalls_gas_consumed(&nested_syscall_usage_sierra_gas, versioned_constants);
+    let sub = get_syscalls_gas_consumed(&nested_syscall_usage_sierra_gas, versioned_constants);
+    println!(
+        "gas consumed {:?} nested sycalls {:?} sub {:?}",
+        &gas_consumed, &nested_syscall_usage_sierra_gas, &sub
+    );
+    gas_consumed -= sub;
 
     let syscall_usage_vm_resources = sum_syscall_usage(
         nested_syscall_usage_vm_resources,
