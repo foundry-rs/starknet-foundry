@@ -38,7 +38,7 @@ pub struct DeclareFrom {
     #[command(flatten)]
     pub rpc: RpcArgs,
 
-    /// Block identifier on which call should be performed.
+    /// Block identifier from which the contract will be fetched.
     /// Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string)
     /// and block number (u64)
     #[arg(short, long, default_value = "latest")]
