@@ -34,12 +34,6 @@ async fn test_happy_case() {
         .current_dir(temp_dir.path());
     let output = snapbox.assert().success();
 
-    let stdout = String::from_utf8_lossy(&output.get_output().stdout);
-    println!("STDOUT: {}", stdout);
-
-    let stderr = String::from_utf8_lossy(&output.get_output().stderr);
-    println!("STDERR: {}", stderr);
-
     assert_stdout_contains(
         output,
         indoc! {r"
