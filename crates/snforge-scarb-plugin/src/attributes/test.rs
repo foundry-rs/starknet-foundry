@@ -72,11 +72,12 @@ fn test_internal(
     // If there is `#[fuzzer]` attribute, called function is suffixed with `__fuzzer_generated`
     // `#[__fuzzer_wrapper]` is responsible for adding this suffix.
     let func_name = func.declaration(db).name(db).to_token_stream(db);
-    let called_func = if has_fuzzer {
+    let called_func_ident = if has_fuzzer {
         format_ident!("{func_name}__fuzzer_generated")
     } else {
         format_ident!("{}", name)
     };
+    let called_func = TokenStream::new(vec![called_func_ident]);
 
     let signature = func.declaration(db).signature(db).as_syntax_node();
     let signature = SyntaxNodeWithDb::new(&signature, db);
@@ -92,8 +93,6 @@ fn test_internal(
     let func_ident = format_ident!("{}", name);
 
     if should_run_test {
-        let called_func = TokenStream::new(vec![called_func]);
-
         let call_args = TokenStream::new(vec![format_ident!("")]);
 
         let test_func_with_attrs = test_func_with_attrs(&test_func, &called_func, &call_args);
@@ -145,18 +144,18 @@ fn has_parameters(db: &SimpleParserDatabase, func: &FunctionWithBody) -> bool {
 
 #[must_use]
 pub fn test_func_with_attrs(
-    test_fn_name_ident: &TokenStream,
-    fn_name_ident: &TokenStream,
+    test_fn_name: &TokenStream,
+    fn_name: &TokenStream,
     call_args: &TokenStream,
 ) -> TokenStream {
-    let test_fn_name_ident = test_fn_name_ident.clone();
-    let fn_name_ident = fn_name_ident.clone();
+    let test_fn_name = test_fn_name.clone();
+    let fn_name = fn_name.clone();
     let call_args = call_args.clone();
     let out_of_gas = create_single_token("'Out of gas'");
     quote!(
         #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
         #[snforge_internal_test_executable]
-        fn #test_fn_name_ident(mut _data: Span<felt252>) -> Span::<felt252> {
+        fn #test_fn_name(mut _data: Span<felt252>) -> Span::<felt252> {
             core::internal::require_implicit::<System>();
             core::internal::revoke_ap_tracking();
             core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
@@ -164,7 +163,7 @@ pub fn test_func_with_attrs(
             core::option::OptionTraitImpl::expect(
                 core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
             );
-            #fn_name_ident (#call_args);
+            #fn_name (#call_args);
 
             let mut arr = ArrayTrait::new();
             core::array::ArrayTrait::span(@arr)
