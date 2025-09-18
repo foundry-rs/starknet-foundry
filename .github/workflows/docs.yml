@@ -32,12 +32,12 @@ jobs:
     env:
       MDBOOK_VERSION: 0.4.52
     steps:
-      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
+      - uses: dtolnay/rust-toolchain@6d653acede28d24f02e3cd41383119e8b1b35921
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: Swatinem/rust-cache@f13886b937689c021905a6b90929199931d60db1
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
       - name: Install sitemap CLI
         run: |
           npm i -g static-sitemap-cli
@@ -88,7 +88,7 @@ jobs:
           sscli --base https://foundry-rs.github.io/starknet-foundry
         working-directory: ./docs/book/html
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: ./docs/book/html
   # Deployment job
