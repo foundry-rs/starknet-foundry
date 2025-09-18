@@ -94,9 +94,11 @@ Tests: 3 passed, 0 failed, 0 ignored, [..] filtered out
 </details>
 <br>
 
-## Combining With Fuzzer Attributes
+## Combining With Fuzzer Attribute
 
-Below is an example of a parameterized test that also uses the fuzzer.
+`#[test_case]` can be freely combined with the `#[fuzzer]` attribute.
+
+Below is an example in which we will fuzz the test but also run the specific defined cases.
 
 ```rust
 {{#include ../../listings/parametrized_testing_fuzzer/tests/example.cairo}}
