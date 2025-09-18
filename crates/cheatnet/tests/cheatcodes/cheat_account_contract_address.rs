@@ -57,7 +57,7 @@ fn cheat_account_contract_address_simple() {
 }
 
 #[test]
-fn cheat_account_contract_address_top() {
+fn cheat_account_contract_address_stop() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("CheatAccountContractAddressChecker", &[]);
