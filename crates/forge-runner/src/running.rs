@@ -28,7 +28,6 @@ use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredErrors, ExtendedStateReader,
 };
 use execution::finalize_execution;
-use foundry_ui::UI;
 use hints::hints_by_representation;
 use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
@@ -65,7 +64,6 @@ pub fn run_test(
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
-    ui: Arc<UI>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -85,17 +83,10 @@ pub fn run_test(
             return TestCaseSummary::Interrupted {};
         }
 
-        extract_test_case_summary(
-            run_result,
-            &case,
-            &forge_config,
-            &versioned_program_path,
-            &ui,
-        )
+        extract_test_case_summary(run_result, &case, &forge_config, &versioned_program_path)
     })
 }
 
-#[expect(clippy::too_many_arguments)]
 pub(crate) fn run_fuzz_test(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
@@ -104,7 +95,6 @@ pub(crate) fn run_fuzz_test(
     send: Sender<()>,
     fuzzing_send: Sender<()>,
     rng: Arc<Mutex<StdRng>>,
-    ui: Arc<UI>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -128,13 +118,7 @@ pub(crate) fn run_fuzz_test(
             return TestCaseSummary::Interrupted {};
         }
 
-        extract_test_case_summary(
-            run_result,
-            &case,
-            &forge_config,
-            &versioned_program_path,
-            &ui,
-        )
+        extract_test_case_summary(run_result, &case, &forge_config, &versioned_program_path)
     })
 }
 
@@ -391,7 +375,6 @@ fn extract_test_case_summary(
     case: &TestCaseWithResolvedConfig,
     forge_config: &ForgeConfig,
     versioned_program_path: &Utf8Path,
-    ui: &UI,
 ) -> TestCaseSummary<Single> {
     let contracts_data = &forge_config.test_runner_config.contracts_data;
     let trace_args = &forge_config.output_config.trace_args;
@@ -403,7 +386,6 @@ fn extract_test_case_summary(
                 contracts_data,
                 versioned_program_path,
                 trace_args,
-                ui,
             ),
             RunResult::Error(run_error) => {
                 let mut message = format!(

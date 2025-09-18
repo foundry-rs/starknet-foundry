@@ -6,7 +6,7 @@ use starknet::core::types::{
 };
 use starknet_api::core::EthAddress;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
-use starknet_api::transaction::fields::Calldata;
+use starknet_api::transaction::fields::{Calldata, ContractAddressSalt};
 use starknet_types_core::felt::Felt;
 use std::{
     cell::{Ref, RefCell},
@@ -226,6 +226,7 @@ macro_rules! impl_serialize_for_tuple {
 impl_serialize_for_felt_type!(Felt);
 impl_serialize_for_felt_type!(ClassHash);
 impl_serialize_for_felt_type!(ContractAddress);
+impl_serialize_for_felt_type!(ContractAddressSalt);
 impl_serialize_for_felt_type!(Nonce);
 impl_serialize_for_felt_type!(EntryPointSelector);
 impl_serialize_for_felt_type!(EthAddress);

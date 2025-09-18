@@ -1108,30 +1108,6 @@ fn call_nonexistent_selector() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_9_1"), ignore)]
-fn sierra_gas_with_older_scarb() {
-    let temp = setup_package("erc20_package");
-    let output = test_runner(&temp)
-        .arg("--detailed-resources")
-        .arg("--tracked-resource")
-        .arg("sierra-gas")
-        .assert()
-        .failure();
-
-    assert_stdout_contains(
-        output,
-        indoc! {r"
-        Checking requirements
-        [..]Scarb Version [..] doesn't satisfy minimal 2.10.0[..]
-        [..]To track sierra gas, minimal required scarb version is 2.10.0 (it comes with sierra >= 1.7.0 support)[..]
-        [..]Follow instructions from https://docs.swmansion.com/scarb/download.html[..]
-        [..]
-        [ERROR] Requirements not satisfied
-        "},
-    );
-}
-
-#[test]
 fn exact_printing_pass() {
     let temp = setup_package("deterministic_output");
 
