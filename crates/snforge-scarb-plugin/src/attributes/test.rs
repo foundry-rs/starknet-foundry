@@ -53,11 +53,12 @@ fn test_internal(
         None => true,
     };
 
-    let func_name = func.declaration(db).name(db).text(db);
-
     let has_fuzzer = has_fuzzer_attribute(db, func);
-    let called_func_name_ident = if has_fuzzer {
-        format_ident!("{func_name}__fuzzer_generated")
+
+    // If there is `#[fuzzer]` attribute, called function is suffixed with `__fuzzer_generated`
+    // `#[__fuzzer_wrapper]` is responsible for adding this suffix.
+    let called_func_ident = if has_fuzzer {
+        format_ident!("{name}__fuzzer_generated")
     } else {
         format_ident!("{}", name)
     };
@@ -72,9 +73,8 @@ fn test_internal(
     let attributes = func.attributes(db).as_syntax_node();
     let attributes = SyntaxNodeWithDb::new(&attributes, db);
 
-    let test_func_name_ident = format_ident!("{}__test_generated", func_name);
-    let mut func_ident = TokenStream::new(vec![format_ident!("{}", func_name)]);
-    func_ident.extend(signature);
+    let test_func_ident = format_ident!("{}__test_generated", name);
+    let func_ident = format_ident!("{}", name);
 
     let out_of_gas = create_single_token("'Out of gas'");
 
@@ -82,7 +82,7 @@ fn test_internal(
         Ok(quote!(
             #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
             #[snforge_internal_test_executable]
-            fn #test_func_name_ident(mut _data: Span<felt252>) -> Span::<felt252> {
+            fn #test_func_ident(mut _data: Span<felt252>) -> Span::<felt252> {
                 core::internal::require_implicit::<System>();
                 core::internal::revoke_ap_tracking();
                 core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
@@ -90,7 +90,7 @@ fn test_internal(
                 core::option::OptionTraitImpl::expect(
                     core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
                 );
-                #called_func_name_ident();
+                #called_func_ident();
 
                 let mut arr = ArrayTrait::new();
                 core::array::ArrayTrait::span(@arr)
@@ -98,7 +98,7 @@ fn test_internal(
 
             #attributes
             #[#internal_config]
-            fn #func_ident
+            fn #func_ident #signature
             #body
         ))
     } else {
