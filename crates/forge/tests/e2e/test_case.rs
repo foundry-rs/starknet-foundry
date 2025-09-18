@@ -26,7 +26,6 @@ fn simple_addition() {
     );
 }
 
-// TODO: Use separate process (with oracle) instead of heavy fib calculation.
 #[test]
 fn with_exit_first_flag() {
     let temp = setup_package("test_case");
