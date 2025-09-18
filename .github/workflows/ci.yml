@@ -37,7 +37,7 @@ jobs:
         with:
           tool: nextest@0.9.98
       - name: Build and archive tests
-        run: cargo nextest archive --profile ci -p forge --features skip_plugin_checks --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
+        run: cargo nextest archive --cargo-profile ci -p forge --features skip_plugin_checks --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v4
         with:
