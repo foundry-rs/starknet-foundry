@@ -39,8 +39,8 @@ fn test_case_internal(
     let unnamed_args = args.unnamed();
     ensure_params_valid(func, &args.unnamed(), db)?;
 
-    let func_name = func.declaration(db).name(db).text(db);
-    let case_fn_name = test_case_name(&func_name, &args, args_db)?;
+    let func_name = func.declaration(db).name(db);
+    let case_fn_name = test_case_name(&func_name.text(db), &args, args_db)?;
     let filtered_fn_attrs = collect_attrs_excluding_test_without_fuzzer(func, db);
 
     let signature = func.declaration(db).signature(db).as_syntax_node();
@@ -49,30 +49,36 @@ fn test_case_internal(
     let func_body = func.body(db).as_syntax_node();
     let func_body = SyntaxNodeWithDb::new(&func_body, db);
 
-    let func_name = format_ident!("{}", func_name);
-    let func = quote!(
+    let case_fn_name = format_ident!("{}", case_fn_name);
+    let case_fn_name = TokenStream::new(vec![case_fn_name]);
+
+    let func_name = func_name.to_token_stream(db);
+
+    let call_args = args_to_token_stream(&unnamed_args, args_db);
+
+    let test_func_with_attrs = test_func_with_attrs(&case_fn_name, &func_name, &call_args);
+
+    let func_ident = quote!(
         #filtered_fn_attrs
         fn #func_name #signature
         #func_body
     );
 
-    let call_args = unnamed_args
-        .clone()
-        .into_iter()
-        .map(|(_, expr)| expr.as_syntax_node().get_text(args_db))
-        .collect::<Vec<_>>()
-        .join(", ")
-        .to_string();
-    let call_args = format_ident!("({})", call_args);
-
-    let case_fn_name_ident = format_ident!("{}", case_fn_name);
-
-    let test_func_with_attrs = test_func_with_attrs(&case_fn_name_ident, &func_name, &call_args);
     Ok(quote!(
         #test_func_with_attrs
 
-        #func
+        #func_ident
     ))
+}
+
+fn args_to_token_stream(args: &UnnamedArgs, db: &SimpleParserDatabase) -> TokenStream {
+    let args_str = args
+        .iter()
+        .map(|(_, expr)| expr.as_syntax_node().get_text(db))
+        .collect::<Vec<_>>()
+        .join(", ")
+        .to_string();
+    TokenStream::new(vec![format_ident!("{}", args_str)])
 }
 
 fn ensure_params_valid(
