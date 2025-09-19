@@ -58,6 +58,7 @@ pub use syscall_handler::has_segment_arena;
 pub use syscall_handler::syscall_handler_offset;
 
 #[must_use]
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn run_test(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
@@ -87,6 +88,7 @@ pub fn run_test(
     })
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 pub(crate) fn run_fuzz_test(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
@@ -151,6 +153,7 @@ pub enum RunResult {
 }
 
 #[expect(clippy::too_many_lines)]
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn run_test_case(
     case: &TestCaseWithResolvedConfig,
     casm_program: &AssembledProgramWithDebugInfo,

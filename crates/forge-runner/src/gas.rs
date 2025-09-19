@@ -18,6 +18,7 @@ use starknet_api::execution_resources::{GasAmount, GasVector};
 use starknet_api::transaction::EventContent;
 use starknet_api::transaction::fields::GasVectorComputationMode;
 
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn calculate_used_gas(
     transaction_context: &TransactionContext,
     state: &mut CachedState<ExtendedStateReader>,

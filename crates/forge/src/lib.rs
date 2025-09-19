@@ -264,6 +264,7 @@ pub enum ExitStatus {
     Failure,
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
     let cli = Cli::parse();
 
@@ -325,6 +326,7 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
     }
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 fn check_requirements(output_on_success: bool, ui: &UI) -> Result<()> {
     let mut requirements_checker = RequirementsChecker::new(output_on_success);
     requirements_checker.add_requirement(Requirement {

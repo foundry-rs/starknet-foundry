@@ -20,6 +20,7 @@ pub enum TestTargetRunResult {
     Interrupted(TestTargetSummary),
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 pub async fn run_for_test_target(
     tests: TestTargetWithResolvedConfig,
     forge_config: Arc<ForgeConfig>,

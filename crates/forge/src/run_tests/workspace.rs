@@ -27,6 +27,7 @@ use shared::consts::SNFORGE_TEST_FILTER;
 use std::env;
 use std::sync::Arc;
 
+#[tracing::instrument(skip_all, level = "debug")]
 pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus> {
     match args.color {
         // SAFETY: This runs in a single-threaded environment.
@@ -147,6 +148,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     })
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 fn extract_failed_tests(
     tests_summaries: Vec<TestTargetSummary>,
 ) -> impl Iterator<Item = AnyTestCaseSummary> {

@@ -69,6 +69,7 @@ pub struct RunForPackageArgs {
 }
 
 impl RunForPackageArgs {
+    #[tracing::instrument(skip_all, level = "debug")]
     pub fn build(
         package: PackageMetadata,
         scarb_metadata: &Metadata,
@@ -130,6 +131,7 @@ impl RunForPackageArgs {
     }
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 async fn test_package_with_config_resolved(
     test_targets: Vec<TestTargetRaw>,
     fork_targets: &[ForkTarget],
@@ -156,6 +158,7 @@ fn sum_test_cases(test_targets: &[TestTargetWithResolvedConfig]) -> usize {
     test_targets.iter().map(|tc| tc.test_cases.len()).sum()
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 pub async fn run_for_package(
     RunForPackageArgs {
         test_targets,
