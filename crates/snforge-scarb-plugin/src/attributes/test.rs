@@ -71,11 +71,10 @@ fn test_internal(
 
     // If there is `#[fuzzer]` attribute, called function is suffixed with `__fuzzer_generated`
     // `#[__fuzzer_wrapper]` is responsible for adding this suffix.
-    let func_name = func.declaration(db).name(db).text(db);
     let called_func_ident = if has_fuzzer {
-        format_ident!("{}__fuzzer_generated", func_name)
+        format_ident!("{name}__fuzzer_generated")
     } else {
-        format_ident!("{}", func_name)
+        format_ident!("{name}")
     };
     let called_func = TokenStream::new(vec![called_func_ident]);
 
