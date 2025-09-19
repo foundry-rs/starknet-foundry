@@ -1,17 +1,16 @@
-use super::{AttributeInfo, ErrorExt, internal_config_statement::InternalConfigStatementCollector};
+use super::{internal_config_statement::InternalConfigStatementCollector, AttributeInfo, ErrorExt};
 use crate::asserts::assert_is_used_once;
 use crate::common::{has_fuzzer_attribute, has_test_case_attribute};
-use crate::utils::{SyntaxNodeUtils, create_single_token};
+use crate::utils::{create_single_token, SyntaxNodeUtils};
 use crate::{
     args::Arguments,
     common::{into_proc_macro_result, with_parsed_values},
     format_ident,
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
+use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
-use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode, ast::FunctionWithBody};
-use std::env::{self, VarError};
+use cairo_lang_syntax::node::{ast::FunctionWithBody, Terminal, TypedSyntaxNode};
 
 pub struct TestCollector;
 
@@ -60,7 +59,7 @@ fn test_internal(
 
     let name = func.declaration(db).name(db).text(db).to_string();
 
-    let test_filter = get_forge_test_filter().ok();
+    let test_filter = ExternalInput::get().forge_test_filter;
 
     let should_run_test = match test_filter {
         Some(ref filter) => name.contains(filter),

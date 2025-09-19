@@ -2,6 +2,7 @@ use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use foundry_ui::UI;
+use sncast::helpers::constants::UDC_ADDRESS;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::deploy::DeployResponse;
@@ -71,7 +72,9 @@ pub async fn deploy(
     ui: &UI,
 ) -> Result<DeployResponse, StarknetCommandError> {
     let salt = extract_or_generate_salt(salt);
-    let factory = ContractFactory::new(class_hash, account);
+
+    // TODO(#3628): Use `ContractFactory::new` once new UDC address is the default one in starknet-rs
+    let factory = ContractFactory::new_with_udc(class_hash, account, UDC_ADDRESS);
 
     let deployment = factory.deploy_v3(calldata.clone(), salt, unique);
 

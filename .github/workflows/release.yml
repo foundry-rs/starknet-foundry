@@ -18,7 +18,7 @@ jobs:
       versionIsValid: ${{ steps.validVersion.outputs.versionIsValid }}
       version: ${{ steps.validVersion.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v4
         with:
@@ -121,7 +121,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ test-binary, verify-version ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Download artifacts
         uses: actions/download-artifact@v4

@@ -7,7 +7,7 @@ edition.workspace = true
 
 [features]
 smoke = []
-scarb_2_9_1 = []
+scarb_2_10_0 = []
 no_scarb_installed = []
 debugging = []
 assert_non_exact_gas = ["test_utils/assert_non_exact_gas"]
