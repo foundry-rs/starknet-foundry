@@ -40,7 +40,7 @@ $ snforge test --trace-components contract-name call-result call-type
 <summary>Output:</summary>
 
 ```shell
-[test name] trace_info_integrationtest::test_trace::test_debugging_trace_success
+[test name] debugging_integrationtest::test_trace::test_debugging_trace_success
 ├─ [selector] execute_calls
 │  ├─ [contract name] SimpleContract
 │  ├─ [call type] Call
@@ -87,7 +87,7 @@ $ snforge test --trace-verbosity standard
 <summary>Output:</summary>
 
 ```shell
-[test name] trace_info_integrationtest::test_trace::test_debugging_trace_success
+[test name] debugging_integrationtest::test_trace::test_debugging_trace_success
 ├─ [selector] execute_calls
 │  ├─ [contract name] SimpleContract
 │  ├─ [calldata] array![RecursiveCall { contract_address: ContractAddress([..]), payload: array![RecursiveCall { contract_address: ContractAddress([..]), payload: array![] }, RecursiveCall { contract_address: ContractAddress([..]), payload: array![] }] }, RecursiveCall { contract_address: ContractAddress([..]), payload: array![] }]
