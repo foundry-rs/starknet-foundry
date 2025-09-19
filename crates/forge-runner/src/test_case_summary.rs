@@ -125,6 +125,7 @@ impl TestType for Single {
 }
 
 /// Summary of running a single test case
+#[expect(clippy::large_enum_variant)]
 #[derive(Debug, Clone)]
 pub enum TestCaseSummary<T: TestType> {
     /// Test case passed
