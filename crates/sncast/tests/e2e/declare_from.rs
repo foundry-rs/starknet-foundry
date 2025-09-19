@@ -39,7 +39,7 @@ async fn test_happy_case() {
         indoc! {r"
         Success: Declaration completed
 
-        Class Hash:       0x[..]
+        Class Hash:       0x283a4f96ee7de15894d9205a93db7cec648562cfe90db14cb018c039e895e78
         Transaction Hash: 0x[..]
         
         To see declaration details, visit:
@@ -84,7 +84,7 @@ async fn test_happy_case_with_block_id() {
         indoc! {r"
         Success: Declaration completed
 
-        Class Hash:       0x[..]
+        Class Hash:       0x3de1a95e27b385c882c79355ca415915989e71f67c0f6f8ce146d4bcee7163c
         Transaction Hash: 0x[..]
         
         To see declaration details, visit:
