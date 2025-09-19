@@ -72,13 +72,16 @@ fn test_case_internal(
 }
 
 fn args_to_token_stream(args: &UnnamedArgs, db: &SimpleParserDatabase) -> TokenStream {
-    let args_str = args
-        .iter()
-        .map(|(_, expr)| expr.as_syntax_node().get_text(db))
-        .collect::<Vec<_>>()
-        .join(", ")
-        .to_string();
-    TokenStream::new(vec![format_ident!("{}", args_str)])
+    args.iter()
+        .map(|(_, expr)| {
+            let expr = expr.as_syntax_node();
+            let expr = SyntaxNodeWithDb::new(&expr, db);
+            quote! { #expr, }
+        })
+        .fold(TokenStream::empty(), |mut acc, token| {
+            acc.extend(token);
+            acc
+        })
 }
 
 fn ensure_params_valid(
