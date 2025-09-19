@@ -3,6 +3,7 @@ use crate::trace::collect::Collector;
 use crate::trace::components::{
     CallResultContainer, CallTypeContainer, CalldataContainer, CallerAddressContainer,
     ContractAddressContainer, ContractNameContainer, EntryPointTypeContainer,
+    FunctionTraceContainer,
 };
 use crate::tree::TreeSerialize;
 use cheatnet::state::CallTrace;
@@ -32,6 +33,7 @@ pub struct TraceInfo {
     pub call_type: CallTypeContainer,
     pub nested_calls: Vec<ContractTrace>,
     pub call_result: CallResultContainer,
+    pub function_trace: FunctionTraceContainer,
 }
 
 #[derive(Debug, Clone)]
