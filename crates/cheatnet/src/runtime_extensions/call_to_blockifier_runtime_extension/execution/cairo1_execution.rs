@@ -100,6 +100,7 @@ pub(crate) fn execute_entry_point_call_cairo1(
     let syscall_usage = cheatable_runtime
         .extended_runtime
         .hint_handler
+        .base
         .syscalls_usage
         .clone();
 

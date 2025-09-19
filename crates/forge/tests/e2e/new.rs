@@ -25,28 +25,6 @@ use toml_edit::{DocumentMut, Formatted, InlineTable, Item, Value};
 
 static RE_NEWLINES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\n{3,}").unwrap());
 
-#[test]
-fn init_new_project() {
-    let temp = tempdir_with_tool_versions().unwrap();
-
-    let output = runner(&temp)
-        .args(["init", "test_name"])
-        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
-        .assert()
-        .success();
-
-    assert_stdout_contains(
-        output,
-        indoc!(
-            r"
-                [WARNING] Command `snforge init` is deprecated and will be removed in the future. Please use `snforge new` instead.
-            "
-        ),
-    );
-
-    validate_init(&temp.join("test_name"), false, &Template::BalanceContract);
-}
-
 #[test_case(&Template::CairoProgram; "cairo-program")]
 #[test_case(&Template::BalanceContract; "balance-contract")]
 #[test_case(&Template::Erc20Contract; "erc20-contract")]
@@ -130,29 +108,6 @@ fn init_new_project_from_scarb() {
     validate_init(&temp.join("test_name"), true, &Template::BalanceContract);
 }
 
-#[test]
-#[cfg_attr(not(feature = "scarb_2_9_1"), ignore)]
-fn init_new_project_from_scarb_with_snforge_std_deprecated() {
-    let temp = tempdir_with_tool_versions().unwrap();
-    let tool_version_path = temp.join(".tool-versions");
-    fs::write(tool_version_path, "scarb 2.11.4").unwrap();
-
-    SnapboxCommand::from_std(
-        ScarbCommand::new()
-            .current_dir(temp.path())
-            .args(["new", "test_name"])
-            .env("SCARB_INIT_TEST_RUNNER", "starknet-foundry")
-            .env(
-                "PATH",
-                append_to_path_var(snforge_test_bin_path().parent().unwrap()),
-            )
-            .command(),
-    )
-    .assert()
-    .success();
-
-    validate_init(&temp.join("test_name"), true, &Template::BalanceContract);
-}
 pub fn append_to_path_var(path: &Path) -> OsString {
     let script_path = iter::once(path.to_path_buf());
     let os_path = env::var_os("PATH").unwrap();
