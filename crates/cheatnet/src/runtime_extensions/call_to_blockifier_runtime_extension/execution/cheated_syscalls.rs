@@ -94,12 +94,17 @@ pub fn deploy_syscall(
         deployer_address
     };
 
-    let deployed_contract_address = calculate_contract_address(
-        request.contract_address_salt,
-        request.class_hash,
-        &request.constructor_calldata,
-        deployer_address_for_calculation,
-    )?;
+    let deployed_contract_address =
+        if let Some(contract_address) = cheatnet_state.next_address_for_deployment() {
+            contract_address
+        } else {
+            calculate_contract_address(
+                request.contract_address_salt,
+                request.class_hash,
+                &request.constructor_calldata,
+                deployer_address_for_calculation,
+            )?
+        };
 
     let ctor_context = ConstructorContext {
         class_hash: request.class_hash,

@@ -28,7 +28,7 @@ jobs:
             os: macos-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: software-mansion/setup-scarb@v1
 
       - name: Setup rust

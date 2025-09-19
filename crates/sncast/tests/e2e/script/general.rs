@@ -447,7 +447,7 @@ async fn test_state_file_contains_all_failed_txs() {
         "declare",
         ScriptTransactionStatus::Error,
         vec![
-            "Failed to find Not_this_time artifact in starknet_artifacts.json file. Please make sure you have specified correct package using `--package` flag and that you have enabled sierra and casm code generation in Scarb.toml.",
+            "Failed to find Not_this_time artifact in starknet_artifacts.json file. Please make sure you have specified correct package using `--package` flag.",
         ],
     );
 

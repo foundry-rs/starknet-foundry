@@ -17,7 +17,7 @@ jobs:
       versions: ${{ steps.get_versions.outputs.versions }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
         with:
           tool_versions: |
@@ -40,7 +40,7 @@ jobs:
         version: ${{ fromJSON(needs.get-scarb-versions.outputs.versions) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       - uses: software-mansion/setup-scarb@v1
@@ -48,8 +48,8 @@ jobs:
           scarb-version: ${{ matrix.version }}
       - uses: software-mansion/setup-universal-sierra-compiler@v1
 
-      - run: cargo test --release --lib -p forge
-      - run: cargo test --release -p forge integration --features assert_non_exact_gas
+      - run: cargo test --profile ci --lib -p forge
+      - run: cargo test --profile ci -p forge integration --features assert_non_exact_gas
 
   test-forge-e2e:
     if: github.event.repository.fork == false
@@ -77,7 +77,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: echo "REPO_NAME=$(echo ${{ github.event.pull_request.head.repo.full_name }}.git)" >> $GITHUB_ENV
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       - uses: software-mansion/setup-scarb@v1
@@ -91,7 +91,7 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
-      - run: cargo test --release -p forge --features skip_plugin_checks e2e
+      - run: cargo test --profile ci -p forge --features skip_plugin_checks e2e
 
   test-cast:
     if: github.event.repository.fork == false
@@ -103,7 +103,7 @@ jobs:
         version: ${{ fromJSON(needs.get-scarb-versions.outputs.versions) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       - uses: software-mansion/setup-scarb@v1
@@ -121,7 +121,7 @@ jobs:
           tool_versions: |
             starknet-devnet ${{ steps.get-devnet-version.outputs.version }}
 
-      - run: cargo test --release -p sncast
+      - run: cargo test --profile ci -p sncast
 
   get-version:
     name: Get current foundry version
@@ -130,7 +130,7 @@ jobs:
     outputs:
       version: ${{ steps.validVersion.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Get version from Cargo.toml
         id: lookupVersion
