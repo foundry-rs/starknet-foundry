@@ -2,7 +2,7 @@ use super::{AttributeInfo, ErrorExt, internal_config_statement::InternalConfigSt
 use crate::asserts::assert_is_used_once;
 use crate::common::{has_fuzzer_attribute, has_test_case_attribute};
 use crate::external_inputs::ExternalInput;
-use crate::utils::{SyntaxNodeUtils, create_single_token};
+use crate::utils::create_single_token;
 use crate::{
     args::Arguments,
     common::{into_proc_macro_result, with_parsed_values},
@@ -71,11 +71,11 @@ fn test_internal(
 
     // If there is `#[fuzzer]` attribute, called function is suffixed with `__fuzzer_generated`
     // `#[__fuzzer_wrapper]` is responsible for adding this suffix.
-    let func_name = func.declaration(db).name(db).to_token_stream(db);
+    let func_name = func.declaration(db).name(db).text(db);
     let called_func_ident = if has_fuzzer {
-        format_ident!("{func_name}__fuzzer_generated")
+        format_ident!("{}__fuzzer_generated", func_name)
     } else {
-        format_ident!("{}", name)
+        format_ident!("{}", func_name)
     };
     let called_func = TokenStream::new(vec![called_func_ident]);
 
