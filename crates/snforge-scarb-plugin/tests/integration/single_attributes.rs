@@ -6,3 +6,4 @@ mod ignore;
 mod internal_config_statement;
 mod should_panic;
 mod test;
+mod test_case;
