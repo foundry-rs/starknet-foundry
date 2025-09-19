@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Possibility to use `#[available_gas]` with unnamed argument. Use named arguments instead, e.g. `#[available_gas(l2_gas: 5)]`.
 - The deprecated command `snforge init`. Use `snforge new` to initialize new `Forge` projects
 
+### Cast
+
+#### Added
+
+`sncast declare-from` command to declare a contract by fetching it from a different Starknet instance
+
 ## [0.49.0] - 2025-09-03
 
 ### Forge

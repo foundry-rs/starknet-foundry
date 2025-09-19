@@ -134,6 +134,7 @@
         * [delete](appendix/sncast/account/delete.md)
         * [list](appendix/sncast/account/list.md)
     * [declare](appendix/sncast/declare.md)
+    * [declare-from](appendix/sncast/declare_from.md)
     * [deploy](appendix/sncast/deploy.md)
     * [invoke](appendix/sncast/invoke.md)
     * [call](appendix/sncast/call.md)
