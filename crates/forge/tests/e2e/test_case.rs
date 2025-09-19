@@ -75,6 +75,7 @@ fn with_multiple_attributes() {
         [IGNORE] test_case_integrationtest::multiple_attributes::with_ignore_1_2_3
         [PASS] test_case_integrationtest::multiple_attributes::with_available_gas_3_4_7 [..]
         [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_3_4 [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_different_order_3_4 [..]
         [FAIL] test_case_integrationtest::multiple_attributes::with_available_gas_exceed_limit_3_4_7
 
         Failure data:
@@ -88,6 +89,9 @@ fn with_multiple_attributes() {
         	Test cost exceeded the available gas. Consumed [..]
         [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_1_2 [..]
         [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_different_order_1_2 [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_different_order [..]
         Running 0 test(s) from src/
         Tests: 7 passed, 2 failed, 2 ignored, [..] filtered out
         Fuzzer seed: [..]
