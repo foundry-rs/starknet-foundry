@@ -90,10 +90,9 @@ fn with_multiple_attributes() {
         [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_1_2 [..]
         [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer [..]
         [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_different_order_1_2 [..]
-        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer [..]
         [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_different_order [..]
         Running 0 test(s) from src/
-        Tests: 7 passed, 2 failed, 2 ignored, [..] filtered out
+        Tests: 10 passed, 2 failed, 2 ignored, [..] filtered out
         Fuzzer seed: [..]
 
         Failures:
