@@ -64,6 +64,11 @@ Each parameterized test gets its own generated name. There are two ways to contr
     ```
     This will generate a test named `test_sum_one_plus_two`.
 
+> 📝 **Note**
+> For unnamed test cases, it's possible that two different input values of the same type can generate the same test case name.
+> In such cases we emit a diagnostic error.
+> To resolve it, simply provide an explicit `name` for the case.
+
 ## Advanced Example
 
 Now let's look at an addvanced example which uses structs as parameters.
