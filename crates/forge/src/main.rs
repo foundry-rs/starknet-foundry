@@ -55,7 +55,7 @@ fn init_logging() -> Option<impl Drop> {
         // Create the file now, so that we early panic, and `fs::canonicalize` will work.
         let profile_file = fs::File::create(&path).expect("failed to create profile file");
 
-        // Try to canonicalise the path so that it is easier to find the file from logs.
+        // Try to canonicalize the path so that it is easier to find the file from logs.
         if let Ok(canonical) = fs::canonicalize(&path) {
             path = canonical;
         }
