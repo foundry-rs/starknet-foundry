@@ -10,7 +10,6 @@ map1 = { path = "../map_script/contracts" }
 
 [lib]
 sierra = true
-casm = true
 
 [[target.starknet-contract]]
 build-external-contracts = ["map1::Mapa"]
