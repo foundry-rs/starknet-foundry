@@ -19,9 +19,9 @@ use starknet_types_core::felt::Felt;
 use universal_sierra_compiler_api::{SierraType, compile_sierra};
 
 #[derive(Args)]
-#[command(about = "Declare a contract available on a different network", long_about = None)]
+#[command(about = "Declare a contract by fetching it from a different Starknet instance", long_about = None)]
 pub struct DeclareFrom {
-    /// Class hash of contract declared on a different network
+    /// Class hash of contract declared on a different Starknet instance
     #[arg(short = 'g', long)]
     pub class_hash: Felt,
 

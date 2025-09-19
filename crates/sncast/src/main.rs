@@ -119,7 +119,7 @@ enum Commands {
     /// Declare a contract
     Declare(Declare),
 
-    /// Declare a contract available on a different network
+    /// Declare a contract by fetching it from a different Starknet instance
     DeclareFrom(DeclareFrom),
 
     /// Deploy a contract
