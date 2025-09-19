@@ -8,6 +8,10 @@ rust-version = "1.87.0"
 [lib]
 crate-type = ["rlib", "cdylib"]
 
+[profile.ci]
+inherits = "release"
+debug-assertions = true
+
 [dependencies]
 cairo-lang-macro = "0.2.1"
 cairo-lang-parser = "2.12.0"
