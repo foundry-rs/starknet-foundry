@@ -61,7 +61,7 @@ fn init_logging() -> Option<impl Drop> {
         }
 
         eprintln!(
-            "this snforge run will output tracing profile to: {}",
+            "`snforge` run will output tracing profile to: {}",
             path.display()
         );
         eprintln!(
