@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-`sncast declare-from` command to declare a contract available on a different network
+`sncast declare-from` command to declare a contract by fetching it from a different Starknet instance
 
 ## [0.49.0] - 2025-09-03
 

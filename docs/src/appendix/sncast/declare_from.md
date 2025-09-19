@@ -1,5 +1,5 @@
 # `declare`
-Declare a contract available on a different network
+Declare a contract by fetching it from a different Starknet instance.
 
 ## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
 
@@ -28,8 +28,6 @@ Possible values: `mainnet`, `sepolia`.
 Optional.
 
 Starknet RPC node url address of the source network where the contract is already declared.
-
-Overrides url from `snfoundry.toml`.
 
 ## `--source-network <NETWORK>`
 Optional.
