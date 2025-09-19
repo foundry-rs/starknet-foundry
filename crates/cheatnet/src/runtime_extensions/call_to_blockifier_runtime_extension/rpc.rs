@@ -178,7 +178,7 @@ pub fn call_l1_handler(
     calldata: &[Felt],
 ) -> CallResult {
     let calldata = create_execute_calldata(calldata);
-
+    let mut remaining_gas = i64::MAX as u64;
     let entry_point = CallEntryPoint {
         class_hash: None,
         code_address: Some(*contract_address),
@@ -188,7 +188,7 @@ pub fn call_l1_handler(
         storage_address: *contract_address,
         caller_address: ContractAddress::default(),
         call_type: CallType::Call,
-        initial_gas: i64::MAX as u64,
+        initial_gas: remaining_gas,
     };
 
     call_entry_point(
@@ -196,6 +196,7 @@ pub fn call_l1_handler(
         cheatnet_state,
         entry_point,
         &AddressOrClassHash::ContractAddress(*contract_address),
+        &mut remaining_gas,
     )
 }
 
@@ -204,6 +205,7 @@ pub fn call_entry_point(
     cheatnet_state: &mut CheatnetState,
     mut entry_point: CallEntryPoint,
     starknet_identifier: &AddressOrClassHash,
+    remaining_gas: &mut u64,
 ) -> CallResult {
     let exec_result = execute_call_entry_point(
         &mut entry_point,
@@ -211,6 +213,7 @@ pub fn call_entry_point(
         cheatnet_state,
         syscall_handler.base.context,
         false,
+        remaining_gas,
     );
 
     let result = CallResult::from_execution_result(&exec_result, starknet_identifier);

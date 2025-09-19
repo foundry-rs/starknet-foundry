@@ -426,6 +426,7 @@ fn execute_inner_call(
     syscall_handler: &mut DeprecatedSyscallHintProcessor<'_>,
     cheatnet_state: &mut CheatnetState,
 ) -> DeprecatedSyscallResult<ReadOnlySegment> {
+    let mut remaining_gas = call.initial_gas;
     // region: Modified blockifier code
     let call_info = execute_call_entry_point(
         call,
@@ -433,6 +434,7 @@ fn execute_inner_call(
         cheatnet_state,
         syscall_handler.context,
         false,
+        &mut remaining_gas,
     )?;
     // endregion
 

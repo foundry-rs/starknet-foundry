@@ -143,6 +143,7 @@ impl ExecuteCall for CallContractRequest {
             cheatnet_state,
             entry_point,
             &AddressOrClassHash::ContractAddress(contract_address),
+            remaining_gas,
         )
     }
 }
@@ -173,6 +174,7 @@ impl ExecuteCall for LibraryCallRequest {
             cheatnet_state,
             entry_point,
             &AddressOrClassHash::ClassHash(class_hash),
+            remaining_gas,
         )
     }
 }
