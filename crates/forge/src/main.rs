@@ -65,7 +65,7 @@ fn init_logging() -> Option<impl Drop> {
             path.display()
         );
         eprintln!(
-            "open that file with https://ui.perfetto.dev (or chrome://tracing) to analyze it"
+            "Open that file with https://ui.perfetto.dev (or chrome://tracing) to analyze it"
         );
 
         let (profile_layer, profile_layer_guard) = ChromeLayerBuilder::new()
