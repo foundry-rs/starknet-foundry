@@ -1,21 +1,17 @@
 use crate::common::assertions::{assert_error, assert_panic, assert_success};
 use crate::common::cache::{purge_cache, read_cache};
 use crate::common::state::{create_fork_cached_state, create_fork_cached_state_at};
-use crate::common::{call_contract, deploy_contract, deploy_wrapper};
+use crate::common::{call_contract, deploy_contract};
 use blockifier::state::cached_state::CachedState;
-use cairo_vm::vm::errors::hint_errors::HintError;
 use camino::Utf8Path;
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::cache::cache_version;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::selector_from_name;
 use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader};
-use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
 use conversions::string::TryFromHexStr;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use runtime::EnhancedHintError;
 use serde_json::Value;
 use starknet_api::block::BlockNumber;
 use starknet_api::core::ContractAddress;
@@ -83,26 +79,6 @@ fn try_calling_nonexistent_contract() {
     let msg = "Contract not deployed at address: 0x1";
     let panic_data_felts: Vec<Felt> = ByteArray::from(msg).serialize_with_magic();
     assert_panic(output, &panic_data_felts);
-}
-
-#[test]
-fn try_deploying_undeclared_class() {
-    let cache_dir = TempDir::new().unwrap();
-    let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
-    let mut cheatnet_state = CheatnetState::default();
-
-    let class_hash = Felt::ONE.into_();
-
-    assert!(match deploy_wrapper(
-        &mut cached_fork_state,
-        &mut cheatnet_state,
-        &class_hash,
-        &[]
-    ) {
-        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
-            msg.as_ref().contains(class_hash.to_string().as_str()),
-        _ => false,
-    });
 }
 
 #[test]

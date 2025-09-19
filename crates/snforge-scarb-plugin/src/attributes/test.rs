@@ -1,17 +1,17 @@
 use super::{AttributeInfo, ErrorExt, internal_config_statement::InternalConfigStatementCollector};
 use crate::asserts::assert_is_used_once;
 use crate::common::{has_fuzzer_attribute, has_test_case_attribute};
+use crate::external_inputs::ExternalInput;
 use crate::utils::create_single_token;
 use crate::{
     args::Arguments,
     common::{into_proc_macro_result, with_parsed_values},
     format_ident,
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, TokenTree, quote};
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
 use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode, ast::FunctionWithBody};
-use std::env::{self, VarError};
 
 pub struct TestCollector;
 
@@ -42,7 +42,7 @@ fn test_internal(
     let has_test_case = has_test_case_attribute(db, func);
     let has_fuzzer = has_fuzzer_attribute(db, func);
 
-    // If the function has `#[test]` attribute and does not have `#[fuzzer]`, we can
+    // If the function has `#[test_case]` attribute and does not have `#[fuzzer]`, we can
     // safely skip code generation from `#[test]`. It will be handled later by `#[test_case]`.
     if has_test_case && !has_fuzzer {
         let func_item = func.as_syntax_node();
@@ -60,21 +60,23 @@ fn test_internal(
 
     let name = func.declaration(db).name(db).text(db).to_string();
 
-    let test_filter = get_forge_test_filter().ok();
+    let test_filter = ExternalInput::get().forge_test_filter;
 
     let should_run_test = match test_filter {
         Some(ref filter) => name.contains(filter),
         None => true,
     };
 
-    let func_name = func.declaration(db).name(db).text(db);
-
     let has_fuzzer = has_fuzzer_attribute(db, func);
-    let called_func_name_ident = if has_fuzzer {
-        format_ident!("{func_name}__fuzzer_generated")
+
+    // If there is `#[fuzzer]` attribute, called function is suffixed with `__fuzzer_generated`
+    // `#[__fuzzer_wrapper]` is responsible for adding this suffix.
+    let called_func_ident = if has_fuzzer {
+        format_ident!("{name}__fuzzer_generated")
     } else {
-        format_ident!("{}", name)
+        format_ident!("{name}")
     };
+    let called_func = TokenStream::new(vec![called_func_ident]);
 
     let signature = func.declaration(db).signature(db).as_syntax_node();
     let signature = SyntaxNodeWithDb::new(&signature, db);
@@ -86,21 +88,20 @@ fn test_internal(
     let attributes = func.attributes(db).as_syntax_node();
     let attributes = SyntaxNodeWithDb::new(&attributes, db);
 
-    let test_func_name_ident = format_ident!("{}__test_generated", func_name);
-    let mut func_ident = TokenStream::new(vec![format_ident!("{}", func_name)]);
-    func_ident.extend(signature);
+    let test_func = TokenStream::new(vec![format_ident!("{}__test_generated", name)]);
+    let func_ident = format_ident!("{}", name);
 
     if should_run_test {
-        let call_args = format_ident!("()");
-        let test_func_with_attrs =
-            test_func_with_attrs(&test_func_name_ident, &called_func_name_ident, &call_args);
+        let call_args = TokenStream::new(vec![format_ident!("")]);
+
+        let test_func_with_attrs = test_func_with_attrs(&test_func, &called_func, &call_args);
 
         Ok(quote!(
             #test_func_with_attrs
 
             #attributes
             #[#internal_config]
-            fn #func_ident
+            fn #func_ident #signature
             #body
         ))
     } else {
@@ -109,10 +110,6 @@ fn test_internal(
             #func_item
         ))
     }
-}
-
-fn get_forge_test_filter() -> Result<String, VarError> {
-    env::var("SNFORGE_TEST_FILTER")
 }
 
 fn ensure_parameters_only_with_fuzzer_or_test_case_attribute(
@@ -142,18 +139,18 @@ fn has_parameters(db: &SimpleParserDatabase, func: &FunctionWithBody) -> bool {
 
 #[must_use]
 pub fn test_func_with_attrs(
-    test_fn_name_ident: &TokenTree,
-    fn_name_ident: &TokenTree,
-    call_args: &TokenTree,
+    test_fn_name: &TokenStream,
+    fn_name: &TokenStream,
+    call_args: &TokenStream,
 ) -> TokenStream {
-    let test_fn_name_ident = test_fn_name_ident.clone();
-    let fn_name_ident = fn_name_ident.clone();
+    let test_fn_name = test_fn_name.clone();
+    let fn_name = fn_name.clone();
     let call_args = call_args.clone();
     let out_of_gas = create_single_token("'Out of gas'");
     quote!(
         #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
         #[snforge_internal_test_executable]
-        fn #test_fn_name_ident(mut _data: Span<felt252>) -> Span::<felt252> {
+        fn #test_fn_name(mut _data: Span<felt252>) -> Span::<felt252> {
             core::internal::require_implicit::<System>();
             core::internal::revoke_ap_tracking();
             core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
@@ -161,7 +158,7 @@ pub fn test_func_with_attrs(
             core::option::OptionTraitImpl::expect(
                 core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
             );
-            #fn_name_ident #call_args;
+            #fn_name (#call_args);
 
             let mut arr = ArrayTrait::new();
             core::array::ArrayTrait::span(@arr)

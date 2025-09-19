@@ -111,42 +111,37 @@ fn deploy_two_at_the_same_address() {
     assert_case_output_contains(
         &result,
         "deploy_two_at_the_same_address",
-        "Address is already taken",
+        "Deployment failed: contract already deployed at address 0x000000000000000000000000000000000000000000000000000000000000007b",
     );
 }
 
 #[test]
-fn deploy_at_error_handling() {
+fn fail_to_deploy_at_0() {
     let test = test_case!(
         indoc!(
             r#"
-        use array::ArrayTrait;
         use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
-        use starknet::ContractAddress;
 
         #[test]
-        fn deploy_at_error_handling() {
-            let contract_address = 123;
-
-            let contract = declare("PanickingConstructor").unwrap().contract_class();
-            match contract.deploy_at(@array![], contract_address.try_into().unwrap()) {
-                Result::Ok(_) => panic_with_felt252('shouldve panicked'),
-                Result::Err(panic_data) => {
-                    assert(*panic_data.at(0) == 'PANIK', 'wrong 1st panic datum');
-                    assert(*panic_data.at(1) == 'DEJTA', 'wrong 2nd panic datum');
-                },
-            }
+        fn deploy_at_0() {
+            let contract = declare("HelloStarknet").unwrap().contract_class();
+            contract.deploy_at(@array![], 0.try_into().unwrap()).unwrap();
         }
     "#
         ),
         Contract::from_code_path(
-            "PanickingConstructor".to_string(),
-            Path::new("tests/data/contracts/panicking_constructor.cairo"),
+            "HelloStarknet".to_string(),
+            Path::new("tests/data/contracts/hello_starknet.cairo"),
         )
         .unwrap()
     );
 
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
-    assert_passed(&result);
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
+        "deploy_at_0",
+        "Cannot deploy contract at address 0",
+    );
 }
