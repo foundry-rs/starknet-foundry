@@ -6,41 +6,6 @@ use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
 #[test]
-fn error_handling() {
-    let test = test_case!(
-        indoc!(
-            r#"
-        use result::ResultTrait;
-        use snforge_std::{ declare, ContractClass, ContractClassTrait, DeclareResultTrait };
-        use array::ArrayTrait;
-
-        #[test]
-        fn error_handling() {
-            let contract = declare("PanickingConstructor").unwrap().contract_class();
-
-            match contract.deploy(@ArrayTrait::new()) {
-                Result::Ok(_) => panic_with_felt252('Should have panicked'),
-                Result::Err(panic_data) => {
-                    assert(*panic_data.at(0_usize) == 'PANIK', *panic_data.at(0_usize));
-                    assert(*panic_data.at(1_usize) == 'DEJTA', *panic_data.at(1_usize));
-                }
-            }
-        }
-    "#
-        ),
-        Contract::from_code_path(
-            "PanickingConstructor".to_string(),
-            Path::new("tests/data/contracts/panicking_constructor.cairo"),
-        )
-        .unwrap()
-    );
-
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
-
-    assert_passed(&result);
-}
-
-#[test]
 fn deploy_syscall_check() {
     let test = test_case!(
         indoc!(
@@ -223,6 +188,69 @@ fn constructor_retdata_struct() {
                 "
             )
         )
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+
+    assert_passed(&result);
+}
+
+#[test]
+fn deploy_twice() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
+
+        #[test]
+        fn deploy_twice() {
+            let contract = declare("DeployChecker").unwrap().contract_class();
+            let constructor_calldata = array![1];
+
+            let (contract_address_1, _) = contract.deploy(@constructor_calldata).unwrap();
+            let (contract_address_2, _) = contract.deploy(@constructor_calldata).unwrap();
+
+            assert(contract_address_1 != contract_address_2, 'Addresses should differ');
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "DeployChecker".to_string(),
+            Path::new("tests/data/contracts/deploy_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+
+    assert_passed(&result);
+}
+
+#[test]
+fn verify_precalculate_address() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
+
+        #[test]
+        fn precalculate_and_deploy() {
+            let contract = declare("DeployChecker").unwrap().contract_class();
+            let constructor_calldata = array![1234];
+
+            let precalculated_address = contract.precalculate_address(@constructor_calldata);
+
+            let (contract_address, _) = contract.deploy(@constructor_calldata).unwrap();
+
+            assert(precalculated_address == contract_address, 'Addresses should not differ');
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "DeployChecker".to_string(),
+            Path::new("tests/data/contracts/deploy_checker.cairo"),
+        )
+        .unwrap()
     );
 
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);

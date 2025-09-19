@@ -85,12 +85,6 @@ Asserts that the test does not use more than 5 units of l1 gas, l1 data gas and 
 #[available_gas(l1_gas: 5, l1_data_gas: 5, l2_gas: 5)]
 ```
 
-Asserts that the test does not use more than 5 units of gas overall:
-
-```rust
-#[available_gas(5)]
-```
-
 ### `#[fork]`
 
 Enables state forking for the given test case.

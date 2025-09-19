@@ -223,7 +223,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(feature = "scarb_2_9_1"), ignore)]
     fn warning_requirements() {
         let mut requirements_checker = RequirementsChecker::new(true);
         requirements_checker.add_requirement(Requirement {
