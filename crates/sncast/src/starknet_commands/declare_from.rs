@@ -118,13 +118,13 @@ pub async fn declare_from(
     .expect("Failed to compile sierra to casm");
     let casm: CompiledClass = serde_json::from_str(&casm_json)
         .expect("Failed to deserialize casm JSON into CompiledClass");
-    let casm_class_hash = casm.class_hash().map_err(anyhow::Error::from)?;
+    let sierra_class_hash = sierra.class_hash().map_err(anyhow::Error::from)?;
 
-    if declare_from.class_hash != casm_class_hash {
+    if declare_from.class_hash != sierra_class_hash {
         return Err(StarknetCommandError::UnknownError(anyhow::anyhow!(
-            "The provided class hash {:#x} does not match the computed class hash {:#x} from the fetched contract.",
+            "The provided sierra class hash {:#x} does not match the computed class hash {:#x} from the fetched contract.",
             declare_from.class_hash,
-            casm_class_hash
+            sierra_class_hash
         )));
     }
 
