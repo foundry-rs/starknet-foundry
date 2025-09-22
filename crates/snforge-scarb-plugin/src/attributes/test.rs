@@ -1,4 +1,4 @@
-use super::{AttributeInfo, ErrorExt, internal_config_statement::InternalConfigStatementCollector};
+use super::{internal_config_statement::InternalConfigStatementCollector, AttributeInfo, ErrorExt};
 use crate::asserts::assert_is_used_once;
 use crate::common::{has_fuzzer_attribute, has_test_case_attribute};
 use crate::external_inputs::ExternalInput;
@@ -8,10 +8,10 @@ use crate::{
     common::{into_proc_macro_result, with_parsed_values},
     format_ident,
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
+use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
-use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode, ast::FunctionWithBody};
+use cairo_lang_syntax::node::{ast::FunctionWithBody, Terminal, TypedSyntaxNode};
 
 pub struct TestCollector;
 
@@ -92,7 +92,7 @@ fn test_internal(
     let func_ident = format_ident!("{}", name);
 
     if should_run_test {
-        let call_args = TokenStream::new(vec![format_ident!("")]);
+        let call_args = TokenStream::empty();
 
         let test_func_with_attrs = test_func_with_attrs(&test_func, &called_func, &call_args);
 
