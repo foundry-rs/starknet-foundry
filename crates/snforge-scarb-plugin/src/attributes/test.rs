@@ -1,4 +1,4 @@
-use super::{AttributeInfo, ErrorExt, internal_config_statement::InternalConfigStatementCollector};
+use super::{internal_config_statement::InternalConfigStatementCollector, AttributeInfo, ErrorExt};
 use crate::asserts::assert_is_used_once;
 use crate::common::has_fuzzer_attribute;
 use crate::external_inputs::ExternalInput;
@@ -8,10 +8,10 @@ use crate::{
     common::{into_proc_macro_result, with_parsed_values},
     format_ident,
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
+use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
-use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode, ast::FunctionWithBody};
+use cairo_lang_syntax::node::{ast::FunctionWithBody, Terminal, TypedSyntaxNode};
 
 pub struct TestCollector;
 
@@ -55,10 +55,10 @@ fn test_internal(
 
     let has_fuzzer = has_fuzzer_attribute(db, func);
 
-    // If there is `#[fuzzer]` attribute, called function is suffixed with `__fuzzer_generated`
+    // If there is `#[fuzzer]` attribute, called function is suffixed with `__snforge_internal_fuzzer_generated`
     // `#[__fuzzer_wrapper]` is responsible for adding this suffix.
     let called_func_ident = if has_fuzzer {
-        format_ident!("{name}__fuzzer_generated")
+        format_ident!("{name}__snforge_internal_fuzzer_generated")
     } else {
         format_ident!("{}", name)
     };
@@ -73,7 +73,7 @@ fn test_internal(
     let attributes = func.attributes(db).as_syntax_node();
     let attributes = SyntaxNodeWithDb::new(&attributes, db);
 
-    let test_func_ident = format_ident!("{}__test_generated", name);
+    let test_func_ident = format_ident!("{}__snforge_internal_test_generated", name);
     let func_ident = format_ident!("{}", name);
 
     let out_of_gas = create_single_token("'Out of gas'");

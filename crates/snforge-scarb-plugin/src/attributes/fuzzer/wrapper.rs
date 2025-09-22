@@ -68,7 +68,7 @@ fn fuzzer_wrapper_internal(
     let vis = SyntaxNodeWithDb::new(&vis, db);
 
     let name = format_ident!(
-        "{}__fuzzer_generated",
+        "{}__snforge_internal_fuzzer_generated",
         func.declaration(db).name(db).text(db)
     );
 

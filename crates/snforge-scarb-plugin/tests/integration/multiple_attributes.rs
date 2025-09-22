@@ -76,7 +76,7 @@ fn works_with_few_attributes() {
         "
             #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
             #[snforge_internal_test_executable]
-            fn empty_fn__test_generated(mut _data: Span<felt252>) -> Span::<felt252> {
+            fn empty_fn__snforge_internal_test_generated(mut _data: Span<felt252>) -> Span::<felt252> {
                 core::internal::require_implicit::<System>();
                 core::internal::revoke_ap_tracking();
                 core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
@@ -178,7 +178,7 @@ fn works_with_fuzzer() {
         "
             #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
             #[snforge_internal_test_executable]
-            fn empty_fn__test_generated(mut _data: Span<felt252>) -> Span::<felt252> {
+            fn empty_fn__snforge_internal_test_generated(mut _data: Span<felt252>) -> Span::<felt252> {
                 core::internal::require_implicit::<System>();
                 core::internal::revoke_ap_tracking();
                 core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
@@ -246,7 +246,7 @@ fn works_with_fuzzer_before_test() {
         r"
             #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
             #[snforge_internal_test_executable]
-            fn empty_fn__test_generated(mut _data: Span<felt252>) -> Span::<felt252> {
+            fn empty_fn__snforge_internal_test_generated(mut _data: Span<felt252>) -> Span::<felt252> {
                 core::internal::require_implicit::<System>();
                 core::internal::revoke_ap_tracking();
                 core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
@@ -254,7 +254,7 @@ fn works_with_fuzzer_before_test() {
                 core::option::OptionTraitImpl::expect(
                     core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
                 );
-                empty_fn__fuzzer_generated();
+                empty_fn__snforge_internal_fuzzer_generated();
 
                 let mut arr = ArrayTrait::new();
                 core::array::ArrayTrait::span(@arr)
@@ -284,7 +284,7 @@ fn works_with_fuzzer_before_test() {
     assert_output(
         &result,
         r"
-            fn empty_fn__fuzzer_generated() {
+            fn empty_fn__snforge_internal_fuzzer_generated() {
                 if snforge_std::_internals::is_config_run() {
                 empty_fn(snforge_std::fuzzable::Fuzzable::blank());
                 return;
@@ -348,7 +348,7 @@ fn works_with_fuzzer_config_wrapper() {
         r"
             #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
             #[snforge_internal_test_executable]
-            fn empty_fn__test_generated(mut _data: Span<felt252>) -> Span::<felt252> {
+            fn empty_fn__snforge_internal_test_generated(mut _data: Span<felt252>) -> Span::<felt252> {
                 core::internal::require_implicit::<System>();
                 core::internal::revoke_ap_tracking();
                 core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
@@ -356,7 +356,7 @@ fn works_with_fuzzer_config_wrapper() {
                 core::option::OptionTraitImpl::expect(
                     core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
                 );
-                empty_fn__fuzzer_generated();
+                empty_fn__snforge_internal_fuzzer_generated();
 
                 let mut arr = ArrayTrait::new();
                 core::array::ArrayTrait::span(@arr)
@@ -440,7 +440,7 @@ fn works_with_fuzzer_config_wrapper() {
         &result,
         r"
             #[__internal_config_statement]
-            fn empty_fn__fuzzer_generated() {
+            fn empty_fn__snforge_internal_fuzzer_generated() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
