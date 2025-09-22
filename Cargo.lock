@@ -5669,6 +5669,7 @@ dependencies = [
  "serde_json",
  "shared",
  "thiserror 2.0.16",
+ "tracing",
  "universal-sierra-compiler-api",
  "which",
 ]
@@ -7339,6 +7340,7 @@ dependencies = [
  "serde_json",
  "shared",
  "tempfile",
+ "tracing",
  "which",
 ]
 

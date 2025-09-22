@@ -54,6 +54,7 @@ impl StarknetArtifactsFiles {
         self
     }
 
+    #[tracing::instrument(skip_all, level = "debug")]
     pub(crate) fn load_contracts_artifacts(
         self,
     ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
@@ -79,6 +80,7 @@ impl StarknetArtifactsFiles {
         Ok(base_artifacts)
     }
 
+    #[tracing::instrument(skip_all, level = "debug")]
     fn compile_artifacts(
         &self,
         artifacts: Vec<(String, Utf8PathBuf)>,
@@ -92,6 +94,7 @@ impl StarknetArtifactsFiles {
             .collect::<Result<_>>()
     }
 
+    #[tracing::instrument(skip_all, level = "debug")]
     fn compile_artifact_at_path(&self, path: &Utf8Path) -> Result<StarknetContractArtifacts> {
         let sierra = fs::read_to_string(path)?;
 
@@ -106,6 +109,7 @@ impl StarknetArtifactsFiles {
         })
     }
 
+    #[tracing::instrument(skip_all, level = "debug")]
     fn compile_to_native(&self, sierra: &str) -> Result<Option<AotContractExecutor>> {
         Ok(if self.compile_native {
             Some(native_api::compile_contract_class(&serde_json::from_str(
@@ -117,6 +121,7 @@ impl StarknetArtifactsFiles {
     }
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 fn unique_artifacts(
     artifact_representations: Vec<StarknetArtifactsRepresentation>,
     current_artifacts: &HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>,
