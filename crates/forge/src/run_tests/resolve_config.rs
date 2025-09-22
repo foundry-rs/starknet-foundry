@@ -31,12 +31,12 @@ pub async fn resolve_config(
                 ignored: case.config.ignored
                     || (env_ignore_fork_tests && case.config.fork_config.is_some()),
                 expected_result: case.config.expected_result,
-                fork_config: resolve_fork_config(
-                    case.config.fork_config,
-                    block_number_map,
-                    fork_targets,
-                )
-                .await?,
+                fork_config: if case.config.ignored {
+                    None
+                } else {
+                    resolve_fork_config(case.config.fork_config, block_number_map, fork_targets)
+                        .await?
+                },
                 fuzzer_config: case.config.fuzzer_config,
                 disable_predeployed_contracts: case.config.disable_predeployed_contracts,
             },

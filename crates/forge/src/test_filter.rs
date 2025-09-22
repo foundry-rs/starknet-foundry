@@ -123,7 +123,10 @@ impl TestCaseFilter for TestsFilter {
 
         match self.ignored_filter {
             IgnoredFilter::All => true,
-            IgnoredFilter::Ignored => ignored,
+            IgnoredFilter::Ignored => {
+                assert!(ignored);
+                true
+            }
             IgnoredFilter::NotIgnored => !ignored,
         }
     }
