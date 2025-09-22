@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, assert_output, empty_function};
-use cairo_lang_macro::{TokenStream, TokenTree, quote};
+use cairo_lang_macro::{quote, TokenStream, TokenTree};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::{ModuleItem, SyntaxFile};
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
@@ -606,7 +606,7 @@ fn works_with_test_fuzzer_and_test_case() {
     assert_output(
         &result,
         "
-    fn test_add_one_and_two__fuzzer_generated() {
+    fn test_add_one_and_two__snforge_internal_fuzzer_generated() {
         if snforge_std::_internals::is_config_run() {
             let mut data = array![];
             snforge_std::_internals::config_types::FuzzerConfig {
