@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, assert_output, empty_function};
-use cairo_lang_macro::{Diagnostic, TokenStream, quote};
+use cairo_lang_macro::{quote, Diagnostic, TokenStream};
 use snforge_scarb_plugin::attributes::test::test;
 
 #[test]
@@ -15,7 +15,7 @@ fn appends_internal_config_and_executable() {
         "
             #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
             #[snforge_internal_test_executable]
-            fn empty_fn__test_generated(mut _data: Span<felt252>) -> Span::<felt252> {
+            fn empty_fn__snforge_internal_test_generated(mut _data: Span<felt252>) -> Span::<felt252> {
                 core::internal::require_implicit::<System>();
                 core::internal::revoke_ap_tracking();
                 core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');

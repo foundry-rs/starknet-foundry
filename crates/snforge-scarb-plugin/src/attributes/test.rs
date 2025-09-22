@@ -69,10 +69,10 @@ fn test_internal(
 
     let has_fuzzer = has_fuzzer_attribute(db, func);
 
-    // If there is `#[fuzzer]` attribute, called function is suffixed with `__fuzzer_generated`
+    // If there is `#[fuzzer]` attribute, called function is suffixed with `__snforge_internal_fuzzer_generated`
     // `#[__fuzzer_wrapper]` is responsible for adding this suffix.
     let called_func_ident = if has_fuzzer {
-        format_ident!("{name}__fuzzer_generated")
+        format_ident!("{name}__snforge_internal_fuzzer_generated")
     } else {
         format_ident!("{name}")
     };
@@ -88,7 +88,10 @@ fn test_internal(
     let attributes = func.attributes(db).as_syntax_node();
     let attributes = SyntaxNodeWithDb::new(&attributes, db);
 
-    let test_func = TokenStream::new(vec![format_ident!("{}__test_generated", name)]);
+    let test_func = TokenStream::new(vec![format_ident!(
+        "{}__snforge_internal_test_generated",
+        name
+    )]);
     let func_ident = format_ident!("{}", name);
 
     if should_run_test {

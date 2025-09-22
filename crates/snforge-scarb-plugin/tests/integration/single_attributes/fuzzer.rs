@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, assert_output, empty_function};
-use cairo_lang_macro::{Diagnostic, TextSpan, Token, TokenStream, TokenTree, quote};
+use cairo_lang_macro::{quote, Diagnostic, TextSpan, Token, TokenStream, TokenTree};
 use snforge_scarb_plugin::attributes::fuzzer::wrapper::fuzzer_wrapper;
 use snforge_scarb_plugin::attributes::fuzzer::{fuzzer, fuzzer_config};
 
@@ -168,7 +168,7 @@ fn config_wrapper_work_without_args() {
     assert_output(
         &result,
         "
-            fn empty_fn__fuzzer_generated() {
+            fn empty_fn__snforge_internal_fuzzer_generated() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
@@ -233,7 +233,7 @@ fn config_wrapper_work_with_both_args() {
     assert_output(
         &result,
         "
-            fn empty_fn__fuzzer_generated() {
+            fn empty_fn__snforge_internal_fuzzer_generated() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
@@ -301,7 +301,7 @@ fn config_wrapper_work_with_fn_with_single_param() {
     assert_output(
         &result,
         "
-            fn empty_fn__fuzzer_generated() {
+            fn empty_fn__snforge_internal_fuzzer_generated() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
@@ -370,7 +370,7 @@ fn config_wrapper_work_with_fn_with_params() {
     assert_output(
         &result,
         "
-            fn empty_fn__fuzzer_generated() {
+            fn empty_fn__snforge_internal_fuzzer_generated() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
@@ -414,7 +414,7 @@ fn wrapper_handle_attributes() {
         &result,
         "
             #[test]
-            fn empty_fn__fuzzer_generated() {
+            fn empty_fn__snforge_internal_fuzzer_generated() {
                 if snforge_std::_internals::is_config_run() {
                     empty_fn();
 
