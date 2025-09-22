@@ -37,6 +37,7 @@ pub fn should_compile_starknet_contract_target(
     *scarb_version < MINIMAL_SCARB_VERSION_TO_OPTIMIZE_COMPILATION || no_optimization
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn build_artifacts_with_scarb(
     filter: PackagesFilter,
     features: FeaturesSpec,
@@ -82,6 +83,7 @@ fn build_test_artifacts_with_scarb(
     Ok(())
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn load_test_artifacts(
     target_dir: &Utf8Path,
     package: &PackageMetadata,
