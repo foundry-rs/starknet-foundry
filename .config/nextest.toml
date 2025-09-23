@@ -1,0 +1,22 @@
+
+[test-groups]
+braavos_account = { max-threads = 1 }
+ready_account = { max-threads = 1 }
+sncast_tests_e2e_declare = { max-threads = 1 }
+sncast_tests_e2e_deploy = { max-threads = 1 }
+
+[[profile.default.overrides]]
+filter = 'test(::braavos_account)'
+test-group = 'braavos_account'
+
+[[profile.default.overrides]]
+filter = 'test(::ready_account)'
+test-group = 'ready_account'
+
+[[profile.default.overrides]]
+filter = 'test(e2e::declare::)'
+test-group = 'sncast_tests_e2e_declare'
+
+[[profile.default.overrides]]
+filter = 'test(e2e::deploy::)'
+test-group = 'sncast_tests_e2e_deploy'
