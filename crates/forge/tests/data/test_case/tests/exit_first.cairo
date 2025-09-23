@@ -2,7 +2,7 @@ use test_case::fib;
 
 #[test]
 #[test_case(0, 1, 3)]
-#[test_case(0, 1, 100000)]
+#[test_case(0, 1, 500000)]
 fn test_fib_with_threshold(a: felt252, b: felt252, n: felt252) {
     let threshold: u256 = 10;
     let res = fib(a, b, n);

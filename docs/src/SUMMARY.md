@@ -39,6 +39,7 @@
 * [Profiling](snforge-advanced-features/profiling.md)
 * [Debugging](snforge-advanced-features/debugging.md)
 * [Oracles](snforge-advanced-features/oracles.md)
+* [Parametrized Tests](snforge-advanced-features/parametrized-testing.md)
 
 ---
 
