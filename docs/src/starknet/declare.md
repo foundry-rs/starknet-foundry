@@ -53,7 +53,7 @@ transaction: https://starkscan.co/search/[..]
 > 💡 **Info**
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
 
-# Declaring a Contract By Fetching It From a Different Starknet Instance
+# Declaring a Contract by Fetching It From a Different Starknet Instance
 
 In some cases, you may need to declare a contract that was already compiled elsewhere and reuse the exact same class hash across multiple networks.
 This is especially important for some contracts, e.g. Universal Deployer Contract (UDC), which must preserve the same class hash across mainnet, testnets, and appchains.
@@ -82,7 +82,7 @@ $ sncast --account my_account \
 ```shell
 Success: Declaration completed
 
-Class Hash:       0x[..]
+Class Hash:       0x283a4f96ee7de15894d9205a93db7cec648562cfe90db14cb018c039e895e78
 Transaction Hash: 0x[..]
 ```
 </details>
