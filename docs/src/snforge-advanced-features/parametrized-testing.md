@@ -122,20 +122,12 @@ $ snforge test
 ```shell
 Collected 3 test(s) from parametrized_testing_fuzzer package
 Running 3 test(s) from tests/
-[PASS] parametrized_testing_fuzzer_integrationtest::example::test_sum_1_2_3 ([..])
-[PASS] parametrized_testing_fuzzer_integrationtest::example::test_sum_3_4_7 ([..])
-[FAIL] parametrized_testing_fuzzer_integrationtest::example::test_sum ([..])
-
-Failure data:
-    "assertion `sum(x, y) == expected` failed.
-    sum(x, y): [..]
-    expected: [..]"
-
-Tests: 2 passed, 1 failed, 0 ignored, [..] filtered out
+[PASS] parametrized_testing_fuzzer_integrationtest::example::test_sum_1_2 ([..])
+[PASS] parametrized_testing_fuzzer_integrationtest::example::test_sum_3_4 ([..])
+[PASS] parametrized_testing_fuzzer_integrationtest::example::test_sum ([..])
+Running 0 test(s) from src/
+Tests: 3 passed, 0 failed, 0 ignored, 0 filtered out
 Fuzzer seed: [..]
-
-Failures:
-    parametrized_testing_fuzzer_integrationtest::example::test_sum
 ```
 </details>
 <br>
