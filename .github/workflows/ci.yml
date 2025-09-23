@@ -36,12 +36,32 @@ jobs:
           tool: nextest@0.9.98
       - name: Build and archive tests
         # TODO: run native only on scheduled workflow
-        run: cargo nextest archive --cargo-profile ci -p forge --features skip_plugin_checks,run-native --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
+        run: cargo nextest archive --cargo-profile ci -p forge --features skip_plugin_checks --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v4
         with:
           name: nextest-archive-${{ runner.os }}
           path: nextest-archive-${{ runner.os }}.tar.zst
+
+  build-test-forge-nextest-archive-native:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup-rust-llvm
+      - name: Install nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest@0.9.98
+      - name: Build and archive tests
+        # TODO: run native only on scheduled workflow
+        run: cargo nextest archive --cargo-profile ci -p forge --features skip_plugin_checks,run-native --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst'
+      - name: Upload archive to workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextest-archive-${{ runner.os }}-native
+          path: nextest-archive-${{ runner.os }}-native.tar.zst
 
   test-forge-integration:
     name: Test Forge / Integration Tests
@@ -117,6 +137,57 @@ jobs:
       - name: nextest partition ${{ matrix.partition }}/3
         run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}.tar.zst' e2e
 
+  test-forge-e2e-native:
+    name: Test Forge / E2E Tests
+    runs-on: ubuntu-latest
+    needs: [ build-test-forge-nextest-archive-native ]
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: [ 1, 2, 3 ]
+    steps:
+      - name: Extract branch name
+        if: github.event_name != 'pull_request'
+        run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Extract branch name on pull request
+        if: github.event_name == 'pull_request'
+        run: echo "BRANCH_NAME=$(echo $GITHUB_HEAD_REF)" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Extract repo name and owner
+        if: github.event_name != 'pull_request'
+        run: echo "REPO_NAME=$(echo ${{ github.repository }}.git)" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Extract repo name and owner on pull request
+        if: github.event_name == 'pull_request'
+        run: echo "REPO_NAME=$(echo ${{ github.event.pull_request.head.repo.full_name }}.git)" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Install cairo-profiler
+        run: |
+          curl -L https://raw.githubusercontent.com/software-mansion/cairo-profiler/main/scripts/install.sh | sh
+      - name: Install cairo-coverage
+        run: |
+          curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
+
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
+      - uses: software-mansion/setup-scarb@v1
+      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: nextest@0.9.98
+      - uses: actions/download-artifact@v4
+        with:
+          name: nextest-archive-${{ runner.os }}-native
+      - name: nextest partition ${{ matrix.partition }}/3
+        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst' e2e
+
   test-plugin-checks:
     name: Test plugin across different scarb versions
     runs-on: ubuntu-latest
@@ -174,8 +245,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run Cheatnet tests
-        # TODO: run native only on scheduled workflow
-        run: cargo test --profile ci -p cheatnet --features run-native
+        run: cargo test --profile ci -p cheatnet
 
   test-data-transformer:
     name: Test Data Transformer
@@ -195,8 +265,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@58146c4184fa6ec5e8aaf02309ab85e35f782ed0 # v1.0.0
       - name: Run Forge Debugging tests
-        # TODO: run native only on scheduled workflow
-        run: cargo test --profile ci -p forge --features debugging,run-native --test main e2e::debugging
+        run: cargo test --profile ci -p forge --features debugging --test main e2e::debugging
 
   test-forge-scarb-plugin:
     name: Test Forge Scarb Plugin
@@ -262,8 +331,7 @@ jobs:
       - uses: ./.github/actions/setup-rust-llvm
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
-        # TODO: run native only on scheduled workflow
-      - run: cargo test --profile ci -p scarb-api --features run-native
+      - run: cargo test --profile ci -p scarb-api
 
   scarbfmt:
     runs-on: ubuntu-latest
