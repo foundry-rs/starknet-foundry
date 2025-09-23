@@ -7,6 +7,7 @@ use attributes::{
     available_gas::available_gas, disable_predeployed_contracts::disable_predeployed_contracts,
     fork::fork, fuzzer::fuzzer, ignore::ignore,
     internal_config_statement::internal_config_statement, should_panic::should_panic, test::test,
+    test_case::test_case,
 };
 use cairo_lang_macro::{ProcMacroResult, TokenStream, attribute_macro, executable_attribute};
 
@@ -38,6 +39,11 @@ fn __fuzzer_config(args: TokenStream, item: TokenStream) -> ProcMacroResult {
 #[attribute_macro]
 fn __fuzzer_wrapper(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     fuzzer::wrapper::fuzzer_wrapper(args, item)
+}
+
+#[attribute_macro]
+fn test_case(args: TokenStream, item: TokenStream) -> ProcMacroResult {
+    test_case(args, item)
 }
 
 #[attribute_macro]

@@ -27,6 +27,7 @@ mod requirements;
 mod running;
 mod steps;
 mod templates;
+mod test_case;
 mod trace_print;
 mod trace_resources;
 mod workspaces;

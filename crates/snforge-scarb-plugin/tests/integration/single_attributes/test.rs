@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, assert_output, empty_function};
-use cairo_lang_macro::{quote, Diagnostic, TokenStream};
+use cairo_lang_macro::{Diagnostic, TokenStream, quote};
 use snforge_scarb_plugin::attributes::test::test;
 
 #[test]
@@ -75,7 +75,7 @@ fn fails_with_params() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(
-            "#[test] function with parameters must have #[fuzzer] attribute",
+            "#[test] function with parameters must have #[fuzzer] or #[test_case] attribute",
         )],
     );
 }
