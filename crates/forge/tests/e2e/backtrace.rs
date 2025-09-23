@@ -23,6 +23,7 @@ fn test_backtrace_missing_env() {
     );
 }
 
+#[cfg_attr(not(feature = "run-native"), ignore)]
 #[test]
 fn test_backtrace_native_execution() {
     let temp = setup_package("backtrace_vm_error");

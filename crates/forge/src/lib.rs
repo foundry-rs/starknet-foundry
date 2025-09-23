@@ -146,6 +146,7 @@ pub struct TestArgs {
     ///
     /// Note: Only contracts execution through native is supported, test code itself will still run on `cairo-vm`.
     #[arg(long)]
+    #[cfg(feature = "cairo-native")]
     run_native: bool,
 
     /// Use exact matches for `test_filter`
@@ -187,15 +188,18 @@ pub struct TestArgs {
     rerun_failed: bool,
 
     /// Save execution traces of all test which have passed and are not fuzz tests
-    #[arg(long, conflicts_with = "run_native")]
+    #[arg(long)]
+    #[cfg_attr(feature = "cairo-native", arg(conflicts_with = "run_native"))]
     save_trace_data: bool,
 
     /// Build profiles of all tests which have passed and are not fuzz tests using the cairo-profiler
-    #[arg(long, conflicts_with_all = ["run_native", "coverage"])]
+    #[arg(long, conflicts_with_all = ["coverage"])]
+    #[cfg_attr(feature = "cairo-native", arg(conflicts_with_all = ["run_native", "coverage"]))]
     build_profile: bool,
 
     /// Generate a coverage report for the executed tests which have passed and are not fuzz tests using the cairo-coverage
-    #[arg(long, conflicts_with_all = ["run_native", "build_profile"])]
+    #[arg(long, conflicts_with_all = ["build_profile"])]
+    #[cfg_attr(feature = "cairo-native", arg(conflicts_with_all = ["run_native", "build_profile"]))]
     coverage: bool,
 
     /// Number of maximum steps during a single test. For fuzz tests this value is applied to each subtest separately.
@@ -230,6 +234,7 @@ impl TestArgs {
     pub fn normalize(&mut self) {
         // Force using `SierraGas` as tracked resource when running with `cairo-native`,
         // as otherwise it would run on vm.
+        #[cfg(feature = "cairo-native")]
         if self.run_native {
             self.tracked_resource = ForgeTrackedResource::SierraGas;
         }

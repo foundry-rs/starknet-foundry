@@ -4,7 +4,6 @@ use clap::{ArgGroup, Args, ValueEnum};
 use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use promptly::prompt;
-use scarb_api::StarknetContractArtifacts;
 use sncast::get_provider;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::FreeProvider;
@@ -19,6 +18,7 @@ pub mod walnut;
 
 use explorer::ContractIdentifier;
 use explorer::VerificationInterface;
+use sncast::helpers::artifacts::CastStarknetContractArtifacts;
 use voyager::Voyager;
 use walnut::WalnutVerificationInterface;
 
@@ -87,7 +87,7 @@ fn display_files_and_confirm(
     files_to_display: Vec<String>,
     confirm_verification: bool,
     ui: &UI,
-    artifacts: &HashMap<String, StarknetContractArtifacts>,
+    artifacts: &HashMap<String, CastStarknetContractArtifacts>,
     contract_name: &str,
 ) -> Result<()> {
     // Display files that will be uploaded
@@ -119,7 +119,7 @@ fn display_files_and_confirm(
 pub async fn verify(
     args: Verify,
     manifest_path: &Utf8PathBuf,
-    artifacts: &HashMap<String, StarknetContractArtifacts>,
+    artifacts: &HashMap<String, CastStarknetContractArtifacts>,
     config: &CastConfig,
     ui: &UI,
 ) -> Result<VerifyResponse> {

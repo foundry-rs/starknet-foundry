@@ -92,6 +92,7 @@ pub fn get_contracts() -> ContractsData {
         &ui,
         CompilationOpts {
             use_test_target_contracts: false,
+            #[cfg(feature = "cairo-native")]
             run_native: cfg!(feature = "run-native"),
         },
     )

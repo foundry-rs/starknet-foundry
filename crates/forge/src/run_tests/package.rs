@@ -89,6 +89,7 @@ impl RunForPackageArgs {
                     &scarb_metadata.app_version_info.version,
                     args.no_optimization,
                 ),
+                #[cfg(feature = "cairo-native")]
                 run_native: args.run_native,
             },
         )?;
