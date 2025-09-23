@@ -13,7 +13,6 @@ pub mod nonce;
 pub mod padded_felt;
 pub mod primitive;
 pub mod serde;
-pub mod sierra_class;
 pub mod string;
 
 extern crate self as conversions;

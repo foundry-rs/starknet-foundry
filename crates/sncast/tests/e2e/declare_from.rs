@@ -12,7 +12,7 @@ async fn test_happy_case() {
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let example_contract_class_hash_sepolia =
-        "0x283a4f96ee7de15894d9205a93db7cec648562cfe90db14cb018c039e895e78";
+        "0x66802613e2cd02ea21430a56181d9ee83c54d4ccdc45efa497d41fe1dc55a0e";
 
     let args = vec![
         "--accounts-file",
@@ -39,7 +39,7 @@ async fn test_happy_case() {
         indoc! {r"
         Success: Declaration completed
 
-        Class Hash:       0x283a4f96ee7de15894d9205a93db7cec648562cfe90db14cb018c039e895e78
+        Class Hash:       0x66802613e2cd02ea21430a56181d9ee83c54d4ccdc45efa497d41fe1dc55a0e
         Transaction Hash: 0x[..]
         
         To see declaration details, visit:
