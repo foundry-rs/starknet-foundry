@@ -8,6 +8,7 @@ use crate::state::CheatStatus;
 use blockifier::execution::call_info::{CallExecution, Retdata, StorageAccessTracker};
 use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
 
+#[cfg(feature = "cairo-native")]
 use crate::runtime_extensions::native::execution::execute_entry_point_call_native;
 use blockifier::execution::entry_point::{EntryPointRevertInfo, ExecutableCallEntryPoint};
 use blockifier::execution::stack_trace::{
@@ -175,6 +176,7 @@ pub fn execute_call_entry_point(
             cheatnet_state,
             context,
         ),
+        #[cfg(feature = "cairo-native")]
         RunnableCompiledClass::V1Native(native_compiled_class_v1) => {
             if context.tracked_resource_stack.last() == Some(&TrackedResource::CairoSteps) {
                 execute_entry_point_call_cairo1(
@@ -185,7 +187,6 @@ pub fn execute_call_entry_point(
                     context,
                 )
             } else {
-                println!("Executing native entry point");
                 execute_entry_point_call_native(
                     &entry_point,
                     &native_compiled_class_v1,

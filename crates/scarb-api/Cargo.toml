@@ -4,7 +4,8 @@ version = "1.0.0"
 edition.workspace = true
 
 [features]
-run-native = []
+cairo-native = ["dep:cairo-native", "dep:native-api"]
+run-native = ["cairo-native"]
 
 [dependencies]
 anyhow.workspace = true
@@ -22,8 +23,8 @@ rayon.workspace = true
 itertools.workspace = true
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 foundry-ui = { path = "../foundry-ui" }
-cairo-native.workspace = true
-native-api = { path = "../native-api" }
+cairo-native = { workspace = true, optional = true }
+native-api = { path = "../native-api", optional = true }
 tracing.workspace = true
 
 [dev-dependencies]

@@ -5,6 +5,7 @@ use crate::runtime_extensions::forge_runtime_extension::{
 };
 use anyhow::{Context, Result};
 use blockifier::execution::contract_class::{CompiledClassV1, RunnableCompiledClass};
+#[cfg(feature = "cairo-native")]
 use blockifier::execution::native::contract_class::NativeCompiledClassV1;
 use blockifier::state::{errors::StateError, state_api::State};
 use conversions::IntoConv;
@@ -73,11 +74,14 @@ fn get_contract_class(contract_artifact: &StarknetContractArtifacts) -> Runnable
     )
     .expect("Failed to read contract class from json");
 
-    match &contract_artifact.executor {
+    #[cfg(feature = "cairo-native")]
+    return match &contract_artifact.executor {
         None => RunnableCompiledClass::V1(contract_class),
         Some(executor) => RunnableCompiledClass::V1Native(NativeCompiledClassV1::new(
             executor.clone(),
             contract_class,
         )),
-    }
+    };
+    #[cfg(not(feature = "cairo-native"))]
+    RunnableCompiledClass::V1(contract_class)
 }

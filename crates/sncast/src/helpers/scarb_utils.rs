@@ -1,8 +1,9 @@
+use crate::helpers::artifacts::CastStarknetContractArtifacts;
 use anyhow::{Context, Result, anyhow};
 use camino::{Utf8Path, Utf8PathBuf};
 use foundry_ui::{UI, components::warning::WarningMessage};
 use scarb_api::{
-    CompilationOpts, ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
+    CompilationOpts, ScarbCommand, ScarbCommandError,
     get_contracts_artifacts_and_source_sierra_paths,
     metadata::{Metadata, MetadataCommand, PackageMetadata},
     target_dir_for_workspace,
@@ -157,7 +158,7 @@ pub fn build_and_load_artifacts(
     config: &BuildConfig,
     build_for_script: bool,
     ui: &UI,
-) -> Result<HashMap<String, StarknetContractArtifacts>> {
+) -> Result<HashMap<String, CastStarknetContractArtifacts>> {
     // TODO (#2042): Remove this logic, always use release as default
     let default_profile = if build_for_script { "dev" } else { "release" };
     build(package, config, default_profile)
@@ -175,7 +176,7 @@ pub fn build_and_load_artifacts(
             CompilationOpts::default()
         ).context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")?
         .into_iter()
-        .map(|(name, (artifacts, _))| (name, artifacts))
+        .map(|(name, (artifacts, _))| (name, CastStarknetContractArtifacts { sierra: artifacts.sierra, casm: artifacts.casm }))
         .collect())
     } else {
         let profile = &config.profile;
@@ -190,7 +191,7 @@ pub fn build_and_load_artifacts(
             CompilationOpts::default(),
         ).context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")?
         .into_iter()
-        .map(|(name, (artifacts, _))| (name, artifacts))
+        .map(|(name, (artifacts, _))| (name, CastStarknetContractArtifacts { sierra: artifacts.sierra, casm: artifacts.casm }))
         .collect())
     }
 }

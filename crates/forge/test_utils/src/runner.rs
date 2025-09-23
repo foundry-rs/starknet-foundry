@@ -111,6 +111,7 @@ impl Contract {
             ui,
             CompilationOpts {
                 use_test_target_contracts: false,
+                #[cfg(feature = "cairo-native")]
                 run_native: cfg!(feature = "run-native"),
             },
         )
@@ -232,6 +233,7 @@ impl<'a> TestCase {
                         StarknetContractArtifacts {
                             sierra,
                             casm,
+                            #[cfg(feature = "cairo-native")]
                             executor: None,
                         },
                         Utf8PathBuf::default(),

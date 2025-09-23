@@ -7,10 +7,12 @@ use semver::Version;
 
 /// Checks if backtrace can be generated based on scarb version, profile settings extracted from
 /// the provided [`Metadata`] and if native execution is disabled in the provided [`TestArgs`].
+#[allow(unused_variables)]
 pub fn check_backtrace_compatibility(
     test_args: &TestArgs,
     scarb_metadata: &Metadata,
 ) -> anyhow::Result<()> {
+    #[cfg(feature = "cairo-native")]
     check_if_native_disabled(test_args)?;
     check_scarb_version(scarb_metadata)?;
     check_profile(scarb_metadata)?;
@@ -18,6 +20,7 @@ pub fn check_backtrace_compatibility(
 }
 
 /// Checks if native execution is disabled in the provided [`TestArgs`].
+#[cfg(feature = "cairo-native")]
 fn check_if_native_disabled(test_args: &TestArgs) -> anyhow::Result<()> {
     ensure!(
         !test_args.run_native,
