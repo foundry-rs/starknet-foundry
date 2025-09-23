@@ -45,7 +45,7 @@ impl CheatAccountContractAddressTrait for TestEnvironment {
 fn cheat_account_contract_address_simple() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("CheatAccountContractAddressChecker", &[]);
+    let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let output = test_env.call_contract(&contract_address, "get_account_contract_address", &[]);
     assert_success(output, &[Felt::from(0)]);
@@ -60,7 +60,7 @@ fn cheat_account_contract_address_simple() {
 fn cheat_account_contract_address_stop() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("CheatAccountContractAddressChecker", &[]);
+    let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     test_env.start_cheat_account_contract_address(contract_address, 123);
 
@@ -81,7 +81,7 @@ fn cheat_account_contract_address_stop() {
 fn cheat_account_contract_address_simple_with_span() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("CheatAccountContractAddressChecker", &[]);
+    let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     test_env.cheat_account_contract_address(
         contract_address,
