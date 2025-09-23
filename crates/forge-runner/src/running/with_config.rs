@@ -21,6 +21,7 @@ use rayon::iter::ParallelIterator;
 use std::{collections::HashMap, sync::Arc};
 use universal_sierra_compiler_api::{SierraType, compile_sierra_at_path};
 
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn test_target_with_config(
     test_target_raw: TestTargetRaw,
     tracked_resource: &ForgeTrackedResource,
