@@ -73,7 +73,6 @@
 
 * [`snforge` Commands](appendix/snforge.md)
     * [test](appendix/snforge/test.md)
-    * [init](appendix/snforge/init.md)
     * [new](appendix/snforge/new.md)
     * [clean](appendix/snforge/clean.md)
     * [clean-cache](appendix/snforge/clean-cache.md)
@@ -151,6 +150,7 @@
     * [completions](appendix/sncast/completions.md)
     * [utils](appendix/sncast/utils/utils.md)
         * [serialize](appendix/sncast/utils/serialize.md)
+        * [class-hash](appendix/sncast/utils/class_hash.md)
 * [`sncast` Library Reference](appendix/sncast-library.md)
     * [declare](appendix/sncast-library/declare.md)
     * [deploy](appendix/sncast-library/deploy.md)

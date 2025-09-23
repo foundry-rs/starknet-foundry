@@ -1,7 +1,6 @@
 # `snforge` CLI Reference
 
 * [`snforge test`](./snforge/test.md)
-* [`snforge init`](./snforge/init.md)
 * [`snforge new`](./snforge/new.md)
 * [`snforge clean`](./snforge/clean.md)
 * [`snforge clean-cache`](./snforge/clean-cache.md)

@@ -36,6 +36,13 @@ fn with_fuzzer(a: felt252, b: felt252) {
     add(a, b);
 }
 
+#[test_case(1, 2)]
+#[test_case(3, 4)]
+#[test]
+#[fuzzer]
+fn with_fuzzer_different_order(a: felt252, b: felt252) {
+    add(a, b);
+}
 
 #[test]
 #[test_case(1, 2, 3)]

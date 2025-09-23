@@ -75,7 +75,7 @@ fn invalid_args_number() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(
-            "#[test_case] Expected 3 parameters, but got 2",
+            "#[test_case] Expected 3 arguments, but got 2",
         )],
     );
 }

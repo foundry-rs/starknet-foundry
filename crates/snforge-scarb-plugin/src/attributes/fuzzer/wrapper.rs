@@ -68,7 +68,7 @@ fn fuzzer_wrapper_internal(
     let vis = SyntaxNodeWithDb::new(&vis, db);
 
     let name = format_ident!(
-        "{}__fuzzer_generated",
+        "{}__snforge_internal_fuzzer_generated",
         func.declaration(db).name(db).text(db)
     );
 
@@ -106,7 +106,8 @@ fn fuzzer_wrapper_internal(
         }
     });
 
-    let func_ident = format_ident!("{}", func.declaration(db).name(db).text(db));
+    let func_name = func.declaration(db).name(db).as_syntax_node();
+    let func_name = SyntaxNodeWithDb::new(&func_name, db);
 
     let (statements, if_content) = get_statements(db, func);
 
@@ -118,17 +119,17 @@ fn fuzzer_wrapper_internal(
                 if snforge_std::_internals::is_config_run() {
                     #if_content
 
-                    #func_ident(#blank_values_for_config_run);
+                    #func_name(#blank_values_for_config_run);
 
                     return;
                 }
                 #fuzzer_assignments
-                #func_ident(#arguments_list);
+                #func_name(#arguments_list);
             }
 
             #actual_body_fn_attrs
             #[#internal_config_attr]
-            fn #func_ident #signature {
+            fn #func_name #signature {
                 #statements
             }
     ))
