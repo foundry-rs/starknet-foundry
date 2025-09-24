@@ -1,8 +1,6 @@
 use super::maat::env_ignore_fork_tests;
 use crate::{
-    block_number_map::BlockNumberMap,
-    scarb::config::ForkTarget,
-    test_filter::{IgnoredFilter, TestsFilter},
+    block_number_map::BlockNumberMap, scarb::config::ForkTarget, test_filter::IgnoredFilter,
 };
 use anyhow::{Result, anyhow};
 use cheatnet::runtime_extensions::forge_config_extension::config::{
@@ -23,7 +21,7 @@ pub async fn resolve_config(
     test_target: TestTargetWithConfig,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
-    tests_filter: TestsFilter,
+    ignored_filter: IgnoredFilter,
 ) -> Result<TestTargetWithResolvedConfig> {
     let mut test_cases = Vec::with_capacity(test_target.test_cases.len());
     let env_ignore_fork_tests = env_ignore_fork_tests();
@@ -38,9 +36,7 @@ pub async fn resolve_config(
                 available_gas: case.config.available_gas,
                 ignored,
                 expected_result: case.config.expected_result,
-                fork_config: if ignored
-                    && matches!(tests_filter.ignored_filter, IgnoredFilter::NotIgnored)
-                {
+                fork_config: if ignored && matches!(ignored_filter, IgnoredFilter::NotIgnored) {
                     None
                 } else {
                     resolve_fork_config(case.config.fork_config, block_number_map, fork_targets)

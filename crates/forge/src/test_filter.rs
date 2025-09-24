@@ -25,8 +25,8 @@ pub(crate) enum NameFilter {
     ExactMatch(String),
 }
 
-#[derive(Debug, PartialEq)]
-pub(crate) enum IgnoredFilter {
+#[derive(Debug, PartialEq, Clone)]
+pub enum IgnoredFilter {
     NotIgnored,
     Ignored,
     All,
