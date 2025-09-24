@@ -9,7 +9,7 @@ pub struct TestsFilter {
     // based on name
     pub(crate) name_filter: NameFilter,
     // based on `#[ignore]` attribute
-    ignored_filter: IgnoredFilter,
+    pub(crate) ignored_filter: IgnoredFilter,
     // based on `--rerun_failed` flag
     last_failed_filter: bool,
     // based on `--skip` flag

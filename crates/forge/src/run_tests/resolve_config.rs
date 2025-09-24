@@ -1,5 +1,9 @@
 use super::maat::env_ignore_fork_tests;
-use crate::{block_number_map::BlockNumberMap, scarb::config::ForkTarget};
+use crate::{
+    block_number_map::BlockNumberMap,
+    scarb::config::ForkTarget,
+    test_filter::{IgnoredFilter, TestsFilter},
+};
 use anyhow::{Result, anyhow};
 use cheatnet::runtime_extensions::forge_config_extension::config::{
     BlockId, InlineForkConfig, OverriddenForkConfig, RawForkConfig,
@@ -19,20 +23,24 @@ pub async fn resolve_config(
     test_target: TestTargetWithConfig,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
+    tests_filter: TestsFilter,
 ) -> Result<TestTargetWithResolvedConfig> {
     let mut test_cases = Vec::with_capacity(test_target.test_cases.len());
     let env_ignore_fork_tests = env_ignore_fork_tests();
 
     for case in test_target.test_cases {
+        let ignored =
+            case.config.ignored || (env_ignore_fork_tests && case.config.fork_config.is_some());
         test_cases.push(TestCaseWithResolvedConfig {
             name: case.name,
             test_details: case.test_details,
             config: TestCaseResolvedConfig {
                 available_gas: case.config.available_gas,
-                ignored: case.config.ignored
-                    || (env_ignore_fork_tests && case.config.fork_config.is_some()),
+                ignored,
                 expected_result: case.config.expected_result,
-                fork_config: if case.config.ignored {
+                fork_config: if ignored
+                    && matches!(tests_filter.ignored_filter, IgnoredFilter::NotIgnored)
+                {
                     None
                 } else {
                     resolve_fork_config(case.config.fork_config, block_number_map, fork_targets)
