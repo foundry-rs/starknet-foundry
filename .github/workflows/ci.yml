@@ -136,7 +136,7 @@ jobs:
         run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}.tar.zst' e2e
 
   test-forge-e2e-native:
-    name: Test Forge / E2E Tests
+    name: Test Forge / E2E Tests (native)
     runs-on: ubuntu-latest
     needs: [ build-test-forge-nextest-archive-native ]
     strategy:
