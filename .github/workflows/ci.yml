@@ -33,7 +33,6 @@ jobs:
         with:
           tool: nextest@0.9.98
       - name: Build and archive tests
-        # TODO: run native only on scheduled workflow
         run: cargo nextest archive --cargo-profile ci -p forge --features skip_plugin_checks --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v4
@@ -53,7 +52,6 @@ jobs:
         with:
           tool: nextest@0.9.98
       - name: Build and archive tests
-        # TODO: run native only on scheduled workflow
         run: cargo nextest archive --cargo-profile ci -p forge --features skip_plugin_checks,run-native --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst'
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v4
