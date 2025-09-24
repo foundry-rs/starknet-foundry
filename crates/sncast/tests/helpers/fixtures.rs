@@ -243,20 +243,26 @@ pub async fn invoke_contract(
 
 pub async fn mint_token(recipient: &str, amount: u128) {
     let client = reqwest::Client::new();
-    let json = json!(
-        {
+    let json = json!({
+        "jsonrpc": "2.0",
+        "method": "devnet_mint",
+        "params": {
             "address": recipient,
             "amount": amount,
             "unit": "FRI",
-        }
-    );
-    client
-        .post("http://127.0.0.1:5055/mint")
+        },
+        "id": 0,
+    });
+    let resp = client
+        .post("http://127.0.0.1:5055/rpc")
         .header("Content-Type", "application/json")
         .body(json.to_string())
         .send()
         .await
         .expect("Error occurred while minting tokens");
+    
+    let resp_body: serde_json::Value = resp.json().await.expect("No JSON in response");
+    assert!(resp_body["result"].is_object());
 }
 
 #[must_use]
