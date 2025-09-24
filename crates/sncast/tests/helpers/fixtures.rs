@@ -260,7 +260,7 @@ pub async fn mint_token(recipient: &str, amount: u128) {
         .send()
         .await
         .expect("Error occurred while minting tokens");
-    
+
     let resp_body: serde_json::Value = resp.json().await.expect("No JSON in response");
     assert!(resp_body["result"].is_object());
 }
