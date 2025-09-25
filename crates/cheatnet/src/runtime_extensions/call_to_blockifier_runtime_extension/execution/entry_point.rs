@@ -29,7 +29,6 @@ use blockifier::{
     state::state_api::State,
 };
 use cairo_vm::vm::runners::cairo_runner::{CairoRunner, ExecutionResources};
-use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use conversions::FromConv;
 use conversions::string::TryFromHexStr;
 use shared::vm::VirtualMachineExt;
@@ -40,16 +39,14 @@ use starknet_api::{
 };
 use starknet_types_core::felt::Felt;
 use std::collections::{HashMap, HashSet};
-use thiserror::Error;
 
 pub(crate) type ContractClassEntryPointExecutionResult =
-    Result<CallInfoWithExecutionData, EntryPointExecutionErrorWithTrace>;
+    Result<CallInfoWithExecutionData, EntryPointExecutionError>;
 
 pub(crate) struct CallInfoWithExecutionData {
     pub call_info: CallInfo,
     pub syscall_usage_vm_resources: SyscallUsageMap,
     pub syscall_usage_sierra_gas: SyscallUsageMap,
-    pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
 }
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
@@ -95,7 +92,6 @@ pub fn execute_call_entry_point(
                 ret_data: ret_data_f252,
             },
             &[],
-            None,
             vec![],
             vec![],
         );
@@ -194,21 +190,19 @@ pub fn execute_call_entry_point(
             call_info,
             syscall_usage_vm_resources,
             syscall_usage_sierra_gas,
-            vm_trace,
         }) => {
             exit_non_error_call(
                 &call_info,
                 &syscall_usage_vm_resources,
                 &syscall_usage_sierra_gas,
                 cheatnet_state,
-                vm_trace,
                 cheated_data.tx_info.signature.unwrap_or_default(),
             );
             update_remaining_gas(remaining_gas, &call_info);
             Ok(call_info)
         }
-        Err(EntryPointExecutionErrorWithTrace { source: err, trace }) => {
-            exit_error_call(&err, cheatnet_state, &entry_point, trace);
+        Err(err) => {
+            exit_error_call(&err, cheatnet_state, &entry_point);
             Err(err)
         }
     }
@@ -227,14 +221,11 @@ fn evaluate_execution_result(
         Ok(res) => {
             if res.call_info.execution.failed && !is_revertable {
                 clear_handled_errors(&res.call_info, cheatnet_state);
-                return Err(EntryPointExecutionErrorWithTrace {
-                    source: EntryPointExecutionError::ExecutionFailed {
-                        error_trace: extract_trailing_cairo1_revert_trace(
-                            &res.call_info,
-                            Cairo1RevertHeader::Execution,
-                        ),
-                    },
-                    trace: res.vm_trace,
+                return Err(EntryPointExecutionError::ExecutionFailed {
+                    error_trace: extract_trailing_cairo1_revert_trace(
+                        &res.call_info,
+                        Cairo1RevertHeader::Execution,
+                    ),
                 });
             }
             Ok(res)
@@ -247,12 +238,12 @@ fn evaluate_execution_result(
 
 #[expect(clippy::result_large_err)]
 fn handle_entry_point_execution_error(
-    err: EntryPointExecutionErrorWithTrace,
+    err: EntryPointExecutionError,
     call: ExecutableCallEntryPoint,
     current_tracked_resource: TrackedResource,
     is_revertable: bool,
 ) -> ContractClassEntryPointExecutionResult {
-    if let EntryPointExecutionError::PreExecutionError(pre_err) = &err.source {
+    if let EntryPointExecutionError::PreExecutionError(pre_err) = &err {
         match pre_err {
             PreExecutionError::EntryPointNotFound(_)
             | PreExecutionError::NoEntryPointOfTypeFound(_)
@@ -296,7 +287,6 @@ fn call_info_from_pre_execution_error(
         },
         syscall_usage_vm_resources: SyscallUsageMap::default(),
         syscall_usage_sierra_gas: SyscallUsageMap::default(),
-        vm_trace: None,
     }
 }
 
@@ -305,7 +295,6 @@ fn exit_non_error_call(
     syscall_usage_vm_resources: &SyscallUsageMap,
     syscall_usage_sierra_gas: &SyscallUsageMap,
     cheatnet_state: &mut CheatnetState,
-    vm_trace: Option<Vec<RelocatedTraceEntry>>,
     signature: Vec<Felt>,
 ) {
     let nested_syscall_usage_vm_resources =
@@ -327,7 +316,6 @@ fn exit_non_error_call(
         syscall_usage_sierra_gas,
         CallResult::from_non_error(call_info),
         &call_info.execution.l2_to_l1_messages,
-        vm_trace,
         signature,
         call_info.execution.events.clone(),
     );
@@ -337,7 +325,6 @@ fn exit_error_call(
     error: &EntryPointExecutionError,
     cheatnet_state: &mut CheatnetState,
     entry_point: &ExecutableCallEntryPoint,
-    vm_trace: Option<Vec<RelocatedTraceEntry>>,
 ) {
     let identifier = match entry_point.call_type {
         CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
@@ -350,7 +337,6 @@ fn exit_error_call(
         SyscallUsageMap::default(),
         CallResult::from_err(error, &identifier),
         &[],
-        vm_trace,
         vec![],
         vec![],
     );
@@ -445,39 +431,18 @@ fn mocked_call_info(
     }
 }
 
-#[derive(Debug, Error)]
-#[error("{}", source)]
-pub struct EntryPointExecutionErrorWithTrace {
-    pub source: EntryPointExecutionError,
-    pub trace: Option<Vec<RelocatedTraceEntry>>,
-}
-
-impl<T> From<T> for EntryPointExecutionErrorWithTrace
-where
-    T: Into<EntryPointExecutionError>,
-{
-    fn from(value: T) -> Self {
-        Self {
-            source: value.into(),
-            trace: None,
-        }
-    }
-}
-
 pub(crate) fn extract_trace_and_register_errors(
-    source: EntryPointExecutionError,
     class_hash: ClassHash,
     runner: &mut CairoRunner,
     cheatnet_state: &mut CheatnetState,
-) -> EntryPointExecutionErrorWithTrace {
+) {
     let trace = get_relocated_vm_trace(runner);
+    cheatnet_state
+        .trace_data
+        .set_vm_trace_for_current_call(trace);
+
     let pcs = runner.vm.get_reversed_pc_traceback();
     cheatnet_state.register_error(class_hash, pcs);
-
-    EntryPointExecutionErrorWithTrace {
-        source,
-        trace: Some(trace),
-    }
 }
 
 /// This helper function is used for backtrace to avoid displaying errors that were already handled
