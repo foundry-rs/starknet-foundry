@@ -7,7 +7,9 @@ use anyhow::{Result, bail};
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
-use blockifier::execution::entry_point_execution::{prepare_call_arguments, run_entry_point};
+use blockifier::execution::entry_point_execution::{
+    extract_vm_resources, prepare_call_arguments, run_entry_point,
+};
 use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::state::cached_state::CachedState;
 use cairo_vm::Felt252;
@@ -289,10 +291,14 @@ pub fn run_test_case(
             )?;
 
             // TODO(#3744): Confirm if this is needed for the profiler
-            let vm_resources_without_inner_calls = runner
-                .get_execution_resources()
-                .expect("Execution resources missing")
-                .filter_unused_builtins();
+            let vm_resources_without_inner_calls = extract_vm_resources(
+                &runner,
+                &forge_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler,
+            )?;
 
             add_resources_to_top_call(
                 &mut forge_runtime,
