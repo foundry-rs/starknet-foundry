@@ -30,7 +30,7 @@ impl<'a> Node<'a> {
 
     /// Creates a child node which parent is the current node and returns handle to created node.
     #[must_use = "if you want to create a leaf node use leaf() instead"]
-    pub fn child_node(&mut self, tree_item: &impl NodeDisplay) -> Node {
+    pub fn child_node(&mut self, tree_item: &impl NodeDisplay) -> Node<'_> {
         self.builder.begin_child(tree_item.display());
         Node::new(self.builder)
     }

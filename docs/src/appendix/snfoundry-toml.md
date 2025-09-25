@@ -75,6 +75,9 @@ show-explorer-links = true
 
 The `block-explorer` field specifies the block explorer service used to display links to transaction details. 
 
+> 📝 **Note**
+> For details on how block explorers are used in `sncast` and when links are shown, see the [Block Explorers](../starknet/block_explorer.md) section.
+
 | Value     | URL                                    |
 |-----------|----------------------------------------|
 | StarkScan | `https://starkscan.co`          |

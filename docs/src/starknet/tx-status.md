@@ -28,4 +28,5 @@ Success: Transaction status retrieved
 Finality Status:  Accepted on L1
 Execution Status: Succeeded
 ```
+
 </details>

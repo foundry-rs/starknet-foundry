@@ -10,6 +10,7 @@ use blockifier::transaction::objects::ExecutionResourcesTraits;
 use cairo_vm::vm::runners::cairo_runner::{CairoRunner, ExecutionResources};
 
 // Based on the code from blockifer
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn finalize_execution(
     // region: Modified blockifier code
     runner: &mut CairoRunner,
@@ -19,12 +20,10 @@ pub fn finalize_execution(
     program_extra_data_length: usize,
     tracked_resource: TrackedResource,
 ) -> Result<CallInfo, PostExecutionError> {
-    // region: Modified blockifier code
     finalize_runner(runner, n_total_args, program_extra_data_length)?;
     syscall_handler
         .read_only_segments
         .mark_as_accessed(runner)?;
-    // endregion
 
     let call_result = get_call_result(runner, syscall_handler, &tracked_resource)?;
 
@@ -43,6 +42,7 @@ pub fn finalize_execution(
     );
 
     let syscall_handler_base = &syscall_handler.base;
+    // region: Modified blockifier code - added clones due to different function signature
     Ok(CallInfo {
         call: syscall_handler_base.call.clone().into(),
         execution: CallExecution {
@@ -59,4 +59,5 @@ pub fn finalize_execution(
         storage_access_tracker: syscall_handler_base.storage_access_tracker.clone(),
         builtin_counters: vm_resources_without_inner_calls.prover_builtins(),
     })
+    // endregion
 }

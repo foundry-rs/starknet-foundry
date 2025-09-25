@@ -1,5 +1,5 @@
+use sncast_std::{FeeSettingsTrait, deploy};
 use starknet::ClassHash;
-use sncast_std::{deploy, FeeSettingsTrait};
 
 fn main() {
     let fee_settings = FeeSettingsTrait::max_fee(9999999);

@@ -1,10 +1,9 @@
 use core::clone::Clone;
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
-
-use trace_resources::{
-    trace_info_checker::{ITraceInfoCheckerDispatcherTrait, ITraceInfoCheckerDispatcher},
-    trace_info_proxy::{ITraceInfoProxyDispatcherTrait, ITraceInfoProxyDispatcher},
+use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
+use trace_resources::trace_info_checker::{
+    ITraceInfoCheckerDispatcher, ITraceInfoCheckerDispatcherTrait,
 };
+use trace_resources::trace_info_proxy::{ITraceInfoProxyDispatcher, ITraceInfoProxyDispatcherTrait};
 
 #[test]
 fn test_call() {

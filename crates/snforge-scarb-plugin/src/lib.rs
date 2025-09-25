@@ -1,11 +1,14 @@
-#![warn(rust_2024_compatibility)]
+// Disallows using methods that are not safed to be used.
+// See clippy.toml for the list of disallowed methods and reasoning behind them.
+#![deny(clippy::disallowed_methods)]
+
 use attributes::fuzzer;
 use attributes::{
     available_gas::available_gas, disable_predeployed_contracts::disable_predeployed_contracts,
     fork::fork, fuzzer::fuzzer, ignore::ignore,
     internal_config_statement::internal_config_statement, should_panic::should_panic, test::test,
 };
-use cairo_lang_macro::{attribute_macro, executable_attribute, ProcMacroResult, TokenStream};
+use cairo_lang_macro::{ProcMacroResult, TokenStream, attribute_macro, executable_attribute};
 
 mod args;
 mod asserts;
@@ -13,9 +16,12 @@ pub mod attributes;
 mod cairo_expression;
 mod common;
 mod config_statement;
+mod external_inputs;
 mod parse;
 mod types;
 mod utils;
+
+pub use utils::create_single_token;
 
 executable_attribute!("snforge_internal_test_executable");
 

@@ -1,9 +1,8 @@
+use core::ec::{EcPoint, EcPointImpl, stark_curve};
 use core::ecdsa::check_ecdsa_signature;
-use core::ec::{EcPointImpl, EcPoint, stark_curve};
+use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 use crate::cheatcode::execute_cheatcode_and_deserialize;
 use super::SignError;
-
-use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 
 pub impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
     fn generate() -> KeyPair<felt252, felt252> {

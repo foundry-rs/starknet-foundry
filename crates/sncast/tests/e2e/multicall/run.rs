@@ -10,7 +10,7 @@ use test_case::test_case;
 #[test_case("oz_cairo_0"; "cairo_0_account")]
 #[test_case("oz_cairo_1"; "cairo_1_account")]
 #[test_case("oz"; "oz_account")]
-#[test_case("argent"; "argent_account")]
+#[test_case("ready"; "ready_account")]
 #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 async fn test_happy_case(account: &str) {
@@ -34,7 +34,7 @@ async fn test_happy_case(account: &str) {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
     let output = snapbox.assert();
 
     let stderr_str = output.as_stderr();
@@ -77,7 +77,9 @@ async fn test_calldata_ids() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
     let output = snapbox.assert();
 
     let stderr_str = output.as_stderr();
@@ -258,7 +260,9 @@ async fn test_numeric_inputs() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
     let output = snapbox.assert();
 
     let stderr_str = output.as_stderr();

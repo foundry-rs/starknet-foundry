@@ -1,10 +1,11 @@
-use crate::contracts_data_store::ContractsDataStore;
+use crate::Context;
 use crate::trace::collect::Collector;
+use crate::trace::components::{
+    CallResultContainer, CallTypeContainer, CalldataContainer, CallerAddressContainer,
+    ContractAddressContainer, ContractNameContainer, EntryPointTypeContainer,
+};
 use crate::tree::TreeSerialize;
-use crate::verbosity::{Detailed, Standard, Verbosity};
-use blockifier::execution::entry_point::CallType;
 use cheatnet::state::CallTrace;
-use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::ContractAddress as ApiContractAddress;
 use std::fmt;
 use std::fmt::Display;
@@ -23,14 +24,14 @@ pub struct ContractTrace {
 
 #[derive(Debug, Clone)]
 pub struct TraceInfo {
-    pub contract_name: ContractName,
-    pub entry_point_type: Detailed<EntryPointType>,
-    pub calldata: Standard<TransformedCalldata>,
-    pub contract_address: Detailed<ContractAddress>,
-    pub caller_address: Detailed<CallerAddress>,
-    pub call_type: Detailed<CallType>,
+    pub contract_name: ContractNameContainer,
+    pub entry_point_type: EntryPointTypeContainer,
+    pub calldata: CalldataContainer,
+    pub contract_address: ContractAddressContainer,
+    pub caller_address: CallerAddressContainer,
+    pub call_type: CallTypeContainer,
     pub nested_calls: Vec<ContractTrace>,
-    pub call_result: Standard<TransformedCallResult>,
+    pub call_result: CallResultContainer,
 }
 
 #[derive(Debug, Clone)]
@@ -55,15 +56,10 @@ pub struct ContractAddress(pub ApiContractAddress);
 pub struct CallerAddress(pub ApiContractAddress);
 
 impl Trace {
-    /// Creates a new [`Trace`] from a given `cheatnet` [`CallTrace`], [`ContractsDataStore`], [`Verbosity`] and a test name.
+    /// Creates a new [`Trace`] from a given [`Context`] and a test name.
     #[must_use]
-    pub fn new(
-        call_trace: &CallTrace,
-        contracts_data_store: &ContractsDataStore,
-        verbosity: Verbosity,
-        test_name: String,
-    ) -> Self {
-        Collector::new(call_trace, contracts_data_store, verbosity).collect_trace(test_name)
+    pub fn new(call_trace: &CallTrace, context: &Context, test_name: String) -> Self {
+        Collector::new(call_trace, context).collect_trace(test_name)
     }
 }
 

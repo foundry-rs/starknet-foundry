@@ -1,13 +1,13 @@
 // Won't be found by the collector
 
-use collection_with_lib::fob::fob_impl::fob_fn;
 use collection_with_lib::fab::fab_impl::fab_fn;
 use collection_with_lib::fib::fib_fn;
+use collection_with_lib::fob::fob_impl::fob_fn;
 
 
 #[cfg(test)]
 mod tests {
-    use super::{fib_fn, fob_fn, fab_fn};
+    use super::{fab_fn, fib_fn, fob_fn};
 
     #[test]
     fn test_fib() {

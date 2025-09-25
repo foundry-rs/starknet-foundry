@@ -17,7 +17,13 @@ Address of the account.
 ## `--type, -t <ACCOUNT_TYPE>`
 Required.
 
-Type of the account. Possible values: oz, argent, braavos.
+<!-- TODO(#3556): Remove `argent` option once we drop Argent account type. -->                              |
+Type of the account. Possible values: `oz`, `argent`, `ready`, `braavos`.
+
+<!-- TODO(#3556): Remove warning once we drop Argent account type. -->                              |
+> ⚠️ **Warning**
+>
+> Argent has rebranded as Ready. The `argent` option is deprecated, please use `ready` instead.
 
 ## `--url, -u <RPC_URL>`
 Optional.

@@ -1,14 +1,12 @@
 use crate::{
     args::Arguments,
     attributes::{AttributeCollector, AttributeInfo, AttributeTypeData},
-    branch,
     cairo_expression::CairoExpression,
     config_statement::extend_with_config_cheatcodes,
     types::{Number, ParseFromExpr},
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, Severity, TokenStream};
-use cairo_lang_syntax::node::db::SyntaxGroup;
-use indoc::formatdoc;
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
+use cairo_lang_parser::utils::SimpleParserDatabase;
 
 pub struct AvailableGasCollector;
 
@@ -22,19 +20,20 @@ impl AttributeTypeData for AvailableGasCollector {
 
 impl AttributeCollector for AvailableGasCollector {
     fn args_into_config_expression(
-        db: &dyn SyntaxGroup,
+        db: &SimpleParserDatabase,
         args: Arguments,
         _warns: &mut Vec<Diagnostic>,
-    ) -> Result<String, Diagnostics> {
-        let expr = branch!(from_resource_bounds(db, &args), from_max_gas(db, &args))?;
-        Ok(expr)
+    ) -> Result<TokenStream, Diagnostics> {
+        Ok(from_resource_bounds(db, &args)?)
     }
 }
 
-fn from_resource_bounds(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnostic> {
+fn from_resource_bounds(
+    db: &SimpleParserDatabase,
+    args: &Arguments,
+) -> Result<TokenStream, Diagnostic> {
     let named_args = args.named_only::<AvailableGasCollector>()?;
     let max = u64::MAX;
-
     let l1_gas = named_args
         .as_once_optional("l1_gas")?
         .map(|arg| Number::parse_from_expr::<AvailableGasCollector>(db, arg, "l1_gas"))
@@ -61,33 +60,12 @@ fn from_resource_bounds(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String
     let l1_data_gas_expr = l1_data_gas.as_cairo_expression();
     let l2_gas_expr = l2_gas.as_cairo_expression();
 
-    Ok(formatdoc!(
-        "
-            snforge_std::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
-                 snforge_std::_internals::config_types::AvailableResourceBoundsConfig {{
-                     l1_gas: {l1_gas_expr},
-                     l1_data_gas: {l1_data_gas_expr},
-                     l2_gas: {l2_gas_expr}
-                 }}
-             )
-        "
-    ))
-}
-
-fn from_max_gas(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnostic> {
-    let &[arg] = args
-        .unnamed_only::<AvailableGasCollector>()?
-        .of_length::<1, AvailableGasCollector>()?;
-
-    let gas =
-        Number::parse_from_expr::<AvailableGasCollector>(db, arg.1, arg.0.to_string().as_str())?;
-
-    gas.validate_in_gas_range::<AvailableGasCollector>("max_gas")?;
-
-    let gas = gas.as_cairo_expression();
-
-    Ok(format!(
-        "snforge_std::_internals::config_types::AvailableGasConfig::MaxGas({gas})"
+    Ok(quote!(
+        snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
+            l1_gas: #l1_gas_expr,
+            l1_data_gas: #l1_data_gas_expr,
+            l2_gas: #l2_gas_expr,
+        }
     ))
 }
 

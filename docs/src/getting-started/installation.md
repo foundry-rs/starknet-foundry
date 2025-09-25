@@ -9,13 +9,15 @@ In this section, we will walk through the process of installing Starknet Foundry
 
 * [Installation](#installation)
     * [Contents](#contents)
-    * [Requirements](#requirements)
-    * [Linux and macOS](#linux-and-macos)
-        * [Install asdf](#install-asdf)
-        * [Install Scarb version >= 2.8.5](#install-scarb-version--285)
-        * [(Optional for Scarb >= 2.10.0) Rust Installation](#optional-for-scarb--21001-rust-installation)
-        * [Install Starknet Foundry](#install-starknet-foundry)
-    * [Windows](#windows)
+    * [With Starkup](#with-starkup)
+    * [Manual Installation](#manual-installation)
+      * [Requirements](#requirements)
+      * [Linux and macOS](#linux-and-macos)
+          * [Install asdf](#install-asdf)
+          * [Install Scarb version >= 2.8.5](#install-scarb-version--285)
+          * [(Optional for Scarb >= 2.10.0) Rust Installation](#optional-for-scarb--21001-rust-installation)
+          * [Install Starknet Foundry](#install-starknet-foundry)
+      * [Windows](#windows)
     * [Common Errors](#common-errors)
         * [No Version Set (Linux and macOS Only)](#no-version-set-linux-and-macos-only)
         * [Invalid Rust Version](#invalid-rust-version)
@@ -29,7 +31,30 @@ In this section, we will walk through the process of installing Starknet Foundry
 
 <!-- TOC -->
 
-## Requirements
+## With Starkup
+
+[Starkup](https://github.com/software-mansion/starkup) helps you install all the tools used to develop packages in Cairo and write contracts for Starknet, including Starknet Foundry.
+
+> ℹ️ **Info**
+>
+> When using starkup on Windows, please
+> use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install), as it only works on macOS and Linux.
+
+Run the following in your terminal, then follow the onscreen instructions:
+
+```shell
+curl --proto '=https' --tlsv1.2 -sSf https://sh.starkup.sh | sh
+```
+
+To verify that Starknet Foundry was installed, open a new terminal and run
+
+```shell
+snforge --version
+```
+
+## Manual Installation
+
+### Requirements
 
 > 📝 **Note**
 >
@@ -55,14 +80,14 @@ all installed and added to your `PATH` environment variable.
 > `Universal-Sierra-Compiler` will be automatically installed if you use `asdf` or `snfoundryup`.
 > You can also create `UNIVERSAL_SIERRA_COMPILER` env var to make it visible for `snforge`.
 
-## Linux and macOS
+### Linux and macOS
 
 > ℹ️ **Info**
 >
 > If you already have installed Rust, Scarb and asdf simply run
 > `asdf plugin add starknet-foundry`
 
-### Install asdf
+#### Install asdf
 
 Follow the instructions from [asdf docs](https://asdf-vm.com/guide/getting-started.html#getting-started).
 
@@ -72,7 +97,7 @@ To verify that asdf was installed, run
 asdf --version
 ```
 
-### Install Scarb version >= 2.8.5
+#### Install Scarb version >= 2.8.5
 
 First, add Scarb plugin to asdf
 
@@ -100,7 +125,7 @@ scarb --version
 
 and verify that version is >= 2.8.5
 
-### (Optional for Scarb >= 2.10.0)[^note] Rust Installation
+#### (Optional for Scarb >= 2.10.0)[^note] Rust Installation
 
 > ℹ️️ **Info**
 >
@@ -127,7 +152,7 @@ and verify that version is >= 1.80.1
 
 See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
 
-### Install Starknet Foundry
+#### Install Starknet Foundry
 
 First, add Starknet Foundry plugin to asdf
 
@@ -159,7 +184,7 @@ or
 sncast --version
 ```
 
-## Windows
+### Windows
 
 > 🐧 **Info** - WSL (Windows Subsystem for Linux)
 >
@@ -234,88 +259,134 @@ test = "snforge test"
 
 Shell completions allow your terminal to suggest and automatically complete commands and options when you press `Tab`.
 
+> ⚠️ **Warning**
+>
+> Most users **DO NOT** need to install shell completions manually.
+> [Starkup](#install-via-starkup-installation-script) automatically set up shell completions for the supported shells.
+> However, if these installation methods do not support the target shell, or for any reason fail to set up completions, you can follow the instructions below to set them up manually.
+
 <details>
   <summary><strong>Bash</strong></summary>
 
-Completions are configured by doing the following:
+Add the following to `~/.bashrc` or `~/.bash_profile` (macOS):
+
 ```bash
-mkdir -p "${ASDF_DATA_DIR:-$HOME/.asdf}/completions"
-sncast completion bash > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/sncast.bash"
-snforge completion bash > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/snforge.bash"
+# BEGIN FOUNDRY COMPLETIONS
+_snforge() {
+  if ! snforge completions bash >/dev/null 2>&1; then
+    return 0
+  fi
+  source <(snforge completions bash)
+  _snforge "$@"
+}
+
+_sncast() {
+  if ! sncast completions bash >/dev/null 2>&1; then
+    return 0
+  fi
+  source <(sncast completions bash)
+  _sncast "$@"
+}
+
+complete -o default -F _snforge snforge
+complete -o default -F _sncast sncast
+# END FOUNDRY COMPLETIONS
 ```
 
-Then add the following to your `.bash`:
-```bash
-# source completion scripts
-. "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/sncast.bash"     
-. "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/snforge.bash"
-```
+Run `source ~/.bashrc` (or `source ~/.bash_profile`), or open a new terminal session to apply the changes.
 
 </details>
 
 <details>
   <summary><strong>ZSH</strong></summary>
 
-Completions are configured by doing the following:
+Add the following to `~/.zshrc`:
+
 ```bash
-mkdir -p "${ASDF_DATA_DIR:-$HOME/.asdf}/completions"
-sncast completion zsh > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/_sncast"
-snforge completion zsh > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/_snforge"
+# BEGIN FOUNDRY COMPLETIONS
+_snforge() {
+  if ! snforge completions zsh >/dev/null 2>&1; then
+    return 0
+  fi
+  eval "$(snforge completions zsh)"
+  _snforge "$@"
+}
+
+_sncast() {
+  if ! sncast completions zsh >/dev/null 2>&1; then
+    return 0
+  fi
+  eval "$(sncast completions zsh)"
+  _sncast "$@"
+}
+
+autoload -Uz compinit && compinit
+compdef _snforge snforge
+compdef _sncast sncast
+# END FOUNDRY COMPLETIONS
 ```
 
-Then add the following to your `.zshrc`:
-```bash
-# append completions to fpath
-fpath=(${ASDF_DATA_DIR:-$HOME/.asdf}/completions $fpath)
-# initialise completions with ZSH's compinit
-autoload -Uz compinit && compinit
-```
-This is to enable autocompletion in [ZSH](https://wiki.archlinux.org/title/Zsh#Command_completion).
+> 📝 **Note**
+>
+> If you already have `autoload -Uz compinit && compinit` in your `~/.zshrc` (for example, from another completions such as `scarb`), do not add it again. Only one call is needed.
+
+Run `source ~/.zshrc`, or open a new terminal session to apply the changes.
+
+For more information about Zsh completions, see the [Zsh documentation](https://zsh.sourceforge.io/Doc/Release/Completion-System.html) or the [Arch Wiki](https://wiki.archlinux.org/title/Zsh#Command_completion).
 
 </details>
 
 <details>
   <summary><strong>Fish</strong></summary>
 
-Completions are configured by doing the following:
+Add the following to `~/.config/fish/config.fish`:
+
 ```bash
-sncast completion fish > ~/.config/fish/completions/sncast.fish
-snforge completion fish > ~/.config/fish/completions/snforge.fish
+# BEGIN FOUNDRY COMPLETIONS
+function _snforge
+  if not snforge completions fish >/dev/null 2>&1
+    return 0
+  end
+  source (snforge completions fish | psub)
+  complete -C (commandline -cp)
+end
+
+function _sncast
+  if not sncast completions fish >/dev/null 2>&1
+    return 0
+  end
+  source (sncast completions fish | psub)
+  complete -C (commandline -cp)
+end
+
+complete -c snforge -f -a '(_snforge)'
+complete -c sncast -f -a '(_sncast)'
+# END FOUNDRY COMPLETIONS
 ```
+
+Run `source ~/.config/fish/config.fish`, or open a new terminal session to apply the changes.
 
 </details>
 
 <details>
   <summary><strong>Elvish</strong></summary>
 
-Completions are configured by doing the following:
+Add the following to your `~/.config/elvish/rc.elv` file:
 
 ```bash
-sncast completion elvish >> ~/.config/elvish/rc.elv
-snforge completion elvish >> ~/.config/elvish/rc.elv
+# BEGIN FOUNDRY COMPLETIONS
+try {
+  eval (snforge completions elvish | slurp)
+} catch { return }
+
+try {
+  eval (sncast completions elvish | slurp)
+} catch { return }
+# END FOUNDRY COMPLETIONS
 ```
 
-</details>
+Run `eval (slurp <  ~/.config/elvish/rc.elv)`, or open a new terminal session to apply the changes.
 
-<details>
-  <summary><strong>PowerShell</strong></summary>
-Open your profile script with:
-
-```bash
-mkdir -Path (Split-Path -Parent $profile) -ErrorAction SilentlyContinue
-notepad $profile
-```
-
-Add the line and save the file:
-```bash
-Invoke-Expression -Command $(sncast completion powershell | Out-String)
-Invoke-Expression -Command $(snforge completion powershell | Out-String)
-``` 
-At the start of the PowerShell session, you may encounter an error due to a restrictive `ExecutionPolicy`. You can resolve this issue by running the following command:
-
-```bash
-Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
 </details>
 
 ## Universal-Sierra-Compiler update

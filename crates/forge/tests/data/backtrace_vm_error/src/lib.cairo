@@ -26,8 +26,8 @@ pub trait IInnerContract<TState> {
 
 #[starknet::contract]
 pub mod InnerContract {
-    use starknet::{SyscallResultTrait, ContractAddress};
     use starknet::syscalls::call_contract_syscall;
+    use starknet::{ContractAddress, SyscallResultTrait};
 
     #[storage]
     pub struct Storage {}

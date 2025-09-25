@@ -1,4 +1,4 @@
-use sncast_std::{declare, deploy, invoke, call, DeclareResultTrait, get_nonce, FeeSettingsTrait};
+use sncast_std::{DeclareResultTrait, FeeSettingsTrait, call, declare, deploy, get_nonce, invoke};
 
 fn second_contract() {
     let fee_settings = FeeSettingsTrait::resource_bounds(
@@ -45,7 +45,7 @@ fn main() {
         .expect('mapa declare failed');
 
     let class_hash = declare_result.class_hash();
-    let deploy_nonce = get_nonce('preconfirmed');
+    let deploy_nonce = get_nonce('pre_confirmed');
     let deploy_result = deploy(
         *class_hash,
         ArrayTrait::new(),
@@ -57,7 +57,7 @@ fn main() {
         .expect('mapa deploy failed');
     assert(deploy_result.transaction_hash != 0, deploy_result.transaction_hash);
 
-    let invoke_nonce = get_nonce('preconfirmed');
+    let invoke_nonce = get_nonce('pre_confirmed');
     let invoke_result = invoke(
         deploy_result.contract_address,
         selector!("put"),

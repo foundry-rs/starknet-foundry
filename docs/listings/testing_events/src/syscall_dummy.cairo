@@ -9,7 +9,8 @@ pub mod SpySyscallEventsChecker {
     // ...
     // Rest of the implementation identical to `SpyEventsChecker`
 
-    use core::starknet::{SyscallResultTrait, syscalls::emit_event_syscall};
+    use core::starknet::SyscallResultTrait;
+    use core::starknet::syscalls::emit_event_syscall;
 
     #[external(v0)]
     pub fn emit_event_with_syscall(ref self: ContractState, some_key: felt252, some_data: felt252) {

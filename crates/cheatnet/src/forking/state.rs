@@ -54,7 +54,9 @@ impl ForkStateReader {
         Ok(ChainId::from(id))
     }
 
-    pub fn compiled_contract_class_map(&self) -> Ref<HashMap<ClassHash, ContractClassStarknet>> {
+    pub fn compiled_contract_class_map(
+        &self,
+    ) -> Ref<'_, HashMap<ClassHash, ContractClassStarknet>> {
         Ref::map(self.cache.borrow(), |cache| {
             cache.compiled_contract_class_map()
         })

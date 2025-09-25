@@ -1,7 +1,7 @@
 use core::clone::Clone;
 use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
-use snforge_std::{declare, ContractClassTrait};
-use starknet::{SyscallResultTrait};
+use snforge_std::{ContractClassTrait, declare};
+use starknet::SyscallResultTrait;
 use starknet::syscalls::deploy_syscall;
 
 #[test]

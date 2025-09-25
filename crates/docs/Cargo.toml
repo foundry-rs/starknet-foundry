@@ -15,6 +15,8 @@ toml_edit.workspace = true
 camino.workspace = true
 tempfile.workspace = true
 anyhow.workspace = true
+semver.workspace = true
+scarb-api = { path = "../scarb-api" }
 
 [features]
 testing = []

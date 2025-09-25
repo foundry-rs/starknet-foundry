@@ -57,11 +57,16 @@ pub fn prepare_account_json(
     class_hash: Option<Felt>,
     salt: Option<Felt>,
 ) -> serde_json::Value {
+    // TODO(#3556): Once `Argent` variant is deleted, use `account_type` directly
+    let saved_account_type = match account_type {
+        AccountType::Argent => AccountType::Ready,
+        _ => account_type,
+    };
     let mut account_json = json!({
         "private_key": format!("{:#x}", private_key.secret_scalar()),
         "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
         "address": format!("{address:#x}"),
-        "type": format!("{account_type}").to_lowercase().replace("openzeppelin", "open_zeppelin"),
+        "type": format!("{saved_account_type}").to_lowercase().replace("openzeppelin", "open_zeppelin"),
         "deployed": deployed,
         "legacy": legacy,
     });
@@ -209,21 +214,21 @@ pub async fn account(
                 &config.accounts_file,
                 &provider,
                 &import,
+                ui,
             )
             .await;
 
             let run_interactive_prompt =
                 !import.silent && result.is_ok() && io::stdout().is_terminal();
 
-            if run_interactive_prompt {
-                if let Some(account_name) = result.as_ref().ok().map(|r| r.account_name.clone()) {
-                    if let Err(err) = prompt_to_add_account_as_default(account_name.as_str()) {
-                        // TODO(#3436)
-                        ui.eprintln(&format!(
-                            "Error: Failed to launch interactive prompt: {err}"
-                        ));
-                    }
-                }
+            if run_interactive_prompt
+                && let Some(account_name) = result.as_ref().ok().map(|r| r.account_name.clone())
+                && let Err(err) = prompt_to_add_account_as_default(account_name.as_str())
+            {
+                // TODO(#3436)
+                ui.eprintln(&format!(
+                    "Error: Failed to launch interactive prompt: {err}"
+                ));
             }
 
             process_command_result("account import", result, ui, None);
@@ -244,18 +249,19 @@ pub async fn account(
             let result = starknet_commands::account::create::create(
                 &account,
                 &config.accounts_file,
-                config.keystore,
+                config.keystore.as_ref(),
                 &provider,
                 chain_id,
                 &create,
+                ui,
             )
             .await;
 
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
                 provider.chain_id().await?,
-                config.show_explorer_links,
-                config.block_explorer,
+                &create.rpc,
+                &config,
             );
 
             process_command_result("account create", result, ui, block_explorer_link);
@@ -271,7 +277,7 @@ pub async fn account(
             let keystore_path = config.keystore.clone();
             let result = starknet_commands::account::deploy::deploy(
                 &provider,
-                config.accounts_file,
+                &config.accounts_file,
                 &deploy,
                 chain_id,
                 wait_config,
@@ -285,24 +291,25 @@ pub async fn account(
             let run_interactive_prompt =
                 !deploy.silent && result.is_ok() && io::stdout().is_terminal();
 
-            if config.keystore.is_none() && run_interactive_prompt {
-                if let Err(err) = prompt_to_add_account_as_default(
+            if config.keystore.is_none()
+                && run_interactive_prompt
+                && let Err(err) = prompt_to_add_account_as_default(
                     &deploy
                         .name
                         .expect("Must be provided if not using a keystore"),
-                ) {
-                    // TODO(#3436)
-                    ui.eprintln(&format!(
-                        "Error: Failed to launch interactive prompt: {err}"
-                    ));
-                }
+                )
+            {
+                // TODO(#3436)
+                ui.eprintln(&format!(
+                    "Error: Failed to launch interactive prompt: {err}"
+                ));
             }
 
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
                 provider.chain_id().await?,
-                config.show_explorer_links,
-                config.block_explorer,
+                &deploy.rpc,
+                &config,
             );
             process_command_result("account deploy", result, ui, block_explorer_link);
             Ok(())

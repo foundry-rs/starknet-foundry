@@ -1,4 +1,6 @@
-use super::common::runner::{BASE_FILE_PATTERNS, setup_package_with_file_patterns, test_runner};
+use super::common::runner::{
+    BASE_FILE_PATTERNS, Package, setup_package_with_file_patterns, test_runner,
+};
 use assert_fs::fixture::PathChild;
 use indoc::formatdoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
@@ -6,7 +8,7 @@ use shared::test_utils::output_assert::assert_stdout_contains;
 #[test]
 fn file_reading() {
     let temp = setup_package_with_file_patterns(
-        "file_reading",
+        Package::Name("file_reading".to_string()),
         &[BASE_FILE_PATTERNS, &["**/*.txt", "**/*.json"]].concat(),
     );
 

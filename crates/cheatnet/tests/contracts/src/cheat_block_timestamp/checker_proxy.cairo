@@ -14,12 +14,11 @@ trait ICheatBlockTimestampCheckerProxy<TContractState> {
 
 #[starknet::contract]
 mod CheatBlockTimestampCheckerProxy {
-    use starknet::ContractAddress;
-    use super::ICheatBlockTimestampCheckerDispatcherTrait;
-    use super::ICheatBlockTimestampCheckerDispatcher;
-    use super::ICheatBlockTimestampCheckerProxyDispatcher;
-    use super::ICheatBlockTimestampCheckerProxyDispatcherTrait;
-    use starknet::get_contract_address;
+    use starknet::{ContractAddress, get_contract_address};
+    use super::{
+        ICheatBlockTimestampCheckerDispatcher, ICheatBlockTimestampCheckerDispatcherTrait,
+        ICheatBlockTimestampCheckerProxyDispatcher, ICheatBlockTimestampCheckerProxyDispatcherTrait,
+    };
 
     #[storage]
     struct Storage {}

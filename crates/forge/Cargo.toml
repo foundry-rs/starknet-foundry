@@ -7,12 +7,12 @@ edition.workspace = true
 
 [features]
 smoke = []
-scarb_2_9_1 = []
-scarb_since_2_10 = []
+scarb_2_10_0 = []
 no_scarb_installed = []
 debugging = []
 assert_non_exact_gas = ["test_utils/assert_non_exact_gas"]
-supports-panic-backtrace = []
+skip_plugin_checks = []
+interact-with-state = []
 
 [dependencies]
 anyhow.workspace = true
@@ -52,6 +52,10 @@ url.workspace = true
 indoc.workspace = true
 derive_more.workspace = true
 foundry-ui = { path = "../foundry-ui" }
+chrono.workspace = true
+tracing-subscriber.workspace = true
+tracing.workspace = true
+tracing-chrome.workspace = true
 
 [[bin]]
 name = "snforge"
@@ -66,5 +70,6 @@ tempfile.workspace = true
 cairo-lang-starknet-classes.workspace = true
 walkdir.workspace = true
 test-case.workspace = true
+itertools.workspace = true
 docs = { workspace = true, features = ["testing"] }
 packages_validation = { path = "../testing/packages_validation"}

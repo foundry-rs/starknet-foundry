@@ -11,7 +11,6 @@ use crate::runtime_extensions::{
     forge_runtime_extension::cheatcodes::{
         CheatcodeError,
         declare::declare,
-        deploy::{deploy, deploy_at},
         generate_random_felt::generate_random_felt,
         get_class_hash::get_class_hash,
         l1_handler_execute::l1_handler_execute,
@@ -26,7 +25,6 @@ use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::CallEntryPoint;
-use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
 use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, SyscallUsageMap};
 use blockifier::state::errors::StateError;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
@@ -46,6 +44,7 @@ use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
 };
+use scarb_oracle_hint_service::OracleHintService;
 use starknet::signers::SigningKey;
 use starknet_api::execution_resources::GasAmount;
 use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
@@ -66,6 +65,9 @@ pub struct ForgeExtension<'a> {
     pub environment_variables: &'a HashMap<String, String>,
     pub contracts_data: &'a ContractsData,
     pub fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
+    /// Whether `--experimental-oracles` flag has been enabled.
+    pub experimental_oracles_enabled: bool,
+    pub oracle_hint_service: OracleHintService,
 }
 
 // This runtime extension provides an implementation logic for functions from snforge_std library.
@@ -79,6 +81,24 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
         mut input_reader: BufferReader<'_>,
         extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
+        if let Some(oracle_selector) = self
+            .oracle_hint_service
+            .accept_cheatcode(selector.as_bytes())
+        {
+            if !self.experimental_oracles_enabled {
+                return Err(anyhow!(
+                    "Oracles are an experimental feature. \
+                    To enable them, pass `--experimental-oracles` CLI flag."
+                )
+                .into());
+            }
+
+            let output = self
+                .oracle_hint_service
+                .execute_cheatcode(oracle_selector, input_reader.into_remaining());
+            return Ok(CheatcodeHandlingResult::Handled(output));
+        }
+
         match selector {
             "is_config_mode" => Ok(CheatcodeHandlingResult::from_serializable(false)),
             "cheat_execution_info" => {
@@ -167,43 +187,16 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 let contract_name: String = input_reader.read::<ByteArray>()?.to_string();
 
-                handle_declare_deploy_result(declare(*state, &contract_name, self.contracts_data))
+                handle_declare_result(declare(*state, &contract_name, self.contracts_data))
             }
-            "deploy" => {
-                let class_hash = input_reader.read()?;
-                let calldata: Vec<_> = input_reader.read()?;
-                let cheatnet_runtime = &mut extended_runtime.extended_runtime;
-                let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
-
-                syscall_handler.increment_syscall_count_by(&SyscallSelector::Deploy, 1);
-                syscall_handler
-                    .increment_linear_factor_by(&SyscallSelector::Deploy, calldata.len());
-
-                handle_declare_deploy_result(deploy(
-                    syscall_handler,
-                    cheatnet_runtime.extension.cheatnet_state,
-                    &class_hash,
-                    &calldata,
-                ))
-            }
-            "deploy_at" => {
-                let class_hash = input_reader.read()?;
-                let calldata: Vec<_> = input_reader.read()?;
+            // Internal cheatcode used to pass a contract address when calling `deploy_at`.
+            "set_deploy_at_address" => {
                 let contract_address = input_reader.read()?;
-                let cheatnet_runtime = &mut extended_runtime.extended_runtime;
-                let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
-                syscall_handler.increment_syscall_count_by(&SyscallSelector::Deploy, 1);
-                syscall_handler
-                    .increment_linear_factor_by(&SyscallSelector::Deploy, calldata.len());
+                let state = &mut *extended_runtime.extended_runtime.extension.cheatnet_state;
+                state.set_next_deploy_at_address(contract_address);
 
-                handle_declare_deploy_result(deploy_at(
-                    syscall_handler,
-                    cheatnet_runtime.extension.cheatnet_state,
-                    &class_hash,
-                    &calldata,
-                    contract_address,
-                ))
+                Ok(CheatcodeHandlingResult::from_serializable(()))
             }
             "precalculate_address" => {
                 let class_hash = input_reader.read()?;
@@ -216,6 +209,16 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .precalculate_address(&class_hash, &calldata);
 
                 Ok(CheatcodeHandlingResult::from_serializable(contract_address))
+            }
+            // Internal cheatcode to guarantee unique salts for each deployment
+            // when deploying via a method of the `ContractClass` struct.
+            "get_salt" => {
+                let state = &mut *extended_runtime.extended_runtime.extension.cheatnet_state;
+
+                let salt = state.get_salt();
+                state.increment_deploy_salt_base();
+
+                Ok(CheatcodeHandlingResult::from_serializable(salt))
             }
             "var" => {
                 let name: String = input_reader.read::<ByteArray>()?.to_string();
@@ -361,26 +364,46 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let curve: Felt = input_reader.read()?;
                 let curve = curve.to_short_string().ok();
 
-                let (signing_key_bytes, verifying_key_bytes) = {
+                let (signing_key_bytes, x_coordinate_bytes, y_coordinate_bytes) = {
+                    let extract_coordinates_from_verifying_key = |verifying_key: Box<[u8]>| {
+                        let verifying_key = verifying_key.iter().as_slice();
+                        (
+                            verifying_key[1..33].try_into().unwrap(),
+                            verifying_key[33..65].try_into().unwrap(),
+                        )
+                    };
+
                     match curve.as_deref() {
                         Some("Secp256k1") => {
                             let signing_key = k256::ecdsa::SigningKey::random(
                                 &mut k256::elliptic_curve::rand_core::OsRng,
                             );
-                            let verifying_key = signing_key.verifying_key();
+                            let verifying_key = signing_key
+                                .verifying_key()
+                                .to_encoded_point(false)
+                                .to_bytes();
+                            let (x_coordinate, y_coordinate) =
+                                extract_coordinates_from_verifying_key(verifying_key);
                             (
-                                signing_key.to_bytes(),
-                                verifying_key.to_encoded_point(false).to_bytes(),
+                                signing_key.to_bytes().as_slice()[0..32].try_into().unwrap(),
+                                x_coordinate,
+                                y_coordinate,
                             )
                         }
                         Some("Secp256r1") => {
                             let signing_key = p256::ecdsa::SigningKey::random(
                                 &mut p256::elliptic_curve::rand_core::OsRng,
                             );
-                            let verifying_key = signing_key.verifying_key();
+                            let verifying_key = signing_key
+                                .verifying_key()
+                                .to_encoded_point(false)
+                                .to_bytes();
+                            let (x_coordinate, y_coordinate) =
+                                extract_coordinates_from_verifying_key(verifying_key);
                             (
-                                signing_key.to_bytes(),
-                                verifying_key.to_encoded_point(false).to_bytes(),
+                                signing_key.to_bytes().as_slice()[0..32].try_into().unwrap(),
+                                x_coordinate,
+                                y_coordinate,
                             )
                         }
                         _ => return Ok(CheatcodeHandlingResult::Forwarded),
@@ -389,8 +412,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 Ok(CheatcodeHandlingResult::from_serializable((
                     CairoU256::from_bytes(&signing_key_bytes),
-                    CairoU256::from_bytes(&verifying_key_bytes[1..]), // bytes of public_key's x-coordinate
-                    CairoU256::from_bytes(&verifying_key_bytes[33..]), // bytes of public_key's y-coordinate
+                    CairoU256::from_bytes(&x_coordinate_bytes), // bytes of public_key's x-coordinate
+                    CairoU256::from_bytes(&y_coordinate_bytes), // bytes of public_key's y-coordinate
                 )))
             }
             "ecdsa_sign_message" => {
@@ -438,6 +461,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 };
 
                 let result = result.map(|(r_bytes, s_bytes)| {
+                    let r_bytes: [u8; 32] = r_bytes.as_slice()[0..32].try_into().unwrap();
+                    let s_bytes: [u8; 32] = s_bytes.as_slice()[0..32].try_into().unwrap();
                     (
                         CairoU256::from_bytes(&r_bytes),
                         CairoU256::from_bytes(&s_bytes),
@@ -551,7 +576,7 @@ enum SignError {
     HashOutOfRange,
 }
 
-fn handle_declare_deploy_result<T: CairoSerialize>(
+fn handle_declare_result<T: CairoSerialize>(
     declare_result: Result<T, CheatcodeError>,
 ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
     let result = match declare_result {
@@ -628,6 +653,7 @@ pub fn update_top_call_resources(
         .extended_runtime
         .extended_runtime
         .hint_handler
+        .base
         .syscalls_usage
         .clone();
 

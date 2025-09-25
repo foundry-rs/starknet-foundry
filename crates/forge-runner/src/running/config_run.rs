@@ -1,5 +1,4 @@
 use super::hints::hints_by_representation;
-use crate::running::copied_code::run_entry_point;
 use crate::running::execution::finalize_execution;
 use crate::running::setup::{
     VmExecutionContext, build_test_call_and_entry_point, entry_point_initial_budget,
@@ -8,7 +7,7 @@ use crate::running::setup::{
 use crate::{forge_config::ForgeTrackedResource, package_tests::TestDetails};
 use anyhow::Result;
 use blockifier::execution::contract_class::TrackedResource;
-use blockifier::execution::entry_point_execution::prepare_call_arguments;
+use blockifier::execution::entry_point_execution::{prepare_call_arguments, run_entry_point};
 use blockifier::state::{cached_state::CachedState, state_api::StateReader};
 use cheatnet::runtime_extensions::forge_config_extension::{
     ForgeConfigExtension, config::RawForgeConfig,

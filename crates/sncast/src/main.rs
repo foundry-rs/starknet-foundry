@@ -1,3 +1,4 @@
+use crate::starknet_commands::declare_from::DeclareFrom;
 use crate::starknet_commands::deploy::DeployArguments;
 use crate::starknet_commands::multicall;
 use crate::starknet_commands::script::run_script_command;
@@ -11,8 +12,9 @@ use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
 use configuration::load_config;
 use data_transformer::transform;
+use foundry_ui::components::warning::WarningMessage;
 use foundry_ui::{Message, UI};
-use shared::auto_completions::{Completion, generate_completions};
+use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
@@ -117,6 +119,9 @@ enum Commands {
     /// Declare a contract
     Declare(Declare),
 
+    /// Declare a contract by fetching it from a different Starknet instance
+    DeclareFrom(DeclareFrom),
+
     /// Deploy a contract
     Deploy(Deploy),
 
@@ -144,8 +149,10 @@ enum Commands {
     /// Verify a contract
     Verify(Verify),
 
-    /// Generate completion script
-    Completion(Completion),
+    /// Generate completions script
+    // TODO(#3560): Remove the `completion` alias
+    #[command(alias = "completion")]
+    Completions(Completions),
 
     /// Utility commands
     Utils(Utils),
@@ -232,11 +239,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         Commands::Declare(declare) => {
             let provider = declare.rpc.get_provider(&config, ui).await?;
 
+            let rpc = declare.rpc.clone();
+
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
                 &provider,
-                config.keystore,
+                config.keystore.as_ref(),
             )
             .await?;
             let manifest_path = assert_manifest_path_exists()?;
@@ -252,6 +261,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 ui,
             )
             .expect("Failed to build contract");
+
             let result = starknet_commands::declare::declare(
                 declare,
                 &account,
@@ -271,14 +281,51 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 }
             });
 
+            let block_explorer_link =
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
+            process_command_result("declare", result, ui, block_explorer_link);
+
+            Ok(())
+        }
+
+        Commands::DeclareFrom(declare_from) => {
+            let provider = declare_from.rpc.get_provider(&config, ui).await?;
+            let rpc_args = declare_from.rpc.clone();
+            let source_provider = declare_from.source_rpc.get_provider(ui).await?;
+            let account = get_account(
+                &config.account,
+                &config.accounts_file,
+                &provider,
+                config.keystore.as_ref(),
+            )
+            .await?;
+
+            let result = starknet_commands::declare_from::declare_from(
+                declare_from,
+                &account,
+                wait_config,
+                false,
+                &source_provider,
+                ui,
+            )
+            .await
+            .map_err(handle_starknet_command_error)
+            .map(|result| match result {
+                DeclareResponse::Success(declare_transaction_response) => {
+                    declare_transaction_response
+                }
+                DeclareResponse::AlreadyDeclared(_) => {
+                    unreachable!("Argument `skip_on_already_declared` is false")
+                }
+            });
+
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
                 provider.chain_id().await?,
-                config.show_explorer_links,
-                config.block_explorer,
+                &rpc_args,
+                &config,
             );
-
-            process_command_result("declare", result, ui, block_explorer_link);
+            process_command_result("declare-from", result, ui, block_explorer_link);
 
             Ok(())
         }
@@ -297,7 +344,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 &config.account,
                 &config.accounts_file,
                 &provider,
-                config.keystore,
+                config.keystore.as_ref(),
             )
             .await?;
 
@@ -323,12 +370,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             .await
             .map_err(handle_starknet_command_error);
 
-            let block_explorer_link = block_explorer_link_if_allowed(
-                &result,
-                provider.chain_id().await?,
-                config.show_explorer_links,
-                config.block_explorer,
-            );
+            let block_explorer_link =
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
             process_command_result("deploy", result, ui, block_explorer_link);
 
             Ok(())
@@ -390,7 +433,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 &config.account,
                 &config.accounts_file,
                 &provider,
-                config.keystore,
+                config.keystore.as_ref(),
             )
             .await?;
 
@@ -415,19 +458,24 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             .await
             .map_err(handle_starknet_command_error);
 
-            let block_explorer_link = block_explorer_link_if_allowed(
-                &result,
-                provider.chain_id().await?,
-                config.show_explorer_links,
-                config.block_explorer,
-            );
+            let block_explorer_link =
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
 
             process_command_result("invoke", result, ui, block_explorer_link);
 
             Ok(())
         }
 
-        Commands::Utils(utils) => utils::utils(utils, config, ui).await,
+        Commands::Utils(utils) => {
+            utils::utils(
+                utils,
+                config,
+                ui,
+                cli.json,
+                cli.profile.clone().unwrap_or("release".to_string()),
+            )
+            .await
+        }
 
         Commands::Multicall(multicall) => {
             multicall::multicall(multicall, config, ui, wait_config).await
@@ -490,8 +538,19 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             Ok(())
         }
 
-        Commands::Completion(completion) => {
-            generate_completions(completion.shell, &mut Cli::command())?;
+        Commands::Completions(completions) => {
+            generate_completions(completions.shell, &mut Cli::command())?;
+
+            // TODO(#3560): Remove this warning when the `completion` alias is removed
+            if std::env::args().nth(1).as_deref() == Some("completion") {
+                let message = &WarningMessage::new(
+                    "Command `sncast completion` is deprecated and will be removed in the future. Please use `sncast completions` instead.",
+                );
+
+                // `#` is required since `sncast completion` generates a script and the output is used directly
+                ui.println(&format!("# {}", message.text()));
+            }
+
             Ok(())
         }
 

@@ -205,7 +205,11 @@ impl SupportedCalldataKind for ExprStructCtorCall {
         let structs_from_abi = find_all_structs(abi);
         let struct_abi_definition = find_item_with_path(structs_from_abi, &struct_path)?;
 
-        let struct_args = self.arguments(db).arguments(db).elements(db);
+        let struct_args = self
+            .arguments(db)
+            .arguments(db)
+            .elements(db)
+            .collect::<Vec<_>>();
 
         let struct_args_with_values = get_struct_arguments_with_values(&struct_args, db)
             .context("Found invalid expression in struct argument")?;
@@ -342,7 +346,6 @@ impl SupportedCalldataKind for ExprListParenthesized {
         let tuple_types = tuple
             .expressions(db)
             .elements(db)
-            .into_iter()
             .map(|element| match element {
                 Expr::Path(path) => Ok(path.as_syntax_node().get_text(db)),
                 other => bail!(
@@ -355,7 +358,6 @@ impl SupportedCalldataKind for ExprListParenthesized {
         let parsed_exprs = self
             .expressions(db)
             .elements(db)
-            .into_iter()
             .zip(tuple_types)
             .map(|(expr, ref single_param)| build_representation(expr, single_param, abi, db))
             .collect::<Result<Vec<_>>>()?;

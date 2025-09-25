@@ -1,5 +1,5 @@
 use super::common::runner::{
-    BASE_FILE_PATTERNS, runner, setup_package_with_file_patterns, test_runner,
+    BASE_FILE_PATTERNS, Package, runner, setup_package_with_file_patterns, test_runner,
 };
 use forge_runner::CACHE_DIR;
 use indoc::{formatdoc, indoc};
@@ -8,7 +8,8 @@ use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[test]
 fn without_cache() {
-    let temp = setup_package_with_file_patterns("forking", BASE_FILE_PATTERNS);
+    let temp =
+        setup_package_with_file_patterns(Package::Name("forking".to_string()), BASE_FILE_PATTERNS);
 
     let output = test_runner(&temp)
         .arg("forking::tests::test_fork_simple")
@@ -40,7 +41,7 @@ fn without_cache() {
 /// The test that passed when using data from network, should fail for fabricated data.
 fn with_cache() {
     let temp = setup_package_with_file_patterns(
-        "forking",
+        Package::Name("forking".to_string()),
         &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
     );
 
@@ -75,7 +76,7 @@ fn with_cache() {
 #[test]
 fn with_clean_cache() {
     let temp = setup_package_with_file_patterns(
-        "forking",
+        Package::Name("forking".to_string()),
         &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
     );
 
@@ -104,7 +105,7 @@ fn with_clean_cache() {
 #[test]
 fn printing_latest_block_number() {
     let temp = setup_package_with_file_patterns(
-        "forking",
+        Package::Name("forking".to_string()),
         &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
     );
     let node_rpc_url = node_rpc_url();
@@ -133,7 +134,8 @@ fn printing_latest_block_number() {
 
 #[test]
 fn with_skip_fork_tests_env() {
-    let temp = setup_package_with_file_patterns("forking", BASE_FILE_PATTERNS);
+    let temp =
+        setup_package_with_file_patterns(Package::Name("forking".to_string()), BASE_FILE_PATTERNS);
 
     let output = test_runner(&temp)
         .env("SNFORGE_IGNORE_FORK_TESTS", "1")

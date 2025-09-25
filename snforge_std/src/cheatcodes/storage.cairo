@@ -1,5 +1,8 @@
 use starknet::{ContractAddress, StorageAddress};
 use crate::cheatcode::execute_cheatcode_and_deserialize;
+use crate::cheatcodes::execution_info::contract_address::{
+    start_cheat_contract_address, stop_cheat_contract_address,
+};
 
 fn validate_storage_address_felt(storage_address_felt: felt252) {
     let result: Option<StorageAddress> = storage_address_felt.try_into();
@@ -49,7 +52,7 @@ pub fn load(target: ContractAddress, storage_address: felt252, size: felt252) ->
         let loaded = load_felt252(target, storage_address + offset.into());
         output_array.append(loaded);
         offset += 1;
-    };
+    }
     output_array
 }
 
@@ -57,4 +60,13 @@ pub fn map_entry_address(map_selector: felt252, keys: Span<felt252>) -> felt252 
     let mut inputs = array![map_selector];
     keys.serialize(ref inputs);
     execute_cheatcode_and_deserialize::<'map_entry_address'>(inputs.span())
+}
+
+pub fn interact_with_state<F, +Drop<F>, impl func: core::ops::FnOnce<F, ()>, +Drop<func::Output>>(
+    contract_address: ContractAddress, f: F,
+) -> func::Output {
+    start_cheat_contract_address(contract_address);
+    let res = f();
+    stop_cheat_contract_address();
+    res
 }

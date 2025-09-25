@@ -22,10 +22,10 @@ pub trait IERC20<TContractState> {
 #[starknet::contract]
 pub mod ERC20 {
     use core::num::traits::zero::Zero;
-    use starknet::{
-        contract_address_const, get_caller_address, ContractAddress,
-        storage::{StoragePointerWriteAccess, StoragePointerReadAccess, StoragePathEntry, Map},
+    use starknet::storage::{
+        Map, StoragePathEntry, StoragePointerReadAccess, StoragePointerWriteAccess,
     };
+    use starknet::{ContractAddress, contract_address_const, get_caller_address};
     #[storage]
     pub struct Storage {
         name: felt252,

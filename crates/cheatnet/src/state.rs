@@ -10,7 +10,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execut
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
-use blockifier::execution::call_info::OrderedL2ToL1Message;
+use blockifier::execution::call_info::{OrderedEvent, OrderedL2ToL1Message};
 use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
@@ -37,13 +37,14 @@ use starknet_api::{
 use starknet_types_core::felt::Felt;
 use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
+use std::num::NonZeroUsize;
 use std::rc::Rc;
 
 // Specifies the duration of the cheat
 #[derive(CairoDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum CheatSpan {
     Indefinite,
-    TargetCalls(usize),
+    TargetCalls(NonZeroUsize),
 }
 
 #[derive(Debug)]
@@ -180,9 +181,13 @@ pub enum CheatStatus<T> {
 impl<T> CheatStatus<T> {
     pub fn decrement_cheat_span(&mut self) {
         if let CheatStatus::Cheated(_, CheatSpan::TargetCalls(n)) = self {
-            *n -= 1;
-            if *n == 0 {
+            let calls_number = n.get() - 1;
+
+            if calls_number == 0 {
                 *self = CheatStatus::Uncheated;
+            } else {
+                *n = NonZeroUsize::new(calls_number)
+                    .expect("`NonZeroUsize` should not be zero after decrement");
             }
         }
     }
@@ -214,6 +219,8 @@ pub struct CallTrace {
     pub used_syscalls_sierra_gas: SyscallUsageMap,
     pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
     pub gas_consumed: u64,
+    pub events: Vec<OrderedEvent>,
+    pub signature: Vec<Felt>,
 }
 
 impl CairoSerialize for CallTrace {
@@ -244,6 +251,8 @@ impl CallTrace {
             result: CallResult::Success { ret_data: vec![] },
             vm_trace: None,
             gas_consumed: u64::default(),
+            events: vec![],
+            signature: vec![],
         }
     }
 
@@ -353,6 +362,7 @@ pub struct CheatedData {
     pub block_number: Option<u64>,
     pub block_timestamp: Option<u64>,
     pub caller_address: Option<ContractAddress>,
+    pub contract_address: Option<ContractAddress>,
     pub sequencer_address: Option<ContractAddress>,
     pub tx_info: CheatedTxInfo,
 }
@@ -373,6 +383,7 @@ pub struct CheatnetState {
     pub detected_events: Vec<Event>,
     pub detected_messages_to_l1: Vec<MessageToL1>,
     pub deploy_salt_base: u32,
+    pub next_deploy_at_address: Option<ContractAddress>,
     pub block_info: BlockInfo,
     pub trace_data: TraceData,
     pub encountered_errors: EncounteredErrors,
@@ -400,6 +411,7 @@ impl Default for CheatnetState {
             detected_events: vec![],
             detected_messages_to_l1: vec![],
             deploy_salt_base: 0,
+            next_deploy_at_address: None,
             block_info: SerializableBlockInfo::default().into(),
             trace_data: TraceData {
                 current_call_stack: NotEmptyCallStack::from(test_call),
@@ -422,6 +434,7 @@ impl CheatnetState {
             block_number: execution_info.block_info.block_number.as_value(),
             block_timestamp: execution_info.block_info.block_timestamp.as_value(),
             caller_address: execution_info.caller_address.as_value(),
+            contract_address: execution_info.contract_address.as_value(),
             sequencer_address: execution_info.block_info.sequencer_address.as_value(),
             tx_info: CheatedTxInfo {
                 version: execution_info.tx_info.version.as_value(),
@@ -464,6 +477,14 @@ impl CheatnetState {
 
     pub fn increment_deploy_salt_base(&mut self) {
         self.deploy_salt_base += 1;
+    }
+
+    pub fn set_next_deploy_at_address(&mut self, address: ContractAddress) {
+        self.next_deploy_at_address = Some(address);
+    }
+
+    pub fn next_address_for_deployment(&mut self) -> Option<ContractAddress> {
+        self.next_deploy_at_address.take()
     }
 
     #[must_use]
@@ -556,6 +577,8 @@ impl TraceData {
         result: CallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
         vm_trace: Option<Vec<RelocatedTraceEntry>>,
+        signature: Vec<Felt>,
+        events: Vec<OrderedEvent>,
     ) {
         let CallStackElement {
             call_trace: last_call,
@@ -575,6 +598,8 @@ impl TraceData {
 
         last_call.result = result;
         last_call.vm_trace = vm_trace;
+        last_call.signature = signature;
+        last_call.events = events;
     }
 
     pub fn add_deploy_without_constructor_node(&mut self) {

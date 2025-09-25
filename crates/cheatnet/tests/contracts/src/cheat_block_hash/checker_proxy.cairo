@@ -18,14 +18,12 @@ trait ICheatBlockHashCheckerProxy<TContractState> {
 
 #[starknet::contract]
 mod CheatBlockHashCheckerProxy {
-    use starknet::ContractAddress;
-    use super::ICheatBlockHashCheckerDispatcherTrait;
-    use super::ICheatBlockHashCheckerDispatcher;
-    use super::ICheatBlockHashCheckerProxyDispatcher;
-    use super::ICheatBlockHashCheckerProxyDispatcherTrait;
-    use starknet::get_contract_address;
     use starknet::syscalls::get_block_hash_syscall;
-    use starknet::SyscallResultTrait;
+    use starknet::{ContractAddress, SyscallResultTrait, get_contract_address};
+    use super::{
+        ICheatBlockHashCheckerDispatcher, ICheatBlockHashCheckerDispatcherTrait,
+        ICheatBlockHashCheckerProxyDispatcher, ICheatBlockHashCheckerProxyDispatcherTrait,
+    };
 
     #[storage]
     struct Storage {}

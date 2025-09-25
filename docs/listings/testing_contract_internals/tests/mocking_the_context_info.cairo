@@ -1,7 +1,7 @@
-use core::result::ResultTrait;
 use core::box::BoxTrait;
-use starknet::ContractAddress;
+use core::result::ResultTrait;
 use snforge_std::{start_cheat_block_number, stop_cheat_block_number, test_address};
+use starknet::ContractAddress;
 
 #[test]
 fn test_cheat_block_number_test_state() {

@@ -6,8 +6,6 @@
 mod contracts_data_store;
 mod trace;
 mod tree;
-mod verbosity;
 
-pub use contracts_data_store::ContractsDataStore;
-pub use trace::types::Trace;
-pub use verbosity::Verbosity;
+pub use trace::components::{Component, Components};
+pub use trace::{context::Context, types::Trace};

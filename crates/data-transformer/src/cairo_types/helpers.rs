@@ -39,7 +39,7 @@ impl<'input> TryFrom<&'input [u8]> for RadixInput {
                     is_hex = true;
                     Ok(byte - b'A' + 10)
                 } else {
-                    return Err(ParseRadixError::InvalidString);
+                    Err(ParseRadixError::InvalidString)
                 }
             })
             .collect::<Result<Box<[u8]>, ParseRadixError>>()?;

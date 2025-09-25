@@ -218,7 +218,7 @@ fn trace_contains_human_readable_form_of_selectors_for_forks() {
 
     let trace_data = fs::read_to_string(
         temp.join(TRACE_DIR)
-            .join("trace_info_integrationtest_test_trace_test_debugging_trace_success.json"),
+            .join("debugging_fork_integrationtest_test_trace_test_debugging_trace_success.json"),
     )
     .unwrap();
 

@@ -14,12 +14,11 @@ trait ICheatBlockNumberCheckerProxy<TContractState> {
 
 #[starknet::contract]
 mod CheatBlockNumberCheckerProxy {
-    use starknet::ContractAddress;
-    use super::ICheatBlockNumberCheckerDispatcherTrait;
-    use super::ICheatBlockNumberCheckerDispatcher;
-    use super::ICheatBlockNumberCheckerProxyDispatcherTrait;
-    use super::ICheatBlockNumberCheckerProxyDispatcher;
-    use starknet::{get_contract_address};
+    use starknet::{ContractAddress, get_contract_address};
+    use super::{
+        ICheatBlockNumberCheckerDispatcher, ICheatBlockNumberCheckerDispatcherTrait,
+        ICheatBlockNumberCheckerProxyDispatcher, ICheatBlockNumberCheckerProxyDispatcherTrait,
+    };
 
     #[storage]
     struct Storage {}

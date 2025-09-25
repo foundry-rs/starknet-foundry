@@ -1,5 +1,3 @@
-use starknet::ContractAddress;
-
 #[starknet::interface]
 trait IConstructorMockChecker<TContractState> {
     fn get_constructor_balance(ref self: TContractState) -> felt252;

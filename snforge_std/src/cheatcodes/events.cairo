@@ -50,7 +50,7 @@ impl EventsFilterTraitImpl of EventsFilterTrait {
             if *from == contract_address {
                 new_events.append((*from, event.clone()));
             };
-        };
+        }
         Events { events: new_events }
     }
 }
@@ -100,7 +100,7 @@ pub impl IsEmittedImpl<T, +starknet::Event<T>, +Drop<T>> of IsEmitted<T> {
                 is_emitted = true;
                 break;
             };
-        };
+        }
         return is_emitted;
     }
 }

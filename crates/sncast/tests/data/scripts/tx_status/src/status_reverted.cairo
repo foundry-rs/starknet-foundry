@@ -1,7 +1,4 @@
-use sncast_std::{
-    tx_status, TxStatusResult, ExecutionStatus, FinalityStatus, ScriptCommandError, ProviderError,
-    StarknetError,
-};
+use sncast_std::{ExecutionStatus, FinalityStatus, TxStatusResult, tx_status};
 
 fn main() {
     let reverted_tx_hash = 0x00ae35dacba17cde62b8ceb12e3b18f4ab6e103fa2d5e3d9821cb9dc59d59a3c;

@@ -11,7 +11,7 @@ use serde_json::{Map, Value, json};
 use sncast::helpers::account::load_accounts;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{
-    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH,
+    BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH,
 };
 use sncast::helpers::fee::FeeSettings;
 use sncast::helpers::scarb_utils::get_package_metadata;
@@ -23,7 +23,7 @@ use sncast::{get_account, get_provider};
 use starknet::accounts::{
     Account, AccountFactory, ArgentAccountFactory, ExecutionV3, OpenZeppelinAccountFactory,
 };
-use starknet::core::types::{Call, InvokeTransactionResult, TransactionReceipt};
+use starknet::core::types::{Call, InvokeTransactionResult, Transaction, TransactionReceipt};
 use starknet::core::utils::get_contract_address;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::JsonRpcClient;
@@ -87,16 +87,16 @@ pub async fn deploy_latest_oz_account() {
     )
     .await;
 }
-pub async fn deploy_argent_account() {
+pub async fn deploy_ready_account() {
     let provider = get_provider(URL).expect("Failed to get the provider");
     let chain_id = get_chain_id(&provider)
         .await
         .expect("Failed to get chain id");
 
-    let (address, salt, private_key) = get_account_deployment_data("argent");
+    let (address, salt, private_key) = get_account_deployment_data("ready");
 
     let factory = ArgentAccountFactory::new(
-        ARGENT_CLASS_HASH,
+        READY_CLASS_HASH,
         chain_id,
         None,
         LocalWallet::from_signing_key(private_key),
@@ -243,20 +243,26 @@ pub async fn invoke_contract(
 
 pub async fn mint_token(recipient: &str, amount: u128) {
     let client = reqwest::Client::new();
-    let json = json!(
-        {
+    let json = json!({
+        "jsonrpc": "2.0",
+        "method": "devnet_mint",
+        "params": {
             "address": recipient,
             "amount": amount,
             "unit": "FRI",
-        }
-    );
-    client
-        .post("http://127.0.0.1:5055/mint")
+        },
+        "id": 0,
+    });
+    let resp = client
+        .post("http://127.0.0.1:5055/rpc")
         .header("Content-Type", "application/json")
         .body(json.to_string())
         .send()
         .await
         .expect("Error occurred while minting tokens");
+
+    let resp_body: serde_json::Value = resp.json().await.expect("No JSON in response");
+    assert!(resp_body["result"].is_object());
 }
 
 #[must_use]
@@ -324,6 +330,38 @@ pub async fn get_transaction_receipt(tx_hash: Felt) -> TransactionReceipt {
         .expect("There is no `result` field in getTransactionReceipt response");
     serde_json::from_str(&result.to_string())
         .expect("Could not serialize result to `TransactionReceipt`")
+}
+
+pub async fn get_transaction_by_hash(tx_hash: Felt) -> Transaction {
+    let client = reqwest::Client::new();
+    let json = json!(
+        {
+            "jsonrpc": "2.0",
+            "method": "starknet_getTransactionByHash",
+            "params": {
+                "transaction_hash": format!("{tx_hash:#x}"),
+            },
+            "id": 0,
+        }
+    );
+    let resp: Value = serde_json::from_str(
+        &client
+            .post(URL)
+            .header("Content-Type", "application/json")
+            .body(json.to_string())
+            .send()
+            .await
+            .expect("Error occurred while getting transaction")
+            .text()
+            .await
+            .expect("Could not get response from getTransactionByHash"),
+    )
+    .expect("Could not serialize getTransactionByHash response");
+
+    let result = resp
+        .get("result")
+        .expect("There is no `result` field in getTransactionByHash response");
+    serde_json::from_str(&result.to_string()).expect("Could not serialize result to `Transaction`")
 }
 
 #[must_use]
@@ -507,7 +545,7 @@ pub fn get_address_from_keystore(
     .unwrap();
     let class_hash = match account_type {
         AccountType::Braavos => BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
-        AccountType::OpenZeppelin | AccountType::Argent => Felt::from_hex(
+        AccountType::OpenZeppelin | AccountType::Argent | AccountType::Ready => Felt::from_hex(
             deployment
                 .get("class_hash")
                 .and_then(serde_json::Value::as_str)
@@ -520,9 +558,11 @@ pub fn get_address_from_keystore(
         AccountType::OpenZeppelin | AccountType::Braavos => {
             vec![private_key.verifying_key().scalar()]
         }
-        // This is a serialization of `Signer` enum for the variant `StarknetSigner` from the Argent account code
+        // This is a serialization of `Signer` enum for the variant `StarknetSigner` from the Ready account code
         // One stands for `None` for the guardian argument
-        AccountType::Argent => vec![Felt::ZERO, private_key.verifying_key().scalar(), Felt::ONE],
+        AccountType::Argent | AccountType::Ready => {
+            vec![Felt::ZERO, private_key.verifying_key().scalar(), Felt::ONE]
+        }
     };
 
     get_contract_address(salt, class_hash, &calldata, Felt::ZERO)
@@ -590,6 +630,7 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
     let account_type = match account_type {
         AccountType::OpenZeppelin => "oz",
         AccountType::Argent => "argent",
+        AccountType::Ready => "ready",
         AccountType::Braavos => "braavos",
     };
     let tempdir = tempdir().unwrap();

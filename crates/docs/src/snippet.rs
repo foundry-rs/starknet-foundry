@@ -1,6 +1,8 @@
 use std::sync::LazyLock;
 
 use regex::Regex;
+use scarb_api::ScarbCommand;
+use semver::VersionReq;
 use serde::{Deserialize, Serialize};
 
 static RE_SNCAST: LazyLock<Regex> = LazyLock::new(|| {
@@ -52,13 +54,36 @@ impl SnippetType {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Serialize)]
 #[serde(default)]
 pub struct SnippetConfig {
     pub ignored: bool,
     pub package_name: Option<String>,
     pub ignored_output: bool,
     pub replace_network: bool,
+    pub scarb_version: Option<VersionReq>,
+}
+
+#[derive(Deserialize)]
+#[serde(default)]
+struct SnippetConfigProxy {
+    ignored: bool,
+    package_name: Option<String>,
+    ignored_output: bool,
+    replace_network: bool,
+    scarb_version: Option<VersionReq>,
+}
+
+impl Default for SnippetConfigProxy {
+    fn default() -> Self {
+        Self {
+            ignored: false,
+            package_name: None,
+            ignored_output: false,
+            replace_network: true,
+            scarb_version: None,
+        }
+    }
 }
 
 impl Default for SnippetConfig {
@@ -68,7 +93,44 @@ impl Default for SnippetConfig {
             package_name: None,
             ignored_output: false,
             replace_network: true,
+            scarb_version: None,
         }
+    }
+}
+
+impl SnippetConfig {
+    fn check_scarb_compatibility(&mut self) {
+        if let Some(ref scarb_version_req) = self.scarb_version {
+            let current_scarb_version = ScarbCommand::version()
+                .run()
+                .expect("Failed to get scarb version")
+                .scarb;
+
+            if !scarb_version_req.matches(&current_scarb_version) {
+                self.ignored = true;
+            }
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for SnippetConfig {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::de::Deserializer<'de>,
+    {
+        let proxy = SnippetConfigProxy::deserialize(deserializer)?;
+
+        let mut config = SnippetConfig {
+            ignored: proxy.ignored,
+            package_name: proxy.package_name,
+            ignored_output: proxy.ignored_output,
+            replace_network: proxy.replace_network,
+            scarb_version: proxy.scarb_version,
+        };
+
+        config.check_scarb_compatibility();
+
+        Ok(config)
     }
 }
 

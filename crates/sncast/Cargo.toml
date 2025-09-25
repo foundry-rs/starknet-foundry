@@ -57,6 +57,7 @@ dialoguer.workspace = true
 toml_edit.workspace = true
 num-traits.workspace = true
 foundry-ui = { path = "../foundry-ui" }
+universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 
 [dev-dependencies]
 ctor.workspace = true
@@ -73,7 +74,6 @@ packages_validation = { path = "../testing/packages_validation" }
 
 [features]
 default = []
-scarb_since_2_10 = ["packages_validation/scarb_since_2_10"]
 
 [[bin]]
 name = "sncast"

@@ -1,4 +1,4 @@
-use starknet::{ContractAddress, ClassHash, SyscallResult};
+use starknet::{ClassHash, ContractAddress, SyscallResult};
 use crate::byte_array::byte_array_as_felt_array;
 use crate::cheatcode::execute_cheatcode_and_deserialize;
 
@@ -66,9 +66,11 @@ impl ContractClassImpl of ContractClassTrait {
     fn deploy(
         self: @ContractClass, constructor_calldata: @Array::<felt252>,
     ) -> SyscallResult<(ContractAddress, Span<felt252>)> {
-        let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
+        let salt: felt252 = execute_cheatcode_and_deserialize::<'get_salt'>(array![].span());
 
-        execute_cheatcode_and_deserialize::<'deploy'>(inputs.span())
+        starknet::syscalls::deploy_syscall(
+            *self.class_hash, salt, constructor_calldata.span(), false,
+        )
     }
 
     fn deploy_at(
@@ -76,10 +78,11 @@ impl ContractClassImpl of ContractClassTrait {
         constructor_calldata: @Array::<felt252>,
         contract_address: ContractAddress,
     ) -> SyscallResult<(ContractAddress, Span<felt252>)> {
-        let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
-        inputs.append(contract_address.into());
+        execute_cheatcode_and_deserialize::<
+            'set_deploy_at_address', (),
+        >(array![contract_address.into()].span());
 
-        execute_cheatcode_and_deserialize::<'deploy_at'>(inputs.span())
+        self.deploy(constructor_calldata)
     }
 
     fn new<T, +Into<T, ClassHash>>(class_hash: T) -> ContractClass {
@@ -123,9 +126,9 @@ pub fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
 
 fn _prepare_calldata(
     class_hash: @ClassHash, constructor_calldata: @Array::<felt252>,
-) -> Array::<felt252> {
+) -> Array<felt252> {
     let class_hash: felt252 = class_hash.clone().into();
-    let mut inputs: Array::<felt252> = array![class_hash];
+    let mut inputs: Array<felt252> = array![class_hash];
     constructor_calldata.serialize(ref inputs);
     inputs
 }

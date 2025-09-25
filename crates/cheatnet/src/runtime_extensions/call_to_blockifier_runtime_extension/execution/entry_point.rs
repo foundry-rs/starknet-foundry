@@ -9,6 +9,7 @@ use crate::runtime_extensions::forge_runtime_extension::{get_nested_calls_syscal
 use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
 
 use blockifier::execution::entry_point::{EntryPointRevertInfo, ExecutableCallEntryPoint};
+use blockifier::execution::execution_utils::update_remaining_gas;
 use blockifier::execution::stack_trace::{
     Cairo1RevertHeader, extract_trailing_cairo1_revert_trace,
 };
@@ -59,6 +60,7 @@ pub fn execute_call_entry_point(
     cheatnet_state: &mut CheatnetState,
     context: &mut EntryPointExecutionContext,
     is_revertable: bool,
+    remaining_gas: &mut u64,
 ) -> EntryPointExecutionResult<CallInfo> {
     let cheated_data = if let CallType::Delegate = entry_point.call_type {
         cheatnet_state
@@ -77,35 +79,36 @@ pub fn execute_call_entry_point(
     // We skip recursion depth validation here.
     cheatnet_state
         .trace_data
-        .enter_nested_call(entry_point.clone(), cheated_data);
+        .enter_nested_call(entry_point.clone(), cheated_data.clone());
 
-    if let Some(cheat_status) = get_mocked_function_cheat_status(entry_point, cheatnet_state) {
-        if let CheatStatus::Cheated(ret_data, _) = (*cheat_status).clone() {
-            cheat_status.decrement_cheat_span();
-            let ret_data_f252: Vec<Felt> =
-                ret_data.iter().map(|datum| Felt::from_(*datum)).collect();
-            cheatnet_state.trace_data.exit_nested_call(
-                ExecutionResources::default(),
-                u64::default(),
-                SyscallUsageMap::default(),
-                SyscallUsageMap::default(),
-                CallResult::Success {
-                    ret_data: ret_data_f252,
-                },
-                &[],
-                None,
-            );
-            let tracked_resource = *context
-                .tracked_resource_stack
-                .last()
-                .expect("Unexpected empty tracked resource.");
+    if let Some(cheat_status) = get_mocked_function_cheat_status(entry_point, cheatnet_state)
+        && let CheatStatus::Cheated(ret_data, _) = (*cheat_status).clone()
+    {
+        cheat_status.decrement_cheat_span();
+        let ret_data_f252: Vec<Felt> = ret_data.iter().map(|datum| Felt::from_(*datum)).collect();
+        cheatnet_state.trace_data.exit_nested_call(
+            ExecutionResources::default(),
+            u64::default(),
+            SyscallUsageMap::default(),
+            SyscallUsageMap::default(),
+            CallResult::Success {
+                ret_data: ret_data_f252,
+            },
+            &[],
+            None,
+            vec![],
+            vec![],
+        );
+        let tracked_resource = *context
+            .tracked_resource_stack
+            .last()
+            .expect("Unexpected empty tracked resource.");
 
-            return Ok(mocked_call_info(
-                entry_point.clone(),
-                ret_data.clone(),
-                tracked_resource,
-            ));
-        }
+        return Ok(mocked_call_info(
+            entry_point.clone(),
+            ret_data.clone(),
+            tracked_resource,
+        ));
     }
     // endregion
 
@@ -135,7 +138,7 @@ pub fn execute_call_entry_point(
         .set_class_hash_for_current_call(class_hash);
     // endregion
 
-    // Hack to prevent version 0 attack on argent accounts.
+    // Hack to prevent version 0 attack on ready (formerly argent) accounts.
     if context.tx_context.tx_info.version() == TransactionVersion(Felt::from(0_u8))
         && class_hash
             == TryFromHexStr::try_from_hex_str(FAULTY_CLASS_HASH)
@@ -200,7 +203,9 @@ pub fn execute_call_entry_point(
                 context,
                 cheatnet_state,
                 vm_trace,
+                cheated_data.tx_info.signature.unwrap_or_default(),
             );
+            update_remaining_gas(remaining_gas, &call_info);
             Ok(call_info)
         }
         Err(EntryPointExecutionErrorWithTrace { source: err, trace }) => {
@@ -303,6 +308,7 @@ fn remove_syscall_resources_and_exit_non_error_call(
     context: &mut EntryPointExecutionContext,
     cheatnet_state: &mut CheatnetState,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
+    signature: Vec<Felt>,
 ) {
     let versioned_constants = context.tx_context.block_context.versioned_constants();
     // We don't want the syscall resources to pollute the results
@@ -342,6 +348,8 @@ fn remove_syscall_resources_and_exit_non_error_call(
         CallResult::from_non_error(call_info),
         &call_info.execution.l2_to_l1_messages,
         vm_trace,
+        signature,
+        call_info.execution.events.clone(),
     );
 }
 
@@ -363,6 +371,8 @@ fn exit_error_call(
         CallResult::from_err(error, &identifier),
         &[],
         vm_trace,
+        vec![],
+        vec![],
     );
 }
 
@@ -374,7 +384,7 @@ pub fn execute_constructor_entry_point(
     context: &mut EntryPointExecutionContext,
     ctor_context: &ConstructorContext,
     calldata: Calldata,
-    remaining_gas: u64,
+    remaining_gas: &mut u64,
 ) -> EntryPointExecutionResult<CallInfo> {
     // Ensure the class is declared (by reading it).
     let contract_class = state.get_compiled_class(ctor_context.class_hash)?;
@@ -388,7 +398,7 @@ pub fn execute_constructor_entry_point(
             context,
             ctor_context,
             calldata,
-            remaining_gas,
+            *remaining_gas,
         );
     };
 
@@ -401,10 +411,17 @@ pub fn execute_constructor_entry_point(
         storage_address: ctor_context.storage_address,
         caller_address: ctor_context.caller_address,
         call_type: CallType::Call,
-        initial_gas: remaining_gas,
+        initial_gas: *remaining_gas,
     };
     // region: Modified blockifier code
-    execute_call_entry_point(&mut constructor_call, state, cheatnet_state, context, false)
+    execute_call_entry_point(
+        &mut constructor_call,
+        state,
+        cheatnet_state,
+        context,
+        false,
+        remaining_gas,
+    )
     // endregion
 }
 

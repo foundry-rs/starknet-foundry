@@ -9,6 +9,7 @@ use starknet_api::block::BlockHash;
 use starknet_api::core::ContractAddress;
 use starknet_api::hash::StarkHash;
 use starknet_types_core::felt::Felt;
+use std::num::NonZeroUsize;
 
 impl CheatnetState {
     pub fn cheat_block_hash(&mut self, block_number: u64, operation: Operation<Felt>) {
@@ -90,14 +91,21 @@ impl CheatnetState {
             .copied()
         {
             match cheat_span {
-                CheatSpan::TargetCalls(1) => {
+                CheatSpan::TargetCalls(n) if n.get() == 1 => {
                     self.block_hash_contracts
                         .remove(&(contract_address, block_number));
                 }
                 CheatSpan::TargetCalls(num) => {
+                    let calls_number = num.get() - 1;
                     self.block_hash_contracts.insert(
                         (contract_address, block_number),
-                        (CheatSpan::TargetCalls(num - 1), block_hash),
+                        (
+                            CheatSpan::TargetCalls(
+                                NonZeroUsize::new(calls_number)
+                                    .expect("`NonZeroUsize` should not be zero after decrement"),
+                            ),
+                            block_hash,
+                        ),
                     );
                 }
                 CheatSpan::Indefinite => {}
@@ -105,10 +113,10 @@ impl CheatnetState {
             return Ok(BlockHash(StarkHash::from(block_hash)));
         }
 
-        if let Some((block_hash, except)) = self.global_block_hash.get(&block_number) {
-            if !except.contains(&contract_address) {
-                return Ok(BlockHash(StarkHash::from(*block_hash)));
-            }
+        if let Some((block_hash, except)) = self.global_block_hash.get(&block_number)
+            && !except.contains(&contract_address)
+        {
+            return Ok(BlockHash(StarkHash::from(*block_hash)));
         }
 
         Ok(BlockHash(

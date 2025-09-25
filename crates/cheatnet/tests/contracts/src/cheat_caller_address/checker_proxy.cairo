@@ -15,12 +15,11 @@ trait ICheatCallerAddressCheckerProxy<TContractState> {
 
 #[starknet::contract]
 mod CheatCallerAddressCheckerProxy {
-    use starknet::ContractAddress;
-    use super::ICheatCallerAddressCheckerDispatcherTrait;
-    use super::ICheatCallerAddressCheckerDispatcher;
-    use super::ICheatCallerAddressCheckerProxyDispatcherTrait;
-    use super::ICheatCallerAddressCheckerProxyDispatcher;
-    use starknet::{get_contract_address, get_caller_address};
+    use starknet::{ContractAddress, get_caller_address, get_contract_address};
+    use super::{
+        ICheatCallerAddressCheckerDispatcher, ICheatCallerAddressCheckerDispatcherTrait,
+        ICheatCallerAddressCheckerProxyDispatcher, ICheatCallerAddressCheckerProxyDispatcherTrait,
+    };
 
     #[storage]
     struct Storage {}

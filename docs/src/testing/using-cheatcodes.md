@@ -7,7 +7,7 @@
 >
 > ```toml
 > [dev-dependencies]
-> snforge_std = "0.33.0"
+> snforge_std = "{{snforge_std_version}}"
 > ```
 
 When testing smart contracts, often there are parts of code that are dependent on a specific blockchain state.
@@ -161,7 +161,7 @@ That's where [`CheatSpan`](../appendix/cheatcodes/cheat_span.md) comes in handy.
 ```rust
 enum CheatSpan {
     Indefinite: (),
-    TargetCalls: usize,
+    TargetCalls: NonZero<usize>,
 }
 ```
 

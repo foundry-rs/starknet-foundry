@@ -2,7 +2,7 @@ use super::test_environment::TestEnvironment;
 use crate::common::assertions::ClassHashAssert;
 use crate::common::recover_data;
 use crate::common::state::create_cached_state;
-use crate::common::{call_contract, deploy_wrapper};
+use crate::common::{call_contract, deploy};
 use crate::{
     common::assertions::assert_success,
     common::{deploy_contract, get_contracts},
@@ -14,6 +14,7 @@ use conversions::IntoConv;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::ContractAddress;
 use starknet_types_core::felt::Felt;
+use std::num::NonZeroUsize;
 
 trait MockCallTrait {
     fn mock_call(
@@ -365,13 +366,12 @@ fn mock_call_library_call_no_effect() {
         .unwrap()
         .unwrap_success();
 
-    let contract_address = deploy_wrapper(
+    let contract_address = deploy(
         &mut cached_state,
         &mut cheatnet_state,
         &class_hash,
         &[Felt::from(420)],
-    )
-    .unwrap();
+    );
 
     let lib_call_address = deploy_contract(
         &mut cached_state,
@@ -420,13 +420,12 @@ fn mock_call_before_deployment() {
         &ret_data,
     );
 
-    let contract_address = deploy_wrapper(
+    let contract_address = deploy(
         &mut cached_state,
         &mut cheatnet_state,
         &class_hash,
         &[Felt::from(420)],
-    )
-    .unwrap();
+    );
 
     assert_eq!(precalculated_address, contract_address);
 
@@ -483,8 +482,7 @@ fn mock_call_in_constructor() {
     let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data)
         .unwrap()
         .unwrap_success();
-    let balance_contract_address =
-        deploy_wrapper(&mut cached_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
+    let balance_contract_address = deploy(&mut cached_state, &mut cheatnet_state, &class_hash, &[]);
     let ret_data = [Felt::from(223)];
     cheatnet_state.start_mock_call(
         balance_contract_address,
@@ -495,13 +493,12 @@ fn mock_call_in_constructor() {
     let class_hash = declare(&mut cached_state, "ConstructorMockChecker", &contracts_data)
         .unwrap()
         .unwrap_success();
-    let contract_address = deploy_wrapper(
+    let contract_address = deploy(
         &mut cached_state,
         &mut cheatnet_state,
         &class_hash,
         &[balance_contract_address.into_()],
-    )
-    .unwrap();
+    );
 
     let selector = selector_from_name("get_constructor_balance");
 
@@ -595,7 +592,7 @@ fn mock_call_simple_with_span() {
         &contract_address,
         "get_thing",
         &[123],
-        CheatSpan::TargetCalls(2),
+        CheatSpan::TargetCalls(NonZeroUsize::new(2).unwrap()),
     );
 
     assert_success(
@@ -623,7 +620,7 @@ fn mock_call_proxy_with_span() {
         &contract_address,
         "get_thing",
         &[123],
-        CheatSpan::TargetCalls(2),
+        CheatSpan::TargetCalls(NonZeroUsize::new(2).unwrap()),
     );
 
     assert_success(
@@ -665,7 +662,7 @@ fn mock_call_in_constructor_with_span() {
         &balance_address,
         "get_balance",
         &[111],
-        CheatSpan::TargetCalls(2),
+        CheatSpan::TargetCalls(NonZeroUsize::new(2).unwrap()),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[balance_address.into_()]);
@@ -700,7 +697,7 @@ fn mock_call_twice_in_function() {
         &precalculated_address,
         "get_thing",
         &[222],
-        CheatSpan::TargetCalls(2),
+        CheatSpan::TargetCalls(NonZeroUsize::new(2).unwrap()),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[111.into()]);
@@ -730,7 +727,7 @@ fn mock_call_override_span() {
         &contract_address,
         "get_thing",
         &[222],
-        CheatSpan::TargetCalls(2),
+        CheatSpan::TargetCalls(NonZeroUsize::new(2).unwrap()),
     );
 
     assert_success(

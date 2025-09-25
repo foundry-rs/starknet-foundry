@@ -3,6 +3,7 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use runtime::EnhancedHintError;
 use starknet_types_core::felt::Felt;
 
+pub mod cheat_account_contract_address;
 pub mod cheat_block_hash;
 pub mod cheat_block_number;
 pub mod cheat_block_timestamp;
@@ -10,7 +11,6 @@ pub mod cheat_caller_address;
 pub mod cheat_execution_info;
 pub mod cheat_sequencer_address;
 pub mod declare;
-pub mod deploy;
 pub mod generate_random_felt;
 pub mod get_class_hash;
 pub mod l1_handler_execute;

@@ -23,7 +23,6 @@ use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use configuration::load_package_config;
 use console::Style;
-use forge_runner::debugging::TraceVerbosity;
 use forge_runner::{
     forge_config::ForgeConfig,
     package_tests::{raw::TestTargetRaw, with_config_resolved::TestTargetWithResolvedConfig},
@@ -70,6 +69,7 @@ pub struct RunForPackageArgs {
 }
 
 impl RunForPackageArgs {
+    #[tracing::instrument(skip_all, level = "debug")]
     pub fn build(
         package: PackageMetadata,
         scarb_metadata: &Metadata,
@@ -107,6 +107,8 @@ impl RunForPackageArgs {
             cache_dir.clone(),
             &forge_config_from_scarb,
             &args.additional_args,
+            args.trace_args.clone(),
+            args.experimental_oracles,
         ));
 
         let test_filter = TestsFilter::from_flags(
@@ -129,6 +131,7 @@ impl RunForPackageArgs {
     }
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 async fn test_package_with_config_resolved(
     test_targets: Vec<TestTargetRaw>,
     fork_targets: &[ForkTarget],
@@ -155,6 +158,7 @@ fn sum_test_cases(test_targets: &[TestTargetWithResolvedConfig]) -> usize {
     test_targets.iter().map(|tc| tc.test_cases.len()).sum()
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 pub async fn run_for_package(
     RunForPackageArgs {
         test_targets,
@@ -164,7 +168,6 @@ pub async fn run_for_package(
         package_name,
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
-    trace_verbosity: Option<TraceVerbosity>,
     ui: Arc<UI>,
 ) -> Result<PackageTestResult> {
     let mut test_targets = test_package_with_config_resolved(
@@ -198,14 +201,8 @@ pub async fn run_for_package(
             test_target.test_cases.len(),
         ));
 
-        let summary = run_for_test_target(
-            test_target,
-            forge_config.clone(),
-            &tests_filter,
-            trace_verbosity,
-            ui,
-        )
-        .await?;
+        let summary =
+            run_for_test_target(test_target, forge_config.clone(), &tests_filter, ui).await?;
 
         match summary {
             TestTargetRunResult::Ok(summary) => {

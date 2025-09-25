@@ -1,8 +1,7 @@
 use snforge_std::{
-    declare, ContractClassTrait, DeclareResultTrait, spy_events, EventSpyAssertionsTrait,
-    EventSpyTrait, Event, EventsFilterTrait,
+    ContractClassTrait, DeclareResultTrait, Event, EventSpyAssertionsTrait, EventSpyTrait,
+    EventsFilterTrait, declare, spy_events,
 };
-
 use testing_events::syscall::{
     ISpySyscallEventsCheckerDispatcher, ISpySyscallEventsCheckerDispatcherTrait,
 };

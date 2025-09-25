@@ -26,20 +26,12 @@ const INTEGRATION_TEST_TYPE: &str = "integration";
 fn get_starknet_artifacts_paths_from_test_targets(
     target_dir: &Utf8Path,
     test_targets: &HashMap<String, &TargetMetadata>,
-    ui: &UI,
 ) -> Option<StarknetArtifactsFiles> {
     let artifact =
         |name: &str, metadata: &TargetMetadata| -> Option<(Utf8PathBuf, Option<String>)> {
             let path = format!("{name}.test.starknet_artifacts.json");
             let path = target_dir.join(&path);
-            let path = if path.exists() {
-                Some(path)
-            } else {
-                ui.println(&WarningMessage::new(&format!(
-                "File = {path} missing when it should be existing, perhaps due to Scarb problem."
-            )));
-                None
-            };
+            let path = path.exists().then_some(path);
 
             let test_type = metadata
                 .params
@@ -110,7 +102,7 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
 ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
     let starknet_artifact_files = if use_test_target_contracts {
         let test_targets = test_targets_by_name(package);
-        get_starknet_artifacts_paths_from_test_targets(artifacts_dir, &test_targets, ui)
+        get_starknet_artifacts_paths_from_test_targets(artifacts_dir, &test_targets)
     } else {
         let starknet_target_name = package
             .targets
@@ -327,11 +319,9 @@ mod tests {
             .find(|p| p.name == "basic_package")
             .unwrap();
 
-        let ui = UI::default();
         let path = get_starknet_artifacts_paths_from_test_targets(
             &Utf8PathBuf::from_path_buf(temp.join("target").join("dev")).unwrap(),
             &test_targets_by_name(package),
-            &ui,
         )
         .unwrap();
 
@@ -383,11 +373,9 @@ mod tests {
             .find(|p| p.name == "basic_package")
             .unwrap();
 
-        let ui = UI::default();
         let path = get_starknet_artifacts_paths_from_test_targets(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target").join("dev")).unwrap(),
             &test_targets_by_name(package),
-            &ui,
         )
         .unwrap();
 
@@ -442,7 +430,7 @@ mod tests {
             package_matches_version_requirement(
                 &scarb_metadata,
                 "starknet",
-                &VersionReq::parse("2.9").unwrap(),
+                &VersionReq::parse("2.12.0").unwrap(),
             )
             .unwrap()
         );
@@ -460,7 +448,7 @@ mod tests {
             !package_matches_version_requirement(
                 &scarb_metadata,
                 "starknet",
-                &VersionReq::parse("2.10").unwrap(),
+                &VersionReq::parse("2.13").unwrap(),
             )
             .unwrap()
         );

@@ -4,8 +4,8 @@ use crate::helpers::constants::{
 };
 use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
-    create_and_deploy_account, create_and_deploy_oz_account, get_transaction_hash,
-    get_transaction_receipt,
+    create_and_deploy_account, create_and_deploy_oz_account, get_transaction_by_hash,
+    get_transaction_hash, get_transaction_receipt,
 };
 use crate::helpers::runner::runner;
 use crate::helpers::shell::os_specific_shell;
@@ -16,7 +16,8 @@ use snapbox::cmd::cargo_bin;
 use sncast::AccountType;
 use sncast::helpers::constants::OZ_CLASS_HASH;
 use sncast::helpers::fee::FeeArgs;
-use starknet::core::types::TransactionReceipt::Deploy;
+use starknet::core::types::TransactionReceipt::Invoke;
+use starknet::core::types::{InvokeTransaction, Transaction, TransactionExecutionStatus};
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 use test_case::test_case;
 
@@ -40,7 +41,9 @@ async fn test_happy_case_human_readable() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
     assert_stdout_contains(
@@ -62,7 +65,7 @@ async fn test_happy_case_human_readable() {
 
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
-#[test_case(sncast::helpers::constants::ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
+#[test_case(sncast::helpers::constants::READY_CLASS_HASH, AccountType::Ready; "READY_CLASS_HASH")]
 #[test_case(sncast::helpers::constants::BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
 async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
@@ -89,7 +92,7 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let hash = get_transaction_hash(&snapbox.assert().success().get_output().stdout.clone());
     let receipt = get_transaction_receipt(hash).await;
 
-    assert!(matches!(receipt, Deploy(_)));
+    assert!(matches!(receipt, Invoke(_)));
 }
 
 #[test_case(FeeArgs{
@@ -100,6 +103,8 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     l1_gas_price:  None,
     l2_gas:  None,
     l2_gas_price:  None,
+    tip: None,
+    estimate_tip: false,
 }; "max_fee")]
 #[test_case(FeeArgs{
     max_fee: None,
@@ -109,6 +114,8 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     l1_gas_price: Some(10_000_000_000_000),
     l2_gas: Some(1_000_000_000),
     l2_gas_price: Some(100_000_000_000_000_000_000),
+    tip: Some(100_000),
+    estimate_tip: false,
 }; "resource_bounds")]
 #[tokio::test]
 async fn test_happy_case_different_fees(fee_args: FeeArgs) {
@@ -149,6 +156,7 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
             "--l2-gas-price",
             fee_args.l2_gas_price.map(|x| x.to_string()),
         ),
+        ("--tip", fee_args.tip.map(|x| x.to_string())),
     ];
 
     for &(key, ref value) in &options {
@@ -160,10 +168,20 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success().get_output().stdout.clone();
-    let hash = get_transaction_hash(&output);
-    let receipt = get_transaction_receipt(hash).await;
 
-    assert!(matches!(receipt, Deploy(_)));
+    let hash = get_transaction_hash(&output);
+    let Invoke(receipt) = get_transaction_receipt(hash).await else {
+        panic!("Should be Invoke receipt");
+    };
+    assert_eq!(
+        receipt.execution_result.status(),
+        TransactionExecutionStatus::Succeeded
+    );
+
+    let Transaction::Invoke(InvokeTransaction::V3(tx)) = get_transaction_by_hash(hash).await else {
+        panic!("Expected Invoke V3 transaction")
+    };
+    assert_eq!(tx.tip, fee_args.tip.unwrap_or(0));
 }
 
 #[tokio::test]
@@ -192,7 +210,7 @@ async fn test_happy_case_with_constructor() {
     let hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(hash).await;
 
-    assert!(matches!(receipt, Deploy(_)));
+    assert!(matches!(receipt, Invoke(_)));
 }
 
 #[tokio::test]
@@ -221,7 +239,7 @@ async fn test_happy_case_with_constructor_cairo_expression_calldata() {
     let hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(hash).await;
 
-    assert!(matches!(receipt, Deploy(_)));
+    assert!(matches!(receipt, Invoke(_)));
 }
 
 #[test]
@@ -374,7 +392,9 @@ async fn test_json_output_format() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
     assert_stdout_contains(

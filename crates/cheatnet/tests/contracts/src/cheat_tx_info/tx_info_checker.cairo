@@ -1,5 +1,8 @@
+use starknet::ContractAddress;
+
 #[starknet::interface]
 trait ICheatTxInfoChecker<TContractState> {
+    fn get_account_contract_address(ref self: TContractState) -> ContractAddress;
     fn get_transaction_hash(self: @TContractState) -> felt252;
     fn get_tx_hash_and_emit_event(ref self: TContractState) -> felt252;
     fn get_tx_info(self: @TContractState) -> starknet::TxInfo;
@@ -7,7 +10,8 @@ trait ICheatTxInfoChecker<TContractState> {
 
 #[starknet::contract]
 mod CheatTxInfoChecker {
-    use starknet::{SyscallResultTrait, syscalls::get_execution_info_v2_syscall};
+    use starknet::syscalls::get_execution_info_v2_syscall;
+    use starknet::{ContractAddress, SyscallResultTrait, get_tx_info};
 
     #[storage]
     struct Storage {}
@@ -38,6 +42,11 @@ mod CheatTxInfoChecker {
         fn get_tx_info(self: @ContractState) -> starknet::TxInfo {
             let execution_info = get_execution_info_v2_syscall().unwrap_syscall().unbox();
             execution_info.tx_info.unbox()
+        }
+
+        fn get_account_contract_address(ref self: ContractState) -> ContractAddress {
+            let tx_info = get_tx_info();
+            tx_info.account_contract_address
         }
     }
 }

@@ -1,0 +1,13 @@
+[package]
+name = "contract_state"
+version = "0.1.0"
+edition = "2024_07"
+
+[dependencies]
+starknet = "2.11.0"
+
+[dev-dependencies]
+snforge_std = { path = "../../../../../snforge_std" }
+assert_macros = "2.11.0"
+
+[[target.starknet-contract]]

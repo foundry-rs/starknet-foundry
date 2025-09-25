@@ -45,8 +45,8 @@ mod HelloStarknet {
 
 #[cfg(test)]
 mod tests {
-    use snforge_std::{declare};
     use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
+    use snforge_std::declare;
 
     #[test]
     fn declare_contract_from_lib() {

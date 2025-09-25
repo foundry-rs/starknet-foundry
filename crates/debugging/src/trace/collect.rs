@@ -3,7 +3,7 @@ use crate::trace::types::{
     CallerAddress, ContractAddress, ContractName, ContractTrace, Selector, TestName, TraceInfo,
     TransformedCallResult, TransformedCalldata,
 };
-use crate::{Trace, Verbosity};
+use crate::{Context, Trace};
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult as CheatnetCallResult,
 };
@@ -15,22 +15,16 @@ use starknet_api::execution_utils::format_panic_data;
 
 pub struct Collector<'a> {
     call_trace: &'a CallTrace,
-    contracts_data_store: &'a ContractsDataStore,
-    verbosity: Verbosity,
+    context: &'a Context,
 }
 
 impl<'a> Collector<'a> {
     /// Creates a new [`Collector`] from a given `cheatnet` [`CallTrace`], [`ContractsDataStore`] and [`Verbosity`].
     #[must_use]
-    pub fn new(
-        call_trace: &'a CallTrace,
-        contracts_data_store: &'a ContractsDataStore,
-        verbosity: Verbosity,
-    ) -> Collector<'a> {
+    pub fn new(call_trace: &'a CallTrace, context: &'a Context) -> Collector<'a> {
         Collector {
             call_trace,
-            contracts_data_store,
-            verbosity,
+            context,
         }
     }
 
@@ -42,21 +36,22 @@ impl<'a> Collector<'a> {
     }
 
     fn collect_contract_trace(&self) -> ContractTrace {
-        let verbosity = self.verbosity;
+        let components = self.context.components();
         let entry_point = &self.call_trace.entry_point;
         let nested_calls = self.collect_nested_calls();
         let contract_name = self.collect_contract_name();
         let abi = self.collect_abi();
 
         let trace_info = TraceInfo {
-            contract_name,
-            entry_point_type: verbosity.detailed(|| entry_point.entry_point_type),
-            calldata: verbosity.standard(|| self.collect_transformed_calldata(abi)),
-            contract_address: verbosity.detailed(|| ContractAddress(entry_point.storage_address)),
-            caller_address: verbosity.detailed(|| CallerAddress(entry_point.caller_address)),
-            call_type: verbosity.detailed(|| entry_point.call_type),
+            contract_name: components.contract_name(contract_name),
+            entry_point_type: components.entry_point_type(entry_point.entry_point_type),
+            calldata: components.calldata_lazy(|| self.collect_transformed_calldata(abi)),
+            contract_address: components
+                .contract_address(ContractAddress(entry_point.storage_address)),
+            caller_address: components.caller_address(CallerAddress(entry_point.caller_address)),
+            call_type: components.call_type(entry_point.call_type),
             nested_calls,
-            call_result: verbosity.standard(|| self.collect_transformed_call_result(abi)),
+            call_result: components.call_result_lazy(|| self.collect_transformed_call_result(abi)),
         };
 
         ContractTrace {
@@ -73,8 +68,7 @@ impl<'a> Collector<'a> {
             .map(|call_trace| {
                 Collector {
                     call_trace: &call_trace.borrow(),
-                    contracts_data_store: self.contracts_data_store,
-                    verbosity: self.verbosity,
+                    context: self.context,
                 }
                 .collect_contract_trace()
             })
@@ -82,20 +76,20 @@ impl<'a> Collector<'a> {
     }
 
     fn collect_contract_name(&self) -> ContractName {
-        self.contracts_data_store
+        self.contracts_data_store()
             .get_contract_name(self.class_hash())
             .cloned()
             .unwrap_or_else(|| ContractName("forked contract".to_string()))
     }
 
     fn collect_selector(&self) -> &Selector {
-        self.contracts_data_store
+        self.contracts_data_store()
             .get_selector(&self.call_trace.entry_point.entry_point_selector)
             .expect("`Selector` should be present")
     }
 
     fn collect_abi(&self) -> &[AbiEntry] {
-        self.contracts_data_store
+        self.contracts_data_store()
             .get_abi(self.class_hash())
             .expect("`ABI` should be present")
     }
@@ -137,6 +131,10 @@ impl<'a> Collector<'a> {
             .class_hash
             .as_ref()
             .expect("class_hash should be set in `fn execute_call_entry_point` in cheatnet")
+    }
+
+    fn contracts_data_store(&self) -> &ContractsDataStore {
+        self.context.contracts_data_store()
     }
 }
 

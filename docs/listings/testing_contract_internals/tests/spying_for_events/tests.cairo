@@ -1,7 +1,7 @@
 use core::array::ArrayTrait;
 use snforge_std::{
-    declare, ContractClassTrait, spy_events, EventSpy, EventSpyTrait, EventSpyAssertionsTrait,
-    Event, test_address,
+    ContractClassTrait, Event, EventSpy, EventSpyAssertionsTrait, EventSpyTrait, declare,
+    spy_events, test_address,
 };
 use testing_contract_internals::spying_for_events::Emitter;
 

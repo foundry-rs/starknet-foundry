@@ -15,11 +15,11 @@ trait ICheatSequencerAddressCheckerLibCall<TContractState> {
 
 #[starknet::contract]
 mod CheatSequencerAddressCheckerLibCall {
+    use starknet::{ClassHash, ContractAddress};
     use super::{
         ICheatSequencerAddressCheckerDispatcherTrait,
         ICheatSequencerAddressCheckerLibraryDispatcher,
     };
-    use starknet::{ClassHash, ContractAddress};
 
     #[storage]
     struct Storage {}

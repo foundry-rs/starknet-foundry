@@ -1,6 +1,5 @@
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, store, load, map_entry_address};
-
 use direct_storage_access::complex_structures::{MapKey, MapValue};
+use snforge_std::{ContractClassTrait, DeclareResultTrait, declare, load, map_entry_address, store};
 
 #[test]
 fn store_in_complex_mapping() {

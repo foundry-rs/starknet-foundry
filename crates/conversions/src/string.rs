@@ -1,14 +1,15 @@
 use crate::IntoConv;
-use starknet_types_core::felt::{Felt, FromStrError};
+use anyhow::Result;
+use starknet_types_core::felt::Felt;
 
 pub trait TryFromDecStr {
-    fn try_from_dec_str(str: &str) -> Result<Self, FromStrError>
+    fn try_from_dec_str(str: &str) -> Result<Self>
     where
         Self: Sized;
 }
 
 pub trait TryFromHexStr {
-    fn try_from_hex_str(str: &str) -> Result<Self, FromStrError>
+    fn try_from_hex_str(str: &str) -> Result<Self>
     where
         Self: Sized;
 }

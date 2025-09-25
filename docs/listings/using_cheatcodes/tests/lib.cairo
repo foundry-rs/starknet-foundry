@@ -1,4 +1,4 @@
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
+use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 use using_cheatcodes::{ICheatcodeCheckerDispatcher, ICheatcodeCheckerDispatcherTrait};
 
 #[test]

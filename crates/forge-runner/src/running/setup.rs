@@ -1,7 +1,7 @@
 use crate::package_tests::TestDetails;
-use crate::running::copied_code::prepare_program_extra_data;
 use blockifier::execution::contract_class::EntryPointV1;
 use blockifier::execution::entry_point::{EntryPointExecutionContext, ExecutableCallEntryPoint};
+use blockifier::execution::entry_point_execution::prepare_program_extra_data;
 use blockifier::execution::errors::PreExecutionError;
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
@@ -30,6 +30,7 @@ pub struct VmExecutionContext<'a> {
 
 // Based on code from https://github.com/starkware-libs/sequencer/blob/e417a9e7d50cbd78065d357763df2fbc2ad41f7c/crates/blockifier/src/execution/entry_point_execution.rs#L122
 // Enough of the logic of this had to be changed that probably it won't be possible to upstream it
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn initialize_execution_context<'a>(
     call: ExecutableCallEntryPoint,
     hints: &'a HashMap<String, Hint>,

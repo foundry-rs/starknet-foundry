@@ -7,11 +7,12 @@ use crate::common::into_proc_macro_result;
 use crate::config_statement::extend_with_config_cheatcodes;
 use crate::parse::parse;
 use crate::types::{Number, ParseFromExpr};
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
-use cairo_lang_syntax::node::db::SyntaxGroup;
+use crate::utils::create_single_token;
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
+use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::TypedSyntaxNode;
+use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
 use cairo_lang_utils::Upcast;
-use indoc::formatdoc;
 use num_bigint::BigInt;
 
 pub mod wrapper;
@@ -34,10 +35,10 @@ impl AttributeTypeData for FuzzerCollector {
 
 impl AttributeCollector for FuzzerCollector {
     fn args_into_config_expression(
-        db: &dyn SyntaxGroup,
+        db: &SimpleParserDatabase,
         args: Arguments,
         _warns: &mut Vec<Diagnostic>,
-    ) -> Result<String, Diagnostics> {
+    ) -> Result<TokenStream, Diagnostics> {
         let named_args = args.named_only::<Self>()?;
 
         let seed = named_args
@@ -59,8 +60,8 @@ impl AttributeCollector for FuzzerCollector {
         let seed = seed.as_cairo_expression();
         let runs = runs.as_cairo_expression();
 
-        Ok(format!(
-            "snforge_std::_internals::config_types::FuzzerConfig {{ seed: {seed}, runs: {runs} }}"
+        Ok(quote!(
+            snforge_std::_internals::config_types::FuzzerConfig { seed: #seed, runs: #runs }
         ))
     }
 }
@@ -80,26 +81,31 @@ fn fuzzer_internal(
     args: &TokenStream,
     item: &TokenStream,
     _warns: &mut Vec<Diagnostic>,
-) -> Result<String, Diagnostics> {
-    let item = item.to_string();
-    let (db, func) = parse::<FuzzerCollector>(&item)?;
+) -> Result<TokenStream, Diagnostics> {
+    let (db, func) = parse::<FuzzerCollector>(item)?;
     let db = db.upcast();
 
     assert_is_used_once::<FuzzerCollector>(db, &func)?;
 
-    let attrs = func.attributes(db).as_syntax_node().get_text(db);
-    let body = func.body(db).as_syntax_node().get_text(db);
-    let declaration = func.declaration(db).as_syntax_node().get_text(db);
+    let attrs = func.attributes(db).as_syntax_node();
+    let attrs = SyntaxNodeWithDb::new(&attrs, db);
 
-    Ok(formatdoc!(
-        "
-            {attrs}
-            #[{}{}]
-            #[{}]
-            {declaration} {body}
-        ",
-        FuzzerConfigCollector::ATTR_NAME,
-        args.to_string(),
-        FuzzerWrapperCollector::ATTR_NAME
+    let body = func.body(db).as_syntax_node();
+    let body = SyntaxNodeWithDb::new(&body, db);
+
+    let declaration = func.declaration(db).as_syntax_node();
+    let declaration = SyntaxNodeWithDb::new(&declaration, db);
+
+    let fuzzer_config = create_single_token(FuzzerConfigCollector::ATTR_NAME);
+    let fuzzer_wrapper = create_single_token(FuzzerWrapperCollector::ATTR_NAME);
+
+    let args = args.clone();
+
+    Ok(quote!(
+        #[#fuzzer_config #args]
+        #[#fuzzer_wrapper]
+        #attrs
+        #declaration
+            #body
     ))
 }

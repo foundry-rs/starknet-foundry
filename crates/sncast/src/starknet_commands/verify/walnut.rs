@@ -16,6 +16,29 @@ pub struct WalnutVerificationInterface {
     workspace_dir: Utf8PathBuf,
 }
 
+impl WalnutVerificationInterface {
+    pub fn gather_files(&self) -> Result<Vec<(String, std::path::PathBuf)>> {
+        let mut files = Vec::new();
+
+        for entry in WalkDir::new(self.workspace_dir.clone()).follow_links(true) {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_file()
+                && let Some(extension) = path.extension()
+                && (extension == OsStr::new("cairo") || extension == OsStr::new("toml"))
+            {
+                let relative_path = path.strip_prefix(self.workspace_dir.clone())?;
+                files.push((
+                    relative_path.to_string_lossy().into_owned(),
+                    path.to_path_buf(),
+                ));
+            }
+        }
+
+        Ok(files)
+    }
+}
+
 #[async_trait::async_trait]
 impl VerificationInterface<'_> for WalnutVerificationInterface {
     fn new(
@@ -35,6 +58,7 @@ impl VerificationInterface<'_> for WalnutVerificationInterface {
         identifier: ContractIdentifier,
         contract_name: String,
         _package: Option<String>,
+        _test_files: bool,
         _ui: &UI,
     ) -> Result<VerifyResponse> {
         // Read all files name along with their contents in a JSON format
@@ -42,22 +66,11 @@ impl VerificationInterface<'_> for WalnutVerificationInterface {
         // key is the file name and value is the file content
         let mut file_data = serde_json::Map::new();
 
-        // Recursively read files and their contents in workspace directory
-        for entry in WalkDir::new(self.workspace_dir.clone()).follow_links(true) {
-            let entry = entry?;
-            let path = entry.path();
-            if path.is_file() {
-                if let Some(extension) = path.extension() {
-                    if extension == OsStr::new("cairo") || extension == OsStr::new("toml") {
-                        let relative_path = path.strip_prefix(self.workspace_dir.clone())?;
-                        let file_content = std::fs::read_to_string(path)?;
-                        file_data.insert(
-                            relative_path.to_string_lossy().into_owned(),
-                            serde_json::Value::String(file_content),
-                        );
-                    }
-                }
-            }
+        // Use the gather_files method to get the list of files
+        let files = self.gather_files()?;
+        for (relative_path, full_path) in files {
+            let file_content = std::fs::read_to_string(full_path)?;
+            file_data.insert(relative_path, serde_json::Value::String(file_content));
         }
 
         // Serialize the JSON object to a JSON string

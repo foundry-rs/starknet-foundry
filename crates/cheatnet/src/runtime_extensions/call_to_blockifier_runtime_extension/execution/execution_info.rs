@@ -155,13 +155,12 @@ pub fn get_cheated_exec_info_ptr(
         }
     }
 
-    if cheated_data.caller_address.is_some() {
-        new_exec_info[2] = MaybeRelocatable::Int(
-            cheated_data
-                .caller_address
-                .expect("No caller address value found for the cheated caller address contract")
-                .into_(),
-        );
+    if let Some(caller_address) = cheated_data.caller_address {
+        new_exec_info[2] = MaybeRelocatable::Int(caller_address.into_());
+    }
+
+    if let Some(contract_address) = cheated_data.contract_address {
+        new_exec_info[3] = MaybeRelocatable::Int(contract_address.into_());
     }
 
     vm.load_data(ptr_cheated_exec_info, &new_exec_info).unwrap();

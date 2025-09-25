@@ -13,3 +13,9 @@ snforge_std = { path = "../../../../../snforge_std" }
 
 [[target.starknet-contract]]
 sierra = true
+
+[profile.custom-profile]
+inherits = "release"
+
+[profile.custom-profile.cairo]
+sierra-replace-ids = true

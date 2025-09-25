@@ -186,7 +186,7 @@ mod tests {
             }
         }),
         "relative URL without a base";
-        "invalid url"
+        "Invalid url"
     )]
     #[test_case(
         &json!({
@@ -197,7 +197,7 @@ mod tests {
             }
         }),
         "invalid digit found in string";
-        "invalid number"
+        "Invalid number"
     )]
     #[test_case(
         &json!({
@@ -208,7 +208,7 @@ mod tests {
             }
         }),
         "Failed to create Felt from string";
-        "invalid hash"
+        "Invalid hash"
     )]
     fn test_fork_target_invalid_cases(input: &serde_json::Value, expected_error: &str) {
         let json_str = input.to_string();

@@ -1,12 +1,9 @@
-use starknet::storage::StorageAsPointer;
-use starknet::storage::StoragePathEntry;
-
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, store, load};
-use starknet::storage_access::{storage_address_from_base};
-
 use direct_storage_access::felts_only::{
-    SimpleStorageContract, ISimpleStorageContractDispatcher, ISimpleStorageContractDispatcherTrait,
+    ISimpleStorageContractDispatcher, ISimpleStorageContractDispatcherTrait, SimpleStorageContract,
 };
+use snforge_std::{ContractClassTrait, DeclareResultTrait, declare, load, store};
+use starknet::storage::{StorageAsPointer, StoragePathEntry};
+use starknet::storage_access::storage_address_from_base;
 
 #[test]
 fn update_mapping() {

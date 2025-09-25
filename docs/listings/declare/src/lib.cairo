@@ -1,4 +1,4 @@
-use sncast_std::{declare, FeeSettingsTrait};
+use sncast_std::{FeeSettingsTrait, declare};
 
 fn main() {
     let fee_settings = FeeSettingsTrait::max_fee(9999999);

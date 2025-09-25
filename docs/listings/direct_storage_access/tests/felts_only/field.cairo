@@ -1,4 +1,4 @@
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, store, load, map_entry_address};
+use snforge_std::{ContractClassTrait, DeclareResultTrait, declare, load, map_entry_address, store};
 
 #[test]
 fn test_store_and_load_plain_felt() {

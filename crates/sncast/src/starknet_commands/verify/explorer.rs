@@ -33,6 +33,7 @@ pub trait VerificationInterface<'a>: Sized {
         identifier: ContractIdentifier,
         contract_name: String,
         package: Option<String>,
+        test_files: bool,
         ui: &UI,
     ) -> Result<VerifyResponse>;
     fn gen_explorer_url(&self) -> String;

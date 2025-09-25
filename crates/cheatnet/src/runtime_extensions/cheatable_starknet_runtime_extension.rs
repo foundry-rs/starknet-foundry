@@ -3,14 +3,12 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 };
 use crate::state::CheatnetState;
 use anyhow::Result;
-use blockifier::blockifier_versioned_constants::SyscallGasCost;
-use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::execution::syscalls::hint_processor::OUT_OF_GAS_ERROR;
 use blockifier::execution::syscalls::syscall_base::SyscallResult;
 use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
 use blockifier::execution::syscalls::vm_syscall_utils::{
-    RevertData, SyscallRequest, SyscallRequestWrapper, SyscallResponse, SyscallResponseWrapper,
-    SyscallSelector,
+    RevertData, SyscallExecutorBaseError, SyscallRequest, SyscallRequestWrapper, SyscallResponse,
+    SyscallResponseWrapper, SyscallSelector,
 };
 use blockifier::execution::{
     common_hints::HintExecutionResult,
@@ -24,8 +22,8 @@ use cairo_vm::{
         vm_core::VirtualMachine,
     },
 };
-use conversions::string::TryFromHexStr;
 use runtime::{ExtendedRuntime, ExtensionLogic, StarknetRuntime, SyscallHandlingResult};
+use starknet_api::execution_resources::GasAmount;
 use starknet_types_core::felt::Felt;
 
 pub struct CheatableStarknetRuntimeExtension<'a> {
@@ -45,6 +43,9 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
     ) -> Result<SyscallHandlingResult, HintError> {
         let syscall_handler = &mut extended_runtime.hint_handler;
 
+        // Warning: Do not add a default (`_`) arm here.
+        // This match must remain exhaustive so that if a new syscall is introduced,
+        // we will explicitly add support for it.
         match selector {
             SyscallSelector::GetExecutionInfo => self
                 .execute_syscall(
@@ -54,7 +55,6 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                     SyscallSelector::GetExecutionInfo,
                 )
                 .map(|()| SyscallHandlingResult::Handled),
-
             SyscallSelector::CallContract => self
                 .execute_syscall(
                     syscall_handler,
@@ -87,7 +87,57 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                     SyscallSelector::GetBlockHash,
                 )
                 .map(|()| SyscallHandlingResult::Handled),
-            _ => Ok(SyscallHandlingResult::Forwarded),
+            SyscallSelector::StorageRead => self
+                .execute_syscall(
+                    syscall_handler,
+                    vm,
+                    cheated_syscalls::storage_read,
+                    SyscallSelector::StorageRead,
+                )
+                .map(|()| SyscallHandlingResult::Handled),
+            SyscallSelector::StorageWrite => self
+                .execute_syscall(
+                    syscall_handler,
+                    vm,
+                    cheated_syscalls::storage_write,
+                    SyscallSelector::StorageWrite,
+                )
+                .map(|()| SyscallHandlingResult::Handled),
+            SyscallSelector::MetaTxV0 => self
+                .execute_syscall(
+                    syscall_handler,
+                    vm,
+                    cheated_syscalls::meta_tx_v0_syscall,
+                    SyscallSelector::MetaTxV0,
+                )
+                .map(|()| SyscallHandlingResult::Handled),
+            SyscallSelector::DelegateCall
+            | SyscallSelector::DelegateL1Handler
+            | SyscallSelector::EmitEvent
+            | SyscallSelector::GetBlockNumber
+            | SyscallSelector::GetBlockTimestamp
+            | SyscallSelector::GetCallerAddress
+            | SyscallSelector::GetClassHashAt
+            | SyscallSelector::GetContractAddress
+            | SyscallSelector::GetSequencerAddress
+            | SyscallSelector::GetTxInfo
+            | SyscallSelector::GetTxSignature
+            | SyscallSelector::Keccak
+            | SyscallSelector::KeccakRound
+            | SyscallSelector::Sha256ProcessBlock
+            | SyscallSelector::LibraryCallL1Handler
+            | SyscallSelector::ReplaceClass
+            | SyscallSelector::Secp256k1Add
+            | SyscallSelector::Secp256k1GetPointFromX
+            | SyscallSelector::Secp256k1GetXy
+            | SyscallSelector::Secp256k1Mul
+            | SyscallSelector::Secp256k1New
+            | SyscallSelector::Secp256r1Add
+            | SyscallSelector::Secp256r1GetPointFromX
+            | SyscallSelector::Secp256r1GetXy
+            | SyscallSelector::Secp256r1Mul
+            | SyscallSelector::Secp256r1New
+            | SyscallSelector::SendMessageToL1 => Ok(SyscallHandlingResult::Forwarded),
         }
     }
 
@@ -121,23 +171,8 @@ pub fn felt_from_ptr_immutable(
     Ok(felt)
 }
 
-fn get_syscall_cost(
-    syscall_selector: SyscallSelector,
-    context: &EntryPointExecutionContext,
-) -> SyscallGasCost {
-    let gas_costs = context.gas_costs();
-    match syscall_selector {
-        SyscallSelector::LibraryCall => gas_costs.syscalls.library_call,
-        SyscallSelector::CallContract => gas_costs.syscalls.call_contract,
-        SyscallSelector::Deploy => gas_costs.syscalls.deploy,
-        SyscallSelector::GetExecutionInfo => gas_costs.syscalls.get_execution_info,
-        SyscallSelector::GetBlockHash => gas_costs.syscalls.get_block_hash,
-        _ => unreachable!("Syscall has no associated cost"),
-    }
-}
-
 impl CheatableStarknetRuntimeExtension<'_> {
-    // crates/blockifier/src/execution/syscalls/hint_processor.rs:280 (SyscallHintProcessor::execute_syscall)
+    // crates/blockifier/src/execution/syscalls/vm_syscall_utils.rs:677 (execute_syscall)
     fn execute_syscall<Request, Response, ExecuteCallback>(
         &mut self,
         syscall_handler: &mut SyscallHintProcessor,
@@ -160,20 +195,18 @@ impl CheatableStarknetRuntimeExtension<'_> {
         syscall_handler.syscall_ptr += 1;
         syscall_handler.increment_syscall_count_by(&selector, 1);
 
+        let syscall_gas_cost = syscall_handler
+            .get_gas_cost_from_selector(&selector)
+            .map_err(|error| SyscallExecutorBaseError::GasCost { error, selector })?;
+
         let SyscallRequestWrapper {
             gas_counter,
             request,
         } = SyscallRequestWrapper::<Request>::read(vm, &mut syscall_handler.syscall_ptr)?;
 
-        let syscall_gas_cost = get_syscall_cost(selector, syscall_handler.base.context);
         let syscall_gas_cost =
             syscall_gas_cost.get_syscall_cost(u64_from_usize(request.get_linear_factor_length()));
-        let syscall_base_cost = syscall_handler
-            .base
-            .context
-            .gas_costs()
-            .base
-            .syscall_base_gas_cost;
+        let syscall_base_cost = syscall_handler.get_syscall_base_gas_cost();
 
         // Sanity check for preventing underflow.
         assert!(
@@ -182,12 +215,13 @@ impl CheatableStarknetRuntimeExtension<'_> {
         );
 
         // Refund `SYSCALL_BASE_GAS_COST` as it was pre-charged.
+        // Note: It is pre-charged by the compiler: https://github.com/starkware-libs/sequencer/blob/v0.15.0-rc.2/crates/blockifier/src/blockifier_versioned_constants.rs#L1057
         let required_gas = syscall_gas_cost - syscall_base_cost;
 
         if gas_counter < required_gas {
             //  Out of gas failure.
-            let out_of_gas_error =
-                Felt::try_from_hex_str(OUT_OF_GAS_ERROR).map_err(SyscallExecutionError::from)?;
+            let out_of_gas_error = Felt::from_hex(OUT_OF_GAS_ERROR)
+                .expect("Failed to parse OUT_OF_GAS_ERROR hex string");
             let response: SyscallResponseWrapper<Response> = SyscallResponseWrapper::Failure {
                 gas_counter,
                 revert_data: RevertData::new_normal(vec![out_of_gas_error]),
@@ -199,6 +233,10 @@ impl CheatableStarknetRuntimeExtension<'_> {
 
         // Execute.
         let mut remaining_gas = gas_counter - required_gas;
+
+        // TODO(#3681)
+        syscall_handler.update_revert_gas_with_next_remaining_gas(GasAmount(remaining_gas));
+
         let original_response = execute_callback(
             request,
             vm,

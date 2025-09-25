@@ -4,12 +4,10 @@ use snforge_std::{
     Event, // A structure describing a raw `Event`
     IsEmitted // Trait for checking if a given event was ever emitted
 };
-
-use testing_events::contract::{
-    SpyEventsChecker, ISpyEventsCheckerDispatcher, ISpyEventsCheckerDispatcherTrait,
-};
-
 use starknet::ContractAddress;
+use testing_events::contract::{
+    ISpyEventsCheckerDispatcher, ISpyEventsCheckerDispatcherTrait, SpyEventsChecker,
+};
 
 #[test]
 fn test_complex_assertions() {

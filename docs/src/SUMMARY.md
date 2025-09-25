@@ -8,6 +8,7 @@
 * [First Steps with Starknet Foundry](getting-started/first-steps.md)
 * [Scarb](getting-started/scarb.md)
 * [Project Configuration](projects/configuration.md)
+* [`snforge` 0.48.0 Migration Guide](getting-started/0-48-0-migration-guide.md)
 
 ---
 
@@ -37,6 +38,7 @@
 * [Direct Storage Access](snforge-advanced-features/storage-cheatcodes.md)
 * [Profiling](snforge-advanced-features/profiling.md)
 * [Debugging](snforge-advanced-features/debugging.md)
+* [Oracles](snforge-advanced-features/oracles.md)
 
 ---
 
@@ -55,6 +57,7 @@
 * [Inspecting Transactions](starknet/tx-status.md)
 * [Verifying Contracts](starknet/verify.md)
 * [Calldata Transformation](starknet/calldata-transformation.md)
+* [Block Explorers](starknet/block_explorer.md)
 
 ---
 
@@ -69,12 +72,11 @@
 
 * [`snforge` Commands](appendix/snforge.md)
     * [test](appendix/snforge/test.md)
-    * [init](appendix/snforge/init.md)
     * [new](appendix/snforge/new.md)
     * [clean](appendix/snforge/clean.md)
     * [clean-cache](appendix/snforge/clean-cache.md)
     * [check-requirements](appendix/snforge/check-requirements.md)
-    * [completion](appendix/snforge/completion.md)
+    * [completions](appendix/snforge/completions.md)
 * [Cheatcodes Reference](appendix/cheatcodes.md)
     * [Cheating Globally](appendix/cheatcodes/global.md)
     * [CheatSpan](appendix/cheatcodes/cheat_span.md)
@@ -108,12 +110,18 @@
     * [generate_arg](appendix/cheatcodes/generate_arg.md)
     * [set_balance](appendix/cheatcodes/set_balance.md)
     * [Token](appendix/cheatcodes/token.md)
+    * [interact_with_state](appendix/cheatcodes/interact_with_state.md)
 * [`snforge` Library Reference](appendix/snforge-library.md)
     * [byte_array](appendix/snforge-library/byte_array.md)
     * [declare](appendix/snforge-library/declare.md)
     * [contract_class](appendix/snforge-library/contract_class.md)
     * [get_call_trace](appendix/snforge-library/get_call_trace.md)
     * [fs](appendix/snforge-library/fs.md)
+        * [file format rules](appendix/snforge-library/fs/file_format_rules.md)
+        * [`File`](appendix/snforge-library/fs/file.md)
+        * [`FileParser`](appendix/snforge-library/fs/file_parser.md)
+        * [`read_txt`](appendix/snforge-library/fs/read_txt.md)
+        * [`read_json`](appendix/snforge-library/fs/read_json.md)
     * [env](appendix/snforge-library/env.md)
     * [signature](appendix/snforge-library/signature.md)
     * [fuzzable](appendix/snforge-library/fuzzable.md)
@@ -126,6 +134,7 @@
         * [delete](appendix/sncast/account/delete.md)
         * [list](appendix/sncast/account/list.md)
     * [declare](appendix/sncast/declare.md)
+    * [declare-from](appendix/sncast/declare_from.md)
     * [deploy](appendix/sncast/deploy.md)
     * [invoke](appendix/sncast/invoke.md)
     * [call](appendix/sncast/call.md)
@@ -138,9 +147,10 @@
         * [run](appendix/sncast/script/run.md)
     * [tx-status](appendix/sncast/tx-status.md)
     * [verify](appendix/sncast/verify.md)
-    * [completion](appendix/sncast/completion.md)
+    * [completions](appendix/sncast/completions.md)
     * [utils](appendix/sncast/utils/utils.md)
         * [serialize](appendix/sncast/utils/serialize.md)
+        * [class-hash](appendix/sncast/utils/class_hash.md)
 * [`sncast` Library Reference](appendix/sncast-library.md)
     * [declare](appendix/sncast-library/declare.md)
     * [deploy](appendix/sncast-library/deploy.md)

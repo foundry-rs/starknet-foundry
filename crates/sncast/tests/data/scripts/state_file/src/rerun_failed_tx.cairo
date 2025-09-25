@@ -1,4 +1,4 @@
-use sncast_std::{invoke, FeeSettingsTrait};
+use sncast_std::{FeeSettingsTrait, invoke};
 
 fn main() {
     let fee_settings = FeeSettingsTrait::resource_bounds(

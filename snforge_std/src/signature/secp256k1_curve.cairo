@@ -1,12 +1,11 @@
-use core::serde::Serde;
 use core::option::OptionTrait;
+use core::serde::Serde;
+use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
+use starknet::SyscallResultTrait;
+use starknet::secp256_trait::{Secp256PointTrait, Secp256Trait, is_valid_signature};
 use starknet::secp256k1::Secp256k1Point;
-use starknet::secp256_trait::{is_valid_signature, Secp256Trait, Secp256PointTrait};
-use starknet::{SyscallResultTrait};
 use crate::cheatcode::execute_cheatcode_and_deserialize;
 use super::SignError;
-
-use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 
 pub impl Secp256k1CurveKeyPairImpl of KeyPairTrait<u256, Secp256k1Point> {
     fn generate() -> KeyPair<u256, Secp256k1Point> {

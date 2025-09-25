@@ -7,11 +7,13 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use console::style;
 use conversions::IntoConv;
+use foundry_ui::UI;
+use foundry_ui::components::warning::WarningMessage;
 use serde_json::json;
-use sncast::helpers::braavos::{BraavosAccountFactory, check_braavos_account_compatibility};
+use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{
-    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
-    CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
+    BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, CREATE_KEYSTORE_PASSWORD_ENV_VAR,
+    OZ_CLASS_HASH, READY_CLASS_HASH,
 };
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::create::AccountCreateResponse;
@@ -59,21 +61,24 @@ pub struct Create {
 pub async fn create(
     account: &str,
     accounts_file: &Utf8PathBuf,
-    keystore: Option<Utf8PathBuf>,
+    keystore: Option<&Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: Felt,
     create: &Create,
+    ui: &UI,
 ) -> Result<AccountCreateResponse> {
-    // Braavos accounts before v1.2.0 are not compatible with starknet >= 0.13.4
-    // For more, read https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
-    if let Some(class_hash) = create.class_hash {
-        check_braavos_account_compatibility(class_hash)?;
+    // TODO(#3556): Remove this warning once we drop Argent account type
+    if create.account_type == AccountType::Argent {
+        ui.println(&WarningMessage::new(
+            "Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account create` is deprecated, please use `ready` instead.",
+        ));
+        ui.print_blank_line();
     }
 
     let salt = extract_or_generate_salt(create.salt);
     let class_hash = create.class_hash.unwrap_or(match create.account_type {
         AccountType::OpenZeppelin => OZ_CLASS_HASH,
-        AccountType::Argent => ARGENT_CLASS_HASH,
+        AccountType::Argent | AccountType::Ready => READY_CLASS_HASH,
         AccountType::Braavos => BRAAVOS_CLASS_HASH,
     });
     check_class_hash_exists(provider, class_hash).await?;
@@ -92,7 +97,7 @@ pub async fn create(
         style(estimated_fee_strk).magenta()
     );
 
-    if let Some(keystore) = keystore.clone() {
+    if let Some(keystore) = keystore {
         let account_path = Utf8PathBuf::from(&account);
         if account_path == Utf8PathBuf::default() {
             bail!("Argument `--account` must be passed and be a path when using `--keystore`");
@@ -111,14 +116,14 @@ pub async fn create(
             salt,
             class_hash,
             create.account_type,
-            &keystore,
+            keystore,
             &account_path,
             legacy,
         )?;
 
         let deploy_command = generate_deploy_command_with_keystore(
             account,
-            &keystore,
+            keystore,
             create.rpc.url.as_deref(),
             create.rpc.network.as_ref(),
         );
@@ -140,7 +145,7 @@ pub async fn create(
         &create.rpc,
         account,
         accounts_file,
-        keystore.clone(),
+        keystore.cloned(),
     )?;
 
     Ok(AccountCreateResponse {
@@ -171,7 +176,7 @@ async fn generate_account(
                 OpenZeppelinAccountFactory::new(class_hash, chain_id, signer, provider).await?;
             get_address_and_deployment_fee(factory, salt).await?
         }
-        AccountType::Argent => {
+        AccountType::Argent | AccountType::Ready => {
             let factory =
                 ArgentAccountFactory::new(class_hash, chain_id, None, signer, provider).await?;
 
@@ -268,11 +273,12 @@ fn create_to_keystore(
                 }
             })
         }
-        AccountType::Argent => {
+        AccountType::Argent | AccountType::Ready => {
             json!({
                 "version": 1,
                 "variant": {
-                    "type": AccountType::Argent,
+                    // TODO(#3556): Remove hardcoded "argent" and use format! with `AccountType::Ready`
+                    "type": "argent",
                     "version": 1,
                     "owner": format!("{:#x}", private_key.verifying_key().scalar()),
                     "guardian": "0x0",

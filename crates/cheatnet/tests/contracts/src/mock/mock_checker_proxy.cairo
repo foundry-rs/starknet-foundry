@@ -17,8 +17,7 @@ trait IMockCheckerProxy<TContractState> {
 #[starknet::contract]
 mod MockCheckerProxy {
     use starknet::ContractAddress;
-    use super::IMockCheckerDispatcherTrait;
-    use super::IMockCheckerDispatcher;
+    use super::{IMockCheckerDispatcher, IMockCheckerDispatcherTrait};
 
     #[storage]
     struct Storage {}

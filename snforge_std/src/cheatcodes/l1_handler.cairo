@@ -9,9 +9,7 @@ pub struct L1Handler {
 
 pub trait L1HandlerTrait {
     fn new(target: ContractAddress, selector: felt252) -> L1Handler;
-    fn execute(
-        self: L1Handler, from_address: felt252, payload: Span::<felt252>,
-    ) -> SyscallResult<()>;
+    fn execute(self: L1Handler, from_address: felt252, payload: Span<felt252>) -> SyscallResult<()>;
 }
 
 impl L1HandlerImpl of L1HandlerTrait {
@@ -29,9 +27,9 @@ impl L1HandlerImpl of L1HandlerTrait {
     /// `payload` - The handlers' function arguments serialized with `Serde`
     /// Returns () or panic data if it failed
     fn execute(
-        self: L1Handler, from_address: felt252, payload: Span::<felt252>,
+        self: L1Handler, from_address: felt252, payload: Span<felt252>,
     ) -> SyscallResult<()> {
-        let mut inputs: Array::<felt252> = array![
+        let mut inputs: Array<felt252> = array![
             self.target.into(), self.selector, from_address.into(),
         ];
         payload.serialize(ref inputs);

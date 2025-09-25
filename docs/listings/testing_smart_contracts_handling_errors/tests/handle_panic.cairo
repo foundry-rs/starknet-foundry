@@ -1,7 +1,6 @@
 // Necessary utility function import
 use snforge_std::byte_array::try_deserialize_bytearray_error;
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
-
+use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 use testing_smart_contracts_handling_errors::{
     IPanicContractSafeDispatcher, IPanicContractSafeDispatcherTrait,
 };

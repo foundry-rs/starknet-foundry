@@ -4,9 +4,11 @@ use crate::{
     serde::serialize::SerializeToFeltVec,
     string::{TryFromDecStr, TryFromHexStr},
 };
+use anyhow::{Context, Result, anyhow, bail};
 use conversions::padded_felt::PaddedFelt;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
-use starknet_types_core::felt::{Felt, FromStrError};
+use starknet_api::transaction::fields::ContractAddressSalt;
+use starknet_types_core::felt::Felt;
 use std::vec;
 
 impl FromConv<ClassHash> for Felt {
@@ -18,6 +20,12 @@ impl FromConv<ClassHash> for Felt {
 impl FromConv<ContractAddress> for Felt {
     fn from_(value: ContractAddress) -> Felt {
         (*value.0.key()).into_()
+    }
+}
+
+impl FromConv<ContractAddressSalt> for Felt {
+    fn from_(value: ContractAddressSalt) -> Felt {
+        value.0.into_()
     }
 }
 
@@ -43,12 +51,14 @@ impl<T> TryFromDecStr for T
 where
     T: FromConv<Felt>,
 {
-    fn try_from_dec_str(value: &str) -> Result<T, FromStrError> {
+    fn try_from_dec_str(value: &str) -> Result<T> {
         if value.starts_with('-') {
-            return Err(FromStrError);
+            bail!("Value must not start with -")
         }
 
-        Felt::from_dec_str(value).map(T::from_)
+        Felt::from_dec_str(value)
+            .map(T::from_)
+            .with_context(|| anyhow!("Invalid value for string"))
     }
 }
 
@@ -56,25 +66,27 @@ impl<T> TryFromHexStr for T
 where
     T: FromConv<Felt>,
 {
-    fn try_from_hex_str(value: &str) -> Result<T, FromStrError> {
+    fn try_from_hex_str(value: &str) -> Result<T> {
         if !value.starts_with("0x") {
-            return Err(FromStrError);
+            bail!("Value must start with 0x");
         }
 
-        Felt::from_hex(value).map(T::from_)
+        Felt::from_hex(value)
+            .map(T::from_)
+            .with_context(|| anyhow!("Invalid value for string"))
     }
 }
 
 pub trait FromShortString<T>: Sized {
-    fn from_short_string(short_string: &str) -> Result<T, FromStrError>;
+    fn from_short_string(short_string: &str) -> Result<T>;
 }
 
 impl FromShortString<Felt> for Felt {
-    fn from_short_string(short_string: &str) -> Result<Felt, FromStrError> {
+    fn from_short_string(short_string: &str) -> Result<Felt> {
         if short_string.len() <= 31 && short_string.is_ascii() {
             Ok(Felt::from_bytes_be_slice(short_string.as_bytes()))
         } else {
-            Err(FromStrError)
+            bail!("Value must be ascii and less than 32 bytes long.")
         }
     }
 }
@@ -107,7 +119,7 @@ impl ToShortString<Felt> for Felt {
 
 pub trait TryInferFormat: Sized {
     /// Parses value from `hex string`, `dec string`, `quotted cairo shortstring `and `quotted cairo string`
-    fn infer_format_and_parse(value: &str) -> Result<Vec<Self>, FromStrError>;
+    fn infer_format_and_parse(value: &str) -> Result<Vec<Self>>;
 }
 
 fn resolve(value: &str) -> String {
@@ -115,7 +127,7 @@ fn resolve(value: &str) -> String {
 }
 
 impl TryInferFormat for Felt {
-    fn infer_format_and_parse(value: &str) -> Result<Vec<Self>, FromStrError> {
+    fn infer_format_and_parse(value: &str) -> Result<Vec<Self>> {
         if value.starts_with('\'') && value.ends_with('\'') {
             let value = resolve(value).replace("\\'", "'");
 

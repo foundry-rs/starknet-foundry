@@ -3,9 +3,8 @@ use snforge_std::{
     EventSpyTrait, Event,
     EventsFilterTrait // Add for filtering the Events object (result of `get_events`)
 };
-
 use testing_events::contract::{
-    SpyEventsChecker, ISpyEventsCheckerDispatcher, ISpyEventsCheckerDispatcherTrait,
+    ISpyEventsCheckerDispatcher, ISpyEventsCheckerDispatcherTrait, SpyEventsChecker,
 };
 
 #[test]

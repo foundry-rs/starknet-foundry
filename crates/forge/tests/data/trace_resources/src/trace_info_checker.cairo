@@ -8,12 +8,12 @@ pub trait ITraceInfoChecker<T> {
 
 #[starknet::contract]
 mod TraceInfoChecker {
-    use super::ITraceInfoChecker;
+    use core::panic_with_felt252;
+    use starknet::{ClassHash, ContractAddress};
     use trace_resources::trace_info_proxy::{
         ITraceInfoProxyDispatcher, ITraceInfoProxyDispatcherTrait,
     };
-    use starknet::{ContractAddress, ClassHash};
-    use core::panic_with_felt252;
+    use super::ITraceInfoChecker;
     use super::super::use_builtins_and_syscalls;
 
     #[storage]
