@@ -59,13 +59,12 @@ pub(crate) fn execute_entry_point_call_cairo0(
         entry_point_pc,
         &args,
     )
-    .map_err(|source| {
+    .inspect_err(|_| {
         extract_trace_and_register_errors(
-            source,
             call.class_hash,
             &mut runner,
             cheatable_syscall_handler.extension.cheatnet_state,
-        )
+        );
     })?;
 
     let syscall_usage = cheatable_syscall_handler
@@ -86,7 +85,6 @@ pub(crate) fn execute_entry_point_call_cairo0(
         call_info: execution_result,
         syscall_usage_vm_resources: syscall_usage,
         syscall_usage_sierra_gas: SyscallUsageMap::default(),
-        vm_trace: None,
     })
     // endregion
 }
