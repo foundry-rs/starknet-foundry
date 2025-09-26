@@ -4,4 +4,5 @@ pub mod cheated_syscalls;
 pub mod deprecated;
 pub mod entry_point;
 pub mod execution_info;
+pub mod execution_utils;
 pub mod syscall_hooks;

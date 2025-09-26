@@ -36,7 +36,6 @@ pub fn execute_inner_call(
         syscall_handler.base.state,
         cheatnet_state,
         syscall_handler.base.context,
-        true,
         remaining_gas,
     )?;
     // endregion
