@@ -50,7 +50,7 @@ pub async fn utils(
                 .await
                 .map_err(handle_starknet_command_error)?;
 
-            process_command_result("serialize", Ok(result), ui, None);
+            process_command_result("utils serialize", Ok(result), ui, None);
         }
 
         Commands::ClassHash(class_hash) => {
