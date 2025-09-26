@@ -4,7 +4,7 @@ pub mod braavos;
 pub mod config;
 pub mod configuration;
 pub mod constants;
-pub mod devnet_client;
+pub mod devnet_provider;
 pub mod fee;
 pub mod interactive;
 pub mod output_format;

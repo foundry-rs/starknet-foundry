@@ -1,4 +1,4 @@
-use crate::{NestedMap, build_account, helpers::devnet_client::DevnetClient};
+use crate::{NestedMap, build_account, helpers::devnet_provider::DevnetProvider};
 use anyhow::{Result, bail};
 use camino::Utf8PathBuf;
 use starknet::{
@@ -83,8 +83,8 @@ pub async fn get_account_from_devnet<'a>(
         .map(|s| s.parse::<u8>().expect("Invalid devnet account number"))
         .context("Failed to parse devnet account number")?;
 
-    let devnet_client = DevnetClient::new(url);
-    let devnet_config = devnet_client.get_config().await?;
+    let devnet_provider = DevnetProvider::new(url);
+    let devnet_config = devnet_provider.get_config().await?;
 
     if account_number >= devnet_config.total_accounts {
         bail!(
@@ -93,7 +93,7 @@ pub async fn get_account_from_devnet<'a>(
         );
     }
 
-    let devnet_accounts = devnet_client.get_predeployed_accounts().await?;
+    let devnet_accounts = devnet_provider.get_predeployed_accounts().await?;
     let predeployed_account = devnet_accounts
         .get((account_number - 1) as usize)
         .expect("Failed to get devnet account")

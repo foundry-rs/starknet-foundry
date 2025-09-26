@@ -8,14 +8,14 @@ use url::Url;
 
 /// A Devnet-RPC client.
 #[derive(Debug, Clone)]
-pub struct DevnetClient {
+pub struct DevnetProvider {
     client: Client,
     url: Url,
 }
 
 /// All Devnet-RPC methods as listed in the official docs.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub enum DevnetClientMethod {
+pub enum DevnetProviderMethod {
     /// The `devnet_getConfig` method.
     #[serde(rename = "devnet_getConfig")]
     GetConfig,
@@ -25,8 +25,8 @@ pub enum DevnetClientMethod {
     GetPredeployedAccounts,
 }
 
-impl DevnetClient {
-    /// Constructs a new [`DevnetClient`] from a transport.
+impl DevnetProvider {
+    /// Constructs a new [`DevnetProvider`] from a transport.
     #[must_use]
     pub fn new(url: &str) -> Self {
         let url = Url::parse(url).expect("Invalid URL");
@@ -37,8 +37,8 @@ impl DevnetClient {
     }
 }
 
-impl DevnetClient {
-    async fn send_request<P, R>(&self, method: DevnetClientMethod, params: P) -> Result<R, Error>
+impl DevnetProvider {
+    async fn send_request<P, R>(&self, method: DevnetProviderMethod, params: P) -> Result<R, Error>
     where
         P: Serialize + Send + Sync,
         R: DeserializeOwned,
@@ -75,13 +75,13 @@ impl DevnetClient {
 
     /// Fetches the current Devnet configuration.
     pub async fn get_config(&self) -> Result<Config, Error> {
-        self.send_request(DevnetClientMethod::GetConfig, json!({}))
+        self.send_request(DevnetProviderMethod::GetConfig, json!({}))
             .await
     }
 
     /// Fetches the list of predeployed accounts in Devnet.
     pub async fn get_predeployed_accounts(&self) -> Result<Vec<PredeployedAccount>, Error> {
-        self.send_request(DevnetClientMethod::GetPredeployedAccounts, json!({}))
+        self.send_request(DevnetProviderMethod::GetPredeployedAccounts, json!({}))
             .await
     }
 }
