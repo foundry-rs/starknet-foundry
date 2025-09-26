@@ -1,4 +1,4 @@
-use crate::helpers::constants::{MAP_CONTRACT_ADDRESS_SEPOLIA, URL};
+use crate::helpers::constants::{MAP_CONTRACT_ADDRESS_SEPOLIA, SEPOLIA_RPC_URL, URL};
 use crate::helpers::fixtures::copy_file;
 use crate::helpers::runner::runner;
 use indoc::indoc;
@@ -9,7 +9,7 @@ use test_case::test_case;
 #[test_case(1)]
 #[test_case(20)]
 #[tokio::test]
-pub async fn test_happy_case(account_number: u8) {
+pub async fn happy_case(account_number: u8) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
     let account = format!("devnet-{account_number}");
@@ -45,7 +45,7 @@ pub async fn test_happy_case(account_number: u8) {
 #[test_case(0)]
 #[test_case(21)]
 #[tokio::test]
-pub async fn test_account_number_out_of_range(account_number: u8) {
+pub async fn account_number_out_of_range(account_number: u8) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
     let account = format!("devnet-{account_number}");
@@ -77,7 +77,7 @@ pub async fn test_account_number_out_of_range(account_number: u8) {
 }
 
 #[tokio::test]
-pub async fn test_account_name_already_exists() {
+pub async fn account_name_already_exists() {
     let accounts_file = "accounts.json";
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
@@ -114,6 +114,37 @@ pub async fn test_account_name_already_exists() {
             Success: Invoke completed
 
             Transaction Hash: 0x0[..]
+            "
+        },
+    );
+}
+
+#[tokio::test]
+pub async fn use_devnet_account_with_node_not_being_devnet() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+
+    let args = vec![
+        "--account",
+        "devnet-1",
+        "invoke",
+        "--url",
+        SEPOLIA_RPC_URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 0x2",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {
+            "
+            Error: {\"code\":-32601,\"message\":\"Method not found\"}
             "
         },
     );
