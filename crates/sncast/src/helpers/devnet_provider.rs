@@ -55,7 +55,7 @@ impl DevnetProvider {
             }))
             .send()
             .await
-            .expect("Error occured during request")
+            .expect("Error occurred during request")
             .json::<serde_json::Value>()
             .await;
 
