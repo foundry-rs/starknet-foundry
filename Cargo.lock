@@ -2078,6 +2078,7 @@ name = "debugging"
 version = "1.0.0"
 dependencies = [
  "blockifier",
+ "cairo-annotations",
  "cairo-lang-sierra",
  "cairo-lang-sierra-to-casm",
  "cairo-lang-starknet-classes",
@@ -2087,6 +2088,7 @@ dependencies = [
  "paste",
  "ptree",
  "rayon",
+ "regex",
  "serde_json",
  "starknet",
  "starknet-types-core",
