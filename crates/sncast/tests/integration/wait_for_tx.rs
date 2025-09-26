@@ -1,5 +1,5 @@
 use crate::helpers::{
-    constants::{ACCOUNT, ACCOUNT_FILE_PATH},
+    constants::{ACCOUNT, ACCOUNT_FILE_PATH, URL},
     fixtures::{create_test_provider, invoke_contract},
 };
 use foundry_ui::UI;
@@ -39,6 +39,7 @@ async fn test_rejected_transaction() {
         ACCOUNT,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
+        URL,
         None,
         &UI::default(),
     )

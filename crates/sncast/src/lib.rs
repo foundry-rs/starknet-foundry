@@ -250,6 +250,7 @@ pub async fn get_account<'a>(
     account: &str,
     accounts_file: &Utf8PathBuf,
     provider: &'a JsonRpcClient<HttpTransport>,
+    url: &str,
     keystore: Option<&Utf8PathBuf>,
     ui: &UI,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
@@ -265,7 +266,7 @@ pub async fn get_account<'a>(
         )));
         return get_account_from_accounts_file(account, accounts_file, provider, keystore).await;
     } else if is_devnet_account && !exists_in_accounts_file {
-        return get_account_from_devnet(account, provider).await;
+        return get_account_from_devnet(account, provider, url).await;
     }
 
     get_account_from_accounts_file(account, accounts_file, provider, keystore).await

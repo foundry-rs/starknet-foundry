@@ -1,4 +1,4 @@
-use crate::{NestedMap, build_account};
+use crate::{NestedMap, build_account, helpers::devnet::DevnetClient};
 use anyhow::{Result, bail};
 use camino::Utf8PathBuf;
 use starknet::{
@@ -70,32 +70,37 @@ pub fn account_exists(
 
 #[must_use]
 pub fn is_devnet_account(account: &str) -> bool {
-    let n_devnet_accounts = 20;
-    account
-        .strip_prefix("devnet-")
-        .and_then(|s| s.parse::<u32>().ok())
-        .is_some_and(|i| (1..=n_devnet_accounts).contains(&i))
-}
-
-#[must_use]
-pub fn get_devnet_accounts() -> Vec<AccountData> {
-    todo!("Return a list of devnet accounts");
+    account.starts_with("devnet-")
 }
 
 pub async fn get_account_from_devnet<'a>(
     account: &str,
     provider: &'a JsonRpcClient<HttpTransport>,
+    url: &str,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
-    let account_number: u32 = account
+    let account_number: u8 = account
         .strip_prefix("devnet-")
-        .map(|s| s.parse::<u32>().expect("Invalid devnet account number"))
+        .map(|s| s.parse::<u8>().expect("Invalid devnet account number"))
         .context("Failed to parse devnet account number")?;
 
-    let devnet_accounts = get_devnet_accounts();
-    let account_data = devnet_accounts
+    let devnet_client = DevnetClient::new(url);
+    let devnet_config = devnet_client.get_config().await?;
+
+    if account_number >= devnet_config.total_accounts {
+        bail!(
+            "Devnet account number must be between 1 and {}",
+            devnet_config.total_accounts
+        );
+    }
+
+    let devnet_accounts = devnet_client.get_predeployed_accounts().await?;
+    let predeployed_account = devnet_accounts
         .get((account_number - 1) as usize)
         .expect("Failed to get devnet account")
         .to_owned();
+
+    let account_data = AccountData::from(predeployed_account);
+
     let chain_id = provider.chain_id().await?;
 
     build_account(account_data, chain_id, provider).await

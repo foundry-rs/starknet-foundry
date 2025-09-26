@@ -204,6 +204,7 @@ pub async fn invoke_contract(
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
+        URL,
         None,
         &UI::default(),
     )

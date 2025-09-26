@@ -41,6 +41,7 @@ async fn test_get_account() {
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
+        URL,
         None,
         &UI::default(),
     )
@@ -61,6 +62,7 @@ async fn test_get_account_no_file() {
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/nonexistentfile.json"),
         &provider,
+        URL,
         None,
         &UI::default(),
     )
@@ -79,6 +81,7 @@ async fn test_get_account_invalid_file() {
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/invalid_format.json"),
         &provider,
+        URL,
         None,
         &UI::default(),
     )
@@ -97,6 +100,7 @@ async fn test_get_account_no_account() {
         "",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
+        URL,
         None,
         &UI::default(),
     )
@@ -115,6 +119,7 @@ async fn test_get_account_no_user_for_network() {
         "user100",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
+        URL,
         None,
         &UI::default(),
     )
@@ -133,6 +138,7 @@ async fn test_get_account_failed_to_convert_field_elements() {
         "with_invalid_private_key",
         &Utf8PathBuf::from("tests/data/accounts/faulty_accounts_invalid_felt.json"),
         &provider,
+        URL,
         None,
         &UI::default(),
     )
