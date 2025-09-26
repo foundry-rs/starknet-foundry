@@ -1,13 +1,13 @@
 use num_traits::ToPrimitive;
-use sncast::helpers::{constants::OZ_CLASS_HASH, devnet_client::DevnetClient};
+use sncast::helpers::{constants::OZ_CLASS_HASH, devnet_provider::DevnetProvider};
 use starknet::macros::felt;
 
 use crate::helpers::constants::{ACCOUNTS_NUMBER, SEED, URL};
 
 #[tokio::test]
 async fn test_get_config() {
-    let devnet_client = DevnetClient::new(URL);
-    let config = devnet_client
+    let devnet_provider = DevnetProvider::new(URL);
+    let config = devnet_provider
         .get_config()
         .await
         .expect("Failed to get config");
@@ -19,8 +19,8 @@ async fn test_get_config() {
 
 #[tokio::test]
 async fn test_get_predeployed_accounts() {
-    let devnet_client = DevnetClient::new(URL);
-    let predeployed_accounts = devnet_client
+    let devnet_provider = DevnetProvider::new(URL);
+    let predeployed_accounts = devnet_provider
         .get_predeployed_accounts()
         .await
         .expect("Failed to get predeployed accounts");
