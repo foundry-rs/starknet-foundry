@@ -118,6 +118,18 @@ impl TestsFilter {
     }
 }
 
+impl Default for TestsFilter {
+    fn default() -> Self {
+        Self {
+            name_filter: NameFilter::All,
+            ignored_filter: IgnoredFilter::All,
+            last_failed_filter: false,
+            skip_filter: Vec::new(),
+            failed_tests_cache: FailedTestsCache::default(),
+        }
+    }
+}
+
 impl TestCaseFilter for TestsFilter {
     fn should_be_run<T>(&self, test_case: &TestCase<T>) -> bool
     where

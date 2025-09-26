@@ -133,8 +133,6 @@ fn replace_id_with_params(
 
 #[cfg(test)]
 mod tests {
-    use crate::shared_cache::FailedTestsCache;
-
     use super::*;
     use cairo_lang_sierra::program::ProgramArtifact;
     use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
@@ -204,15 +202,7 @@ mod tests {
                     block_id: BlockId::BlockNumber(120),
                 }],
                 &mut BlockNumberMap::default(),
-                &TestsFilter::from_flags(
-                    None,
-                    false,
-                    Vec::new(),
-                    true,
-                    true,
-                    false,
-                    FailedTestsCache::default(),
-                )
+                &TestsFilter::default(),
             )
             .await
             .is_err()
