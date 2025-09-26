@@ -567,6 +567,11 @@ impl TraceData {
         current_call.borrow_mut().entry_point.class_hash = Some(class_hash);
     }
 
+    pub fn set_vm_trace_for_current_call(&mut self, vm_trace: Vec<RelocatedTraceEntry>) {
+        let current_call = self.current_call_stack.top();
+        current_call.borrow_mut().vm_trace = Some(vm_trace);
+    }
+
     #[expect(clippy::too_many_arguments)]
     pub fn exit_nested_call(
         &mut self,
@@ -576,7 +581,6 @@ impl TraceData {
         used_syscalls_sierra_gas: SyscallUsageMap,
         result: CallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
-        vm_trace: Option<Vec<RelocatedTraceEntry>>,
         signature: Vec<Felt>,
         events: Vec<OrderedEvent>,
     ) {
@@ -597,7 +601,6 @@ impl TraceData {
             .collect();
 
         last_call.result = result;
-        last_call.vm_trace = vm_trace;
         last_call.signature = signature;
         last_call.events = events;
     }
