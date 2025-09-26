@@ -86,7 +86,7 @@ pub async fn get_account_from_devnet<'a>(
     let devnet_provider = DevnetProvider::new(url);
     let devnet_config = devnet_provider.get_config().await?;
 
-    if account_number >= devnet_config.total_accounts {
+    if account_number > devnet_config.total_accounts || account_number == 0 {
         bail!(
             "Devnet account number must be between 1 and {}",
             devnet_config.total_accounts

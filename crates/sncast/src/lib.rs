@@ -267,6 +267,7 @@ pub async fn get_account<'a>(
         ui.println(&WarningMessage::new(format!(
             "Using account {account} from accounts file {accounts_file}. To use inbuilt devnet account, please change the name of your existing account {account}."
         )));
+        ui.print_blank_line();
         return get_account_from_accounts_file(account, accounts_file, provider, keystore).await;
     } else if is_devnet_account && !exists_in_accounts_file {
         return get_account_from_devnet(account, provider, url).await;
