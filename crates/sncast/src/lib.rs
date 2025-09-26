@@ -1,3 +1,4 @@
+use crate::helpers::account::{account_exists, get_account_from_devnet, is_devnet_account};
 use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::response::errors::SNCastProviderError;
 use anyhow::{Context, Error, Result, anyhow, bail};
@@ -5,6 +6,7 @@ use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use conversions::serde::serialize::CairoSerialize;
 use foundry_ui::UI;
+use foundry_ui::components::warning::WarningMessage;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::RngCore;
 use rand::rngs::OsRng;
@@ -245,6 +247,31 @@ pub async fn get_nonce(
 }
 
 pub async fn get_account<'a>(
+    account: &str,
+    accounts_file: &Utf8PathBuf,
+    provider: &'a JsonRpcClient<HttpTransport>,
+    keystore: Option<&Utf8PathBuf>,
+    ui: &UI,
+) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
+    let chain_id = get_chain_id(provider).await?;
+    let network_name = chain_id_to_network_name(chain_id);
+    let is_devnet_account = is_devnet_account(account);
+    let exists_in_accounts_file = account_exists(account, &network_name, accounts_file)
+        .expect("Failed to check if account exists in accounts file");
+
+    if is_devnet_account && exists_in_accounts_file {
+        ui.println(&WarningMessage::new(format!(
+            "Using account {account} from accounts file {accounts_file}. To use inbuilt devnet account, please change the name of your existing account {account}."
+        )));
+        return get_account_from_accounts_file(account, accounts_file, provider, keystore).await;
+    } else if is_devnet_account && !exists_in_accounts_file {
+        return get_account_from_devnet(account, provider).await;
+    }
+
+    get_account_from_accounts_file(account, accounts_file, provider, keystore).await
+}
+
+pub async fn get_account_from_accounts_file<'a>(
     account: &str,
     accounts_file: &Utf8PathBuf,
     provider: &'a JsonRpcClient<HttpTransport>,

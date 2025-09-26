@@ -56,6 +56,7 @@ pub async fn multicall(
                 &config.accounts_file,
                 &provider,
                 config.keystore.as_ref(),
+                ui,
             )
             .await?;
             let result =

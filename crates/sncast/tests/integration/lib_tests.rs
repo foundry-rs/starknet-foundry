@@ -4,6 +4,7 @@ use crate::helpers::constants::{
 use crate::helpers::fixtures::create_test_provider;
 
 use camino::Utf8PathBuf;
+use foundry_ui::UI;
 use shared::rpc::{get_rpc_version, is_expected_version};
 use sncast::{check_if_legacy_contract, get_account, get_provider};
 use starknet::accounts::Account;
@@ -41,6 +42,7 @@ async fn test_get_account() {
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
         None,
+        &UI::default(),
     )
     .await
     .unwrap();
@@ -60,6 +62,7 @@ async fn test_get_account_no_file() {
         &Utf8PathBuf::from("tests/data/accounts/nonexistentfile.json"),
         &provider,
         None,
+        &UI::default(),
     )
     .await;
     let err = account.unwrap_err();
@@ -77,6 +80,7 @@ async fn test_get_account_invalid_file() {
         &Utf8PathBuf::from("tests/data/accounts/invalid_format.json"),
         &provider,
         None,
+        &UI::default(),
     )
     .await;
     let err = account.unwrap_err();
@@ -94,6 +98,7 @@ async fn test_get_account_no_account() {
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
         None,
+        &UI::default(),
     )
     .await;
     let err = account.unwrap_err();
@@ -111,6 +116,7 @@ async fn test_get_account_no_user_for_network() {
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
         None,
+        &UI::default(),
     )
     .await;
     let err = account.unwrap_err();
@@ -128,6 +134,7 @@ async fn test_get_account_failed_to_convert_field_elements() {
         &Utf8PathBuf::from("tests/data/accounts/faulty_accounts_invalid_felt.json"),
         &provider,
         None,
+        &UI::default(),
     )
     .await;
     let err = account1.unwrap_err();

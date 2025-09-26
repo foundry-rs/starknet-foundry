@@ -246,6 +246,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 &config.accounts_file,
                 &provider,
                 config.keystore.as_ref(),
+                ui,
             )
             .await?;
             let manifest_path = assert_manifest_path_exists()?;
@@ -297,6 +298,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 &config.accounts_file,
                 &provider,
                 config.keystore.as_ref(),
+                ui,
             )
             .await?;
 
@@ -345,6 +347,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 &config.accounts_file,
                 &provider,
                 config.keystore.as_ref(),
+                ui,
             )
             .await?;
 
@@ -434,6 +437,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 &config.accounts_file,
                 &provider,
                 config.keystore.as_ref(),
+                ui,
             )
             .await?;
 

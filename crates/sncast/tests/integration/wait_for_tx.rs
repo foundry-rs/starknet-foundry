@@ -40,6 +40,7 @@ async fn test_rejected_transaction() {
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
         None,
+        &UI::default(),
     )
     .await
     .expect("Could not get the account");

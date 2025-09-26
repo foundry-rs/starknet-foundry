@@ -369,6 +369,7 @@ pub fn run(
             &config.accounts_file,
             provider,
             config.keystore.as_ref(),
+            ui,
         ))?)
     };
     let state = StateManager::from(state_file_path)?;
