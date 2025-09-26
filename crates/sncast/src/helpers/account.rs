@@ -1,4 +1,4 @@
-use crate::{NestedMap, build_account, helpers::devnet::DevnetClient};
+use crate::{NestedMap, build_account, helpers::devnet_client::DevnetClient};
 use anyhow::{Result, bail};
 use camino::Utf8PathBuf;
 use starknet::{
@@ -54,7 +54,7 @@ pub fn load_accounts(accounts_file: &Utf8PathBuf) -> Result<Value> {
     Ok(accounts)
 }
 
-pub fn account_exists(
+pub fn account_exists_in_accounts_file(
     account_name: &str,
     network_name: &str,
     accounts_file: &Utf8PathBuf,

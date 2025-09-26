@@ -73,11 +73,13 @@ impl DevnetClient {
         }
     }
 
+    /// Fetches the current Devnet configuration.
     pub async fn get_config(&self) -> Result<Config, Error> {
         self.send_request(DevnetClientMethod::GetConfig, json!({}))
             .await
     }
 
+    /// Fetches the list of predeployed accounts in Devnet.
     pub async fn get_predeployed_accounts(&self) -> Result<Vec<PredeployedAccount>, Error> {
         self.send_request(DevnetClientMethod::GetPredeployedAccounts, json!({}))
             .await
@@ -111,14 +113,4 @@ impl From<&PredeployedAccount> for AccountData {
             account_type: None,
         }
     }
-}
-
-#[tokio::test]
-async fn test_get_config() {
-    // let url = "http://127.0.0.1:5050/rpc";
-    // let client = DevnetClient::new(url);
-
-    // let config = client.get_config().await.expect("sdsd");
-
-    // let predeployed_accounts = client.get_predeployed_accounts().await.expect("sdsd");
 }
