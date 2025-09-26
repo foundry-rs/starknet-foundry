@@ -4,6 +4,7 @@ use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
 use conversions::string::IntoHexStr;
 use core::str;
+use foundry_ui::UI;
 use fs_extra::dir::{CopyOptions, copy};
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
@@ -203,7 +204,9 @@ pub async fn invoke_contract(
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
+        URL,
         None,
+        &UI::default(),
     )
     .await
     .expect("Could not get the account");

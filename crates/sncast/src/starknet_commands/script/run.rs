@@ -284,6 +284,7 @@ pub fn run(
     package_metadata: &PackageMetadata,
     artifacts: &mut HashMap<String, StarknetContractArtifacts>,
     provider: &JsonRpcClient<HttpTransport>,
+    url: &str,
     tokio_runtime: Runtime,
     config: &CastConfig,
     state_file_path: Option<Utf8PathBuf>,
@@ -368,7 +369,9 @@ pub fn run(
             &config.account,
             &config.accounts_file,
             provider,
+            url,
             config.keystore.as_ref(),
+            ui,
         ))?)
     };
     let state = StateManager::from(state_file_path)?;
