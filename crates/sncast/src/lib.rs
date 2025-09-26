@@ -260,8 +260,7 @@ pub async fn get_account<'a>(
     let network_name = chain_id_to_network_name(chain_id);
     let is_devnet_account = is_devnet_account(account);
     let exists_in_accounts_file =
-        account_exists_in_accounts_file(account, &network_name, accounts_file)
-            .expect("Failed to check if account exists in accounts file");
+        account_exists_in_accounts_file(account, &network_name, accounts_file)?;
 
     if is_devnet_account && exists_in_accounts_file {
         ui.println(&WarningMessage::new(format!(
