@@ -573,7 +573,7 @@ impl TraceData {
     }
 
     #[expect(clippy::too_many_arguments)]
-    pub fn exit_nested_call(
+    pub fn update_current_call(
         &mut self,
         execution_resources: ExecutionResources,
         gas_consumed: u64,
@@ -584,25 +584,51 @@ impl TraceData {
         signature: Vec<Felt>,
         events: Vec<OrderedEvent>,
     ) {
-        let CallStackElement {
-            call_trace: last_call,
-            ..
-        } = self.current_call_stack.pop();
+        let current_call = self.current_call_stack.top();
+        let mut current_call = current_call.borrow_mut();
 
-        let mut last_call = last_call.borrow_mut();
-        last_call.used_execution_resources = execution_resources;
-        last_call.gas_consumed = gas_consumed;
-        last_call.used_syscalls_vm_resources = used_syscalls_vm_resources;
-        last_call.used_syscalls_sierra_gas = used_syscalls_sierra_gas;
+        current_call.used_execution_resources = execution_resources;
+        current_call.gas_consumed = gas_consumed;
+        current_call.used_syscalls_vm_resources = used_syscalls_vm_resources;
+        current_call.used_syscalls_sierra_gas = used_syscalls_sierra_gas;
 
-        last_call.used_l1_resources.l2_l1_message_sizes = l2_to_l1_messages
+        current_call.used_l1_resources.l2_l1_message_sizes = l2_to_l1_messages
             .iter()
             .map(|ordered_message| ordered_message.message.payload.0.len())
             .collect();
 
-        last_call.result = result;
-        last_call.signature = signature;
-        last_call.events = events;
+        current_call.result = result;
+        current_call.signature = signature;
+        current_call.events = events;
+    }
+
+    #[expect(clippy::too_many_arguments)]
+    pub fn update_and_exit_nested_call(
+        &mut self,
+        execution_resources: ExecutionResources,
+        gas_consumed: u64,
+        used_syscalls_vm_resources: SyscallUsageMap,
+        used_syscalls_sierra_gas: SyscallUsageMap,
+        result: CallResult,
+        l2_to_l1_messages: &[OrderedL2ToL1Message],
+        signature: Vec<Felt>,
+        events: Vec<OrderedEvent>,
+    ) {
+        self.update_current_call(
+            execution_resources,
+            gas_consumed,
+            used_syscalls_vm_resources,
+            used_syscalls_sierra_gas,
+            result,
+            l2_to_l1_messages,
+            signature,
+            events,
+        );
+        self.exit_nested_call();
+    }
+
+    pub fn exit_nested_call(&mut self) {
+        self.current_call_stack.pop();
     }
 
     pub fn add_deploy_without_constructor_node(&mut self) {
