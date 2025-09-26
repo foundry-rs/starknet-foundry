@@ -1,4 +1,4 @@
-use crate::helpers::constants::{FORK_BLOCK_NUMBER, SEED, SEPOLIA_RPC_URL, URL};
+use crate::helpers::constants::{ACCOUNTS_NUMBER, FORK_BLOCK_NUMBER, SEED, SEPOLIA_RPC_URL, URL};
 use crate::helpers::fixtures::{
     deploy_braavos_account, deploy_cairo_0_account, deploy_keystore_account,
     deploy_latest_oz_account, deploy_ready_account,
@@ -49,7 +49,7 @@ fn start_devnet() {
             "--initial-balance",
             "9999999999999999999999999999999",
             "--accounts",
-            "20",
+            &ACCOUNTS_NUMBER.to_string(),
         ])
         .stdout(Stdio::null())
         .spawn()
