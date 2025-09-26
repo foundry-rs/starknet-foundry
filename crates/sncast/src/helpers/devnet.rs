@@ -19,12 +19,10 @@ pub enum DevnetClientMethod {
     /// The `devnet_getConfig` method.
     #[serde(rename = "devnet_getConfig")]
     GetConfig,
+
     /// The `devnet_getPredeployedAccounts` method.
     #[serde(rename = "devnet_getPredeployedAccounts")]
     GetPredeployedAccounts,
-    /// The `devnet_mint` method.
-    #[serde(rename = "devnet_mint")]
-    Mint,
 }
 
 impl DevnetClient {
