@@ -1,7 +1,8 @@
 use crate::shared_cache::FailedTestsCache;
 use anyhow::Result;
-use forge_runner::TestCaseFilter;
+use forge_runner::package_tests::TestCase;
 use forge_runner::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
+use forge_runner::{TestCaseFilter, TestCaseIsIgnored};
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -9,7 +10,7 @@ pub struct TestsFilter {
     // based on name
     pub(crate) name_filter: NameFilter,
     // based on `#[ignore]` attribute
-    pub(crate) ignored_filter: IgnoredFilter,
+    ignored_filter: IgnoredFilter,
     // based on `--rerun_failed` flag
     last_failed_filter: bool,
     // based on `--skip` flag
@@ -25,7 +26,7 @@ pub(crate) enum NameFilter {
     ExactMatch(String),
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq)]
 pub enum IgnoredFilter {
     NotIgnored,
     Ignored,
@@ -118,8 +119,11 @@ impl TestsFilter {
 }
 
 impl TestCaseFilter for TestsFilter {
-    fn should_be_run(&self, test_case: &TestCaseWithResolvedConfig) -> bool {
-        let ignored = test_case.config.ignored;
+    fn should_be_run<T>(&self, test_case: &TestCase<T>) -> bool
+    where
+        T: TestCaseIsIgnored,
+    {
+        let ignored = test_case.config.is_ignored();
 
         match self.ignored_filter {
             IgnoredFilter::All => true,
