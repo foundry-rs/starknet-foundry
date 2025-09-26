@@ -1,8 +1,7 @@
 use super::CheatnetState;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::non_reverting_execute_call_entry_point;
 use crate::runtime_extensions::{
-    call_to_blockifier_runtime_extension::{
-        execution::entry_point::execute_call_entry_point, panic_data::try_extract_panic_data,
-    },
+    call_to_blockifier_runtime_extension::panic_data::try_extract_panic_data,
     common::create_execute_calldata,
 };
 use blockifier::execution::call_info::ExecutionSummary;
@@ -207,12 +206,11 @@ pub fn call_entry_point(
     starknet_identifier: &AddressOrClassHash,
     remaining_gas: &mut u64,
 ) -> CallResult {
-    let exec_result = execute_call_entry_point(
+    let exec_result = non_reverting_execute_call_entry_point(
         &mut entry_point,
         syscall_handler.base.state,
         cheatnet_state,
         syscall_handler.base.context,
-        false,
         remaining_gas,
     );
 
