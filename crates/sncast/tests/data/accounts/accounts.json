@@ -140,6 +140,11 @@
             "public_key": "0x36a64f9d432cce317c3e50bc467d48f2797463babe8f29c83c2e6125ddd1947",
             "salt": "0x25e7144fce03d200",
             "type": "open_zeppelin"
+        },
+        "devnet-1": {
+            "private_key": "0x0000000000000000000000000000000056c12e097e49ea382ca8eadec0839401",
+            "public_key": "0x048234b9bc6c1e749f4b908d310d8c53dae6564110b05ccf79016dca8ce7dfac",
+            "address": "0x06f4621e7ad43707b3f69f9df49425c3d94fdc5ab2e444bfa0e7e4edeff7992d"
         }
     }
 }

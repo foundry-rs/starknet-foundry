@@ -45,7 +45,7 @@ impl RpcArgs {
     }
 
     #[must_use]
-    fn get_url(&self, config_url: &String) -> Option<String> {
+    pub fn get_url(&self, config_url: &String) -> Option<String> {
         if let Some(network) = self.network {
             let free_provider = FreeProvider::semi_random();
             Some(network.url(&free_provider))
