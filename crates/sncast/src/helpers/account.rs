@@ -6,7 +6,7 @@ use starknet::{
     providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport},
     signers::LocalWallet,
 };
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 
 use crate::{AccountData, read_and_parse_json_file};
@@ -59,13 +59,14 @@ pub fn account_exists_in_accounts_file(
     network_name: &str,
     accounts_file: &Utf8PathBuf,
 ) -> Result<bool> {
-    let items = load_accounts(accounts_file)?;
+    let accounts: HashMap<String, HashMap<String, AccountData>> =
+        read_and_parse_json_file(accounts_file)?;
 
-    if items[network_name].is_null() {
+    if let Some(network_accounts) = accounts.get(network_name) {
+        Ok(network_accounts.contains_key(account_name))
+    } else {
         bail!("Network with name {network_name} does not exist in accounts file");
     }
-
-    Ok(!items[network_name][account_name].is_null())
 }
 
 #[must_use]
