@@ -54,6 +54,20 @@ pub fn load_accounts(accounts_file: &Utf8PathBuf) -> Result<Value> {
     Ok(accounts)
 }
 
+pub fn account_exists_in_accounts_file(
+    account_name: &str,
+    network_name: &str,
+    accounts_file: &Utf8PathBuf,
+) -> Result<bool> {
+    let items = load_accounts(accounts_file)?;
+
+    if items[network_name].is_null() {
+        bail!("Network with name {network_name} does not exist in accounts file");
+    }
+
+    Ok(!items[network_name][account_name].is_null())
+}
+
 #[must_use]
 pub fn is_devnet_account(account: &str) -> bool {
     account.starts_with("devnet-")
