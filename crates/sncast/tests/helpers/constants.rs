@@ -9,6 +9,7 @@ pub const SEPOLIA_RPC_URL: &str = "http://188.34.188.184:7070/rpc/v0_9";
 pub const URL: &str = "http://127.0.0.1:5055/rpc";
 pub const NETWORK: &str = "testnet";
 pub const SEED: u32 = 1_053_545_548;
+pub const ACCOUNTS_NUMBER: u8 = 20;
 
 // Block number used by devnet to fork the Sepolia testnet network in the tests
 pub const FORK_BLOCK_NUMBER: u32 = 721_720;
