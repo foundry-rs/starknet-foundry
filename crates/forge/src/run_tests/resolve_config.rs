@@ -1,15 +1,20 @@
 use super::maat::env_ignore_fork_tests;
-use crate::{block_number_map::BlockNumberMap, scarb::config::ForkTarget};
+use crate::{
+    block_number_map::BlockNumberMap, scarb::config::ForkTarget, test_filter::TestsFilter,
+};
 use anyhow::{Result, anyhow};
 use cheatnet::runtime_extensions::forge_config_extension::config::{
     BlockId, InlineForkConfig, OverriddenForkConfig, RawForkConfig,
 };
 use conversions::byte_array::ByteArray;
-use forge_runner::package_tests::{
-    with_config::TestTargetWithConfig,
-    with_config_resolved::{
-        ResolvedForkConfig, TestCaseResolvedConfig, TestCaseWithResolvedConfig,
-        TestTargetWithResolvedConfig,
+use forge_runner::{
+    TestCaseFilter,
+    package_tests::{
+        with_config::TestTargetWithConfig,
+        with_config_resolved::{
+            ResolvedForkConfig, TestCaseResolvedConfig, TestCaseWithResolvedConfig,
+            TestTargetWithResolvedConfig,
+        },
     },
 };
 use starknet_api::block::BlockNumber;
@@ -19,28 +24,30 @@ pub async fn resolve_config(
     test_target: TestTargetWithConfig,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
+    tests_filter: &TestsFilter,
 ) -> Result<TestTargetWithResolvedConfig> {
     let mut test_cases = Vec::with_capacity(test_target.test_cases.len());
     let env_ignore_fork_tests = env_ignore_fork_tests();
 
     for case in test_target.test_cases {
+        let ignored =
+            case.config.ignored || (env_ignore_fork_tests && case.config.fork_config.is_some());
         test_cases.push(TestCaseWithResolvedConfig {
-            name: case.name,
-            test_details: case.test_details,
             config: TestCaseResolvedConfig {
                 available_gas: case.config.available_gas,
-                ignored: case.config.ignored
-                    || (env_ignore_fork_tests && case.config.fork_config.is_some()),
+                ignored,
+                fork_config: if ignored && tests_filter.should_be_run(&case) {
+                    None
+                } else {
+                    resolve_fork_config(case.config.fork_config, block_number_map, fork_targets)
+                        .await?
+                },
                 expected_result: case.config.expected_result,
-                fork_config: resolve_fork_config(
-                    case.config.fork_config,
-                    block_number_map,
-                    fork_targets,
-                )
-                .await?,
                 fuzzer_config: case.config.fuzzer_config,
                 disable_predeployed_contracts: case.config.disable_predeployed_contracts,
             },
+            name: case.name,
+            test_details: case.test_details,
         });
     }
 
@@ -194,7 +201,8 @@ mod tests {
                     url: Url::parse("https://not_taken.com").expect("Should be valid url"),
                     block_id: BlockId::BlockNumber(120),
                 }],
-                &mut BlockNumberMap::default()
+                &mut BlockNumberMap::default(),
+                &TestsFilter::default(),
             )
             .await
             .is_err()
