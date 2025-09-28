@@ -1,4 +1,6 @@
-use crate::{NestedMap, build_account, helpers::devnet_provider::DevnetProvider};
+use crate::{
+    NestedMap, build_account, check_account_file_exists, helpers::devnet_provider::DevnetProvider,
+};
 use anyhow::{Result, bail};
 use camino::Utf8PathBuf;
 use starknet::{
@@ -54,11 +56,13 @@ pub fn load_accounts(accounts_file: &Utf8PathBuf) -> Result<Value> {
     Ok(accounts)
 }
 
-pub fn account_exists_in_accounts_file(
+pub fn check_account_exists(
     account_name: &str,
     network_name: &str,
     accounts_file: &Utf8PathBuf,
 ) -> Result<bool> {
+    check_account_file_exists(accounts_file)?;
+
     let accounts: HashMap<String, HashMap<String, AccountData>> =
         read_and_parse_json_file(accounts_file)?;
 

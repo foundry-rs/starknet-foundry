@@ -1,6 +1,4 @@
-use crate::helpers::account::{
-    account_exists_in_accounts_file, get_account_from_devnet, is_devnet_account,
-};
+use crate::helpers::account::{check_account_exists, get_account_from_devnet, is_devnet_account};
 use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::response::errors::SNCastProviderError;
 use anyhow::{Context, Error, Result, anyhow, bail};
@@ -259,8 +257,7 @@ pub async fn get_account<'a>(
     let chain_id = get_chain_id(provider).await?;
     let network_name = chain_id_to_network_name(chain_id);
     let is_devnet_account = is_devnet_account(account);
-    let exists_in_accounts_file =
-        account_exists_in_accounts_file(account, &network_name, accounts_file)?;
+    let exists_in_accounts_file = check_account_exists(account, &network_name, accounts_file)?;
 
     if is_devnet_account && exists_in_accounts_file {
         ui.println(&WarningMessage::new(format!(
