@@ -26,7 +26,7 @@ pub enum DevnetProviderMethod {
 }
 
 impl DevnetProvider {
-    /// Constructs a new [`DevnetProvider`] from a transport.
+    /// Constructs a new [`DevnetProvider`] from given url.
     #[must_use]
     pub fn new(url: &str) -> Self {
         let url = Url::parse(url).expect("Invalid URL");
@@ -62,7 +62,7 @@ impl DevnetProvider {
         match res {
             Ok(res_body) => {
                 if let Some(error) = res_body.get("error") {
-                    Err(anyhow::anyhow!("RPC error: {error}"))
+                    Err(anyhow::anyhow!(error.to_string()))
                 } else if let Some(result) = res_body.get("result") {
                     serde_json::from_value(result.clone()).map_err(anyhow::Error::from)
                 } else {
