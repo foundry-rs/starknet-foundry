@@ -1,7 +1,6 @@
 use super::{AttributeInfo, ErrorExt, internal_config_statement::InternalConfigStatementCollector};
 use crate::asserts::assert_is_used_once;
-use crate::attributes::fuzzer::wrapper::FuzzerWrapperCollector;
-use crate::attributes::fuzzer::{FuzzerCollector, FuzzerConfigCollector};
+use crate::common::has_fuzzer_attribute;
 use crate::external_inputs::ExternalInput;
 use crate::utils::create_single_token;
 use crate::{
@@ -13,7 +12,6 @@ use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, qu
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
 use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode, ast::FunctionWithBody};
-use std::ops::Not;
 
 pub struct TestCollector;
 
@@ -55,8 +53,15 @@ fn test_internal(
         None => true,
     };
 
-    let name = func.declaration(db).name(db).as_syntax_node();
-    let name = SyntaxNodeWithDb::new(&name, db);
+    let has_fuzzer = has_fuzzer_attribute(db, func);
+
+    // If there is `#[fuzzer]` attribute, called function is suffixed with `__snforge_internal_fuzzer_generated`
+    // `#[__fuzzer_wrapper]` is responsible for adding this suffix.
+    let called_func_ident = if has_fuzzer {
+        format_ident!("{name}__snforge_internal_fuzzer_generated")
+    } else {
+        format_ident!("{}", name)
+    };
 
     let signature = func.declaration(db).signature(db).as_syntax_node();
     let signature = SyntaxNodeWithDb::new(&signature, db);
@@ -68,11 +73,8 @@ fn test_internal(
     let attributes = func.attributes(db).as_syntax_node();
     let attributes = SyntaxNodeWithDb::new(&attributes, db);
 
-    let name_return_wrapper =
-        format_ident!("{}_return_wrapper", func.declaration(db).name(db).text(db));
-
-    let mut return_wrapper = TokenStream::new(vec![name_return_wrapper.clone()]);
-    return_wrapper.extend(signature);
+    let test_func_ident = format_ident!("{}__snforge_internal_test_generated", name);
+    let func_ident = format_ident!("{}", name);
 
     let out_of_gas = create_single_token("'Out of gas'");
 
@@ -80,7 +82,7 @@ fn test_internal(
         Ok(quote!(
             #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
             #[snforge_internal_test_executable]
-            fn #name(mut _data: Span<felt252>) -> Span::<felt252> {
+            fn #test_func_ident(mut _data: Span<felt252>) -> Span::<felt252> {
                 core::internal::require_implicit::<System>();
                 core::internal::revoke_ap_tracking();
                 core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
@@ -88,7 +90,7 @@ fn test_internal(
                 core::option::OptionTraitImpl::expect(
                     core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
                 );
-                #name_return_wrapper();
+                #called_func_ident();
 
                 let mut arr = ArrayTrait::new();
                 core::array::ArrayTrait::span(@arr)
@@ -96,7 +98,7 @@ fn test_internal(
 
             #attributes
             #[#internal_config]
-            fn #return_wrapper
+            fn #func_ident #signature
             #body
         ))
     } else {
@@ -111,7 +113,7 @@ fn ensure_parameters_only_with_fuzzer_attribute(
     db: &SimpleParserDatabase,
     func: &FunctionWithBody,
 ) -> Result<(), Diagnostic> {
-    if has_parameters(db, func) && no_fuzzer_attribute(db, func) {
+    if has_parameters(db, func) && !has_fuzzer_attribute(db, func) {
         Err(TestCollector::error(
             "function with parameters must have #[fuzzer] attribute",
         ))?;
@@ -127,25 +129,4 @@ fn has_parameters(db: &SimpleParserDatabase, func: &FunctionWithBody) -> bool {
         .elements(db)
         .len()
         != 0
-}
-
-fn no_fuzzer_attribute(db: &SimpleParserDatabase, func: &FunctionWithBody) -> bool {
-    const FUZZER_ATTRIBUTES: [&str; 3] = [
-        FuzzerCollector::ATTR_NAME,
-        FuzzerWrapperCollector::ATTR_NAME,
-        FuzzerConfigCollector::ATTR_NAME,
-    ];
-
-    func.attributes(db)
-        .elements(db)
-        .any(|attr| {
-            FUZZER_ATTRIBUTES.contains(
-                &attr
-                    .attr(db)
-                    .as_syntax_node()
-                    .get_text_without_trivia(db)
-                    .as_str(),
-            )
-        })
-        .not()
 }
