@@ -26,7 +26,7 @@ pub enum DevnetProviderMethod {
 }
 
 impl DevnetProvider {
-    /// Constructs a new [`DevnetProvider`] from a transport.
+    /// Constructs a new [`DevnetProvider`] from given url.
     #[must_use]
     pub fn new(url: &str) -> Self {
         let url = Url::parse(url).expect("Invalid URL");
