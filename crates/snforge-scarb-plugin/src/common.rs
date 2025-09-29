@@ -1,15 +1,15 @@
 use crate::{
     args::Arguments,
     attributes::{
-        AttributeInfo,
-        fuzzer::{FuzzerCollector, FuzzerConfigCollector, wrapper::FuzzerWrapperCollector},
+        fuzzer::{wrapper::FuzzerWrapperCollector, FuzzerCollector, FuzzerConfigCollector},
         test_case::TestCaseCollector,
+        AttributeInfo,
     },
     parse::{parse, parse_args},
 };
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::{TypedSyntaxNode, ast::FunctionWithBody};
+use cairo_lang_syntax::node::{ast::FunctionWithBody, TypedSyntaxNode};
 use cairo_lang_utils::Upcast;
 
 #[expect(clippy::needless_pass_by_value)]

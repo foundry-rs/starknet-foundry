@@ -1587,8 +1587,10 @@ checksum = "c469d952047f47f91b68d1cba3f10d63c11d73e4636f24f08daf0278abf01c4d"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
+ "js-sys",
  "num-traits",
  "serde",
+ "wasm-bindgen",
  "windows-link",
 ]
 
@@ -2649,6 +2651,7 @@ dependencies = [
  "cairo-vm",
  "camino",
  "cheatnet",
+ "chrono",
  "clap",
  "clap_complete",
  "configuration",
@@ -2683,6 +2686,9 @@ dependencies = [
  "test_utils",
  "tokio",
  "toml_edit",
+ "tracing",
+ "tracing-chrome",
+ "tracing-subscriber",
  "universal-sierra-compiler-api",
  "url",
  "walkdir",
@@ -2731,6 +2737,7 @@ dependencies = [
  "strum_macros 0.27.2",
  "tokio",
  "toml_edit",
+ "tracing",
  "universal-sierra-compiler-api",
  "url",
  "which",
@@ -5891,6 +5898,7 @@ dependencies = [
  "tokio",
  "toml",
  "toml_edit",
+ "universal-sierra-compiler-api",
  "url",
  "walkdir",
  "wiremock",
@@ -6741,6 +6749,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.106",
+]
+
+[[package]]
+name = "tracing-chrome"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf0a738ed5d6450a9fb96e86a23ad808de2b727fd1394585da5cdd6788ffe724"
+dependencies = [
+ "serde_json",
+ "tracing-core",
+ "tracing-subscriber",
 ]
 
 [[package]]

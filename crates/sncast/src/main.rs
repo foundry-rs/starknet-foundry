@@ -1,3 +1,4 @@
+use crate::starknet_commands::declare_from::DeclareFrom;
 use crate::starknet_commands::deploy::DeployArguments;
 use crate::starknet_commands::multicall;
 use crate::starknet_commands::script::run_script_command;
@@ -117,6 +118,9 @@ struct Cli {
 enum Commands {
     /// Declare a contract
     Declare(Declare),
+
+    /// Declare a contract by fetching it from a different Starknet instance
+    DeclareFrom(DeclareFrom),
 
     /// Deploy a contract
     Deploy(Deploy),
@@ -280,6 +284,48 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
             process_command_result("declare", result, ui, block_explorer_link);
+
+            Ok(())
+        }
+
+        Commands::DeclareFrom(declare_from) => {
+            let provider = declare_from.rpc.get_provider(&config, ui).await?;
+            let rpc_args = declare_from.rpc.clone();
+            let source_provider = declare_from.source_rpc.get_provider(ui).await?;
+            let account = get_account(
+                &config.account,
+                &config.accounts_file,
+                &provider,
+                config.keystore.as_ref(),
+            )
+            .await?;
+
+            let result = starknet_commands::declare_from::declare_from(
+                declare_from,
+                &account,
+                wait_config,
+                false,
+                &source_provider,
+                ui,
+            )
+            .await
+            .map_err(handle_starknet_command_error)
+            .map(|result| match result {
+                DeclareResponse::Success(declare_transaction_response) => {
+                    declare_transaction_response
+                }
+                DeclareResponse::AlreadyDeclared(_) => {
+                    unreachable!("Argument `skip_on_already_declared` is false")
+                }
+            });
+
+            let block_explorer_link = block_explorer_link_if_allowed(
+                &result,
+                provider.chain_id().await?,
+                &rpc_args,
+                &config,
+            );
+            process_command_result("declare-from", result, ui, block_explorer_link);
 
             Ok(())
         }
