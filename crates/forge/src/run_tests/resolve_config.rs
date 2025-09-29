@@ -14,6 +14,7 @@ use forge_runner::package_tests::{
 };
 use starknet_api::block::BlockNumber;
 
+#[tracing::instrument(skip_all, level = "debug")]
 pub async fn resolve_config(
     test_target: TestTargetWithConfig,
     fork_targets: &[ForkTarget],

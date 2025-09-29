@@ -48,3 +48,4 @@ foundry-ui = { path = "../foundry-ui" }
 strum = "0.27"
 strum_macros = "0.27"
 scarb-oracle-hint-service.workspace = true
+tracing.workspace = true

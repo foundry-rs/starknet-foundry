@@ -1,5 +1,5 @@
 [package]
-name = "fibonacci2"
+name = "fibonacci_docs"
 version.workspace = true
 edition = "2024_07"
 
@@ -10,12 +10,14 @@ test.workspace = true
 snforge.workspace = true
 
 [dependencies]
-subtraction = { path = "../subtraction" }
-starknet.workspace = true
+addition_docs = { path = "../addition_docs" }
+starknet = "2.8.5"
 
 [dev-dependencies]
 snforge_std.workspace = true
 
 [[target.starknet-contract]]
+sierra = true
+build-external-contracts = ["addition_docs::AdditionContract"]
 
-build-external-contracts = ["subtraction::SubtractionContract"]
+[lib]

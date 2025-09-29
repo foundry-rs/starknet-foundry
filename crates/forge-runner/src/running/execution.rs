@@ -10,6 +10,7 @@ use blockifier::transaction::objects::ExecutionResourcesTraits;
 use cairo_vm::vm::runners::cairo_runner::{CairoRunner, ExecutionResources};
 
 // Based on the code from blockifer
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn finalize_execution(
     // region: Modified blockifier code
     runner: &mut CairoRunner,
