@@ -1,5 +1,5 @@
 [package]
-name = "test_case"
+name = "test_case_attr"
 version = "0.1.0"
 edition = "2024_07"
 
