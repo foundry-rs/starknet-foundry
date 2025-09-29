@@ -460,13 +460,11 @@ fn test_case() {
         note: this error originates in the attribute macro: `test`
 
         error: Plugin diagnostic: #[test_case] Expected 2 arguments, but got 3
-         --> [..]/tests/basic.cairo:9:1
         #[test_case(3, 4, 7)]
         ^^^^^^^^^^^^^^^^^^^^^
         note: this error originates in the attribute macro: `test`
 
         error: Plugin diagnostic: #[test_case] Only string literals are allowed for 'name' argument.
-         --> /Users/franciszekjob/Projects/sss/tests/test_contract.cairo:14:1
         #[test_case(name: array![1, 2, 3], 3, 4, 7)]
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         note: this error originates in the attribute macro: `test`
