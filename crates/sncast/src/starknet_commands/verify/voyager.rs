@@ -357,7 +357,7 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
         };
 
         let url = format!(
-            "{}{}/{:#064x}",
+            "{}{}/{:#066x}",
             self.gen_explorer_url(),
             VERIFY_ENDPOINT,
             hash

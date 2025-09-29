@@ -38,7 +38,7 @@ async fn test_happy_case_contract_address() {
     let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
     Mock::given(method("POST"))
-        .and(path(format!("class-verify/{class_hash:#064x}")))
+        .and(path(format!("class-verify/{class_hash:#066x}")))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
         .expect(1)
         .mount(&mock_server)
@@ -83,7 +83,7 @@ async fn test_happy_case_class_hash() {
     let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
     Mock::given(method("POST"))
-        .and(path(format!("class-verify/{class_hash:#068x}")))
+        .and(path(format!("class-verify/{class_hash:#066x}")))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
         .expect(1)
         .mount(&mock_server)
@@ -141,7 +141,7 @@ async fn test_happy_case_with_confirm_verification_flag() {
     let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
     Mock::given(method("POST"))
-        .and(path(format!("class-verify/{class_hash:#068x}")))
+        .and(path(format!("class-verify/{class_hash:#066x}")))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
         .expect(1)
         .mount(&mock_server)
@@ -197,7 +197,7 @@ async fn test_failed_verification_contract_address() {
     let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
     Mock::given(method("POST"))
-        .and(path(format!("class-verify/{class_hash:#068x}")))
+        .and(path(format!("class-verify/{class_hash:#066x}")))
         .respond_with(ResponseTemplate::new(400).set_body_json(json!({ "error": error })))
         .expect(1)
         .mount(&mock_server)
@@ -252,7 +252,7 @@ async fn test_failed_verification_class_hash() {
     let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
     Mock::given(method("POST"))
-        .and(path(format!("class-verify/{class_hash:#068x}")))
+        .and(path(format!("class-verify/{class_hash:#066x}")))
         .respond_with(ResponseTemplate::new(400).set_body_json(json!({ "error": error })))
         .expect(1)
         .mount(&mock_server)
@@ -323,7 +323,7 @@ async fn test_failed_class_hash_lookup() {
     let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
     Mock::given(method("POST"))
-        .and(path(format!("class-verify/{class_hash:#068x}")))
+        .and(path(format!("class-verify/{class_hash:#066x}")))
         .respond_with(ResponseTemplate::new(400))
         .expect(0)
         .mount(&mock_server)
@@ -390,7 +390,7 @@ async fn test_virtual_workspaces() {
     let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
     Mock::given(method("POST"))
-        .and(path(format!("class-verify/{class_hash:#068x}")))
+        .and(path(format!("class-verify/{class_hash:#066x}")))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
         .expect(1)
         .mount(&mock_server)
@@ -443,7 +443,7 @@ async fn test_contract_name_not_found() {
         "license": null
     });
     Mock::given(method("POST"))
-        .and(path(format!("class-verify/{class_hash:#068x}")))
+        .and(path(format!("class-verify/{class_hash:#066x}")))
         .and(body_partial_json(&expected_body))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
         .expect(0)
@@ -545,7 +545,7 @@ async fn test_test_files_flag_includes_test_files() {
 
     // Mock the verification request and verify that test files are included
     Mock::given(method("POST"))
-        .and(path(format!("class-verify/{class_hash:#064x}")))
+        .and(path(format!("class-verify/{class_hash:#066x}")))
         .and(body_partial_json(json!({
             "name": "Map",
             "package_name": "map"
@@ -621,7 +621,7 @@ async fn test_without_test_files_flag_excludes_test_files() {
 
     // Mock the verification request - without --test-files flag, test files should be excluded
     Mock::given(method("POST"))
-        .and(path(format!("class-verify/{class_hash:#064x}")))
+        .and(path(format!("class-verify/{class_hash:#066x}")))
         .and(body_partial_json(json!({
             "name": "Map",
             "package_name": "map"
