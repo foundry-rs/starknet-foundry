@@ -26,7 +26,7 @@ pub(super) fn read_json(path: String) -> Result<Vec<Felt>, EnhancedHintError> {
     let content = read_to_string(&path)?;
 
     let json: Map<String, Value> = serde_json::from_str(&content)
-        .map_err(|e| anyhow!("Parse JSON error: {} , in file {path}", e.to_string()))?;
+        .map_err(|e| anyhow!("Parse JSON error: {e} , in file {path}"))?;
     let data = flatten(&json);
 
     let mut result = vec![];
