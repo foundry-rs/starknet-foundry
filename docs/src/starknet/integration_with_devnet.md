@@ -14,8 +14,7 @@ They are available under specific names - `devnet-1`, `devnet-2`, ..., `devnet-<
 Let's invoke a contract using `devnet-1` account.
 
 ```shell
-$ sncast invoke \
-  --account devnet-1 \
+$ sncast --account devnet-1 invoke \
   --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
   --function "get_balance"
 ```
