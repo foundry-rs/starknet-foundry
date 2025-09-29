@@ -105,8 +105,6 @@ pub async fn get_account_from_devnet<'a>(
         .to_owned();
 
     let account_data = AccountData::from(predeployed_account);
-
     let chain_id = provider.chain_id().await?;
-
     build_account(account_data, chain_id, provider).await
 }
