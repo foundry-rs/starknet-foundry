@@ -16,7 +16,7 @@ use snapbox::cmd::cargo_bin;
 use sncast::AccountType;
 use sncast::helpers::constants::OZ_CLASS_HASH;
 use sncast::helpers::fee::FeeArgs;
-use starknet::core::types::TransactionReceipt::Deploy;
+use starknet::core::types::TransactionReceipt::Invoke;
 use starknet::core::types::{InvokeTransaction, Transaction, TransactionExecutionStatus};
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 use test_case::test_case;
@@ -92,7 +92,7 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let hash = get_transaction_hash(&snapbox.assert().success().get_output().stdout.clone());
     let receipt = get_transaction_receipt(hash).await;
 
-    assert!(matches!(receipt, Deploy(_)));
+    assert!(matches!(receipt, Invoke(_)));
 }
 
 #[test_case(FeeArgs{
@@ -170,8 +170,8 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
     let output = snapbox.assert().success().get_output().stdout.clone();
 
     let hash = get_transaction_hash(&output);
-    let Deploy(receipt) = get_transaction_receipt(hash).await else {
-        panic!("Should be Deploy receipt");
+    let Invoke(receipt) = get_transaction_receipt(hash).await else {
+        panic!("Should be Invoke receipt");
     };
     assert_eq!(
         receipt.execution_result.status(),
@@ -210,7 +210,7 @@ async fn test_happy_case_with_constructor() {
     let hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(hash).await;
 
-    assert!(matches!(receipt, Deploy(_)));
+    assert!(matches!(receipt, Invoke(_)));
 }
 
 #[tokio::test]
@@ -239,7 +239,7 @@ async fn test_happy_case_with_constructor_cairo_expression_calldata() {
     let hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(hash).await;
 
-    assert!(matches!(receipt, Deploy(_)));
+    assert!(matches!(receipt, Invoke(_)));
 }
 
 #[test]

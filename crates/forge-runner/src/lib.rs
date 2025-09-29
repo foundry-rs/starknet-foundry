@@ -103,6 +103,7 @@ pub fn maybe_generate_coverage(
 }
 
 #[must_use]
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn run_for_test_case(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
@@ -137,6 +138,7 @@ pub fn run_for_test_case(
     }
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 fn run_with_fuzzing(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,

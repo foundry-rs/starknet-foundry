@@ -5,6 +5,7 @@ use crate::runtime_extensions::{
     },
     common::create_execute_calldata,
 };
+use blockifier::execution::call_info::ExecutionSummary;
 use blockifier::execution::{
     call_info::CallInfo,
     entry_point::{CallType, EntryPointExecutionResult},
@@ -18,12 +19,12 @@ use blockifier::state::errors::StateError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use conversions::{byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr};
 use shared::utils::build_readable_text;
+use starknet_api::core::EntryPointSelector;
 use starknet_api::execution_resources::GasAmount;
 use starknet_api::{
     contract_class::EntryPointType,
     core::{ClassHash, ContractAddress},
 };
-use starknet_api::{core::EntryPointSelector, transaction::EventContent};
 use starknet_types_core::felt::Felt;
 
 #[derive(Clone, Debug, Default)]
@@ -31,9 +32,8 @@ pub struct UsedResources {
     pub syscall_usage: SyscallUsageMap,
     pub execution_resources: ExecutionResources,
     pub gas_consumed: GasAmount,
-    pub l2_to_l1_payload_lengths: Vec<usize>,
+    pub execution_summary: ExecutionSummary,
     pub l1_handler_payload_lengths: Vec<usize>,
-    pub events: Vec<EventContent>,
 }
 
 /// Enum representing possible call execution result, along with the data
@@ -178,7 +178,7 @@ pub fn call_l1_handler(
     calldata: &[Felt],
 ) -> CallResult {
     let calldata = create_execute_calldata(calldata);
-
+    let mut remaining_gas = i64::MAX as u64;
     let entry_point = CallEntryPoint {
         class_hash: None,
         code_address: Some(*contract_address),
@@ -188,7 +188,7 @@ pub fn call_l1_handler(
         storage_address: *contract_address,
         caller_address: ContractAddress::default(),
         call_type: CallType::Call,
-        initial_gas: i64::MAX as u64,
+        initial_gas: remaining_gas,
     };
 
     call_entry_point(
@@ -196,6 +196,7 @@ pub fn call_l1_handler(
         cheatnet_state,
         entry_point,
         &AddressOrClassHash::ContractAddress(*contract_address),
+        &mut remaining_gas,
     )
 }
 
@@ -204,6 +205,7 @@ pub fn call_entry_point(
     cheatnet_state: &mut CheatnetState,
     mut entry_point: CallEntryPoint,
     starknet_identifier: &AddressOrClassHash,
+    remaining_gas: &mut u64,
 ) -> CallResult {
     let exec_result = execute_call_entry_point(
         &mut entry_point,
@@ -211,6 +213,7 @@ pub fn call_entry_point(
         cheatnet_state,
         syscall_handler.base.context,
         false,
+        remaining_gas,
     );
 
     let result = CallResult::from_execution_result(&exec_result, starknet_identifier);

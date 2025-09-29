@@ -20,6 +20,7 @@ mod forking;
 mod fuzzing;
 mod io_operations;
 mod new;
+mod package_warnings;
 mod plugin_diagnostics;
 mod plugin_versions;
 mod profiles;
