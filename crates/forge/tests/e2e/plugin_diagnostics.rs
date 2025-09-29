@@ -436,3 +436,40 @@ fn different_attributes() {
         );
     }
 }
+
+#[test]
+#[cfg_attr(feature = "skip_plugin_checks", ignore = "Plugin checks skipped")]
+fn test_case() {
+    let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/test_case_attr"));
+    let output = SnapboxCommand::from_std(
+        ScarbCommand::new()
+            .current_dir(temp.path())
+            .args(["build", "--test"])
+            .command(),
+    )
+    .assert()
+    .failure();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        error: Plugin diagnostic: #[test_case] The function must have at least one parameter to use #[test_case] attribute
+         --> [..]/tests/basic.cairo:2:1
+        #[test_case(3, 4, 7)]
+        ^^^^^^^^^^^^^^^^^^^^^
+        note: this error originates in the attribute macro: `test`
+
+        error: Plugin diagnostic: #[test_case] Expected 2 arguments, but got 3
+        #[test_case(3, 4, 7)]
+        ^^^^^^^^^^^^^^^^^^^^^
+        note: this error originates in the attribute macro: `test`
+
+        error: Plugin diagnostic: #[test_case] Only string literals are allowed for 'name' argument.
+        #[test_case(name: array![1, 2, 3], 3, 4, 7)]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        note: this error originates in the attribute macro: `test`
+
+        error: could not compile `test_case_attr_integrationtest` due to previous error
+    "},
+    );
+}
