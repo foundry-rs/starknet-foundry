@@ -455,13 +455,13 @@ fn test_case() {
         indoc! {r"
         error: Plugin diagnostic: #[test_case] The function must have at least one parameter to use #[test_case] attribute
          --> [..]/tests/basic.cairo:2:1
-        #[test_case(1, 2, 3)]
+        #[test_case(3, 4, 7)]
         ^^^^^^^^^^^^^^^^^^^^^
         note: this error originates in the attribute macro: `test`
 
         error: Plugin diagnostic: #[test_case] Expected 2 arguments, but got 3
          --> [..]/tests/basic.cairo:9:1
-        #[test_case(1, 2, 3)]
+        #[test_case(3, 4, 7)]
         ^^^^^^^^^^^^^^^^^^^^^
         note: this error originates in the attribute macro: `test`
 
