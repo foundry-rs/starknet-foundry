@@ -182,7 +182,7 @@ fn deploy_helper(
         syscall_handler.base.context,
         &ctor_context,
         calldata,
-        i64::MAX as u64,
+        &mut (i64::MAX as u64),
     )
     .unwrap();
     cheatnet_state.increment_deploy_salt_base();
@@ -235,6 +235,7 @@ pub fn call_contract(
         cheatnet_state,
         entry_point,
         &AddressOrClassHash::ContractAddress(*contract_address),
+        &mut (i64::MAX as u64),
     )
 }
 
@@ -278,6 +279,7 @@ pub fn call_contract_raw(
         cheatnet_state,
         syscall_hint_processor.base.context,
         false,
+        &mut (i64::MAX as u64),
     )
 }
 

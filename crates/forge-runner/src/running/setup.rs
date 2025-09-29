@@ -30,6 +30,7 @@ pub struct VmExecutionContext<'a> {
 
 // Based on code from https://github.com/starkware-libs/sequencer/blob/e417a9e7d50cbd78065d357763df2fbc2ad41f7c/crates/blockifier/src/execution/entry_point_execution.rs#L122
 // Enough of the logic of this had to be changed that probably it won't be possible to upstream it
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn initialize_execution_context<'a>(
     call: ExecutableCallEntryPoint,
     hints: &'a HashMap<String, Hint>,
