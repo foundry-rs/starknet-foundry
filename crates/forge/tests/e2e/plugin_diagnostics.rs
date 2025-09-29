@@ -440,7 +440,7 @@ fn different_attributes() {
 #[test]
 #[cfg_attr(feature = "skip_plugin_checks", ignore = "Plugin checks skipped")]
 fn test_case() {
-    let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/test_case"));
+    let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/test_case_attr"));
     let output = SnapboxCommand::from_std(
         ScarbCommand::new()
             .current_dir(temp.path())
@@ -469,7 +469,7 @@ fn test_case() {
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         note: this error originates in the attribute macro: `test`
 
-        error: could not compile `test_case_integrationtest` due to previous error
+        error: could not compile `test_case_attr_integrationtest` due to previous error
     "},
     );
 }
