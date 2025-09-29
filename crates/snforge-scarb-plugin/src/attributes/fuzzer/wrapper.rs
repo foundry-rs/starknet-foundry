@@ -67,8 +67,10 @@ fn fuzzer_wrapper_internal(
     let vis = func.visibility(db).as_syntax_node();
     let vis = SyntaxNodeWithDb::new(&vis, db);
 
-    let name = func.declaration(db).name(db).as_syntax_node();
-    let name = SyntaxNodeWithDb::new(&name, db);
+    let name = format_ident!(
+        "{}__snforge_internal_fuzzer_generated",
+        func.declaration(db).name(db).text(db)
+    );
 
     let signature = func.declaration(db).signature(db).as_syntax_node();
     let signature = SyntaxNodeWithDb::new(&signature, db);
@@ -104,8 +106,8 @@ fn fuzzer_wrapper_internal(
         }
     });
 
-    let actual_body_fn_name =
-        format_ident!("{}_actual_body", func.declaration(db).name(db).text(db));
+    let func_name = func.declaration(db).name(db).as_syntax_node();
+    let func_name = SyntaxNodeWithDb::new(&func_name, db);
 
     let (statements, if_content) = get_statements(db, func);
 
@@ -117,17 +119,17 @@ fn fuzzer_wrapper_internal(
                 if snforge_std::_internals::is_config_run() {
                     #if_content
 
-                    #actual_body_fn_name(#blank_values_for_config_run);
+                    #func_name(#blank_values_for_config_run);
 
                     return;
                 }
                 #fuzzer_assignments
-                #actual_body_fn_name(#arguments_list);
+                #func_name(#arguments_list);
             }
 
             #actual_body_fn_attrs
             #[#internal_config_attr]
-            fn #actual_body_fn_name #signature {
+            fn #func_name #signature {
                 #statements
             }
     ))
