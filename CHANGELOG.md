@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.50.0] - 2025-09-29
+
 ### Forge
 
 #### Added
@@ -16,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Minimal supported `Scarb` version is now `2.10.0` (updated from `2.9.1`)
+- Minimal supported `snforge_std` and `snforge_std_deprecated` version is now `0.50.0`
 
 #### Fixed
 

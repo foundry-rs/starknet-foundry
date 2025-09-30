@@ -177,7 +177,7 @@ fn new_scarb_old_macros() {
     assert_stdout_contains(
         output,
         formatdoc! {r"
-            [ERROR] Package snforge_std version does not meet the minimum required version >=0.48.0. Please upgrade snforge_std in Scarb.toml
+            [ERROR] Package snforge_std version does not meet the minimum required version >=0.50.0. Please upgrade snforge_std in Scarb.toml
         ", },
     );
 }

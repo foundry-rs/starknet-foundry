@@ -53,9 +53,9 @@ pub fn print_ignored_snippet_message(snippet: &Snippet) {
 
 fn get_canonical_path(relative_path: &str) -> Result<String> {
     Ok(Utf8PathBuf::from_str(relative_path)
-        .map_err(|e| anyhow!("Failed to create Utf8PathBuf: {}", e))?
+        .map_err(|e| anyhow!("Failed to create Utf8PathBuf: {e}"))?
         .canonicalize_utf8()
-        .map_err(|e| anyhow!("Failed to canonicalize path: {}", e))?
+        .map_err(|e| anyhow!("Failed to canonicalize path: {e}"))?
         .to_string())
 }
 
