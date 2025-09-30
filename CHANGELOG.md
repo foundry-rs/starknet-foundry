@@ -11,7 +11,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
+- Updated the error message returned when calling a nonexistent method on a contract to better align with the format used by the network
+
+### Cast
+
+#### Added
+
+- Debug logging for `sncast` commands that can be enabled by setting `CAST_LOG` env variable.
+
+## [0.50.0] - 2025-09-29
+
+### Forge
+
+#### Added
+
+- `#[test_case]` attribute for parameterized testing. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/parametrized-testing.html)
+
+#### Changed
+
 - Minimal supported `Scarb` version is now `2.10.0` (updated from `2.9.1`)
+- Minimal supported `snforge_std` and `snforge_std_deprecated` version is now `0.50.0`
 
 #### Fixed
 
@@ -26,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-`sncast declare-from` command to declare a contract by fetching it from a different Starknet instance
+- `sncast declare-from` command to declare a contract by fetching it from a different Starknet instance
 
 ## [0.49.0] - 2025-09-03
 

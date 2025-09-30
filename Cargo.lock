@@ -1536,7 +1536,7 @@ checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 
 [[package]]
 name = "cheatnet"
-version = "0.49.0"
+version = "0.50.0"
 dependencies = [
  "anyhow",
  "bimap",
@@ -2355,7 +2355,7 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
 name = "docs"
-version = "0.49.0"
+version = "0.50.0"
 dependencies = [
  "anyhow",
  "camino",
@@ -2697,7 +2697,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.49.0"
+version = "0.50.0"
 dependencies = [
  "anyhow",
  "assert_fs",
@@ -2754,7 +2754,7 @@ dependencies = [
 
 [[package]]
 name = "forge_runner"
-version = "0.49.0"
+version = "0.50.0"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -2812,7 +2812,7 @@ dependencies = [
 
 [[package]]
 name = "foundry-ui"
-version = "0.49.0"
+version = "0.50.0"
 dependencies = [
  "anyhow",
  "console",
@@ -5930,7 +5930,7 @@ dependencies = [
 
 [[package]]
 name = "sncast"
-version = "0.49.0"
+version = "0.50.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5989,6 +5989,9 @@ dependencies = [
  "tokio",
  "toml",
  "toml_edit",
+ "tracing",
+ "tracing-log",
+ "tracing-subscriber",
  "universal-sierra-compiler-api",
  "url",
  "walkdir",

@@ -17,7 +17,7 @@ use starknet_api::{
 };
 use starknet_types_core::felt::Felt;
 
-use super::entry_point::execute_call_entry_point;
+use super::entry_point::{ExecuteCallEntryPointExtraOptions, execute_call_entry_point};
 
 // blockifier/src/execution/syscalls/hint_processor.rs:541 (execute_inner_call)
 #[expect(clippy::result_large_err)]
@@ -36,8 +36,8 @@ pub fn execute_inner_call(
         syscall_handler.base.state,
         cheatnet_state,
         syscall_handler.base.context,
-        true,
         remaining_gas,
+        &ExecuteCallEntryPointExtraOptions::default(),
     )?;
     // endregion
 

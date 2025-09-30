@@ -52,22 +52,18 @@ impl SupportedCalldataKind for ExprUnary {
         };
 
         match self.op(db) {
-            UnaryOperator::Not(_) => bail!(
-                "Invalid unary operator in expression !{} , only - allowed, got !",
-                value
-            ),
-            UnaryOperator::Desnap(_) => bail!(
-                "Invalid unary operator in expression *{} , only - allowed, got *",
-                value
-            ),
-            UnaryOperator::BitNot(_) => bail!(
-                "Invalid unary operator in expression ~{} , only - allowed, got ~",
-                value
-            ),
-            UnaryOperator::At(_) => bail!(
-                "Invalid unary operator in expression @{} , only - allowed, got @",
-                value
-            ),
+            UnaryOperator::Not(_) => {
+                bail!("Invalid unary operator in expression !{value} , only - allowed, got !",)
+            }
+            UnaryOperator::Desnap(_) => {
+                bail!("Invalid unary operator in expression *{value} , only - allowed, got *",)
+            }
+            UnaryOperator::BitNot(_) => {
+                bail!("Invalid unary operator in expression ~{value} , only - allowed, got ~",)
+            }
+            UnaryOperator::At(_) => {
+                bail!("Invalid unary operator in expression @{value} , only - allowed, got @",)
+            }
             UnaryOperator::Minus(_) => {}
         }
 

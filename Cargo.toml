@@ -26,7 +26,7 @@ inherits = "release"
 debug-assertions = true
 
 [workspace.package]
-version = "0.49.0"
+version = "0.50.0"
 edition = "2024"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
@@ -125,3 +125,4 @@ chrono = "0.4.41"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 tracing = "0.1.41"
 tracing-chrome = "0.7.2"
+tracing-log = "0.2.0"

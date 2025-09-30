@@ -75,7 +75,7 @@ fn fails_with_params() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(
-            "#[test] function with parameters must have #[fuzzer] attribute",
+            "#[test] function with parameters must have #[fuzzer] or #[test_case] attribute",
         )],
     );
 }
