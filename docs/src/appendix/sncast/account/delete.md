@@ -1,5 +1,5 @@
 # `delete`
-Delete an account from `accounts-file` and its associated snfoundry profile.
+Delete an account from `accounts-file`.
 
 ## `--name, -n <ACCOUNT_NAME>`
 Required.
