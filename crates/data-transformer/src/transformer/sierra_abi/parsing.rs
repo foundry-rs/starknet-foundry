@@ -68,10 +68,7 @@ pub fn parse_inline_macro(
         Simple(simple) => {
             let macro_name = simple.ident(db).text(db);
             if macro_name != "array" {
-                bail!(
-                    r#"Invalid macro name, expected "array![]", got "{}""#,
-                    macro_name
-                )
+                bail!(r#"Invalid macro name, expected "array![]", got "{macro_name}""#,)
             }
         }
         PathSegment::WithGenericArgs(_) => {
