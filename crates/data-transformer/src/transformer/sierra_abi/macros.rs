@@ -23,10 +23,7 @@ impl SupportedCalldataKind for ExprInlineMacro {
 
         // We do not expect any other expression in proper ABI
         let Expr::Path(path) = parse_expression(expected_type, db)? else {
-            bail!(
-                "Unexpected expression encountered in ABI: {}. ABI may be invalid",
-                expected_type
-            );
+            bail!("Unexpected expression encountered in ABI: {expected_type}. ABI may be invalid",);
         };
 
         let type_parameters_from_abi = path
@@ -68,7 +65,7 @@ impl SupportedCalldataKind for ExprInlineMacro {
 
         // Check by string; A proper array type in ABI looks exactly like this
         if !expected_type.contains("core::array::Array") {
-            bail!(r#"Expected "{}", got array"#, expected_type);
+            bail!(r#"Expected "{expected_type}", got array"#);
         }
 
         // Array should have exactly one type parameter. ABI is invalid otherwise
