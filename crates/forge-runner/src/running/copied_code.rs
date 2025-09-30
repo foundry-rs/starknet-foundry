@@ -60,6 +60,7 @@ pub fn get_call_result(
         TrackedResource::CairoSteps => 0,
         TrackedResource::SierraGas => syscall_handler.base.call.initial_gas - gas,
     };
+
     Ok(CallResult {
         failed,
         retdata: read_execution_retdata(runner, retdata_size, retdata_start)?,

@@ -1,6 +1,6 @@
 use super::{AttributeInfo, ErrorExt, internal_config_statement::InternalConfigStatementCollector};
-use crate::attributes::fuzzer::wrapper::FuzzerWrapperCollector;
-use crate::attributes::fuzzer::{FuzzerCollector, FuzzerConfigCollector};
+use crate::asserts::assert_is_used_once;
+use crate::common::{has_fuzzer_attribute, has_test_case_attribute};
 use crate::external_inputs::ExternalInput;
 use crate::utils::create_single_token;
 use crate::{
@@ -12,7 +12,6 @@ use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, qu
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
 use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode, ast::FunctionWithBody};
-use std::ops::Not;
 
 pub struct TestCollector;
 
@@ -36,8 +35,23 @@ fn test_internal(
     args: Arguments,
     _warns: &mut Vec<Diagnostic>,
 ) -> Result<TokenStream, Diagnostics> {
+    assert_is_used_once::<TestCollector>(db, func)?;
     args.assert_is_empty::<TestCollector>()?;
-    ensure_parameters_only_with_fuzzer_attribute(db, func)?;
+    ensure_parameters_only_with_fuzzer_or_test_case_attribute(db, func)?;
+
+    let has_test_case = has_test_case_attribute(db, func);
+    let has_fuzzer = has_fuzzer_attribute(db, func);
+
+    // If the function has `#[test_case]` attribute and does not have `#[fuzzer]`, we can
+    // safely skip code generation from `#[test]`. It will be handled later by `#[test_case]`.
+    if has_test_case && !has_fuzzer {
+        let func_item = func.as_syntax_node();
+        let func_item = SyntaxNodeWithDb::new(&func_item, db);
+
+        return Ok(quote!(
+            #func_item
+        ));
+    }
 
     let internal_config = create_single_token(InternalConfigStatementCollector::ATTR_NAME);
 
@@ -53,8 +67,16 @@ fn test_internal(
         None => true,
     };
 
-    let name = func.declaration(db).name(db).as_syntax_node();
-    let name = SyntaxNodeWithDb::new(&name, db);
+    let has_fuzzer = has_fuzzer_attribute(db, func);
+
+    // If there is `#[fuzzer]` attribute, called function is suffixed with `__snforge_internal_fuzzer_generated`
+    // `#[__fuzzer_wrapper]` is responsible for adding this suffix.
+    let called_func_ident = if has_fuzzer {
+        format_ident!("{name}__snforge_internal_fuzzer_generated")
+    } else {
+        format_ident!("{name}")
+    };
+    let called_func = TokenStream::new(vec![called_func_ident]);
 
     let signature = func.declaration(db).signature(db).as_syntax_node();
     let signature = SyntaxNodeWithDb::new(&signature, db);
@@ -66,35 +88,23 @@ fn test_internal(
     let attributes = func.attributes(db).as_syntax_node();
     let attributes = SyntaxNodeWithDb::new(&attributes, db);
 
-    let name_return_wrapper =
-        format_ident!("{}_return_wrapper", func.declaration(db).name(db).text(db));
-
-    let mut return_wrapper = TokenStream::new(vec![name_return_wrapper.clone()]);
-    return_wrapper.extend(signature);
-
-    let out_of_gas = create_single_token("'Out of gas'");
+    let test_func = TokenStream::new(vec![format_ident!(
+        "{}__snforge_internal_test_generated",
+        name
+    )]);
+    let func_ident = format_ident!("{}", name);
 
     if should_run_test {
+        let call_args = TokenStream::empty();
+
+        let test_func_with_attrs = test_func_with_attrs(&test_func, &called_func, &call_args);
+
         Ok(quote!(
-            #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
-            #[snforge_internal_test_executable]
-            fn #name(mut _data: Span<felt252>) -> Span::<felt252> {
-                core::internal::require_implicit::<System>();
-                core::internal::revoke_ap_tracking();
-                core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
-
-                core::option::OptionTraitImpl::expect(
-                    core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
-                );
-                #name_return_wrapper();
-
-                let mut arr = ArrayTrait::new();
-                core::array::ArrayTrait::span(@arr)
-            }
+            #test_func_with_attrs
 
             #attributes
             #[#internal_config]
-            fn #return_wrapper
+            fn #func_ident #signature
             #body
         ))
     } else {
@@ -105,13 +115,16 @@ fn test_internal(
     }
 }
 
-fn ensure_parameters_only_with_fuzzer_attribute(
+fn ensure_parameters_only_with_fuzzer_or_test_case_attribute(
     db: &SimpleParserDatabase,
     func: &FunctionWithBody,
 ) -> Result<(), Diagnostic> {
-    if has_parameters(db, func) && no_fuzzer_attribute(db, func) {
+    if has_parameters(db, func)
+        && !has_fuzzer_attribute(db, func)
+        && !has_test_case_attribute(db, func)
+    {
         Err(TestCollector::error(
-            "function with parameters must have #[fuzzer] attribute",
+            "function with parameters must have #[fuzzer] or #[test_case] attribute",
         ))?;
     }
 
@@ -127,23 +140,31 @@ fn has_parameters(db: &SimpleParserDatabase, func: &FunctionWithBody) -> bool {
         != 0
 }
 
-fn no_fuzzer_attribute(db: &SimpleParserDatabase, func: &FunctionWithBody) -> bool {
-    const FUZZER_ATTRIBUTES: [&str; 3] = [
-        FuzzerCollector::ATTR_NAME,
-        FuzzerWrapperCollector::ATTR_NAME,
-        FuzzerConfigCollector::ATTR_NAME,
-    ];
+#[must_use]
+pub fn test_func_with_attrs(
+    test_fn_name: &TokenStream,
+    fn_name: &TokenStream,
+    call_args: &TokenStream,
+) -> TokenStream {
+    let test_fn_name = test_fn_name.clone();
+    let fn_name = fn_name.clone();
+    let call_args = call_args.clone();
+    let out_of_gas = create_single_token("'Out of gas'");
+    quote!(
+        #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+        #[snforge_internal_test_executable]
+        fn #test_fn_name(mut _data: Span<felt252>) -> Span::<felt252> {
+            core::internal::require_implicit::<System>();
+            core::internal::revoke_ap_tracking();
+            core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
 
-    func.attributes(db)
-        .elements(db)
-        .any(|attr| {
-            FUZZER_ATTRIBUTES.contains(
-                &attr
-                    .attr(db)
-                    .as_syntax_node()
-                    .get_text_without_trivia(db)
-                    .as_str(),
-            )
-        })
-        .not()
+            core::option::OptionTraitImpl::expect(
+                core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
+            );
+            #fn_name (#call_args);
+
+            let mut arr = ArrayTrait::new();
+            core::array::ArrayTrait::span(@arr)
+        }
+    )
 }
