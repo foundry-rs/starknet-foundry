@@ -9,9 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- `#[test_case]` attribute for parameterized testing. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/parametrized-testing.html)
+
 #### Changed
 
 - Minimal supported `Scarb` version is now `2.10.0` (updated from `2.9.1`)
+
+#### Fixed
+
+- [`core::testing::get_available_gas`](https://docs.starknet.io/build/corelib/core-testing-get_available_gas) now works correctly in snforge tests
 
 #### Removed
 
@@ -22,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-`sncast declare-from` command to declare a contract by fetching it from a different Starknet instance
+- `sncast declare-from` command to declare a contract by fetching it from a different Starknet instance
 
 ## [0.49.0] - 2025-09-03
 

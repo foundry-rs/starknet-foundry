@@ -22,6 +22,7 @@ url = "=2.5.4"
 indoc = "=2.0.5"
 smol_str = "=0.3.2"
 num-bigint = "=0.4.6"
+regex = "1.11.1"
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
 
 [dev-dependencies]

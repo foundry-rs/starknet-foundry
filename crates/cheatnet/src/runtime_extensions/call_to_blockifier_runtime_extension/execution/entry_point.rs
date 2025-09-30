@@ -2,7 +2,7 @@ use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
-use crate::runtime_extensions::common::{get_relocated_vm_trace, get_syscalls_gas_consumed, sum_syscall_usage};
+use crate::runtime_extensions::common::{get_relocated_vm_trace, sum_syscall_usage};
 use crate::state::CheatStatus;
 use blockifier::execution::call_info::{CallExecution, Retdata, StorageAccessTracker};
 use crate::runtime_extensions::forge_runtime_extension::{get_nested_calls_syscalls_sierra_gas, get_nested_calls_syscalls_vm_resources};
@@ -196,11 +196,10 @@ pub fn execute_call_entry_point(
             syscall_usage_sierra_gas,
             vm_trace,
         }) => {
-            remove_syscall_resources_and_exit_non_error_call(
+            exit_non_error_call(
                 &call_info,
                 &syscall_usage_vm_resources,
                 &syscall_usage_sierra_gas,
-                context,
                 cheatnet_state,
                 vm_trace,
                 cheated_data.tx_info.signature.unwrap_or_default(),
@@ -301,37 +300,18 @@ fn call_info_from_pre_execution_error(
     }
 }
 
-fn remove_syscall_resources_and_exit_non_error_call(
+fn exit_non_error_call(
     call_info: &CallInfo,
     syscall_usage_vm_resources: &SyscallUsageMap,
     syscall_usage_sierra_gas: &SyscallUsageMap,
-    context: &mut EntryPointExecutionContext,
     cheatnet_state: &mut CheatnetState,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
     signature: Vec<Felt>,
 ) {
-    let versioned_constants = context.tx_context.block_context.versioned_constants();
-    // We don't want the syscall resources to pollute the results
-    let mut resources = call_info.resources.clone();
-    let mut gas_consumed = call_info.execution.gas_consumed;
-
-    // Remove resources consumed by syscalls from the current call
-    // `syscall_usage_vm_resources` and `syscall_usage_sierra_gas` are flat, meaning they only include syscalls from the specific call
-    resources -=
-        &versioned_constants.get_additional_os_syscall_resources(syscall_usage_vm_resources);
-    gas_consumed -= get_syscalls_gas_consumed(syscall_usage_sierra_gas, versioned_constants);
-
-    // Below syscall usages are cumulative.
     let nested_syscall_usage_vm_resources =
         get_nested_calls_syscalls_vm_resources(&cheatnet_state.trace_data.current_call_stack.top());
     let nested_syscall_usage_sierra_gas =
         get_nested_calls_syscalls_sierra_gas(&cheatnet_state.trace_data.current_call_stack.top());
-
-    // Remove resources consumed by syscalls from nested calls
-    resources -= &versioned_constants
-        .get_additional_os_syscall_resources(&nested_syscall_usage_vm_resources);
-    gas_consumed -=
-        get_syscalls_gas_consumed(&nested_syscall_usage_sierra_gas, versioned_constants);
 
     let syscall_usage_vm_resources = sum_syscall_usage(
         nested_syscall_usage_vm_resources,
@@ -341,8 +321,8 @@ fn remove_syscall_resources_and_exit_non_error_call(
         sum_syscall_usage(nested_syscall_usage_sierra_gas, syscall_usage_sierra_gas);
 
     cheatnet_state.trace_data.exit_nested_call(
-        resources,
-        gas_consumed,
+        call_info.resources.clone(),
+        call_info.execution.gas_consumed,
         syscall_usage_vm_resources,
         syscall_usage_sierra_gas,
         CallResult::from_non_error(call_info),
