@@ -126,7 +126,7 @@ pub async fn run(
                 });
             }
             Some(unsupported) => {
-                anyhow::bail!("Unsupported call type found = {}", unsupported);
+                anyhow::bail!("Unsupported call type found = {unsupported}");
             }
             None => anyhow::bail!("Field `call_type` is missing in a call specification"),
         }
