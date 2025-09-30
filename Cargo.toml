@@ -33,8 +33,10 @@ license = "MIT"
 license-file = "LICENSE"
 
 [workspace.dependencies]
+# TODO(#3770) Use blockifier directly
 blockifier = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.14.0", features = ["testing", "tracing"] }
 bigdecimal = "0.4.8"
+# TODO(#3770) Use starknet_api directly
 starknet_api = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.14.0" }
 cairo-lang-casm = { version = "2.12.3", features = ["serde"] }
 cairo-lang-sierra = "2.12.3"
