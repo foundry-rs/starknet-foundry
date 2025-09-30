@@ -11,6 +11,7 @@ use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
 use configuration::load_config;
+use conversions::byte_array::ByteArray;
 use data_transformer::transform;
 use foundry_ui::components::warning::WarningMessage;
 use foundry_ui::{Message, UI};
@@ -24,17 +25,17 @@ use sncast::helpers::scarb_utils::{
 };
 use sncast::response::cast_message::SncastMessage;
 use sncast::response::command::CommandResponse;
-use sncast::response::declare::DeclareResponse;
-use sncast::response::errors::ResponseError;
+use sncast::response::declare::{DeclareResponse, DeployCommandMessage};
 use sncast::response::errors::handle_starknet_command_error;
+use sncast::response::errors::{ResponseError, StarknetCommandError};
 use sncast::response::explorer_link::{ExplorerLinksMessage, block_explorer_link_if_allowed};
 use sncast::response::transformed_call::transform_response;
 use sncast::{
-    ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
-    get_contract_class,
+    ErrorData, ValidatedWaitParams, WaitForTx, get_account, get_block_id,
+    get_class_hash_by_address, get_contract_class,
 };
 use starknet::core::types::ContractClass;
-use starknet::core::types::contract::AbiEntry;
+use starknet::core::types::contract::{AbiEntry, CompiledClass, SierraClass};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
 use starknet_commands::verify::Verify;
@@ -262,10 +263,24 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             )
             .expect("Failed to build contract");
 
-            let result = starknet_commands::declare::declare(
-                declare,
+            let contract_artifacts = artifacts.get(&declare.contract).ok_or(
+                StarknetCommandError::ContractArtifactsNotFound(ErrorData {
+                    data: ByteArray::from(declare.contract.as_str()),
+                }),
+            )?;
+
+            let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
+                .context("Failed to parse sierra artifact")?;
+            let casm_contract_definition: CompiledClass =
+                serde_json::from_str(&contract_artifacts.casm)
+                    .context("Failed to parse casm artifact")?;
+
+            let result = starknet_commands::declare::declare_with_artifacts(
+                contract_definition.clone(),
+                casm_contract_definition,
+                declare.fee_args,
+                declare.nonce,
                 &account,
-                &artifacts,
                 wait_config,
                 false,
                 ui,
@@ -283,7 +298,34 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
+
+            let deploy_command_message = if let Ok(response) = &result {
+                // maybe_print_deploy_command(
+                // contract_definition.abi,
+                // response,
+                // &config.account,
+                // &config.accounts_file,
+                // rpc.get_url(&config.url).as_deref(),
+                // rpc.network.as_ref(),
+                // ui,
+                // );
+                Some(DeployCommandMessage::new(
+                    &contract_definition.abi,
+                    response,
+                    &config.account,
+                    &config.accounts_file,
+                    rpc.get_url(&config.url).as_deref(),
+                    rpc.network.as_ref(),
+                ))
+            } else {
+                None
+            };
+
             process_command_result("declare", result, ui, block_explorer_link);
+
+            if let Some(deploy_command_message) = deploy_command_message {
+                ui.println(&deploy_command_message?);
+            }
 
             Ok(())
         }
