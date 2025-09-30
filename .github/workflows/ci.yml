@@ -18,20 +18,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
-      - uses: software-mansion/setup-scarb@v1
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - uses: ./.github/actions/setup-rust-llvm
       - run: cargo test --profile ci --lib -p forge
 
   build-test-forge-nextest-archive:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: ./.github/actions/setup-rust-llvm
+        with:
+          setup-scarb: 'false'
+          setup-usc: 'false'
       - name: Install nextest
         uses: taiki-e/install-action@v2
         with:
@@ -46,11 +43,13 @@ jobs:
 
   build-test-forge-nextest-archive-native:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-rust-llvm
+        with:
+          install-llvm: 'true'
+          setup-scarb: 'false'
+          setup-usc: 'false'
       - name: Install nextest
         uses: taiki-e/install-action@v2
         with:
@@ -65,7 +64,7 @@ jobs:
 
   test-forge-integration:
     name: Test Forge / Integration Tests
-    runs-on: [ubuntu-latest]
+    runs-on: [ ubuntu-latest ]
     needs: [ build-test-forge-nextest-archive ]
     strategy:
       fail-fast: false
@@ -73,10 +72,7 @@ jobs:
         partition: [ 1, 2, 3 ]
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
-      - uses: software-mansion/setup-scarb@v1
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - uses: ./.github/actions/setup-rust-llvm
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
@@ -123,11 +119,8 @@ jobs:
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: ./.github/actions/setup-rust-llvm
       - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
-      - uses: software-mansion/setup-scarb@v1
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
@@ -174,11 +167,8 @@ jobs:
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: ./.github/actions/setup-rust-llvm
       - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
-      - uses: software-mansion/setup-scarb@v1
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
@@ -193,9 +183,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - uses: ./.github/actions/setup-rust-llvm
+        with:
+          setup-scarb: 'false'
       - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
       - run: cargo test --profile ci --package forge e2e::plugin_versions
       - run: cargo test --profile ci --package forge e2e::plugin_diagnostics
@@ -205,9 +195,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - uses: ./.github/actions/setup-rust-llvm
+        with:
+          setup-scarb: 'false'
 
       - run: cargo test --profile ci --package forge --features no_scarb_installed --lib compatibility_check::tests::failing_tool_not_installed
 
@@ -223,10 +213,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
-      - uses: software-mansion/setup-scarb@v1
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - uses: ./.github/actions/setup-rust-llvm
 
       - run: cargo test --profile ci --package forge --features interact-with-state --test main integration::interact_with_state
       - run: cargo test --profile ci --package forge --features interact-with-state --test main e2e::running::test_interact_with_state
@@ -236,8 +223,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: ./.github/actions/setup-rust-llvm
       - run: cargo test --profile ci -p forge_runner
 
   test-cheatnet:
@@ -245,10 +231,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
-      - uses: software-mansion/setup-scarb@v1
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - uses: ./.github/actions/setup-rust-llvm
       - name: Run Cheatnet tests
         run: cargo test --profile ci -p cheatnet
 
@@ -257,8 +240,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: ./.github/actions/setup-rust-llvm
       - name: Run Data Transformer tests
         run: cargo test --profile ci -p data-transformer
 
@@ -267,10 +249,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
-      - uses: software-mansion/setup-scarb@v1
-      - uses: software-mansion/setup-universal-sierra-compiler@58146c4184fa6ec5e8aaf02309ab85e35f782ed0 # v1.0.0
+      - uses: ./.github/actions/setup-rust-llvm
       - name: Run Forge Debugging tests
         run: cargo test --profile ci -p forge --features debugging --test main e2e::debugging
 
@@ -279,10 +258,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
-      - uses: software-mansion/setup-scarb@v1
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - uses: ./.github/actions/setup-rust-llvm
       - name: Run Forge Scarb Plugin tests
         working-directory: crates/snforge-scarb-plugin
         run: cargo test --profile ci
@@ -292,10 +268,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
-      - uses: software-mansion/setup-scarb@v1
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - uses: ./.github/actions/setup-rust-llvm
       - name: Run Forge Scarb Plugin tests
         working-directory: crates/snforge-scarb-plugin-deprecated
         run: cargo test --profile ci
@@ -305,11 +278,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: ./.github/actions/setup-rust-llvm
       - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
-      - uses: software-mansion/setup-scarb@v1
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run tests
         run: cargo test --profile ci -p sncast
 
@@ -318,8 +288,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: ./.github/actions/setup-rust-llvm
+        with:
+          setup-scarb: 'false'
+          setup-usc: 'false'
       - name: Run tests
         run: cargo test --profile ci -p conversions
 
@@ -328,8 +300,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: ./.github/actions/setup-rust-llvm
+        with:
+          setup-scarb: 'false'
+          setup-usc: 'false'
       - run: cargo test --profile ci -p shared
 
   test-scarb-api:
@@ -337,10 +311,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
-      - uses: software-mansion/setup-scarb@v1
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - uses: ./.github/actions/setup-rust-llvm
       - run: cargo test --profile ci -p scarb-api
 
   scarbfmt:
@@ -387,6 +358,10 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-rust-llvm
+        with:
+          install-llvm: 'true'
+          setup-scarb: 'false'
+          setup-usc: 'false'
       - run: cargo lint
 
       - name: Lint snforge-scarb-plugin
@@ -404,10 +379,7 @@ jobs:
       MDBOOK_VERSION: 0.4.52
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
-      - uses: software-mansion/setup-scarb@v1
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - uses: ./.github/actions/setup-rust-llvm
       - name: Install mdBook
         run: |
           cargo install --version ${MDBOOK_VERSION} mdbook
