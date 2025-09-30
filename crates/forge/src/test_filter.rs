@@ -118,6 +118,7 @@ impl TestsFilter {
     }
 }
 
+#[cfg(test)]
 impl Default for TestsFilter {
     fn default() -> Self {
         Self {
