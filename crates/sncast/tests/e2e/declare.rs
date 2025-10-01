@@ -498,7 +498,7 @@ fn test_scarb_no_casm_artifact() {
         Transaction Hash: [..]
 
         To deploy a contract of this class, run:
-        sncast --accounts-file accounts.json --account user1 deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
+        sncast --accounts-file [..]accounts.json --account user1 deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
         "},
     );
 }
@@ -635,7 +635,7 @@ async fn test_no_scarb_profile() {
             transaction: [..]
 
             To deploy a contract of this class, run:
-            sncast --accounts-file accounts.json --account user8 deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
+            sncast --accounts-file [..]accounts.json --account user8 deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
         "},
     );
 }

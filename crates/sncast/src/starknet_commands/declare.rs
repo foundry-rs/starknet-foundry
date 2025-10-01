@@ -25,7 +25,7 @@ use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-#[derive(Args)]
+#[derive(Args, Clone)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
 pub struct Declare {
     /// Contract name

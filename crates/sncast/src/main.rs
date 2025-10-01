@@ -35,7 +35,7 @@ use sncast::{
     get_class_hash_by_address, get_contract_class,
 };
 use starknet::core::types::ContractClass;
-use starknet::core::types::contract::{AbiEntry, CompiledClass, SierraClass};
+use starknet::core::types::contract::{AbiEntry, SierraClass};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
 use starknet_commands::verify::Verify;
@@ -263,24 +263,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             )
             .expect("Failed to build contract");
 
-            let contract_artifacts = artifacts.get(&declare.contract).ok_or(
-                StarknetCommandError::ContractArtifactsNotFound(ErrorData {
-                    data: ByteArray::from(declare.contract.as_str()),
-                }),
-            )?;
-
-            let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
-                .context("Failed to parse sierra artifact")?;
-            let casm_contract_definition: CompiledClass =
-                serde_json::from_str(&contract_artifacts.casm)
-                    .context("Failed to parse casm artifact")?;
-
-            let result = starknet_commands::declare::declare_with_artifacts(
-                contract_definition.clone(),
-                casm_contract_definition,
-                declare.fee_args,
-                declare.nonce,
+            let result = starknet_commands::declare::declare(
+                declare.clone(),
                 &account,
+                &artifacts,
                 wait_config,
                 false,
                 ui,
@@ -300,6 +286,15 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
 
             let deploy_command_message = if let Ok(response) = &result {
+                let contract_artifacts = artifacts.get(&declare.contract.clone()).ok_or(
+                    StarknetCommandError::ContractArtifactsNotFound(ErrorData {
+                        data: ByteArray::from(declare.contract.as_str()),
+                    }),
+                )?;
+                let contract_definition: SierraClass =
+                    serde_json::from_str(&contract_artifacts.sierra)
+                        .context("Failed to parse sierra artifact")?;
+
                 Some(DeployCommandMessage::new(
                     &contract_definition.abi,
                     response,
