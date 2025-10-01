@@ -16,17 +16,14 @@ pub struct DevnetProvider {
 /// All Devnet-RPC methods as listed in the official docs.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum DevnetProviderMethod {
-    /// The `devnet_getConfig` method.
     #[serde(rename = "devnet_getConfig")]
     GetConfig,
 
-    /// The `devnet_getPredeployedAccounts` method.
     #[serde(rename = "devnet_getPredeployedAccounts")]
     GetPredeployedAccounts,
 }
 
 impl DevnetProvider {
-    /// Constructs a new [`DevnetProvider`] from given url.
     #[must_use]
     pub fn new(url: &str) -> Self {
         let url = Url::parse(url).expect("Invalid URL");
