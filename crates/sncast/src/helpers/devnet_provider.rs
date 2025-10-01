@@ -1,6 +1,6 @@
 use crate::AccountData;
 use ::serde::{Deserialize, Serialize, de::DeserializeOwned};
-use anyhow::Error;
+use anyhow::{Context, Error};
 use reqwest::Client;
 use serde_json::json;
 use starknet_types_core::felt::Felt;
@@ -52,7 +52,7 @@ impl DevnetProvider {
             }))
             .send()
             .await
-            .expect("Error occurred during request")
+            .context("Error occurred during request")?
             .json::<serde_json::Value>()
             .await;
 
