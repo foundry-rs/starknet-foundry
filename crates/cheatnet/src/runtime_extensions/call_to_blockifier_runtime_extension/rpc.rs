@@ -1,10 +1,10 @@
 use super::CheatnetState;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::non_reverting_execute_call_entry_point;
 use crate::runtime_extensions::{
-    call_to_blockifier_runtime_extension::{
-        execution::entry_point::execute_call_entry_point, panic_data::try_extract_panic_data,
-    },
+    call_to_blockifier_runtime_extension::panic_data::try_extract_panic_data,
     common::create_execute_calldata,
 };
+use blockifier::execution::call_info::ExecutionSummary;
 use blockifier::execution::{
     call_info::CallInfo,
     entry_point::{CallType, EntryPointExecutionResult},
@@ -18,12 +18,12 @@ use blockifier::state::errors::StateError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use conversions::{byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr};
 use shared::utils::build_readable_text;
+use starknet_api::core::EntryPointSelector;
 use starknet_api::execution_resources::GasAmount;
 use starknet_api::{
     contract_class::EntryPointType,
     core::{ClassHash, ContractAddress},
 };
-use starknet_api::{core::EntryPointSelector, transaction::EventContent};
 use starknet_types_core::felt::Felt;
 
 #[derive(Clone, Debug, Default)]
@@ -31,9 +31,8 @@ pub struct UsedResources {
     pub syscall_usage: SyscallUsageMap,
     pub execution_resources: ExecutionResources,
     pub gas_consumed: GasAmount,
-    pub l2_to_l1_payload_lengths: Vec<usize>,
+    pub execution_summary: ExecutionSummary,
     pub l1_handler_payload_lengths: Vec<usize>,
-    pub events: Vec<EventContent>,
 }
 
 /// Enum representing possible call execution result, along with the data
@@ -207,12 +206,11 @@ pub fn call_entry_point(
     starknet_identifier: &AddressOrClassHash,
     remaining_gas: &mut u64,
 ) -> CallResult {
-    let exec_result = execute_call_entry_point(
+    let exec_result = non_reverting_execute_call_entry_point(
         &mut entry_point,
         syscall_handler.base.state,
         cheatnet_state,
         syscall_handler.base.context,
-        false,
         remaining_gas,
     );
 

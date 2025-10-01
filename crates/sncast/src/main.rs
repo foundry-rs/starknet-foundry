@@ -211,7 +211,35 @@ impl From<DeployArguments> for Arguments {
     }
 }
 
+fn init_logging() {
+    use std::io;
+    use std::io::IsTerminal;
+    use tracing_log::LogTracer;
+    use tracing_subscriber::filter::{EnvFilter, LevelFilter};
+    use tracing_subscriber::fmt::Layer;
+    use tracing_subscriber::fmt::time::Uptime;
+    use tracing_subscriber::prelude::*;
+
+    let fmt_layer = Layer::new()
+        .with_writer(io::stderr)
+        .with_ansi(io::stderr().is_terminal())
+        .with_timer(Uptime::default())
+        .with_filter(
+            EnvFilter::builder()
+                .with_default_directive(LevelFilter::WARN.into())
+                .with_env_var("SNCAST_LOG")
+                .from_env_lossy(),
+        );
+
+    LogTracer::init().expect("could not initialize log tracer");
+
+    tracing::subscriber::set_global_default(tracing_subscriber::registry().with(fmt_layer))
+        .expect("could not set up global logger");
+}
+
 fn main() -> Result<()> {
+    init_logging();
+
     let cli = Cli::parse();
 
     let output_format = output_format_from_json_flag(cli.json);

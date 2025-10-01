@@ -5,7 +5,7 @@ use sncast::helpers::{
 };
 use starknet::macros::felt;
 
-use crate::helpers::constants::{ACCOUNTS_NUMBER, SEED, URL};
+use crate::helpers::constants::{DEVNET_ACCOUNTS_NUMBER, DEVNET_SEED, URL};
 
 #[tokio::test]
 async fn test_get_config() {
@@ -16,8 +16,8 @@ async fn test_get_config() {
         .expect("Failed to get config");
 
     assert!(config.account_contract_class_hash == OZ_CLASS_HASH);
-    assert!(config.seed == SEED);
-    assert!(config.total_accounts == ACCOUNTS_NUMBER);
+    assert!(config.seed == DEVNET_SEED);
+    assert!(config.total_accounts == DEVNET_ACCOUNTS_NUMBER);
 }
 
 #[tokio::test]
@@ -28,7 +28,7 @@ async fn test_get_predeployed_accounts() {
         .await
         .expect("Failed to get predeployed accounts");
 
-    assert!(predeployed_accounts.len().to_u8().unwrap() == ACCOUNTS_NUMBER);
+    assert!(predeployed_accounts.len().to_u8().unwrap() == DEVNET_ACCOUNTS_NUMBER);
 
     let first_account = &predeployed_accounts[0];
     let expected_first_account = PredeployedAccount {

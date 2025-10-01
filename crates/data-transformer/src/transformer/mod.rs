@@ -55,9 +55,7 @@ fn process(
 
     ensure!(
         n_inputs == n_arguments,
-        "Invalid number of arguments: passed {}, expected {}",
-        n_arguments,
-        n_inputs,
+        "Invalid number of arguments: passed {n_arguments}, expected {n_inputs}",
     );
 
     function

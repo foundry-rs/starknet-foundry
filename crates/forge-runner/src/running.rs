@@ -7,7 +7,9 @@ use anyhow::{Result, bail};
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
-use blockifier::execution::entry_point_execution::{prepare_call_arguments, run_entry_point};
+use blockifier::execution::entry_point_execution::{
+    extract_vm_resources, prepare_call_arguments, run_entry_point,
+};
 use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::state::cached_state::CachedState;
 use cairo_vm::Felt252;
@@ -288,11 +290,15 @@ pub fn run_test_case(
                 tracked_resource,
             )?;
 
-            // TODO(#3292) this can be done better, we can take gas directly from call info
-            let vm_resources_without_inner_calls = runner
-                .get_execution_resources()
-                .expect("Execution resources missing")
-                .filter_unused_builtins();
+            // TODO(#3744): Confirm if this is needed for the profiler
+            let vm_resources_without_inner_calls = extract_vm_resources(
+                &runner,
+                &forge_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler,
+            )?;
 
             add_resources_to_top_call(
                 &mut forge_runtime,
@@ -335,34 +341,38 @@ pub fn run_test_case(
         .clone();
 
     let transaction_context = get_context(&forge_runtime).tx_context.clone();
-    let used_resources =
-        get_all_used_resources(forge_runtime, &transaction_context, tracked_resource);
-    let gas_used = calculate_used_gas(
-        &transaction_context,
-        &mut cached_state,
-        used_resources.clone(),
-    )?;
 
     let fork_data = cached_state
         .state
         .fork_state_reader
+        .as_ref()
         .map(|fork_state_reader| ForkData::new(&fork_state_reader.compiled_contract_class_map()))
         .unwrap_or_default();
 
     Ok(match result {
-        Ok(result) => RunResult::Completed(Box::new(RunCompleted {
-            status: if result.execution.failed {
-                RunStatus::Panic(result.execution.retdata.0)
-            } else {
-                RunStatus::Success(result.execution.retdata.0)
-            },
-            call_trace: call_trace_ref,
-            gas_used,
-            used_resources,
-            encountered_errors,
-            fuzzer_args,
-            fork_data,
-        })),
+        Ok(result) => {
+            let used_resources =
+                get_all_used_resources(&result, &call_trace_ref, &transaction_context);
+            let gas_used = calculate_used_gas(
+                &transaction_context,
+                &mut cached_state,
+                used_resources.clone(),
+            )?;
+
+            RunResult::Completed(Box::new(RunCompleted {
+                status: if result.execution.failed {
+                    RunStatus::Panic(result.execution.retdata.0)
+                } else {
+                    RunStatus::Success(result.execution.retdata.0)
+                },
+                call_trace: call_trace_ref,
+                gas_used,
+                used_resources,
+                encountered_errors,
+                fuzzer_args,
+                fork_data,
+            }))
+        }
         Err(error) => RunResult::Error(RunError {
             error: Box::new(error),
             call_trace: call_trace_ref,
