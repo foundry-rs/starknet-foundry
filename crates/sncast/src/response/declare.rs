@@ -224,11 +224,7 @@ fn generate_constructor_placeholder_args(constructor: AbiConstructor) -> String 
     constructor
         .inputs
         .into_iter()
-        .map(|input| {
-            let input_name = input.name;
-            let input_type = input.r#type;
-            format!("<{input_name} ({input_type})>")
-        })
+        .map(|input| format!("<{}>", input.name))
         .collect::<Vec<String>>()
         .join(", ")
 }
