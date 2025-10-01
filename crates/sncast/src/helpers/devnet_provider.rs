@@ -1,6 +1,6 @@
 use crate::AccountData;
 use ::serde::{Deserialize, Serialize, de::DeserializeOwned};
-use anyhow::Error;
+use anyhow::{Context, Error};
 use reqwest::Client;
 use serde_json::json;
 use starknet_types_core::felt::Felt;
@@ -16,17 +16,14 @@ pub struct DevnetProvider {
 /// All Devnet-RPC methods as listed in the official docs.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum DevnetProviderMethod {
-    /// The `devnet_getConfig` method.
     #[serde(rename = "devnet_getConfig")]
     GetConfig,
 
-    /// The `devnet_getPredeployedAccounts` method.
     #[serde(rename = "devnet_getPredeployedAccounts")]
     GetPredeployedAccounts,
 }
 
 impl DevnetProvider {
-    /// Constructs a new [`DevnetProvider`] from given url.
     #[must_use]
     pub fn new(url: &str) -> Self {
         let url = Url::parse(url).expect("Invalid URL");
@@ -55,7 +52,7 @@ impl DevnetProvider {
             }))
             .send()
             .await
-            .expect("Error occurred during request")
+            .context("Error occurred during request")?
             .json::<serde_json::Value>()
             .await;
 
