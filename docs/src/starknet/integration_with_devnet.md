@@ -7,7 +7,7 @@
 When you start `starknet-devnet`, it automatically predeploys some contracts, including set of accounts with known details (read more about them [here](https://0xspaceshard.github.io/starknet-devnet/docs/predeployed)).
 
 You can use these accounts directly in `sncast` without needing to import them. 
-They are available under specific names - `devnet-1`, `devnet-2`, ..., `devnet-<N>` (where N is the number of predeployed accounts, by default it's 20). 
+They are available under specific names - `devnet-1`, `devnet-2`, ..., `devnet-<N>` (where N is the number of predeployed accounts, by default it's 10). 
 
 ### Example
 
