@@ -216,7 +216,7 @@ impl Message for DeployCommandMessage {
     }
 
     fn json(&self) -> Value {
-        todo!()
+        json!(self)
     }
 }
 

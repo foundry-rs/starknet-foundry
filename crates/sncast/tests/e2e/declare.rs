@@ -57,6 +57,9 @@ async fn test_happy_case_human_readable() {
         To see declaration details, visit:
         class: https://[..]
         transaction: https://[..]
+
+        To deploy a contract of this class, run:
+        sncast --accounts-file accounts.json --account my_account deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
     " },
     );
 }
@@ -493,6 +496,9 @@ fn test_scarb_no_casm_artifact() {
 
         Class Hash: [..]
         Transaction Hash: [..]
+
+        To deploy a contract of this class, run:
+        sncast --accounts-file accounts.json --account user1 deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
         "},
     );
 }
@@ -627,6 +633,9 @@ async fn test_no_scarb_profile() {
             To see declaration details, visit:
             class: [..]
             transaction: [..]
+
+            To deploy a contract of this class, run:
+            sncast --accounts-file accounts.json --account user8 deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
         "},
     );
 }
