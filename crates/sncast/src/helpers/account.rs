@@ -95,7 +95,7 @@ pub async fn get_account_from_devnet<'a>(
         Err(err) => {
             if err.to_string().contains("Method not found") {
                 bail!(
-                    "The provided node is not a Devnet instance. Devnet accounts can only be used with Devnet nodes."
+                    "The provided network is not a Devnet instance. Devnet accounts can only be used with Devnet."
                 )
             }
             return Err(err);
