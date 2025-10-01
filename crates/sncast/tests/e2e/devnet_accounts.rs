@@ -120,7 +120,7 @@ pub async fn account_name_already_exists() {
 }
 
 #[tokio::test]
-pub async fn use_devnet_account_with_node_not_being_devnet() {
+pub async fn use_devnet_account_with_network_not_being_devnet() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
     let args = vec![
@@ -144,7 +144,7 @@ pub async fn use_devnet_account_with_node_not_being_devnet() {
         output,
         indoc! {
             "
-            Error: {\"code\":-32601,\"message\":\"Method not found\"}
+            Error: The provided network is not a Devnet instance. Devnet accounts can only be used with Devnet.
             "
         },
     );
