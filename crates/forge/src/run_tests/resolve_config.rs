@@ -30,12 +30,11 @@ pub async fn resolve_config(
     let env_ignore_fork_tests = env_ignore_fork_tests();
 
     for case in test_target.test_cases {
-        let ignored =
-            case.config.ignored || (env_ignore_fork_tests && case.config.fork_config.is_some());
         test_cases.push(TestCaseWithResolvedConfig {
             config: TestCaseResolvedConfig {
                 available_gas: case.config.available_gas,
-                ignored,
+                ignored: case.config.ignored
+                    || (env_ignore_fork_tests && case.config.fork_config.is_some()),
                 fork_config: if tests_filter.should_be_run(&case) {
                     resolve_fork_config(case.config.fork_config, block_number_map, fork_targets)
                         .await?
@@ -218,6 +217,16 @@ mod tests {
             Some(RawForkConfig::Named("non_existent".into())),
         )]);
 
+        let tests_filter = TestsFilter::from_flags(
+            None,
+            false,
+            Vec::new(),
+            false,
+            true,
+            false,
+            FailedTestsCache::default(),
+        );
+
         assert!(
             resolve_config(
                 mocked_tests,
@@ -227,7 +236,7 @@ mod tests {
                     BlockId::BlockNumber(120)
                 )],
                 &mut BlockNumberMap::default(),
-                &TestsFilter::default(),
+                &tests_filter,
             )
             .await
             .is_err()
@@ -285,7 +294,15 @@ mod tests {
             BlockId::BlockNumber(100),
         )];
 
-        let tests_filter = TestsFilter::default();
+        let tests_filter = TestsFilter::from_flags(
+            None,
+            false,
+            Vec::new(),
+            false,
+            true,
+            false,
+            FailedTestsCache::default(),
+        );
 
         let resolved = resolve_config(
             test_target,
@@ -551,7 +568,15 @@ mod tests {
         );
 
         let test_target = create_test_target_with_cases(vec![test_case]);
-        let tests_filter = TestsFilter::default();
+        let tests_filter = TestsFilter::from_flags(
+            None,
+            false,
+            Vec::new(),
+            false,
+            true,
+            false,
+            FailedTestsCache::default(),
+        );
 
         let resolved = resolve_config(
             test_target,
@@ -591,7 +616,15 @@ mod tests {
             BlockId::BlockNumber(100),
         )];
 
-        let tests_filter = TestsFilter::default();
+        let tests_filter = TestsFilter::from_flags(
+            None,
+            false,
+            Vec::new(),
+            false,
+            true,
+            false,
+            FailedTestsCache::default(),
+        );
 
         let resolved = resolve_config(
             test_target,
