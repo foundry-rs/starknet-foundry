@@ -85,13 +85,12 @@ pub(crate) fn execute_entry_point_call_cairo1(
         &args,
         program_extra_data_length,
     )
-    .map_err(|source| {
+    .inspect_err(|_| {
         extract_trace_and_register_errors(
-            source,
             class_hash,
             &mut runner,
             cheatable_runtime.extension.cheatnet_state,
-        )
+        );
     })?;
 
     let trace = get_relocated_vm_trace(&mut runner);
@@ -128,6 +127,9 @@ pub(crate) fn execute_entry_point_call_cairo1(
             .cheatnet_state
             .register_error(class_hash, pcs);
     }
+    cheatnet_state
+        .trace_data
+        .set_vm_trace_for_current_call(trace);
 
     let (syscall_usage_vm_resources, syscall_usage_sierra_gas) = match tracked_resource {
         TrackedResource::CairoSteps => (syscall_usage, SyscallUsageMap::default()),
@@ -138,7 +140,6 @@ pub(crate) fn execute_entry_point_call_cairo1(
         call_info,
         syscall_usage_vm_resources,
         syscall_usage_sierra_gas,
-        vm_trace: Some(trace),
     })
     // endregion
 }

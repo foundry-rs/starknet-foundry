@@ -1,3 +1,4 @@
+use anyhow::Context;
 use clap::{Args, Subcommand};
 
 pub mod new;
@@ -50,7 +51,7 @@ pub async fn multicall(
         }
         starknet_commands::multicall::Commands::Run(run) => {
             let provider = run.rpc.get_provider(&config, ui).await?;
-            let url = run.rpc.get_url(&config.url).expect("Failed to get url");
+            let url = run.rpc.get_url(&config.url).context("Failed to get url")?;
 
             let account = get_account(
                 &config.account,
