@@ -36,7 +36,7 @@ fn start_devnet() {
         }
     }
 
-    Command::new("/Users/franciszekjob/Downloads/starknet-devnet-0.6.0")
+    Command::new("starknet-devnet")
         .args([
             "--port",
             &port,
