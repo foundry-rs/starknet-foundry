@@ -300,15 +300,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
 
             let deploy_command_message = if let Ok(response) = &result {
-                // maybe_print_deploy_command(
-                // contract_definition.abi,
-                // response,
-                // &config.account,
-                // &config.accounts_file,
-                // rpc.get_url(&config.url).as_deref(),
-                // rpc.network.as_ref(),
-                // ui,
-                // );
                 Some(DeployCommandMessage::new(
                     &contract_definition.abi,
                     response,
