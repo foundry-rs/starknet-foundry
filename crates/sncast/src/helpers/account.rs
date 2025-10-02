@@ -90,6 +90,7 @@ pub async fn get_account_from_devnet<'a>(
 
     let devnet_provider = DevnetProvider::new(url);
     devnet_provider.ensure_alive().await?;
+
     let devnet_config = devnet_provider.get_config().await;
     let devnet_config = match devnet_config {
         Ok(config) => config,
