@@ -1,12 +1,11 @@
 use crate::Network;
 use crate::helpers::{
-    block_explorer::LinkProvider, configuration::CastConfig, devnet, rpc::RpcArgs,
+    block_explorer::LinkProvider, configuration::CastConfig, devnet,
 };
 use foundry_ui::Message;
 use serde::Serialize;
 use serde_json::{Value, json};
 use starknet_types_core::felt::Felt;
-use url::Url;
 
 const SNCAST_FORCE_SHOW_EXPLORER_LINKS_ENV: &str = "SNCAST_FORCE_SHOW_EXPLORER_LINKS";
 

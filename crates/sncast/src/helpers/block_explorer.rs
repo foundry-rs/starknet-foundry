@@ -37,9 +37,8 @@ pub trait LinkProvider {
 
 const fn network_subdomain(network: Network) -> &'static str {
     match network {
-        Network::Mainnet => "",
         Network::Sepolia => "sepolia.",
-        Network::Devnet => "",
+        Network::Mainnet | Network::Devnet => "",
     }
 }
 

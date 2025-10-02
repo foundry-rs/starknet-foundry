@@ -16,8 +16,7 @@ pub struct RpcArgs {
     pub url: Option<String>,
 
     /// Use predefined network with a public provider. Note that this option may result in rate limits or other unexpected behavior.
-    /// For devnet, attempts to auto-detect running starknet-devnet instances or falls back to http://localhost:5050.
-    /// If auto-detection fails or you're using a custom devnet address, use --url instead.
+    /// For devnet, attempts to auto-detect running starknet-devnet instance. If auto-detection fails, use --url instead.
     #[arg(long)]
     pub network: Option<Network>,
 }

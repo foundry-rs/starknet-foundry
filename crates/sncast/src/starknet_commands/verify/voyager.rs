@@ -392,7 +392,7 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
             Err(_) => match self.network {
                 Network::Mainnet => "https://api.voyager.online/beta".to_string(),
                 Network::Sepolia => "https://sepolia-api.voyager.online/beta".to_string(),
-                Network::Devnet => "".to_string(),
+                Network::Devnet => String::new(),
             },
         }
     }

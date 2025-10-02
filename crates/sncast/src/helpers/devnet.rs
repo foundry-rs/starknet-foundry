@@ -2,10 +2,12 @@ use std::net::TcpStream;
 use std::time::Duration;
 
 /// Detects devnet by scanning running processes for starknet-devnet and extracting the port
+#[must_use]
 pub fn detect_devnet_url() -> String {
     detect_devnet_from_processes().unwrap_or_else(|| "http://localhost:5050".to_string())
 }
 
+#[must_use]
 pub fn is_devnet_running() -> bool {
     detect_devnet_from_processes().is_some()
 }
@@ -13,13 +15,13 @@ pub fn is_devnet_running() -> bool {
 /// Detects devnet by scanning running processes for starknet-devnet and extracting the port
 fn detect_devnet_from_processes() -> Option<String> {
     if let Some(port) = find_devnet_process_port() {
-        return Some(format!("http://localhost:{}", port));
+        return Some(format!("http://localhost:{port}"));
     }
 
     let common_ports = [5050, 5000, 8545, 3000, 8000];
     for &port in &common_ports {
         if is_port_reachable("localhost", port) {
-            return Some(format!("http://localhost:{}", port));
+            return Some(format!("http://localhost:{port}"));
         }
     }
 
@@ -29,7 +31,7 @@ fn detect_devnet_from_processes() -> Option<String> {
 fn find_devnet_process_port() -> Option<u16> {
     use std::process::Command;
 
-    let output = Command::new("ps").args(&["aux"]).output().ok()?;
+    let output = Command::new("ps").args(["aux"]).output().ok()?;
     let ps_output = String::from_utf8_lossy(&output.stdout);
 
     for line in ps_output.lines() {
@@ -72,7 +74,7 @@ fn try_lsof_for_port(pid: u32) -> Option<u16> {
     use std::process::Command;
 
     let output = Command::new("lsof")
-        .args(&["-P", "-p", &pid.to_string(), "-i"])
+        .args(["-P", "-p", &pid.to_string(), "-i"])
         .output()
         .ok()?;
 
@@ -81,7 +83,7 @@ fn try_lsof_for_port(pid: u32) -> Option<u16> {
     for line in lsof_output.lines() {
         if line.contains("TCP") && line.contains("LISTEN") {
             if let Some(port_part) = line.split_whitespace().last() {
-                if let Some(port_str) = port_part.split(':').last() {
+                if let Some(port_str) = port_part.split(':').next_back() {
                     if let Ok(port) = port_str.parse::<u16>() {
                         return Some(port);
                     }
@@ -150,11 +152,8 @@ fn extract_port_from_cmdline(cmdline: &str) -> Option<u16> {
 }
 
 fn is_port_reachable(host: &str, port: u16) -> bool {
-    if let Ok(addr) = format!("{}:{}", host, port).parse() {
-        match TcpStream::connect_timeout(&addr, Duration::from_millis(50)) {
-            Ok(_) => true,
-            Err(_) => false,
-        }
+    if let Ok(addr) = format!("{host}:{port}").parse() {
+        TcpStream::connect_timeout(&addr, Duration::from_millis(50)).is_ok()
     } else {
         false
     }
