@@ -137,11 +137,11 @@ impl OutputLink for DeclareTransactionResponse {
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct DeployCommandMessage {
-    pub accounts_file: Option<String>,
-    pub account: String,
-    pub class_hash: PaddedFelt,
-    pub arguments: Option<String>,
-    pub network_flag: String,
+    accounts_file: Option<String>,
+    account: String,
+    class_hash: PaddedFelt,
+    arguments: Option<String>,
+    network_flag: String,
 }
 
 impl DeployCommandMessage {
