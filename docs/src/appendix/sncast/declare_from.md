@@ -1,4 +1,4 @@
-# `declare`
+# `declare-from`
 Declare a contract by fetching it from a different Starknet instance.
 
 ## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
