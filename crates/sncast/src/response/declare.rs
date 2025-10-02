@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_json::json;
 use starknet::core::types::contract::{AbiConstructor, AbiEntry};
+use std::fmt::Write;
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeclareTransactionResponse {
     pub class_hash: PaddedFelt,
@@ -153,32 +154,19 @@ impl DeployCommandMessage {
         rpc_url: Option<&str>,
         network: Option<&Network>,
     ) -> Result<Self, Error> {
-        let mut constructor_entries = abi
-            .iter()
-            .filter(|e| matches!(e, AbiEntry::Constructor { .. }));
-        let first = constructor_entries.next();
-
-        if constructor_entries.next().is_some() {
-            unreachable!("Multiple constructor entries found in ABI");
-        }
-
-        let arguments = if let Some(AbiEntry::Constructor(constructor)) = first {
-            let args = generate_constructor_placeholder_args(constructor.clone());
-            if args.is_empty() { None } else { Some(args) }
-        } else {
-            None
-        };
-
+        let arguments = abi.iter().find_map(|entry| {
+            if let AbiEntry::Constructor(constructor) = entry {
+                let args = generate_constructor_placeholder_args(constructor.clone());
+                (!args.is_empty()).then_some(args)
+            } else {
+                None
+            }
+        });
         let network_flag = generate_network_flag(rpc_url, network);
-
-        let accounts_file = if accounts_file
-            .to_string()
-            .contains("starknet_accounts/starknet_open_zeppelin_accounts.json")
-        {
-            None
-        } else {
-            Some(accounts_file.to_string())
-        };
+        let accounts_file_str = accounts_file.to_string();
+        let accounts_file = (!accounts_file_str
+            .contains("starknet_accounts/starknet_open_zeppelin_accounts.json"))
+        .then_some(accounts_file_str);
 
         Ok(Self {
             account: account.to_string(),
@@ -192,21 +180,25 @@ impl DeployCommandMessage {
 
 impl Message for DeployCommandMessage {
     fn text(&self) -> String {
-        let command = "sncast";
-        let command = self.accounts_file.as_ref().map_or_else(
-            || command.to_string(),
-            |file| format!("{command} --accounts-file {file}"),
-        );
-        let command = format!("{command} --account {}", self.account);
-        let command = format!(
-            "{command} deploy --class-hash {}",
+        let mut command = String::from("sncast");
+
+        if let Some(file) = &self.accounts_file {
+            write!(command, " --accounts-file {file}").unwrap();
+        }
+
+        write!(command, " --account {}", self.account).unwrap();
+        write!(
+            command,
+            " deploy --class-hash {}",
             self.class_hash.into_hex_string()
-        );
-        let command = self.arguments.as_ref().map_or_else(
-            || command.to_string(),
-            |arguments| format!("{command} --arguments '{arguments}'",),
-        );
-        let command = format!("{command} {}", self.network_flag);
+        )
+        .unwrap();
+
+        if let Some(arguments) = &self.arguments {
+            write!(command, " --arguments '{arguments}'").unwrap();
+        }
+
+        write!(command, " {}", self.network_flag).unwrap();
 
         formatdoc!(
             "
