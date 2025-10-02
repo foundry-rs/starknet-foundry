@@ -12,6 +12,7 @@ use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
 use configuration::load_config;
 use data_transformer::transform;
+use foundry_ui::components::error::ErrorMessage;
 use foundry_ui::components::warning::WarningMessage;
 use foundry_ui::{Message, UI};
 use shared::auto_completions::{Completions, generate_completions};
@@ -211,6 +212,11 @@ impl From<DeployArguments> for Arguments {
     }
 }
 
+pub enum ExitStatus {
+    Success,
+    Failure,
+}
+
 fn init_logging() {
     use std::io;
     use std::io::IsTerminal;
@@ -237,7 +243,7 @@ fn init_logging() {
         .expect("could not set up global logger");
 }
 
-fn main() -> Result<()> {
+fn main() {
     init_logging();
 
     let cli = Cli::parse();
@@ -248,16 +254,42 @@ fn main() -> Result<()> {
 
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
-    if let Commands::Script(script) = &cli.command {
-        run_script_command(&cli, runtime, script, &ui)
+    let result: Result<ExitStatus> = if let Commands::Script(script) = &cli.command {
+        match run_script_command(&cli, runtime, script, &ui) {
+            Ok(status) => Ok(status),
+            Err(error) => {
+                ui.println(&ErrorMessage::<String>::from(error));
+                Ok(ExitStatus::Failure)
+            }
+        }
     } else {
-        let config = get_cast_config(&cli, &ui)?;
-        runtime.block_on(run_async_command(cli, config, &ui))
+        match get_cast_config(&cli, &ui) {
+            Ok(config) => match runtime.block_on(run_async_command(cli, config, &ui)) {
+                Ok(status) => Ok(status),
+                Err(error) => {
+                    ui.println(&ErrorMessage::<String>::from(error));
+                    Ok(ExitStatus::Failure)
+                }
+            },
+            Err(error) => {
+                ui.println(&ErrorMessage::<String>::from(error));
+                Ok(ExitStatus::Failure)
+            }
+        }
+    };
+
+    match result {
+        Ok(ExitStatus::Success) => std::process::exit(0),
+        Ok(ExitStatus::Failure) => std::process::exit(1),
+        Err(error) => {
+            ui.println(&ErrorMessage::<String>::from(error));
+            std::process::exit(2);
+        }
     }
 }
 
 #[expect(clippy::too_many_lines)]
-async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> {
+async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<ExitStatus> {
     let wait_config = WaitForTx {
         wait: cli.wait,
         wait_params: config.wait_params,
@@ -311,9 +343,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
-            process_command_result("declare", result, ui, block_explorer_link);
+            let status = process_command_result("declare", result, ui, block_explorer_link);
 
-            Ok(())
+            Ok(status)
         }
 
         Commands::DeclareFrom(declare_from) => {
@@ -353,9 +385,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 &rpc_args,
                 &config,
             );
-            process_command_result("declare-from", result, ui, block_explorer_link);
+            let status = process_command_result("declare-from", result, ui, block_explorer_link);
 
-            Ok(())
+            Ok(status)
         }
 
         Commands::Deploy(deploy) => {
@@ -400,9 +432,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
-            process_command_result("deploy", result, ui, block_explorer_link);
+            let status = process_command_result("deploy", result, ui, block_explorer_link);
 
-            Ok(())
+            Ok(status)
         }
 
         Commands::Call(Call {
@@ -433,15 +465,15 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             .await
             .map_err(handle_starknet_command_error);
 
-            if let Some(transformed_result) =
+            let status = if let Some(transformed_result) =
                 transform_response(&result, &contract_class, &selector)
             {
-                process_command_result("call", Ok(transformed_result), ui, None);
+                process_command_result("call", Ok(transformed_result), ui, None)
             } else {
-                process_command_result("call", result, ui, None);
-            }
+                process_command_result("call", result, ui, None)
+            };
 
-            Ok(())
+            Ok(status)
         }
 
         Commands::Invoke(invoke) => {
@@ -489,13 +521,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
 
-            process_command_result("invoke", result, ui, block_explorer_link);
+            let status = process_command_result("invoke", result, ui, block_explorer_link);
 
-            Ok(())
+            Ok(status)
         }
 
         Commands::Utils(utils) => {
-            utils::utils(
+            match utils::utils(
                 utils,
                 config,
                 ui,
@@ -503,13 +535,34 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 cli.profile.clone().unwrap_or("release".to_string()),
             )
             .await
+            {
+                Ok(_) => Ok(ExitStatus::Success),
+                Err(e) => {
+                    ui.println(&ErrorMessage::from(e));
+                    Ok(ExitStatus::Failure)
+                }
+            }
         }
 
         Commands::Multicall(multicall) => {
-            multicall::multicall(multicall, config, ui, wait_config).await
+            match multicall::multicall(multicall, config, ui, wait_config).await {
+                Ok(_) => Ok(ExitStatus::Success),
+                Err(e) => {
+                    ui.println(&ErrorMessage::from(e));
+                    Ok(ExitStatus::Failure)
+                }
+            }
         }
 
-        Commands::Account(account) => account::account(account, config, ui, wait_config).await,
+        Commands::Account(account) => {
+            match account::account(account, config, ui, wait_config).await {
+                Ok(_) => Ok(ExitStatus::Success),
+                Err(e) => {
+                    ui.println(&ErrorMessage::from(e));
+                    Ok(ExitStatus::Failure)
+                }
+            }
+        }
 
         Commands::ShowConfig(show) => {
             let provider = show.rpc.get_provider(&config, ui).await.ok();
@@ -522,9 +575,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             )
             .await;
 
-            process_command_result("show-config", result, ui, None);
+            let status = process_command_result("show-config", result, ui, None);
 
-            Ok(())
+            Ok(status)
         }
 
         Commands::TxStatus(tx_status) => {
@@ -535,8 +588,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     .await
                     .context("Failed to get transaction status");
 
-            process_command_result("tx-status", result, ui, None);
-            Ok(())
+            let status = process_command_result("tx-status", result, ui, None);
+            Ok(status)
         }
 
         Commands::Verify(verify) => {
@@ -562,8 +615,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             )
             .await;
 
-            process_command_result("verify", result, ui, None);
-            Ok(())
+            let status = process_command_result("verify", result, ui, None);
+            Ok(status)
         }
 
         Commands::Completions(completions) => {
@@ -579,7 +632,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 ui.println(&format!("# {}", message.text()));
             }
 
-            Ok(())
+            Ok(ExitStatus::Success)
         }
 
         Commands::Script(_) => unreachable!(),
@@ -637,7 +690,8 @@ fn process_command_result<T>(
     result: Result<T>,
     ui: &UI,
     block_explorer_link: Option<ExplorerLinksMessage>,
-) where
+) -> ExitStatus
+where
     T: CommandResponse,
     SncastMessage<T>: Message,
 {
@@ -652,10 +706,12 @@ fn process_command_result<T>(
             if let Some(link) = block_explorer_link {
                 ui.println(&link);
             }
+            ExitStatus::Success
         }
         Err(err) => {
             let err = ResponseError::new(command.to_string(), format!("{err:#}"));
             ui.eprintln(&err);
+            ExitStatus::Failure
         }
     }
 }
