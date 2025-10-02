@@ -1,11 +1,12 @@
-# Calculate contract class hash
+# `class-hash`
+Calculate the class hash of a contract.
 
-## Overview
-Use the `sncast utils class-hash` command to calculate the class hash of a contract.
+## `--contract-name <CONTRACT_NAME>`
+Required.
 
-## Examples
+The name of the contract. The contract name is the part after the `mod` keyword in your contract file.
 
-### General Example
+## General Example
 
 ```shell
 $ sncast utils \
