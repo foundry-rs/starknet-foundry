@@ -5,7 +5,7 @@ use sncast::helpers::{
 };
 use starknet::macros::felt;
 
-use crate::helpers::constants::{DEVNET_ACCOUNTS_NUMBER, DEVNET_SEED, URL};
+use crate::helpers::constants::{DEVNET_ACCOUNTS_NUMBER, DEVNET_SEED, SEPOLIA_RPC_URL, URL};
 
 #[tokio::test]
 async fn test_get_config() {
@@ -39,4 +39,28 @@ async fn test_get_predeployed_accounts() {
     assert!(first_account.address == expected_first_account.address);
     assert!(first_account.private_key == expected_first_account.private_key);
     assert!(first_account.public_key == expected_first_account.public_key);
+}
+
+#[tokio::test]
+async fn test_is_alive_happy_case() {
+    let devnet_provider = DevnetProvider::new(URL);
+    devnet_provider
+        .ensure_alive()
+        .await
+        .expect("Failed to ensure the devnet is alive");
+}
+
+#[tokio::test]
+async fn test_is_alive_fails_on_sepolia_node() {
+    let devnet_provider = DevnetProvider::new(SEPOLIA_RPC_URL);
+    let res = devnet_provider.ensure_alive().await;
+    assert!(res.is_err(), "Expected an error");
+
+    let err = res.unwrap_err().to_string();
+    assert!(
+        err == format!(
+            "Node at {SEPOLIA_RPC_URL} is not responding to the Devnet health check (GET `/is_alive`). It may not be a Devnet instance or it may be down."
+        ),
+        "Unexpected error message: {err}"
+    );
 }
