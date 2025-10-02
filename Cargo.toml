@@ -33,26 +33,28 @@ license = "MIT"
 license-file = "LICENSE"
 
 [workspace.dependencies]
-blockifier = { version = "0.15.0-rc.3", features = ["testing", "tracing"] }
+# TODO(#3770) Use blockifier directly
+blockifier = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.14.0", features = ["testing", "tracing"] }
 bigdecimal = "0.4.8"
-starknet_api = "0.15.0-rc.3"
-cairo-lang-casm = { version = "=2.12.0", features = ["serde"] }
-cairo-lang-sierra = "=2.12.0"
-cairo-lang-utils = "=2.12.0"
-cairo-lang-starknet = "=2.12.0"
-cairo-lang-filesystem = "=2.12.0"
-cairo-lang-diagnostics = "=2.12.0"
-cairo-lang-sierra-type-size = "=2.12.0"
-cairo-lang-syntax = "=2.12.0"
-cairo-lang-test-plugin = "=2.12.0"
-cairo-lang-starknet-classes = "=2.12.0"
-cairo-lang-parser = "=2.12.0"
-cairo-lang-sierra-to-casm = "=2.12.0"
-cairo-vm = "=2.3.1"
-cairo-annotations = "0.5.2"
+# TODO(#3770) Use starknet_api directly
+starknet_api = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.14.0" }
+cairo-lang-casm = { version = "2.12.3", features = ["serde"] }
+cairo-lang-sierra = "2.12.3"
+cairo-lang-utils = "2.12.3"
+cairo-lang-starknet = "2.12.3"
+cairo-lang-filesystem = "2.12.3"
+cairo-lang-diagnostics = "2.12.3"
+cairo-lang-sierra-type-size = "2.12.3"
+cairo-lang-syntax = "2.12.3"
+cairo-lang-test-plugin = "2.12.3"
+cairo-lang-starknet-classes = "2.12.3"
+cairo-lang-parser = "2.12.3"
+cairo-lang-sierra-to-casm = "2.12.3"
+cairo-vm = "2.5.0"
+cairo-annotations = { version = "0.6.1", features = ["cairo-lang"] }
 dirs = "6.0.0"
 dialoguer = "0.11.0"
-starknet-types-core = { version = "0.1.8", features = ["hash", "prime-bigint"] }
+starknet-types-core = { version = "0.2.2", features = ["hash", "prime-bigint"] }
 anyhow = "1.0.97"
 assert_fs = "1.1.2"
 camino = { version = "1.1.9", features = ["serde1"] }
@@ -68,8 +70,8 @@ rayon = "1.10"
 regex = "1.11.1"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "ea064f0b51655e4c7b3d382315f0d83cfa17393b" }
-starknet-crypto = "0.7.4"
+starknet = "0.17.0"
+starknet-crypto = "0.8.1"
 tempfile = "3.20.0"
 thiserror = "2.0.12"
 ctor = "0.4.1"
@@ -120,7 +122,7 @@ derive_more = { version = "2.0.1", features = ["display"] }
 paste = "1.0.15"
 strum = "0.27"
 strum_macros = "0.27"
-scarb-oracle-hint-service = { git = "https://github.com/software-mansion/scarb", rev = "210da8dfd0b370f0f1970b33a373f1a7afe6ae33" }
+scarb-oracle-hint-service = { git = "https://github.com/software-mansion/scarb", rev = "c1dd0c1284c1c6acea1a6511e7bb525a37e6b14b" }
 chrono = "0.4.41"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 tracing = "0.1.41"

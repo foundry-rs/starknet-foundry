@@ -29,6 +29,7 @@ use starknet_types_core::felt::Felt;
 use std::any::Any;
 use std::collections::HashMap;
 use std::io;
+use std::rc::Rc;
 use thiserror::Error;
 
 pub mod starknet;
@@ -132,7 +133,6 @@ impl HintProcessorLogic for StarknetRuntime<'_> {
         vm: &mut VirtualMachine,
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt>,
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
 
@@ -173,8 +173,7 @@ impl HintProcessorLogic for StarknetRuntime<'_> {
             }
         }
 
-        self.hint_handler
-            .execute_hint(vm, exec_scopes, hint_data, constants)
+        self.hint_handler.execute_hint(vm, exec_scopes, hint_data)
     }
 
     fn compile_hint(
@@ -183,9 +182,15 @@ impl HintProcessorLogic for StarknetRuntime<'_> {
         ap_tracking_data: &ApTracking,
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
+        constants: Rc<HashMap<String, Felt>>,
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        self.hint_handler
-            .compile_hint(hint_code, ap_tracking_data, reference_ids, references)
+        self.hint_handler.compile_hint(
+            hint_code,
+            ap_tracking_data,
+            reference_ids,
+            references,
+            constants,
+        )
     }
 }
 
@@ -200,7 +205,6 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
         vm: &mut VirtualMachine,
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt>,
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
 
@@ -216,7 +220,6 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
                     vm,
                     exec_scopes,
                     hint_data,
-                    constants,
                     selector,
                     &VmIoPointers {
                         input_start,
@@ -226,12 +229,12 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
                     },
                 ),
                 StarknetHint::SystemCall { .. } => {
-                    self.execute_syscall_hint(vm, exec_scopes, hint_data, constants)
+                    self.execute_syscall_hint(vm, exec_scopes, hint_data)
                 }
             },
             _ => self
                 .extended_runtime
-                .execute_hint(vm, exec_scopes, hint_data, constants),
+                .execute_hint(vm, exec_scopes, hint_data),
         }
     }
 
@@ -241,9 +244,15 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
         ap_tracking_data: &ApTracking,
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
+        constants: Rc<HashMap<String, Felt>>,
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        self.extended_runtime
-            .compile_hint(hint_code, ap_tracking_data, reference_ids, references)
+        self.extended_runtime.compile_hint(
+            hint_code,
+            ap_tracking_data,
+            reference_ids,
+            references,
+            constants,
+        )
     }
 }
 
@@ -260,7 +269,6 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
         vm: &mut VirtualMachine,
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt>,
         selector: &BigIntAsHex,
         vm_io_ptrs: &VmIoPointers,
     ) -> Result<(), HintError> {
@@ -277,7 +285,7 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
             Ok(CheatcodeHandlingResult::Forwarded) => {
                 let res = self
                     .extended_runtime
-                    .execute_hint(vm, exec_scopes, hint_data, constants);
+                    .execute_hint(vm, exec_scopes, hint_data);
                 self.extension.handle_cheatcode_signal(
                     &selector,
                     &inputs,
@@ -310,7 +318,6 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
         vm: &mut VirtualMachine,
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt>,
     ) -> Result<(), HintError> {
         // We peek into memory to check the selector
         let selector = SyscallSelector::try_from(
@@ -327,7 +334,7 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
             Ok(())
         } else {
             self.extended_runtime
-                .execute_hint(vm, exec_scopes, hint_data, constants)?;
+                .execute_hint(vm, exec_scopes, hint_data)?;
             self.extension
                 .handle_system_call_signal(selector, vm, &mut self.extended_runtime);
             Ok(())

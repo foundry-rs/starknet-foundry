@@ -25,7 +25,6 @@ pub fn test(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     })
 }
 
-#[expect(clippy::ptr_arg)]
 #[expect(clippy::needless_pass_by_value)]
 fn test_internal(
     db: &dyn SyntaxGroup,

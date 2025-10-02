@@ -17,6 +17,17 @@ mod tests {
     }
 
     #[test]
+    fn test_padded_felt_max() {
+        let felt = Felt::MAX;
+        let padded_felt = PaddedFelt(felt);
+
+        assert_eq!(
+            format!("{padded_felt:x}"),
+            "0x0800000000000011000000000000000000000000000000000000000000000000".to_string()
+        );
+    }
+
+    #[test]
     fn test_padded_felt_conversions_happy_case() {
         let felt = Felt::from_bytes_be(&[1u8; 32]);
         let padded_felt = PaddedFelt(felt);
