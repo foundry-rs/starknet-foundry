@@ -52,21 +52,17 @@ impl DevnetProvider {
             }))
             .send()
             .await
-            .context("Failed to parse response")?
+            .context("Failed to send request")?
             .json::<serde_json::Value>()
-            .await;
+            .await
+            .context("Failed to parse response")?;
 
-        match res {
-            Ok(res_body) => {
-                if let Some(error) = res_body.get("error") {
-                    Err(anyhow::anyhow!(error.to_string()))
-                } else if let Some(result) = res_body.get("result") {
-                    serde_json::from_value(result.clone()).map_err(anyhow::Error::from)
-                } else {
-                    panic!("Malformed RPC response: {res_body}")
-                }
-            }
-            Err(e) => Err(anyhow::anyhow!(e.to_string())),
+        if let Some(error) = res.get("error") {
+            Err(anyhow::anyhow!(error.to_string()))
+        } else if let Some(result) = res.get("result") {
+            serde_json::from_value(result.clone()).map_err(anyhow::Error::from)
+        } else {
+            panic!("Malformed RPC response: {res}")
         }
     }
 
