@@ -7,7 +7,6 @@ use foundry_ui::UI;
 use shared::consts::RPC_URL_VERSION;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet::providers::{JsonRpcClient, jsonrpc::HttpTransport};
-use url::Url;
 
 #[derive(Args, Clone, Debug, Default)]
 #[group(required = false, multiple = false)]
@@ -61,14 +60,6 @@ impl RpcArgs {
                 }
             })
         }
-    }
-
-    #[must_use]
-    pub fn is_localhost(&self, config_url: &String) -> bool {
-        self.get_url(config_url)
-            .and_then(|url_str| Url::parse(&url_str).ok())
-            .and_then(|url| url.host_str().map(str::to_string))
-            .is_some_and(|host| host == "localhost" || host == "127.0.0.1" || host == "::1")
     }
 }
 

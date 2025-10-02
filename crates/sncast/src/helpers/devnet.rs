@@ -6,6 +6,10 @@ pub fn detect_devnet_url() -> String {
     detect_devnet_from_processes().unwrap_or_else(|| "http://localhost:5050".to_string())
 }
 
+pub fn is_devnet_running() -> bool {
+    detect_devnet_from_processes().is_some()
+}
+
 /// Detects devnet by scanning running processes for starknet-devnet and extracting the port
 fn detect_devnet_from_processes() -> Option<String> {
     if let Some(port) = find_devnet_process_port() {

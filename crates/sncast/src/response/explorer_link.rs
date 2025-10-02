@@ -1,8 +1,12 @@
-use crate::helpers::{block_explorer::LinkProvider, configuration::CastConfig, rpc::RpcArgs};
+use crate::Network;
+use crate::helpers::{
+    block_explorer::LinkProvider, configuration::CastConfig, devnet, rpc::RpcArgs,
+};
 use foundry_ui::Message;
 use serde::Serialize;
 use serde_json::{Value, json};
 use starknet_types_core::felt::Felt;
+use url::Url;
 
 const SNCAST_FORCE_SHOW_EXPLORER_LINKS_ENV: &str = "SNCAST_FORCE_SHOW_EXPLORER_LINKS";
 
@@ -55,23 +59,24 @@ pub enum ExplorerError {
 pub fn block_explorer_link_if_allowed<T>(
     result: &anyhow::Result<T>,
     chain_id: Felt,
-    rpc: &RpcArgs,
     config: &CastConfig,
 ) -> Option<ExplorerLinksMessage>
 where
     T: OutputLink + Clone,
 {
-    if (!config.show_explorer_links || rpc.is_localhost(&config.url))
-        && !is_explorer_link_overridden()
-    {
-        return None;
-    }
-
     let Ok(response) = result else {
         return None;
     };
 
     let network = chain_id.try_into().ok()?;
+
+    let is_devnet_network = matches!(network, Network::Devnet);
+    let is_devnet_running = devnet::is_devnet_running();
+    let is_devnet = is_devnet_network || is_devnet_running;
+
+    if (!config.show_explorer_links || is_devnet) && !is_explorer_link_overridden() {
+        return None;
+    }
 
     config
         .block_explorer
