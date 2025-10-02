@@ -225,7 +225,14 @@ fn generate_constructor_placeholder_args(constructor: AbiConstructor) -> String 
     constructor
         .inputs
         .into_iter()
-        .map(|input| format!("<{}>", input.name))
+        .map(|input| {
+            let input_type = input
+                .r#type
+                .split("::")
+                .last()
+                .expect("Failed to get last part of input type");
+            format!("<{} ({})>", input.name, input_type)
+        })
         .collect::<Vec<String>>()
         .join(", ")
 }

@@ -142,7 +142,7 @@ async fn test_contract_with_constructor_params() {
         transaction: https://[..]
 
         To deploy a contract of this class, run:
-        sncast --accounts-file accounts.json --account my_account deploy --class-hash 0x[..] --arguments '<foo>, <bar>' --url http://127.0.0.1:5055/rpc
+        sncast --accounts-file accounts.json --account my_account deploy --class-hash 0x[..] --arguments '<foo (felt252)>, <bar (felt252)>' --url http://127.0.0.1:5055/rpc
     " },
     );
 }
