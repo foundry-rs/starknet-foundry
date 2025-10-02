@@ -1,5 +1,19 @@
-name: Setup Rust + LLVM 19
-description: Installs Rust and LLVM 19 toolchain
+name: Setup Tools
+description: Installs Rust and optionally Scarb, Universal Sierra Compiler and LLVM 19 toolchain
+
+inputs:
+  install-llvm:
+    description: 'Whether to install the LLVM 19 toolchain'
+    required: false
+    default: 'false'
+  setup-scarb:
+    description: 'Whether to setup scarb'
+    required: false
+    default: 'true'
+  setup-usc:
+    description: 'Whether to setup universal-sierra-compiler'
+    required: false
+    default: 'true'
 
 runs:
   using: "composite"
@@ -8,8 +22,15 @@ runs:
 
     - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
 
+    - uses: software-mansion/setup-scarb@v1
+      if: ${{ inputs.setup-scarb == 'true' }}
+
+    - uses: software-mansion/setup-universal-sierra-compiler@v1
+      if: ${{ inputs.setup-usc == 'true' }}
+
     - name: Add LLVM APT repository
       uses: myci-actions/add-deb-repo@11
+      if: ${{ inputs.install-llvm == 'true' }}
       with:
         repo: deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main
         repo-name: llvm-repo
@@ -17,6 +38,7 @@ runs:
 
     - name: Install LLVM
       shell: bash
+      if: ${{ inputs.install-llvm == 'true' }}
       run: |
         sudo apt-get update
         sudo apt-get install -y \
@@ -25,6 +47,7 @@ runs:
           lld-19 libpolly-19-dev libmlir-19-dev mlir-19-tools
 
     - name: Set environment variables
+      if: ${{ inputs.install-llvm == 'true' }}
       shell: bash
       run: |
         echo "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19/" >> $GITHUB_ENV
