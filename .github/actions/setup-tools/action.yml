@@ -1,5 +1,5 @@
-name: Setup Rust + optionally LLVM 19
-description: Installs Rust and optionally LLVM 19 toolchain
+name: Setup Tools
+description: Installs Rust and optionally Scarb, Universal Sierra Compiler and LLVM 19 toolchain
 
 inputs:
   install-llvm:

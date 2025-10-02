@@ -18,14 +18,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
       - run: cargo test --profile ci --lib -p forge
 
   build-test-forge-nextest-archive:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
         with:
           setup-scarb: 'false'
           setup-usc: 'false'
@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
         with:
           install-llvm: 'true'
           setup-scarb: 'false'
@@ -72,7 +72,7 @@ jobs:
         partition: [ 1, 2, 3 ]
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
@@ -120,7 +120,7 @@ jobs:
 
       - uses: actions/checkout@v5
       - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
@@ -168,7 +168,7 @@ jobs:
 
       - uses: actions/checkout@v5
       - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
@@ -183,7 +183,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
         with:
           setup-scarb: 'false'
       - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
@@ -195,7 +195,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
         with:
           setup-scarb: 'false'
 
@@ -213,7 +213,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
 
       - run: cargo test --profile ci --package forge --features interact-with-state --test main integration::interact_with_state
       - run: cargo test --profile ci --package forge --features interact-with-state --test main e2e::running::test_interact_with_state
@@ -223,7 +223,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
       - run: cargo test --profile ci -p forge_runner
 
   test-cheatnet:
@@ -231,7 +231,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
       - name: Run Cheatnet tests
         run: cargo test --profile ci -p cheatnet
 
@@ -240,7 +240,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
       - name: Run Data Transformer tests
         run: cargo test --profile ci -p data-transformer
 
@@ -249,7 +249,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
       - name: Run Forge Debugging tests
         run: cargo test --profile ci -p forge --features debugging --test main e2e::debugging
 
@@ -258,7 +258,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
       - name: Run Forge Scarb Plugin tests
         working-directory: crates/snforge-scarb-plugin
         run: cargo test --profile ci
@@ -268,7 +268,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
       - name: Run Forge Scarb Plugin tests
         working-directory: crates/snforge-scarb-plugin-deprecated
         run: cargo test --profile ci
@@ -279,7 +279,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
       - name: Run tests
         run: cargo test --profile ci -p sncast
 
@@ -288,7 +288,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
         with:
           setup-scarb: 'false'
           setup-usc: 'false'
@@ -300,7 +300,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
         with:
           setup-scarb: 'false'
           setup-usc: 'false'
@@ -311,7 +311,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
       - run: cargo test --profile ci -p scarb-api
 
   scarbfmt:
@@ -357,7 +357,7 @@ jobs:
       RUSTFLAGS: "-Dwarnings"
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
         with:
           install-llvm: 'true'
           setup-scarb: 'false'
@@ -379,7 +379,7 @@ jobs:
       MDBOOK_VERSION: 0.4.52
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-rust-llvm
+      - uses: ./.github/actions/setup-tools
       - name: Install mdBook
         run: |
           cargo install --version ${MDBOOK_VERSION} mdbook
