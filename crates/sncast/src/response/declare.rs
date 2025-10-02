@@ -209,7 +209,8 @@ impl Message for DeployCommandMessage {
     }
 
     fn json(&self) -> Value {
-        json!(self)
+        // This message is only helpful in human mode, we don't need it in JSON mode.
+        Value::Null
     }
 }
 
