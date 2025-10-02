@@ -89,15 +89,11 @@ pub async fn get_account_from_devnet<'a>(
         .context("Failed to parse devnet account number")?;
 
     let devnet_provider = DevnetProvider::new(url);
+    devnet_provider.ensure_alive().await?;
     let devnet_config = devnet_provider.get_config().await;
     let devnet_config = match devnet_config {
         Ok(config) => config,
         Err(err) => {
-            if err.to_string().contains("Method not found") {
-                bail!(
-                    "The provided network is not a Devnet instance. Devnet accounts can only be used with Devnet."
-                )
-            }
             return Err(err);
         }
     };
