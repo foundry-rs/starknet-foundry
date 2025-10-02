@@ -259,17 +259,22 @@ pub async fn get_account<'a>(
     let is_devnet_account = is_devnet_account(account);
     let exists_in_accounts_file = check_account_exists(account, &network_name, accounts_file)?;
 
-    if is_devnet_account && exists_in_accounts_file {
-        ui.println(&WarningMessage::new(format!(
-            "Using account {account} from accounts file {accounts_file}. To use inbuilt devnet account, please change the name of your existing account."
-        )));
-        ui.print_blank_line();
-        return get_account_from_accounts_file(account, accounts_file, provider, keystore).await;
-    } else if is_devnet_account && !exists_in_accounts_file {
-        return get_account_from_devnet(account, provider, url).await;
+    match (is_devnet_account, exists_in_accounts_file) {
+        (true, true) => {
+            ui.println(&WarningMessage::new(format!(
+                "Using account {account} from accounts file {accounts_file}. \
+                 To use an inbuilt devnet account, please rename your existing account."
+            )));
+            ui.print_blank_line();
+            return get_account_from_accounts_file(account, accounts_file, provider, keystore)
+                .await;
+        }
+        (true, false) => return get_account_from_devnet(account, provider, url).await,
+        _ => {
+            return get_account_from_accounts_file(account, accounts_file, provider, keystore)
+                .await;
+        }
     }
-
-    get_account_from_accounts_file(account, accounts_file, provider, keystore).await
 }
 
 pub async fn get_account_from_accounts_file<'a>(
