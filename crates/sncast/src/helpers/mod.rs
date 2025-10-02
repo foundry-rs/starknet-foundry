@@ -1,7 +1,7 @@
 pub mod account;
 pub mod block_explorer;
 pub mod braavos;
-pub mod command_processing;
+pub mod commands;
 pub mod config;
 pub mod configuration;
 pub mod constants;
