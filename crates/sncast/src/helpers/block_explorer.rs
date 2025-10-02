@@ -24,6 +24,7 @@ impl Service {
             (Service::ViewBlock, Network::Mainnet) => Ok(Box::new(ViewBlock)),
             (Service::OkLink, Network::Mainnet) => Ok(Box::new(OkLink)),
             (_, Network::Sepolia) => Err(ExplorerError::SepoliaNotSupported),
+            (_, Network::Devnet) => Err(ExplorerError::DevnetNotSupported),
         }
     }
 }
@@ -38,6 +39,7 @@ const fn network_subdomain(network: Network) -> &'static str {
     match network {
         Network::Mainnet => "",
         Network::Sepolia => "sepolia.",
+        Network::Devnet => "",
     }
 }
 

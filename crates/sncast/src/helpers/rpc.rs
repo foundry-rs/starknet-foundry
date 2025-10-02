@@ -1,4 +1,5 @@
 use crate::helpers::configuration::CastConfig;
+use crate::helpers::devnet;
 use crate::{Network, get_provider};
 use anyhow::{Context, Result, bail};
 use clap::Args;
@@ -15,7 +16,9 @@ pub struct RpcArgs {
     #[arg(short, long)]
     pub url: Option<String>,
 
-    /// Use predefined network with a public provider. Note that this option may result in rate limits or other unexpected behavior
+    /// Use predefined network with a public provider. Note that this option may result in rate limits or other unexpected behavior.
+    /// For devnet, attempts to auto-detect running starknet-devnet instances or falls back to http://localhost:5050. 
+    /// If auto-detection fails or you're using a custom devnet address, use --url instead.
     #[arg(long)]
     pub network: Option<Network>,
 }
@@ -86,6 +89,7 @@ impl Network {
         match self {
             Network::Mainnet => Self::free_mainnet_rpc(provider),
             Network::Sepolia => Self::free_sepolia_rpc(provider),
+            Network::Devnet => Self::free_devnet_rpc(provider),
         }
     }
 
@@ -95,6 +99,10 @@ impl Network {
 
     fn free_sepolia_rpc(_provider: &FreeProvider) -> String {
         format!("https://starknet-sepolia.public.blastapi.io/rpc/{RPC_URL_VERSION}")
+    }
+
+    fn free_devnet_rpc(_provider: &FreeProvider) -> String {
+        devnet::detect_devnet_url()
     }
 }
 

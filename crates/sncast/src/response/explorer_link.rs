@@ -48,6 +48,8 @@ pub enum ExplorerError {
     SepoliaNotSupported,
     #[error("Custom network is not recognized by block explorer service")]
     UnrecognizedNetwork,
+    #[error("Block explorer service is not available for Devnet Network")]
+    DevnetNotSupported,
 }
 
 pub fn block_explorer_link_if_allowed<T>(

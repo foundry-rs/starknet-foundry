@@ -114,6 +114,7 @@ impl VerificationInterface<'_> for WalnutVerificationInterface {
         let path = match self.network {
             Network::Mainnet => "/v1/sn_main/verify",
             Network::Sepolia => "/v1/sn_sepolia/verify",
+            Network::Devnet => "",
         };
         format!("{api_base_url}{path}")
     }
