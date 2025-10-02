@@ -35,7 +35,7 @@ impl DevnetProvider {
 }
 
 impl DevnetProvider {
-    async fn send_request<P, R>(&self, method: DevnetProviderMethod, params: P) -> Result<R, Error>
+    async fn send_request<P, R>(&self, method: DevnetProviderMethod, params: P) -> anyhow::Result<R>
     where
         P: Serialize + Send + Sync,
         R: DeserializeOwned,
@@ -52,7 +52,7 @@ impl DevnetProvider {
             }))
             .send()
             .await
-            .context("Error occurred during request")?
+            .context("Failed to parse response")?
             .json::<serde_json::Value>()
             .await;
 
@@ -63,7 +63,7 @@ impl DevnetProvider {
                 } else if let Some(result) = res_body.get("result") {
                     serde_json::from_value(result.clone()).map_err(anyhow::Error::from)
                 } else {
-                    Err(anyhow::anyhow!("Malformed RPC response: {res_body}"))
+                    panic!("Malformed RPC response: {res_body}")
                 }
             }
             Err(e) => Err(anyhow::anyhow!(e.to_string())),
