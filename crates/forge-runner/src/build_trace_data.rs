@@ -103,6 +103,7 @@ fn build_cairo_execution_info(
             vm_trace: vm_trace?,
         },
         source_sierra_path: source_sierra_path?,
+        enable_gas: None,
     })
 }
 
