@@ -1,6 +1,7 @@
 use anyhow::Result;
 
 use crate::artifacts::representation::StarknetArtifactsRepresentation;
+#[cfg(feature = "cairo-native")]
 use cairo_native::executor::AotContractExecutor;
 use camino::{Utf8Path, Utf8PathBuf};
 use itertools::Itertools;
@@ -20,16 +21,19 @@ pub struct StarknetContractArtifacts {
     /// Compiled casm code
     pub casm: String,
 
+    #[cfg(feature = "cairo-native")]
     /// Optional AOT compiled native executor
     pub executor: Option<AotContractExecutor>,
 }
 
 impl PartialEq for StarknetContractArtifacts {
     fn eq(&self, other: &Self) -> bool {
-        self.sierra == other.sierra
-            && self.casm == other.casm
-            // We only check if both have an executor or not, as the actual executor does not implement PartialEq
-            && self.executor.is_some() == other.executor.is_some()
+        let eq = self.sierra == other.sierra && self.casm == other.casm;
+
+        #[cfg(feature = "cairo-native")]
+        let eq = eq && self.executor.is_some() == other.executor.is_some();
+
+        eq
     }
 }
 
@@ -37,6 +41,7 @@ impl PartialEq for StarknetContractArtifacts {
 pub(crate) struct StarknetArtifactsFiles {
     base: Utf8PathBuf,
     other: Vec<Utf8PathBuf>,
+    #[cfg(feature = "cairo-native")]
     compile_native: bool,
 }
 
@@ -45,10 +50,12 @@ impl StarknetArtifactsFiles {
         Self {
             base: base_file,
             other: other_files,
+            #[cfg(feature = "cairo-native")]
             compile_native: false,
         }
     }
 
+    #[cfg(feature = "cairo-native")]
     pub(crate) fn compile_native(mut self, compile_native: bool) -> Self {
         self.compile_native = compile_native;
         self
@@ -95,20 +102,24 @@ impl StarknetArtifactsFiles {
     }
 
     #[tracing::instrument(skip_all, level = "debug")]
+    #[cfg_attr(not(feature = "cairo-native"), expect(clippy::unused_self))]
     fn compile_artifact_at_path(&self, path: &Utf8Path) -> Result<StarknetContractArtifacts> {
         let sierra = fs::read_to_string(path)?;
 
         let casm = compile_sierra_at_path(path, &SierraType::Contract)?;
 
+        #[cfg(feature = "cairo-native")]
         let executor = self.compile_to_native(&sierra)?;
 
         Ok(StarknetContractArtifacts {
             sierra,
             casm,
+            #[cfg(feature = "cairo-native")]
             executor,
         })
     }
 
+    #[cfg(feature = "cairo-native")]
     #[tracing::instrument(skip_all, level = "debug")]
     fn compile_to_native(&self, sierra: &str) -> Result<Option<AotContractExecutor>> {
         Ok(if self.compile_native {
@@ -155,6 +166,7 @@ mod tests {
                 StarknetContractArtifacts {
                     sierra: "sierra1".to_string(),
                     casm: "casm1".to_string(),
+                    #[cfg(feature = "cairo-native")]
                     executor: None,
                 },
                 Utf8PathBuf::from("path1"),
@@ -258,6 +270,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "cairo-native")]
     fn test_load_contracts_artifacts_native() {
         let (_temp, artifacts_files) = setup();
 

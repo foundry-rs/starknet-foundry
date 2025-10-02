@@ -13,7 +13,8 @@ debugging = []
 assert_non_exact_gas = ["test_utils/assert_non_exact_gas"]
 skip_plugin_checks = []
 interact-with-state = []
-run-native = ["test_utils/run-native"]
+cairo-native = ["test_utils/cairo-native", "cheatnet/cairo-native", "scarb-api/cairo-native"]
+run-native = ["cairo-native"]
 
 [dependencies]
 anyhow.workspace = true
@@ -73,4 +74,4 @@ walkdir.workspace = true
 test-case.workspace = true
 itertools.workspace = true
 docs = { workspace = true, features = ["testing"] }
-packages_validation = { path = "../testing/packages_validation"}
+packages_validation = { path = "../testing/packages_validation" }
