@@ -157,6 +157,7 @@ impl DeployCommandMessage {
             .iter()
             .filter(|e| matches!(e, AbiEntry::Constructor { .. }));
         let first = constructor_entries.next();
+
         if constructor_entries.next().is_some() {
             unreachable!("Multiple constructor entries found in ABI");
         }
