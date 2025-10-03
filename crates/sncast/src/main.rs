@@ -15,6 +15,7 @@ use data_transformer::transform;
 use foundry_ui::components::warning::WarningMessage;
 use foundry_ui::{Message, UI};
 use shared::auto_completions::{Completions, generate_completions};
+use sncast::helpers::command::process_command_result;
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
@@ -22,12 +23,9 @@ use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
-use sncast::response::cast_message::SncastMessage;
-use sncast::response::command::CommandResponse;
 use sncast::response::declare::DeclareResponse;
-use sncast::response::errors::ResponseError;
 use sncast::response::errors::handle_starknet_command_error;
-use sncast::response::explorer_link::{ExplorerLinksMessage, block_explorer_link_if_allowed};
+use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transformed_call::transform_response;
 use sncast::{
     ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
@@ -630,32 +628,4 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
 
     config_with_cli(&mut combined_config, cli);
     Ok(combined_config)
-}
-
-fn process_command_result<T>(
-    command: &str,
-    result: Result<T>,
-    ui: &UI,
-    block_explorer_link: Option<ExplorerLinksMessage>,
-) where
-    T: CommandResponse,
-    SncastMessage<T>: Message,
-{
-    let cast_msg = result.map(|command_response| SncastMessage {
-        command: command.to_string(),
-        command_response,
-    });
-
-    match cast_msg {
-        Ok(response) => {
-            ui.println(&response);
-            if let Some(link) = block_explorer_link {
-                ui.println(&link);
-            }
-        }
-        Err(err) => {
-            let err = ResponseError::new(command.to_string(), format!("{err:#}"));
-            ui.eprintln(&err);
-        }
-    }
 }
