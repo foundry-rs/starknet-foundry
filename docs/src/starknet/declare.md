@@ -39,7 +39,7 @@ To see declaration details, visit:
 class: https://starkscan.co/search/[..]
 transaction: https://starkscan.co/search/[..]
 
-To deploy a contract of this class, run:
+To deploy a contract of this class, replace the placeholders in `--arguments` with your actual values, then run:
 sncast --account my_account deploy --class-hash 0x[..] --network sepolia
 ```
 </details>

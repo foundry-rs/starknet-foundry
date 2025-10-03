@@ -202,7 +202,7 @@ impl Message for DeployCommandMessage {
 
         formatdoc!(
             "
-            To deploy a contract of this class, run:
+            To deploy a contract of this class, replace the placeholders in `--arguments` with your actual values, then run:
             {command}
             "
         )

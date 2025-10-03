@@ -58,7 +58,7 @@ async fn test_happy_case_human_readable() {
         class: https://[..]
         transaction: https://[..]
 
-        To deploy a contract of this class, run:
+        To deploy a contract of this class, replace the placeholders in `--arguments` with your actual values, then run:
         sncast --accounts-file accounts.json --account my_account deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
     " },
     );
@@ -141,7 +141,7 @@ async fn test_contract_with_constructor_params() {
         class: https://[..]
         transaction: https://[..]
 
-        To deploy a contract of this class, run:
+        To deploy a contract of this class, replace the placeholders in `--arguments` with your actual values, then run:
         sncast --accounts-file accounts.json --account my_account deploy --class-hash 0x[..] --arguments '<foo (felt252)>, <bar (felt252)>' --url http://127.0.0.1:5055/rpc
     " },
     );
@@ -543,7 +543,7 @@ fn test_scarb_no_casm_artifact() {
         Class Hash: [..]
         Transaction Hash: [..]
 
-        To deploy a contract of this class, run:
+        To deploy a contract of this class, replace the placeholders in `--arguments` with your actual values, then run:
         sncast --accounts-file [..]accounts.json --account user1 deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
         "},
     );
@@ -680,7 +680,7 @@ async fn test_no_scarb_profile() {
             class: [..]
             transaction: [..]
 
-            To deploy a contract of this class, run:
+            To deploy a contract of this class, replace the placeholders in `--arguments` with your actual values, then run:
             sncast --accounts-file [..]accounts.json --account user8 deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
         "},
     );
