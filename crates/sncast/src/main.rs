@@ -1,3 +1,4 @@
+use crate::starknet_commands::declare::declare;
 use crate::starknet_commands::declare_from::DeclareFrom;
 use crate::starknet_commands::deploy::DeployArguments;
 use crate::starknet_commands::multicall;
@@ -11,6 +12,7 @@ use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
 use configuration::load_config;
+use conversions::IntoConv;
 use data_transformer::transform;
 use foundry_ui::components::warning::WarningMessage;
 use foundry_ui::{Message, UI};
@@ -24,7 +26,10 @@ use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
-use sncast::response::declare::{DeclareResponse, DeployCommandMessage};
+use sncast::response::declare::{
+    AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse, DeployCommandMessage,
+};
+use sncast::response::deploy::{DeployResponse, DeployResponseWithDeclare};
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transformed_call::transform_response;
@@ -393,9 +398,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Deploy(deploy) => {
             let Deploy {
+                contract_identifier: identifier,
                 arguments,
                 fee_args,
                 rpc,
+                mut nonce,
+                package,
                 ..
             } = deploy;
 
@@ -404,27 +412,98 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let account =
                 get_account(&config, &provider, &rpc, config.keystore.as_ref(), ui).await?;
 
+            let (class_hash, declare_response) = if let Some(class_hash) = identifier.class_hash {
+                (class_hash, None)
+            } else if let Some(contract_name) = identifier.contract_name {
+                let manifest_path = assert_manifest_path_exists()?;
+                let package_metadata = get_package_metadata(&manifest_path, &package)?;
+                let artifacts = build_and_load_artifacts(
+                    &package_metadata,
+                    &BuildConfig {
+                        scarb_toml_path: manifest_path,
+                        json: cli.json,
+                        profile: cli.profile.unwrap_or("release".to_string()),
+                    },
+                    false,
+                    ui,
+                )
+                .expect("Failed to build contract");
+
+                let declare_result = declare(
+                    contract_name,
+                    fee_args.clone(),
+                    nonce,
+                    &account,
+                    &artifacts,
+                    WaitForTx {
+                        wait: true,
+                        wait_params: wait_config.wait_params,
+                        // Only show outputs if user explicitly provides `--wait` flag
+                        show_ui_outputs: wait_config.wait,
+                    },
+                    true,
+                    ui,
+                )
+                .await
+                .map_err(handle_starknet_command_error);
+
+                // Increment nonce after successful declare if it was explicitly provided
+                nonce = nonce.map(|n| n + Felt::ONE);
+
+                match declare_result {
+                    Ok(DeclareResponse::AlreadyDeclared(AlreadyDeclaredResponse {
+                        class_hash,
+                    })) => (class_hash.into_(), None),
+                    Ok(DeclareResponse::Success(declare_transaction_response)) => (
+                        declare_transaction_response.class_hash.into_(),
+                        Some(declare_transaction_response),
+                    ),
+                    Err(err) => {
+                        process_command_result::<DeclareTransactionResponse>(
+                            "deploy",
+                            Err(err),
+                            ui,
+                            None,
+                        );
+                        return Ok(());
+                    }
+                }
+            } else {
+                unreachable!("Either `--class_hash` or `--contract_name` must be provided");
+            };
+
             // safe to unwrap because "constructor" is a standardized name
             let selector = get_selector_from_name("constructor").unwrap();
 
-            let contract_class = get_contract_class(deploy.class_hash, &provider).await?;
+            let contract_class = get_contract_class(class_hash, &provider).await?;
 
             let arguments: Arguments = arguments.into();
             let calldata = arguments.try_into_calldata(contract_class, &selector)?;
 
             let result = starknet_commands::deploy::deploy(
-                deploy.class_hash,
+                class_hash,
                 &calldata,
                 deploy.salt,
                 deploy.unique,
                 fee_args,
-                deploy.nonce,
+                nonce,
                 &account,
                 wait_config,
                 ui,
             )
             .await
             .map_err(handle_starknet_command_error);
+
+            let result = if let Some(declare_response) = declare_response {
+                result.map(|r| {
+                    DeployResponse::WithDeclare(DeployResponseWithDeclare::from_responses(
+                        &r,
+                        &declare_response,
+                    ))
+                })
+            } else {
+                result.map(DeployResponse::Standard)
+            };
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
