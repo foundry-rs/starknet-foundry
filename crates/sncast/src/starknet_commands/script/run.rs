@@ -1,4 +1,3 @@
-use crate::starknet_commands::declare::Declare;
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{WaitForTx, get_account};
 use anyhow::{Context, Result, anyhow};
@@ -127,14 +126,6 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let fee_args: FeeArgs = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
 
-                let declare = Declare {
-                    contract: contract.clone(),
-                    fee_args,
-                    nonce,
-                    package: None,
-                    rpc: RpcArgs::default(),
-                };
-
                 let declare_tx_id = generate_declare_tx_id(contract.as_str());
 
                 if let Some(success_output) =
@@ -144,7 +135,9 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 }
 
                 let declare_result = self.tokio_runtime.block_on(declare::declare(
-                    &declare,
+                    contract.clone(),
+                    fee_args,
+                    nonce,
                     self.account()?,
                     self.artifacts,
                     WaitForTx {

@@ -31,8 +31,8 @@ use std::sync::Arc;
 #[command(about = "Declare a contract to starknet", long_about = None)]
 pub struct Declare {
     /// Contract name
-    #[arg(short = 'c', long = "contract-name")]
-    pub contract: String,
+    #[arg(short = 'c', long)]
+    pub contract_name: String,
 
     #[command(flatten)]
     pub fee_args: FeeArgs,
@@ -50,8 +50,11 @@ pub struct Declare {
 }
 
 // TODO(#3785)
+#[expect(clippy::too_many_arguments)]
 pub async fn declare(
-    declare: &Declare,
+    contract_name: String,
+    fee_args: FeeArgs,
+    nonce: Option<Felt>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
     wait_config: WaitForTx,
@@ -60,9 +63,9 @@ pub async fn declare(
 ) -> Result<DeclareResponse, StarknetCommandError> {
     let contract_artifacts =
         artifacts
-            .get(&declare.contract)
+            .get(&contract_name)
             .ok_or(StarknetCommandError::ContractArtifactsNotFound(ErrorData {
-                data: ByteArray::from(declare.contract.as_str()),
+                data: ByteArray::from(contract_name.as_str()),
             }))?;
 
     let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
@@ -73,8 +76,8 @@ pub async fn declare(
     declare_with_artifacts(
         contract_definition,
         casm_contract_definition,
-        declare.fee_args.clone(),
-        declare.nonce,
+        fee_args.clone(),
+        nonce,
         account,
         wait_config,
         skip_on_already_declared,
