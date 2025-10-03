@@ -292,7 +292,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             .expect("Failed to build contract");
 
             let result = starknet_commands::declare::declare(
-                declare.clone(),
+                &declare,
                 &account,
                 &artifacts,
                 wait_config,

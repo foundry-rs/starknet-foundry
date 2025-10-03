@@ -25,7 +25,7 @@ use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-#[derive(Args, Clone)]
+#[derive(Args)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
 pub struct Declare {
     /// Contract name
@@ -48,7 +48,7 @@ pub struct Declare {
 }
 
 pub async fn declare(
-    declare: Declare,
+    declare: &Declare,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
     wait_config: WaitForTx,
@@ -70,7 +70,7 @@ pub async fn declare(
     declare_with_artifacts(
         contract_definition,
         casm_contract_definition,
-        declare.fee_args,
+        declare.fee_args.clone(),
         declare.nonce,
         account,
         wait_config,
