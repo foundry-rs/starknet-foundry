@@ -38,13 +38,14 @@ fn find_devnet_process_info() -> Option<DevnetInfo> {
     ps_output
         .lines()
         .filter(|line| line.contains("starknet-devnet"))
-        .find_map(|line| {
+        .map(|line| {
             if line.contains("docker") {
-                Some(extract_devnet_info_from_docker_line(line))
+                extract_devnet_info_from_docker_line(line)
             } else {
-                Some(extract_devnet_info_from_cmdline(line))
+                extract_devnet_info_from_cmdline(line)
             }
         })
+        .next()
 }
 
 fn extract_string_from_flag(cmdline: &str, flag: &str) -> Option<String> {
@@ -161,7 +162,20 @@ mod tests {
     use std::thread;
     use std::time::{Duration, Instant};
 
+    // Those tests are marked to run serially to avoid interference from env vars
     #[test]
+    fn test_devnet_parsing() {
+        test_extract_devnet_info_from_cmdline();
+
+        test_extract_devnet_info_from_docker_line();
+
+        test_extract_devnet_info_with_both_envs();
+
+        test_cmdline_args_override_env();
+
+        test_detect_devnet_url();
+    }
+
     fn test_extract_devnet_info_from_cmdline() {
         let cmdline1 = "starknet-devnet --port 5050 --host 127.0.0.1";
         let info1 = extract_devnet_info_from_cmdline(cmdline1);
@@ -179,7 +193,6 @@ mod tests {
         assert_eq!(info3.host, "127.0.0.1");
     }
 
-    #[test]
     fn test_extract_devnet_info_from_docker_line() {
         let cmdline1 = "docker run -p 127.0.0.1:5055:5050 shardlabs/starknet-devnet-rs";
         let info1 = extract_devnet_info_from_docker_line(cmdline1);
@@ -197,37 +210,44 @@ mod tests {
         assert_eq!(info3.host, "127.0.0.1");
     }
 
-    #[test]
     fn test_extract_devnet_info_with_both_envs() {
-        // SAFETY: Tests run in parallel and share the same environment variables.
-        // However, this modification applies only to this one test.
+        // SAFETY: Variables are only modified within this test and cleaned up afterwards
         unsafe {
-            std::env::set_var("PORT", "8080");
-            std::env::set_var("HOST", "0.0.0.0");
+            std::env::set_var("PORT", "9999");
+            std::env::set_var("HOST", "9.9.9.9");
         }
 
         let cmdline = "starknet-devnet";
         let info = extract_devnet_info_from_cmdline(cmdline);
-        assert_eq!(info.port, 8080);
-        assert_eq!(info.host, "0.0.0.0");
+        assert_eq!(info.port, 9999);
+        assert_eq!(info.host, "9.9.9.9");
+
+        // SAFETY: Clean up environment variables to prevent interference
+        unsafe {
+            std::env::remove_var("PORT");
+            std::env::remove_var("HOST");
+        }
     }
 
-    #[test]
     fn test_cmdline_args_override_env() {
-        // SAFETY: Tests run in parallel and share the same environment variables.
-        // However, this modification applies only to this one test.
+        // SAFETY: Variables are only modified within this test and cleaned up afterwards
         unsafe {
             std::env::set_var("PORT", "3000");
-            std::env::set_var("HOST", "localhost");
+            std::env::set_var("HOST", "7.7.7.7");
         }
 
         let cmdline = "starknet-devnet --port 9999 --host 192.168.1.1";
         let info = extract_devnet_info_from_cmdline(cmdline);
         assert_eq!(info.port, 9999);
         assert_eq!(info.host, "192.168.1.1");
+
+        // SAFETY: Clean up environment variables to prevent interference
+        unsafe {
+            std::env::remove_var("PORT");
+            std::env::remove_var("HOST");
+        }
     }
 
-    #[test]
     fn test_detect_devnet_url() {
         let child = spawn_devnet("5090");
 
