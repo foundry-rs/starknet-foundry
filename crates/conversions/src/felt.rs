@@ -118,7 +118,7 @@ impl ToShortString<Felt> for Felt {
 }
 
 pub trait TryInferFormat: Sized {
-    /// Parses value from `hex string`, `dec string`, `quotted cairo shortstring `and `quotted cairo string`
+    /// Parses value from `hex string`, `dec string`, `quoted cairo shortstring `and `quoted cairo string`
     fn infer_format_and_parse(value: &str) -> Result<Vec<Self>>;
 }
 

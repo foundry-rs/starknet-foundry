@@ -124,7 +124,7 @@ impl ParseFromExpr<Expr> for String {
         match expr {
             Expr::String(string) => Ok(string.text(db).trim_matches('"').to_string()),
             _ => Err(T::error(format!(
-                "<{arg_name}> invalid type, should be: double quotted string"
+                "<{arg_name}> invalid type, should be: double quoted string"
             ))),
         }
     }
@@ -142,7 +142,7 @@ impl ParseFromExpr<Expr> for ShortString {
                 Ok(ShortString(string))
             }
             _ => Err(T::error(format!(
-                "<{arg_name}> invalid type, should be: double quotted string"
+                "<{arg_name}> invalid type, should be: double quoted string"
             ))),
         }
     }
