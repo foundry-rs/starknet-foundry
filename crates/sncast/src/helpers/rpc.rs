@@ -1,5 +1,5 @@
 use crate::helpers::configuration::CastConfig;
-use crate::helpers::devnet;
+use crate::helpers::devnet_detection;
 use crate::{Network, get_provider};
 use anyhow::{Context, Result, bail};
 use clap::Args;
@@ -85,7 +85,7 @@ impl Network {
     }
 
     fn free_devnet_rpc(_provider: &FreeProvider) -> Result<String> {
-        devnet::detect_devnet_url().with_context(
+        devnet_detection::detect_devnet_url().with_context(
             || "Could not detect running starknet-devnet instance. Please use --url instead.",
         )
     }

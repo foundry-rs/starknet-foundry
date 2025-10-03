@@ -5,7 +5,7 @@ pub mod command;
 pub mod config;
 pub mod configuration;
 pub mod constants;
-pub mod devnet;
+pub mod devnet_detection;
 pub mod fee;
 pub mod interactive;
 pub mod output_format;
