@@ -50,7 +50,7 @@ pub async fn utils(
                 .await
                 .map_err(handle_starknet_command_error)?;
 
-            process_command_result("serialize", Ok(result), ui, None);
+            process_command_result("serialize", Ok(result), ui, None)?;
         }
 
         Commands::ClassHash(class_hash) => {
@@ -72,7 +72,7 @@ pub async fn utils(
             let result = class_hash::get_class_hash(&class_hash, &artifacts)
                 .map_err(handle_starknet_command_error)?;
 
-            process_command_result("class-hash", Ok(result), ui, None);
+            process_command_result("class-hash", Ok(result), ui, None)?;
         }
     }
 

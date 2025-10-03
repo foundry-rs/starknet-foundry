@@ -42,7 +42,7 @@ pub async fn multicall(
                     new.overwrite,
                 );
 
-                process_command_result("multicall new", result, ui, None);
+                process_command_result("multicall new", result, ui, None)?;
             } else {
                 ui.println(&DEFAULT_MULTICALL_CONTENTS);
             }
@@ -68,7 +68,7 @@ pub async fn multicall(
                 &run.rpc,
                 &config,
             );
-            process_command_result("multicall run", result, ui, block_explorer_link);
+            process_command_result("multicall run", result, ui, block_explorer_link)?;
             Ok(())
         }
     }
