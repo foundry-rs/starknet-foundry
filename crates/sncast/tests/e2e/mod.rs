@@ -5,6 +5,7 @@ mod completions;
 mod declare;
 mod declare_from;
 mod deploy;
+mod devnet_accounts;
 mod fee;
 mod invoke;
 mod main_tests;

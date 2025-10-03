@@ -1,6 +1,7 @@
 use crate::starknet_commands::script::run::Run;
 use crate::{Cli, starknet_commands::script::init::Init};
 use crate::{get_cast_config, process_command_result, starknet_commands};
+use anyhow::Context;
 use clap::{Args, Subcommand};
 use foundry_ui::UI;
 use sncast::helpers::scarb_utils::{
@@ -78,12 +79,14 @@ pub fn run_script_command(
                 )))
             };
 
+            let url = run.rpc.get_url(&config.url).context("Failed to get url")?;
             let result = starknet_commands::script::run::run(
                 &run.script_name,
                 &metadata_with_deps,
                 &package_metadata,
                 &mut artifacts,
                 &provider,
+                &url,
                 runtime,
                 &config,
                 state_file_path,

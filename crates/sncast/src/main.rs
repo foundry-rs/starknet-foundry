@@ -266,6 +266,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
     match cli.command {
         Commands::Declare(declare) => {
             let provider = declare.rpc.get_provider(&config, ui).await?;
+            let url = declare
+                .rpc
+                .get_url(&config.url)
+                .context("Failed to get url")?;
 
             let rpc = declare.rpc.clone();
 
@@ -273,7 +277,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 &config.account,
                 &config.accounts_file,
                 &provider,
+                &url,
                 config.keystore.as_ref(),
+                ui,
             )
             .await?;
             let manifest_path = assert_manifest_path_exists()?;
@@ -320,11 +326,17 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let provider = declare_from.rpc.get_provider(&config, ui).await?;
             let rpc_args = declare_from.rpc.clone();
             let source_provider = declare_from.source_rpc.get_provider(ui).await?;
+            let url = declare_from
+                .rpc
+                .get_url(&config.url)
+                .context("Failed to get url")?;
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
                 &provider,
+                &url,
                 config.keystore.as_ref(),
+                ui,
             )
             .await?;
 
@@ -367,12 +379,15 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             } = deploy;
 
             let provider = rpc.get_provider(&config, ui).await?;
+            let url = rpc.get_url(&config.url).context("Failed to get url")?;
 
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
                 &provider,
+                &url,
                 config.keystore.as_ref(),
+                ui,
             )
             .await?;
 
@@ -456,12 +471,15 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             } = invoke;
 
             let provider = rpc.get_provider(&config, ui).await?;
+            let url = rpc.get_url(&config.url).context("Failed to get url")?;
 
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
                 &provider,
+                &url,
                 config.keystore.as_ref(),
+                ui,
             )
             .await?;
 
