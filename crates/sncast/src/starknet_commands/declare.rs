@@ -9,11 +9,13 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::response::declare::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
 };
-use sncast::response::errors::StarknetCommandError;
+use sncast::response::errors::{SNCastProviderError, SNCastStarknetError, StarknetCommandError};
 use sncast::{ErrorData, WaitForTx, apply_optional_fields, handle_wait_for_tx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, DeclarationV3};
-use starknet::core::types::{DeclareTransactionResult, StarknetError};
+use starknet::core::types::{
+    ContractExecutionError, DeclareTransactionResult, StarknetError, TransactionExecutionErrorData,
+};
 use starknet::providers::ProviderError;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
@@ -156,6 +158,22 @@ pub async fn declare_with_artifacts(
             Ok(DeclareResponse::AlreadyDeclared(AlreadyDeclaredResponse {
                 class_hash: class_hash.into_(),
             }))
+        }
+        Err(Provider(ProviderError::StarknetError(StarknetError::TransactionExecutionError(
+            TransactionExecutionErrorData {
+                execution_error: ContractExecutionError::Message(message),
+                ..
+            },
+        )))) if message.contains("is already declared") => {
+            if skip_on_already_declared {
+                Ok(DeclareResponse::AlreadyDeclared(AlreadyDeclaredResponse {
+                    class_hash: class_hash.into_(),
+                }))
+            } else {
+                Err(StarknetCommandError::ProviderError(
+                    SNCastProviderError::StarknetError(SNCastStarknetError::ClassAlreadyDeclared),
+                ))
+            }
         }
         Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
         Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
