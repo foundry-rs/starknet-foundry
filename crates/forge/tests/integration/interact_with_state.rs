@@ -5,7 +5,10 @@ use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
 #[test]
-#[cfg_attr(not(feature = "interact-with-state"), ignore)]
+#[cfg_attr(
+    feature = "skip_test_for_scarb_since_2_11",
+    ignore = "Skipping test because feature skip_test_for_scarb_since_2_11 enabled"
+)]
 fn get_contract_address_in_interact_with_state() {
     let test = test_case!(
         indoc!(

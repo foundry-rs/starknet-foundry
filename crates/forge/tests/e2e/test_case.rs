@@ -3,6 +3,10 @@ use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[test]
+#[cfg_attr(
+    feature = "skip_test_for_only_latest_scarb",
+    ignore = "Plugin checks skipped"
+)]
 fn simple_addition() {
     let temp = setup_package("test_case");
 
@@ -27,6 +31,10 @@ fn simple_addition() {
 }
 
 #[test]
+#[cfg_attr(
+    feature = "skip_test_for_only_latest_scarb",
+    ignore = "Plugin checks skipped"
+)]
 fn with_exit_first_flag() {
     let temp = setup_package("test_case");
 
@@ -60,6 +68,10 @@ fn with_exit_first_flag() {
 }
 
 #[test]
+#[cfg_attr(
+    feature = "skip_test_for_only_latest_scarb",
+    ignore = "Plugin checks skipped"
+)]
 fn with_multiple_attributes() {
     let temp = setup_package("test_case");
 
@@ -103,6 +115,10 @@ fn with_multiple_attributes() {
 }
 
 #[test]
+#[cfg_attr(
+    feature = "skip_test_for_only_latest_scarb",
+    ignore = "Plugin checks skipped"
+)]
 fn addition_with_name_arg() {
     let temp = setup_package("test_case");
 

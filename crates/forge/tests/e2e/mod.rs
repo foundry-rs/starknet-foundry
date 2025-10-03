@@ -10,7 +10,6 @@ mod completions;
 mod components;
 mod contract_artifacts;
 mod coverage;
-#[cfg(feature = "debugging")]
 mod debugging;
 mod docs_snippets_validation;
 mod env;

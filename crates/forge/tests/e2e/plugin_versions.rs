@@ -8,7 +8,10 @@ use test_utils::tempdir_with_tool_versions;
 use toml_edit::ImDocument;
 
 #[test]
-#[cfg_attr(feature = "skip_plugin_checks", ignore = "Plugin checks skipped")]
+#[cfg_attr(
+    not(feature = "test_for_multiple_scarb_versions"),
+    ignore = "Multiple scarb versions must be installed"
+)]
 fn new_with_new_scarb() {
     let temp = tempdir_with_tool_versions().unwrap();
     runner(&temp)
@@ -39,7 +42,10 @@ fn new_with_new_scarb() {
 }
 
 #[test]
-#[cfg_attr(feature = "skip_plugin_checks", ignore = "Plugin checks skipped")]
+#[cfg_attr(
+    not(feature = "test_for_multiple_scarb_versions"),
+    ignore = "Multiple scarb versions must be installed"
+)]
 fn new_with_old_scarb() {
     let temp = tempdir_with_tool_versions().unwrap();
     Command::new("asdf")
@@ -75,7 +81,10 @@ fn new_with_old_scarb() {
 }
 
 #[test]
-#[cfg_attr(feature = "skip_plugin_checks", ignore = "Plugin checks skipped")]
+#[cfg_attr(
+    not(feature = "test_for_multiple_scarb_versions"),
+    ignore = "Multiple scarb versions must be installed"
+)]
 fn new_scarb_new_macros() {
     let temp = tempdir_with_tool_versions().unwrap();
     runner(&temp)
@@ -112,7 +121,10 @@ fn new_scarb_new_macros() {
 }
 
 #[test]
-#[cfg_attr(feature = "skip_plugin_checks", ignore = "Plugin checks skipped")]
+#[cfg_attr(
+    not(feature = "test_for_multiple_scarb_versions"),
+    ignore = "Multiple scarb versions must be installed"
+)]
 fn new_scarb_deprecated_macros() {
     let temp = tempdir_with_tool_versions().unwrap();
     runner(&temp)
@@ -157,7 +169,10 @@ fn new_scarb_deprecated_macros() {
 }
 
 #[test]
-#[cfg_attr(feature = "skip_plugin_checks", ignore = "Plugin checks skipped")]
+#[cfg_attr(
+    not(feature = "test_for_multiple_scarb_versions"),
+    ignore = "Multiple scarb versions must be installed"
+)]
 fn new_scarb_old_macros() {
     let temp = tempdir_with_tool_versions().unwrap();
     runner(&temp)
@@ -183,7 +198,10 @@ fn new_scarb_old_macros() {
 }
 
 #[test]
-#[cfg_attr(feature = "skip_plugin_checks", ignore = "Plugin checks skipped")]
+#[cfg_attr(
+    not(feature = "test_for_multiple_scarb_versions"),
+    ignore = "Multiple scarb versions must be installed"
+)]
 fn old_scarb_new_macros() {
     let temp = tempdir_with_tool_versions().unwrap();
     Command::new("asdf")
@@ -217,7 +235,10 @@ fn old_scarb_new_macros() {
 }
 
 #[test]
-#[cfg_attr(feature = "skip_plugin_checks", ignore = "Plugin checks skipped")]
+#[cfg_attr(
+    not(feature = "test_for_multiple_scarb_versions"),
+    ignore = "Multiple scarb versions must be installed"
+)]
 fn old_scarb_deprecated_macros() {
     let temp = tempdir_with_tool_versions().unwrap();
     Command::new("asdf")
@@ -264,7 +285,10 @@ fn old_scarb_deprecated_macros() {
 }
 
 #[test]
-#[cfg_attr(feature = "skip_plugin_checks", ignore = "Plugin checks skipped")]
+#[cfg_attr(
+    not(feature = "test_for_multiple_scarb_versions"),
+    ignore = "Multiple scarb versions must be installed"
+)]
 fn old_scarb_old_macros() {
     let temp = tempdir_with_tool_versions().unwrap();
     Command::new("asdf")

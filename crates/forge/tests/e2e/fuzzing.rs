@@ -292,6 +292,10 @@ fn generate_arg_cheatcode() {
 }
 
 #[test]
+#[cfg_attr(
+    feature = "skip_test_for_only_latest_scarb",
+    ignore = "Plugin checks skipped"
+)]
 fn no_fuzzer_attribute() {
     let temp = setup_package("fuzzing");
     let test_file = temp.child("tests/no_attribute.cairo");

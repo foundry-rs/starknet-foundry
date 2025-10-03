@@ -21,7 +21,7 @@ Below is a simple example which checks addition of two numbers.
 
 Now run:
 
-<!-- { "package_name": "parametrized_testing_basic" } -->
+<!-- { "package_name": "parametrized_testing_basic", "scarb_version": ">=2.12.0" } -->
 ```shell
 $ snforge test
 ```
@@ -79,7 +79,7 @@ Now let's look at an addvanced example which uses structs as parameters.
 
 Now run:
 
-<!-- { "package_name": "parametrized_testing_advanced" } -->
+<!-- { "package_name": "parametrized_testing_advanced", "scarb_version": ">=2.12.0" } -->
 ```shell
 $ snforge test
 ```
@@ -111,7 +111,7 @@ Below is an example in which we will fuzz the test but also run the specific def
 
 Now run:
 
-<!-- { "package_name": "parametrized_testing_fuzzer" } -->
+<!-- { "package_name": "parametrized_testing_fuzzer", "scarb_version": ">=2.12.0" } -->
 ```shell
 $ snforge test
 ```
