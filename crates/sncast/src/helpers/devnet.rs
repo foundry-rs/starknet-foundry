@@ -1,10 +1,8 @@
-use std::net::TcpStream;
-use std::time::Duration;
-
-/// Detects devnet by scanning running processes for starknet-devnet and extracting the port
 #[must_use]
-pub fn detect_devnet_url() -> String {
-    detect_devnet_from_processes().unwrap_or_else(|| "http://localhost:5050".to_string())
+pub fn detect_devnet_url() -> Result<String, String> {
+    detect_devnet_from_processes().ok_or_else(|| {
+        "Could not detect running starknet-devnet instance. Please use --url instead.".to_string()
+    })
 }
 
 #[must_use]
@@ -12,169 +10,256 @@ pub fn is_devnet_running() -> bool {
     detect_devnet_from_processes().is_some()
 }
 
-/// Detects devnet by scanning running processes for starknet-devnet and extracting the port
 fn detect_devnet_from_processes() -> Option<String> {
-    if let Some(port) = find_devnet_process_port() {
-        return Some(format!("http://localhost:{port}"));
-    }
-
-    let common_ports = [5050, 5000, 8545, 3000, 8000];
-    for &port in &common_ports {
-        if is_port_reachable("localhost", port) {
-            return Some(format!("http://localhost:{port}"));
-        }
+    if let Some(info) = find_devnet_process_info() {
+        return Some(format!("http://{}:{}", info.host, info.port));
     }
 
     None
 }
 
-fn find_devnet_process_port() -> Option<u16> {
+#[derive(Debug, Clone)]
+struct DevnetInfo {
+    host: String,
+    port: u16,
+}
+
+fn find_devnet_process_info() -> Option<DevnetInfo> {
     use std::process::Command;
 
     let output = Command::new("ps").args(["aux"]).output().ok()?;
     let ps_output = String::from_utf8_lossy(&output.stdout);
 
-    for line in ps_output.lines() {
-        if line.contains("starknet-devnet") {
-            // First try to extract port from command line arguments (faster)
-            if let Some(port) = extract_port_from_cmdline(line) {
-                return Some(port);
+    ps_output
+        .lines()
+        .filter(|line| line.contains("starknet-devnet"))
+        .find_map(|line| {
+            if line.contains("docker") {
+                Some(extract_devnet_info_from_docker_line(line))
+            } else {
+                Some(extract_devnet_info_from_cmdline(line))
             }
+        })
+}
 
-            // If that fails, try to get port from PID
-            let parts: Vec<&str> = line.split_whitespace().collect();
-            if parts.len() > 1 {
-                if let Ok(pid) = parts[1].parse::<u32>() {
-                    if let Some(port) = get_port_from_pid(pid) {
-                        return Some(port);
-                    }
-                }
+fn extract_string_from_flag(cmdline: &str, flag: &str) -> Option<String> {
+    if let Some(pos) = cmdline.find(flag) {
+        let after_pattern = &cmdline[pos + flag.len()..];
+        let value_str = after_pattern
+            .split_whitespace()
+            .next()
+            .unwrap_or("")
+            .trim_start_matches('=')
+            .trim_start_matches(':');
+
+        if !value_str.is_empty() {
+            return Some(value_str.to_string());
+        }
+    }
+    None
+}
+
+fn extract_port_from_flag(cmdline: &str, flag: &str) -> Option<u16> {
+    if let Some(port_str) = extract_string_from_flag(cmdline, flag) {
+        if let Ok(p) = port_str.parse::<u16>() {
+            if p > 1024 && p < 65535 {
+                return Some(p);
             }
         }
     }
     None
 }
 
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-fn get_port_from_pid(pid: u32) -> Option<u16> {
-    if let Some(port) = try_lsof_for_port(pid) {
-        return Some(port);
-    }
+fn extract_docker_port_mapping(cmdline: &str) -> Option<(String, u16)> {
+    if let Some(pos) = cmdline.find("-p ") {
+        let after_pattern = &cmdline[pos + 3..]; // "-p ".len() = 3
+        let port_mapping = after_pattern.split_whitespace().next().unwrap_or("");
 
-    #[cfg(target_os = "linux")]
-    {
-        try_linux_nettools_for_port(pid)
-    }
-
-    None
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-fn try_lsof_for_port(pid: u32) -> Option<u16> {
-    use std::process::Command;
-
-    let output = Command::new("lsof")
-        .args(["-P", "-p", &pid.to_string(), "-i"])
-        .output()
-        .ok()?;
-
-    let lsof_output = String::from_utf8_lossy(&output.stdout);
-
-    for line in lsof_output.lines() {
-        if line.contains("TCP") && line.contains("LISTEN") {
-            if let Some(port_part) = line.split_whitespace().last() {
-                if let Some(port_str) = port_part.split(':').next_back() {
-                    if let Ok(port) = port_str.parse::<u16>() {
-                        return Some(port);
-                    }
-                }
+        let parts: Vec<&str> = port_mapping.split(':').collect();
+        if parts.len() == 3 {
+            if let Ok(external_port) = parts[1].parse::<u16>() {
+                return Some((parts[0].to_string(), external_port));
+            }
+        } else if parts.len() == 2 {
+            if let Ok(external_port) = parts[0].parse::<u16>() {
+                return Some(("127.0.0.1".to_string(), external_port));
             }
         }
     }
     None
 }
 
-#[cfg(target_os = "linux")]
-fn try_linux_nettools_for_port(pid: u32) -> Option<u16> {
-    use std::process::Command;
+fn extract_devnet_info_from_docker_line(cmdline: &str) -> DevnetInfo {
+    let mut port = None;
+    let mut host = None;
 
-    let output = Command::new("ss")
-        .args(&["-tlnp"])
-        .output()
-        .or_else(|_| Command::new("netstat").args(&["-tlnp"]).output())
-        .ok()?;
-
-    let net_output = String::from_utf8_lossy(&output.stdout);
-
-    for line in net_output.lines() {
-        if line.contains(&pid.to_string()) {
-            let parts: Vec<&str> = line.split_whitespace().collect();
-            if parts.len() > 3 {
-                if let Some(port_str) = parts[3].split(':').last() {
-                    if let Ok(port) = port_str.parse::<u16>() {
-                        return Some(port);
-                    }
-                }
-            }
-        }
+    if let Some((docker_host, docker_port)) = extract_docker_port_mapping(cmdline) {
+        host = Some(docker_host);
+        port = Some(docker_port);
     }
-    None
+
+    if port.is_none() {
+        port = extract_port_from_flag(cmdline, "--port");
+    }
+
+    let final_host = host.unwrap_or_else(|| "127.0.0.1".to_string());
+    let final_port = port.unwrap_or(5050);
+
+    DevnetInfo {
+        host: final_host,
+        port: final_port,
+    }
 }
 
-fn extract_port_from_cmdline(cmdline: &str) -> Option<u16> {
-    let patterns = ["--port", "--host", ":", "localhost:"];
+fn extract_devnet_info_from_cmdline(cmdline: &str) -> DevnetInfo {
+    let mut port = extract_port_from_flag(cmdline, "--port");
+    let mut host = extract_string_from_flag(cmdline, "--host");
 
-    for pattern in &patterns {
-        if let Some(pos) = cmdline.find(pattern) {
-            let after_pattern = &cmdline[pos + pattern.len()..];
-            let port_str = after_pattern
-                .split_whitespace()
-                .next()
-                .unwrap_or("")
-                .trim_start_matches('=')
-                .trim_start_matches(':');
-
-            if let Ok(port) = port_str.parse::<u16>() {
-                if port > 1000 && port < 65535 {
-                    return Some(port);
+    if port.is_none() {
+        if let Ok(port_env) = std::env::var("PORT") {
+            if let Ok(p) = port_env.parse::<u16>() {
+                if p > 0 && p < 65535 {
+                    port = Some(p);
                 }
             }
         }
     }
 
-    for word in cmdline.split_whitespace() {
-        if let Ok(port) = word.parse::<u16>() {
-            return Some(port);
+    if host.is_none() {
+        if let Ok(host_env) = std::env::var("HOST") {
+            if !host_env.is_empty() {
+                host = Some(host_env);
+            }
         }
     }
 
-    None
-}
+    let final_port = port.unwrap_or(5050);
+    let final_host = host.unwrap_or_else(|| "127.0.0.1".to_string());
 
-fn is_port_reachable(host: &str, port: u16) -> bool {
-    if let Ok(addr) = format!("{host}:{port}").parse() {
-        TcpStream::connect_timeout(&addr, Duration::from_millis(50)).is_ok()
-    } else {
-        false
+    DevnetInfo {
+        host: final_host,
+        port: final_port,
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::net::TcpStream;
+    use std::process::{Command, Stdio};
+    use std::thread;
+    use std::time::{Duration, Instant};
 
     #[test]
-    fn test_devnet_process_detection() {
-        let cmdline1 = "starknet-devnet --port 5050 --host localhost";
-        assert_eq!(extract_port_from_cmdline(cmdline1), Some(5050));
+    fn test_extract_devnet_info_from_cmdline() {
+        let cmdline1 = "starknet-devnet --port 5050 --host 127.0.0.1";
+        let info1 = extract_devnet_info_from_cmdline(cmdline1);
+        assert_eq!(info1.port, 5050);
+        assert_eq!(info1.host, "127.0.0.1");
 
-        let cmdline3 = "/usr/bin/starknet-devnet --port=5000";
-        assert_eq!(extract_port_from_cmdline(cmdline3), Some(5000));
+        let cmdline2 = "/usr/bin/starknet-devnet --port=5000";
+        let info2 = extract_devnet_info_from_cmdline(cmdline2);
+        assert_eq!(info2.port, 5000);
+        assert_eq!(info2.host, "127.0.0.1");
 
-        // Test devnet URL generation
-        let devnet_url = detect_devnet_url();
-        assert!(devnet_url.starts_with("http://localhost:"));
+        let cmdline3 = "starknet-devnet --host 127.0.0.1";
+        let info3 = extract_devnet_info_from_cmdline(cmdline3);
+        assert_eq!(info3.port, 5050);
+        assert_eq!(info3.host, "127.0.0.1");
+    }
 
-        let _reachable = is_port_reachable("localhost", 5050);
+    #[test]
+    fn test_extract_devnet_info_from_docker_line() {
+        let cmdline1 = "docker run -p 127.0.0.1:5055:5050 shardlabs/starknet-devnet-rs";
+        let info1 = extract_devnet_info_from_docker_line(cmdline1);
+        assert_eq!(info1.port, 5055);
+        assert_eq!(info1.host, "127.0.0.1");
+
+        let cmdline2 = "docker run -p 8080:5050 shardlabs/starknet-devnet-rs";
+        let info2 = extract_devnet_info_from_docker_line(cmdline2);
+        assert_eq!(info2.port, 8080);
+        assert_eq!(info2.host, "127.0.0.1");
+
+        let cmdline3 = "docker run --network host shardlabs/starknet-devnet-rs --port 5055";
+        let info3 = extract_devnet_info_from_docker_line(cmdline3);
+        assert_eq!(info3.port, 5055);
+        assert_eq!(info3.host, "127.0.0.1");
+    }
+
+    #[test]
+    fn test_extract_devnet_info_with_both_envs() {
+        // SAFETY: Tests run in parallel and share the same environment variables.
+        // However, this modification applies only to this one test.
+        unsafe {
+            std::env::set_var("PORT", "8080");
+            std::env::set_var("HOST", "0.0.0.0");
+        }
+
+        let cmdline = "starknet-devnet";
+        let info = extract_devnet_info_from_cmdline(cmdline);
+        assert_eq!(info.port, 8080);
+        assert_eq!(info.host, "0.0.0.0");
+    }
+
+    #[test]
+    fn test_cmdline_args_override_env() {
+        // SAFETY: Tests run in parallel and share the same environment variables.
+        // However, this modification applies only to this one test.
+        unsafe {
+            std::env::set_var("PORT", "3000");
+            std::env::set_var("HOST", "localhost");
+        }
+
+        let cmdline = "starknet-devnet --port 9999 --host 192.168.1.1";
+        let info = extract_devnet_info_from_cmdline(cmdline);
+        assert_eq!(info.port, 9999);
+        assert_eq!(info.host, "192.168.1.1");
+    }
+
+    #[test]
+    fn test_detect_devnet_url() {
+        let child = spawn_devnet("5090");
+
+        let result = detect_devnet_url().expect("Failed to detect devnet URL");
+        assert_eq!(result, "http://127.0.0.1:5090");
+
+        cleanup_process(child);
+    }
+
+    fn spawn_devnet(port: &str) -> std::process::Child {
+        let mut child = Command::new("starknet-devnet")
+            .args(["--port", port])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("Failed to spawn starknet-devnet process");
+
+        let port_num: u16 = port.parse().expect("Invalid port number");
+        let start_time = Instant::now();
+        let timeout = Duration::from_secs(10);
+
+        while start_time.elapsed() < timeout {
+            if is_port_reachable("127.0.0.1", port_num) {
+                return child;
+            }
+            thread::sleep(Duration::from_millis(500));
+        }
+
+        let _ = child.kill();
+        let _ = child.wait();
+        panic!("Devnet did not start in time on port {port}");
+    }
+
+    fn cleanup_process(mut child: std::process::Child) {
+        child.kill().expect("Failed to kill devnet process");
+        child.wait().expect("Failed to wait for devnet process");
+    }
+
+    fn is_port_reachable(host: &str, port: u16) -> bool {
+        if let Ok(addr) = format!("{host}:{port}").parse() {
+            TcpStream::connect_timeout(&addr, Duration::from_millis(50)).is_ok()
+        } else {
+            false
+        }
     }
 }

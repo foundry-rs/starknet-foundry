@@ -92,7 +92,7 @@ impl Network {
     }
 
     fn free_devnet_rpc(_provider: &FreeProvider) -> String {
-        devnet::detect_devnet_url()
+        devnet::detect_devnet_url().unwrap()
     }
 }
 
