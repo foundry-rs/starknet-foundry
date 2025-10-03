@@ -395,7 +395,9 @@ pub fn assert_builtin(
             AnyTestCaseSummary::Single(case) => match case {
                 TestCaseSummary::Passed { used_resources, .. } => {
                     used_resources
-                        .execution_resources
+                        .execution_summary
+                        .charged_resources
+                        .vm_resources
                         .builtin_instance_counter
                         .get(&builtin)
                         .unwrap_or(&0)
