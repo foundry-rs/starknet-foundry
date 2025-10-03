@@ -291,7 +291,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             .expect("Failed to build contract");
 
             let result = starknet_commands::declare::declare(
-                &declare,
+                declare.contract_name.clone(),
+                declare.fee_args,
+                declare.nonce,
                 &account,
                 &artifacts,
                 wait_config,
@@ -315,7 +317,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let deploy_command_message = if let Ok(response) = &result {
                 // TODO(#3785)
                 let contract_artifacts = artifacts
-                    .get(&declare.contract.clone())
+                    .get(&declare.contract_name)
                     .expect("Failed to get contract artifacts");
                 let contract_definition: SierraClass =
                     serde_json::from_str(&contract_artifacts.sierra)
