@@ -74,7 +74,7 @@ impl SourceRpcArgs {
     fn get_url(&self) -> Option<String> {
         if let Some(network) = self.source_network {
             let free_provider = FreeProvider::semi_random();
-            Some(network.url(&free_provider))
+            Some(network.url(&free_provider).ok()?)
         } else {
             self.source_url
                 .as_ref()

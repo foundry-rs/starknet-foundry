@@ -56,8 +56,16 @@ Response: [0x0, 0x0, 0x43686172697a617264, 0x9, 0x0, 0x0, 0x41a78e741e5af2fec34b
 
 ### Network and RPC Providers
 
-When providing `--network` flag, `sncast` will randomly select on of the free RPC providers.
-When using free provider you may experience rate limits and other unexpected behavior.
+The `--network` flag supports the following networks:
+
+- **mainnet** - Connects to Starknet mainnet using a free RPC provider
+- **sepolia** - Connects to Starknet Sepolia testnet using a free RPC provider
+- **devnet** - Attempts to auto-detect running starknet-devnet instances or falls back to `http://localhost:5050`
+
+When using **mainnet** or **sepolia**, `sncast` will randomly select one of the free RPC providers.
+When using free providers you may experience rate limits and other unexpected behavior.
+
+For **devnet**, `sncast` will try to detect running `starknet-devnet` instance and connect to it, but it may fail. If detection fails, then use the `--url` flag instead.
 
 If using `sncast` extensively, we recommend getting access to a dedicated RPC node and providing its URL to sncast with
 `--url` flag.
