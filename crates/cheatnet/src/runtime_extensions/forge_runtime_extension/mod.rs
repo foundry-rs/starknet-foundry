@@ -42,7 +42,6 @@ use runtime::{
 };
 use scarb_oracle_hint_service::OracleHintService;
 use starknet::signers::SigningKey;
-use starknet_api::execution_resources::GasAmount;
 use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
@@ -785,12 +784,11 @@ pub fn get_all_used_resources(
 
     let l1_handler_payload_lengths = get_l1_handlers_payloads_lengths(&call_info.inner_calls);
 
+    // Syscalls are used only for `--detailed-resources` output.
     let top_call_syscalls = trace.borrow().get_total_used_syscalls();
 
     UsedResources {
         syscall_usage: top_call_syscalls,
-        execution_resources: call_info.resources.clone(),
-        gas_consumed: GasAmount::from(call_info.execution.gas_consumed),
         execution_summary: summary,
         l1_handler_payload_lengths,
     }
