@@ -66,13 +66,14 @@ fn extract_string_from_flag(cmdline: &str, flag: &str) -> Option<String> {
 }
 
 fn extract_port_from_flag(cmdline: &str, flag: &str) -> Option<u16> {
-    if let Some(port_str) = extract_string_from_flag(cmdline, flag) {
-        if let Ok(p) = port_str.parse::<u16>() {
-            if p > 1024 && p < 65535 {
-                return Some(p);
-            }
-        }
+    if let Some(port_str) = extract_string_from_flag(cmdline, flag)
+        && let Ok(p) = port_str.parse::<u16>()
+        && p > 1024
+        && p < 65535
+    {
+        return Some(p);
     }
+
     None
 }
 
@@ -82,14 +83,14 @@ fn extract_docker_port_mapping(cmdline: &str) -> Option<(String, u16)> {
         let port_mapping = after_pattern.split_whitespace().next().unwrap_or("");
 
         let parts: Vec<&str> = port_mapping.split(':').collect();
-        if parts.len() == 3 {
-            if let Ok(external_port) = parts[1].parse::<u16>() {
-                return Some((parts[0].to_string(), external_port));
-            }
-        } else if parts.len() == 2 {
-            if let Ok(external_port) = parts[0].parse::<u16>() {
-                return Some(("127.0.0.1".to_string(), external_port));
-            }
+        if parts.len() == 3
+            && let Ok(external_port) = parts[1].parse::<u16>()
+        {
+            return Some((parts[0].to_string(), external_port));
+        } else if parts.len() == 2
+            && let Ok(external_port) = parts[0].parse::<u16>()
+        {
+            return Some(("127.0.0.1".to_string(), external_port));
         }
     }
     None
@@ -121,22 +122,20 @@ fn extract_devnet_info_from_cmdline(cmdline: &str) -> DevnetInfo {
     let mut port = extract_port_from_flag(cmdline, "--port");
     let mut host = extract_string_from_flag(cmdline, "--host");
 
-    if port.is_none() {
-        if let Ok(port_env) = std::env::var("PORT") {
-            if let Ok(p) = port_env.parse::<u16>() {
-                if p > 0 && p < 65535 {
-                    port = Some(p);
-                }
-            }
-        }
+    if port.is_none()
+        && let Ok(port_env) = std::env::var("PORT")
+        && let Ok(p) = port_env.parse::<u16>()
+        && p > 1024
+        && p < 65535
+    {
+        port = Some(p);
     }
 
-    if host.is_none() {
-        if let Ok(host_env) = std::env::var("HOST") {
-            if !host_env.is_empty() {
-                host = Some(host_env);
-            }
-        }
+    if host.is_none()
+        && let Ok(host_env) = std::env::var("HOST")
+        && !host_env.is_empty()
+    {
+        host = Some(host_env);
     }
 
     let final_port = port.unwrap_or(5050);

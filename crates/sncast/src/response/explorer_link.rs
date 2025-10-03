@@ -1,7 +1,5 @@
 use crate::Network;
-use crate::helpers::{
-    block_explorer::LinkProvider, configuration::CastConfig, devnet_detection,
-};
+use crate::helpers::{block_explorer::LinkProvider, configuration::CastConfig, devnet_detection};
 use foundry_ui::Message;
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -69,9 +67,7 @@ where
 
     let network = chain_id.try_into().ok()?;
 
-    let is_devnet_network = matches!(network, Network::Devnet);
-    let is_devnet_running = devnet_detection::is_devnet_running();
-    let is_devnet = is_devnet_network || is_devnet_running;
+    let is_devnet = matches!(network, Network::Devnet) || devnet_detection::is_devnet_running();
 
     if (!config.show_explorer_links || is_devnet) && !is_explorer_link_overridden() {
         return None;
