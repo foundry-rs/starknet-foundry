@@ -47,6 +47,7 @@ pub struct Declare {
     pub rpc: RpcArgs,
 }
 
+// TODO(#3785)
 pub async fn declare(
     declare: &Declare,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
