@@ -49,8 +49,11 @@ pub struct Declare {
     pub rpc: RpcArgs,
 }
 
+#[expect(clippy::too_many_arguments)]
 pub async fn declare(
-    declare: Declare,
+    contract: String,
+    fee_args: FeeArgs,
+    nonce: Option<Felt>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
     wait_config: WaitForTx,
@@ -59,9 +62,9 @@ pub async fn declare(
 ) -> Result<DeclareResponse, StarknetCommandError> {
     let contract_artifacts =
         artifacts
-            .get(&declare.contract)
+            .get(&contract)
             .ok_or(StarknetCommandError::ContractArtifactsNotFound(ErrorData {
-                data: ByteArray::from(declare.contract.as_str()),
+                data: ByteArray::from(contract.as_str()),
             }))?;
 
     let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
@@ -72,8 +75,8 @@ pub async fn declare(
     declare_with_artifacts(
         contract_definition,
         casm_contract_definition,
-        declare.fee_args,
-        declare.nonce,
+        fee_args,
+        nonce,
         account,
         wait_config,
         skip_on_already_declared,
