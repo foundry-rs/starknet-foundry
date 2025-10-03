@@ -80,7 +80,7 @@ pub fn run_test(
             &casm_program,
             &RuntimeConfig::from(&forge_config.test_runner_config),
             None,
-            &versioned_program_path
+            &versioned_program_path,
         );
 
         if send.is_closed() {
@@ -114,7 +114,7 @@ pub(crate) fn run_fuzz_test(
             &casm_program,
             &RuntimeConfig::from(&forge_config.test_runner_config),
             Some(rng),
-            &versioned_program_path
+            &versioned_program_path,
         );
 
         // TODO: code below is added to fix snforge tests
