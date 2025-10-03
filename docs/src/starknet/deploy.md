@@ -82,6 +82,45 @@ transaction: https://sepolia.starkscan.co/tx/[..]
 > It is important to know how types are serialized because all values passed as constructor calldata are
 > interpreted as a field elements (felt252).
 
+### Deploying and Declaring at the Same Time
+
+You can deploy and declare a contract at the same time by passing `--contract-name` flag instead of `--class-hash`.
+Under the hood, if the passed contract was never declared to starknet, it will run the [declare](../starknet/declare.md)
+command first and then execute the contract deployment.
+
+> 📝 **Note**
+> When passing `--contract-name` flag, `sncast` must wait for the declare transaction to be completed first.
+> The contract might wait for a few seconds before executing the deployment.
+
+> 📝 **Note**
+> If fee arguments are provided to the method, they will be shared between declare and deploy transactions.
+
+<!-- TODO(#2736) -->
+<!-- { "ignored": true } -->
+```shell
+$ sncast deploy \
+    --contract-name HelloSncast
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Success: Deployment completed
+
+Contract Address:         0x0[..]
+Class Hash:               0x0[..]
+Declare Transaction Hash: 0x0[..]
+Deploy Transaction Hash:  0x0[..]
+
+To see deployment details, visit:
+contract: [..]
+class: [..]
+declare transaction: [..]
+deploy transaction: [..]
+```
+</details>
+
 ### Passing `salt` Argument
 
 Salt is a parameter which modifies contract's address, if not passed it will be automatically generated.

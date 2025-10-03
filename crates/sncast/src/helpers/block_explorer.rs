@@ -129,6 +129,7 @@ impl LinkProvider for OkLink {
 
 #[cfg(test)]
 mod tests {
+    use crate::response::deploy::DeployResponseKind;
     use crate::{
         Network,
         helpers::block_explorer::Service,
@@ -139,23 +140,23 @@ mod tests {
     use starknet::macros::felt;
     use test_case::test_case;
 
-    const MAINNET_RESPONSE: DeployResponse = DeployResponse {
+    const MAINNET_RESPONSE: DeployResponseKind = DeployResponseKind::Deploy(DeployResponse {
         contract_address: PaddedFelt(felt!(
             "0x03241d40a2af53a34274dd411e090ccac1ea80e0380a0303fe76d71b046cfecb"
         )),
         transaction_hash: PaddedFelt(felt!(
             "0x7605291e593e0c6ad85681d09e27a601befb85033bdf1805aabf5d84617cf68"
         )),
-    };
+    });
 
-    const SEPOLIA_RESPONSE: DeployResponse = DeployResponse {
+    const SEPOLIA_RESPONSE: DeployResponseKind = DeployResponseKind::Deploy(DeployResponse {
         contract_address: PaddedFelt(felt!(
             "0x0716b5f1e3bd760c489272fd6530462a09578109049e26e3f4c70492676eae17"
         )),
         transaction_hash: PaddedFelt(felt!(
             "0x1cde70aae10f79d2d1289c923a1eeca7b81a2a6691c32551ec540fa2cb29c33"
         )),
-    };
+    });
 
     async fn assert_valid_links(input: &str) {
         let pattern = Regex::new(r"transaction: |contract: |class: ").unwrap();
@@ -175,7 +176,7 @@ mod tests {
     #[tokio::test]
     #[test_case(Network::Mainnet, &MAINNET_RESPONSE; "mainnet")]
     #[test_case(Network::Sepolia, &SEPOLIA_RESPONSE; "sepolia")]
-    async fn test_happy_case_starkscan(network: Network, response: &DeployResponse) {
+    async fn test_happy_case_starkscan(network: Network, response: &DeployResponseKind) {
         let provider = Service::Voyager.as_provider(network).unwrap();
         let result = response.format_links(provider);
         assert_valid_links(&result).await;
@@ -184,7 +185,7 @@ mod tests {
     #[tokio::test]
     #[test_case(Network::Mainnet, &MAINNET_RESPONSE; "mainnet")]
     #[test_case(Network::Sepolia, &SEPOLIA_RESPONSE; "sepolia")]
-    async fn test_happy_case_voyager(network: Network, response: &DeployResponse) {
+    async fn test_happy_case_voyager(network: Network, response: &DeployResponseKind) {
         let provider = Service::Voyager.as_provider(network).unwrap();
         let result = response.format_links(provider);
         assert_valid_links(&result).await;

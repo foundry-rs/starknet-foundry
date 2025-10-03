@@ -17,12 +17,22 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 
+#[derive(Args, Debug, Clone)]
+#[group(required = true, multiple = false)]
+pub struct DeployIdentifier {
+    /// Class hash of contract to deploy
+    #[arg(short = 'g', long)]
+    pub class_hash: Option<Felt>,
+
+    #[arg(long, conflicts_with = "class_hash")]
+    pub contract_name: Option<String>,
+}
+
 #[derive(Args)]
 #[command(about = "Deploy a contract on Starknet")]
 pub struct Deploy {
-    /// Class hash of contract to deploy
-    #[arg(short = 'g', long)]
-    pub class_hash: Felt,
+    #[command(flatten)]
+    pub identifier: DeployIdentifier,
 
     #[command(flatten)]
     pub arguments: DeployArguments,
