@@ -57,6 +57,9 @@ async fn test_happy_case_human_readable() {
         To see declaration details, visit:
         class: https://[..]
         transaction: https://[..]
+
+        To deploy a contract of this class, run:
+        sncast --accounts-file accounts.json --account my_account deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
     " },
     );
 }
@@ -96,6 +99,52 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let receipt = get_transaction_receipt(hash).await;
 
     assert!(matches!(receipt, Declare(_)));
+}
+
+#[tokio::test]
+async fn test_contract_with_constructor_params() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/contract_with_constructor_params",
+        "put",
+        "human_readable",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "ContractWithConstructorParams",
+    ];
+    let args = apply_test_resource_bounds_flags(args);
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        Success: Declaration completed
+
+        Class Hash:       0x[..]
+        Transaction Hash: 0x[..]
+        
+        To see declaration details, visit:
+        class: https://[..]
+        transaction: https://[..]
+
+        To deploy a contract of this class, replace the placeholders in `--arguments` with your actual values, then run:
+        sncast --accounts-file accounts.json --account my_account deploy --class-hash 0x[..] --arguments '<foo: felt252>, <bar: felt252>' --url http://127.0.0.1:5055/rpc
+    " },
+    );
 }
 
 #[test_case(FeeArgs{
@@ -493,6 +542,9 @@ fn test_scarb_no_casm_artifact() {
 
         Class Hash: [..]
         Transaction Hash: [..]
+
+        To deploy a contract of this class, run:
+        sncast --accounts-file [..]accounts.json --account user1 deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
         "},
     );
 }
@@ -627,6 +679,9 @@ async fn test_no_scarb_profile() {
             To see declaration details, visit:
             class: [..]
             transaction: [..]
+
+            To deploy a contract of this class, run:
+            sncast --accounts-file [..]accounts.json --account user8 deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
         "},
     );
 }
