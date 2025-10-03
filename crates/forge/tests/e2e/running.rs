@@ -1208,7 +1208,7 @@ fn dispatchers() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "skip_test_for_scarb_since_2_11"), ignore)]
+#[cfg_attr(feature = "skip_test_for_scarb_since_2_11", ignore)]
 fn test_interact_with_state() {
     let temp = setup_package("contract_state");
     let output = test_runner(&temp).assert().code(0);
