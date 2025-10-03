@@ -200,9 +200,15 @@ impl Message for DeployCommandMessage {
 
         write!(command, " {}", self.network_flag).unwrap();
 
+        let header = if self.arguments.is_some() {
+            "To deploy a contract of this class, replace the placeholders in `--arguments` with your actual values, then run:"
+        } else {
+            "To deploy a contract of this class, run:"
+        };
+
         formatdoc!(
             "
-            To deploy a contract of this class, replace the placeholders in `--arguments` with your actual values, then run:
+            {header}
             {command}
             "
         )
