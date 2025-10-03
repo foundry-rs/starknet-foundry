@@ -109,7 +109,7 @@ pub async fn account_name_already_exists() {
         output,
         indoc! {
             "
-            [WARNING] Using account devnet-1 from accounts file accounts.json. To use inbuilt devnet account, please change the name of your existing account.
+            [WARNING] Using account devnet-1 from accounts file accounts.json. To use an inbuilt devnet account, please rename your existing account or use an account with a different number.
             
             Success: Invoke completed
 
