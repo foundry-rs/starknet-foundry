@@ -33,9 +33,7 @@ impl RpcArgs {
             )
         }
 
-        let url = self
-            .get_url(&config.url)
-            .context("Either `--network` or `--url` must be provided")?;
+        let url = self.get_url(&config.url)?;
 
         assert!(!url.is_empty(), "url cannot be empty");
         let provider = get_provider(&url)?;
@@ -45,19 +43,15 @@ impl RpcArgs {
         Ok(provider)
     }
 
-    #[must_use]
-    fn get_url(&self, config_url: &String) -> Option<String> {
-        if let Some(network) = self.network {
-            let free_provider = FreeProvider::semi_random();
-            Some(network.url(&free_provider))
-        } else {
-            self.url.clone().or_else(|| {
-                if config_url.is_empty() {
-                    None
-                } else {
-                    Some(config_url.to_string())
-                }
-            })
+    fn get_url(&self, config_url: &str) -> Result<String> {
+        match (&self.network, &self.url, config_url.is_empty()) {
+            (Some(network), None, _) => {
+                let free_provider = FreeProvider::semi_random();
+                network.url(&free_provider)
+            }
+            (None, Some(url), _) => Ok(url.clone()),
+            (None, None, false) => Ok(config_url.to_string()),
+            _ => bail!("Either `--network` or `--url` must be provided"),
         }
     }
 }
@@ -74,11 +68,10 @@ impl FreeProvider {
 }
 
 impl Network {
-    #[must_use]
-    pub fn url(self, provider: &FreeProvider) -> String {
+    pub fn url(self, provider: &FreeProvider) -> Result<String> {
         match self {
-            Network::Mainnet => Self::free_mainnet_rpc(provider),
-            Network::Sepolia => Self::free_sepolia_rpc(provider),
+            Network::Mainnet => Ok(Self::free_mainnet_rpc(provider)),
+            Network::Sepolia => Ok(Self::free_sepolia_rpc(provider)),
             Network::Devnet => Self::free_devnet_rpc(provider),
         }
     }
@@ -91,8 +84,10 @@ impl Network {
         format!("https://starknet-sepolia.public.blastapi.io/rpc/{RPC_URL_VERSION}")
     }
 
-    fn free_devnet_rpc(_provider: &FreeProvider) -> String {
-        devnet::detect_devnet_url().unwrap()
+    fn free_devnet_rpc(_provider: &FreeProvider) -> Result<String> {
+        devnet::detect_devnet_url().with_context(
+            || "Could not detect running starknet-devnet instance. Please use --url instead.",
+        )
     }
 }
 

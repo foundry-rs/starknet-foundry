@@ -142,7 +142,7 @@ pub async fn verify(
             if config.url.is_empty() {
                 let network =
                     network.ok_or_else(|| anyhow!("Either --network or --url must be provided"))?;
-                let free_rpc_provider = network.url(&FreeProvider::semi_random());
+                let free_rpc_provider = network.url(&FreeProvider::semi_random())?;
                 Url::parse(&free_rpc_provider)?
             } else {
                 Url::parse(&config.url)?

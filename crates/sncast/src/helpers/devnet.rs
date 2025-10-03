@@ -1,8 +1,8 @@
+use std::{net::TcpStream, time::Duration};
+
 #[must_use]
-pub fn detect_devnet_url() -> Result<String, String> {
-    detect_devnet_from_processes().ok_or_else(|| {
-        "Could not detect running starknet-devnet instance. Please use --url instead.".to_string()
-    })
+pub fn detect_devnet_url() -> Option<String> {
+    detect_devnet_from_processes()
 }
 
 #[must_use]
@@ -13,6 +13,11 @@ pub fn is_devnet_running() -> bool {
 fn detect_devnet_from_processes() -> Option<String> {
     if let Some(info) = find_devnet_process_info() {
         return Some(format!("http://{}:{}", info.host, info.port));
+    }
+
+    // Fallback to default 127.0.0.1:5050 if reachable
+    if is_port_reachable("127.0.0.1", 5050) {
+        return Some("http://127.0.0.1:5050".to_string());
     }
 
     None
@@ -142,10 +147,16 @@ fn extract_devnet_info_from_cmdline(cmdline: &str) -> DevnetInfo {
     }
 }
 
+fn is_port_reachable(host: &str, port: u16) -> bool {
+    if let Ok(addr) = format!("{host}:{port}").parse() {
+        TcpStream::connect_timeout(&addr, Duration::from_millis(50)).is_ok()
+    } else {
+        false
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::net::TcpStream;
     use std::process::{Command, Stdio};
     use std::thread;
     use std::time::{Duration, Instant};
@@ -253,13 +264,5 @@ mod tests {
     fn cleanup_process(mut child: std::process::Child) {
         child.kill().expect("Failed to kill devnet process");
         child.wait().expect("Failed to wait for devnet process");
-    }
-
-    fn is_port_reachable(host: &str, port: u16) -> bool {
-        if let Ok(addr) = format!("{host}:{port}").parse() {
-            TcpStream::connect_timeout(&addr, Duration::from_millis(50)).is_ok()
-        } else {
-            false
-        }
     }
 }
