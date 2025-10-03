@@ -143,16 +143,10 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     return Ok(CheatcodeHandlingResult::from_serializable(success_output));
                 }
 
-                let contract_artifacts = self.artifacts.get(&contract).ok_or_else(|| {
-                    EnhancedHintError::Anyhow(anyhow!(
-                        "Failed to find {contract} artifact in starknet_artifacts.json file."
-                    ))
-                })?;
-
                 let declare_result = self.tokio_runtime.block_on(declare::declare(
-                    &declare,
+                    declare,
                     self.account()?,
-                    contract_artifacts,
+                    self.artifacts,
                     WaitForTx {
                         wait: true,
                         wait_params: self.config.wait_params,

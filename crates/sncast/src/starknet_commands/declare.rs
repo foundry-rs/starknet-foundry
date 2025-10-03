@@ -1,6 +1,7 @@
 use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
+use conversions::byte_array::ByteArray;
 use foundry_ui::UI;
 use scarb_api::StarknetContractArtifacts;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
@@ -9,7 +10,7 @@ use sncast::response::declare::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
 };
 use sncast::response::errors::StarknetCommandError;
-use sncast::{WaitForTx, apply_optional_fields, handle_wait_for_tx};
+use sncast::{ErrorData, WaitForTx, apply_optional_fields, handle_wait_for_tx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, DeclarationV3};
 use starknet::core::types::{DeclareTransactionResult, StarknetError};
@@ -21,9 +22,10 @@ use starknet::{
     signers::LocalWallet,
 };
 use starknet_types_core::felt::Felt;
+use std::collections::HashMap;
 use std::sync::Arc;
 
-#[derive(Args)]
+#[derive(Args, Clone)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
 pub struct Declare {
     /// Contract name
@@ -46,13 +48,20 @@ pub struct Declare {
 }
 
 pub async fn declare(
-    declare: &Declare,
+    declare: Declare,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-    contract_artifacts: &StarknetContractArtifacts,
+    artifacts: &HashMap<String, StarknetContractArtifacts>,
     wait_config: WaitForTx,
     skip_on_already_declared: bool,
     ui: &UI,
 ) -> Result<DeclareResponse, StarknetCommandError> {
+    let contract_artifacts =
+        artifacts
+            .get(&declare.contract)
+            .ok_or(StarknetCommandError::ContractArtifactsNotFound(ErrorData {
+                data: ByteArray::from(declare.contract.as_str()),
+            }))?;
+
     let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
         .context("Failed to parse sierra artifact")?;
     let casm_contract_definition: CompiledClass =
@@ -61,7 +70,7 @@ pub async fn declare(
     declare_with_artifacts(
         contract_definition,
         casm_contract_definition,
-        declare.fee_args.clone(),
+        declare.fee_args,
         declare.nonce,
         account,
         wait_config,
@@ -72,7 +81,7 @@ pub async fn declare(
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) async fn declare_with_artifacts(
+pub async fn declare_with_artifacts(
     sierra_class: SierraClass,
     compiled_casm: CompiledClass,
     fee_args: FeeArgs,

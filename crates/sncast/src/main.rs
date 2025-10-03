@@ -279,29 +279,22 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             .await?;
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &declare.package)?;
-            let artifacts: std::collections::HashMap<String, scarb_api::StarknetContractArtifacts> =
-                build_and_load_artifacts(
-                    &package_metadata,
-                    &BuildConfig {
-                        scarb_toml_path: manifest_path,
-                        json: cli.json,
-                        profile: cli.profile.unwrap_or("release".to_string()),
-                    },
-                    false,
-                    ui,
-                )
-                .expect("Failed to build contract");
-
-            let contract_artifacts = artifacts.get(&declare.contract.clone()).ok_or(
-                StarknetCommandError::ContractArtifactsNotFound(ErrorData {
-                    data: ByteArray::from(declare.contract.as_str()),
-                }),
-            )?;
+            let artifacts = build_and_load_artifacts(
+                &package_metadata,
+                &BuildConfig {
+                    scarb_toml_path: manifest_path,
+                    json: cli.json,
+                    profile: cli.profile.unwrap_or("release".to_string()),
+                },
+                false,
+                ui,
+            )
+            .expect("Failed to build contract");
 
             let result = starknet_commands::declare::declare(
-                &declare,
+                declare.clone(),
                 &account,
-                contract_artifacts,
+                &artifacts,
                 wait_config,
                 false,
                 ui,
@@ -321,6 +314,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
 
             let deploy_command_message = if let Ok(response) = &result {
+                let contract_artifacts = artifacts.get(&declare.contract.clone()).ok_or(
+                    StarknetCommandError::ContractArtifactsNotFound(ErrorData {
+                        data: ByteArray::from(declare.contract.as_str()),
+                    }),
+                )?;
                 let contract_definition: SierraClass =
                     serde_json::from_str(&contract_artifacts.sierra)
                         .context("Failed to parse sierra artifact")?;
