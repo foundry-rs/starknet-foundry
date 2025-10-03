@@ -263,7 +263,7 @@ pub async fn get_account<'a>(
         (true, true) => {
             ui.println(&WarningMessage::new(format!(
                 "Using account {account} from accounts file {accounts_file}. \
-                 To use an inbuilt devnet account, please rename your existing account."
+                To use an inbuilt devnet account, please rename your existing account or use an account with a different number."
             )));
             ui.print_blank_line();
             return get_account_from_accounts_file(account, accounts_file, provider, keystore)
