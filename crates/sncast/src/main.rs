@@ -15,7 +15,7 @@ use data_transformer::transform;
 use foundry_ui::components::warning::WarningMessage;
 use foundry_ui::{Message, UI};
 use shared::auto_completions::{Completions, generate_completions};
-use sncast::helpers::command_processing::process_command_result;
+use sncast::helpers::command::process_command_result;
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
