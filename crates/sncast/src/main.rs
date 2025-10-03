@@ -260,6 +260,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
     let wait_config = WaitForTx {
         wait: cli.wait,
         wait_params: config.wait_params,
+        show_ui_outputs: true,
     };
 
     match cli.command {
