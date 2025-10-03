@@ -1,11 +1,6 @@
-use num_traits::ToPrimitive;
-use sncast::helpers::{
-    constants::OZ_CLASS_HASH,
-    devnet_provider::{DevnetProvider, PredeployedAccount},
-};
-use starknet::macros::felt;
-
 use crate::helpers::constants::{DEVNET_ACCOUNTS_NUMBER, DEVNET_SEED, SEPOLIA_RPC_URL, URL};
+use num_traits::ToPrimitive;
+use sncast::helpers::{constants::OZ_CLASS_HASH, devnet_provider::DevnetProvider};
 
 #[tokio::test]
 async fn test_get_config() {
