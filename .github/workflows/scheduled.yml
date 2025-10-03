@@ -91,7 +91,7 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
-      - run: cargo test --profile ci -p forge --features skip_plugin_checks e2e
+      - run: cargo test --profile ci -p forge --features skip_plugin_checks skip_test_for_scarb_since_2_11 e2e
 
   test-cast:
     if: github.event.repository.fork == false

@@ -11,7 +11,7 @@ no_scarb_installed = []
 debugging = []
 assert_non_exact_gas = ["test_utils/assert_non_exact_gas"]
 skip_plugin_checks = []
-interact-with-state = []
+skip_test_for_scarb_since_2_11 = []
 
 [dependencies]
 anyhow.workspace = true
