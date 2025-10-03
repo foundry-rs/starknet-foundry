@@ -293,6 +293,7 @@ async fn test_contract_already_declared() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
+        "--wait",
         "declare",
         "--url",
         URL,
@@ -300,6 +301,47 @@ async fn test_contract_already_declared() {
         "Map",
     ];
     let args = apply_test_resource_bounds_flags(args);
+
+    runner(&args).current_dir(tempdir.path()).assert().success();
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Command: declare
+        Error: Contract with the same class hash is already declared
+        "},
+    );
+}
+
+#[tokio::test]
+async fn test_contract_already_declared_estimate_fee() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "74362345",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "--wait",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+    ];
+    // Commented out because we explicitly do not want to set any resource bounds.
+    // Transaction has to go through estimate fee endpoint first because it throws different errors
+    // than the normal declare endpoint and we want to test them.
+    // let args = apply_test_resource_bounds_flags(args);
 
     runner(&args).current_dir(tempdir.path()).assert().success();
 
