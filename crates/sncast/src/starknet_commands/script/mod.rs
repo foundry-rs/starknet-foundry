@@ -30,11 +30,12 @@ pub fn run_script_command(
     runtime: Runtime,
     script: &Script,
     ui: &UI,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<crate::ExitStatus> {
     match &script.command {
         starknet_commands::script::Commands::Init(init) => {
             let result = starknet_commands::script::init::init(init, ui);
-            process_command_result("script init", result, ui, None);
+            let status = process_command_result("script init", result, ui, None);
+            Ok(status)
         }
         starknet_commands::script::Commands::Run(run) => {
             let manifest_path = assert_manifest_path_exists()?;
@@ -90,9 +91,8 @@ pub fn run_script_command(
                 ui,
             );
 
-            process_command_result("script run", result, ui, None);
+            let status = process_command_result("script run", result, ui, None);
+            Ok(status)
         }
     }
-
-    Ok(())
 }
