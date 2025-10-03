@@ -122,6 +122,13 @@ impl ContractsDataStore {
     pub fn get_casm_debug_info(&self, class_hash: &ClassHash) -> Option<&CairoProgramDebugInfo> {
         self.casm_debug_infos.get(class_hash)
     }
+
+    /// Checks if the contract with the given [`ClassHash`] is a forked contract.
+    pub fn is_fork(&self, class_hash: &ClassHash) -> bool {
+        // We create contract names only from `ContractsData` and not from `ForkData`,
+        // so if the contract name is not present in `contract_names`, it is a fork
+        !self.contract_names.contains_key(class_hash)
+    }
 }
 
 /// Compile the given [`ContractClass`] to `casm` and return [`CairoProgramDebugInfo`]

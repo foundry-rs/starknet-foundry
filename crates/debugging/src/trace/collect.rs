@@ -1,4 +1,5 @@
 use crate::contracts_data_store::ContractsDataStore;
+use crate::trace::function::{FunctionTrace, FunctionTraceError};
 use crate::trace::types::{
     CallerAddress, ContractAddress, ContractName, ContractTrace, Selector, TestName, TraceInfo,
     TransformedCallResult, TransformedCalldata,
@@ -38,6 +39,7 @@ impl<'a> Collector<'a> {
     fn collect_contract_trace(&self) -> ContractTrace {
         let components = self.context.components();
         let entry_point = &self.call_trace.entry_point;
+
         let nested_calls = self.collect_nested_calls();
         let contract_name = self.collect_contract_name();
         let abi = self.collect_abi();
@@ -52,6 +54,7 @@ impl<'a> Collector<'a> {
             call_type: components.call_type(entry_point.call_type),
             nested_calls,
             call_result: components.call_result_lazy(|| self.collect_transformed_call_result(abi)),
+            function_trace: components.function_trace_lazy(|| self.collect_function_trace()),
         };
 
         ContractTrace {
@@ -123,6 +126,14 @@ impl<'a> Collector<'a> {
                 CallFailure::Error { msg } => format_result_message("error", &msg.to_string()),
             },
         })
+    }
+
+    fn collect_function_trace(&self) -> Result<FunctionTrace, FunctionTraceError> {
+        FunctionTrace::create(
+            *self.class_hash(),
+            self.call_trace,
+            self.contracts_data_store(),
+        )
     }
 
     fn class_hash(&self) -> &ClassHash {

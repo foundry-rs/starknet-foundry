@@ -1,3 +1,4 @@
+use crate::trace::function::{FunctionNode, FunctionTrace, FunctionTraceError};
 use crate::trace::types::{ContractTrace, Trace, TraceInfo};
 use crate::tree::building::node::Node;
 
@@ -34,8 +35,27 @@ impl AsTreeNode for TraceInfo {
         parent.leaf_optional(self.caller_address.as_option());
         parent.leaf_optional(self.call_type.as_option());
         parent.leaf_optional(self.call_result.as_option());
+        parent.as_tree_node_optional(self.function_trace.as_option());
         for nested_call in &self.nested_calls {
             parent.as_tree_node(nested_call);
+        }
+    }
+}
+
+impl AsTreeNode for Result<FunctionTrace, FunctionTraceError> {
+    fn as_tree_node(&self, parent: &mut Node) {
+        match self {
+            Ok(trace) => parent.child_node(trace).as_tree_node(&trace.root),
+            Err(error) => parent.leaf(error),
+        }
+    }
+}
+
+impl AsTreeNode for FunctionNode {
+    fn as_tree_node(&self, parent: &mut Node) {
+        let mut node = parent.child_node(self);
+        for child in &self.children {
+            node.as_tree_node(child);
         }
     }
 }
