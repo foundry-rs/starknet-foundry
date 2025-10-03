@@ -1,4 +1,6 @@
-use crate::helpers::constants::{FORK_BLOCK_NUMBER, SEED, SEPOLIA_RPC_URL, URL};
+use crate::helpers::constants::{
+    DEVNET_ACCOUNTS_NUMBER, DEVNET_FORK_BLOCK_NUMBER, DEVNET_SEED, SEPOLIA_RPC_URL, URL,
+};
 use crate::helpers::fixtures::{
     deploy_braavos_account, deploy_cairo_0_account, deploy_keystore_account,
     deploy_latest_oz_account, deploy_ready_account,
@@ -39,17 +41,17 @@ fn start_devnet() {
             "--port",
             &port,
             "--seed",
-            &SEED.to_string(),
+            &DEVNET_SEED.to_string(),
             "--state-archive-capacity",
             "full",
             "--fork-network",
             SEPOLIA_RPC_URL,
             "--fork-block",
-            &FORK_BLOCK_NUMBER.to_string(),
+            &DEVNET_FORK_BLOCK_NUMBER.to_string(),
             "--initial-balance",
             "9999999999999999999999999999999",
             "--accounts",
-            "20",
+            &DEVNET_ACCOUNTS_NUMBER.to_string(),
         ])
         .stdout(Stdio::null())
         .spawn()
@@ -80,7 +82,7 @@ fn start_devnet() {
 #[dtor]
 fn stop_devnet() {
     let port = Url::parse(URL).unwrap().port().unwrap_or(80).to_string();
-    let pattern = format!("starknet-devnet.*{port}.*{SEED}");
+    let pattern = format!("starknet-devnet.*{port}.*{DEVNET_SEED}");
 
     Command::new("pkill")
         .args(["-f", &pattern])
