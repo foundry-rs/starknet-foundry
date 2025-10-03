@@ -11,7 +11,6 @@ use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
 use configuration::load_config;
-use conversions::byte_array::ByteArray;
 use data_transformer::transform;
 use foundry_ui::components::warning::WarningMessage;
 use foundry_ui::{Message, UI};
@@ -21,16 +20,17 @@ use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use sncast::helpers::output_format::output_format_from_json_flag;
+use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
 use sncast::response::declare::{DeclareResponse, DeployCommandMessage};
-use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
+use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transformed_call::transform_response;
 use sncast::{
-    ErrorData, ValidatedWaitParams, WaitForTx, get_account, get_block_id,
-    get_class_hash_by_address, get_contract_class,
+    ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
+    get_contract_class,
 };
 use starknet::core::types::ContractClass;
 use starknet::core::types::contract::{AbiEntry, SierraClass};
@@ -312,22 +312,23 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
 
             let deploy_command_message = if let Ok(response) = &result {
-                let contract_artifacts = artifacts.get(&declare.contract.clone()).ok_or(
-                    StarknetCommandError::ContractArtifactsNotFound(ErrorData {
-                        data: ByteArray::from(declare.contract.as_str()),
-                    }),
-                )?;
+                // TODO(#3785)
+                let contract_artifacts = artifacts
+                    .get(&declare.contract.clone())
+                    .expect("Failed to get contract artifacts");
                 let contract_definition: SierraClass =
                     serde_json::from_str(&contract_artifacts.sierra)
                         .context("Failed to parse sierra artifact")?;
-
+                let network_flag = generate_network_flag(
+                    rpc.get_url(&config.url).as_deref(),
+                    rpc.network.as_ref(),
+                );
                 Some(DeployCommandMessage::new(
                     &contract_definition.abi,
                     response,
                     &config.account,
                     &config.accounts_file,
-                    rpc.get_url(&config.url).as_deref(),
-                    rpc.network.as_ref(),
+                    network_flag,
                 ))
             } else {
                 None

@@ -1,7 +1,5 @@
 use super::{command::CommandResponse, explorer_link::OutputLink};
-use crate::Network;
 use crate::helpers::block_explorer::LinkProvider;
-use crate::helpers::rpc::generate_network_flag;
 use crate::response::cast_message::SncastMessage;
 use anyhow::Error;
 use camino::Utf8PathBuf;
@@ -141,7 +139,7 @@ pub struct DeployCommandMessage {
     accounts_file: Option<String>,
     account: String,
     class_hash: PaddedFelt,
-    arguments: Option<String>,
+    arguments_flag: Option<String>,
     network_flag: String,
 }
 
@@ -151,18 +149,9 @@ impl DeployCommandMessage {
         response: &DeclareTransactionResponse,
         account: &str,
         accounts_file: &Utf8PathBuf,
-        rpc_url: Option<&str>,
-        network: Option<&Network>,
+        network_flag: String,
     ) -> Result<Self, Error> {
-        let arguments = abi.iter().find_map(|entry| {
-            if let AbiEntry::Constructor(constructor) = entry {
-                let args = generate_constructor_placeholder_args(constructor.clone());
-                (!args.is_empty()).then_some(args)
-            } else {
-                None
-            }
-        });
-        let network_flag = generate_network_flag(rpc_url, network);
+        let arguments_flag: Option<String> = generate_arguments_flag(abi);
         let accounts_file_str = accounts_file.to_string();
         let accounts_file = (!accounts_file_str
             .contains("starknet_accounts/starknet_open_zeppelin_accounts.json"))
@@ -172,7 +161,7 @@ impl DeployCommandMessage {
             account: account.to_string(),
             accounts_file,
             class_hash: response.class_hash,
-            arguments,
+            arguments_flag,
             network_flag,
         })
     }
@@ -182,25 +171,30 @@ impl Message for DeployCommandMessage {
     fn text(&self) -> String {
         let mut command = String::from("sncast");
 
-        if let Some(file) = &self.accounts_file {
-            write!(command, " --accounts-file {file}").unwrap();
+        let accounts_file_flag = generate_accounts_file_flag(self.accounts_file.as_ref());
+        if let Some(flag) = accounts_file_flag {
+            write!(command, " {flag}").unwrap();
         }
 
-        write!(command, " --account {}", self.account).unwrap();
+        let account_flag = format!("--account {}", self.account);
+        write!(command, " {account_flag}").unwrap();
+
+        write!(command, " deploy").unwrap();
+
         write!(
             command,
-            " deploy --class-hash {}",
+            " --class-hash {}",
             self.class_hash.into_hex_string()
         )
         .unwrap();
 
-        if let Some(arguments) = &self.arguments {
-            write!(command, " --arguments '{arguments}'").unwrap();
+        if let Some(arguments) = &self.arguments_flag {
+            write!(command, " {arguments}").unwrap();
         }
 
         write!(command, " {}", self.network_flag).unwrap();
 
-        let header = if self.arguments.is_some() {
+        let header = if self.arguments_flag.is_some() {
             "To deploy a contract of this class, replace the placeholders in `--arguments` with your actual values, then run:"
         } else {
             "To deploy a contract of this class, run:"
@@ -220,7 +214,7 @@ impl Message for DeployCommandMessage {
     }
 }
 
-fn generate_constructor_placeholder_args(constructor: AbiConstructor) -> String {
+fn generate_constructor_placeholder_arguments(constructor: AbiConstructor) -> String {
     constructor
         .inputs
         .into_iter()
@@ -230,8 +224,27 @@ fn generate_constructor_placeholder_args(constructor: AbiConstructor) -> String 
                 .split("::")
                 .last()
                 .expect("Failed to get last part of input type");
-            format!("<{} ({})>", input.name, input_type)
+            format!("<{}: {})>", input.name, input_type)
         })
         .collect::<Vec<String>>()
         .join(", ")
+}
+
+fn generate_arguments_flag(abi: &[AbiEntry]) -> Option<String> {
+    let arguments = abi.iter().find_map(|entry| {
+        if let AbiEntry::Constructor(constructor) = entry {
+            let arguments = generate_constructor_placeholder_arguments(constructor.clone());
+            (!arguments.is_empty()).then_some(arguments)
+        } else {
+            None
+        }
+    });
+
+    arguments.map(|arguments| format!("--arguments '{arguments}'"))
+}
+
+fn generate_accounts_file_flag(accounts_file: Option<&String>) -> Option<String> {
+    accounts_file
+        .as_ref()
+        .map(|file| format!("--accounts-file {file}"))
 }
