@@ -8,8 +8,8 @@ edition.workspace = true
 [features]
 scarb_2_10_0 = []
 no_scarb_installed = []
-assert_non_exact_gas = ["test_utils/assert_non_exact_gas"]
-skip_plugin_checks = []
+non_exact_gas_assertions = ["test_utils/assert_non_exact_gas"]
+skip_test_for_only_latest_scarb = []
 skip_test_for_scarb_since_2_11 = []
 
 [dependencies]
