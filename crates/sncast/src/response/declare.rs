@@ -224,7 +224,7 @@ fn generate_constructor_placeholder_arguments(constructor: AbiConstructor) -> St
                 .split("::")
                 .last()
                 .expect("Failed to get last part of input type");
-            format!("<{}: {})>", input.name, input_type)
+            format!("<{}: {}>", input.name, input_type)
         })
         .collect::<Vec<String>>()
         .join(", ")
