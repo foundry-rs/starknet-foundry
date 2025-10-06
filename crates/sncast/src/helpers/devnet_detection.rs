@@ -154,6 +154,7 @@ fn is_port_reachable(host: &str, port: u16) -> bool {
         false
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;

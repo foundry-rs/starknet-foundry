@@ -60,7 +60,7 @@ The `--network` flag supports the following networks:
 
 - **mainnet** - Connects to Starknet mainnet using a free RPC provider
 - **sepolia** - Connects to Starknet Sepolia testnet using a free RPC provider
-- **devnet** - Attempts to auto-detect running starknet-devnet instances or falls back to `http://localhost:5050`
+- **devnet** - Attempts to auto-detect running starknet-devnet instances
 
 When using **mainnet** or **sepolia**, `sncast` will randomly select one of the free RPC providers.
 When using free providers you may experience rate limits and other unexpected behavior.
