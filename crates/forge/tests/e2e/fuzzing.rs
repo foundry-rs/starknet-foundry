@@ -311,7 +311,7 @@ fn no_fuzzer_attribute() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        error: Plugin diagnostic: #[test] function with parameters must have #[fuzzer] attribute
+        error: Plugin diagnostic: #[test] function with parameters must have #[fuzzer] or #[test_case] attribute
          --> [..]no_attribute.cairo:1:1
         #[test]
 

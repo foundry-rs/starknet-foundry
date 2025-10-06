@@ -1,6 +1,5 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
     CallInfoWithExecutionData, ContractClassEntryPointExecutionResult,
-    EntryPointExecutionErrorWithTrace,
 };
 use crate::runtime_extensions::native::native_syscall_handler::CheatableNativeSyscallHandler;
 use crate::state::CheatnetState;
@@ -36,11 +35,7 @@ pub(crate) fn execute_entry_point_call_native(
         native_syscall_handler: &mut NativeSyscallHandler::new(call.clone(), state, context),
     };
 
-    let call_info = execute_entry_point_call(call, native_compiled_class_v1, &mut syscall_handler)
-        .map_err(|err| EntryPointExecutionErrorWithTrace {
-            source: err,
-            trace: None,
-        })?;
+    let call_info = execute_entry_point_call(call, native_compiled_class_v1, &mut syscall_handler)?;
 
     let syscall_usage = &syscall_handler.native_syscall_handler.base.syscalls_usage;
 
@@ -50,7 +45,6 @@ pub(crate) fn execute_entry_point_call_native(
         // If we got to this point, it means tracked resources are SierraGas.
         syscall_usage_vm_resources: HashMap::default(),
         syscall_usage_sierra_gas: syscall_usage.clone(),
-        vm_trace: None,
     })
 }
 

@@ -1,9 +1,10 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
+    ExecuteCallEntryPointExtraOptions, execute_call_entry_point,
+};
 use crate::runtime_extensions::native::native_syscall_handler::BaseSyscallResult;
 use crate::state::CheatnetState;
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::entry_point::CallEntryPoint;
-use blockifier::execution::execution_utils::update_remaining_gas;
 use blockifier::execution::syscalls::hint_processor::{
     ENTRYPOINT_FAILED_ERROR, SyscallExecutionError,
 };
@@ -26,10 +27,11 @@ pub fn execute_inner_call(
         syscall_handler_base.state,
         cheatnet_state,
         syscall_handler_base.context,
-        true,
+        remaining_gas,
+        &ExecuteCallEntryPointExtraOptions {
+            trace_data_handled_by_revert_call: false,
+        },
     )?;
-    // TODO not sure if to keep it
-    update_remaining_gas(remaining_gas, &call_info);
     // endregion
 
     let mut raw_retdata = call_info.execution.retdata.0.clone();

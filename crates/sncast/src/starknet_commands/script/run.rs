@@ -143,7 +143,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 }
 
                 let declare_result = self.tokio_runtime.block_on(declare::declare(
-                    declare,
+                    &declare,
                     self.account()?,
                     self.artifacts,
                     WaitForTx {

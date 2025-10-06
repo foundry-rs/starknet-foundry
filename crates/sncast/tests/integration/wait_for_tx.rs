@@ -13,7 +13,7 @@ use camino::Utf8PathBuf;
 use conversions::string::IntoHexStr;
 use sncast::{ValidatedWaitParams, get_account};
 use sncast::{WaitForTx, handle_wait_for_tx, wait_for_tx};
-use starknet::contract::ContractFactory;
+use starknet::contract::{ContractFactory, UdcSelector};
 use starknet_types_core::felt::Felt;
 
 #[tokio::test]
@@ -44,7 +44,11 @@ async fn test_rejected_transaction() {
     .await
     .expect("Could not get the account");
 
-    let factory = ContractFactory::new(MAP_CONTRACT_CLASS_HASH_SEPOLIA.parse().unwrap(), account);
+    let factory = ContractFactory::new_with_udc(
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA.parse().unwrap(),
+        account,
+        UdcSelector::New,
+    );
     let deployment = factory
         .deploy_v3(Vec::new(), Felt::ONE, false)
         .l1_gas(1)

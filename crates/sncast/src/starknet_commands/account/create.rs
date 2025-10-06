@@ -15,7 +15,7 @@ use sncast::helpers::constants::{
     BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, CREATE_KEYSTORE_PASSWORD_ENV_VAR,
     OZ_CLASS_HASH, READY_CLASS_HASH,
 };
-use sncast::helpers::rpc::RpcArgs;
+use sncast::helpers::rpc::{RpcArgs, generate_network_flag};
 use sncast::response::account::create::AccountCreateResponse;
 use sncast::{
     AccountType, Network, check_class_hash_exists, check_if_legacy_contract,
@@ -334,16 +334,6 @@ fn write_account_to_file(
         serde_json::to_string_pretty(&account_json).unwrap(),
     )?;
     Ok(())
-}
-
-fn generate_network_flag(rpc_url: Option<&str>, network: Option<&Network>) -> String {
-    if let Some(rpc_url) = rpc_url {
-        format!("--url {rpc_url}")
-    } else if let Some(network) = network {
-        format!("--network {network}")
-    } else {
-        unreachable!("Either `--rpc_url` or `--network` must be provided.")
-    }
 }
 
 fn generate_deploy_command(

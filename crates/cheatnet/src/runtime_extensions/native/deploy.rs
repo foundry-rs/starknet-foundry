@@ -1,4 +1,6 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
+    ExecuteCallEntryPointExtraOptions, execute_call_entry_point,
+};
 use crate::runtime_extensions::native::native_syscall_handler::BaseSyscallResult;
 use crate::state::CheatnetState;
 use blockifier::execution::call_info::CallInfo;
@@ -64,15 +66,19 @@ pub fn execute_constructor_entry_point(
     };
 
     // region: Modified blockifer code
-    let call_info =
-        execute_call_entry_point(&mut constructor_call, state, cheatnet_state, context, false)
-            .map_err(|error| {
-                ConstructorEntryPointExecutionError::new(
-                    error,
-                    &ctor_context,
-                    Some(constructor_selector),
-                )
-            })?;
+    let call_info = execute_call_entry_point(
+        &mut constructor_call,
+        state,
+        cheatnet_state,
+        context,
+        remaining_gas,
+        &ExecuteCallEntryPointExtraOptions {
+            trace_data_handled_by_revert_call: false,
+        },
+    )
+    .map_err(|error| {
+        ConstructorEntryPointExecutionError::new(error, &ctor_context, Some(constructor_selector))
+    })?;
 
     Ok(call_info)
     // endregion

@@ -31,6 +31,7 @@ mod requirements;
 mod running;
 mod steps;
 mod templates;
+mod test_case;
 mod trace_print;
 #[cfg(not(feature = "run-native"))]
 mod trace_resources;

@@ -11,7 +11,7 @@ use blockifier::state::state_api::State;
 use cairo_lang_casm::hints::Hint;
 use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::execution::cheated_syscalls;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::non_reverting_execute_call_entry_point;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     AddressOrClassHash, call_entry_point,
 };
@@ -192,7 +192,7 @@ fn deploy_helper(
         syscall_handler.base.context,
         &ctor_context,
         calldata,
-        i64::MAX as u64,
+        &mut (i64::MAX as u64),
     )
     .unwrap();
     cheatnet_state.increment_deploy_salt_base();
@@ -245,6 +245,7 @@ pub fn call_contract(
         cheatnet_state,
         entry_point,
         &AddressOrClassHash::ContractAddress(*contract_address),
+        &mut (i64::MAX as u64),
     )
 }
 
@@ -282,12 +283,12 @@ pub fn call_contract_raw(
         &hints,
     );
 
-    execute_call_entry_point(
+    non_reverting_execute_call_entry_point(
         &mut entry_point,
         syscall_hint_processor.base.state,
         cheatnet_state,
         syscall_hint_processor.base.context,
-        false,
+        &mut (i64::MAX as u64),
     )
 }
 

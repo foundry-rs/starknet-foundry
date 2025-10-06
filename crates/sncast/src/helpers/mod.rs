@@ -2,6 +2,7 @@ pub mod account;
 pub mod artifacts;
 pub mod block_explorer;
 pub mod braavos;
+pub mod command;
 pub mod config;
 pub mod configuration;
 pub mod constants;

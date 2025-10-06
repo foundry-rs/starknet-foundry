@@ -2,7 +2,6 @@ use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use foundry_ui::UI;
-use sncast::helpers::constants::UDC_ADDRESS;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::deploy::DeployResponse;
@@ -11,7 +10,7 @@ use sncast::{WaitForTx, apply_optional_fields, handle_wait_for_tx};
 use sncast::{extract_or_generate_salt, udc_uniqueness};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
-use starknet::contract::{ContractFactory, DeploymentV3};
+use starknet::contract::{ContractFactory, DeploymentV3, UdcSelector};
 use starknet::core::utils::get_udc_deployed_address;
 use starknet::providers::JsonRpcClient;
 use starknet::providers::jsonrpc::HttpTransport;
@@ -74,7 +73,7 @@ pub async fn deploy(
     let salt = extract_or_generate_salt(salt);
 
     // TODO(#3628): Use `ContractFactory::new` once new UDC address is the default one in starknet-rs
-    let factory = ContractFactory::new_with_udc(class_hash, account, UDC_ADDRESS);
+    let factory = ContractFactory::new_with_udc(class_hash, account, UdcSelector::New);
 
     let deployment = factory.deploy_v3(calldata.clone(), salt, unique);
 
