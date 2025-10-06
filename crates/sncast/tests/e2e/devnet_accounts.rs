@@ -172,7 +172,7 @@ pub async fn use_devnet_account_with_network_flags(network: &str) {
 
     assert_stderr_contains(
         output,
-        format! {"Error: Devnet accounts cannot be used with `{network}` for `--network` flag."
+        format! {"Error: Devnet accounts cannot be used with `--network {network}`"
         },
     );
 }

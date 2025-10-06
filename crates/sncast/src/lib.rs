@@ -265,7 +265,7 @@ pub async fn get_account<'a>(
         && (network == Network::Mainnet || network == Network::Sepolia)
     {
         bail!(format!(
-            "Devnet accounts cannot be used with `{network}` for `--network` flag."
+            "Devnet accounts cannot be used with `--network {network}`"
         ));
     }
 
