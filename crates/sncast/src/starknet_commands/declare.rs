@@ -47,8 +47,9 @@ pub struct Declare {
     pub rpc: RpcArgs,
 }
 
+// TODO(#3785)
 pub async fn declare(
-    declare: Declare,
+    declare: &Declare,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
     wait_config: WaitForTx,
@@ -70,7 +71,7 @@ pub async fn declare(
     declare_with_artifacts(
         contract_definition,
         casm_contract_definition,
-        declare.fee_args,
+        declare.fee_args.clone(),
         declare.nonce,
         account,
         wait_config,
@@ -81,7 +82,7 @@ pub async fn declare(
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) async fn declare_with_artifacts(
+pub async fn declare_with_artifacts(
     sierra_class: SierraClass,
     compiled_casm: CompiledClass,
     fee_args: FeeArgs,

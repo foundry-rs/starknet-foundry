@@ -264,7 +264,9 @@ pub async fn get_account<'a>(
         && let Some(network) = rpc_args.network
         && (network == Network::Mainnet || network == Network::Sepolia)
     {
-        bail!("Value of `--network` cannot be `mainnet` or `sepolia` when using a devnet account");
+        bail!(format!(
+            "Devnet accounts cannot be used with `--network {network}`"
+        ));
     }
 
     let accounts_file = &config.accounts_file;

@@ -49,7 +49,7 @@ jobs:
       - uses: software-mansion/setup-universal-sierra-compiler@v1
 
       - run: cargo test --profile ci --lib -p forge
-      - run: cargo test --profile ci -p forge integration --features assert_non_exact_gas
+      - run: cargo test --profile ci -p forge integration --features non_exact_gas_assertions,skip_test_for_scarb_since_2_11
 
   test-forge-e2e:
     if: github.event.repository.fork == false
@@ -91,7 +91,7 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
-      - run: cargo test --profile ci -p forge --features skip_plugin_checks e2e
+      - run: cargo test --profile ci -p forge --features skip_test_for_only_latest_scarb,skip_test_for_scarb_since_2_11 e2e
 
   test-cast:
     if: github.event.repository.fork == false

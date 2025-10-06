@@ -15,11 +15,9 @@ use blockifier::execution::{
     entry_point::CallEntryPoint, syscalls::vm_syscall_utils::SyscallUsageMap,
 };
 use blockifier::state::errors::StateError;
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use conversions::{byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr};
 use shared::utils::build_readable_text;
 use starknet_api::core::EntryPointSelector;
-use starknet_api::execution_resources::GasAmount;
 use starknet_api::{
     contract_class::EntryPointType,
     core::{ClassHash, ContractAddress},
@@ -29,8 +27,6 @@ use starknet_types_core::felt::Felt;
 #[derive(Clone, Debug, Default)]
 pub struct UsedResources {
     pub syscall_usage: SyscallUsageMap,
-    pub execution_resources: ExecutionResources,
-    pub gas_consumed: GasAmount,
     pub execution_summary: ExecutionSummary,
     pub l1_handler_payload_lengths: Vec<usize>,
 }

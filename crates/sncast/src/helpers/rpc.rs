@@ -98,6 +98,17 @@ impl Network {
     }
 }
 
+#[must_use]
+pub fn generate_network_flag(rpc_url: Option<&str>, network: Option<&Network>) -> String {
+    if let Some(network) = network {
+        format!("--network {network}")
+    } else if let Some(rpc_url) = rpc_url {
+        format!("--url {rpc_url}")
+    } else {
+        unreachable!("Either `--rpc_url` or `--network` must be provided.")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

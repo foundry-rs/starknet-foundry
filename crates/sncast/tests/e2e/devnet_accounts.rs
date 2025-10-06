@@ -146,3 +146,33 @@ pub async fn use_devnet_account_with_network_not_being_devnet() {
         },
     );
 }
+
+#[test_case("mainnet")]
+#[test_case("sepolia")]
+#[tokio::test]
+pub async fn use_devnet_account_with_network_flags(network: &str) {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+
+    let args = vec![
+        "--account",
+        "devnet-1",
+        "invoke",
+        "--network",
+        network,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 0x2",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        format! {"Error: Devnet accounts cannot be used with `--network {network}`"
+        },
+    );
+}
