@@ -109,7 +109,7 @@ pub async fn account_name_already_exists() {
         output,
         indoc! {
             "
-            [WARNING] Using account devnet-1 from accounts file accounts.json. To use inbuilt devnet account, please change the name of your existing account.
+            [WARNING] Using account devnet-1 from accounts file accounts.json. To use an inbuilt devnet account, please rename your existing account or use an account with a different number.
             
             Success: Invoke completed
 
@@ -142,10 +142,7 @@ pub async fn use_devnet_account_with_network_not_being_devnet() {
 
     assert_stderr_contains(
         output,
-        indoc! {
-            "
-            Error: The provided network is not a Devnet instance. Devnet accounts can only be used with Devnet.
-            "
+        format! {"Error: Node at {SEPOLIA_RPC_URL} is not responding to the Devnet health check (GET `/is_alive`). It may not be a Devnet instance or it may be down."
         },
     );
 }

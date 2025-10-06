@@ -1,5 +1,7 @@
 use crate::helpers::account::{check_account_exists, get_account_from_devnet, is_devnet_account};
+use crate::helpers::configuration::CastConfig;
 use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
+use crate::helpers::rpc::RpcArgs;
 use crate::response::errors::SNCastProviderError;
 use anyhow::{Context, Error, Result, anyhow, bail};
 use camino::Utf8PathBuf;
@@ -87,7 +89,7 @@ pub const MAINNET: Felt =
 pub const SEPOLIA: Felt =
     Felt::from_hex_unchecked(const_hex::const_encode::<10, true>(b"SN_SEPOLIA").as_str());
 
-#[derive(ValueEnum, Clone, Copy, Debug)]
+#[derive(ValueEnum, Clone, Copy, Debug, PartialEq)]
 pub enum Network {
     Mainnet,
     Sepolia,
@@ -247,29 +249,46 @@ pub async fn get_nonce(
 }
 
 pub async fn get_account<'a>(
-    account: &str,
-    accounts_file: &Utf8PathBuf,
+    config: &CastConfig,
     provider: &'a JsonRpcClient<HttpTransport>,
-    url: &str,
+    rpc_args: &RpcArgs,
     keystore: Option<&Utf8PathBuf>,
     ui: &UI,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
     let chain_id = get_chain_id(provider).await?;
     let network_name = chain_id_to_network_name(chain_id);
+    let account = &config.account;
     let is_devnet_account = is_devnet_account(account);
-    let exists_in_accounts_file = check_account_exists(account, &network_name, accounts_file)?;
 
-    if is_devnet_account && exists_in_accounts_file {
-        ui.println(&WarningMessage::new(format!(
-            "Using account {account} from accounts file {accounts_file}. To use inbuilt devnet account, please change the name of your existing account."
-        )));
-        ui.print_blank_line();
-        return get_account_from_accounts_file(account, accounts_file, provider, keystore).await;
-    } else if is_devnet_account && !exists_in_accounts_file {
-        return get_account_from_devnet(account, provider, url).await;
+    if is_devnet_account
+        && let Some(network) = rpc_args.network
+        && (network == Network::Mainnet || network == Network::Sepolia)
+    {
+        bail!("Value of `--network` cannot be `mainnet` or `sepolia` when using a devnet account");
     }
 
-    get_account_from_accounts_file(account, accounts_file, provider, keystore).await
+    let accounts_file = &config.accounts_file;
+    let exists_in_accounts_file = check_account_exists(account, &network_name, accounts_file)?;
+
+    match (is_devnet_account, exists_in_accounts_file) {
+        (true, true) => {
+            ui.println(&WarningMessage::new(format!(
+                "Using account {account} from accounts file {accounts_file}. \
+                To use an inbuilt devnet account, please rename your existing account or use an account with a different number."
+            )));
+            ui.print_blank_line();
+            return get_account_from_accounts_file(account, accounts_file, provider, keystore)
+                .await;
+        }
+        (true, false) => {
+            let url = rpc_args.get_url(&config.url).context("Failed to get url")?;
+            return get_account_from_devnet(account, provider, &url).await;
+        }
+        _ => {
+            return get_account_from_accounts_file(account, accounts_file, provider, keystore)
+                .await;
+        }
+    }
 }
 
 pub async fn get_account_from_accounts_file<'a>(

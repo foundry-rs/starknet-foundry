@@ -1,7 +1,7 @@
 use crate::{
     NestedMap, build_account, check_account_file_exists, helpers::devnet_provider::DevnetProvider,
 };
-use anyhow::{Result, bail};
+use anyhow::{Result, ensure};
 use camino::Utf8PathBuf;
 use starknet::{
     accounts::SingleOwnerAccount,
@@ -66,11 +66,12 @@ pub fn check_account_exists(
     let accounts: HashMap<String, HashMap<String, AccountData>> =
         read_and_parse_json_file(accounts_file)?;
 
-    if let Some(network_accounts) = accounts.get(network_name) {
-        Ok(network_accounts.contains_key(account_name))
-    } else {
-        bail!("Network with name {network_name} does not exist in accounts file");
-    }
+    accounts
+        .get(network_name)
+        .map(|network_accounts| network_accounts.contains_key(account_name))
+        .ok_or_else(|| {
+            anyhow::anyhow!("Network with name {network_name} does not exist in accounts file")
+        })
 }
 
 #[must_use]
@@ -89,25 +90,21 @@ pub async fn get_account_from_devnet<'a>(
         .context("Failed to parse devnet account number")?;
 
     let devnet_provider = DevnetProvider::new(url);
+    devnet_provider.ensure_alive().await?;
+
     let devnet_config = devnet_provider.get_config().await;
     let devnet_config = match devnet_config {
         Ok(config) => config,
         Err(err) => {
-            if err.to_string().contains("Method not found") {
-                bail!(
-                    "The provided network is not a Devnet instance. Devnet accounts can only be used with Devnet."
-                )
-            }
             return Err(err);
         }
     };
 
-    if account_number > devnet_config.total_accounts || account_number == 0 {
-        bail!(
-            "Devnet account number must be between 1 and {}",
-            devnet_config.total_accounts
-        );
-    }
+    ensure!(
+        account_number <= devnet_config.total_accounts && account_number != 0,
+        "Devnet account number must be between 1 and {}",
+        devnet_config.total_accounts
+    );
 
     let devnet_accounts = devnet_provider.get_predeployed_accounts().await?;
     let predeployed_account = devnet_accounts

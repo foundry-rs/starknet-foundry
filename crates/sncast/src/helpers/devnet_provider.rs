@@ -1,6 +1,6 @@
 use crate::AccountData;
 use ::serde::{Deserialize, Serialize, de::DeserializeOwned};
-use anyhow::{Context, Error};
+use anyhow::{Context, Error, ensure};
 use reqwest::Client;
 use serde_json::json;
 use starknet_types_core::felt::Felt;
@@ -35,7 +35,7 @@ impl DevnetProvider {
 }
 
 impl DevnetProvider {
-    async fn send_request<P, R>(&self, method: DevnetProviderMethod, params: P) -> Result<R, Error>
+    async fn send_request<P, R>(&self, method: DevnetProviderMethod, params: P) -> anyhow::Result<R>
     where
         P: Serialize + Send + Sync,
         R: DeserializeOwned,
@@ -52,21 +52,17 @@ impl DevnetProvider {
             }))
             .send()
             .await
-            .context("Error occurred during request")?
+            .context("Failed to send request")?
             .json::<serde_json::Value>()
-            .await;
+            .await
+            .context("Failed to parse response")?;
 
-        match res {
-            Ok(res_body) => {
-                if let Some(error) = res_body.get("error") {
-                    Err(anyhow::anyhow!(error.to_string()))
-                } else if let Some(result) = res_body.get("result") {
-                    serde_json::from_value(result.clone()).map_err(anyhow::Error::from)
-                } else {
-                    Err(anyhow::anyhow!("Malformed RPC response: {res_body}"))
-                }
-            }
-            Err(e) => Err(anyhow::anyhow!(e.to_string())),
+        if let Some(error) = res.get("error") {
+            Err(anyhow::anyhow!(error.to_string()))
+        } else if let Some(result) = res.get("result") {
+            serde_json::from_value(result.clone()).map_err(anyhow::Error::from)
+        } else {
+            panic!("Malformed RPC response: {res}")
         }
     }
 
@@ -80,6 +76,27 @@ impl DevnetProvider {
     pub async fn get_predeployed_accounts(&self) -> Result<Vec<PredeployedAccount>, Error> {
         self.send_request(DevnetProviderMethod::GetPredeployedAccounts, json!({}))
             .await
+    }
+
+    /// Ensures the Devnet instance is alive.
+    pub async fn ensure_alive(&self) -> Result<(), Error> {
+        let is_alive = self
+            .client
+            .get(format!(
+                "{}/is_alive",
+                self.url.to_string().replace("/rpc", "")
+            ))
+            .send()
+            .await
+            .map(|res| res.status().is_success())
+            .unwrap_or(false);
+
+        ensure!(
+            is_alive,
+            "Node at {} is not responding to the Devnet health check (GET `/is_alive`). It may not be a Devnet instance or it may be down.",
+            self.url
+        );
+        Ok(())
     }
 }
 
