@@ -11,7 +11,7 @@ They are available under specific names - `devnet-1`, `devnet-2`, ..., `devnet-<
 
 > 📝 **Note**
 >
-> Devnet accounts aren't availabe when using `--network` flag with `sepolia` and `mainnet` values.
+> Devnet accounts can't be used together with `sepolia` and `mainnet` values for `--network` flag.
 
 
 ### Example
