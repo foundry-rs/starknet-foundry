@@ -29,7 +29,7 @@ fn detect_devnet_from_processes() -> Result<String, String> {
             Err("Multiple starknet-devnet instances found. Please use --url to specify which one to use.".to_string())
         }
         Err(FindDevnetError::None | FindDevnetError::CommandFailed) => {
-            // Fallback to default starknet-
+            // Fallback to default starknet-devnet URL if reachable
             if is_port_reachable("127.0.0.1", 5050) {
                 Ok("http://127.0.0.1:5050".to_string())
             } else {
@@ -182,7 +182,7 @@ mod tests {
     use std::thread;
     use std::time::{Duration, Instant};
 
-    // Those tests are marked to run serially to avoid interference from env vars
+    // These tests are marked to run serially to avoid interference from environment variables
     #[test]
     fn test_devnet_parsing() {
         test_extract_devnet_info_from_cmdline();
