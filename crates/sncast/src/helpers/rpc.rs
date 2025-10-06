@@ -1,7 +1,7 @@
 use crate::helpers::configuration::CastConfig;
 use crate::helpers::devnet_detection;
 use crate::{Network, get_provider};
-use anyhow::{Context, Result, bail};
+use anyhow::{Result, bail};
 use clap::Args;
 use foundry_ui::UI;
 use shared::consts::RPC_URL_VERSION;
@@ -85,9 +85,7 @@ impl Network {
     }
 
     fn free_devnet_rpc(_provider: &FreeProvider) -> Result<String> {
-        devnet_detection::detect_devnet_url().with_context(
-            || "Could not detect running starknet-devnet instance. Please use --url instead.",
-        )
+        devnet_detection::detect_devnet_url().map_err(|e| anyhow::anyhow!(e))
     }
 }
 

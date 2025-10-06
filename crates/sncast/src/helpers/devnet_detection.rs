@@ -1,27 +1,4 @@
-use std::{net::TcpStream, time::Duration};
-
-#[must_use]
-pub fn detect_devnet_url() -> Option<String> {
-    detect_devnet_from_processes()
-}
-
-#[must_use]
-pub fn is_devnet_running() -> bool {
-    detect_devnet_from_processes().is_some()
-}
-
-fn detect_devnet_from_processes() -> Option<String> {
-    if let Some(info) = find_devnet_process_info() {
-        return Some(format!("http://{}:{}", info.host, info.port));
-    }
-
-    // Fallback to default 127.0.0.1:5050 if reachable
-    if is_port_reachable("127.0.0.1", 5050) {
-        return Some("http://127.0.0.1:5050".to_string());
-    }
-
-    None
-}
+use std::process::Command;
 
 #[derive(Debug, Clone)]
 struct DevnetInfo {
@@ -29,23 +6,63 @@ struct DevnetInfo {
     port: u16,
 }
 
-fn find_devnet_process_info() -> Option<DevnetInfo> {
-    use std::process::Command;
+#[derive(Debug)]
+enum FindDevnetError {
+    None,
+    Multiple,
+    CommandFailed,
+}
 
-    let output = Command::new("ps").args(["aux"]).output().ok()?;
+pub fn detect_devnet_url() -> Result<String, String> {
+    detect_devnet_from_processes()
+}
+
+#[must_use]
+pub fn is_devnet_running() -> bool {
+    detect_devnet_from_processes().is_ok()
+}
+
+fn detect_devnet_from_processes() -> Result<String, String> {
+    match find_devnet_process_info() {
+        Ok(info) => Ok(format!("http://{}:{}", info.host, info.port)),
+        Err(FindDevnetError::Multiple) => {
+            Err("Multiple starknet-devnet instances found. Please use --url to specify which one to use.".to_string())
+        }
+        Err(FindDevnetError::None | FindDevnetError::CommandFailed) => {
+            // Fallback to default starknet-
+            if is_port_reachable("127.0.0.1", 5050) {
+                Ok("http://127.0.0.1:5050".to_string())
+            } else {
+                Err("Could not detect running starknet-devnet instance. Please use --url instead.".to_string())
+            }
+        }
+    }
+}
+
+fn find_devnet_process_info() -> Result<DevnetInfo, FindDevnetError> {
+    let output = Command::new("ps")
+        .args(["aux"])
+        .output()
+        .map_err(|_| FindDevnetError::CommandFailed)?;
     let ps_output = String::from_utf8_lossy(&output.stdout);
 
-    ps_output
+    let devnet_processes: Vec<DevnetInfo> = ps_output
         .lines()
         .filter(|line| line.contains("starknet-devnet"))
         .map(|line| {
-            if line.contains("docker") {
+            if line.contains("docker") || line.contains("podman") {
                 extract_devnet_info_from_docker_line(line)
             } else {
                 extract_devnet_info_from_cmdline(line)
             }
         })
-        .next()
+        .collect();
+
+    match devnet_processes.as_slice() {
+        [] => Err(FindDevnetError::None),
+        [single] => Ok(single.clone()),
+        _ => Err(FindDevnetError::Multiple),
+    }
 }
 
 fn extract_string_from_flag(cmdline: &str, flag: &str) -> Option<String> {
@@ -148,11 +165,14 @@ fn extract_devnet_info_from_cmdline(cmdline: &str) -> DevnetInfo {
 }
 
 fn is_port_reachable(host: &str, port: u16) -> bool {
-    if let Ok(addr) = format!("{host}:{port}").parse() {
-        TcpStream::connect_timeout(&addr, Duration::from_millis(50)).is_ok()
-    } else {
-        false
-    }
+    let url = format!("http://{host}:{port}/is_alive");
+
+    // TODO: Try to use a DevnetProvider::ensure_alive() from https://github.com/foundry-rs/starknet-foundry/pull/3760/
+    std::process::Command::new("curl")
+        .args(["-s", "-f", "--max-time", "1", &url])
+        .output()
+        .map(|output| output.status.success())
+        .unwrap_or(false)
 }
 
 #[cfg(test)]
