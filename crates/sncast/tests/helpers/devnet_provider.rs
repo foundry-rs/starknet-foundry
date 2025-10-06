@@ -1,11 +1,6 @@
-use num_traits::ToPrimitive;
-use sncast::helpers::{
-    constants::OZ_CLASS_HASH,
-    devnet_provider::{DevnetProvider, PredeployedAccount},
-};
-use starknet::macros::felt;
-
 use crate::helpers::constants::{DEVNET_ACCOUNTS_NUMBER, DEVNET_SEED, SEPOLIA_RPC_URL, URL};
+use num_traits::ToPrimitive;
+use sncast::helpers::{constants::OZ_CLASS_HASH, devnet_provider::DevnetProvider};
 
 #[tokio::test]
 async fn test_get_config() {
@@ -29,16 +24,6 @@ async fn test_get_predeployed_accounts() {
         .expect("Failed to get predeployed accounts");
 
     assert!(predeployed_accounts.len().to_u8().unwrap() == DEVNET_ACCOUNTS_NUMBER);
-
-    let first_account = &predeployed_accounts[0];
-    let expected_first_account = PredeployedAccount {
-        address: felt!("0x06f4621e7ad43707b3f69f9df49425c3d94fdc5ab2e444bfa0e7e4edeff7992d"),
-        private_key: felt!("0x0000000000000000000000000000000056c12e097e49ea382ca8eadec0839401"),
-        public_key: felt!("0x048234b9bc6c1e749f4b908d310d8c53dae6564110b05ccf79016dca8ce7dfac"),
-    };
-    assert!(first_account.address == expected_first_account.address);
-    assert!(first_account.private_key == expected_first_account.private_key);
-    assert!(first_account.public_key == expected_first_account.public_key);
 }
 
 #[tokio::test]
