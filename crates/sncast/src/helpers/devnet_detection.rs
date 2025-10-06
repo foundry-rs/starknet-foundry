@@ -167,7 +167,7 @@ fn extract_devnet_info_from_cmdline(cmdline: &str) -> DevnetInfo {
 fn is_port_reachable(host: &str, port: u16) -> bool {
     let url = format!("http://{host}:{port}/is_alive");
 
-    // TODO: Try to use a DevnetProvider::ensure_alive() from https://github.com/foundry-rs/starknet-foundry/pull/3760/
+    // TODO: Try to use a DevnetProvider::ensure_alive() from https://github.com/foundry-rs/starknet-foundry/blob/master/crates/sncast/src/helpers/devnet_provider.rs#L82
     std::process::Command::new("curl")
         .args(["-s", "-f", "--max-time", "1", &url])
         .output()

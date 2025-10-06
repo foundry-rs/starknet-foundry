@@ -266,6 +266,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         Commands::Declare(declare) => {
             let provider = declare.rpc.get_provider(&config, ui).await?;
 
+            let rpc = declare.rpc.clone();
+
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
@@ -318,7 +320,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     serde_json::from_str(&contract_artifacts.sierra)
                         .context("Failed to parse sierra artifact")?;
                 let network_flag = generate_network_flag(
-                    rpc.get_url(&config.url).as_deref(),
+                    rpc.get_url(&config.url).ok().as_deref(),
                     rpc.network.as_ref(),
                 );
                 Some(DeployCommandMessage::new(

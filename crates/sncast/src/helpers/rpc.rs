@@ -72,7 +72,7 @@ impl Network {
         match self {
             Network::Mainnet => Ok(Self::free_mainnet_rpc(provider)),
             Network::Sepolia => Ok(Self::free_sepolia_rpc(provider)),
-            Network::Devnet => Self::free_devnet_rpc(provider),
+            Network::Devnet => Self::devnet_rpc(provider),
         }
     }
 
@@ -84,7 +84,7 @@ impl Network {
         format!("https://starknet-sepolia.public.blastapi.io/rpc/{RPC_URL_VERSION}")
     }
 
-    fn free_devnet_rpc(_provider: &FreeProvider) -> Result<String> {
+    fn devnet_rpc(_provider: &FreeProvider) -> Result<String> {
         devnet_detection::detect_devnet_url().map_err(|e| anyhow::anyhow!(e))
     }
 }
