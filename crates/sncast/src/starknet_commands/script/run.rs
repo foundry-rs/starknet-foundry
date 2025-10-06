@@ -365,11 +365,14 @@ pub fn run(
     let account = if config.account.is_empty() {
         None
     } else {
+        let rpc_args = RpcArgs {
+            url: Some(url.to_string()),
+            network: None,
+        };
         Some(tokio_runtime.block_on(get_account(
-            &config.account,
-            &config.accounts_file,
+            config,
             provider,
-            url,
+            &rpc_args,
             config.keystore.as_ref(),
             ui,
         ))?)

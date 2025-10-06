@@ -6,6 +6,8 @@ use crate::helpers::fixtures::create_test_provider;
 use camino::Utf8PathBuf;
 use foundry_ui::UI;
 use shared::rpc::{get_rpc_version, is_expected_version};
+use sncast::helpers::configuration::CastConfig;
+use sncast::helpers::rpc::RpcArgs;
 use sncast::{check_if_legacy_contract, get_account, get_provider};
 use starknet::accounts::Account;
 use starknet::macros::felt;
@@ -37,16 +39,18 @@ async fn test_get_provider_empty_url() {
 #[tokio::test]
 async fn test_get_account() {
     let provider = create_test_provider();
-    let account = get_account(
-        "user1",
-        &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
-        &provider,
-        URL,
-        None,
-        &UI::default(),
-    )
-    .await
-    .unwrap();
+    let config = CastConfig {
+        account: "user1".to_string(),
+        accounts_file: Utf8PathBuf::from("tests/data/accounts/accounts.json"),
+        ..Default::default()
+    };
+    let rpc_args = RpcArgs {
+        url: Some(URL.to_string()),
+        network: None,
+    };
+    let account = get_account(&config, &provider, &rpc_args, None, &UI::default())
+        .await
+        .unwrap();
 
     assert_eq!(account.chain_id(), felt!("0x534e5f5345504f4c4941"));
     assert_eq!(
@@ -58,15 +62,16 @@ async fn test_get_account() {
 #[tokio::test]
 async fn test_get_account_no_file() {
     let provider = create_test_provider();
-    let account = get_account(
-        "user1",
-        &Utf8PathBuf::from("tests/data/accounts/nonexistentfile.json"),
-        &provider,
-        URL,
-        None,
-        &UI::default(),
-    )
-    .await;
+    let config = CastConfig {
+        account: "user1".to_string(),
+        accounts_file: Utf8PathBuf::from("tests/data/accounts/nonexistentfile.json"),
+        ..Default::default()
+    };
+    let rpc_args = RpcArgs {
+        url: Some(URL.to_string()),
+        network: None,
+    };
+    let account = get_account(&config, &provider, &rpc_args, None, &UI::default()).await;
     let err = account.unwrap_err();
     assert!(
         err.to_string()
@@ -77,15 +82,16 @@ async fn test_get_account_no_file() {
 #[tokio::test]
 async fn test_get_account_invalid_file() {
     let provider = create_test_provider();
-    let account = get_account(
-        "user1",
-        &Utf8PathBuf::from("tests/data/accounts/invalid_format.json"),
-        &provider,
-        URL,
-        None,
-        &UI::default(),
-    )
-    .await;
+    let config = CastConfig {
+        account: "user1".to_string(),
+        accounts_file: Utf8PathBuf::from("tests/data/accounts/invalid_format.json"),
+        ..Default::default()
+    };
+    let rpc_args = RpcArgs {
+        url: Some(URL.to_string()),
+        network: None,
+    };
+    let account = get_account(&config, &provider, &rpc_args, None, &UI::default()).await;
     let err = account.unwrap_err();
     assert!(err
         .to_string()
@@ -96,15 +102,16 @@ async fn test_get_account_invalid_file() {
 #[tokio::test]
 async fn test_get_account_no_account() {
     let provider = create_test_provider();
-    let account = get_account(
-        "",
-        &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
-        &provider,
-        URL,
-        None,
-        &UI::default(),
-    )
-    .await;
+    let config = CastConfig {
+        account: String::new(),
+        accounts_file: Utf8PathBuf::from("tests/data/accounts/accounts.json"),
+        ..Default::default()
+    };
+    let rpc_args = RpcArgs {
+        url: Some(URL.to_string()),
+        network: None,
+    };
+    let account = get_account(&config, &provider, &rpc_args, None, &UI::default()).await;
     let err = account.unwrap_err();
     assert!(
         err.to_string()
@@ -115,15 +122,16 @@ async fn test_get_account_no_account() {
 #[tokio::test]
 async fn test_get_account_no_user_for_network() {
     let provider = create_test_provider();
-    let account = get_account(
-        "user100",
-        &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
-        &provider,
-        URL,
-        None,
-        &UI::default(),
-    )
-    .await;
+    let config = CastConfig {
+        account: "user100".to_string(),
+        accounts_file: Utf8PathBuf::from("tests/data/accounts/accounts.json"),
+        ..Default::default()
+    };
+    let rpc_args = RpcArgs {
+        url: Some(URL.to_string()),
+        network: None,
+    };
+    let account = get_account(&config, &provider, &rpc_args, None, &UI::default()).await;
     let err = account.unwrap_err();
     assert!(
         err.to_string()
@@ -134,15 +142,16 @@ async fn test_get_account_no_user_for_network() {
 #[tokio::test]
 async fn test_get_account_failed_to_convert_field_elements() {
     let provider = create_test_provider();
-    let account1 = get_account(
-        "with_invalid_private_key",
-        &Utf8PathBuf::from("tests/data/accounts/faulty_accounts_invalid_felt.json"),
-        &provider,
-        URL,
-        None,
-        &UI::default(),
-    )
-    .await;
+    let config = CastConfig {
+        account: "with_invalid_private_key".to_string(),
+        accounts_file: Utf8PathBuf::from("tests/data/accounts/faulty_accounts_invalid_felt.json"),
+        ..Default::default()
+    };
+    let rpc_args = RpcArgs {
+        url: Some(URL.to_string()),
+        network: None,
+    };
+    let account1 = get_account(&config, &provider, &rpc_args, None, &UI::default()).await;
     let err = account1.unwrap_err();
 
     assert!(err.to_string().contains(
