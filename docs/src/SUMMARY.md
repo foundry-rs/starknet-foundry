@@ -59,7 +59,7 @@
 * [Verifying Contracts](starknet/verify.md)
 * [Calldata Transformation](starknet/calldata-transformation.md)
 * [Block Explorers](starknet/block_explorer.md)
-* [Developer Functionalites](starknet/developer.md)
+* [Developer Functionalities](starknet/developer.md)
 
 ---
 
