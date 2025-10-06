@@ -9,6 +9,11 @@ When you start `starknet-devnet`, it automatically predeploys some contracts, in
 You can use these accounts directly in `sncast` without needing to import them. 
 They are available under specific names - `devnet-1`, `devnet-2`, ..., `devnet-<N>` (where N is the number of predeployed accounts, by default it's 10). 
 
+> 📝 **Note**
+>
+> Devnet accounts aren't availabe when using `--network` flag with `sepolia` and `mainnet` values.
+
+
 ### Example
 
 Let's invoke a contract using `devnet-1` account.
