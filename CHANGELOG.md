@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - Debug logging for `sncast` commands that can be enabled by setting `CAST_LOG` env variable.
+- `sncast declare` command now outputs a ready-to-use deployment command after successful declaration.
 - Support for `--network devnet` flag that attempts to auto-detect running `starknet-devnet` instance and connect to it.
 
 ## [0.50.0] - 2025-09-29

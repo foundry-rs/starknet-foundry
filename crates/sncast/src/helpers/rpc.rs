@@ -43,7 +43,7 @@ impl RpcArgs {
         Ok(provider)
     }
 
-    fn get_url(&self, config_url: &str) -> Result<String> {
+    pub fn get_url(&self, config_url: &str) -> Result<String> {
         match (&self.network, &self.url, config_url.is_empty()) {
             (Some(network), None, _) => {
                 let free_provider = FreeProvider::semi_random();
@@ -86,6 +86,17 @@ impl Network {
 
     fn free_devnet_rpc(_provider: &FreeProvider) -> Result<String> {
         devnet_detection::detect_devnet_url().map_err(|e| anyhow::anyhow!(e))
+    }
+}
+
+#[must_use]
+pub fn generate_network_flag(rpc_url: Option<&str>, network: Option<&Network>) -> String {
+    if let Some(network) = network {
+        format!("--network {network}")
+    } else if let Some(rpc_url) = rpc_url {
+        format!("--url {rpc_url}")
+    } else {
+        unreachable!("Either `--rpc_url` or `--network` must be provided.")
     }
 }
 
