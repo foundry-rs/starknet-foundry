@@ -34,6 +34,8 @@ Available components:
 
 ## `--run-native`
 
+_This flag is only available if `snforge` was built with `cairo-native` flag_
+
 Run contracts on [`cairo-native`](https://github.com/lambdaclass/cairo_native) instead of the default `cairo-vm`.
 
 Note: Only contracts execution through native is supported, test code itself will still run on `cairo-vm`.
