@@ -82,6 +82,26 @@ jobs:
       - name: nextest partition ${{ matrix.partition }}/3
         run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}.tar.zst' integration
 
+  test-forge-integration-native:
+    name: Test Forge / Integration Tests (native)
+    runs-on: [ ubuntu-latest ]
+    needs: [ build-test-forge-nextest-archive-native ]
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: [ 1, 2, 3 ]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup-tools
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: nextest@0.9.98
+      - uses: actions/download-artifact@v4
+        with:
+          name: nextest-archive-${{ runner.os }}-native
+      - name: nextest partition ${{ matrix.partition }}/3
+        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst' integration
+
   test-forge-e2e:
     name: Test Forge / E2E Tests
     runs-on: ubuntu-latest
