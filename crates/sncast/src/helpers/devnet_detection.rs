@@ -97,22 +97,24 @@ fn extract_port_from_flag(cmdline: &str, flag: &str) -> Option<u16> {
     None
 }
 
-fn extract_docker_port_mapping(cmdline: &str) -> Option<(String, u16)> {
-    if let Some(pos) = cmdline.find("-p ") {
-        let after_pattern = &cmdline[pos + 3..]; // "-p ".len() = 3
-        let port_mapping = after_pattern.split_whitespace().next().unwrap_or("");
+fn extract_docker_mapping(cmdline: &str) -> Option<(String, u16)> {
+    let port_flags = ["-p", "--publish"];
 
-        let parts: Vec<&str> = port_mapping.split(':').collect();
-        if parts.len() == 3
-            && let Ok(external_port) = parts[1].parse::<u16>()
-        {
-            return Some((parts[0].to_string(), external_port));
-        } else if parts.len() == 2
-            && let Ok(external_port) = parts[0].parse::<u16>()
-        {
-            return Some(("127.0.0.1".to_string(), external_port));
+    for flag in &port_flags {
+        if let Some(port_mapping) = extract_string_from_flag(cmdline, flag) {
+            let parts: Vec<&str> = port_mapping.split(':').collect();
+            if parts.len() == 3
+                && let Ok(host_port) = parts[1].parse::<u16>()
+            {
+                return Some((parts[0].to_string(), host_port));
+            } else if parts.len() == 2
+                && let Ok(host_port) = parts[0].parse::<u16>()
+            {
+                return Some(("127.0.0.1".to_string(), host_port));
+            }
         }
     }
+
     None
 }
 
@@ -120,7 +122,7 @@ fn extract_devnet_info_from_docker_line(cmdline: &str) -> DevnetInfo {
     let mut port = None;
     let mut host = None;
 
-    if let Some((docker_host, docker_port)) = extract_docker_port_mapping(cmdline) {
+    if let Some((docker_host, docker_port)) = extract_docker_mapping(cmdline) {
         host = Some(docker_host);
         port = Some(docker_port);
     }
@@ -199,9 +201,9 @@ mod tests {
     }
 
     fn test_extract_devnet_info_from_cmdline() {
-        let cmdline1 = "starknet-devnet --port 5050 --host 127.0.0.1";
+        let cmdline1 = "starknet-devnet --port 6000 --host 127.0.0.1";
         let info1 = extract_devnet_info_from_cmdline(cmdline1);
-        assert_eq!(info1.port, 5050);
+        assert_eq!(info1.port, 6000);
         assert_eq!(info1.host, "127.0.0.1");
 
         let cmdline2 = "/usr/bin/starknet-devnet --port=5000";
@@ -221,7 +223,7 @@ mod tests {
         assert_eq!(info1.port, 5055);
         assert_eq!(info1.host, "127.0.0.1");
 
-        let cmdline2 = "docker run -p 8080:5050 shardlabs/starknet-devnet-rs";
+        let cmdline2 = "docker run --publish     8080:5050 shardlabs/starknet-devnet-rs";
         let info2 = extract_devnet_info_from_docker_line(cmdline2);
         assert_eq!(info2.port, 8080);
         assert_eq!(info2.host, "127.0.0.1");
