@@ -53,7 +53,10 @@ fn simple_package() {
     );
 }
 
-#[cfg_attr(not(feature = "cairo-native"), ignore = "Requires cairo-native feature")]
+#[cfg_attr(
+    not(feature = "cairo-native"),
+    ignore = "Requires cairo-native feature"
+)]
 #[test]
 fn simple_package_native() {
     let temp = setup_package("simple_package");

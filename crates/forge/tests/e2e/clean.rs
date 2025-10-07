@@ -21,7 +21,10 @@ struct CleanComponentsState {
 }
 
 #[test]
-#[cfg_attr(feature = "cairo-native", ignore = "Native doesn't support coverage yet")]
+#[cfg_attr(
+    feature = "cairo-native",
+    ignore = "Native doesn't support coverage yet"
+)]
 fn test_clean_coverage() {
     let temp_dir = setup_package("coverage_project");
 
@@ -55,7 +58,10 @@ fn test_clean_coverage() {
 }
 
 #[test]
-#[cfg_attr(feature = "cairo-native", ignore = "Native doesn't support profiler yet")]
+#[cfg_attr(
+    feature = "cairo-native",
+    ignore = "Native doesn't support profiler yet"
+)]
 fn test_clean_profile() {
     let temp_dir = setup_package("coverage_project");
 
