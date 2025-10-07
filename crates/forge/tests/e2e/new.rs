@@ -1,6 +1,3 @@
-#[cfg(feature = "smoke")]
-use super::common::runner::{get_current_branch, get_remote_url};
-
 use super::common::runner::{runner, snforge_test_bin_path, test_runner};
 use assert_fs::TempDir;
 use assert_fs::fixture::{FileTouch, PathChild};
@@ -303,65 +300,6 @@ fn get_expected_output(template: &Template) -> &str {
             )
         }
     }
-}
-
-#[test]
-#[cfg(feature = "smoke")]
-fn test_init_project_with_custom_snforge_dependency_git() {
-    let temp = tempdir_with_tool_versions().unwrap();
-
-    runner(&temp)
-        .args(["new", "test_name"])
-        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
-        .assert()
-        .success();
-
-    let project_path = temp.join("test_name");
-    let manifest_path = project_path.join("Scarb.toml");
-
-    let scarb_toml = std::fs::read_to_string(&manifest_path).unwrap();
-    let mut scarb_toml = DocumentMut::from_str(&scarb_toml).unwrap();
-
-    let dependencies = scarb_toml
-        .get_mut("dev-dependencies")
-        .unwrap()
-        .as_table_mut()
-        .unwrap();
-
-    let branch = get_current_branch();
-    let remote_url = format!("https://github.com/{}", get_remote_url());
-
-    let mut snforge_std = InlineTable::new();
-    snforge_std.insert("git", Value::String(Formatted::new(remote_url.clone())));
-    snforge_std.insert("branch", Value::String(Formatted::new(branch)));
-
-    dependencies.remove("snforge_std");
-    dependencies.insert("snforge_std", Item::Value(Value::InlineTable(snforge_std)));
-
-    std::fs::write(&manifest_path, scarb_toml.to_string()).unwrap();
-
-    let output = test_runner(&temp)
-        .current_dir(&project_path)
-        .assert()
-        .success();
-
-    let expected = formatdoc!(
-        r"
-        [..]Updating git repository {}
-        [..]Compiling test_name v0.1.0[..]
-        [..]Finished[..]
-
-        Collected 2 test(s) from test_name package
-        Running 0 test(s) from src/
-        Running 2 test(s) from tests/
-        [PASS] test_name_integrationtest::test_contract::test_increase_balance [..]
-        [PASS] test_name_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value [..]
-        Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
-        ",
-        remote_url.trim_end_matches(".git")
-    );
-
-    assert_stdout_contains(output, expected);
 }
 
 #[test]

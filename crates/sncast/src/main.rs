@@ -269,10 +269,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let rpc = declare.rpc.clone();
 
             let account = get_account(
-                &config.account,
-                &config.accounts_file,
+                &config,
                 &provider,
+                &declare.rpc,
                 config.keystore.as_ref(),
+                ui,
             )
             .await?;
             let manifest_path = assert_manifest_path_exists()?;
@@ -347,11 +348,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let provider = declare_from.rpc.get_provider(&config, ui).await?;
             let rpc_args = declare_from.rpc.clone();
             let source_provider = declare_from.source_rpc.get_provider(ui).await?;
+
             let account = get_account(
-                &config.account,
-                &config.accounts_file,
+                &config,
                 &provider,
+                &declare_from.rpc,
                 config.keystore.as_ref(),
+                ui,
             )
             .await?;
 
@@ -395,13 +398,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let provider = rpc.get_provider(&config, ui).await?;
 
-            let account = get_account(
-                &config.account,
-                &config.accounts_file,
-                &provider,
-                config.keystore.as_ref(),
-            )
-            .await?;
+            let account =
+                get_account(&config, &provider, &rpc, config.keystore.as_ref(), ui).await?;
 
             // safe to unwrap because "constructor" is a standardized name
             let selector = get_selector_from_name("constructor").unwrap();
@@ -484,13 +482,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let provider = rpc.get_provider(&config, ui).await?;
 
-            let account = get_account(
-                &config.account,
-                &config.accounts_file,
-                &provider,
-                config.keystore.as_ref(),
-            )
-            .await?;
+            let account =
+                get_account(&config, &provider, &rpc, config.keystore.as_ref(), ui).await?;
 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;

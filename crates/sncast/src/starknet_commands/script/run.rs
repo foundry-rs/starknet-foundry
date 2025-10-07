@@ -283,6 +283,7 @@ pub fn run(
     package_metadata: &PackageMetadata,
     artifacts: &mut HashMap<String, CastStarknetContractArtifacts>,
     provider: &JsonRpcClient<HttpTransport>,
+    url: &str,
     tokio_runtime: Runtime,
     config: &CastConfig,
     state_file_path: Option<Utf8PathBuf>,
@@ -363,11 +364,16 @@ pub fn run(
     let account = if config.account.is_empty() {
         None
     } else {
+        let rpc_args = RpcArgs {
+            url: Some(url.to_string()),
+            network: None,
+        };
         Some(tokio_runtime.block_on(get_account(
-            &config.account,
-            &config.accounts_file,
+            config,
             provider,
+            &rpc_args,
             config.keystore.as_ref(),
+            ui,
         ))?)
     };
     let state = StateManager::from(state_file_path)?;
