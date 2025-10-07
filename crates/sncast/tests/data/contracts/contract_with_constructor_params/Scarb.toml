@@ -1,0 +1,12 @@
+[package]
+name = "contract_with_constructor_params"
+version = "0.1.0"
+edition = "2024_07"
+
+[dependencies]
+starknet = ">=2.10.1"
+
+[[target.starknet-contract]]
+
+[lib]
+sierra = false

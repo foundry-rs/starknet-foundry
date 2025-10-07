@@ -6,13 +6,12 @@ edition.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-smoke = []
 scarb_2_10_0 = []
 no_scarb_installed = []
-debugging = []
-assert_non_exact_gas = ["test_utils/assert_non_exact_gas"]
-skip_plugin_checks = []
-interact-with-state = []
+non_exact_gas_assertions = ["test_utils/non_exact_gas_assertions"]
+skip_test_for_only_latest_scarb = []
+skip_test_for_scarb_since_2_11 = []
+test_for_multiple_scarb_versions = []
 
 [dependencies]
 anyhow.workspace = true

@@ -1,9 +1,11 @@
 pub mod account;
 pub mod block_explorer;
 pub mod braavos;
+pub mod command;
 pub mod config;
 pub mod configuration;
 pub mod constants;
+pub mod devnet_provider;
 pub mod fee;
 pub mod interactive;
 pub mod output_format;

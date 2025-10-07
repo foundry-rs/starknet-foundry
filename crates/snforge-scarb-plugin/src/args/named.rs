@@ -6,7 +6,7 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct NamedArgs(HashMap<SmolStr, Vec<Expr>>);
 
 impl Deref for NamedArgs {

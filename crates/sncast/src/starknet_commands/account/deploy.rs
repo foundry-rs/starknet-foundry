@@ -322,8 +322,7 @@ where
     match result {
         Err(AccountFactoryError::Provider(error)) => match error {
             StarknetError(ClassHashNotFound) => Err(anyhow!(
-                "Provided class hash {:#x} does not exist",
-                class_hash,
+                "Provided class hash {class_hash:#x} does not exist",
             )),
             _ => Err(handle_rpc_error(error)),
         },

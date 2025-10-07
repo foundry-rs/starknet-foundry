@@ -39,6 +39,7 @@
 * [Profiling](snforge-advanced-features/profiling.md)
 * [Debugging](snforge-advanced-features/debugging.md)
 * [Oracles](snforge-advanced-features/oracles.md)
+* [Parametrized Tests](snforge-advanced-features/parametrized-testing.md)
 
 ---
 
@@ -58,6 +59,8 @@
 * [Verifying Contracts](starknet/verify.md)
 * [Calldata Transformation](starknet/calldata-transformation.md)
 * [Block Explorers](starknet/block_explorer.md)
+* [Integration With Devnet](starknet/integration_with_devnet.md)
+* [Developer Functionalites](starknet/developer.md)
 
 ---
 

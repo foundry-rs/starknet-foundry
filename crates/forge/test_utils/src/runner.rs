@@ -321,7 +321,7 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
 // and to assert gas values with a margin in scheduled tests, as values can vary for different Scarb versions
 // FOR LOCAL DEVELOPMENT ALWAYS USE EXACT CALCULATIONS
 fn assert_gas_with_margin(gas: GasVector, asserted_gas: GasVector) -> bool {
-    if cfg!(feature = "assert_non_exact_gas") {
+    if cfg!(feature = "non_exact_gas_assertions") {
         let diff = gas_vector_abs_diff(&gas, &asserted_gas);
         diff.l1_gas.0 <= 10 && diff.l1_data_gas.0 <= 10 && diff.l2_gas.0 <= 200_000
     } else {
@@ -395,7 +395,9 @@ pub fn assert_builtin(
             AnyTestCaseSummary::Single(case) => match case {
                 TestCaseSummary::Passed { used_resources, .. } => {
                     used_resources
-                        .execution_resources
+                        .execution_summary
+                        .charged_resources
+                        .vm_resources
                         .builtin_instance_counter
                         .get(&builtin)
                         .unwrap_or(&0)

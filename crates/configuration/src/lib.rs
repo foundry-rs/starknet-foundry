@@ -49,7 +49,7 @@ pub fn get_profile(
     match get_with_ownership(tool_config, profile_name) {
         Some(profile_value) => Ok(profile_value),
         None if profile_name == "default" => Ok(serde_json::Value::Object(Map::default())),
-        None => Err(anyhow!("Profile [{}] not found in config", profile_name)),
+        None => Err(anyhow!("Profile [{profile_name}] not found in config")),
     }
 }
 

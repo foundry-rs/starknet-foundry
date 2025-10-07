@@ -5,6 +5,7 @@ use blockifier::execution::syscalls::vm_syscall_utils::{
     SyscallSelector, SyscallUsage, SyscallUsageMap,
 };
 
+use blockifier::blockifier_versioned_constants::VersionedConstants;
 use blockifier::execution::call_info::OrderedEvent;
 use cairo_annotations::trace_data::{
     CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint,
@@ -20,6 +21,7 @@ use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::forking::data::ForkData;
+use cheatnet::runtime_extensions::common::{get_syscalls_gas_consumed, sum_syscall_usage};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::{CallTrace, CallTraceNode};
 use conversions::IntoConv;
@@ -68,8 +70,9 @@ pub fn build_profiler_call_trace(
     ProfilerCallTrace {
         entry_point,
         cumulative_resources: build_profiler_execution_resources(
-            value.used_execution_resources.clone(),
-            value.get_total_used_syscalls(),
+            &value.used_execution_resources,
+            &value.used_syscalls_vm_resources,
+            &value.used_syscalls_sierra_gas,
             value.gas_consumed,
         ),
         used_l1_resources: value.used_l1_resources.clone(),
@@ -100,6 +103,7 @@ fn build_cairo_execution_info(
             vm_trace: vm_trace?,
         },
         source_sierra_path: source_sierra_path?,
+        enable_gas: None,
     })
 }
 
@@ -133,10 +137,21 @@ fn build_profiler_call_trace_node(
 
 #[must_use]
 pub fn build_profiler_execution_resources(
-    execution_resources: ExecutionResources,
-    syscall_usage: SyscallUsageMap,
+    execution_resources: &ExecutionResources,
+    syscall_usage_vm_resources: &SyscallUsageMap,
+    syscall_usage_sierra_gas: &SyscallUsageMap,
     gas_consumed: u64,
 ) -> ProfilerExecutionResources {
+    // Subtract syscall related resources to get the values expected by the profiler.
+    // The profiler operates on resources excluding syscall overhead.
+    let versioned_constants = VersionedConstants::latest_constants();
+    let execution_resources = execution_resources
+        - &versioned_constants.get_additional_os_syscall_resources(syscall_usage_vm_resources);
+    let gas_consumed =
+        gas_consumed - get_syscalls_gas_consumed(syscall_usage_sierra_gas, versioned_constants);
+
+    let syscall_usage =
+        sum_syscall_usage(syscall_usage_vm_resources.clone(), syscall_usage_sierra_gas);
     let profiler_syscall_counter = syscall_usage
         .into_iter()
         .map(|(key, val)| {

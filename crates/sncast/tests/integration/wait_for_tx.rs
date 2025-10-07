@@ -1,19 +1,21 @@
 use crate::helpers::{
-    constants::{ACCOUNT, ACCOUNT_FILE_PATH},
+    constants::{ACCOUNT, ACCOUNT_FILE_PATH, URL},
     fixtures::{create_test_provider, invoke_contract},
 };
+use camino::Utf8PathBuf;
 use foundry_ui::UI;
-use sncast::helpers::{constants::UDC_ADDRESS, fee::FeeSettings};
+use sncast::helpers::{
+    configuration::CastConfig, constants::UDC_ADDRESS, fee::FeeSettings, rpc::RpcArgs,
+};
 
 use crate::helpers::constants::{
     CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA,
     MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA,
 };
-use camino::Utf8PathBuf;
 use conversions::string::IntoHexStr;
 use sncast::{ValidatedWaitParams, get_account};
 use sncast::{WaitForTx, handle_wait_for_tx, wait_for_tx};
-use starknet::contract::ContractFactory;
+use starknet::contract::{ContractFactory, UdcSelector};
 use starknet_types_core::felt::Felt;
 
 #[tokio::test]
@@ -35,16 +37,24 @@ async fn test_happy_path() {
 #[tokio::test]
 async fn test_rejected_transaction() {
     let provider = create_test_provider();
-    let account = get_account(
-        ACCOUNT,
-        &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
-        &provider,
-        None,
-    )
-    .await
-    .expect("Could not get the account");
+    let config = CastConfig {
+        account: ACCOUNT.to_string(),
+        accounts_file: Utf8PathBuf::from(ACCOUNT_FILE_PATH),
+        ..Default::default()
+    };
+    let rpc_args = RpcArgs {
+        url: Some(URL.to_string()),
+        network: None,
+    };
+    let account = get_account(&config, &provider, &rpc_args, None, &UI::default())
+        .await
+        .expect("Could not get the account");
 
-    let factory = ContractFactory::new(MAP_CONTRACT_CLASS_HASH_SEPOLIA.parse().unwrap(), account);
+    let factory = ContractFactory::new_with_udc(
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA.parse().unwrap(),
+        account,
+        UdcSelector::New,
+    );
     let deployment = factory
         .deploy_v3(Vec::new(), Felt::ONE, false)
         .l1_gas(1)
