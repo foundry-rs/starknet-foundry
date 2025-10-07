@@ -145,7 +145,7 @@ pub fn deploy(
     //     .tx_context
     //     .block_context
     //     .versioned_constants;
-    // TODO support for reject
+    // TODO(#3790) support for reject
     // if should_reject_deploy(
     //     versioned_constants.disable_deploy_in_validation_mode,
     //     syscall_handler_base.context.execution_mode,

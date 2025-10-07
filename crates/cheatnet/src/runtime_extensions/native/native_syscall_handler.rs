@@ -33,7 +33,7 @@ pub struct CheatableNativeSyscallHandler<'a> {
 pub type BaseSyscallResult<T> = Result<T, SyscallExecutionError>;
 
 impl CheatableNativeSyscallHandler<'_> {
-    // TODO consider modifying this so it doesn't use take
+    // TODO(#3790) consider modifying this so it doesn't use take
     pub fn unrecoverable_error(&mut self) -> Option<SyscallExecutionError> {
         self.native_syscall_handler.unrecoverable_error.take()
     }
@@ -263,7 +263,7 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
             .tx_info
             .nonce
             .unwrap_or(original_data.tx_info.nonce);
-        // TODO impl conversions
+        // TODO(#3790) impl conversions
         let resource_bounds = cheated_data.tx_info.resource_bounds.map_or(
             original_data.tx_info.resource_bounds,
             |rb| {
@@ -469,7 +469,7 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
             return Err(self.handle_error(remaining_gas, err.into()));
         }
         let selector = EntryPointSelector(entry_point_selector);
-        // TODO restore blocking
+        // TODO(#3790) restore blocking
         // self
         //     .native_syscall_handler
         //     .base
@@ -544,7 +544,7 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
                 .native_syscall_handler
                 .base
                 .call
-                // TODO why we default to code_address??
+                // TODO(#3790) why we default to code_address??
                 .code_address
                 .unwrap_or(self.native_syscall_handler.base.call.storage_address);
             let event = self
@@ -576,7 +576,7 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
                 .native_syscall_handler
                 .base
                 .call
-                // TODO why we default to code_address??
+                // TODO(#3790) why we default to code_address??
                 .code_address
                 .unwrap_or(self.native_syscall_handler.base.call.storage_address);
             let message = self

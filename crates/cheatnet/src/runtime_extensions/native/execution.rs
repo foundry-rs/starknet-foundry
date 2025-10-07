@@ -115,7 +115,7 @@ pub fn execute_entry_point_call(
 
     let call_result = execution_result.map_err(EntryPointExecutionError::NativeUnexpectedError)?;
 
-    // TODO consider modifying this so it doesn't use take internally
+    // TODO(#3790) consider modifying this so it doesn't use take internally
     if let Some(error) = syscall_handler.unrecoverable_error() {
         return Err(EntryPointExecutionError::NativeUnrecoverableError(
             Box::new(error),
