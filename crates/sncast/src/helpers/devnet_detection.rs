@@ -46,15 +46,14 @@ fn detect_devnet_from_processes() -> Result<String, String> {
 }
 
 fn find_devnet_process_info() -> Result<DevnetProcessInfo, DevnetDetectionError> {
-    let output = Command::new("ps")
-        .args(["aux"])
+    let output = Command::new("sh")
+        .args(["-c", "ps aux | grep starknet-devnet | grep -v grep"])
         .output()
         .map_err(|_| DevnetDetectionError::CommandFailed)?;
     let ps_output = String::from_utf8_lossy(&output.stdout);
 
     let devnet_processes: Vec<DevnetProcessInfo> = ps_output
         .lines()
-        .filter(|line| line.contains("starknet-devnet"))
         .map(|line| {
             if line.contains("docker") || line.contains("podman") {
                 extract_devnet_info_from_docker_line(line)
