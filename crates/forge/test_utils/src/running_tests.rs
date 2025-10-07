@@ -87,6 +87,7 @@ pub fn run_test_case(
                 }),
             }),
             fork_targets: vec![],
+            partition: None,
         },
         &mut BlockNumberMap::default(),
         ui,

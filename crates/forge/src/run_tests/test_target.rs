@@ -14,6 +14,8 @@ use futures::{StreamExt, stream::FuturesUnordered};
 use std::sync::Arc;
 use tokio::sync::mpsc::channel;
 
+use crate::TestPartition;
+
 #[non_exhaustive]
 pub enum TestTargetRunResult {
     Ok(TestTargetSummary),
@@ -25,6 +27,7 @@ pub async fn run_for_test_target(
     tests: TestTargetWithResolvedConfig,
     forge_config: Arc<ForgeConfig>,
     tests_filter: &impl TestCaseFilter,
+    partition: Option<TestPartition>,
     ui: Arc<UI>,
 ) -> Result<TestTargetRunResult> {
     let casm_program = tests.casm_program.clone();
@@ -37,8 +40,24 @@ pub async fn run_for_test_target(
     // a channel is used to signal the task that test processing is no longer necessary.
     let (send, mut rec) = channel(1);
 
-    for case in tests.test_cases {
+    for (i, case) in tests.test_cases.into_iter().enumerate() {
         let case_name = case.name.clone();
+
+        if let Some(partition) = &partition {
+            // User provides 1-based index, convert to 0-based.
+            let partition_index = partition.index - 1;
+            let is_test_present_in_partition = i % partition.total == partition_index;
+
+            if !is_test_present_in_partition {
+                tasks.push(tokio::task::spawn(async {
+                    // TODO TestCaseType should also be encoded in the test case definition
+                    Ok(AnyTestCaseSummary::Single(
+                        TestCaseSummary::SkippedByPartition {},
+                    ))
+                }));
+                continue;
+            }
+        }
 
         if !tests_filter.should_be_run(&case) {
             tasks.push(tokio::task::spawn(async {
@@ -68,7 +87,7 @@ pub async fn run_for_test_target(
     while let Some(task) = tasks.next().await {
         let result = task??;
 
-        if !result.is_interrupted() {
+        if !result.is_interrupted() && !result.is_skipped() {
             let test_result_message = TestResultMessage::new(
                 &result,
                 forge_config.output_config.detailed_resources,

@@ -4,7 +4,7 @@ use super::{
     test_target::{TestTargetRunResult, run_for_test_target},
 };
 use crate::{
-    TestArgs,
+    TestArgs, TestPartition,
     block_number_map::BlockNumberMap,
     combine_configs::combine_configs,
     scarb::{
@@ -38,14 +38,20 @@ use std::sync::Arc;
 pub struct PackageTestResult {
     summaries: Vec<TestTargetSummary>,
     filtered: Option<usize>,
+    skipped: Option<usize>,
 }
 
 impl PackageTestResult {
     #[must_use]
-    pub fn new(summaries: Vec<TestTargetSummary>, filtered: Option<usize>) -> Self {
+    pub fn new(
+        summaries: Vec<TestTargetSummary>,
+        filtered: Option<usize>,
+        skipped: Option<usize>,
+    ) -> Self {
         Self {
             summaries,
             filtered,
+            skipped,
         }
     }
 
@@ -58,6 +64,11 @@ impl PackageTestResult {
     pub fn summaries(self) -> Vec<TestTargetSummary> {
         self.summaries
     }
+
+    #[must_use]
+    pub fn skipped(&self) -> Option<usize> {
+        self.skipped
+    }
 }
 
 pub struct RunForPackageArgs {
@@ -66,6 +77,7 @@ pub struct RunForPackageArgs {
     pub forge_config: Arc<ForgeConfig>,
     pub fork_targets: Vec<ForkTarget>,
     pub package_name: String,
+    pub partition: Option<TestPartition>,
 }
 
 impl RunForPackageArgs {
@@ -76,6 +88,7 @@ impl RunForPackageArgs {
         args: &TestArgs,
         cache_dir: &Utf8PathBuf,
         artifacts_dir: &Utf8Path,
+        partition: Option<TestPartition>,
         ui: &UI,
     ) -> Result<RunForPackageArgs> {
         let raw_test_targets = load_test_artifacts(artifacts_dir, &package)?;
@@ -127,6 +140,7 @@ impl RunForPackageArgs {
             tests_filter: test_filter,
             fork_targets: forge_config_from_scarb.fork,
             package_name: package.name,
+            partition,
         })
     }
 }
@@ -158,6 +172,10 @@ fn sum_test_cases(test_targets: &[TestTargetWithResolvedConfig]) -> usize {
     test_targets.iter().map(|tc| tc.test_cases.len()).sum()
 }
 
+fn sum_skipped_test_cases(summaries: &[TestTargetSummary]) -> usize {
+    summaries.iter().map(TestTargetSummary::count_skipped).sum()
+}
+
 #[tracing::instrument(skip_all, level = "debug")]
 pub async fn run_for_package(
     RunForPackageArgs {
@@ -166,6 +184,7 @@ pub async fn run_for_package(
         tests_filter,
         fork_targets,
         package_name,
+        partition,
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
     ui: Arc<UI>,
@@ -201,8 +220,14 @@ pub async fn run_for_package(
             test_target.test_cases.len(),
         ));
 
-        let summary =
-            run_for_test_target(test_target, forge_config.clone(), &tests_filter, ui).await?;
+        let summary = run_for_test_target(
+            test_target,
+            forge_config.clone(),
+            &tests_filter,
+            partition,
+            ui,
+        )
+        .await?;
 
         match summary {
             TestTargetRunResult::Ok(summary) => {
@@ -225,7 +250,13 @@ pub async fn run_for_package(
         Some(all_tests - not_filtered)
     };
 
-    ui.println(&TestsSummaryMessage::new(&summaries, filtered_count));
+    let skipped_count = partition.map(|_| sum_skipped_test_cases(&summaries));
+
+    ui.println(&TestsSummaryMessage::new(
+        &summaries,
+        filtered_count,
+        skipped_count,
+    ));
 
     let any_fuzz_test_was_run = summaries.iter().any(|test_target_summary| {
         test_target_summary
@@ -242,5 +273,9 @@ pub async fn run_for_package(
         ));
     }
 
-    Ok(PackageTestResult::new(summaries, filtered_count))
+    Ok(PackageTestResult::new(
+        summaries,
+        filtered_count,
+        skipped_count,
+    ))
 }

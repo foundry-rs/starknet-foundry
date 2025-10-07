@@ -13,6 +13,7 @@ enum TestResultStatus {
     Failed,
     Ignored,
     Interrupted,
+    SkippedByPartition,
 }
 
 impl From<&AnyTestCaseSummary> for TestResultStatus {
@@ -26,6 +27,12 @@ impl From<&AnyTestCaseSummary> for TestResultStatus {
             | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Ignored { .. }) => Self::Ignored,
             AnyTestCaseSummary::Single(TestCaseSummary::Interrupted { .. })
             | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Interrupted { .. }) => Self::Interrupted,
+            AnyTestCaseSummary::Fuzzing(TestCaseSummary::SkippedByPartition { .. }) => {
+                Self::SkippedByPartition
+            }
+            AnyTestCaseSummary::Single(TestCaseSummary::SkippedByPartition { .. }) => {
+                Self::SkippedByPartition
+            }
         }
     }
 }
@@ -110,7 +117,9 @@ impl TestResultMessage {
             match self.status {
                 TestResultStatus::Passed => return format!("\n\n{msg}"),
                 TestResultStatus::Failed => return format!("\n\nFailure data:{msg}"),
-                TestResultStatus::Ignored | TestResultStatus::Interrupted => return String::new(),
+                TestResultStatus::Ignored
+                | TestResultStatus::Interrupted
+                | TestResultStatus::SkippedByPartition => return String::new(),
             }
         }
         String::new()
@@ -123,6 +132,11 @@ impl TestResultMessage {
             TestResultStatus::Ignored => format!("[{}]", style("IGNORE").yellow()),
             TestResultStatus::Interrupted => {
                 unreachable!("Interrupted tests should not have visible message representation")
+            }
+            TestResultStatus::SkippedByPartition => {
+                unreachable!(
+                    "Skipped by partition tests should not have visible message representation"
+                )
             }
         }
     }

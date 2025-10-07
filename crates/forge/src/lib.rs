@@ -15,6 +15,7 @@ use semver::Version;
 use shared::auto_completions::{Completions, generate_completions};
 use std::cell::RefCell;
 use std::ffi::OsString;
+use std::str::FromStr;
 use std::sync::Arc;
 use std::{fs, num::NonZeroU32, thread::available_parallelism};
 use tokio::runtime::Builder;
@@ -83,7 +84,7 @@ enum ForgeSubcommand {
     /// Run tests for a project in the current directory
     Test {
         #[command(flatten)]
-        args: TestArgs,
+        args: Box<TestArgs>,
     },
     /// Create a new Forge project at <PATH>
     New {
@@ -130,6 +131,48 @@ enum ColorOption {
     Auto,
     Always,
     Never,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct TestPartition {
+    index: usize,
+    total: usize,
+}
+
+impl TestPartition {
+    #[must_use]
+    pub fn index(&self) -> usize {
+        self.index
+    }
+
+    #[must_use]
+    pub fn total(&self) -> usize {
+        self.total
+    }
+}
+
+impl FromStr for TestPartition {
+    type Err = String;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        let parts: Vec<&str> = s.split('/').collect();
+        if parts.len() != 2 {
+            return Err("Partition must be in the format <INDEX>/<TOTAL>".to_string());
+        }
+
+        let index = parts[0]
+            .parse::<usize>()
+            .map_err(|_| "INDEX must be a positive integer".to_string())?;
+        let total = parts[1]
+            .parse::<usize>()
+            .map_err(|_| "TOTAL must be a positive integer".to_string())?;
+
+        if index == 0 || total == 0 || index > total {
+            return Err("Invalid partition values: ensure 1 <= INDEX <= TOTAL".to_string());
+        }
+
+        Ok(TestPartition { index, total })
+    }
 }
 
 #[derive(Parser, Debug)]
@@ -202,6 +245,10 @@ pub struct TestArgs {
     /// Specify tracked resource type
     #[arg(long, value_enum, default_value_t)]
     tracked_resource: ForgeTrackedResource,
+
+    /// If specified, divides tests into `total` partitions and runs only the partition with the given `index` (1-based).
+    #[arg(long)]
+    partition: Option<TestPartition>,
 
     /// Additional arguments for cairo-coverage or cairo-profiler
     #[arg(last = true)]
@@ -301,7 +348,7 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
                 .enable_all()
                 .build()?;
 
-            rt.block_on(run_for_workspace(args, ui))
+            rt.block_on(run_for_workspace(*args, ui))
         }
         ForgeSubcommand::CheckRequirements => {
             check_requirements(true, &ui)?;
