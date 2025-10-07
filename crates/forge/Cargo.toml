@@ -14,7 +14,7 @@ assert_non_exact_gas = ["test_utils/assert_non_exact_gas"]
 skip_plugin_checks = []
 interact-with-state = []
 cairo-native = ["test_utils/cairo-native", "cheatnet/cairo-native", "scarb-api/cairo-native"]
-run-native = ["cairo-native"]
+run-native = ["cairo-native", "test_utils/run-native", "cheatnet/run-native", "scarb-api/run-native"]
 
 [dependencies]
 anyhow.workspace = true

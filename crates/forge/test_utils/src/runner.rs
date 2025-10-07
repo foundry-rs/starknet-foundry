@@ -62,7 +62,7 @@ impl Contract {
         })
     }
 
-    fn generate_sierra_and_casm(self, ui: &UI) -> Result<(String, String)> {
+    fn generate_contract_artifacts(self, ui: &UI) -> Result<StarknetContractArtifacts> {
         let dir = tempdir_with_tool_versions()?;
 
         let contract_path = dir.child("src/lib.cairo");
@@ -105,7 +105,7 @@ impl Contract {
             .unwrap();
         let artifacts_dir = target_dir_for_workspace(&scarb_metadata).join("dev");
 
-        let contract = get_contracts_artifacts_and_source_sierra_paths(
+        let artifacts = get_contracts_artifacts_and_source_sierra_paths(
             &artifacts_dir,
             package,
             ui,
@@ -120,7 +120,7 @@ impl Contract {
         .ok_or(anyhow!("there is no contract with name {}", self.name))?
         .0;
 
-        Ok((contract.sierra, contract.casm))
+        Ok(artifacts)
     }
 }
 
@@ -225,20 +225,9 @@ impl<'a> TestCase {
             .into_iter()
             .map(|contract| {
                 let name = contract.name.clone();
-                let (sierra, casm) = contract.generate_sierra_and_casm(ui)?;
+                let artifacts = contract.generate_contract_artifacts(ui)?;
 
-                Ok((
-                    name,
-                    (
-                        StarknetContractArtifacts {
-                            sierra,
-                            casm,
-                            #[cfg(feature = "cairo-native")]
-                            executor: None,
-                        },
-                        Utf8PathBuf::default(),
-                    ),
-                ))
+                Ok((name, (artifacts, Utf8PathBuf::default())))
             })
             .collect()
     }
