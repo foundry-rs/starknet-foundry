@@ -1,8 +1,8 @@
-#[cfg(not(feature = "run-native"))]
+#[cfg(not(feature = "cairo-native"))]
 mod backtrace;
-#[cfg(not(feature = "run-native"))]
+#[cfg(not(feature = "cairo-native"))]
 mod build_profile;
-#[cfg(not(feature = "run-native"))]
+#[cfg(not(feature = "cairo-native"))]
 mod build_trace_data;
 mod clean;
 mod collection;
@@ -11,9 +11,9 @@ pub(crate) mod common;
 mod completions;
 mod components;
 mod contract_artifacts;
-#[cfg(not(feature = "run-native"))]
+#[cfg(not(feature = "cairo-native"))]
 mod coverage;
-#[cfg(all(feature = "debugging", not(feature = "run-native")))]
+#[cfg(all(feature = "debugging", not(feature = "cairo-native")))]
 mod debugging;
 mod docs_snippets_validation;
 mod env;
@@ -33,6 +33,6 @@ mod steps;
 mod templates;
 mod test_case;
 mod trace_print;
-#[cfg(not(feature = "run-native"))]
+#[cfg(not(feature = "cairo-native"))]
 mod trace_resources;
 mod workspaces;

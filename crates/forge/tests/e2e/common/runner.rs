@@ -32,9 +32,9 @@ pub fn snforge_test_bin_path() -> PathBuf {
 }
 
 /// Returns a command that runs `snforge test` in the given temporary directory.
-/// If the `run-native` feature is enabled, it adds the `--run-native` flag.
+/// If the `cairo-native` feature is enabled, it adds the `--run-native` flag.
 pub(crate) fn test_runner<T: AsRef<Path>>(temp_dir: T) -> SnapboxCommand {
-    if cfg!(feature = "run-native") {
+    if cfg!(feature = "cairo-native") {
         test_runner_native(temp_dir)
     } else {
         test_runner_vm(temp_dir)

@@ -597,7 +597,7 @@ mod tests {
             CompilationOpts {
                 use_test_target_contracts: false,
                 #[cfg(feature = "cairo-native")]
-                run_native: cfg!(feature = "run-native"),
+                run_native: true,
             },
         )
         .unwrap();

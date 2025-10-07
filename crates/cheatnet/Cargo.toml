@@ -6,7 +6,6 @@ edition.workspace = true
 [features]
 testing = []
 cairo-native = ["dep:cairo-native", "blockifier/cairo_native"]
-run-native = ["cairo-native"]
 
 [dependencies]
 anyhow.workspace = true

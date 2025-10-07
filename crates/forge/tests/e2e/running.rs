@@ -53,7 +53,7 @@ fn simple_package() {
     );
 }
 
-#[cfg_attr(not(feature = "run-native"), ignore)]
+#[cfg_attr(not(feature = "cairo-native"), ignore = "Requires cairo-native feature")]
 #[test]
 fn simple_package_native() {
     let temp = setup_package("simple_package");
@@ -1060,7 +1060,7 @@ fn incompatible_snforge_std_version_error() {
 
 #[test]
 #[cfg_attr(
-    feature = "run-native",
+    feature = "cairo-native",
     ignore = "Native runner does not support vm resources tracking"
 )]
 fn detailed_resources_flag() {
@@ -1259,7 +1259,7 @@ fn exact_printing_mixed() {
 
 #[test]
 #[cfg_attr(
-    feature = "run-native",
+    feature = "cairo-native",
     ignore = "Native runner does not support panic backtrace yet"
 )]
 fn dispatchers() {

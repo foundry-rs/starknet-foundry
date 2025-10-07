@@ -5,7 +5,6 @@ edition.workspace = true
 
 [features]
 cairo-native = ["dep:cairo-native", "dep:native-api"]
-run-native = ["cairo-native"]
 
 [dependencies]
 anyhow.workspace = true

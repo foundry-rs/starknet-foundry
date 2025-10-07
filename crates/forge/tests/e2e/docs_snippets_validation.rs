@@ -12,7 +12,7 @@ use super::common::runner::{runner, setup_package};
 
 #[test]
 #[cfg_attr(
-    feature = "run-native",
+    feature = "cairo-native",
     ignore = "TODO: Many snippets show vm resources witch cairo native doesn't support"
 )]
 fn test_docs_snippets() {
