@@ -394,7 +394,7 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
                 Network::Mainnet => Ok("https://api.voyager.online/beta".to_string()),
                 Network::Sepolia => Ok("https://sepolia-api.voyager.online/beta".to_string()),
                 Network::Devnet => Err(ExplorerError::DevnetNotSupported.into()),
-            }
+            },
         }
     }
 }
