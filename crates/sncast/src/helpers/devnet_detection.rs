@@ -1,15 +1,18 @@
 use std::process::Command;
 
+const DEFAULT_DEVNET_HOST: &str = "127.0.0.1";
+const DEFAULT_DEVNET_PORT: u16 = 5050;
+
 #[derive(Debug, Clone)]
-struct DevnetInfo {
+struct DevnetProcessInfo {
     host: String,
     port: u16,
 }
 
 #[derive(Debug)]
-enum FindDevnetError {
-    None,
-    Multiple,
+enum DevnetDetectionError {
+    NoInstance,
+    MultipleInstances,
     CommandFailed,
 }
 
@@ -25,16 +28,16 @@ pub fn is_devnet_running() -> bool {
 fn detect_devnet_from_processes() -> Result<String, String> {
     match find_devnet_process_info() {
         Ok(info) => Ok(format!("http://{}:{}", info.host, info.port)),
-        Err(FindDevnetError::Multiple) => {
-            Err("Multiple starknet-devnet instances found. Please use --url to specify which one to use.".to_string())
+        Err(DevnetDetectionError::MultipleInstances) => {
+            Err("Multiple starknet-devnet instances found. Please use `--url <URL>` to specify which one to use.".to_string())
         }
-        Err(FindDevnetError::None | FindDevnetError::CommandFailed) => {
+        Err(DevnetDetectionError::NoInstance | DevnetDetectionError::CommandFailed) => {
             // Fallback to default starknet-devnet URL if reachable
-            if is_port_reachable("127.0.0.1", 5050) {
-                Ok("http://127.0.0.1:5050".to_string())
+            if is_port_reachable(DEFAULT_DEVNET_HOST, DEFAULT_DEVNET_PORT) {
+                Ok(format!("http://{DEFAULT_DEVNET_HOST}:{DEFAULT_DEVNET_PORT}"))
             } else {
                 Err(
-                    "Could not detect running starknet-devnet instance. Please use --url instead."
+                    "Could not detect running starknet-devnet instance. Please use `--url <URL>` instead or start devnet if it is not running."
                         .to_string(),
                 )
             }
@@ -42,14 +45,14 @@ fn detect_devnet_from_processes() -> Result<String, String> {
     }
 }
 
-fn find_devnet_process_info() -> Result<DevnetInfo, FindDevnetError> {
+fn find_devnet_process_info() -> Result<DevnetProcessInfo, DevnetDetectionError> {
     let output = Command::new("ps")
         .args(["aux"])
         .output()
-        .map_err(|_| FindDevnetError::CommandFailed)?;
+        .map_err(|_| DevnetDetectionError::CommandFailed)?;
     let ps_output = String::from_utf8_lossy(&output.stdout);
 
-    let devnet_processes: Vec<DevnetInfo> = ps_output
+    let devnet_processes: Vec<DevnetProcessInfo> = ps_output
         .lines()
         .filter(|line| line.contains("starknet-devnet"))
         .map(|line| {
@@ -62,9 +65,9 @@ fn find_devnet_process_info() -> Result<DevnetInfo, FindDevnetError> {
         .collect();
 
     match devnet_processes.as_slice() {
-        [] => Err(FindDevnetError::None),
+        [] => Err(DevnetDetectionError::NoInstance),
         [single] => Ok(single.clone()),
-        _ => Err(FindDevnetError::Multiple),
+        _ => Err(DevnetDetectionError::MultipleInstances),
     }
 }
 
@@ -86,15 +89,7 @@ fn extract_string_from_flag(cmdline: &str, flag: &str) -> Option<String> {
 }
 
 fn extract_port_from_flag(cmdline: &str, flag: &str) -> Option<u16> {
-    if let Some(port_str) = extract_string_from_flag(cmdline, flag)
-        && let Ok(p) = port_str.parse::<u16>()
-        && p > 1024
-        && p < 65535
-    {
-        return Some(p);
-    }
-
-    None
+    extract_string_from_flag(cmdline, flag).and_then(|port_str| parse_valid_port(&port_str))
 }
 
 fn extract_docker_mapping(cmdline: &str) -> Option<(String, u16)> {
@@ -110,7 +105,7 @@ fn extract_docker_mapping(cmdline: &str) -> Option<(String, u16)> {
             } else if parts.len() == 2
                 && let Ok(host_port) = parts[0].parse::<u16>()
             {
-                return Some(("127.0.0.1".to_string(), host_port));
+                return Some((DEFAULT_DEVNET_HOST.to_string(), host_port));
             }
         }
     }
@@ -118,7 +113,7 @@ fn extract_docker_mapping(cmdline: &str) -> Option<(String, u16)> {
     None
 }
 
-fn extract_devnet_info_from_docker_line(cmdline: &str) -> DevnetInfo {
+fn extract_devnet_info_from_docker_line(cmdline: &str) -> DevnetProcessInfo {
     let mut port = None;
     let mut host = None;
 
@@ -131,26 +126,23 @@ fn extract_devnet_info_from_docker_line(cmdline: &str) -> DevnetInfo {
         port = extract_port_from_flag(cmdline, "--port");
     }
 
-    let final_host = host.unwrap_or_else(|| "127.0.0.1".to_string());
-    let final_port = port.unwrap_or(5050);
+    let final_host = host.unwrap_or_else(|| DEFAULT_DEVNET_HOST.to_string());
+    let final_port = port.unwrap_or(DEFAULT_DEVNET_PORT);
 
-    DevnetInfo {
+    DevnetProcessInfo {
         host: final_host,
         port: final_port,
     }
 }
 
-fn extract_devnet_info_from_cmdline(cmdline: &str) -> DevnetInfo {
+fn extract_devnet_info_from_cmdline(cmdline: &str) -> DevnetProcessInfo {
     let mut port = extract_port_from_flag(cmdline, "--port");
     let mut host = extract_string_from_flag(cmdline, "--host");
 
-    if port.is_none()
-        && let Ok(port_env) = std::env::var("PORT")
-        && let Ok(p) = port_env.parse::<u16>()
-        && p > 1024
-        && p < 65535
-    {
-        port = Some(p);
+    if port.is_none() {
+        port = std::env::var("PORT")
+            .ok()
+            .and_then(|port_env| parse_valid_port(&port_env));
     }
 
     if host.is_none()
@@ -160,10 +152,10 @@ fn extract_devnet_info_from_cmdline(cmdline: &str) -> DevnetInfo {
         host = Some(host_env);
     }
 
-    let final_port = port.unwrap_or(5050);
-    let final_host = host.unwrap_or_else(|| "127.0.0.1".to_string());
+    let final_port = port.unwrap_or(DEFAULT_DEVNET_PORT);
+    let final_host = host.unwrap_or_else(|| DEFAULT_DEVNET_HOST.to_string());
 
-    DevnetInfo {
+    DevnetProcessInfo {
         host: final_host,
         port: final_port,
     }
@@ -172,11 +164,16 @@ fn extract_devnet_info_from_cmdline(cmdline: &str) -> DevnetInfo {
 fn is_port_reachable(host: &str, port: u16) -> bool {
     let url = format!("http://{host}:{port}/is_alive");
 
-    std::process::Command::new("curl")
+    Command::new("curl")
         .args(["-s", "-f", "--max-time", "1", &url])
         .output()
         .map(|output| output.status.success())
         .unwrap_or(false)
+}
+
+fn parse_valid_port(port_str: &str) -> Option<u16> {
+    // Ports below 1024 typically require elevated permissions
+    port_str.parse::<u16>().ok().filter(|&p| p >= 1024)
 }
 
 #[cfg(test)]

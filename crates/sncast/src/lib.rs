@@ -89,9 +89,6 @@ pub const MAINNET: Felt =
 pub const SEPOLIA: Felt =
     Felt::from_hex_unchecked(const_hex::const_encode::<10, true>(b"SN_SEPOLIA").as_str());
 
-pub const DEVNET: Felt =
-    Felt::from_hex_unchecked(const_hex::const_encode::<6, true>(b"SN_DEV").as_str());
-
 #[derive(ValueEnum, Clone, Copy, Debug, PartialEq)]
 pub enum Network {
     Mainnet,
@@ -117,8 +114,6 @@ impl TryFrom<Felt> for Network {
             Ok(Network::Mainnet)
         } else if value == SEPOLIA {
             Ok(Network::Sepolia)
-        } else if value == DEVNET {
-            Ok(Network::Devnet)
         } else {
             bail!("Given network is neither Mainnet nor Sepolia")
         }
