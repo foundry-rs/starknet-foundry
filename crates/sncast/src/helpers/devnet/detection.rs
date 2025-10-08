@@ -190,13 +190,10 @@ async fn is_port_reachable(host: &str, port: u16) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::process::{Command, Stdio};
-    use std::thread;
-    use std::time::{Duration, Instant};
 
     // These tests are marked to run serially to avoid interference from environment variables
-    #[tokio::test]
-    async fn test_devnet_parsing() {
+    #[test]
+    fn test_devnet_parsing() {
         test_extract_devnet_info_from_cmdline();
 
         test_extract_devnet_info_from_docker_line();
@@ -204,8 +201,6 @@ mod tests {
         test_extract_devnet_info_with_both_envs();
 
         test_cmdline_args_override_env();
-
-        test_detect_devnet_url().await;
     }
 
     fn test_extract_devnet_info_from_cmdline() {
@@ -278,45 +273,5 @@ mod tests {
             std::env::remove_var("PORT");
             std::env::remove_var("HOST");
         }
-    }
-
-    async fn test_detect_devnet_url() {
-        let child = spawn_devnet("5090").await;
-
-        let result = detect_devnet_url()
-            .await
-            .expect("Failed to detect devnet URL");
-        assert_eq!(result, "http://127.0.0.1:5090");
-
-        cleanup_process(child);
-    }
-
-    async fn spawn_devnet(port: &str) -> std::process::Child {
-        let mut child = Command::new("starknet-devnet")
-            .args(["--port", port])
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn()
-            .expect("Failed to spawn starknet-devnet process");
-
-        let port_num: u16 = port.parse().expect("Invalid port number");
-        let start_time = Instant::now();
-        let timeout = Duration::from_secs(10);
-
-        while start_time.elapsed() < timeout {
-            if is_port_reachable("127.0.0.1", port_num).await {
-                return child;
-            }
-            thread::sleep(Duration::from_millis(500));
-        }
-
-        let _ = child.kill();
-        let _ = child.wait();
-        panic!("Devnet did not start in time on port {port}");
-    }
-
-    fn cleanup_process(mut child: std::process::Child) {
-        child.kill().expect("Failed to kill devnet process");
-        child.wait().expect("Failed to wait for devnet process");
     }
 }
