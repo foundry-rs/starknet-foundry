@@ -53,7 +53,7 @@ pub enum ExplorerError {
     DevnetNotSupported,
 }
 
-pub fn block_explorer_link_if_allowed<T>(
+pub async fn block_explorer_link_if_allowed<T>(
     result: &anyhow::Result<T>,
     chain_id: Felt,
     config: &CastConfig,
@@ -67,7 +67,7 @@ where
 
     let network = chain_id.try_into().ok()?;
 
-    let is_devnet = matches!(network, Network::Devnet) || detection::is_devnet_running();
+    let is_devnet = matches!(network, Network::Devnet) || detection::is_devnet_running().await;
 
     if (!config.show_explorer_links || is_devnet) && !is_explorer_link_overridden() {
         return None;

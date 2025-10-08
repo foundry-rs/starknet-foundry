@@ -1,6 +1,8 @@
 use regex::Regex;
 use std::process::Command;
 
+use crate::helpers::devnet::provider::DevnetProvider;
+
 const DEFAULT_DEVNET_HOST: &str = "127.0.0.1";
 const DEFAULT_DEVNET_PORT: u16 = 5050;
 
@@ -10,46 +12,57 @@ struct DevnetProcessInfo {
     port: u16,
 }
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 enum DevnetDetectionError {
+    #[error(
+        "Could not detect running starknet-devnet instance. Please use `--url <URL>` instead or start devnet if it is not running."
+    )]
     NoInstance,
+    #[error(
+        "Multiple starknet-devnet instances found. Please use `--url <URL>` to specify which one to use."
+    )]
     MultipleInstances,
+    #[error("Failed to execute process detection command.")]
     CommandFailed,
+    #[error(
+        "Found starknet-devnet process, but could not reach it. Please use `--url <URL>` to specify the correct URL."
+    )]
+    ProcessNotReachable,
 }
 
-pub fn detect_devnet_url() -> Result<String, String> {
-    detect_devnet_from_processes()
+pub async fn detect_devnet_url() -> Result<String, String> {
+    detect_devnet_from_processes().await
 }
 
 #[must_use]
-pub fn is_devnet_running() -> bool {
-    detect_devnet_from_processes().is_ok()
+pub async fn is_devnet_running() -> bool {
+    detect_devnet_from_processes().await.is_ok()
 }
 
-fn detect_devnet_from_processes() -> Result<String, String> {
+async fn detect_devnet_from_processes() -> Result<String, String> {
     match find_devnet_process_info() {
         Ok(info) => {
-            if is_port_reachable(&info.host, info.port) {
+            if is_port_reachable(&info.host, info.port).await {
                 Ok(format!("http://{}:{}", info.host, info.port))
             } else {
-                Err(format!(
-                    "Found starknet-devnet process, but could not reach it. Please use `--url <URL>` to specify the correct URL.",
-                ))
+                Err(DevnetDetectionError::ProcessNotReachable.to_string())
             }
         }
         Err(DevnetDetectionError::MultipleInstances) => {
-            Err("Multiple starknet-devnet instances found. Please use `--url <URL>` to specify which one to use.".to_string())
+            Err(DevnetDetectionError::MultipleInstances.to_string())
         }
         Err(DevnetDetectionError::NoInstance | DevnetDetectionError::CommandFailed) => {
             // Fallback to default starknet-devnet URL if reachable
-            if is_port_reachable(DEFAULT_DEVNET_HOST, DEFAULT_DEVNET_PORT) {
-                Ok(format!("http://{DEFAULT_DEVNET_HOST}:{DEFAULT_DEVNET_PORT}"))
+            if is_port_reachable(DEFAULT_DEVNET_HOST, DEFAULT_DEVNET_PORT).await {
+                Ok(format!(
+                    "http://{DEFAULT_DEVNET_HOST}:{DEFAULT_DEVNET_PORT}"
+                ))
             } else {
-                Err(
-                    "Could not detect running starknet-devnet instance. Please use `--url <URL>` instead or start devnet if it is not running."
-                        .to_string(),
-                )
+                Err(DevnetDetectionError::NoInstance.to_string())
             }
+        }
+        Err(DevnetDetectionError::ProcessNotReachable) => {
+            Err(DevnetDetectionError::ProcessNotReachable.to_string())
         }
     }
 }
@@ -149,7 +162,7 @@ fn extract_devnet_info_from_cmdline(cmdline: &str) -> DevnetProcessInfo {
         port = std::env::var("PORT")
             .ok()
             .and_then(|port_env| port_env.parse().ok());
-    
+    }
 
     if host.is_none()
         && let Ok(host_env) = std::env::var("HOST")
@@ -167,23 +180,11 @@ fn extract_devnet_info_from_cmdline(cmdline: &str) -> DevnetProcessInfo {
     }
 }
 
-fn is_port_reachable(host: &str, port: u16) -> bool {
-    let url = format!("http://{host}:{port}/is_alive");
+async fn is_port_reachable(host: &str, port: u16) -> bool {
+    let url = format!("http://{host}:{port}");
 
-    println!(
-        "{:?}",
-        Command::new("curl")
-            .args(["-s", "-f", "--max-time", "1", &url])
-            .output()
-            .map(|output| output.status.success())
-            .unwrap_or(false)
-    );
-
-    Command::new("curl")
-        .args(["-s", "-f", "--max-time", "1", &url])
-        .output()
-        .map(|output| output.status.success())
-        .unwrap_or(false)
+    let provider = DevnetProvider::new(&url);
+    provider.ensure_alive().await.is_ok()
 }
 
 #[cfg(test)]
@@ -194,8 +195,8 @@ mod tests {
     use std::time::{Duration, Instant};
 
     // These tests are marked to run serially to avoid interference from environment variables
-    #[test]
-    fn test_devnet_parsing() {
+    #[tokio::test]
+    async fn test_devnet_parsing() {
         test_extract_devnet_info_from_cmdline();
 
         test_extract_devnet_info_from_docker_line();
@@ -204,7 +205,7 @@ mod tests {
 
         test_cmdline_args_override_env();
 
-        test_detect_devnet_url();
+        test_detect_devnet_url().await;
     }
 
     fn test_extract_devnet_info_from_cmdline() {
@@ -279,16 +280,18 @@ mod tests {
         }
     }
 
-    fn test_detect_devnet_url() {
-        let child = spawn_devnet("5090");
+    async fn test_detect_devnet_url() {
+        let child = spawn_devnet("5090").await;
 
-        let result = detect_devnet_url().expect("Failed to detect devnet URL");
+        let result = detect_devnet_url()
+            .await
+            .expect("Failed to detect devnet URL");
         assert_eq!(result, "http://127.0.0.1:5090");
 
         cleanup_process(child);
     }
 
-    fn spawn_devnet(port: &str) -> std::process::Child {
+    async fn spawn_devnet(port: &str) -> std::process::Child {
         let mut child = Command::new("starknet-devnet")
             .args(["--port", port])
             .stdout(Stdio::null())
@@ -301,7 +304,7 @@ mod tests {
         let timeout = Duration::from_secs(10);
 
         while start_time.elapsed() < timeout {
-            if is_port_reachable("127.0.0.1", port_num) {
+            if is_port_reachable("127.0.0.1", port_num).await {
                 return child;
             }
             thread::sleep(Duration::from_millis(500));

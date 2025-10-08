@@ -33,7 +33,7 @@ impl RpcArgs {
             )
         }
 
-        let url = self.get_url(&config.url)?;
+        let url = self.get_url(&config.url).await?;
 
         assert!(!url.is_empty(), "url cannot be empty");
         let provider = get_provider(&url)?;
@@ -43,11 +43,11 @@ impl RpcArgs {
         Ok(provider)
     }
 
-    pub fn get_url(&self, config_url: &str) -> Result<String> {
+    pub async fn get_url(&self, config_url: &str) -> Result<String> {
         match (&self.network, &self.url, config_url) {
             (Some(network), None, _) => {
                 let free_provider = FreeProvider::semi_random();
-                network.url(&free_provider)
+                network.url(&free_provider).await
             }
             (None, Some(url), _) => Ok(url.clone()),
             (None, None, config_url) if !config_url.is_empty() => Ok(config_url.to_string()),
@@ -68,11 +68,11 @@ impl FreeProvider {
 }
 
 impl Network {
-    pub fn url(self, provider: &FreeProvider) -> Result<String> {
+    pub async fn url(self, provider: &FreeProvider) -> Result<String> {
         match self {
             Network::Mainnet => Ok(Self::free_mainnet_rpc(provider)),
             Network::Sepolia => Ok(Self::free_sepolia_rpc(provider)),
-            Network::Devnet => Self::devnet_rpc(provider),
+            Network::Devnet => Self::devnet_rpc(provider).await,
         }
     }
 
@@ -84,8 +84,10 @@ impl Network {
         format!("https://starknet-sepolia.public.blastapi.io/rpc/{RPC_URL_VERSION}")
     }
 
-    fn devnet_rpc(_provider: &FreeProvider) -> Result<String> {
-        detection::detect_devnet_url().map_err(|e| anyhow::anyhow!(e))
+    async fn devnet_rpc(_provider: &FreeProvider) -> Result<String> {
+        detection::detect_devnet_url()
+            .await
+            .map_err(|e| anyhow::anyhow!(e))
     }
 }
 

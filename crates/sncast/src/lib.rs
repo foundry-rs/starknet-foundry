@@ -285,7 +285,10 @@ pub async fn get_account<'a>(
                 .await;
         }
         (true, false) => {
-            let url = rpc_args.get_url(&config.url).context("Failed to get url")?;
+            let url = rpc_args
+                .get_url(&config.url)
+                .await
+                .context("Failed to get url")?;
             return get_account_from_devnet(account, provider, &url).await;
         }
         _ => {
