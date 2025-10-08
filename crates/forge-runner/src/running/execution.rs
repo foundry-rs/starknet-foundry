@@ -1,8 +1,7 @@
-use crate::running::copied_code::get_call_result;
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point_execution::{
-    extract_vm_resources, finalize_runner, total_vm_resources,
+    extract_vm_resources, finalize_runner, get_call_result, total_vm_resources,
 };
 use blockifier::execution::errors::PostExecutionError;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
