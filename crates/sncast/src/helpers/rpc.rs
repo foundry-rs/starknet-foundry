@@ -1,5 +1,5 @@
 use crate::helpers::configuration::CastConfig;
-use crate::helpers::devnet_detection;
+use crate::helpers::devnet::detection;
 use crate::{Network, get_provider};
 use anyhow::{Result, bail};
 use clap::Args;
@@ -16,7 +16,7 @@ pub struct RpcArgs {
     pub url: Option<String>,
 
     /// Use predefined network with a public provider. Note that this option may result in rate limits or other unexpected behavior.
-    /// For devnet, attempts to auto-detect running starknet-devnet instance. If auto-detection fails, use --url instead.
+    /// For devnet, attempts to auto-detect running starknet-devnet instance.
     #[arg(long)]
     pub network: Option<Network>,
 }
@@ -44,13 +44,13 @@ impl RpcArgs {
     }
 
     pub fn get_url(&self, config_url: &str) -> Result<String> {
-        match (&self.network, &self.url, config_url.is_empty()) {
+        match (&self.network, &self.url, config_url) {
             (Some(network), None, _) => {
                 let free_provider = FreeProvider::semi_random();
                 network.url(&free_provider)
             }
             (None, Some(url), _) => Ok(url.clone()),
-            (None, None, false) => Ok(config_url.to_string()),
+            (None, None, config_url) if !config_url.is_empty() => Ok(config_url.to_string()),
             _ => bail!("Either `--network` or `--url` must be provided"),
         }
     }
@@ -85,7 +85,7 @@ impl Network {
     }
 
     fn devnet_rpc(_provider: &FreeProvider) -> Result<String> {
-        devnet_detection::detect_devnet_url().map_err(|e| anyhow::anyhow!(e))
+        detection::detect_devnet_url().map_err(|e| anyhow::anyhow!(e))
     }
 }
 

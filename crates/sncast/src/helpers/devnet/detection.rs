@@ -64,8 +64,8 @@ fn find_devnet_process_info() -> Result<DevnetProcessInfo, DevnetDetectionError>
         .collect();
 
     match devnet_processes.as_slice() {
-        [] => Err(DevnetDetectionError::NoInstance),
         [single] => Ok(single.clone()),
+        [] => Err(DevnetDetectionError::NoInstance),
         _ => Err(DevnetDetectionError::MultipleInstances),
     }
 }
@@ -75,10 +75,8 @@ fn extract_string_from_flag(cmdline: &str, flag: &str) -> Option<String> {
         let after_pattern = &cmdline[pos + flag.len()..];
         let value_str = after_pattern
             .split_whitespace()
-            .next()
-            .unwrap_or("")
-            .trim_start_matches('=')
-            .trim_start_matches(':');
+            .next()?
+            .trim_start_matches('=');
 
         if !value_str.is_empty() {
             return Some(value_str.to_string());
@@ -224,7 +222,7 @@ mod tests {
         assert_eq!(info2.port, 8080);
         assert_eq!(info2.host, "127.0.0.1");
 
-        let cmdline3 = "docker run --network host shardlabs/starknet-devnet-rs --port 5055";
+        let cmdline3 = "podman run --network host shardlabs/starknet-devnet-rs --port 5055";
         let info3 = extract_devnet_info_from_docker_line(cmdline3);
         assert_eq!(info3.port, 5055);
         assert_eq!(info3.host, "127.0.0.1");
