@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Updated the error message returned when calling a nonexistent method on a contract to better align with the format used by the network
+- Oracle support in `snforge` is now stable and no longer requires the `--experimental-oracles` CLI flag
 
 ### Cast
 
@@ -56,7 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - Support for `meta_tx_v0` syscall with cheatcode compatibility
-- `snforge` now supports [oracles](https://docs.swmansion.com/cairo-oracle/).
+- `snforge` now supports [oracles](https://docs.swmansion.com/cairo-oracle/) with `--experimental-oracles` flag.
 - `--trace-components` flag to allow selecting which components of the trace to do display. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#trace-components)
 
 ### Changed
