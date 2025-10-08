@@ -46,7 +46,6 @@ use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
 pub mod config_run;
-mod copied_code;
 mod execution;
 mod hints;
 mod setup;
