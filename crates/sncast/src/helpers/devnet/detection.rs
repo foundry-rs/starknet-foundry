@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::process::Command;
 
 const DEFAULT_DEVNET_HOST: &str = "127.0.0.1";
@@ -27,7 +28,15 @@ pub fn is_devnet_running() -> bool {
 
 fn detect_devnet_from_processes() -> Result<String, String> {
     match find_devnet_process_info() {
-        Ok(info) => Ok(format!("http://{}:{}", info.host, info.port)),
+        Ok(info) => {
+            if is_port_reachable(&info.host, info.port) {
+                Ok(format!("http://{}:{}", info.host, info.port))
+            } else {
+                Err(format!(
+                    "Found starknet-devnet process, but could not reach it. Please use `--url <URL>` to specify the correct URL.",
+                ))
+            }
+        }
         Err(DevnetDetectionError::MultipleInstances) => {
             Err("Multiple starknet-devnet instances found. Please use `--url <URL>` to specify which one to use.".to_string())
         }
@@ -71,39 +80,37 @@ fn find_devnet_process_info() -> Result<DevnetProcessInfo, DevnetDetectionError>
 }
 
 fn extract_string_from_flag(cmdline: &str, flag: &str) -> Option<String> {
-    if let Some(pos) = cmdline.find(flag) {
-        let after_pattern = &cmdline[pos + flag.len()..];
-        let value_str = after_pattern
-            .split_whitespace()
-            .next()?
-            .trim_start_matches('=');
+    let pattern = format!(r"{}\s*=?\s*(\S+)", regex::escape(flag));
+    let re = Regex::new(&pattern).ok()?;
 
-        if !value_str.is_empty() {
-            return Some(value_str.to_string());
-        }
-    }
-    None
+    re.captures(cmdline)
+        .and_then(|caps| caps.get(1))
+        .map(|m| m.as_str().to_string())
 }
 
 fn extract_port_from_flag(cmdline: &str, flag: &str) -> Option<u16> {
-    extract_string_from_flag(cmdline, flag).and_then(|port_str| parse_valid_port(&port_str))
+    extract_string_from_flag(cmdline, flag).and_then(|port_str| port_str.parse().ok())
 }
 
 fn extract_docker_mapping(cmdline: &str) -> Option<(String, u16)> {
     let port_flags = ["-p", "--publish"];
 
+    // Port mapping patterns:
+    // - host:host_port:container_port (e.g., "127.0.0.1:5055:5050")
+    // - host_port:container_port (e.g., "5090:5050")
+    let re = Regex::new(r"^(?:([^:]+):)?(\d+):\d+$").ok()?;
+
     for flag in &port_flags {
-        if let Some(port_mapping) = extract_string_from_flag(cmdline, flag) {
-            let parts: Vec<&str> = port_mapping.split(':').collect();
-            if parts.len() == 3
-                && let Ok(host_port) = parts[1].parse::<u16>()
-            {
-                return Some((parts[0].to_string(), host_port));
-            } else if parts.len() == 2
-                && let Ok(host_port) = parts[0].parse::<u16>()
-            {
-                return Some((DEFAULT_DEVNET_HOST.to_string(), host_port));
-            }
+        if let Some(port_mapping) = extract_string_from_flag(cmdline, flag)
+            && let Some(caps) = re.captures(&port_mapping)
+            && let Ok(host_port) = caps.get(2)?.as_str().parse::<u16>()
+        {
+            let host = caps.get(1).map_or_else(
+                || DEFAULT_DEVNET_HOST.to_string(),
+                |m| m.as_str().to_string(),
+            );
+
+            return Some((host, host_port));
         }
     }
 
@@ -119,7 +126,9 @@ fn extract_devnet_info_from_docker_line(cmdline: &str) -> DevnetProcessInfo {
         port = Some(docker_port);
     }
 
-    if port.is_none() {
+    if port.is_none()
+        && extract_string_from_flag(cmdline, "--network").is_some_and(|network| network == "host")
+    {
         port = extract_port_from_flag(cmdline, "--port");
     }
 
@@ -139,8 +148,8 @@ fn extract_devnet_info_from_cmdline(cmdline: &str) -> DevnetProcessInfo {
     if port.is_none() {
         port = std::env::var("PORT")
             .ok()
-            .and_then(|port_env| parse_valid_port(&port_env));
-    }
+            .and_then(|port_env| port_env.parse().ok());
+    
 
     if host.is_none()
         && let Ok(host_env) = std::env::var("HOST")
@@ -161,16 +170,20 @@ fn extract_devnet_info_from_cmdline(cmdline: &str) -> DevnetProcessInfo {
 fn is_port_reachable(host: &str, port: u16) -> bool {
     let url = format!("http://{host}:{port}/is_alive");
 
+    println!(
+        "{:?}",
+        Command::new("curl")
+            .args(["-s", "-f", "--max-time", "1", &url])
+            .output()
+            .map(|output| output.status.success())
+            .unwrap_or(false)
+    );
+
     Command::new("curl")
         .args(["-s", "-f", "--max-time", "1", &url])
         .output()
         .map(|output| output.status.success())
         .unwrap_or(false)
-}
-
-fn parse_valid_port(port_str: &str) -> Option<u16> {
-    // Ports below 1024 typically require elevated permissions
-    port_str.parse::<u16>().ok().filter(|&p| p >= 1024)
 }
 
 #[cfg(test)]
