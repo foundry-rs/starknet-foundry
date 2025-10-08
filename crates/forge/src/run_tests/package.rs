@@ -25,7 +25,11 @@ use configuration::load_package_config;
 use console::Style;
 use forge_runner::{
     forge_config::ForgeConfig,
-    package_tests::{raw::TestTargetRaw, with_config_resolved::TestTargetWithResolvedConfig},
+    package_tests::{
+        TestTarget,
+        raw::TestTargetRaw,
+        with_config_resolved::{TestCaseResolvedConfig, TestTargetWithResolvedConfig},
+    },
     running::with_config::test_target_with_config,
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
@@ -176,6 +180,32 @@ fn sum_skipped_test_cases(summaries: &[TestTargetSummary]) -> usize {
     summaries.iter().map(TestTargetSummary::count_skipped).sum()
 }
 
+fn sum_test_cases_from_package(
+    test_targets: &[TestTarget<TestCaseResolvedConfig>],
+    partition: Option<&TestPartition>,
+) -> usize {
+    test_targets
+        .iter()
+        .map(|tt| sum_test_cases_from_test_target(tt.clone(), partition))
+        .sum()
+}
+
+fn sum_test_cases_from_test_target(
+    test_target: TestTarget<TestCaseResolvedConfig>,
+    partition: Option<&TestPartition>,
+) -> usize {
+    if let Some(partition) = partition {
+        test_target
+            .test_cases
+            .into_iter()
+            .enumerate()
+            .filter(|(i, _)| i % partition.total() == partition.index_0_based())
+            .count()
+    } else {
+        test_target.test_cases.len()
+    }
+}
+
 #[tracing::instrument(skip_all, level = "debug")]
 pub async fn run_for_package(
     RunForPackageArgs {
@@ -205,7 +235,7 @@ pub async fn run_for_package(
     warn_if_available_gas_used_with_incompatible_scarb_version(&test_targets, &ui)?;
     warn_if_incompatible_rpc_version(&test_targets, ui.clone()).await?;
 
-    let not_filtered = sum_test_cases(&test_targets);
+    let not_filtered = sum_test_cases_from_package(&test_targets, partition.as_ref());
     ui.println(&CollectedTestsCountMessage {
         tests_num: not_filtered,
         package_name: package_name.clone(),
@@ -217,7 +247,7 @@ pub async fn run_for_package(
         let ui = ui.clone();
         ui.println(&TestsRunMessage::new(
             test_target.tests_location,
-            test_target.test_cases.len(),
+            sum_test_cases_from_test_target(test_target.clone(), partition.as_ref()),
         ));
 
         let summary = run_for_test_target(

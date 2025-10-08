@@ -1,4 +1,5 @@
 use crate::compatibility_check::{Requirement, RequirementsChecker, create_version_parser};
+use crate::tests_partition::TestPartition;
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
@@ -15,7 +16,6 @@ use semver::Version;
 use shared::auto_completions::{Completions, generate_completions};
 use std::cell::RefCell;
 use std::ffi::OsString;
-use std::str::FromStr;
 use std::sync::Arc;
 use std::{fs, num::NonZeroU32, thread::available_parallelism};
 use tokio::runtime::Builder;
@@ -31,6 +31,7 @@ pub mod run_tests;
 pub mod scarb;
 pub mod shared_cache;
 pub mod test_filter;
+mod tests_partition;
 mod warn;
 
 pub const CAIRO_EDITION: &str = "2024_07";
@@ -131,48 +132,6 @@ enum ColorOption {
     Auto,
     Always,
     Never,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct TestPartition {
-    index: usize,
-    total: usize,
-}
-
-impl TestPartition {
-    #[must_use]
-    pub fn index(&self) -> usize {
-        self.index
-    }
-
-    #[must_use]
-    pub fn total(&self) -> usize {
-        self.total
-    }
-}
-
-impl FromStr for TestPartition {
-    type Err = String;
-
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let parts: Vec<&str> = s.split('/').collect();
-        if parts.len() != 2 {
-            return Err("Partition must be in the format <INDEX>/<TOTAL>".to_string());
-        }
-
-        let index = parts[0]
-            .parse::<usize>()
-            .map_err(|_| "INDEX must be a positive integer".to_string())?;
-        let total = parts[1]
-            .parse::<usize>()
-            .map_err(|_| "TOTAL must be a positive integer".to_string())?;
-
-        if index == 0 || total == 0 || index > total {
-            return Err("Invalid partition values: ensure 1 <= INDEX <= TOTAL".to_string());
-        }
-
-        Ok(TestPartition { index, total })
-    }
 }
 
 #[derive(Parser, Debug)]

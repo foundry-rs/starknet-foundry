@@ -44,9 +44,7 @@ pub async fn run_for_test_target(
         let case_name = case.name.clone();
 
         if let Some(partition) = &partition {
-            // User provides 1-based index, convert to 0-based.
-            let partition_index = partition.index - 1;
-            let is_test_present_in_partition = i % partition.total == partition_index;
+            let is_test_present_in_partition = i % partition.total() == partition.index_0_based();
 
             if !is_test_present_in_partition {
                 tasks.push(tokio::task::spawn(async {

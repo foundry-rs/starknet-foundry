@@ -27,10 +27,8 @@ impl From<&AnyTestCaseSummary> for TestResultStatus {
             | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Ignored { .. }) => Self::Ignored,
             AnyTestCaseSummary::Single(TestCaseSummary::Interrupted { .. })
             | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Interrupted { .. }) => Self::Interrupted,
-            AnyTestCaseSummary::Fuzzing(TestCaseSummary::SkippedByPartition { .. }) => {
-                Self::SkippedByPartition
-            }
-            AnyTestCaseSummary::Single(TestCaseSummary::SkippedByPartition { .. }) => {
+            AnyTestCaseSummary::Single(TestCaseSummary::SkippedByPartition { .. })
+            | AnyTestCaseSummary::Fuzzing(TestCaseSummary::SkippedByPartition { .. }) => {
                 Self::SkippedByPartition
             }
         }

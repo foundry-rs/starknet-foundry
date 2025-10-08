@@ -184,8 +184,9 @@ impl<T: TestType> TestCaseSummary<T> {
             TestCaseSummary::Failed { name, .. }
             | TestCaseSummary::Passed { name, .. }
             | TestCaseSummary::Ignored { name, .. } => Some(name),
-            TestCaseSummary::Interrupted { .. } => None,
-            TestCaseSummary::SkippedByPartition { .. } => None,
+            TestCaseSummary::Interrupted { .. } | TestCaseSummary::SkippedByPartition { .. } => {
+                None
+            }
         }
     }
 
