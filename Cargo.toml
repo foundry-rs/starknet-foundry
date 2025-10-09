@@ -34,7 +34,7 @@ license-file = "LICENSE"
 
 [workspace.dependencies]
 # TODO(#3770) Use blockifier directly
-blockifier = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.14.0", features = ["testing", "tracing"] }
+blockifier = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.14.0", features = ["testing", "tracing", "node_api"] }
 bigdecimal = "0.4.8"
 # TODO(#3770) Use starknet_api directly
 starknet_api = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.14.0" }

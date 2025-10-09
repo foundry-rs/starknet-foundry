@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Fuzzable` trait implementations for `bool` and `ContractAddress`
 - Type aliases for `StarkCurveKeyPair`, `Secp256k1CurveKeyPair`, `Secp256r1CurveKeyPair`
+- Option to display L2 gas for each call in the debugging trace
 
 #### Changed
 
