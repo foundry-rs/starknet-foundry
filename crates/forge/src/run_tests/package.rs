@@ -4,9 +4,10 @@ use super::{
     test_target::{TestTargetRunResult, run_for_test_target},
 };
 use crate::{
-    TestArgs, TestPartition,
+    Partition, TestArgs,
     block_number_map::BlockNumberMap,
     combine_configs::combine_configs,
+    partition::PartitionConfig,
     scarb::{
         config::{ForgeConfigFromScarb, ForkTarget},
         load_test_artifacts, should_compile_starknet_contract_target,
@@ -81,7 +82,6 @@ pub struct RunForPackageArgs {
     pub forge_config: Arc<ForgeConfig>,
     pub fork_targets: Vec<ForkTarget>,
     pub package_name: String,
-    pub partition: Option<TestPartition>,
 }
 
 impl RunForPackageArgs {
@@ -92,7 +92,6 @@ impl RunForPackageArgs {
         args: &TestArgs,
         cache_dir: &Utf8PathBuf,
         artifacts_dir: &Utf8Path,
-        partition: Option<TestPartition>,
         ui: &UI,
     ) -> Result<RunForPackageArgs> {
         let raw_test_targets = load_test_artifacts(artifacts_dir, &package)?;
@@ -144,7 +143,6 @@ impl RunForPackageArgs {
             tests_filter: test_filter,
             fork_targets: forge_config_from_scarb.fork,
             package_name: package.name,
-            partition,
         })
     }
 }
@@ -182,7 +180,7 @@ fn sum_skipped_test_cases(summaries: &[TestTargetSummary]) -> usize {
 
 fn sum_test_cases_from_package(
     test_targets: &[TestTarget<TestCaseResolvedConfig>],
-    partition: Option<&TestPartition>,
+    partition: Option<&Partition>,
 ) -> usize {
     test_targets
         .iter()
@@ -192,7 +190,7 @@ fn sum_test_cases_from_package(
 
 fn sum_test_cases_from_test_target(
     test_target: TestTarget<TestCaseResolvedConfig>,
-    partition: Option<&TestPartition>,
+    partition: Option<&Partition>,
 ) -> usize {
     if let Some(partition) = partition {
         test_target
@@ -214,9 +212,9 @@ pub async fn run_for_package(
         tests_filter,
         fork_targets,
         package_name,
-        partition,
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
+    partition_config: Option<&PartitionConfig>,
     ui: Arc<UI>,
 ) -> Result<PackageTestResult> {
     let mut test_targets = test_package_with_config_resolved(
@@ -234,6 +232,8 @@ pub async fn run_for_package(
 
     warn_if_available_gas_used_with_incompatible_scarb_version(&test_targets, &ui)?;
     warn_if_incompatible_rpc_version(&test_targets, ui.clone()).await?;
+
+    let partition = partition_config.as_ref().map(|pc| pc.partition());
 
     let not_filtered = sum_test_cases_from_package(&test_targets, partition.as_ref());
     ui.println(&CollectedTestsCountMessage {
@@ -254,7 +254,7 @@ pub async fn run_for_package(
             test_target,
             forge_config.clone(),
             &tests_filter,
-            partition,
+            partition_config,
             ui,
         )
         .await?;

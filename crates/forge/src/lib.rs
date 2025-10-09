@@ -1,5 +1,5 @@
 use crate::compatibility_check::{Requirement, RequirementsChecker, create_version_parser};
-use crate::tests_partition::TestPartition;
+use crate::partition::Partition;
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
@@ -26,12 +26,12 @@ mod clean;
 mod combine_configs;
 mod compatibility_check;
 mod new;
+mod partition;
 mod profile_validation;
 pub mod run_tests;
 pub mod scarb;
 pub mod shared_cache;
 pub mod test_filter;
-mod tests_partition;
 mod warn;
 
 pub const CAIRO_EDITION: &str = "2024_07";
@@ -207,7 +207,7 @@ pub struct TestArgs {
 
     /// If specified, divides tests into `total` partitions and runs only the partition with the given `index` (1-based).
     #[arg(long)]
-    partition: Option<TestPartition>,
+    partition: Option<Partition>,
 
     /// Additional arguments for cairo-coverage or cairo-profiler
     #[arg(last = true)]

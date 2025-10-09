@@ -1,3 +1,4 @@
+use crate::partition::PartitionConfig;
 use anyhow::Result;
 use forge_runner::messages::TestResultMessage;
 use forge_runner::{
@@ -14,8 +15,6 @@ use futures::{StreamExt, stream::FuturesUnordered};
 use std::sync::Arc;
 use tokio::sync::mpsc::channel;
 
-use crate::TestPartition;
-
 #[non_exhaustive]
 pub enum TestTargetRunResult {
     Ok(TestTargetSummary),
@@ -27,7 +26,7 @@ pub async fn run_for_test_target(
     tests: TestTargetWithResolvedConfig,
     forge_config: Arc<ForgeConfig>,
     tests_filter: &impl TestCaseFilter,
-    partition: Option<TestPartition>,
+    partition_config: Option<&PartitionConfig>,
     ui: Arc<UI>,
 ) -> Result<TestTargetRunResult> {
     let casm_program = tests.casm_program.clone();
@@ -40,11 +39,18 @@ pub async fn run_for_test_target(
     // a channel is used to signal the task that test processing is no longer necessary.
     let (send, mut rec) = channel(1);
 
-    for (i, case) in tests.test_cases.into_iter().enumerate() {
+    for case in tests.test_cases {
         let case_name = case.name.clone();
 
-        if let Some(partition) = &partition {
-            let is_test_present_in_partition = i % partition.total() == partition.index_0_based();
+        if let Some(partition_config) = &partition_config {
+            let function_id = format!("{}__snforge_internal_test_generated", case.name);
+
+            let test_partition = partition_config
+                .partitions_mapping()
+                .get(&function_id)
+                .expect("Test name should be present in tests partitions mapping");
+            let is_test_present_in_partition =
+                *test_partition == partition_config.partition().index_1_based();
 
             if !is_test_present_in_partition {
                 tasks.push(tokio::task::spawn(async {

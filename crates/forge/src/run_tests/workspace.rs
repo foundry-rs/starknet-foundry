@@ -1,5 +1,6 @@
 use super::package::RunForPackageArgs;
 use super::structs::{LatestBlocksNumbersMessage, TestsFailureSummaryMessage};
+use crate::partition::PartitionConfig;
 use crate::profile_validation::check_profile_compatibility;
 use crate::run_tests::structs::OverallSummaryMessage;
 use crate::warn::{
@@ -28,6 +29,7 @@ use std::env;
 use std::sync::Arc;
 
 #[tracing::instrument(skip_all, level = "debug")]
+#[expect(clippy::too_many_lines)]
 pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus> {
     match args.color {
         // SAFETY: This runs in a single-threaded environment.
@@ -94,20 +96,34 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     let cache_dir = workspace_root.join(CACHE_DIR);
     let packages_len = packages.len();
 
-    for package in packages {
+    let packages_args = packages
+        .iter()
+        .map(|package| {
+            RunForPackageArgs::build(
+                package.clone(),
+                &scarb_metadata,
+                &args,
+                &cache_dir,
+                &artifacts_dir_path,
+                &ui,
+            )
+        })
+        .collect::<Result<Vec<RunForPackageArgs>>>()?;
+
+    let partition_config = args
+        .partition
+        .map(|partition| PartitionConfig::new(partition, &packages_args));
+
+    for (package, args) in packages.iter().zip(packages_args) {
         env::set_current_dir(&package.root)?;
 
-        let args = RunForPackageArgs::build(
-            package,
-            &scarb_metadata,
-            &args,
-            &cache_dir,
-            &artifacts_dir_path,
-            args.partition,
-            &ui,
-        )?;
-
-        let result = run_for_package(args, &mut block_number_map, ui.clone()).await?;
+        let result = run_for_package(
+            args,
+            &mut block_number_map,
+            partition_config.as_ref(),
+            ui.clone(),
+        )
+        .await?;
 
         let filtered = result.filtered();
         let skipped = result.skipped();

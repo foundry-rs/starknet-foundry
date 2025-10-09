@@ -173,9 +173,9 @@ fn fork_aliased_decorator() {
                     url: node_rpc_url().as_str().parse().unwrap(),
                     block_id: BlockId::BlockTag,
                 }],
-                partition: None,
             },
             &mut BlockNumberMap::default(),
+            None,
             ui,
         ))
         .expect("Runner fail")
@@ -267,9 +267,9 @@ fn fork_aliased_decorator_overrding() {
                     url: node_rpc_url().as_str().parse().unwrap(),
                     block_id: BlockId::BlockNumber(12_341_234),
                 }],
-                partition: None,
             },
             &mut BlockNumberMap::default(),
+            None,
             ui,
         ))
         .expect("Runner fail")
