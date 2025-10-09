@@ -46,7 +46,6 @@ use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
 pub mod config_run;
-mod copied_code;
 mod execution;
 mod hints;
 mod setup;
@@ -80,6 +79,7 @@ pub fn run_test(
             &casm_program,
             &RuntimeConfig::from(&forge_config.test_runner_config),
             None,
+            &versioned_program_path,
         );
 
         if send.is_closed() {
@@ -113,6 +113,7 @@ pub(crate) fn run_fuzz_test(
             &casm_program,
             &RuntimeConfig::from(&forge_config.test_runner_config),
             Some(rng),
+            &versioned_program_path,
         );
 
         // TODO: code below is added to fix snforge tests
@@ -161,6 +162,7 @@ pub fn run_test_case(
     casm_program: &AssembledProgramWithDebugInfo,
     runtime_config: &RuntimeConfig,
     fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
+    versioned_program_path: &Utf8Path,
 ) -> Result<RunResult> {
     let program = case.try_into_program(casm_program)?;
     let (call, entry_point) =
@@ -229,7 +231,7 @@ pub fn run_test_case(
         contracts_data: runtime_config.contracts_data,
         fuzzer_rng,
         experimental_oracles_enabled: runtime_config.experimental_oracles,
-        oracle_hint_service: OracleHintService::default(),
+        oracle_hint_service: OracleHintService::new(Some(versioned_program_path.as_std_path())),
     };
 
     let mut forge_runtime = ExtendedRuntime {

@@ -38,6 +38,9 @@ Transaction Hash: 0x0[..]
 To see declaration details, visit:
 class: https://starkscan.co/search/[..]
 transaction: https://starkscan.co/search/[..]
+
+To deploy a contract of this class, run:
+sncast --account my_account deploy --class-hash 0x[..] --network sepolia
 ```
 </details>
 <br>

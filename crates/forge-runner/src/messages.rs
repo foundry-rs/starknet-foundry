@@ -176,7 +176,9 @@ fn format_detailed_resources(
     };
 
     let syscalls = format_items(&syscall_usage);
-    let vm_resources_output = format_vm_resources(&used_resources.execution_resources);
+
+    let charged_resources = &used_resources.execution_summary.charged_resources;
+    let vm_resources_output = format_vm_resources(&charged_resources.vm_resources);
 
     match tracked_resource {
         ForgeTrackedResource::CairoSteps => {
@@ -191,10 +193,10 @@ fn format_detailed_resources(
                 "
         sierra_gas_consumed: {}
         syscalls: ({syscalls})",
-                used_resources.gas_consumed.0
+                charged_resources.gas_consumed.0
             );
 
-            if used_resources.execution_resources != ExecutionResources::default() {
+            if charged_resources.vm_resources != ExecutionResources::default() {
                 output.push_str(&vm_resources_output);
             }
             output.push('\n');

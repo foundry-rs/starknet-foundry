@@ -15,26 +15,25 @@ use data_transformer::transform;
 use foundry_ui::components::warning::WarningMessage;
 use foundry_ui::{Message, UI};
 use shared::auto_completions::{Completions, generate_completions};
+use sncast::helpers::command::process_command_result;
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use sncast::helpers::output_format::output_format_from_json_flag;
+use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
-use sncast::response::cast_message::SncastMessage;
-use sncast::response::command::CommandResponse;
-use sncast::response::declare::DeclareResponse;
-use sncast::response::errors::ResponseError;
+use sncast::response::declare::{DeclareResponse, DeployCommandMessage};
 use sncast::response::errors::handle_starknet_command_error;
-use sncast::response::explorer_link::{ExplorerLinksMessage, block_explorer_link_if_allowed};
+use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transformed_call::transform_response;
 use sncast::{
     ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
     get_contract_class,
 };
 use starknet::core::types::ContractClass;
-use starknet::core::types::contract::AbiEntry;
+use starknet::core::types::contract::{AbiEntry, SierraClass};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
 use starknet_commands::verify::Verify;
@@ -270,10 +269,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let rpc = declare.rpc.clone();
 
             let account = get_account(
-                &config.account,
-                &config.accounts_file,
+                &config,
                 &provider,
+                &declare.rpc,
                 config.keystore.as_ref(),
+                ui,
             )
             .await?;
             let manifest_path = assert_manifest_path_exists()?;
@@ -291,7 +291,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             .expect("Failed to build contract");
 
             let result = starknet_commands::declare::declare(
-                declare,
+                &declare,
                 &account,
                 &artifacts,
                 wait_config,
@@ -311,7 +311,35 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
+
+            let deploy_command_message = if let Ok(response) = &result {
+                // TODO(#3785)
+                let contract_artifacts = artifacts
+                    .get(&declare.contract.clone())
+                    .expect("Failed to get contract artifacts");
+                let contract_definition: SierraClass =
+                    serde_json::from_str(&contract_artifacts.sierra)
+                        .context("Failed to parse sierra artifact")?;
+                let network_flag = generate_network_flag(
+                    rpc.get_url(&config.url).as_deref(),
+                    rpc.network.as_ref(),
+                );
+                Some(DeployCommandMessage::new(
+                    &contract_definition.abi,
+                    response,
+                    &config.account,
+                    &config.accounts_file,
+                    network_flag,
+                ))
+            } else {
+                None
+            };
+
             process_command_result("declare", result, ui, block_explorer_link)?;
+
+            if let Some(deploy_command_message) = deploy_command_message {
+                ui.println(&deploy_command_message?);
+            }
 
             Ok(())
         }
@@ -320,11 +348,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let provider = declare_from.rpc.get_provider(&config, ui).await?;
             let rpc_args = declare_from.rpc.clone();
             let source_provider = declare_from.source_rpc.get_provider(ui).await?;
+
             let account = get_account(
-                &config.account,
-                &config.accounts_file,
+                &config,
                 &provider,
+                &declare_from.rpc,
                 config.keystore.as_ref(),
+                ui,
             )
             .await?;
 
@@ -368,13 +398,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let provider = rpc.get_provider(&config, ui).await?;
 
-            let account = get_account(
-                &config.account,
-                &config.accounts_file,
-                &provider,
-                config.keystore.as_ref(),
-            )
-            .await?;
+            let account =
+                get_account(&config, &provider, &rpc, config.keystore.as_ref(), ui).await?;
 
             // safe to unwrap because "constructor" is a standardized name
             let selector = get_selector_from_name("constructor").unwrap();
@@ -457,13 +482,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let provider = rpc.get_provider(&config, ui).await?;
 
-            let account = get_account(
-                &config.account,
-                &config.accounts_file,
-                &provider,
-                config.keystore.as_ref(),
-            )
-            .await?;
+            let account =
+                get_account(&config, &provider, &rpc, config.keystore.as_ref(), ui).await?;
 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
@@ -630,35 +650,4 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
 
     config_with_cli(&mut combined_config, cli);
     Ok(combined_config)
-}
-
-fn process_command_result<T>(
-    command: &str,
-    result: Result<T>,
-    ui: &UI,
-    block_explorer_link: Option<ExplorerLinksMessage>,
-) -> Result<()>
-where
-    T: CommandResponse,
-    SncastMessage<T>: Message,
-{
-    let cast_msg = result.map(|command_response| SncastMessage {
-        command: command.to_string(),
-        command_response,
-    });
-
-    match cast_msg {
-        Ok(response) => {
-            ui.println(&response);
-            if let Some(link) = block_explorer_link {
-                ui.println(&link);
-            }
-            Ok(())
-        }
-        Err(err) => {
-            let response_err = ResponseError::new(command.to_string(), format!("{err:#}"));
-            ui.eprintln(&response_err);
-            Err(err)
-        }
-    }
 }

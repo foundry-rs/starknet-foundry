@@ -51,13 +51,8 @@ pub async fn multicall(
         starknet_commands::multicall::Commands::Run(run) => {
             let provider = run.rpc.get_provider(&config, ui).await?;
 
-            let account = get_account(
-                &config.account,
-                &config.accounts_file,
-                &provider,
-                config.keystore.as_ref(),
-            )
-            .await?;
+            let account =
+                get_account(&config, &provider, &run.rpc, config.keystore.as_ref(), ui).await?;
             let result =
                 starknet_commands::multicall::run::run(run.clone(), &account, wait_config, ui)
                     .await;
