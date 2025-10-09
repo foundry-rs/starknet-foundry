@@ -143,6 +143,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     WaitForTx {
                         wait: true,
                         wait_params: self.config.wait_params,
+                        show_ui_outputs: true,
                     },
                     true,
                     self.ui,
@@ -183,6 +184,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     WaitForTx {
                         wait: true,
                         wait_params: self.config.wait_params,
+                        show_ui_outputs: true,
                     },
                     self.ui,
                 ));
@@ -221,6 +223,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     WaitForTx {
                         wait: true,
                         wait_params: self.config.wait_params,
+                        show_ui_outputs: true,
                     },
                     self.ui,
                 ));

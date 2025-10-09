@@ -26,7 +26,7 @@ async fn test_happy_path() {
         &provider,
         MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
         ValidatedWaitParams::default(),
-        &ui,
+        Some(&ui),
     )
     .await;
 
@@ -109,7 +109,7 @@ async fn test_wait_for_reverted_transaction() {
         &provider,
         transaction_hash,
         ValidatedWaitParams::new(1, 3),
-        &ui,
+        Some(&ui),
     )
     .await
     .map_err(anyhow::Error::from)
@@ -125,7 +125,7 @@ async fn test_wait_for_nonexistent_tx() {
         &provider,
         "0x123456789".parse().expect("Could not parse a number"),
         ValidatedWaitParams::new(1, 3),
-        &ui,
+        Some(&ui),
     )
     .await
     .map_err(anyhow::Error::from)
@@ -143,6 +143,7 @@ async fn test_happy_path_handle_wait_for_tx() {
         WaitForTx {
             wait: true,
             wait_params: ValidatedWaitParams::new(5, 63),
+            show_ui_outputs: true,
         },
         &ui,
     )
@@ -160,7 +161,7 @@ async fn test_wait_for_wrong_retry_values() {
         &provider,
         MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
         ValidatedWaitParams::new(2, 1),
-        &ui,
+        Some(&ui),
     )
     .await
     .unwrap();
@@ -175,7 +176,7 @@ async fn test_wait_for_wrong_retry_values_timeout_zero() {
         &provider,
         MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
         ValidatedWaitParams::new(2, 0),
-        &ui,
+        Some(&ui),
     )
     .await
     .unwrap();
@@ -190,7 +191,7 @@ async fn test_wait_for_wrong_retry_values_interval_zero() {
         &provider,
         MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
         ValidatedWaitParams::new(0, 1),
-        &ui,
+        Some(&ui),
     )
     .await
     .unwrap();
