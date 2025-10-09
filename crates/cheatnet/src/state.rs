@@ -588,6 +588,11 @@ impl TraceData {
         current_call.borrow_mut().vm_trace = Some(vm_trace);
     }
 
+    pub fn update_call_result(&mut self, result: CallResult) {
+        let current_call = self.current_call_stack.top();
+        current_call.borrow_mut().result = result;
+    }
+
     #[expect(clippy::too_many_arguments)]
     pub fn update_current_call(
         &mut self,
@@ -616,31 +621,6 @@ impl TraceData {
         current_call.result = result;
         current_call.signature = signature;
         current_call.events = events;
-    }
-
-    #[expect(clippy::too_many_arguments)]
-    pub fn update_and_exit_nested_call(
-        &mut self,
-        execution_resources: ExecutionResources,
-        gas_consumed: u64,
-        used_syscalls_vm_resources: SyscallUsageMap,
-        used_syscalls_sierra_gas: SyscallUsageMap,
-        result: CallResult,
-        l2_to_l1_messages: &[OrderedL2ToL1Message],
-        signature: Vec<Felt>,
-        events: Vec<OrderedEvent>,
-    ) {
-        self.update_current_call(
-            execution_resources,
-            gas_consumed,
-            used_syscalls_vm_resources,
-            used_syscalls_sierra_gas,
-            result,
-            l2_to_l1_messages,
-            signature,
-            events,
-        );
-        self.exit_nested_call();
     }
 
     pub fn exit_nested_call(&mut self) {
