@@ -55,33 +55,30 @@ fn partitions_mapping_from_packages_args(
     packages_args: &[RunForPackageArgs],
     partition: Partition,
 ) -> TestsPartitionsMapping {
-    let mut mapping = HashMap::new();
-
-    let all_test_executables_flattened = packages_args
+    let names: Vec<String> = packages_args
         .iter()
-        .flat_map(|args| {
-            args.test_targets.iter().map(|test_target| {
-                let debug_info = test_target.sierra_program.debug_info.clone();
-                let default_executables = vec![];
-                let executables = debug_info
-                    .as_ref()
-                    .and_then(|info| info.executables.get("snforge_internal_test_executable"))
-                    .unwrap_or(&default_executables);
-                executables.clone()
-            })
+        .flat_map(|pkg| pkg.test_targets.iter())
+        .flat_map(|tt| {
+            tt.sierra_program
+                .debug_info
+                .as_ref()
+                .and_then(|info| info.executables.get("snforge_internal_test_executable"))
+                .into_iter()
+                .flatten()
         })
-        .flatten()
-        .collect::<Vec<FunctionId>>();
+        .filter_map(|fid: &FunctionId| {
+            fid.debug_name
+                .as_ref()
+                .map(std::string::ToString::to_string)
+        })
+        .collect();
 
-    for (i, exec) in all_test_executables_flattened.iter().enumerate() {
-        let partition_index_1_based = (i % partition.total()) + 1;
-        let test_name = exec
-            .clone()
-            .debug_name
-            .expect("Failed to get function debug name")
-            .to_string();
+    let total = partition.total();
+    let mut mapping = HashMap::with_capacity(names.len());
 
-        mapping.insert(test_name, partition_index_1_based);
+    for (i, name) in names.into_iter().enumerate() {
+        let shard_1_based = (i % total) + 1;
+        mapping.insert(name, shard_1_based);
     }
 
     mapping
