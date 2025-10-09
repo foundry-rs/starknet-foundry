@@ -30,8 +30,10 @@ pub async fn resolve_config(
     let env_ignore_fork_tests = env_ignore_fork_tests();
 
     for case in test_target.test_cases {
-        test_cases.push(TestCaseWithResolvedConfig {
-            config: TestCaseResolvedConfig {
+        test_cases.push(TestCaseWithResolvedConfig::new(
+            &case.name,
+            case.test_details.clone(),
+            TestCaseResolvedConfig {
                 available_gas: case.config.available_gas,
                 ignored: case.config.ignored
                     || (env_ignore_fork_tests && case.config.fork_config.is_some()),
@@ -45,9 +47,7 @@ pub async fn resolve_config(
                 fuzzer_config: case.config.fuzzer_config,
                 disable_predeployed_contracts: case.config.disable_predeployed_contracts,
             },
-            name: case.name,
-            test_details: case.test_details,
-        });
+        ));
     }
 
     Ok(TestTargetWithResolvedConfig {
