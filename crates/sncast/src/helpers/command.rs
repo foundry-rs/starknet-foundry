@@ -5,14 +5,12 @@ use crate::response::{
 use anyhow::Result;
 use foundry_ui::{Message, UI};
 
-use std::process::ExitCode;
-
 pub fn process_command_result<T>(
     command: &str,
     result: Result<T>,
     ui: &UI,
     block_explorer_link: Option<ExplorerLinksMessage>,
-) -> ExitCode
+) -> Result<()>
 where
     T: CommandResponse,
     SncastMessage<T>: Message,
@@ -28,12 +26,12 @@ where
             if let Some(link) = block_explorer_link {
                 ui.println(&link);
             }
-            ExitCode::SUCCESS
+            Ok(())
         }
         Err(err) => {
-            let err = ResponseError::new(command.to_string(), format!("{err:#}"));
-            ui.eprintln(&err);
-            ExitCode::FAILURE
+            let response_err = ResponseError::new(command.to_string(), format!("{err:#}"));
+            ui.eprintln(&response_err);
+            Err(err)
         }
     }
 }

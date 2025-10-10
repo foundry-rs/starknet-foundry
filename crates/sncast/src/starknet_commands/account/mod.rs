@@ -231,7 +231,7 @@ pub async fn account(
                 ));
             }
 
-            process_command_result("account import", result, ui, None);
+            process_command_result("account import", result, ui, None)?;
             Ok(())
         }
         Commands::Create(create) => {
@@ -264,7 +264,7 @@ pub async fn account(
                 &config,
             );
 
-            process_command_result("account create", result, ui, block_explorer_link);
+            process_command_result("account create", result, ui, block_explorer_link)?;
             Ok(())
         }
 
@@ -311,7 +311,7 @@ pub async fn account(
                 &deploy.rpc,
                 &config,
             );
-            process_command_result("account deploy", result, ui, block_explorer_link);
+            process_command_result("account deploy", result, ui, block_explorer_link)?;
             Ok(())
         }
 
@@ -326,7 +326,7 @@ pub async fn account(
                 delete.yes,
             );
 
-            process_command_result("account delete", result, ui, None);
+            process_command_result("account delete", result, ui, None)?;
             Ok(())
         }
 

@@ -335,7 +335,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 None
             };
 
-            process_command_result("declare", result, ui, block_explorer_link);
+            process_command_result("declare", result, ui, block_explorer_link)?;
 
             if let Some(deploy_command_message) = deploy_command_message {
                 ui.println(&deploy_command_message?);
@@ -383,7 +383,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 &rpc_args,
                 &config,
             );
-            process_command_result("declare-from", result, ui, block_explorer_link);
+            process_command_result("declare-from", result, ui, block_explorer_link)?;
 
             Ok(())
         }
@@ -425,7 +425,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
-            process_command_result("deploy", result, ui, block_explorer_link);
+            process_command_result("deploy", result, ui, block_explorer_link)?;
 
             Ok(())
         }
@@ -461,9 +461,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             if let Some(transformed_result) =
                 transform_response(&result, &contract_class, &selector)
             {
-                process_command_result("call", Ok(transformed_result), ui, None);
+                process_command_result("call", Ok(transformed_result), ui, None)?;
             } else {
-                process_command_result("call", result, ui, None);
+                process_command_result("call", result, ui, None)?;
             }
 
             Ok(())
@@ -509,7 +509,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
 
-            process_command_result("invoke", result, ui, block_explorer_link);
+            process_command_result("invoke", result, ui, block_explorer_link)?;
 
             Ok(())
         }
@@ -542,7 +542,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             )
             .await;
 
-            process_command_result("show-config", result, ui, None);
+            process_command_result("show-config", result, ui, None)?;
 
             Ok(())
         }
@@ -555,7 +555,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     .await
                     .context("Failed to get transaction status");
 
-            process_command_result("tx-status", result, ui, None);
+            process_command_result("tx-status", result, ui, None)?;
             Ok(())
         }
 
@@ -582,7 +582,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             )
             .await;
 
-            process_command_result("verify", result, ui, None);
+            process_command_result("verify", result, ui, None)?;
             Ok(())
         }
 

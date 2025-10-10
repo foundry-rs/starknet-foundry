@@ -35,7 +35,7 @@ pub fn run_script_command(
     match &script.command {
         starknet_commands::script::Commands::Init(init) => {
             let result = starknet_commands::script::init::init(init, ui);
-            process_command_result("script init", result, ui, None);
+            process_command_result("script init", result, ui, None)?;
         }
         starknet_commands::script::Commands::Run(run) => {
             let manifest_path = assert_manifest_path_exists()?;
@@ -93,7 +93,7 @@ pub fn run_script_command(
                 ui,
             );
 
-            process_command_result("script run", result, ui, None);
+            process_command_result("script run", result, ui, None)?;
         }
     }
 
