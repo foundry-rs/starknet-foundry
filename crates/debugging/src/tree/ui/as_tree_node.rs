@@ -34,6 +34,7 @@ impl AsTreeNode for TraceInfo {
         parent.leaf_optional(self.caller_address.as_option());
         parent.leaf_optional(self.call_type.as_option());
         parent.leaf_optional(self.call_result.as_option());
+        parent.leaf_optional(self.gas.as_option());
         for nested_call in &self.nested_calls {
             parent.as_tree_node(nested_call);
         }
