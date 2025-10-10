@@ -257,12 +257,8 @@ pub async fn account(
             )
             .await;
 
-            let block_explorer_link = block_explorer_link_if_allowed(
-                &result,
-                provider.chain_id().await?,
-                &create.rpc,
-                &config,
-            );
+            let block_explorer_link =
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
 
             process_command_result("account create", result, ui, block_explorer_link);
             Ok(())
@@ -305,12 +301,8 @@ pub async fn account(
                 ));
             }
 
-            let block_explorer_link = block_explorer_link_if_allowed(
-                &result,
-                provider.chain_id().await?,
-                &deploy.rpc,
-                &config,
-            );
+            let block_explorer_link =
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
             process_command_result("account deploy", result, ui, block_explorer_link);
             Ok(())
         }

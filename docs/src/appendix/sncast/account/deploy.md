@@ -18,7 +18,7 @@ Optional.
 
 Use predefined network with a public provider
 
-Possible values: `mainnet`, `sepolia`.
+Possible values: `mainnet`, `sepolia`, `devnet`.
 
 ## `--max-fee, -m <MAX_FEE>`
 Optional.

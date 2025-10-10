@@ -84,7 +84,10 @@ impl DevnetProvider {
             .client
             .get(format!(
                 "{}/is_alive",
-                self.url.to_string().replace("/rpc", "")
+                self.url
+                    .to_string()
+                    .trim_end_matches('/')
+                    .replace("/rpc", "")
             ))
             .send()
             .await

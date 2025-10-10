@@ -22,7 +22,7 @@ Optional.
 
 Use predefined network with public provider
 
-Possible values: `mainnet`, `sepolia`.
+Possible values: `mainnet`, `sepolia`, `devnet`.
 
 ## `--constructor-calldata, -c <CONSTRUCTOR_CALLDATA>`
 Optional.

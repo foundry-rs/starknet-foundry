@@ -1,6 +1,6 @@
 use crate::helpers::constants::{DEVNET_ACCOUNTS_NUMBER, DEVNET_SEED, SEPOLIA_RPC_URL, URL};
 use num_traits::ToPrimitive;
-use sncast::helpers::{constants::OZ_CLASS_HASH, devnet_provider::DevnetProvider};
+use sncast::helpers::{constants::OZ_CLASS_HASH, devnet::provider::DevnetProvider};
 
 #[tokio::test]
 async fn test_get_config() {

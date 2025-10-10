@@ -23,7 +23,7 @@ Optional.
 
 Use predefined network with public provider
 
-Possible values: `mainnet`, `sepolia`.
+Possible values: `mainnet`, `sepolia`, `devnet`.
 
 ## `--calldata, -c <CALLDATA>`
 Optional.
