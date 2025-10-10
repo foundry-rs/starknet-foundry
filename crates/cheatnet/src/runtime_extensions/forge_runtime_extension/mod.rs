@@ -755,7 +755,7 @@ pub fn compute_and_store_execution_summary(trace: &Rc<RefCell<CallTrace>>) -> Ex
         let mut current_call_summary =
             get_call_execution_summary(trace) + nested_calls_summaries.into_iter().sum();
 
-        // vm_resources and gas_consumed of a call already contains the resources of its inner calls.
+        // vm_resources and gas_consumed of a call already contain the resources of its inner calls.
         current_call_summary.charged_resources.vm_resources =
             trace.borrow().used_execution_resources.clone();
         current_call_summary.charged_resources.gas_consumed =
@@ -768,6 +768,7 @@ pub fn compute_and_store_execution_summary(trace: &Rc<RefCell<CallTrace>>) -> Ex
     execution_summary
 }
 
+// Based on blockifier/src/execution/call_info.rs (summarize)
 fn get_call_execution_summary(trace: &Rc<RefCell<CallTrace>>) -> ExecutionSummary {
     let current_call = trace.borrow();
     ExecutionSummary {
@@ -787,6 +788,7 @@ fn get_call_execution_summary(trace: &Rc<RefCell<CallTrace>>) -> ExecutionSummar
             }
             event_summary
         },
+        // Fields below are not relevant for partial gas calculation.
         call_summary: CallSummary::default(),
         executed_class_hashes: HashSet::default(),
         visited_storage_entries: HashSet::default(),
