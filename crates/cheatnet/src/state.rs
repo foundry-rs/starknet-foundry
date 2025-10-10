@@ -593,6 +593,16 @@ impl TraceData {
         current_call.borrow_mut().result = result;
     }
 
+    pub fn clear_events_and_messages(&mut self) {
+        let current_call = self.current_call_stack.top();
+        current_call.borrow_mut().events.clear();
+        current_call
+            .borrow_mut()
+            .used_l1_resources
+            .l2_l1_message_sizes
+            .clear();
+    }
+
     #[expect(clippy::too_many_arguments)]
     pub fn update_current_call(
         &mut self,
