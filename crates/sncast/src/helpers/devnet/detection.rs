@@ -42,7 +42,7 @@ pub async fn is_devnet_running() -> bool {
 async fn detect_devnet_from_processes() -> Result<String, String> {
     match find_devnet_process_info() {
         Ok(info) => {
-            if is_port_reachable(&info.host, info.port).await {
+            if is_devnet_url_reachable(&info.host, info.port).await {
                 Ok(format!("http://{}:{}", info.host, info.port))
             } else {
                 Err(DevnetDetectionError::ProcessNotReachable.to_string())
@@ -53,7 +53,7 @@ async fn detect_devnet_from_processes() -> Result<String, String> {
         }
         Err(DevnetDetectionError::NoInstance | DevnetDetectionError::CommandFailed) => {
             // Fallback to default starknet-devnet URL if reachable
-            if is_port_reachable(DEFAULT_DEVNET_HOST, DEFAULT_DEVNET_PORT).await {
+            if is_devnet_url_reachable(DEFAULT_DEVNET_HOST, DEFAULT_DEVNET_PORT).await {
                 Ok(format!(
                     "http://{DEFAULT_DEVNET_HOST}:{DEFAULT_DEVNET_PORT}"
                 ))
@@ -107,7 +107,7 @@ fn extract_port_from_flag(cmdline: &str, flag: &str) -> Option<u16> {
     extract_string_from_flag(cmdline, flag).and_then(|port_str| port_str.parse().ok())
 }
 
-fn extract_docker_mapping(cmdline: &str) -> Option<(String, u16)> {
+fn extract_docker_mapping(cmdline: &str) -> Option<DevnetProcessInfo> {
     let port_flags = ["-p", "--publish"];
 
     // Port mapping patterns:
@@ -118,14 +118,14 @@ fn extract_docker_mapping(cmdline: &str) -> Option<(String, u16)> {
     for flag in &port_flags {
         if let Some(port_mapping) = extract_string_from_flag(cmdline, flag)
             && let Some(caps) = re.captures(&port_mapping)
-            && let Ok(host_port) = caps.get(2)?.as_str().parse::<u16>()
+            && let Ok(port) = caps.get(2)?.as_str().parse::<u16>()
         {
             let host = caps.get(1).map_or_else(
                 || DEFAULT_DEVNET_HOST.to_string(),
                 |m| m.as_str().to_string(),
             );
 
-            return Some((host, host_port));
+            return Some(DevnetProcessInfo { host, port });
         }
     }
 
@@ -135,29 +135,22 @@ fn extract_docker_mapping(cmdline: &str) -> Option<(String, u16)> {
 fn extract_devnet_info_from_docker_line(
     cmdline: &str,
 ) -> Result<DevnetProcessInfo, DevnetDetectionError> {
-    let mut port = None;
-    let mut host = None;
-
-    if let Some((docker_host, docker_port)) = extract_docker_mapping(cmdline) {
-        host = Some(docker_host);
-        port = Some(docker_port);
+    if let Some(docker_info) = extract_docker_mapping(cmdline) {
+        return Ok(docker_info);
     }
 
-    if port.is_none()
-        && extract_string_from_flag(cmdline, "--network").is_some_and(|network| network == "host")
+    if extract_string_from_flag(cmdline, "--network").is_some_and(|network| network == "host")
+        && let Some(port) = extract_port_from_flag(cmdline, "--port")
     {
-        port = extract_port_from_flag(cmdline, "--port");
+        return Ok(DevnetProcessInfo {
+            host: DEFAULT_DEVNET_HOST.to_string(),
+            port,
+        });
     }
 
-    // If port or host are still None, it means neither docker flags nor command line provided them (e.g., docker run shardlabs/starknet-devnet-rs)
-    // which means we cannot connect to the process from outside the container
-    let final_host = host.ok_or(DevnetDetectionError::ProcessNotReachable)?;
-    let final_port = port.ok_or(DevnetDetectionError::ProcessNotReachable)?;
-
-    Ok(DevnetProcessInfo {
-        host: final_host,
-        port: final_port,
-    })
+    // If connection info was not provided (e.g., docker run shardlabs/starknet-devnet-rs),
+    // we cannot connect to the process from outside the container
+    Err(DevnetDetectionError::ProcessNotReachable)
 }
 
 fn extract_devnet_info_from_cmdline(
@@ -183,7 +176,7 @@ fn extract_devnet_info_from_cmdline(
         host = Some(host_env);
     }
 
-    // If port or host are still None, it means neither command line nor env vars provided them, (e.g starknet-devnet --seed 0)
+    // If port or host are still None, it means neither command line nor env vars provided them (e.g., starknet-devnet --seed 0)
     let final_port = port.unwrap_or(DEFAULT_DEVNET_PORT);
     let final_host = host.unwrap_or_else(|| DEFAULT_DEVNET_HOST.to_string());
 
@@ -193,7 +186,7 @@ fn extract_devnet_info_from_cmdline(
     })
 }
 
-async fn is_port_reachable(host: &str, port: u16) -> bool {
+async fn is_devnet_url_reachable(host: &str, port: u16) -> bool {
     let url = format!("http://{host}:{port}");
 
     let provider = DevnetProvider::new(&url);
