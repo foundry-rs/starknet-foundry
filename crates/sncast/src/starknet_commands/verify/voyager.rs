@@ -40,6 +40,7 @@ pub struct Body {
     #[serde(rename = "name")]
     pub contract_name: String,
     pub package_name: String,
+    pub build_tool: String,
     pub license: Option<String>,
     pub files: HashMap<String, String>,
 }
@@ -345,6 +346,7 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
             contract_name: contract_name.clone(),
             license: selected.manifest_metadata.license.clone(),
             package_name: selected.name,
+            build_tool: "scarb".to_string(),
             files: files
                 .iter()
                 .map(|(name, path)| -> Result<(String, String)> {
@@ -355,7 +357,7 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
         };
 
         let url = format!(
-            "{}{}/{:#064x}",
+            "{}{}/{:#066x}",
             self.gen_explorer_url(),
             VERIFY_ENDPOINT,
             hash

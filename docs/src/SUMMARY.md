@@ -39,6 +39,7 @@
 * [Profiling](snforge-advanced-features/profiling.md)
 * [Debugging](snforge-advanced-features/debugging.md)
 * [Oracles](snforge-advanced-features/oracles.md)
+* [Parametrized Tests](snforge-advanced-features/parametrized-testing.md)
 
 ---
 
@@ -58,6 +59,8 @@
 * [Verifying Contracts](starknet/verify.md)
 * [Calldata Transformation](starknet/calldata-transformation.md)
 * [Block Explorers](starknet/block_explorer.md)
+* [Integration With Devnet](starknet/integration_with_devnet.md)
+* [Developer Functionalites](starknet/developer.md)
 
 ---
 
@@ -72,7 +75,6 @@
 
 * [`snforge` Commands](appendix/snforge.md)
     * [test](appendix/snforge/test.md)
-    * [init](appendix/snforge/init.md)
     * [new](appendix/snforge/new.md)
     * [clean](appendix/snforge/clean.md)
     * [clean-cache](appendix/snforge/clean-cache.md)
@@ -136,6 +138,7 @@
         * [delete](appendix/sncast/account/delete.md)
         * [list](appendix/sncast/account/list.md)
     * [declare](appendix/sncast/declare.md)
+    * [declare-from](appendix/sncast/declare_from.md)
     * [deploy](appendix/sncast/deploy.md)
     * [invoke](appendix/sncast/invoke.md)
     * [call](appendix/sncast/call.md)

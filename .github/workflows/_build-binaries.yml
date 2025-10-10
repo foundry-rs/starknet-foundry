@@ -49,13 +49,13 @@ jobs:
     steps:
       - name: Checkout with ref
         if: inputs.ref != ''
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref }}
 
       - name: Checkout default
         if: inputs.ref == ''
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup rust
         run: |

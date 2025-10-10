@@ -5,6 +5,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 use blockifier::context::TransactionContext;
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::execution_utils::ReadOnlySegment;
+use blockifier::execution::syscalls::hint_processor::create_retdata_segment;
 use blockifier::execution::syscalls::hint_processor::{
     INVALID_ARGUMENT, SyscallExecutionError, SyscallHintProcessor,
 };
@@ -26,10 +27,6 @@ use blockifier::{
         CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
     },
     state::state_api::State,
-};
-use blockifier::{
-    execution::execution_utils::update_remaining_gas,
-    execution::syscalls::hint_processor::create_retdata_segment,
 };
 use cairo_vm::Felt252;
 use cairo_vm::vm::vm_core::VirtualMachine;
@@ -94,12 +91,17 @@ pub fn deploy_syscall(
         deployer_address
     };
 
-    let deployed_contract_address = calculate_contract_address(
-        request.contract_address_salt,
-        request.class_hash,
-        &request.constructor_calldata,
-        deployer_address_for_calculation,
-    )?;
+    let deployed_contract_address =
+        if let Some(contract_address) = cheatnet_state.next_address_for_deployment() {
+            contract_address
+        } else {
+            calculate_contract_address(
+                request.contract_address_salt,
+                request.class_hash,
+                &request.constructor_calldata,
+                deployer_address_for_calculation,
+            )?
+        };
 
     let ctor_context = ConstructorContext {
         class_hash: request.class_hash,
@@ -113,12 +115,11 @@ pub fn deploy_syscall(
         syscall_handler.base.context,
         &ctor_context,
         request.constructor_calldata,
-        *remaining_gas,
+        remaining_gas,
     )?;
 
     let constructor_retdata =
         create_retdata_segment(vm, syscall_handler, &call_info.execution.retdata.0)?;
-    update_remaining_gas(remaining_gas, &call_info);
 
     syscall_handler.base.inner_calls.push(call_info);
 
@@ -136,7 +137,7 @@ pub fn execute_deployment(
     context: &mut EntryPointExecutionContext,
     ctor_context: &ConstructorContext,
     constructor_calldata: Calldata,
-    remaining_gas: u64,
+    remaining_gas: &mut u64,
 ) -> EntryPointExecutionResult<CallInfo> {
     // Address allocation in the state is done before calling the constructor, so that it is
     // visible from it.

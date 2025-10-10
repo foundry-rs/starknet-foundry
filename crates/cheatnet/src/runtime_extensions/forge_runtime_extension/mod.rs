@@ -1,6 +1,6 @@
 use self::contracts_data::ContractsData;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
-use crate::runtime_extensions::common::{get_syscalls_gas_consumed, sum_syscall_usage};
+use crate::runtime_extensions::common::sum_syscall_usage;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
 use crate::runtime_extensions::{
     call_to_blockifier_runtime_extension::{
@@ -11,7 +11,6 @@ use crate::runtime_extensions::{
     forge_runtime_extension::cheatcodes::{
         CheatcodeError,
         declare::declare,
-        deploy::{deploy, deploy_at},
         generate_random_felt::generate_random_felt,
         get_class_hash::get_class_hash,
         l1_handler_execute::l1_handler_execute,
@@ -20,13 +19,10 @@ use crate::runtime_extensions::{
 };
 use crate::state::{CallTrace, CallTraceNode};
 use anyhow::{Context, Result, anyhow};
-use blockifier::blockifier_versioned_constants::VersionedConstants;
 use blockifier::bouncer::vm_resources_to_sierra_gas;
 use blockifier::context::TransactionContext;
-use blockifier::execution::call_info::{CallExecution, CallInfo};
+use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::TrackedResource;
-use blockifier::execution::entry_point::CallEntryPoint;
-use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
 use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, SyscallUsageMap};
 use blockifier::state::errors::StateError;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
@@ -34,21 +30,18 @@ use cairo_vm::vm::{
     errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
     vm_core::VirtualMachine,
 };
-use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
 use conversions::felt::{ToShortString, TryInferFormat};
 use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::CairoSerialize;
 use data_transformer::cairo_types::CairoU256;
 use rand::prelude::StdRng;
-use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
 };
 use scarb_oracle_hint_service::OracleHintService;
 use starknet::signers::SigningKey;
-use starknet_api::execution_resources::GasAmount;
 use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
@@ -67,8 +60,6 @@ pub struct ForgeExtension<'a> {
     pub environment_variables: &'a HashMap<String, String>,
     pub contracts_data: &'a ContractsData,
     pub fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
-    /// Whether `--experimental-oracles` flag has been enabled.
-    pub experimental_oracles_enabled: bool,
     pub oracle_hint_service: OracleHintService,
 }
 
@@ -87,14 +78,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             .oracle_hint_service
             .accept_cheatcode(selector.as_bytes())
         {
-            if !self.experimental_oracles_enabled {
-                return Err(anyhow!(
-                    "Oracles are an experimental feature. \
-                    To enable them, pass `--experimental-oracles` CLI flag."
-                )
-                .into());
-            }
-
             let output = self
                 .oracle_hint_service
                 .execute_cheatcode(oracle_selector, input_reader.into_remaining());
@@ -194,45 +177,16 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 let contract_name: String = input_reader.read::<ByteArray>()?.to_string();
 
-                handle_declare_deploy_result(declare(*state, &contract_name, self.contracts_data))
+                handle_declare_result(declare(*state, &contract_name, self.contracts_data))
             }
-            "deploy" => {
-                let class_hash = input_reader.read()?;
-                let calldata: Vec<_> = input_reader.read()?;
-                let cheatnet_runtime = &mut extended_runtime.extended_runtime;
-                let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
-
-                syscall_handler.increment_syscall_count_by(&SyscallSelector::Deploy, 1);
-                syscall_handler
-                    .base
-                    .increment_syscall_linear_factor_by(&SyscallSelector::Deploy, calldata.len());
-
-                handle_declare_deploy_result(deploy(
-                    syscall_handler,
-                    cheatnet_runtime.extension.cheatnet_state,
-                    &class_hash,
-                    &calldata,
-                ))
-            }
-            "deploy_at" => {
-                let class_hash = input_reader.read()?;
-                let calldata: Vec<_> = input_reader.read()?;
+            // Internal cheatcode used to pass a contract address when calling `deploy_at`.
+            "set_deploy_at_address" => {
                 let contract_address = input_reader.read()?;
-                let cheatnet_runtime = &mut extended_runtime.extended_runtime;
-                let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
-                syscall_handler.increment_syscall_count_by(&SyscallSelector::Deploy, 1);
-                syscall_handler
-                    .base
-                    .increment_syscall_linear_factor_by(&SyscallSelector::Deploy, calldata.len());
+                let state = &mut *extended_runtime.extended_runtime.extension.cheatnet_state;
+                state.set_next_deploy_at_address(contract_address);
 
-                handle_declare_deploy_result(deploy_at(
-                    syscall_handler,
-                    cheatnet_runtime.extension.cheatnet_state,
-                    &class_hash,
-                    &calldata,
-                    contract_address,
-                ))
+                Ok(CheatcodeHandlingResult::from_serializable(()))
             }
             "precalculate_address" => {
                 let class_hash = input_reader.read()?;
@@ -245,6 +199,16 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .precalculate_address(&class_hash, &calldata);
 
                 Ok(CheatcodeHandlingResult::from_serializable(contract_address))
+            }
+            // Internal cheatcode to guarantee unique salts for each deployment
+            // when deploying via a method of the `ContractClass` struct.
+            "get_salt" => {
+                let state = &mut *extended_runtime.extended_runtime.extension.cheatnet_state;
+
+                let salt = state.get_salt();
+                state.increment_deploy_salt_base();
+
+                Ok(CheatcodeHandlingResult::from_serializable(salt))
             }
             "var" => {
                 let name: String = input_reader.read::<ByteArray>()?.to_string();
@@ -390,26 +354,46 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let curve: Felt = input_reader.read()?;
                 let curve = curve.to_short_string().ok();
 
-                let (signing_key_bytes, verifying_key_bytes) = {
+                let (signing_key_bytes, x_coordinate_bytes, y_coordinate_bytes) = {
+                    let extract_coordinates_from_verifying_key = |verifying_key: Box<[u8]>| {
+                        let verifying_key = verifying_key.iter().as_slice();
+                        (
+                            verifying_key[1..33].try_into().unwrap(),
+                            verifying_key[33..65].try_into().unwrap(),
+                        )
+                    };
+
                     match curve.as_deref() {
                         Some("Secp256k1") => {
                             let signing_key = k256::ecdsa::SigningKey::random(
                                 &mut k256::elliptic_curve::rand_core::OsRng,
                             );
-                            let verifying_key = signing_key.verifying_key();
+                            let verifying_key = signing_key
+                                .verifying_key()
+                                .to_encoded_point(false)
+                                .to_bytes();
+                            let (x_coordinate, y_coordinate) =
+                                extract_coordinates_from_verifying_key(verifying_key);
                             (
-                                signing_key.to_bytes(),
-                                verifying_key.to_encoded_point(false).to_bytes(),
+                                signing_key.to_bytes().as_slice()[0..32].try_into().unwrap(),
+                                x_coordinate,
+                                y_coordinate,
                             )
                         }
                         Some("Secp256r1") => {
                             let signing_key = p256::ecdsa::SigningKey::random(
                                 &mut p256::elliptic_curve::rand_core::OsRng,
                             );
-                            let verifying_key = signing_key.verifying_key();
+                            let verifying_key = signing_key
+                                .verifying_key()
+                                .to_encoded_point(false)
+                                .to_bytes();
+                            let (x_coordinate, y_coordinate) =
+                                extract_coordinates_from_verifying_key(verifying_key);
                             (
-                                signing_key.to_bytes(),
-                                verifying_key.to_encoded_point(false).to_bytes(),
+                                signing_key.to_bytes().as_slice()[0..32].try_into().unwrap(),
+                                x_coordinate,
+                                y_coordinate,
                             )
                         }
                         _ => return Ok(CheatcodeHandlingResult::Forwarded),
@@ -418,8 +402,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 Ok(CheatcodeHandlingResult::from_serializable((
                     CairoU256::from_bytes(&signing_key_bytes),
-                    CairoU256::from_bytes(&verifying_key_bytes[1..]), // bytes of public_key's x-coordinate
-                    CairoU256::from_bytes(&verifying_key_bytes[33..]), // bytes of public_key's y-coordinate
+                    CairoU256::from_bytes(&x_coordinate_bytes), // bytes of public_key's x-coordinate
+                    CairoU256::from_bytes(&y_coordinate_bytes), // bytes of public_key's y-coordinate
                 )))
             }
             "ecdsa_sign_message" => {
@@ -467,6 +451,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 };
 
                 let result = result.map(|(r_bytes, s_bytes)| {
+                    let r_bytes: [u8; 32] = r_bytes.as_slice()[0..32].try_into().unwrap();
+                    let s_bytes: [u8; 32] = s_bytes.as_slice()[0..32].try_into().unwrap();
                     (
                         CairoU256::from_bytes(&r_bytes),
                         CairoU256::from_bytes(&s_bytes),
@@ -580,7 +566,7 @@ enum SignError {
     HashOutOfRange,
 }
 
-fn handle_declare_deploy_result<T: CairoSerialize>(
+fn handle_declare_result<T: CairoSerialize>(
     declare_result: Result<T, CheatcodeError>,
 ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
     let result = match declare_result {
@@ -756,15 +742,6 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &mut C
             Some(get_relocated_vm_trace(cairo_runner));
     }
 }
-fn add_syscall_execution_resources(
-    versioned_constants: &VersionedConstants,
-    execution_resources: &ExecutionResources,
-    syscall_usage: &SyscallUsageMap,
-) -> ExecutionResources {
-    let mut total_vm_usage = execution_resources.filter_unused_builtins();
-    total_vm_usage += &versioned_constants.get_additional_os_syscall_resources(syscall_usage);
-    total_vm_usage
-}
 
 fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
     let mut gas_consumed = top_call.borrow().gas_consumed;
@@ -792,78 +769,22 @@ fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResourc
 
 #[must_use]
 pub fn get_all_used_resources(
-    runtime: ForgeRuntime,
+    call_info: &CallInfo,
+    trace: &Rc<RefCell<CallTrace>>,
     transaction_context: &TransactionContext,
-    tracked_resource: TrackedResource,
 ) -> UsedResources {
-    let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
-    let top_call_l2_to_l1_messages = starknet_runtime.hint_handler.base.l2_to_l1_messages;
-    let top_call_events = starknet_runtime.hint_handler.base.events;
-
     let versioned_constants = transaction_context.block_context.versioned_constants();
 
-    // used just to obtain payloads of L2 -> L1 messages
-    let runtime_call_info = CallInfo {
-        execution: CallExecution {
-            l2_to_l1_messages: top_call_l2_to_l1_messages,
-            events: top_call_events,
-            ..Default::default()
-        },
-        call: CallEntryPoint {
-            class_hash: Some(Felt::from_hex(TEST_CONTRACT_CLASS_HASH).unwrap().into_()),
-            ..Default::default()
-        },
-        inner_calls: starknet_runtime.hint_handler.base.inner_calls,
-        tracked_resource,
-        ..Default::default()
-    };
-    let summary = runtime_call_info.summarize(versioned_constants);
-    let l2_to_l1_payload_lengths = summary.l2_to_l1_payload_lengths;
+    let summary = call_info.summarize(versioned_constants);
 
-    let l1_handler_payload_lengths =
-        get_l1_handlers_payloads_lengths(&runtime_call_info.inner_calls);
+    let l1_handler_payload_lengths = get_l1_handlers_payloads_lengths(&call_info.inner_calls);
 
-    // call representing the test code
-    let top_call = runtime
-        .extended_runtime
-        .extended_runtime
-        .extension
-        .cheatnet_state
-        .trace_data
-        .current_call_stack
-        .top();
-
-    let mut execution_resources = top_call.borrow().used_execution_resources.clone();
-    let mut sierra_gas_consumed = top_call.borrow().gas_consumed;
-    let top_call_syscalls = top_call.borrow().get_total_used_syscalls();
-
-    execution_resources = add_syscall_execution_resources(
-        versioned_constants,
-        &execution_resources,
-        &top_call.borrow().used_syscalls_vm_resources,
-    );
-    sierra_gas_consumed += get_syscalls_gas_consumed(
-        &top_call.borrow().used_syscalls_sierra_gas,
-        versioned_constants,
-    );
-
-    let events = runtime_call_info
-        .iter() // This method iterates over inner calls as well
-        .flat_map(|call_info| {
-            call_info
-                .execution
-                .events
-                .iter()
-                .map(|evt| evt.event.clone())
-        })
-        .collect();
+    // Syscalls are used only for `--detailed-resources` output.
+    let top_call_syscalls = trace.borrow().get_total_used_syscalls();
 
     UsedResources {
-        events,
         syscall_usage: top_call_syscalls,
-        execution_resources,
-        gas_consumed: GasAmount::from(sierra_gas_consumed),
+        execution_summary: summary,
         l1_handler_payload_lengths,
-        l2_to_l1_payload_lengths,
     }
 }

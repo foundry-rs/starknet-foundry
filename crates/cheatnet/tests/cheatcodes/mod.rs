@@ -1,5 +1,6 @@
 mod test_environment;
 
+mod cheat_account_contract_address;
 mod cheat_block_hash;
 mod cheat_block_number;
 mod cheat_block_timestamp;
@@ -7,7 +8,6 @@ mod cheat_caller_address;
 mod cheat_execution_info;
 mod cheat_sequencer_address;
 mod declare;
-mod deploy;
 mod generate_random_felt;
 mod get_class_hash;
 mod load;

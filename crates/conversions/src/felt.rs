@@ -7,6 +7,7 @@ use crate::{
 use anyhow::{Context, Result, anyhow, bail};
 use conversions::padded_felt::PaddedFelt;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
+use starknet_api::transaction::fields::ContractAddressSalt;
 use starknet_types_core::felt::Felt;
 use std::vec;
 
@@ -19,6 +20,12 @@ impl FromConv<ClassHash> for Felt {
 impl FromConv<ContractAddress> for Felt {
     fn from_(value: ContractAddress) -> Felt {
         (*value.0.key()).into_()
+    }
+}
+
+impl FromConv<ContractAddressSalt> for Felt {
+    fn from_(value: ContractAddressSalt) -> Felt {
+        value.0.into_()
     }
 }
 

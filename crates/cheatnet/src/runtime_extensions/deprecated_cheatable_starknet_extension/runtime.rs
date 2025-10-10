@@ -21,6 +21,7 @@ use cairo_vm::{
 };
 use runtime::{SyscallHandlingResult, SyscallPtrAccess};
 use starknet_types_core::felt::Felt;
+use std::rc::Rc;
 use std::{any::Any, collections::HashMap};
 
 pub struct DeprecatedStarknetRuntime<'a> {
@@ -57,10 +58,8 @@ impl HintProcessorLogic for DeprecatedStarknetRuntime<'_> {
         vm: &mut VirtualMachine,
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt>,
     ) -> Result<(), HintError> {
-        self.hint_handler
-            .execute_hint(vm, exec_scopes, hint_data, constants)
+        self.hint_handler.execute_hint(vm, exec_scopes, hint_data)
     }
 
     fn compile_hint(
@@ -69,9 +68,15 @@ impl HintProcessorLogic for DeprecatedStarknetRuntime<'_> {
         ap_tracking_data: &ApTracking,
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
+        constants: Rc<HashMap<String, Felt>>,
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        self.hint_handler
-            .compile_hint(hint_code, ap_tracking_data, reference_ids, references)
+        self.hint_handler.compile_hint(
+            hint_code,
+            ap_tracking_data,
+            reference_ids,
+            references,
+            constants,
+        )
     }
 }
 
@@ -88,7 +93,6 @@ impl<Extension: DeprecatedExtensionLogic> HintProcessorLogic
         vm: &mut VirtualMachine,
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt>,
     ) -> Result<(), HintError> {
         let hint = hint_data
             .downcast_ref::<HintProcessorData>()
@@ -99,13 +103,12 @@ impl<Extension: DeprecatedExtensionLogic> HintProcessorLogic
                 exec_scopes,
                 hint_data,
                 &hint.ids_data,
-                constants,
                 &hint.ap_tracking,
             );
         }
 
         self.extended_runtime
-            .execute_hint(vm, exec_scopes, hint_data, constants)
+            .execute_hint(vm, exec_scopes, hint_data)
     }
 
     fn compile_hint(
@@ -114,9 +117,15 @@ impl<Extension: DeprecatedExtensionLogic> HintProcessorLogic
         ap_tracking_data: &ApTracking,
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
+        constants: Rc<HashMap<String, Felt>>,
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        self.extended_runtime
-            .compile_hint(hint_code, ap_tracking_data, reference_ids, references)
+        self.extended_runtime.compile_hint(
+            hint_code,
+            ap_tracking_data,
+            reference_ids,
+            references,
+            constants,
+        )
     }
 }
 
@@ -127,7 +136,6 @@ impl<Extension: DeprecatedExtensionLogic> DeprecatedExtendedRuntime<Extension> {
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
         ids_data: &HashMap<String, HintReference>,
-        constants: &HashMap<String, Felt>,
         ap_tracking: &ApTracking,
     ) -> Result<(), HintError> {
         let initial_syscall_ptr = get_ptr_from_var_name("syscall_ptr", vm, ids_data, ap_tracking)?;
@@ -142,7 +150,7 @@ impl<Extension: DeprecatedExtensionLogic> DeprecatedExtendedRuntime<Extension> {
             Ok(())
         } else {
             self.extended_runtime
-                .execute_hint(vm, exec_scopes, hint_data, constants)?;
+                .execute_hint(vm, exec_scopes, hint_data)?;
 
             self.extension
                 .post_syscall_hook(&selector, &mut self.extended_runtime);

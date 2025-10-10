@@ -919,7 +919,7 @@ fn should_panic() {
 
 #[ignore = "TODO Restore this test once there are at least 2 versions supporting v2 macros"]
 #[test]
-// #[cfg_attr(feature = "skip_plugin_checks", ignore = "Plugin checks skipped")]
+// #[cfg_attr(feature = "skip_test_for_only_latest_scarb", ignore = "Plugin checks skipped")]
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
@@ -980,7 +980,7 @@ fn incompatible_snforge_std_version_error() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        [ERROR] Package snforge_std version does not meet the minimum required version >=0.48.0. Please upgrade snforge_std in Scarb.toml
+        [ERROR] Package snforge_std version does not meet the minimum required version >=0.50.0. Please upgrade snforge_std in Scarb.toml
         "},
     );
 }
@@ -1108,30 +1108,6 @@ fn call_nonexistent_selector() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_9_1"), ignore)]
-fn sierra_gas_with_older_scarb() {
-    let temp = setup_package("erc20_package");
-    let output = test_runner(&temp)
-        .arg("--detailed-resources")
-        .arg("--tracked-resource")
-        .arg("sierra-gas")
-        .assert()
-        .failure();
-
-    assert_stdout_contains(
-        output,
-        indoc! {r"
-        Checking requirements
-        [..]Scarb Version [..] doesn't satisfy minimal 2.10.0[..]
-        [..]To track sierra gas, minimal required scarb version is 2.10.0 (it comes with sierra >= 1.7.0 support)[..]
-        [..]Follow instructions from https://docs.swmansion.com/scarb/download.html[..]
-        [..]
-        [ERROR] Requirements not satisfied
-        "},
-    );
-}
-
-#[test]
 fn exact_printing_pass() {
     let temp = setup_package("deterministic_output");
 
@@ -1232,7 +1208,10 @@ fn dispatchers() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "interact-with-state"), ignore)]
+#[cfg_attr(
+    feature = "skip_test_for_scarb_since_2_11",
+    ignore = "Skipping test because feature skip_test_for_scarb_since_2_11 enabled"
+)]
 fn test_interact_with_state() {
     let temp = setup_package("contract_state");
     let output = test_runner(&temp).assert().code(0);

@@ -1,8 +1,7 @@
-use crate::running::copied_code::get_call_result;
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point_execution::{
-    extract_vm_resources, finalize_runner, total_vm_resources,
+    extract_vm_resources, finalize_runner, get_call_result, total_vm_resources,
 };
 use blockifier::execution::errors::PostExecutionError;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
@@ -10,6 +9,7 @@ use blockifier::transaction::objects::ExecutionResourcesTraits;
 use cairo_vm::vm::runners::cairo_runner::{CairoRunner, ExecutionResources};
 
 // Based on the code from blockifer
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn finalize_execution(
     // region: Modified blockifier code
     runner: &mut CairoRunner,

@@ -2,7 +2,7 @@ use super::test_environment::TestEnvironment;
 use crate::common::assertions::ClassHashAssert;
 use crate::common::recover_data;
 use crate::common::state::create_cached_state;
-use crate::common::{call_contract, deploy_wrapper};
+use crate::common::{call_contract, deploy};
 use crate::{
     common::assertions::assert_success,
     common::{deploy_contract, get_contracts},
@@ -408,13 +408,12 @@ fn mock_call_library_call_no_effect() {
         .unwrap()
         .unwrap_success();
 
-    let contract_address = deploy_wrapper(
+    let contract_address = deploy(
         &mut cached_state,
         &mut cheatnet_state,
         &class_hash,
         &[Felt::from(420)],
-    )
-    .unwrap();
+    );
 
     let lib_call_address = deploy_contract(
         &mut cached_state,
@@ -465,13 +464,12 @@ fn mock_call_before_deployment() {
         &ret_data,
     );
 
-    let contract_address = deploy_wrapper(
+    let contract_address = deploy(
         &mut cached_state,
         &mut cheatnet_state,
         &class_hash,
         &[Felt::from(420)],
-    )
-    .unwrap();
+    );
 
     assert_eq!(precalculated_address, contract_address);
 
@@ -529,8 +527,7 @@ fn mock_call_in_constructor() {
     let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data)
         .unwrap()
         .unwrap_success();
-    let balance_contract_address =
-        deploy_wrapper(&mut cached_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
+    let balance_contract_address = deploy(&mut cached_state, &mut cheatnet_state, &class_hash, &[]);
     let ret_data = [Felt::from(223)];
     cheatnet_state.start_mock_call(
         balance_contract_address,
@@ -542,13 +539,12 @@ fn mock_call_in_constructor() {
     let class_hash = declare(&mut cached_state, "ConstructorMockChecker", &contracts_data)
         .unwrap()
         .unwrap_success();
-    let contract_address = deploy_wrapper(
+    let contract_address = deploy(
         &mut cached_state,
         &mut cheatnet_state,
         &class_hash,
         &[balance_contract_address.into_()],
-    )
-    .unwrap();
+    );
 
     let selector = selector_from_name("get_constructor_balance");
 

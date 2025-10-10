@@ -32,7 +32,7 @@ use self::runtime::{
     DeprecatedExtendedRuntime, DeprecatedExtensionLogic, DeprecatedStarknetRuntime,
 };
 
-use super::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
+use super::call_to_blockifier_runtime_extension::execution::entry_point::non_reverting_execute_call_entry_point;
 use super::call_to_blockifier_runtime_extension::execution::syscall_hooks;
 
 pub mod runtime;
@@ -426,13 +426,14 @@ fn execute_inner_call(
     syscall_handler: &mut DeprecatedSyscallHintProcessor<'_>,
     cheatnet_state: &mut CheatnetState,
 ) -> DeprecatedSyscallResult<ReadOnlySegment> {
+    let mut remaining_gas = call.initial_gas;
     // region: Modified blockifier code
-    let call_info = execute_call_entry_point(
+    let call_info = non_reverting_execute_call_entry_point(
         call,
         syscall_handler.state,
         cheatnet_state,
         syscall_handler.context,
-        false,
+        &mut remaining_gas,
     )?;
     // endregion
 

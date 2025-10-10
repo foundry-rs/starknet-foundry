@@ -1,0 +1,21 @@
+[package]
+name = "fibonacci_virtual"
+version.workspace = true
+edition = "2024_07"
+
+[scripts]
+test.workspace = true
+
+[tool]
+snforge.workspace = true
+
+[dependencies]
+subtraction = { path = "../subtraction" }
+starknet.workspace = true
+
+[dev-dependencies]
+snforge_std.workspace = true
+
+[[target.starknet-contract]]
+
+build-external-contracts = ["subtraction::SubtractionContract"]

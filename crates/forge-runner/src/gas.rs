@@ -9,15 +9,14 @@ use blockifier::fee::resources::{
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
 use blockifier::transaction::objects::HasRelatedFeeType;
-use blockifier::utils::u64_from_usize;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableResourceBoundsConfig;
 use cheatnet::state::ExtendedStateReader;
 use starknet_api::execution_resources::{GasAmount, GasVector};
-use starknet_api::transaction::EventContent;
 use starknet_api::transaction::fields::GasVectorComputationMode;
 
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn calculate_used_gas(
     transaction_context: &TransactionContext,
     state: &mut CachedState<ExtendedStateReader>,
@@ -26,13 +25,14 @@ pub fn calculate_used_gas(
     let versioned_constants = transaction_context.block_context.versioned_constants();
 
     let message_resources = get_messages_resources(
-        &resources.l2_to_l1_payload_lengths,
+        &resources.execution_summary.l2_to_l1_payload_lengths,
         &resources.l1_handler_payload_lengths,
     );
 
     let state_resources = get_state_resources(transaction_context, state)?;
 
-    let archival_data_resources = get_archival_data_resources(resources.events);
+    let archival_data_resources =
+        get_archival_data_resources(resources.execution_summary.event_summary);
 
     let starknet_resources = StarknetResources {
         archival_data: archival_data_resources,
@@ -40,14 +40,18 @@ pub fn calculate_used_gas(
         state: state_resources,
     };
     let computation_resources = ComputationResources {
-        tx_vm_resources: resources.execution_resources.clone(),
+        tx_vm_resources: resources
+            .execution_summary
+            .charged_resources
+            .vm_resources
+            .clone(),
         // OS resources (transaction type related costs) and fee transfer resources are not included
         // as they are not relevant for test execution (see documentation for details):
         // https://github.com/foundry-rs/starknet-foundry/blob/979caf23c5d1085349e253d75682dd0e2527e321/docs/src/testing/gas-and-resource-estimation.md?plain=1#L75
         os_vm_resources: ExecutionResources::default(),
-        n_reverted_steps: 0,
-        sierra_gas: resources.gas_consumed,
-        reverted_sierra_gas: GasAmount::ZERO,
+        n_reverted_steps: 0, // TODO(#3681)
+        sierra_gas: resources.execution_summary.charged_resources.gas_consumed,
+        reverted_sierra_gas: GasAmount::ZERO, // TODO(#3681)
     };
 
     let transaction_resources = TransactionResources {
@@ -63,17 +67,7 @@ pub fn calculate_used_gas(
     ))
 }
 
-fn get_archival_data_resources(events: Vec<EventContent>) -> ArchivalDataResources {
-    // Based on from https://github.com/starkware-libs/sequencer/blob/fc0f06a07f3338ae1e11612dcaed9c59373bca37/crates/blockifier/src/execution/call_info.rs#L222
-    let mut event_summary = EventSummary {
-        n_events: events.len(),
-        ..Default::default()
-    };
-    for event in events {
-        event_summary.total_event_data_size += u64_from_usize(event.data.0.len());
-        event_summary.total_event_keys += u64_from_usize(event.keys.len());
-    }
-
+fn get_archival_data_resources(event_summary: EventSummary) -> ArchivalDataResources {
     // calldata length, signature length and code size are set to 0, because
     // we don't include them in estimations
     // ref: https://github.com/foundry-rs/starknet-foundry/blob/5ce15b029135545452588c00aae580c05eb11ca8/docs/src/testing/gas-and-resource-estimation.md?plain=1#L73

@@ -1,0 +1,23 @@
+[package]
+name = "fibonacci_docs"
+version.workspace = true
+edition = "2024_07"
+
+[scripts]
+test.workspace = true
+
+[tool]
+snforge.workspace = true
+
+[dependencies]
+addition_docs = { path = "../addition_docs" }
+starknet = "2.8.5"
+
+[dev-dependencies]
+snforge_std.workspace = true
+
+[[target.starknet-contract]]
+sierra = true
+build-external-contracts = ["addition_docs::AdditionContract"]
+
+[lib]

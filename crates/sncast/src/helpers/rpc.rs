@@ -45,7 +45,7 @@ impl RpcArgs {
     }
 
     #[must_use]
-    fn get_url(&self, config_url: &String) -> Option<String> {
+    pub fn get_url(&self, config_url: &String) -> Option<String> {
         if let Some(network) = self.network {
             let free_provider = FreeProvider::semi_random();
             Some(network.url(&free_provider))
@@ -95,6 +95,17 @@ impl Network {
 
     fn free_sepolia_rpc(_provider: &FreeProvider) -> String {
         format!("https://starknet-sepolia.public.blastapi.io/rpc/{RPC_URL_VERSION}")
+    }
+}
+
+#[must_use]
+pub fn generate_network_flag(rpc_url: Option<&str>, network: Option<&Network>) -> String {
+    if let Some(network) = network {
+        format!("--network {network}")
+    } else if let Some(rpc_url) = rpc_url {
+        format!("--url {rpc_url}")
+    } else {
+        unreachable!("Either `--rpc_url` or `--network` must be provided.")
     }
 }
 

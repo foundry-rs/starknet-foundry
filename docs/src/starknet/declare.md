@@ -38,6 +38,9 @@ Transaction Hash: 0x0[..]
 To see declaration details, visit:
 class: https://starkscan.co/search/[..]
 transaction: https://starkscan.co/search/[..]
+
+To deploy a contract of this class, run:
+sncast --account my_account deploy --class-hash 0x[..] --network sepolia
 ```
 </details>
 <br>
@@ -52,5 +55,40 @@ transaction: https://starkscan.co/search/[..]
 
 > 💡 **Info**
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
+
+# Declaring a Contract by Fetching It From a Different Starknet Instance
+
+In some cases, you may need to declare a contract that was already compiled elsewhere and reuse the exact same class hash across multiple networks.
+This is especially important for some contracts, e.g. Universal Deployer Contract (UDC), which must preserve the same class hash across mainnet, testnets, and appchains.
+
+Compiling a contract locally with a different Cairo compiler version may result in a different class hash.
+
+To avoid this, you can use the `declare-from` which allows you to declare a contract by providing its class hash and the source network where it is already declared.
+
+## Example
+
+Let's consider a basic contract, which is already declared on Sepolia network.
+
+To declare it on another network, e.g. local devnet, run:
+
+```shell
+$ sncast --account my_account \
+    declare-from \
+    --class-hash 0x283a4f96ee7de15894d9205a93db7cec648562cfe90db14cb018c039e895e78 \
+    --source-network sepolia \
+    --url http://127.0.0.1:5055/rpc
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Success: Declaration completed
+
+Class Hash:       0x283a4f96ee7de15894d9205a93db7cec648562cfe90db14cb018c039e895e78
+Transaction Hash: 0x[..]
+```
+</details>
+<br>
 
 
