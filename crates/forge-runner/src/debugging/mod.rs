@@ -4,7 +4,7 @@ mod trace_verbosity;
 
 use cheatnet::forking::data::ForkData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use cheatnet::state::CallTrace;
+use cheatnet::trace_data::CallTrace;
 
 pub use args::TraceArgs;
 pub use trace_verbosity::TraceVerbosity;

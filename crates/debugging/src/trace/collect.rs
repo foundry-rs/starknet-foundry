@@ -7,7 +7,7 @@ use crate::{Context, Trace};
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult as CheatnetCallResult,
 };
-use cheatnet::state::{CallTrace, CallTraceNode};
+use cheatnet::trace_data::{CallTrace, CallTraceNode};
 use data_transformer::{reverse_transform_input, reverse_transform_output};
 use starknet::core::types::contract::AbiEntry;
 use starknet_api::core::ClassHash;
