@@ -77,8 +77,8 @@ fn partitions_mapping_from_packages_args(
     let mut mapping = HashMap::with_capacity(names.len());
 
     for (i, name) in names.into_iter().enumerate() {
-        let shard_1_based = (i % total) + 1;
-        mapping.insert(name, shard_1_based);
+        let partition_index_1_based = (i % total) + 1;
+        mapping.insert(name, partition_index_1_based);
     }
 
     mapping
