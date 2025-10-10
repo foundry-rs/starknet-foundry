@@ -74,8 +74,8 @@ pub(crate) fn exit_error_call(
         CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
         CallType::Delegate => AddressOrClassHash::ClassHash(entry_point.class_hash),
     };
-    cheatnet_state
-        .trace_data
-        .update_call_result(CallResult::from_err(error, &identifier));
-    cheatnet_state.trace_data.exit_nested_call();
+    let trace_data = &mut cheatnet_state.trace_data;
+    trace_data.clear_events_and_messages();
+    trace_data.update_call_result(CallResult::from_err(error, &identifier));
+    trace_data.exit_nested_call();
 }
