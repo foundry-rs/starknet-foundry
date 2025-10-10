@@ -17,7 +17,7 @@ use crate::runtime_extensions::{
         storage::{calculate_variable_address, load, store},
     },
 };
-use crate::state::{CallTrace, CallTraceNode, GasReportData};
+use crate::trace_data::{CallTrace, CallTraceNode, GasReportData};
 use anyhow::{Context, Result, anyhow};
 use blockifier::bouncer::vm_resources_to_sierra_gas;
 use blockifier::context::TransactionContext;

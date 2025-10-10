@@ -5,7 +5,7 @@ use crate::trace::components::{
     ContractAddressContainer, ContractNameContainer, EntryPointTypeContainer, GasContainer,
 };
 use crate::tree::TreeSerialize;
-use cheatnet::state::CallTrace;
+use cheatnet::trace_data::CallTrace;
 use starknet_api::core::ContractAddress as ApiContractAddress;
 use starknet_api::execution_resources::GasAmount as ApiGasAmount;
 use std::fmt;
