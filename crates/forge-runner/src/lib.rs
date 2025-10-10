@@ -1,5 +1,6 @@
 use crate::coverage_api::run_coverage;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig};
+use crate::package_tests::TestCase;
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
 use anyhow::Result;
@@ -56,7 +57,13 @@ const BUILTINS: [&str; 11] = [
 ];
 
 pub trait TestCaseFilter {
-    fn should_be_run(&self, test_case: &TestCaseWithResolvedConfig) -> bool;
+    fn should_be_run<T>(&self, test_case: &TestCase<T>) -> bool
+    where
+        T: TestCaseIsIgnored;
+}
+
+pub trait TestCaseIsIgnored {
+    fn is_ignored(&self) -> bool;
 }
 
 pub fn maybe_save_trace_and_profile(

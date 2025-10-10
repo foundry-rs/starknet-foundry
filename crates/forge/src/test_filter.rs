@@ -1,7 +1,8 @@
 use crate::shared_cache::FailedTestsCache;
 use anyhow::Result;
-use forge_runner::TestCaseFilter;
+use forge_runner::package_tests::TestCase;
 use forge_runner::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
+use forge_runner::{TestCaseFilter, TestCaseIsIgnored};
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -26,7 +27,7 @@ pub(crate) enum NameFilter {
 }
 
 #[derive(Debug, PartialEq)]
-pub(crate) enum IgnoredFilter {
+pub enum IgnoredFilter {
     NotIgnored,
     Ignored,
     All,
@@ -118,8 +119,11 @@ impl TestsFilter {
 }
 
 impl TestCaseFilter for TestsFilter {
-    fn should_be_run(&self, test_case: &TestCaseWithResolvedConfig) -> bool {
-        let ignored = test_case.config.ignored;
+    fn should_be_run<T>(&self, test_case: &TestCase<T>) -> bool
+    where
+        T: TestCaseIsIgnored,
+    {
+        let ignored = test_case.config.is_ignored();
 
         match self.ignored_filter {
             IgnoredFilter::All => true,
@@ -197,11 +201,10 @@ mod tests {
                 .unwrap(),
             ),
             test_cases: vec![
-                TestCaseWithResolvedConfig {
-                    name: "crate1::do_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                TestCaseWithResolvedConfig::new(
+                    "crate1::do_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
                         expected_result: ExpectedTestResult::Success,
@@ -209,12 +212,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "crate2::run_other_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "crate2::run_other_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
                         expected_result: ExpectedTestResult::Success,
@@ -222,12 +224,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "outer::crate2::execute_next_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "outer::crate2::execute_next_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
                         expected_result: ExpectedTestResult::Success,
@@ -235,12 +236,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
                         expected_result: ExpectedTestResult::Success,
@@ -248,7 +248,7 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
+                ),
             ],
             tests_location: TestTargetLocation::Lib,
         };
@@ -269,11 +269,10 @@ mod tests {
 
         assert_eq!(
             filtered.test_cases,
-            vec![TestCaseWithResolvedConfig {
-                name: "crate1::do_thing".to_string(),
-                test_details: TestDetails::default(),
-
-                config: TestCaseResolvedConfig {
+            vec![TestCaseWithResolvedConfig::new(
+                "crate1::do_thing",
+                TestDetails::default(),
+                TestCaseResolvedConfig {
                     available_gas: None,
                     ignored: false,
                     expected_result: ExpectedTestResult::Success,
@@ -281,7 +280,7 @@ mod tests {
                     fuzzer_config: None,
                     disable_predeployed_contracts: false,
                 },
-            },]
+            ),]
         );
 
         let tests_filter = TestsFilter::from_flags(
@@ -299,11 +298,10 @@ mod tests {
 
         assert_eq!(
             filtered.test_cases,
-            vec![TestCaseWithResolvedConfig {
-                name: "crate2::run_other_thing".to_string(),
-                test_details: TestDetails::default(),
-
-                config: TestCaseResolvedConfig {
+            vec![TestCaseWithResolvedConfig::new(
+                "crate2::run_other_thing",
+                TestDetails::default(),
+                TestCaseResolvedConfig {
                     available_gas: None,
                     ignored: true,
                     expected_result: ExpectedTestResult::Success,
@@ -311,7 +309,7 @@ mod tests {
                     fuzzer_config: None,
                     disable_predeployed_contracts: false,
                 },
-            },]
+            ),]
         );
 
         let tests_filter = TestsFilter::from_flags(
@@ -330,11 +328,10 @@ mod tests {
         assert_eq!(
             filtered.test_cases,
             vec![
-                TestCaseWithResolvedConfig {
-                    name: "crate1::do_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                TestCaseWithResolvedConfig::new(
+                    "crate1::do_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
                         expected_result: ExpectedTestResult::Success,
@@ -342,12 +339,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "crate2::run_other_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "crate2::run_other_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
                         expected_result: ExpectedTestResult::Success,
@@ -355,12 +351,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "outer::crate2::execute_next_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "outer::crate2::execute_next_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
                         expected_result: ExpectedTestResult::Success,
@@ -368,12 +363,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
                         expected_result: ExpectedTestResult::Success,
@@ -381,7 +375,7 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
+                ),
             ]
         );
 
@@ -416,11 +410,10 @@ mod tests {
         assert_eq!(
             filtered.test_cases,
             vec![
-                TestCaseWithResolvedConfig {
-                    name: "crate1::do_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                TestCaseWithResolvedConfig::new(
+                    "crate1::do_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
                         expected_result: ExpectedTestResult::Success,
@@ -428,12 +421,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "crate2::run_other_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "crate2::run_other_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
                         expected_result: ExpectedTestResult::Success,
@@ -441,12 +433,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "outer::crate2::execute_next_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "outer::crate2::execute_next_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
                         expected_result: ExpectedTestResult::Success,
@@ -454,12 +445,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
                         expected_result: ExpectedTestResult::Success,
@@ -467,7 +457,7 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
+                ),
             ]
         );
     }
@@ -533,11 +523,10 @@ mod tests {
                 .unwrap(),
             ),
             test_cases: vec![
-                TestCaseWithResolvedConfig {
-                    name: "crate1::do_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                TestCaseWithResolvedConfig::new(
+                    "crate1::do_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
                         expected_result: ExpectedTestResult::Success,
@@ -545,12 +534,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "crate2::run_other_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "crate2::run_other_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
                         expected_result: ExpectedTestResult::Success,
@@ -558,12 +546,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "outer::crate3::run_other_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "outer::crate3::run_other_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
                         expected_result: ExpectedTestResult::Success,
@@ -571,12 +558,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "do_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "do_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
                         expected_result: ExpectedTestResult::Success,
@@ -584,7 +570,7 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
+                ),
             ],
             tests_location: TestTargetLocation::Tests,
         };
@@ -634,11 +620,10 @@ mod tests {
 
         assert_eq!(
             filtered.test_cases,
-            vec![TestCaseWithResolvedConfig {
-                name: "do_thing".to_string(),
-                test_details: TestDetails::default(),
-
-                config: TestCaseResolvedConfig {
+            vec![TestCaseWithResolvedConfig::new(
+                "do_thing",
+                TestDetails::default(),
+                TestCaseResolvedConfig {
                     available_gas: None,
                     ignored: false,
                     expected_result: ExpectedTestResult::Success,
@@ -646,7 +631,7 @@ mod tests {
                     fuzzer_config: None,
                     disable_predeployed_contracts: false,
                 },
-            },]
+            ),]
         );
 
         let tests_filter = TestsFilter::from_flags(
@@ -664,11 +649,10 @@ mod tests {
 
         assert_eq!(
             filtered.test_cases,
-            vec![TestCaseWithResolvedConfig {
-                name: "crate1::do_thing".to_string(),
-                test_details: TestDetails::default(),
-
-                config: TestCaseResolvedConfig {
+            vec![TestCaseWithResolvedConfig::new(
+                "crate1::do_thing",
+                TestDetails::default(),
+                TestCaseResolvedConfig {
                     available_gas: None,
                     ignored: false,
                     expected_result: ExpectedTestResult::Success,
@@ -676,7 +660,7 @@ mod tests {
                     fuzzer_config: None,
                     disable_predeployed_contracts: false,
                 },
-            },]
+            ),]
         );
 
         let tests_filter = TestsFilter::from_flags(
@@ -709,11 +693,10 @@ mod tests {
 
         assert_eq!(
             filtered.test_cases,
-            vec![TestCaseWithResolvedConfig {
-                name: "outer::crate3::run_other_thing".to_string(),
-                test_details: TestDetails::default(),
-
-                config: TestCaseResolvedConfig {
+            vec![TestCaseWithResolvedConfig::new(
+                "outer::crate3::run_other_thing",
+                TestDetails::default(),
+                TestCaseResolvedConfig {
                     available_gas: None,
                     ignored: true,
                     expected_result: ExpectedTestResult::Success,
@@ -721,7 +704,7 @@ mod tests {
                     fuzzer_config: None,
                     disable_predeployed_contracts: false,
                 },
-            },]
+            ),]
         );
     }
 
@@ -739,11 +722,10 @@ mod tests {
                 .unwrap(),
             ),
             test_cases: vec![
-                TestCaseWithResolvedConfig {
-                    name: "crate1::do_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                TestCaseWithResolvedConfig::new(
+                    "crate1::do_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
                         expected_result: ExpectedTestResult::Success,
@@ -751,12 +733,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "crate2::run_other_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "crate2::run_other_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
                         expected_result: ExpectedTestResult::Success,
@@ -764,12 +745,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "outer::crate3::run_other_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "outer::crate3::run_other_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
                         expected_result: ExpectedTestResult::Success,
@@ -777,12 +757,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "do_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "do_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
                         expected_result: ExpectedTestResult::Success,
@@ -790,7 +769,7 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
+                ),
             ],
             tests_location: TestTargetLocation::Tests,
         };
@@ -810,11 +789,10 @@ mod tests {
         assert_eq!(
             filtered.test_cases,
             vec![
-                TestCaseWithResolvedConfig {
-                    name: "crate2::run_other_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                TestCaseWithResolvedConfig::new(
+                    "crate2::run_other_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
                         expected_result: ExpectedTestResult::Success,
@@ -822,12 +800,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "outer::crate3::run_other_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "outer::crate3::run_other_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
                         expected_result: ExpectedTestResult::Success,
@@ -835,7 +812,7 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
+                ),
             ]
         );
     }
@@ -854,11 +831,10 @@ mod tests {
                 .unwrap(),
             ),
             test_cases: vec![
-                TestCaseWithResolvedConfig {
-                    name: "crate1::do_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                TestCaseWithResolvedConfig::new(
+                    "crate1::do_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
                         expected_result: ExpectedTestResult::Success,
@@ -866,12 +842,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "crate2::run_other_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "crate2::run_other_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
                         expected_result: ExpectedTestResult::Success,
@@ -879,12 +854,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "outer::crate3::run_other_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "outer::crate3::run_other_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
                         expected_result: ExpectedTestResult::Success,
@@ -892,12 +866,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "do_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "do_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
                         expected_result: ExpectedTestResult::Success,
@@ -905,7 +878,7 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
+                ),
             ],
             tests_location: TestTargetLocation::Tests,
         };
@@ -925,11 +898,10 @@ mod tests {
         assert_eq!(
             filtered.test_cases,
             vec![
-                TestCaseWithResolvedConfig {
-                    name: "crate1::do_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                TestCaseWithResolvedConfig::new(
+                    "crate1::do_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
                         expected_result: ExpectedTestResult::Success,
@@ -937,12 +909,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "crate2::run_other_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "crate2::run_other_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
                         expected_result: ExpectedTestResult::Success,
@@ -950,12 +921,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "outer::crate3::run_other_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "outer::crate3::run_other_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
                         expected_result: ExpectedTestResult::Success,
@@ -963,12 +933,11 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
-                TestCaseWithResolvedConfig {
-                    name: "do_thing".to_string(),
-                    test_details: TestDetails::default(),
-
-                    config: TestCaseResolvedConfig {
+                ),
+                TestCaseWithResolvedConfig::new(
+                    "do_thing",
+                    TestDetails::default(),
+                    TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
                         expected_result: ExpectedTestResult::Success,
@@ -976,7 +945,7 @@ mod tests {
                         fuzzer_config: None,
                         disable_predeployed_contracts: false,
                     },
-                },
+                ),
             ]
         );
     }

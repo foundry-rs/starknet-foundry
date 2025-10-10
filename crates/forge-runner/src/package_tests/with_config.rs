@@ -1,5 +1,8 @@
 use super::{TestCase, TestTarget};
-use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
+use crate::{
+    TestCaseIsIgnored,
+    expected_result::{ExpectedPanicValue, ExpectedTestResult},
+};
 use cheatnet::runtime_extensions::forge_config_extension::config::{
     Expected, RawAvailableResourceBoundsConfig, RawForgeConfig, RawForkConfig, RawFuzzerConfig,
     RawShouldPanicConfig,
@@ -20,6 +23,12 @@ pub struct TestCaseConfig {
     pub fork_config: Option<RawForkConfig>,
     pub fuzzer_config: Option<RawFuzzerConfig>,
     pub disable_predeployed_contracts: bool,
+}
+
+impl TestCaseIsIgnored for TestCaseConfig {
+    fn is_ignored(&self) -> bool {
+        self.ignored
+    }
 }
 
 impl From<RawForgeConfig> for TestCaseConfig {
