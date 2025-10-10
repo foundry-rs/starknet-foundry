@@ -88,6 +88,7 @@ pub fn run_test_case(
             fork_targets: vec![],
         },
         &mut BlockNumberMap::default(),
+        None,
         ui,
     ))
     .expect("Runner fail")
