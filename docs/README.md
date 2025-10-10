@@ -8,6 +8,16 @@ Install mdBook
 $ cargo install mdbook
 ```
 
+Install necessary mdBook extensions
+
+```shell
+$ cargo install mdbook-linkcheck
+```
+
+```shell
+$ cargo install mdbook-variables
+```
+
 ## Building
 
 ```shell
