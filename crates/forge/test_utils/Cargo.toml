@@ -7,6 +7,7 @@ edition.workspace = true
 
 [features]
 non_exact_gas_assertions = []
+cairo-native = ["scarb-api/cairo-native", "cheatnet/cairo-native"]
 
 [dependencies]
 walkdir.workspace = true
