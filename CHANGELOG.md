@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Updated the error message returned when calling a nonexistent method on a contract to better align with the format used by the network
+- Oracle support in `snforge` is now stable and no longer requires the `--experimental-oracles` CLI flag
 
 ### Cast
 
