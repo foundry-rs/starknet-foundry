@@ -74,7 +74,7 @@ fn find_devnet_process_info() -> Result<DevnetProcessInfo, DevnetDetectionError>
         .map_err(|_| DevnetDetectionError::CommandFailed)?;
     let ps_output = String::from_utf8_lossy(&output.stdout);
 
-    let devnet_processes: Vec<DevnetProcessInfo> = ps_output
+    let devnet_processes: Result<Vec<DevnetProcessInfo>, DevnetDetectionError> = ps_output
         .lines()
         .map(|line| {
             if line.contains("docker") || line.contains("podman") {
@@ -84,6 +84,8 @@ fn find_devnet_process_info() -> Result<DevnetProcessInfo, DevnetDetectionError>
             }
         })
         .collect();
+
+    let devnet_processes = devnet_processes?;
 
     match devnet_processes.as_slice() {
         [single] => Ok(single.clone()),
@@ -130,7 +132,9 @@ fn extract_docker_mapping(cmdline: &str) -> Option<(String, u16)> {
     None
 }
 
-fn extract_devnet_info_from_docker_line(cmdline: &str) -> DevnetProcessInfo {
+fn extract_devnet_info_from_docker_line(
+    cmdline: &str,
+) -> Result<DevnetProcessInfo, DevnetDetectionError> {
     let mut port = None;
     let mut host = None;
 
@@ -145,23 +149,31 @@ fn extract_devnet_info_from_docker_line(cmdline: &str) -> DevnetProcessInfo {
         port = extract_port_from_flag(cmdline, "--port");
     }
 
-    let final_host = host.unwrap_or_else(|| DEFAULT_DEVNET_HOST.to_string());
-    let final_port = port.unwrap_or(DEFAULT_DEVNET_PORT);
+    // If port or host are still None, it means neither docker flags nor command line provided them (e.g., docker run shardlabs/starknet-devnet-rs)
+    // which means we cannot connect to the process from outside the container
+    let final_host = host.ok_or(DevnetDetectionError::ProcessNotReachable)?;
+    let final_port = port.ok_or(DevnetDetectionError::ProcessNotReachable)?;
 
-    DevnetProcessInfo {
+    Ok(DevnetProcessInfo {
         host: final_host,
         port: final_port,
-    }
+    })
 }
 
-fn extract_devnet_info_from_cmdline(cmdline: &str) -> DevnetProcessInfo {
+fn extract_devnet_info_from_cmdline(
+    cmdline: &str,
+) -> Result<DevnetProcessInfo, DevnetDetectionError> {
     let mut port = extract_port_from_flag(cmdline, "--port");
     let mut host = extract_string_from_flag(cmdline, "--host");
 
-    if port.is_none() {
-        port = std::env::var("PORT")
-            .ok()
-            .and_then(|port_env| port_env.parse().ok());
+    if port.is_none()
+        && let Ok(port_env) = std::env::var("PORT")
+    {
+        port = Some(
+            port_env
+                .parse()
+                .map_err(|_| DevnetDetectionError::ProcessNotReachable)?,
+        );
     }
 
     if host.is_none()
@@ -171,13 +183,14 @@ fn extract_devnet_info_from_cmdline(cmdline: &str) -> DevnetProcessInfo {
         host = Some(host_env);
     }
 
+    // If port or host are still None, it means neither command line nor env vars provided them, (e.g starknet-devnet --seed 0)
     let final_port = port.unwrap_or(DEFAULT_DEVNET_PORT);
     let final_host = host.unwrap_or_else(|| DEFAULT_DEVNET_HOST.to_string());
 
-    DevnetProcessInfo {
+    Ok(DevnetProcessInfo {
         host: final_host,
         port: final_port,
-    }
+    })
 }
 
 async fn is_port_reachable(host: &str, port: u16) -> bool {
@@ -201,38 +214,40 @@ mod tests {
         test_extract_devnet_info_with_both_envs();
 
         test_cmdline_args_override_env();
+
+        test_invalid_env();
     }
 
     fn test_extract_devnet_info_from_cmdline() {
         let cmdline1 = "starknet-devnet --port 6000 --host 127.0.0.1";
-        let info1 = extract_devnet_info_from_cmdline(cmdline1);
+        let info1 = extract_devnet_info_from_cmdline(cmdline1).unwrap();
         assert_eq!(info1.port, 6000);
         assert_eq!(info1.host, "127.0.0.1");
 
         let cmdline2 = "/usr/bin/starknet-devnet --port=5000";
-        let info2 = extract_devnet_info_from_cmdline(cmdline2);
+        let info2 = extract_devnet_info_from_cmdline(cmdline2).unwrap();
         assert_eq!(info2.port, 5000);
         assert_eq!(info2.host, "127.0.0.1");
 
         let cmdline3 = "starknet-devnet --host 127.0.0.1";
-        let info3 = extract_devnet_info_from_cmdline(cmdline3);
+        let info3 = extract_devnet_info_from_cmdline(cmdline3).unwrap();
         assert_eq!(info3.port, 5050);
         assert_eq!(info3.host, "127.0.0.1");
     }
 
     fn test_extract_devnet_info_from_docker_line() {
         let cmdline1 = "docker run -p 127.0.0.1:5055:5050 shardlabs/starknet-devnet-rs";
-        let info1 = extract_devnet_info_from_docker_line(cmdline1);
+        let info1 = extract_devnet_info_from_docker_line(cmdline1).unwrap();
         assert_eq!(info1.port, 5055);
         assert_eq!(info1.host, "127.0.0.1");
 
         let cmdline2 = "docker run --publish     8080:5050 shardlabs/starknet-devnet-rs";
-        let info2 = extract_devnet_info_from_docker_line(cmdline2);
+        let info2 = extract_devnet_info_from_docker_line(cmdline2).unwrap();
         assert_eq!(info2.port, 8080);
         assert_eq!(info2.host, "127.0.0.1");
 
         let cmdline3 = "podman run --network host shardlabs/starknet-devnet-rs --port 5055";
-        let info3 = extract_devnet_info_from_docker_line(cmdline3);
+        let info3 = extract_devnet_info_from_docker_line(cmdline3).unwrap();
         assert_eq!(info3.port, 5055);
         assert_eq!(info3.host, "127.0.0.1");
     }
@@ -245,9 +260,30 @@ mod tests {
         }
 
         let cmdline = "starknet-devnet";
-        let info = extract_devnet_info_from_cmdline(cmdline);
+        let info = extract_devnet_info_from_cmdline(cmdline).unwrap();
         assert_eq!(info.port, 9999);
         assert_eq!(info.host, "9.9.9.9");
+
+        // SAFETY: Clean up environment variables to prevent interference
+        unsafe {
+            std::env::remove_var("PORT");
+            std::env::remove_var("HOST");
+        }
+    }
+
+    fn test_invalid_env() {
+        // SAFETY: Variables are only modified within this test and cleaned up afterwards
+        unsafe {
+            std::env::set_var("PORT", "asdf");
+            std::env::set_var("HOST", "9.9.9.9");
+        }
+        let cmdline = "starknet-devnet";
+        let result = extract_devnet_info_from_cmdline(cmdline);
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            DevnetDetectionError::ProcessNotReachable
+        ));
 
         // SAFETY: Clean up environment variables to prevent interference
         unsafe {
@@ -264,7 +300,7 @@ mod tests {
         }
 
         let cmdline = "starknet-devnet --port 9999 --host 192.168.1.1";
-        let info = extract_devnet_info_from_cmdline(cmdline);
+        let info = extract_devnet_info_from_cmdline(cmdline).unwrap();
         assert_eq!(info.port, 9999);
         assert_eq!(info.host, "192.168.1.1");
 
