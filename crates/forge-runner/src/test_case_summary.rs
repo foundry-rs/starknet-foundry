@@ -498,7 +498,7 @@ impl AnyTestCaseSummary {
     }
 
     #[must_use]
-    pub fn is_skipped(&self) -> bool {
+    pub fn is_skipped_by_partition(&self) -> bool {
         matches!(
             self,
             AnyTestCaseSummary::Single(TestCaseSummary::SkippedByPartition { .. })
