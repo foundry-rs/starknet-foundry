@@ -43,20 +43,14 @@ use std::sync::Arc;
 pub struct PackageTestResult {
     summaries: Vec<TestTargetSummary>,
     filtered: Option<usize>,
-    skipped: Option<usize>,
 }
 
 impl PackageTestResult {
     #[must_use]
-    pub fn new(
-        summaries: Vec<TestTargetSummary>,
-        filtered: Option<usize>,
-        skipped: Option<usize>,
-    ) -> Self {
+    pub fn new(summaries: Vec<TestTargetSummary>, filtered: Option<usize>) -> Self {
         Self {
             summaries,
             filtered,
-            skipped,
         }
     }
 
@@ -68,11 +62,6 @@ impl PackageTestResult {
     #[must_use]
     pub fn summaries(self) -> Vec<TestTargetSummary> {
         self.summaries
-    }
-
-    #[must_use]
-    pub fn skipped(&self) -> Option<usize> {
-        self.skipped
     }
 }
 
@@ -172,10 +161,6 @@ async fn test_package_with_config_resolved(
 
 fn sum_test_cases(test_targets: &[TestTargetWithResolvedConfig]) -> usize {
     test_targets.iter().map(|tc| tc.test_cases.len()).sum()
-}
-
-fn sum_skipped_test_cases(summaries: &[TestTargetSummary]) -> usize {
-    summaries.iter().map(TestTargetSummary::count_skipped).sum()
 }
 
 fn sum_test_cases_from_package(
@@ -280,13 +265,7 @@ pub async fn run_for_package(
         Some(all_tests - not_filtered)
     };
 
-    let skipped_count = partition.map(|_| sum_skipped_test_cases(&summaries));
-
-    ui.println(&TestsSummaryMessage::new(
-        &summaries,
-        filtered_count,
-        skipped_count,
-    ));
+    ui.println(&TestsSummaryMessage::new(&summaries, filtered_count));
 
     let any_fuzz_test_was_run = summaries.iter().any(|test_target_summary| {
         test_target_summary
@@ -303,9 +282,5 @@ pub async fn run_for_package(
         ));
     }
 
-    Ok(PackageTestResult::new(
-        summaries,
-        filtered_count,
-        skipped_count,
-    ))
+    Ok(PackageTestResult::new(summaries, filtered_count))
 }

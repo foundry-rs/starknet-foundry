@@ -69,16 +69,11 @@ struct TestsSummary {
     interrupted: usize,
     ignored: usize,
     filtered: Option<usize>,
-    skipped: Option<usize>,
 }
 
 impl TestsSummary {
     #[must_use]
-    fn new(
-        summaries: &[TestTargetSummary],
-        filtered: Option<usize>,
-        skipped: Option<usize>,
-    ) -> Self {
+    fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
         let passed = summaries.iter().map(TestTargetSummary::count_passed).sum();
         let failed = summaries.iter().map(TestTargetSummary::count_failed).sum();
         let interrupted = summaries
@@ -93,7 +88,6 @@ impl TestsSummary {
             interrupted,
             ignored,
             filtered,
-            skipped,
         }
     }
 
@@ -108,12 +102,8 @@ impl TestsSummary {
             String::new()
         };
 
-        let skipped = self
-            .skipped
-            .map_or_else(String::new, |v| format!(", {v} skipped"));
-
         format!(
-            "{} passed, {} failed, {} ignored, {filtered} filtered out{skipped}{interrupted}",
+            "{} passed, {} failed, {} ignored, {filtered} filtered out{interrupted}",
             self.passed, self.failed, self.ignored,
         )
     }
@@ -128,13 +118,9 @@ impl TestsSummaryMessage {
     pub const LABEL: &str = "Tests";
 
     #[must_use]
-    pub fn new(
-        summaries: &[TestTargetSummary],
-        filtered: Option<usize>,
-        skipped: Option<usize>,
-    ) -> Self {
+    pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
         Self {
-            summary: TestsSummary::new(summaries, filtered, skipped),
+            summary: TestsSummary::new(summaries, filtered),
         }
     }
 }
@@ -230,13 +216,9 @@ impl OverallSummaryMessage {
     pub const LABEL: &str = "Tests summary";
 
     #[must_use]
-    pub fn new(
-        summaries: &[TestTargetSummary],
-        filtered: Option<usize>,
-        skipped: Option<usize>,
-    ) -> Self {
+    pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
         Self {
-            summary: TestsSummary::new(summaries, filtered, skipped),
+            summary: TestsSummary::new(summaries, filtered),
         }
     }
 }
