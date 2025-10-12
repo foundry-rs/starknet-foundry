@@ -43,16 +43,15 @@ pub async fn run_for_test_target(
         let case_name = case.name.clone();
 
         if let Some(partition_config) = &partition_config {
-            let function_id = format!("{}__snforge_internal_test_generated", case.name);
-
+            let test_name = format!("{}__snforge_internal_test_generated", case.name);
             let test_partition = partition_config
                 .partitions_mapping()
-                .get(&function_id)
+                .get(&test_name)
                 .expect("Test name should be present in tests partitions mapping");
-            let is_test_present_in_partition =
+            let should_run_in_partition =
                 *test_partition == partition_config.partition().index_1_based();
 
-            if !is_test_present_in_partition {
+            if !should_run_in_partition {
                 tasks.push(tokio::task::spawn(async {
                     // TODO TestCaseType should also be encoded in the test case definition
                     Ok(AnyTestCaseSummary::Single(
