@@ -133,7 +133,7 @@ impl TestResultMessage {
             }
             TestResultStatus::SkippedByPartition => {
                 unreachable!(
-                    "Skipped by partition tests should not have visible message representation"
+                    "Tests skipped by partition should not have visible message representation"
                 )
             }
         }

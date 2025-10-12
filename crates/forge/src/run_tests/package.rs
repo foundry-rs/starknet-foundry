@@ -27,7 +27,7 @@ use console::Style;
 use forge_runner::{
     forge_config::ForgeConfig,
     package_tests::{
-        TestTarget,
+        TestCase, TestTarget,
         raw::TestTargetRaw,
         with_config_resolved::{TestCaseResolvedConfig, TestTargetWithResolvedConfig},
     },
@@ -169,23 +169,23 @@ fn sum_test_cases_from_package(
 ) -> usize {
     test_targets
         .iter()
-        .map(|tt| sum_test_cases_from_test_target(tt.clone(), partition))
+        .map(|tt| sum_test_cases_from_test_target(tt.test_cases.clone(), partition))
         .sum()
 }
 
 fn sum_test_cases_from_test_target(
-    test_target: TestTarget<TestCaseResolvedConfig>,
+    // test_target: TestTarget<TestCaseResolvedConfig>,
+    test_cases: Vec<TestCase<TestCaseResolvedConfig>>,
     partition: Option<&Partition>,
 ) -> usize {
     if let Some(partition) = partition {
-        test_target
-            .test_cases
+        test_cases
             .into_iter()
             .enumerate()
             .filter(|(i, _)| i % partition.total() == partition.index_0_based())
             .count()
     } else {
-        test_target.test_cases.len()
+        test_cases.len()
     }
 }
 
@@ -232,7 +232,7 @@ pub async fn run_for_package(
         let ui = ui.clone();
         ui.println(&TestsRunMessage::new(
             test_target.tests_location,
-            sum_test_cases_from_test_target(test_target.clone(), partition.as_ref()),
+            sum_test_cases_from_test_target(test_target.test_cases.clone(), partition.as_ref()),
         ));
 
         let summary = run_for_test_target(
