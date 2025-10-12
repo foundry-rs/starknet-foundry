@@ -1,5 +1,6 @@
 use crate::run_tests::package::RunForPackageArgs;
 use cairo_lang_sierra::ids::FunctionId;
+use forge_runner::package_tests::with_config_resolved::sanitize_test_case_name;
 use std::{collections::HashMap, str::FromStr};
 
 #[derive(Debug, Clone, Copy)]
@@ -48,40 +49,46 @@ impl FromStr for Partition {
         Ok(Partition { index, total })
     }
 }
+pub struct TestsPartitionsMapping(HashMap<String, usize>);
 
-pub type TestsPartitionsMapping = HashMap<String, usize>;
-
-fn partitions_mapping_from_packages_args(
-    packages_args: &[RunForPackageArgs],
-    partition: Partition,
-) -> TestsPartitionsMapping {
-    let names: Vec<String> = packages_args
-        .iter()
-        .flat_map(|pkg| pkg.test_targets.iter())
-        .flat_map(|tt| {
-            tt.sierra_program
-                .debug_info
-                .as_ref()
-                .and_then(|info| info.executables.get("snforge_internal_test_executable"))
-                .into_iter()
-                .flatten()
-        })
-        .filter_map(|fid: &FunctionId| {
-            fid.debug_name
-                .as_ref()
-                .map(std::string::ToString::to_string)
-        })
-        .collect();
-
-    let total = partition.total();
-    let mut mapping = HashMap::with_capacity(names.len());
-
-    for (i, name) in names.into_iter().enumerate() {
-        let partition_index_1_based = (i % total) + 1;
-        mapping.insert(name, partition_index_1_based);
+impl TestsPartitionsMapping {
+    pub fn get(&self, test_name: &str) -> Option<&usize> {
+        self.0.get(test_name)
     }
 
-    mapping
+    pub fn insert(&mut self, test_name: String, partition_index: usize) {
+        self.0.insert(test_name, partition_index);
+    }
+
+    pub fn from_packages_args(packages_args: &[RunForPackageArgs], partition: Partition) -> Self {
+        let names: Vec<String> = packages_args
+            .iter()
+            .flat_map(|pkg| pkg.test_targets.iter())
+            .flat_map(|tt| {
+                tt.sierra_program
+                    .debug_info
+                    .as_ref()
+                    .and_then(|info| info.executables.get("snforge_internal_test_executable"))
+                    .into_iter()
+                    .flatten()
+            })
+            .filter_map(|fid: &FunctionId| {
+                fid.debug_name
+                    .as_ref()
+                    .map(std::string::ToString::to_string)
+            })
+            .collect();
+
+        let total = partition.total();
+        let mut mapping = HashMap::with_capacity(names.len());
+
+        for (i, name) in names.into_iter().enumerate() {
+            let partition_index_1_based = (i % total) + 1;
+            mapping.insert(sanitize_test_case_name(&name), partition_index_1_based);
+        }
+
+        Self(mapping)
+    }
 }
 
 pub struct PartitionConfig {
@@ -91,7 +98,8 @@ pub struct PartitionConfig {
 
 impl PartitionConfig {
     pub fn new(partition: Partition, packages_args: &[RunForPackageArgs]) -> Self {
-        let partitions_mapping = partitions_mapping_from_packages_args(packages_args, partition);
+        let partitions_mapping =
+            TestsPartitionsMapping::from_packages_args(packages_args, partition);
         Self {
             partition,
             partitions_mapping,
