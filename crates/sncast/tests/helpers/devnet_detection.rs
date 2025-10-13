@@ -29,6 +29,7 @@ async fn test_multiple_devnet_instances_error() {
     let result = detect_devnet_url().await;
 
     let _ = devnet1.kill();
+    let _ = devnet1.wait();
 
     assert!(matches!(
         result,
@@ -58,7 +59,7 @@ fn wait_for_devnet(address: &str, timeout: Duration) {
         if TcpStream::connect(address).is_ok() {
             break;
         } else if now.elapsed() >= timeout {
-            panic!("Timed out waiting for devnet at {}", address);
+            panic!("Timed out waiting for devnet at {address}");
         }
         std::thread::sleep(Duration::from_millis(100));
     }
