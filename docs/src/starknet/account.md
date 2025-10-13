@@ -57,7 +57,7 @@ See more advanced use cases below or jump directly to the section [here](#advanc
 
 #### Prefund generated address with tokens
 
-To deploy an account in the next step, you need to prefund it with STRK tokens (read more about them [here](https://docs.starknet.io/architecture-and-concepts/economics-of-starknet/)).
+To deploy an account in the next step, you need to prefund it with STRK tokens (read more about them [here](https://docs.starknet.io/learn/protocol/accounts#deploying-a-new-account)).
 You can do it both by sending tokens from another starknet account or by bridging them
 with [StarkGate](https://starkgate.starknet.io/).
 
