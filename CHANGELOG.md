@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- `Fuzzable` trait implementations for `bool` and `ContractAddress`
+
 #### Changed
 
 - Updated the error message returned when calling a nonexistent method on a contract to better align with the format used by the network
