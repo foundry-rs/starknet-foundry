@@ -7,7 +7,7 @@ const DEFAULT_DEVNET_HOST: &str = "127.0.0.1";
 const DEFAULT_DEVNET_PORT: u16 = 5050;
 
 #[derive(Debug, Clone)]
-struct DevnetProcessInfo {
+struct ProcessInfo {
     host: String,
     port: u16,
 }
@@ -15,7 +15,7 @@ struct DevnetProcessInfo {
 #[derive(Debug, thiserror::Error)]
 enum DevnetDetectionError {
     #[error(
-        "Could not detect running starknet-devnet instance. Please use `--url <URL>` instead or start devnet if it is not running."
+        "Could not detect running starknet-devnet instance. Please use `--url <URL>` instead or start devnet."
     )]
     NoInstance,
     #[error(
@@ -67,14 +67,14 @@ async fn detect_devnet_from_processes() -> Result<String, String> {
     }
 }
 
-fn find_devnet_process_info() -> Result<DevnetProcessInfo, DevnetDetectionError> {
+fn find_devnet_process_info() -> Result<ProcessInfo, DevnetDetectionError> {
     let output = Command::new("sh")
         .args(["-c", "ps aux | grep starknet-devnet | grep -v grep"])
         .output()
         .map_err(|_| DevnetDetectionError::CommandFailed)?;
     let ps_output = String::from_utf8_lossy(&output.stdout);
 
-    let devnet_processes: Result<Vec<DevnetProcessInfo>, DevnetDetectionError> = ps_output
+    let devnet_processes: Result<Vec<ProcessInfo>, DevnetDetectionError> = ps_output
         .lines()
         .map(|line| {
             if line.contains("docker") || line.contains("podman") {
@@ -107,7 +107,7 @@ fn extract_port_from_flag(cmdline: &str, flag: &str) -> Option<u16> {
     extract_string_from_flag(cmdline, flag).and_then(|port_str| port_str.parse().ok())
 }
 
-fn extract_docker_mapping(cmdline: &str) -> Option<DevnetProcessInfo> {
+fn extract_docker_mapping(cmdline: &str) -> Option<ProcessInfo> {
     let port_flags = ["-p", "--publish"];
 
     // Port mapping patterns:
@@ -125,7 +125,7 @@ fn extract_docker_mapping(cmdline: &str) -> Option<DevnetProcessInfo> {
                 |m| m.as_str().to_string(),
             );
 
-            return Some(DevnetProcessInfo { host, port });
+            return Some(ProcessInfo { host, port });
         }
     }
 
@@ -134,7 +134,7 @@ fn extract_docker_mapping(cmdline: &str) -> Option<DevnetProcessInfo> {
 
 fn extract_devnet_info_from_docker_line(
     cmdline: &str,
-) -> Result<DevnetProcessInfo, DevnetDetectionError> {
+) -> Result<ProcessInfo, DevnetDetectionError> {
     if let Some(docker_info) = extract_docker_mapping(cmdline) {
         return Ok(docker_info);
     }
@@ -142,7 +142,7 @@ fn extract_devnet_info_from_docker_line(
     if extract_string_from_flag(cmdline, "--network").is_some_and(|network| network == "host")
         && let Some(port) = extract_port_from_flag(cmdline, "--port")
     {
-        return Ok(DevnetProcessInfo {
+        return Ok(ProcessInfo {
             host: DEFAULT_DEVNET_HOST.to_string(),
             port,
         });
@@ -153,9 +153,7 @@ fn extract_devnet_info_from_docker_line(
     Err(DevnetDetectionError::ProcessNotReachable)
 }
 
-fn extract_devnet_info_from_cmdline(
-    cmdline: &str,
-) -> Result<DevnetProcessInfo, DevnetDetectionError> {
+fn extract_devnet_info_from_cmdline(cmdline: &str) -> Result<ProcessInfo, DevnetDetectionError> {
     let mut port = extract_port_from_flag(cmdline, "--port");
     let mut host = extract_string_from_flag(cmdline, "--host");
 
@@ -180,7 +178,7 @@ fn extract_devnet_info_from_cmdline(
     let final_port = port.unwrap_or(DEFAULT_DEVNET_PORT);
     let final_host = host.unwrap_or_else(|| DEFAULT_DEVNET_HOST.to_string());
 
-    Ok(DevnetProcessInfo {
+    Ok(ProcessInfo {
         host: final_host,
         port: final_port,
     })
