@@ -54,6 +54,8 @@ fn assert_resources_for_test(
     test_runner(&temp)
         .arg(test_name)
         .arg("--save-trace-data")
+        .arg("--tracked-resource")
+        .arg("cairo-steps")
         .assert()
         .success();
 

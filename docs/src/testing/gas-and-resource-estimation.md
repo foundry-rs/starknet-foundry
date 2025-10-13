@@ -39,7 +39,7 @@ To learn more about tracked resource flag, see [--tracked-resource](../appendix/
 In order to run tests with this feature, run the `test` command with the appropriate flag:
 
 ```shell
-$ snforge test --detailed-resources
+$ snforge test --detailed-resources --tracked-resource cairo-steps
 ```
 
 <details>

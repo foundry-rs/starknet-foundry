@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated the error message returned when calling a nonexistent method on a contract to better align with the format used by the network
 - Oracle support in `snforge` is now stable and no longer requires the `--experimental-oracles` CLI flag
+- The default tracked resource is now Sierra gas, so gas reporting results may differ compared to previous versions
+- When using the `--detailed-resources` flag, the used Sierra gas key is now shown as `sierra gas` instead of `sierra_gas_consumption`
 
 ### Cast
 
