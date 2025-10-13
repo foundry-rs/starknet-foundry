@@ -13,7 +13,7 @@ struct ProcessInfo {
 }
 
 #[derive(Debug, thiserror::Error)]
-enum DevnetDetectionError {
+pub enum DevnetDetectionError {
     #[error(
         "Could not detect running starknet-devnet instance. Please use `--url <URL>` instead or start devnet."
     )]
@@ -30,7 +30,7 @@ enum DevnetDetectionError {
     ProcessNotReachable,
 }
 
-pub async fn detect_devnet_url() -> Result<String, String> {
+pub async fn detect_devnet_url() -> Result<String, DevnetDetectionError> {
     detect_devnet_from_processes().await
 }
 
@@ -39,17 +39,14 @@ pub async fn is_devnet_running() -> bool {
     detect_devnet_from_processes().await.is_ok()
 }
 
-async fn detect_devnet_from_processes() -> Result<String, String> {
+async fn detect_devnet_from_processes() -> Result<String, DevnetDetectionError> {
     match find_devnet_process_info() {
         Ok(info) => {
             if is_devnet_url_reachable(&info.host, info.port).await {
                 Ok(format!("http://{}:{}", info.host, info.port))
             } else {
-                Err(DevnetDetectionError::ProcessNotReachable.to_string())
+                Err(DevnetDetectionError::ProcessNotReachable)
             }
-        }
-        Err(DevnetDetectionError::MultipleInstances) => {
-            Err(DevnetDetectionError::MultipleInstances.to_string())
         }
         Err(DevnetDetectionError::NoInstance | DevnetDetectionError::CommandFailed) => {
             // Fallback to default starknet-devnet URL if reachable
@@ -58,12 +55,10 @@ async fn detect_devnet_from_processes() -> Result<String, String> {
                     "http://{DEFAULT_DEVNET_HOST}:{DEFAULT_DEVNET_PORT}"
                 ))
             } else {
-                Err(DevnetDetectionError::NoInstance.to_string())
+                Err(DevnetDetectionError::NoInstance)
             }
         }
-        Err(DevnetDetectionError::ProcessNotReachable) => {
-            Err(DevnetDetectionError::ProcessNotReachable.to_string())
-        }
+        Err(e) => Err(e),
     }
 }
 
@@ -207,6 +202,8 @@ mod tests {
         test_cmdline_args_override_env();
 
         test_invalid_env();
+
+        test_wrong_env_var();
     }
 
     fn test_extract_devnet_info_from_cmdline() {
@@ -300,5 +297,69 @@ mod tests {
             std::env::remove_var("PORT");
             std::env::remove_var("HOST");
         }
+    }
+
+    fn test_wrong_env_var() {
+        // SAFETY: Variables are only modified within this test and cleaned up afterwards
+        unsafe {
+            std::env::set_var("PORT", "asdf");
+        }
+
+        // Empty HOST env var should be ignored and defaults should be used
+        let cmdline = "starknet-devnet";
+        let result = extract_devnet_info_from_cmdline(cmdline);
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            DevnetDetectionError::ProcessNotReachable
+        ));
+
+        // SAFETY: Clean up environment variables to prevent interference
+        unsafe {
+            std::env::remove_var("PORT");
+        }
+    }
+
+    #[test]
+    fn test_docker_without_port_mapping() {
+        let cmdline = "docker run shardlabs/starknet-devnet-rs";
+        let result = extract_devnet_info_from_docker_line(cmdline);
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            DevnetDetectionError::ProcessNotReachable
+        ));
+    }
+
+    #[test]
+    fn test_docker_with_invalid_port_mapping() {
+        let cmdline = "docker run -p invalid shardlabs/starknet-devnet-rs";
+        let result = extract_devnet_info_from_docker_line(cmdline);
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            DevnetDetectionError::ProcessNotReachable
+        ));
+    }
+
+    #[test]
+    fn test_docker_network_host_without_port() {
+        let cmdline = "docker run --network host shardlabs/starknet-devnet-rs";
+        let result = extract_devnet_info_from_docker_line(cmdline);
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            DevnetDetectionError::ProcessNotReachable
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_detect_devnet_url() {
+        let result = detect_devnet_url().await;
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            DevnetDetectionError::NoInstance
+        ));
     }
 }
