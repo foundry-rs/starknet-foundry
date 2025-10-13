@@ -1,25 +1,30 @@
 use crate::helpers::constants::{
-    ACCOUNT, ACCOUNT_FILE_PATH, CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
+    ACCOUNT, ACCOUNT_FILE_PATH, CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA, CONTRACTS_DIR,
     DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
 };
 use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
-    create_and_deploy_account, create_and_deploy_oz_account, get_transaction_by_hash,
-    get_transaction_hash, get_transaction_receipt,
+    create_and_deploy_account, create_and_deploy_oz_account, create_test_provider,
+    duplicate_contract_directory_with_salt, get_transaction_by_hash, get_transaction_hash,
+    get_transaction_receipt, join_tempdirs,
 };
 use crate::helpers::runner::runner;
 use crate::helpers::shell::os_specific_shell;
 use camino::Utf8PathBuf;
 use indoc::indoc;
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
 use snapbox::cmd::cargo_bin;
 use sncast::AccountType;
 use sncast::helpers::constants::OZ_CLASS_HASH;
 use sncast::helpers::fee::FeeArgs;
 use starknet::core::types::TransactionReceipt::Invoke;
-use starknet::core::types::{InvokeTransaction, Transaction, TransactionExecutionStatus};
+use starknet::core::types::{
+    BlockId, BlockTag, InvokeTransaction, Transaction, TransactionExecutionStatus,
+};
+use starknet::providers::Provider;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 use test_case::test_case;
+use toml::Value;
 
 #[tokio::test]
 async fn test_happy_case_human_readable() {
@@ -270,6 +275,33 @@ fn test_wrong_calldata() {
     );
 }
 
+#[test]
+fn test_class_hash_with_package() {
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        "user9",
+        "deploy",
+        "--url",
+        URL,
+        "--class-hash",
+        CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--package",
+        "my_package",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        error: the argument '--class-hash <CLASS_HASH>' cannot be used with '--package <PACKAGE>'
+        "},
+    );
+}
+
 #[tokio::test]
 async fn test_contract_not_declared() {
     let args = vec![
@@ -403,5 +435,253 @@ async fn test_json_output_format() {
             {"contract_address":"0x[..]","transaction_hash":"0x[..]"}
             {"links":"contract: https://sepolia.starkscan.co/contract/0x[..]\ntransaction: https://sepolia.starkscan.co/tx/0x[..]\n","title":"deployment"}
             "#},
+    );
+}
+
+#[tokio::test]
+async fn test_happy_case_with_declare() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "with_declare",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "deploy",
+        "--url",
+        URL,
+        "--constructor-calldata",
+        "0x1",
+        "0x1",
+        "0x0",
+        "--contract-name",
+        "Map",
+    ];
+    let args = apply_test_resource_bounds_flags(args);
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Deployment completed
+
+            Contract Address:         0x0[..]
+            Class Hash:               0x0[..]
+            Declare Transaction Hash: 0x0[..]
+            Deploy Transaction Hash:  0x0[..]
+
+            To see deployment details, visit:
+            contract: [..]
+            class: [..]
+            deploy transaction: [..]
+            declare transaction: [..]
+            "
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_happy_case_with_already_declared() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "with_redeclare",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    {
+        // Declare the contract first
+        let args = vec![
+            "--accounts-file",
+            "accounts.json",
+            "--account",
+            "my_account",
+            "declare",
+            "--url",
+            URL,
+            "--contract-name",
+            "Map",
+        ];
+        let args = apply_test_resource_bounds_flags(args);
+
+        runner(&args).current_dir(tempdir.path()).assert().success();
+    }
+
+    // Deploy the contract with declaring
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "deploy",
+        "--url",
+        URL,
+        "--constructor-calldata",
+        "0x1",
+        "0x1",
+        "0x0",
+        "--contract-name",
+        "Map",
+    ];
+    let args = apply_test_resource_bounds_flags(args);
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Deployment completed
+
+            Contract Address: 0x0[..]
+            Transaction Hash: 0x0[..]
+
+            To see deployment details, visit:
+            contract: [..]
+            transaction: [..]
+            "
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_happy_case_with_declare_nonce() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "with_declare_nonce",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let nonce = {
+        // Get nonce
+        let provider = create_test_provider();
+        let args = vec![
+            "--accounts-file",
+            "accounts.json",
+            "--json",
+            "account",
+            "list",
+        ];
+
+        let snapbox = runner(&args).current_dir(tempdir.path());
+        let output = snapbox.assert().success();
+
+        let value: Value = serde_json::from_str(output.as_stdout()).unwrap();
+        let account_address = value["my_account"]["address"].as_str().unwrap();
+
+        provider
+            .get_nonce(
+                BlockId::Tag(BlockTag::Latest),
+                Felt::from_hex(account_address).unwrap(),
+            )
+            .await
+            .unwrap()
+            .to_string()
+    };
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "deploy",
+        "--url",
+        URL,
+        "--constructor-calldata",
+        "0x1",
+        "0x1",
+        "0x0",
+        "--contract-name",
+        "Map",
+        "--nonce",
+        nonce.as_str(),
+    ];
+    let args = apply_test_resource_bounds_flags(args);
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Deployment completed
+
+            Contract Address:         0x0[..]
+            Class Hash:               0x0[..]
+            Declare Transaction Hash: 0x0[..]
+            Deploy Transaction Hash:  0x0[..]
+
+            To see deployment details, visit:
+            contract: [..]
+            class: [..]
+            deploy transaction: [..]
+            declare transaction: [..]
+            "
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_deploy_with_declare_invalid_nonce() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "with_redeclare",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "deploy",
+        "--url",
+        URL,
+        "--constructor-calldata",
+        "0x1",
+        "0x1",
+        "0x0",
+        "--contract-name",
+        "Map",
+        "--nonce",
+        "0x123456",
+    ];
+    let args = apply_test_resource_bounds_flags(args);
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {
+            "
+            Command: deploy
+            Error: Invalid transaction nonce
+            "
+        },
     );
 }
