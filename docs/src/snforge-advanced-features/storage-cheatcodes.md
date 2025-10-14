@@ -45,7 +45,7 @@ And perform a test checking `load` and `store` behavior in context of those stru
 
 > ⚠️ **Warning**
 >
-> Complex data can often times be packed in a custom manner (see [this pattern](https://www.starknet.io/cairo-book/ch103-01-optimizing-storage-costs.html)) to optimize costs.
+> Complex data can often times be packed in a custom manner (see [this pattern](https://book.cairo-lang.org/ch16-01-optimizing-storage-costs.html)) to optimize costs.
 > If that's the case for your contract, make sure to handle deserialization properly - standard methods might not work.
 > **Use those cheatcode as a last-resort, for cases that cannot be handled via contract's API!**
 
