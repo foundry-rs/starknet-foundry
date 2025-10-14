@@ -4,15 +4,15 @@ use sncast::get_block_id;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::helpers::token::Token;
 use sncast::response::balance::BalanceResponse;
+use sncast::response::errors::SNCastProviderError;
 use sncast::response::errors::StarknetCommandError;
 use starknet::{
     core::{types::FunctionCall, utils::get_selector_from_name},
     providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport},
 };
 use starknet_types_core::felt::Felt;
-
 #[derive(Args, Debug, Clone)]
-#[group(id = "TokenIdentifier", multiple = false)]
+#[group(multiple = false)]
 pub struct TokenIdentifier {
     /// Symbol of the token to check the balance for.
     /// Supported tokens are: strk, eth.
@@ -35,6 +35,17 @@ impl TokenIdentifier {
             // Both token and token address are optional, hence we cannot have
             // default value for token at clap level.
             Token::Strk.contract_address()
+        }
+    }
+
+    pub fn displayed_token(&self) -> Option<Token> {
+        match (self.token, self.token_address) {
+            (Some(token), None) => Some(token),
+            (None, Some(_)) => None,
+            (None, None) => Some(Token::default()),
+            (Some(_), Some(_)) => unreachable!(
+                "Clap should ensure that only one of `--token` or `--token-address` is provided"
+            ),
         }
     }
 }
@@ -67,17 +78,19 @@ pub async fn balance(
     };
     let block_id = get_block_id(&balance.block_id)?;
 
-    let res = provider.call(call, block_id).await.map_err(|err| {
-        StarknetCommandError::ProviderError(
-            sncast::response::errors::SNCastProviderError::UnknownError(err.into()),
-        )
-    })?;
-    let res = res
+    let res = provider
+        .call(call, block_id)
+        .await
+        .map_err(|err| StarknetCommandError::ProviderError(SNCastProviderError::from(err)))?;
+    let res: Result<Vec<u128>, _> = res
         .iter()
-        .map(|val| u128::from_str_radix(&val.to_string(), 16).expect("Failed to parse u128"))
-        .collect::<Vec<u128>>();
+        .map(|val| {
+            u128::from_str_radix(&val.to_string(), 16)
+                .map_err(|_| anyhow::anyhow!("Failed to parse balance as u128"))
+        })
+        .collect();
 
-    let (low, high) = match res.as_slice() {
+    let (low, high) = match res?.as_slice() {
         [low, high] => (*low, *high),
         _ => {
             return Err(StarknetCommandError::UnknownError(anyhow!(
@@ -86,21 +99,9 @@ pub async fn balance(
         }
     };
 
-    let displayed_token = match (
-        balance.token_identifier.token,
-        balance.token_identifier.token_address,
-    ) {
-        (Some(tok), None) => Some(tok),
-        (None, Some(_)) => None,
-        (None, None) => Some(Token::default()),
-        (Some(_), Some(_)) => unreachable!(
-            "Clap should ensure that only one of `--token` or `--token-address` is provided"
-        ),
-    };
-
     Ok(BalanceResponse {
         account_address,
         balance: (low, high),
-        token: displayed_token,
+        token: balance.token_identifier.displayed_token(),
     })
 }

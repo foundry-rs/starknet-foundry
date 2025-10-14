@@ -9,7 +9,7 @@ use test_case::test_case;
 
 #[tokio::test]
 pub async fn happy_case() {
-    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let tempdir = tempdir().unwrap();
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -35,7 +35,7 @@ pub async fn happy_case() {
 #[test_case(&Token::Eth)]
 #[tokio::test]
 pub async fn happy_case_with_token(token: &Token) {
-    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let tempdir = tempdir().unwrap();
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let token = token.to_string();
@@ -62,7 +62,7 @@ pub async fn happy_case_with_token(token: &Token) {
 
 #[tokio::test]
 pub async fn happy_case_with_block_id() {
-    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let tempdir = tempdir().unwrap();
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -88,7 +88,7 @@ pub async fn happy_case_with_block_id() {
 
 #[tokio::test]
 pub async fn invalid_token() {
-    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let tempdir = tempdir().unwrap();
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -116,7 +116,7 @@ pub async fn invalid_token() {
 
 #[tokio::test]
 pub async fn happy_case_with_token_address() {
-    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let tempdir = tempdir().unwrap();
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let strk_address = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
@@ -143,7 +143,7 @@ pub async fn happy_case_with_token_address() {
 
 #[tokio::test]
 pub async fn nonexistent_token_address() {
-    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let tempdir = tempdir().unwrap();
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
