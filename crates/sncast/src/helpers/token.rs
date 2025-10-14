@@ -12,14 +12,6 @@ const STRK_CONTRACT_ADDRESS: Felt =
 const ETH_CONTRACT_ADDRESS: Felt =
     felt!("0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7");
 
-impl CairoSerialize for Token {
-    fn serialize(&self, output: &mut BufferWriter) {
-        match self {
-            Token::Strk => output.write_felt(0.into()),
-            Token::Eth => output.write_felt(1.into()),
-        }
-    }
-}
 #[derive(Default, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
 #[serde(rename_all = "lowercase")]
 pub enum Token {
@@ -45,7 +37,7 @@ impl FromStr for Token {
         match s {
             "strk" => Ok(Token::Strk),
             "eth" => Ok(Token::Eth),
-            account_type => Err(anyhow!("Invalid token: {account_type}")),
+            token => Err(anyhow!("Invalid token: {token}")),
         }
     }
 }
@@ -55,6 +47,15 @@ impl fmt::Display for Token {
         match self {
             Token::Strk => write!(f, "strk"),
             Token::Eth => write!(f, "eth"),
+        }
+    }
+}
+
+impl CairoSerialize for Token {
+    fn serialize(&self, output: &mut BufferWriter) {
+        match self {
+            Token::Strk => output.write_felt(0.into()),
+            Token::Eth => output.write_felt(1.into()),
         }
     }
 }
