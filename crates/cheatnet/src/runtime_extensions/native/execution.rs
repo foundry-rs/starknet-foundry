@@ -48,20 +48,16 @@ pub(crate) fn execute_entry_point_call_native(
     })
 }
 
-// Copied from blockifier
-// todo(rodrigo): add an `entry point not found` test for Native
+// Based on https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/entry_point_execution.rs#L20
 #[allow(clippy::result_large_err)]
-pub fn execute_entry_point_call(
+fn execute_entry_point_call(
     call: &ExecutableCallEntryPoint,
     compiled_class: &NativeCompiledClassV1,
-    // state: &mut dyn State,
-    // context: &mut EntryPointExecutionContext,
+    // region: Modified blockifier code
     syscall_handler: &mut CheatableNativeSyscallHandler,
+    // endregion
 ) -> EntryPointExecutionResult<CallInfo> {
     let entry_point = compiled_class.get_entry_point(&call.type_and_selector())?;
-
-    // let mut syscall_handler: NativeSyscallHandler<'_> =
-    //     NativeSyscallHandler::new(call, state, context);
 
     let gas_costs = &syscall_handler
         .native_syscall_handler
@@ -69,7 +65,6 @@ pub fn execute_entry_point_call(
         .context
         .gas_costs();
     let builtin_costs = BuiltinCosts {
-        // todo(rodrigo): Unsure of what value `const` means, but 1 is the right value.
         r#const: 1,
         pedersen: gas_costs.builtins.pedersen,
         bitwise: gas_costs.builtins.bitwise,
@@ -125,7 +120,7 @@ pub fn execute_entry_point_call(
     create_callinfo(call_result, syscall_handler)
 }
 
-// Copied from blockifier
+// Copied from https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/entry_point_execution.rs#L73
 #[allow(clippy::result_large_err)]
 fn create_callinfo(
     call_result: ContractExecutionResult,

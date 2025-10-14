@@ -89,6 +89,7 @@ pub fn deploy_syscall(
         deployer_address
     };
 
+    // region: Modified blockifier code
     let deployed_contract_address =
         if let Some(contract_address) = cheatnet_state.next_address_for_deployment() {
             contract_address
@@ -100,6 +101,7 @@ pub fn deploy_syscall(
                 deployer_address_for_calculation,
             )?
         };
+    // endregion
 
     let ctor_context = ConstructorContext {
         class_hash: request.class_hash,
