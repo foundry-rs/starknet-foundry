@@ -208,8 +208,8 @@ impl<T> CheatStatus<T> {
 
 #[derive(Clone, Debug)]
 pub struct GasReportData {
-    pub execution_summary: ExecutionSummary,
-    pub gas: OnceCell<GasVector>,
+    execution_summary: ExecutionSummary,
+    gas: OnceCell<GasVector>,
 }
 
 impl GasReportData {
