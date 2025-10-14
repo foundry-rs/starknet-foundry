@@ -20,7 +20,6 @@
 * [show-config](./sncast/show_config.md)
 * [tx-status](./sncast/tx-status.md)
 * [utils](./sncast/utils/utils.md)
-    * [balance](./sncast/utils/balance.md)
     * [serialize](./sncast/utils/serialize.md)
     * [class-hash](./sncast/utils/class_hash.md)
 * [completions](./sncast/completions.md)
