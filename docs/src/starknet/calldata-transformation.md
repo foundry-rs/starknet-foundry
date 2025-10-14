@@ -33,7 +33,7 @@ list of comma-separated Cairo expressions wrapped in single quotes. This can be 
 flag.
 Cast will perform serialization automatically, based on an ABI of the contract
 we interact with, following
-the [Starknet specification](https://www.starknet.io/cairo-book/ch102-04-serialization-of-cairo-types.html).
+the [Starknet specification](https://docs.starknet.io/architecture-and-concepts/smart-contracts/serialization-of-cairo-types/).
 
 ### Basic example
 
