@@ -57,7 +57,7 @@ See more advanced use cases below or jump directly to the section [here](#advanc
 
 #### Prefund generated address with tokens
 
-To deploy an account in the next step, you need to prefund it with STRK tokens (read more about them [here](https://docs.starknet.io/architecture-and-concepts/economics-of-starknet/)).
+To deploy an account in the next step, you need to prefund it with STRK tokens (read more about them [here](https://docs.starknet.io/learn/protocol/accounts#deploying-a-new-account)).
 You can do it both by sending tokens from another starknet account or by bridging them
 with [StarkGate](https://starkgate.starknet.io/).
 
@@ -65,23 +65,6 @@ with [StarkGate](https://starkgate.starknet.io/).
 > When deploying on a Sepolia test network, you can also fund your account with artificial tokens via
 > the [Starknet Faucet](https://starknet-faucet.vercel.app)
 > ![image](images/starknet-faucet-sepolia.png)
-
-#### Check Account Balance
-
-After sending tokens to the account address, you can check its balance with the `sncast utils balance` command.
-
-```shell
-$ sncast --account new_account utils balance --network sepolia
-```
-
-<details>
-<summary>Output:</summary>
-
-```shell
-Account Address: 0x[..]
-Balance:         [..] strk
-```
-</details>
 
 #### Deploy account with the `sncast account deploy` command
 
