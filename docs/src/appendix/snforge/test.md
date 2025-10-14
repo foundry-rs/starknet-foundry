@@ -5,7 +5,7 @@ Run tests for a project in the current directory.
 ## `[TEST_FILTER]`
 
 Passing a test filter will only run tests with
-an [absolute module tree path](https://book.cairo-lang.org/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html#paths-for-referring-to-an-item-in-the-module-tree)
+an [absolute module tree path](https://www.starknet.io/cairo-book/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html#paths-for-referring-to-an-item-in-the-module-tree)
 containing this filter.
 
 ## `--trace-verbosity <TRACE_VERBOSITY>`
@@ -128,7 +128,7 @@ Enabling this flag will slow down the compilation process, but the built contrac
 Set tracked resource for test execution. Impacts overall test gas cost. Valid values:
 - `cairo-steps` (default): track cairo steps, uses vm `ExecutionResources` (steps, builtins, memory holes) to describe  resources consumed by the test.
 - `sierra-gas` (sierra 1.7.0+ is required): track sierra gas, uses cairo native `CallExecution` (sierra gas consumption) to describe computation resources consumed by the test.
-To learn more about fee calculation formula (and an impact of tracking sierra gas on it) please consult [starknet docs](https://docs.starknet.io/architecture-and-concepts/fees/#overall_fee)
+To learn more about fee calculation formula (and an impact of tracking sierra gas on it) please consult [starknet docs](https://docs.starknet.io/learn/protocol/fees#overall-fee)
 
 ##  `-P`, `--profile` `<PROFILE>`
 Specify the profile to use by name.
@@ -138,10 +138,6 @@ Use Scarb release profile.
 
 ## `--dev`
 Use Scarb dev profile.
-
-## `--experimental-oracles`
-
-Enable experimental [oracles](../../snforge-advanced-features/oracles.md) support.
 
 ## `-h`, `--help`
 

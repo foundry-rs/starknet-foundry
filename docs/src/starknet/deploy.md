@@ -4,7 +4,12 @@
 
 Starknet Foundry `sncast` supports deploying smart contracts to a given network with the `sncast deploy` command.
 
-It works by invoking a [Universal Deployer Contract](https://docs.openzeppelin.com/contracts-cairo/0.19.0/udc), which deploys the contract with the given class hash and constructor arguments.
+It works by invoking a [Universal Deployer Contract](https://docs.openzeppelin.com/contracts-cairo/2.x/udc), which
+deploys the contract with the given class hash and constructor arguments.
+
+For contract to be deployed on starknet, it must be declared first.
+It can be done with the [declare command](./declare.md) or by using the [`--contract-name`](#deploying-by-contract-name)
+flag in the `deploy` command.
 
 For detailed CLI description, see [deploy command reference](../appendix/sncast/deploy.md).
 
@@ -81,6 +86,49 @@ transaction: https://sepolia.starkscan.co/tx/[..]
 > Although the constructor has only two params you have to pass more because u256 is serialized to two felts.
 > It is important to know how types are serialized because all values passed as constructor calldata are
 > interpreted as a field elements (felt252).
+
+### Deploying by Contract Name
+
+Instead of providing the `--class-hash` of an already declared contract, you can pass the name of the
+contract from a Scarb project by providing the `--contract-name` flag.
+Under the hood, if the passed contract was never declared to starknet, it will run the [declare](../starknet/declare.md)
+command first and then execute the contract deployment.
+
+> 📝 **Note**
+> When passing `--contract-name` flag, `sncast` must wait for the declare transaction to be completed first.
+> The contract might wait for a few seconds before executing the deployment.
+
+> 📝 **Note**
+> If fee arguments are provided to the method, same fee arguments will be used for **each** transaction separately.
+> That is, the total fee paid for the operation will be **2 times the fee limits provided**.
+>
+> For better control over fee, use `declare` and `deploy` with  `--class-hash` separately.
+
+<!-- TODO(#2736) -->
+<!-- { "ignored": true } -->
+```shell
+$ sncast deploy \
+    --contract-name HelloSncast
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Success: Deployment completed
+
+Contract Address:         0x0[..]
+Class Hash:               0x0[..]
+Declare Transaction Hash: 0x0[..]
+Deploy Transaction Hash:  0x0[..]
+
+To see deployment details, visit:
+contract: [..]
+class: [..]
+deploy transaction: [..]
+declare transaction: [..]
+```
+</details>
 
 ### Passing `salt` Argument
 
