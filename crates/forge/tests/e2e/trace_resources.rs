@@ -15,37 +15,37 @@ use std::{collections::HashMap, fs};
 
 #[test]
 fn trace_resources_call() {
-    assert_resources_for_test("test_call", check_call);
+    assert_vm_resources_for_test("test_call", check_call);
 }
 
 #[test]
 fn trace_resources_deploy() {
-    assert_resources_for_test("test_deploy", check_deploy);
+    assert_vm_resources_for_test("test_deploy", check_deploy);
 }
 
 #[test]
 fn trace_resources_l1_handler() {
-    assert_resources_for_test("test_l1_handler", check_l1_handler);
+    assert_vm_resources_for_test("test_l1_handler", check_l1_handler);
 }
 
 #[test]
 fn trace_resources_lib_call() {
-    assert_resources_for_test("test_lib_call", check_libcall);
+    assert_vm_resources_for_test("test_lib_call", check_libcall);
 }
 
 #[test]
 #[ignore = "TODO(#1657)"]
 fn trace_resources_failed_call() {
-    assert_resources_for_test("test_failed_call", |_| ());
+    assert_vm_resources_for_test("test_failed_call", |_| ());
 }
 
 #[test]
 #[ignore = "TODO(#1657)"]
 fn trace_resources_failed_lib_call() {
-    assert_resources_for_test("test_failed_lib_call", |_| ());
+    assert_vm_resources_for_test("test_failed_lib_call", |_| ());
 }
 
-fn assert_resources_for_test(
+fn assert_vm_resources_for_test(
     test_name: &str,
     check_not_easily_unifiable_syscalls: fn(&ProfilerCallTrace),
 ) {
