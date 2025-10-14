@@ -3,7 +3,7 @@
 `snforge` supports gas and other VM resources estimation for each individual test case. 
 
 It does not calculate the final transaction fee, for details on how fees are calculated, 
-please refer to fee mechanism in [Starknet documentation](https://docs.starknet.io/architecture-and-concepts/network-architecture/fee-mechanism).
+please refer to fee mechanism in [Starknet documentation](https://docs.starknet.io/learn/protocol/fees#overview).
 
 ## Gas Estimation
 
@@ -27,7 +27,7 @@ While using the fuzzing feature additional gas statistics will be displayed:
 > 📝 **Note**
 >  
 > Starknet-Foundry uses blob-based gas calculation formula in order to calculate gas usage. 
-> For details on the exact formula, [see the docs](https://docs.starknet.io/architecture-and-concepts/fees/#overall_fee). 
+> For details on the exact formula, [see the docs](https://docs.starknet.io/learn/protocol/fees#overall-fee).
 
 ## Resources Estimation 
 
