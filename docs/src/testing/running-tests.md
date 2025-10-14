@@ -138,13 +138,6 @@ To track resources like `builtins` / `syscalls` that are used when running tests
 $ snforge test --detailed-resources
 ```
 
-> 📝 **Note**
->
-> The default resource tracked by snforge is Sierra gas.
-> To view VM resources used during execution, run the command with `--tracked-resource cairo-steps`.
-> For more information about different resources refer to the [Starknet documentation](https://docs.starknet.io/learn/protocol/fees#vm-resources-vs-sierra-gas). 
->
-
 <details>
 <summary>Output:</summary>
 

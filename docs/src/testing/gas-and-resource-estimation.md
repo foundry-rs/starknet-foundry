@@ -14,8 +14,8 @@ When the test passes with no errors, estimated gas is displayed this way:
 [PASS] tests::simple_test (l1_gas: ~1, l1_data_gas: ~1, l2_gas: ~1)
 ```
 
-This gas calculation is based on the estimated VM resources (that you can [display additionally on demand](#usage)), 
-deployed contracts, storage updates, events and l1 <> l2 messages. 
+This gas calculation is based on the collected VM resources or Sierra gas (that you can [display additionally on demand](#usage)),
+storage updates, events and l1 <> l2 messages.
 
 ### Fuzzed Tests
 
@@ -33,10 +33,10 @@ While using the fuzzing feature additional gas statistics will be displayed:
 
 It is possible to enable more detailed breakdown of resources, on which the gas calculations are based on.
 Depending on `--tracked-resource`, vm resources or sierra gas will be displayed.
-To learn more about tracked resource flag, see [--tracked-resource](../appendix/snforge/test.md#--tracked-resource).
+To learn more about the tracked resource flag, see [--tracked-resource](../appendix/snforge/test.md#--tracked-resource).
 
 ### Usage
-In order to run tests with this feature, run the `test` command with the appropriate flag:
+In order to run tests with this feature, run the `test` command with the `--detailed-resources` flag:
 
 ```shell
 $ snforge test --detailed-resources --tracked-resource cairo-steps
