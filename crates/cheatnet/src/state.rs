@@ -588,12 +588,12 @@ impl TraceData {
         current_call.borrow_mut().vm_trace = Some(vm_trace);
     }
 
-    pub fn update_call_result(&mut self, result: CallResult) {
+    pub fn update_current_call_result(&mut self, result: CallResult) {
         let current_call = self.current_call_stack.top();
         current_call.borrow_mut().result = result;
     }
 
-    pub fn clear_events_and_messages(&mut self) {
+    pub fn clear_current_call_events_and_messages(&mut self) {
         let current_call = self.current_call_stack.top();
         current_call.borrow_mut().events.clear();
         current_call
