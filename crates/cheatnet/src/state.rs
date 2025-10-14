@@ -203,9 +203,10 @@ impl<T> CheatStatus<T> {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct GasReportData {
-    pub execution_summary: ExecutionSummary,
+    #[expect(dead_code)]
+    execution_summary: ExecutionSummary,
 }
 
 impl GasReportData {
