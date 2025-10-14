@@ -32,6 +32,8 @@ impl TokenIdentifier {
         } else if let Some(tok) = self.token {
             tok.contract_address()
         } else {
+            // Both token and token address are optional, hence we cannot have
+            // default value for token at clap level.
             Token::Strk.contract_address()
         }
     }
@@ -70,7 +72,6 @@ pub async fn balance(
             sncast::response::errors::SNCastProviderError::UnknownError(err.into()),
         )
     })?;
-
     let res = res
         .iter()
         .map(|val| u128::from_str_radix(&val.to_string(), 16).expect("Failed to parse u128"))
@@ -85,7 +86,7 @@ pub async fn balance(
         }
     };
 
-    let token = match (
+    let displayed_token = match (
         balance.token_identifier.token,
         balance.token_identifier.token_address,
     ) {
@@ -100,6 +101,6 @@ pub async fn balance(
     Ok(BalanceResponse {
         account_address,
         balance: (low, high),
-        token,
+        token: displayed_token,
     })
 }
