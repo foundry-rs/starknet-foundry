@@ -1,6 +1,7 @@
 use clap::{Args, Subcommand};
 use foundry_ui::UI;
 use sncast::{
+    get_account,
     helpers::{
         configuration::CastConfig,
         scarb_utils::{
@@ -10,15 +11,17 @@ use sncast::{
     },
     response::errors::handle_starknet_command_error,
 };
+use starknet::accounts::Account;
 
 use crate::{
     process_command_result,
     starknet_commands::{
         self,
-        utils::{class_hash::ClassHash, serialize::Serialize},
+        utils::{balance::Balance, class_hash::ClassHash, serialize::Serialize},
     },
 };
 
+pub mod balance;
 pub mod class_hash;
 pub mod serialize;
 
@@ -35,6 +38,9 @@ pub enum Commands {
 
     /// Get contract class hash
     ClassHash(ClassHash),
+
+    /// Fetch balance of the account for specified token
+    Balance(Balance),
 }
 
 pub async fn utils(
@@ -73,6 +79,25 @@ pub async fn utils(
                 .map_err(handle_starknet_command_error)?;
 
             process_command_result("class-hash", Ok(result), ui, None);
+        }
+
+        Commands::Balance(balance) => {
+            let provider = balance.rpc.get_provider(&config, ui).await?;
+            let account = get_account(
+                &config,
+                &provider,
+                &balance.rpc,
+                config.keystore.as_ref(),
+                ui,
+            )
+            .await?;
+
+            let result =
+                starknet_commands::utils::balance::balance(account.address(), &provider, &balance)
+                    .await
+                    .map_err(handle_starknet_command_error)?;
+
+            process_command_result("balance", Ok(result), ui, None);
         }
     }
 

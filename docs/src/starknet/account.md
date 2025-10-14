@@ -66,6 +66,23 @@ with [StarkGate](https://starkgate.starknet.io/).
 > the [Starknet Faucet](https://starknet-faucet.vercel.app)
 > ![image](images/starknet-faucet-sepolia.png)
 
+#### Check Account Balance
+
+After sending tokens to the account address, you can check its balance with the `sncast utils balance` command.
+
+```shell
+$ sncast --account new_account utils balance --network sepolia
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Account Address: 0x[..]
+Balance:         [..] strk
+```
+</details>
+
 #### Deploy account with the `sncast account deploy` command
 
 <!-- TODO(#2736) -->
