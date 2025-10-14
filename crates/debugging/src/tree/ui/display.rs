@@ -87,7 +87,7 @@ impl NodeDisplay for TransformedCallResult {
 impl NodeDisplay for Gas {
     const TAG: &'static str = "L2 gas";
     fn string_pretty(&self) -> String {
-        self.0.0.to_string()
+        self.0.to_string()
     }
 }
 
