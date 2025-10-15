@@ -9,7 +9,7 @@ use test_case::test_case;
 
 #[tokio::test]
 pub async fn happy_case() {
-    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let tempdir = tempdir().unwrap();
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -17,7 +17,6 @@ pub async fn happy_case() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
-        "utils",
         "balance",
         "--url",
         URL,
@@ -35,7 +34,7 @@ pub async fn happy_case() {
 #[test_case(&Token::Eth)]
 #[tokio::test]
 pub async fn happy_case_with_token(token: &Token) {
-    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let tempdir = tempdir().unwrap();
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let token = token.to_string();
@@ -44,7 +43,6 @@ pub async fn happy_case_with_token(token: &Token) {
         accounts_json_path.as_str(),
         "--account",
         "user1",
-        "utils",
         "balance",
         "--token",
         &token,
@@ -62,7 +60,7 @@ pub async fn happy_case_with_token(token: &Token) {
 
 #[tokio::test]
 pub async fn happy_case_with_block_id() {
-    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let tempdir = tempdir().unwrap();
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -70,7 +68,6 @@ pub async fn happy_case_with_block_id() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
-        "utils",
         "balance",
         "--block-id",
         "latest",
@@ -88,7 +85,7 @@ pub async fn happy_case_with_block_id() {
 
 #[tokio::test]
 pub async fn invalid_token() {
-    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let tempdir = tempdir().unwrap();
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -96,7 +93,6 @@ pub async fn invalid_token() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
-        "utils",
         "balance",
         "--token",
         "xyz",
@@ -116,7 +112,7 @@ pub async fn invalid_token() {
 
 #[tokio::test]
 pub async fn happy_case_with_token_address() {
-    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let tempdir = tempdir().unwrap();
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let strk_address = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
@@ -125,7 +121,6 @@ pub async fn happy_case_with_token_address() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
-        "utils",
         "balance",
         "--token-address",
         strk_address,
@@ -143,7 +138,7 @@ pub async fn happy_case_with_token_address() {
 
 #[tokio::test]
 pub async fn nonexistent_token_address() {
-    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let tempdir = tempdir().unwrap();
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -151,7 +146,6 @@ pub async fn nonexistent_token_address() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
-        "utils",
         "balance",
         "--token-address",
         "0x123",
@@ -163,5 +157,6 @@ pub async fn nonexistent_token_address() {
 
     let snapbox = snapbox.assert().failure();
     let err = snapbox.as_stderr();
-    assert!(err.contains("Error: Unknown RPC error: ContractNotFound"));
+    println!("Error: {}", err);
+    assert!(err.contains("Error: Error: There is no contract at the specified address"));
 }

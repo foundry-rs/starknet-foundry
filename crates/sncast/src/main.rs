@@ -1,3 +1,4 @@
+use crate::starknet_commands::balance::Balance;
 use crate::starknet_commands::declare::declare;
 use crate::starknet_commands::declare_from::DeclareFrom;
 use crate::starknet_commands::deploy::DeployArguments;
@@ -5,8 +6,9 @@ use crate::starknet_commands::multicall;
 use crate::starknet_commands::script::run_script_command;
 use crate::starknet_commands::utils::{self, Utils};
 use crate::starknet_commands::{
-    account, account::Account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke,
-    multicall::Multicall, script::Script, show_config::ShowConfig, tx_status::TxStatus,
+    account, account::Account as AccountCommand, call::Call, declare::Declare, deploy::Deploy,
+    invoke::Invoke, multicall::Multicall, script::Script, show_config::ShowConfig,
+    tx_status::TxStatus,
 };
 use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
@@ -37,6 +39,7 @@ use sncast::{
     ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
     get_contract_class,
 };
+use starknet::accounts::Account;
 use starknet::core::types::ContractClass;
 use starknet::core::types::contract::{AbiEntry, SierraClass};
 use starknet::core::utils::get_selector_from_name;
@@ -139,7 +142,7 @@ enum Commands {
     Multicall(Multicall),
 
     /// Create and deploy an account
-    Account(Account),
+    Account(AccountCommand),
 
     /// Show current configuration being used
     ShowConfig(ShowConfig),
@@ -160,6 +163,9 @@ enum Commands {
 
     /// Utility commands
     Utils(Utils),
+
+    /// Fetch balance of the account for specified token
+    Balance(Balance),
 }
 
 #[derive(Debug, Clone, clap::Args)]
@@ -680,6 +686,27 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 // `#` is required since `sncast completion` generates a script and the output is used directly
                 ui.println(&format!("# {}", message.text()));
             }
+
+            Ok(())
+        }
+
+        Commands::Balance(balance) => {
+            let provider = balance.rpc.get_provider(&config, ui).await?;
+            let account = get_account(
+                &config,
+                &provider,
+                &balance.rpc,
+                config.keystore.as_ref(),
+                ui,
+            )
+            .await?;
+
+            let result =
+                starknet_commands::balance::balance(account.address(), &provider, &balance)
+                    .await
+                    .map_err(handle_starknet_command_error)?;
+
+            process_command_result("balance", Ok(result), ui, None);
 
             Ok(())
         }
