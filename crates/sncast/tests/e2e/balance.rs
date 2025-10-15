@@ -17,7 +17,6 @@ pub async fn happy_case() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
-        "utils",
         "balance",
         "--url",
         URL,
@@ -44,7 +43,6 @@ pub async fn happy_case_with_token(token: &Token) {
         accounts_json_path.as_str(),
         "--account",
         "user1",
-        "utils",
         "balance",
         "--token",
         &token,
@@ -70,7 +68,6 @@ pub async fn happy_case_with_block_id() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
-        "utils",
         "balance",
         "--block-id",
         "latest",
@@ -96,7 +93,6 @@ pub async fn invalid_token() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
-        "utils",
         "balance",
         "--token",
         "xyz",
@@ -125,7 +121,6 @@ pub async fn happy_case_with_token_address() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
-        "utils",
         "balance",
         "--token-address",
         strk_address,
@@ -151,7 +146,6 @@ pub async fn nonexistent_token_address() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
-        "utils",
         "balance",
         "--token-address",
         "0x123",
@@ -163,5 +157,6 @@ pub async fn nonexistent_token_address() {
 
     let snapbox = snapbox.assert().failure();
     let err = snapbox.as_stderr();
-    assert!(err.contains("Error: Unknown RPC error: ContractNotFound"));
+    println!("Error: {}", err);
+    assert!(err.contains("Error: Error: There is no contract at the specified address"));
 }
