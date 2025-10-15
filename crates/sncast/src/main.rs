@@ -702,9 +702,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             .await?;
 
             let result =
-                starknet_commands::balance::balance(account.address(), &provider, &balance)
-                    .await
-                    .map_err(handle_starknet_command_error)?;
+                starknet_commands::balance::balance(account.address(), &provider, &balance).await?;
 
             process_command_result("balance", Ok(result), ui, None);
 
