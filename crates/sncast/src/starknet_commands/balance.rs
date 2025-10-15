@@ -70,7 +70,7 @@ pub async fn balance(
     account_address: Felt,
     provider: &JsonRpcClient<HttpTransport>,
     balance: &Balance,
-) -> Result<BalanceResponse, StarknetCommandError> {
+) -> Result<BalanceResponse, anyhow::Error> {
     let call = FunctionCall {
         contract_address: balance.token_identifier.contract_address(),
         entry_point_selector: get_selector_from_name("balance_of").expect("Failed to get selector"),
@@ -93,9 +93,12 @@ pub async fn balance(
     let (low, high) = match res?.as_slice() {
         [low, high] => (*low, *high),
         _ => {
-            return Err(StarknetCommandError::UnknownError(anyhow!(
+            // return Err(StarknetCommandError::UnknownError(anyhow!(
+            //     "Balance response should contain exactly two u128 values"
+            // )));
+            return Err(anyhow!(
                 "Balance response should contain exactly two u128 values"
-            )));
+            ));
         }
     };
 
