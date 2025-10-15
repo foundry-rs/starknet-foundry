@@ -98,6 +98,7 @@ For a detailed CLI description, see [account deploy command reference](../append
 
 After successful deployment, you can check the balance of your account using the `sncast balance` command.
 
+<!-- { "ignored": true } -->
 ```shell
 $ sncast --account new_account balance --network sepolia
 ```
