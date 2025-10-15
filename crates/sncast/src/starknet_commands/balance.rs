@@ -100,7 +100,6 @@ pub async fn balance(
     };
 
     Ok(BalanceResponse {
-        account_address,
         balance: (low, high),
         token: balance.token_identifier.displayed_token(),
     })

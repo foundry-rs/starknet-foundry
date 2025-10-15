@@ -25,8 +25,7 @@ pub async fn happy_case() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        Account Address: 0x[..]
-        Balance:         [..] strk
+        Balance: [..] strk
     "});
 }
 
@@ -53,8 +52,7 @@ pub async fn happy_case_with_token(token: &Token) {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(formatdoc! {r"
-        Account Address: 0x[..]
-        Balance:         [..] {token}
+        Balance: [..] {token}
     "});
 }
 
@@ -78,8 +76,7 @@ pub async fn happy_case_with_block_id() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        Account Address: 0x[..]
-        Balance:         [..] strk
+        Balance: [..] strk
     "});
 }
 
@@ -131,8 +128,7 @@ pub async fn happy_case_with_token_address() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        Account Address: 0x[..]
-        Balance:         [..]
+        Balance: [..]
     "});
 }
 
@@ -157,5 +153,5 @@ pub async fn nonexistent_token_address() {
 
     let snapbox = snapbox.assert().failure();
     let err = snapbox.as_stderr();
-    assert!(err.contains("Error: Error: There is no contract at the specified address"));
+    assert!(err.contains("Error: There is no contract at the specified address"));
 }
