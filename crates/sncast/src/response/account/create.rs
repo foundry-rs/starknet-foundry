@@ -1,4 +1,5 @@
 use crate::response::cast_message::SncastMessage;
+use crate::response::helpers::serialize_json;
 use crate::{
     helpers::block_explorer::LinkProvider,
     response::{command::CommandResponse, explorer_link::OutputLink},
@@ -9,7 +10,6 @@ use foundry_ui::Message;
 use foundry_ui::styling;
 use serde::{Serialize, Serializer};
 use serde_json::Value;
-use serde_json::json;
 
 fn as_str<S>(value: &u128, serializer: S) -> Result<S::Ok, S::Error>
 where
@@ -48,13 +48,7 @@ impl Message for SncastMessage<AccountCreateResponse> {
     }
 
     fn json(&self) -> Value {
-        serde_json::to_value(&self.command_response).unwrap_or_else(|err| {
-            json!({
-                "error": "Failed to serialize response",
-                "command": self.command,
-                "details": err.to_string()
-            })
-        })
+        serialize_json(self)
     }
 }
 

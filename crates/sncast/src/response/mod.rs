@@ -7,6 +7,7 @@ pub mod declare;
 pub mod deploy;
 pub mod errors;
 pub mod explorer_link;
+pub mod helpers;
 pub mod invoke;
 pub mod multicall;
 pub mod script;
