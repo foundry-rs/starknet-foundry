@@ -32,7 +32,7 @@ use sncast::response::declare::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse, DeployCommandMessage,
 };
 use sncast::response::deploy::{DeployResponse, DeployResponseWithDeclare};
-use sncast::response::errors::handle_starknet_command_error;
+use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transformed_call::transform_response;
 use sncast::{
@@ -704,7 +704,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let result =
                 starknet_commands::balance::balance(account.address(), &provider, &balance)
                     .await
-                    .map_err(handle_starknet_command_error)?;
+                    .map_err(|error| StarknetCommandError::ProviderError(error.into()))?;
 
             process_command_result("balance", Ok(result), ui, None);
 
