@@ -1,3 +1,4 @@
+use crate::starknet_commands::declare::declare;
 use crate::starknet_commands::declare_from::DeclareFrom;
 use crate::starknet_commands::deploy::DeployArguments;
 use crate::starknet_commands::multicall;
@@ -11,30 +12,33 @@ use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
 use configuration::load_config;
+use conversions::IntoConv;
 use data_transformer::transform;
 use foundry_ui::components::warning::WarningMessage;
 use foundry_ui::{Message, UI};
 use shared::auto_completions::{Completions, generate_completions};
+use sncast::helpers::command::process_command_result;
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use sncast::helpers::output_format::output_format_from_json_flag;
+use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
-use sncast::response::cast_message::SncastMessage;
-use sncast::response::command::CommandResponse;
-use sncast::response::declare::DeclareResponse;
-use sncast::response::errors::ResponseError;
+use sncast::response::declare::{
+    AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse, DeployCommandMessage,
+};
+use sncast::response::deploy::{DeployResponse, DeployResponseWithDeclare};
 use sncast::response::errors::handle_starknet_command_error;
-use sncast::response::explorer_link::{ExplorerLinksMessage, block_explorer_link_if_allowed};
+use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transformed_call::transform_response;
 use sncast::{
     ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
     get_contract_class,
 };
 use starknet::core::types::ContractClass;
-use starknet::core::types::contract::AbiEntry;
+use starknet::core::types::contract::{AbiEntry, SierraClass};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
 use starknet_commands::verify::Verify;
@@ -261,6 +265,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
     let wait_config = WaitForTx {
         wait: cli.wait,
         wait_params: config.wait_params,
+        show_ui_outputs: true,
     };
 
     match cli.command {
@@ -270,10 +275,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let rpc = declare.rpc.clone();
 
             let account = get_account(
-                &config.account,
-                &config.accounts_file,
+                &config,
                 &provider,
+                &declare.rpc,
                 config.keystore.as_ref(),
+                ui,
             )
             .await?;
             let manifest_path = assert_manifest_path_exists()?;
@@ -291,7 +297,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             .expect("Failed to build contract");
 
             let result = starknet_commands::declare::declare(
-                declare,
+                declare.contract_name.clone(),
+                declare.fee_args,
+                declare.nonce,
                 &account,
                 &artifacts,
                 wait_config,
@@ -310,21 +318,50 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             });
 
             let block_explorer_link =
-                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
+
+            let deploy_command_message = if let Ok(response) = &result {
+                // TODO(#3785)
+                let contract_artifacts = artifacts
+                    .get(&declare.contract_name)
+                    .expect("Failed to get contract artifacts");
+                let contract_definition: SierraClass =
+                    serde_json::from_str(&contract_artifacts.sierra)
+                        .context("Failed to parse sierra artifact")?;
+                let network_flag = generate_network_flag(
+                    rpc.get_url(&config.url).await.ok().as_deref(),
+                    rpc.network.as_ref(),
+                );
+                Some(DeployCommandMessage::new(
+                    &contract_definition.abi,
+                    response,
+                    &config.account,
+                    &config.accounts_file,
+                    network_flag,
+                ))
+            } else {
+                None
+            };
+
             process_command_result("declare", result, ui, block_explorer_link);
+
+            if let Some(deploy_command_message) = deploy_command_message {
+                ui.println(&deploy_command_message?);
+            }
 
             Ok(())
         }
 
         Commands::DeclareFrom(declare_from) => {
             let provider = declare_from.rpc.get_provider(&config, ui).await?;
-            let rpc_args = declare_from.rpc.clone();
             let source_provider = declare_from.source_rpc.get_provider(ui).await?;
+
             let account = get_account(
-                &config.account,
-                &config.accounts_file,
+                &config,
                 &provider,
+                &declare_from.rpc,
                 config.keystore.as_ref(),
+                ui,
             )
             .await?;
 
@@ -347,12 +384,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 }
             });
 
-            let block_explorer_link = block_explorer_link_if_allowed(
-                &result,
-                provider.chain_id().await?,
-                &rpc_args,
-                &config,
-            );
+            let block_explorer_link =
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
             process_command_result("declare-from", result, ui, block_explorer_link);
 
             Ok(())
@@ -360,37 +393,95 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Deploy(deploy) => {
             let Deploy {
+                contract_identifier: identifier,
                 arguments,
                 fee_args,
                 rpc,
+                mut nonce,
+                package,
                 ..
             } = deploy;
 
             let provider = rpc.get_provider(&config, ui).await?;
 
-            let account = get_account(
-                &config.account,
-                &config.accounts_file,
-                &provider,
-                config.keystore.as_ref(),
-            )
-            .await?;
+            let account =
+                get_account(&config, &provider, &rpc, config.keystore.as_ref(), ui).await?;
+
+            let (class_hash, declare_response) = if let Some(class_hash) = identifier.class_hash {
+                (class_hash, None)
+            } else if let Some(contract_name) = identifier.contract_name {
+                let manifest_path = assert_manifest_path_exists()?;
+                let package_metadata = get_package_metadata(&manifest_path, &package)?;
+                let artifacts = build_and_load_artifacts(
+                    &package_metadata,
+                    &BuildConfig {
+                        scarb_toml_path: manifest_path,
+                        json: cli.json,
+                        profile: cli.profile.unwrap_or("release".to_string()),
+                    },
+                    false,
+                    ui,
+                )
+                .expect("Failed to build contract");
+
+                let declare_result = declare(
+                    contract_name,
+                    fee_args.clone(),
+                    nonce,
+                    &account,
+                    &artifacts,
+                    WaitForTx {
+                        wait: true,
+                        wait_params: wait_config.wait_params,
+                        // Only show outputs if user explicitly provides `--wait` flag
+                        show_ui_outputs: wait_config.wait,
+                    },
+                    true,
+                    ui,
+                )
+                .await
+                .map_err(handle_starknet_command_error);
+
+                // Increment nonce after successful declare if it was explicitly provided
+                nonce = nonce.map(|n| n + Felt::ONE);
+
+                match declare_result {
+                    Ok(DeclareResponse::AlreadyDeclared(AlreadyDeclaredResponse {
+                        class_hash,
+                    })) => (class_hash.into_(), None),
+                    Ok(DeclareResponse::Success(declare_transaction_response)) => (
+                        declare_transaction_response.class_hash.into_(),
+                        Some(declare_transaction_response),
+                    ),
+                    Err(err) => {
+                        process_command_result::<DeclareTransactionResponse>(
+                            "deploy",
+                            Err(err),
+                            ui,
+                            None,
+                        );
+                        return Ok(());
+                    }
+                }
+            } else {
+                unreachable!("Either `--class_hash` or `--contract_name` must be provided");
+            };
 
             // safe to unwrap because "constructor" is a standardized name
             let selector = get_selector_from_name("constructor").unwrap();
 
-            let contract_class = get_contract_class(deploy.class_hash, &provider).await?;
+            let contract_class = get_contract_class(class_hash, &provider).await?;
 
             let arguments: Arguments = arguments.into();
             let calldata = arguments.try_into_calldata(contract_class, &selector)?;
 
             let result = starknet_commands::deploy::deploy(
-                deploy.class_hash,
+                class_hash,
                 &calldata,
                 deploy.salt,
                 deploy.unique,
                 fee_args,
-                deploy.nonce,
+                nonce,
                 &account,
                 wait_config,
                 ui,
@@ -398,8 +489,19 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             .await
             .map_err(handle_starknet_command_error);
 
+            let result = if let Some(declare_response) = declare_response {
+                result.map(|r| {
+                    DeployResponse::WithDeclare(DeployResponseWithDeclare::from_responses(
+                        &r,
+                        &declare_response,
+                    ))
+                })
+            } else {
+                result.map(DeployResponse::Standard)
+            };
+
             let block_explorer_link =
-                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
             process_command_result("deploy", result, ui, block_explorer_link);
 
             Ok(())
@@ -457,13 +559,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let provider = rpc.get_provider(&config, ui).await?;
 
-            let account = get_account(
-                &config.account,
-                &config.accounts_file,
-                &provider,
-                config.keystore.as_ref(),
-            )
-            .await?;
+            let account =
+                get_account(&config, &provider, &rpc, config.keystore.as_ref(), ui).await?;
 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
@@ -487,7 +584,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             .map_err(handle_starknet_command_error);
 
             let block_explorer_link =
-                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
 
             process_command_result("invoke", result, ui, block_explorer_link);
 
@@ -630,32 +727,4 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
 
     config_with_cli(&mut combined_config, cli);
     Ok(combined_config)
-}
-
-fn process_command_result<T>(
-    command: &str,
-    result: Result<T>,
-    ui: &UI,
-    block_explorer_link: Option<ExplorerLinksMessage>,
-) where
-    T: CommandResponse,
-    SncastMessage<T>: Message,
-{
-    let cast_msg = result.map(|command_response| SncastMessage {
-        command: command.to_string(),
-        command_response,
-    });
-
-    match cast_msg {
-        Ok(response) => {
-            ui.println(&response);
-            if let Some(link) = block_explorer_link {
-                ui.println(&link);
-            }
-        }
-        Err(err) => {
-            let err = ResponseError::new(command.to_string(), format!("{err:#}"));
-            ui.eprintln(&err);
-        }
-    }
 }

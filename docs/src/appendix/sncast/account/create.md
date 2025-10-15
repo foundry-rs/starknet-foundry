@@ -23,7 +23,7 @@ Optional.
 
 Use predefined network with a public provider
 
-Possible values: `mainnet`, `sepolia`.
+Possible values: `mainnet`, `sepolia`, `devnet`.
 
 ## `--type, -t <ACCOUNT_TYPE>`
 Optional. Required if `--class-hash` is passed.

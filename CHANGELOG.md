@@ -12,12 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Updated the error message returned when calling a nonexistent method on a contract to better align with the format used by the network
+- Oracle support in `snforge` is now stable and no longer requires the `--experimental-oracles` CLI flag
 
 ### Cast
 
 #### Added
 
 - Debug logging for `sncast` commands that can be enabled by setting `CAST_LOG` env variable.
+- `sncast declare` command now outputs a ready-to-use deployment command after successful declaration.
+- Possibility to use [`starknet-devnet`](https://github.com/0xSpaceShard/starknet-devnet) predeployed accounts directly in `sncast` without needing to import them. They are available under specific names - `devnet-1`, `devnet-2`, ..., `devnet-<N>`. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/integration_with_devnet.html#predeployed-accounts)
+- Support for `--network devnet` flag that attempts to auto-detect running `starknet-devnet` instance and connect to it.
+- Support for automatically declaring the contract when running `sncast deploy`, by providing `--contract-name` flag instead of `--class-hash`. 
 
 ## [0.50.0] - 2025-09-29
 
@@ -68,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--test-files` flag to `verify` command to include test files under src/ for verification (only applies to voyager)
 - `--tip` flag to `invoke`, `declare`, `deploy`, `multicall run` and `account deploy` commands to set the transaction tip
 - `--estimate-tip` flag which automatically adds an estimated tip to the transaction. The tip is calculated based on the current network conditions and added to the transaction fee
+- `utils class-hash` command to calculate the class hash for a contract
 
 #### Changed
 
@@ -81,12 +87,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - A bug that caused `#[fuzzer]` attribute to fail when used with generic structs
-
-### Cast
-
-#### Added
-
-- `utils class-hash` command to calculate the class hash for a contract
 
 ## [0.48.0] - 2025-08-05
 

@@ -42,7 +42,6 @@ use runtime::{
 };
 use scarb_oracle_hint_service::OracleHintService;
 use starknet::signers::SigningKey;
-use starknet_api::execution_resources::GasAmount;
 use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
@@ -61,8 +60,6 @@ pub struct ForgeExtension<'a> {
     pub environment_variables: &'a HashMap<String, String>,
     pub contracts_data: &'a ContractsData,
     pub fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
-    /// Whether `--experimental-oracles` flag has been enabled.
-    pub experimental_oracles_enabled: bool,
     pub oracle_hint_service: OracleHintService,
 }
 
@@ -81,14 +78,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             .oracle_hint_service
             .accept_cheatcode(selector.as_bytes())
         {
-            if !self.experimental_oracles_enabled {
-                return Err(anyhow!(
-                    "Oracles are an experimental feature. \
-                    To enable them, pass `--experimental-oracles` CLI flag."
-                )
-                .into());
-            }
-
             let output = self
                 .oracle_hint_service
                 .execute_cheatcode(oracle_selector, input_reader.into_remaining());
@@ -785,12 +774,11 @@ pub fn get_all_used_resources(
 
     let l1_handler_payload_lengths = get_l1_handlers_payloads_lengths(&call_info.inner_calls);
 
+    // Syscalls are used only for `--detailed-resources` output.
     let top_call_syscalls = trace.borrow().get_total_used_syscalls();
 
     UsedResources {
         syscall_usage: top_call_syscalls,
-        execution_resources: call_info.resources.clone(),
-        gas_consumed: GasAmount::from(call_info.execution.gas_consumed),
         execution_summary: summary,
         l1_handler_payload_lengths,
     }

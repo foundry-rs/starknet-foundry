@@ -1,4 +1,4 @@
-# `declare`
+# `declare-from`
 Declare a contract by fetching it from a different Starknet instance.
 
 ## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
@@ -22,7 +22,7 @@ Optional.
 
 Use predefined network with public provider
 
-Possible values: `mainnet`, `sepolia`.
+Possible values: `mainnet`, `sepolia`, `devnet`.
 
 ## `--source-url, -u <RPC_URL>`
 Optional.
@@ -34,7 +34,7 @@ Optional.
 
 Use predefined network with public provider where the contract is already declared.
 
-Possible values: `mainnet`, `sepolia`.
+Possible values: `mainnet`, `sepolia`, `devnet`.
 
 ## `--max-fee, -m <MAX_FEE>`
 Optional.

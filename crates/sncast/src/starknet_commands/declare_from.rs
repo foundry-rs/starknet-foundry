@@ -60,6 +60,7 @@ impl SourceRpcArgs {
     pub async fn get_provider(&self, ui: &UI) -> Result<JsonRpcClient<HttpTransport>> {
         let url = self
             .get_url()
+            .await
             .context("Either `--source-network` or `--source-url` must be provided")?;
 
         assert!(!url.is_empty(), "url cannot be empty");
@@ -71,10 +72,10 @@ impl SourceRpcArgs {
     }
 
     #[must_use]
-    fn get_url(&self) -> Option<String> {
+    async fn get_url(&self) -> Option<String> {
         if let Some(network) = self.source_network {
             let free_provider = FreeProvider::semi_random();
-            Some(network.url(&free_provider))
+            Some(network.url(&free_provider).await.ok()?)
         } else {
             self.source_url
                 .as_ref()

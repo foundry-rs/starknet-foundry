@@ -1,10 +1,14 @@
+use crate::helpers::account::{check_account_exists, get_account_from_devnet, is_devnet_account};
+use crate::helpers::configuration::CastConfig;
 use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
+use crate::helpers::rpc::RpcArgs;
 use crate::response::errors::SNCastProviderError;
 use anyhow::{Context, Error, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use conversions::serde::serialize::CairoSerialize;
 use foundry_ui::UI;
+use foundry_ui::components::warning::WarningMessage;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::RngCore;
 use rand::rngs::OsRng;
@@ -85,10 +89,11 @@ pub const MAINNET: Felt =
 pub const SEPOLIA: Felt =
     Felt::from_hex_unchecked(const_hex::const_encode::<10, true>(b"SN_SEPOLIA").as_str());
 
-#[derive(ValueEnum, Clone, Copy, Debug)]
+#[derive(ValueEnum, Clone, Copy, Debug, PartialEq)]
 pub enum Network {
     Mainnet,
     Sepolia,
+    Devnet,
 }
 
 impl Display for Network {
@@ -96,6 +101,7 @@ impl Display for Network {
         match self {
             Network::Mainnet => write!(f, "mainnet"),
             Network::Sepolia => write!(f, "sepolia"),
+            Network::Devnet => write!(f, "devnet"),
         }
     }
 }
@@ -132,6 +138,7 @@ pub struct AccountData {
 pub struct WaitForTx {
     pub wait: bool,
     pub wait_params: ValidatedWaitParams,
+    pub show_ui_outputs: bool,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, Copy, PartialEq)]
@@ -245,6 +252,54 @@ pub async fn get_nonce(
 }
 
 pub async fn get_account<'a>(
+    config: &CastConfig,
+    provider: &'a JsonRpcClient<HttpTransport>,
+    rpc_args: &RpcArgs,
+    keystore: Option<&Utf8PathBuf>,
+    ui: &UI,
+) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
+    let chain_id = get_chain_id(provider).await?;
+    let network_name = chain_id_to_network_name(chain_id);
+    let account = &config.account;
+    let is_devnet_account = is_devnet_account(account);
+
+    if is_devnet_account
+        && let Some(network) = rpc_args.network
+        && (network == Network::Mainnet || network == Network::Sepolia)
+    {
+        bail!(format!(
+            "Devnet accounts cannot be used with `--network {network}`"
+        ));
+    }
+
+    let accounts_file = &config.accounts_file;
+    let exists_in_accounts_file = check_account_exists(account, &network_name, accounts_file)?;
+
+    match (is_devnet_account, exists_in_accounts_file) {
+        (true, true) => {
+            ui.println(&WarningMessage::new(format!(
+                "Using account {account} from accounts file {accounts_file}. \
+                To use an inbuilt devnet account, please rename your existing account or use an account with a different number."
+            )));
+            ui.print_blank_line();
+            return get_account_from_accounts_file(account, accounts_file, provider, keystore)
+                .await;
+        }
+        (true, false) => {
+            let url = rpc_args
+                .get_url(&config.url)
+                .await
+                .context("Failed to get url")?;
+            return get_account_from_devnet(account, provider, &url).await;
+        }
+        _ => {
+            return get_account_from_accounts_file(account, accounts_file, provider, keystore)
+                .await;
+        }
+    }
+}
+
+pub async fn get_account_from_accounts_file<'a>(
     account: &str,
     accounts_file: &Utf8PathBuf,
     provider: &'a JsonRpcClient<HttpTransport>,
@@ -576,9 +631,9 @@ pub async fn wait_for_tx(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: Felt,
     wait_params: ValidatedWaitParams,
-    ui: &UI,
+    ui: Option<&UI>,
 ) -> Result<String, WaitForTransactionError> {
-    ui.println(&format!("Transaction hash: {tx_hash:#x}"));
+    ui.inspect(|ui| ui.println(&format!("Transaction hash: {tx_hash:#x}")));
 
     let retries = wait_params.get_retries();
     for i in (1..retries).rev() {
@@ -610,24 +665,32 @@ pub async fn wait_for_tx(
             Ok(starknet::core::types::TransactionStatus::PreConfirmed(
                 ExecutionResult::Succeeded,
             )) => {
-                let remaining_time = wait_params.remaining_time(i);
-                ui.println(&"Transaction status: PRE_CONFIRMED".to_string());
-                ui.println(&format!(
-                    "Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)"
-                ));
+                ui.inspect(|ui| {
+                    let remaining_time = wait_params.remaining_time(i);
+                    ui.println(&"Transaction status: PRE_CONFIRMED".to_string());
+                    ui.println(&format!(
+                        "Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)"
+                    ));
+                });
             }
             Ok(
                 starknet::core::types::TransactionStatus::Received
                 | starknet::core::types::TransactionStatus::Candidate,
             )
             | Err(StarknetError(TransactionHashNotFound)) => {
-                let remaining_time = wait_params.remaining_time(i);
-                ui.println(&format!(
-                    "Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)"
-                ));
+                ui.inspect(|ui| {
+                        let remaining_time = wait_params.remaining_time(i);
+                        ui.println(&format!(
+                            "Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)"
+                        ));
+                    });
             }
             Err(ProviderError::RateLimited) => {
-                ui.println(&"Request rate limited while waiting for transaction to be accepted");
+                ui.inspect(|ui| {
+                    ui.println(
+                        &"Request rate limited while waiting for transaction to be accepted",
+                    );
+                });
                 sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
             }
             Err(err) => return Err(WaitForTransactionError::ProviderError(err.into())),
@@ -664,7 +727,14 @@ pub async fn handle_wait_for_tx<T>(
     ui: &UI,
 ) -> Result<T, WaitForTransactionError> {
     if wait_config.wait {
-        return match wait_for_tx(provider, transaction_hash, wait_config.wait_params, ui).await {
+        return match wait_for_tx(
+            provider,
+            transaction_hash,
+            wait_config.wait_params,
+            wait_config.show_ui_outputs.then_some(ui),
+        )
+        .await
+        {
             Ok(_) => Ok(return_value),
             Err(error) => Err(error),
         };

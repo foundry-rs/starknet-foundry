@@ -2,28 +2,38 @@ use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use foundry_ui::UI;
-use sncast::helpers::constants::UDC_ADDRESS;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::deploy::DeployResponse;
+use sncast::response::deploy::StandardDeployResponse;
 use sncast::response::errors::StarknetCommandError;
 use sncast::{WaitForTx, apply_optional_fields, handle_wait_for_tx};
 use sncast::{extract_or_generate_salt, udc_uniqueness};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
-use starknet::contract::{ContractFactory, DeploymentV3};
+use starknet::contract::{ContractFactory, DeploymentV3, UdcSelector};
 use starknet::core::utils::get_udc_deployed_address;
 use starknet::providers::JsonRpcClient;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 
+#[derive(Args, Debug, Clone)]
+#[group(required = true, multiple = false)]
+pub struct ContractIdentifier {
+    /// Class hash of contract to deploy
+    #[arg(short = 'g', long, conflicts_with = "package")]
+    pub class_hash: Option<Felt>,
+
+    /// Contract name
+    #[arg(long)]
+    pub contract_name: Option<String>,
+}
+
 #[derive(Args)]
 #[command(about = "Deploy a contract on Starknet")]
 pub struct Deploy {
-    /// Class hash of contract to deploy
-    #[arg(short = 'g', long)]
-    pub class_hash: Felt,
+    #[command(flatten)]
+    pub contract_identifier: ContractIdentifier,
 
     #[command(flatten)]
     pub arguments: DeployArguments,
@@ -45,6 +55,10 @@ pub struct Deploy {
 
     #[command(flatten)]
     pub rpc: RpcArgs,
+
+    /// Specifies scarb package to be used. Only possible to use with `--contract-name`.
+    #[arg(long, conflicts_with = "class_hash")]
+    pub package: Option<String>,
 }
 
 #[derive(Debug, Clone, clap::Args)]
@@ -70,11 +84,11 @@ pub async fn deploy(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
     ui: &UI,
-) -> Result<DeployResponse, StarknetCommandError> {
+) -> Result<StandardDeployResponse, StarknetCommandError> {
     let salt = extract_or_generate_salt(salt);
 
     // TODO(#3628): Use `ContractFactory::new` once new UDC address is the default one in starknet-rs
-    let factory = ContractFactory::new_with_udc(class_hash, account, UDC_ADDRESS);
+    let factory = ContractFactory::new_with_udc(class_hash, account, UdcSelector::New);
 
     let deployment = factory.deploy_v3(calldata.clone(), salt, unique);
 
@@ -115,7 +129,7 @@ pub async fn deploy(
         Ok(result) => handle_wait_for_tx(
             account.provider(),
             result.transaction_hash,
-            DeployResponse {
+            StandardDeployResponse {
                 contract_address: get_udc_deployed_address(
                     salt,
                     class_hash,

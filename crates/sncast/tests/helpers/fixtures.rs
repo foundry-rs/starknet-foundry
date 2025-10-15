@@ -4,16 +4,19 @@ use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
 use conversions::string::IntoHexStr;
 use core::str;
+use foundry_ui::UI;
 use fs_extra::dir::{CopyOptions, copy};
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value, json};
 use sncast::helpers::account::load_accounts;
 use sncast::helpers::braavos::BraavosAccountFactory;
+use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
     BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH,
 };
 use sncast::helpers::fee::FeeSettings;
+use sncast::helpers::rpc::RpcArgs;
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::state::state_file::{
     ScriptTransactionEntry, ScriptTransactionOutput, ScriptTransactionStatus,
@@ -199,14 +202,18 @@ pub async fn invoke_contract(
     constructor_calldata: &[&str],
 ) -> InvokeTransactionResult {
     let provider = get_provider(URL).expect("Could not get the provider");
-    let account = get_account(
-        account,
-        &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
-        &provider,
-        None,
-    )
-    .await
-    .expect("Could not get the account");
+    let config = CastConfig {
+        account: account.to_string(),
+        accounts_file: Utf8PathBuf::from(ACCOUNT_FILE_PATH),
+        ..Default::default()
+    };
+    let rpc_args = RpcArgs {
+        url: Some(URL.to_string()),
+        network: None,
+    };
+    let account = get_account(&config, &provider, &rpc_args, None, &UI::default())
+        .await
+        .expect("Could not get the account");
 
     let mut calldata: Vec<Felt> = vec![];
 

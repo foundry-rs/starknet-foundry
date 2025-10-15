@@ -207,7 +207,7 @@ mod tests {
                 "hash": "invalid_hash"
             }
         }),
-        "Failed to create Felt from string";
+        "failed to create Felt from string";
         "Invalid hash"
     )]
     fn test_fork_target_invalid_cases(input: &serde_json::Value, expected_error: &str) {

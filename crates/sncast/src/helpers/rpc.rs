@@ -1,12 +1,12 @@
 use crate::helpers::configuration::CastConfig;
+use crate::helpers::devnet::detection;
 use crate::{Network, get_provider};
-use anyhow::{Context, Result, bail};
+use anyhow::{Result, bail};
 use clap::Args;
 use foundry_ui::UI;
 use shared::consts::RPC_URL_VERSION;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet::providers::{JsonRpcClient, jsonrpc::HttpTransport};
-use url::Url;
 
 #[derive(Args, Clone, Debug, Default)]
 #[group(required = false, multiple = false)]
@@ -15,7 +15,8 @@ pub struct RpcArgs {
     #[arg(short, long)]
     pub url: Option<String>,
 
-    /// Use predefined network with a public provider. Note that this option may result in rate limits or other unexpected behavior
+    /// Use predefined network with a public provider. Note that this option may result in rate limits or other unexpected behavior.
+    /// For devnet, attempts to auto-detect running starknet-devnet instance.
     #[arg(long)]
     pub network: Option<Network>,
 }
@@ -32,9 +33,7 @@ impl RpcArgs {
             )
         }
 
-        let url = self
-            .get_url(&config.url)
-            .context("Either `--network` or `--url` must be provided")?;
+        let url = self.get_url(&config.url).await?;
 
         assert!(!url.is_empty(), "url cannot be empty");
         let provider = get_provider(&url)?;
@@ -44,28 +43,16 @@ impl RpcArgs {
         Ok(provider)
     }
 
-    #[must_use]
-    fn get_url(&self, config_url: &String) -> Option<String> {
-        if let Some(network) = self.network {
-            let free_provider = FreeProvider::semi_random();
-            Some(network.url(&free_provider))
-        } else {
-            self.url.clone().or_else(|| {
-                if config_url.is_empty() {
-                    None
-                } else {
-                    Some(config_url.to_string())
-                }
-            })
+    pub async fn get_url(&self, config_url: &str) -> Result<String> {
+        match (&self.network, &self.url, config_url) {
+            (Some(network), None, _) => {
+                let free_provider = FreeProvider::semi_random();
+                network.url(&free_provider).await
+            }
+            (None, Some(url), _) => Ok(url.clone()),
+            (None, None, config_url) if !config_url.is_empty() => Ok(config_url.to_string()),
+            _ => bail!("Either `--network` or `--url` must be provided"),
         }
-    }
-
-    #[must_use]
-    pub fn is_localhost(&self, config_url: &String) -> bool {
-        self.get_url(config_url)
-            .and_then(|url_str| Url::parse(&url_str).ok())
-            .and_then(|url| url.host_str().map(str::to_string))
-            .is_some_and(|host| host == "localhost" || host == "127.0.0.1" || host == "::1")
     }
 }
 
@@ -81,11 +68,11 @@ impl FreeProvider {
 }
 
 impl Network {
-    #[must_use]
-    pub fn url(self, provider: &FreeProvider) -> String {
+    pub async fn url(self, provider: &FreeProvider) -> Result<String> {
         match self {
-            Network::Mainnet => Self::free_mainnet_rpc(provider),
-            Network::Sepolia => Self::free_sepolia_rpc(provider),
+            Network::Mainnet => Ok(Self::free_mainnet_rpc(provider)),
+            Network::Sepolia => Ok(Self::free_sepolia_rpc(provider)),
+            Network::Devnet => Self::devnet_rpc(provider).await,
         }
     }
 
@@ -95,6 +82,23 @@ impl Network {
 
     fn free_sepolia_rpc(_provider: &FreeProvider) -> String {
         format!("https://starknet-sepolia.public.blastapi.io/rpc/{RPC_URL_VERSION}")
+    }
+
+    async fn devnet_rpc(_provider: &FreeProvider) -> Result<String> {
+        detection::detect_devnet_url()
+            .await
+            .map_err(|e| anyhow::anyhow!(e))
+    }
+}
+
+#[must_use]
+pub fn generate_network_flag(rpc_url: Option<&str>, network: Option<&Network>) -> String {
+    if let Some(network) = network {
+        format!("--network {network}")
+    } else if let Some(rpc_url) = rpc_url {
+        format!("--url {rpc_url}")
+    } else {
+        unreachable!("Either `--rpc_url` or `--network` must be provided.")
     }
 }
 

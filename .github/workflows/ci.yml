@@ -37,7 +37,7 @@ jobs:
         with:
           tool: nextest@0.9.98
       - name: Build and archive tests
-        run: cargo nextest archive --cargo-profile ci -p forge --features skip_plugin_checks --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
+        run: cargo nextest archive --cargo-profile ci -p forge --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v4
         with:
@@ -126,9 +126,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       - uses: software-mansion/setup-universal-sierra-compiler@v1
+      # No setup scarb action is used because we want to install multiple versions of scarb through asdf
       - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
-      - run: cargo test --profile ci --package forge e2e::plugin_versions
-      - run: cargo test --profile ci --package forge e2e::plugin_diagnostics
+      - run: cargo test --profile ci --package forge --features test_for_multiple_scarb_versions e2e::plugin_diagnostic
 
   test-requirements-check-special-conditions:
     name: Test requirements check special conditions
@@ -146,20 +146,6 @@ jobs:
           scarb-version: "2.10.0"
 
       - run: cargo test --profile ci --package forge --features scarb_2_10_0 --test main e2e::requirements::test_warning_on_scarb_version_below_recommended
-
-  # TODO(#3212): Closures in Cairo are fully supported since version 2.11
-  test-interact-with-state:
-    name: Test interact with state
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
-      - uses: software-mansion/setup-scarb@v1
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
-
-      - run: cargo test --profile ci --package forge --features interact-with-state --test main integration::interact_with_state
-      - run: cargo test --profile ci --package forge --features interact-with-state --test main e2e::running::test_interact_with_state
 
   test-forge-runner:
     name: Test Forge Runner
@@ -191,18 +177,6 @@ jobs:
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       - name: Run Data Transformer tests
         run: cargo test --profile ci -p data-transformer
-
-  test-forge-debugging:
-    name: Test Forge Debugging
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
-      - uses: software-mansion/setup-scarb@v1
-      - uses: software-mansion/setup-universal-sierra-compiler@58146c4184fa6ec5e8aaf02309ab85e35f782ed0 # v1.0.0
-      - name: Run Forge Debugging tests
-        run: cargo test --profile ci -p forge --features debugging --test main e2e::debugging
 
   test-forge-scarb-plugin:
     name: Test Forge Scarb Plugin
@@ -302,6 +276,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
         with:
           toolchain: stable
+          components: rustfmt
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       - name: Check formatting
         run: cargo fmt --check
@@ -324,6 +299,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
         with:
           toolchain: stable
+          components: clippy
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       - run: cargo lint
 

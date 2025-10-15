@@ -7,6 +7,7 @@ use scarb_api::metadata::MetadataCommand;
 use scarb_metadata::{Metadata, PackageMetadata};
 use serde::Serialize;
 use sncast::Network;
+use sncast::response::explorer_link::ExplorerError;
 use sncast::{helpers::scarb_utils, response::verify::VerifyResponse};
 use starknet::{
     core::types::{BlockId, BlockTag},
@@ -357,8 +358,8 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
         };
 
         let url = format!(
-            "{}{}/{:#064x}",
-            self.gen_explorer_url(),
+            "{}{}/{:#066x}",
+            self.gen_explorer_url()?,
             VERIFY_ENDPOINT,
             hash
         );
@@ -375,7 +376,7 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
                 let message = format!(
                     "{} submitted for verification, you can query the status at: {}{}/{}",
                     contract_name.clone(),
-                    self.gen_explorer_url(),
+                    self.gen_explorer_url()?,
                     STATUS_ENDPOINT,
                     response.json::<VerificationJobDispatch>().await?.job_id,
                 );
@@ -386,12 +387,13 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
         }
     }
 
-    fn gen_explorer_url(&self) -> String {
+    fn gen_explorer_url(&self) -> Result<String> {
         match env::var("VERIFIER_API_URL") {
-            Ok(addr) => addr,
+            Ok(addr) => Ok(addr),
             Err(_) => match self.network {
-                Network::Mainnet => "https://api.voyager.online/beta".to_string(),
-                Network::Sepolia => "https://sepolia-api.voyager.online/beta".to_string(),
+                Network::Mainnet => Ok("https://api.voyager.online/beta".to_string()),
+                Network::Sepolia => Ok("https://sepolia-api.voyager.online/beta".to_string()),
+                Network::Devnet => Err(ExplorerError::DevnetNotSupported.into()),
             },
         }
     }
