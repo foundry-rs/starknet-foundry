@@ -78,7 +78,6 @@ $ sncast --account new_account balance --network sepolia
 <summary>Output:</summary>
 
 ```shell
-Account Address: 0x[..]
 Balance:         [..] strk
 ```
 </details>
