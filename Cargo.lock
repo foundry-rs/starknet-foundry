@@ -6495,6 +6495,8 @@ dependencies = [
  "starknet",
  "starknet-crypto",
  "starknet-types-core",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "tempfile",
  "test-case",
  "thiserror 2.0.17",

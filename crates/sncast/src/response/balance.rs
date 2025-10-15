@@ -2,13 +2,12 @@ use crate::{
     helpers::token::Token,
     response::{cast_message::SncastMessage, command::CommandResponse},
 };
-use conversions::serde::serialize::CairoSerialize;
 use foundry_ui::{Message, styling};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use serde_json::json;
 use starknet::core::types::U256;
 
-#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
+#[derive(Serialize, Debug)]
 pub struct BalanceResponse {
     pub balance: (u128, u128),
     pub token: Option<Token>,

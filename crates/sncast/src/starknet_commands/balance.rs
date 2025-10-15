@@ -34,7 +34,7 @@ impl TokenIdentifier {
         } else {
             // Both token and token address are optional, hence we cannot have
             // default value for token at clap level.
-            Token::Strk.contract_address()
+            Token::default().contract_address()
         }
     }
 
