@@ -573,7 +573,7 @@ mod tests {
             false,
             Vec::new(),
             false,
-            true,
+            false,
             false,
             FailedTestsCache::default(),
         );
@@ -621,7 +621,7 @@ mod tests {
             false,
             Vec::new(),
             false,
-            true,
+            false,
             false,
             FailedTestsCache::default(),
         );
