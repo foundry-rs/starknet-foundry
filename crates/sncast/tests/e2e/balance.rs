@@ -157,6 +157,5 @@ pub async fn nonexistent_token_address() {
 
     let snapbox = snapbox.assert().failure();
     let err = snapbox.as_stderr();
-    println!("Error: {}", err);
     assert!(err.contains("Error: Error: There is no contract at the specified address"));
 }
