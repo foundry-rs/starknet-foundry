@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- `Fuzzable` trait implementations for `bool` and `ContractAddress`
+- Type aliases for `StarkCurveKeyPair`, `Secp256k1CurveKeyPair`, `Secp256r1CurveKeyPair`
+
 #### Changed
 
 - Updated the error message returned when calling a nonexistent method on a contract to better align with the format used by the network
@@ -21,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Debug logging for `sncast` commands that can be enabled by setting `CAST_LOG` env variable.
 - `sncast declare` command now outputs a ready-to-use deployment command after successful declaration.
 - Possibility to use [`starknet-devnet`](https://github.com/0xSpaceShard/starknet-devnet) predeployed accounts directly in `sncast` without needing to import them. They are available under specific names - `devnet-1`, `devnet-2`, ..., `devnet-<N>`. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/integration_with_devnet.html#predeployed-accounts)
+- Support for `--network devnet` flag that attempts to auto-detect running `starknet-devnet` instance and connect to it.
 - Support for automatically declaring the contract when running `sncast deploy`, by providing `--contract-name` flag instead of `--class-hash`. 
 
 ## [0.50.0] - 2025-09-29

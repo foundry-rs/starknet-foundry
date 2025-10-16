@@ -93,6 +93,7 @@ pub const SEPOLIA: Felt =
 pub enum Network {
     Mainnet,
     Sepolia,
+    Devnet,
 }
 
 impl Display for Network {
@@ -100,6 +101,7 @@ impl Display for Network {
         match self {
             Network::Mainnet => write!(f, "mainnet"),
             Network::Sepolia => write!(f, "sepolia"),
+            Network::Devnet => write!(f, "devnet"),
         }
     }
 }
@@ -284,7 +286,10 @@ pub async fn get_account<'a>(
                 .await;
         }
         (true, false) => {
-            let url = rpc_args.get_url(&config.url).context("Failed to get url")?;
+            let url = rpc_args
+                .get_url(&config.url)
+                .await
+                .context("Failed to get url")?;
             return get_account_from_devnet(account, provider, &url).await;
         }
         _ => {

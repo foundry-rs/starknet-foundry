@@ -13,7 +13,7 @@ pub enum AvailableGasConfig {
 
 #[derive(Drop, Serde)]
 pub enum BlockId {
-    BlockTag: (),
+    BlockTag,
     BlockHash: felt252,
     BlockNumber: felt252,
 }

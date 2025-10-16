@@ -124,7 +124,7 @@ derive_more = { version = "2.0.1", features = ["display"] }
 paste = "1.0.15"
 strum = "0.27"
 strum_macros = "0.27"
-scarb-oracle-hint-service = "0.1.0"
+scarb-oracle-hint-service = "0.1.1"
 chrono = "0.4.42"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 tracing = "0.1.41"
