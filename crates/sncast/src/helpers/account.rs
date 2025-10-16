@@ -1,5 +1,5 @@
 use crate::{
-    NestedMap, build_account, check_account_file_exists, helpers::devnet_provider::DevnetProvider,
+    NestedMap, build_account, check_account_file_exists, helpers::devnet::provider::DevnetProvider,
 };
 use anyhow::{Result, ensure};
 use camino::Utf8PathBuf;
