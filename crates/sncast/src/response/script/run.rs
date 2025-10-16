@@ -1,10 +1,8 @@
 use crate::response::cast_message::SncastMessage;
+use crate::response::cast_message::SncastTextMessage;
 use crate::response::command::CommandResponse;
-use crate::response::helpers::serialize_json;
-use foundry_ui::Message;
 use foundry_ui::styling;
 use serde::Serialize;
-use serde_json::Value;
 
 #[derive(Serialize, Debug, Clone)]
 pub struct ScriptRunResponse {
@@ -14,7 +12,7 @@ pub struct ScriptRunResponse {
 
 impl CommandResponse for ScriptRunResponse {}
 
-impl Message for SncastMessage<ScriptRunResponse> {
+impl SncastTextMessage for SncastMessage<ScriptRunResponse> {
     fn text(&self) -> String {
         let mut builder = styling::OutputBuilder::new()
             .success_message("Script execution completed")
@@ -26,9 +24,5 @@ impl Message for SncastMessage<ScriptRunResponse> {
         }
 
         builder.build()
-    }
-
-    fn json(&self) -> Value {
-        serialize_json(self)
     }
 }

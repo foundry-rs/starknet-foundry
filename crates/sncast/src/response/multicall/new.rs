@@ -1,11 +1,9 @@
 use crate::response::cast_message::SncastMessage;
+use crate::response::cast_message::SncastTextMessage;
 use crate::response::command::CommandResponse;
-use crate::response::helpers::serialize_json;
 use camino::Utf8PathBuf;
-use foundry_ui::Message;
 use foundry_ui::styling;
 use serde::Serialize;
-use serde_json::Value;
 
 #[derive(Serialize, Clone)]
 pub struct MulticallNewResponse {
@@ -15,7 +13,7 @@ pub struct MulticallNewResponse {
 
 impl CommandResponse for MulticallNewResponse {}
 
-impl Message for SncastMessage<MulticallNewResponse> {
+impl SncastTextMessage for SncastMessage<MulticallNewResponse> {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
             .success_message("Multicall template created successfully")
@@ -23,9 +21,5 @@ impl Message for SncastMessage<MulticallNewResponse> {
             .field("Path", self.command_response.path.as_ref())
             .field("Content", self.command_response.content.as_ref())
             .build()
-    }
-
-    fn json(&self) -> Value {
-        serialize_json(self)
     }
 }

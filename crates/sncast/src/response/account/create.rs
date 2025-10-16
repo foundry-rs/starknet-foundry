@@ -1,15 +1,12 @@
-use crate::response::cast_message::SncastMessage;
-use crate::response::helpers::serialize_json;
+use crate::response::cast_message::{SncastMessage, SncastTextMessage};
 use crate::{
     helpers::block_explorer::LinkProvider,
     response::{command::CommandResponse, explorer_link::OutputLink},
 };
 use conversions::padded_felt::PaddedFelt;
 use conversions::string::IntoPaddedHexStr;
-use foundry_ui::Message;
 use foundry_ui::styling;
 use serde::{Serialize, Serializer};
-use serde_json::Value;
 
 fn as_str<S>(value: &u128, serializer: S) -> Result<S::Ok, S::Error>
 where
@@ -29,7 +26,7 @@ pub struct AccountCreateResponse {
 
 impl CommandResponse for AccountCreateResponse {}
 
-impl Message for SncastMessage<AccountCreateResponse> {
+impl SncastTextMessage for SncastMessage<AccountCreateResponse> {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
             .success_message("Account created")
@@ -45,10 +42,6 @@ impl Message for SncastMessage<AccountCreateResponse> {
             .blank_line()
             .text_field(&self.command_response.message)
             .build()
-    }
-
-    fn json(&self) -> Value {
-        serialize_json(self)
     }
 }
 

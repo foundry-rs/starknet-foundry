@@ -1,12 +1,10 @@
 use super::command::CommandResponse;
 use crate::response::cast_message::SncastMessage;
-use crate::response::helpers::serialize_json;
+use crate::response::cast_message::SncastTextMessage;
 use conversions::serde::serialize::CairoSerialize;
 use conversions::string::IntoHexStr;
-use foundry_ui::Message;
 use foundry_ui::styling;
 use serde::Serialize;
-use serde_json::Value;
 use starknet_types_core::felt::Felt;
 
 #[derive(Serialize, CairoSerialize, Clone)]
@@ -16,7 +14,7 @@ pub struct CallResponse {
 
 impl CommandResponse for CallResponse {}
 
-impl Message for SncastMessage<CallResponse> {
+impl SncastTextMessage for SncastMessage<CallResponse> {
     fn text(&self) -> String {
         let response_values = self
             .command_response
@@ -31,9 +29,5 @@ impl Message for SncastMessage<CallResponse> {
             .blank_line()
             .field("Response", &format!("[{response_values}]"))
             .build()
-    }
-
-    fn json(&self) -> Value {
-        serialize_json(self)
     }
 }

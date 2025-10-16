@@ -1,10 +1,8 @@
 use crate::response::cast_message::SncastMessage;
+use crate::response::cast_message::SncastTextMessage;
 use crate::response::command::CommandResponse;
-use crate::response::helpers::serialize_json;
-use foundry_ui::Message;
 use foundry_ui::styling;
 use serde::Serialize;
-use serde_json::Value;
 
 #[derive(Serialize, Clone)]
 pub struct AccountImportResponse {
@@ -14,7 +12,7 @@ pub struct AccountImportResponse {
 
 impl CommandResponse for AccountImportResponse {}
 
-impl Message for SncastMessage<AccountImportResponse> {
+impl SncastTextMessage for SncastMessage<AccountImportResponse> {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
             .success_message("Account imported successfully")
@@ -25,9 +23,5 @@ impl Message for SncastMessage<AccountImportResponse> {
                 |builder, profile| builder.field("Add Profile", profile),
             )
             .build()
-    }
-
-    fn json(&self) -> Value {
-        serialize_json(self)
     }
 }

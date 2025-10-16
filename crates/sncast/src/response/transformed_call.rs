@@ -1,14 +1,12 @@
 use super::command::CommandResponse;
 use crate::response::call::CallResponse;
 use crate::response::cast_message::SncastMessage;
-use crate::response::helpers::serialize_json;
+use crate::response::cast_message::SncastTextMessage;
 use anyhow::Result;
 use conversions::string::IntoHexStr;
 use data_transformer::reverse_transform_output;
-use foundry_ui::Message;
 use foundry_ui::styling;
 use serde::Serialize;
-use serde_json::Value;
 use starknet::core::types::{ContractClass, contract::AbiEntry};
 use starknet_types_core::felt::Felt;
 
@@ -20,7 +18,7 @@ pub struct TransformedCallResponse {
 
 impl CommandResponse for TransformedCallResponse {}
 
-impl Message for SncastMessage<TransformedCallResponse> {
+impl SncastTextMessage for SncastMessage<TransformedCallResponse> {
     fn text(&self) -> String {
         let response_raw_values = self
             .command_response
@@ -36,10 +34,6 @@ impl Message for SncastMessage<TransformedCallResponse> {
             .field("Response", &self.command_response.response)
             .field("Response Raw", &format!("[{response_raw_values}]"))
             .build()
-    }
-
-    fn json(&self) -> Value {
-        serialize_json(self)
     }
 }
 

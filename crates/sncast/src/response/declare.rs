@@ -1,7 +1,6 @@
 use super::{command::CommandResponse, explorer_link::OutputLink};
 use crate::helpers::block_explorer::LinkProvider;
-use crate::response::cast_message::SncastMessage;
-use crate::response::helpers::serialize_json;
+use crate::response::cast_message::{SncastMessage, SncastTextMessage};
 use anyhow::Error;
 use camino::Utf8PathBuf;
 use conversions::string::IntoHexStr;
@@ -23,7 +22,7 @@ pub struct DeclareTransactionResponse {
 
 impl CommandResponse for DeclareTransactionResponse {}
 
-impl Message for SncastMessage<DeclareTransactionResponse> {
+impl SncastTextMessage for SncastMessage<DeclareTransactionResponse> {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
             .success_message("Declaration completed")
@@ -37,10 +36,6 @@ impl Message for SncastMessage<DeclareTransactionResponse> {
                 &self.command_response.transaction_hash.into_hex_string(),
             )
             .build()
-    }
-
-    fn json(&self) -> Value {
-        serialize_json(self)
     }
 }
 

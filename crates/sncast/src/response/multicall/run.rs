@@ -1,4 +1,4 @@
-use crate::response::helpers::serialize_json;
+use crate::response::cast_message::SncastTextMessage;
 use crate::{
     helpers::block_explorer::LinkProvider,
     response::{
@@ -8,10 +8,8 @@ use crate::{
 };
 use conversions::string::IntoHexStr;
 use conversions::{padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
-use foundry_ui::Message;
 use foundry_ui::styling;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 #[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct MulticallRunResponse {
@@ -20,7 +18,7 @@ pub struct MulticallRunResponse {
 
 impl CommandResponse for MulticallRunResponse {}
 
-impl Message for SncastMessage<MulticallRunResponse> {
+impl SncastTextMessage for SncastMessage<MulticallRunResponse> {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
             .success_message("Multicall completed")
@@ -30,10 +28,6 @@ impl Message for SncastMessage<MulticallRunResponse> {
                 &self.command_response.transaction_hash.into_hex_string(),
             )
             .build()
-    }
-
-    fn json(&self) -> Value {
-        serialize_json(self)
     }
 }
 

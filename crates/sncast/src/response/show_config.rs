@@ -1,12 +1,10 @@
 use super::command::CommandResponse;
 use crate::helpers::block_explorer;
 use crate::response::cast_message::SncastMessage;
-use crate::response::helpers::serialize_json;
+use crate::response::cast_message::SncastTextMessage;
 use camino::Utf8PathBuf;
-use foundry_ui::Message;
 use foundry_ui::styling;
 use serde::Serialize;
-use serde_json::Value;
 
 #[derive(Serialize, Clone)]
 pub struct ShowConfigResponse {
@@ -24,7 +22,7 @@ pub struct ShowConfigResponse {
 
 impl CommandResponse for ShowConfigResponse {}
 
-impl Message for SncastMessage<ShowConfigResponse> {
+impl SncastTextMessage for SncastMessage<ShowConfigResponse> {
     fn text(&self) -> String {
         let builder = styling::OutputBuilder::new()
             .if_some(self.command_response.profile.as_ref(), |b, profile| {
@@ -63,9 +61,5 @@ impl Message for SncastMessage<ShowConfigResponse> {
             );
 
         builder.build()
-    }
-
-    fn json(&self) -> Value {
-        serialize_json(self)
     }
 }
