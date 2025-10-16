@@ -136,6 +136,7 @@ async fn test_package_with_config_resolved(
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
     forge_config: &ForgeConfig,
+    tests_filter: &TestsFilter,
 ) -> Result<Vec<TestTargetWithResolvedConfig>> {
     let mut test_targets_with_resolved_config = Vec::with_capacity(test_targets.len());
 
@@ -145,7 +146,8 @@ async fn test_package_with_config_resolved(
             &forge_config.test_runner_config.tracked_resource,
         )?;
 
-        let test_target = resolve_config(test_target, fork_targets, block_number_map).await?;
+        let test_target =
+            resolve_config(test_target, fork_targets, block_number_map, tests_filter).await?;
 
         test_targets_with_resolved_config.push(test_target);
     }
@@ -174,6 +176,7 @@ pub async fn run_for_package(
         &fork_targets,
         block_number_map,
         &forge_config,
+        &tests_filter,
     )
     .await?;
     let all_tests = sum_test_cases(&test_targets);
