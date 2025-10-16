@@ -10,7 +10,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execut
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
-use blockifier::execution::call_info::{OrderedEvent, OrderedL2ToL1Message};
+use blockifier::execution::call_info::{ExecutionSummary, OrderedEvent, OrderedL2ToL1Message};
 use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
@@ -203,6 +203,18 @@ impl<T> CheatStatus<T> {
     }
 }
 
+#[derive(Debug)]
+pub struct GasReportData {
+    pub execution_summary: ExecutionSummary,
+}
+
+impl GasReportData {
+    #[must_use]
+    pub fn new(execution_summary: ExecutionSummary) -> Self {
+        Self { execution_summary }
+    }
+}
+
 /// Tree structure representing trace of a call.
 #[derive(Debug)]
 pub struct CallTrace {
@@ -221,6 +233,9 @@ pub struct CallTrace {
     pub gas_consumed: u64,
     pub events: Vec<OrderedEvent>,
     pub signature: Vec<Felt>,
+
+    // This is updated only once after the entire test execution.
+    pub gas_report_data: Option<GasReportData>,
 }
 
 impl CairoSerialize for CallTrace {
@@ -253,6 +268,7 @@ impl CallTrace {
             gas_consumed: u64::default(),
             events: vec![],
             signature: vec![],
+            gas_report_data: None,
         }
     }
 

@@ -1,4 +1,4 @@
-use core::starknet::ContractAddress;
+use starknet::ContractAddress;
 use crate::cheatcode::execute_cheatcode_and_deserialize;
 
 /// Tree-like structure which contains all of the starknet calls and sub-calls along with the

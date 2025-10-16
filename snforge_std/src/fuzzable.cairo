@@ -1,4 +1,5 @@
 use core::fmt::Debug;
+use starknet::ContractAddress;
 pub use super::cheatcodes::generate_arg::generate_arg;
 
 const MAX_FELT: felt252 = 0x800000000000011000000000000000000000000000000000000000000000000;
@@ -81,5 +82,29 @@ pub impl FuzzableByteArray1000ASCII of Fuzzable<ByteArray> {
         }
 
         ba
+    }
+}
+
+pub impl FuzzableBool of Fuzzable<bool> {
+    fn blank() -> bool {
+        false
+    }
+
+    fn generate() -> bool {
+        generate_arg(0, 1) == 1
+    }
+}
+
+pub impl FuzzableContractAddress of Fuzzable<ContractAddress> {
+    fn blank() -> ContractAddress {
+        0x1.try_into().expect('0x1 should be a valid address')
+    }
+
+    fn generate() -> ContractAddress {
+        // [0, 2 ** 251)
+        let arg = generate_arg(
+            0x0, 3618502788666131106986593281521497120414687020801267626233049500247285301247,
+        );
+        arg.try_into().expect('Should be a valid address')
     }
 }
