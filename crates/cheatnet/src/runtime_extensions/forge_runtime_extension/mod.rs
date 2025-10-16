@@ -742,14 +742,22 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &mut C
     }
 }
 
-pub fn compute_and_store_execution_summary(trace: &Rc<RefCell<CallTrace>>) -> ExecutionSummary {
+pub fn compute_and_store_execution_summary(trace: &Rc<RefCell<CallTrace>>) {
     let execution_summary = if trace.borrow().nested_calls.is_empty() {
         get_call_execution_summary(trace)
     } else {
         let mut nested_calls_summaries = vec![];
         for nested_call in &trace.borrow().nested_calls {
             if let CallTraceNode::EntryPointCall(nested_call) = nested_call {
-                nested_calls_summaries.push(compute_and_store_execution_summary(nested_call));
+                compute_and_store_execution_summary(nested_call);
+                nested_calls_summaries.push(
+                    nested_call
+                        .borrow()
+                        .gas_report_data
+                        .as_ref()
+                        .expect("Gas report data must be set after calling `compute_and_store_execution_summary`")
+                        .execution_summary
+                        .clone());
             }
         }
         let mut current_call_summary =
@@ -764,8 +772,6 @@ pub fn compute_and_store_execution_summary(trace: &Rc<RefCell<CallTrace>>) -> Ex
     };
 
     trace.borrow_mut().gas_report_data = Some(GasReportData::new(execution_summary.clone()));
-
-    execution_summary
 }
 
 // Based on blockifier/src/execution/call_info.rs (summarize)
