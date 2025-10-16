@@ -11,14 +11,17 @@ use blockifier::execution::syscalls::hint_processor::{
 use blockifier::execution::syscalls::syscall_base::SyscallHandlerBase;
 use starknet_types_core::felt::Felt;
 
+// Based on https://github.com/software-mansion-labs/sequencer/blob/57447e3e8897d4e7ce7f3ec8d23af58d5b6bf1a7/crates/blockifier/src/execution/syscalls/syscall_base.rs#L435
 #[expect(clippy::mut_mut)]
-#[allow(clippy::result_large_err)]
+#[expect(clippy::result_large_err)]
 pub fn execute_inner_call(
+    // region: Modified blockifier code
     syscall_handler_base: &mut SyscallHandlerBase,
     cheatnet_state: &mut CheatnetState,
     call: &mut CallEntryPoint,
     remaining_gas: &mut u64,
 ) -> BaseSyscallResult<Vec<Felt>> {
+    // endregion
     let revert_idx = syscall_handler_base.context.revert_infos.0.len();
 
     // region: Modified blockifier code
