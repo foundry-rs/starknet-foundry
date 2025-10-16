@@ -10,6 +10,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execut
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
+use blockifier::blockifier_versioned_constants::VersionedConstants;
 use blockifier::execution::call_info::{ExecutionSummary, OrderedEvent, OrderedL2ToL1Message};
 use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::execution::entry_point::CallEntryPoint;
@@ -29,13 +30,15 @@ use runtime::starknet::context::SerializableBlockInfo;
 use runtime::starknet::state::DictStateReader;
 use starknet_api::block::BlockInfo;
 use starknet_api::core::{ChainId, EntryPointSelector};
+use starknet_api::execution_resources::GasVector;
 use starknet_api::transaction::fields::ContractAddressSalt;
+use starknet_api::transaction::fields::GasVectorComputationMode;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
     state::StorageKey,
 };
 use starknet_types_core::felt::Felt;
-use std::cell::{Ref, RefCell};
+use std::cell::{OnceCell, Ref, RefCell};
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
 use std::rc::Rc;
@@ -203,15 +206,28 @@ impl<T> CheatStatus<T> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct GasReportData {
     pub execution_summary: ExecutionSummary,
+    partial_gas_usage: OnceCell<GasVector>,
 }
 
 impl GasReportData {
     #[must_use]
     pub fn new(execution_summary: ExecutionSummary) -> Self {
-        Self { execution_summary }
+        Self {
+            execution_summary,
+            partial_gas_usage: OnceCell::new(),
+        }
+    }
+
+    pub fn get_gas(&self) -> &GasVector {
+        self.partial_gas_usage.get_or_init(|| {
+            self.execution_summary.clone().to_partial_gas_vector(
+                VersionedConstants::latest_constants(),
+                &GasVectorComputationMode::All,
+            )
+        })
     }
 }
 
