@@ -1,6 +1,6 @@
 use super::command::CommandResponse;
-use crate::response::cast_message::SncastMessage;
 use crate::response::cast_message::SncastCommandMessage;
+use crate::response::cast_message::SncastMessage;
 use conversions::serde::serialize::CairoSerialize;
 use conversions::string::IntoHexStr;
 use foundry_ui::styling;

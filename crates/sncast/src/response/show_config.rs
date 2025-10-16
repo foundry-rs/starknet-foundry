@@ -1,7 +1,7 @@
 use super::command::CommandResponse;
 use crate::helpers::block_explorer;
-use crate::response::cast_message::SncastMessage;
 use crate::response::cast_message::SncastCommandMessage;
+use crate::response::cast_message::SncastMessage;
 use camino::Utf8PathBuf;
 use foundry_ui::styling;
 use serde::Serialize;

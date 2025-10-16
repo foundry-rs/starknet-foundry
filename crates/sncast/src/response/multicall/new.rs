@@ -1,5 +1,5 @@
-use crate::response::cast_message::SncastMessage;
 use crate::response::cast_message::SncastCommandMessage;
+use crate::response::cast_message::SncastMessage;
 use crate::response::command::CommandResponse;
 use camino::Utf8PathBuf;
 use foundry_ui::styling;

@@ -1,6 +1,6 @@
 use super::{command::CommandResponse, explorer_link::OutputLink};
 use crate::helpers::block_explorer::LinkProvider;
-use crate::response::cast_message::{SncastMessage, SncastCommandMessage};
+use crate::response::cast_message::{SncastCommandMessage, SncastMessage};
 use anyhow::Error;
 use camino::Utf8PathBuf;
 use conversions::string::IntoHexStr;

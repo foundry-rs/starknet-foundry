@@ -1,4 +1,4 @@
-use crate::response::cast_message::{SncastMessage, SncastCommandMessage};
+use crate::response::cast_message::{SncastCommandMessage, SncastMessage};
 use crate::{
     helpers::block_explorer::LinkProvider,
     response::{command::CommandResponse, explorer_link::OutputLink},
