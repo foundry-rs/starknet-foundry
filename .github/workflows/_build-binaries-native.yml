@@ -23,30 +23,37 @@ jobs:
 
     strategy:
       matrix:
+        # Currently we have only managed to build successfuly on x86 gnu Linux
+        # - On MacOS, LLVM is installed with brew and the built binary requires having LLVM installed through it,
+        #   even though it is supossed to be bundled.
+        # - MUSL Linux was not investigated
+        # - Aarch64 Linux requires LLVM to be build for Aarch64, but proc macros run against host OS, which is x86_64
+        #   when building through cross. With current setup, we install LLVM for only one of these arches.
+        #   We need to investigate cross compiling LLVM for multiple architectures.
         include:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             system: linux
 
-          - target: x86_64-unknown-linux-musl
-            os: ubuntu-latest
-            system: linux
-
-          - target: aarch64-unknown-linux-gnu
-            os: ubuntu-latest
-            system: linux
-
-          - target: aarch64-unknown-linux-musl
-            os: ubuntu-latest
-            system: linux
-
-          - target: x86_64-apple-darwin
-            os: macos-14-large
-            system: macos
-
-          - target: aarch64-apple-darwin
-            os: macos-latest
-            system: macos
+#          - target: x86_64-unknown-linux-musl
+#            os: ubuntu-latest
+#            system: linux
+#
+#          - target: aarch64-unknown-linux-gnu
+#            os: ubuntu-latest
+#            system: linux
+#
+#          - target: aarch64-unknown-linux-musl
+#            os: ubuntu-latest
+#            system: linux
+#
+#          - target: x86_64-apple-darwin
+#            os: macos-14-large
+#            system: macos
+#
+#          - target: aarch64-apple-darwin
+#            os: macos-latest
+#            system: macos
 
     steps:
       - name: Checkout with ref
