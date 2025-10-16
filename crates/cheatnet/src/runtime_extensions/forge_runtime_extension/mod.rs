@@ -744,7 +744,7 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &mut C
 
 pub fn compute_and_store_execution_summary(trace: &Rc<RefCell<CallTrace>>) {
     let execution_summary = if trace.borrow().nested_calls.is_empty() {
-        get_call_execution_summary(trace)
+        get_execution_summary_without_nested_calls(trace)
     } else {
         let mut nested_calls_summaries = vec![];
         for nested_call in &trace.borrow().nested_calls {
@@ -760,8 +760,8 @@ pub fn compute_and_store_execution_summary(trace: &Rc<RefCell<CallTrace>>) {
                         .clone());
             }
         }
-        let mut current_call_summary =
-            get_call_execution_summary(trace) + nested_calls_summaries.into_iter().sum();
+        let mut current_call_summary = get_execution_summary_without_nested_calls(trace)
+            + nested_calls_summaries.into_iter().sum();
 
         // vm_resources and gas_consumed of a call already contain the resources of its inner calls.
         current_call_summary.charged_resources.vm_resources =
@@ -775,7 +775,7 @@ pub fn compute_and_store_execution_summary(trace: &Rc<RefCell<CallTrace>>) {
 }
 
 // Based on blockifier/src/execution/call_info.rs (summarize)
-fn get_call_execution_summary(trace: &Rc<RefCell<CallTrace>>) -> ExecutionSummary {
+fn get_execution_summary_without_nested_calls(trace: &Rc<RefCell<CallTrace>>) -> ExecutionSummary {
     let current_call = trace.borrow();
     ExecutionSummary {
         charged_resources: ChargedResources {
