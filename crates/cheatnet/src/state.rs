@@ -208,8 +208,8 @@ impl<T> CheatStatus<T> {
 
 #[derive(Clone, Debug)]
 pub struct GasReportData {
-    execution_summary: ExecutionSummary,
-    gas: OnceCell<GasVector>,
+    pub execution_summary: ExecutionSummary,
+    partial_gas_usage: OnceCell<GasVector>,
 }
 
 impl GasReportData {
@@ -217,12 +217,12 @@ impl GasReportData {
     pub fn new(execution_summary: ExecutionSummary) -> Self {
         Self {
             execution_summary,
-            gas: OnceCell::new(),
+            partial_gas_usage: OnceCell::new(),
         }
     }
 
     pub fn get_gas(&self) -> &GasVector {
-        self.gas.get_or_init(|| {
+        self.partial_gas_usage.get_or_init(|| {
             self.execution_summary.clone().to_partial_gas_vector(
                 VersionedConstants::latest_constants(),
                 &GasVectorComputationMode::All,
