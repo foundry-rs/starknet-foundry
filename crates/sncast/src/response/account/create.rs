@@ -1,4 +1,4 @@
-use crate::response::cast_message::{SncastMessage, SncastTextMessage};
+use crate::response::cast_message::{SncastMessage, SncastCommandMessage};
 use crate::{
     helpers::block_explorer::LinkProvider,
     response::{command::CommandResponse, explorer_link::OutputLink},
@@ -26,7 +26,7 @@ pub struct AccountCreateResponse {
 
 impl CommandResponse for AccountCreateResponse {}
 
-impl SncastTextMessage for SncastMessage<AccountCreateResponse> {
+impl SncastCommandMessage for SncastMessage<AccountCreateResponse> {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
             .success_message("Account created")

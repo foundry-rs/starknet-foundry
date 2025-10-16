@@ -1,7 +1,7 @@
 use super::command::CommandResponse;
 use crate::response::call::CallResponse;
+use crate::response::cast_message::SncastCommandMessage;
 use crate::response::cast_message::SncastMessage;
-use crate::response::cast_message::SncastTextMessage;
 use anyhow::Result;
 use conversions::string::IntoHexStr;
 use data_transformer::reverse_transform_output;
@@ -18,7 +18,7 @@ pub struct TransformedCallResponse {
 
 impl CommandResponse for TransformedCallResponse {}
 
-impl SncastTextMessage for SncastMessage<TransformedCallResponse> {
+impl SncastCommandMessage for SncastMessage<TransformedCallResponse> {
     fn text(&self) -> String {
         let response_raw_values = self
             .command_response

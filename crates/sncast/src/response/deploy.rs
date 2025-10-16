@@ -1,6 +1,6 @@
 use super::command::CommandResponse;
 use crate::helpers::block_explorer::LinkProvider;
-use crate::response::cast_message::{SncastMessage, SncastTextMessage};
+use crate::response::cast_message::{SncastCommandMessage, SncastMessage};
 use crate::response::declare::DeclareTransactionResponse;
 use crate::response::explorer_link::OutputLink;
 use conversions::string::IntoPaddedHexStr;
@@ -18,7 +18,7 @@ pub enum DeployResponse {
 
 impl CommandResponse for DeployResponse {}
 
-impl SncastTextMessage for SncastMessage<DeployResponse> {
+impl SncastCommandMessage for SncastMessage<DeployResponse> {
     fn text(&self) -> String {
         match &self.command_response {
             DeployResponse::Standard(response) => response.text(),

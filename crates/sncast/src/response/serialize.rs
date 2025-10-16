@@ -1,6 +1,6 @@
 use super::command::CommandResponse;
 use crate::response::cast_message::SncastMessage;
-use crate::response::cast_message::SncastTextMessage;
+use crate::response::cast_message::SncastCommandMessage;
 use conversions::serde::serialize::CairoSerialize;
 use foundry_ui::styling;
 use serde::{Deserialize, Serialize};
@@ -13,7 +13,7 @@ pub struct SerializeResponse {
 
 impl CommandResponse for SerializeResponse {}
 
-impl SncastTextMessage for SncastMessage<SerializeResponse> {
+impl SncastCommandMessage for SncastMessage<SerializeResponse> {
     fn text(&self) -> String {
         let calldata = format!("{:?}", &self.command_response.calldata);
 

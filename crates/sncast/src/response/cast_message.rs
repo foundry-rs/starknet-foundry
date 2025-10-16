@@ -9,16 +9,16 @@ pub struct SncastMessage<T: CommandResponse> {
     pub command_response: T,
 }
 
-pub trait SncastTextMessage {
+pub trait SncastCommandMessage {
     fn text(&self) -> String;
 }
 
 impl<T: CommandResponse> Message for SncastMessage<T>
 where
-    SncastMessage<T>: SncastTextMessage,
+    SncastMessage<T>: SncastCommandMessage,
 {
     fn text(&self) -> String {
-        SncastTextMessage::text(self)
+        SncastCommandMessage::text(self)
     }
 
     fn json(&self) -> Value {

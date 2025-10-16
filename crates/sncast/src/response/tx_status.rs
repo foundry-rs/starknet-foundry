@@ -1,6 +1,6 @@
 use super::command::CommandResponse;
+use crate::response::cast_message::SncastCommandMessage;
 use crate::response::cast_message::SncastMessage;
-use crate::response::cast_message::SncastTextMessage;
 use conversions::serde::serialize::CairoSerialize;
 use foundry_ui::styling;
 use serde::Serialize;
@@ -28,7 +28,7 @@ pub struct TransactionStatusResponse {
 
 impl CommandResponse for TransactionStatusResponse {}
 
-impl SncastTextMessage for SncastMessage<TransactionStatusResponse> {
+impl SncastCommandMessage for SncastMessage<TransactionStatusResponse> {
     fn text(&self) -> String {
         let finality_status = match &self.command_response.finality_status {
             FinalityStatus::Received => "Received",

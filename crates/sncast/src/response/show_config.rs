@@ -1,7 +1,7 @@
 use super::command::CommandResponse;
 use crate::helpers::block_explorer;
 use crate::response::cast_message::SncastMessage;
-use crate::response::cast_message::SncastTextMessage;
+use crate::response::cast_message::SncastCommandMessage;
 use camino::Utf8PathBuf;
 use foundry_ui::styling;
 use serde::Serialize;
@@ -22,7 +22,7 @@ pub struct ShowConfigResponse {
 
 impl CommandResponse for ShowConfigResponse {}
 
-impl SncastTextMessage for SncastMessage<ShowConfigResponse> {
+impl SncastCommandMessage for SncastMessage<ShowConfigResponse> {
     fn text(&self) -> String {
         let builder = styling::OutputBuilder::new()
             .if_some(self.command_response.profile.as_ref(), |b, profile| {

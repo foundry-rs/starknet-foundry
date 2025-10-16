@@ -1,4 +1,4 @@
-use crate::response::cast_message::SncastTextMessage;
+use crate::response::cast_message::SncastCommandMessage;
 use crate::{
     helpers::block_explorer::LinkProvider,
     response::{
@@ -18,7 +18,7 @@ pub struct MulticallRunResponse {
 
 impl CommandResponse for MulticallRunResponse {}
 
-impl SncastTextMessage for SncastMessage<MulticallRunResponse> {
+impl SncastCommandMessage for SncastMessage<MulticallRunResponse> {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
             .success_message("Multicall completed")

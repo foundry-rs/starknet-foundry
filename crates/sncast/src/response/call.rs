@@ -1,6 +1,6 @@
 use super::command::CommandResponse;
 use crate::response::cast_message::SncastMessage;
-use crate::response::cast_message::SncastTextMessage;
+use crate::response::cast_message::SncastCommandMessage;
 use conversions::serde::serialize::CairoSerialize;
 use conversions::string::IntoHexStr;
 use foundry_ui::styling;
@@ -14,7 +14,7 @@ pub struct CallResponse {
 
 impl CommandResponse for CallResponse {}
 
-impl SncastTextMessage for SncastMessage<CallResponse> {
+impl SncastCommandMessage for SncastMessage<CallResponse> {
     fn text(&self) -> String {
         let response_values = self
             .command_response

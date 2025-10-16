@@ -1,5 +1,5 @@
 use crate::response::cast_message::SncastMessage;
-use crate::response::cast_message::SncastTextMessage;
+use crate::response::cast_message::SncastCommandMessage;
 use crate::response::command::CommandResponse;
 use camino::Utf8PathBuf;
 use foundry_ui::styling;
@@ -13,7 +13,7 @@ pub struct MulticallNewResponse {
 
 impl CommandResponse for MulticallNewResponse {}
 
-impl SncastTextMessage for SncastMessage<MulticallNewResponse> {
+impl SncastCommandMessage for SncastMessage<MulticallNewResponse> {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
             .success_message("Multicall template created successfully")

@@ -1,6 +1,6 @@
 use super::command::CommandResponse;
 use crate::response::cast_message::SncastMessage;
-use crate::response::cast_message::SncastTextMessage;
+use crate::response::cast_message::SncastCommandMessage;
 use foundry_ui::styling;
 use serde::Serialize;
 
@@ -11,7 +11,7 @@ pub struct VerifyResponse {
 
 impl CommandResponse for VerifyResponse {}
 
-impl SncastTextMessage for SncastMessage<VerifyResponse> {
+impl SncastCommandMessage for SncastMessage<VerifyResponse> {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
             .success_message("Verification completed")

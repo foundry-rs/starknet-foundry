@@ -1,4 +1,4 @@
-use crate::response::cast_message::SncastTextMessage;
+use crate::response::cast_message::SncastCommandMessage;
 use crate::response::{cast_message::SncastMessage, command::CommandResponse};
 use conversions::padded_felt::PaddedFelt;
 use conversions::{serde::serialize::CairoSerialize, string::IntoPaddedHexStr};
@@ -12,7 +12,7 @@ pub struct ClassHashResponse {
 
 impl CommandResponse for ClassHashResponse {}
 
-impl SncastTextMessage for SncastMessage<ClassHashResponse> {
+impl SncastCommandMessage for SncastMessage<ClassHashResponse> {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
             .field(

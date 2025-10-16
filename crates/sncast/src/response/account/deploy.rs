@@ -1,4 +1,4 @@
-use crate::response::cast_message::{SncastMessage, SncastTextMessage};
+use crate::response::cast_message::{SncastMessage, SncastCommandMessage};
 use crate::{
     helpers::block_explorer::LinkProvider,
     response::{command::CommandResponse, explorer_link::OutputLink, invoke::InvokeResponse},
@@ -23,7 +23,7 @@ impl From<InvokeResponse> for AccountDeployResponse {
     }
 }
 
-impl SncastTextMessage for SncastMessage<AccountDeployResponse> {
+impl SncastCommandMessage for SncastMessage<AccountDeployResponse> {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
             .success_message("Account deployed")
