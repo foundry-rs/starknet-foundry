@@ -2,6 +2,12 @@
 
 [`starknet-devnet`](https://0xspaceshard.github.io/starknet-devnet/) is a local Starknet node used for development and testing. `sncast` provides inbuilt support for some of its features, making it easier to work with it.
 
+## Automatic Devnet Detection
+
+You can use `--network devnet` to automatically detect and connect to a running `starknet-devnet` instance. `sncast` will look for running `starknet-devnet` processes, including those running in Docker/Podman containers, and automatically connect to them.
+
+This eliminates the need to manually specify the URL when working with devnet.
+
 ## Predeployed Accounts
 
 When you start `starknet-devnet`, it automatically predeploys some contracts, including set of accounts with known details (read more about them [here](https://0xspaceshard.github.io/starknet-devnet/docs/predeployed)).
@@ -21,7 +27,7 @@ Let's invoke a contract using `devnet-1` account.
 ```shell
 $ sncast --account devnet-1 invoke \
   --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
-  --function "get_balance"
+  --function "get_balance" --network devnet
 ```
 
 <details>

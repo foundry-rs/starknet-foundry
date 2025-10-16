@@ -5,8 +5,10 @@ use starknet::secp256r1::Secp256r1Point;
 use crate::cheatcode::execute_cheatcode_and_deserialize;
 use super::SignError;
 
+pub type Secp256r1CurveKeyPair = KeyPair<u256, Secp256r1Point>;
+
 pub impl Secp256r1CurveKeyPairImpl of KeyPairTrait<u256, Secp256r1Point> {
-    fn generate() -> KeyPair<u256, Secp256r1Point> {
+    fn generate() -> Secp256r1CurveKeyPair {
         let (secret_key, pk_x, pk_y) = execute_cheatcode_and_deserialize::<
             'generate_ecdsa_keys', (u256, u256, u256),
         >(array!['Secp256r1'].span());
@@ -16,7 +18,7 @@ pub impl Secp256r1CurveKeyPairImpl of KeyPairTrait<u256, Secp256r1Point> {
         KeyPair { secret_key, public_key }
     }
 
-    fn from_secret_key(secret_key: u256) -> KeyPair<u256, Secp256r1Point> {
+    fn from_secret_key(secret_key: u256) -> Secp256r1CurveKeyPair {
         if (secret_key == 0_u256
             || secret_key >= Secp256Trait::<Secp256r1Point>::get_curve_size()) {
             core::panic_with_felt252('invalid secret_key');
@@ -30,12 +32,8 @@ pub impl Secp256r1CurveKeyPairImpl of KeyPairTrait<u256, Secp256r1Point> {
     }
 }
 
-pub impl Secp256r1CurveSignerImpl of SignerTrait<
-    KeyPair<u256, Secp256r1Point>, u256, (u256, u256),
-> {
-    fn sign(
-        self: KeyPair<u256, Secp256r1Point>, message_hash: u256,
-    ) -> Result<(u256, u256), SignError> {
+pub impl Secp256r1CurveSignerImpl of SignerTrait<Secp256r1CurveKeyPair, u256, (u256, u256)> {
+    fn sign(self: Secp256r1CurveKeyPair, message_hash: u256) -> Result<(u256, u256), SignError> {
         let mut input = array!['Secp256r1'];
         self.secret_key.serialize(ref input);
         message_hash.serialize(ref input);
@@ -44,12 +42,8 @@ pub impl Secp256r1CurveSignerImpl of SignerTrait<
     }
 }
 
-pub impl Secp256r1CurveVerifierImpl of VerifierTrait<
-    KeyPair<u256, Secp256r1Point>, u256, (u256, u256),
-> {
-    fn verify(
-        self: KeyPair<u256, Secp256r1Point>, message_hash: u256, signature: (u256, u256),
-    ) -> bool {
+pub impl Secp256r1CurveVerifierImpl of VerifierTrait<Secp256r1CurveKeyPair, u256, (u256, u256)> {
+    fn verify(self: Secp256r1CurveKeyPair, message_hash: u256, signature: (u256, u256)) -> bool {
         let (r, s) = signature;
         is_valid_signature::<Secp256r1Point>(message_hash, r, s, self.public_key)
     }

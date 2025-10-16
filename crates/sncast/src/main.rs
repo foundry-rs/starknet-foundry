@@ -318,7 +318,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             });
 
             let block_explorer_link =
-                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
 
             let deploy_command_message = if let Ok(response) = &result {
                 // TODO(#3785)
@@ -329,7 +329,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     serde_json::from_str(&contract_artifacts.sierra)
                         .context("Failed to parse sierra artifact")?;
                 let network_flag = generate_network_flag(
-                    rpc.get_url(&config.url).as_deref(),
+                    rpc.get_url(&config.url).await.ok().as_deref(),
                     rpc.network.as_ref(),
                 );
                 Some(DeployCommandMessage::new(
@@ -354,7 +354,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::DeclareFrom(declare_from) => {
             let provider = declare_from.rpc.get_provider(&config, ui).await?;
-            let rpc_args = declare_from.rpc.clone();
             let source_provider = declare_from.source_rpc.get_provider(ui).await?;
 
             let account = get_account(
@@ -385,12 +384,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 }
             });
 
-            let block_explorer_link = block_explorer_link_if_allowed(
-                &result,
-                provider.chain_id().await?,
-                &rpc_args,
-                &config,
-            );
+            let block_explorer_link =
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
             process_command_result("declare-from", result, ui, block_explorer_link);
 
             Ok(())
@@ -506,7 +501,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             };
 
             let block_explorer_link =
-                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
             process_command_result("deploy", result, ui, block_explorer_link);
 
             Ok(())
@@ -589,7 +584,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             .map_err(handle_starknet_command_error);
 
             let block_explorer_link =
-                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
 
             process_command_result("invoke", result, ui, block_explorer_link);
 
