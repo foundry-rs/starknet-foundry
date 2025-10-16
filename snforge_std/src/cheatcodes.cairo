@@ -1,4 +1,4 @@
-use starknet::{ClassHash, ContractAddress, contract_address_const};
+use starknet::{ClassHash, ContractAddress};
 use super::cheatcode::execute_cheatcode_and_deserialize;
 pub mod block_hash;
 pub mod contract_class;
@@ -30,7 +30,7 @@ pub fn test_selector() -> felt252 {
 }
 
 pub fn test_address() -> ContractAddress {
-    contract_address_const::<469394814521890341860918960550914>()
+    469394814521890341860918960550914.try_into().expect('Test address should be valid')
 }
 
 /// Mocks contract call to a `function_selector` of a contract at the given address, for `n_times`
