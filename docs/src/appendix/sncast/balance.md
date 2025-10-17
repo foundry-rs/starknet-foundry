@@ -13,7 +13,7 @@ Name of the token to check the balance for. Possible values
 Optional.
 Conflicts with: [`--token`](#--token)
 
-Token contract address to check the balance for.
+Token contract address to check the balance for. Token needs to be compatible with ERC-20 standard.
 
 ## `--block-id, -b <BLOCK_ID>`
 Optional.
