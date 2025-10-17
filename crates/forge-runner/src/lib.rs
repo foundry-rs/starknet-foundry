@@ -176,9 +176,12 @@ fn run_with_fuzzing(
 
         let mut tasks = FuturesUnordered::new();
 
+        let program = case.try_into_program(&casm_program)?;
+
         for _ in 1..=fuzzer_runs.get() {
             tasks.push(run_fuzz_test(
                 case.clone(),
+                program.clone(),
                 casm_program.clone(),
                 forge_config.clone(),
                 versioned_program_path.clone(),
