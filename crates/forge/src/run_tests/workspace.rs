@@ -1,7 +1,8 @@
 use super::package::RunForPackageArgs;
-use super::structs::{LatestBlocksNumbersMessage, TestsFailureSummaryMessage};
 use crate::profile_validation::check_profile_compatibility;
-use crate::run_tests::structs::OverallSummaryMessage;
+use crate::run_tests::messages::latest_blocks_numbers::LatestBlocksNumbersMessage;
+use crate::run_tests::messages::overall_summary::OverallSummaryMessage;
+use crate::run_tests::messages::tests_failure_summary::TestsFailureSummaryMessage;
 use crate::warn::{
     error_if_snforge_std_deprecated_missing, error_if_snforge_std_deprecated_not_compatible,
     error_if_snforge_std_not_compatible, warn_if_backtrace_without_panic_hint,
