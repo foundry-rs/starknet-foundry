@@ -16,6 +16,8 @@ use cheatnet::state::ExtendedStateReader;
 use starknet_api::execution_resources::{GasAmount, GasVector};
 use starknet_api::transaction::fields::GasVectorComputationMode;
 
+pub mod stats;
+
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn calculate_used_gas(
     transaction_context: &TransactionContext,
