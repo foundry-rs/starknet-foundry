@@ -5,7 +5,7 @@
 ## Basic Example
 
 ```shell
-$ sncast --account user1 balance --network sepolia
+$ sncast --account my_account balance --network devnet
 ```
 
 <details>

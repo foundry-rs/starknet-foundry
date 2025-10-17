@@ -24,7 +24,7 @@ Tests: 3 passed, 0 failed, 0 ignored, 0 filtered out
 ## Filtering Tests
 
 You can pass a filter string after the `snforge test` command to filter tests.
-By default, any test with an [absolute module tree path](https://book.cairo-lang.org/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html#paths-for-referring-to-an-item-in-the-module-tree) matching the filter will be run.
+By default, any test with an [absolute module tree path](https://www.starknet.io/cairo-book/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html#paths-for-referring-to-an-item-in-the-module-tree) matching the filter will be run.
 
 ```shell
 $ snforge test calling
