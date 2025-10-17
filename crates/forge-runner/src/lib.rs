@@ -33,6 +33,7 @@ pub mod package_tests;
 pub mod profiler_api;
 pub mod test_case_summary;
 pub mod test_target_summary;
+pub mod tests_summary;
 
 pub mod backtrace;
 pub mod debugging;
@@ -176,9 +177,12 @@ fn run_with_fuzzing(
 
         let mut tasks = FuturesUnordered::new();
 
+        let program = case.try_into_program(&casm_program)?;
+
         for _ in 1..=fuzzer_runs.get() {
             tasks.push(run_fuzz_test(
                 case.clone(),
+                program.clone(),
                 casm_program.clone(),
                 forge_config.clone(),
                 versioned_program_path.clone(),
