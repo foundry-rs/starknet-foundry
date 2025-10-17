@@ -1,6 +1,5 @@
 use anyhow::Result;
 use forge_runner::messages::TestResultMessage;
-
 use forge_runner::{
     TestCaseFilter,
     forge_config::ForgeConfig,
