@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- Gas values in fuzzing test output are now displayed as whole numbers without fractional parts
+
 ## [0.51.0] - 2025-10-21
 
 ### Forge

@@ -21,7 +21,7 @@ storage updates, events and l1 <> l2 messages.
 
 While using the fuzzing feature additional gas statistics will be displayed:
 ```shell
-[PASS] tests::fuzzing_test (runs: 256, l1_gas: {max: ~126, min: ~1, mean: ~65.00, std deviation: ~37.31}, l1_data_gas: {max: ~126, min: ~1, mean: ~65.00, std deviation: ~37.31}, l2_gas: {max: ~126, min: ~1, mean: ~65.00, std deviation: ~37.31})
+[PASS] tests::fuzzing_test (runs: 256, l1_gas: {max: ~126, min: ~1, mean: ~65, std deviation: ~37}, l1_data_gas: {max: ~96, min: ~96, mean: ~96, std deviation: ~0}, l2_gas: {max: ~1888390, min: ~1852630, mean: ~1881888, std deviation: ~9322}})
 ```
 
 > 📝 **Note**

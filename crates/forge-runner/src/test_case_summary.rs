@@ -39,7 +39,7 @@ impl fmt::Display for GasStats {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "{{max: ~{}, min: ~{}, mean: ~{:.2}, std deviation: ~{:.2}}}",
+            "{{max: ~{}, min: ~{}, mean: ~{:.0}, std deviation: ~{:.0}}}",
             self.max, self.min, self.mean, self.std_deviation
         )
     }

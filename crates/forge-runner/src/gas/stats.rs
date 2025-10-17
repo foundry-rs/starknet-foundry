@@ -23,12 +23,20 @@ impl GasStats {
 
 #[expect(clippy::cast_precision_loss)]
 fn mean(values: &[u64]) -> f64 {
+    if values.is_empty() {
+        return 0.0;
+    }
+
     let sum: f64 = values.iter().map(|&x| x as f64).sum();
     sum / values.len() as f64
 }
 
 #[expect(clippy::cast_precision_loss)]
 fn std_deviation(mean: f64, values: &[u64]) -> f64 {
+    if values.is_empty() {
+        return 0.0;
+    }
+
     let sum_squared_diff = values
         .iter()
         .map(|&x| (x as f64 - mean).pow(2))
