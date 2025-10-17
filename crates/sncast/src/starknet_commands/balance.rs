@@ -21,7 +21,7 @@ pub struct TokenIdentifier {
     #[arg(value_enum, short = 't', long)]
     pub token: Option<Token>,
 
-    /// Token contract address to check the balance for.
+    /// Token contract address to check the balance for. Token needs to be compatible with ERC-20 standard.
     #[arg(short = 'd', long)]
     pub token_address: Option<Felt>,
 }
