@@ -29,6 +29,7 @@ The `--trace-components` flag allows you to specify which components of the trac
 - `caller-address`: the address of the caller contract
 - `call-type`: the type of the call (e.g., `Call`, `Delegate`, etc.)
 - `call-result`: the result of the call, transformed for display
+- `gas`: estimated L2 gas consumed by the call 
 
 Example usage:
 
@@ -122,17 +123,18 @@ $ snforge test --trace-verbosity standard
 
 Here's what each tag in the trace represents:
 
-| Tag                  | Description                                                                                                                                          |
-|----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `[test name]`        | The path to the test being executed, using the Cairo module structure. Indicates which test case produced this trace.                                |
-| `[selector]`         | The name of the contract function being called. The structure shows nested calls when one function triggers another.                                 |
-| `[contract name]`    | The name of the contract where the selector (function) was invoked. Helps trace calls across contracts.                                              |
-| `[entry point type]` | (In detailed view) Type of entry point used: External, Constructor, L1Handler. Useful to differentiate the context in which the call is executed.    |
-| `[calldata]`         | (In standard view and above) The arguments passed into the function call.                                                                            |
-| `[storage address]`  | (In detailed view) The storage address of the specific contract instance called. Helps identify which deployment is used if you're testing multiple. |
-| `[caller address]`   | (In detailed view) The address of the account or contract that made this call. Important to identify who triggered the function.                     |
-| `[call type]`        | (In detailed view) Call, Delegate. Describes how the function is being invoked.                                                                      |
-| `[call result]`      | (In standard view and above) The return value of the call, success or panic.                                                                         |
+| Tag                  | Description                                                                                                                                                                      |
+|----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `[test name]`        | The path to the test being executed, using the Cairo module structure. Indicates which test case produced this trace.                                                            |
+| `[selector]`         | The name of the contract function being called. The structure shows nested calls when one function triggers another.                                                             |
+| `[contract name]`    | The name of the contract where the selector (function) was invoked. Helps trace calls across contracts.                                                                          |
+| `[entry point type]` | (In detailed view) Type of entry point used: External, Constructor, L1Handler. Useful to differentiate the context in which the call is executed.                                |
+| `[calldata]`         | (In standard view and above) The arguments passed into the function call.                                                                                                        |
+| `[storage address]`  | (In detailed view) The storage address of the specific contract instance called. Helps identify which deployment is used if you're testing multiple.                             |
+| `[caller address]`   | (In detailed view) The address of the account or contract that made this call. Important to identify who triggered the function.                                                 |
+| `[call type]`        | (In detailed view) Call, Delegate. Describes how the function is being invoked.                                                                                                  |
+| `[call result]`      | (In standard view and above) The return value of the call, success or panic.                                                                                                     |
+| `[gas]`              | (In detailed view) L2 gas needed to execute the call. The calculation ignores state changes, calldata and signature lengths, L1 handler payload length and Starknet OS overhead. |
 
 
 

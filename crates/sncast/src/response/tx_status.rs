@@ -1,11 +1,9 @@
 use super::command::CommandResponse;
+use crate::response::cast_message::SncastCommandMessage;
 use crate::response::cast_message::SncastMessage;
 use conversions::serde::serialize::CairoSerialize;
-use foundry_ui::Message;
 use foundry_ui::styling;
 use serde::Serialize;
-use serde_json::Value;
-use serde_json::json;
 
 #[derive(Serialize, CairoSerialize, Clone)]
 pub enum FinalityStatus {
@@ -30,7 +28,7 @@ pub struct TransactionStatusResponse {
 
 impl CommandResponse for TransactionStatusResponse {}
 
-impl Message for SncastMessage<TransactionStatusResponse> {
+impl SncastCommandMessage for SncastMessage<TransactionStatusResponse> {
     fn text(&self) -> String {
         let finality_status = match &self.command_response.finality_status {
             FinalityStatus::Received => "Received",
@@ -54,15 +52,5 @@ impl Message for SncastMessage<TransactionStatusResponse> {
         }
 
         builder.build()
-    }
-
-    fn json(&self) -> Value {
-        serde_json::to_value(&self.command_response).unwrap_or_else(|err| {
-            json!({
-                "error": "Failed to serialize response",
-                "command": self.command,
-                "details": err.to_string()
-            })
-        })
     }
 }

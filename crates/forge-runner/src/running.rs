@@ -23,12 +23,12 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBl
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
-    ForgeExtension, ForgeRuntime, add_resources_to_top_call, get_all_used_resources,
-    update_top_call_l1_resources, update_top_call_resources, update_top_call_vm_trace,
+    ForgeExtension, ForgeRuntime, add_resources_to_top_call, compute_and_store_execution_summary,
+    get_all_used_resources, update_top_call_l1_resources, update_top_call_resources,
+    update_top_call_vm_trace,
 };
-use cheatnet::state::{
-    BlockInfoReader, CallTrace, CheatnetState, EncounteredErrors, ExtendedStateReader,
-};
+use cheatnet::state::{BlockInfoReader, CheatnetState, EncounteredErrors, ExtendedStateReader};
+use cheatnet::trace_data::CallTrace;
 use execution::finalize_execution;
 use hints::hints_by_representation;
 use rand::prelude::StdRng;
@@ -332,6 +332,7 @@ pub fn run_test_case(
 
     update_top_call_resources(&mut forge_runtime, tracked_resource);
     update_top_call_l1_resources(&mut forge_runtime);
+    compute_and_store_execution_summary(&call_trace_ref);
 
     let fuzzer_args = forge_runtime
         .extended_runtime

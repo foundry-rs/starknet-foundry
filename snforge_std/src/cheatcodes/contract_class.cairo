@@ -127,7 +127,7 @@ pub fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
 fn _prepare_calldata(
     class_hash: @ClassHash, constructor_calldata: @Array::<felt252>,
 ) -> Array<felt252> {
-    let class_hash: felt252 = class_hash.clone().into();
+    let class_hash: felt252 = (*class_hash).into();
     let mut inputs: Array<felt252> = array![class_hash];
     constructor_calldata.serialize(ref inputs);
     inputs

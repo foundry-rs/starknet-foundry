@@ -1,5 +1,5 @@
 use super::{TestCase, TestTarget};
-use crate::{expected_result::ExpectedTestResult, package_tests::TestDetails};
+use crate::{TestCaseIsIgnored, expected_result::ExpectedTestResult, package_tests::TestDetails};
 use anyhow::Result;
 use cairo_vm::types::program::Program;
 use cheatnet::runtime_extensions::forge_config_extension::config::{
@@ -54,4 +54,10 @@ pub struct TestCaseResolvedConfig {
     pub fork_config: Option<ResolvedForkConfig>,
     pub fuzzer_config: Option<RawFuzzerConfig>,
     pub disable_predeployed_contracts: bool,
+}
+
+impl TestCaseIsIgnored for TestCaseResolvedConfig {
+    fn is_ignored(&self) -> bool {
+        self.ignored
+    }
 }

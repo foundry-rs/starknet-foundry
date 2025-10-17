@@ -1,13 +1,13 @@
 use crate::contracts_data_store::ContractsDataStore;
 use crate::trace::types::{
-    CallerAddress, ContractAddress, ContractName, ContractTrace, Selector, TestName, TraceInfo,
-    TransformedCallResult, TransformedCalldata,
+    CallerAddress, ContractAddress, ContractName, ContractTrace, Gas, Selector, TestName,
+    TraceInfo, TransformedCallResult, TransformedCalldata,
 };
 use crate::{Context, Trace};
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult as CheatnetCallResult,
 };
-use cheatnet::state::{CallTrace, CallTraceNode};
+use cheatnet::trace_data::{CallTrace, CallTraceNode};
 use data_transformer::{reverse_transform_input, reverse_transform_output};
 use starknet::core::types::contract::AbiEntry;
 use starknet_api::core::ClassHash;
@@ -52,6 +52,7 @@ impl<'a> Collector<'a> {
             call_type: components.call_type(entry_point.call_type),
             nested_calls,
             call_result: components.call_result_lazy(|| self.collect_transformed_call_result(abi)),
+            gas: components.gas_lazy(|| self.collect_gas()),
         };
 
         ContractTrace {
@@ -123,6 +124,16 @@ impl<'a> Collector<'a> {
                 CallFailure::Error { msg } => format_result_message("error", &msg.to_string()),
             },
         })
+    }
+
+    fn collect_gas(&self) -> Gas {
+        Gas(self
+            .call_trace
+            .gas_report_data
+            .as_ref()
+            .expect("Gas report data must be updated after test execution")
+            .get_gas()
+            .l2_gas)
     }
 
     fn class_hash(&self) -> &ClassHash {

@@ -36,5 +36,5 @@ pub trait VerificationInterface<'a>: Sized {
         test_files: bool,
         ui: &UI,
     ) -> Result<VerifyResponse>;
-    fn gen_explorer_url(&self) -> String;
+    fn gen_explorer_url(&self) -> Result<String>;
 }
