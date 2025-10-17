@@ -163,6 +163,8 @@ pub enum TestCaseSummary<T: TestType> {
         /// Name of the test case
         name: String,
     },
+    /// Test case skipped due to partitioning
+    SkippedByPartition {},
     /// Test case skipped due to exit first or execution interrupted, test result is ignored.
     Interrupted {},
 }
@@ -182,7 +184,9 @@ impl<T: TestType> TestCaseSummary<T> {
             TestCaseSummary::Failed { name, .. }
             | TestCaseSummary::Passed { name, .. }
             | TestCaseSummary::Ignored { name, .. } => Some(name),
-            TestCaseSummary::Interrupted { .. } => None,
+            TestCaseSummary::Interrupted { .. } | TestCaseSummary::SkippedByPartition { .. } => {
+                None
+            }
         }
     }
 
@@ -264,6 +268,7 @@ impl TestCaseSummary<Fuzzing> {
             },
             TestCaseSummary::Ignored { name } => TestCaseSummary::Ignored { name: name.clone() },
             TestCaseSummary::Interrupted {} => TestCaseSummary::Interrupted {},
+            TestCaseSummary::SkippedByPartition {} => TestCaseSummary::SkippedByPartition {},
         }
     }
 }
@@ -489,6 +494,15 @@ impl AnyTestCaseSummary {
             self,
             AnyTestCaseSummary::Single(TestCaseSummary::Ignored { .. })
                 | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Ignored { .. })
+        )
+    }
+
+    #[must_use]
+    pub fn is_skipped_by_partition(&self) -> bool {
+        matches!(
+            self,
+            AnyTestCaseSummary::Single(TestCaseSummary::SkippedByPartition { .. })
+                | AnyTestCaseSummary::Fuzzing(TestCaseSummary::SkippedByPartition { .. })
         )
     }
 }

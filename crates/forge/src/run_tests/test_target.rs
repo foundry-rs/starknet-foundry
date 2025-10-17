@@ -1,3 +1,4 @@
+use crate::partition::PartitionConfig;
 use anyhow::Result;
 use forge_runner::messages::TestResultMessage;
 use forge_runner::{
@@ -25,6 +26,7 @@ pub async fn run_for_test_target(
     tests: TestTargetWithResolvedConfig,
     forge_config: Arc<ForgeConfig>,
     tests_filter: &impl TestCaseFilter,
+    partition_config: Option<&PartitionConfig>,
     ui: Arc<UI>,
 ) -> Result<TestTargetRunResult> {
     let casm_program = tests.casm_program.clone();
@@ -39,6 +41,27 @@ pub async fn run_for_test_target(
 
     for case in tests.test_cases {
         let case_name = case.name.clone();
+
+        if let Some(partition_config) = &partition_config {
+            let test_partition = partition_config
+                .partitions_mapping()
+                .get(&case.name)
+                .unwrap_or_else(|| {
+                    panic!("Test name '{}' not found in partitions mapping", case.name)
+                });
+            let should_run_in_partition =
+                *test_partition == partition_config.partition().index_1_based();
+
+            if !should_run_in_partition {
+                tasks.push(tokio::task::spawn(async {
+                    // TODO TestCaseType should also be encoded in the test case definition
+                    Ok(AnyTestCaseSummary::Single(
+                        TestCaseSummary::SkippedByPartition {},
+                    ))
+                }));
+                continue;
+            }
+        }
 
         if !tests_filter.should_be_run(&case) {
             tasks.push(tokio::task::spawn(async {
@@ -68,7 +91,7 @@ pub async fn run_for_test_target(
     while let Some(task) = tasks.next().await {
         let result = task??;
 
-        if !result.is_interrupted() {
+        if !result.is_interrupted() && !result.is_skipped_by_partition() {
             let test_result_message = TestResultMessage::new(
                 &result,
                 forge_config.output_config.detailed_resources,
