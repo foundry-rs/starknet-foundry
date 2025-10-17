@@ -130,10 +130,10 @@ mod tests {
 
         let balance = vec![
             Felt::from_hex("0xFFFFFFFFFFFFFFFF").unwrap(),
-            Felt::from_hex("0x0").unwrap(),
+            Felt::from_hex("0x2").unwrap(),
         ];
         let result = erc20_balance_to_u256(&balance).unwrap();
-        let expected = (U256::from(1u128) << 128) + U256::from(u128::MAX);
+        let expected = U256::from_dec_str("680564733841877041525364481164555130389").unwrap();
         assert_eq!(result, expected);
     }
 
