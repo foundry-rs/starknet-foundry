@@ -10,6 +10,8 @@ const ETH_CONTRACT_ADDRESS: Felt =
     felt!("0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7");
 
 #[derive(Default, Serialize, Clone, Copy, Debug, ValueEnum, strum_macros::Display)]
+// Both serde and strum enums need to have proper
+// casing configuration in clap and for serialization.
 #[strum(serialize_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum Token {

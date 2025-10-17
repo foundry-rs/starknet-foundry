@@ -71,7 +71,7 @@ pub async fn balance(
     account_address: Felt,
     provider: &JsonRpcClient<HttpTransport>,
     balance: &Balance,
-) -> Result<BalanceResponse, anyhow::Error> {
+) -> Result<BalanceResponse> {
     let call = FunctionCall {
         contract_address: balance.token_identifier.contract_address(),
         entry_point_selector: get_selector_from_name("balance_of").expect("Failed to get selector"),
@@ -110,4 +110,49 @@ fn erc20_balance_to_u256(balance: &[Felt]) -> Result<U256, Error> {
     bytes[16..32].copy_from_slice(&high.to_le_bytes());
 
     Ok(U256::from_little_endian(&bytes))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use primitive_types::U256;
+    use starknet::macros::felt;
+    use starknet_types_core::felt::Felt;
+
+    #[test]
+    fn test_happy_case() {
+        let balance = vec![
+            Felt::from_hex("0x1").unwrap(),
+            Felt::from_hex("0x0").unwrap(),
+        ];
+        let result = erc20_balance_to_u256(&balance).unwrap();
+        assert_eq!(result, U256::from(1u64));
+
+        let balance = vec![
+            Felt::from_hex("0xFFFFFFFFFFFFFFFF").unwrap(),
+            Felt::from_hex("0x0").unwrap(),
+        ];
+        let result = erc20_balance_to_u256(&balance).unwrap();
+        let expected = (U256::from(1u128) << 128) + U256::from(u128::MAX);
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_invalid_length() {
+        let balance = vec![felt!("0x1"), felt!("0x0"), felt!("0x0")];
+        let err = erc20_balance_to_u256(&balance).unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("Balance response should contain exactly two values"),
+            "Unexpected error: {err}"
+        );
+
+        let balance = vec![Felt::from_hex("0x1").unwrap()];
+        let err = erc20_balance_to_u256(&balance).unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("Balance response should contain exactly two values"),
+            "Unexpected error: {err}"
+        );
+    }
 }
