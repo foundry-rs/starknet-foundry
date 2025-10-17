@@ -33,6 +33,7 @@ pub mod package_tests;
 pub mod profiler_api;
 pub mod test_case_summary;
 pub mod test_target_summary;
+pub mod tests_summary;
 
 pub mod backtrace;
 pub mod debugging;

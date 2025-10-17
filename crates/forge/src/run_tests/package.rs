@@ -1,12 +1,15 @@
 use super::{
     resolve_config::resolve_config,
-    structs::{CollectedTestsCountMessage, TestsRunMessage, TestsSummaryMessage},
     test_target::{TestTargetRunResult, run_for_test_target},
 };
 use crate::{
     TestArgs,
     block_number_map::BlockNumberMap,
     combine_configs::combine_configs,
+    run_tests::messages::{
+        collected_tests_count::CollectedTestsCountMessage, tests_run::TestsRunMessage,
+        tests_summary::TestsSummaryMessage,
+    },
     scarb::{
         config::{ForgeConfigFromScarb, ForkTarget},
         load_test_artifacts, should_compile_starknet_contract_target,
