@@ -3,13 +3,13 @@ use crate::{
     response::{cast_message::SncastMessage, command::CommandResponse},
 };
 use foundry_ui::{Message, styling};
-use serde::Serialize;
+use primitive_types::U256;
+use serde::ser::{Serialize, SerializeStruct, Serializer};
 use serde_json::json;
-use starknet::core::types::U256;
 
-#[derive(Serialize, Debug)]
+#[derive(Debug)]
 pub struct BalanceResponse {
-    pub balance: (u128, u128),
+    pub balance: U256,
     pub token: Option<Token>,
 }
 
@@ -17,12 +17,10 @@ impl CommandResponse for BalanceResponse {}
 
 impl Message for SncastMessage<BalanceResponse> {
     fn text(&self) -> String {
-        let (low, high) = self.command_response.balance;
-        let balance = U256::from_words(low, high).to_string();
         let balance_str = if let Some(token) = self.command_response.token {
-            format!("{balance} {token}")
+            format!("{} {}", self.command_response.balance, token)
         } else {
-            balance
+            self.command_response.balance.to_string()
         };
 
         styling::OutputBuilder::new()
@@ -38,5 +36,19 @@ impl Message for SncastMessage<BalanceResponse> {
                 "details": err.to_string()
             })
         })
+    }
+}
+
+// We need custom serialization because U256's default serialization is hex string
+impl Serialize for BalanceResponse {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut s = serializer.serialize_struct("BalanceResponse", 2)?;
+        // Default U256 serialization uses hex string, we want decimal string
+        s.serialize_field("balance", &self.balance.to_string())?;
+        s.serialize_field("token", &self.token)?;
+        s.end()
     }
 }

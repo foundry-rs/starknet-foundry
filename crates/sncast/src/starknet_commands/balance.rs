@@ -1,5 +1,6 @@
-use anyhow::{Result, anyhow};
+use anyhow::{Error, Result};
 use clap::Args;
+use primitive_types::U256;
 use sncast::get_block_id;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::helpers::token::Token;
@@ -38,7 +39,7 @@ impl TokenIdentifier {
         }
     }
 
-    pub fn displayed_token(&self) -> Option<Token> {
+    pub fn token_suffix(&self) -> Option<Token> {
         match (self.token, self.token_address) {
             (Some(token), None) => Some(token),
             (None, Some(_)) => None,
@@ -82,28 +83,31 @@ pub async fn balance(
         .call(call, block_id)
         .await
         .map_err(|err| StarknetCommandError::ProviderError(SNCastProviderError::from(err)))?;
-    let res: Result<Vec<u128>, _> = res
-        .iter()
-        .map(|val| {
-            u128::from_str_radix(&val.to_string(), 16)
-                .map_err(|_| anyhow::anyhow!("Failed to parse balance as u128"))
-        })
-        .collect();
 
-    let (low, high) = match res?.as_slice() {
-        [low, high] => (*low, *high),
-        _ => {
-            // return Err(StarknetCommandError::UnknownError(anyhow!(
-            //     "Balance response should contain exactly two u128 values"
-            // )));
-            return Err(anyhow!(
-                "Balance response should contain exactly two u128 values"
-            ));
-        }
-    };
+    let token = &balance.token_identifier.token_suffix();
+    let balance = erc20_balance_to_u256(&res)?;
 
     Ok(BalanceResponse {
-        balance: (low, high),
-        token: balance.token_identifier.displayed_token(),
+        balance,
+        token: *token,
     })
+}
+
+fn erc20_balance_to_u256(balance: &[Felt]) -> Result<U256, Error> {
+    if balance.len() != 2 {
+        return Err(anyhow::anyhow!(
+            "Balance response should contain exactly two values"
+        ));
+    }
+
+    let low: u128 = u128::from_str_radix(&balance[0].to_string(), 16)
+        .map_err(|_| anyhow::anyhow!("Failed to parse low part of balance as u128"))?;
+    let high = u128::from_str_radix(&balance[1].to_string(), 16)
+        .map_err(|_| anyhow::anyhow!("Failed to parse high part of balance as u128"))?;
+
+    let mut bytes = [0u8; 32];
+    bytes[0..16].copy_from_slice(&low.to_le_bytes());
+    bytes[16..32].copy_from_slice(&high.to_le_bytes());
+
+    Ok(U256::from_little_endian(&bytes))
 }

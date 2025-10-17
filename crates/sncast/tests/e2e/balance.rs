@@ -29,6 +29,29 @@ pub async fn happy_case() {
     "});
 }
 
+#[tokio::test]
+pub async fn happy_case_json() {
+    let tempdir = tempdir().unwrap();
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let args = vec![
+        "--json",
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user1",
+        "balance",
+        "--url",
+        URL,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().stdout_matches(indoc! {r#"
+        {"balance":"[..]","token":"strk"}
+    "#});
+}
+
 #[test_case(&Token::Strk)]
 #[test_case(&Token::Eth)]
 #[tokio::test]
@@ -130,6 +153,29 @@ pub async fn happy_case_with_token_address() {
     snapbox.assert().stdout_matches(indoc! {r"
         Balance: [..]
     "});
+}
+
+#[tokio::test]
+pub async fn happy_case_json_with_token_address() {
+    let tempdir = tempdir().unwrap();
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let args = vec![
+        "--json",
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user1",
+        "balance",
+        "--url",
+        URL,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().stdout_matches(indoc! {r#"
+        {"balance":"[..]"}
+    "#});
 }
 
 #[tokio::test]
