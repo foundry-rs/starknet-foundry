@@ -1,11 +1,13 @@
 use crate::{
     helpers::token::Token,
-    response::{cast_message::SncastMessage, command::CommandResponse},
+    response::{
+        cast_message::{SncastCommandMessage, SncastMessage},
+        command::CommandResponse,
+    },
 };
-use foundry_ui::{Message, styling};
+use foundry_ui::styling;
 use primitive_types::U256;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
-use serde_json::json;
 
 #[derive(Debug)]
 pub struct BalanceResponse {
@@ -15,7 +17,7 @@ pub struct BalanceResponse {
 
 impl CommandResponse for BalanceResponse {}
 
-impl Message for SncastMessage<BalanceResponse> {
+impl SncastCommandMessage for SncastMessage<BalanceResponse> {
     fn text(&self) -> String {
         let balance_str = if let Some(token) = self.command_response.token {
             format!("{} {}", self.command_response.balance, token)
@@ -26,16 +28,6 @@ impl Message for SncastMessage<BalanceResponse> {
         styling::OutputBuilder::new()
             .field("Balance", &balance_str)
             .build()
-    }
-
-    fn json(&self) -> serde_json::Value {
-        serde_json::to_value(&self.command_response).unwrap_or_else(|err| {
-            json!({
-                "error": "Failed to serialize response",
-                "command": self.command,
-                "details": err.to_string()
-            })
-        })
     }
 }
 
