@@ -94,23 +94,6 @@ transaction: https://sepolia.starkscan.co/tx/[..]
 
 For a detailed CLI description, see [account deploy command reference](../appendix/sncast/account/deploy.md).
 
-#### Check Account Balance
-
-After successful deployment, you can check the balance of your account using the `sncast balance` command.
-
-<!-- { "ignored": true } -->
-```shell
-$ sncast --account new_account balance --network sepolia
-```
-
-<details>
-<summary>Output:</summary>
-
-```shell
-Balance:         [..] strk
-```
-</details>
-
 ## Managing Accounts
 
 If you created an account with `sncast account create` it by default it will be saved in
