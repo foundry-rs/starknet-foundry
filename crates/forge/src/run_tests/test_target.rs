@@ -54,7 +54,6 @@ pub async fn run_for_test_target(
 
             if !should_run_in_partition {
                 tasks.push(tokio::task::spawn(async {
-                    // TODO TestCaseType should also be encoded in the test case definition
                     Ok(AnyTestCaseSummary::Single(
                         TestCaseSummary::SkippedByPartition {},
                     ))
