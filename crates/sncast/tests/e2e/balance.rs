@@ -173,18 +173,13 @@ pub async fn happy_case_json_with_token_address() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
+    let balance_str = std::str::from_utf8(&output.get_output().stdout).unwrap();
 
-    output.clone().stdout_matches(indoc! {r#"
+    assert!(!balance_str.contains("0x"));
+
+    output.stdout_matches(indoc! {r#"
         {"balance":"[..]"}
     "#});
-
-    let balance_str = output
-        .as_stdout()
-        .trim()
-        .strip_prefix(r#"{"balance":""#)
-        .and_then(|s| s.strip_suffix(r#""}"#))
-        .unwrap();
-    assert!(!balance_str.contains("0x"));
 }
 
 #[tokio::test]
