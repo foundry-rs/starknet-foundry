@@ -46,12 +46,9 @@ impl Serialize for BalanceResponse {
         S: Serializer,
     {
         let mut s = serializer.serialize_struct("BalanceResponse", 2)?;
-
         // Default U256 serialization uses hex string, we want decimal string
         s.serialize_field("balance", &self.balance.to_string())?;
-
         s.serialize_field("token", &self.token)?;
-
         s.end()
     }
 }
