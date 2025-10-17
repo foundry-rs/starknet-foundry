@@ -191,7 +191,7 @@ fn format_detailed_resources(
         ForgeTrackedResource::SierraGas => {
             let mut output = format!(
                 "
-        sierra_gas_consumed: {}
+        sierra gas: {}
         syscalls: ({syscalls})",
                 charged_resources.gas_consumed.0
             );

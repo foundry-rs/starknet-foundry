@@ -2,8 +2,8 @@ use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use foundry_ui::UI;
 use reqwest::StatusCode;
-use sncast::Network;
 use sncast::response::verify::VerifyResponse;
+use sncast::{Network, response::explorer_link::ExplorerError};
 use starknet::providers::{JsonRpcClient, jsonrpc::HttpTransport};
 use std::env;
 use std::ffi::OsStr;
@@ -89,7 +89,7 @@ impl VerificationInterface<'_> for WalnutVerificationInterface {
         // Send the POST request to the explorer
         let client = reqwest::Client::new();
         let api_res = client
-            .post(self.gen_explorer_url())
+            .post(self.gen_explorer_url()?)
             .header("Content-Type", "application/json")
             .body(json_payload)
             .send()
@@ -108,13 +108,14 @@ impl VerificationInterface<'_> for WalnutVerificationInterface {
         }
     }
 
-    fn gen_explorer_url(&self) -> String {
+    fn gen_explorer_url(&self) -> Result<String> {
         let api_base_url =
             env::var("VERIFIER_API_URL").unwrap_or_else(|_| "https://api.walnut.dev".to_string());
         let path = match self.network {
             Network::Mainnet => "/v1/sn_main/verify",
             Network::Sepolia => "/v1/sn_sepolia/verify",
+            Network::Devnet => return Err(ExplorerError::DevnetNotSupported.into()),
         };
-        format!("{api_base_url}{path}")
+        Ok(format!("{api_base_url}{path}"))
     }
 }

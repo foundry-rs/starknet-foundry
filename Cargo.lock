@@ -5997,9 +5997,9 @@ dependencies = [
 
 [[package]]
 name = "scarb-oracle-hint-service"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "145da8c93a6ad5e0e9037cecccd3c4f03dc385b40f2d19911f3c71e282527814"
+checksum = "c172d79f333e27291bd18c77aa2f290fca9d14eec4e9ce025d7c0aeaabac3422"
 dependencies = [
  "anyhow",
  "deno_task_shell",

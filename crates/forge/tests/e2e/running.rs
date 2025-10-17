@@ -986,10 +986,12 @@ fn incompatible_snforge_std_version_error() {
 }
 
 #[test]
-fn detailed_resources_flag() {
+fn detailed_resources_flag_cairo_steps() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)
         .arg("--detailed-resources")
+        .arg("--tracked-resource")
+        .arg("cairo-steps")
         .assert()
         .success();
 
@@ -1014,12 +1016,10 @@ fn detailed_resources_flag() {
 }
 
 #[test]
-fn detailed_resources_flag_sierra_gas() {
+fn detailed_resources_flag() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)
         .arg("--detailed-resources")
-        .arg("--tracked-resource")
-        .arg("sierra-gas")
         .assert()
         .success();
 
@@ -1035,7 +1035,7 @@ fn detailed_resources_flag_sierra_gas() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] erc20_package_integrationtest::test_complex::complex[..]
-                sierra_gas_consumed: [..]
+                sierra gas: [..]
                 syscalls: ([..])
         Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
         "},
@@ -1061,7 +1061,7 @@ fn detailed_resources_mixed_resources() {
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
         [PASS] forking::tests::test_track_resources [..]
-                sierra_gas_consumed: [..]
+                sierra gas: [..]
                 syscalls: ([..])
                 steps: [..]
                 memory holes: [..]

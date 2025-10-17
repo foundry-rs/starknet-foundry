@@ -1,4 +1,5 @@
-use crate::helpers::{block_explorer::LinkProvider, configuration::CastConfig, rpc::RpcArgs};
+use crate::Network;
+use crate::helpers::{block_explorer::LinkProvider, configuration::CastConfig, devnet::detection};
 use foundry_ui::Message;
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -48,28 +49,29 @@ pub enum ExplorerError {
     SepoliaNotSupported,
     #[error("Custom network is not recognized by block explorer service")]
     UnrecognizedNetwork,
+    #[error("Block explorer service is not available for Devnet Network")]
+    DevnetNotSupported,
 }
 
-pub fn block_explorer_link_if_allowed<T>(
+pub async fn block_explorer_link_if_allowed<T>(
     result: &anyhow::Result<T>,
     chain_id: Felt,
-    rpc: &RpcArgs,
     config: &CastConfig,
 ) -> Option<ExplorerLinksMessage>
 where
     T: OutputLink + Clone,
 {
-    if (!config.show_explorer_links || rpc.is_localhost(&config.url))
-        && !is_explorer_link_overridden()
-    {
-        return None;
-    }
-
     let Ok(response) = result else {
         return None;
     };
 
     let network = chain_id.try_into().ok()?;
+
+    let is_devnet = matches!(network, Network::Devnet) || detection::is_devnet_running().await;
+
+    if (!config.show_explorer_links || is_devnet) && !is_explorer_link_overridden() {
+        return None;
+    }
 
     config
         .block_explorer

@@ -28,7 +28,8 @@ pub fn extract_snippets_from_file(
                 static GAS_RE: LazyLock<Regex> =
                     LazyLock::new(|| Regex::new(r"gas: (?:~\d+|\{.+\})").unwrap());
                 static EXECUTION_RESOURCES_RE: LazyLock<Regex> = LazyLock::new(|| {
-                    Regex::new(r"(steps|memory holes|builtins|syscalls): (\d+|\(.+\))").unwrap()
+                    Regex::new(r"(steps|memory holes|builtins|syscalls|sierra gas): (\d+|\(.+\))")
+                        .unwrap()
                 });
 
                 let output = GAS_RE.replace_all(m.as_str(), "gas: [..]").to_string();
