@@ -22,6 +22,10 @@ By default, it shows the balance in STRK tokens. Other possible tokens can be sp
 
 You can check the balance of a custom token by providing the `--token-address` flag followed by the token's contract address.
 
+> 📝 **Note**
+>
+> Token address must be a valid ERC-20 token contract.
+
 <!-- { "ignored": true } -->
 ```shell
 $ sncast --account user1 balance \
