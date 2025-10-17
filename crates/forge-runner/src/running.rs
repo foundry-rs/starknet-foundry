@@ -27,9 +27,8 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
     get_all_used_resources, update_top_call_l1_resources, update_top_call_resources,
     update_top_call_vm_trace,
 };
-use cheatnet::state::{
-    BlockInfoReader, CallTrace, CheatnetState, EncounteredErrors, ExtendedStateReader,
-};
+use cheatnet::state::{BlockInfoReader, CheatnetState, EncounteredErrors, ExtendedStateReader};
+use cheatnet::trace_data::CallTrace;
 use execution::finalize_execution;
 use hints::hints_by_representation;
 use rand::prelude::StdRng;
