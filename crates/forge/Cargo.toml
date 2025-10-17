@@ -12,6 +12,7 @@ non_exact_gas_assertions = ["test_utils/non_exact_gas_assertions"]
 skip_test_for_only_latest_scarb = []
 skip_test_for_scarb_since_2_11 = []
 test_for_multiple_scarb_versions = []
+cairo-native = ["test_utils/cairo-native", "cheatnet/cairo-native", "scarb-api/cairo-native"]
 
 [dependencies]
 anyhow.workspace = true
@@ -71,4 +72,4 @@ walkdir.workspace = true
 test-case.workspace = true
 itertools.workspace = true
 docs = { workspace = true, features = ["testing"] }
-packages_validation = { path = "../testing/packages_validation"}
+packages_validation = { path = "../testing/packages_validation" }

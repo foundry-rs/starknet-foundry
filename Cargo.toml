@@ -17,6 +17,7 @@ members = [
     "crates/debugging",
     "crates/testing/packages_validation",
     "crates/foundry-ui",
+    "crates/native-api",
 ]
 
 exclude = ["crates/snforge-scarb-plugin", "crates/snforge-scarb-plugin-deprecated"]
@@ -38,6 +39,7 @@ blockifier = { git = "https://github.com/software-mansion-labs/sequencer.git", b
 bigdecimal = "0.4.8"
 # TODO(#3770) Use starknet_api directly
 starknet_api = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.14.0" }
+cairo-native = "0.6.2"
 cairo-lang-casm = { version = "2.12.3", features = ["serde"] }
 cairo-lang-sierra = "2.12.3"
 cairo-lang-utils = "2.12.3"
