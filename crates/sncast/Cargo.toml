@@ -61,6 +61,9 @@ universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 tracing-subscriber.workspace = true
 tracing.workspace = true
 tracing-log.workspace = true
+strum.workspace = true
+strum_macros.workspace = true
+primitive-types.workspace = true
 
 [dev-dependencies]
 ctor.workspace = true
