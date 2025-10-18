@@ -24,7 +24,7 @@ Tests: 3 passed, 0 failed, 0 ignored, 0 filtered out
 ## Filtering Tests
 
 You can pass a filter string after the `snforge test` command to filter tests.
-By default, any test with an [absolute module tree path](https://book.cairo-lang.org/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html#paths-for-referring-to-an-item-in-the-module-tree) matching the filter will be run.
+By default, any test with an [absolute module tree path](https://www.starknet.io/cairo-book/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html#paths-for-referring-to-an-item-in-the-module-tree) matching the filter will be run.
 
 ```shell
 $ snforge test calling
@@ -144,16 +144,12 @@ $ snforge test --detailed-resources
 ```shell
 Collected 2 test(s) from hello_starknet package
 Running 2 test(s) from tests/
-[PASS] hello_starknet_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~360000)
-        steps: 3405
-        memory holes: 22
-        builtins: (range_check: 77, pedersen: 7)
+[PASS] hello_starknet_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~406680)
+        sierra gas: 406680
         syscalls: (CallContract: 2, StorageRead: 1, Deploy: 1)
 
-[PASS] hello_starknet_integrationtest::test_contract::test_increase_balance (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~480000)
-        steps: 4535
-        memory holes: 15
-        builtins: (range_check: 95, pedersen: 7)
+[PASS] hello_starknet_integrationtest::test_contract::test_increase_balance (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~511980)
+        sierra gas: 511980
         syscalls: (CallContract: 3, StorageRead: 3, Deploy: 1, StorageWrite: 1)
 
 Running 0 test(s) from src/

@@ -93,6 +93,7 @@ pub const SEPOLIA: Felt =
 pub enum Network {
     Mainnet,
     Sepolia,
+    Devnet,
 }
 
 impl Display for Network {
@@ -100,6 +101,7 @@ impl Display for Network {
         match self {
             Network::Mainnet => write!(f, "mainnet"),
             Network::Sepolia => write!(f, "sepolia"),
+            Network::Devnet => write!(f, "devnet"),
         }
     }
 }
@@ -136,6 +138,7 @@ pub struct AccountData {
 pub struct WaitForTx {
     pub wait: bool,
     pub wait_params: ValidatedWaitParams,
+    pub show_ui_outputs: bool,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, Copy, PartialEq)]
@@ -283,7 +286,10 @@ pub async fn get_account<'a>(
                 .await;
         }
         (true, false) => {
-            let url = rpc_args.get_url(&config.url).context("Failed to get url")?;
+            let url = rpc_args
+                .get_url(&config.url)
+                .await
+                .context("Failed to get url")?;
             return get_account_from_devnet(account, provider, &url).await;
         }
         _ => {
@@ -625,9 +631,9 @@ pub async fn wait_for_tx(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: Felt,
     wait_params: ValidatedWaitParams,
-    ui: &UI,
+    ui: Option<&UI>,
 ) -> Result<String, WaitForTransactionError> {
-    ui.println(&format!("Transaction hash: {tx_hash:#x}"));
+    ui.inspect(|ui| ui.println(&format!("Transaction hash: {tx_hash:#x}")));
 
     let retries = wait_params.get_retries();
     for i in (1..retries).rev() {
@@ -659,24 +665,32 @@ pub async fn wait_for_tx(
             Ok(starknet::core::types::TransactionStatus::PreConfirmed(
                 ExecutionResult::Succeeded,
             )) => {
-                let remaining_time = wait_params.remaining_time(i);
-                ui.println(&"Transaction status: PRE_CONFIRMED".to_string());
-                ui.println(&format!(
-                    "Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)"
-                ));
+                ui.inspect(|ui| {
+                    let remaining_time = wait_params.remaining_time(i);
+                    ui.println(&"Transaction status: PRE_CONFIRMED".to_string());
+                    ui.println(&format!(
+                        "Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)"
+                    ));
+                });
             }
             Ok(
                 starknet::core::types::TransactionStatus::Received
                 | starknet::core::types::TransactionStatus::Candidate,
             )
             | Err(StarknetError(TransactionHashNotFound)) => {
-                let remaining_time = wait_params.remaining_time(i);
-                ui.println(&format!(
-                    "Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)"
-                ));
+                ui.inspect(|ui| {
+                        let remaining_time = wait_params.remaining_time(i);
+                        ui.println(&format!(
+                            "Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)"
+                        ));
+                    });
             }
             Err(ProviderError::RateLimited) => {
-                ui.println(&"Request rate limited while waiting for transaction to be accepted");
+                ui.inspect(|ui| {
+                    ui.println(
+                        &"Request rate limited while waiting for transaction to be accepted",
+                    );
+                });
                 sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
             }
             Err(err) => return Err(WaitForTransactionError::ProviderError(err.into())),
@@ -713,7 +727,14 @@ pub async fn handle_wait_for_tx<T>(
     ui: &UI,
 ) -> Result<T, WaitForTransactionError> {
     if wait_config.wait {
-        return match wait_for_tx(provider, transaction_hash, wait_config.wait_params, ui).await {
+        return match wait_for_tx(
+            provider,
+            transaction_hash,
+            wait_config.wait_params,
+            wait_config.show_ui_outputs.then_some(ui),
+        )
+        .await
+        {
             Ok(_) => Ok(return_value),
             Err(error) => Err(error),
         };

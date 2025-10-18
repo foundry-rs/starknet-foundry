@@ -1,7 +1,7 @@
 use crate::WaitForTransactionError;
 use crate::helpers::constants::STATE_FILE_VERSION;
 use crate::response::declare::DeclareResponse;
-use crate::response::deploy::DeployResponse;
+use crate::response::deploy::StandardDeployResponse;
 use crate::response::errors::StarknetCommandError;
 use crate::response::invoke::InvokeResponse;
 use crate::state::hashing::generate_id;
@@ -179,7 +179,7 @@ impl ScriptTransactionEntry {
 pub enum ScriptTransactionOutput {
     InvokeResponse(InvokeResponse),
     DeclareResponse(DeclareResponse),
-    DeployResponse(DeployResponse),
+    DeployResponse(StandardDeployResponse),
     ErrorResponse(ErrorResponse),
 }
 
@@ -195,8 +195,8 @@ impl From<DeclareResponse> for ScriptTransactionOutput {
     }
 }
 
-impl From<DeployResponse> for ScriptTransactionOutput {
-    fn from(value: DeployResponse) -> Self {
+impl From<StandardDeployResponse> for ScriptTransactionOutput {
+    fn from(value: StandardDeployResponse) -> Self {
         Self::DeployResponse(value)
     }
 }
@@ -608,7 +608,7 @@ mod tests {
 
         let new_transaction = ScriptTransactionEntry {
             name: "deploy".to_string(),
-            output: ScriptTransactionOutput::DeployResponse(DeployResponse {
+            output: ScriptTransactionOutput::DeployResponse(StandardDeployResponse {
                 transaction_hash: Felt::try_from_hex_str("0x3").unwrap().into_(),
                 contract_address: Felt::try_from_hex_str("0x333").unwrap().into_(),
             }),

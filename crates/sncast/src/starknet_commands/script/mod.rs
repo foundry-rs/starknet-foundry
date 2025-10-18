@@ -78,8 +78,9 @@ pub fn run_script_command(
                     &chain_id_to_network_name(chain_id),
                 )))
             };
-
-            let url = run.rpc.get_url(&config.url).context("Failed to get url")?;
+            let url = runtime
+                .block_on(run.rpc.get_url(&config.url))
+                .context("Failed to get url")?;
             let result = starknet_commands::script::run::run(
                 &run.script_name,
                 &metadata_with_deps,

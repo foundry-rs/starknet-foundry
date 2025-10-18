@@ -37,7 +37,7 @@ Optional.
 
 Use predefined network with public provider
 
-Possible values: `mainnet`, `sepolia`.
+Possible values: `mainnet`, `sepolia`, `devnet`.
 
 ## `--class-hash, -c <CLASS_HASH>`
 Optional.

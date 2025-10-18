@@ -10,7 +10,6 @@ use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType, ExecutableCallEntryPoint};
 use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 
 pub(crate) fn resolve_cheated_data_for_call(
     entry_point: &mut CallEntryPoint,
@@ -75,14 +74,11 @@ pub(crate) fn exit_error_call(
         CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
         CallType::Delegate => AddressOrClassHash::ClassHash(entry_point.class_hash),
     };
-    cheatnet_state.trace_data.update_and_exit_nested_call(
-        ExecutionResources::default(),
-        u64::default(),
-        SyscallUsageMap::default(),
-        SyscallUsageMap::default(),
-        CallResult::from_err(error, &identifier),
-        &[],
-        vec![],
-        vec![],
-    );
+    let trace_data = &mut cheatnet_state.trace_data;
+
+    // In case of a revert, clear all events and messages emitted by the current call.
+    trace_data.clear_current_call_events_and_messages();
+
+    trace_data.update_current_call_result(CallResult::from_err(error, &identifier));
+    trace_data.exit_nested_call();
 }

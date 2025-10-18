@@ -17,14 +17,17 @@ use crate::runtime_extensions::{
         storage::{calculate_variable_address, load, store},
     },
 };
-use crate::state::{CallTrace, CallTraceNode};
+use crate::trace_data::{CallTrace, CallTraceNode, GasReportData};
 use anyhow::{Context, Result, anyhow};
 use blockifier::bouncer::vm_resources_to_sierra_gas;
 use blockifier::context::TransactionContext;
-use blockifier::execution::call_info::CallInfo;
+use blockifier::execution::call_info::{
+    CallInfo, CallSummary, ChargedResources, EventSummary, ExecutionSummary, OrderedEvent,
+};
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, SyscallUsageMap};
 use blockifier::state::errors::StateError;
+use blockifier::utils::u64_from_usize;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::{
     errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
@@ -42,10 +45,11 @@ use runtime::{
 };
 use scarb_oracle_hint_service::OracleHintService;
 use starknet::signers::SigningKey;
+use starknet_api::execution_resources::GasAmount;
 use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
@@ -60,8 +64,6 @@ pub struct ForgeExtension<'a> {
     pub environment_variables: &'a HashMap<String, String>,
     pub contracts_data: &'a ContractsData,
     pub fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
-    /// Whether `--experimental-oracles` flag has been enabled.
-    pub experimental_oracles_enabled: bool,
     pub oracle_hint_service: OracleHintService,
 }
 
@@ -80,14 +82,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             .oracle_hint_service
             .accept_cheatcode(selector.as_bytes())
         {
-            if !self.experimental_oracles_enabled {
-                return Err(anyhow!(
-                    "Oracles are an experimental feature. \
-                    To enable them, pass `--experimental-oracles` CLI flag."
-                )
-                .into());
-            }
-
             let output = self
                 .oracle_hint_service
                 .execute_cheatcode(oracle_selector, input_reader.into_remaining());
@@ -745,6 +739,65 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &mut C
     if trace_data.is_vm_trace_needed {
         trace_data.current_call_stack.top().borrow_mut().vm_trace =
             Some(get_relocated_vm_trace(cairo_runner));
+    }
+}
+
+pub fn compute_and_store_execution_summary(trace: &Rc<RefCell<CallTrace>>) {
+    let execution_summary = if trace.borrow().nested_calls.is_empty() {
+        get_execution_summary_without_nested_calls(trace)
+    } else {
+        let mut nested_calls_summaries = vec![];
+        for nested_call in &trace.borrow().nested_calls {
+            if let CallTraceNode::EntryPointCall(nested_call) = nested_call {
+                compute_and_store_execution_summary(nested_call);
+                nested_calls_summaries.push(
+                    nested_call
+                        .borrow()
+                        .gas_report_data
+                        .as_ref()
+                        .expect("Gas report data must be set after calling `compute_and_store_execution_summary`")
+                        .execution_summary
+                        .clone());
+            }
+        }
+        let mut current_call_summary = get_execution_summary_without_nested_calls(trace)
+            + nested_calls_summaries.into_iter().sum();
+
+        // vm_resources and gas_consumed of a call already contain the resources of its inner calls.
+        current_call_summary.charged_resources.vm_resources =
+            trace.borrow().used_execution_resources.clone();
+        current_call_summary.charged_resources.gas_consumed =
+            GasAmount(trace.borrow().gas_consumed);
+        current_call_summary
+    };
+
+    trace.borrow_mut().gas_report_data = Some(GasReportData::new(execution_summary.clone()));
+}
+
+// Based on blockifier/src/execution/call_info.rs (summarize)
+fn get_execution_summary_without_nested_calls(trace: &Rc<RefCell<CallTrace>>) -> ExecutionSummary {
+    let current_call = trace.borrow();
+    ExecutionSummary {
+        charged_resources: ChargedResources {
+            vm_resources: current_call.used_execution_resources.clone(),
+            gas_consumed: GasAmount(current_call.gas_consumed),
+        },
+        l2_to_l1_payload_lengths: current_call.used_l1_resources.l2_l1_message_sizes.clone(),
+        event_summary: {
+            let mut event_summary = EventSummary {
+                n_events: current_call.events.len(),
+                ..Default::default()
+            };
+            for OrderedEvent { event, .. } in &current_call.events {
+                event_summary.total_event_data_size += u64_from_usize(event.data.0.len());
+                event_summary.total_event_keys += u64_from_usize(event.keys.len());
+            }
+            event_summary
+        },
+        // Fields below are not relevant for partial gas calculation.
+        call_summary: CallSummary::default(),
+        executed_class_hashes: HashSet::default(),
+        visited_storage_entries: HashSet::default(),
     }
 }
 
