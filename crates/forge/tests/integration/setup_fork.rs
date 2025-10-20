@@ -24,7 +24,7 @@ use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
 use scarb_api::ScarbCommand;
-use scarb_api::metadata::MetadataCommandExt;
+use scarb_api::metadata::metadata_for_dir;
 use shared::test_utils::node_url::node_rpc_url;
 use test_utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
 use test_utils::running_tests::run_test_case;
@@ -117,10 +117,7 @@ fn fork_aliased_decorator() {
         .run()
         .unwrap();
 
-    let metadata = ScarbCommand::metadata()
-        .current_dir(test.path().unwrap())
-        .run()
-        .unwrap();
+    let metadata = metadata_for_dir(test.path().unwrap()).unwrap();
 
     let package = metadata
         .packages
@@ -209,10 +206,7 @@ fn fork_aliased_decorator_overrding() {
         .run()
         .unwrap();
 
-    let metadata = ScarbCommand::metadata()
-        .current_dir(test.path().unwrap())
-        .run()
-        .unwrap();
+    let metadata = metadata_for_dir(test.path().unwrap()).unwrap();
 
     let package = metadata
         .packages

@@ -9,7 +9,8 @@ use forge_runner::forge_config::ForgeTrackedResource;
 use foundry_ui::components::warning::WarningMessage;
 use foundry_ui::{Message, UI};
 use run_tests::workspace::run_for_workspace;
-use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
+use scarb_api::ScarbCommand;
+use scarb_api::metadata::metadata;
 use scarb_ui::args::{FeaturesSpec, PackagesFilter, ProfileSpec};
 use semver::Version;
 use shared::auto_completions::{Completions, generate_completions};
@@ -298,7 +299,7 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
         }
         ForgeSubcommand::CleanCache {} => {
             ui.println(&WarningMessage::new("`snforge clean-cache` is deprecated and will be removed in the future. Use `snforge clean cache` instead"));
-            let scarb_metadata = ScarbCommand::metadata().inherit_stderr().run()?;
+            let scarb_metadata = metadata()?;
             let cache_dir = scarb_metadata.workspace.root.join(CACHE_DIR);
 
             if cache_dir.exists() {
