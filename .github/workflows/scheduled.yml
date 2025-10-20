@@ -12,6 +12,7 @@ on:
 jobs:
   create-nightly-release:
     # Creating a nightly release will trigger a Maat experiment for it as well
+    if: ${{ (github.event_name == 'schedule') || (github.event_name == 'workflow_dispatch') }}
     secrets: inherit
     uses:
       ./.github/workflows/nightly.yml
