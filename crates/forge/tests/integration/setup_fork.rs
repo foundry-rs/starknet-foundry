@@ -163,6 +163,7 @@ fn fork_aliased_decorator() {
                         detailed_resources: false,
                         execution_data_to_save: ExecutionDataToSave::default(),
                         trace_args: TraceArgs::default(),
+                        gas_report: false,
                     }),
                 }),
                 fork_targets: vec![ForkTarget {
@@ -253,6 +254,7 @@ fn fork_aliased_decorator_overrding() {
                         detailed_resources: false,
                         execution_data_to_save: ExecutionDataToSave::default(),
                         trace_args: TraceArgs::default(),
+                        gas_report: false,
                     }),
                 }),
                 fork_targets: vec![ForkTarget {
