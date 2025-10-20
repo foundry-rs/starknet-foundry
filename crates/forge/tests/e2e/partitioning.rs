@@ -229,7 +229,7 @@ fn test_whole_workspace_partition_3_3() {
         Tests: 2 passed, 0 failed, 0 ignored, other filtered out
 
 
-        Tests summary: 4 passed, 0 failed, 0 ignored, 1other filtered out
+        Tests summary: 4 passed, 0 failed, 0 ignored, other filtered out
         Finished partition run: 3/3
     "},
     );
