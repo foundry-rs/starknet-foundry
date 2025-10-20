@@ -213,6 +213,10 @@ pub struct TestArgs {
     #[arg(long, value_enum, default_value_t)]
     tracked_resource: ForgeTrackedResource,
 
+    /// Display a table of L2 gas breakdown for each contract and selector
+    #[arg(long)]
+    gas_report: bool,
+
     /// Additional arguments for cairo-coverage or cairo-profiler
     #[arg(last = true)]
     additional_args: Vec<OsString>,

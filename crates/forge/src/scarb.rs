@@ -241,6 +241,7 @@ mod tests {
                 save_trace_data: false,
                 build_profile: false,
                 coverage: false,
+                gas_report: false,
             }
         );
     }
@@ -510,6 +511,7 @@ mod tests {
                 save_trace_data: false,
                 build_profile: false,
                 coverage: false,
+                gas_report: false,
             }
         );
     }
