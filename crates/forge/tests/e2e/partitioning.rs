@@ -3,7 +3,7 @@ use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[test]
-fn whole_workspace_partition_1_2() {
+fn test_whole_workspace_partition_1_2() {
     let temp = setup_package("partitioning");
     let output = test_runner(&temp)
         .args(["--partition", "1/2", "--workspace"])
@@ -49,7 +49,7 @@ fn whole_workspace_partition_1_2() {
 }
 
 #[test]
-fn single_package_partition_2_2() {
+fn test_whole_workspace_partition_2_2() {
     let temp = setup_package("partitioning");
     let output = test_runner(&temp)
         .args(["--partition", "2/2", "--workspace"])
@@ -100,7 +100,7 @@ fn single_package_partition_2_2() {
 }
 
 #[test]
-fn single_package_partition_1_3() {
+fn test_whole_workspace_partition_1_3() {
     let temp = setup_package("partitioning");
     let output = test_runner(&temp)
         .args(["--partition", "1/3", "--workspace"])
@@ -144,7 +144,7 @@ fn single_package_partition_1_3() {
 }
 
 #[test]
-fn single_package_partition_2_3() {
+fn test_whole_workspace_partition_2_3() {
     let temp = setup_package("partitioning");
     let output = test_runner(&temp)
         .args(["--partition", "2/3", "--workspace"])
@@ -193,7 +193,7 @@ fn single_package_partition_2_3() {
 }
 
 #[test]
-fn single_package_partition_3_3() {
+fn test_whole_workspace_partition_3_3() {
     let temp = setup_package("partitioning");
     let output = test_runner(&temp)
         .args(["--partition", "3/3", "--workspace"])
@@ -231,6 +231,22 @@ fn single_package_partition_3_3() {
 
         Tests summary: 4 passed, 0 failed, 0 ignored, 1other filtered out
         Finished partition run: 3/3
+    "},
+    );
+}
+
+#[test]
+fn test_does_not_work_with_exact_flag() {
+    let temp = setup_package("partitioning");
+    let output = test_runner(&temp)
+        .args(["--partition", "3/3", "--workspace"])
+        .assert()
+        .code(2);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        error: the argument '--partition <PARTITION>' cannot be used with '--exact'
     "},
     );
 }
