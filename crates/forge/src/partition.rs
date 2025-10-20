@@ -1,9 +1,10 @@
 use crate::run_tests::package::RunForPackageArgs;
 use cairo_lang_sierra::ids::FunctionId;
 use forge_runner::package_tests::with_config_resolved::sanitize_test_case_name;
+use serde::Serialize;
 use std::{collections::HashMap, str::FromStr};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize)]
 pub struct Partition {
     index: usize,
     total: usize,
@@ -49,6 +50,8 @@ impl FromStr for Partition {
         Ok(Partition { index, total })
     }
 }
+
+#[derive(Serialize)]
 pub struct TestsPartitionsMapping(HashMap<String, usize>);
 
 impl TestsPartitionsMapping {
@@ -61,7 +64,7 @@ impl TestsPartitionsMapping {
     }
 
     pub fn from_packages_args(packages_args: &[RunForPackageArgs], partition: Partition) -> Self {
-        let names: Vec<String> = packages_args
+        let mut names: Vec<String> = packages_args
             .iter()
             .flat_map(|pkg| pkg.test_targets.iter())
             .flat_map(|tt| {
@@ -79,6 +82,8 @@ impl TestsPartitionsMapping {
             })
             .collect();
 
+        names.sort();
+
         let total = partition.total();
         let mut mapping = HashMap::with_capacity(names.len());
 
@@ -91,6 +96,7 @@ impl TestsPartitionsMapping {
     }
 }
 
+#[derive(Serialize)]
 pub struct PartitionConfig {
     partition: Partition,
     partitions_mapping: TestsPartitionsMapping,

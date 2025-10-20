@@ -144,7 +144,7 @@ pub struct TestArgs {
     trace_args: TraceArgs,
 
     /// Use exact matches for `test_filter`
-    #[arg(short, long)]
+    #[arg(short, long, conflicts_with = "partition")]
     exact: bool,
 
     /// Skips any tests whose name contains the given SKIP string.
@@ -206,7 +206,7 @@ pub struct TestArgs {
     tracked_resource: ForgeTrackedResource,
 
     /// If specified, divides tests into `total` partitions and runs only the partition with the given `index` (1-based).
-    #[arg(long)]
+    #[arg(long, conflicts_with = "exact")]
     partition: Option<Partition>,
 
     /// Additional arguments for cairo-coverage or cairo-profiler

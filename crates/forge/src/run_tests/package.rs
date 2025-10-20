@@ -266,6 +266,8 @@ pub async fn run_for_package(
     // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
     let filtered_count = if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
         None
+    } else if partition_config.is_some() {
+        None
     } else {
         Some(all_tests - not_filtered)
     };

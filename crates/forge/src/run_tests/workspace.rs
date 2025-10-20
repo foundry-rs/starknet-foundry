@@ -3,6 +3,7 @@ use crate::partition::PartitionConfig;
 use crate::profile_validation::check_profile_compatibility;
 use crate::run_tests::messages::latest_blocks_numbers::LatestBlocksNumbersMessage;
 use crate::run_tests::messages::overall_summary::OverallSummaryMessage;
+use crate::run_tests::messages::partition::PartitionMessage;
 use crate::run_tests::messages::tests_failure_summary::TestsFailureSummaryMessage;
 use crate::warn::{
     error_if_snforge_std_deprecated_missing, error_if_snforge_std_deprecated_not_compatible,
@@ -166,8 +167,6 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         ));
     }
 
-    // TODO: Print partition info
-
     ui.println(&TestsFailureSummaryMessage::new(&all_failed_tests));
 
     // Print the overall summary only when testing multiple packages
@@ -175,6 +174,10 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         // Add newline to separate summary from previous output
         ui.print_blank_line();
         ui.println(&overall_summary);
+    }
+
+    if let Some(partition) = &args.partition {
+        ui.println(&PartitionMessage::new(*partition));
     }
 
     if args.exact {
