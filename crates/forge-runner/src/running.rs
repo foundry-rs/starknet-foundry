@@ -409,6 +409,7 @@ fn extract_test_case_summary(
                 contracts_data,
                 versioned_program_path,
                 trace_args,
+                forge_config.output_config.gas_report,
             ),
             RunResult::Error(run_error) => {
                 let mut message = format!(
