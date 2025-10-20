@@ -7,6 +7,8 @@ on:
         description: "Dry run"
         type: boolean
         default: true
+  workflow_call:
+
 
 concurrency:
   group: ${{ github.workflow }}

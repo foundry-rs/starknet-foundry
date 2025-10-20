@@ -10,6 +10,11 @@ on:
   workflow_dispatch:
 
 jobs:
+  create-nightly-release:
+    # Creating a nightly release will trigger a Maat experiment for it as well
+    uses:
+      ./.github/workflows/nightly.yml
+
   get-scarb-versions:
     if: github.event.repository.fork == false
     name: Get Scarb versions
