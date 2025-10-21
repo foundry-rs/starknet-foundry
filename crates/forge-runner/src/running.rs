@@ -13,6 +13,7 @@ use blockifier::execution::entry_point_execution::{
 use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::state::cached_state::CachedState;
 use cairo_vm::Felt252;
+use cairo_vm::types::program::Program;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use camino::{Utf8Path, Utf8PathBuf};
@@ -23,12 +24,12 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBl
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
-    ForgeExtension, ForgeRuntime, add_resources_to_top_call, get_all_used_resources,
-    update_top_call_l1_resources, update_top_call_resources, update_top_call_vm_trace,
+    ForgeExtension, ForgeRuntime, add_resources_to_top_call, compute_and_store_execution_summary,
+    get_all_used_resources, update_top_call_l1_resources, update_top_call_resources,
+    update_top_call_vm_trace,
 };
-use cheatnet::state::{
-    BlockInfoReader, CallTrace, CheatnetState, EncounteredErrors, ExtendedStateReader,
-};
+use cheatnet::state::{BlockInfoReader, CheatnetState, EncounteredErrors, ExtendedStateReader};
+use cheatnet::trace_data::CallTrace;
 use execution::finalize_execution;
 use hints::hints_by_representation;
 use rand::prelude::StdRng;
@@ -74,13 +75,17 @@ pub fn run_test(
         if send.is_closed() {
             return TestCaseSummary::Interrupted {};
         }
-        let run_result = run_test_case(
-            &case,
-            &casm_program,
-            &RuntimeConfig::from(&forge_config.test_runner_config),
-            None,
-            &versioned_program_path,
-        );
+
+        let run_result = case.try_into_program(&casm_program).and_then(|program| {
+            run_test_case(
+                &case,
+                &program,
+                &casm_program,
+                &RuntimeConfig::from(&forge_config.test_runner_config),
+                None,
+                &versioned_program_path,
+            )
+        });
 
         if send.is_closed() {
             return TestCaseSummary::Interrupted {};
@@ -91,8 +96,10 @@ pub fn run_test(
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn run_fuzz_test(
     case: Arc<TestCaseWithResolvedConfig>,
+    program: Program,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
@@ -107,9 +114,9 @@ pub(crate) fn run_fuzz_test(
         if send.is_closed() | fuzzing_send.is_closed() {
             return TestCaseSummary::Interrupted {};
         }
-
         let run_result = run_test_case(
             &case,
+            &program,
             &casm_program,
             &RuntimeConfig::from(&forge_config.test_runner_config),
             Some(rng),
@@ -159,14 +166,14 @@ pub enum RunResult {
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn run_test_case(
     case: &TestCaseWithResolvedConfig,
+    program: &Program,
     casm_program: &AssembledProgramWithDebugInfo,
     runtime_config: &RuntimeConfig,
     fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
     versioned_program_path: &Utf8Path,
 ) -> Result<RunResult> {
-    let program = case.try_into_program(casm_program)?;
     let (call, entry_point) =
-        setup::build_test_call_and_entry_point(&case.test_details, casm_program, &program);
+        setup::build_test_call_and_entry_point(&case.test_details, casm_program, program);
 
     let mut state_reader = ExtendedStateReader {
         dict_state_reader: cheatnet_constants::build_testing_state(),
@@ -199,7 +206,7 @@ pub fn run_test_case(
     } = setup::initialize_execution_context(
         call.clone(),
         &hints,
-        &program,
+        program,
         &mut cached_state,
         &mut context,
     )?;
@@ -332,6 +339,7 @@ pub fn run_test_case(
 
     update_top_call_resources(&mut forge_runtime, tracked_resource);
     update_top_call_l1_resources(&mut forge_runtime);
+    compute_and_store_execution_summary(&call_trace_ref);
 
     let fuzzer_args = forge_runtime
         .extended_runtime

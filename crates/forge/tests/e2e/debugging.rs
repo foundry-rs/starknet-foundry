@@ -175,6 +175,7 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │  ├─ [caller address] [..]
         │  ├─ [call type] Call
         │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  ├─ [L2 gas] [..]
         │  ├─ [selector] execute_calls
         │  │  ├─ [contract name] SimpleContract
         │  │  ├─ [entry point type] External
@@ -183,6 +184,7 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │  │  ├─ [caller address] [..]
         │  │  ├─ [call type] Call
         │  │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  │  ├─ [L2 gas] [..]
         │  │  ├─ [selector] execute_calls
         │  │  │  ├─ [contract name] SimpleContract
         │  │  │  ├─ [entry point type] External
@@ -190,7 +192,8 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │  │  │  ├─ [contract address] [..]
         │  │  │  ├─ [caller address] [..]
         │  │  │  ├─ [call type] Call
-        │  │  │  └─ [call result] success: array![]
+        │  │  │  ├─ [call result] success: array![]
+        │  │  │  └─ [L2 gas] [..]
         │  │  └─ [selector] execute_calls
         │  │     ├─ [contract name] SimpleContract
         │  │     ├─ [entry point type] External
@@ -198,7 +201,8 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │  │     ├─ [contract address] [..]
         │  │     ├─ [caller address] [..]
         │  │     ├─ [call type] Call
-        │  │     └─ [call result] success: array![]
+        │  │     ├─ [call result] success: array![]
+        │  │     └─ [L2 gas] [..]
         │  └─ [selector] execute_calls
         │     ├─ [contract name] SimpleContract
         │     ├─ [entry point type] External
@@ -206,7 +210,8 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │     ├─ [contract address] [..]
         │     ├─ [caller address] [..]
         │     ├─ [call type] Call
-        │     └─ [call result] success: array![]
+        │     ├─ [call result] success: array![]
+        │     └─ [L2 gas] [..]
         └─ [selector] fail
            ├─ [contract name] SimpleContract
            ├─ [entry point type] External
@@ -214,7 +219,8 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
            ├─ [contract address] [..]
            ├─ [caller address] [..]
            ├─ [call type] Call
-           └─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
+           ├─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
+           └─ [L2 gas] [..]
         "}
 }
 
@@ -229,6 +235,7 @@ fn detailed_debugging_trace_message_fork(test_name: &str, package_name: &str) ->
         │  ├─ [caller address] [..]
         │  ├─ [call type] Call
         │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  ├─ [L2 gas] [..]
         │  ├─ [selector] execute_calls
         │  │  ├─ [contract name] forked contract
         │  │  ├─ [entry point type] External
@@ -237,6 +244,7 @@ fn detailed_debugging_trace_message_fork(test_name: &str, package_name: &str) ->
         │  │  ├─ [caller address] [..]
         │  │  ├─ [call type] Call
         │  │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  │  ├─ [L2 gas] [..]
         │  │  ├─ [selector] execute_calls
         │  │  │  ├─ [contract name] forked contract
         │  │  │  ├─ [entry point type] External
@@ -244,7 +252,8 @@ fn detailed_debugging_trace_message_fork(test_name: &str, package_name: &str) ->
         │  │  │  ├─ [contract address] [..]
         │  │  │  ├─ [caller address] [..]
         │  │  │  ├─ [call type] Call
-        │  │  │  └─ [call result] success: array![]
+        │  │  │  ├─ [call result] success: array![]
+        │  │  │  └─ [L2 gas] [..]
         │  │  └─ [selector] execute_calls
         │  │     ├─ [contract name] forked contract
         │  │     ├─ [entry point type] External
@@ -252,7 +261,8 @@ fn detailed_debugging_trace_message_fork(test_name: &str, package_name: &str) ->
         │  │     ├─ [contract address] [..]
         │  │     ├─ [caller address] [..]
         │  │     ├─ [call type] Call
-        │  │     └─ [call result] success: array![]
+        │  │     ├─ [call result] success: array![]
+        │  │     └─ [L2 gas] [..]
         │  └─ [selector] execute_calls
         │     ├─ [contract name] forked contract
         │     ├─ [entry point type] External
@@ -260,7 +270,8 @@ fn detailed_debugging_trace_message_fork(test_name: &str, package_name: &str) ->
         │     ├─ [contract address] [..]
         │     ├─ [caller address] [..]
         │     ├─ [call type] Call
-        │     └─ [call result] success: array![]
+        │     ├─ [call result] success: array![]
+        │     └─ [L2 gas] [..]
         └─ [selector] fail
            ├─ [contract name] forked contract
            ├─ [entry point type] External
@@ -268,7 +279,8 @@ fn detailed_debugging_trace_message_fork(test_name: &str, package_name: &str) ->
            ├─ [contract address] [..]
            ├─ [caller address] [..]
            ├─ [call type] Call
-           └─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
+           ├─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
+           └─ [L2 gas] [..]
         "}
 }
 

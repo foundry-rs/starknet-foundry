@@ -4,7 +4,7 @@ use conversions::{IntoConv, byte_array::ByteArray};
 use sncast::helpers::artifacts::CastStarknetContractArtifacts;
 use sncast::{
     ErrorData,
-    response::{class_hash::ClassHashResponse, errors::StarknetCommandError},
+    response::{errors::StarknetCommandError, utils::class_hash::ClassHashResponse},
 };
 use starknet::core::types::contract::SierraClass;
 use std::collections::HashMap;

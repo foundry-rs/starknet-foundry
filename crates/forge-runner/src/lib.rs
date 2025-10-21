@@ -1,5 +1,6 @@
 use crate::coverage_api::run_coverage;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig};
+use crate::package_tests::TestCase;
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
 use anyhow::Result;
@@ -32,6 +33,7 @@ pub mod package_tests;
 pub mod profiler_api;
 pub mod test_case_summary;
 pub mod test_target_summary;
+pub mod tests_summary;
 
 pub mod backtrace;
 pub mod debugging;
@@ -56,7 +58,13 @@ const BUILTINS: [&str; 11] = [
 ];
 
 pub trait TestCaseFilter {
-    fn should_be_run(&self, test_case: &TestCaseWithResolvedConfig) -> bool;
+    fn should_be_run<T>(&self, test_case: &TestCase<T>) -> bool
+    where
+        T: TestCaseIsIgnored;
+}
+
+pub trait TestCaseIsIgnored {
+    fn is_ignored(&self) -> bool;
 }
 
 pub fn maybe_save_trace_and_profile(
@@ -169,9 +177,12 @@ fn run_with_fuzzing(
 
         let mut tasks = FuturesUnordered::new();
 
+        let program = case.try_into_program(&casm_program)?;
+
         for _ in 1..=fuzzer_runs.get() {
             tasks.push(run_fuzz_test(
                 case.clone(),
+                program.clone(),
                 casm_program.clone(),
                 forge_config.clone(),
                 versioned_program_path.clone(),

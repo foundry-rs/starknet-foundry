@@ -1,15 +1,13 @@
 use super::command::CommandResponse;
 use crate::helpers::block_explorer::LinkProvider;
-use crate::response::cast_message::SncastMessage;
+use crate::response::cast_message::{SncastCommandMessage, SncastMessage};
 use crate::response::declare::DeclareTransactionResponse;
 use crate::response::explorer_link::OutputLink;
 use conversions::string::IntoPaddedHexStr;
 use conversions::{padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
-use foundry_ui::Message;
 use foundry_ui::styling;
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 #[serde(untagged)]
@@ -20,22 +18,12 @@ pub enum DeployResponse {
 
 impl CommandResponse for DeployResponse {}
 
-impl Message for SncastMessage<DeployResponse> {
+impl SncastCommandMessage for SncastMessage<DeployResponse> {
     fn text(&self) -> String {
         match &self.command_response {
             DeployResponse::Standard(response) => response.text(),
             DeployResponse::WithDeclare(response) => response.text(),
         }
-    }
-
-    fn json(&self) -> Value {
-        serde_json::to_value(&self.command_response).unwrap_or_else(|err| {
-            json!({
-                "error": "Failed to serialize response",
-                "command": self.command,
-                "details": err.to_string()
-            })
-        })
     }
 }
 

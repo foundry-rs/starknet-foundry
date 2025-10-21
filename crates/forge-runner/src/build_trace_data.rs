@@ -23,7 +23,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::forking::data::ForkData;
 use cheatnet::runtime_extensions::common::{get_syscalls_gas_consumed, sum_syscall_usage};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use cheatnet::state::{CallTrace, CallTraceNode};
+use cheatnet::trace_data::{CallTrace, CallTraceNode};
 use conversions::IntoConv;
 use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};

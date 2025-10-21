@@ -1,5 +1,5 @@
 use crate::trace::types::{
-    CallerAddress, ContractAddress, ContractName, Selector, TestName, TransformedCallResult,
+    CallerAddress, ContractAddress, ContractName, Gas, Selector, TestName, TransformedCallResult,
     TransformedCalldata,
 };
 use blockifier::execution::entry_point::CallType;
@@ -81,6 +81,13 @@ impl NodeDisplay for TransformedCallResult {
     const TAG: &'static str = "call result";
     fn string_pretty(&self) -> String {
         self.0.clone()
+    }
+}
+
+impl NodeDisplay for Gas {
+    const TAG: &'static str = "L2 gas";
+    fn string_pretty(&self) -> String {
+        self.0.to_string()
     }
 }
 

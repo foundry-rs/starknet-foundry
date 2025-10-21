@@ -1,4 +1,5 @@
 pub mod account;
+pub mod balance;
 pub mod call;
 pub mod declare;
 pub mod declare_from;

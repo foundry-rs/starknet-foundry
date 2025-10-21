@@ -1,5 +1,5 @@
 use crate::trace::types::{
-    CallerAddress, ContractAddress, ContractName, TransformedCallResult, TransformedCalldata,
+    CallerAddress, ContractAddress, ContractName, Gas, TransformedCallResult, TransformedCalldata,
 };
 use blockifier::execution::entry_point::CallType;
 use paste::paste;
@@ -42,6 +42,8 @@ pub enum Component {
     CallType,
     /// The result of the call, transformed for display.
     CallResult,
+    /// The L2 gas used by the call.
+    Gas,
 }
 
 macro_rules! impl_component_container {
@@ -122,3 +124,4 @@ impl_component_container!(ContractAddress);
 impl_component_container!(CallerAddress);
 impl_component_container!(CallType);
 impl_component_container!(CallResult, TransformedCallResult);
+impl_component_container!(Gas);

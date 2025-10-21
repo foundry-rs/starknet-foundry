@@ -12,3 +12,4 @@ pub mod interactive;
 pub mod output_format;
 pub mod rpc;
 pub mod scarb_utils;
+pub mod token;
