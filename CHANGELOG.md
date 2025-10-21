@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.51.0] - 2025-10-21
+
 ### Forge
 
 #### Added
@@ -32,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for `--network devnet` flag that attempts to auto-detect running `starknet-devnet` instance and connect to it.
 - Support for automatically declaring the contract when running `sncast deploy`, by providing `--contract-name` flag instead of `--class-hash`. 
 - `sncast balance` command to fetch the balance of an account for a specified token.
+
+#### Fixed
+
+- `sncast declare` now shows a correct error message when contract is already declared.
 
 ## [0.50.0] - 2025-09-29
 
