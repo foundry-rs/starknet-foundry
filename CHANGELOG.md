@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Debug logging for `sncast` commands that can be enabled by setting `CAST_LOG` env variable.
+- Debug logging for `sncast` commands that can be enabled by setting `SNCAST_LOG` env variable.
 - `sncast declare` command now outputs a ready-to-use deployment command after successful declaration.
 - Possibility to use [`starknet-devnet`](https://github.com/0xSpaceShard/starknet-devnet) predeployed accounts directly in `sncast` without needing to import them. They are available under specific names - `devnet-1`, `devnet-2`, ..., `devnet-<N>`. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/integration_with_devnet.html#predeployed-accounts)
 - Support for `--network devnet` flag that attempts to auto-detect running `starknet-devnet` instance and connect to it.
