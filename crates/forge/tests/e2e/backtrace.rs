@@ -1,10 +1,10 @@
 use super::common::runner::{setup_package, test_runner};
+use crate::utils::use_snforge_std_deprecated;
 use assert_fs::TempDir;
 use assert_fs::fixture::{FileWriteStr, PathChild};
 use indoc::indoc;
 use shared::test_utils::output_assert::{AsOutput, assert_stdout_contains};
 use std::fs;
-use test_utils::use_snforge_std_deprecated;
 use toml_edit::{DocumentMut, value};
 
 #[test]

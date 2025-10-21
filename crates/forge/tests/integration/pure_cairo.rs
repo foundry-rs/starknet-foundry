@@ -1,10 +1,10 @@
-use forge_runner::forge_config::ForgeTrackedResource;
-use indoc::indoc;
-use test_utils::running_tests::run_test_case;
-use test_utils::{
+use crate::utils::running_tests::run_test_case;
+use crate::utils::{
     runner::{assert_failed, assert_passed},
     test_case,
 };
+use forge_runner::forge_config::ForgeTrackedResource;
+use indoc::indoc;
 
 #[test]
 fn simple() {

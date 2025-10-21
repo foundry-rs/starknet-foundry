@@ -1,4 +1,4 @@
-use crate::runner::TestCase;
+use crate::utils::runner::TestCase;
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::shared_cache::FailedTestsCache;
@@ -45,11 +45,8 @@ pub fn run_test_case(
         .unwrap();
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
-    let raw_test_targets = if false {
-        load_test_artifacts(&test.path().unwrap().join("target/release"), package).unwrap()
-    } else {
-        load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap()
-    };
+    let raw_test_targets =
+        load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
     let ui = Arc::new(UI::default());
     rt.block_on(run_for_package(
