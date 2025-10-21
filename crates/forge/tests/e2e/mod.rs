@@ -25,6 +25,7 @@ mod fuzzing;
 mod gas_report;
 mod io_operations;
 mod new;
+mod oracles;
 mod package_warnings;
 mod plugin_diagnostics;
 mod plugin_versions;
