@@ -1,0 +1,15 @@
+[package]
+name = "oracles"
+version = "0.1.0"
+edition = "2024_07"
+assets = ["wasm_oracle.wasm"]
+
+#[[target.starknet-contract]]
+#sierra = true
+
+[dependencies]
+oracle = "1"
+starknet = "2.4.0"
+
+[dev-dependencies]
+snforge_std = { path = "../../../../../snforge_std" }
