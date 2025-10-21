@@ -1,4 +1,4 @@
-use crate::forge_config::ForgeTrackedResource;
+use crate::forge_config::{ForgeTrackedResource, OutputConfig};
 use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary};
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
@@ -39,12 +39,13 @@ pub struct TestResultMessage {
     fuzzer_report: String,
     gas_usage: String,
     used_resources: String,
+    gas_report: String,
 }
 
 impl TestResultMessage {
     pub fn new(
         test_result: &AnyTestCaseSummary,
-        show_detailed_resources: bool,
+        output_config: &OutputConfig,
         tracked_resource: ForgeTrackedResource,
     ) -> Self {
         let name = test_result
@@ -75,19 +76,28 @@ impl TestResultMessage {
             String::new()
         };
 
-        let gas_usage = match test_result {
+        let (gas_usage, gas_report) = match test_result {
             AnyTestCaseSummary::Single(TestCaseSummary::Passed { gas_info, .. }) => {
-                format!(
-                    " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
-                    gas_info.gas_used.l1_gas,
-                    gas_info.gas_used.l1_data_gas,
-                    gas_info.gas_used.l2_gas
+                let gas_report = if output_config.gas_report {
+                    format!("{}", gas_info.report_data)
+                } else {
+                    String::new()
+                };
+
+                (
+                    format!(
+                        " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
+                        gas_info.gas_used.l1_gas,
+                        gas_info.gas_used.l1_data_gas,
+                        gas_info.gas_used.l2_gas
+                    ),
+                    gas_report,
                 )
             }
-            _ => String::new(),
+            _ => (String::new(), String::new()),
         };
 
-        let used_resources = match (show_detailed_resources, &test_result) {
+        let used_resources = match (output_config.detailed_resources, &test_result) {
             (true, AnyTestCaseSummary::Single(TestCaseSummary::Passed { used_resources, .. })) => {
                 format_detailed_resources(used_resources, tracked_resource)
             }
@@ -104,6 +114,7 @@ impl TestResultMessage {
             fuzzer_report,
             gas_usage,
             used_resources,
+            gas_report,
         }
     }
 
@@ -140,10 +151,11 @@ impl Message for TestResultMessage {
 
         let fuzzer_report = &self.fuzzer_report;
         let gas_usage = &self.gas_usage;
+        let gas_report = &self.gas_report;
         let used_resources = &self.used_resources;
 
         format!(
-            "{result_header} {result_name}{fuzzer_report}{gas_usage}{used_resources}{result_msg}{result_debug_trace}"
+            "{result_header} {result_name}{fuzzer_report}{gas_usage}{used_resources}{result_msg}{result_debug_trace}{gas_report}"
         )
     }
 

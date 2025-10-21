@@ -1,9 +1,13 @@
 use crate::gas::stats::GasStats;
 use cheatnet::trace_data::{CallTrace, CallTraceNode};
+use comfy_table::modifiers::UTF8_ROUND_CORNERS;
+use comfy_table::{Cell, Color, Table};
 use debugging::ContractsDataStore;
 use starknet_api::core::{ClassHash, EntryPointSelector};
 use starknet_api::execution_resources::GasVector;
 use std::collections::BTreeMap;
+use std::fmt;
+use std::fmt::Display;
 
 type ContractName = String;
 type Selector = String;
@@ -116,4 +120,50 @@ fn get_selector(contracts_data: &ContractsDataStore, selector: EntryPointSelecto
         .expect("`Selector` should be present")
         .0
         .clone()
+}
+
+impl Display for ReportData {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (name, contract_info) in &self.0 {
+            if !contract_info.functions.is_empty() {
+                let table = format_table_output(contract_info, name);
+                writeln!(f, "\n{table}")?;
+            }
+        }
+        Ok(())
+    }
+}
+
+pub fn format_table_output(contract_info: &ContractInfo, name: &ContractName) -> Table {
+    let mut table = Table::new();
+    table.apply_modifier(UTF8_ROUND_CORNERS);
+
+    table.set_header(vec![
+        Cell::new(format!("{name} Contract")).fg(Color::Magenta),
+    ]);
+    table.add_row(vec![
+        Cell::new("Function Name"),
+        Cell::new("Min").fg(Color::Green),
+        Cell::new("Max").fg(Color::Red),
+        Cell::new("Avg").fg(Color::Yellow),
+        Cell::new("Std Dev").fg(Color::Yellow),
+        Cell::new("# Calls").fg(Color::Cyan),
+    ]);
+
+    contract_info
+        .functions
+        .iter()
+        .for_each(|(selector, report_data)| {
+            table.add_row(vec![
+                Cell::new(selector),
+                Cell::new(report_data.gas_stats.min.to_string()).fg(Color::Green),
+                Cell::new(report_data.gas_stats.max.to_string()).fg(Color::Red),
+                Cell::new(report_data.gas_stats.mean.round().to_string()).fg(Color::Yellow),
+                Cell::new(report_data.gas_stats.std_deviation.round().to_string())
+                    .fg(Color::Yellow),
+                Cell::new(report_data.n_calls.to_string()),
+            ]);
+        });
+
+    table
 }
