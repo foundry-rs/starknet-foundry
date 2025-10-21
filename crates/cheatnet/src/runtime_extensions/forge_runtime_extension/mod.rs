@@ -73,7 +73,9 @@ pub struct ForgeExtension<'a> {
 impl<'a> ExtensionLogic for ForgeExtension<'a> {
     type Runtime = CallToBlockifierRuntime<'a>;
 
-    #[expect(clippy::too_many_lines)]
+    // `generic_array` which is a transitive dependency of multiple packages we depend on
+    // now, shows a deprecation warning at asking to upgrade to version 1.x
+    #[expect(clippy::too_many_lines, deprecated)]
     fn handle_cheatcode(
         &mut self,
         selector: &str,
