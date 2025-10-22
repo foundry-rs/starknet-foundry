@@ -19,7 +19,7 @@ impl PartitionMessage {
 
 impl Message for PartitionMessage {
     fn text(&self) -> String {
-        let styled_label = style("Finished partition run:").bold().to_string();
+        let styled_label = style("Finished partition run").bold().to_string();
         LabeledMessage::new(
             &styled_label,
             &format!("{}/{}", self.partition.index(), self.partition.total()),
