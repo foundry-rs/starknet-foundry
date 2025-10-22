@@ -25,6 +25,7 @@ impl FromStr for Partition {
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let parts: Vec<&str> = s.split('/').collect();
+
         if parts.len() != 2 {
             return Err("Partition must be in the format <INDEX>/<TOTAL>".to_string());
         }
@@ -74,6 +75,7 @@ impl PartitionConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use test_case::test_case;
 
     #[test]
     fn test_happy_case() {
@@ -88,24 +90,21 @@ mod tests {
         assert_eq!(err, "Partition must be in the format <INDEX>/<TOTAL>");
     }
 
-    #[test]
-    fn test_non_integer() {
-        let err = "a/5".parse::<Partition>().unwrap_err();
-        assert_eq!(err, "INDEX must be a positive integer");
-
-        let err = "2/b".parse::<Partition>().unwrap_err();
-        assert_eq!(err, "TOTAL must be a positive integer");
+    // #[test]
+    #[test_case("-1/5", "INDEX")]
+    #[test_case("2/-5", "TOTAL")]
+    #[test_case("a/5", "INDEX")]
+    #[test_case("2/b", "TOTAL")]
+    fn test_invalid_integer(partition: &str, invalid_part: &str) {
+        let err = partition.parse::<Partition>().unwrap_err();
+        assert_eq!(err, format!("{invalid_part} must be a positive integer"));
     }
 
-    #[test]
-    fn test_out_of_bounds() {
-        let err = "0/5".parse::<Partition>().unwrap_err();
-        assert_eq!(err, "Invalid partition values: ensure 1 <= INDEX <= TOTAL");
-
-        let err = "6/5".parse::<Partition>().unwrap_err();
-        assert_eq!(err, "Invalid partition values: ensure 1 <= INDEX <= TOTAL");
-
-        let err = "2/0".parse::<Partition>().unwrap_err();
+    #[test_case("0/5")]
+    #[test_case("6/5")]
+    #[test_case("2/0")]
+    fn test_out_of_bounds(partition: &str) {
+        let err = partition.parse::<Partition>().unwrap_err();
         assert_eq!(err, "Invalid partition values: ensure 1 <= INDEX <= TOTAL");
     }
 }
