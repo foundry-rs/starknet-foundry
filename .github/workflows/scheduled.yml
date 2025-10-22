@@ -6,7 +6,9 @@ on:
       - scripts/get_scarb_versions.sh
       - .github/workflows/scheduled.yml
   schedule:
-    - cron: '0 0 * * 3,0'
+    # Two schedules needed so we can distinguish between nightly and non-nightly runs
+    - cron: '0 0 * * 0'
+    - cron: '0 0 * * 3'
   workflow_dispatch:
 
 jobs:
@@ -200,11 +202,19 @@ jobs:
       bin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
       std_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
 
+  create-nightly-release:
+    needs: [ test-binary ]
+    # Creating a nightly release will trigger a Maat experiment for it as well
+    # Publish nightly only on Sundays
+    if: ${{ (github.event_name == 'schedule') && (github.event.schedule == '0 0 * * 0') }}
+    secrets: inherit
+    uses:
+      ./.github/workflows/nightly.yml
 
   notify_if_failed:
     runs-on: ubuntu-latest
     if: always() && contains(needs.*.result, 'failure') && github.event_name == 'schedule'
-    needs: [ test-forge-unit-and-integration, test-forge-e2e, test-cast , build-plugin-binaries, build-binaries, publish-plugin, publish-std, test-binary ]
+    needs: [ create-nightly-release, test-forge-unit-and-integration, test-forge-e2e, test-cast , build-plugin-binaries, build-binaries, publish-plugin, publish-std, test-binary ]
     steps:
       - name: Notify that the workflow has failed
         uses: slackapi/slack-github-action@v2.0.0
