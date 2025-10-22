@@ -6234,12 +6234,14 @@ version = "1.0.0"
 dependencies = [
  "anyhow",
  "assert_fs",
+ "cairo-lang-starknet-classes",
  "cairo-native",
  "camino",
  "foundry-ui",
  "indoc",
  "itertools 0.14.0",
  "native-api",
+ "num-bigint",
  "rayon",
  "regex",
  "scarb-metadata",
@@ -6619,6 +6621,7 @@ dependencies = [
  "starknet",
  "starknet-types-core",
  "starknet_api",
+ "thiserror 2.0.17",
  "url",
 ]
 
@@ -7955,12 +7958,15 @@ version = "1.0.0"
 dependencies = [
  "anyhow",
  "cairo-lang-casm",
+ "cairo-lang-starknet-classes",
  "camino",
  "num-bigint",
  "serde",
  "serde_json",
  "shared",
+ "strum_macros 0.27.2",
  "tempfile",
+ "thiserror 2.0.17",
  "tracing",
  "which",
 ]

@@ -221,7 +221,7 @@ pub fn test_targets_by_name(package: &PackageMetadata) -> HashMap<String, &Targe
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::metadata::MetadataCommandExt;
+    use crate::metadata::metadata_for_dir;
     use assert_fs::TempDir;
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use camino::Utf8PathBuf;
@@ -324,10 +324,7 @@ mod tests {
             .run()
             .unwrap();
 
-        let metadata = ScarbCommand::metadata()
-            .current_dir(temp.path())
-            .run()
-            .unwrap();
+        let metadata = metadata_for_dir(temp.path()).unwrap();
 
         let package = metadata
             .packages
@@ -378,10 +375,7 @@ mod tests {
             .run()
             .unwrap();
 
-        let metadata = ScarbCommand::metadata()
-            .current_dir(temp.path())
-            .run()
-            .unwrap();
+        let metadata = metadata_for_dir(temp.path()).unwrap();
 
         let package = metadata
             .packages
@@ -436,11 +430,7 @@ mod tests {
             ))
             .unwrap();
 
-        let scarb_metadata = ScarbCommand::metadata()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .run()
-            .unwrap();
+        let scarb_metadata = metadata_for_dir(temp.path()).unwrap();
 
         assert!(
             package_matches_version_requirement(
@@ -580,11 +570,7 @@ mod tests {
             .run()
             .unwrap();
 
-        let metadata = ScarbCommand::metadata()
-            .inherit_stderr()
-            .manifest_path(temp.join("Scarb.toml"))
-            .run()
-            .unwrap();
+        let metadata = metadata_for_dir(temp.path()).unwrap();
 
         let target_dir = target_dir_for_workspace(&metadata).join("dev");
         let package = metadata.packages.first().unwrap();
@@ -611,7 +597,6 @@ mod tests {
 
         let contract = contracts.get("ERC20").unwrap();
         assert_eq!(&sierra_contents_erc20, &contract.0.sierra);
-        assert!(!contract.0.casm.is_empty());
 
         let sierra_contents_erc20 = fs::read_to_string(
             temp.join("target/dev/basic_package_HelloStarknet.contract_class.json"),
@@ -619,17 +604,12 @@ mod tests {
         .unwrap();
         let contract = contracts.get("HelloStarknet").unwrap();
         assert_eq!(&sierra_contents_erc20, &contract.0.sierra);
-        assert!(!contract.0.casm.is_empty());
     }
 
     #[test]
     fn get_name_for_package() {
         let temp = setup_package("basic_package");
-        let scarb_metadata = ScarbCommand::metadata()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .run()
-            .unwrap();
+        let scarb_metadata = metadata_for_dir(temp.path()).unwrap();
 
         let package_name =
             name_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();

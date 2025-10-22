@@ -1,7 +1,7 @@
 use std::sync::LazyLock;
 
 use regex::Regex;
-use scarb_api::ScarbCommand;
+use scarb_api::version::scarb_version;
 use semver::VersionReq;
 use serde::{Deserialize, Serialize};
 
@@ -101,10 +101,7 @@ impl Default for SnippetConfig {
 impl SnippetConfig {
     fn check_scarb_compatibility(&mut self) {
         if let Some(ref scarb_version_req) = self.scarb_version {
-            let current_scarb_version = ScarbCommand::version()
-                .run()
-                .expect("Failed to get scarb version")
-                .scarb;
+            let current_scarb_version = scarb_version().expect("Failed to get scarb version").scarb;
 
             if !scarb_version_req.matches(&current_scarb_version) {
                 self.ignored = true;

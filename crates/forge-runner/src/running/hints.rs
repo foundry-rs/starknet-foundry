@@ -1,7 +1,7 @@
 use cairo_lang_casm::hints::Hint;
 use cairo_vm::serde::deserialize_program::{ApTracking, FlowTrackingData, HintParams};
 use std::collections::HashMap;
-use universal_sierra_compiler_api::AssembledCairoProgramWithSerde;
+use universal_sierra_compiler_api::representation::AssembledCairoProgramWithSerde;
 
 pub fn hints_by_representation(
     assembled_program: &AssembledCairoProgramWithSerde,

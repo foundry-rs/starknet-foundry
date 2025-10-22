@@ -3,7 +3,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use foundry_ui::{UI, components::warning::WarningMessage};
 use itertools::Itertools;
 use reqwest::{self, StatusCode};
-use scarb_api::metadata::MetadataCommand;
+use scarb_api::metadata::metadata_for_dir;
 use scarb_metadata::{Metadata, PackageMetadata};
 use serde::Serialize;
 use sncast::Network;
@@ -112,10 +112,7 @@ fn gather_packages(metadata: &Metadata, packages: &mut Vec<PackageMetadata>) -> 
         .collect();
 
     for (name, manifest) in out_of_workspace_dependencies {
-        let new_meta = MetadataCommand::new()
-            .json()
-            .manifest_path(manifest)
-            .exec()
+        let new_meta = metadata_for_dir(manifest.parent().expect("manifest should have a parent"))
             .map_err(|_| VoyagerApiError::MetadataError {
                 name: name.clone(),
                 path: manifest.to_string_lossy().to_string(),

@@ -15,7 +15,8 @@ use forge_runner::forge_config::{
 };
 use forge_runner::test_target_summary::TestTargetSummary;
 use foundry_ui::UI;
-use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
+use scarb_api::ScarbCommand;
+use scarb_api::metadata::metadata_for_dir;
 use std::num::NonZeroU32;
 use std::sync::Arc;
 use tempfile::tempdir;
@@ -33,10 +34,7 @@ pub fn run_test_case(
         .run()
         .unwrap();
 
-    let metadata = ScarbCommand::metadata()
-        .current_dir(test.path().unwrap())
-        .run()
-        .unwrap();
+    let metadata = metadata_for_dir(test.path().unwrap()).unwrap();
 
     let package = metadata
         .packages

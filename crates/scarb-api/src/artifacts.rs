@@ -1,6 +1,7 @@
 use anyhow::Result;
 
 use crate::artifacts::representation::StarknetArtifactsRepresentation;
+use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 #[cfg(feature = "cairo-native")]
 use cairo_native::executor::AotContractExecutor;
 use camino::{Utf8Path, Utf8PathBuf};
@@ -8,7 +9,7 @@ use itertools::Itertools;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::collections::HashMap;
 use std::fs;
-use universal_sierra_compiler_api::{SierraType, compile_sierra_at_path};
+use universal_sierra_compiler_api::compile_contract_sierra_at_path;
 
 mod deserialized;
 mod representation;
@@ -19,7 +20,7 @@ pub struct StarknetContractArtifacts {
     /// Compiled sierra code
     pub sierra: String,
     /// Compiled casm code
-    pub casm: String,
+    pub casm: CasmContractClass,
 
     #[cfg(feature = "cairo-native")]
     /// Optional AOT compiled native executor
@@ -106,7 +107,7 @@ impl StarknetArtifactsFiles {
     fn compile_artifact_at_path(&self, path: &Utf8Path) -> Result<StarknetContractArtifacts> {
         let sierra = fs::read_to_string(path)?;
 
-        let casm = compile_sierra_at_path(path, &SierraType::Contract)?;
+        let casm = compile_contract_sierra_at_path(path)?;
 
         #[cfg(feature = "cairo-native")]
         let executor = self.compile_to_native(&sierra)?;
@@ -153,9 +154,11 @@ mod tests {
     use crate::tests::setup_package;
     use assert_fs::TempDir;
     use assert_fs::fixture::{FileWriteStr, PathChild};
+    use cairo_lang_starknet_classes::casm_contract_class::CasmContractEntryPoints;
     use camino::Utf8PathBuf;
     use deserialized::{StarknetArtifacts, StarknetContract, StarknetContractArtifactPaths};
     use indoc::indoc;
+    use num_bigint::BigUint;
 
     #[test]
     fn test_unique_artifacts() {
@@ -165,7 +168,15 @@ mod tests {
             (
                 StarknetContractArtifacts {
                     sierra: "sierra1".to_string(),
-                    casm: "casm1".to_string(),
+                    casm: CasmContractClass {
+                        prime: BigUint::default(),
+                        compiler_version: String::default(),
+                        bytecode: vec![],
+                        bytecode_segment_lengths: None,
+                        hints: vec![],
+                        pythonic_hints: None,
+                        entry_points_by_type: CasmContractEntryPoints::default(),
+                    },
                     #[cfg(feature = "cairo-native")]
                     executor: None,
                 },
