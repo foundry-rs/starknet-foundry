@@ -64,7 +64,7 @@ impl TestsPartitionsMapping {
     }
 
     pub fn from_packages_args(packages_args: &[RunForPackageArgs], partition: Partition) -> Self {
-        let mut names: Vec<String> = packages_args
+        let mut full_paths: Vec<String> = packages_args
             .iter()
             .flat_map(|pkg| pkg.test_targets.iter())
             .flat_map(|tt| {
@@ -81,15 +81,22 @@ impl TestsPartitionsMapping {
                     .map(std::string::ToString::to_string)
             })
             .collect();
+        // println!("names before sort: {:?}", full_paths);
+        // for name in &full_paths {
+        //     println!("name: {}", name);
+        // }
+        full_paths.sort();
 
-        names.sort();
-
+        // println!("names after sort: {:?}", full_paths);
+        // for name in &full_paths {
+        //     println!("name: {}", name);
+        // }
         let total = partition.total();
-        let mut mapping = HashMap::with_capacity(names.len());
+        let mut mapping = HashMap::with_capacity(full_paths.len());
 
-        for (i, name) in names.into_iter().enumerate() {
+        for (i, path) in full_paths.into_iter().enumerate() {
             let partition_index_1_based = (i % total) + 1;
-            mapping.insert(sanitize_test_case_name(&name), partition_index_1_based);
+            mapping.insert(sanitize_test_case_name(&path), partition_index_1_based);
         }
 
         Self(mapping)

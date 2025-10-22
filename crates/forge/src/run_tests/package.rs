@@ -3,7 +3,7 @@ use super::{
     test_target::{TestTargetRunResult, run_for_test_target},
 };
 use crate::{
-    Partition, TestArgs,
+    TestArgs,
     block_number_map::BlockNumberMap,
     combine_configs::combine_configs,
     partition::PartitionConfig,
@@ -163,30 +163,30 @@ async fn test_package_with_config_resolved(
     Ok(test_targets_with_resolved_config)
 }
 
-fn sum_test_cases(test_targets: &[TestTargetWithResolvedConfig]) -> usize {
-    test_targets.iter().map(|tc| tc.test_cases.len()).sum()
-}
-
 fn sum_test_cases_from_package(
     test_targets: &[TestTarget<TestCaseResolvedConfig>],
-    partition: Option<&Partition>,
+    partition_config: Option<&PartitionConfig>,
 ) -> usize {
     test_targets
         .iter()
-        .map(|tt| sum_test_cases_from_test_target(tt.test_cases.clone(), partition))
+        .map(|tt| sum_test_cases_from_test_target(tt.test_cases.clone(), partition_config))
         .sum()
 }
 
 fn sum_test_cases_from_test_target(
-    // test_target: TestTarget<TestCaseResolvedConfig>,
     test_cases: Vec<TestCase<TestCaseResolvedConfig>>,
-    partition: Option<&Partition>,
+    partition_config: Option<&PartitionConfig>,
 ) -> usize {
-    if let Some(partition) = partition {
+    if let Some(partition_config) = partition_config {
         test_cases
             .into_iter()
-            .enumerate()
-            .filter(|(i, _)| i % partition.total() == partition.index_0_based())
+            .filter(|test_case| {
+                partition_config.partition().index_1_based()
+                    == *partition_config
+                        .partitions_mapping()
+                        .get(&test_case.name)
+                        .expect("Test case name not found in partitions mapping")
+            })
             .count()
     } else {
         test_cases.len()
@@ -214,7 +214,7 @@ pub async fn run_for_package(
         &tests_filter,
     )
     .await?;
-    let all_tests = sum_test_cases(&test_targets);
+    let all_tests = sum_test_cases_from_package(&test_targets, partition_config);
 
     for test_target in &mut test_targets {
         tests_filter.filter_tests(&mut test_target.test_cases)?;
@@ -223,9 +223,8 @@ pub async fn run_for_package(
     warn_if_available_gas_used_with_incompatible_scarb_version(&test_targets, &ui)?;
     warn_if_incompatible_rpc_version(&test_targets, ui.clone()).await?;
 
-    let partition = partition_config.as_ref().map(|pc| pc.partition());
+    let not_filtered = sum_test_cases_from_package(&test_targets, partition_config);
 
-    let not_filtered = sum_test_cases_from_package(&test_targets, partition.as_ref());
     ui.println(&CollectedTestsCountMessage {
         tests_num: not_filtered,
         package_name: package_name.clone(),
@@ -237,7 +236,7 @@ pub async fn run_for_package(
         let ui = ui.clone();
         ui.println(&TestsRunMessage::new(
             test_target.tests_location,
-            sum_test_cases_from_test_target(test_target.test_cases.clone(), partition.as_ref()),
+            sum_test_cases_from_test_target(test_target.test_cases.clone(), partition_config),
         ));
 
         let summary = run_for_test_target(
@@ -265,8 +264,6 @@ pub async fn run_for_package(
 
     // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
     let filtered_count = if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
-        None
-    } else if partition_config.is_some() {
         None
     } else {
         Some(all_tests - not_filtered)

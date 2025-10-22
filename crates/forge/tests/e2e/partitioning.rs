@@ -22,7 +22,7 @@ fn test_whole_workspace_partition_1_2() {
         [PASS] package_a_integrationtest::tests::test_c ([..])
         Running 1 test(s) from src/
         [PASS] package_a::tests::test_a ([..])
-        Tests: 2 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
 
 
         Collected 2 test(s) from package_b package
@@ -30,7 +30,7 @@ fn test_whole_workspace_partition_1_2() {
         [PASS] package_b::tests::test_e ([..])
         Running 1 test(s) from tests/
         [PASS] package_b_integrationtest::tests::test_g ([..])
-        Tests: 2 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
 
 
         Collected 3 test(s) from partitioning package
@@ -39,10 +39,10 @@ fn test_whole_workspace_partition_1_2() {
         [PASS] partitioning_integrationtest::tests::test_m ([..])
         Running 1 test(s) from src/
         [PASS] partitioning::tests::test_i ([..])
-        Tests: 3 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 3 passed, 0 failed, 0 ignored, 0 filtered out
 
 
-        Tests summary: 7 passed, 0 failed, 0 ignored, other filtered out
+        Tests summary: 7 passed, 0 failed, 0 ignored, 0 filtered out
         Finished partition run: 1/2
     "},
     );
@@ -68,7 +68,7 @@ fn test_whole_workspace_partition_2_2() {
         [PASS] package_a_integrationtest::tests::test_d ([..])
         Running 1 test(s) from src/
         [IGNORE] package_a::tests::test_b
-        Tests: 1 passed, 0 failed, 1 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 1 ignored, 0 filtered out
 
 
         Collected 2 test(s) from package_b package
@@ -80,7 +80,7 @@ fn test_whole_workspace_partition_2_2() {
         Failure data:
             "assertion failed: `1 + 1 == 3`."
 
-        Tests: 1 passed, 1 failed, 0 ignored, other filtered out
+        Tests: 1 passed, 1 failed, 0 ignored, 0 filtered out
 
 
         Collected 2 test(s) from partitioning package
@@ -88,12 +88,12 @@ fn test_whole_workspace_partition_2_2() {
         [PASS] partitioning_integrationtest::tests::test_l ([..])
         Running 1 test(s) from src/
         [PASS] partitioning::tests::test_j ([..])
-        Tests: 2 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
 
         Failures:
             package_b_integrationtest::tests::test_h
 
-        Tests summary: 4 passed, 1 failed, 1 ignored, other filtered out
+        Tests summary: 4 passed, 1 failed, 1 ignored, 0 filtered out
         Finished partition run: 2/2
     "#},
     );
@@ -119,14 +119,14 @@ fn test_whole_workspace_partition_1_3() {
         [PASS] package_a_integrationtest::tests::test_d ([..])
         Running 1 test(s) from src/
         [PASS] package_a::tests::test_a ([..])
-        Tests: 2 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
 
 
         Collected 2 test(s) from package_b package
         Running 1 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] package_b_integrationtest::tests::test_g ([..])
-        Tests: 1 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
 
 
         Collected 2 test(s) from partitioning package
@@ -134,10 +134,10 @@ fn test_whole_workspace_partition_1_3() {
         [PASS] partitioning_integrationtest::tests::test_m ([..])
         Running 1 test(s) from src/
         [PASS] partitioning::tests::test_j ([..])
-        Tests: 2 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
 
 
-        Tests summary: 5 passed, 0 failed, 0 ignored, other filtered out
+        Tests summary: 5 passed, 0 failed, 0 ignored, 0 filtered out
         Finished partition run: 1/3
     "},
     );
@@ -162,7 +162,7 @@ fn test_whole_workspace_partition_2_3() {
         Running 1 test(s) from tests/
         Running 1 test(s) from src/
         [IGNORE] package_a::tests::test_b
-        Tests: 0 passed, 0 failed, 1 ignored, other filtered out
+        Tests: 0 passed, 0 failed, 1 ignored, 0 filtered out
 
 
         Collected 2 test(s) from package_b package
@@ -174,19 +174,19 @@ fn test_whole_workspace_partition_2_3() {
 
         Running 1 test(s) from src/
         [PASS] package_b::tests::test_e ([..])
-        Tests: 1 passed, 1 failed, 0 ignored, other filtered out
+        Tests: 1 passed, 1 failed, 0 ignored, 0 filtered out
 
 
         Collected 2 test(s) from partitioning package
         Running 1 test(s) from tests/
         [PASS] partitioning_integrationtest::tests::test_k ([..])
         Running 1 test(s) from src/
-        Tests: 1 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
 
         Failures:
             package_b_integrationtest::tests::test_h
 
-        Tests summary: 2 passed, 1 failed, 1 ignored, other filtered out
+        Tests summary: 2 passed, 1 failed, 1 ignored, 0 filtered out
         Finished partition run: 2/3
     "#},
     );
@@ -211,14 +211,14 @@ fn test_whole_workspace_partition_3_3() {
         Running 0 test(s) from src/
         Running 0 test(s) from tests/
         [PASS] package_a_integrationtest::tests::test_c ([..])
-        Tests: 1 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
 
 
         Collected 0 test(s) from package_b package
         Running 0 test(s) from tests/
         Running 0 test(s) from src/
         [PASS] package_b::tests::test_f ([..])
-        Tests: 1 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
 
 
         Collected 1 test(s) from partitioning package
@@ -226,10 +226,10 @@ fn test_whole_workspace_partition_3_3() {
         [PASS] partitioning_integrationtest::tests::test_l ([..])
         Running 0 test(s) from src/
         [PASS] partitioning::tests::test_i ([..])
-        Tests: 2 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
 
 
-        Tests summary: 4 passed, 0 failed, 0 ignored, other filtered out
+        Tests summary: 4 passed, 0 failed, 0 ignored, 0 filtered out
         Finished partition run: 3/3
     "},
     );
