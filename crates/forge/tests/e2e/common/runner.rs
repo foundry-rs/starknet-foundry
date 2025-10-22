@@ -165,7 +165,6 @@ pub(crate) fn setup_package_with_file_patterns(
 
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
-    // TODO (#2074): do that on .cairo.template files only
     replace_node_rpc_url_placeholders(temp.path());
 
     temp
@@ -187,7 +186,7 @@ fn replace_node_rpc_url_placeholders(dir_path: &Path) {
 
         let path = entry.path();
 
-        if path.is_file() {
+        if path.is_file() && path.extension().is_some_and(|ex| ex == "cairo") {
             let content = fs::read_to_string(path).unwrap();
 
             let modified_content = content.replace("{{ NODE_RPC_URL }}", url.as_str());
