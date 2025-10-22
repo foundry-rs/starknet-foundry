@@ -114,7 +114,7 @@ fn test_whole_workspace_partition_1_3() {
         [..]Finished[..]
 
 
-        Collected 2 test(s) from package_a package
+       Collected 2 test(s) from package_a package
         Running 1 test(s) from tests/
         [PASS] package_a_integrationtest::tests::test_d ([..])
         Running 1 test(s) from src/
@@ -122,18 +122,18 @@ fn test_whole_workspace_partition_1_3() {
         Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
 
 
-        Collected 2 test(s) from package_b package
-        Running 1 test(s) from src/
+        Collected 1 test(s) from package_b package
         Running 1 test(s) from tests/
         [PASS] package_b_integrationtest::tests::test_g ([..])
+        Running 0 test(s) from src/
         Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
 
 
         Collected 2 test(s) from partitioning package
-        Running 1 test(s) from tests/
-        [PASS] partitioning_integrationtest::tests::test_m ([..])
         Running 1 test(s) from src/
         [PASS] partitioning::tests::test_j ([..])
+        Running 1 test(s) from tests/
+        [PASS] partitioning_integrationtest::tests::test_m ([..])
         Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
 
 
@@ -173,13 +173,13 @@ fn test_whole_workspace_partition_2_3() {
             "assertion failed: `1 + 1 == 3`."
 
         Running 1 test(s) from src/
-        [PASS] package_b::tests::test_e (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~14240)
+        [PASS] package_b::tests::test_e ([..])
         Tests: 1 passed, 1 failed, 0 ignored, 0 filtered out
 
 
         Collected 1 test(s) from partitioning package
         Running 1 test(s) from tests/
-        [PASS] partitioning_integrationtest::tests::test_k (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~14240)
+        [PASS] partitioning_integrationtest::tests::test_k ([..])
         Running 0 test(s) from src/
         Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
 
@@ -207,29 +207,30 @@ fn test_whole_workspace_partition_3_3() {
         [..]Finished[..]
 
 
-        Collected 0 test(s) from package_a package
-        Running 0 test(s) from src/
-        Running 0 test(s) from tests/
-        [PASS] package_a_integrationtest::tests::test_c ([..])
-        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
-
-
-        Collected 0 test(s) from package_b package
-        Running 0 test(s) from tests/
-        Running 0 test(s) from src/
-        [PASS] package_b::tests::test_f ([..])
-        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
-
-
-        Collected 1 test(s) from partitioning package
+        Collected 1 test(s) from package_a package
         Running 1 test(s) from tests/
-        [PASS] partitioning_integrationtest::tests::test_l ([..])
+        [PASS] package_a_integrationtest::tests::test_c (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~14240)
         Running 0 test(s) from src/
-        [PASS] partitioning::tests::test_i ([..])
+        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
+
+
+        Collected 1 test(s) from package_b package
+        Running 1 test(s) from src/
+        [PASS] package_b::tests::test_f (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~14240)
+        Running 0 test(s) from tests/
+        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
+
+
+        Collected 2 test(s) from partitioning package
+        Running 1 test(s) from tests/
+        [PASS] partitioning_integrationtest::tests::test_l (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~14240)
+        Running 1 test(s) from src/
+        [PASS] partitioning::tests::test_i (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~14240)
         Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
 
 
         Tests summary: 4 passed, 0 failed, 0 ignored, 0 filtered out
+        Finished partition run: 3/3
         Finished partition run: 3/3
     "},
     );
