@@ -156,7 +156,6 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     }
 
     let overall_summary = OverallSummaryMessage::new(&all_tests, total_filtered_count);
-
     let all_failed_tests: Vec<AnyTestCaseSummary> = extract_failed_tests(all_tests).collect();
 
     FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
