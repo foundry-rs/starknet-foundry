@@ -14,6 +14,7 @@ use std::hash::Hash;
 
 /// Data structure containing information about contracts,
 /// including their ABI, names, selectors and programs that will be used to create a [`Trace`](crate::Trace).
+#[derive(Clone)]
 pub struct ContractsDataStore {
     abi: HashMap<ClassHash, Vec<AbiEntry>>,
     contract_names: HashMap<ClassHash, ContractName>,
