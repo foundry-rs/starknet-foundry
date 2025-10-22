@@ -81,16 +81,9 @@ impl TestsPartitionsMapping {
                     .map(std::string::ToString::to_string)
             })
             .collect();
-        // println!("names before sort: {:?}", full_paths);
-        // for name in &full_paths {
-        //     println!("name: {}", name);
-        // }
+
         full_paths.sort();
 
-        // println!("names after sort: {:?}", full_paths);
-        // for name in &full_paths {
-        //     println!("name: {}", name);
-        // }
         let total = partition.total();
         let mut mapping = HashMap::with_capacity(full_paths.len());
 
