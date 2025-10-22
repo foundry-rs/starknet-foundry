@@ -45,6 +45,7 @@ impl FromStr for Partition {
     }
 }
 
+/// A mapping between test full paths and their assigned partition indices.
 #[derive(Serialize)]
 pub struct TestPartitionMap(HashMap<String, usize>);
 
