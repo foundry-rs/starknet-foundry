@@ -165,7 +165,7 @@ fn meta_tx_v0_with_cheat_block_hash() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
     assert_passed(&result);
 }
 
@@ -236,6 +236,6 @@ fn meta_tx_v0_verify_tx_context_modification() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
     assert_passed(&result);
 }
