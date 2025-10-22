@@ -1,4 +1,5 @@
-use foundry_ui::Message;
+use console::style;
+use foundry_ui::{Message, components::labeled::LabeledMessage};
 use serde::Serialize;
 use serde_json::{Value, json};
 
@@ -18,16 +19,15 @@ impl PartitionMessage {
 
 impl Message for PartitionMessage {
     fn text(&self) -> String {
-        format!(
-            "Finished partition run: {}/{}",
-            self.partition.index(),
-            self.partition.total()
+        let styled_label = style("Finished partition run").bold().to_string();
+        LabeledMessage::new(
+            &styled_label,
+            &format!("{}/{}", self.partition.index(), self.partition.total()),
         )
+        .text()
     }
 
     fn json(&self) -> Value {
-        json!({
-            "partition": format!("{}/{}", self.partition.index(), self.partition.total())
-        })
+        json!(self)
     }
 }

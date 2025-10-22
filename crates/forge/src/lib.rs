@@ -151,7 +151,7 @@ pub struct TestArgs {
     run_native: bool,
 
     /// Use exact matches for `test_filter`
-    #[arg(short, long)]
+    #[arg(short, long, conflicts_with = "partition")]
     exact: bool,
 
     /// Skips any tests whose name contains the given SKIP string.
