@@ -52,9 +52,9 @@ pub async fn run_for_test_target(
                         case.name
                     )
                 });
-            let should_run_in_partition = *test_partition == partition_config.partition().index();
+            let is_included_in_partition = *test_partition == partition_config.partition().index();
 
-            if !should_run_in_partition {
+            if !is_included_in_partition {
                 tasks.push(tokio::task::spawn(async {
                     Ok(AnyTestCaseSummary::Single(
                         TestCaseSummary::ExcludedFromPartition {},
