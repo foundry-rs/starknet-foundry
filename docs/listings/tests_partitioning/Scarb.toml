@@ -1,5 +1,5 @@
 [package]
-name = "partitioning"
+name = "tests_partitioning"
 version = "0.1.0"
 edition = "2024_07"
 
