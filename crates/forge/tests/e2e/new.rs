@@ -1,4 +1,5 @@
 use super::common::runner::{runner, snforge_test_bin_path, test_runner};
+use crate::utils::{tempdir_with_tool_versions, use_snforge_std_deprecated};
 use assert_fs::TempDir;
 use assert_fs::fixture::{FileTouch, PathChild};
 use forge::CAIRO_EDITION;
@@ -17,7 +18,6 @@ use std::str::FromStr;
 use std::sync::LazyLock;
 use std::{env, fs, iter};
 use test_case::test_case;
-use test_utils::{tempdir_with_tool_versions, use_snforge_std_deprecated};
 use toml_edit::{DocumentMut, Formatted, InlineTable, Item, Value};
 
 static RE_NEWLINES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\n{3,}").unwrap());

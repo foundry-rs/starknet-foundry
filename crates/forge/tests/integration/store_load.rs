@@ -1,13 +1,14 @@
+use crate::utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
+use crate::utils::running_tests::run_test_case;
+use crate::utils::test_case;
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::node_url::node_rpc_url;
 use std::path::Path;
-use test_utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
-use test_utils::running_tests::run_test_case;
 
 #[test]
 fn store_load_simple() {
-    let test = test_utils::test_case!(
+    let test = test_case!(
         indoc!(
             r#"
             use starknet::ContractAddress;
@@ -58,7 +59,7 @@ fn store_load_simple() {
 
 #[test]
 fn store_load_wrong_selector() {
-    let test = test_utils::test_case!(
+    let test = test_case!(
         indoc!(
             r#"
             use starknet::ContractAddress;
@@ -108,7 +109,7 @@ fn store_load_wrong_selector() {
 
 #[test]
 fn store_load_wrong_data_length() {
-    let test = test_utils::test_case!(
+    let test = test_case!(
         indoc!(
             r#"
             use starknet::ContractAddress;
@@ -155,7 +156,7 @@ fn store_load_wrong_data_length() {
 
 #[test]
 fn store_load_max_boundaries_input() {
-    let test = test_utils::test_case!(
+    let test = test_case!(
         indoc!(
             r#"
             use starknet::ContractAddress;
@@ -250,7 +251,7 @@ fn store_load_max_boundaries_input() {
 
 #[test]
 fn store_load_structure() {
-    let test = test_utils::test_case!(
+    let test = test_case!(
         indoc!(
             r#"
             use starknet::ContractAddress;
@@ -335,7 +336,7 @@ fn store_load_structure() {
 
 #[test]
 fn store_load_felt_to_structure() {
-    let test = test_utils::test_case!(
+    let test = test_case!(
         indoc!(
             r#"
             use starknet::ContractAddress;
@@ -424,7 +425,7 @@ fn store_load_felt_to_structure() {
 
 #[test]
 fn store_load_structure_to_felt() {
-    let test = test_utils::test_case!(
+    let test = test_case!(
         indoc!(
             r#"
             use starknet::ContractAddress;
@@ -504,7 +505,7 @@ fn store_load_structure_to_felt() {
 
 #[test]
 fn store_load_felt_to_felt() {
-    let test = test_utils::test_case!(
+    let test = test_case!(
         indoc!(
             r#"
             use starknet::ContractAddress;
@@ -563,7 +564,7 @@ fn store_load_felt_to_felt() {
 
 #[test]
 fn fork_store_load() {
-    let test = test_utils::test_case!(formatdoc!(
+    let test = test_case!(formatdoc!(
         r#"
             use starknet::{{ ContractAddress, contract_address_const }};
             use snforge_std::{{ load, store }};

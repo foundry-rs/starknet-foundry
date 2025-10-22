@@ -1,10 +1,10 @@
 use crate::e2e::common::runner::{get_current_branch, get_remote_url, setup_package};
+use crate::utils::use_snforge_std_deprecated;
 use assert_fs::fixture::{FileWriteStr, PathChild};
 use indoc::formatdoc;
 use scarb_api::ScarbCommand;
 use shared::test_utils::output_assert::AsOutput;
 use snapbox::cmd::Command as SnapboxCommand;
-use test_utils::use_snforge_std_deprecated;
 
 #[test]
 fn no_warnings_are_produced() {

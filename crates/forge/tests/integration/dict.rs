@@ -1,12 +1,13 @@
+use crate::utils::runner::{Contract, assert_passed};
+use crate::utils::running_tests::run_test_case;
+use crate::utils::test_case;
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::{Contract, assert_passed};
-use test_utils::running_tests::run_test_case;
 
 #[test]
 fn using_dict() {
-    let test = test_utils::test_case!(
+    let test = test_case!(
         indoc!(
             r#"
         use result::ResultTrait;

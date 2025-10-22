@@ -4,6 +4,7 @@ mod backtrace;
 mod build_profile;
 mod build_trace_data;
 mod clean;
+mod code_quality;
 mod collection;
 mod color;
 mod completions;

@@ -1,11 +1,11 @@
+use crate::utils::runner::{Contract, assert_builtin, assert_passed, assert_syscall};
+use crate::utils::running_tests::run_test_case;
+use crate::utils::{test_case, use_snforge_std_deprecated};
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallSelector;
 use cairo_vm::types::builtin_name::BuiltinName;
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::{Contract, assert_builtin, assert_passed, assert_syscall};
-use test_utils::running_tests::run_test_case;
-use test_utils::{test_case, use_snforge_std_deprecated};
 
 #[test]
 fn builtins_count() {

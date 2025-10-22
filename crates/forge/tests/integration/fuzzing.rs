@@ -1,9 +1,9 @@
+use crate::utils::runner::{TestCase, assert_passed};
+use crate::utils::running_tests::run_test_case;
+use crate::utils::test_case;
 use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use indoc::indoc;
-use test_utils::runner::{TestCase, assert_passed};
-use test_utils::running_tests::run_test_case;
-use test_utils::test_case;
 
 const ALLOWED_ERROR: f64 = 0.05;
 

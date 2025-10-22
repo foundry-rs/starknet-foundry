@@ -1,11 +1,11 @@
+use crate::utils::runner::assert_passed;
+use crate::utils::running_tests::run_test_case;
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
-use test_utils::runner::assert_passed;
-use test_utils::running_tests::run_test_case;
 
 #[test]
 fn builtin_test() {
-    let test = test_utils::test_case!(indoc!(
+    let test = crate::utils::test_case!(indoc!(
         r"
         use core::{
             pedersen::Pedersen, RangeCheck, integer::Bitwise, ec::EcOp, poseidon::Poseidon,
