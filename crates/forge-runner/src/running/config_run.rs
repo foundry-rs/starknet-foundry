@@ -58,6 +58,7 @@ impl StateReader for PhantomStateReader {
     }
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn run_config_pass(
     test_details: &TestDetails,
     casm_program: &AssembledProgramWithDebugInfo,

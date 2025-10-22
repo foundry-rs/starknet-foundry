@@ -66,6 +66,7 @@ pub fn compile_sierra<T: UniversalSierraCompilerOutput>(
     )
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn compile_sierra_at_path<T: UniversalSierraCompilerOutput>(
     sierra_file_path: &Utf8Path,
     sierra_type: &SierraType,

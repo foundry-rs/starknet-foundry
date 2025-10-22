@@ -88,6 +88,7 @@ pub fn test_target_with_config(
     })
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 fn build_test_details(
     func: &GenFunction<StatementIdx>,
     type_declarations: &HashMap<u64, &TypeDeclaration>,
