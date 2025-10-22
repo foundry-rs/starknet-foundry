@@ -13,7 +13,7 @@ enum TestResultStatus {
     Failed,
     Ignored,
     Interrupted,
-    SkippedByPartition,
+    ExcludedFromPartition,
 }
 
 impl From<&AnyTestCaseSummary> for TestResultStatus {
@@ -27,9 +27,9 @@ impl From<&AnyTestCaseSummary> for TestResultStatus {
             | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Ignored { .. }) => Self::Ignored,
             AnyTestCaseSummary::Single(TestCaseSummary::Interrupted { .. })
             | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Interrupted { .. }) => Self::Interrupted,
-            AnyTestCaseSummary::Single(TestCaseSummary::SkippedByPartition { .. })
-            | AnyTestCaseSummary::Fuzzing(TestCaseSummary::SkippedByPartition { .. }) => {
-                Self::SkippedByPartition
+            AnyTestCaseSummary::Single(TestCaseSummary::ExcludedFromPartition { .. })
+            | AnyTestCaseSummary::Fuzzing(TestCaseSummary::ExcludedFromPartition { .. }) => {
+                Self::ExcludedFromPartition
             }
         }
     }
@@ -117,7 +117,7 @@ impl TestResultMessage {
                 TestResultStatus::Failed => return format!("\n\nFailure data:{msg}"),
                 TestResultStatus::Ignored
                 | TestResultStatus::Interrupted
-                | TestResultStatus::SkippedByPartition => return String::new(),
+                | TestResultStatus::ExcludedFromPartition => return String::new(),
             }
         }
         String::new()
@@ -131,9 +131,9 @@ impl TestResultMessage {
             TestResultStatus::Interrupted => {
                 unreachable!("Interrupted tests should not have visible message representation")
             }
-            TestResultStatus::SkippedByPartition => {
+            TestResultStatus::ExcludedFromPartition => {
                 unreachable!(
-                    "Tests skipped by partition should not have visible message representation"
+                    "Tests excluded from partition should not have visible message representation"
                 )
             }
         }

@@ -55,7 +55,7 @@ pub async fn run_for_test_target(
             if !should_run_in_partition {
                 tasks.push(tokio::task::spawn(async {
                     Ok(AnyTestCaseSummary::Single(
-                        TestCaseSummary::SkippedByPartition {},
+                        TestCaseSummary::ExcludedFromPartition {},
                     ))
                 }));
                 continue;
@@ -90,7 +90,7 @@ pub async fn run_for_test_target(
     while let Some(task) = tasks.next().await {
         let result = task??;
 
-        if !result.is_interrupted() && !result.is_skipped_by_partition() {
+        if !result.is_interrupted() && !result.is_excluded_from_partition() {
             let test_result_message = TestResultMessage::new(
                 &result,
                 forge_config.output_config.detailed_resources,
