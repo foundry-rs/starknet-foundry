@@ -1,0 +1,10 @@
+[package]
+name = "package_a"
+version.workspace = true
+edition = "2024_07"
+
+[dependencies]
+starknet.workspace = true
+
+[dev-dependencies]
+snforge_std.workspace = true

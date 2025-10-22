@@ -1,5 +1,9 @@
+use cairo_lang_sierra::ids::FunctionId;
+use forge_runner::package_tests::with_config_resolved::sanitize_test_case_name;
 use serde::Serialize;
 use std::{collections::HashMap, str::FromStr};
+
+use crate::run_tests::package::RunForPackageArgs;
 
 #[derive(Debug, Clone, Copy, Serialize)]
 pub struct Partition {
@@ -7,7 +11,6 @@ pub struct Partition {
     total: usize,
 }
 
-#[allow(dead_code)] // TODO: Removed in later PRs
 impl Partition {
     #[must_use]
     pub fn index(&self) -> usize {
@@ -47,15 +50,57 @@ impl FromStr for Partition {
 #[derive(Serialize)]
 pub struct TestPartitionMap(HashMap<String, usize>);
 
+impl TestPartitionMap {
+    pub fn get(&self, test_name: &str) -> Option<&usize> {
+        self.0.get(test_name)
+    }
+
+    pub fn insert(&mut self, test_name: String, partition_index: usize) {
+        self.0.insert(test_name, partition_index);
+    }
+
+    pub fn from_packages_args(packages_args: &[RunForPackageArgs], partition: Partition) -> Self {
+        let mut full_paths: Vec<String> = packages_args
+            .iter()
+            .flat_map(|pkg| pkg.test_targets.iter())
+            .flat_map(|tt| {
+                tt.sierra_program
+                    .debug_info
+                    .as_ref()
+                    .and_then(|info| info.executables.get("snforge_internal_test_executable"))
+                    .into_iter()
+                    .flatten()
+            })
+            .filter_map(|fid: &FunctionId| {
+                fid.debug_name
+                    .as_ref()
+                    .map(std::string::ToString::to_string)
+            })
+            .collect();
+
+        full_paths.sort();
+
+        let total = partition.total();
+        let mut mapping = HashMap::with_capacity(full_paths.len());
+
+        for (i, path) in full_paths.into_iter().enumerate() {
+            let partition_index_1_based = (i % total) + 1;
+            mapping.insert(sanitize_test_case_name(&path), partition_index_1_based);
+        }
+
+        Self(mapping)
+    }
+}
+
 #[derive(Serialize)]
 pub struct PartitionConfig {
     partition: Partition,
     test_partition_map: TestPartitionMap,
 }
 
-#[allow(dead_code)] // TODO: Removed in later PRs
 impl PartitionConfig {
-    pub fn new(partition: Partition, test_partition_map: TestPartitionMap) -> Self {
+    pub fn new(partition: Partition, packages_args: &[RunForPackageArgs]) -> Self {
+        let test_partition_map = TestPartitionMap::from_packages_args(packages_args, partition);
         Self {
             partition,
             test_partition_map,

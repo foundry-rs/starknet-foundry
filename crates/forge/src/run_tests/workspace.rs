@@ -1,7 +1,9 @@
 use super::package::RunForPackageArgs;
+use crate::partition::PartitionConfig;
 use crate::profile_validation::check_profile_compatibility;
 use crate::run_tests::messages::latest_blocks_numbers::LatestBlocksNumbersMessage;
 use crate::run_tests::messages::overall_summary::OverallSummaryMessage;
+use crate::run_tests::messages::partition::PartitionMessage;
 use crate::run_tests::messages::tests_failure_summary::TestsFailureSummaryMessage;
 use crate::warn::{
     error_if_snforge_std_deprecated_missing, error_if_snforge_std_deprecated_not_compatible,
@@ -29,6 +31,7 @@ use std::env;
 use std::sync::Arc;
 
 #[tracing::instrument(skip_all, level = "debug")]
+#[expect(clippy::too_many_lines)]
 pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus> {
     match args.color {
         // SAFETY: This runs in a single-threaded environment.
@@ -94,31 +97,66 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     let cache_dir = workspace_root.join(CACHE_DIR);
     let packages_len = packages.len();
 
-    for package in packages {
-        env::set_current_dir(&package.root)?;
+    if let Some(partition) = &args.partition {
+        // When partitioning is used, we need to collect all tests across all packages first
+        // to create a consistent mapping of tests to partitions.
+        // This ensures that partitions are equal, i.e. difference in number of tests is <= 1).
+        let packages_args = packages
+            .iter()
+            .map(|package| {
+                RunForPackageArgs::build(
+                    package.clone(),
+                    &scarb_metadata,
+                    &args,
+                    &cache_dir,
+                    &artifacts_dir_path,
+                    &ui,
+                )
+            })
+            .collect::<Result<Vec<RunForPackageArgs>>>()?;
 
-        let args = RunForPackageArgs::build(
-            package,
-            &scarb_metadata,
-            &args,
-            &cache_dir,
-            &artifacts_dir_path,
-            &ui,
-        )?;
+        let partition_config = PartitionConfig::new(*partition, &packages_args);
 
-        let result = run_for_package(args, &mut block_number_map, ui.clone()).await?;
+        for (package, args) in packages.iter().zip(packages_args) {
+            env::set_current_dir(&package.root)?;
 
-        let filtered = result.filtered();
-        all_tests.extend(result.summaries());
+            let result = run_for_package(
+                args,
+                &mut block_number_map,
+                Some(&partition_config),
+                ui.clone(),
+            )
+            .await?;
 
-        // Accumulate filtered test counts across packages. When using --exact flag,
-        // result.filtered_count is None, so total_filtered_count becomes None too.
-        total_filtered_count = total_filtered_count
-            .zip(filtered)
-            .map(|(total, filtered)| total + filtered);
+            let filtered = result.filtered();
+            all_tests.extend(result.summaries());
+
+            total_filtered_count = calculate_total_filtered_count(total_filtered_count, filtered);
+        }
+    } else {
+        for package in packages {
+            env::set_current_dir(&package.root)?;
+
+            let args = RunForPackageArgs::build(
+                package,
+                &scarb_metadata,
+                &args,
+                &cache_dir,
+                &artifacts_dir_path,
+                &ui,
+            )?;
+
+            let result = run_for_package(args, &mut block_number_map, None, ui.clone()).await?;
+
+            let filtered = result.filtered();
+            all_tests.extend(result.summaries());
+
+            total_filtered_count = calculate_total_filtered_count(total_filtered_count, filtered);
+        }
     }
 
     let overall_summary = OverallSummaryMessage::new(&all_tests, total_filtered_count);
+
     let all_failed_tests: Vec<AnyTestCaseSummary> = extract_failed_tests(all_tests).collect();
 
     FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
@@ -138,6 +176,10 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         ui.println(&overall_summary);
     }
 
+    if let Some(partition) = &args.partition {
+        ui.println(&PartitionMessage::new(*partition));
+    }
+
     if args.exact {
         unset_forge_test_filter();
     }
@@ -147,6 +189,17 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     } else {
         ExitStatus::Failure
     })
+}
+
+fn calculate_total_filtered_count(
+    total_filtered_count: Option<usize>,
+    filtered: Option<usize>,
+) -> Option<usize> {
+    // Accumulate filtered test counts across packages. When using `--exact` flag,
+    // `result.filtered_count` is None, so `total_filtered_count` becomes None too.
+    total_filtered_count
+        .zip(filtered)
+        .map(|(total, filtered)| total + filtered)
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
