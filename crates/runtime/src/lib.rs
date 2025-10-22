@@ -470,6 +470,8 @@ pub enum EnhancedHintError {
     StarknetApi(#[from] StarknetApiError),
     #[error("Failed to parse {path} file")]
     FileParsing { path: String },
+    #[error("{error}")]
+    OracleError { error: ByteArray },
 }
 
 impl From<BufferReadError> for EnhancedHintError {
