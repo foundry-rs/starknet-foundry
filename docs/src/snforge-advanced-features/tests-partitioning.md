@@ -12,7 +12,7 @@ When this flag is provided, `snforge` will divide all collected tests into `TOTA
 Let's consider package with the following 7 tests:
 
 ```rust
-{{#include ../../listings/partitioning/tests/example.cairo}}
+{{#include ../../listings/tests_partitioning/tests/example.cairo}}
 ```
 
 Running `snforge test --partition 1/2` will run tests `test_a`, `test_c`, `test_e`, `test_g` (4 tests), while running `snforge test --partition 2/2` will run tests `test_b`, `test_d`, `test_f` (3 tests).
