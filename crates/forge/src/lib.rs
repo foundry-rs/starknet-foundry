@@ -215,7 +215,8 @@ pub struct TestArgs {
     #[arg(long, value_enum, default_value_t)]
     tracked_resource: ForgeTrackedResource,
 
-    /// If specified, divides tests into partitions and runs only the partition with the given index (1-based).
+    /// If specified, divides tests into partitions and runs specified partition.
+    /// <PARTITION> is in the format INDEX/TOTAL, where INDEX is the 1-based index of the partition to run, and TOTAL is the number of partitions.
     #[arg(long, conflicts_with = "exact")]
     partition: Option<Partition>,
 
