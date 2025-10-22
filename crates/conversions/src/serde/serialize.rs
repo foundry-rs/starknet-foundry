@@ -2,7 +2,6 @@ use starknet_types_core::felt::Felt;
 
 pub use cairo_serde_macros::CairoSerialize;
 
-pub mod raw;
 mod serialize_impl;
 
 pub struct BufferWriter {

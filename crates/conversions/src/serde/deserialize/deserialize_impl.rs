@@ -53,6 +53,19 @@ where
     }
 }
 
+impl<T: CairoDeserialize, E: CairoDeserialize> CairoDeserialize for Result<T, E> {
+    fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
+        let variant: Felt = reader.read()?;
+        let variant: usize = variant.to_usize().ok_or(BufferReadError::ParseFailed)?;
+
+        match variant {
+            0 => Ok(Ok(reader.read()?)),
+            1 => Ok(Err(reader.read()?)),
+            _ => Err(BufferReadError::ParseFailed),
+        }
+    }
+}
+
 impl CairoDeserialize for bool {
     fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
         let num: usize = reader.read()?;
