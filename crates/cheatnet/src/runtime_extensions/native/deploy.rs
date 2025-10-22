@@ -22,18 +22,9 @@ pub fn deploy(
     syscall_handler_base
         .increment_syscall_linear_factor_by(&SyscallSelector::Deploy, constructor_calldata.0.len());
 
-    // TODO(#3790) support for reject
-    // let versioned_constants = &syscall_handler_base
-    //     .context
-    //     .tx_context
-    //     .block_context
-    //     .versioned_constants;
-    // if should_reject_deploy(
-    //     versioned_constants.disable_deploy_in_validation_mode,
-    //     syscall_handler_base.context.execution_mode,
-    // ) {
-    //     syscall_handler_base.reject_syscall_in_validate_mode("deploy")?;
-    // }
+    // region: Modified blockifer code
+    // removed code
+    // endregion
 
     let deployer_address = syscall_handler_base.call.storage_address;
     let deployer_address_for_calculation = match deploy_from_zero {
