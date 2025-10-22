@@ -143,6 +143,10 @@ Use Scarb dev profile.
 
 Enable experimental [oracles](../../snforge-advanced-features/oracles.md) support.
 
+## `--partition <INDEX/TOTAL>`
+
+If specified, divides tests into partitions and runs only the partition with the given index (1-based).
+
 ## `-h`, `--help`
 
 Print help.
