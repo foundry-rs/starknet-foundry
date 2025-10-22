@@ -1,6 +1,6 @@
 use super::common::runner::{setup_package, test_runner};
 use indoc::indoc;
-use shared::test_utils::output_assert::assert_stdout_contains;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 
 #[test]
 fn test_whole_workspace_partition_1_2() {
@@ -243,7 +243,7 @@ fn test_does_not_work_with_exact_flag() {
         .assert()
         .code(2);
 
-    assert_stdout_contains(
+    assert_stderr_contains(
         output,
         indoc! {r"
         error: the argument '--partition <PARTITION>' cannot be used with '--exact'
