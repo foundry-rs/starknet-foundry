@@ -35,8 +35,9 @@ use cairo_vm::vm::{
 };
 use conversions::byte_array::ByteArray;
 use conversions::felt::{ToShortString, TryInferFormat};
+use conversions::serde::SerializedValue;
 use conversions::serde::deserialize::BufferReader;
-use conversions::serde::serialize::CairoSerialize;
+use conversions::serde::serialize::{CairoSerialize, SerializeToFeltVec};
 use data_transformer::cairo_types::CairoU256;
 use rand::prelude::StdRng;
 use runtime::{
@@ -97,7 +98,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             let output = self
                 .oracle_hint_service
                 .execute_cheatcode(oracle_selector, input_reader.into_remaining());
-            return Ok(CheatcodeHandlingResult::Handled(output));
+            let mut reader = BufferReader::new(&output);
+            let deserialized: Result<SerializedValue<Felt>, ByteArray> = reader.read()?;
+            let converted = deserialized
+                .map_err(|error| EnhancedHintError::OracleError { error })
+                .map(|r| r.serialize_to_vec());
+
+            return Ok(CheatcodeHandlingResult::Handled(converted?));
         }
 
         match selector {
