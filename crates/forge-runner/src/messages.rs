@@ -13,6 +13,7 @@ enum TestResultStatus {
     Failed,
     Ignored,
     Interrupted,
+    ExcludedFromPartition,
 }
 
 impl From<&AnyTestCaseSummary> for TestResultStatus {
@@ -26,6 +27,10 @@ impl From<&AnyTestCaseSummary> for TestResultStatus {
             | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Ignored { .. }) => Self::Ignored,
             AnyTestCaseSummary::Single(TestCaseSummary::Interrupted { .. })
             | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Interrupted { .. }) => Self::Interrupted,
+            AnyTestCaseSummary::Single(TestCaseSummary::ExcludedFromPartition { .. })
+            | AnyTestCaseSummary::Fuzzing(TestCaseSummary::ExcludedFromPartition { .. }) => {
+                Self::ExcludedFromPartition
+            }
         }
     }
 }
@@ -110,7 +115,9 @@ impl TestResultMessage {
             match self.status {
                 TestResultStatus::Passed => return format!("\n\n{msg}"),
                 TestResultStatus::Failed => return format!("\n\nFailure data:{msg}"),
-                TestResultStatus::Ignored | TestResultStatus::Interrupted => return String::new(),
+                TestResultStatus::Ignored
+                | TestResultStatus::Interrupted
+                | TestResultStatus::ExcludedFromPartition => return String::new(),
             }
         }
         String::new()
@@ -123,6 +130,11 @@ impl TestResultMessage {
             TestResultStatus::Ignored => format!("[{}]", style("IGNORE").yellow()),
             TestResultStatus::Interrupted => {
                 unreachable!("Interrupted tests should not have visible message representation")
+            }
+            TestResultStatus::ExcludedFromPartition => {
+                unreachable!(
+                    "Tests excluded from partition should not have visible message representation"
+                )
             }
         }
     }
