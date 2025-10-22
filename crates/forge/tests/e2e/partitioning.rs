@@ -250,3 +250,43 @@ fn test_does_not_work_with_exact_flag() {
     "},
     );
 }
+
+#[test]
+fn test_works_with_name_filter() {
+    let temp = setup_package("partitioning");
+    let output = test_runner(&temp)
+        .args(["--partition", "1/2", "--workspace", "test_a"])
+        .assert()
+        .code(0);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from package_a package
+        Running 0 test(s) from tests/
+        Running 1 test(s) from src/
+        [PASS] package_a::tests::test_a ([..])
+        Tests: 1 passed, 0 failed, 0 ignored, 1 filtered out
+
+
+        Collected 0 test(s) from package_b package
+        Running 0 test(s) from src/
+        Running 0 test(s) from tests/
+        Tests: 0 passed, 0 failed, 0 ignored, 1 filtered out
+
+
+        Collected 0 test(s) from partitioning package
+        Running 0 test(s) from tests/
+        Running 0 test(s) from src/
+        Tests: 0 passed, 0 failed, 0 ignored, 2 filtered out
+
+
+        Tests summary: 1 passed, 0 failed, 0 ignored, 4 filtered out
+        Finished partition run: 1/3
+    "},
+    );
+}
