@@ -114,18 +114,18 @@ fn test_whole_workspace_partition_1_3() {
         [..]Finished[..]
 
 
-       Collected 2 test(s) from package_a package
-        Running 1 test(s) from tests/
-        [PASS] package_a_integrationtest::tests::test_d ([..])
+        Collected 2 test(s) from package_a package
         Running 1 test(s) from src/
         [PASS] package_a::tests::test_a ([..])
+        Running 1 test(s) from tests/
+        [PASS] package_a_integrationtest::tests::test_d ([..])
         Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
 
 
         Collected 1 test(s) from package_b package
+        Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] package_b_integrationtest::tests::test_g ([..])
-        Running 0 test(s) from src/
         Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
 
 
@@ -209,28 +209,27 @@ fn test_whole_workspace_partition_3_3() {
 
         Collected 1 test(s) from package_a package
         Running 1 test(s) from tests/
-        [PASS] package_a_integrationtest::tests::test_c (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~14240)
+        [PASS] package_a_integrationtest::tests::test_c ([..])
         Running 0 test(s) from src/
         Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
 
 
         Collected 1 test(s) from package_b package
         Running 1 test(s) from src/
-        [PASS] package_b::tests::test_f (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~14240)
+        [PASS] package_b::tests::test_f ([..])
         Running 0 test(s) from tests/
         Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
 
 
         Collected 2 test(s) from partitioning package
         Running 1 test(s) from tests/
-        [PASS] partitioning_integrationtest::tests::test_l (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~14240)
+        [PASS] partitioning_integrationtest::tests::test_l ([..])
         Running 1 test(s) from src/
-        [PASS] partitioning::tests::test_i (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~14240)
+        [PASS] partitioning::tests::test_i ([..])
         Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
 
 
         Tests summary: 4 passed, 0 failed, 0 ignored, 0 filtered out
-        Finished partition run: 3/3
         Finished partition run: 3/3
     "},
     );
@@ -240,7 +239,7 @@ fn test_whole_workspace_partition_3_3() {
 fn test_does_not_work_with_exact_flag() {
     let temp = setup_package("partitioning");
     let output = test_runner(&temp)
-        .args(["--partition", "3/3", "--workspace"])
+        .args(["--partition", "3/3", "--workspace", "--exact"])
         .assert()
         .code(2);
 
@@ -256,7 +255,7 @@ fn test_does_not_work_with_exact_flag() {
 fn test_works_with_name_filter() {
     let temp = setup_package("partitioning");
     let output = test_runner(&temp)
-        .args(["--partition", "1/2", "--workspace", "test_a"])
+        .args(["--partition", "1/3", "--workspace", "test_a"])
         .assert()
         .code(0);
 
