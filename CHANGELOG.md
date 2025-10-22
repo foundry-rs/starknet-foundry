@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.51.0] - 2025-10-21
+
 ### Forge
 
 #### Added
@@ -18,7 +20,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Updated the error message returned when calling a nonexistent method on a contract to better align with the format used by the network
-- Oracle support in `snforge` is now stable and no longer requires the `--experimental-oracles` CLI flag
 - The default tracked resource is now Sierra gas, so gas reporting results may differ compared to previous versions. For more information refer to the [documentation](https://foundry-rs.github.io/starknet-foundry/testing/gas-and-resource-estimation.html)
 - When using the `--detailed-resources` flag, the used Sierra gas key is now shown as `sierra gas` instead of `sierra_gas_consumption`
 
@@ -26,12 +27,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Debug logging for `sncast` commands that can be enabled by setting `CAST_LOG` env variable.
+- Debug logging for `sncast` commands that can be enabled by setting `SNCAST_LOG` env variable.
 - `sncast declare` command now outputs a ready-to-use deployment command after successful declaration.
 - Possibility to use [`starknet-devnet`](https://github.com/0xSpaceShard/starknet-devnet) predeployed accounts directly in `sncast` without needing to import them. They are available under specific names - `devnet-1`, `devnet-2`, ..., `devnet-<N>`. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/integration_with_devnet.html#predeployed-accounts)
 - Support for `--network devnet` flag that attempts to auto-detect running `starknet-devnet` instance and connect to it.
 - Support for automatically declaring the contract when running `sncast deploy`, by providing `--contract-name` flag instead of `--class-hash`. 
 - `sncast balance` command to fetch the balance of an account for a specified token.
+
+#### Fixed
+
+- `sncast declare` now shows a correct error message when contract is already declared.
 
 ## [0.50.0] - 2025-09-29
 

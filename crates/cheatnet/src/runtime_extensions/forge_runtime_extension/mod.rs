@@ -64,6 +64,8 @@ pub struct ForgeExtension<'a> {
     pub environment_variables: &'a HashMap<String, String>,
     pub contracts_data: &'a ContractsData,
     pub fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
+    /// Whether `--experimental-oracles` flag has been enabled.
+    pub experimental_oracles_enabled: bool,
     pub oracle_hint_service: OracleHintService,
 }
 
@@ -71,7 +73,9 @@ pub struct ForgeExtension<'a> {
 impl<'a> ExtensionLogic for ForgeExtension<'a> {
     type Runtime = CallToBlockifierRuntime<'a>;
 
-    #[expect(clippy::too_many_lines)]
+    // `generic_array` which is a transitive dependency of multiple packages we depend on
+    // now, shows a deprecation warning at asking to upgrade to version 1.x
+    #[expect(clippy::too_many_lines, deprecated)]
     fn handle_cheatcode(
         &mut self,
         selector: &str,
@@ -82,6 +86,14 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             .oracle_hint_service
             .accept_cheatcode(selector.as_bytes())
         {
+            if !self.experimental_oracles_enabled {
+                return Err(anyhow!(
+                    "Oracles are an experimental feature. \
+                    To enable them, pass `--experimental-oracles` CLI flag."
+                )
+                .into());
+            }
+
             let output = self
                 .oracle_hint_service
                 .execute_cheatcode(oracle_selector, input_reader.into_remaining());

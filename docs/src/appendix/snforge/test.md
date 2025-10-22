@@ -139,6 +139,10 @@ Use Scarb release profile.
 ## `--dev`
 Use Scarb dev profile.
 
+## `--experimental-oracles`
+
+Enable experimental [oracles](../../snforge-advanced-features/oracles.md) support.
+
 ## `-h`, `--help`
 
 Print help.
