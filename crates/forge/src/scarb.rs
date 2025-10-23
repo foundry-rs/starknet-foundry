@@ -137,7 +137,7 @@ mod tests {
     use configuration::load_package_config;
     use forge_runner::forge_config::ForgeTrackedResource;
     use indoc::{formatdoc, indoc};
-    use scarb_api::metadata::MetadataCommandExt;
+    use scarb_api::metadata::metadata_for_dir;
     use scarb_metadata::PackageId;
     use std::env;
     use test_utils::{get_snforge_std_entry, tempdir_with_tool_versions};
@@ -195,11 +195,7 @@ mod tests {
     #[test]
     fn get_forge_config_for_package() {
         let temp = setup_package("simple_package");
-        let scarb_metadata = ScarbCommand::metadata()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .run()
-            .unwrap();
+        let scarb_metadata = metadata_for_dir(temp.path()).unwrap();
 
         let config = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
@@ -248,11 +244,7 @@ mod tests {
     #[test]
     fn get_forge_config_for_package_err_on_invalid_package() {
         let temp = setup_package("simple_package");
-        let scarb_metadata = ScarbCommand::metadata()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .run()
-            .unwrap();
+        let scarb_metadata = metadata_for_dir(temp.path()).unwrap();
 
         let result = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
@@ -278,11 +270,7 @@ mod tests {
         );
         temp.child("Scarb.toml").write_str(content).unwrap();
 
-        let scarb_metadata = ScarbCommand::metadata()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .run()
-            .unwrap();
+        let scarb_metadata = metadata_for_dir(temp.path()).unwrap();
 
         let config = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
@@ -315,11 +303,7 @@ mod tests {
         );
         temp.child("Scarb.toml").write_str(content).unwrap();
 
-        let scarb_metadata = ScarbCommand::metadata()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .run()
-            .unwrap();
+        let scarb_metadata = metadata_for_dir(temp.path()).unwrap();
         let err = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
             &scarb_metadata.workspace.members[0],
@@ -346,11 +330,7 @@ mod tests {
         );
         temp.child("Scarb.toml").write_str(content).unwrap();
 
-        let scarb_metadata = ScarbCommand::metadata()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .run()
-            .unwrap();
+        let scarb_metadata = metadata_for_dir(temp.path()).unwrap();
         let err = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
             &scarb_metadata.workspace.members[0],
@@ -379,11 +359,7 @@ mod tests {
         );
         temp.child("Scarb.toml").write_str(content).unwrap();
 
-        let scarb_metadata = ScarbCommand::metadata()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .run()
-            .unwrap();
+        let scarb_metadata = metadata_for_dir(temp.path()).unwrap();
 
         let err = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
@@ -413,11 +389,7 @@ mod tests {
         );
         temp.child("Scarb.toml").write_str(content).unwrap();
 
-        let scarb_metadata = ScarbCommand::metadata()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .run()
-            .unwrap();
+        let scarb_metadata = metadata_for_dir(temp.path()).unwrap();
 
         let err = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
@@ -444,11 +416,7 @@ mod tests {
         );
         temp.child("Scarb.toml").write_str(content).unwrap();
 
-        let scarb_metadata = ScarbCommand::metadata()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .run()
-            .unwrap();
+        let scarb_metadata = metadata_for_dir(temp.path()).unwrap();
 
         let forge_config = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
@@ -475,11 +443,7 @@ mod tests {
         );
         temp.child("Scarb.toml").write_str(content).unwrap();
 
-        let scarb_metadata = ScarbCommand::metadata()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .run()
-            .unwrap();
+        let scarb_metadata = metadata_for_dir(temp.path()).unwrap();
 
         // SAFETY: This value is only read here and is not modified by other tests.
         unsafe {
