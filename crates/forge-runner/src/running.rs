@@ -44,7 +44,7 @@ use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
-use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
+use universal_sierra_compiler_api::representation::RawCasmProgram;
 
 pub mod config_run;
 mod execution;
@@ -63,7 +63,7 @@ pub use syscall_handler::syscall_handler_offset;
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn run_test(
     case: Arc<TestCaseWithResolvedConfig>,
-    casm_program: Arc<AssembledProgramWithDebugInfo>,
+    casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -100,7 +100,7 @@ pub fn run_test(
 pub(crate) fn run_fuzz_test(
     case: Arc<TestCaseWithResolvedConfig>,
     program: Program,
-    casm_program: Arc<AssembledProgramWithDebugInfo>,
+    casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -167,7 +167,7 @@ pub enum RunResult {
 pub fn run_test_case(
     case: &TestCaseWithResolvedConfig,
     program: &Program,
-    casm_program: &AssembledProgramWithDebugInfo,
+    casm_program: &RawCasmProgram,
     runtime_config: &RuntimeConfig,
     fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
     versioned_program_path: &Utf8Path,

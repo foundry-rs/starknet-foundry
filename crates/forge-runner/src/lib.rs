@@ -23,7 +23,7 @@ use std::sync::{Arc, Mutex};
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{Sender, channel};
 use tokio::task::JoinHandle;
-use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
+use universal_sierra_compiler_api::representation::RawCasmProgram;
 
 pub mod build_trace_data;
 pub mod coverage_api;
@@ -114,7 +114,7 @@ pub fn maybe_generate_coverage(
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn run_for_test_case(
     case: Arc<TestCaseWithResolvedConfig>,
-    casm_program: Arc<AssembledProgramWithDebugInfo>,
+    casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -149,7 +149,7 @@ pub fn run_for_test_case(
 #[tracing::instrument(skip_all, level = "debug")]
 fn run_with_fuzzing(
     case: Arc<TestCaseWithResolvedConfig>,
-    casm_program: Arc<AssembledProgramWithDebugInfo>,
+    casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,

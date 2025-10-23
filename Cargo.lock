@@ -224,7 +224,7 @@ dependencies = [
  "proc-macro-error2",
  "proc-macro2",
  "quote",
- "syn 2.0.106",
+ "syn 2.0.107",
 ]
 
 [[package]]
@@ -709,7 +709,7 @@ version = "0.71.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5f58bf3d7db68cfbac37cfc485a8d711e87e064c3d0fe0435b92f7a407f9d6b3"
 dependencies = [
- "bitflags 2.9.4",
+ "bitflags 2.10.0",
  "cexpr",
  "clang-sys",
  "itertools 0.13.0",
@@ -720,7 +720,7 @@ dependencies = [
  "regex",
  "rustc-hash 2.1.1",
  "shlex",
- "syn 2.0.106",
+ "syn 2.0.107",
 ]
 
 [[package]]
@@ -2844,7 +2844,7 @@ dependencies = [
  "enum-ordinalize",
  "proc-macro2",
  "quote",
- "syn 2.0.106",
+ "syn 2.0.107",
 ]
 
 [[package]]
@@ -4396,7 +4396,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7c4b02199fee7c5d21a5ae7d8cfa79a6ef5bb2fc834d6e9058e89c825efdc55"
 dependencies = [
  "cfg-if",
- "windows-link 0.2.0",
+ "windows-link 0.2.1",
 ]
 
 [[package]]
@@ -4544,7 +4544,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "regex",
- "syn 2.0.106",
+ "syn 2.0.107",
  "tblgen",
  "unindent",
 ]
@@ -4670,7 +4670,7 @@ checksum = "b52c1b33ff98142aecea13138bd399b68aa7ab5d9546c300988c345004001eea"
 
 [[package]]
 name = "native-api"
-version = "0.50.0"
+version = "0.51.0"
 dependencies = [
  "cairo-lang-starknet-classes",
  "cairo-native",
@@ -5381,7 +5381,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "479ca8adacdd7ce8f1fb39ce9ecccbfe93a3f1344b3d0d97f20bc0196208f62b"
 dependencies = [
  "proc-macro2",
- "syn 2.0.106",
+ "syn 2.0.107",
 ]
 
 [[package]]
@@ -6237,12 +6237,14 @@ version = "1.0.0"
 dependencies = [
  "anyhow",
  "assert_fs",
+ "cairo-lang-starknet-classes",
  "cairo-native",
  "camino",
  "foundry-ui",
  "indoc",
  "itertools 0.14.0",
  "native-api",
+ "num-bigint",
  "rayon",
  "regex",
  "scarb-metadata",
@@ -6622,6 +6624,7 @@ dependencies = [
  "starknet",
  "starknet-types-core",
  "starknet_api",
+ "thiserror 2.0.17",
  "url",
 ]
 
@@ -7956,14 +7959,15 @@ checksum = "7264e107f553ccae879d21fbea1d6724ac785e8c3bfc762137959b5802826ef3"
 name = "universal-sierra-compiler-api"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "cairo-lang-casm",
- "camino",
+ "cairo-lang-starknet-classes",
  "num-bigint",
  "serde",
  "serde_json",
  "shared",
+ "strum_macros 0.27.2",
  "tempfile",
+ "thiserror 2.0.17",
  "tracing",
  "which",
 ]

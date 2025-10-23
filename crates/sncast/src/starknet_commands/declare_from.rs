@@ -15,7 +15,7 @@ use starknet::providers::Provider;
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
-use universal_sierra_compiler_api::{SierraType, compile_sierra};
+use universal_sierra_compiler_api::compile_contract_sierra;
 
 #[derive(Args)]
 #[command(about = "Declare a contract by fetching it from a different Starknet instance", long_about = None)]
@@ -110,11 +110,13 @@ pub async fn declare_from(
     let sierra: SierraClass = flattened_sierra_to_sierra(flattened_sierra)
         .expect("Failed to parse flattened sierra class");
 
-    let casm_json: String = compile_sierra(
-        &serde_json::to_value(&sierra).expect("Failed to convert sierra to json value"),
-        &SierraType::Contract,
+    let casm_json: String = serde_json::to_string(
+        &compile_contract_sierra(
+            &serde_json::to_value(&sierra).expect("Failed to convert sierra to json value"),
+        )
+        .expect("Failed to compile sierra to casm"),
     )
-    .expect("Failed to compile sierra to casm");
+    .expect("serialization should succeed");
     let casm: CompiledClass = serde_json::from_str(&casm_json)
         .expect("Failed to deserialize casm JSON into CompiledClass");
     let sierra_class_hash = sierra.class_hash().map_err(anyhow::Error::from)?;
