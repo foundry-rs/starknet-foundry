@@ -2,7 +2,7 @@
 set -ex
 
 # Run this script to generate wasm fixtures from their sources.
-# Prebuilt fixtures are expected to be commited to the repository.
+# Prebuilt fixtures are expected to be committed to the repository.
 
 cd "$(dirname "$0")"
 
