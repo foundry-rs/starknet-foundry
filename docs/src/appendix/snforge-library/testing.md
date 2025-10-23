@@ -1,6 +1,6 @@
 # `testing` Module
 
-Module containing functions usefule for testing.
+Module containing functions useful for testing.
 
 ## Functions
 

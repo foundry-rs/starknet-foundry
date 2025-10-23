@@ -1,7 +1,6 @@
 #[starknet::interface]
 pub trait ICounter<TContractState> {
     fn increment(ref self: TContractState);
-    fn decrement(ref self: TContractState);
 }
 
 #[starknet::contract]
@@ -23,11 +22,6 @@ pub mod Counter {
         fn increment(ref self: ContractState) {
             let current_value = self.i.read();
             self.i.write(current_value + 1);
-        }
-
-        fn decrement(ref self: ContractState) {
-            let current_value = self.i.read();
-            self.i.write(current_value - 1);
         }
     }
 }

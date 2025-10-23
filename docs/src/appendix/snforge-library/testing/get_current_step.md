@@ -1,6 +1,6 @@
 # `get_current_step`
 
-Function for getting the current step from Cairo VM during test execution.
+Gets the current step from Cairo VM during test execution.
 
 ```rust
 fn get_current_step() -> u32;
@@ -14,13 +14,11 @@ Let's consider a simple counter contract that increments a value stored in its s
 {{#include ../../../../listings/testing_reference/src/lib.cairo}}
 ```
 
-Now, let's say that we have some kind of setup function which deploys this contract and increments the counter a few times.
+Now, let's define `setup` function which deploys this contract and increments the counter a few times and assert that `setup` function does not exceed a certain number of steps during its execution. This is particularly useful for performance testing and ensuring that our setup logic remains efficient.
 
 ```rust
-{{#include ../../../../listings/testing_reference/src/tests/tests.cairo}}
+{{#include ../../../../listings/testing_reference/tests/tests.cairo}}
 ```
-
-With `get_current_step`, we can assert that `setup` function does not exceed a certain number of steps during its execution. This is particularly useful for performance testing and ensuring that our setup logic remains efficient.
 
 <!-- { "package_name": "testing_reference" } -->
 Let's run the test:
