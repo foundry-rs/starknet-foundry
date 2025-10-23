@@ -128,6 +128,8 @@ pub mod signature;
 
 pub mod trace;
 
+pub mod testing;
+
 #[doc(hidden)]
 pub mod _internals {
     pub use cheatcode::{is_config_run, save_fuzzer_arg};
