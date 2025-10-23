@@ -11,6 +11,10 @@ use shared::test_utils::output_assert::assert_stdout_contains;
 use super::common::runner::{runner, setup_package};
 
 #[test]
+#[cfg_attr(
+    feature = "cairo-native",
+    ignore = "TODO(#3790): Many snippets show vm resources witch cairo native doesn't support"
+)]
 fn test_docs_snippets() {
     let root_dir = get_nth_ancestor(2);
     let docs_dir = root_dir.join("docs/src");

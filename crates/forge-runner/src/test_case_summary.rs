@@ -3,6 +3,7 @@ use crate::build_trace_data::build_profiler_call_trace;
 use crate::debugging::{TraceArgs, build_debugging_trace};
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
+use crate::gas::stats::GasStats;
 use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use crate::running::{RunCompleted, RunStatus};
 use cairo_annotations::trace_data::VersionedCallTrace as VersionedProfilerCallTrace;
@@ -11,7 +12,6 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::Use
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use conversions::byte_array::ByteArray;
 use conversions::felt::ToShortString;
-use num_traits::Pow;
 use shared::utils::build_readable_text;
 use starknet_api::execution_resources::GasVector;
 use starknet_types_core::felt::Felt;
@@ -19,13 +19,13 @@ use std::fmt;
 use std::option::Option;
 
 #[derive(Debug, PartialEq, Clone, Default)]
-pub struct GasStatistics {
-    pub l1_gas: GasStatisticsComponent,
-    pub l1_data_gas: GasStatisticsComponent,
-    pub l2_gas: GasStatisticsComponent,
+pub struct GasFuzzingInfo {
+    pub l1_gas: GasStats,
+    pub l1_data_gas: GasStats,
+    pub l2_gas: GasStats,
 }
 
-impl fmt::Display for GasStatistics {
+impl fmt::Display for GasFuzzingInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -35,65 +35,28 @@ impl fmt::Display for GasStatistics {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Default)]
-pub struct GasStatisticsComponent {
-    pub min: u64,
-    pub max: u64,
-    pub mean: f64,
-    pub std_deviation: f64,
-}
-
-impl GasStatisticsComponent {
-    #[must_use]
-    pub fn new(gas_usages: &[u64]) -> Self {
-        let mean = GasStatistics::mean(gas_usages);
-        Self {
-            min: *gas_usages.iter().min().unwrap(),
-            max: *gas_usages.iter().max().unwrap(),
-            mean,
-            std_deviation: GasStatistics::std_deviation(mean, gas_usages),
-        }
-    }
-}
-
-impl fmt::Display for GasStatisticsComponent {
+impl fmt::Display for GasStats {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "{{max: ~{}, min: ~{}, mean: ~{:.2}, std deviation: ~{:.2}}}",
+            "{{max: ~{}, min: ~{}, mean: ~{:.0}, std deviation: ~{:.0}}}",
             self.max, self.min, self.mean, self.std_deviation
         )
     }
 }
 
-impl GasStatistics {
+impl GasFuzzingInfo {
     #[must_use]
     pub fn new(gas_usages: &[GasVector]) -> Self {
         let l1_gas_values: Vec<u64> = gas_usages.iter().map(|gv| gv.l1_gas.0).collect();
         let l1_data_gas_values: Vec<u64> = gas_usages.iter().map(|gv| gv.l1_data_gas.0).collect();
         let l2_gas_values: Vec<u64> = gas_usages.iter().map(|gv| gv.l2_gas.0).collect();
 
-        GasStatistics {
-            l1_gas: { GasStatisticsComponent::new(l1_gas_values.as_ref()) },
-            l1_data_gas: { GasStatisticsComponent::new(l1_data_gas_values.as_ref()) },
-            l2_gas: { GasStatisticsComponent::new(l2_gas_values.as_ref()) },
+        GasFuzzingInfo {
+            l1_gas: { GasStats::new(l1_gas_values.as_ref()) },
+            l1_data_gas: { GasStats::new(l1_data_gas_values.as_ref()) },
+            l2_gas: { GasStats::new(l2_gas_values.as_ref()) },
         }
-    }
-
-    #[expect(clippy::cast_precision_loss)]
-    fn mean(gas_usages: &[u64]) -> f64 {
-        let sum: f64 = gas_usages.iter().map(|&x| x as f64).sum();
-        sum / gas_usages.len() as f64
-    }
-
-    #[expect(clippy::cast_precision_loss)]
-    fn std_deviation(mean: f64, gas_usages: &[u64]) -> f64 {
-        let sum_squared_diff = gas_usages
-            .iter()
-            .map(|&x| (x as f64 - mean).pow(2))
-            .sum::<f64>();
-
-        (sum_squared_diff / gas_usages.len() as f64).sqrt()
     }
 }
 
@@ -111,7 +74,7 @@ pub trait TestType {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Fuzzing;
 impl TestType for Fuzzing {
-    type GasInfo = GasStatistics;
+    type GasInfo = GasFuzzingInfo;
     type TestStatistics = FuzzingStatistics;
     type TraceData = ();
 }
@@ -240,7 +203,7 @@ impl TestCaseSummary<Fuzzing> {
                 TestCaseSummary::Passed {
                     name,
                     msg,
-                    gas_info: GasStatistics::new(gas_usages.as_ref()),
+                    gas_info: GasFuzzingInfo::new(gas_usages.as_ref()),
                     used_resources: UsedResources::default(),
                     test_statistics: FuzzingStatistics { runs },
                     trace_data: (),
@@ -495,40 +458,10 @@ impl AnyTestCaseSummary {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use starknet_api::execution_resources::GasAmount;
+    use crate::test_case_summary::*;
+    use starknet_api::execution_resources::{GasAmount, GasVector};
 
     const FLOAT_ERROR: f64 = 0.01;
-
-    #[test]
-    fn test_mean_basic() {
-        let data = [1, 2, 3, 4, 5];
-        let result = GasStatistics::mean(&data);
-        assert!((result - 3.0).abs() < FLOAT_ERROR);
-    }
-
-    #[test]
-    fn test_mean_single_element() {
-        let data = [42];
-        let result = GasStatistics::mean(&data);
-        assert!((result - 42.0).abs() < FLOAT_ERROR);
-    }
-
-    #[test]
-    fn test_std_deviation_basic() {
-        let data = [1, 2, 3, 4, 5];
-        let mean_value = GasStatistics::mean(&data);
-        let result = GasStatistics::std_deviation(mean_value, &data);
-        assert!((result - 1.414).abs() < FLOAT_ERROR);
-    }
-
-    #[test]
-    fn test_std_deviation_single_element() {
-        let data = [10];
-        let mean_value = GasStatistics::mean(&data);
-        let result = GasStatistics::std_deviation(mean_value, &data);
-        assert!(result.abs() < FLOAT_ERROR);
-    }
 
     #[test]
     fn test_gas_statistics_new() {
@@ -550,7 +483,7 @@ mod tests {
             },
         ];
 
-        let stats = GasStatistics::new(&gas_usages);
+        let stats = GasFuzzingInfo::new(&gas_usages);
 
         assert_eq!(stats.l1_gas.min, 10);
         assert_eq!(stats.l1_data_gas.min, 20);

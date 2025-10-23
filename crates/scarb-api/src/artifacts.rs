@@ -1,6 +1,8 @@
 use anyhow::Result;
 
 use crate::artifacts::representation::StarknetArtifactsRepresentation;
+#[cfg(feature = "cairo-native")]
+use cairo_native::executor::AotContractExecutor;
 use camino::{Utf8Path, Utf8PathBuf};
 use itertools::Itertools;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
@@ -12,18 +14,35 @@ mod deserialized;
 mod representation;
 
 /// Contains compiled Starknet artifacts
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone)]
 pub struct StarknetContractArtifacts {
     /// Compiled sierra code
     pub sierra: String,
     /// Compiled casm code
     pub casm: String,
+
+    #[cfg(feature = "cairo-native")]
+    /// Optional AOT compiled native executor
+    pub executor: Option<AotContractExecutor>,
+}
+
+impl PartialEq for StarknetContractArtifacts {
+    fn eq(&self, other: &Self) -> bool {
+        let eq = self.sierra == other.sierra && self.casm == other.casm;
+
+        #[cfg(feature = "cairo-native")]
+        let eq = eq && self.executor.is_some() == other.executor.is_some();
+
+        eq
+    }
 }
 
 #[derive(PartialEq, Debug)]
 pub(crate) struct StarknetArtifactsFiles {
     base: Utf8PathBuf,
     other: Vec<Utf8PathBuf>,
+    #[cfg(feature = "cairo-native")]
+    compile_native: bool,
 }
 
 impl StarknetArtifactsFiles {
@@ -31,15 +50,24 @@ impl StarknetArtifactsFiles {
         Self {
             base: base_file,
             other: other_files,
+            #[cfg(feature = "cairo-native")]
+            compile_native: false,
         }
     }
 
+    #[cfg(feature = "cairo-native")]
+    pub(crate) fn compile_native(mut self, compile_native: bool) -> Self {
+        self.compile_native = compile_native;
+        self
+    }
+
+    #[tracing::instrument(skip_all, level = "debug")]
     pub(crate) fn load_contracts_artifacts(
         self,
     ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
         // TODO(#2626) handle duplicates
-        let mut base_artifacts: HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)> =
-            compile_artifacts(
+        let mut base_artifacts: HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)> = self
+            .compile_artifacts(
                 StarknetArtifactsRepresentation::try_from_path(self.base.as_path())?.artifacts(),
             )?;
 
@@ -52,14 +80,59 @@ impl StarknetArtifactsFiles {
         let other_artifacts: Vec<(String, Utf8PathBuf)> =
             unique_artifacts(other_artifact_representations, &base_artifacts);
 
-        let compiled_artifacts = compile_artifacts(other_artifacts)?;
+        let compiled_artifacts = self.compile_artifacts(other_artifacts)?;
 
         base_artifacts.extend(compiled_artifacts);
 
         Ok(base_artifacts)
     }
+
+    #[tracing::instrument(skip_all, level = "debug")]
+    fn compile_artifacts(
+        &self,
+        artifacts: Vec<(String, Utf8PathBuf)>,
+    ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
+        artifacts
+            .into_par_iter()
+            .map(|(name, path)| {
+                self.compile_artifact_at_path(&path)
+                    .map(|artifact| (name.to_string(), (artifact, path)))
+            })
+            .collect::<Result<_>>()
+    }
+
+    #[tracing::instrument(skip_all, level = "debug")]
+    #[cfg_attr(not(feature = "cairo-native"), expect(clippy::unused_self))]
+    fn compile_artifact_at_path(&self, path: &Utf8Path) -> Result<StarknetContractArtifacts> {
+        let sierra = fs::read_to_string(path)?;
+
+        let casm = compile_sierra_at_path(path, &SierraType::Contract)?;
+
+        #[cfg(feature = "cairo-native")]
+        let executor = self.compile_to_native(&sierra)?;
+
+        Ok(StarknetContractArtifacts {
+            sierra,
+            casm,
+            #[cfg(feature = "cairo-native")]
+            executor,
+        })
+    }
+
+    #[cfg(feature = "cairo-native")]
+    #[tracing::instrument(skip_all, level = "debug")]
+    fn compile_to_native(&self, sierra: &str) -> Result<Option<AotContractExecutor>> {
+        Ok(if self.compile_native {
+            Some(native_api::compile_contract_class(&serde_json::from_str(
+                sierra,
+            )?)?)
+        } else {
+            None
+        })
+    }
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 fn unique_artifacts(
     artifact_representations: Vec<StarknetArtifactsRepresentation>,
     current_artifacts: &HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>,
@@ -72,29 +145,13 @@ fn unique_artifacts(
         .collect()
 }
 
-fn compile_artifacts(
-    artifacts: Vec<(String, Utf8PathBuf)>,
-) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
-    artifacts
-        .into_par_iter()
-        .map(|(name, path)| {
-            compile_artifact_at_path(&path).map(|artifact| (name.to_string(), (artifact, path)))
-        })
-        .collect::<Result<_>>()
-}
-
-fn compile_artifact_at_path(path: &Utf8Path) -> Result<StarknetContractArtifacts> {
-    let sierra = fs::read_to_string(path)?;
-
-    let casm = compile_sierra_at_path(path, &SierraType::Contract)?;
-
-    Ok(StarknetContractArtifacts { sierra, casm })
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use crate::ScarbCommand;
+    use crate::tests::setup_package;
+    use assert_fs::TempDir;
     use assert_fs::fixture::{FileWriteStr, PathChild};
     use camino::Utf8PathBuf;
     use deserialized::{StarknetArtifacts, StarknetContract, StarknetContractArtifactPaths};
@@ -109,6 +166,8 @@ mod tests {
                 StarknetContractArtifacts {
                     sierra: "sierra1".to_string(),
                     casm: "casm1".to_string(),
+                    #[cfg(feature = "cairo-native")]
+                    executor: None,
                 },
                 Utf8PathBuf::from("path1"),
             ),
@@ -152,9 +211,8 @@ mod tests {
         assert_eq!(result[0].0, "contract2");
     }
 
-    #[test]
-    fn test_load_contracts_artifacts() {
-        let temp = crate::tests::setup_package("basic_package");
+    fn setup() -> (TempDir, StarknetArtifactsFiles) {
+        let temp = setup_package("basic_package");
         let tests_dir = temp.join("tests");
         fs::create_dir(&tests_dir).unwrap();
 
@@ -196,11 +254,34 @@ mod tests {
         // Create `StarknetArtifactsFiles`
         let artifacts_files = StarknetArtifactsFiles::new(base_file, other_files);
 
+        (temp, artifacts_files)
+    }
+
+    #[test]
+    fn test_load_contracts_artifacts() {
+        let (_temp, artifacts_files) = setup();
+
         // Load the contracts
         let result = artifacts_files.load_contracts_artifacts().unwrap();
 
         // Assert the Contract Artifacts are loaded.
         assert!(result.contains_key("ERC20"));
         assert!(result.contains_key("HelloStarknet"));
+    }
+
+    #[test]
+    #[cfg(feature = "cairo-native")]
+    fn test_load_contracts_artifacts_native() {
+        let (_temp, artifacts_files) = setup();
+
+        let artifacts_files = artifacts_files.compile_native(true);
+
+        // Load the contracts
+        let result = artifacts_files.load_contracts_artifacts().unwrap();
+
+        // Assert the Contract Artifacts are loaded.
+        assert!(result.contains_key("ERC20"));
+        assert!(result.contains_key("HelloStarknet"));
+        assert!(result.get("ERC20").unwrap().0.executor.is_some());
     }
 }

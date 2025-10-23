@@ -1,15 +1,19 @@
-pub(crate) mod common;
-
+#[cfg(not(feature = "cairo-native"))]
 mod backtrace;
+#[cfg(not(feature = "cairo-native"))]
 mod build_profile;
+#[cfg(not(feature = "cairo-native"))]
 mod build_trace_data;
 mod clean;
 mod collection;
 mod color;
+pub(crate) mod common;
 mod completions;
 mod components;
 mod contract_artifacts;
+#[cfg(not(feature = "cairo-native"))]
 mod coverage;
+#[cfg(not(feature = "cairo-native"))]
 mod debugging;
 mod docs_snippets_validation;
 mod env;
@@ -29,5 +33,6 @@ mod steps;
 mod templates;
 mod test_case;
 mod trace_print;
+#[cfg(not(feature = "cairo-native"))]
 mod trace_resources;
 mod workspaces;

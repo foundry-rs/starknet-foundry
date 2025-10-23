@@ -1,0 +1,118 @@
+# TODO(#3790) this is currently unused, integrate into nightly release flow
+name: Build Native binaries
+
+on:
+  workflow_call:
+    inputs:
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
+      version:
+        required: true
+        type: string
+      ref:
+        required: false
+        type: string
+
+jobs:
+  build-binaries:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+
+    env:
+      # Cross-compiled targets will override this to `cross`.
+      CARGO: cargo
+
+    strategy:
+      matrix:
+        # Currently we have only managed to build successfuly on x86 gnu Linux
+        # - On MacOS, LLVM is installed with brew and the built binary requires having LLVM installed through it,
+        #   even though it is supossed to be bundled.
+        # - MUSL Linux was not investigated
+        # - Aarch64 Linux requires LLVM to be build for Aarch64, but proc macros run against host OS, which is x86_64
+        #   when building through cross. With current setup, we install LLVM for only one of these arches.
+        #   We need to investigate cross compiling LLVM for multiple architectures.
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            system: linux
+
+#          - target: x86_64-unknown-linux-musl
+#            os: ubuntu-latest
+#            system: linux
+#
+#          - target: aarch64-unknown-linux-gnu
+#            os: ubuntu-latest
+#            system: linux
+#
+#          - target: aarch64-unknown-linux-musl
+#            os: ubuntu-latest
+#            system: linux
+#
+#          - target: x86_64-apple-darwin
+#            os: macos-14-large
+#            system: macos
+#
+#          - target: aarch64-apple-darwin
+#            os: macos-latest
+#            system: macos
+
+    steps:
+      - name: Checkout with ref
+        if: inputs.ref != ''
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Checkout default
+        if: inputs.ref == ''
+        uses: actions/checkout@v5
+
+      - name: Setup rust
+        run: |
+          rustup target add ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+
+      - name: Setup LLVM on MacOS
+        if: matrix.system == 'macos'
+        run: |
+          brew install llvm@19
+          brew reinstall zstd
+          echo "MLIR_SYS_190_PREFIX=$(brew --prefix llvm@19)" >> $GITHUB_ENV
+          echo "LLVM_SYS_191_PREFIX=$(brew --prefix llvm@19)" >> $GITHUB_ENV
+          echo "TABLEGEN_190_PREFIX=$(brew --prefix llvm@19)" >> $GITHUB_ENV
+          echo "LIBRARY_PATH=/opt/homebrew/lib" >> $GITHUB_ENV
+
+      - name: Install cross
+        if: matrix.system == 'linux'
+        run: |
+          cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Build MacOS
+        if: matrix.system == 'macos'
+        run: |
+          export MLIR_SYS_190_PREFIX=${{ env.MLIR_SYS_190_PREFIX }}
+          export LLVM_SYS_191_PREFIX=${{ env.LLVM_SYS_191_PREFIX }}
+          export TABLEGEN_190_PREFIX=${{ env.TABLEGEN_190_PREFIX }}
+          export LIBRARY_PATH=${{ env.LIBRARY_PATH }}
+          cargo build --release --locked --target ${{ matrix.target }}
+
+      - name: Build Linux
+        if: matrix.system == 'linux'
+        run: |
+          # Use cross to link oldest GLIBC possible.
+          cross build --release --locked --target ${{ matrix.target }}
+
+      - name: Package
+        shell: bash
+        run: |
+          set -euxo pipefail
+          PKG_FULL_NAME="starknet-foundry-v${{ inputs.version }}-${{ matrix.target }}"
+          echo "PKG_FULL_NAME=$PKG_FULL_NAME" >> $GITHUB_ENV
+
+          ./scripts/package.sh "${{ matrix.target }}" "$PKG_FULL_NAME"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.target }}
+          path: ${{ env.PKG_FULL_NAME }}.*

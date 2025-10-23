@@ -65,7 +65,7 @@ fn ok_events() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
 }
@@ -133,28 +133,28 @@ fn too_many_events() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_failed(&result);
     assert_case_output_contains(
         &result,
         "emit_too_many_events",
         &format!(
-            "Got an exception while executing a hint: Exceeded the maximum number of events, number events: {emit_too_many_events}, max number events: {max_n_emitted_events}."
+            "Exceeded the maximum number of events, number events: {emit_too_many_events}, max number events: {max_n_emitted_events}."
         ),
     );
     assert_case_output_contains(
         &result,
         "emit_too_many_data",
         &format!(
-            "Got an exception while executing a hint: Exceeded the maximum data length, data length: {emit_too_many_data}, max data length: {max_data_length}."
+            "Exceeded the maximum data length, data length: {emit_too_many_data}, max data length: {max_data_length}."
         ),
     );
     assert_case_output_contains(
         &result,
         "emit_too_many_keys",
         &format!(
-            "Got an exception while executing a hint: Exceeded the maximum keys length, keys length: {emit_too_many_keys}, max keys length: {max_keys_length}."
+            "Exceeded the maximum keys length, keys length: {emit_too_many_keys}, max keys length: {max_keys_length}."
         ),
     );
 }

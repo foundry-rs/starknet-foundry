@@ -31,12 +31,13 @@ use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic, StarknetRuntime,
     SyscallHandlingResult,
 };
-use scarb_api::{StarknetContractArtifacts, package_matches_version_requirement};
+use scarb_api::package_matches_version_requirement;
 use scarb_metadata::{Metadata, PackageMetadata};
 use script_runtime::CastScriptRuntime;
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::utils::build_readable_text;
 use sncast::get_nonce;
+use sncast::helpers::artifacts::CastStarknetContractArtifacts;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::helpers::fee::{FeeArgs, ScriptFeeSettings};
@@ -57,8 +58,6 @@ use std::fs;
 use tokio::runtime::Runtime;
 
 mod script_runtime;
-
-type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
 
 #[derive(Args, Debug)]
 #[command(about = "Execute a deployment script")]
@@ -83,7 +82,7 @@ pub struct CastScriptExtension<'a> {
     pub account: Option<&'a SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>>,
     pub tokio_runtime: Runtime,
     pub config: &'a CastConfig,
-    pub artifacts: &'a HashMap<String, StarknetContractArtifacts>,
+    pub artifacts: &'a HashMap<String, CastStarknetContractArtifacts>,
     pub state: StateManager,
     pub ui: &'a UI,
 }
@@ -278,7 +277,7 @@ pub fn run(
     module_name: &str,
     metadata: &Metadata,
     package_metadata: &PackageMetadata,
-    artifacts: &mut HashMap<String, StarknetContractArtifacts>,
+    artifacts: &mut HashMap<String, CastStarknetContractArtifacts>,
     provider: &JsonRpcClient<HttpTransport>,
     url: &str,
     tokio_runtime: Runtime,
@@ -448,8 +447,8 @@ fn warn_if_sncast_std_not_compatible(scarb_metadata: &Metadata, ui: &UI) -> Resu
 fn inject_lib_artifact(
     metadata: &Metadata,
     package_metadata: &PackageMetadata,
-    artifacts: &mut HashMap<String, StarknetContractArtifacts>,
-) -> Result<HashMap<String, StarknetContractArtifacts>> {
+    artifacts: &mut HashMap<String, CastStarknetContractArtifacts>,
+) -> Result<HashMap<String, CastStarknetContractArtifacts>> {
     let sierra_filename = format!("{}.sierra.json", package_metadata.name);
 
     let target_dir = &metadata
@@ -459,7 +458,7 @@ fn inject_lib_artifact(
     // TODO(#2042)
     let sierra_path = &target_dir.join("dev").join(sierra_filename);
 
-    let lib_artifacts = ScriptStarknetContractArtifacts {
+    let lib_artifacts = CastStarknetContractArtifacts {
         sierra: fs::read_to_string(sierra_path)?,
         casm: String::new(),
     };
