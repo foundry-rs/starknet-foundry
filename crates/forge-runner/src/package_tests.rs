@@ -19,7 +19,7 @@ use serde::Serialize;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::sync::Arc;
-use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
+use universal_sierra_compiler_api::representation::RawCasmProgram;
 
 pub mod raw;
 pub mod with_config;
@@ -66,10 +66,7 @@ impl TestDetails {
         builtins
     }
 
-    pub fn try_into_program(
-        &self,
-        casm_program: &AssembledProgramWithDebugInfo,
-    ) -> Result<Program> {
+    pub fn try_into_program(&self, casm_program: &RawCasmProgram) -> Result<Program> {
         let builtins = self.builtins();
 
         let assembled_program = &casm_program.assembled_cairo_program;
@@ -102,7 +99,7 @@ pub struct TestTarget<C> {
     pub tests_location: TestTargetLocation,
     pub sierra_program: ProgramArtifact,
     pub sierra_program_path: Arc<Utf8PathBuf>,
-    pub casm_program: Arc<AssembledProgramWithDebugInfo>,
+    pub casm_program: Arc<RawCasmProgram>,
     pub test_cases: Vec<TestCase<C>>,
 }
 
