@@ -16,7 +16,7 @@ Cairo Native introduces additional dependencies outside of the Rust ecosystem.
 
 ### LLVM
 
-LLVM is linked into Starknet Foundry binary, so it doesn't have to be installed separately at the cost an incrased
+LLVM is linked into Starknet Foundry binary, so it doesn't have to be installed separately at the cost an increased
 binary size.
 
 ### `ld`
