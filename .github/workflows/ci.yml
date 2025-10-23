@@ -419,4 +419,4 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: typos-action
-        uses: crate-ci/typos@v1.31.2
+        uses: crate-ci/typos@v1.38.1
