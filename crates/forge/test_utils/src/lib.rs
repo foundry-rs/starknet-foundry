@@ -6,7 +6,7 @@ use assert_fs::fixture::PathCopy;
 use camino::Utf8PathBuf;
 use forge::MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT;
 use project_root::get_project_root;
-use scarb_api::ScarbCommand;
+use scarb_api::version::scarb_version;
 use semver::Version;
 use std::str::FromStr;
 
@@ -21,7 +21,7 @@ pub fn tempdir_with_tool_versions() -> Result<assert_fs::TempDir> {
 }
 
 pub fn get_assert_macros_version() -> Result<Version> {
-    let scarb_version_output = ScarbCommand::version().run()?;
+    let scarb_version_output = scarb_version()?;
     let assert_macros_version =
         if scarb_version_output.scarb < MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS {
             DEFAULT_ASSERT_MACROS
@@ -56,8 +56,6 @@ pub fn get_snforge_std_entry() -> Result<String> {
 
 #[must_use]
 pub fn use_snforge_std_deprecated() -> bool {
-    let scarb_version_output = ScarbCommand::version()
-        .run()
-        .expect("Failed to get scarb version");
+    let scarb_version_output = scarb_version().expect("Failed to get scarb version");
     scarb_version_output.scarb < MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT
 }

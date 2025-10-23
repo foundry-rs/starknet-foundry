@@ -1,6 +1,6 @@
 use crate::e2e::common::runner::{runner, setup_package};
 use indoc::{formatdoc, indoc};
-use scarb_api::ScarbCommand;
+use scarb_api::version::scarb_version;
 use semver::Version;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
@@ -9,7 +9,7 @@ fn happy_path() {
     let temp = setup_package("simple_package");
     let output = runner(&temp).arg("check-requirements").assert();
 
-    let scarb_version = ScarbCommand::version().run().unwrap().scarb;
+    let scarb_version = scarb_version().unwrap().scarb;
 
     let rust_check = if scarb_version < Version::new(2, 10, 0) {
         indoc! {"
