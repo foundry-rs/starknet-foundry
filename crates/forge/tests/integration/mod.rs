@@ -7,6 +7,7 @@ mod cheat_caller_address;
 mod cheat_execution_info;
 mod cheat_fork;
 mod cheat_sequencer_address;
+mod config;
 mod declare;
 mod deploy;
 mod deploy_at;

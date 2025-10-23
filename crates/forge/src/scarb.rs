@@ -1,12 +1,13 @@
 use crate::scarb::config::ForgeConfigFromScarb;
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, anyhow};
 use cairo_lang_sierra::program::VersionedProgram;
 use camino::Utf8Path;
-use configuration::PackageConfig;
+use configuration::Config;
+use configuration::core::Profile;
 use forge_runner::package_tests::TestTargetLocation;
 use forge_runner::package_tests::raw::TestTargetRaw;
 use scarb_api::{ScarbCommand, test_targets_by_name};
-use scarb_metadata::PackageMetadata;
+use scarb_metadata::{Metadata, PackageId, PackageMetadata};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter, ProfileSpec};
 use semver::Version;
 use std::fs;
@@ -16,16 +17,36 @@ pub mod config;
 
 const MINIMAL_SCARB_VERSION_TO_OPTIMIZE_COMPILATION: Version = Version::new(2, 8, 3);
 
-impl PackageConfig for ForgeConfigFromScarb {
+impl Config for ForgeConfigFromScarb {
     fn tool_name() -> &'static str {
         "snforge"
     }
 
-    fn from_raw(config: &serde_json::Value) -> Result<Self>
+    fn from_raw(config: serde_json::Value) -> Result<Self>
     where
         Self: Sized,
     {
         serde_json::from_value(config.clone()).context("Failed to parse snforge config")
+    }
+}
+
+/// Loads config for a specific package from the `Scarb.toml` file
+/// # Arguments
+/// * `metadata` - Scarb metadata object
+/// * `package` - Id of the Scarb package
+pub fn load_package_config<T: Config + Default>(
+    metadata: &Metadata,
+    package: &PackageId,
+) -> Result<T> {
+    let maybe_raw_metadata = metadata
+        .get_package(package)
+        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
+        .tool_metadata(T::tool_name())
+        .cloned();
+
+    match maybe_raw_metadata {
+        Some(raw_metadata) => configuration::core::load_config(raw_metadata, Profile::None),
+        None => Ok(T::default()),
     }
 }
 
