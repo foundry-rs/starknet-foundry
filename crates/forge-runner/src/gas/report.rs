@@ -83,9 +83,10 @@ impl GasSingleTestInfo {
     ) {
         let contract_info = self.report_data.0.entry(contract_name).or_default();
 
-        if let Some(gas) = contract_info.gas_used.checked_add(gas_used) {
-            contract_info.gas_used = gas;
-        }
+        let current_gas = contract_info.gas_used;
+        contract_info.gas_used = current_gas.checked_add(gas_used).unwrap_or_else(|| {
+            panic!("Gas addition overflow when adding {gas_used:?} to {current_gas:?}.")
+        });
 
         let entry = contract_info.functions.entry(selector).or_default();
         entry.records.push(gas_used.l2_gas.0);
