@@ -21,6 +21,7 @@ pub fn combine_configs(
     save_trace_data: bool,
     build_profile: bool,
     coverage: bool,
+    gas_report: bool,
     max_n_steps: Option<u32>,
     tracked_resource: ForgeTrackedResource,
     contracts_data: ContractsData,
@@ -58,6 +59,7 @@ pub fn combine_configs(
             trace_args,
             detailed_resources: detailed_resources || forge_config_from_scarb.detailed_resources,
             execution_data_to_save,
+            gas_report: gas_report || forge_config_from_scarb.gas_report,
         }),
     }
 }
@@ -76,6 +78,7 @@ mod tests {
             false,
             false,
             false,
+            false,
             None,
             ForgeTrackedResource::CairoSteps,
             ContractsData::default(),
@@ -89,6 +92,7 @@ mod tests {
             false,
             None,
             None,
+            false,
             false,
             false,
             false,
@@ -121,6 +125,7 @@ mod tests {
             false,
             false,
             false,
+            false,
             None,
             ForgeTrackedResource::CairoSteps,
             ContractsData::default(),
@@ -149,6 +154,7 @@ mod tests {
                     detailed_resources: false,
                     execution_data_to_save: ExecutionDataToSave::default(),
                     trace_args: TraceArgs::default(),
+                    gas_report: false,
                 }),
             }
         );
@@ -165,6 +171,7 @@ mod tests {
             save_trace_data: true,
             build_profile: true,
             coverage: true,
+            gas_report: true,
             max_n_steps: Some(1_000_000),
             tracked_resource: ForgeTrackedResource::CairoSteps,
         };
@@ -173,6 +180,7 @@ mod tests {
             false,
             None,
             None,
+            false,
             false,
             false,
             false,
@@ -210,6 +218,7 @@ mod tests {
                         additional_args: vec![],
                     },
                     trace_args: TraceArgs::default(),
+                    gas_report: true,
                 }),
             }
         );
@@ -226,6 +235,7 @@ mod tests {
             save_trace_data: false,
             build_profile: false,
             coverage: false,
+            gas_report: false,
             max_n_steps: Some(1234),
             tracked_resource: ForgeTrackedResource::CairoSteps,
         };
@@ -233,6 +243,7 @@ mod tests {
             true,
             Some(NonZeroU32::new(100).unwrap()),
             Some(32),
+            true,
             true,
             true,
             true,
@@ -271,6 +282,7 @@ mod tests {
                         additional_args: vec![],
                     },
                     trace_args: TraceArgs::default(),
+                    gas_report: true,
                 }),
             }
         );

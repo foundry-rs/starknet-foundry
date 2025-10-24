@@ -34,6 +34,7 @@ pub struct OutputConfig {
     pub trace_args: TraceArgs,
     pub detailed_resources: bool,
     pub execution_data_to_save: ExecutionDataToSave,
+    pub gas_report: bool,
 }
 
 #[derive(Debug, PartialEq, Clone, Default)]
