@@ -21,9 +21,8 @@ fn skip_scarb_lt_2_11_0() -> bool {
     }
 }
 
-#[cfg(feature = "cairo-native")]
 #[test]
-fn check_meta_tx_v0_syscall_work_on_native() {
+fn check_meta_tx_v0_syscall_work_without_cheats() {
     // TODO(#3704) Remove scarb version check
     if skip_scarb_lt_2_11_0() {
         return;
