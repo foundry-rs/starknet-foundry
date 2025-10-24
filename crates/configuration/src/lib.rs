@@ -6,9 +6,11 @@ use serde_json::{Map, Number};
 use std::fs::File;
 use std::{env, fs};
 use tempfile::{TempDir, tempdir};
-pub const CONFIG_FILENAME: &str = "snfoundry.toml";
 
 mod validation;
+
+pub const CONFIG_FILENAME: &str = "snfoundry.toml";
+
 /// Defined in snfoundry.toml
 /// Configuration not associated with any specific package
 pub trait Config {
