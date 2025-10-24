@@ -3,7 +3,7 @@ use crate::build_trace_data::build_profiler_call_trace;
 use crate::debugging::{TraceArgs, build_debugging_trace};
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
-use crate::gas::report::GasSingleTestInfo;
+use crate::gas::report::SingleTestGasInfo;
 use crate::gas::stats::GasStats;
 use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use crate::running::{RunCompleted, RunStatus};
@@ -84,7 +84,7 @@ impl TestType for Fuzzing {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Single;
 impl TestType for Single {
-    type GasInfo = GasSingleTestInfo;
+    type GasInfo = SingleTestGasInfo;
     type TestStatistics = ();
     type TraceData = VersionedProfilerCallTrace;
 }
@@ -303,13 +303,13 @@ impl TestCaseSummary<Single> {
         );
 
         let gas_info = if gas_report_enabled {
-            GasSingleTestInfo::new_with_report(
+            SingleTestGasInfo::new_with_report(
                 gas_used,
                 &call_trace.borrow(),
                 &ContractsDataStore::new(contracts_data, &fork_data),
             )
         } else {
-            GasSingleTestInfo::new(gas_used)
+            SingleTestGasInfo::new(gas_used)
         };
 
         match status {
