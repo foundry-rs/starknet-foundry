@@ -16,6 +16,6 @@ pub fn build_debugging_trace(
     test_name: String,
 ) -> Option<debugging::Trace> {
     let components = trace_args.to_components()?;
-    let context = debugging::Context::new(contracts_data_store.clone(), components);
+    let context = debugging::Context::new(contracts_data_store, components);
     Some(debugging::Trace::new(call_trace, &context, test_name))
 }
