@@ -2,7 +2,7 @@ use crate::{CleanArgs, CleanComponent};
 use anyhow::{Context, Result, ensure};
 use camino::Utf8PathBuf;
 use foundry_ui::UI;
-use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
+use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use std::fs;
 
 const COVERAGE_DIR: &str = "coverage";
@@ -26,7 +26,10 @@ pub fn clean(args: CleanArgs, ui: &UI) -> Result<()> {
         args.clean_components
     };
 
-    let scarb_metadata = ScarbCommand::metadata().inherit_stderr().no_deps().run()?;
+    let scarb_metadata = metadata_with_opts(MetadataOpts {
+        no_deps: true,
+        ..MetadataOpts::default()
+    })?;
     let workspace_root = scarb_metadata.workspace.root;
 
     let packages_root: Vec<Utf8PathBuf> = scarb_metadata

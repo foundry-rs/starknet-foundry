@@ -16,9 +16,9 @@ use forge_runner::{
 };
 use foundry_ui::UI;
 use indoc::formatdoc;
+use scarb_api::metadata::metadata_for_dir;
 use scarb_api::{
-    CompilationOpts, ScarbCommand, StarknetContractArtifacts,
-    get_contracts_artifacts_and_source_sierra_paths, metadata::MetadataCommandExt,
+    CompilationOpts, StarknetContractArtifacts, get_contracts_artifacts_and_source_sierra_paths,
     target_dir_for_workspace,
 };
 use shared::command::CommandExt;
@@ -94,10 +94,7 @@ impl Contract {
             .output_checked()
             .context("Failed to build contracts with Scarb")?;
 
-        let scarb_metadata = ScarbCommand::metadata()
-            .current_dir(dir.path())
-            .inherit_stderr()
-            .run()?;
+        let scarb_metadata = metadata_for_dir(dir.path())?;
         let package = scarb_metadata
             .packages
             .iter()

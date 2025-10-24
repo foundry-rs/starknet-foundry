@@ -4,7 +4,7 @@ use anyhow::{Context, Ok, Result, anyhow, bail, ensure};
 use camino::Utf8PathBuf;
 use include_dir::{Dir, DirEntry, include_dir};
 use indoc::formatdoc;
-use scarb_api::ScarbCommand;
+use scarb_api::{ScarbCommand, ensure_scarb_available};
 use semver::Version;
 use shared::consts::FREE_RPC_PROVIDER_URL;
 use std::env;
@@ -351,7 +351,7 @@ pub fn new(
         template,
     }: NewArgs,
 ) -> Result<()> {
-    ScarbCommand::new().ensure_available()?;
+    ensure_scarb_available()?;
     if !overwrite {
         ensure!(
             !path.exists() || path.read_dir().is_ok_and(|mut i| i.next().is_none()),

@@ -27,10 +27,9 @@ use conversions::string::TryFromHexStr;
 use foundry_ui::UI;
 use runtime::starknet::constants::TEST_ADDRESS;
 use runtime::starknet::context::build_context;
-use scarb_api::metadata::MetadataCommandExt;
+use scarb_api::metadata::metadata_for_dir;
 use scarb_api::{
-    CompilationOpts, ScarbCommand, get_contracts_artifacts_and_source_sierra_paths,
-    target_dir_for_workspace,
+    CompilationOpts, get_contracts_artifacts_and_source_sierra_paths, target_dir_for_workspace,
 };
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::contract_class::EntryPointType;
@@ -76,11 +75,7 @@ pub fn recover_data(output: CallResult) -> Vec<Felt> {
 }
 
 pub fn get_contracts() -> ContractsData {
-    let scarb_metadata = ScarbCommand::metadata()
-        .inherit_stderr()
-        .manifest_path("tests/contracts/Scarb.toml")
-        .run()
-        .unwrap();
+    let scarb_metadata = metadata_for_dir("tests/contracts").unwrap();
     let target_dir = target_dir_for_workspace(&scarb_metadata).join("dev");
 
     let package = scarb_metadata.packages.first().unwrap();
