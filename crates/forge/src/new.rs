@@ -4,6 +4,7 @@ use anyhow::{Context, Ok, Result, anyhow, bail, ensure};
 use camino::Utf8PathBuf;
 use include_dir::{Dir, DirEntry, include_dir};
 use indoc::formatdoc;
+use scarb_api::version::scarb_version;
 use scarb_api::{ScarbCommand, ensure_scarb_available};
 use semver::Version;
 use shared::consts::FREE_RPC_PROVIDER_URL;
@@ -108,7 +109,7 @@ impl TryFrom<&Template> for TemplateManifestConfig {
     type Error = anyhow::Error;
 
     fn try_from(template: &Template) -> Result<Self> {
-        let cairo_version = ScarbCommand::version().run()?.cairo;
+        let cairo_version = scarb_version()?.cairo;
         match template {
             Template::CairoProgram => Ok(TemplateManifestConfig {
                 dependencies: vec![],
@@ -256,7 +257,7 @@ fn set_cairo_edition(document: &mut DocumentMut, cairo_edition: &str) {
 }
 
 fn add_assert_macros(document: &mut DocumentMut) -> Result<()> {
-    let versions = ScarbCommand::version().run()?;
+    let versions = scarb_version()?;
     let version = if versions.scarb < MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS {
         DEFAULT_ASSERT_MACROS
     } else {
@@ -361,7 +362,7 @@ pub fn new(
         );
     }
     let name = infer_name(name, &path)?;
-    let scarb_version = ScarbCommand::version().run()?.scarb;
+    let scarb_version = scarb_version()?.scarb;
 
     fs::create_dir_all(&path)?;
     let project_path = path.canonicalize()?;
@@ -455,7 +456,7 @@ fn get_template_dir(template: &Template) -> Result<Dir<'_>> {
 }
 
 fn get_oz_version() -> Result<Version> {
-    let scarb_version = ScarbCommand::version().run()?.scarb;
+    let scarb_version = scarb_version()?.scarb;
 
     let oz_version = match scarb_version {
         ver if ver >= Version::new(2, 9, 4) => Version::new(1, 0, 0),
