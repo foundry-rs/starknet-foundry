@@ -15,7 +15,7 @@ use starknet_api::execution_utils::format_panic_data;
 
 pub struct Collector<'a> {
     call_trace: &'a CallTrace,
-    context: &'a Context,
+    context: &'a Context<'a>,
 }
 
 impl<'a> Collector<'a> {
