@@ -130,3 +130,4 @@ tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 tracing = "0.1.41"
 tracing-chrome = "0.7.2"
 tracing-log = "0.2.0"
+comfy-table = "7"
