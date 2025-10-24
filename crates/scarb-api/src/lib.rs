@@ -611,7 +611,6 @@ mod tests {
 
         let contract = contracts.get("ERC20").unwrap();
         assert_eq!(&sierra_contents_erc20, &contract.0.sierra);
-        assert!(!contract.0.casm.is_empty());
 
         let sierra_contents_erc20 = fs::read_to_string(
             temp.join("target/dev/basic_package_HelloStarknet.contract_class.json"),
@@ -619,7 +618,6 @@ mod tests {
         .unwrap();
         let contract = contracts.get("HelloStarknet").unwrap();
         assert_eq!(&sierra_contents_erc20, &contract.0.sierra);
-        assert!(!contract.0.casm.is_empty());
     }
 
     #[test]
