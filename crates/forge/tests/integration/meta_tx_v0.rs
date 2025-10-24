@@ -95,6 +95,10 @@ fn meta_tx_v0_with_cheat_caller_address() {
     assert_passed(&result);
 }
 
+#[cfg_attr(
+    feature = "cairo-native",
+    ignore = "Cheats in `meta_tx_v0` are not supported on `cairo-native`"
+)]
 #[test]
 fn meta_tx_v0_with_cheat_block_hash() {
     // TODO(#3704) Remove scarb version check
