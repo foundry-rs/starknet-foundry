@@ -55,3 +55,25 @@ mod CheatBlockHashCheckerMetaTxV0 {
         }
     }
 }
+
+#[starknet::interface]
+trait ISimpleCheckerMetaTxV0<TContractState> {
+    fn __execute__(ref self: TContractState) -> felt252;
+}
+
+#[starknet::contract(account)]
+mod SimpleCheckerMetaTxV0 {
+    use starknet::SyscallResultTrait;
+    use starknet::syscalls::get_block_hash_syscall;
+
+    #[storage]
+    struct Storage {}
+
+    #[abi(embed_v0)]
+    impl ISimpleCheckerMetaTxV0 of super::ISimpleCheckerMetaTxV0<ContractState> {
+        fn __execute__(ref self: ContractState) -> felt252 {
+           1234567890.into()
+        }
+    }
+}
+
