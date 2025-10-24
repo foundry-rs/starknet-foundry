@@ -1,6 +1,5 @@
 use crate::gas::stats::GasStats;
 use cheatnet::trace_data::{CallTrace, CallTraceNode};
-use debugging::ContractName as DebuggingContractName;
 use debugging::ContractsDataStore;
 use starknet_api::core::{ClassHash, EntryPointSelector};
 use starknet_api::execution_resources::GasVector;
@@ -105,10 +104,8 @@ impl SingleTestGasInfo {
 fn get_contract_name(contracts_data: &ContractsDataStore, class_hash: ClassHash) -> ContractName {
     contracts_data
         .get_contract_name(&class_hash)
-        .cloned()
-        .unwrap_or_else(|| DebuggingContractName("forked contract".to_string()))
-        .0
-        .clone()
+        .map_or("forked contract", |name| name.0.as_str())
+        .to_string()
 }
 
 fn get_selector(contracts_data: &ContractsDataStore, selector: EntryPointSelector) -> Selector {
