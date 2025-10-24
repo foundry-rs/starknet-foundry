@@ -10,12 +10,12 @@ type ContractName = String;
 type Selector = String;
 
 #[derive(Debug, Clone)]
-pub struct GasSingleTestInfo {
+pub struct SingleTestGasInfo {
     pub gas_used: GasVector,
     pub report_data: ReportData,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ReportData(BTreeMap<ContractName, ContractInfo>);
 
 #[derive(Debug, Clone, Default)]
@@ -31,12 +31,12 @@ pub struct SelectorReportData {
     pub records: Vec<u64>,
 }
 
-impl GasSingleTestInfo {
+impl SingleTestGasInfo {
     #[must_use]
     pub fn new(gas_used: GasVector) -> Self {
         Self {
             gas_used,
-            report_data: ReportData(BTreeMap::new()),
+            report_data: ReportData::default(),
         }
     }
 
