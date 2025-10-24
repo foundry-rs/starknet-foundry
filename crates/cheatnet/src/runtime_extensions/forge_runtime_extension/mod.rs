@@ -81,6 +81,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
         selector: &str,
         mut input_reader: BufferReader<'_>,
         extended_runtime: &mut Self::Runtime,
+        vm: &mut VirtualMachine,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         if let Some(oracle_selector) = self
             .oracle_hint_service
@@ -551,6 +552,14 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .cheatnet_state
                     .cheat_block_hash(block_number, operation);
                 Ok(CheatcodeHandlingResult::from_serializable(()))
+            }
+            "get_current_step" => {
+                let current_step: u32 = vm
+                    .get_current_step()
+                    .try_into()
+                    .context("Current step value exceeds u32")?;
+
+                Ok(CheatcodeHandlingResult::from_serializable(current_step))
             }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         }
