@@ -1,3 +1,4 @@
+use crate::validation::validate_config;
 use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
 use scarb_metadata::{Metadata, PackageId};
@@ -5,9 +6,9 @@ use serde_json::{Map, Number};
 use std::fs::File;
 use std::{env, fs};
 use tempfile::{TempDir, tempdir};
-use toml::Value;
 pub const CONFIG_FILENAME: &str = "snfoundry.toml";
 
+mod validation;
 /// Defined in snfoundry.toml
 /// Configuration not associated with any specific package
 pub trait Config {
@@ -75,20 +76,24 @@ pub fn load_config<T: Config + Default>(
 
     match config_path {
         Some(path) => {
-            let raw_config_toml = fs::read_to_string(path)
-                .context("Failed to read snfoundry.toml config file")?
-                .parse::<Value>()
+            let raw_config_toml =
+                fs::read_to_string(path).context("Failed to read snfoundry.toml config file")?;
+
+            let config_toml: toml::Value = toml::from_str(&raw_config_toml)
                 .context("Failed to parse snfoundry.toml config file")?;
 
-            let raw_config_json = serde_json::to_value(raw_config_toml)
+            validate_config(&config_toml)?;
+
+            let config_json = serde_json::to_value(config_toml)
                 .context("Conversion from TOML value to JSON value should not fail.")?;
 
-            let profile = get_profile(raw_config_json, T::tool_name(), profile)?;
+            let profile = get_profile(config_json, T::tool_name(), profile)?;
             T::from_raw(resolve_env_variables(profile)?)
         }
         None => Ok(T::default()),
     }
 }
+
 /// Loads config for a specific package from the `Scarb.toml` file
 /// # Arguments
 /// * `metadata` - Scarb metadata object
