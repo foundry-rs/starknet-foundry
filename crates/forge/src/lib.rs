@@ -1,4 +1,5 @@
 use crate::compatibility_check::{Requirement, RequirementsChecker, create_version_parser};
+use crate::partition::Partition;
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
@@ -25,6 +26,7 @@ mod clean;
 mod combine_configs;
 mod compatibility_check;
 mod new;
+mod partition;
 mod profile_validation;
 pub mod run_tests;
 pub mod scarb;
@@ -83,7 +85,7 @@ enum ForgeSubcommand {
     /// Run tests for a project in the current directory
     Test {
         #[command(flatten)]
-        args: TestArgs,
+        args: Box<TestArgs>,
     },
     /// Create a new Forge project at <PATH>
     New {
@@ -149,7 +151,7 @@ pub struct TestArgs {
     run_native: bool,
 
     /// Use exact matches for `test_filter`
-    #[arg(short, long)]
+    #[arg(short, long, conflicts_with = "partition")]
     exact: bool,
 
     /// Skips any tests whose name contains the given SKIP string.
@@ -212,6 +214,11 @@ pub struct TestArgs {
     /// Specify tracked resource type
     #[arg(long, value_enum, default_value_t)]
     tracked_resource: ForgeTrackedResource,
+
+    /// If specified, divides tests into partitions and runs specified partition.
+    /// <PARTITION> is in the format INDEX/TOTAL, where INDEX is the 1-based index of the partition to run, and TOTAL is the number of partitions.
+    #[arg(long, conflicts_with = "exact")]
+    partition: Option<Partition>,
 
     /// Additional arguments for cairo-coverage or cairo-profiler
     #[arg(last = true)]
@@ -327,7 +334,7 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
                 .enable_all()
                 .build()?;
 
-            rt.block_on(run_for_workspace(args, ui))
+            rt.block_on(run_for_workspace(*args, ui))
         }
         ForgeSubcommand::CheckRequirements => {
             check_requirements(true, &ui)?;
