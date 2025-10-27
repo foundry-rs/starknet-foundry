@@ -69,6 +69,45 @@ Response Raw: [0x0]
 </details>
 <br>
 
+### Configuring Network Addresses
+
+You can configure custom RPC URLs for `mainnet`, `sepolia`, and `devnet` networks in your profile. 
+When you use `--network <network_name>`, `sncast` will first check if you have a custom URL configured for that network. 
+If not found, it will fall back to the default behavior (public RPC provider for mainnet/sepolia, auto-detection for devnet).
+
+```toml
+[sncast.myprofile]
+account = "user"
+accounts-file = "~/my_accounts.json"
+
+[sncast.myprofile.networks]
+mainnet = "https://starknet-mainnet.infura.io/v3/YOUR-INFURA-API-KEY"
+sepolia = "https://starknet-sepolia.infura.io/v3/YOUR-INFURA-API-KEY"
+devnet = "http://127.0.0.1:5050"
+```
+
+Now when you use `--network mainnet` with `--profile myprofile`, `sncast` will use your custom Infura RPC URL:
+
+```shell
+$ sncast --profile myprofile \
+    call \
+    --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
+    --function get_balance \
+    --network mainnet
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Success: Call completed
+
+Response:     0x0
+Response Raw: [0x0]
+```
+</details>
+<br>
+
 ### Multiple Profiles
 
 You can have multiple profiles defined in the `snfoundry.toml`.

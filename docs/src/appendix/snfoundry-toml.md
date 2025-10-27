@@ -102,6 +102,11 @@ wait-params = { timeout = 500, retry-interval = 10 }
 block-explorer = "StarkScan"
 show-explorer-links = true
 
+[sncast.myprofile1.networks]
+mainnet = "https://starknet-mainnet.infura.io/v3/YOUR-INFURA-API-KEY"
+sepolia = "https://starknet-sepolia.infura.io/v3/YOUR-INFURA-API-KEY"
+devnet = "http://127.0.0.1:5050"
+
 [sncast.dev]
 url = "http://127.0.0.1:5056/rpc"
 account = "devuser"
