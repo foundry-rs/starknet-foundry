@@ -6,20 +6,20 @@ use serde_json::{Value, json};
 use crate::partition::Partition;
 
 #[derive(Serialize)]
-pub struct PartitionMessage {
+pub struct PartitionStartedMessage {
     partition: Partition,
 }
 
-impl PartitionMessage {
+impl PartitionStartedMessage {
     #[must_use]
     pub fn new(partition: Partition) -> Self {
         Self { partition }
     }
 }
 
-impl Message for PartitionMessage {
+impl Message for PartitionStartedMessage {
     fn text(&self) -> String {
-        let styled_label = style("Finished partition run").bold().to_string();
+        let styled_label = style("Started partition run").bold().to_string();
         LabeledMessage::new(
             &styled_label,
             &format!("{}/{}", self.partition.index, self.partition.total),
