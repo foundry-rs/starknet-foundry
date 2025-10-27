@@ -27,7 +27,7 @@ inherits = "release"
 debug-assertions = true
 
 [workspace.package]
-version = "0.51.0"
+version = "0.51.1"
 edition = "2024"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
