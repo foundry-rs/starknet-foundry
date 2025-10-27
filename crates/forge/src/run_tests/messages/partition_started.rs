@@ -19,7 +19,7 @@ impl PartitionStartedMessage {
 
 impl Message for PartitionStartedMessage {
     fn text(&self) -> String {
-        let styled_label = style("Started partition run").bold().to_string();
+        let styled_label = style("Running partition run").bold().to_string();
         LabeledMessage::new(
             &styled_label,
             &format!("{}/{}", self.partition.index, self.partition.total),
