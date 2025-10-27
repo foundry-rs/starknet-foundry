@@ -22,7 +22,7 @@ impl Message for PartitionMessage {
         let styled_label = style("Finished partition run").bold().to_string();
         LabeledMessage::new(
             &styled_label,
-            &format!("{}/{}", self.partition.index(), self.partition.total()),
+            &format!("{}/{}", self.partition.index, self.partition.total),
         )
         .text()
     }
