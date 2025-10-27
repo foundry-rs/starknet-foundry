@@ -2,22 +2,10 @@ use serde::Serialize;
 use std::{collections::HashMap, str::FromStr};
 
 #[derive(Debug, Clone, Copy, Serialize)]
+#[non_exhaustive]
 pub struct Partition {
-    index: usize,
-    total: usize,
-}
-
-#[allow(dead_code)] // TODO: Removed in later PRs
-impl Partition {
-    #[must_use]
-    pub fn index(&self) -> usize {
-        self.index
-    }
-
-    #[must_use]
-    pub fn total(&self) -> usize {
-        self.total
-    }
+    pub index: usize,
+    pub total: usize,
 }
 
 impl FromStr for Partition {
@@ -50,27 +38,10 @@ impl FromStr for Partition {
 pub struct TestPartitionMap(HashMap<String, usize>);
 
 #[derive(Serialize)]
+#[non_exhaustive]
 pub struct PartitionConfig {
-    partition: Partition,
-    test_partition_map: TestPartitionMap,
-}
-
-#[allow(dead_code)] // TODO: Removed in later PRs
-impl PartitionConfig {
-    pub fn new(partition: Partition, test_partition_map: TestPartitionMap) -> Self {
-        Self {
-            partition,
-            test_partition_map,
-        }
-    }
-
-    pub fn partition(&self) -> Partition {
-        self.partition
-    }
-
-    pub fn test_partition_map(&self) -> &TestPartitionMap {
-        &self.test_partition_map
-    }
+    pub partition: Partition,
+    pub test_partition_map: TestPartitionMap,
 }
 
 #[cfg(test)]
@@ -81,8 +52,8 @@ mod tests {
     #[test]
     fn test_happy_case() {
         let partition = "2/5".parse::<Partition>().unwrap();
-        assert_eq!(partition.index(), 2);
-        assert_eq!(partition.total(), 5);
+        assert_eq!(partition.index, 2);
+        assert_eq!(partition.total, 5);
     }
 
     #[test]
