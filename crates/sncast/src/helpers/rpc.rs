@@ -152,7 +152,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_fallback_to_default_network_url() {
-        let config = CastConfig::default(); 
+        let config = CastConfig::default();
 
         let rpc_args = RpcArgs {
             url: None,
