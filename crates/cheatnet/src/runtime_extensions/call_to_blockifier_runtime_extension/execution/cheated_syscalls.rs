@@ -47,7 +47,6 @@ use starknet_api::{
 };
 use std::sync::Arc;
 
-#[expect(clippy::result_large_err)]
 pub fn get_execution_info_syscall(
     _request: EmptyRequest,
     vm: &mut VirtualMachine,
@@ -67,7 +66,6 @@ pub fn get_execution_info_syscall(
 }
 
 // blockifier/src/execution/syscalls/mod.rs:222 (deploy_syscall)
-#[expect(clippy::result_large_err)]
 pub fn deploy_syscall(
     request: DeployRequest,
     vm: &mut VirtualMachine,
@@ -130,7 +128,6 @@ pub fn deploy_syscall(
 }
 
 // blockifier/src/execution/execution_utils.rs:217 (execute_deployment)
-#[expect(clippy::result_large_err)]
 pub fn execute_deployment(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
@@ -162,7 +159,6 @@ pub fn execute_deployment(
 }
 
 // blockifier/src/execution/syscalls/mod.rs:407 (library_call)
-#[expect(clippy::result_large_err)]
 pub fn library_call_syscall(
     request: LibraryCallRequest,
     vm: &mut VirtualMachine,
@@ -196,7 +192,6 @@ pub fn library_call_syscall(
 }
 
 // blockifier/src/execution/syscalls/mod.rs:157 (call_contract)
-#[expect(clippy::result_large_err)]
 pub fn call_contract_syscall(
     request: CallContractRequest,
     vm: &mut VirtualMachine,
@@ -389,7 +384,7 @@ fn meta_tx_v0(
     Ok(retdata_segment)
 }
 
-#[expect(clippy::needless_pass_by_value, clippy::result_large_err)]
+#[expect(clippy::needless_pass_by_value)]
 pub fn get_block_hash_syscall(
     request: GetBlockHashRequest,
     _vm: &mut VirtualMachine,
@@ -409,7 +404,7 @@ pub fn get_block_hash_syscall(
     Ok(GetBlockHashResponse { block_hash })
 }
 
-#[expect(clippy::needless_pass_by_value, clippy::result_large_err)]
+#[expect(clippy::needless_pass_by_value)]
 pub fn storage_read(
     request: StorageReadRequest,
     _vm: &mut VirtualMachine,
@@ -434,7 +429,7 @@ pub fn storage_read(
     Ok(StorageReadResponse { value })
 }
 
-#[expect(clippy::needless_pass_by_value, clippy::result_large_err)]
+#[expect(clippy::needless_pass_by_value)]
 pub fn storage_write(
     request: StorageWriteRequest,
     _vm: &mut VirtualMachine,

@@ -19,7 +19,7 @@ use crate::runtime_extensions::{
 };
 use crate::trace_data::{CallTrace, CallTraceNode, GasReportData};
 use anyhow::{Context, Result, anyhow};
-use blockifier::bouncer::vm_resources_to_sierra_gas;
+use blockifier::bouncer::vm_resources_to_gas;
 use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::{
     CallInfo, CallSummary, ChargedResources, EventSummary, ExecutionSummary, OrderedEvent,
@@ -617,8 +617,9 @@ pub fn add_resources_to_top_call(
     match tracked_resource {
         TrackedResource::CairoSteps => top_call.used_execution_resources += resources,
         TrackedResource::SierraGas => {
+            let builtin_gas_costs = versioned_constants.os_constants.gas_costs.builtins;
             top_call.gas_consumed +=
-                vm_resources_to_sierra_gas(&resources.clone(), versioned_constants).0;
+                vm_resources_to_gas(&resources.clone(), &builtin_gas_costs, versioned_constants).0;
         }
     }
 }

@@ -51,6 +51,7 @@ pub fn build_block_context(block_info: &BlockInfo, chain_id: Option<ChainId>) ->
                 eth_fee_token_address: ContractAddress::try_from_hex_str(ETH_CONTRACT_ADDRESS)
                     .unwrap(),
             },
+            is_l3: false,
         },
         VersionedConstants::latest_constants().clone(), // 0.13.1
         BouncerConfig::default(),

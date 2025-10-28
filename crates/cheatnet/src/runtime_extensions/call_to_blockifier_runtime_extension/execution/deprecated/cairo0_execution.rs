@@ -20,7 +20,6 @@ use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
 use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner};
 
 // blockifier/src/execution/deprecated_execution.rs:36 (execute_entry_point_call)
-#[expect(clippy::result_large_err)]
 pub(crate) fn execute_entry_point_call_cairo0(
     call: ExecutableCallEntryPoint,
     compiled_class_v0: CompiledClassV0,
@@ -90,7 +89,6 @@ pub(crate) fn execute_entry_point_call_cairo0(
 }
 
 // blockifier/src/execution/deprecated_execution.rs:192 (run_entry_point)
-#[expect(clippy::result_large_err)]
 pub fn cheatable_run_entry_point(
     runner: &mut CairoRunner,
     hint_processor: &mut dyn HintProcessor,
@@ -104,13 +102,15 @@ pub fn cheatable_run_entry_point(
     let program_segment_size = None; // Infer size from program.
     let args: Vec<&CairoArg> = args.iter().collect();
 
-    runner.run_from_entrypoint(
-        entry_point_pc,
-        &args,
-        verify_secure,
-        program_segment_size,
-        hint_processor,
-    )?;
+    runner
+        .run_from_entrypoint(
+            entry_point_pc,
+            &args,
+            verify_secure,
+            program_segment_size,
+            hint_processor,
+        )
+        .map_err(Box::new)?;
 
     Ok(())
 }

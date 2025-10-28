@@ -8,7 +8,7 @@ use blockifier::execution::syscalls::vm_syscall_utils::SyscallSelector;
 use starknet_api::core::{ClassHash, ContractAddress, calculate_contract_address};
 use starknet_api::transaction::fields::{Calldata, ContractAddressSalt};
 
-#[expect(clippy::match_bool, clippy::result_large_err)]
+#[expect(clippy::match_bool)]
 // Copied from blockifer/src/execution/syscalls/syscall_base.rs
 pub fn deploy(
     syscall_handler_base: &mut SyscallHandlerBase,
