@@ -424,7 +424,7 @@ pub trait ExtensionLogic {
         _selector: &str,
         _input_reader: BufferReader,
         _extended_runtime: &mut Self::Runtime,
-        _vm: &mut VirtualMachine,
+        _vm: &VirtualMachine,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         Ok(CheatcodeHandlingResult::Forwarded)
     }

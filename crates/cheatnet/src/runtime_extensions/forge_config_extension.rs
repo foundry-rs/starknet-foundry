@@ -18,7 +18,7 @@ impl<'a> ExtensionLogic for ForgeConfigExtension<'a> {
         selector: &str,
         mut input_reader: BufferReader<'_>,
         _extended_runtime: &mut Self::Runtime,
-        _vm: &mut VirtualMachine,
+        _vm: &VirtualMachine,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         macro_rules! config_cheatcode {
             ( $prop:ident) => {{
