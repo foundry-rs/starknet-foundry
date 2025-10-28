@@ -18,6 +18,7 @@ use starknet_api::transaction::fields::GasVectorComputationMode;
 
 pub mod report;
 pub mod stats;
+mod utils;
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn calculate_used_gas(
