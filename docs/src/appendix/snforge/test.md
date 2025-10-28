@@ -130,6 +130,9 @@ Set tracked resource for test execution. Impacts overall test gas cost. Valid va
 - `cairo-steps`: track cairo steps, uses vm `ExecutionResources` (steps, builtins, memory holes) to describe resources consumed by the test.
 To learn more about fee calculation formula (and the impact of tracking sierra gas on it) please consult [starknet docs](https://docs.starknet.io/learn/protocol/fees#overall-fee)
 
+## `--gas-report`
+Display a table of L2 gas breakdown for each contract and selector.
+
 ##  `-P`, `--profile` `<PROFILE>`
 Specify the profile to use by name.
 
