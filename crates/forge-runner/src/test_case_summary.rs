@@ -304,10 +304,7 @@ impl TestCaseSummary<Single> {
 
         let gas_info = SingleTestGasInfo::new(gas_used);
         let gas_info = if gas_report_enabled {
-            gas_info.get_with_report_data(
-                &call_trace.borrow(),
-                &contracts_data_store,
-            )
+            gas_info.get_with_report_data(&call_trace.borrow(), &contracts_data_store)
         } else {
             gas_info
         };
