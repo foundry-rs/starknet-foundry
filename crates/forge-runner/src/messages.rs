@@ -1,4 +1,4 @@
-use crate::forge_config::{ForgeTrackedResource, OutputConfig};
+use crate::forge_config::ForgeTrackedResource;
 use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary};
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
@@ -45,7 +45,7 @@ pub struct TestResultMessage {
 impl TestResultMessage {
     pub fn new(
         test_result: &AnyTestCaseSummary,
-        output_config: &OutputConfig,
+        show_detailed_resources: bool,
         tracked_resource: ForgeTrackedResource,
     ) -> Self {
         let name = test_result
@@ -78,11 +78,11 @@ impl TestResultMessage {
 
         let (gas_usage, gas_report) = match test_result {
             AnyTestCaseSummary::Single(TestCaseSummary::Passed { gas_info, .. }) => {
-                let gas_report = if output_config.gas_report {
-                    format!("{}", gas_info.report_data)
-                } else {
-                    String::new()
-                };
+                let gas_report = gas_info
+                    .report_data
+                    .as_ref()
+                    .map(std::string::ToString::to_string)
+                    .unwrap_or_default();
 
                 (
                     format!(
@@ -97,7 +97,7 @@ impl TestResultMessage {
             _ => (String::new(), String::new()),
         };
 
-        let used_resources = match (output_config.detailed_resources, &test_result) {
+        let used_resources = match (show_detailed_resources, &test_result) {
             (true, AnyTestCaseSummary::Single(TestCaseSummary::Passed { used_resources, .. })) => {
                 format_detailed_resources(used_resources, tracked_resource)
             }

@@ -107,6 +107,18 @@ impl ReportData {
     }
 }
 
+impl Display for ReportData {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (name, contract_info) in &self.0 {
+            if !contract_info.functions.is_empty() {
+                let table = format_table_output(contract_info, name);
+                writeln!(f, "\n{table}")?;
+            }
+        }
+        Ok(())
+    }
+}
+
 fn get_contract_name(contracts_data: &ContractsDataStore, class_hash: ClassHash) -> ContractName {
     contracts_data
         .get_contract_name(&class_hash)
@@ -120,18 +132,6 @@ fn get_selector(contracts_data: &ContractsDataStore, selector: EntryPointSelecto
         .expect("`Selector` should be present")
         .0
         .clone()
-}
-
-impl Display for ReportData {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for (name, contract_info) in &self.0 {
-            if !contract_info.functions.is_empty() {
-                let table = format_table_output(contract_info, name);
-                writeln!(f, "\n{table}")?;
-            }
-        }
-        Ok(())
-    }
 }
 
 pub fn format_table_output(contract_info: &ContractInfo, name: &ContractName) -> Table {
