@@ -71,7 +71,7 @@ pub async fn run_for_test_target(
         if !result.is_interrupted() {
             let test_result_message = TestResultMessage::new(
                 &result,
-                &forge_config.output_config,
+                forge_config.output_config.detailed_resources,
                 forge_config.test_runner_config.tracked_resource,
             );
             ui.println(&test_result_message);
