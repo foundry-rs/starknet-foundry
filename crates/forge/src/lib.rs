@@ -18,7 +18,6 @@ use std::ffi::OsString;
 use std::sync::Arc;
 use std::{fs, num::NonZeroU32, thread::available_parallelism};
 use tokio::runtime::Builder;
-use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
 pub mod block_number_map;
 mod clean;
@@ -366,7 +365,7 @@ fn check_requirements(output_on_success: bool, ui: &UI) -> Result<()> {
 
     requirements_checker.add_requirement(Requirement {
         name: "Universal Sierra Compiler".to_string(),
-        command: RefCell::new(UniversalSierraCompilerCommand::new().arg("--version").command()),
+        command: RefCell::new(universal_sierra_compiler_api::version_command()?),
         minimal_version: MINIMAL_USC_VERSION,
         minimal_recommended_version: None,
         helper_text: "Reinstall `snforge` using the same installation method or follow instructions from https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#universal-sierra-compiler-update".to_string(),
