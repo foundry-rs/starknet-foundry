@@ -11,7 +11,7 @@ type Selector = String;
 #[derive(Debug, Clone)]
 pub struct SingleTestGasInfo {
     pub gas_used: GasVector,
-    pub report_data: ReportData,
+    pub report_data: Option<ReportData>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -19,36 +19,32 @@ pub struct ReportData(BTreeMap<ContractName, ContractInfo>);
 
 #[derive(Debug, Clone, Default)]
 pub struct ContractInfo {
-    pub gas_used: GasVector,
-    pub functions: BTreeMap<Selector, SelectorReportData>,
+    pub(super) gas_used: GasVector,
+    pub(super) functions: BTreeMap<Selector, SelectorReportData>,
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct SelectorReportData {
-    pub gas_stats: GasStats,
-    pub n_calls: u64,
-    pub records: Vec<u64>,
+    pub(super) gas_stats: GasStats,
+    pub(super) n_calls: u64,
+    pub(super) records: Vec<u64>,
 }
 
 impl SingleTestGasInfo {
     #[must_use]
-    pub fn new(gas_used: GasVector) -> Self {
+    pub(crate) fn new(gas_used: GasVector) -> Self {
         Self {
             gas_used,
-            report_data: ReportData::default(),
+            report_data: None,
         }
     }
 
-    #[must_use]
-    pub fn new_with_report(
-        gas_used: GasVector,
-        call_trace: &CallTrace,
+    pub(crate) fn get_with_report_data(
+        self,
+        trace: &CallTrace,
         contracts_data: &ContractsDataStore,
     ) -> Self {
-        Self::new(gas_used).collect_gas_data(call_trace, contracts_data)
-    }
-
-    fn collect_gas_data(mut self, trace: &CallTrace, contracts_data: &ContractsDataStore) -> Self {
+        let mut report_data = ReportData::default();
         let mut stack = trace.nested_calls.clone();
 
         while let Some(call_trace_node) = stack.pop() {
@@ -66,21 +62,27 @@ impl SingleTestGasInfo {
                     .expect("Gas report data must be updated after test execution")
                     .get_gas();
 
-                self.update_entry(contract_name, selector, gas);
+                report_data.update_entry(contract_name, selector, gas);
                 stack.extend(call.nested_calls.clone());
             }
         }
-        self.finalize();
-        self
-    }
+        report_data.finalize();
 
+        Self {
+            gas_used: self.gas_used,
+            report_data: Some(report_data),
+        }
+    }
+}
+
+impl ReportData {
     fn update_entry(
         &mut self,
         contract_name: ContractName,
         selector: Selector,
         gas_used: GasVector,
     ) {
-        let contract_info = self.report_data.0.entry(contract_name).or_default();
+        let contract_info = self.0.entry(contract_name).or_default();
 
         let current_gas = contract_info.gas_used;
         contract_info.gas_used = current_gas.checked_add(gas_used).unwrap_or_else(|| {
@@ -93,7 +95,7 @@ impl SingleTestGasInfo {
     }
 
     fn finalize(&mut self) {
-        for contract_info in self.report_data.0.values_mut() {
+        for contract_info in self.0.values_mut() {
             for gas_info in contract_info.functions.values_mut() {
                 gas_info.gas_stats = GasStats::new(&gas_info.records);
             }
