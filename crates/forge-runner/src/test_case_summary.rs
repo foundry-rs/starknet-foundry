@@ -302,14 +302,14 @@ impl TestCaseSummary<Single> {
             &fork_data,
         );
 
+        let gas_info = SingleTestGasInfo::new(gas_used);
         let gas_info = if gas_report_enabled {
-            SingleTestGasInfo::new_with_report(
-                gas_used,
+            gas_info.get_with_report_data(
                 &call_trace.borrow(),
                 &ContractsDataStore::new(contracts_data, &fork_data),
             )
         } else {
-            SingleTestGasInfo::new(gas_used)
+            gas_info
         };
 
         match status {
