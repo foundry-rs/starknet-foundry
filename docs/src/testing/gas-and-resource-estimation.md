@@ -17,6 +17,38 @@ When the test passes with no errors, estimated gas is displayed this way:
 This gas calculation is based on the collected Sierra gas or VM resources (that you can [display additionally on demand](#usage)),
 storage updates, events and l1 <> l2 messages.
 
+#### Gas Report
+
+For individual tests, more detailed L2 gas usage can be displayed by passing the [`--gas-report`](../appendix/snforge/test.md#--gas-report) flag.
+This will generate a table that shows gas statistics for each contract and function.
+
+```shell
+$ snforge test --gas-report
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Collected 1 test(s) from hello_starknet package
+Running 1 test(s) from tests/
+[PASS] hello_starknet_integrationtest::test_contract::test_increase_balance (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~998280)
+╭------------------------+-------+-------+-------+---------+---------╮
+| HelloStarknet Contract |       |       |       |         |         |
++====================================================================+
+| Function Name          | Min   | Max   | Avg   | Std Dev | # Calls |
+|------------------------+-------+-------+-------+---------+---------|
+| get_balance            | 13340 | 13340 | 13340 | 0       | 4       |
+|------------------------+-------+-------+-------+---------+---------|
+| increase_balance       | 25540 | 61240 | 37440 | 16829   | 3       |
+╰------------------------+-------+-------+-------+---------+---------╯
+```
+
+</details>
+<br>
+
+Note that gas report data calculation ignores state changes, the cost of declared classes, Starknet OS overhead, L1 handler payload length and calldata payload length.
+
 ### Fuzzed Tests
 
 While using the fuzzing feature additional gas statistics will be displayed:
