@@ -170,7 +170,7 @@ mod tests {
         let toml_str = r#"
             mainnet = "https://mainnet.example.com"
             custom = "https://custom.example.com"
-            sepoila = "https://sepolia.example.com"
+            wrong_key = "https://sepolia.example.com"
         "#;
 
         let result: Result<NetworksConfig, _> = toml::from_str(toml_str);
