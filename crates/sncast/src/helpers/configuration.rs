@@ -128,7 +128,7 @@ mod tests {
             Some(&"https://mainnet.example.com".to_string())
         );
         assert_eq!(
-            networks.get_url(Network::Mainnet),
+            networks.get_url(Network::Sepolia),
             Some(&"https://sepolia.example.com".to_string())
         );
         assert_eq!(
