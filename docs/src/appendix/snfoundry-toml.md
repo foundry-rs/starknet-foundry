@@ -94,7 +94,7 @@ block-explorer = "StarkScan"
 
 The URLs of the predefined networks can be configured.
 When you use `--network <network_name>`, `sncast` first checks whether you have a custom URL configured for that network.
-If none is found, it falls back to the default behavior (public RPC provider for `mainnet`/`sepolia`; auto-detection for `devnet`).
+In the absence of a user-defined value, the default configuration is applied - public RPC provider is used for `mainnet` and `sepolia`, and the `devnet` endpoint is determined automatically.
 
 ```toml
 [sncast.myprofile.networks]
