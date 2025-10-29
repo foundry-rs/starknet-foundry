@@ -22,6 +22,7 @@ storage updates, events and l1 <> l2 messages.
 For individual tests, more detailed L2 gas usage can be displayed by passing the [`--gas-report`](../appendix/snforge/test.md#--gas-report) flag.
 This will generate a table that shows gas statistics for each contract and function.
 
+<!-- { "ignored": true } -->
 ```shell
 $ snforge test --gas-report
 ```
