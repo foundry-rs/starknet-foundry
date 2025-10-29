@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added 
 
-- Possibility to specify custom providers used by `--network` flag via `sncast` profile
+- Possibility to configure urls of predefined networks used by `--network` flag via `sncast` profile
 
 ## [0.51.1] - 2025-10-23
 
