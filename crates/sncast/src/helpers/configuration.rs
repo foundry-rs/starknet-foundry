@@ -1,5 +1,5 @@
 use super::block_explorer;
-use crate::ValidatedWaitParams;
+use crate::{Network, ValidatedWaitParams};
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use configuration::Config;
@@ -23,16 +23,15 @@ pub struct NetworksConfig {
 
 impl NetworksConfig {
     #[must_use]
-    pub fn get(&self, network: &str) -> Option<&String> {
+    pub fn get_url(&self, network: Network) -> Option<&String> {
         match network {
-            "mainnet" => self.mainnet.as_ref(),
-            "sepolia" => self.sepolia.as_ref(),
-            "devnet" => self.devnet.as_ref(),
-            _ => None,
+            Network::Mainnet => self.mainnet.as_ref(),
+            Network::Sepolia => self.sepolia.as_ref(),
+            Network::Devnet => self.devnet.as_ref(),
         }
     }
 
-    pub fn merge(&mut self, other: &NetworksConfig) {
+    pub fn override_with(&mut self, other: &NetworksConfig) {
         if other.mainnet.is_some() {
             self.mainnet.clone_from(&other.mainnet);
         }
@@ -83,7 +82,7 @@ pub struct CastConfig {
     pub show_explorer_links: bool,
 
     #[serde(default)]
-    /// Custom network URLs - mainnet, sepolia, and devnet are supported
+    /// Configurable urls of predefined networks - mainnet, sepolia, and devnet are supported
     pub networks: NetworksConfig,
 }
 
@@ -125,22 +124,21 @@ mod tests {
         };
 
         assert_eq!(
-            networks.get("mainnet"),
+            networks.get_url(Network::Mainnet),
             Some(&"https://mainnet.example.com".to_string())
         );
         assert_eq!(
-            networks.get("sepolia"),
+            networks.get_url(Network::Mainnet),
             Some(&"https://sepolia.example.com".to_string())
         );
         assert_eq!(
-            networks.get("devnet"),
+            networks.get_url(Network::Devnet),
             Some(&"https://devnet.example.com".to_string())
         );
-        assert_eq!(networks.get("custom"), None);
     }
 
     #[test]
-    fn test_networks_config_merge() {
+    fn test_networks_config_override() {
         let mut global = NetworksConfig {
             mainnet: Some("https://global-mainnet.example.com".to_string()),
             sepolia: Some("https://global-sepolia.example.com".to_string()),
@@ -152,7 +150,7 @@ mod tests {
             devnet: None,
         };
 
-        global.merge(&local);
+        global.override_with(&local);
 
         // Local mainnet should override global
         assert_eq!(

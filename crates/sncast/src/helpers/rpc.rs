@@ -53,9 +53,7 @@ impl RpcArgs {
     }
 
     async fn resolve_network_url(&self, network: &Network, config: &CastConfig) -> Result<String> {
-        let network_key = network.to_string().to_lowercase();
-
-        if let Some(custom_url) = config.networks.get(&network_key) {
+        if let Some(custom_url) = config.networks.get_url(*network) {
             Ok(custom_url.clone())
         } else {
             network.url(&FreeProvider::semi_random()).await
