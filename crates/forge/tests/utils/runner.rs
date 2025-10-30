@@ -52,7 +52,7 @@ impl Contract {
         }
     }
 
-    pub fn from_code_path(name: impl Into<String>, path: &Path) -> Result<Self> {
+    pub fn from_code_path(name: impl Into<String>, path: impl AsRef<Path>) -> Result<Self> {
         let code = fs::read_to_string(path)?;
         Ok(Self {
             name: name.into(),
