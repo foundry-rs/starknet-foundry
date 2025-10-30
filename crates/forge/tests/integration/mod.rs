@@ -40,3 +40,4 @@ mod syscalls;
 mod test_state;
 mod too_many_events;
 mod trace;
+mod reverts;
