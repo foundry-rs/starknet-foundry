@@ -143,7 +143,7 @@ impl Display for ContractId {
 
 fn get_contract_id(contracts_data: &ContractsDataStore, class_hash: ClassHash) -> ContractId {
     match contracts_data.get_contract_name(&class_hash) {
-        Some(name) => ContractId::LocalContract(name.0.to_string()),
+        Some(name) => ContractId::LocalContract(name.0.clone()),
         None => ContractId::ForkedContract(class_hash),
     }
 }
