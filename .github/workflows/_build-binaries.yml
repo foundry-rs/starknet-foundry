@@ -11,6 +11,9 @@ on:
         required: false
         type: string
 
+env:
+  ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+
 jobs:
   build-binaries:
     name: Build ${{ matrix.target }}

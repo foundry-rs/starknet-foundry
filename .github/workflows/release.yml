@@ -61,6 +61,7 @@ jobs:
     needs: verify-version
     if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
     uses: ./.github/workflows/_build-binaries.yml
+    secrets: inherit
     with:
       version: ${{ needs.verify-version.outputs.version }}
 

@@ -1,3 +1,6 @@
+[build.env]
+passthrough = ["ALCHEMY_API_KEY"]
+
 # TODO(#3790) Setup cross for native
 #[build]
 #pre-build = [
