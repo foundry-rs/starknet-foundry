@@ -1,8 +1,7 @@
+use crate::assert_cleaned_output;
 use crate::e2e::common::runner::{
     BASE_FILE_PATTERNS, Package, setup_package, setup_package_with_file_patterns, test_runner,
 };
-use indoc::indoc;
-use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[test]
 fn basic() {
@@ -13,66 +12,19 @@ fn basic() {
         .assert()
         .code(0);
 
-    assert_stdout_contains(
-        output,
-        indoc! {r"
-    [..]Compiling[..]
-    [..]Finished[..]
-
-
-    Collected 1 test(s) from simple_package package
-    Running 0 test(s) from src/
-    Running 1 test(s) from tests/
-    [PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~[..], l2_gas: ~[..])
-    ╭------------------------+-------+-------+-------+---------+---------╮
-    | HelloStarknet Contract |       |       |       |         |         |
-    +====================================================================+
-    | Function Name          | Min   | Max   | Avg   | Std Dev | # Calls |
-    |------------------------+-------+-------+-------+---------+---------|
-    | get_balance            | 13340 | 13340 | 13340 | 0       | 2       |
-    |------------------------+-------+-------+-------+---------+---------|
-    | increase_balance       | 24940 | 24940 | 24940 | 0       | 1       |
-    ╰------------------------+-------+-------+-------+---------+---------╯
-
-    Tests: 1 passed, 0 failed, 0 ignored, [..] filtered out
-    "},
-    );
+    assert_cleaned_output!(output);
 }
 
 #[test]
 fn recursive_calls() {
     let temp = setup_package("debugging");
-
     let output = test_runner(&temp)
-        .arg("test_debugging_trace_success")
         .arg("--gas-report")
+        .arg("test_debugging_trace_success")
         .assert()
         .code(0);
 
-    assert_stdout_contains(
-        output,
-        indoc! {r"
-    [..]Compiling[..]
-    [..]Finished[..]
-
-
-    Collected 1 test(s) from debugging package
-    Running 0 test(s) from src/
-    Running 1 test(s) from tests/
-    [PASS] debugging_integrationtest::test_trace::test_debugging_trace_success (l1_gas: ~0, l1_data_gas: ~[..], l2_gas: ~[..])
-    ╭-------------------------+-------+--------+--------+---------+---------╮
-    | SimpleContract Contract |       |        |        |         |         |
-    +=======================================================================+
-    | Function Name           | Min   | Max    | Avg    | Std Dev | # Calls |
-    |-------------------------+-------+--------+--------+---------+---------|
-    | execute_calls           | 11680 | 609080 | 183924 | 235859  | 5       |
-    |-------------------------+-------+--------+--------+---------+---------|
-    | fail                    | 17950 | 17950  | 17950  | 0       | 1       |
-    ╰-------------------------+-------+--------+--------+---------+---------╯
-
-    Tests: 1 passed, 0 failed, 0 ignored, [..] filtered out
-    "},
-    );
+    assert_cleaned_output!(output);
 }
 
 #[test]
@@ -84,38 +36,7 @@ fn multiple_contracts_and_constructor() {
         .assert()
         .code(0);
 
-    assert_stdout_contains(
-        output,
-        indoc! {r"
-    [..]Compiling[..]
-    [..]Finished[..]
-
-
-    Collected 1 test(s) from simple_package_with_cheats package
-    Running 0 test(s) from src/
-    Running 1 test(s) from tests/
-    [PASS] simple_package_with_cheats_integrationtest::contract::call_and_invoke_proxy (l1_gas: ~0, l1_data_gas: ~[..], l2_gas: ~[..])
-    ╭------------------------+-------+-------+-------+---------+---------╮
-    | HelloStarknet Contract |       |       |       |         |         |
-    +====================================================================+
-    | Function Name          | Min   | Max   | Avg   | Std Dev | # Calls |
-    |------------------------+-------+-------+-------+---------+---------|
-    | get_block_number       | 15780 | 15780 | 15780 | 0       | 2       |
-    ╰------------------------+-------+-------+-------+---------+---------╯
-
-    ╭-----------------------------+--------+--------+--------+---------+---------╮
-    | HelloStarknetProxy Contract |        |        |        |         |         |
-    +============================================================================+
-    | Function Name               | Min    | Max    | Avg    | Std Dev | # Calls |
-    |-----------------------------+--------+--------+--------+---------+---------|
-    | constructor                 | 14650  | 14650  | 14650  | 0       | 1       |
-    |-----------------------------+--------+--------+--------+---------+---------|
-    | get_block_number            | 125280 | 125280 | 125280 | 0       | 2       |
-    ╰-----------------------------+--------+--------+--------+---------+---------╯
-
-    Tests: 1 passed, 0 failed, 0 ignored, [..] filtered out
-    "},
-    );
+    assert_cleaned_output!(output);
 }
 
 #[test]
@@ -124,44 +45,12 @@ fn fork() {
         setup_package_with_file_patterns(Package::Name("forking".to_string()), BASE_FILE_PATTERNS);
 
     let output = test_runner(&temp)
-        .arg("test_track_resources")
         .arg("--gas-report")
+        .arg("test_track_resources")
         .assert()
         .code(0);
 
-    assert_stdout_contains(
-        output,
-        indoc! {r"
-        [..]Compiling[..]
-        [..]Finished[..]
-
-        Collected 1 test(s) from forking package
-        Running 1 test(s) from src/
-        [PASS] forking::tests::test_track_resources (l1_gas: ~0, l1_data_gas: ~[..], l2_gas: ~[..])
-        ╭---------------------------+-------+-------+-------+---------+---------╮
-        | forked contract           |       |       |       |         |         |
-        | (class hash: 0x06a7…1550) |       |       |       |         |         |
-        +=======================================================================+
-        | Function Name             | Min   | Max   | Avg   | Std Dev | # Calls |
-        |---------------------------+-------+-------+-------+---------+---------|
-        | get_balance               | 40000 | 40000 | 40000 | 0       | 1       |
-        |---------------------------+-------+-------+-------+---------+---------|
-        | increase_balance          | 40000 | 40000 | 40000 | 0       | 1       |
-        ╰---------------------------+-------+-------+-------+---------+---------╯
-        ╭---------------------------+-------+-------+-------+---------+---------╮
-        | forked contract           |       |       |       |         |         |
-        | (class hash: 0x07aa…af4b) |       |       |       |         |         |
-        +=======================================================================+
-        | Function Name             | Min   | Max   | Avg   | Std Dev | # Calls |
-        |---------------------------+-------+-------+-------+---------+---------|
-        | get_balance               | 13840 | 13840 | 13840 | 0       | 1       |
-        |---------------------------+-------+-------+-------+---------+---------|
-        | increase_balance          | 25840 | 25840 | 25840 | 0       | 1       |
-        ╰---------------------------+-------+-------+-------+---------+---------╯
-
-        Tests: 1 passed, 0 failed, 0 ignored, [..] filtered out
-        "},
-    );
+    assert_cleaned_output!(output);
 }
 
 #[test]

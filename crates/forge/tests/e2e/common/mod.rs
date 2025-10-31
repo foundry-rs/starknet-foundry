@@ -3,6 +3,7 @@ use cairo_annotations::trace_data::{
     CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
 };
 
+mod output;
 pub mod runner;
 
 #[cfg(not(feature = "cairo-native"))]
