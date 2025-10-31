@@ -6,7 +6,6 @@ use include_dir::{Dir, DirEntry, include_dir};
 use indoc::formatdoc;
 use scarb_api::{ScarbCommand, ensure_scarb_available};
 use semver::Version;
-use shared::consts::free_rpc_provider_url;
 use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
@@ -152,15 +151,14 @@ fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
         # and https://foundry-rs.github.io/starknet-foundry/projects/configuration.html for more information
 
         # [sncast.default]                                         # Define a profile name
-        # url = "{default_rpc_url}" # Url of the RPC provider
+        # url = "<YOUR_RPC_PROVIDER>" # Url of the RPC provider
         # accounts-file = "../account-file"                        # Path to the file with the account data
         # account = "mainuser"                                     # Account from `accounts_file` or default account file that will be used for the transactions
         # keystore = "~/keystore"                                  # Path to the keystore file
         # wait-params = {{ timeout = 300, retry-interval = 10 }}     # Wait for submitted transaction parameters
         # block-explorer = "StarkScan"                             # Block explorer service used to display links to transaction details
         # show-explorer-links = true                               # Print links pointing to pages with transaction details in the chosen block explorer
-        "#,
-            default_rpc_url = free_rpc_provider_url(),
+        "#
         },
     )?;
 
@@ -309,7 +307,7 @@ fn add_fork_config(document: &mut DocumentMut) -> Result<()> {
 
     let mut fork_table = Table::new();
     fork_table.insert("name", Item::Value(Value::from("SEPOLIA_LATEST")));
-    fork_table.insert("url", Item::Value(Value::from(free_rpc_provider_url())));
+    fork_table.insert("url", Item::Value(Value::from("<YOUR_RPC_URL>")));
 
     let mut block_id_table = Table::new();
     block_id_table.insert("tag", Item::Value(Value::from("latest")));
