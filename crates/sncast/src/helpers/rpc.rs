@@ -69,6 +69,7 @@ impl FreeProvider {
         Self::Alchemy
     }
 
+    #[must_use]
     pub fn mainnet_rpc(&self) -> String {
         match self {
             FreeProvider::Alchemy => {
@@ -79,6 +80,7 @@ impl FreeProvider {
         }
     }
 
+    #[must_use]
     pub fn sepolia_rpc(&self) -> String {
         match self {
             FreeProvider::Alchemy => {
