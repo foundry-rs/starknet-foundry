@@ -2,6 +2,8 @@ use crate::assert_cleaned_output;
 use crate::e2e::common::runner::{
     BASE_FILE_PATTERNS, Package, setup_package, setup_package_with_file_patterns, test_runner,
 };
+use indoc::indoc;
+use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[test]
 fn basic() {
