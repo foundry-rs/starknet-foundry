@@ -79,7 +79,7 @@ pub fn run_script_command(
                 )))
             };
             let url = runtime
-                .block_on(run.rpc.get_url(&config.url))
+                .block_on(run.rpc.get_url(&config))
                 .context("Failed to get url")?;
             let result = starknet_commands::script::run::run(
                 &run.script_name,
