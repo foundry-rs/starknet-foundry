@@ -1,3 +1,8 @@
+use crate::utils::runner::replace_snforge_std_with_snforge_std_deprecated;
+use crate::utils::{
+    get_assert_macros_version, get_snforge_std_entry, get_std_name, get_std_path,
+    tempdir_with_tool_versions, use_snforge_std_deprecated,
+};
 use assert_fs::TempDir;
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
@@ -9,11 +14,6 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
 use std::{env, fs};
-use test_utils::runner::replace_snforge_std_with_snforge_std_deprecated;
-use test_utils::{
-    get_assert_macros_version, get_snforge_std_entry, get_std_name, get_std_path,
-    tempdir_with_tool_versions, use_snforge_std_deprecated,
-};
 use toml_edit::{DocumentMut, Item, value};
 use walkdir::WalkDir;
 
