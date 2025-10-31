@@ -7,6 +7,9 @@ use foundry_ui::UI;
 use shared::consts::RPC_URL_VERSION;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet::providers::{JsonRpcClient, jsonrpc::HttpTransport};
+use std::env;
+
+const ALCHEMY_API_KEY: &str = env!("ALCHEMY_API_KEY");
 
 #[derive(Args, Clone, Debug, Default)]
 #[group(required = false, multiple = false)]
@@ -57,13 +60,35 @@ impl RpcArgs {
 }
 
 pub enum FreeProvider {
-    Blast,
+    Alchemy,
 }
 
 impl FreeProvider {
     #[must_use]
     pub fn semi_random() -> Self {
-        Self::Blast
+        Self::Alchemy
+    }
+
+    #[must_use]
+    pub fn mainnet_rpc(&self) -> String {
+        match self {
+            FreeProvider::Alchemy => {
+                format!(
+                    "https://starknet-mainnet.g.alchemy.com/starknet/version/rpc/{RPC_URL_VERSION}/{ALCHEMY_API_KEY}"
+                )
+            }
+        }
+    }
+
+    #[must_use]
+    pub fn sepolia_rpc(&self) -> String {
+        match self {
+            FreeProvider::Alchemy => {
+                format!(
+                    "https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/{RPC_URL_VERSION}/{ALCHEMY_API_KEY}"
+                )
+            }
+        }
     }
 }
 
@@ -76,12 +101,12 @@ impl Network {
         }
     }
 
-    fn free_mainnet_rpc(_provider: &FreeProvider) -> String {
-        format!("https://starknet-mainnet.public.blastapi.io/rpc/{RPC_URL_VERSION}")
+    fn free_mainnet_rpc(provider: &FreeProvider) -> String {
+        provider.mainnet_rpc()
     }
 
-    fn free_sepolia_rpc(_provider: &FreeProvider) -> String {
-        format!("https://starknet-sepolia.public.blastapi.io/rpc/{RPC_URL_VERSION}")
+    fn free_sepolia_rpc(provider: &FreeProvider) -> String {
+        provider.sepolia_rpc()
     }
 
     async fn devnet_rpc(_provider: &FreeProvider) -> Result<String> {
@@ -111,14 +136,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_mainnet_url_happy_case() {
-        let provider = get_provider(&Network::free_mainnet_rpc(&FreeProvider::Blast)).unwrap();
+        let provider = get_provider(&Network::free_mainnet_rpc(&FreeProvider::Alchemy)).unwrap();
         let spec_version = provider.spec_version().await.unwrap();
         assert!(is_expected_version(&Version::parse(&spec_version).unwrap()));
     }
 
     #[tokio::test]
     async fn test_sepolia_url_happy_case() {
-        let provider = get_provider(&Network::free_sepolia_rpc(&FreeProvider::Blast)).unwrap();
+        let provider = get_provider(&Network::free_sepolia_rpc(&FreeProvider::Alchemy)).unwrap();
         let spec_version = provider.spec_version().await.unwrap();
         assert!(is_expected_version(&Version::parse(&spec_version).unwrap()));
     }
