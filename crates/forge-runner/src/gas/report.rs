@@ -109,6 +109,13 @@ impl ReportData {
 
 impl Display for ReportData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.0.is_empty() {
+            writeln!(
+                f,
+                "\nNo contract gas usage data to display. Make sure your test include transactions."
+            )?;
+        }
+
         for (name, contract_info) in &self.0 {
             if !contract_info.functions.is_empty() {
                 let table = format_table_output(contract_info, name);
