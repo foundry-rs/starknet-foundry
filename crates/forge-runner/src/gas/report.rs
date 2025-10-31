@@ -15,7 +15,7 @@ type Selector = String;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Ord, Eq)]
 pub enum ContractId {
-    TestContract(ContractName),
+    LocalContract(ContractName),
     ForkedContract(ClassHash),
 }
 
@@ -129,7 +129,7 @@ impl Display for ReportData {
 impl Display for ContractId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = match self {
-            ContractId::TestContract(name) => format!("{name} Contract"),
+            ContractId::LocalContract(name) => format!("{name} Contract"),
             ContractId::ForkedContract(class_hash) => {
                 format!(
                     "forked contract\n(class hash: {})",
@@ -143,7 +143,7 @@ impl Display for ContractId {
 
 fn get_contract_id(contracts_data: &ContractsDataStore, class_hash: ClassHash) -> ContractId {
     match contracts_data.get_contract_name(&class_hash) {
-        Some(name) => ContractId::TestContract(name.0.to_string()),
+        Some(name) => ContractId::LocalContract(name.0.to_string()),
         None => ContractId::ForkedContract(class_hash),
     }
 }
