@@ -67,7 +67,7 @@ fn unique_artifacts(
     artifact_representations
         .into_iter()
         .flat_map(StarknetArtifactsRepresentation::artifacts)
-        .unique_by(|(name, _)| name.to_string())
+        .unique_by(|(name, _)| name.clone())
         .filter(|(name, _)| !current_artifacts.contains_key(name))
         .collect()
 }
@@ -78,7 +78,7 @@ fn compile_artifacts(
     artifacts
         .into_par_iter()
         .map(|(name, path)| {
-            compile_artifact_at_path(&path).map(|artifact| (name.to_string(), (artifact, path)))
+            compile_artifact_at_path(&path).map(|artifact| (name.clone(), (artifact, path)))
         })
         .collect::<Result<_>>()
 }
