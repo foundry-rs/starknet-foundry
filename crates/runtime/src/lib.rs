@@ -279,6 +279,7 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
             &selector,
             BufferReader::new(&inputs),
             &mut self.extended_runtime,
+            vm,
         );
 
         let res = match result {
@@ -423,6 +424,7 @@ pub trait ExtensionLogic {
         _selector: &str,
         _input_reader: BufferReader,
         _extended_runtime: &mut Self::Runtime,
+        _vm: &VirtualMachine,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         Ok(CheatcodeHandlingResult::Forwarded)
     }

@@ -81,6 +81,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
         selector: &str,
         mut input_reader: BufferReader<'_>,
         extended_runtime: &mut Self::Runtime,
+        vm: &VirtualMachine,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         if let Some(oracle_selector) = self
             .oracle_hint_service
@@ -552,6 +553,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .cheat_block_hash(block_number, operation);
                 Ok(CheatcodeHandlingResult::from_serializable(()))
             }
+            "get_current_step" => Ok(CheatcodeHandlingResult::from_serializable(
+                vm.get_current_step(),
+            )),
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         }
     }

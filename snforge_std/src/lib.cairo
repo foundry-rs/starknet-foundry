@@ -126,6 +126,8 @@ pub mod fuzzable;
 
 pub mod signature;
 
+pub mod testing;
+
 pub mod trace;
 
 #[doc(hidden)]
