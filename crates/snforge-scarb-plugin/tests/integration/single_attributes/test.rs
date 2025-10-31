@@ -29,8 +29,11 @@ fn appends_internal_config_and_executable() {
                 core::array::ArrayTrait::span(@arr)
             }
 
-            #[__internal_config_statement]
-            fn empty_fn() {}
+            fn empty_fn() {
+                if snforge_std::_internals::is_config_run() {
+                    return;
+                }
+            }
         ",
     );
 }
