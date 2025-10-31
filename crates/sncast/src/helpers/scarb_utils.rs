@@ -1,16 +1,17 @@
+use crate::helpers::artifacts::CastStarknetContractArtifacts;
 use anyhow::{Context, Result, anyhow};
 use camino::{Utf8Path, Utf8PathBuf};
 use foundry_ui::{UI, components::warning::WarningMessage};
+use scarb_api::metadata::{MetadataError, MetadataOpts, metadata_for_dir, metadata_with_opts};
 use scarb_api::{
-    ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
+    CompilationOpts, ScarbCommand, ScarbCommandError, ensure_scarb_available,
     get_contracts_artifacts_and_source_sierra_paths,
-    metadata::{Metadata, MetadataCommand, PackageMetadata},
+    metadata::{Metadata, PackageMetadata},
     target_dir_for_workspace,
 };
 use scarb_ui::args::PackagesFilter;
 use shared::command::CommandExt;
 use std::collections::HashMap;
-use std::env;
 use std::str::FromStr;
 
 pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
@@ -18,7 +19,7 @@ pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
 }
 
 pub fn get_scarb_manifest_for(dir: &Utf8Path) -> Result<Utf8PathBuf> {
-    ScarbCommand::new().ensure_available()?;
+    ensure_scarb_available()?;
 
     let output = ScarbCommand::new()
         .current_dir(dir)
@@ -36,34 +37,23 @@ pub fn get_scarb_manifest_for(dir: &Utf8Path) -> Result<Utf8PathBuf> {
     Ok(path)
 }
 
-fn get_scarb_metadata_command(manifest_path: &Utf8PathBuf) -> Result<MetadataCommand> {
-    ScarbCommand::new().ensure_available()?;
-
-    let mut command = ScarbCommand::metadata();
-    command.inherit_stderr().manifest_path(manifest_path);
-    Ok(command)
+pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<Metadata, MetadataError> {
+    metadata_with_opts(MetadataOpts {
+        current_dir: Some(
+            manifest_path
+                .parent()
+                .expect("manifest should have parent")
+                .into(),
+        ),
+        no_deps: true,
+        ..MetadataOpts::default()
+    })
 }
 
-fn execute_scarb_metadata_command(command: &MetadataCommand) -> Result<Metadata> {
-    command.exec().context(format!(
-        "Failed to read the `Scarb.toml` manifest file. Doesn't exist in the current or parent directories = {}",
-        env::current_dir()
-            .expect("Failed to access the current directory")
-            .into_os_string()
-            .into_string()
-            .expect("Failed to convert current directory into a string")
-    ))
-}
-
-pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<Metadata> {
-    let mut command = get_scarb_metadata_command(manifest_path)?;
-    let command = command.no_deps();
-    execute_scarb_metadata_command(command)
-}
-
-pub fn get_scarb_metadata_with_deps(manifest_path: &Utf8PathBuf) -> Result<Metadata> {
-    let command = get_scarb_metadata_command(manifest_path)?;
-    execute_scarb_metadata_command(&command)
+pub fn get_scarb_metadata_with_deps(
+    manifest_path: &Utf8PathBuf,
+) -> Result<Metadata, MetadataError> {
+    metadata_for_dir(manifest_path.parent().expect("manifest should have parent"))
 }
 
 pub fn get_cairo_version(manifest_path: &Utf8PathBuf) -> Result<String> {
@@ -157,7 +147,7 @@ pub fn build_and_load_artifacts(
     config: &BuildConfig,
     build_for_script: bool,
     ui: &UI,
-) -> Result<HashMap<String, StarknetContractArtifacts>> {
+) -> Result<HashMap<String, CastStarknetContractArtifacts>> {
     // TODO (#2042): Remove this logic, always use release as default
     let default_profile = if build_for_script { "dev" } else { "release" };
     build(package, config, default_profile)
@@ -170,11 +160,11 @@ pub fn build_and_load_artifacts(
         Ok(get_contracts_artifacts_and_source_sierra_paths(
             &target_dir.join(&config.profile),
             package,
-            false,
-            ui
+            ui,
+            CompilationOpts::default()
         ).context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")?
         .into_iter()
-        .map(|(name, (artifacts, _))| (name, artifacts))
+        .map(|(name, (artifacts, _))| (name, CastStarknetContractArtifacts { sierra: artifacts.sierra, casm: serde_json::to_string(&artifacts.casm).expect("valid serialization")  }))
         .collect())
     } else {
         let profile = &config.profile;
@@ -184,11 +174,11 @@ pub fn build_and_load_artifacts(
         Ok(get_contracts_artifacts_and_source_sierra_paths(
             &target_dir.join(default_profile),
             package,
-            false,
-            ui
+            ui,
+            CompilationOpts::default(),
         ).context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")?
         .into_iter()
-        .map(|(name, (artifacts, _))| (name, artifacts))
+        .map(|(name, (artifacts, _))| (name, CastStarknetContractArtifacts { sierra: artifacts.sierra, casm: serde_json::to_string(&artifacts.casm).expect("valid serialization") }))
         .collect())
     }
 }
@@ -202,16 +192,6 @@ mod tests {
         let metadata =
             get_scarb_metadata(&"tests/data/contracts/constructor_with_params/Scarb.toml".into());
         assert!(metadata.is_ok());
-    }
-
-    #[test]
-    fn test_get_scarb_metadata_not_found() {
-        let metadata_err = get_scarb_metadata(&"Scarb.toml".into()).unwrap_err();
-        assert!(
-            metadata_err
-                .to_string()
-                .contains("Failed to read the `Scarb.toml` manifest file.")
-        );
     }
 
     #[test]

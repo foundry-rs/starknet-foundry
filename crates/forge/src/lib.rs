@@ -9,7 +9,8 @@ use forge_runner::forge_config::ForgeTrackedResource;
 use foundry_ui::components::warning::WarningMessage;
 use foundry_ui::{Message, UI};
 use run_tests::workspace::run_for_workspace;
-use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
+use scarb_api::ScarbCommand;
+use scarb_api::metadata::metadata;
 use scarb_ui::args::{FeaturesSpec, PackagesFilter, ProfileSpec};
 use semver::Version;
 use shared::auto_completions::{Completions, generate_completions};
@@ -18,7 +19,6 @@ use std::ffi::OsString;
 use std::sync::Arc;
 use std::{fs, num::NonZeroU32, thread::available_parallelism};
 use tokio::runtime::Builder;
-use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
 pub mod block_number_map;
 mod clean;
@@ -141,6 +141,13 @@ pub struct TestArgs {
     #[command(flatten)]
     trace_args: TraceArgs,
 
+    /// Run contracts on `cairo-native` instead of the default `cairo-vm`. This will set `tracked-resource` to `sierra-gas`.
+    ///
+    /// Note: Only contracts execution through native is supported, test code itself will still run on `cairo-vm`.
+    #[arg(long)]
+    #[cfg(feature = "cairo-native")]
+    run_native: bool,
+
     /// Use exact matches for `test_filter`
     #[arg(short, long)]
     exact: bool,
@@ -181,14 +188,17 @@ pub struct TestArgs {
 
     /// Save execution traces of all test which have passed and are not fuzz tests
     #[arg(long)]
+    #[cfg_attr(feature = "cairo-native", arg(conflicts_with = "run_native"))]
     save_trace_data: bool,
 
     /// Build profiles of all tests which have passed and are not fuzz tests using the cairo-profiler
-    #[arg(long, conflicts_with = "coverage")]
+    #[arg(long, conflicts_with_all = ["coverage"])]
+    #[cfg_attr(feature = "cairo-native", arg(conflicts_with_all = ["run_native", "coverage"]))]
     build_profile: bool,
 
     /// Generate a coverage report for the executed tests which have passed and are not fuzz tests using the cairo-coverage
-    #[arg(long, conflicts_with = "build_profile")]
+    #[arg(long, conflicts_with_all = ["build_profile"])]
+    #[cfg_attr(feature = "cairo-native", arg(conflicts_with_all = ["run_native", "build_profile"]))]
     coverage: bool,
 
     /// Number of maximum steps during a single test. For fuzz tests this value is applied to each subtest separately.
@@ -213,6 +223,21 @@ pub struct TestArgs {
 
     #[command(flatten)]
     scarb_args: ScarbArgs,
+}
+
+impl TestArgs {
+    /// Adjust dependent arguments based on related flags.
+    ///
+    /// This function mutates the `TestArgs` instance to enforce logical coherence
+    /// between fields.
+    pub fn normalize(&mut self) {
+        // Force using `SierraGas` as tracked resource when running with `cairo-native`,
+        // as otherwise it would run on vm.
+        #[cfg(feature = "cairo-native")]
+        if self.run_native {
+            self.tracked_resource = ForgeTrackedResource::SierraGas;
+        }
+    }
 }
 
 #[derive(Parser, Debug)]
@@ -278,7 +303,7 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
         }
         ForgeSubcommand::CleanCache {} => {
             ui.println(&WarningMessage::new("`snforge clean-cache` is deprecated and will be removed in the future. Use `snforge clean cache` instead"));
-            let scarb_metadata = ScarbCommand::metadata().inherit_stderr().run()?;
+            let scarb_metadata = metadata()?;
             let cache_dir = scarb_metadata.workspace.root.join(CACHE_DIR);
 
             if cache_dir.exists() {
@@ -287,7 +312,8 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
 
             Ok(ExitStatus::Success)
         }
-        ForgeSubcommand::Test { args } => {
+        ForgeSubcommand::Test { mut args } => {
+            args.normalize();
             check_requirements(false, &ui)?;
             let cores = if let Ok(available_cores) = available_parallelism() {
                 available_cores.get()
@@ -340,7 +366,7 @@ fn check_requirements(output_on_success: bool, ui: &UI) -> Result<()> {
 
     requirements_checker.add_requirement(Requirement {
         name: "Universal Sierra Compiler".to_string(),
-        command: RefCell::new(UniversalSierraCompilerCommand::new().arg("--version").command()),
+        command: RefCell::new(universal_sierra_compiler_api::version_command()?),
         minimal_version: MINIMAL_USC_VERSION,
         minimal_recommended_version: None,
         helper_text: "Reinstall `snforge` using the same installation method or follow instructions from https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#universal-sierra-compiler-update".to_string(),

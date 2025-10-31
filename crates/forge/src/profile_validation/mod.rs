@@ -18,7 +18,7 @@ pub fn check_profile_compatibility(
         check_coverage_compatibility(scarb_metadata)?;
     }
     if is_backtrace_enabled() {
-        check_backtrace_compatibility(scarb_metadata)?;
+        check_backtrace_compatibility(test_args, scarb_metadata)?;
     }
     Ok(())
 }

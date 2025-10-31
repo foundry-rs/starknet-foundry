@@ -1,8 +1,7 @@
 use super::common::runner::{runner, setup_package, test_runner};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
-use scarb_api::ScarbCommand;
-use scarb_api::metadata::MetadataCommandExt;
+use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use shared::test_utils::output_assert::assert_stdout_contains;
 use std::path::Path;
 
@@ -21,6 +20,10 @@ struct CleanComponentsState {
 }
 
 #[test]
+#[cfg_attr(
+    feature = "cairo-native",
+    ignore = "Native doesn't support coverage yet"
+)]
 fn test_clean_coverage() {
     let temp_dir = setup_package("coverage_project");
 
@@ -54,6 +57,10 @@ fn test_clean_coverage() {
 }
 
 #[test]
+#[cfg_attr(
+    feature = "cairo-native",
+    ignore = "Native doesn't support profiler yet"
+)]
 fn test_clean_profile() {
     let temp_dir = setup_package("coverage_project");
 
@@ -118,6 +125,10 @@ fn test_clean_cache() {
 }
 
 #[test]
+#[cfg_attr(
+    feature = "cairo-native",
+    ignore = "Native doesn't support trace, coverage and profiler yet"
+)]
 fn test_clean_all() {
     let temp_dir = setup_package("coverage_project");
 
@@ -152,7 +163,7 @@ fn test_clean_all_and_component() {
     let clean_components_state = CleanComponentsState {
         coverage: false,
         cache: true,
-        trace: true,
+        trace: false,
         profile: false,
     };
     generate_clean_components(clean_components_state, &temp_dir);
@@ -219,12 +230,12 @@ fn generate_clean_components(state: CleanComponentsState, temp_dir: &TempDir) {
 }
 
 fn check_clean_components_state(path: &Path) -> CleanComponentsState {
-    let scarb_metadata = ScarbCommand::metadata()
-        .inherit_stderr()
-        .current_dir(path)
-        .no_deps()
-        .run()
-        .unwrap();
+    let scarb_metadata = metadata_with_opts(MetadataOpts {
+        no_deps: true,
+        current_dir: Some(path.into()),
+        ..MetadataOpts::default()
+    })
+    .unwrap();
 
     let workspace_root = scarb_metadata.workspace.root;
 

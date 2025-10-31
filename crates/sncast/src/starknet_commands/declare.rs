@@ -3,7 +3,7 @@ use clap::Args;
 use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
 use foundry_ui::UI;
-use scarb_api::StarknetContractArtifacts;
+use sncast::helpers::artifacts::CastStarknetContractArtifacts;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::declare::{
@@ -56,7 +56,7 @@ pub async fn declare(
     fee_args: FeeArgs,
     nonce: Option<Felt>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-    artifacts: &HashMap<String, StarknetContractArtifacts>,
+    artifacts: &HashMap<String, CastStarknetContractArtifacts>,
     wait_config: WaitForTx,
     skip_on_already_declared: bool,
     ui: &UI,

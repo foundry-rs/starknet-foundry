@@ -18,7 +18,7 @@ use starknet_api::block::{
 };
 use starknet_types_core::felt::Felt;
 use std::default::Default;
-use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
+use universal_sierra_compiler_api::representation::RawCasmProgram;
 
 struct PhantomStateReader;
 
@@ -58,9 +58,10 @@ impl StateReader for PhantomStateReader {
     }
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn run_config_pass(
     test_details: &TestDetails,
-    casm_program: &AssembledProgramWithDebugInfo,
+    casm_program: &RawCasmProgram,
     tracked_resource: &ForgeTrackedResource,
 ) -> Result<RawForgeConfig> {
     let program = test_details.try_into_program(casm_program)?;

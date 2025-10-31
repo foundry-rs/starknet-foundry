@@ -82,15 +82,14 @@ pub fn deploy_syscall(
         request.constructor_calldata.0.len(),
     );
 
-    // region: Modified blockifier code
-    let deployer_address = syscall_handler.storage_address();
-    // endregion
+    let deployer_address = syscall_handler.base.call.storage_address;
     let deployer_address_for_calculation = if request.deploy_from_zero {
         ContractAddress::default()
     } else {
         deployer_address
     };
 
+    // region: Modified blockifier code
     let deployed_contract_address =
         if let Some(contract_address) = cheatnet_state.next_address_for_deployment() {
             contract_address
@@ -102,6 +101,7 @@ pub fn deploy_syscall(
                 deployer_address_for_calculation,
             )?
         };
+    // endregion
 
     let ctor_context = ConstructorContext {
         class_hash: request.class_hash,
