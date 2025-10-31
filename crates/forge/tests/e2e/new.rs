@@ -7,7 +7,6 @@ use forge::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use indoc::{formatdoc, indoc};
 use regex::Regex;
 use scarb_api::ScarbCommand;
-use shared::consts::free_rpc_provider_url;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::assert_matches;
 use snapbox::cmd::Command as SnapboxCommand;
@@ -183,13 +182,12 @@ fn get_expected_manifest_content(template: &Template, validate_snforge_std: bool
 
     let target_contract_entry = "[[target.starknet-contract]]\nsierra = true";
 
-    let free_rpc_provider_url = free_rpc_provider_url();
     let fork_config = if let Template::Erc20Contract = template {
         &formatdoc!(
             r#"
             [[tool.snforge.fork]]
             name = "SEPOLIA_LATEST"
-            url = "{free_rpc_provider_url}"
+            url = "<YOUR_RPC_URL>"
             block_id = {{ tag = "latest" }}
         "#
         )
