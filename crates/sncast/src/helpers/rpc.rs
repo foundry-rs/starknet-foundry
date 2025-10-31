@@ -70,7 +70,7 @@ impl FreeProvider {
     pub fn mainnet_rpc(&self) -> String {
         match self {
             FreeProvider::Alchemy => {
-                let api_key = env::var("ALCHEMY_API_KEY").expect("Failed to read api key");
+                let api_key = env::var("ALCHEMY_API_KEY").expect("Failed to read alchemy api key");
                 format!(
                     "https://starknet-mainnet.g.alchemy.com/starknet/version/rpc/{RPC_URL_VERSION}/{api_key}"
                 )
@@ -81,7 +81,7 @@ impl FreeProvider {
     pub fn sepolia_rpc(&self) -> String {
         match self {
             FreeProvider::Alchemy => {
-                let api_key = env::var("ALCHEMY_API_KEY").expect("Failed to read api key");
+                let api_key = env::var("ALCHEMY_API_KEY").expect("Failed to alchemy read api key");
                 format!(
                     "https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/{RPC_URL_VERSION}/{api_key}"
                 )
