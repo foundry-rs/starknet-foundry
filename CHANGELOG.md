@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.51.2] - 2025-10-31
+
+### Cast
+
+#### Changed
+
+- Replaced the free RPC provider used.
+
 ## [0.51.1] - 2025-10-22
 
 ### Forge
