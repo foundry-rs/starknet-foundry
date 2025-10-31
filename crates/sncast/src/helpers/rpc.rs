@@ -9,6 +9,8 @@ use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet::providers::{JsonRpcClient, jsonrpc::HttpTransport};
 use std::env;
 
+const ALCHEMY_API_KEY: &str = env!("ALCHEMY_API_KEY");
+
 #[derive(Args, Clone, Debug, Default)]
 #[group(required = false, multiple = false)]
 pub struct RpcArgs {
@@ -70,9 +72,8 @@ impl FreeProvider {
     pub fn mainnet_rpc(&self) -> String {
         match self {
             FreeProvider::Alchemy => {
-                let api_key = env::var("ALCHEMY_API_KEY").expect("Failed to read alchemy api key");
                 format!(
-                    "https://starknet-mainnet.g.alchemy.com/starknet/version/rpc/{RPC_URL_VERSION}/{api_key}"
+                    "https://starknet-mainnet.g.alchemy.com/starknet/version/rpc/{RPC_URL_VERSION}/{ALCHEMY_API_KEY}"
                 )
             }
         }
@@ -81,9 +82,8 @@ impl FreeProvider {
     pub fn sepolia_rpc(&self) -> String {
         match self {
             FreeProvider::Alchemy => {
-                let api_key = env::var("ALCHEMY_API_KEY").expect("Failed to alchemy read api key");
                 format!(
-                    "https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/{RPC_URL_VERSION}/{api_key}"
+                    "https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/{RPC_URL_VERSION}/{ALCHEMY_API_KEY}"
                 )
             }
         }
