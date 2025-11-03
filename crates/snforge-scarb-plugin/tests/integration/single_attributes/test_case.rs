@@ -32,6 +32,7 @@ fn works_with_args() {
                 let mut arr = ArrayTrait::new();
                 core::array::ArrayTrait::span(@arr)
             }
+            #[__internal_config_statement]
             fn test_add(x: i128, y: i128, expected: i128) {}
         ",
     );
@@ -61,6 +62,7 @@ fn works_with_name_and_args() {
                 let mut arr = ArrayTrait::new();
                 core::array::ArrayTrait::span(@arr)
             }
+            #[__internal_config_statement]
             fn test_add(x: i128, y: i128, expected: i128) {}
         ",
     );
