@@ -55,12 +55,6 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 
 See the [whole roadmap](./ROADMAP.md). 
 
-## Performance
-
-![Performance plot](.github/images/plot.png)
-
-`snforge` achieves performance comparable to the Cairo Test Runner with improved user experience.
-
 ## Getting Help
 
 You haven't found your answer to your question in
