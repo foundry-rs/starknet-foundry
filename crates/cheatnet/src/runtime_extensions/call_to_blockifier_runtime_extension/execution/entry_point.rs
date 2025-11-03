@@ -225,6 +225,17 @@ pub fn execute_call_entry_point(
                 cheatnet_state.trace_data.exit_nested_call();
             }
 
+            let resources_from_inner_calls = &res
+                .call_info
+                .inner_calls
+                .iter()
+                .fold(ExecutionResources::default(), |acc, call_info| {
+                    &acc + &call_info.resources
+                });
+            let used_resources = &res.call_info.resources - resources_from_inner_calls;
+
+            cheatnet_state.add_already_used_resources(&used_resources);
+
             Ok(res.call_info)
         }
         Err(EntryPointExecutionError::PreExecutionError(err))

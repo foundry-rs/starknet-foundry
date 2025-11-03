@@ -10,9 +10,11 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
 use crate::trace_data::{CallTrace, NotEmptyCallStack, TraceData};
 use blockifier::execution::contract_class::RunnableCompiledClass;
+use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_vm::Felt252;
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use conversions::serde::deserialize::CairoDeserialize;
 use conversions::string::TryFromHexStr;
 use indexmap::IndexMap;
@@ -246,6 +248,8 @@ pub struct CheatnetState {
     pub fuzzer_args: Vec<String>,
     pub block_hash_contracts: HashMap<(ContractAddress, u64), (CheatSpan, Felt)>,
     pub global_block_hash: HashMap<u64, (Felt, Vec<ContractAddress>)>,
+    pub already_used_resources: ExecutionResources,
+    pub already_used_syscalls: SyscallUsageMap,
 }
 
 pub type EncounteredErrors = IndexMap<ClassHash, Vec<usize>>;
@@ -277,6 +281,8 @@ impl Default for CheatnetState {
             fuzzer_args: Vec::default(),
             block_hash_contracts: HashMap::default(),
             global_block_hash: HashMap::default(),
+            already_used_resources: ExecutionResources::default(),
+            already_used_syscalls: SyscallUsageMap::default(),
         }
     }
 }
@@ -399,5 +405,20 @@ impl CheatnetState {
 
     pub fn clear_error(&mut self, class_hash: ClassHash) {
         self.encountered_errors.shift_remove(&class_hash);
+    }
+
+    pub fn add_already_used_resources(&mut self, resources: &ExecutionResources) {
+        self.already_used_resources += resources;
+    }
+
+    pub fn add_already_used_syscalls(&mut self, syscalls: &SyscallUsageMap) {
+        for (selector, usage) in syscalls.iter() {
+            self.already_used_syscalls
+                .entry(*selector)
+                .and_modify(|existing_usage| {
+                    existing_usage.call_count += usage.call_count;
+                })
+                .or_insert_with(|| usage.clone());
+        }
     }
 }

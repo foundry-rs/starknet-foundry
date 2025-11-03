@@ -19,6 +19,7 @@ use crate::runtime_extensions::{
 };
 use crate::trace_data::{CallTrace, CallTraceNode, GasReportData};
 use anyhow::{Context, Result, anyhow};
+use blockifier::blockifier_versioned_constants::VersionedConstants;
 use blockifier::bouncer::vm_resources_to_sierra_gas;
 use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::{
@@ -553,9 +554,28 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .cheat_block_hash(block_number, operation);
                 Ok(CheatcodeHandlingResult::from_serializable(()))
             }
-            "get_current_step" => Ok(CheatcodeHandlingResult::from_serializable(
-                vm.get_current_step(),
-            )),
+            "get_current_step" => {
+                let execution_resources_from_used_resources = &extended_runtime
+                    .extended_runtime
+                    .extension
+                    .cheatnet_state
+                    .already_used_resources;
+
+                let execution_resources_from_used_syscalls =
+                    &VersionedConstants::latest_constants().get_additional_os_syscall_resources(
+                        &extended_runtime
+                            .extended_runtime
+                            .extension
+                            .cheatnet_state
+                            .already_used_syscalls,
+                    );
+
+                let resources_from_calls = execution_resources_from_used_resources
+                    + execution_resources_from_used_syscalls;
+
+                let vm_steps_total = resources_from_calls.n_steps + vm.get_current_step();
+                Ok(CheatcodeHandlingResult::from_serializable(vm_steps_total))
+            }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         }
     }
