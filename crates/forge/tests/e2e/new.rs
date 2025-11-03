@@ -23,7 +23,7 @@ static RE_NEWLINES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\n{3,}").unw
 
 #[test_case(&Template::CairoProgram; "cairo-program")]
 #[test_case(&Template::BalanceContract; "balance-contract")]
-// TODO restore this test case
+// TODO(#3896) restore this test case
 // #[test_case(&Template::Erc20Contract; "erc20-contract")]
 fn create_new_project_dir_not_exist(template: &Template) {
     let temp = tempdir_with_tool_versions().unwrap();
