@@ -7,6 +7,7 @@ use crate::{
     scarb::build_artifacts_with_scarb, shared_cache::FailedTestsCache,
 };
 use anyhow::{Context, Result};
+use camino::Utf8PathBuf;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
 use foundry_ui::UI;
@@ -19,14 +20,35 @@ use shared::consts::SNFORGE_TEST_FILTER;
 use std::env;
 use std::sync::Arc;
 
+pub struct WorkspaceDirs {
+    pub artifacts_dir: Utf8PathBuf,
+    pub cache_dir: Utf8PathBuf,
+    pub root_dir: Utf8PathBuf,
+}
+
+impl WorkspaceDirs {
+    pub fn new(scarb_metadata: &Metadata) -> Self {
+        let artifacts_dir =
+            target_dir_for_workspace(&scarb_metadata).join(&scarb_metadata.current_profile);
+
+        let workspace_root = &scarb_metadata.workspace.root;
+        let cache_dir = workspace_root.join(CACHE_DIR);
+
+        Self {
+            artifacts_dir,
+            cache_dir,
+            root_dir: workspace_root.clone(),
+        }
+    }
+}
+
 #[tracing::instrument(skip_all, level = "debug")]
 pub async fn run_for_workspace(
     scarb_metadata: &Metadata,
     args: TestArgs,
     ui: Arc<UI>,
 ) -> Result<ExitStatus> {
-    let artifacts_dir_path =
-        target_dir_for_workspace(&scarb_metadata).join(&scarb_metadata.current_profile);
+    let workspace_dirs = WorkspaceDirs::new(scarb_metadata);
 
     let packages: Vec<PackageMetadata> = args
         .scarb_args
@@ -57,21 +79,12 @@ pub async fn run_for_workspace(
     let mut all_tests = vec![];
     let mut total_filtered_count = Some(0);
 
-    let workspace_root = &scarb_metadata.workspace.root;
-    let cache_dir = workspace_root.join(CACHE_DIR);
     let packages_len = packages.len();
 
     for package in packages {
         env::set_current_dir(&package.root)?;
 
-        let args = RunForPackageArgs::build(
-            package,
-            &scarb_metadata,
-            &args,
-            &cache_dir,
-            &artifacts_dir_path,
-            &ui,
-        )?;
+        let args = RunForPackageArgs::build(package, &scarb_metadata, &args, &workspace_dirs, &ui)?;
 
         let result = run_for_package(args, &mut block_number_map, ui.clone()).await?;
 
@@ -88,7 +101,7 @@ pub async fn run_for_workspace(
     let overall_summary = OverallSummaryMessage::new(&all_tests, total_filtered_count);
     let all_failed_tests: Vec<AnyTestCaseSummary> = extract_failed_tests(all_tests).collect();
 
-    FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
+    FailedTestsCache::new(&workspace_dirs.cache_dir).save_failed_tests(&all_failed_tests)?;
 
     if !block_number_map.get_url_to_latest_block_number().is_empty() {
         ui.println(&LatestBlocksNumbersMessage::new(
