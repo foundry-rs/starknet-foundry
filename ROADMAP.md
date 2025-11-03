@@ -83,8 +83,8 @@ findings.
 
 _Size: 5_
 
-New test mechanism and/or change to a fork mechanism, for asserting network state after test execution and comparing
-different code.
+New test mechanism for detecting regressions in new contract versions (for upgrades on chain). Forking and asserting
+state changes after executing a test scenario.
 
 ### Derive Macro for `Fuzzable` Trait
 
