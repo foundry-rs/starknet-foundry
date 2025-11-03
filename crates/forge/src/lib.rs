@@ -8,7 +8,6 @@ use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::ForgeTrackedResource;
 use foundry_ui::components::warning::WarningMessage;
 use foundry_ui::{Message, UI};
-use run_tests::workspace::run_for_workspace;
 use scarb_api::ScarbCommand;
 use scarb_api::metadata::metadata;
 use scarb_ui::args::{FeaturesSpec, PackagesFilter, ProfileSpec};
@@ -29,6 +28,7 @@ mod profile_validation;
 pub mod run_tests;
 pub mod scarb;
 pub mod shared_cache;
+pub mod test;
 pub mod test_filter;
 mod warn;
 
@@ -327,7 +327,7 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
                 .enable_all()
                 .build()?;
 
-            rt.block_on(run_for_workspace(args, ui))
+            rt.block_on(test::test(args, ui))
         }
         ForgeSubcommand::CheckRequirements => {
             check_requirements(true, &ui)?;
