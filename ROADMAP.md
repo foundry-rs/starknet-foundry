@@ -74,6 +74,8 @@ Sierra -> Casm performance investigation and optimization (if viable).
 
 _Size: 3_
 
+https://github.com/foundry-rs/starknet-foundry/issues/3899
+
 Investigate bottlenecks in standard test execution (workspace & package processing, config run, collecting configs, test
 execution) using tracing harnesses. Performance report on eventual findings and measurements for future optimizations.
 
