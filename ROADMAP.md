@@ -72,12 +72,10 @@ Sierra -> Casm performance investigation and optimization (if viable).
 
 ### Performance Investigation
 
-[//]: # (TODO size)
+_Size: 3_
 
-[//]: # (TODO needs defined scope)
-
-Tracing harnesses in code and comprehensive snforge performance investigation. Performance improvements following
-findings.
+Investigate bottlenecks in standard test execution (workspace & package processing, config run, collecting configs, test
+execution) using tracing harnesses. Performance report on eventual findings and measurements for future optimizations.
 
 ### Advanced Forking / Forking State Asserting
 
