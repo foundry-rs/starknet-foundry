@@ -6,10 +6,9 @@ pub trait IValueStorage<TContractState> {
 
 #[starknet::contract]
 pub mod ValueStorage {
-    use starknet::storage::StoragePointerWriteAccess;
-    use starknet::storage::StoragePointerReadAccess;
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
-#[storage]
+    #[storage]
     struct Storage {
         stored_value: u128,
     }

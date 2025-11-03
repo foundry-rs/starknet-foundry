@@ -1,4 +1,4 @@
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
+use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 use test_case::{IValueStorageDispatcher, IValueStorageDispatcherTrait};
 
 #[test]
