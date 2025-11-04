@@ -409,7 +409,7 @@ impl CheatnetState {
         self.encountered_errors.shift_remove(&class_hash);
     }
 
-    pub fn add_already_used_resources(&mut self, resources: &ExecutionResources) {
+    pub fn add_used_resources(&mut self, resources: &ExecutionResources) {
         self.used_resources += resources;
     }
 
