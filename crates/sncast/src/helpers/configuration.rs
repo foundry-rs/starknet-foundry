@@ -13,11 +13,8 @@ pub const fn show_explorer_links_default() -> bool {
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Default)]
 #[serde(deny_unknown_fields)]
 pub struct NetworksConfig {
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub mainnet: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub sepolia: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub devnet: Option<String>,
 }
 

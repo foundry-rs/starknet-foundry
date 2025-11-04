@@ -158,9 +158,6 @@ mod tests {
         };
 
         let url = rpc_args.get_url(&config).await.unwrap();
-        assert_eq!(
-            url,
-            format!("https://starknet-mainnet.public.blastapi.io/rpc/{RPC_URL_VERSION}")
-        );
+        assert_eq!(url, Network::free_mainnet_rpc(&FreeProvider::Blast));
     }
 }
