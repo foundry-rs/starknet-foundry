@@ -71,11 +71,14 @@ For **devnet**, `sncast` will try to detect running `starknet-devnet` instance a
 If using `sncast` extensively, we recommend getting access to a dedicated RPC node and providing its URL to sncast with
 `--url` flag.
 
+> 📝 **Note**
+> You can configure URLs for predefined networks (used by the `--network` flag) in `snfoundry.toml` profiles. Read more in [snfoundry.toml Reference](../appendix/snfoundry-toml.md#sncastprofile-namenetworks).
+
 ### Arguments
 
 Some `sncast` commands (namely `call`, `deploy` and `invoke`) allow passing arguments to perform an action with on the blockchain.
 
-Under the hood cast always send request with serialized form of arguments, but it can be passed in 
+Under the hood cast always send request with serialized form of arguments, but it can be passed in
 human-readable form thanks to the [calldata transformation](./calldata-transformation.md) feature present in Cast.
 
 In the example above we called a function with a deserialized argument: `'"Charizard"'`, passed using `--arguments` flag.
@@ -83,7 +86,6 @@ In the example above we called a function with a deserialized argument: `'"Chari
 > ⚠️ **Warning**
 > Cast will not verify the serialized calldata. Any errors caused by passing improper calldata in a serialized form will originate from the network.
 > Basic static analysis is possible only when passing expressions - see [calldata transformation](./calldata-transformation.md).
-
 
 ### Using Serialized Calldata
 
