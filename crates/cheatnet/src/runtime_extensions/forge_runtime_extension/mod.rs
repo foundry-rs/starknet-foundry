@@ -555,12 +555,11 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::from_serializable(()))
             }
             "get_current_step" => {
-                let execution_resources_from_used_resources = &extended_runtime
+                let used_resources = &extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
                     .used_resources;
-
                 let execution_resources_from_used_syscalls =
                     &VersionedConstants::latest_constants().get_additional_os_syscall_resources(
                         &extended_runtime
@@ -569,11 +568,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                             .cheatnet_state
                             .used_syscalls,
                     );
-
-                let resources_from_calls = execution_resources_from_used_resources
-                    + execution_resources_from_used_syscalls;
-
+                let resources_from_calls = used_resources + execution_resources_from_used_syscalls;
                 let vm_steps_total = resources_from_calls.n_steps + vm.get_current_step();
+
                 Ok(CheatcodeHandlingResult::from_serializable(vm_steps_total))
             }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
