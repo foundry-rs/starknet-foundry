@@ -141,7 +141,7 @@ combines configuration.
 
 _Size: 4_
 
-Native ledger and keystore support with encryption, account storage rework.
+Support for Ledger wallet, keystore support with encryption, account storage rework.
 
 ### New Multicall Interface
 
