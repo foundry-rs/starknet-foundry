@@ -569,9 +569,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                             .used_syscalls,
                     );
                 let resources_from_calls = used_resources + execution_resources_from_used_syscalls;
-                let vm_steps_total = resources_from_calls.n_steps + vm.get_current_step();
+                let total_steps = resources_from_calls.n_steps + vm.get_current_step();
 
-                Ok(CheatcodeHandlingResult::from_serializable(vm_steps_total))
+                Ok(CheatcodeHandlingResult::from_serializable(total_steps))
             }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         }
