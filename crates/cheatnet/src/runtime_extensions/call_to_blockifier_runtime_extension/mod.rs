@@ -193,7 +193,7 @@ fn execute_syscall<Request: ExecuteCall + SyscallRequest>(
     syscall_handler.syscall_ptr += 1;
     syscall_handler.increment_syscall_count_by(&selector, 1);
 
-    cheatnet_state.add_used_syscall(&selector);
+    cheatnet_state.add_used_syscall(&selector, 1);
     // endregion
 
     let syscall_gas_cost = syscall_handler

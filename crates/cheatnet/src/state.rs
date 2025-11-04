@@ -10,9 +10,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
 use crate::trace_data::{CallTrace, NotEmptyCallStack, TraceData};
 use blockifier::execution::contract_class::RunnableCompiledClass;
-use blockifier::execution::syscalls::vm_syscall_utils::{
-    SyscallSelector, SyscallUsage, SyscallUsageMap,
-};
+use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, SyscallUsageMap};
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_vm::Felt252;
@@ -413,15 +411,8 @@ impl CheatnetState {
         self.used_resources += resources;
     }
 
-    pub fn add_used_syscall(&mut self, syscall: &SyscallSelector) {
-        self.used_syscalls
-            .entry(*syscall)
-            .and_modify(|existing_usage| {
-                existing_usage.call_count += 1;
-            })
-            .or_insert(SyscallUsage {
-                call_count: 1,
-                linear_factor: 0,
-            });
+    pub fn add_used_syscall(&mut self, syscall: &SyscallSelector, count: usize) {
+        let usage = self.used_syscalls.entry(*syscall).or_default();
+        usage.call_count += count;
     }
 }
