@@ -10,9 +10,6 @@ use scarb_api::version::scarb_version;
 use semver::Version;
 use std::str::FromStr;
 
-const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
-const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
-
 pub fn tempdir_with_tool_versions() -> Result<assert_fs::TempDir> {
     let project_root = get_project_root()?;
     let temp_dir = assert_fs::TempDir::new()?;
@@ -21,14 +18,7 @@ pub fn tempdir_with_tool_versions() -> Result<assert_fs::TempDir> {
 }
 
 pub fn get_assert_macros_version() -> Result<Version> {
-    let scarb_version_output = scarb_version()?;
-    let assert_macros_version =
-        if scarb_version_output.scarb < MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS {
-            DEFAULT_ASSERT_MACROS
-        } else {
-            scarb_version_output.cairo
-        };
-    Ok(assert_macros_version)
+    Ok(scarb_version()?.cairo)
 }
 
 #[must_use]
