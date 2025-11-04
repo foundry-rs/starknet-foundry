@@ -50,7 +50,7 @@ impl RpcArgs {
         match (&self.network, &self.url, &config.url) {
             (Some(network), None, _) => self.resolve_network_url(network, config).await,
             (None, Some(url), _) => Ok(url.clone()),
-            (None, None, url) if !url.is_empty() => Ok(url.to_string()),
+            (None, None, url) if !url.is_empty() => Ok(url.clone()),
             _ => bail!("Either `--network` or `--url` must be provided."),
         }
     }
