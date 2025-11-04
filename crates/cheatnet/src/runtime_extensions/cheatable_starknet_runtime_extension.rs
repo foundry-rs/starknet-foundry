@@ -8,7 +8,7 @@ use blockifier::execution::syscalls::syscall_base::SyscallResult;
 use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
 use blockifier::execution::syscalls::vm_syscall_utils::{
     RevertData, SyscallExecutorBaseError, SyscallRequest, SyscallRequestWrapper, SyscallResponse,
-    SyscallResponseWrapper, SyscallSelector, SyscallUsage, SyscallUsageMap,
+    SyscallResponseWrapper, SyscallSelector,
 };
 use blockifier::execution::{
     common_hints::HintExecutionResult,
@@ -195,13 +195,7 @@ impl CheatableStarknetRuntimeExtension<'_> {
         syscall_handler.syscall_ptr += 1;
         syscall_handler.increment_syscall_count_by(&selector, 1);
 
-        let mut syscall_usage_map = SyscallUsageMap::new();
-        let mut syscall_usage = SyscallUsage::default();
-        syscall_usage.increment_call_count();
-        syscall_usage_map.insert(selector, syscall_usage);
-
-        self.cheatnet_state
-            .add_already_used_syscalls(&syscall_usage_map);
+        self.cheatnet_state.add_used_syscall(&selector);
 
         let syscall_gas_cost = syscall_handler
             .get_gas_cost_from_selector(&selector)

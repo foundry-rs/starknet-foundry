@@ -10,7 +10,9 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
 use crate::trace_data::{CallTrace, NotEmptyCallStack, TraceData};
 use blockifier::execution::contract_class::RunnableCompiledClass;
-use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
+use blockifier::execution::syscalls::vm_syscall_utils::{
+    SyscallSelector, SyscallUsage, SyscallUsageMap,
+};
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_vm::Felt252;
@@ -248,8 +250,8 @@ pub struct CheatnetState {
     pub fuzzer_args: Vec<String>,
     pub block_hash_contracts: HashMap<(ContractAddress, u64), (CheatSpan, Felt)>,
     pub global_block_hash: HashMap<u64, (Felt, Vec<ContractAddress>)>,
-    pub already_used_resources: ExecutionResources,
-    pub already_used_syscalls: SyscallUsageMap,
+    pub used_resources: ExecutionResources,
+    pub used_syscalls: SyscallUsageMap,
 }
 
 pub type EncounteredErrors = IndexMap<ClassHash, Vec<usize>>;
@@ -281,8 +283,8 @@ impl Default for CheatnetState {
             fuzzer_args: Vec::default(),
             block_hash_contracts: HashMap::default(),
             global_block_hash: HashMap::default(),
-            already_used_resources: ExecutionResources::default(),
-            already_used_syscalls: SyscallUsageMap::default(),
+            used_resources: ExecutionResources::default(),
+            used_syscalls: SyscallUsageMap::default(),
         }
     }
 }
@@ -408,17 +410,18 @@ impl CheatnetState {
     }
 
     pub fn add_already_used_resources(&mut self, resources: &ExecutionResources) {
-        self.already_used_resources += resources;
+        self.used_resources += resources;
     }
 
-    pub fn add_already_used_syscalls(&mut self, syscalls: &SyscallUsageMap) {
-        for (selector, usage) in syscalls.iter() {
-            self.already_used_syscalls
-                .entry(*selector)
-                .and_modify(|existing_usage| {
-                    existing_usage.call_count += usage.call_count;
-                })
-                .or_insert_with(|| usage.clone());
-        }
+    pub fn add_used_syscall(&mut self, syscall: &SyscallSelector) {
+        self.used_syscalls
+            .entry(*syscall)
+            .and_modify(|existing_usage| {
+                existing_usage.call_count += 1;
+            })
+            .or_insert(SyscallUsage {
+                call_count: 1,
+                linear_factor: 0,
+            });
     }
 }

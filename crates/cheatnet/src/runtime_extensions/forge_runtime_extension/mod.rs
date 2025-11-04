@@ -559,7 +559,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .already_used_resources;
+                    .used_resources;
 
                 let execution_resources_from_used_syscalls =
                     &VersionedConstants::latest_constants().get_additional_os_syscall_resources(
@@ -567,7 +567,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                             .extended_runtime
                             .extension
                             .cheatnet_state
-                            .already_used_syscalls,
+                            .used_syscalls,
                     );
 
                 let resources_from_calls = execution_resources_from_used_resources
