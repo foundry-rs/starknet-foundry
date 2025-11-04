@@ -1,6 +1,4 @@
-use crate::metadata::MetadataCommand;
 use crate::version::VersionCommand;
-use anyhow::Context;
 use scarb_ui::args::{FeaturesSpec, PackagesFilter, ProfileSpec, ToEnvVars};
 use std::collections::HashMap;
 use std::ffi::{OsStr, OsString};
@@ -33,7 +31,6 @@ pub struct ScarbCommand {
     json: bool,
     offline: bool,
     manifest_path: Option<PathBuf>,
-    scarb_path: Option<PathBuf>,
 }
 
 impl ScarbCommand {
@@ -53,32 +50,10 @@ impl ScarbCommand {
         cmd
     }
 
-    /// Creates [`MetadataCommand`] command
-    #[must_use]
-    pub fn metadata() -> MetadataCommand {
-        MetadataCommand::new()
-    }
-
     /// Creates [`VersionCommand`] command
     #[must_use]
     pub fn version() -> VersionCommand {
         VersionCommand::new()
-    }
-
-    /// Ensures that `scarb` binary is available in the system.
-    pub fn ensure_available(&self) -> anyhow::Result<()> {
-        which::which(self.binary_path())
-            .context("Cannot find `scarb` binary. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
-        Ok(())
-    }
-
-    /// Path to `scarb` executable.
-    ///
-    /// If not set, this will use the `$SCARB` environment variable, and if that is not set, it
-    /// will simply be `scarb` and the system will look it up in `$PATH`.
-    pub fn scarb_path(&mut self, path: impl Into<PathBuf>) -> &mut Self {
-        self.scarb_path = Some(path.into());
-        self
     }
 
     /// Path to `Scarb.toml`.
@@ -186,7 +161,7 @@ impl ScarbCommand {
     /// Build executable `scarb` command.
     #[must_use]
     pub fn command(&self) -> Command {
-        let scarb = self.binary_path();
+        let scarb = binary_path();
 
         let mut cmd = Command::new(scarb);
 
@@ -227,13 +202,6 @@ impl ScarbCommand {
         cmd
     }
 
-    fn binary_path(&self) -> PathBuf {
-        self.scarb_path
-            .clone()
-            .or_else(|| env::var("SCARB").map(PathBuf::from).ok())
-            .unwrap_or_else(|| PathBuf::from("scarb"))
-    }
-
     /// Runs configured `scarb` command.
     pub fn run(&self) -> Result<(), ScarbCommandError> {
         let mut cmd = self.command();
@@ -243,4 +211,25 @@ impl ScarbCommand {
             Err(ScarbCommandError::ScarbError)
         }
     }
+}
+
+#[derive(Error, Debug)]
+pub enum ScarbUnavailableError {
+    #[error(
+        "Cannot find `scarb` binary. Make sure you have Scarb installed https://github.com/software-mansion/scarb"
+    )]
+    NotFound(which::Error),
+}
+
+pub fn ensure_scarb_available() -> anyhow::Result<(), ScarbUnavailableError> {
+    which::which(binary_path())
+        .map(|_| ())
+        .map_err(ScarbUnavailableError::NotFound)
+}
+
+fn binary_path() -> PathBuf {
+    env::var("SCARB")
+        .map(PathBuf::from)
+        .ok()
+        .unwrap_or_else(|| PathBuf::from("scarb"))
 }

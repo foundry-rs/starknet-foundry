@@ -18,9 +18,10 @@ use anyhow::{Context, Result};
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
 use foundry_ui::UI;
+use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use scarb_api::{
     ScarbCommand,
-    metadata::{Metadata, MetadataCommandExt, PackageMetadata},
+    metadata::{Metadata, PackageMetadata},
     target_dir_for_workspace,
 };
 use scarb_ui::args::PackagesFilter;
@@ -38,11 +39,10 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         ColorOption::Auto => (),
     }
 
-    let mut metadata_command = ScarbCommand::metadata();
-    if let Some(profile) = &args.scarb_args.profile.specified() {
-        metadata_command.profile(profile.clone());
-    }
-    let scarb_metadata = metadata_command.inherit_stderr().run()?;
+    let scarb_metadata = metadata_with_opts(MetadataOpts {
+        profile: args.scarb_args.profile.specified(),
+        ..MetadataOpts::default()
+    })?;
 
     check_profile_compatibility(&args, &scarb_metadata)?;
 

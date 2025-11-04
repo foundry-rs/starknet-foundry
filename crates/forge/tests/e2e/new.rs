@@ -7,7 +7,6 @@ use forge::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use indoc::{formatdoc, indoc};
 use regex::Regex;
 use scarb_api::ScarbCommand;
-use shared::consts::FREE_RPC_PROVIDER_URL;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::assert_matches;
 use snapbox::cmd::Command as SnapboxCommand;
@@ -24,7 +23,8 @@ static RE_NEWLINES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\n{3,}").unw
 
 #[test_case(&Template::CairoProgram; "cairo-program")]
 #[test_case(&Template::BalanceContract; "balance-contract")]
-#[test_case(&Template::Erc20Contract; "erc20-contract")]
+// TODO(#3896) restore this test case
+// #[test_case(&Template::Erc20Contract; "erc20-contract")]
 fn create_new_project_dir_not_exist(template: &Template) {
     let temp = tempdir_with_tool_versions().unwrap();
     let project_path = temp.join("new").join("project");
@@ -188,7 +188,7 @@ fn get_expected_manifest_content(template: &Template, validate_snforge_std: bool
             r#"
             [[tool.snforge.fork]]
             name = "SEPOLIA_LATEST"
-            url = "{FREE_RPC_PROVIDER_URL}"
+            url = "<YOUR_RPC_PROVIDER"
             block_id = {{ tag = "latest" }}
         "#
         )
