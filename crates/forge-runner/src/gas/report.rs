@@ -117,10 +117,8 @@ impl Display for ReportData {
         }
 
         for (name, contract_info) in &self.0 {
-            if !contract_info.functions.is_empty() {
-                let table = format_table_output(contract_info, name);
-                writeln!(f, "\n{table}")?;
-            }
+            let table = format_table_output(contract_info, name);
+            writeln!(f, "\n{table}")?;
         }
         Ok(())
     }
