@@ -183,6 +183,6 @@ mod tests {
         };
 
         let url = rpc_args.get_url(&config).await.unwrap();
-        assert_eq!(url, Network::free_mainnet_rpc(&FreeProvider::Blast));
+        assert_eq!(url, Network::free_mainnet_rpc(&FreeProvider::Alchemy));
     }
 }
