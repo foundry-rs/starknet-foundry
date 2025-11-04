@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Gas values in fuzzing test output are now displayed as whole numbers without fractional parts
 
+#### Fixed
+
+- A bug that prevented the `#[test_case]` attribute from being used on its own with cheatcodes
+
 ## [0.51.2] - 2025-10-31
 
 ### Cast
