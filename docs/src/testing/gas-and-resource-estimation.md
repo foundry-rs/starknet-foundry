@@ -48,7 +48,9 @@ Running 1 test(s) from tests/
 </details>
 <br>
 
-Note that gas report data calculation ignores state changes, the cost of declared classes, Starknet OS overhead, L1 handler payload length and calldata payload length.
+> 📝 **Note**
+>
+> Gas report data calculation ignores state changes, the cost of declared classes, Starknet OS overhead, L1 handler payload length and calldata payload length.
 
 ### Fuzzed Tests
 
