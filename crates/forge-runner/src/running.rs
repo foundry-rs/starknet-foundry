@@ -12,7 +12,6 @@ use blockifier::execution::entry_point_execution::{
 };
 use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::state::cached_state::CachedState;
-use blockifier::transaction::objects::ExecutionResourcesTraits;
 use cairo_vm::Felt252;
 use cairo_vm::types::program::Program;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
@@ -299,10 +298,7 @@ pub fn run_test_case(
                 program_extra_data_length,
                 tracked_resource,
             )?;
-            println!(
-                "run_test_case call_info steps: {}",
-                call_info.resources.total_n_steps()
-            );
+
             // TODO(#3744): Confirm if this is needed for the profiler
             let vm_resources_without_inner_calls = extract_vm_resources(
                 &runner,
