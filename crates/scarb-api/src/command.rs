@@ -1,4 +1,3 @@
-use crate::version::VersionCommand;
 use scarb_ui::args::{FeaturesSpec, PackagesFilter, ProfileSpec, ToEnvVars};
 use std::collections::HashMap;
 use std::ffi::{OsStr, OsString};
@@ -48,12 +47,6 @@ impl ScarbCommand {
         cmd.inherit_stderr();
         cmd.inherit_stdout();
         cmd
-    }
-
-    /// Creates [`VersionCommand`] command
-    #[must_use]
-    pub fn version() -> VersionCommand {
-        VersionCommand::new()
     }
 
     /// Path to `Scarb.toml`.
