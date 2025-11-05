@@ -95,19 +95,17 @@ where
     let raw = fs::read_to_string(config_path).context("Failed to read snfoundry.toml")?;
     let toml_value: toml::Value =
         toml::from_str(&raw).context("Failed to parse snfoundry.toml config file")?;
-
     let json_value = serde_json::to_value(toml_value)?;
     let resolved_json = resolve_env_variables(json_value)?;
-
     let parsed: ConfigSchema<T> = serde_json::from_value(resolved_json)
         .context("Failed to deserialize resolved config into ConfigSchema")?;
     let tool_name = T::tool_name();
+
     let Some(tool_profiles) = parsed.tools.get(tool_name) else {
         return Ok(T::default());
     };
 
     let profile_name = profile.unwrap_or("default");
-
     let Some(profile_config) = tool_profiles.profiles.get(profile_name) else {
         return Err(anyhow!("Profile [{profile_name}] not found in config"));
     };
