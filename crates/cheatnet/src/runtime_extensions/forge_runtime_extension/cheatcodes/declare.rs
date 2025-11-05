@@ -68,11 +68,9 @@ pub fn get_class_hash(sierra_class: &SierraClass) -> Result<ClassHash> {
 }
 
 fn get_contract_class(contract_artifact: &StarknetContractArtifacts) -> RunnableCompiledClass {
-    let contract_class = CompiledClassV1::try_from_json_string(
-        &contract_artifact.casm,
-        get_current_sierra_version(),
-    )
-    .expect("Failed to read contract class from json");
+    let contract_class =
+        CompiledClassV1::try_from((contract_artifact.casm.clone(), get_current_sierra_version()))
+            .expect("Failed to read contract class from json");
 
     #[cfg(feature = "cairo-native")]
     return match &contract_artifact.executor {

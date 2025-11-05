@@ -53,8 +53,8 @@ fn build_default_manifest() -> String {
         
         # Configure custom network addresses
         # [sncast.default.networks]
-        # mainnet = "https://custom-starknet.example.com/rpc/mainnet/{{RPC_URL_VERSION}}?api_key=YOUR-API-KEY"
-        # sepolia = "https://custom-starknet.example.com/rpc/sepolia/{{RPC_URL_VERSION}}?api_key=YOUR-API-KEY"
+        # mainnet = "https://mainnet.your-node.com"
+        # sepolia = "https://sepolia.your-node.com"
         # devnet = "http://127.0.0.1:5050/rpc"
         "#,
         default_accounts_file = DEFAULT_ACCOUNTS_FILE,
@@ -86,7 +86,7 @@ pub fn combine_cast_configs(global_config: &CastConfig, local_config: &CastConfi
     let default_cast_config = CastConfig::default();
 
     let mut networks = global_config.networks.clone();
-    networks.merge(&local_config.networks);
+    networks.override_with(&local_config.networks);
 
     CastConfig {
         url: clone_field!(global_config, local_config, default_cast_config, url),

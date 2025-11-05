@@ -1,8 +1,7 @@
 use super::common::runner::{runner, setup_package, test_runner};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
-use scarb_api::ScarbCommand;
-use scarb_api::metadata::MetadataCommandExt;
+use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use shared::test_utils::output_assert::assert_stdout_contains;
 use std::path::Path;
 
@@ -231,12 +230,12 @@ fn generate_clean_components(state: CleanComponentsState, temp_dir: &TempDir) {
 }
 
 fn check_clean_components_state(path: &Path) -> CleanComponentsState {
-    let scarb_metadata = ScarbCommand::metadata()
-        .inherit_stderr()
-        .current_dir(path)
-        .no_deps()
-        .run()
-        .unwrap();
+    let scarb_metadata = metadata_with_opts(MetadataOpts {
+        no_deps: true,
+        current_dir: Some(path.into()),
+        ..MetadataOpts::default()
+    })
+    .unwrap();
 
     let workspace_root = scarb_metadata.workspace.root;
 

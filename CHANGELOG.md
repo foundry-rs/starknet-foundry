@@ -19,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Possibility to configure urls of predefined networks used by `--network` flag via `sncast` profile in `snfoundry.toml`
 
+## [0.51.2] - 2025-10-31
+
+### Cast
+
+#### Changed
+
+- Replaced the free RPC provider used.
+
 ## [0.51.1] - 2025-10-23
 
 ### Forge

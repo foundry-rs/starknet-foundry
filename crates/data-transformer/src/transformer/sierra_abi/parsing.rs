@@ -84,7 +84,7 @@ pub fn parse_inline_macro(
             let node_text = token_tree
                 .tokens(db)
                 .elements(db)
-                .map(|token| token.as_syntax_node().get_text(db).to_string())
+                .map(|token| token.as_syntax_node().get_text(db).clone())
                 .collect::<String>();
             split_expressions(&node_text, db)
         }
