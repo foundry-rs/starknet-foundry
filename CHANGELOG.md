@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Gas values in fuzzing test output are now displayed as whole numbers without fractional parts
-- Minimal recommended `Scarb` version is now `2.11.0` (updated from `2.10.0`)
+- Minimal recommended `Scarb` version is now `2.11.4` (updated from `2.10.1`)
 
 #### Fixed
 
