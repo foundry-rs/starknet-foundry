@@ -2,7 +2,6 @@ use self::contracts_data::ContractsData;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use crate::runtime_extensions::common::sum_syscall_usage;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::testing::calculate_steps_from_calls;
 use crate::runtime_extensions::{
     call_to_blockifier_runtime_extension::{
         CallToBlockifierRuntime,
@@ -20,6 +19,7 @@ use crate::runtime_extensions::{
 };
 use crate::trace_data::{CallTrace, CallTraceNode, GasReportData};
 use anyhow::{Context, Result, anyhow};
+use blockifier::blockifier_versioned_constants::VersionedConstants;
 use blockifier::bouncer::vm_resources_to_sierra_gas;
 use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::{
@@ -880,4 +880,27 @@ pub fn get_all_used_resources(
         execution_summary: summary,
         l1_handler_payload_lengths,
     }
+}
+
+fn calculate_steps_from_calls(
+    top_call: &Rc<RefCell<CallTrace>>,
+    top_call_syscalls: &SyscallUsageMap,
+) -> usize {
+    // Resources from inner calls already include syscall resources used in them
+    let used_resources =
+        &top_call
+            .borrow()
+            .nested_calls
+            .iter()
+            .fold(ExecutionResources::default(), |acc, node| match node {
+                CallTraceNode::EntryPointCall(call_trace) => {
+                    &acc + &call_trace.borrow().used_execution_resources
+                }
+                CallTraceNode::DeployWithoutConstructor => acc,
+            });
+    let total_syscalls_exeucution_resources = &VersionedConstants::latest_constants()
+        .get_additional_os_syscall_resources(&top_call_syscalls);
+    let resources_from_calls = used_resources + total_syscalls_exeucution_resources;
+
+    resources_from_calls.n_steps
 }

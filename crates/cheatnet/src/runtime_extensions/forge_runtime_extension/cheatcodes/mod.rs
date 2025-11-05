@@ -20,7 +20,6 @@ pub mod replace_bytecode;
 pub mod spy_events;
 pub mod spy_messages_to_l1;
 pub mod storage;
-pub mod testing;
 
 /// A structure used for returning cheatcode errors in tests
 #[derive(Debug)]
