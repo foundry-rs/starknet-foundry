@@ -1,3 +1,4 @@
+use crate::core::resolve_env_variables;
 use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
 use serde::de::DeserializeOwned;
@@ -5,8 +6,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
 use std::{env, fs};
-
-use crate::core::resolve_env_variables;
 
 pub mod core;
 pub mod test_utils;
