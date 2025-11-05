@@ -12,6 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Gas values in fuzzing test output are now displayed as whole numbers without fractional parts
+- Minimal recommended `Scarb` version is now `2.11.4` (updated from `2.10.1`)
+
+#### Fixed
+
+- A bug that prevented the `#[test_case]` attribute from being used on its own with cheatcodes
+
+### Cast
+
+#### Added 
+
+- Possibility to configure urls of predefined networks used by `--network` flag via `sncast` profile in `snfoundry.toml`
 
 ## [0.51.2] - 2025-10-31
 

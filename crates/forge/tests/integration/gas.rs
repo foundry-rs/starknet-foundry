@@ -1,11 +1,11 @@
+use crate::utils::runner::{Contract, assert_gas, assert_passed};
+use crate::utils::running_tests::run_test_case;
+use crate::utils::test_case;
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::node_url::node_rpc_url;
 use starknet_api::execution_resources::{GasAmount, GasVector};
 use std::path::Path;
-use test_utils::runner::{Contract, assert_gas, assert_passed};
-use test_utils::running_tests::run_test_case;
-use test_utils::test_case;
 
 // all calculations are based on formulas from
 // https://docs.starknet.io/architecture-and-concepts/fees/#overall_fee

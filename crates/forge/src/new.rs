@@ -4,6 +4,7 @@ use anyhow::{Context, Ok, Result, anyhow, bail, ensure};
 use camino::Utf8PathBuf;
 use include_dir::{Dir, DirEntry, include_dir};
 use indoc::formatdoc;
+use scarb_api::version::scarb_version;
 use scarb_api::{ScarbCommand, ensure_scarb_available};
 use semver::Version;
 use std::env;
@@ -12,10 +13,11 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use toml_edit::{Array, ArrayOfTables, DocumentMut, Item, Table, Value, value};
 
+const OZ_VERSION: Version = Version::new(1, 0, 0);
+
 static TEMPLATES_DIR: Dir = include_dir!("snforge_templates");
 
-const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
-const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
+const SCARB_WITHOUT_CAIRO_TEST_TEMPLATE: Version = Version::new(2, 13, 0);
 
 struct Dependency {
     name: String,
@@ -107,7 +109,7 @@ impl TryFrom<&Template> for TemplateManifestConfig {
     type Error = anyhow::Error;
 
     fn try_from(template: &Template) -> Result<Self> {
-        let cairo_version = ScarbCommand::version().run()?.cairo;
+        let cairo_version = scarb_version()?.cairo;
         match template {
             Template::CairoProgram => Ok(TemplateManifestConfig {
                 dependencies: vec![],
@@ -132,7 +134,7 @@ impl TryFrom<&Template> for TemplateManifestConfig {
                     },
                     Dependency {
                         name: "openzeppelin_token".to_string(),
-                        version: get_oz_version()?.to_string(),
+                        version: OZ_VERSION.to_string(),
                         dev: false,
                     },
                 ],
@@ -254,16 +256,12 @@ fn set_cairo_edition(document: &mut DocumentMut, cairo_edition: &str) {
 }
 
 fn add_assert_macros(document: &mut DocumentMut) -> Result<()> {
-    let versions = ScarbCommand::version().run()?;
-    let version = if versions.scarb < MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS {
-        DEFAULT_ASSERT_MACROS
-    } else {
-        versions.cairo
-    };
+    let version = scarb_version()?.cairo;
 
     document
-        .get_mut("dev-dependencies")
-        .and_then(|dep| dep.as_table_mut())
+        .entry("dev-dependencies")
+        .or_insert(Item::Table(Table::new()))
+        .as_table_mut()
         .context("Failed to get dev-dependencies from Scarb.toml")?
         .insert("assert_macros", value(version.to_string()));
 
@@ -359,7 +357,7 @@ pub fn new(
         );
     }
     let name = infer_name(name, &path)?;
-    let scarb_version = ScarbCommand::version().run()?.scarb;
+    let scarb_version = scarb_version()?.scarb;
 
     fs::create_dir_all(&path)?;
     let project_path = path.canonicalize()?;
@@ -376,19 +374,29 @@ pub fn new(
             cmd.arg("--no-vcs");
         }
 
-        cmd.env("SCARB_INIT_TEST_RUNNER", "cairo-test")
+        // TODO(#3910)
+        let test_runner = if scarb_version < SCARB_WITHOUT_CAIRO_TEST_TEMPLATE {
+            "cairo-test"
+        } else {
+            "none"
+        };
+
+        cmd.env("SCARB_INIT_TEST_RUNNER", test_runner)
             .run()
             .context("Failed to initialize a new project")?;
 
-        ScarbCommand::new_with_stdio()
-            .current_dir(&project_path)
-            .manifest_path(scarb_manifest_path.clone())
-            .offline()
-            .arg("remove")
-            .arg("--dev")
-            .arg("cairo_test")
-            .run()
-            .context("Failed to remove cairo_test dependency")?;
+        // TODO(#3910)
+        if scarb_version < SCARB_WITHOUT_CAIRO_TEST_TEMPLATE {
+            ScarbCommand::new_with_stdio()
+                .current_dir(&project_path)
+                .manifest_path(scarb_manifest_path.clone())
+                .offline()
+                .arg("remove")
+                .arg("--dev")
+                .arg("cairo_test")
+                .run()
+                .context("Failed to remove cairo_test dependency")?;
+        }
     }
 
     add_template_to_scarb_manifest(&scarb_manifest_path)?;
@@ -450,17 +458,4 @@ fn get_template_dir(template: &Template) -> Result<Dir<'_>> {
         .get_dir(dir_name)
         .ok_or_else(|| anyhow!("Directory {dir_name} not found"))
         .cloned()
-}
-
-fn get_oz_version() -> Result<Version> {
-    let scarb_version = ScarbCommand::version().run()?.scarb;
-
-    let oz_version = match scarb_version {
-        ver if ver >= Version::new(2, 9, 4) => Version::new(1, 0, 0),
-        ver if ver >= Version::new(2, 9, 1) => Version::new(0, 20, 0),
-        ver if ver >= Version::new(2, 8, 4) => Version::new(0, 19, 0),
-        _ => bail!("Minimal Scarb version to create a new project with ERC-20 template is 2.8.4"),
-    };
-
-    Ok(oz_version)
 }

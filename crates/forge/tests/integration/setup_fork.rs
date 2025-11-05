@@ -13,6 +13,9 @@ use forge::test_filter::TestsFilter;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
+use crate::utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
+use crate::utils::running_tests::run_test_case;
+use crate::utils::test_case;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::run_tests::package::RunForPackageArgs;
 use forge::scarb::load_test_artifacts;
@@ -26,9 +29,6 @@ use forge_runner::forge_config::{
 use scarb_api::ScarbCommand;
 use scarb_api::metadata::metadata_for_dir;
 use shared::test_utils::node_url::node_rpc_url;
-use test_utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
-use test_utils::running_tests::run_test_case;
-use test_utils::test_case;
 
 #[test]
 fn fork_simple_decorator() {

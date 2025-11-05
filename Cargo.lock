@@ -1949,7 +1949,6 @@ version = "1.0.0"
 dependencies = [
  "anyhow",
  "camino",
- "scarb-metadata",
  "serde",
  "serde_json",
  "tempfile",
@@ -3197,6 +3196,7 @@ dependencies = [
  "num-bigint",
  "openssl",
  "packages_validation",
+ "project-root",
  "rand 0.8.5",
  "regex",
  "scarb-api",
@@ -3212,7 +3212,6 @@ dependencies = [
  "starknet_api",
  "tempfile",
  "test-case",
- "test_utils",
  "tokio",
  "toml_edit 0.22.27",
  "tracing",
@@ -7361,30 +7360,6 @@ dependencies = [
  "quote",
  "syn 2.0.108",
  "test-case-core",
-]
-
-[[package]]
-name = "test_utils"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "assert_fs",
- "blockifier",
- "cairo-vm",
- "camino",
- "cheatnet",
- "forge",
- "forge_runner",
- "foundry-ui",
- "indoc",
- "project-root",
- "scarb-api",
- "semver",
- "shared",
- "starknet_api",
- "tempfile",
- "tokio",
- "walkdir",
 ]
 
 [[package]]

@@ -90,6 +90,19 @@ The `block-explorer` field specifies the block explorer service used to display 
 block-explorer = "StarkScan"
 ```
 
+#### `[sncast.<profile-name>.networks]`
+
+The URLs of the predefined networks can be configured.
+When you use `--network <network_name>`, `sncast` first checks whether you have a custom URL configured for that network.
+In the absence of a user-defined value, the default configuration is applied - public RPC provider is used for `mainnet` and `sepolia`, and the `devnet` endpoint is determined automatically.
+
+```toml
+[sncast.myprofile.networks]
+mainnet = "https://mainnet.your-node.com"
+sepolia = "https://sepolia.your-node.com"
+devnet = "http://127.0.0.1:5050"
+```
+
 #### Complete Example of `snfoundry.toml` File
 
 ```toml
@@ -101,6 +114,11 @@ keystore = "~/keystore"
 wait-params = { timeout = 500, retry-interval = 10 }
 block-explorer = "StarkScan"
 show-explorer-links = true
+
+[sncast.myprofile1.networks]
+mainnet = "https://mainnet.your-node.com"
+sepolia = "https://sepolia.your-node.com"
+devnet = "http://127.0.0.1:5050"
 
 [sncast.dev]
 url = "http://127.0.0.1:5056/rpc"
