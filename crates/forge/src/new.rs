@@ -17,6 +17,7 @@ static TEMPLATES_DIR: Dir = include_dir!("snforge_templates");
 
 const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
 const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
+const SCARB_WITHOUT_CAIRO_TEST_TEMPLATE: Version = Version::new(2, 13, 0);
 
 struct Dependency {
     name: String,
@@ -263,8 +264,9 @@ fn add_assert_macros(document: &mut DocumentMut) -> Result<()> {
     };
 
     document
-        .get_mut("dev-dependencies")
-        .and_then(|dep| dep.as_table_mut())
+        .entry("dev-dependencies")
+        .or_insert(Item::Table(Table::new()))
+        .as_table_mut()
         .context("Failed to get dev-dependencies from Scarb.toml")?
         .insert("assert_macros", value(version.to_string()));
 
@@ -377,19 +379,29 @@ pub fn new(
             cmd.arg("--no-vcs");
         }
 
-        cmd.env("SCARB_INIT_TEST_RUNNER", "cairo-test")
+        // TODO(#3910)
+        let test_runner = if scarb_version < SCARB_WITHOUT_CAIRO_TEST_TEMPLATE {
+            "cairo-test"
+        } else {
+            "none"
+        };
+
+        cmd.env("SCARB_INIT_TEST_RUNNER", test_runner)
             .run()
             .context("Failed to initialize a new project")?;
 
-        ScarbCommand::new_with_stdio()
-            .current_dir(&project_path)
-            .manifest_path(scarb_manifest_path.clone())
-            .offline()
-            .arg("remove")
-            .arg("--dev")
-            .arg("cairo_test")
-            .run()
-            .context("Failed to remove cairo_test dependency")?;
+        // TODO(#3910)
+        if scarb_version < SCARB_WITHOUT_CAIRO_TEST_TEMPLATE {
+            ScarbCommand::new_with_stdio()
+                .current_dir(&project_path)
+                .manifest_path(scarb_manifest_path.clone())
+                .offline()
+                .arg("remove")
+                .arg("--dev")
+                .arg("cairo_test")
+                .run()
+                .context("Failed to remove cairo_test dependency")?;
+        }
     }
 
     add_template_to_scarb_manifest(&scarb_manifest_path)?;
