@@ -1,11 +1,11 @@
+use crate::utils::runner::{Contract, assert_passed};
+use crate::utils::running_tests::run_test_case;
+use crate::utils::test_case;
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
 use scarb_api::version::scarb_version;
 use semver::Version;
 use std::path::Path;
-use test_utils::runner::{Contract, assert_passed};
-use test_utils::running_tests::run_test_case;
-use test_utils::test_case;
 
 // TODO(#3704) Remove scarb version check
 fn skip_scarb_lt_2_11_0() -> bool {

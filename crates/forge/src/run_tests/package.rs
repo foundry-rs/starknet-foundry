@@ -2,6 +2,7 @@ use super::{
     resolve_config::resolve_config,
     test_target::{TestTargetRunResult, run_for_test_target},
 };
+use crate::scarb::load_package_config;
 use crate::{
     TestArgs,
     block_number_map::BlockNumberMap,
@@ -21,7 +22,6 @@ use crate::{
 use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use configuration::load_package_config;
 use console::Style;
 use forge_runner::{
     forge_config::ForgeConfig,

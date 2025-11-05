@@ -1,6 +1,8 @@
 pub mod runner;
 pub mod running_tests;
 
+pub use crate::test_case;
+
 use anyhow::Result;
 use assert_fs::fixture::PathCopy;
 use camino::Utf8PathBuf;

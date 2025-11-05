@@ -1,4 +1,4 @@
-use crate::{
+use crate::utils::{
     get_assert_macros_version, get_std_name, get_std_path, tempdir_with_tool_versions,
     use_snforge_std_deprecated,
 };
@@ -238,14 +238,16 @@ impl<'a> TestCase {
     }
 }
 
+#[expect(clippy::crate_in_macro_def)]
 #[macro_export]
 macro_rules! test_case {
     ( $test_code:expr ) => ({
-        use $crate::runner::TestCase;
+        use crate::utils::runner::TestCase;
+
         TestCase::from($test_code, vec![]).unwrap()
     });
     ( $test_code:expr, $( $contract:expr ),*) => ({
-        use $crate::runner::TestCase;
+        use crate::utils::runner::TestCase;
 
         let contracts = vec![$($contract,)*];
         TestCase::from($test_code, contracts).unwrap()

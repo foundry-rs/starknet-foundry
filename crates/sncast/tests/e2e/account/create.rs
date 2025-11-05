@@ -1,7 +1,7 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use crate::helpers::fixtures::copy_file;
 use crate::helpers::runner::runner;
-use configuration::copy_config_to_tempdir;
+use configuration::test_utils::copy_config_to_tempdir;
 use indoc::{formatdoc, indoc};
 
 use crate::helpers::env::set_create_keystore_password_env;
@@ -354,7 +354,7 @@ pub async fn test_add_profile_with_network() {
 
 #[tokio::test]
 pub async fn test_profile_already_exists() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -515,7 +515,7 @@ pub async fn test_happy_case_keystore_argent_with_deprecation_warning() {
 
 #[tokio::test]
 pub async fn test_happy_case_keystore_add_profile() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let keystore_file = "my_key.json";
     let account_file = "my_account.json";
     let accounts_json_file = "accounts.json";
