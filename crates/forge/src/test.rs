@@ -8,6 +8,7 @@ use anyhow::Result;
 use foundry_ui::UI;
 use scarb_api::metadata::MetadataOpts;
 use scarb_api::metadata::metadata_with_opts;
+use scarb_api::version::scarb_version;
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub async fn test(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus> {
@@ -19,6 +20,17 @@ pub async fn test(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus> {
     })?;
 
     check_profile_compatibility(&args, &scarb_metadata)?;
+
+    let scarb_version: semver::Version = scarb_version()?.scarb;
+
+    if scarb_version >= MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT {
+        error_if_snforge_std_not_compatible(&scarb_metadata)?;
+        warn_if_snforge_std_does_not_match_package_version(&scarb_metadata, &ui)?;
+    } else {
+        error_if_snforge_std_deprecated_missing(&scarb_metadata)?;
+        error_if_snforge_std_deprecated_not_compatible(&scarb_metadata)?;
+        warn_if_snforge_std_deprecated_does_not_match_package_version(&scarb_metadata, &ui)?;
+    }
 
     warn_if_backtrace_without_panic_hint(&scarb_metadata, &ui);
 
