@@ -1,13 +1,13 @@
-use crate::validation::validate_config;
 use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
 use scarb_metadata::{Metadata, PackageId};
+use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
 use serde_json::{Map, Number};
+use std::collections::HashMap;
 use std::fs::File;
 use std::{env, fs};
 use tempfile::{TempDir, tempdir};
-
-mod validation;
 
 pub const CONFIG_FILENAME: &str = "snfoundry.toml";
 
@@ -31,6 +31,18 @@ pub trait PackageConfig {
     fn from_raw(config: &serde_json::Value) -> Result<Self>
     where
         Self: Sized;
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ConfigSchema<T> {
+    #[serde(flatten)]
+    pub tools: HashMap<String, ToolProfiles<T>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ToolProfiles<T> {
+    #[serde(flatten)]
+    pub profiles: HashMap<String, T>,
 }
 
 fn get_with_ownership(config: serde_json::Value, key: &str) -> Option<serde_json::Value> {
@@ -67,33 +79,40 @@ pub fn resolve_config_file() -> Utf8PathBuf {
     })
 }
 
-pub fn load_config<T: Config + Default>(
-    path: Option<&Utf8PathBuf>,
-    profile: Option<&str>,
-) -> Result<T> {
-    let config_path = path
+pub fn load_config<T>(path: Option<&Utf8PathBuf>, profile: Option<&str>) -> Result<T>
+where
+    T: Config + Default + Serialize + DeserializeOwned + Clone,
+{
+    let path = path
         .as_ref()
         .and_then(|p| search_config_upwards_relative_to(p).ok())
         .or_else(|| find_config_file().ok());
 
-    match config_path {
-        Some(path) => {
-            let raw_config_toml =
-                fs::read_to_string(path).context("Failed to read snfoundry.toml config file")?;
+    let Some(config_path) = path else {
+        return Ok(T::default());
+    };
 
-            let config_toml: toml::Value = toml::from_str(&raw_config_toml)
-                .context("Failed to parse snfoundry.toml config file")?;
+    let raw = fs::read_to_string(config_path).context("Failed to read snfoundry.toml")?;
+    let toml_value: toml::Value =
+        toml::from_str(&raw).context("Failed to parse snfoundry.toml config file")?;
 
-            validate_config(&config_toml)?;
+    let json_value = serde_json::to_value(toml_value)?;
+    let resolved_json = resolve_env_variables(json_value)?;
 
-            let config_json = serde_json::to_value(config_toml)
-                .context("Conversion from TOML value to JSON value should not fail.")?;
+    let parsed: ConfigSchema<T> = serde_json::from_value(resolved_json)
+        .context("Failed to deserialize resolved config into ConfigSchema")?;
+    let tool_name = T::tool_name();
+    let Some(tool_profiles) = parsed.tools.get(tool_name) else {
+        return Ok(T::default());
+    };
 
-            let profile = get_profile(config_json, T::tool_name(), profile)?;
-            T::from_raw(resolve_env_variables(profile)?)
-        }
-        None => Ok(T::default()),
-    }
+    let profile_name = profile.unwrap_or("default");
+
+    let Some(profile_config) = tool_profiles.profiles.get(profile_name) else {
+        return Err(anyhow!("Profile [{profile_name}] not found in config"));
+    };
+
+    Ok(profile_config.clone())
 }
 
 /// Loads config for a specific package from the `Scarb.toml` file
@@ -259,7 +278,7 @@ mod tests {
         );
     }
 
-    #[derive(Debug, Default, Serialize, Deserialize)]
+    #[derive(Debug, Default, Serialize, Deserialize, Clone)]
     pub struct StubConfig {
         #[serde(default)]
         pub url: String,
@@ -312,7 +331,7 @@ mod tests {
         assert_eq!(config.url, String::new());
     }
 
-    #[derive(Debug, Default, Serialize, Deserialize)]
+    #[derive(Debug, Default, Serialize, Deserialize, Clone)]
     pub struct StubComplexConfig {
         #[serde(default)]
         pub url: String,
@@ -322,7 +341,7 @@ mod tests {
         pub nested: StubComplexConfigNested,
     }
 
-    #[derive(Debug, Default, Serialize, Deserialize)]
+    #[derive(Debug, Default, Serialize, Deserialize, Clone)]
     pub struct StubComplexConfigNested {
         #[serde(
             default,
@@ -360,11 +379,13 @@ mod tests {
     #[test]
     #[expect(clippy::float_cmp)]
     fn resolve_env_vars() {
-        let tempdir =
-            copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", Some("childdir1"))
-                .unwrap();
+        let tempdir = copy_config_to_tempdir(
+            "tests/data/stubtool_with_envs_snfoundry.toml",
+            Some("childdir1"),
+        )
+        .unwrap();
         fs::copy(
-            "tests/data/stubtool_snfoundry.toml",
+            "tests/data/stubtool_with_envs_snfoundry.toml",
             tempdir.path().join("childdir1").join(CONFIG_FILENAME),
         )
         .expect("Failed to copy config file to temp dir");
