@@ -226,9 +226,9 @@ jobs:
 
       - uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: "2.10.0"
+          scarb-version: "2.11.0"
 
-      - run: cargo test --profile ci --package forge --features scarb_2_10_0 --test main e2e::requirements::test_warning_on_scarb_version_below_recommended
+      - run: cargo test --profile ci --package forge --features scarb_2_11_0 --test main e2e::requirements::test_warning_on_scarb_version_below_recommended
 
   test-forge-runner:
     name: Test Forge Runner

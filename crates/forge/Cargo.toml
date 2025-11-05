@@ -6,7 +6,7 @@ edition.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-scarb_2_10_0 = []
+scarb_2_11_0 = []
 no_scarb_installed = []
 non_exact_gas_assertions = ["test_utils/non_exact_gas_assertions"]
 skip_test_for_only_latest_scarb = []
