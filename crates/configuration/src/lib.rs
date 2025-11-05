@@ -277,6 +277,7 @@ mod tests {
     }
 
     #[derive(Debug, Default, Serialize, Deserialize, Clone)]
+    #[serde(deny_unknown_fields)]
     pub struct StubConfig {
         #[serde(default)]
         pub url: String,
@@ -420,6 +421,32 @@ mod tests {
         assert_eq!(
             config.nested.url_alt,
             String::from("nfsasnsidnnsailfbsbksdabdkdkl")
+        );
+    }
+
+    #[test]
+    fn config_with_unknown_field() {
+        let tempdir = copy_config_to_tempdir(
+            "tests/data/stubtool_with_unknown_field_snfoundry.toml",
+            None,
+        )
+        .unwrap();
+        let config = load_config::<StubConfig>(
+            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            Some(&String::from("user1")),
+        );
+
+        assert!(config.is_err());
+
+        let err = config.unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("Failed to deserialize resolved config into ConfigSchema")
+        );
+        assert!(
+            err.root_cause()
+                .to_string()
+                .contains("unknown field `non-existing-field`")
         );
     }
 }

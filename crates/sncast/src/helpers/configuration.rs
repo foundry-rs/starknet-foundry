@@ -11,6 +11,7 @@ pub const fn show_explorer_links_default() -> bool {
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct CastConfig {
     #[serde(default)]
     /// RPC url
