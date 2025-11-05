@@ -544,6 +544,7 @@ fn works_with_test_fuzzer_and_test_case() {
 
             #[__fuzzer_config]
             #[__fuzzer_wrapper]
+            #[__internal_config_statement]
             fn test_add(x: i128, y: i128, expected: i128) {}
         ",
     );

@@ -5,7 +5,8 @@ use forge_runner::package_tests::with_config_resolved::TestTargetWithResolvedCon
 use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use indoc::formatdoc;
-use scarb_api::{ScarbCommand, package_matches_version_requirement};
+use scarb_api::package_matches_version_requirement;
+use scarb_api::version::scarb_version;
 use scarb_metadata::Metadata;
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::rpc::create_rpc_client;
@@ -25,7 +26,7 @@ pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
                 .config
                 .available_gas
                 .as_ref().is_some_and(cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableResourceBoundsConfig::is_zero)
-                && ScarbCommand::version().run()?.scarb <= Version::new(2, 4, 3)
+                && scarb_version()?.scarb <= Version::new(2, 4, 3)
             {
                 ui.println(&WarningMessage::new("`available_gas` attribute was probably specified when using Scarb ~2.4.3 \
                     Make sure to use Scarb >=2.4.4"
