@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A bug that prevented the `#[test_case]` attribute from being used on its own with cheatcodes
 
+### Cast
+
+#### Added 
+
+- Possibility to configure urls of predefined networks used by `--network` flag via `sncast` profile in `snfoundry.toml`
+
 ## [0.51.2] - 2025-10-31
 
 ### Cast
