@@ -46,6 +46,7 @@ async fn test_show_config_from_cli() {
         Wait Timeout:        2s
         Wait Retry Interval: 1s
         Show Explorer Links: true
+        Block Explorer:      StarkScan
     ", URL});
 }
 
