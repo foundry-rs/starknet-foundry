@@ -13,10 +13,10 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use toml_edit::{Array, ArrayOfTables, DocumentMut, Item, Table, Value, value};
 
+const OZ_VERSION: Version = Version::new(1, 0, 0);
+
 static TEMPLATES_DIR: Dir = include_dir!("snforge_templates");
 
-const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
-const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
 const SCARB_WITHOUT_CAIRO_TEST_TEMPLATE: Version = Version::new(2, 13, 0);
 
 struct Dependency {
@@ -134,7 +134,7 @@ impl TryFrom<&Template> for TemplateManifestConfig {
                     },
                     Dependency {
                         name: "openzeppelin_token".to_string(),
-                        version: get_oz_version()?.to_string(),
+                        version: OZ_VERSION.to_string(),
                         dev: false,
                     },
                 ],
@@ -256,12 +256,7 @@ fn set_cairo_edition(document: &mut DocumentMut, cairo_edition: &str) {
 }
 
 fn add_assert_macros(document: &mut DocumentMut) -> Result<()> {
-    let versions = scarb_version()?;
-    let version = if versions.scarb < MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS {
-        DEFAULT_ASSERT_MACROS
-    } else {
-        versions.cairo
-    };
+    let version = scarb_version()?.cairo;
 
     document
         .entry("dev-dependencies")
@@ -463,17 +458,4 @@ fn get_template_dir(template: &Template) -> Result<Dir<'_>> {
         .get_dir(dir_name)
         .ok_or_else(|| anyhow!("Directory {dir_name} not found"))
         .cloned()
-}
-
-fn get_oz_version() -> Result<Version> {
-    let scarb_version = scarb_version()?.scarb;
-
-    let oz_version = match scarb_version {
-        ver if ver >= Version::new(2, 9, 4) => Version::new(1, 0, 0),
-        ver if ver >= Version::new(2, 9, 1) => Version::new(0, 20, 0),
-        ver if ver >= Version::new(2, 8, 4) => Version::new(0, 19, 0),
-        _ => bail!("Minimal Scarb version to create a new project with ERC-20 template is 2.8.4"),
-    };
-
-    Ok(oz_version)
 }
