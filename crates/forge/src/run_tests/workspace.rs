@@ -1,7 +1,7 @@
 use super::package::RunForPackageArgs;
 use crate::run_tests::messages::latest_blocks_numbers::LatestBlocksNumbersMessage;
-use crate::run_tests::messages::overall_summary::OverallSummaryMessage;
 use crate::run_tests::messages::tests_failure_summary::TestsFailureSummaryMessage;
+use crate::run_tests::messages::workspace_summary::WorkspaceSummaryMessage;
 use crate::{
     ExitStatus, TestArgs, block_number_map::BlockNumberMap, run_tests::package::run_for_package,
     scarb::build_artifacts_with_scarb, shared_cache::FailedTestsCache,
@@ -97,7 +97,7 @@ pub async fn run_for_workspace(
             .map(|(total, filtered)| total + filtered);
     }
 
-    let overall_summary = OverallSummaryMessage::new(&all_tests, total_filtered_count);
+    let overall_summary = WorkspaceSummaryMessage::new(&all_tests, total_filtered_count);
     let all_failed_tests: Vec<AnyTestCaseSummary> = extract_failed_tests(all_tests).collect();
 
     FailedTestsCache::new(&workspace_dirs.cache_dir).save_failed_tests(&all_failed_tests)?;
