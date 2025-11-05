@@ -195,8 +195,6 @@ impl CheatableStarknetRuntimeExtension<'_> {
         syscall_handler.syscall_ptr += 1;
         syscall_handler.increment_syscall_count_by(&selector, 1);
 
-        self.cheatnet_state.add_used_syscall(&selector, 1);
-
         let syscall_gas_cost = syscall_handler
             .get_gas_cost_from_selector(&selector)
             .map_err(|error| SyscallExecutorBaseError::GasCost { error, selector })?;

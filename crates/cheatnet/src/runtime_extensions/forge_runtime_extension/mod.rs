@@ -2,6 +2,7 @@ use self::contracts_data::ContractsData;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use crate::runtime_extensions::common::sum_syscall_usage;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::testing::calculate_steps_from_calls;
 use crate::runtime_extensions::{
     call_to_blockifier_runtime_extension::{
         CallToBlockifierRuntime,
@@ -19,7 +20,6 @@ use crate::runtime_extensions::{
 };
 use crate::trace_data::{CallTrace, CallTraceNode, GasReportData};
 use anyhow::{Context, Result, anyhow};
-use blockifier::blockifier_versioned_constants::VersionedConstants;
 use blockifier::bouncer::vm_resources_to_sierra_gas;
 use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::{
@@ -555,21 +555,23 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::from_serializable(()))
             }
             "get_current_step" => {
-                let used_resources = &extended_runtime
+                let top_call = extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .used_resources;
-                let execution_resources_from_used_syscalls =
-                    &VersionedConstants::latest_constants().get_additional_os_syscall_resources(
-                        &extended_runtime
-                            .extended_runtime
-                            .extension
-                            .cheatnet_state
-                            .used_syscalls,
-                    );
-                let resources_from_calls = used_resources + execution_resources_from_used_syscalls;
-                let total_steps = resources_from_calls.n_steps + vm.get_current_step();
+                    .trace_data
+                    .current_call_stack
+                    .top();
+
+                let top_call_syscalls = &extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .base
+                    .syscalls_usage;
+
+                let steps_from_calls = calculate_steps_from_calls(&top_call, top_call_syscalls);
+                let total_steps = steps_from_calls + vm.get_current_step();
 
                 Ok(CheatcodeHandlingResult::from_serializable(total_steps))
             }
