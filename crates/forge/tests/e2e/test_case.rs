@@ -144,3 +144,66 @@ fn addition_with_name_arg() {
         "},
     );
 }
+
+#[test]
+#[cfg_attr(
+    feature = "skip_test_for_only_latest_scarb",
+    ignore = "Plugin checks skipped"
+)]
+fn with_contract_deploy() {
+    let temp = setup_package("test_case");
+
+    let output = test_runner(&temp)
+        .arg("with_contract_deploy")
+        .assert()
+        .code(0);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 3 test(s) from test_case package
+        Running 3 test(s) from tests/
+        [PASS] test_case_integrationtest::with_deploy::with_contract_deploy_100 [..]
+        [PASS] test_case_integrationtest::with_deploy::with_contract_deploy_42 [..]
+        [PASS] test_case_integrationtest::with_deploy::with_contract_deploy_0 [..]
+        Running 0 test(s) from src/
+        Tests: 3 passed, 0 failed, 0 ignored, [..] filtered out
+        "},
+    );
+}
+
+#[test]
+#[cfg_attr(
+    feature = "skip_test_for_only_latest_scarb",
+    ignore = "Plugin checks skipped"
+)]
+fn with_fuzzer_and_contract_deploy() {
+    let temp = setup_package("test_case");
+
+    let output = test_runner(&temp)
+        .arg("with_fuzzer_and_contract_deploy")
+        .assert()
+        .code(0);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 3 test(s) from test_case package
+        Running 3 test(s) from tests/
+        [PASS] test_case_integrationtest::with_deploy::with_fuzzer_and_contract_deploy_123 [..]
+        [PASS] test_case_integrationtest::with_deploy::with_fuzzer_and_contract_deploy_0 [..]
+        [PASS] test_case_integrationtest::with_deploy::with_fuzzer_and_contract_deploy [..]
+        Running 0 test(s) from src/
+        Tests: 3 passed, 0 failed, 0 ignored, [..] filtered out
+        Fuzzer seed: [..]
+        "},
+    );
+}

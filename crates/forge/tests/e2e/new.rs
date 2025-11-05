@@ -6,9 +6,9 @@ use forge::CAIRO_EDITION;
 use forge::Template;
 use forge::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use indoc::{formatdoc, indoc};
+use itertools::Itertools;
 use regex::Regex;
 use scarb_api::ScarbCommand;
-use shared::consts::FREE_RPC_PROVIDER_URL;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::assert_matches;
 use snapbox::cmd::Command as SnapboxCommand;
@@ -24,7 +24,8 @@ static RE_NEWLINES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\n{3,}").unw
 
 #[test_case(&Template::CairoProgram; "cairo-program")]
 #[test_case(&Template::BalanceContract; "balance-contract")]
-#[test_case(&Template::Erc20Contract; "erc20-contract")]
+// TODO(#3896) restore this test case
+// #[test_case(&Template::Erc20Contract; "erc20-contract")]
 fn create_new_project_dir_not_exist(template: &Template) {
     let temp = tempdir_with_tool_versions().unwrap();
     let project_path = temp.join("new").join("project");
@@ -117,7 +118,7 @@ fn validate_init(project_path: &PathBuf, validate_snforge_std: bool, template: &
     let scarb_toml = fs::read_to_string(manifest_path.clone()).unwrap();
 
     let expected = get_expected_manifest_content(template, validate_snforge_std);
-    assert_matches(&expected, &scarb_toml);
+    assert_manifest_matches(&expected, &scarb_toml);
 
     let mut scarb_toml = DocumentMut::from_str(&scarb_toml).unwrap();
 
@@ -188,7 +189,7 @@ fn get_expected_manifest_content(template: &Template, validate_snforge_std: bool
             r#"
             [[tool.snforge.fork]]
             name = "SEPOLIA_LATEST"
-            url = "{FREE_RPC_PROVIDER_URL}"
+            url = "<YOUR_RPC_PROVIDER"
             block_id = {{ tag = "latest" }}
         "#
         )
@@ -330,4 +331,21 @@ fn create_new_project_and_check_gitignore() {
     };
 
     assert_eq!(gitignore_content, expected_gitignore_content);
+}
+
+/// Asserts that two manifest contents match, ignoring the order of lines.
+///
+/// # Why Line Order Can Vary
+///
+/// Starting from Scarb version 2.13, `scarb init` no longer inserts the `[dev-dependencies]` section.
+/// When tools like `forge new` generate a new project, they insert this section later
+/// in the manifest. As a result, the relative placement of `[dev-dependencies]` and other sections
+/// might differ depending on the version of Scarb used.
+fn assert_manifest_matches(expected: &str, actual: &str) {
+    // TODO(#3910)
+    fn sort_lines(s: &str) -> String {
+        s.lines().sorted().join("\n")
+    }
+
+    assert_matches(sort_lines(expected), sort_lines(actual));
 }

@@ -9,13 +9,10 @@ use forge_runner::package_tests::raw::TestTargetRaw;
 use scarb_api::{ScarbCommand, test_targets_by_name};
 use scarb_metadata::{Metadata, PackageId, PackageMetadata};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter, ProfileSpec};
-use semver::Version;
 use std::fs;
 use std::io::ErrorKind;
 
 pub mod config;
-
-const MINIMAL_SCARB_VERSION_TO_OPTIMIZE_COMPILATION: Version = Version::new(2, 8, 3);
 
 impl Config for ForgeConfigFromScarb {
     fn tool_name() -> &'static str {
@@ -50,23 +47,14 @@ pub fn load_package_config<T: Config + Default>(
     }
 }
 
-#[must_use]
-pub fn should_compile_starknet_contract_target(
-    scarb_version: &Version,
-    no_optimization: bool,
-) -> bool {
-    *scarb_version < MINIMAL_SCARB_VERSION_TO_OPTIMIZE_COMPILATION || no_optimization
-}
-
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn build_artifacts_with_scarb(
     filter: PackagesFilter,
     features: FeaturesSpec,
     profile: ProfileSpec,
-    scarb_version: &Version,
     no_optimization: bool,
 ) -> Result<()> {
-    if should_compile_starknet_contract_target(scarb_version, no_optimization) {
+    if no_optimization {
         build_contracts_with_scarb(filter.clone(), features.clone(), profile.clone())?;
     }
     build_test_artifacts_with_scarb(filter, features, profile)?;

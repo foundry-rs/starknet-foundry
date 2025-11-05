@@ -1735,7 +1735,7 @@ checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 
 [[package]]
 name = "cheatnet"
-version = "0.51.1"
+version = "0.51.2"
 dependencies = [
  "anyhow",
  "bimap",
@@ -2777,7 +2777,7 @@ checksum = "780955b8b195a21ab8e4ac6b60dd1dbdcec1dc6c51c0617964b08c81785e12c9"
 
 [[package]]
 name = "docs"
-version = "0.51.1"
+version = "0.51.2"
 dependencies = [
  "anyhow",
  "camino",
@@ -3167,7 +3167,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.51.1"
+version = "0.51.2"
 dependencies = [
  "anyhow",
  "assert_fs",
@@ -3224,7 +3224,7 @@ dependencies = [
 
 [[package]]
 name = "forge_runner"
-version = "0.51.1"
+version = "0.51.2"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -3282,7 +3282,7 @@ dependencies = [
 
 [[package]]
 name = "foundry-ui"
-version = "0.51.1"
+version = "0.51.2"
 dependencies = [
  "anyhow",
  "console",
@@ -4669,7 +4669,7 @@ checksum = "b52c1b33ff98142aecea13138bd399b68aa7ab5d9546c300988c345004001eea"
 
 [[package]]
 name = "native-api"
-version = "0.51.1"
+version = "0.51.2"
 dependencies = [
  "cairo-lang-starknet-classes",
  "cairo-native",
@@ -6744,7 +6744,7 @@ dependencies = [
 
 [[package]]
 name = "sncast"
-version = "0.51.1"
+version = "0.51.2"
 dependencies = [
  "anyhow",
  "async-trait",

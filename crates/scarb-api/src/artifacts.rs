@@ -97,7 +97,7 @@ impl StarknetArtifactsFiles {
             .into_par_iter()
             .map(|(name, path)| {
                 self.compile_artifact_at_path(&path)
-                    .map(|artifact| (name.to_string(), (artifact, path)))
+                    .map(|artifact| (name.clone(), (artifact, path)))
             })
             .collect::<Result<_>>()
     }
@@ -126,7 +126,7 @@ impl StarknetArtifactsFiles {
         Ok(if self.compile_native {
             Some(native_api::compile_contract_class(&serde_json::from_str(
                 sierra,
-            )?)?)
+            )?))
         } else {
             None
         })
@@ -141,7 +141,7 @@ fn unique_artifacts(
     artifact_representations
         .into_iter()
         .flat_map(StarknetArtifactsRepresentation::artifacts)
-        .unique_by(|(name, _)| name.to_string())
+        .unique_by(|(name, _)| name.clone())
         .filter(|(name, _)| !current_artifacts.contains_key(name))
         .collect()
 }

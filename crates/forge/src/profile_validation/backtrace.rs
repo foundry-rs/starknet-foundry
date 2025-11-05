@@ -3,7 +3,6 @@ use crate::profile_validation::{check_cairo_profile_entries, get_manifest};
 use anyhow::ensure;
 use indoc::formatdoc;
 use scarb_metadata::Metadata;
-use semver::Version;
 
 /// Checks if backtrace can be generated based on scarb version, profile settings extracted from
 /// the provided [`Metadata`] and if native execution is disabled in the provided [`TestArgs`].
@@ -14,7 +13,6 @@ pub fn check_backtrace_compatibility(
 ) -> anyhow::Result<()> {
     #[cfg(feature = "cairo-native")]
     check_if_native_disabled(test_args)?;
-    check_scarb_version(scarb_metadata)?;
     check_profile(scarb_metadata)?;
     Ok(())
 }
@@ -25,15 +23,6 @@ fn check_if_native_disabled(test_args: &TestArgs) -> anyhow::Result<()> {
     ensure!(
         !test_args.run_native,
         "Backtrace generation is not supported with `cairo-native` execution",
-    );
-    Ok(())
-}
-/// Checks if the scarb version from the provided [`Metadata`] is greater than or equal to the minimal required version.
-fn check_scarb_version(scarb_metadata: &Metadata) -> anyhow::Result<()> {
-    const MINIMAL_SCARB_VERSION: Version = Version::new(2, 8, 0);
-    ensure!(
-        scarb_metadata.app_version_info.version >= MINIMAL_SCARB_VERSION,
-        "Backtrace generation requires scarb version >= {MINIMAL_SCARB_VERSION}",
     );
     Ok(())
 }
