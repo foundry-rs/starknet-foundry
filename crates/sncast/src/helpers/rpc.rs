@@ -36,7 +36,7 @@ impl RpcArgs {
             )
         }
 
-        let url = self.get_url(&config.url).await?;
+        let url = self.get_url(config).await?;
 
         assert!(!url.is_empty(), "url cannot be empty");
         let provider = get_provider(&url)?;
@@ -46,15 +46,20 @@ impl RpcArgs {
         Ok(provider)
     }
 
-    pub async fn get_url(&self, config_url: &str) -> Result<String> {
-        match (&self.network, &self.url, config_url) {
-            (Some(network), None, _) => {
-                let free_provider = FreeProvider::semi_random();
-                network.url(&free_provider).await
-            }
+    pub async fn get_url(&self, config: &CastConfig) -> Result<String> {
+        match (&self.network, &self.url, &config.url) {
+            (Some(network), None, _) => self.resolve_network_url(network, config).await,
             (None, Some(url), _) => Ok(url.clone()),
-            (None, None, config_url) if !config_url.is_empty() => Ok(config_url.to_string()),
-            _ => bail!("Either `--network` or `--url` must be provided"),
+            (None, None, url) if !url.is_empty() => Ok(url.clone()),
+            _ => bail!("Either `--network` or `--url` must be provided."),
+        }
+    }
+
+    async fn resolve_network_url(&self, network: &Network, config: &CastConfig) -> Result<String> {
+        if let Some(custom_url) = config.networks.get_url(*network) {
+            Ok(custom_url.clone())
+        } else {
+            network.url(&FreeProvider::semi_random()).await
         }
     }
 }
@@ -146,5 +151,38 @@ mod tests {
         let provider = get_provider(&Network::free_sepolia_rpc(&FreeProvider::Alchemy)).unwrap();
         let spec_version = provider.spec_version().await.unwrap();
         assert!(is_expected_version(&Version::parse(&spec_version).unwrap()));
+    }
+
+    #[tokio::test]
+    async fn test_custom_network_url_from_config() {
+        let mut config = CastConfig::default();
+        config.networks.mainnet =
+            Some("https://starknet-mainnet.infura.io/v3/custom-api-key".to_string());
+        config.networks.sepolia =
+            Some("https://starknet-sepolia.g.alchemy.com/v2/custom-api-key".to_string());
+
+        let rpc_args = RpcArgs {
+            url: None,
+            network: Some(Network::Mainnet),
+        };
+
+        let url = rpc_args.get_url(&config).await.unwrap();
+        assert_eq!(
+            url,
+            "https://starknet-mainnet.infura.io/v3/custom-api-key".to_string()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_fallback_to_default_network_url() {
+        let config = CastConfig::default();
+
+        let rpc_args = RpcArgs {
+            url: None,
+            network: Some(Network::Mainnet),
+        };
+
+        let url = rpc_args.get_url(&config).await.unwrap();
+        assert_eq!(url, Network::free_mainnet_rpc(&FreeProvider::Alchemy));
     }
 }
