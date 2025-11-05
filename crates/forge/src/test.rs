@@ -1,5 +1,3 @@
-use std::{env, sync::Arc};
-
 use crate::profile_validation::check_profile_compatibility;
 use crate::run_tests::workspace::run_for_workspace;
 use crate::warn::warn_if_snforge_std_does_not_match_package_version;
@@ -14,6 +12,7 @@ use foundry_ui::UI;
 use scarb_api::metadata::MetadataOpts;
 use scarb_api::metadata::metadata_with_opts;
 use scarb_api::version::scarb_version;
+use std::{env, sync::Arc};
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub async fn test(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus> {
