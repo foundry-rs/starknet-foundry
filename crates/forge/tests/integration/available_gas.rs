@@ -1,11 +1,11 @@
+use crate::utils::runner::{assert_case_output_contains, assert_failed, assert_passed};
+use crate::utils::running_tests::run_test_case;
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
-use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed};
-use test_utils::running_tests::run_test_case;
 
 #[test]
 fn correct_available_gas() {
-    let test = test_utils::test_case!(indoc!(
+    let test = crate::utils::test_case!(indoc!(
         r"
             #[test]
             #[available_gas(l2_gas: 440000)]
@@ -22,7 +22,7 @@ fn correct_available_gas() {
 
 #[test]
 fn available_gas_exceeded() {
-    let test = test_utils::test_case!(indoc!(
+    let test = crate::utils::test_case!(indoc!(
         r"
             #[test]
             #[available_gas(l2_gas: 5)]
@@ -44,7 +44,7 @@ fn available_gas_exceeded() {
 
 #[test]
 fn available_gas_fuzzing() {
-    let test = test_utils::test_case!(indoc!(
+    let test = crate::utils::test_case!(indoc!(
         r"
             #[test]
             #[available_gas(l2_gas: 40000000)]

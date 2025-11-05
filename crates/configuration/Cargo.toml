@@ -13,5 +13,3 @@ serde.workspace = true
 camino.workspace = true
 toml.workspace = true
 tempfile.workspace = true
-scarb-metadata.workspace = true
-

@@ -7,7 +7,7 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
-use configuration::copy_config_to_tempdir;
+use configuration::test_utils::copy_config_to_tempdir;
 use conversions::string::IntoHexStr;
 use indoc::indoc;
 use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
@@ -224,7 +224,7 @@ pub async fn test_valid_no_max_fee() {
 }
 
 pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &str) -> TempDir {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let accounts_file = "accounts.json";
 
     let mut args = vec![

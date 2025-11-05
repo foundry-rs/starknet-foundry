@@ -1,4 +1,4 @@
-use crate::runner::TestCase;
+use crate::utils::runner::TestCase;
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::shared_cache::FailedTestsCache;

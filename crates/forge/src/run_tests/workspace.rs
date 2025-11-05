@@ -49,7 +49,6 @@ pub async fn run_for_workspace(
         filter.clone(),
         args.scarb_args.features.clone(),
         args.scarb_args.profile.clone(),
-        &scarb_metadata.app_version_info.version,
         args.no_optimization,
     )?;
 
