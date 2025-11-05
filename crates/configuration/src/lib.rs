@@ -431,11 +431,11 @@ mod tests {
             None,
         )
         .unwrap();
+
         let config = load_config::<StubConfig>(
             Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
             Some(&String::from("user1")),
         );
-
         assert!(config.is_err());
 
         let err = config.unwrap_err();
