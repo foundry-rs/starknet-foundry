@@ -11,6 +11,9 @@ on:
         required: false
         type: string
 
+env:
+  ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+
 jobs:
   build-binaries:
     name: Build ${{ matrix.target }}
@@ -76,7 +79,7 @@ jobs:
           echo "CARGO=cross" >> $GITHUB_ENV
 
       - name: Build
-        run: ${{ env.CARGO }} build --release --locked --target ${{ matrix.target }}
+        run: ${{ env.CARGO }} build --release --locked --bins --target ${{ matrix.target }}
 
       - name: Package
         shell: bash

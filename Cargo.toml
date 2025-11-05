@@ -27,7 +27,7 @@ inherits = "release"
 debug-assertions = true
 
 [workspace.package]
-version = "0.51.0"
+version = "0.51.2"
 edition = "2024"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
@@ -40,18 +40,18 @@ bigdecimal = "0.4.8"
 # TODO(#3770) Use starknet_api directly
 starknet_api = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.14.0" }
 cairo-native = "0.6.2"
-cairo-lang-casm = { version = "2.12.3", features = ["serde"] }
-cairo-lang-sierra = "2.12.3"
-cairo-lang-utils = "2.12.3"
-cairo-lang-starknet = "2.12.3"
-cairo-lang-filesystem = "2.12.3"
-cairo-lang-diagnostics = "2.12.3"
-cairo-lang-sierra-type-size = "2.12.3"
-cairo-lang-syntax = "2.12.3"
-cairo-lang-test-plugin = "2.12.3"
-cairo-lang-starknet-classes = "2.12.3"
-cairo-lang-parser = "2.12.3"
-cairo-lang-sierra-to-casm = "2.12.3"
+cairo-lang-casm = { version = "=2.12.3", features = ["serde"] }
+cairo-lang-sierra = "=2.12.3"
+cairo-lang-utils = "=2.12.3"
+cairo-lang-starknet = "=2.12.3"
+cairo-lang-filesystem = "=2.12.3"
+cairo-lang-diagnostics = "=2.12.3"
+cairo-lang-sierra-type-size = "=2.12.3"
+cairo-lang-syntax = "=2.12.3"
+cairo-lang-test-plugin = "=2.12.3"
+cairo-lang-starknet-classes = "=2.12.3"
+cairo-lang-parser = "=2.12.3"
+cairo-lang-sierra-to-casm = "=2.12.3"
 cairo-vm = "2.5.0"
 cairo-annotations = { version = "0.6.1", features = ["cairo-lang"] }
 dirs = "6.0.0"

@@ -15,6 +15,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
+- A bug that prevented the `#[test_case]` attribute from being used on its own with cheatcodes
+
+### Cast
+
+#### Added 
+
+- Possibility to configure urls of predefined networks used by `--network` flag via `sncast` profile in `snfoundry.toml`
+
+## [0.51.2] - 2025-10-31
+
+### Cast
+
+#### Changed
+
+- Replaced the free RPC provider used.
+
+## [0.51.1] - 2025-10-23
+
+### Forge
+
+#### Fixed
+
 - A bug that caused `meta_tx_v0` to panic when tracked resources are Sierra gas.
 
 ## [0.51.0] - 2025-10-21

@@ -1,4 +1,4 @@
-use crate::{
+use crate::utils::{
     get_assert_macros_version, get_std_name, get_std_path, tempdir_with_tool_versions,
     use_snforge_std_deprecated,
 };
@@ -16,9 +16,9 @@ use forge_runner::{
 };
 use foundry_ui::UI;
 use indoc::formatdoc;
+use scarb_api::metadata::metadata_for_dir;
 use scarb_api::{
-    CompilationOpts, ScarbCommand, StarknetContractArtifacts,
-    get_contracts_artifacts_and_source_sierra_paths, metadata::MetadataCommandExt,
+    CompilationOpts, StarknetContractArtifacts, get_contracts_artifacts_and_source_sierra_paths,
     target_dir_for_workspace,
 };
 use shared::command::CommandExt;
@@ -94,10 +94,7 @@ impl Contract {
             .output_checked()
             .context("Failed to build contracts with Scarb")?;
 
-        let scarb_metadata = ScarbCommand::metadata()
-            .current_dir(dir.path())
-            .inherit_stderr()
-            .run()?;
+        let scarb_metadata = metadata_for_dir(dir.path())?;
         let package = scarb_metadata
             .packages
             .iter()
@@ -241,14 +238,16 @@ impl<'a> TestCase {
     }
 }
 
+#[expect(clippy::crate_in_macro_def)]
 #[macro_export]
 macro_rules! test_case {
     ( $test_code:expr ) => ({
-        use $crate::runner::TestCase;
+        use crate::utils::runner::TestCase;
+
         TestCase::from($test_code, vec![]).unwrap()
     });
     ( $test_code:expr, $( $contract:expr ),*) => ({
-        use $crate::runner::TestCase;
+        use crate::utils::runner::TestCase;
 
         let contracts = vec![$($contract,)*];
         TestCase::from($test_code, contracts).unwrap()

@@ -6,7 +6,7 @@ use cheatnet::runtime_extensions::forge_config_extension::config::{
     RawAvailableResourceBoundsConfig, RawFuzzerConfig,
 };
 use starknet_api::block::BlockNumber;
-use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
+use universal_sierra_compiler_api::representation::RawCasmProgram;
 use url::Url;
 
 pub type TestTargetWithResolvedConfig = TestTarget<TestCaseResolvedConfig>;
@@ -29,10 +29,7 @@ impl TestCaseWithResolvedConfig {
         }
     }
 
-    pub fn try_into_program(
-        &self,
-        casm_program: &AssembledProgramWithDebugInfo,
-    ) -> Result<Program> {
+    pub fn try_into_program(&self, casm_program: &RawCasmProgram) -> Result<Program> {
         self.test_details.try_into_program(casm_program)
     }
 }

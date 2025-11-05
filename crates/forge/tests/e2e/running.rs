@@ -1,11 +1,11 @@
 use super::common::runner::{
     get_current_branch, get_remote_url, setup_package, test_runner, test_runner_native,
 };
+use crate::utils::{get_snforge_std_entry, use_snforge_std_deprecated};
 use assert_fs::fixture::{FileWriteStr, PathChild};
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::{AsOutput, assert_stdout, assert_stdout_contains};
 use std::fs;
-use test_utils::{get_snforge_std_entry, use_snforge_std_deprecated};
 use toml_edit::{DocumentMut, value};
 
 #[test]

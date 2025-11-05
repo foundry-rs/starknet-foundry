@@ -1,10 +1,11 @@
 use crate::e2e::common::runner::{runner, test_runner};
+use crate::utils::tempdir_with_tool_versions;
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 use scarb_api::ScarbCommand;
+use scarb_api::version::scarb_version_for_dir;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::cmd::Command;
-use test_utils::tempdir_with_tool_versions;
 use toml_edit::ImDocument;
 
 #[test]
@@ -146,9 +147,7 @@ fn new_scarb_deprecated_macros() {
         .command()
         .output()
         .unwrap();
-    let scarb_version = ScarbCommand::version()
-        .current_dir(temp.path())
-        .run()
+    let scarb_version = scarb_version_for_dir(temp.path())
         .unwrap()
         .scarb
         .to_string();

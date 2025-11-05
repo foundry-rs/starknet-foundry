@@ -1,10 +1,10 @@
 use forge_runner::forge_config::ForgeTrackedResource;
 use std::path::Path;
 
+use crate::utils::runner::{Contract, assert_passed};
+use crate::utils::running_tests::run_test_case;
+use crate::utils::test_case;
 use indoc::indoc;
-use test_utils::runner::{Contract, assert_passed};
-use test_utils::running_tests::run_test_case;
-use test_utils::test_case;
 
 #[test]
 fn should_panic() {

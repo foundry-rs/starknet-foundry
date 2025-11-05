@@ -15,7 +15,7 @@ use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cheatnet::constants::build_test_entry_point;
 use starknet_api::deprecated_contract_class::EntryPointOffset;
 use std::collections::HashMap;
-use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
+use universal_sierra_compiler_api::representation::RawCasmProgram;
 
 // Based on structure from https://github.com/starkware-libs/sequencer/blob/e417a9e7d50cbd78065d357763df2fbc2ad41f7c/crates/blockifier/src/execution/entry_point_execution.rs#L39
 // Logic of `initialize_execution_context` had to be modified so this struct ended up modified as well.
@@ -96,7 +96,7 @@ pub fn entry_point_initial_budget(syscall_hint_processor: &SyscallHintProcessor)
 
 pub fn build_test_call_and_entry_point(
     test_details: &TestDetails,
-    casm_program: &AssembledProgramWithDebugInfo,
+    casm_program: &RawCasmProgram,
     program: &Program,
 ) -> (ExecutableCallEntryPoint, EntryPointV1) {
     let sierra_instruction_idx = test_details.sierra_entry_point_statement_idx;
