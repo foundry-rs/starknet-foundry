@@ -378,12 +378,12 @@ mod tests {
     #[expect(clippy::float_cmp)]
     fn resolve_env_vars() {
         let tempdir = copy_config_to_tempdir(
-            "tests/data/stubtool_with_envs_snfoundry.toml",
+            "tests/data/stubtool_complex_snfoundry.toml",
             Some("childdir1"),
         )
         .unwrap();
         fs::copy(
-            "tests/data/stubtool_with_envs_snfoundry.toml",
+            "tests/data/stubtool_complex_snfoundry.toml",
             tempdir.path().join("childdir1").join(CONFIG_FILENAME),
         )
         .expect("Failed to copy config file to temp dir");
