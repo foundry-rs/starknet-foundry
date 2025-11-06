@@ -1,15 +1,16 @@
+use anyhow::Result;
+use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
+use forge::block_number_map::BlockNumberMap;
+use forge::run_tests::package::run_for_package;
+use forge::scarb::config::ForkTarget;
+use forge::test_filter::TestsFilter;
+use forge_runner::package_tests::TestTarget;
 use foundry_ui::UI;
 use indoc::{formatdoc, indoc};
 use std::num::NonZeroU32;
 use std::path::Path;
 use std::sync::Arc;
-
-use camino::Utf8PathBuf;
-use forge::block_number_map::BlockNumberMap;
-use forge::run_tests::package::run_for_package;
-use forge::scarb::config::ForkTarget;
-use forge::test_filter::TestsFilter;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
@@ -127,12 +128,17 @@ fn fork_aliased_decorator() {
 
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
+    let test_targets = raw_test_targets
+        .into_iter()
+        .map(TestTarget::from_raw)
+        .collect::<Result<Vec<_>>>()
+        .unwrap();
 
     let ui = Arc::new(UI::default());
     let result = rt
         .block_on(run_for_package(
             RunForPackageArgs {
-                test_targets: raw_test_targets,
+                test_targets,
                 package_name: "test_package".to_string(),
                 tests_filter: TestsFilter::from_flags(
                     None,
@@ -217,12 +223,17 @@ fn fork_aliased_decorator_overrding() {
 
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
+    let test_targets = raw_test_targets
+        .into_iter()
+        .map(TestTarget::from_raw)
+        .collect::<Result<Vec<_>>>()
+        .unwrap();
 
     let ui = Arc::new(UI::default());
     let result = rt
         .block_on(run_for_package(
             RunForPackageArgs {
-                test_targets: raw_test_targets,
+                test_targets,
                 package_name: "test_package".to_string(),
                 tests_filter: TestsFilter::from_flags(
                     None,

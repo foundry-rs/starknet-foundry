@@ -46,10 +46,9 @@ impl WorkspaceDirs {
     }
 }
 
-#[expect(dead_code)]
-struct PackageData {
-    metadata: PackageMetadata,
-    test_targets: Vec<TestTarget<TestCandidate>>,
+pub struct PackageData {
+    pub metadata: PackageMetadata,
+    pub test_targets: Vec<TestTarget<TestCandidate>>,
 }
 
 pub struct Workspace(HashMap<PackageId, PackageData>);
@@ -116,10 +115,19 @@ pub async fn run_for_workspace(
 
     let packages_len = packages.len();
 
-    for package in packages {
-        env::set_current_dir(&package.root)?;
+    let workspace = Workspace::new(&workspace_dirs, &packages)?;
 
-        let args = RunForPackageArgs::build(package, scarb_metadata, &args, &workspace_dirs, &ui)?;
+    for (_, package_data) in workspace.0 {
+        env::set_current_dir(&package_data.metadata.root)?;
+
+        let args = RunForPackageArgs::build(
+            package_data.test_targets,
+            package_data.metadata,
+            scarb_metadata,
+            &args,
+            &workspace_dirs,
+            &ui,
+        )?;
 
         let result = run_for_package(args, &mut block_number_map, ui.clone()).await?;
 

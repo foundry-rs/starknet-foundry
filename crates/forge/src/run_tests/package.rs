@@ -1,7 +1,4 @@
-use super::{
-    resolve_config::resolve_config,
-    test_target::{TestTargetRunResult, run_for_test_target},
-};
+use super::test_target::{TestTargetRunResult, run_for_test_target};
 use crate::scarb::load_package_config;
 use crate::{
     TestArgs,
@@ -11,12 +8,10 @@ use crate::{
         messages::{
             collected_tests_count::CollectedTestsCountMessage, tests_summary::TestsSummaryMessage,
         },
+        resolve_config::resolve_config,
         workspace::WorkspaceDirs,
     },
-    scarb::{
-        config::{ForgeConfigFromScarb, ForkTarget},
-        load_test_artifacts,
-    },
+    scarb::config::{ForgeConfigFromScarb, ForkTarget},
     shared_cache::FailedTestsCache,
     test_filter::{NameFilter, TestsFilter},
     warn::warn_if_incompatible_rpc_version,
@@ -25,11 +20,8 @@ use anyhow::Result;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use console::Style;
 use forge_runner::{
-    forge_config::ForgeConfig,
-    package_tests::{
-        TestTargetDeprecated, raw::TestTargetRaw,
-        with_config_resolved::TestTargetWithResolvedConfig,
-    },
+    forge_config::{ForgeConfig, ForgeTrackedResource},
+    package_tests::{TestCandidate, TestCase, TestTarget},
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
 };
@@ -64,24 +56,24 @@ impl PackageTestResult {
 }
 
 pub struct RunForPackageArgs {
-    pub test_targets: Vec<TestTargetRaw>,
+    pub test_targets: Vec<TestTarget<TestCandidate>>,
     pub tests_filter: TestsFilter,
     pub forge_config: Arc<ForgeConfig>,
     pub fork_targets: Vec<ForkTarget>,
     pub package_name: String,
+    // pub tracked_resource: ForgeTrackedResource,
 }
 
 impl RunForPackageArgs {
     #[tracing::instrument(skip_all, level = "debug")]
     pub fn build(
+        test_targets: Vec<TestTarget<TestCandidate>>,
         package: PackageMetadata,
         scarb_metadata: &Metadata,
         args: &TestArgs,
         workspace_dirs: &WorkspaceDirs,
         ui: &UI,
     ) -> Result<RunForPackageArgs> {
-        let raw_test_targets = load_test_artifacts(&workspace_dirs.artifacts_dir, &package)?;
-
         let contracts = get_contracts_artifacts_and_source_sierra_paths(
             &workspace_dirs.artifacts_dir,
             &package,
@@ -125,33 +117,35 @@ impl RunForPackageArgs {
         );
 
         Ok(RunForPackageArgs {
-            test_targets: raw_test_targets,
+            test_targets,
             forge_config,
             tests_filter: test_filter,
             fork_targets: forge_config_from_scarb.fork,
             package_name: package.name,
+            // tracked_resource: args.tracked_resource,
         })
     }
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
 async fn test_package_with_config_resolved(
-    test_targets: Vec<TestTargetRaw>,
+    test_targets: Vec<TestTarget<TestCandidate>>,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
-    forge_config: &ForgeConfig,
     tests_filter: &TestsFilter,
-) -> Result<Vec<TestTargetWithResolvedConfig>> {
+    tracked_resource: &ForgeTrackedResource,
+) -> Result<Vec<TestTarget<TestCase>>> {
     let mut test_targets_with_resolved_config = Vec::with_capacity(test_targets.len());
 
     for test_target in test_targets {
-        let test_target = TestTargetDeprecated::from_raw_deprecated(
+        let test_target = resolve_config(
             test_target,
-            &forge_config.test_runner_config.tracked_resource,
-        )?;
-
-        let test_target =
-            resolve_config(test_target, fork_targets, block_number_map, tests_filter).await?;
+            fork_targets,
+            block_number_map,
+            tests_filter,
+            tracked_resource,
+        )
+        .await?;
 
         test_targets_with_resolved_config.push(test_target);
     }
@@ -159,7 +153,7 @@ async fn test_package_with_config_resolved(
     Ok(test_targets_with_resolved_config)
 }
 
-fn sum_test_cases(test_targets: &[TestTargetWithResolvedConfig]) -> usize {
+fn sum_test_cases(test_targets: &[TestTarget<TestCase>]) -> usize {
     test_targets.iter().map(|tc| tc.test_cases.len()).sum()
 }
 
@@ -179,8 +173,8 @@ pub async fn run_for_package(
         test_targets,
         &fork_targets,
         block_number_map,
-        &forge_config,
         &tests_filter,
+        &forge_config.test_runner_config.tracked_resource,
     )
     .await?;
     let all_tests = sum_test_cases(&test_targets);

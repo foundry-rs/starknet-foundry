@@ -1,4 +1,4 @@
-use super::{TestCase, TestTargetDeprecated};
+use super::{TestCaseDeprecated, TestTargetDeprecated};
 use crate::{
     TestCaseIsIgnored,
     expected_result::{ExpectedPanicValue, ExpectedTestResult},
@@ -11,7 +11,7 @@ use conversions::serde::serialize::SerializeToFeltVec;
 
 pub type TestTargetWithConfig = TestTargetDeprecated<TestCaseConfig>;
 
-pub type TestCaseWithConfig = TestCase<TestCaseConfig>;
+pub type TestCaseWithConfig = TestCaseDeprecated<TestCaseConfig>;
 
 /// Test case with config that has not yet been resolved
 /// see [`super::with_config_resolved::TestCaseResolvedConfig`] for more info

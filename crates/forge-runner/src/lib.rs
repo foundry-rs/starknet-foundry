@@ -1,6 +1,7 @@
 use crate::coverage_api::run_coverage;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig};
-use crate::package_tests::TestCase;
+use crate::package_tests::with_config_resolved::TestCaseResolvedConfig;
+use crate::package_tests::{TestCase, TestCaseDeprecated};
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
 use anyhow::Result;
@@ -58,9 +59,12 @@ const BUILTINS: [&str; 11] = [
 ];
 
 pub trait TestCaseFilter {
-    fn should_be_run<T>(&self, test_case: &TestCase<T>) -> bool
+    // TODO: Remove in next PRs
+    fn should_be_run<T>(&self, test_case: &TestCaseDeprecated<T>) -> bool
     where
         T: TestCaseIsIgnored;
+
+    fn should_run(&self, is_test_case_ignored: bool) -> bool;
 }
 
 pub trait TestCaseIsIgnored {
@@ -113,16 +117,24 @@ pub fn maybe_generate_coverage(
 #[must_use]
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn run_for_test_case(
-    case: Arc<TestCaseWithResolvedConfig>,
+    case: Arc<TestCase>,
     casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
 ) -> JoinHandle<Result<AnyTestCaseSummary>> {
+    // TODO: Change all tests running functions to use `TestCase` in next PRs
+    let deprecated_test_case: TestCaseDeprecated<TestCaseResolvedConfig> = TestCaseDeprecated {
+        name: case.name.clone(),
+        test_details: case.test_details.clone(),
+        config: case.config.clone(),
+    };
+    let deprecated_test_case = Arc::new(deprecated_test_case);
+
     if case.config.fuzzer_config.is_none() {
         tokio::task::spawn(async move {
             let res = run_test(
-                case,
+                deprecated_test_case,
                 casm_program,
                 forge_config,
                 versioned_program_path,
@@ -134,7 +146,7 @@ pub fn run_for_test_case(
     } else {
         tokio::task::spawn(async move {
             let res = run_with_fuzzing(
-                case,
+                deprecated_test_case,
                 casm_program,
                 forge_config.clone(),
                 versioned_program_path,

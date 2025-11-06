@@ -1,11 +1,10 @@
 use anyhow::Result;
 use forge_runner::messages::TestResultMessage;
+use forge_runner::package_tests::{TestCase, TestTarget};
 use forge_runner::{
     TestCaseFilter,
     forge_config::ForgeConfig,
-    maybe_generate_coverage, maybe_save_trace_and_profile,
-    package_tests::with_config_resolved::TestTargetWithResolvedConfig,
-    run_for_test_case,
+    maybe_generate_coverage, maybe_save_trace_and_profile, run_for_test_case,
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
     test_target_summary::TestTargetSummary,
 };
@@ -24,7 +23,7 @@ pub enum TestTargetRunResult {
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub async fn run_for_test_target(
-    tests: TestTargetWithResolvedConfig,
+    tests: TestTarget<TestCase>,
     forge_config: Arc<ForgeConfig>,
     tests_filter: &impl TestCaseFilter,
     ui: Arc<UI>,
@@ -47,7 +46,7 @@ pub async fn run_for_test_target(
     for case in tests.test_cases {
         let case_name = case.name.clone();
 
-        if !tests_filter.should_be_run(&case) {
+        if !tests_filter.should_run(case.config.ignored) {
             tasks.push(tokio::task::spawn(async {
                 // TODO TestCaseType should also be encoded in the test case definition
                 Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
@@ -61,7 +60,7 @@ pub async fn run_for_test_target(
 
         tasks.push(run_for_test_case(
             case,
-            casm_program.clone(),
+            casm_program.clone().unwrap(),
             forge_config.clone(),
             tests.sierra_program_path.clone(),
             send.clone(),

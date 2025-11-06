@@ -1,6 +1,7 @@
 use crate::forge_config::ForgeTrackedResource;
 use crate::package_tests::raw::TestTargetRaw;
 use crate::package_tests::with_config::{TestCaseWithConfig, TestTargetWithConfig};
+use crate::package_tests::with_config_resolved::{TestCaseResolvedConfig, sanitize_test_case_name};
 use crate::running::config_run::run_config_pass;
 use crate::running::hints_to_params;
 use anyhow::{Result, anyhow};
@@ -135,7 +136,7 @@ pub struct TestTargetDeprecated<C> {
     pub sierra_program: ProgramArtifact,
     pub sierra_program_path: Arc<Utf8PathBuf>,
     pub casm_program: Arc<RawCasmProgram>,
-    pub test_cases: Vec<TestCase<C>>,
+    pub test_cases: Vec<TestCaseDeprecated<C>>,
 }
 
 // TODO: Remove in next PRs
@@ -207,11 +208,34 @@ impl TestTargetDeprecated<TestCaseWithConfig> {
     }
 }
 
+// TODO: Remove in next PRs
 #[derive(Debug, Clone, PartialEq)]
-pub struct TestCase<C> {
+pub struct TestCaseDeprecated<C> {
     pub test_details: TestDetails,
     pub name: String,
     pub config: C,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TestCase {
+    pub test_details: TestDetails,
+    pub name: String,
+    pub config: TestCaseResolvedConfig,
+}
+
+impl TestCase {
+    #[must_use]
+    pub fn new(name: &str, test_details: TestDetails, config: TestCaseResolvedConfig) -> Self {
+        Self {
+            name: sanitize_test_case_name(name),
+            test_details,
+            config,
+        }
+    }
+
+    pub fn try_into_program(&self, casm_program: &RawCasmProgram) -> Result<Program> {
+        self.test_details.try_into_program(casm_program)
+    }
 }
 
 #[derive(Debug, Clone)]
