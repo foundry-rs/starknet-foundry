@@ -555,6 +555,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::from_serializable(()))
             }
             "get_current_vm_step" => {
+                // Each contract call is executed in separate VM, hence all VM steps
+                // are calculated as sum of steps from calls + current VM steps.
+                // Since syscalls are added to VM resources after the execution, we need
+                // to include them manually here.
                 let top_call = extended_runtime
                     .extended_runtime
                     .extension
