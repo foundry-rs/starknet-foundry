@@ -2,10 +2,9 @@ use super::{TestCase, TestTarget};
 use crate::{
     TestCaseIsIgnored,
     expected_result::{ExpectedPanicValue, ExpectedTestResult},
-    package_tests::{TestCandidate, TestTargetWithTests},
 };
 use cheatnet::runtime_extensions::forge_config_extension::config::{
-    Expected, RawAvailableResourceBoundsConfig, RawForgeConfig, RawForkConfig, RawFuzzerConfig,
+    Expected, RawAvailableResourceBoundsConfig, RawForkConfig, RawFuzzerConfig,
     RawShouldPanicConfig,
 };
 use conversions::serde::serialize::SerializeToFeltVec;
@@ -31,21 +30,6 @@ impl TestCaseIsIgnored for TestCaseConfig {
         self.ignored
     }
 }
-
-// impl From<RawForgeConfig> for TestCaseConfig {
-//     fn from(value: RawForgeConfig) -> Self {
-//         Self {
-//             available_gas: value.available_gas,
-//             ignored: value.ignore.is_some_and(|v| v.is_ignored),
-//             expected_result: value.should_panic.into(),
-//             fork_config: value.fork,
-//             fuzzer_config: value.fuzzer,
-//             disable_predeployed_contracts: value
-//                 .disable_predeployed_contracts
-//                 .is_some_and(|v| v.is_disabled),
-//         }
-//     }
-// }
 
 impl From<Option<RawShouldPanicConfig>> for ExpectedTestResult {
     fn from(value: Option<RawShouldPanicConfig>) -> Self {

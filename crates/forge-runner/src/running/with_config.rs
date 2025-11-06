@@ -1,7 +1,4 @@
-use crate::{
-    forge_config::ForgeTrackedResource,
-    package_tests::{TestCandidate, TestDetails, TestTargetWithTests, raw::TestTargetRaw},
-};
+use crate::package_tests::{TestCandidate, TestDetails, TestTargetWithTests, raw::TestTargetRaw};
 use anyhow::{Result, anyhow};
 use cairo_lang_sierra::{
     extensions::core::{CoreLibfunc, CoreType},
@@ -14,72 +11,6 @@ use cairo_lang_utils::unordered_hash_map::UnorderedHashMap;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use std::collections::HashMap;
-
-// #[tracing::instrument(skip_all, level = "debug")]
-// pub fn test_target_with_config(
-//     test_target_raw: TestTargetRaw,
-//     tracked_resource: &ForgeTrackedResource,
-// ) -> Result<TestTargetWithConfig> {
-//     macro_rules! by_id {
-//         ($field:ident) => {{
-//             let temp: HashMap<_, _> = test_target_raw
-//                 .sierra_program
-//                 .program
-//                 .$field
-//                 .iter()
-//                 .map(|f| (f.id.id, f))
-//                 .collect();
-
-//             temp
-//         }};
-//     }
-//     let funcs = by_id!(funcs);
-//     let type_declarations = by_id!(type_declarations);
-
-//     let casm_program = Arc::new(compile_raw_sierra_at_path(
-//         test_target_raw.sierra_program_path.as_std_path(),
-//     )?);
-
-//     let sierra_program_registry =
-//         ProgramRegistry::<CoreType, CoreLibfunc>::new(&test_target_raw.sierra_program.program)?;
-//     let type_size_map = get_type_size_map(
-//         &test_target_raw.sierra_program.program,
-//         &sierra_program_registry,
-//     )
-//     .ok_or_else(|| anyhow!("can not get type size map"))?;
-
-//     let default_executables = vec![];
-//     let debug_info = test_target_raw.sierra_program.debug_info.clone();
-//     let executables = debug_info
-//         .as_ref()
-//         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
-//         .unwrap_or(&default_executables);
-
-//     let test_cases = executables
-//         .par_iter()
-//         .map(|case| -> Result<TestCaseWithConfig> {
-//             let func = funcs[&case.id];
-
-//             let test_details = build_test_details(func, &type_declarations, &type_size_map);
-
-//             let raw_config = run_config_pass(&test_details, &casm_program, tracked_resource)?;
-
-//             Ok(TestCaseWithConfig {
-//                 config: raw_config.into(),
-//                 name: case.debug_name.clone().unwrap().into(),
-//                 test_details,
-//             })
-//         })
-//         .collect::<Result<_>>()?;
-
-//     Ok(TestTargetWithConfig {
-//         tests_location: test_target_raw.tests_location,
-//         test_cases,
-//         sierra_program: test_target_raw.sierra_program,
-//         sierra_program_path: test_target_raw.sierra_program_path.into(),
-//         casm_program,
-//     })
-// }
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn test_target_with_tests(test_target_raw: TestTargetRaw) -> Result<TestTargetWithTests> {

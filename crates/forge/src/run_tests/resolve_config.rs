@@ -191,10 +191,6 @@ mod tests {
         TestTargetWithTests {
             sierra_program: program_for_testing(),
             sierra_program_path: Arc::default(),
-            // casm_program: Arc::new(
-            //     compile_raw_sierra(&serde_json::to_value(&program_for_testing().program).unwrap())
-            //         .unwrap(),
-            // ),
             test_cases,
             tests_location: TestTargetLocation::Lib,
         }
