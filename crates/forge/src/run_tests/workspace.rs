@@ -16,7 +16,6 @@ use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge_runner::forge_config::ForgeConfig;
 use forge_runner::package_tests::TestTarget;
-use forge_runner::running::with_config::test_target_with_tests;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
 use foundry_ui::UI;
@@ -221,10 +220,7 @@ impl Workspace {
 
             let test_targets_with_config = raw_test_targets
                 .into_iter()
-                .map(|raw| {
-                    let tt = test_target_with_tests(raw)?;
-                    Ok(tt)
-                })
+                .map(TestTarget::from_raw)
                 .collect::<Result<Vec<TestTarget>>>()?;
 
             result

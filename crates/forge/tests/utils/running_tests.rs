@@ -12,7 +12,7 @@ use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, ForgeTrackedResource, OutputConfig, TestRunnerConfig,
 };
-use forge_runner::running::with_config::test_target_with_tests;
+use forge_runner::package_tests::TestTarget;
 use forge_runner::test_target_summary::TestTargetSummary;
 use foundry_ui::UI;
 use scarb_api::ScarbCommand;
@@ -61,7 +61,7 @@ pub fn run_test_case(
     let mut test_targets_resolved = Vec::new();
 
     for raw in raw_test_targets.into_iter() {
-        let tt = test_target_with_tests(raw).expect("failed to prepare test target");
+        let tt = TestTarget::from_raw(raw).expect("failed to prepare test target");
 
         let tt_resolved = tokio::runtime::Runtime::new()
             .unwrap()

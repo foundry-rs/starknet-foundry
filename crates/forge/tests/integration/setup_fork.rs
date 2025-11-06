@@ -1,6 +1,6 @@
 use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
 use forge::run_tests::resolve_config::resolve_config;
-use forge_runner::running::with_config::test_target_with_tests;
+use forge_runner::package_tests::TestTarget;
 use foundry_ui::UI;
 use indoc::{formatdoc, indoc};
 use std::num::NonZeroU32;
@@ -148,7 +148,7 @@ async fn fork_aliased_decorator() {
 
     let mut test_targets_resolved = Vec::new();
     for raw in raw_test_targets.into_iter() {
-        let tt = test_target_with_tests(raw).expect("failed to prepare test target");
+        let tt = TestTarget::from_raw(raw).expect("failed to prepare test target");
         let tt_resolved = resolve_config(
             tt,
             &fork_targets,
@@ -253,7 +253,7 @@ async fn fork_aliased_decorator_overrding() {
 
     let mut test_targets_resolved = Vec::new();
     for raw in raw_test_targets.into_iter() {
-        let tt = test_target_with_tests(raw).expect("failed to prepare test target");
+        let tt = TestTarget::from_raw(raw).expect("failed to prepare test target");
         let tt_resolved = resolve_config(
             tt,
             &fork_targets,
