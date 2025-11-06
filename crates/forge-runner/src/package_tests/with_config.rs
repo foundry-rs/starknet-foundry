@@ -1,4 +1,3 @@
-use super::{TestCase, TestTarget};
 use crate::{
     TestCaseIsIgnored,
     expected_result::{ExpectedPanicValue, ExpectedTestResult},
@@ -8,10 +7,6 @@ use cheatnet::runtime_extensions::forge_config_extension::config::{
     RawShouldPanicConfig,
 };
 use conversions::serde::serialize::SerializeToFeltVec;
-
-pub type TestTargetWithConfig = TestTarget<TestCaseConfig>;
-
-pub type TestCaseWithConfig = TestCase<TestCaseConfig>;
 
 /// Test case with config that has not yet been resolved
 /// see [`super::with_config_resolved::TestCaseResolvedConfig`] for more info
