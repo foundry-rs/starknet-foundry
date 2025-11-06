@@ -79,7 +79,9 @@ impl TestResultMessage {
             AnyTestCaseSummary::Single(TestCaseSummary::Passed { gas_info, .. }) => {
                 format!(
                     " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
-                    gas_info.l1_gas, gas_info.l1_data_gas, gas_info.l2_gas
+                    gas_info.gas_used.l1_gas,
+                    gas_info.gas_used.l1_data_gas,
+                    gas_info.gas_used.l2_gas
                 )
             }
             _ => String::new(),
