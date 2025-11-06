@@ -83,7 +83,7 @@ pub async fn run_for_workspace(
     for package in packages {
         env::set_current_dir(&package.root)?;
 
-        let args = RunForPackageArgs::build(package, &scarb_metadata, &args, &workspace_dirs, &ui)?;
+        let args = RunForPackageArgs::build(package, scarb_metadata, &args, &workspace_dirs, &ui)?;
 
         let result = run_for_package(args, &mut block_number_map, ui.clone()).await?;
 
