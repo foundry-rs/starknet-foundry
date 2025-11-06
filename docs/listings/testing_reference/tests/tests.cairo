@@ -1,4 +1,4 @@
-use snforge_std::testing::get_current_step;
+use snforge_std::testing::get_current_vm_step;
 use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 use testing_reference::{ICounterSafeDispatcher, ICounterSafeDispatcherTrait};
 
@@ -21,9 +21,9 @@ fn setup() {
 
 #[test]
 fn test_setup_steps() {
-    let steps_start = get_current_step();
+    let steps_start = get_current_vm_step();
     setup();
-    let steps_end = get_current_step();
+    let steps_end = get_current_vm_step();
 
     // Assert that setup used no more than 100 steps
     assert!(steps_end - steps_start <= 100);

@@ -1,9 +1,9 @@
-# `get_current_step`
+# `get_current_vm_step`
 
 Gets the current step from Cairo VM during test execution.
 
 ```rust
-fn get_current_step() -> u32;
+fn get_current_vm_step() -> u32;
 ```
 
 ## Example

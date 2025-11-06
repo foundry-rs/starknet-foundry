@@ -6,21 +6,21 @@ use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
 #[test]
-fn test_get_current_step() {
+fn test_get_current_vm_step() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::testing::get_current_step;
+            use snforge_std::testing::get_current_vm_step;
             use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 
             #[test]
             fn check_current_step() {
-                let step_start = get_current_step();
+                let step_start = get_current_vm_step();
 
                 let contract = declare("HelloStarknet").unwrap().contract_class().clone();
                 let _ = contract.deploy(@ArrayTrait::new()).unwrap();
 
-                let step_end = get_current_step();
+                let step_end = get_current_vm_step();
 
                 assert!(step_end > step_start);
             }

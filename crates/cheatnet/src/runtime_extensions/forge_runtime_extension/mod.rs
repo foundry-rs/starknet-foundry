@@ -554,7 +554,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .cheat_block_hash(block_number, operation);
                 Ok(CheatcodeHandlingResult::from_serializable(()))
             }
-            "get_current_step" => {
+            "get_current_vm_step" => {
                 let top_call = extended_runtime
                     .extended_runtime
                     .extension
@@ -562,18 +562,20 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .trace_data
                     .current_call_stack
                     .top();
-
+                let vm_steps_from_calls = calculate_vm_steps_from_calls(&top_call);
                 let top_call_syscalls = &extended_runtime
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
                     .base
                     .syscalls_usage;
+                let vm_steps_from_syscalls = &VersionedConstants::latest_constants()
+                    .get_additional_os_syscall_resources(top_call_syscalls)
+                    .n_steps;
+                let total_vm_steps =
+                    vm_steps_from_calls + vm_steps_from_syscalls + vm.get_current_step();
 
-                let steps_from_calls = calculate_steps_from_calls(&top_call, top_call_syscalls);
-                let total_steps = steps_from_calls + vm.get_current_step();
-
-                Ok(CheatcodeHandlingResult::from_serializable(total_steps))
+                Ok(CheatcodeHandlingResult::from_serializable(total_vm_steps))
             }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         }
@@ -882,9 +884,9 @@ pub fn get_all_used_resources(
     }
 }
 
-fn calculate_steps_from_calls(
+fn calculate_vm_steps_from_calls(
     top_call: &Rc<RefCell<CallTrace>>,
-    top_call_syscalls: &SyscallUsageMap,
+    // top_call_syscalls: &SyscallUsageMap,
 ) -> usize {
     // Resources from inner calls already include syscall resources used in them
     let used_resources =
@@ -898,9 +900,9 @@ fn calculate_steps_from_calls(
                 }
                 CallTraceNode::DeployWithoutConstructor => acc,
             });
-    let total_syscalls_exeucution_resources = &VersionedConstants::latest_constants()
-        .get_additional_os_syscall_resources(&top_call_syscalls);
-    let resources_from_calls = used_resources + total_syscalls_exeucution_resources;
+    // let total_syscalls_exeucution_resources = &VersionedConstants::latest_constants()
+    //     .get_additional_os_syscall_resources(&top_call_syscalls);
+    // let resources_from_calls = used_resources + total_syscalls_exeucution_resources;
 
-    resources_from_calls.n_steps
+    used_resources.n_steps
 }
