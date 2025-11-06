@@ -26,8 +26,9 @@ use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::Contr
 use console::Style;
 use forge_runner::{
     forge_config::ForgeConfig,
-    package_tests::{raw::TestTargetRaw, with_config_resolved::TestTargetWithResolvedConfig},
-    running::with_config::test_target_with_config,
+    package_tests::{
+        TestTarget, raw::TestTargetRaw, with_config_resolved::TestTargetWithResolvedConfig,
+    },
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
 };
@@ -143,7 +144,7 @@ async fn test_package_with_config_resolved(
     let mut test_targets_with_resolved_config = Vec::with_capacity(test_targets.len());
 
     for test_target in test_targets {
-        let test_target = test_target_with_config(
+        let test_target = TestTarget::from_raw(
             test_target,
             &forge_config.test_runner_config.tracked_resource,
         )?;

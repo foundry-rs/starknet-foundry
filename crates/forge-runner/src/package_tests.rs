@@ -1,24 +1,34 @@
+use crate::forge_config::ForgeTrackedResource;
+use crate::package_tests::raw::TestTargetRaw;
+use crate::package_tests::with_config::{TestCaseWithConfig, TestTargetWithConfig};
+use crate::running::config_run::run_config_pass;
 use crate::running::hints_to_params;
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use cairo_lang_sierra::extensions::NamedType;
 use cairo_lang_sierra::extensions::bitwise::BitwiseType;
 use cairo_lang_sierra::extensions::circuit::{AddModType, MulModType};
+use cairo_lang_sierra::extensions::core::{CoreLibfunc, CoreType};
 use cairo_lang_sierra::extensions::ec::EcOpType;
 use cairo_lang_sierra::extensions::pedersen::PedersenType;
 use cairo_lang_sierra::extensions::poseidon::PoseidonType;
 use cairo_lang_sierra::extensions::range_check::{RangeCheck96Type, RangeCheckType};
 use cairo_lang_sierra::extensions::segment_arena::SegmentArenaType;
-use cairo_lang_sierra::ids::GenericTypeId;
-use cairo_lang_sierra::program::ProgramArtifact;
+use cairo_lang_sierra::ids::{ConcreteTypeId, GenericTypeId};
+use cairo_lang_sierra::program::{GenFunction, ProgramArtifact, StatementIdx, TypeDeclaration};
+use cairo_lang_sierra::program_registry::ProgramRegistry;
+use cairo_lang_sierra_type_size::get_type_size_map;
+use cairo_lang_utils::unordered_hash_map::UnorderedHashMap;
 use cairo_vm::serde::deserialize_program::ReferenceManager;
 use cairo_vm::types::builtin_name::BuiltinName;
 use cairo_vm::types::program::Program;
 use cairo_vm::types::relocatable::MaybeRelocatable;
 use camino::Utf8PathBuf;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use serde::Serialize;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::sync::Arc;
+use universal_sierra_compiler_api::compile_raw_sierra_at_path;
 use universal_sierra_compiler_api::representation::RawCasmProgram;
 
 pub mod raw;
@@ -55,6 +65,30 @@ pub struct TestDetails {
 }
 
 impl TestDetails {
+    #[tracing::instrument(skip_all, level = "debug")]
+    pub fn build(
+        func: &GenFunction<StatementIdx>,
+        type_declarations: &HashMap<u64, &TypeDeclaration>,
+        type_size_map: &UnorderedHashMap<ConcreteTypeId, i16>,
+    ) -> TestDetails {
+        let map_types = |concrete_types: &[ConcreteTypeId]| {
+            concrete_types
+                .iter()
+                .map(|ty| {
+                    let ty = type_declarations[&ty.id];
+
+                    (ty.long_id.generic_id.clone(), type_size_map[&ty.id])
+                })
+                .collect()
+        };
+
+        TestDetails {
+            sierra_entry_point_statement_idx: func.entry_point.0,
+            parameter_types: map_types(&func.signature.param_types),
+            return_types: map_types(&func.signature.ret_types),
+        }
+    }
+
     #[must_use]
     pub fn builtins(&self) -> Vec<BuiltinName> {
         let mut builtins = vec![];
@@ -101,6 +135,74 @@ pub struct TestTarget<C> {
     pub sierra_program_path: Arc<Utf8PathBuf>,
     pub casm_program: Arc<RawCasmProgram>,
     pub test_cases: Vec<TestCase<C>>,
+}
+
+impl TestTarget<TestCaseWithConfig> {
+    #[tracing::instrument(skip_all, level = "debug")]
+    pub fn from_raw(
+        test_target_raw: TestTargetRaw,
+        tracked_resource: &ForgeTrackedResource,
+    ) -> Result<TestTargetWithConfig> {
+        macro_rules! by_id {
+            ($field:ident) => {{
+                let temp: HashMap<_, _> = test_target_raw
+                    .sierra_program
+                    .program
+                    .$field
+                    .iter()
+                    .map(|f| (f.id.id, f))
+                    .collect();
+
+                temp
+            }};
+        }
+        let funcs = by_id!(funcs);
+        let type_declarations = by_id!(type_declarations);
+
+        let casm_program = Arc::new(compile_raw_sierra_at_path(
+            test_target_raw.sierra_program_path.as_std_path(),
+        )?);
+
+        let sierra_program_registry =
+            ProgramRegistry::<CoreType, CoreLibfunc>::new(&test_target_raw.sierra_program.program)?;
+        let type_size_map = get_type_size_map(
+            &test_target_raw.sierra_program.program,
+            &sierra_program_registry,
+        )
+        .ok_or_else(|| anyhow!("can not get type size map"))?;
+
+        let default_executables = vec![];
+        let debug_info = test_target_raw.sierra_program.debug_info.clone();
+        let executables = debug_info
+            .as_ref()
+            .and_then(|info| info.executables.get("snforge_internal_test_executable"))
+            .unwrap_or(&default_executables);
+
+        let test_cases = executables
+            .par_iter()
+            .map(|case| -> Result<TestCaseWithConfig> {
+                let func = funcs[&case.id];
+
+                let test_details = TestDetails::build(func, &type_declarations, &type_size_map);
+
+                let raw_config = run_config_pass(&test_details, &casm_program, tracked_resource)?;
+
+                Ok(TestCaseWithConfig {
+                    config: raw_config.into(),
+                    name: case.debug_name.clone().unwrap().into(),
+                    test_details,
+                })
+            })
+            .collect::<Result<_>>()?;
+
+        Ok(TestTargetWithConfig {
+            tests_location: test_target_raw.tests_location,
+            test_cases,
+            sierra_program: test_target_raw.sierra_program,
+            sierra_program_path: test_target_raw.sierra_program_path.into(),
+            casm_program,
+        })
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
