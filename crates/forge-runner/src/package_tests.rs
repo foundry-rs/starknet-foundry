@@ -103,9 +103,23 @@ pub struct TestTarget<C> {
     pub test_cases: Vec<TestCase<C>>,
 }
 
+#[derive(Debug, Clone)]
+pub struct TestTargetWithTests {
+    pub tests_location: TestTargetLocation,
+    pub sierra_program: ProgramArtifact,
+    pub sierra_program_path: Arc<Utf8PathBuf>,
+    pub test_cases: Vec<TestCandidate>,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct TestCase<C> {
     pub test_details: TestDetails,
     pub name: String,
     pub config: C,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TestCandidate {
+    pub test_details: TestDetails,
+    pub name: String,
 }

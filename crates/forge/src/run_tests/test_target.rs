@@ -14,6 +14,8 @@ use futures::{StreamExt, stream::FuturesUnordered};
 use std::sync::Arc;
 use tokio::sync::mpsc::channel;
 
+use crate::test_filter::TestsFilter;
+
 #[non_exhaustive]
 pub enum TestTargetRunResult {
     Ok(TestTargetSummary),
@@ -24,7 +26,7 @@ pub enum TestTargetRunResult {
 pub async fn run_for_test_target(
     tests: TestTargetWithResolvedConfig,
     forge_config: Arc<ForgeConfig>,
-    tests_filter: &impl TestCaseFilter,
+    tests_filter: &TestsFilter,
     ui: Arc<UI>,
 ) -> Result<TestTargetRunResult> {
     let casm_program = tests.casm_program.clone();
@@ -40,7 +42,7 @@ pub async fn run_for_test_target(
     for case in tests.test_cases {
         let case_name = case.name.clone();
 
-        if !tests_filter.should_be_run(&case) {
+        if !tests_filter.should_run_test(case.config.ignored) {
             tasks.push(tokio::task::spawn(async {
                 // TODO TestCaseType should also be encoded in the test case definition
                 Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {

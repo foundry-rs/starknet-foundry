@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use super::maat::env_ignore_fork_tests;
 use crate::{
     block_number_map::BlockNumberMap, scarb::config::ForkTarget, test_filter::TestsFilter,
@@ -9,43 +11,54 @@ use cheatnet::runtime_extensions::forge_config_extension::config::{
 use conversions::byte_array::ByteArray;
 use forge_runner::{
     TestCaseFilter,
+    forge_config::ForgeTrackedResource,
     package_tests::{
-        with_config::TestTargetWithConfig,
+        TestTargetWithTests,
         with_config_resolved::{
             ResolvedForkConfig, TestCaseResolvedConfig, TestCaseWithResolvedConfig,
             TestTargetWithResolvedConfig,
         },
     },
+    running::config_run::run_config_pass,
 };
 use starknet_api::block::BlockNumber;
+use universal_sierra_compiler_api::compile_raw_sierra_at_path;
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub async fn resolve_config(
-    test_target: TestTargetWithConfig,
+    test_target: TestTargetWithTests,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
     tests_filter: &TestsFilter,
+    tracked_resource: &ForgeTrackedResource,
 ) -> Result<TestTargetWithResolvedConfig> {
     let mut test_cases = Vec::with_capacity(test_target.test_cases.len());
     let env_ignore_fork_tests = env_ignore_fork_tests();
 
+    let casm_program = Arc::new(compile_raw_sierra_at_path(
+        test_target.sierra_program_path.as_std_path(),
+    )?);
+
     for case in test_target.test_cases {
+        let raw_config = run_config_pass(&case.test_details, &casm_program, tracked_resource)?;
+        let ignored = raw_config.ignore.is_some_and(|v| v.is_ignored);
+
         test_cases.push(TestCaseWithResolvedConfig::new(
             &case.name,
             case.test_details.clone(),
             TestCaseResolvedConfig {
-                available_gas: case.config.available_gas,
-                ignored: case.config.ignored
-                    || (env_ignore_fork_tests && case.config.fork_config.is_some()),
-                fork_config: if tests_filter.should_be_run(&case) {
-                    resolve_fork_config(case.config.fork_config, block_number_map, fork_targets)
-                        .await?
+                available_gas: raw_config.available_gas,
+                ignored: ignored || (env_ignore_fork_tests && raw_config.fork.is_some()),
+                fork_config: if tests_filter.should_run_test(ignored) {
+                    resolve_fork_config(raw_config.fork, block_number_map, fork_targets).await?
                 } else {
                     None
                 },
-                expected_result: case.config.expected_result,
-                fuzzer_config: case.config.fuzzer_config,
-                disable_predeployed_contracts: case.config.disable_predeployed_contracts,
+                expected_result: raw_config.should_panic.into(),
+                fuzzer_config: raw_config.fuzzer,
+                disable_predeployed_contracts: raw_config
+                    .disable_predeployed_contracts
+                    .is_some_and(|v| v.is_disabled),
             },
         ));
     }
@@ -54,7 +67,7 @@ pub async fn resolve_config(
         tests_location: test_target.tests_location,
         sierra_program: test_target.sierra_program,
         sierra_program_path: test_target.sierra_program_path,
-        casm_program: test_target.casm_program,
+        casm_program: casm_program,
         test_cases,
     })
 }
@@ -137,7 +150,9 @@ mod tests {
     use cairo_lang_sierra::program::ProgramArtifact;
     use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
     use forge_runner::package_tests::TestTargetLocation;
-    use forge_runner::package_tests::with_config::{TestCaseConfig, TestCaseWithConfig};
+    use forge_runner::package_tests::with_config::{
+        TestCaseConfig, TestCaseWithConfig, TestTargetWithConfig,
+    };
     use forge_runner::{expected_result::ExpectedTestResult, package_tests::TestDetails};
     use std::sync::Arc;
     use universal_sierra_compiler_api::compile_raw_sierra;

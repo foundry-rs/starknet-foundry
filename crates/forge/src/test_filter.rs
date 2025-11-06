@@ -131,6 +131,14 @@ impl TestCaseFilter for TestsFilter {
             IgnoredFilter::NotIgnored => !ignored,
         }
     }
+
+    fn should_run_test(&self, test_config_ignored: bool) -> bool {
+        match self.ignored_filter {
+            IgnoredFilter::All => true,
+            IgnoredFilter::Ignored => test_config_ignored,
+            IgnoredFilter::NotIgnored => !test_config_ignored,
+        }
+    }
 }
 
 #[cfg(test)]

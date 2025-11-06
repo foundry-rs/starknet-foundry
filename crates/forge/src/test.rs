@@ -1,5 +1,5 @@
 use crate::profile_validation::check_profile_compatibility;
-use crate::run_tests::workspace::run_for_workspace;
+use crate::run_tests::workspace2::run_for_workspace;
 use crate::warn::warn_if_snforge_std_does_not_match_package_version;
 use crate::warn::{
     error_if_snforge_std_deprecated_missing, error_if_snforge_std_deprecated_not_compatible,

@@ -1,40 +1,24 @@
-use super::{
-    resolve_config::resolve_config,
-    test_target::{TestTargetRunResult, run_for_test_target},
-};
-use crate::scarb::load_package_config;
+use super::test_target::{TestTargetRunResult, run_for_test_target};
+use crate::run_tests::resolve_config::resolve_config_2;
 use crate::{
-    TestArgs,
     block_number_map::BlockNumberMap,
-    combine_configs::combine_configs,
-    run_tests::{
-        messages::{
-            collected_tests_count::CollectedTestsCountMessage, tests_run::TestsRunMessage,
-            tests_summary::TestsSummaryMessage,
-        },
-        workspace::WorkspaceDirs,
+    run_tests::messages::{
+        collected_tests_count::CollectedTestsCountMessage, tests_run::TestsRunMessage,
+        tests_summary::TestsSummaryMessage,
     },
-    scarb::{
-        config::{ForgeConfigFromScarb, ForkTarget},
-        load_test_artifacts,
-    },
-    shared_cache::FailedTestsCache,
+    scarb::config::ForkTarget,
     test_filter::{NameFilter, TestsFilter},
     warn::warn_if_incompatible_rpc_version,
 };
 use anyhow::Result;
-use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use console::Style;
 use forge_runner::{
-    forge_config::ForgeConfig,
-    package_tests::{raw::TestTargetRaw, with_config_resolved::TestTargetWithResolvedConfig},
-    running::with_config::test_target_with_config,
+    forge_config::{ForgeConfig, ForgeTrackedResource},
+    package_tests::{TestTargetWithTests, with_config_resolved::TestTargetWithResolvedConfig},
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
 };
 use foundry_ui::{UI, components::labeled::LabeledMessage};
-use scarb_api::{CompilationOpts, get_contracts_artifacts_and_source_sierra_paths};
-use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
 
 pub struct PackageTestResult {
@@ -62,95 +46,25 @@ impl PackageTestResult {
     }
 }
 
-pub struct RunForPackageArgs {
-    pub test_targets: Vec<TestTargetRaw>,
-    pub tests_filter: TestsFilter,
-    pub forge_config: Arc<ForgeConfig>,
-    pub fork_targets: Vec<ForkTarget>,
-    pub package_name: String,
-}
-
-impl RunForPackageArgs {
-    #[tracing::instrument(skip_all, level = "debug")]
-    pub fn build(
-        package: PackageMetadata,
-        scarb_metadata: &Metadata,
-        args: &TestArgs,
-        workspace_dirs: &WorkspaceDirs,
-        ui: &UI,
-    ) -> Result<RunForPackageArgs> {
-        let raw_test_targets = load_test_artifacts(&workspace_dirs.artifacts_dir, &package)?;
-
-        let contracts = get_contracts_artifacts_and_source_sierra_paths(
-            &workspace_dirs.artifacts_dir,
-            &package,
-            ui,
-            CompilationOpts {
-                use_test_target_contracts: !args.no_optimization,
-                #[cfg(feature = "cairo-native")]
-                run_native: args.run_native,
-            },
-        )?;
-        let contracts_data = ContractsData::try_from(contracts)?;
-
-        let forge_config_from_scarb =
-            load_package_config::<ForgeConfigFromScarb>(scarb_metadata, &package.id)?;
-        let forge_config = Arc::new(combine_configs(
-            args.exit_first,
-            args.fuzzer_runs,
-            args.fuzzer_seed,
-            args.detailed_resources,
-            args.save_trace_data,
-            args.build_profile,
-            args.coverage,
-            args.max_n_steps,
-            args.tracked_resource,
-            contracts_data,
-            workspace_dirs.cache_dir.clone(),
-            &forge_config_from_scarb,
-            &args.additional_args,
-            args.trace_args.clone(),
-            args.experimental_oracles,
-        ));
-
-        let test_filter = TestsFilter::from_flags(
-            args.test_filter.clone(),
-            args.exact,
-            args.skip.clone(),
-            args.only_ignored,
-            args.include_ignored,
-            args.rerun_failed,
-            FailedTestsCache::new(&workspace_dirs.cache_dir),
-        );
-
-        Ok(RunForPackageArgs {
-            test_targets: raw_test_targets,
-            forge_config,
-            tests_filter: test_filter,
-            fork_targets: forge_config_from_scarb.fork,
-            package_name: package.name,
-        })
-    }
-}
-
 #[tracing::instrument(skip_all, level = "debug")]
-async fn test_package_with_config_resolved(
-    test_targets: Vec<TestTargetRaw>,
+pub async fn test_package_with_config_resolved(
+    test_targets: Vec<TestTargetWithTests>,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
-    forge_config: &ForgeConfig,
     tests_filter: &TestsFilter,
+    tracked_resource: &ForgeTrackedResource,
 ) -> Result<Vec<TestTargetWithResolvedConfig>> {
     let mut test_targets_with_resolved_config = Vec::with_capacity(test_targets.len());
 
     for test_target in test_targets {
-        let test_target = test_target_with_config(
+        let test_target = resolve_config_2(
             test_target,
-            &forge_config.test_runner_config.tracked_resource,
-        )?;
-
-        let test_target =
-            resolve_config(test_target, fork_targets, block_number_map, tests_filter).await?;
+            fork_targets,
+            block_number_map,
+            tests_filter,
+            tracked_resource,
+        )
+        .await?;
 
         test_targets_with_resolved_config.push(test_target);
     }
@@ -164,24 +78,12 @@ fn sum_test_cases(test_targets: &[TestTargetWithResolvedConfig]) -> usize {
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub async fn run_for_package(
-    RunForPackageArgs {
-        test_targets,
-        forge_config,
-        tests_filter,
-        fork_targets,
-        package_name,
-    }: RunForPackageArgs,
-    block_number_map: &mut BlockNumberMap,
+    package_name: String,
+    forge_config: Arc<ForgeConfig>,
+    mut test_targets: Vec<TestTargetWithResolvedConfig>,
+    tests_filter: &TestsFilter,
     ui: Arc<UI>,
 ) -> Result<PackageTestResult> {
-    let mut test_targets = test_package_with_config_resolved(
-        test_targets,
-        &fork_targets,
-        block_number_map,
-        &forge_config,
-        &tests_filter,
-    )
-    .await?;
     let all_tests = sum_test_cases(&test_targets);
 
     for test_target in &mut test_targets {
