@@ -128,8 +128,9 @@ impl TestDetails {
     }
 }
 
+// TODO: Remove in next PRs
 #[derive(Debug, Clone)]
-pub struct TestTarget<C> {
+pub struct TestTargetDeprecated<C> {
     pub tests_location: TestTargetLocation,
     pub sierra_program: ProgramArtifact,
     pub sierra_program_path: Arc<Utf8PathBuf>,
@@ -137,9 +138,10 @@ pub struct TestTarget<C> {
     pub test_cases: Vec<TestCase<C>>,
 }
 
-impl TestTarget<TestCaseWithConfig> {
+// TODO: Remove in next PRs
+impl TestTargetDeprecated<TestCaseWithConfig> {
     #[tracing::instrument(skip_all, level = "debug")]
-    pub fn from_raw(
+    pub fn from_raw_deprecated(
         test_target_raw: TestTargetRaw,
         tracked_resource: &ForgeTrackedResource,
     ) -> Result<TestTargetWithConfig> {
@@ -200,7 +202,7 @@ impl TestTarget<TestCaseWithConfig> {
             test_cases,
             sierra_program: test_target_raw.sierra_program,
             sierra_program_path: test_target_raw.sierra_program_path.into(),
-            casm_program,
+            casm_program: casm_program,
         })
     }
 }
@@ -210,4 +212,73 @@ pub struct TestCase<C> {
     pub test_details: TestDetails,
     pub name: String,
     pub config: C,
+}
+
+#[derive(Debug, Clone)]
+pub struct TestTarget<T> {
+    pub tests_location: TestTargetLocation,
+    pub sierra_program: ProgramArtifact,
+    pub sierra_program_path: Arc<Utf8PathBuf>,
+    pub casm_program: Option<Arc<RawCasmProgram>>,
+    pub test_cases: Vec<T>,
+}
+
+impl TestTarget<TestCandidate> {
+    #[tracing::instrument(skip_all, level = "debug")]
+    pub fn from_raw(test_target_raw: TestTargetRaw) -> Result<TestTarget<TestCandidate>> {
+        macro_rules! by_id {
+            ($field:ident) => {{
+                let temp: HashMap<_, _> = test_target_raw
+                    .sierra_program
+                    .program
+                    .$field
+                    .iter()
+                    .map(|f| (f.id.id, f))
+                    .collect();
+
+                temp
+            }};
+        }
+        let funcs = by_id!(funcs);
+        let type_declarations = by_id!(type_declarations);
+
+        let sierra_program_registry =
+            ProgramRegistry::<CoreType, CoreLibfunc>::new(&test_target_raw.sierra_program.program)?;
+        let type_size_map = get_type_size_map(
+            &test_target_raw.sierra_program.program,
+            &sierra_program_registry,
+        )
+        .ok_or_else(|| anyhow!("can not get type size map"))?;
+
+        let default_executables = vec![];
+        let debug_info = test_target_raw.sierra_program.debug_info.clone();
+        let executables = debug_info
+            .as_ref()
+            .and_then(|info| info.executables.get("snforge_internal_test_executable"))
+            .unwrap_or(&default_executables);
+
+        let test_cases = executables
+            .par_iter()
+            .map(|case| {
+                let func = funcs[&case.id];
+                let name = case.debug_name.clone().unwrap().into();
+                let test_details = TestDetails::build(func, &type_declarations, &type_size_map);
+
+                Ok(TestCandidate { name, test_details })
+            })
+            .collect::<Result<_>>()?;
+
+        Ok(TestTarget {
+            tests_location: test_target_raw.tests_location,
+            test_cases,
+            sierra_program: test_target_raw.sierra_program,
+            sierra_program_path: test_target_raw.sierra_program_path.into(),
+            casm_program: None,
+        })
+    }
+}
+
+pub struct TestCandidate {
+    pub name: String,
+    pub test_details: TestDetails,
 }

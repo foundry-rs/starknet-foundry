@@ -2,12 +2,14 @@ use super::package::RunForPackageArgs;
 use crate::run_tests::messages::latest_blocks_numbers::LatestBlocksNumbersMessage;
 use crate::run_tests::messages::tests_failure_summary::TestsFailureSummaryMessage;
 use crate::run_tests::messages::workspace_summary::WorkspaceSummaryMessage;
+use crate::scarb::load_test_artifacts;
 use crate::{
     ExitStatus, TestArgs, block_number_map::BlockNumberMap, run_tests::package::run_for_package,
     scarb::build_artifacts_with_scarb, shared_cache::FailedTestsCache,
 };
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
+use forge_runner::package_tests::{TestCandidate, TestTarget};
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
 use foundry_ui::UI;
@@ -15,8 +17,10 @@ use scarb_api::{
     metadata::{Metadata, PackageMetadata},
     target_dir_for_workspace,
 };
+use scarb_metadata::PackageId;
 use scarb_ui::args::PackagesFilter;
 use shared::consts::SNFORGE_TEST_FILTER;
+use std::collections::HashMap;
 use std::env;
 use std::sync::Arc;
 
@@ -39,6 +43,38 @@ impl WorkspaceDirs {
             cache_dir,
             root_dir: workspace_root.clone(),
         }
+    }
+}
+
+#[expect(dead_code)]
+struct PackageData {
+    metadata: PackageMetadata,
+    test_targets: Vec<TestTarget<TestCandidate>>,
+}
+
+pub struct Workspace(HashMap<PackageId, PackageData>);
+
+impl Workspace {
+    pub fn new(workspace_dirs: &WorkspaceDirs, packages: &[PackageMetadata]) -> Result<Self> {
+        let mut result = Workspace(HashMap::new());
+
+        for package in packages {
+            let test_targets_raw = load_test_artifacts(&workspace_dirs.artifacts_dir, &package)?;
+            let test_targets = test_targets_raw
+                .into_iter()
+                .map(|raw| TestTarget::from_raw(raw))
+                .collect::<Result<Vec<_>>>()?;
+
+            result.0.insert(
+                package.id.clone(),
+                PackageData {
+                    metadata: package.clone(),
+                    test_targets: test_targets,
+                },
+            );
+        }
+
+        Ok(result)
     }
 }
 
