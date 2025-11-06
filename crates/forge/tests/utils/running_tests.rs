@@ -2,7 +2,7 @@ use crate::utils::runner::TestCase;
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::run_tests::package::run_for_package;
-use forge::run_tests::resolve_config::resolve_config_2;
+use forge::run_tests::resolve_config::resolve_config;
 use forge::shared_cache::FailedTestsCache;
 use forge::{
     block_number_map::BlockNumberMap, scarb::load_test_artifacts, test_filter::TestsFilter,
@@ -65,7 +65,7 @@ pub fn run_test_case(
 
         let tt_resolved = tokio::runtime::Runtime::new()
             .unwrap()
-            .block_on(resolve_config_2(
+            .block_on(resolve_config(
                 tt,
                 &fork_targets,
                 &mut block_number_map,

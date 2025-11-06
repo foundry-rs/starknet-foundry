@@ -149,13 +149,8 @@ mod tests {
     use crate::shared_cache::FailedTestsCache;
     use cairo_lang_sierra::program::ProgramArtifact;
     use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
-    use forge_runner::package_tests::TestTargetLocation;
-    use forge_runner::package_tests::with_config::{
-        TestCaseConfig, TestCaseWithConfig, TestTargetWithConfig,
-    };
-    use forge_runner::{expected_result::ExpectedTestResult, package_tests::TestDetails};
+    use forge_runner::package_tests::{TestCandidate, TestDetails, TestTargetLocation};
     use std::sync::Arc;
-    use universal_sierra_compiler_api::compile_raw_sierra;
     use url::Url;
 
     fn program_for_testing() -> ProgramArtifact {
@@ -172,19 +167,11 @@ mod tests {
 
     fn create_test_case_with_config(
         name: &str,
-        ignored: bool,
-        fork_config: Option<RawForkConfig>,
-    ) -> TestCaseWithConfig {
-        TestCaseWithConfig {
+        _ignored: bool,
+        _fork_config: Option<RawForkConfig>,
+    ) -> TestCandidate {
+        TestCandidate {
             name: name.to_string(),
-            config: TestCaseConfig {
-                available_gas: None,
-                ignored,
-                expected_result: ExpectedTestResult::Success,
-                fork_config,
-                fuzzer_config: None,
-                disable_predeployed_contracts: false,
-            },
             test_details: TestDetails {
                 sierra_entry_point_statement_idx: 100,
                 parameter_types: vec![
@@ -200,14 +187,14 @@ mod tests {
         }
     }
 
-    fn create_test_target_with_cases(test_cases: Vec<TestCaseWithConfig>) -> TestTargetWithConfig {
-        TestTargetWithConfig {
+    fn create_test_target_with_cases(test_cases: Vec<TestCandidate>) -> TestTargetWithTests {
+        TestTargetWithTests {
             sierra_program: program_for_testing(),
             sierra_program_path: Arc::default(),
-            casm_program: Arc::new(
-                compile_raw_sierra(&serde_json::to_value(&program_for_testing().program).unwrap())
-                    .unwrap(),
-            ),
+            // casm_program: Arc::new(
+            //     compile_raw_sierra(&serde_json::to_value(&program_for_testing().program).unwrap())
+            //         .unwrap(),
+            // ),
             test_cases,
             tests_location: TestTargetLocation::Lib,
         }
@@ -249,6 +236,7 @@ mod tests {
                 )],
                 &mut BlockNumberMap::default(),
                 &tests_filter,
+                &ForgeTrackedResource::default(),
             )
             .await
             .is_err()
@@ -281,6 +269,7 @@ mod tests {
             &[],
             &mut BlockNumberMap::default(),
             &tests_filter,
+            &ForgeTrackedResource::default(),
         )
         .await
         .unwrap();
@@ -321,6 +310,7 @@ mod tests {
             &fork_targets,
             &mut BlockNumberMap::default(),
             &tests_filter,
+            &ForgeTrackedResource::default(),
         )
         .await
         .unwrap();
@@ -365,6 +355,7 @@ mod tests {
             &fork_targets,
             &mut BlockNumberMap::default(),
             &tests_filter,
+            &ForgeTrackedResource::default(),
         )
         .await
         .unwrap();
@@ -421,6 +412,7 @@ mod tests {
             &fork_targets,
             &mut BlockNumberMap::default(),
             &tests_filter,
+            &ForgeTrackedResource::default(),
         )
         .await
         .unwrap();
@@ -489,6 +481,7 @@ mod tests {
             &fork_targets,
             &mut BlockNumberMap::default(),
             &tests_filter,
+            &ForgeTrackedResource::default(),
         )
         .await
         .unwrap();
@@ -546,6 +539,7 @@ mod tests {
             &fork_targets,
             &mut BlockNumberMap::default(),
             &tests_filter,
+            &ForgeTrackedResource::default(),
         )
         .await
         .unwrap();
@@ -595,6 +589,7 @@ mod tests {
             &[],
             &mut BlockNumberMap::default(),
             &tests_filter,
+            &ForgeTrackedResource::default(),
         )
         .await
         .unwrap();
@@ -643,6 +638,7 @@ mod tests {
             &fork_targets,
             &mut BlockNumberMap::default(),
             &tests_filter,
+            &ForgeTrackedResource::default(),
         )
         .await
         .unwrap();
@@ -687,6 +683,7 @@ mod tests {
             &fork_targets,
             &mut BlockNumberMap::default(),
             &tests_filter,
+            &ForgeTrackedResource::default(),
         )
         .await
         .unwrap();

@@ -1,5 +1,5 @@
 use super::test_target::{TestTargetRunResult, run_for_test_target};
-use crate::run_tests::resolve_config::resolve_config_2;
+use crate::run_tests::resolve_config::resolve_config;
 use crate::{
     block_number_map::BlockNumberMap,
     run_tests::messages::{
@@ -57,7 +57,7 @@ pub async fn test_package_with_config_resolved(
     let mut test_targets_with_resolved_config = Vec::with_capacity(test_targets.len());
 
     for test_target in test_targets {
-        let test_target = resolve_config_2(
+        let test_target = resolve_config(
             test_target,
             fork_targets,
             block_number_map,
