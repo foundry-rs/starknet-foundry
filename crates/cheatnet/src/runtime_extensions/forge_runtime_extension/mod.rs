@@ -884,10 +884,7 @@ pub fn get_all_used_resources(
     }
 }
 
-fn calculate_vm_steps_from_calls(
-    top_call: &Rc<RefCell<CallTrace>>,
-    // top_call_syscalls: &SyscallUsageMap,
-) -> usize {
+fn calculate_vm_steps_from_calls(top_call: &Rc<RefCell<CallTrace>>) -> usize {
     // Resources from inner calls already include syscall resources used in them
     let used_resources =
         &top_call
@@ -900,9 +897,5 @@ fn calculate_vm_steps_from_calls(
                 }
                 CallTraceNode::DeployWithoutConstructor => acc,
             });
-    // let total_syscalls_exeucution_resources = &VersionedConstants::latest_constants()
-    //     .get_additional_os_syscall_resources(&top_call_syscalls);
-    // let resources_from_calls = used_resources + total_syscalls_exeucution_resources;
-
     used_resources.n_steps
 }

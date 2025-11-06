@@ -33,7 +33,7 @@ fn test_get_current_vm_step() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
