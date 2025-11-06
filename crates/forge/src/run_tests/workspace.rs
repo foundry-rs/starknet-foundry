@@ -26,7 +26,7 @@ pub async fn run_for_workspace(
     ui: Arc<UI>,
 ) -> Result<ExitStatus> {
     let artifacts_dir_path =
-        target_dir_for_workspace(&scarb_metadata).join(&scarb_metadata.current_profile);
+        target_dir_for_workspace(scarb_metadata).join(&scarb_metadata.current_profile);
 
     let packages: Vec<PackageMetadata> = args
         .scarb_args
