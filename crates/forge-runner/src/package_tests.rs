@@ -73,6 +73,30 @@ impl TestDetails {
         builtins
     }
 
+    #[tracing::instrument(skip_all, level = "debug")]
+    fn build(
+        func: &GenFunction<StatementIdx>,
+        type_declarations: &HashMap<u64, &TypeDeclaration>,
+        type_size_map: &UnorderedHashMap<ConcreteTypeId, i16>,
+    ) -> Self {
+        let map_types = |concrete_types: &[ConcreteTypeId]| {
+            concrete_types
+                .iter()
+                .map(|ty| {
+                    let ty = type_declarations[&ty.id];
+
+                    (ty.long_id.generic_id.clone(), type_size_map[&ty.id])
+                })
+                .collect()
+        };
+
+        Self {
+            sierra_entry_point_statement_idx: func.entry_point.0,
+            parameter_types: map_types(&func.signature.param_types),
+            return_types: map_types(&func.signature.ret_types),
+        }
+    }
+
     pub fn try_into_program(&self, casm_program: &RawCasmProgram) -> Result<Program> {
         let builtins = self.builtins();
 
@@ -147,7 +171,7 @@ impl TestTarget {
             .par_iter()
             .map(|case| -> Result<TestCandidate> {
                 let func = funcs[&case.id];
-                let test_details = build_test_details(func, &type_declarations, &type_size_map);
+                let test_details = TestDetails::build(func, &type_declarations, &type_size_map);
 
                 Ok(TestCandidate {
                     name: case.debug_name.clone().unwrap().into(),
@@ -185,28 +209,4 @@ pub struct TestCase {
     pub name: String,
     pub test_details: TestDetails,
     pub config: TestCaseResolvedConfig,
-}
-
-#[tracing::instrument(skip_all, level = "debug")]
-fn build_test_details(
-    func: &GenFunction<StatementIdx>,
-    type_declarations: &HashMap<u64, &TypeDeclaration>,
-    type_size_map: &UnorderedHashMap<ConcreteTypeId, i16>,
-) -> TestDetails {
-    let map_types = |concrete_types: &[ConcreteTypeId]| {
-        concrete_types
-            .iter()
-            .map(|ty| {
-                let ty = type_declarations[&ty.id];
-
-                (ty.long_id.generic_id.clone(), type_size_map[&ty.id])
-            })
-            .collect()
-    };
-
-    TestDetails {
-        sierra_entry_point_statement_idx: func.entry_point.0,
-        parameter_types: map_types(&func.signature.param_types),
-        return_types: map_types(&func.signature.ret_types),
-    }
 }
