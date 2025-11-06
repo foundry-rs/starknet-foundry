@@ -112,7 +112,7 @@ impl Display for ReportData {
         if self.0.is_empty() {
             writeln!(
                 f,
-                "\nNo contract gas usage data to display. Make sure your test include transactions."
+                "\nNo contract gas usage data to display, no contract calls made."
             )?;
         }
 

@@ -135,7 +135,7 @@ fn no_transactions() {
     Collected 1 test(s) from simple_package package
     Running 1 test(s) from src/
     [PASS] simple_package::tests::test_fib (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~[..])
-    No contract gas usage data to display. Make sure your test include transactions.
+    No contract gas usage data to display, no contract calls made.
 
     Running 0 test(s) from tests/
     Tests: 1 passed, 0 failed, 0 ignored, [..] filtered out
