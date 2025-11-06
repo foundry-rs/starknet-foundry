@@ -1,4 +1,4 @@
-use crate::package_tests::{TestCandidate, TestDetails, TestTargetWithTests, raw::TestTargetRaw};
+use crate::package_tests::{TestCandidate, TestDetails, TestTarget, raw::TestTargetRaw};
 use anyhow::{Result, anyhow};
 use cairo_lang_sierra::{
     extensions::core::{CoreLibfunc, CoreType},
@@ -13,7 +13,7 @@ use rayon::iter::ParallelIterator;
 use std::collections::HashMap;
 
 #[tracing::instrument(skip_all, level = "debug")]
-pub fn test_target_with_tests(test_target_raw: TestTargetRaw) -> Result<TestTargetWithTests> {
+pub fn test_target_with_tests(test_target_raw: TestTargetRaw) -> Result<TestTarget> {
     macro_rules! by_id {
         ($field:ident) => {{
             let temp: HashMap<_, _> = test_target_raw
@@ -58,7 +58,7 @@ pub fn test_target_with_tests(test_target_raw: TestTargetRaw) -> Result<TestTarg
         })
         .collect::<Result<_>>()?;
 
-    Ok(TestTargetWithTests {
+    Ok(TestTarget {
         tests_location: test_target_raw.tests_location,
         test_cases,
         sierra_program: test_target_raw.sierra_program,

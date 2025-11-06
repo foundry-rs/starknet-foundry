@@ -13,11 +13,8 @@ use forge_runner::{
     TestCaseFilter,
     forge_config::ForgeTrackedResource,
     package_tests::{
-        TestTargetWithTests,
-        with_config_resolved::{
-            ResolvedForkConfig, TestCaseResolvedConfig, TestCaseWithResolvedConfig,
-            TestTargetWithResolvedConfig,
-        },
+        TestCase, TestTarget, TestTargetResolved,
+        with_config_resolved::{ResolvedForkConfig, TestCaseResolvedConfig},
     },
     running::config_run::run_config_pass,
 };
@@ -26,12 +23,12 @@ use universal_sierra_compiler_api::compile_raw_sierra_at_path;
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub async fn resolve_config(
-    test_target: TestTargetWithTests,
+    test_target: TestTarget,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
     tests_filter: &TestsFilter,
     tracked_resource: &ForgeTrackedResource,
-) -> Result<TestTargetWithResolvedConfig> {
+) -> Result<TestTargetResolved> {
     let mut test_cases = Vec::with_capacity(test_target.test_cases.len());
     let env_ignore_fork_tests = env_ignore_fork_tests();
 
@@ -43,7 +40,7 @@ pub async fn resolve_config(
         let raw_config = run_config_pass(&case.test_details, &casm_program, tracked_resource)?;
         let ignored = raw_config.ignore.is_some_and(|v| v.is_ignored);
 
-        test_cases.push(TestCaseWithResolvedConfig::new(
+        test_cases.push(TestCase::new(
             &case.name,
             case.test_details.clone(),
             TestCaseResolvedConfig {
@@ -63,7 +60,7 @@ pub async fn resolve_config(
         ));
     }
 
-    Ok(TestTargetWithResolvedConfig {
+    Ok(TestTargetResolved {
         tests_location: test_target.tests_location,
         sierra_program: test_target.sierra_program,
         sierra_program_path: test_target.sierra_program_path,
@@ -184,11 +181,25 @@ mod tests {
                     (GenericTypeId("Enum".into()), 3),
                 ],
             },
+            // TODO: Change
+            // config: TestCaseResolvedConfig {
+            //     available_gas: None,
+            //     ignored: _ignored,
+            //     expected_result: forge_runner::expected_result::ExpectedTestResult::Panics(
+            //         "some panic".into(),
+            //     ),
+            //     fork_config: _fork_config.map(|_| ResolvedForkConfig {
+            //         url: Url::parse("https://example.com").unwrap(),
+            //         block_number: BlockNumber(42),
+            //     }),
+            //     fuzzer_config: None,
+            //     disable_predeployed_contracts: false,
+            // },
         }
     }
 
-    fn create_test_target_with_cases(test_cases: Vec<TestCandidate>) -> TestTargetWithTests {
-        TestTargetWithTests {
+    fn create_test_target_with_cases(test_cases: Vec<TestCandidate>) -> TestTarget {
+        TestTarget {
             sierra_program: program_for_testing(),
             sierra_program_path: Arc::default(),
             test_cases,

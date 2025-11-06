@@ -1,7 +1,6 @@
 use crate::shared_cache::FailedTestsCache;
 use anyhow::Result;
 use forge_runner::package_tests::TestCase;
-use forge_runner::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use forge_runner::{TestCaseFilter, TestCaseIsIgnored};
 
 #[derive(Debug, PartialEq)]
@@ -78,10 +77,7 @@ impl TestsFilter {
         }
     }
 
-    pub(crate) fn filter_tests(
-        &self,
-        test_cases: &mut Vec<TestCaseWithResolvedConfig>,
-    ) -> Result<()> {
+    pub(crate) fn filter_tests(&self, test_cases: &mut Vec<TestCase>) -> Result<()> {
         match &self.name_filter {
             NameFilter::All => {}
             NameFilter::Match(filter) => {
@@ -119,10 +115,7 @@ impl TestsFilter {
 }
 
 impl TestCaseFilter for TestsFilter {
-    fn should_be_run<T>(&self, test_case: &TestCase<T>) -> bool
-    where
-        T: TestCaseIsIgnored,
-    {
+    fn should_be_run(&self, test_case: &TestCase) -> bool {
         let ignored = test_case.config.is_ignored();
 
         match self.ignored_filter {
@@ -148,9 +141,9 @@ mod tests {
     use cairo_lang_sierra::program::Program;
     use cairo_lang_sierra::program::ProgramArtifact;
     use forge_runner::expected_result::ExpectedTestResult;
-    use forge_runner::package_tests::with_config_resolved::{
-        TestCaseResolvedConfig, TestCaseWithResolvedConfig, TestTargetWithResolvedConfig,
-    };
+    use forge_runner::package_tests::TestCase;
+    use forge_runner::package_tests::TestTargetResolved;
+    use forge_runner::package_tests::with_config_resolved::TestCaseResolvedConfig;
     use forge_runner::package_tests::{TestDetails, TestTargetLocation};
     use std::sync::Arc;
     use universal_sierra_compiler_api::compile_raw_sierra;
@@ -198,7 +191,7 @@ mod tests {
     #[test]
     #[expect(clippy::too_many_lines)]
     fn filtering_tests() {
-        let mocked_tests = TestTargetWithResolvedConfig {
+        let mocked_tests = TestTargetResolved {
             sierra_program: program_for_testing(),
             sierra_program_path: Arc::default(),
             casm_program: Arc::new(
@@ -206,7 +199,7 @@ mod tests {
                     .unwrap(),
             ),
             test_cases: vec![
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "crate1::do_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -219,7 +212,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -232,7 +225,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -245,7 +238,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -278,7 +271,7 @@ mod tests {
 
         assert_eq!(
             filtered.test_cases,
-            vec![TestCaseWithResolvedConfig {
+            vec![TestCase {
                 name: "crate1::do_thing".to_string(),
                 test_details: TestDetails::default(),
 
@@ -308,7 +301,7 @@ mod tests {
 
         assert_eq!(
             filtered.test_cases,
-            vec![TestCaseWithResolvedConfig {
+            vec![TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 test_details: TestDetails::default(),
 
@@ -339,7 +332,7 @@ mod tests {
         assert_eq!(
             filtered.test_cases,
             vec![
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "crate1::do_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -352,7 +345,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -365,7 +358,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -378,7 +371,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -425,7 +418,7 @@ mod tests {
         assert_eq!(
             filtered.test_cases,
             vec![
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "crate1::do_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -438,7 +431,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -451,7 +444,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -464,7 +457,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -483,7 +476,7 @@ mod tests {
 
     #[test]
     fn filtering_with_no_tests() {
-        let mocked_tests = TestTargetWithResolvedConfig {
+        let mocked_tests = TestTargetResolved {
             sierra_program: program_for_testing(),
             sierra_program_path: Arc::default(),
             casm_program: Arc::new(
@@ -528,7 +521,7 @@ mod tests {
     #[test]
     #[expect(clippy::too_many_lines)]
     fn filtering_with_exact_match() {
-        let mocked_tests = TestTargetWithResolvedConfig {
+        let mocked_tests = TestTargetResolved {
             sierra_program: program_for_testing(),
             sierra_program_path: Arc::default(),
             casm_program: Arc::new(
@@ -536,7 +529,7 @@ mod tests {
                     .unwrap(),
             ),
             test_cases: vec![
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "crate1::do_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -549,7 +542,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -562,7 +555,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "outer::crate3::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -575,7 +568,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "do_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -637,7 +630,7 @@ mod tests {
 
         assert_eq!(
             filtered.test_cases,
-            vec![TestCaseWithResolvedConfig {
+            vec![TestCase {
                 name: "do_thing".to_string(),
                 test_details: TestDetails::default(),
 
@@ -667,7 +660,7 @@ mod tests {
 
         assert_eq!(
             filtered.test_cases,
-            vec![TestCaseWithResolvedConfig {
+            vec![TestCase {
                 name: "crate1::do_thing".to_string(),
                 test_details: TestDetails::default(),
 
@@ -712,7 +705,7 @@ mod tests {
 
         assert_eq!(
             filtered.test_cases,
-            vec![TestCaseWithResolvedConfig {
+            vec![TestCase {
                 name: "outer::crate3::run_other_thing".to_string(),
                 test_details: TestDetails::default(),
 
@@ -730,7 +723,7 @@ mod tests {
 
     #[test]
     fn filtering_with_only_ignored() {
-        let mocked_tests = TestTargetWithResolvedConfig {
+        let mocked_tests = TestTargetResolved {
             sierra_program: program_for_testing(),
             sierra_program_path: Arc::default(),
             casm_program: Arc::new(
@@ -738,7 +731,7 @@ mod tests {
                     .unwrap(),
             ),
             test_cases: vec![
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "crate1::do_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -751,7 +744,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -764,7 +757,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "outer::crate3::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -777,7 +770,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "do_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -809,7 +802,7 @@ mod tests {
         assert_eq!(
             filtered.test_cases,
             vec![
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -822,7 +815,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "outer::crate3::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -842,7 +835,7 @@ mod tests {
     #[test]
     #[expect(clippy::too_many_lines)]
     fn filtering_with_include_ignored() {
-        let mocked_tests = TestTargetWithResolvedConfig {
+        let mocked_tests = TestTargetResolved {
             sierra_program: program_for_testing(),
             sierra_program_path: Arc::default(),
             casm_program: Arc::new(
@@ -850,7 +843,7 @@ mod tests {
                     .unwrap(),
             ),
             test_cases: vec![
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "crate1::do_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -863,7 +856,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -876,7 +869,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "outer::crate3::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -889,7 +882,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "do_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -921,7 +914,7 @@ mod tests {
         assert_eq!(
             filtered.test_cases,
             vec![
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "crate1::do_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -934,7 +927,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -947,7 +940,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "outer::crate3::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
 
@@ -960,7 +953,7 @@ mod tests {
                         disable_predeployed_contracts: false,
                     },
                 },
-                TestCaseWithResolvedConfig {
+                TestCase {
                     name: "do_thing".to_string(),
                     test_details: TestDetails::default(),
 

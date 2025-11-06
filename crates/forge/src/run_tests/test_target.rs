@@ -1,11 +1,10 @@
 use anyhow::Result;
 use forge_runner::messages::TestResultMessage;
+use forge_runner::package_tests::TestTargetResolved;
 use forge_runner::{
     TestCaseFilter,
     forge_config::ForgeConfig,
-    maybe_generate_coverage, maybe_save_trace_and_profile,
-    package_tests::with_config_resolved::TestTargetWithResolvedConfig,
-    run_for_test_case,
+    maybe_generate_coverage, maybe_save_trace_and_profile, run_for_test_case,
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
     test_target_summary::TestTargetSummary,
 };
@@ -24,7 +23,7 @@ pub enum TestTargetRunResult {
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub async fn run_for_test_target(
-    tests: TestTargetWithResolvedConfig,
+    tests: TestTargetResolved,
     forge_config: Arc<ForgeConfig>,
     tests_filter: &TestsFilter,
     ui: Arc<UI>,

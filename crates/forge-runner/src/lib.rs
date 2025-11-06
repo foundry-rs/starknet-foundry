@@ -12,7 +12,6 @@ use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use futures::StreamExt;
 use futures::stream::FuturesUnordered;
-use package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use profiler_api::run_profiler;
 use rand::SeedableRng;
 use rand::prelude::StdRng;
@@ -58,9 +57,7 @@ const BUILTINS: [&str; 11] = [
 ];
 
 pub trait TestCaseFilter {
-    fn should_be_run<T>(&self, test_case: &TestCase<T>) -> bool
-    where
-        T: TestCaseIsIgnored;
+    fn should_be_run(&self, test_case: &TestCase) -> bool;
 
     fn should_run_test(&self, test_case_config: bool) -> bool;
 }
@@ -115,7 +112,7 @@ pub fn maybe_generate_coverage(
 #[must_use]
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn run_for_test_case(
-    case: Arc<TestCaseWithResolvedConfig>,
+    case: Arc<TestCase>,
     casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
@@ -150,7 +147,7 @@ pub fn run_for_test_case(
 
 #[tracing::instrument(skip_all, level = "debug")]
 fn run_with_fuzzing(
-    case: Arc<TestCaseWithResolvedConfig>,
+    case: Arc<TestCase>,
     casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,

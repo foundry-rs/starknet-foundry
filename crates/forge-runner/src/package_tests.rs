@@ -1,3 +1,4 @@
+use crate::package_tests::with_config_resolved::TestCaseResolvedConfig;
 use crate::running::hints_to_params;
 use anyhow::Result;
 use cairo_lang_sierra::extensions::NamedType;
@@ -95,31 +96,31 @@ impl TestDetails {
 }
 
 #[derive(Debug, Clone)]
-pub struct TestTarget<C> {
-    pub tests_location: TestTargetLocation,
-    pub sierra_program: ProgramArtifact,
-    pub sierra_program_path: Arc<Utf8PathBuf>,
-    pub casm_program: Arc<RawCasmProgram>,
-    pub test_cases: Vec<TestCase<C>>,
-}
-
-#[derive(Debug, Clone)]
-pub struct TestTargetWithTests {
+pub struct TestTarget {
     pub tests_location: TestTargetLocation,
     pub sierra_program: ProgramArtifact,
     pub sierra_program_path: Arc<Utf8PathBuf>,
     pub test_cases: Vec<TestCandidate>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct TestCase<C> {
-    pub test_details: TestDetails,
-    pub name: String,
-    pub config: C,
+#[derive(Debug, Clone)]
+pub struct TestTargetResolved {
+    pub tests_location: TestTargetLocation,
+    pub sierra_program: ProgramArtifact,
+    pub sierra_program_path: Arc<Utf8PathBuf>,
+    pub casm_program: Arc<RawCasmProgram>,
+    pub test_cases: Vec<TestCase>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TestCandidate {
-    pub test_details: TestDetails,
     pub name: String,
+    pub test_details: TestDetails,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TestCase {
+    pub name: String,
+    pub test_details: TestDetails,
+    pub config: TestCaseResolvedConfig,
 }

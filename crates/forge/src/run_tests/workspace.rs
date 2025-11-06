@@ -15,7 +15,7 @@ use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge_runner::forge_config::ForgeConfig;
-use forge_runner::package_tests::TestTargetWithTests;
+use forge_runner::package_tests::TestTarget;
 use forge_runner::running::with_config::test_target_with_tests;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
@@ -210,7 +210,7 @@ fn unset_forge_test_filter() {
     };
 }
 
-pub struct Workspace(pub HashMap<PackageId, Vec<TestTargetWithTests>>);
+pub struct Workspace(pub HashMap<PackageId, Vec<TestTarget>>);
 
 impl Workspace {
     pub fn build(workspace_dirs: &WorkspaceDirs, packages: &[PackageMetadata]) -> Result<Self> {
@@ -225,7 +225,7 @@ impl Workspace {
                     let tt = test_target_with_tests(raw)?;
                     Ok(tt)
                 })
-                .collect::<Result<Vec<TestTargetWithTests>>>()?;
+                .collect::<Result<Vec<TestTarget>>>()?;
 
             result
                 .0

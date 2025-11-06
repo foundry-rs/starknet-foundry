@@ -12,9 +12,10 @@ use crate::{
 };
 use anyhow::Result;
 use console::Style;
+use forge_runner::package_tests::TestTargetResolved;
 use forge_runner::{
     forge_config::{ForgeConfig, ForgeTrackedResource},
-    package_tests::{TestTargetWithTests, with_config_resolved::TestTargetWithResolvedConfig},
+    package_tests::TestTarget,
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
 };
@@ -48,12 +49,12 @@ impl PackageTestResult {
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub async fn test_package_with_config_resolved(
-    test_targets: Vec<TestTargetWithTests>,
+    test_targets: Vec<TestTarget>,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
     tests_filter: &TestsFilter,
     tracked_resource: &ForgeTrackedResource,
-) -> Result<Vec<TestTargetWithResolvedConfig>> {
+) -> Result<Vec<TestTargetResolved>> {
     let mut test_targets_with_resolved_config = Vec::with_capacity(test_targets.len());
 
     for test_target in test_targets {
@@ -72,7 +73,7 @@ pub async fn test_package_with_config_resolved(
     Ok(test_targets_with_resolved_config)
 }
 
-fn sum_test_cases(test_targets: &[TestTargetWithResolvedConfig]) -> usize {
+fn sum_test_cases(test_targets: &[TestTargetResolved]) -> usize {
     test_targets.iter().map(|tc| tc.test_cases.len()).sum()
 }
 
@@ -80,7 +81,7 @@ fn sum_test_cases(test_targets: &[TestTargetWithResolvedConfig]) -> usize {
 pub async fn run_for_package(
     package_name: String,
     forge_config: Arc<ForgeConfig>,
-    mut test_targets: Vec<TestTargetWithResolvedConfig>,
+    mut test_targets: Vec<TestTargetResolved>,
     tests_filter: &TestsFilter,
     ui: Arc<UI>,
 ) -> Result<PackageTestResult> {

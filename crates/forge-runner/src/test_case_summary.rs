@@ -4,7 +4,7 @@ use crate::debugging::{TraceArgs, build_debugging_trace};
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
 use crate::gas::stats::GasStats;
-use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
+use crate::package_tests::TestCase;
 use crate::running::{RunCompleted, RunStatus};
 use cairo_annotations::trace_data::VersionedCallTrace as VersionedProfilerCallTrace;
 use camino::Utf8Path;
@@ -284,7 +284,7 @@ impl TestCaseSummary<Single> {
             fuzzer_args,
             fork_data,
         }: RunCompleted,
-        test_case: &TestCaseWithResolvedConfig,
+        test_case: &TestCase,
         contracts_data: &ContractsData,
         versioned_program_path: &Utf8Path,
         trace_args: &TraceArgs,
@@ -320,7 +320,7 @@ impl TestCaseSummary<Single> {
                 }
                 ExpectedTestResult::Panics(expected_panic_value) => TestCaseSummary::Failed {
                     name,
-                    msg: Some(build_expected_panic_message(expected_panic_value)),
+                    msg: Some(build_expected_panic_message(&expected_panic_value)),
                     fuzzer_args,
                     test_statistics: (),
                     debugging_trace,
@@ -337,7 +337,7 @@ impl TestCaseSummary<Single> {
                 },
                 ExpectedTestResult::Panics(expected_panic_value) => {
                     let (matching, msg) =
-                        check_if_matching_and_get_message(&value, expected_panic_value);
+                        check_if_matching_and_get_message(&value, &expected_panic_value);
                     if matching {
                         TestCaseSummary::Passed {
                             name,
