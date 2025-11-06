@@ -65,7 +65,7 @@ pub async fn run_for_workspace(
 
         let args = RunForPackageArgs::build(
             package,
-            &scarb_metadata,
+            scarb_metadata,
             &args,
             &cache_dir,
             &artifacts_dir_path,
