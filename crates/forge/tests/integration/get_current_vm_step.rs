@@ -14,7 +14,7 @@ fn test_get_current_vm_step() {
             use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 
             #[test]
-            fn check_current_step() {
+            fn check_current_vm_step() {
                 let step_start = get_current_vm_step();
 
                 let contract = declare("HelloStarknet").unwrap().contract_class().clone();
