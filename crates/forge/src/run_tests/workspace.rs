@@ -58,17 +58,17 @@ impl Workspace {
         let mut result = Workspace(HashMap::new());
 
         for package in packages {
-            let test_targets_raw = load_test_artifacts(&workspace_dirs.artifacts_dir, &package)?;
+            let test_targets_raw = load_test_artifacts(&workspace_dirs.artifacts_dir, package)?;
             let test_targets = test_targets_raw
                 .into_iter()
-                .map(|raw| TestTarget::from_raw(raw))
+                .map(TestTarget::from_raw)
                 .collect::<Result<Vec<_>>>()?;
 
             result.0.insert(
                 package.id.clone(),
                 PackageData {
                     metadata: package.clone(),
-                    test_targets: test_targets,
+                    test_targets,
                 },
             );
         }
