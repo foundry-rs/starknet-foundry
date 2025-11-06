@@ -97,7 +97,7 @@ pub async fn run_for_workspace(
             .map(|(total, filtered)| total + filtered);
     }
 
-    let overall_summary = WorkspaceSummaryMessage::new(&all_tests, total_filtered_count);
+    let workspace_summary = WorkspaceSummaryMessage::new(&all_tests, total_filtered_count);
     let all_failed_tests: Vec<AnyTestCaseSummary> = extract_failed_tests(all_tests).collect();
 
     FailedTestsCache::new(&workspace_dirs.cache_dir).save_failed_tests(&all_failed_tests)?;
@@ -114,7 +114,7 @@ pub async fn run_for_workspace(
     if packages_len > 1 {
         // Add newline to separate summary from previous output
         ui.print_blank_line();
-        ui.println(&overall_summary);
+        ui.println(&workspace_summary);
     }
 
     if args.exact {
