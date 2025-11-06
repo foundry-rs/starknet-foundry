@@ -1,4 +1,6 @@
-use crate::e2e::common::runner::{setup_package, test_runner};
+use crate::e2e::common::runner::{
+    BASE_FILE_PATTERNS, Package, setup_package, setup_package_with_file_patterns, test_runner,
+};
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
@@ -113,6 +115,52 @@ fn multiple_contracts_and_constructor() {
 
     Tests: 1 passed, 0 failed, 0 ignored, [..] filtered out
     "},
+    );
+}
+
+#[test]
+fn fork() {
+    let temp =
+        setup_package_with_file_patterns(Package::Name("forking".to_string()), BASE_FILE_PATTERNS);
+
+    let output = test_runner(&temp)
+        .arg("test_track_resources")
+        .arg("--gas-report")
+        .assert()
+        .code(0);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+        Collected 1 test(s) from forking package
+        Running 1 test(s) from src/
+        [PASS] forking::tests::test_track_resources (l1_gas: ~0, l1_data_gas: ~[..], l2_gas: ~[..])
+        ╭---------------------------+-------+-------+-------+---------+---------╮
+        | forked contract           |       |       |       |         |         |
+        | (class hash: 0x06a7…1550) |       |       |       |         |         |
+        +=======================================================================+
+        | Function Name             | Min   | Max   | Avg   | Std Dev | # Calls |
+        |---------------------------+-------+-------+-------+---------+---------|
+        | get_balance               | 40000 | 40000 | 40000 | 0       | 1       |
+        |---------------------------+-------+-------+-------+---------+---------|
+        | increase_balance          | 40000 | 40000 | 40000 | 0       | 1       |
+        ╰---------------------------+-------+-------+-------+---------+---------╯
+        ╭---------------------------+-------+-------+-------+---------+---------╮
+        | forked contract           |       |       |       |         |         |
+        | (class hash: 0x07aa…af4b) |       |       |       |         |         |
+        +=======================================================================+
+        | Function Name             | Min   | Max   | Avg   | Std Dev | # Calls |
+        |---------------------------+-------+-------+-------+---------+---------|
+        | get_balance               | 13840 | 13840 | 13840 | 0       | 1       |
+        |---------------------------+-------+-------+-------+---------+---------|
+        | increase_balance          | 25840 | 25840 | 25840 | 0       | 1       |
+        ╰---------------------------+-------+-------+-------+---------+---------╯
+
+        Tests: 1 passed, 0 failed, 0 ignored, [..] filtered out
+        "},
     );
 }
 

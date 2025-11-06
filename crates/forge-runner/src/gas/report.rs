@@ -1,4 +1,5 @@
 use crate::gas::stats::GasStats;
+use crate::gas::utils::shorten_felt;
 use cheatnet::trace_data::{CallTrace, CallTraceNode};
 use comfy_table::modifiers::UTF8_ROUND_CORNERS;
 use comfy_table::{Attribute, Cell, Color, Table};
@@ -12,6 +13,12 @@ use std::fmt::Display;
 type ContractName = String;
 type Selector = String;
 
+#[derive(Debug, Clone, PartialOrd, PartialEq, Ord, Eq)]
+pub enum ContractId {
+    LocalContract(ContractName),
+    ForkedContract(ClassHash),
+}
+
 #[derive(Debug, Clone)]
 pub struct SingleTestGasInfo {
     pub gas_used: GasVector,
@@ -19,7 +26,7 @@ pub struct SingleTestGasInfo {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct ReportData(BTreeMap<ContractName, ContractInfo>);
+pub struct ReportData(BTreeMap<ContractId, ContractInfo>);
 
 #[derive(Debug, Clone, Default)]
 pub struct ContractInfo {
@@ -58,7 +65,7 @@ impl SingleTestGasInfo {
                     "class_hash should be set in `fn execute_call_entry_point` in cheatnet",
                 );
 
-                let contract_name = get_contract_name(contracts_data, class_hash);
+                let contract_id = get_contract_id(contracts_data, class_hash);
                 let selector = get_selector(contracts_data, call.entry_point.entry_point_selector);
                 let gas = call
                     .gas_report_data
@@ -66,7 +73,7 @@ impl SingleTestGasInfo {
                     .expect("Gas report data must be updated after test execution")
                     .get_gas();
 
-                report_data.update_entry(contract_name, selector, gas);
+                report_data.update_entry(contract_id, selector, gas);
                 stack.extend(call.nested_calls.clone());
             }
         }
@@ -80,13 +87,8 @@ impl SingleTestGasInfo {
 }
 
 impl ReportData {
-    fn update_entry(
-        &mut self,
-        contract_name: ContractName,
-        selector: Selector,
-        gas_used: GasVector,
-    ) {
-        let contract_info = self.0.entry(contract_name).or_default();
+    fn update_entry(&mut self, contract_id: ContractId, selector: Selector, gas_used: GasVector) {
+        let contract_info = self.0.entry(contract_id).or_default();
 
         let current_gas = contract_info.gas_used;
         contract_info.gas_used = current_gas.checked_add(gas_used).unwrap_or_else(|| {
@@ -124,11 +126,26 @@ impl Display for ReportData {
     }
 }
 
-fn get_contract_name(contracts_data: &ContractsDataStore, class_hash: ClassHash) -> ContractName {
-    contracts_data
-        .get_contract_name(&class_hash)
-        .map_or("forked contract", |name| name.0.as_str())
-        .to_string()
+impl Display for ContractId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let name = match self {
+            ContractId::LocalContract(name) => format!("{name} Contract"),
+            ContractId::ForkedContract(class_hash) => {
+                format!(
+                    "forked contract\n(class hash: {})",
+                    shorten_felt(class_hash.0)
+                )
+            }
+        };
+        write!(f, "{name}")
+    }
+}
+
+fn get_contract_id(contracts_data: &ContractsDataStore, class_hash: ClassHash) -> ContractId {
+    match contracts_data.get_contract_name(&class_hash) {
+        Some(name) => ContractId::LocalContract(name.0.clone()),
+        None => ContractId::ForkedContract(class_hash),
+    }
 }
 
 fn get_selector(contracts_data: &ContractsDataStore, selector: EntryPointSelector) -> Selector {
@@ -139,13 +156,11 @@ fn get_selector(contracts_data: &ContractsDataStore, selector: EntryPointSelecto
         .clone()
 }
 
-pub fn format_table_output(contract_info: &ContractInfo, name: &ContractName) -> Table {
+pub fn format_table_output(contract_info: &ContractInfo, contract_id: &ContractId) -> Table {
     let mut table = Table::new();
     table.apply_modifier(UTF8_ROUND_CORNERS);
 
-    table.set_header(vec![
-        Cell::new(format!("{name} Contract")).fg(Color::Magenta),
-    ]);
+    table.set_header(vec![Cell::new(contract_id.to_string()).fg(Color::Magenta)]);
     table.add_row(vec![
         Cell::new("Function Name").add_attribute(Attribute::Bold),
         Cell::new("Min").add_attribute(Attribute::Bold),
