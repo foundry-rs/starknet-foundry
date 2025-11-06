@@ -27,9 +27,10 @@ pub struct WorkspaceDirs {
 }
 
 impl WorkspaceDirs {
+    #[must_use]
     pub fn new(scarb_metadata: &Metadata) -> Self {
         let artifacts_dir =
-            target_dir_for_workspace(&scarb_metadata).join(&scarb_metadata.current_profile);
+            target_dir_for_workspace(scarb_metadata).join(&scarb_metadata.current_profile);
         let workspace_root = &scarb_metadata.workspace.root;
         let cache_dir = workspace_root.join(CACHE_DIR);
 
