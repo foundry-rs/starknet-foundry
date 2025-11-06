@@ -145,7 +145,7 @@ mod tests {
     };
     use forge_runner::package_tests::{TestDetails, TestTargetLocation};
     use std::sync::Arc;
-    use universal_sierra_compiler_api::{SierraType, compile_sierra};
+    use universal_sierra_compiler_api::compile_raw_sierra;
 
     fn program_for_testing() -> ProgramArtifact {
         ProgramArtifact {
@@ -194,11 +194,8 @@ mod tests {
             sierra_program: program_for_testing(),
             sierra_program_path: Arc::default(),
             casm_program: Arc::new(
-                compile_sierra(
-                    &serde_json::to_value(&program_for_testing().program).unwrap(),
-                    &SierraType::Raw,
-                )
-                .unwrap(),
+                compile_raw_sierra(&serde_json::to_value(&program_for_testing().program).unwrap())
+                    .unwrap(),
             ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
@@ -482,11 +479,8 @@ mod tests {
             sierra_program: program_for_testing(),
             sierra_program_path: Arc::default(),
             casm_program: Arc::new(
-                compile_sierra(
-                    &serde_json::to_value(&program_for_testing().program).unwrap(),
-                    &SierraType::Raw,
-                )
-                .unwrap(),
+                compile_raw_sierra(&serde_json::to_value(&program_for_testing().program).unwrap())
+                    .unwrap(),
             ),
             test_cases: vec![],
             tests_location: TestTargetLocation::Lib,
@@ -530,11 +524,8 @@ mod tests {
             sierra_program: program_for_testing(),
             sierra_program_path: Arc::default(),
             casm_program: Arc::new(
-                compile_sierra(
-                    &serde_json::to_value(&program_for_testing().program).unwrap(),
-                    &SierraType::Raw,
-                )
-                .unwrap(),
+                compile_raw_sierra(&serde_json::to_value(&program_for_testing().program).unwrap())
+                    .unwrap(),
             ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
@@ -730,17 +721,13 @@ mod tests {
     }
 
     #[test]
-    #[expect(clippy::too_many_lines)]
     fn filtering_with_only_ignored() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
             sierra_program_path: Arc::default(),
             casm_program: Arc::new(
-                compile_sierra(
-                    &serde_json::to_value(&program_for_testing().program).unwrap(),
-                    &SierraType::Raw,
-                )
-                .unwrap(),
+                compile_raw_sierra(&serde_json::to_value(&program_for_testing().program).unwrap())
+                    .unwrap(),
             ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
@@ -851,11 +838,8 @@ mod tests {
             sierra_program: program_for_testing(),
             sierra_program_path: Arc::default(),
             casm_program: Arc::new(
-                compile_sierra(
-                    &serde_json::to_value(&program_for_testing().program).unwrap(),
-                    &SierraType::Raw,
-                )
-                .unwrap(),
+                compile_raw_sierra(&serde_json::to_value(&program_for_testing().program).unwrap())
+                    .unwrap(),
             ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {

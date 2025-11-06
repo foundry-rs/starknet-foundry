@@ -50,6 +50,12 @@ fn build_default_manifest() -> String {
         # accounts-file = "{default_accounts_file}"
         # account = ""
         # keystore = ""
+        
+        # Configure custom network addresses
+        # [sncast.default.networks]
+        # mainnet = "https://mainnet.your-node.com"
+        # sepolia = "https://sepolia.your-node.com"
+        # devnet = "http://127.0.0.1:5050/rpc"
         "#,
         default_accounts_file = DEFAULT_ACCOUNTS_FILE,
         default_wait_timeout = default_wait_params.timeout,
@@ -79,6 +85,9 @@ macro_rules! clone_field {
 pub fn combine_cast_configs(global_config: &CastConfig, local_config: &CastConfig) -> CastConfig {
     let default_cast_config = CastConfig::default();
 
+    let mut networks = global_config.networks.clone();
+    networks.override_with(&local_config.networks);
+
     CastConfig {
         url: clone_field!(global_config, local_config, default_cast_config, url),
         account: clone_field!(global_config, local_config, default_cast_config, account),
@@ -107,5 +116,6 @@ pub fn combine_cast_configs(global_config: &CastConfig, local_config: &CastConfi
             default_cast_config,
             show_explorer_links
         ),
+        networks,
     }
 }

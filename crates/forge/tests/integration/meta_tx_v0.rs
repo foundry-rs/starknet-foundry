@@ -1,33 +1,12 @@
+use crate::utils::runner::{Contract, assert_passed};
+use crate::utils::running_tests::run_test_case;
+use crate::utils::test_case;
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
-use scarb_api::ScarbCommand;
-use semver::Version;
 use std::path::Path;
-use test_utils::runner::{Contract, assert_passed};
-use test_utils::running_tests::run_test_case;
-use test_utils::test_case;
-
-// TODO(#3704) Remove scarb version check
-fn skip_scarb_lt_2_11_0() -> bool {
-    let version_info = ScarbCommand::version()
-        .run()
-        .expect("Failed to get Scarb version");
-
-    if version_info.scarb < Version::new(2, 11, 0) {
-        eprintln!("[IGNORED] `meta_tx_v0` syscall is not supported in Scarb < 2.11.0");
-        true
-    } else {
-        false
-    }
-}
 
 #[test]
 fn check_meta_tx_v0_syscall_work_without_cheats() {
-    // TODO(#3704) Remove scarb version check
-    if skip_scarb_lt_2_11_0() {
-        return;
-    }
-
     let test = test_case!(
         indoc!(
             r#"
@@ -84,11 +63,6 @@ fn check_meta_tx_v0_syscall_work_without_cheats() {
 
 #[test]
 fn meta_tx_v0_with_cheat_caller_address() {
-    // TODO(#3704) Remove scarb version check
-    if skip_scarb_lt_2_11_0() {
-        return;
-    }
-
     let test = test_case!(
         indoc!(
             r#"
@@ -162,11 +136,6 @@ fn meta_tx_v0_with_cheat_caller_address() {
 )]
 #[test]
 fn meta_tx_v0_with_cheat_block_hash() {
-    // TODO(#3704) Remove scarb version check
-    if skip_scarb_lt_2_11_0() {
-        return;
-    }
-
     let test = test_case!(
         indoc!(
             r#"
@@ -236,11 +205,6 @@ fn meta_tx_v0_with_cheat_block_hash() {
 
 #[test]
 fn meta_tx_v0_verify_tx_context_modification() {
-    // TODO(#3704) Remove scarb version check
-    if skip_scarb_lt_2_11_0() {
-        return;
-    }
-
     let test = test_case!(
         indoc!(
             r#"

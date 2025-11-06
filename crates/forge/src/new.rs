@@ -4,19 +4,20 @@ use anyhow::{Context, Ok, Result, anyhow, bail, ensure};
 use camino::Utf8PathBuf;
 use include_dir::{Dir, DirEntry, include_dir};
 use indoc::formatdoc;
-use scarb_api::ScarbCommand;
+use scarb_api::version::scarb_version;
+use scarb_api::{ScarbCommand, ensure_scarb_available};
 use semver::Version;
-use shared::consts::FREE_RPC_PROVIDER_URL;
 use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use toml_edit::{Array, ArrayOfTables, DocumentMut, Item, Table, Value, value};
 
+const OZ_VERSION: Version = Version::new(1, 0, 0);
+
 static TEMPLATES_DIR: Dir = include_dir!("snforge_templates");
 
-const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
-const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
+const SCARB_WITHOUT_CAIRO_TEST_TEMPLATE: Version = Version::new(2, 13, 0);
 
 struct Dependency {
     name: String,
@@ -108,7 +109,7 @@ impl TryFrom<&Template> for TemplateManifestConfig {
     type Error = anyhow::Error;
 
     fn try_from(template: &Template) -> Result<Self> {
-        let cairo_version = ScarbCommand::version().run()?.cairo;
+        let cairo_version = scarb_version()?.cairo;
         match template {
             Template::CairoProgram => Ok(TemplateManifestConfig {
                 dependencies: vec![],
@@ -133,7 +134,7 @@ impl TryFrom<&Template> for TemplateManifestConfig {
                     },
                     Dependency {
                         name: "openzeppelin_token".to_string(),
-                        version: get_oz_version()?.to_string(),
+                        version: OZ_VERSION.to_string(),
                         dev: false,
                     },
                 ],
@@ -152,7 +153,7 @@ fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
         # and https://foundry-rs.github.io/starknet-foundry/projects/configuration.html for more information
 
         # [sncast.default]                                         # Define a profile name
-        # url = "{default_rpc_url}" # Url of the RPC provider
+        # url = "<YOUR_RPC_PROVIDER>" # Url of the RPC provider
         # accounts-file = "../account-file"                        # Path to the file with the account data
         # account = "mainuser"                                     # Account from `accounts_file` or default account file that will be used for the transactions
         # keystore = "~/keystore"                                  # Path to the keystore file
@@ -160,7 +161,6 @@ fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
         # block-explorer = "StarkScan"                             # Block explorer service used to display links to transaction details
         # show-explorer-links = true                               # Print links pointing to pages with transaction details in the chosen block explorer
         "#,
-            default_rpc_url = FREE_RPC_PROVIDER_URL,
         },
     )?;
 
@@ -256,16 +256,12 @@ fn set_cairo_edition(document: &mut DocumentMut, cairo_edition: &str) {
 }
 
 fn add_assert_macros(document: &mut DocumentMut) -> Result<()> {
-    let versions = ScarbCommand::version().run()?;
-    let version = if versions.scarb < MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS {
-        DEFAULT_ASSERT_MACROS
-    } else {
-        versions.cairo
-    };
+    let version = scarb_version()?.cairo;
 
     document
-        .get_mut("dev-dependencies")
-        .and_then(|dep| dep.as_table_mut())
+        .entry("dev-dependencies")
+        .or_insert(Item::Table(Table::new()))
+        .as_table_mut()
         .context("Failed to get dev-dependencies from Scarb.toml")?
         .insert("assert_macros", value(version.to_string()));
 
@@ -309,7 +305,7 @@ fn add_fork_config(document: &mut DocumentMut) -> Result<()> {
 
     let mut fork_table = Table::new();
     fork_table.insert("name", Item::Value(Value::from("SEPOLIA_LATEST")));
-    fork_table.insert("url", Item::Value(Value::from(FREE_RPC_PROVIDER_URL)));
+    fork_table.insert("url", Item::Value(Value::from("<YOUR_RPC_PROVIDER>")));
 
     let mut block_id_table = Table::new();
     block_id_table.insert("tag", Item::Value(Value::from("latest")));
@@ -351,7 +347,7 @@ pub fn new(
         template,
     }: NewArgs,
 ) -> Result<()> {
-    ScarbCommand::new().ensure_available()?;
+    ensure_scarb_available()?;
     if !overwrite {
         ensure!(
             !path.exists() || path.read_dir().is_ok_and(|mut i| i.next().is_none()),
@@ -361,7 +357,7 @@ pub fn new(
         );
     }
     let name = infer_name(name, &path)?;
-    let scarb_version = ScarbCommand::version().run()?.scarb;
+    let scarb_version = scarb_version()?.scarb;
 
     fs::create_dir_all(&path)?;
     let project_path = path.canonicalize()?;
@@ -378,19 +374,29 @@ pub fn new(
             cmd.arg("--no-vcs");
         }
 
-        cmd.env("SCARB_INIT_TEST_RUNNER", "cairo-test")
+        // TODO(#3910)
+        let test_runner = if scarb_version < SCARB_WITHOUT_CAIRO_TEST_TEMPLATE {
+            "cairo-test"
+        } else {
+            "none"
+        };
+
+        cmd.env("SCARB_INIT_TEST_RUNNER", test_runner)
             .run()
             .context("Failed to initialize a new project")?;
 
-        ScarbCommand::new_with_stdio()
-            .current_dir(&project_path)
-            .manifest_path(scarb_manifest_path.clone())
-            .offline()
-            .arg("remove")
-            .arg("--dev")
-            .arg("cairo_test")
-            .run()
-            .context("Failed to remove cairo_test dependency")?;
+        // TODO(#3910)
+        if scarb_version < SCARB_WITHOUT_CAIRO_TEST_TEMPLATE {
+            ScarbCommand::new_with_stdio()
+                .current_dir(&project_path)
+                .manifest_path(scarb_manifest_path.clone())
+                .offline()
+                .arg("remove")
+                .arg("--dev")
+                .arg("cairo_test")
+                .run()
+                .context("Failed to remove cairo_test dependency")?;
+        }
     }
 
     add_template_to_scarb_manifest(&scarb_manifest_path)?;
@@ -452,17 +458,4 @@ fn get_template_dir(template: &Template) -> Result<Dir<'_>> {
         .get_dir(dir_name)
         .ok_or_else(|| anyhow!("Directory {dir_name} not found"))
         .cloned()
-}
-
-fn get_oz_version() -> Result<Version> {
-    let scarb_version = ScarbCommand::version().run()?.scarb;
-
-    let oz_version = match scarb_version {
-        ver if ver >= Version::new(2, 9, 4) => Version::new(1, 0, 0),
-        ver if ver >= Version::new(2, 9, 1) => Version::new(0, 20, 0),
-        ver if ver >= Version::new(2, 8, 4) => Version::new(0, 19, 0),
-        _ => bail!("Minimal Scarb version to create a new project with ERC-20 template is 2.8.4"),
-    };
-
-    Ok(oz_version)
 }

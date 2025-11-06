@@ -2,6 +2,7 @@ use super::{
     resolve_config::resolve_config,
     test_target::{TestTargetRunResult, run_for_test_target},
 };
+use crate::scarb::load_package_config;
 use crate::{
     TestArgs,
     block_number_map::BlockNumberMap,
@@ -12,19 +13,15 @@ use crate::{
     },
     scarb::{
         config::{ForgeConfigFromScarb, ForkTarget},
-        load_test_artifacts, should_compile_starknet_contract_target,
+        load_test_artifacts,
     },
     shared_cache::FailedTestsCache,
     test_filter::{NameFilter, TestsFilter},
-    warn::{
-        warn_if_available_gas_used_with_incompatible_scarb_version,
-        warn_if_incompatible_rpc_version,
-    },
+    warn::warn_if_incompatible_rpc_version,
 };
 use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use configuration::load_package_config;
 use console::Style;
 use forge_runner::{
     forge_config::ForgeConfig,
@@ -88,10 +85,7 @@ impl RunForPackageArgs {
             &package,
             ui,
             CompilationOpts {
-                use_test_target_contracts: !should_compile_starknet_contract_target(
-                    &scarb_metadata.app_version_info.version,
-                    args.no_optimization,
-                ),
+                use_test_target_contracts: !args.no_optimization,
                 #[cfg(feature = "cairo-native")]
                 run_native: args.run_native,
             },
@@ -193,7 +187,6 @@ pub async fn run_for_package(
         tests_filter.filter_tests(&mut test_target.test_cases)?;
     }
 
-    warn_if_available_gas_used_with_incompatible_scarb_version(&test_targets, &ui)?;
     warn_if_incompatible_rpc_version(&test_targets, ui.clone()).await?;
 
     let not_filtered = sum_test_cases(&test_targets);

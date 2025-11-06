@@ -335,7 +335,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     serde_json::from_str(&contract_artifacts.sierra)
                         .context("Failed to parse sierra artifact")?;
                 let network_flag = generate_network_flag(
-                    rpc.get_url(&config.url).await.ok().as_deref(),
+                    rpc.get_url(&config).await.ok().as_deref(),
                     rpc.network.as_ref(),
                 );
                 Some(DeployCommandMessage::new(
@@ -742,11 +742,11 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
 
     let global_config =
         load_config::<CastConfig>(Some(&global_config_path.clone()), cli.profile.as_deref())
-            .unwrap_or_else(|_| {
-                load_config::<CastConfig>(Some(&global_config_path), None).unwrap()
-            });
+            .or_else(|_| load_config::<CastConfig>(Some(&global_config_path), None))
+            .map_err(|err| anyhow::anyhow!(format!("Failed to load config: {err}")))?;
 
-    let local_config = load_config::<CastConfig>(None, cli.profile.as_deref())?;
+    let local_config = load_config::<CastConfig>(None, cli.profile.as_deref())
+        .map_err(|err| anyhow::anyhow!(format!("Failed to load config: {err}")))?;
 
     let mut combined_config = combine_cast_configs(&global_config, &local_config);
 

@@ -1,14 +1,15 @@
+use crate::core::Profile;
 use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
-use scarb_metadata::{Metadata, PackageId};
-use serde_json::{Map, Number};
 use std::fs::File;
 use std::{env, fs};
-use tempfile::{TempDir, tempdir};
 use toml::Value;
+
+pub mod core;
+pub mod test_utils;
+
 pub const CONFIG_FILENAME: &str = "snfoundry.toml";
 
-/// Defined in snfoundry.toml
 /// Configuration not associated with any specific package
 pub trait Config {
     #[must_use]
@@ -17,40 +18,6 @@ pub trait Config {
     fn from_raw(config: serde_json::Value) -> Result<Self>
     where
         Self: Sized;
-}
-
-/// Defined in scarb manifest
-/// Configuration associated with a specific package
-pub trait PackageConfig {
-    #[must_use]
-    fn tool_name() -> &'static str;
-
-    fn from_raw(config: &serde_json::Value) -> Result<Self>
-    where
-        Self: Sized;
-}
-
-fn get_with_ownership(config: serde_json::Value, key: &str) -> Option<serde_json::Value> {
-    match config {
-        serde_json::Value::Object(mut map) => map.remove(key),
-        _ => None,
-    }
-}
-
-pub fn get_profile(
-    raw_config: serde_json::Value,
-    tool: &str,
-    profile: Option<&str>,
-) -> Result<serde_json::Value> {
-    let profile_name = profile.unwrap_or("default");
-    let tool_config = get_with_ownership(raw_config, tool)
-        .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
-
-    match get_with_ownership(tool_config, profile_name) {
-        Some(profile_value) => Ok(profile_value),
-        None if profile_name == "default" => Ok(serde_json::Value::Object(Map::default())),
-        None => Err(anyhow!("Profile [{profile_name}] not found in config")),
-    }
 }
 
 #[must_use]
@@ -83,69 +50,13 @@ pub fn load_config<T: Config + Default>(
             let raw_config_json = serde_json::to_value(raw_config_toml)
                 .context("Conversion from TOML value to JSON value should not fail.")?;
 
-            let profile = get_profile(raw_config_json, T::tool_name(), profile)?;
-            T::from_raw(resolve_env_variables(profile)?)
+            core::load_config(
+                raw_config_json,
+                profile.map_or_else(|| Profile::Default, |p| Profile::Some(p.to_string())),
+            )
         }
         None => Ok(T::default()),
     }
-}
-/// Loads config for a specific package from the `Scarb.toml` file
-/// # Arguments
-/// * `metadata` - Scarb metadata object
-/// * `package` - Id of the Scarb package
-pub fn load_package_config<T: PackageConfig + Default>(
-    metadata: &Metadata,
-    package: &PackageId,
-) -> Result<T> {
-    let maybe_raw_metadata = metadata
-        .get_package(package)
-        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
-        .tool_metadata(T::tool_name())
-        .cloned();
-    match maybe_raw_metadata {
-        Some(raw_metadata) => T::from_raw(&resolve_env_variables(raw_metadata)?),
-        None => Ok(T::default()),
-    }
-}
-
-fn resolve_env_variables(config: serde_json::Value) -> Result<serde_json::Value> {
-    match config {
-        serde_json::Value::Object(map) => {
-            let val = map
-                .into_iter()
-                .map(|(k, v)| -> Result<(String, serde_json::Value)> {
-                    Ok((k, resolve_env_variables(v)?))
-                })
-                .collect::<Result<serde_json::Map<String, serde_json::Value>>>()?;
-            Ok(serde_json::Value::Object(val))
-        }
-        serde_json::Value::Array(val) => {
-            let val = val
-                .into_iter()
-                .map(resolve_env_variables)
-                .collect::<Result<Vec<serde_json::Value>>>()?;
-            Ok(serde_json::Value::Array(val))
-        }
-        serde_json::Value::String(val) if val.starts_with('$') => resolve_env_variable(&val),
-        val => Ok(val),
-    }
-}
-
-fn resolve_env_variable(var: &str) -> Result<serde_json::Value> {
-    assert!(var.starts_with('$'));
-    let mut initial_value = &var[1..];
-    if initial_value.starts_with('{') && initial_value.ends_with('}') {
-        initial_value = &initial_value[1..initial_value.len() - 1];
-    }
-    let value = env::var(initial_value)?;
-
-    if let Ok(value) = value.parse::<Number>() {
-        return Ok(serde_json::Value::Number(value));
-    }
-    if let Ok(value) = value.parse::<bool>() {
-        return Ok(serde_json::Value::Bool(value));
-    }
-    Ok(serde_json::Value::String(value))
 }
 
 pub fn search_config_upwards_relative_to(current_dir: &Utf8PathBuf) -> Result<Utf8PathBuf> {
@@ -166,30 +77,18 @@ pub fn find_config_file() -> Result<Utf8PathBuf> {
     )?)
 }
 
-pub fn copy_config_to_tempdir(src_path: &str, additional_path: Option<&str>) -> Result<TempDir> {
-    let temp_dir = tempdir().context("Failed to create a temporary directory")?;
-    if let Some(dir) = additional_path {
-        let path = temp_dir.path().join(dir);
-        fs::create_dir_all(path).context("Failed to create directories in temp dir")?;
-    }
-    let temp_dir_file_path = temp_dir.path().join(CONFIG_FILENAME);
-    fs::copy(src_path, temp_dir_file_path).context("Failed to copy config file to temp dir")?;
-
-    Ok(temp_dir)
-}
-
 #[cfg(test)]
 mod tests {
     use std::fs::{self, File};
 
+    use super::*;
+    use crate::test_utils::copy_config_to_tempdir;
     use serde::{Deserialize, Serialize};
     use tempfile::tempdir;
 
-    use super::*;
-
     #[test]
     fn find_config_in_current_dir() {
-        let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None).unwrap();
+        let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None);
         let path = search_config_upwards_relative_to(
             &Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap(),
         )
@@ -200,7 +99,7 @@ mod tests {
     #[test]
     fn find_config_in_parent_dir() {
         let tempdir =
-            copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", Some("childdir")).unwrap();
+            copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", Some("childdir"));
         let path = search_config_upwards_relative_to(
             &Utf8PathBuf::try_from(tempdir.path().to_path_buf().join("childdir")).unwrap(),
         )
@@ -213,8 +112,7 @@ mod tests {
         let tempdir = copy_config_to_tempdir(
             "tests/data/stubtool_snfoundry.toml",
             Some("childdir1/childdir2"),
-        )
-        .unwrap();
+        );
         let path = search_config_upwards_relative_to(
             &Utf8PathBuf::try_from(tempdir.path().to_path_buf().join("childdir1/childdir2"))
                 .unwrap(),
@@ -226,8 +124,7 @@ mod tests {
     #[test]
     fn find_config_in_parent_dir_available_in_multiple_parents() {
         let tempdir =
-            copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", Some("childdir1"))
-                .unwrap();
+            copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", Some("childdir1"));
         fs::copy(
             "tests/data/stubtool_snfoundry.toml",
             tempdir.path().join("childdir1").join(CONFIG_FILENAME),
@@ -270,7 +167,7 @@ mod tests {
     }
     #[test]
     fn load_config_happy_case_with_profile() {
-        let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None).unwrap();
+        let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None);
         let config = load_config::<StubConfig>(
             Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
             Some(&String::from("profile1")),
@@ -282,7 +179,7 @@ mod tests {
 
     #[test]
     fn load_config_happy_case_default_profile() {
-        let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None).unwrap();
+        let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None);
         let config = load_config::<StubConfig>(
             Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
             None,
@@ -354,8 +251,7 @@ mod tests {
     #[expect(clippy::float_cmp)]
     fn resolve_env_vars() {
         let tempdir =
-            copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", Some("childdir1"))
-                .unwrap();
+            copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", Some("childdir1"));
         fs::copy(
             "tests/data/stubtool_snfoundry.toml",
             tempdir.path().join("childdir1").join(CONFIG_FILENAME),

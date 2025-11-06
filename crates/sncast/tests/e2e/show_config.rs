@@ -1,10 +1,10 @@
 use crate::helpers::{constants::URL, runner::runner};
-use configuration::copy_config_to_tempdir;
+use configuration::test_utils::copy_config_to_tempdir;
 use indoc::formatdoc;
 
 #[tokio::test]
 async fn test_show_config_from_snfoundry_toml() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let args = vec!["show-config"];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -51,7 +51,7 @@ async fn test_show_config_from_cli() {
 
 #[tokio::test]
 async fn test_show_config_from_cli_and_snfoundry_toml() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let args = vec!["--account", "user2", "--profile", "profile2", "show-config"];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -70,7 +70,7 @@ async fn test_show_config_from_cli_and_snfoundry_toml() {
 
 #[tokio::test]
 async fn test_show_config_when_no_keystore() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let args = vec!["--profile", "profile4", "show-config"];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -89,7 +89,7 @@ async fn test_show_config_when_no_keystore() {
 
 #[tokio::test]
 async fn test_show_config_when_keystore() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let args = vec!["--profile", "profile3", "show-config"];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -108,7 +108,7 @@ async fn test_show_config_when_keystore() {
 
 #[tokio::test]
 async fn test_show_config_no_url() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let args = vec!["--profile", "profile6", "show-config"];
 
     let snapbox = runner(&args).current_dir(tempdir.path());

@@ -1,10 +1,8 @@
+use crate::utils::runner::{assert_case_output_contains, assert_failed};
+use crate::utils::running_tests::run_test_case;
+use crate::utils::test_case;
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
-use test_utils::running_tests::run_test_case;
-use test_utils::{
-    runner::{assert_case_output_contains, assert_failed},
-    test_case,
-};
 
 #[test]
 fn missing_cheatcode_error() {
@@ -64,7 +62,7 @@ fn cairo_test_cheatcode_error() {
 #[test]
 #[ignore = "TODO(#2765)"]
 fn cheatcode_invalid_args() {
-    let test = test_utils::test_case!(indoc!(
+    let test = test_case!(indoc!(
         r"
             use starknet::testing::cheatcode;
             use snforge_std::_cheatcode::handle_cheatcode;
