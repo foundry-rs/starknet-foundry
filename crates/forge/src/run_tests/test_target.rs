@@ -14,6 +14,8 @@ use futures::{StreamExt, stream::FuturesUnordered};
 use std::sync::Arc;
 use tokio::sync::mpsc::channel;
 
+use crate::run_tests::messages::tests_run::TestsRunMessage;
+
 #[non_exhaustive]
 pub enum TestTargetRunResult {
     Ok(TestTargetSummary),
@@ -27,6 +29,11 @@ pub async fn run_for_test_target(
     tests_filter: &impl TestCaseFilter,
     ui: Arc<UI>,
 ) -> Result<TestTargetRunResult> {
+    ui.println(&TestsRunMessage::new(
+        tests.tests_location,
+        tests.test_cases.len(),
+    ));
+
     let casm_program = tests.casm_program.clone();
 
     let mut tasks = FuturesUnordered::new();

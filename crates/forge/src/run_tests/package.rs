@@ -9,8 +9,7 @@ use crate::{
     combine_configs::combine_configs,
     run_tests::{
         messages::{
-            collected_tests_count::CollectedTestsCountMessage, tests_run::TestsRunMessage,
-            tests_summary::TestsSummaryMessage,
+            collected_tests_count::CollectedTestsCountMessage, tests_summary::TestsSummaryMessage,
         },
         workspace::WorkspaceDirs,
     },
@@ -200,11 +199,6 @@ pub async fn run_for_package(
 
     for test_target in test_targets {
         let ui = ui.clone();
-        ui.println(&TestsRunMessage::new(
-            test_target.tests_location,
-            test_target.test_cases.len(),
-        ));
-
         let summary =
             run_for_test_target(test_target, forge_config.clone(), &tests_filter, ui).await?;
 
