@@ -1,9 +1,13 @@
 use crate::gas::stats::GasStats;
 use cheatnet::trace_data::{CallTrace, CallTraceNode};
+use comfy_table::modifiers::UTF8_ROUND_CORNERS;
+use comfy_table::{Attribute, Cell, Color, Table};
 use debugging::ContractsDataStore;
 use starknet_api::core::{ClassHash, EntryPointSelector};
 use starknet_api::execution_resources::GasVector;
 use std::collections::BTreeMap;
+use std::fmt;
+use std::fmt::Display;
 
 type ContractName = String;
 type Selector = String;
@@ -103,6 +107,23 @@ impl ReportData {
     }
 }
 
+impl Display for ReportData {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.0.is_empty() {
+            writeln!(
+                f,
+                "\nNo contract gas usage data to display, no contract calls made."
+            )?;
+        }
+
+        for (name, contract_info) in &self.0 {
+            let table = format_table_output(contract_info, name);
+            writeln!(f, "\n{table}")?;
+        }
+        Ok(())
+    }
+}
+
 fn get_contract_name(contracts_data: &ContractsDataStore, class_hash: ClassHash) -> ContractName {
     contracts_data
         .get_contract_name(&class_hash)
@@ -116,4 +137,37 @@ fn get_selector(contracts_data: &ContractsDataStore, selector: EntryPointSelecto
         .expect("`Selector` should be present")
         .0
         .clone()
+}
+
+pub fn format_table_output(contract_info: &ContractInfo, name: &ContractName) -> Table {
+    let mut table = Table::new();
+    table.apply_modifier(UTF8_ROUND_CORNERS);
+
+    table.set_header(vec![
+        Cell::new(format!("{name} Contract")).fg(Color::Magenta),
+    ]);
+    table.add_row(vec![
+        Cell::new("Function Name").add_attribute(Attribute::Bold),
+        Cell::new("Min").add_attribute(Attribute::Bold),
+        Cell::new("Max").add_attribute(Attribute::Bold),
+        Cell::new("Avg").add_attribute(Attribute::Bold),
+        Cell::new("Std Dev").add_attribute(Attribute::Bold),
+        Cell::new("# Calls").add_attribute(Attribute::Bold),
+    ]);
+
+    contract_info
+        .functions
+        .iter()
+        .for_each(|(selector, report_data)| {
+            table.add_row(vec![
+                Cell::new(selector),
+                Cell::new(report_data.gas_stats.min.to_string()),
+                Cell::new(report_data.gas_stats.max.to_string()),
+                Cell::new(report_data.gas_stats.mean.round().to_string()),
+                Cell::new(report_data.gas_stats.std_deviation.round().to_string()),
+                Cell::new(report_data.n_calls.to_string()),
+            ]);
+        });
+
+    table
 }

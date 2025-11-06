@@ -22,6 +22,7 @@ mod features;
 mod fork_warning;
 mod forking;
 mod fuzzing;
+mod gas_report;
 mod io_operations;
 mod new;
 mod package_warnings;
