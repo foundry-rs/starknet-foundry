@@ -5,8 +5,7 @@ macro_rules! assert_cleaned_output {
     ($output:expr) => {{
         let stdout = String::from_utf8_lossy(&$output.get_output().stdout);
 
-        let scarb_version = scarb_api::ScarbCommand::version()
-            .run()
+        let scarb_version = scarb_api::version::scarb_version()
             .expect("Failed to get scarb version")
             .scarb;
 
