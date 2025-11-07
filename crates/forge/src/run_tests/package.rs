@@ -61,7 +61,6 @@ pub struct RunForPackageArgs {
     pub forge_config: Arc<ForgeConfig>,
     pub fork_targets: Vec<ForkTarget>,
     pub package_name: String,
-    // pub tracked_resource: ForgeTrackedResource,
 }
 
 impl RunForPackageArgs {
@@ -122,7 +121,6 @@ impl RunForPackageArgs {
             tests_filter: test_filter,
             fork_targets: forge_config_from_scarb.fork,
             package_name: package.name,
-            // tracked_resource: args.tracked_resource,
         })
     }
 }
