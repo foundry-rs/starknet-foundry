@@ -259,13 +259,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_non_ignored_filter_resolves_fork_config() {
-        // let test_case = create_test_case_with_config(
-        //     "valid_test",
-        //     false,
-        //     Some(RawForkConfig::Named("valid_fork".into())),
-        // );
-
-        // let test_target = create_test_target_with_cases(vec![test_case]);
         let raw_config = create_raw_config(false, Some(RawForkConfig::Named("valid_fork".into())));
 
         let fork_targets = vec![create_fork_target(
@@ -345,6 +338,7 @@ mod tests {
             create_raw_config(true, Some(RawForkConfig::Named("valid_fork".into()))),
             create_raw_config(false, Some(RawForkConfig::Named("valid_fork".into()))),
             create_raw_config(false, Some(RawForkConfig::Named("valid_fork".into()))),
+            create_raw_config(false, None),
         ];
 
         let fork_targets = vec![create_fork_target(
