@@ -17,10 +17,8 @@ use scarb_api::{
     metadata::{Metadata, PackageMetadata},
     target_dir_for_workspace,
 };
-use scarb_metadata::PackageId;
 use scarb_ui::args::PackagesFilter;
 use shared::consts::SNFORGE_TEST_FILTER;
-use std::collections::HashMap;
 use std::env;
 use std::sync::Arc;
 
@@ -46,35 +44,25 @@ impl WorkspaceDirs {
     }
 }
 
-pub struct PackageData {
-    pub metadata: PackageMetadata,
-    pub test_targets: Vec<TestTarget<TestCandidate>>,
-}
+type TestTargets = Vec<TestTarget<TestCandidate>>;
 
-pub struct Workspace(HashMap<PackageId, PackageData>);
+fn collect_packages_with_tests(
+    workspace_dirs: &WorkspaceDirs,
+    packages: &[PackageMetadata],
+) -> Result<Vec<(PackageMetadata, TestTargets)>> {
+    let mut result = Vec::new();
 
-impl Workspace {
-    pub fn new(workspace_dirs: &WorkspaceDirs, packages: &[PackageMetadata]) -> Result<Self> {
-        let mut result = Workspace(HashMap::new());
+    for package in packages {
+        let test_targets_raw = load_test_artifacts(&workspace_dirs.artifacts_dir, package)?;
+        let test_targets = test_targets_raw
+            .into_iter()
+            .map(TestTarget::from_raw)
+            .collect::<Result<Vec<_>>>()?;
 
-        for package in packages {
-            let test_targets_raw = load_test_artifacts(&workspace_dirs.artifacts_dir, package)?;
-            let test_targets = test_targets_raw
-                .into_iter()
-                .map(TestTarget::from_raw)
-                .collect::<Result<Vec<_>>>()?;
-
-            result.0.insert(
-                package.id.clone(),
-                PackageData {
-                    metadata: package.clone(),
-                    test_targets,
-                },
-            );
-        }
-
-        Ok(result)
+        result.push((package.clone(), test_targets));
     }
+
+    Ok(result)
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
@@ -115,14 +103,14 @@ pub async fn run_for_workspace(
 
     let packages_len = packages.len();
 
-    let workspace = Workspace::new(&workspace_dirs, &packages)?;
+    let packages_with_tests = collect_packages_with_tests(&workspace_dirs, &packages)?;
 
-    for (_, package_data) in workspace.0 {
-        env::set_current_dir(&package_data.metadata.root)?;
+    for (package_metadata, test_targets) in packages_with_tests {
+        env::set_current_dir(&package_metadata.root)?;
 
         let args = RunForPackageArgs::build(
-            package_data.test_targets,
-            package_data.metadata,
+            test_targets,
+            package_metadata,
             scarb_metadata,
             &args,
             &workspace_dirs,
