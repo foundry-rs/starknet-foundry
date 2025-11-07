@@ -2,8 +2,8 @@
 
 > ⚠️ **Warning**
 >
-> Oracles are an experimental feature.
-> To enable them, you must pass the `--experimental-oracles` flag to `snforge`.
+> Oracles are fully supported starting from Scarb 2.13.1.
+> Using oracles in Starknet Foundry with older versions of Scarb is not supported and may result in unexpected behavior.
 
 An [oracle][oracle docs] is an external process (like a script, binary, or web service)
 that exposes custom logic or data to a Cairo program at runtime. You use it to perform tasks the Cairo VM can't, such as

@@ -157,7 +157,6 @@ fn fork_aliased_decorator() {
                             .unwrap(),
                         tracked_resource: ForgeTrackedResource::CairoSteps,
                         environment_variables: test.env().clone(),
-                        experimental_oracles: false,
                     }),
                     output_config: Arc::new(OutputConfig {
                         detailed_resources: false,
@@ -248,7 +247,6 @@ fn fork_aliased_decorator_overrding() {
                             .unwrap(),
                         tracked_resource: ForgeTrackedResource::CairoSteps,
                         environment_variables: test.env().clone(),
-                        experimental_oracles: false,
                     }),
                     output_config: Arc::new(OutputConfig {
                         detailed_resources: false,
