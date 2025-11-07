@@ -18,7 +18,6 @@ fn wasm() {
     let output = test_runner(&temp)
         // Output of oracle is different depending on the env, and Intellij sets it automatically
         .env_remove("RUST_BACKTRACE")
-        .arg("--experimental-oracles")
         .assert()
         .code(1);
 
