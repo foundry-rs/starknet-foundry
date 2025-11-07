@@ -138,7 +138,7 @@ dependencies = [
  "rlimit",
  "serde",
  "serde_json",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "tempfile",
  "thiserror 1.0.69",
@@ -210,7 +210,7 @@ dependencies = [
  "lazy_static 1.5.0",
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -224,7 +224,7 @@ dependencies = [
  "proc-macro-error2",
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -328,7 +328,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62945a2f7e6de02a31fe400aa489f0e0f5b2502e69f95f853adb82a96c7a6b60"
 dependencies = [
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -354,7 +354,7 @@ dependencies = [
  "num-traits",
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -473,7 +473,7 @@ checksum = "213888f660fddcca0d257e88e54ac05bca01885f258ccdf695bafd77031bb69d"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -556,7 +556,7 @@ checksum = "9035ad2d096bed7955a320ee7e2230574d28fd3c3a0f186cbea1ff3c7eed5dbb"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -573,7 +573,7 @@ checksum = "ffdcb70bdbc4d478427380519163274ac86e52916e10f0a8889adf0f96d3fee7"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -639,6 +639,12 @@ name = "base16ct"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c7f02d4ea65f2c1853089ffd8d2787bdbc63de2f0d29dedbcf8ccdfa0ccd4cf"
+
+[[package]]
+name = "base16ct"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8b59d472eab27ade8d770dcb11da7201c11234bef9f82ce7aa517be028d462b"
 
 [[package]]
 name = "base64"
@@ -720,7 +726,7 @@ dependencies = [
  "regex",
  "rustc-hash 2.1.1",
  "shlex",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -803,7 +809,7 @@ dependencies = [
  "cairo-lang-casm",
  "cairo-lang-runner",
  "cairo-lang-starknet-classes",
- "cairo-native",
+ "cairo-native 0.6.2",
  "cairo-vm",
  "dashmap",
  "derive_more 0.99.20",
@@ -825,7 +831,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "strum 0.25.0",
  "strum_macros 0.25.3",
@@ -842,7 +848,7 @@ dependencies = [
  "pretty_assertions",
  "rstest",
  "serde_json",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "strum 0.25.0",
  "strum_macros 0.25.3",
@@ -936,9 +942,9 @@ checksum = "ade8366b8bd5ba243f0a58f036cc0ca8a2f069cff1a2351ef1cac6b083e16fc0"
 
 [[package]]
 name = "cairo-annotations"
-version = "0.6.1"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c47eb9019886fa1e43d26761384550d36dc4c2cfb859704e91f7f42154a3f0e"
+checksum = "9c97ec125673123e432c0082c80ceeeb2c18516d97373565f9710b19a7aafb6c"
 dependencies = [
  "cairo-lang-sierra",
  "cairo-lang-sierra-to-casm",
@@ -947,7 +953,7 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "strum 0.27.2",
  "strum_macros 0.27.2",
  "thiserror 2.0.17",
@@ -1059,7 +1065,7 @@ dependencies = [
  "semver",
  "serde",
  "smol_str",
- "toml",
+ "toml 0.8.23",
 ]
 
 [[package]]
@@ -1162,7 +1168,7 @@ checksum = "61599d8cac760505d1913fa5d7dddcf019f22d47f0748ff66b1b58afe1858b62"
 dependencies = [
  "cairo-lang-debug",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -1175,7 +1181,7 @@ dependencies = [
  "cairo-lang-utils",
  "serde",
  "thiserror 2.0.17",
- "toml",
+ "toml 0.8.23",
 ]
 
 [[package]]
@@ -1222,7 +1228,7 @@ dependencies = [
  "rand 0.9.2",
  "sha2",
  "smol_str",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.17",
 ]
 
@@ -1250,7 +1256,7 @@ dependencies = [
  "rust-analyzer-salsa",
  "sha3",
  "smol_str",
- "toml",
+ "toml 0.8.23",
 ]
 
 [[package]]
@@ -1276,7 +1282,7 @@ dependencies = [
  "serde_json",
  "sha3",
  "smol_str",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.17",
 ]
 
@@ -1353,7 +1359,7 @@ dependencies = [
  "itertools 0.14.0",
  "num-bigint",
  "num-traits",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.17",
 ]
 
@@ -1394,7 +1400,7 @@ dependencies = [
  "serde",
  "serde_json",
  "smol_str",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.17",
  "typetag",
 ]
@@ -1418,7 +1424,7 @@ dependencies = [
  "serde_json",
  "sha3",
  "smol_str",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.17",
 ]
 
@@ -1475,7 +1481,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "serde",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
 ]
 
 [[package]]
@@ -1554,7 +1560,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "starknet-curve",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "stats_alloc",
  "tempfile",
  "thiserror 2.0.17",
@@ -1564,12 +1570,55 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairo-native"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4353361398d63962a78dfeada310701dcff26218ee0aee8754354dc81a5b38a0"
+dependencies = [
+ "aquamarine",
+ "ark-ec 0.5.0",
+ "ark-ff 0.5.0",
+ "ark-secp256k1 0.5.0",
+ "ark-secp256r1 0.5.0",
+ "bumpalo",
+ "cairo-lang-runner",
+ "cairo-lang-sierra",
+ "cairo-lang-sierra-ap-change",
+ "cairo-lang-sierra-gas",
+ "cairo-lang-sierra-to-casm",
+ "cairo-lang-starknet-classes",
+ "cairo-lang-utils",
+ "educe 0.5.11",
+ "itertools 0.14.0",
+ "keccak",
+ "lazy_static 1.5.0",
+ "libc",
+ "libloading",
+ "llvm-sys",
+ "melior",
+ "mlir-sys",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "rand 0.9.2",
+ "serde",
+ "serde_json",
+ "sha2",
+ "starknet-curve",
+ "starknet-types-core 0.2.4",
+ "tempfile",
+ "thiserror 2.0.17",
+ "tracing",
+ "utf8_iter",
+]
+
+[[package]]
 name = "cairo-serde-macros"
 version = "1.0.0"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -1599,7 +1648,7 @@ dependencies = [
  "sha2",
  "sha3",
  "starknet-crypto",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.17",
  "zip",
 ]
@@ -1744,7 +1793,7 @@ dependencies = [
  "cairo-lang-casm",
  "cairo-lang-starknet-classes",
  "cairo-lang-utils",
- "cairo-native",
+ "cairo-native 0.7.1",
  "cairo-vm",
  "camino",
  "conversions",
@@ -1771,7 +1820,7 @@ dependencies = [
  "serde_json",
  "shared",
  "starknet",
- "starknet-types-core",
+ "starknet-types-core 1.0.0",
  "starknet_api",
  "tempfile",
  "test-case",
@@ -1818,9 +1867,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.5.50"
+version = "4.5.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c2cfd7bf8a6017ddaa4e32ffe7403d547790db06bd171c1c53926faab501623"
+checksum = "4c26d721170e0295f191a69bd9a1f93efcdb0aff38684b61ab5750468972e5f5"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -1828,9 +1877,9 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.5.50"
+version = "4.5.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a4c05b9e80c5ccd3a7ef080ad7b6ba7d6fc00a985b8b157197075677c82c7a0"
+checksum = "75835f0c7bf681bfd05abe44e965760fea999a5286c6eb2d59883634fd02011a"
 dependencies = [
  "anstream",
  "anstyle",
@@ -1840,9 +1889,9 @@ dependencies = [
 
 [[package]]
 name = "clap_complete"
-version = "4.5.59"
+version = "4.5.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2348487adcd4631696ced64ccdb40d38ac4d31cae7f2eec8817fcea1b9d1c43c"
+checksum = "8e602857739c5a4291dfa33b5a298aeac9006185229a700e5810a3ef7272d971"
 dependencies = [
  "clap",
 ]
@@ -1856,7 +1905,7 @@ dependencies = [
  "heck 0.5.0",
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -1950,7 +1999,7 @@ dependencies = [
  "rust-ini",
  "serde",
  "serde_json",
- "toml",
+ "toml 0.8.23",
  "yaml-rust2",
 ]
 
@@ -1963,7 +2012,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
- "toml",
+ "toml 0.9.8",
 ]
 
 [[package]]
@@ -1977,6 +2026,19 @@ dependencies = [
  "once_cell",
  "unicode-width 0.2.2",
  "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "console"
+version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b430743a6eb14e9764d4260d4c0d8123087d504eeb9c48f2b2a5e810dd369df4"
+dependencies = [
+ "encode_unicode",
+ "libc",
+ "once_cell",
+ "unicode-width 0.2.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2057,7 +2119,7 @@ dependencies = [
  "serde",
  "serde_json",
  "starknet",
- "starknet-types-core",
+ "starknet-types-core 1.0.0",
  "starknet_api",
  "thiserror 2.0.17",
 ]
@@ -2354,9 +2416,9 @@ dependencies = [
 
 [[package]]
 name = "ctor"
-version = "0.4.3"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec09e802f5081de6157da9a75701d6c713d8dc3ba52571fd4bd25f412644e8a6"
+checksum = "3ffc71fcdcdb40d6f087edddf7f8f1f8f79e6cf922f555a9ee8779752d4819bd"
 dependencies = [
  "ctor-proc-macro",
  "dtor",
@@ -2364,9 +2426,9 @@ dependencies = [
 
 [[package]]
 name = "ctor-proc-macro"
-version = "0.0.6"
+version = "0.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2931af7e13dc045d8e9d26afccc6fa115d64e115c9c84b1166288b46f6782c2"
+checksum = "52560adf09603e58c9a7ee1fe1dcb95a16927b17c127f0ac02d6e768a0e25bc1"
 
 [[package]]
 name = "ctr"
@@ -2422,7 +2484,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "strsim 0.11.1",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -2444,7 +2506,7 @@ checksum = "d38308df82d1080de0afee5d069fa14b0326a88c14f15c5ccda35b4a6c414c81"
 dependencies = [
  "darling_core 0.21.3",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -2476,12 +2538,12 @@ dependencies = [
  "indoc",
  "itertools 0.14.0",
  "num-bigint",
- "primitive-types 0.13.1",
+ "primitive-types 0.14.0",
  "serde",
  "serde_json",
  "shared",
  "starknet",
- "starknet-types-core",
+ "starknet-types-core 1.0.0",
  "test-case",
  "thiserror 2.0.17",
  "tokio",
@@ -2515,14 +2577,14 @@ dependencies = [
  "cairo-lang-sierra-to-casm",
  "cairo-lang-starknet-classes",
  "cheatnet",
- "console",
+ "console 0.16.1",
  "data-transformer",
  "paste",
  "ptree",
  "rayon",
  "serde_json",
  "starknet",
- "starknet-types-core",
+ "starknet-types-core 1.0.0",
  "starknet_api",
  "thiserror 2.0.17",
 ]
@@ -2555,7 +2617,7 @@ checksum = "409f265785bd946d3006756955aaf40b0e4deb25752eae6a990afe54a31cfd83"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -2634,7 +2696,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "rustc_version",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -2654,7 +2716,7 @@ checksum = "bda628edc44c4bb645fbe0f758797143e4e07926f7ebf4e9bdfbd3d2ce621df3"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
  "unicode-xid",
 ]
 
@@ -2666,14 +2728,13 @@ checksum = "abd57806937c9cc163efc8ea3910e00a62e2aeb0b8119f1793a978088f8f6b04"
 
 [[package]]
 name = "dialoguer"
-version = "0.11.0"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "658bce805d770f407bc62102fca7c2c64ceef2fbcb2b8bd19d2765ce093980de"
+checksum = "25f104b501bf2364e78d0d3974cbc774f738f5865306ed128e1e0d7499c0ad96"
 dependencies = [
- "console",
+ "console 0.16.1",
  "shell-words",
  "tempfile",
- "thiserror 1.0.69",
  "zeroize",
 ]
 
@@ -2791,7 +2852,7 @@ checksum = "97369cbbc041bc366949bc74d34658d6cda5621039731c6310521892a3a20ae0"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -2822,7 +2883,7 @@ dependencies = [
  "serde_json",
  "shell-words",
  "tempfile",
- "toml_edit 0.22.27",
+ "toml_edit 0.23.7",
  "walkdir",
 ]
 
@@ -2843,18 +2904,18 @@ checksum = "1435fa1053d8b2fbbe9be7e97eca7f33d37b28409959813daefc1446a14247f1"
 
 [[package]]
 name = "dtor"
-version = "0.0.6"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97cbdf2ad6846025e8e25df05171abfb30e3ababa12ee0a0e44b9bbe570633a8"
+checksum = "404d02eeb088a82cfd873006cb713fe411306c7d182c344905e101fb1167d301"
 dependencies = [
  "dtor-proc-macro",
 ]
 
 [[package]]
 name = "dtor-proc-macro"
-version = "0.0.5"
+version = "0.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7454e41ff9012c00d53cf7f475c5e3afa3b91b7c90568495495e8d9bf47a1055"
+checksum = "f678cf4a922c215c63e0de95eb1ff08a958a81d47e485cf9da1e27bf6305cfa5"
 
 [[package]]
 name = "dyn-clone"
@@ -2886,7 +2947,7 @@ dependencies = [
  "enum-ordinalize",
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -2898,7 +2959,7 @@ dependencies = [
  "enum-ordinalize",
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -2913,7 +2974,7 @@ version = "0.13.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5e6043086bf7973472e0c7dff2142ea0b680d30e18d9cc40f267efbf222bd47"
 dependencies = [
- "base16ct",
+ "base16ct 0.2.0",
  "crypto-bigint",
  "digest",
  "ff",
@@ -2993,7 +3054,7 @@ checksum = "0d28318a75d4aead5c4db25382e8ef717932d0346600cacae6357eb5941bc5ff"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -3226,7 +3287,7 @@ dependencies = [
  "clap",
  "clap_complete",
  "configuration",
- "console",
+ "console 0.16.1",
  "conversions",
  "derive_more 2.0.1",
  "docs",
@@ -3252,12 +3313,12 @@ dependencies = [
  "shared",
  "snapbox",
  "starknet",
- "starknet-types-core",
+ "starknet-types-core 1.0.0",
  "starknet_api",
  "tempfile",
  "test-case",
  "tokio",
- "toml_edit 0.22.27",
+ "toml_edit 0.23.7",
  "tracing",
  "tracing-chrome",
  "tracing-subscriber",
@@ -3285,7 +3346,7 @@ dependencies = [
  "cheatnet",
  "clap",
  "comfy-table",
- "console",
+ "console 0.16.1",
  "conversions",
  "debugging",
  "foundry-ui",
@@ -3304,12 +3365,12 @@ dependencies = [
  "serde_json",
  "shared",
  "starknet",
- "starknet-types-core",
+ "starknet-types-core 1.0.0",
  "starknet_api",
  "strum 0.27.2",
  "strum_macros 0.27.2",
  "tokio",
- "toml_edit 0.22.27",
+ "toml_edit 0.23.7",
  "tracing",
  "universal-sierra-compiler-api",
  "url",
@@ -3330,10 +3391,10 @@ name = "foundry-ui"
 version = "0.52.0"
 dependencies = [
  "anyhow",
- "console",
+ "console 0.16.1",
  "serde",
  "serde_json",
- "starknet-types-core",
+ "starknet-types-core 1.0.0",
 ]
 
 [[package]]
@@ -3431,7 +3492,7 @@ checksum = "162ee34ebcb7c64a8abebc059ce0fee27c2262618d7b60ed8faf72fef13c3650"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -3511,14 +3572,14 @@ checksum = "43eaff6bbc0b3a878361aced5ec6a2818ee7c541c5b33b5880dfa9a86c23e9e7"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
 name = "generic-array"
-version = "0.14.9"
+version = "0.14.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4bb6743198531e02858aeaea5398fcc883e71851fcbcb5a2f773e2fb6cb1edf2"
+checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
 dependencies = [
  "typenum",
  "version_check",
@@ -4075,7 +4136,7 @@ checksum = "a0eb5a3343abf848c0984fe4604b2b105da9539376e24fc0a3b0007411ae4fd9"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -4132,10 +4193,23 @@ version = "0.17.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "183b3088984b400f4cfac3620d5e076c84da5364016b4f49473de574b2586235"
 dependencies = [
- "console",
+ "console 0.15.11",
  "number_prefix",
  "portable-atomic",
  "unicode-width 0.2.2",
+ "web-time",
+]
+
+[[package]]
+name = "indicatif"
+version = "0.18.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ade6dfcba0dfb62ad59e59e7241ec8912af34fd29e0e743e3db992bd278e8b65"
+dependencies = [
+ "console 0.16.1",
+ "portable-atomic",
+ "unicode-width 0.2.2",
+ "unit-prefix",
  "web-time",
 ]
 
@@ -4163,7 +4237,7 @@ version = "1.43.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "46fdb647ebde000f43b5b53f773c30cf9b0cb4300453208713fa38b2c70935a0"
 dependencies = [
- "console",
+ "console 0.15.11",
  "once_cell",
  "regex",
  "similar",
@@ -4606,7 +4680,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "regex",
- "syn 2.0.108",
+ "syn 2.0.109",
  "tblgen",
  "unindent",
 ]
@@ -4721,7 +4795,7 @@ dependencies = [
  "cfg-if",
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -4735,7 +4809,7 @@ name = "native-api"
 version = "0.52.0"
 dependencies = [
  "cairo-lang-starknet-classes",
- "cairo-native",
+ "cairo-native 0.7.1",
  "starknet_api",
  "thiserror 2.0.17",
 ]
@@ -4950,7 +5024,7 @@ dependencies = [
  "proc-macro-crate",
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -5012,7 +5086,7 @@ checksum = "a948666b637a0f465e8564c73e89d4dde00d72d4d473cc972f390fc3dcee7d9c"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -5126,7 +5200,7 @@ dependencies = [
  "proc-macro-crate",
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -5233,7 +5307,7 @@ dependencies = [
  "pest_meta",
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -5296,7 +5370,7 @@ dependencies = [
  "phf_shared",
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -5443,7 +5517,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "479ca8adacdd7ce8f1fb39ce9ecccbfe93a3f1344b3d0d97f20bc0196208f62b"
 dependencies = [
  "proc-macro2",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -5471,9 +5545,9 @@ dependencies = [
 
 [[package]]
 name = "primitive-types"
-version = "0.13.1"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d15600a7d856470b7d278b3fe0e311fe28c2526348549f8ef2ff7db3299c87f5"
+checksum = "721a1da530b5a2633218dc9f75713394c983c352be88d2d7c9ee85e2c4c21794"
 dependencies = [
  "fixed-hash",
  "impl-codec 0.7.1",
@@ -5610,7 +5684,7 @@ checksum = "efb9fdafaca625f9ea8cfa793364ea1bdd32d306cff18f166b00ddaa61ecbb27"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -5670,9 +5744,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.41"
+version = "1.0.42"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce25767e7b499d1b604768e7cde645d14cc8584231ea6b295e9c9eb22c02e1d1"
+checksum = "a338cc41d27e6cc6dce6cefc13a0729dfbb81c262b1f519331575dd80ef3067f"
 dependencies = [
  "proc-macro2",
 ]
@@ -5841,7 +5915,7 @@ checksum = "b7186006dcb21920990093f30e3dea63b7d6e977bf1256be20c3563a5db070da"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -6043,7 +6117,7 @@ checksum = "b3a8fb4672e840a587a66fc577a5491375df51ddb88f2a2c2a792598c326fe14"
 dependencies = [
  "quote",
  "rand 0.8.5",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -6072,7 +6146,7 @@ dependencies = [
  "serde_json",
  "shared",
  "starknet",
- "starknet-types-core",
+ "starknet-types-core 1.0.0",
  "starknet_api",
  "thiserror 2.0.17",
 ]
@@ -6103,7 +6177,7 @@ dependencies = [
  "heck 0.4.1",
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -6300,7 +6374,7 @@ dependencies = [
  "anyhow",
  "assert_fs",
  "cairo-lang-starknet-classes",
- "cairo-native",
+ "cairo-native 0.7.1",
  "camino",
  "foundry-ui",
  "indoc",
@@ -6358,8 +6432,8 @@ dependencies = [
  "anyhow",
  "camino",
  "clap",
- "console",
- "indicatif",
+ "console 0.15.11",
+ "indicatif 0.17.11",
  "scarb-metadata",
  "serde",
  "serde_json",
@@ -6421,7 +6495,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "serde_derive_internals",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -6448,7 +6522,7 @@ version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3e97a565f76233a6003f9f5c54be1d9c5bdfa3eccfb189469f11ec4901c47dc"
 dependencies = [
- "base16ct",
+ "base16ct 0.2.0",
  "der",
  "generic-array",
  "pkcs8",
@@ -6527,7 +6601,7 @@ checksum = "d540f220d3187173da220f885ab66608367b6574e925011a9353e4badda91d79"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -6538,7 +6612,7 @@ checksum = "18d26a20a969b9e3fdf2fc2d9f21eda6c40e2de84c9408bb5d3b05d499aae711"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -6586,6 +6660,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_spanned"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e24345aa0fe688594e73770a5f6d1b216508b4f93484c0026d521acd30134392"
+dependencies = [
+ "serde_core",
+]
+
+[[package]]
 name = "serde_urlencoded"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6625,7 +6708,7 @@ dependencies = [
  "darling 0.21.3",
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -6634,7 +6717,7 @@ version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a84f14a19e9a014bb9f4512488d9829a68e04ecabffb0f9904cd1ace94598177"
 dependencies = [
- "base16ct",
+ "base16ct 0.2.0",
  "serde",
 ]
 
@@ -6676,15 +6759,15 @@ dependencies = [
  "cairo-vm",
  "clap",
  "clap_complete",
- "console",
+ "console 0.16.1",
  "foundry-ui",
- "indicatif",
+ "indicatif 0.18.2",
  "num-traits",
  "regex",
  "semver",
  "snapbox",
  "starknet",
- "starknet-types-core",
+ "starknet-types-core 1.0.0",
  "starknet_api",
  "thiserror 2.0.17",
  "url",
@@ -6785,9 +6868,9 @@ dependencies = [
 
 [[package]]
 name = "snapbox"
-version = "0.4.17"
+version = "0.6.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b831b6e80fbcd2889efa75b185d24005f85981431495f995292b25836519d84"
+checksum = "96fa1ce81be900d083b30ec2d481e6658c2acfaa2cfc7be45ccc2cc1b820edb3"
 dependencies = [
  "anstream",
  "anstyle",
@@ -6798,9 +6881,9 @@ dependencies = [
 
 [[package]]
 name = "snapbox-macros"
-version = "0.3.10"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "16569f53ca23a41bb6f62e0a5084aa1661f4814a67fa33696a79073e03a664af"
+checksum = "3b750c344002d7cc69afb9da00ebd9b5c0f8ac2eb7d115d9d45d5b5f47718d74"
 dependencies = [
  "anstream",
 ]
@@ -6811,7 +6894,7 @@ version = "0.52.0"
 dependencies = [
  "anyhow",
  "async-trait",
- "base16ct",
+ "base16ct 0.3.0",
  "bigdecimal",
  "blockifier",
  "cairo-lang-casm",
@@ -6824,7 +6907,7 @@ dependencies = [
  "clap",
  "clap_complete",
  "configuration",
- "console",
+ "console 0.16.1",
  "const-hex",
  "conversions",
  "ctor",
@@ -6839,7 +6922,7 @@ dependencies = [
  "itertools 0.14.0",
  "num-traits",
  "packages_validation",
- "primitive-types 0.13.1",
+ "primitive-types 0.14.0",
  "project-root",
  "promptly",
  "rand 0.8.5",
@@ -6860,15 +6943,15 @@ dependencies = [
  "snapbox",
  "starknet",
  "starknet-crypto",
- "starknet-types-core",
+ "starknet-types-core 1.0.0",
  "strum 0.27.2",
  "strum_macros 0.27.2",
  "tempfile",
  "test-case",
  "thiserror 2.0.17",
  "tokio",
- "toml",
- "toml_edit 0.22.27",
+ "toml 0.9.8",
+ "toml_edit 0.23.7",
  "tracing",
  "tracing-log",
  "tracing-subscriber",
@@ -6998,7 +7081,7 @@ dependencies = [
  "sha3",
  "starknet-core-derive",
  "starknet-crypto",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
 ]
 
 [[package]]
@@ -7009,7 +7092,7 @@ checksum = "b08520b7d80eda7bf1a223e8db4f9bb5779a12846f15ebf8f8d76667eca7f5ad"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -7027,7 +7110,7 @@ dependencies = [
  "rfc6979",
  "sha2",
  "starknet-curve",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "zeroize",
 ]
 
@@ -7037,7 +7120,7 @@ version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "22c898ae81b6409532374cf237f1bd752d068b96c6ad500af9ebbd0d9bb712f6"
 dependencies = [
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
 ]
 
 [[package]]
@@ -7047,7 +7130,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6d59e1eb22f4366385b132ba7016faa5a6457f1f23f896f737a06da626455e7b"
 dependencies = [
  "starknet-core",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -7108,6 +7191,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "starknet-types-core"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a12690813e587969cb4a9e7d8ebdb069d4bb7ec8d03275c5f719310c8e1f07c"
+dependencies = [
+ "blake2",
+ "digest",
+ "generic-array",
+ "lambdaworks-crypto",
+ "lambdaworks-math",
+ "lazy_static 1.5.0",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "rand 0.9.2",
+ "serde",
+ "zeroize",
+]
+
+[[package]]
 name = "starknet_api"
 version = "0.15.0-rc.4"
 source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.14.0#57447e3e8897d4e7ce7f3ec8d23af58d5b6bf1a7"
@@ -7134,7 +7237,7 @@ dependencies = [
  "serde_json",
  "sha3",
  "starknet-crypto",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "strum 0.25.0",
  "strum_macros 0.25.3",
  "thiserror 1.0.69",
@@ -7208,7 +7311,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "rustversion",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -7220,7 +7323,7 @@ dependencies = [
  "heck 0.5.0",
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -7242,9 +7345,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.108"
+version = "2.0.109"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da58917d35242480a05c2897064da0a80589a2a0476c9a3f2fdc83b53502e917"
+checksum = "2f17c7e013e88258aa9543dcbe81aca68a667a9ac37cd69c9fbc07858bfe0e2f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -7268,7 +7371,7 @@ checksum = "728a70f3dbaf5bab7f0c4b1ac8d7ae5ea60a4b5549c8a5914361c99147a709d2"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -7291,7 +7394,7 @@ checksum = "181f22127402abcf8ee5c83ccd5b408933fec36a6095cf82cda545634692657e"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -7410,7 +7513,7 @@ dependencies = [
  "cfg-if",
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -7421,7 +7524,7 @@ checksum = "5c89e72a01ed4c579669add59014b9a524d609c0c88c6a585ce37485879f6ffb"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
  "test-case-core",
 ]
 
@@ -7451,7 +7554,7 @@ checksum = "4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -7462,7 +7565,7 @@ checksum = "3ff15c8ecd7de3849db632e14d18d2571fa09dfc5ed93479bc4485c7a517c913"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -7573,7 +7676,7 @@ checksum = "af407857209536a95c8e56f8231ef2c2e2aff839b22e07a1ffcbc617e9db9fa5"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -7616,9 +7719,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc1beb996b9d83529a9e75c17a1686767d148d70663143c7854d8b4a09ced362"
 dependencies = [
  "serde",
- "serde_spanned",
+ "serde_spanned 0.6.9",
  "toml_datetime 0.6.11",
  "toml_edit 0.22.27",
+]
+
+[[package]]
+name = "toml"
+version = "0.9.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f0dc8b1fb61449e27716ec0e1bdf0f6b8f3e8f6b05391e8497b8b6d7804ea6d8"
+dependencies = [
+ "indexmap 2.12.0",
+ "serde_core",
+ "serde_spanned 1.0.3",
+ "toml_datetime 0.7.3",
+ "toml_parser",
+ "toml_writer",
+ "winnow",
 ]
 
 [[package]]
@@ -7647,7 +7765,7 @@ checksum = "41fe8c660ae4257887cf66394862d21dbca4a6ddd26f04a3560410406a2f819a"
 dependencies = [
  "indexmap 2.12.0",
  "serde",
- "serde_spanned",
+ "serde_spanned 0.6.9",
  "toml_datetime 0.6.11",
  "toml_write",
  "winnow",
@@ -7662,6 +7780,7 @@ dependencies = [
  "indexmap 2.12.0",
  "toml_datetime 0.7.3",
  "toml_parser",
+ "toml_writer",
  "winnow",
 ]
 
@@ -7679,6 +7798,12 @@ name = "toml_write"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d99f8c9a7727884afe522e9bd5edbfc91a3312b36a77b5fb8926e4c31a41801"
+
+[[package]]
+name = "toml_writer"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df8b2b54733674ad286d16267dcfc7a71ed5c776e4ac7aa3c3e2561f7c637bf2"
 
 [[package]]
 name = "tower"
@@ -7746,7 +7871,7 @@ checksum = "81383ab64e72a7a8b8e13130c49e3dab29def6d0c7d76a03087b3cf71c5c6903"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -7830,7 +7955,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04659ddb06c87d233c566112c1c9c5b9e98256d9af50ec3bc9c8327f873a7568"
 dependencies = [
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -7888,7 +8013,7 @@ checksum = "27a7a9b72ba121f6f1f6c3632b85604cac41aedb5ddc70accbebb6cac83de846"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -7992,6 +8117,12 @@ name = "unindent"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7264e107f553ccae879d21fbea1d6724ac785e8c3bfc762137959b5802826ef3"
+
+[[package]]
+name = "unit-prefix"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "323402cff2dd658f39ca17c789b502021b3f18707c91cdf22e3838e1b4023817"
 
 [[package]]
 name = "universal-sierra-compiler-api"
@@ -8186,7 +8317,7 @@ dependencies = [
  "log",
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
  "wasm-bindgen-shared",
 ]
 
@@ -8221,7 +8352,7 @@ checksum = "9f07d2f20d4da7b26400c9f4a0511e6e0345b040694e8a75bd41d578fa4421d7"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]
@@ -8396,7 +8527,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "sha2",
- "toml",
+ "toml 0.8.23",
  "windows-sys 0.60.2",
  "zstd",
 ]
@@ -8410,7 +8541,7 @@ dependencies = [
  "anyhow",
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
  "wasmtime-internal-component-util",
  "wasmtime-internal-wit-bindgen",
  "wit-parser",
@@ -8525,7 +8656,7 @@ checksum = "c61c7f75326434944cc5f3b75409a063fa37e537f6247f00f0f733679f0be406"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -8698,7 +8829,7 @@ dependencies = [
  "heck 0.5.0",
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
  "witx",
 ]
 
@@ -8710,7 +8841,7 @@ checksum = "fd7e511edbcaa045079dea564486c4ff7946ae491002227c41d74ea62a59d329"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
  "wiggle-generate",
 ]
 
@@ -8786,7 +8917,7 @@ checksum = "053e2e040ab57b9dc951b72c264860db7eb3b0200ba345b4e4c3b14f67855ddf"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -8797,7 +8928,7 @@ checksum = "3f316c4a2570ba26bbec722032c4099d8c8bc095efccdc15688708623367e358"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -9247,7 +9378,7 @@ checksum = "38da3c9736e16c5d3c8c597a9aaa5d1fa565d0532ae05e27c24aa62fb32c0ab6"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
  "synstructure",
 ]
 
@@ -9268,7 +9399,7 @@ checksum = "88d2b8d9c68ad2b9e4340d7832716a4d21a22a1154777ad56ea55c51a9cf3831"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -9288,7 +9419,7 @@ checksum = "d71e5d6e06ab090c67b5e44993ec16b72dcbaabc526db883a360057678b48502"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
  "synstructure",
 ]
 
@@ -9309,7 +9440,7 @@ checksum = "ce36e65b0d2999d2aafac989fb249189a141aee1f53c612c1f37d72631959f69"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
@@ -9342,7 +9473,7 @@ checksum = "5b96237efa0c878c64bd89c436f661be4e46b2f3eff1ebb976f7ef2321d2f58f"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.108",
+ "syn 2.0.109",
 ]
 
 [[package]]
