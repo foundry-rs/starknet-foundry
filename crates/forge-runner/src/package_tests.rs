@@ -243,6 +243,7 @@ pub struct TestTarget<T> {
     pub tests_location: TestTargetLocation,
     pub sierra_program: ProgramArtifact,
     pub sierra_program_path: Arc<Utf8PathBuf>,
+    pub casm_program: Option<Arc<RawCasmProgram>>,
     pub test_cases: Vec<T>,
 }
 
@@ -296,6 +297,7 @@ impl TestTarget<TestCandidate> {
             test_cases,
             sierra_program: test_target_raw.sierra_program,
             sierra_program_path: test_target_raw.sierra_program_path.into(),
+            casm_program: None,
         })
     }
 }
