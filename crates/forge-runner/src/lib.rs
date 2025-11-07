@@ -110,7 +110,7 @@ pub fn maybe_generate_coverage(
 #[must_use]
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn run_for_test_case(
-    case: Arc<TestCase>,
+    case: &Arc<TestCase>,
     casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
