@@ -2,21 +2,14 @@ use crate::e2e::common::runner::{
     BASE_FILE_PATTERNS, Package, setup_package_with_file_patterns, test_runner,
 };
 use indoc::indoc;
-use scarb_api::version::scarb_version;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
-fn scarb_supports_oracles() -> bool {
-    scarb_version().unwrap().scarb >= semver::Version::parse("2.12.3+nightly-2025-10-21").unwrap()
-}
-
+#[cfg_attr(
+    not(feature = "run_test_for_scarb_since_2_13_1"),
+    ignore = "Skipping test because feature skip_test_for_scarb_2_13 enabled"
+)]
 #[test]
 fn wasm() {
-    // TODO use feature here
-    if !scarb_supports_oracles() {
-        eprintln!("skipping because scarb does not fully support oracles");
-        return;
-    }
-
     let temp = setup_package_with_file_patterns(
         Package::Name("wasm_oracles".to_string()),
         &[BASE_FILE_PATTERNS, &["*.wasm"]].concat(),
