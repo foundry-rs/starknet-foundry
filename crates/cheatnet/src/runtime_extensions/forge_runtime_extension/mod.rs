@@ -566,7 +566,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .trace_data
                     .current_call_stack
                     .top();
-                let vm_steps_from_calls = calculate_vm_steps_from_calls(&top_call);
+                let vm_steps_from_inner_calls = calculate_vm_steps_from_calls(&top_call);
                 let top_call_syscalls = &extended_runtime
                     .extended_runtime
                     .extended_runtime
@@ -577,7 +577,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .get_additional_os_syscall_resources(top_call_syscalls)
                     .n_steps;
                 let total_vm_steps =
-                    vm_steps_from_calls + vm_steps_from_syscalls + vm.get_current_step();
+                    vm_steps_from_inner_calls + vm_steps_from_syscalls + vm.get_current_step();
 
                 Ok(CheatcodeHandlingResult::from_serializable(total_vm_steps))
             }
