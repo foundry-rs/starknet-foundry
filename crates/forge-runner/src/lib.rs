@@ -1,7 +1,6 @@
 use crate::coverage_api::run_coverage;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig};
-use crate::package_tests::with_config_resolved::TestCaseResolvedConfig;
-use crate::package_tests::{TestCase, TestCaseDeprecated};
+use crate::package_tests::TestCase;
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
 use anyhow::Result;
@@ -13,7 +12,6 @@ use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use futures::StreamExt;
 use futures::stream::FuturesUnordered;
-use package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use profiler_api::run_profiler;
 use rand::SeedableRng;
 use rand::prelude::StdRng;
@@ -59,11 +57,6 @@ const BUILTINS: [&str; 11] = [
 ];
 
 pub trait TestCaseFilter {
-    // TODO: Remove in next PRs
-    fn should_be_run<T>(&self, test_case: &TestCaseDeprecated<T>) -> bool
-    where
-        T: TestCaseIsIgnored;
-
     fn should_run(&self, is_test_case_ignored: bool) -> bool;
 }
 
@@ -123,18 +116,10 @@ pub fn run_for_test_case(
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
 ) -> JoinHandle<Result<AnyTestCaseSummary>> {
-    // TODO: Change all tests running functions to use `TestCase` in next PRs
-    let deprecated_test_case: TestCaseDeprecated<TestCaseResolvedConfig> = TestCaseDeprecated {
-        name: case.name.clone(),
-        test_details: case.test_details.clone(),
-        config: case.config.clone(),
-    };
-    let deprecated_test_case = Arc::new(deprecated_test_case);
-
     if case.config.fuzzer_config.is_none() {
         tokio::task::spawn(async move {
             let res = run_test(
-                deprecated_test_case,
+                case,
                 casm_program,
                 forge_config,
                 versioned_program_path,
@@ -146,7 +131,7 @@ pub fn run_for_test_case(
     } else {
         tokio::task::spawn(async move {
             let res = run_with_fuzzing(
-                deprecated_test_case,
+                case,
                 casm_program,
                 forge_config.clone(),
                 versioned_program_path,
@@ -160,7 +145,7 @@ pub fn run_for_test_case(
 
 #[tracing::instrument(skip_all, level = "debug")]
 fn run_with_fuzzing(
-    case: Arc<TestCaseWithResolvedConfig>,
+    case: Arc<TestCase>,
     casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,

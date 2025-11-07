@@ -1,7 +1,8 @@
 use crate::backtrace::add_backtrace_footer;
 use crate::forge_config::{ForgeConfig, RuntimeConfig};
 use crate::gas::calculate_used_gas;
-use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
+use crate::package_tests::TestCase;
+use crate::package_tests::with_config_resolved::ResolvedForkConfig;
 use crate::test_case_summary::{Single, TestCaseSummary};
 use anyhow::{Result, bail};
 use blockifier::execution::call_info::CallInfo;
@@ -61,7 +62,7 @@ pub use syscall_handler::syscall_handler_offset;
 #[must_use]
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn run_test(
-    case: Arc<TestCaseWithResolvedConfig>,
+    case: Arc<TestCase>,
     casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
@@ -97,7 +98,7 @@ pub fn run_test(
 #[tracing::instrument(skip_all, level = "debug")]
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn run_fuzz_test(
-    case: Arc<TestCaseWithResolvedConfig>,
+    case: Arc<TestCase>,
     program: Program,
     casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
@@ -164,7 +165,7 @@ pub enum RunResult {
 #[expect(clippy::too_many_lines)]
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn run_test_case(
-    case: &TestCaseWithResolvedConfig,
+    case: &TestCase,
     program: &Program,
     casm_program: &RawCasmProgram,
     runtime_config: &RuntimeConfig,
@@ -394,7 +395,7 @@ pub fn run_test_case(
 
 fn extract_test_case_summary(
     run_result: Result<RunResult>,
-    case: &TestCaseWithResolvedConfig,
+    case: &TestCase,
     forge_config: &ForgeConfig,
     versioned_program_path: &Utf8Path,
 ) -> TestCaseSummary<Single> {

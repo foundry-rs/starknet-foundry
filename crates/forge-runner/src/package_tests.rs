@@ -1,8 +1,5 @@
-use crate::forge_config::ForgeTrackedResource;
 use crate::package_tests::raw::TestTargetRaw;
-use crate::package_tests::with_config::{TestCaseWithConfig, TestTargetWithConfig};
 use crate::package_tests::with_config_resolved::{TestCaseResolvedConfig, sanitize_test_case_name};
-use crate::running::config_run::run_config_pass;
 use crate::running::hints_to_params;
 use anyhow::{Result, anyhow};
 use cairo_lang_sierra::extensions::NamedType;
@@ -29,7 +26,6 @@ use serde::Serialize;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::sync::Arc;
-use universal_sierra_compiler_api::compile_raw_sierra_at_path;
 use universal_sierra_compiler_api::representation::RawCasmProgram;
 
 pub mod raw;
@@ -127,93 +123,6 @@ impl TestDetails {
         )
         .map_err(std::convert::Into::into)
     }
-}
-
-// TODO: Remove in next PRs
-#[derive(Debug, Clone)]
-pub struct TestTargetDeprecated<C> {
-    pub tests_location: TestTargetLocation,
-    pub sierra_program: ProgramArtifact,
-    pub sierra_program_path: Arc<Utf8PathBuf>,
-    pub casm_program: Arc<RawCasmProgram>,
-    pub test_cases: Vec<TestCaseDeprecated<C>>,
-}
-
-// TODO: Remove in next PRs
-impl TestTargetDeprecated<TestCaseWithConfig> {
-    #[tracing::instrument(skip_all, level = "debug")]
-    pub fn from_raw_deprecated(
-        test_target_raw: TestTargetRaw,
-        tracked_resource: &ForgeTrackedResource,
-    ) -> Result<TestTargetWithConfig> {
-        macro_rules! by_id {
-            ($field:ident) => {{
-                let temp: HashMap<_, _> = test_target_raw
-                    .sierra_program
-                    .program
-                    .$field
-                    .iter()
-                    .map(|f| (f.id.id, f))
-                    .collect();
-
-                temp
-            }};
-        }
-        let funcs = by_id!(funcs);
-        let type_declarations = by_id!(type_declarations);
-
-        let casm_program = Arc::new(compile_raw_sierra_at_path(
-            test_target_raw.sierra_program_path.as_std_path(),
-        )?);
-
-        let sierra_program_registry =
-            ProgramRegistry::<CoreType, CoreLibfunc>::new(&test_target_raw.sierra_program.program)?;
-        let type_size_map = get_type_size_map(
-            &test_target_raw.sierra_program.program,
-            &sierra_program_registry,
-        )
-        .ok_or_else(|| anyhow!("can not get type size map"))?;
-
-        let default_executables = vec![];
-        let debug_info = test_target_raw.sierra_program.debug_info.clone();
-        let executables = debug_info
-            .as_ref()
-            .and_then(|info| info.executables.get("snforge_internal_test_executable"))
-            .unwrap_or(&default_executables);
-
-        let test_cases = executables
-            .par_iter()
-            .map(|case| -> Result<TestCaseWithConfig> {
-                let func = funcs[&case.id];
-
-                let test_details = TestDetails::build(func, &type_declarations, &type_size_map);
-
-                let raw_config = run_config_pass(&test_details, &casm_program, tracked_resource)?;
-
-                Ok(TestCaseWithConfig {
-                    config: raw_config.into(),
-                    name: case.debug_name.clone().unwrap().into(),
-                    test_details,
-                })
-            })
-            .collect::<Result<_>>()?;
-
-        Ok(TestTargetWithConfig {
-            tests_location: test_target_raw.tests_location,
-            test_cases,
-            sierra_program: test_target_raw.sierra_program,
-            sierra_program_path: test_target_raw.sierra_program_path.into(),
-            casm_program,
-        })
-    }
-}
-
-// TODO: Remove in next PRs
-#[derive(Debug, Clone, PartialEq)]
-pub struct TestCaseDeprecated<C> {
-    pub test_details: TestDetails,
-    pub name: String,
-    pub config: C,
 }
 
 #[derive(Debug, Clone, PartialEq)]
