@@ -131,3 +131,4 @@ tracing = "0.1.41"
 tracing-chrome = "0.7.2"
 tracing-log = "0.2.0"
 comfy-table = "7"
+insta = { version = "1.43.1", features = ["filters"] }
