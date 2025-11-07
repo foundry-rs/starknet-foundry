@@ -46,7 +46,6 @@ impl WorkspaceDirs {
 
 type TestTargets = Vec<TestTarget<TestCandidate>>;
 
-#[expect(dead_code)]
 fn collect_packages_with_tests(
     workspace_dirs: &WorkspaceDirs,
     packages: &[PackageMetadata],
@@ -104,14 +103,14 @@ pub async fn run_for_workspace(
 
     let packages_len = packages.len();
 
-    let workspace = Workspace::new(&workspace_dirs, &packages)?;
+    let packages_with_tests = collect_packages_with_tests(&workspace_dirs, &packages)?;
 
-    for (_, package_data) in workspace.0 {
-        env::set_current_dir(&package_data.metadata.root)?;
+    for (package_metadata, test_targets) in packages_with_tests {
+        env::set_current_dir(&package_metadata.root)?;
 
         let args = RunForPackageArgs::build(
-            package_data.test_targets,
-            package_data.metadata,
+            test_targets,
+            package_metadata,
             scarb_metadata,
             &args,
             &workspace_dirs,
