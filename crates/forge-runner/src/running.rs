@@ -321,10 +321,10 @@ pub fn run_test_case(
             Ok(call_info)
         }
         Err(error) => Err(match error {
-            EntryPointExecutionError::CairoRunError(CairoRunError::VmException(err)) => {
-                CairoRunError::VirtualMachine(err.inner_exc)
-            }
-            EntryPointExecutionError::CairoRunError(err) => err,
+            EntryPointExecutionError::CairoRunError(err_box) => match *err_box {
+                CairoRunError::VmException(err) => CairoRunError::VirtualMachine(err.inner_exc),
+                other => other,
+            },
             err => bail!(err),
         }),
     };
