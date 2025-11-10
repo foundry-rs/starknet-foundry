@@ -68,6 +68,17 @@ fn test_get_current_vm_step() {
                     "step_c ({step_c}) not in [{expected_lower}, {expected_upper}]",
                 );
             }
+
+            #[starknet::interface]
+            pub trait IHelloStarknet<TContractState> {
+                fn get_balance(self: @TContractState) -> felt252;
+                fn call_other_contract(
+                    self: @TContractState,
+                    other_contract_address: felt252,
+                    selector: felt252,
+                    calldata: Option<Array<felt252>>,
+                ) -> Span<felt252>;
+            }
         "#
         ),
         Contract::from_code_path(
