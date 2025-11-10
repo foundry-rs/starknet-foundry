@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- `get_current_vm_step` function to get the current step from Cairo VM during test execution. For more see [docs](https://foundry-rs.github.io/starknet-foundry/snforge-library/testing/get_current_vm_step.html)
+
 #### Changed
 
 - Gas values in fuzzing test output are now displayed as whole numbers without fractional parts

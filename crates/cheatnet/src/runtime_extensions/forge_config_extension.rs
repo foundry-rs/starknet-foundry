@@ -1,3 +1,4 @@
+use cairo_vm::vm::vm_core::VirtualMachine;
 use config::RawForgeConfig;
 use conversions::serde::deserialize::BufferReader;
 use runtime::{CheatcodeHandlingResult, EnhancedHintError, ExtensionLogic, StarknetRuntime};
@@ -17,6 +18,7 @@ impl<'a> ExtensionLogic for ForgeConfigExtension<'a> {
         selector: &str,
         mut input_reader: BufferReader<'_>,
         _extended_runtime: &mut Self::Runtime,
+        _vm: &VirtualMachine,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         macro_rules! config_cheatcode {
             ( $prop:ident) => {{
