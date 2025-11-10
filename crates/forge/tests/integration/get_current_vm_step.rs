@@ -13,7 +13,6 @@ fn test_get_current_vm_step() {
             use snforge_std::testing::get_current_vm_step;
             use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 
-
             const STEPS_MARGIN: u32 = 250;
 
             // 1173 = cost of 1 deploy syscall without calldata
@@ -64,6 +63,11 @@ fn test_get_current_vm_step() {
                     expected_lower <= step_c && step_c <= expected_upper,
                     "step_c ({step_c}) not in [{expected_lower}, {expected_upper}]",
                 );
+            }
+
+            #[starknet::interface]
+            trait IHelloStarknet<TContractState> {
+                fn get_balance(self: @TContractState) -> felt252;
             }
         "#
         ),
