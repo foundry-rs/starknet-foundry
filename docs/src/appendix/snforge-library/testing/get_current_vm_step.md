@@ -8,13 +8,13 @@ fn get_current_vm_step() -> u32;
 
 ## Example
 
-Let's consider a simple counter contract that increments a value stored in its storage.
+Contract code:
 
 ```rust
 {{#include ../../../../listings/testing_reference/src/lib.cairo}}
 ```
 
-Now, let's define `setup` function which deploys this contract and increments the counter a few times and assert that `setup` function does not exceed a certain number of steps during its execution. This is particularly useful for performance testing and ensuring that our setup logic remains efficient.
+Test code:
 
 ```rust
 {{#include ../../../../listings/testing_reference/tests/tests.cairo}}
@@ -46,4 +46,4 @@ Failures:
 </details>
 <br>
 
-As we can see, the test fails because the `setup` function exceeded the allowed number of steps (100 in this case).
+The test fails because the `setup` function exceeded the allowed number of steps (100 in this case).
