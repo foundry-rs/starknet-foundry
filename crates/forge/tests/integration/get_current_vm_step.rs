@@ -10,7 +10,6 @@ fn test_get_current_vm_step() {
     let test = test_case!(
         indoc!(
             r#"
-            use jjj::{IHelloStarknetDispatcher, IHelloStarknetDispatcherTrait};
             use snforge_std::testing::get_current_vm_step;
             use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 
