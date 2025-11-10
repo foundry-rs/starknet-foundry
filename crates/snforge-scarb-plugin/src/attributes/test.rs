@@ -2,7 +2,7 @@ use super::{AttributeInfo, ErrorExt, internal_config_statement::InternalConfigSt
 use crate::asserts::assert_is_used_once;
 use crate::common::{has_fuzzer_attribute, has_test_case_attribute};
 use crate::external_inputs::ExternalInput;
-use crate::utils::create_single_token;
+use crate::utils::{create_single_token, process_statements};
 use crate::{
     args::Arguments,
     common::{into_proc_macro_result, with_parsed_values},
@@ -81,9 +81,6 @@ fn test_internal(
     let signature = SyntaxNodeWithDb::new(&signature, db);
     let signature = quote! { #signature };
 
-    let body = func.body(db).as_syntax_node();
-    let body = SyntaxNodeWithDb::new(&body, db);
-
     let attributes = func.attributes(db).as_syntax_node();
     let attributes = SyntaxNodeWithDb::new(&attributes, db);
 
@@ -98,13 +95,27 @@ fn test_internal(
 
         let test_func_with_attrs = test_func_with_attrs(&test_func, &called_func, &call_args);
 
+        let statements = func
+            .body(db)
+            .statements(db)
+            .elements(db)
+            .collect::<Vec<_>>();
+        let (statements, if_content) = process_statements(db, &statements);
+
         Ok(quote!(
             #test_func_with_attrs
 
             #attributes
-            #[#internal_config]
             fn #func_ident #signature
-            #body
+            {
+               if snforge_std::_internals::is_config_run() {
+                   #if_content
+
+                   return;
+               }
+
+               #statements
+           }
         ))
     } else {
         Ok(quote!(
