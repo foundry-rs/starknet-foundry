@@ -84,7 +84,7 @@ pub async fn resolve_config(
     for test_candidate in test_target.test_cases {
         let raw_config = run_config_pass(
             &test_candidate.test_details,
-            &casm_program.clone(),
+            &casm_program,
             tracked_resource,
         )?;
         let resolved_config = resolved_config_from_raw(
