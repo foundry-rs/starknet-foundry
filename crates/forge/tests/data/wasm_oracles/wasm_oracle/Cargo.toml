@@ -1,0 +1,12 @@
+[workspace]
+
+[package]
+name = "wasm_oracle"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wit-bindgen = "0.46.0"
