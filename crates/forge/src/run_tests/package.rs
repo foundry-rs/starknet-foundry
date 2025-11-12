@@ -7,9 +7,12 @@ use crate::{
     TestArgs,
     block_number_map::BlockNumberMap,
     combine_configs::combine_configs,
-    run_tests::messages::{
-        collected_tests_count::CollectedTestsCountMessage, tests_run::TestsRunMessage,
-        tests_summary::TestsSummaryMessage,
+    run_tests::{
+        messages::{
+            collected_tests_count::CollectedTestsCountMessage, tests_run::TestsRunMessage,
+            tests_summary::TestsSummaryMessage,
+        },
+        workspace::WorkspaceDirs,
     },
     scarb::{
         config::{ForgeConfigFromScarb, ForkTarget},
@@ -20,7 +23,6 @@ use crate::{
     warn::warn_if_incompatible_rpc_version,
 };
 use anyhow::Result;
-use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use console::Style;
 use forge_runner::{
@@ -74,14 +76,13 @@ impl RunForPackageArgs {
         package: PackageMetadata,
         scarb_metadata: &Metadata,
         args: &TestArgs,
-        cache_dir: &Utf8PathBuf,
-        artifacts_dir: &Utf8Path,
+        workspace_dirs: &WorkspaceDirs,
         ui: &UI,
     ) -> Result<RunForPackageArgs> {
-        let raw_test_targets = load_test_artifacts(artifacts_dir, &package)?;
+        let raw_test_targets = load_test_artifacts(&workspace_dirs.artifacts_dir, &package)?;
 
         let contracts = get_contracts_artifacts_and_source_sierra_paths(
-            artifacts_dir,
+            &workspace_dirs.artifacts_dir,
             &package,
             ui,
             CompilationOpts {
@@ -106,7 +107,7 @@ impl RunForPackageArgs {
             args.max_n_steps,
             args.tracked_resource,
             contracts_data,
-            cache_dir.clone(),
+            workspace_dirs.cache_dir.clone(),
             &forge_config_from_scarb,
             &args.additional_args,
             args.trace_args.clone(),
@@ -120,7 +121,7 @@ impl RunForPackageArgs {
             args.only_ignored,
             args.include_ignored,
             args.rerun_failed,
-            FailedTestsCache::new(cache_dir),
+            FailedTestsCache::new(&workspace_dirs.cache_dir),
         );
 
         Ok(RunForPackageArgs {
