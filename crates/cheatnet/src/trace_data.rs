@@ -240,8 +240,8 @@ impl GasReportData {
         }
     }
 
-    pub fn get_gas(&self) -> &GasVector {
-        self.partial_gas_usage.get_or_init(|| {
+    pub fn get_gas(&self) -> GasVector {
+        *self.partial_gas_usage.get_or_init(|| {
             self.execution_summary.clone().to_partial_gas_vector(
                 VersionedConstants::latest_constants(),
                 &GasVectorComputationMode::All,

@@ -3,6 +3,7 @@ use crate::build_trace_data::build_profiler_call_trace;
 use crate::debugging::{TraceArgs, build_debugging_trace};
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
+use crate::gas::report::SingleTestGasInfo;
 use crate::gas::stats::GasStats;
 use crate::package_tests::TestCase;
 use crate::running::{RunCompleted, RunStatus};
@@ -12,6 +13,7 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::Use
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use conversions::byte_array::ByteArray;
 use conversions::felt::ToShortString;
+use debugging::ContractsDataStore;
 use shared::utils::build_readable_text;
 use starknet_api::execution_resources::GasVector;
 use starknet_types_core::felt::Felt;
@@ -82,7 +84,7 @@ impl TestType for Fuzzing {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Single;
 impl TestType for Single {
-    type GasInfo = GasVector;
+    type GasInfo = SingleTestGasInfo;
     type TestStatistics = ();
     type TraceData = VersionedProfilerCallTrace;
 }
@@ -195,7 +197,7 @@ impl TestCaseSummary<Fuzzing> {
                 let gas_usages: Vec<GasVector> = results
                     .into_iter()
                     .map(|a| match a {
-                        TestCaseSummary::Passed { gas_info, .. } => gas_info,
+                        TestCaseSummary::Passed { gas_info, .. } => gas_info.gas_used,
                         _ => unreachable!(),
                     })
                     .collect();
@@ -278,7 +280,7 @@ impl TestCaseSummary<Single> {
         RunCompleted {
             status,
             call_trace,
-            gas_used: gas_info,
+            gas_used,
             used_resources,
             encountered_errors,
             fuzzer_args,
@@ -288,16 +290,24 @@ impl TestCaseSummary<Single> {
         contracts_data: &ContractsData,
         versioned_program_path: &Utf8Path,
         trace_args: &TraceArgs,
+        gas_report_enabled: bool,
     ) -> Self {
         let name = test_case.name.clone();
 
+        let contracts_data_store = ContractsDataStore::new(contracts_data, &fork_data);
         let debugging_trace = build_debugging_trace(
             &call_trace.borrow(),
-            contracts_data,
+            &contracts_data_store,
             trace_args,
             name.clone(),
-            &fork_data,
         );
+
+        let gas_info = SingleTestGasInfo::new(gas_used);
+        let gas_info = if gas_report_enabled {
+            gas_info.get_with_report_data(&call_trace.borrow(), &contracts_data_store)
+        } else {
+            gas_info
+        };
 
         match status {
             RunStatus::Success(data) => match &test_case.config.expected_result {
