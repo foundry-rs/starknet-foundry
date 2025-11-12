@@ -16,7 +16,9 @@ use cheatnet::state::ExtendedStateReader;
 use starknet_api::execution_resources::{GasAmount, GasVector};
 use starknet_api::transaction::fields::GasVectorComputationMode;
 
+pub mod report;
 pub mod stats;
+mod utils;
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn calculate_used_gas(
@@ -149,16 +151,18 @@ pub fn check_available_gas(
             ..
         } if available_gas.is_some_and(|available_gas| {
             let av_gas = available_gas.to_gas_vector();
-            gas_info.l1_gas > av_gas.l1_gas
-                || gas_info.l1_data_gas > av_gas.l1_data_gas
-                || gas_info.l2_gas > av_gas.l2_gas
+            gas_info.gas_used.l1_gas > av_gas.l1_gas
+                || gas_info.gas_used.l1_data_gas > av_gas.l1_data_gas
+                || gas_info.gas_used.l2_gas > av_gas.l2_gas
         }) =>
         {
             TestCaseSummary::Failed {
                 name,
                 msg: Some(format!(
                     "\n\tTest cost exceeded the available gas. Consumed l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{}",
-                    gas_info.l1_gas, gas_info.l1_data_gas, gas_info.l2_gas
+                    gas_info.gas_used.l1_gas,
+                    gas_info.gas_used.l1_data_gas,
+                    gas_info.gas_used.l2_gas
                 )),
                 fuzzer_args: Vec::default(),
                 test_statistics: (),

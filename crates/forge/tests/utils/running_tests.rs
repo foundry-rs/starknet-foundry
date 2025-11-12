@@ -86,6 +86,7 @@ pub fn run_test_case(
                     detailed_resources: false,
                     execution_data_to_save: ExecutionDataToSave::default(),
                     trace_args: TraceArgs::default(),
+                    gas_report: false,
                 }),
             }),
             fork_targets: vec![],
