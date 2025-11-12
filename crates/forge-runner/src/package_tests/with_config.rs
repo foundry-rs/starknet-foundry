@@ -1,4 +1,4 @@
-use super::{TestCase, TestTarget};
+use super::{TestCase, TestTargetDeprecated};
 use crate::{
     TestCaseIsIgnored,
     expected_result::{ExpectedPanicValue, ExpectedTestResult},
@@ -9,7 +9,7 @@ use cheatnet::runtime_extensions::forge_config_extension::config::{
 };
 use conversions::serde::serialize::SerializeToFeltVec;
 
-pub type TestTargetWithConfig = TestTarget<TestCaseConfig>;
+pub type TestTargetWithConfig = TestTargetDeprecated<TestCaseConfig>;
 
 pub type TestCaseWithConfig = TestCase<TestCaseConfig>;
 

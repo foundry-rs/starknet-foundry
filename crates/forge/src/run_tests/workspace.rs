@@ -2,15 +2,18 @@ use super::package::RunForPackageArgs;
 use crate::run_tests::messages::latest_blocks_numbers::LatestBlocksNumbersMessage;
 use crate::run_tests::messages::tests_failure_summary::TestsFailureSummaryMessage;
 use crate::run_tests::messages::workspace_summary::WorkspaceSummaryMessage;
+use crate::scarb::load_test_artifacts;
 use crate::{
     ExitStatus, TestArgs, block_number_map::BlockNumberMap, run_tests::package::run_for_package,
     scarb::build_artifacts_with_scarb, shared_cache::FailedTestsCache,
 };
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
+use forge_runner::package_tests::{TestCandidate, TestTarget};
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
 use foundry_ui::UI;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use scarb_api::{
     metadata::{Metadata, PackageMetadata},
     target_dir_for_workspace,
@@ -40,6 +43,26 @@ impl WorkspaceDirs {
             root_dir: workspace_root.clone(),
         }
     }
+}
+
+type TestTargets = Vec<TestTarget<TestCandidate>>;
+
+#[expect(dead_code)]
+fn collect_packages_with_tests(
+    workspace_dirs: &WorkspaceDirs,
+    packages: &[PackageMetadata],
+) -> Result<Vec<(PackageMetadata, TestTargets)>> {
+    packages
+        .par_iter()
+        .map(|package| {
+            let test_targets_raw = load_test_artifacts(&workspace_dirs.artifacts_dir, package)?;
+            let test_targets = test_targets_raw
+                .into_iter()
+                .map(TestTarget::from_raw)
+                .collect::<Result<Vec<_>>>()?;
+            Ok((package.clone(), test_targets))
+        })
+        .collect()
 }
 
 #[tracing::instrument(skip_all, level = "debug")]

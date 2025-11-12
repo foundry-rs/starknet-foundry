@@ -1,4 +1,4 @@
-use super::{TestCase, TestTarget};
+use super::{TestCase, TestTargetDeprecated};
 use crate::{TestCaseIsIgnored, expected_result::ExpectedTestResult, package_tests::TestDetails};
 use anyhow::Result;
 use cairo_vm::types::program::Program;
@@ -9,7 +9,7 @@ use starknet_api::block::BlockNumber;
 use universal_sierra_compiler_api::representation::RawCasmProgram;
 use url::Url;
 
-pub type TestTargetWithResolvedConfig = TestTarget<TestCaseResolvedConfig>;
+pub type TestTargetWithResolvedConfig = TestTargetDeprecated<TestCaseResolvedConfig>;
 
 pub type TestCaseWithResolvedConfig = TestCase<TestCaseResolvedConfig>;
 
