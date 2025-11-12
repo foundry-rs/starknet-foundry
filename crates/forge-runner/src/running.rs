@@ -30,6 +30,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 };
 use cheatnet::state::{BlockInfoReader, CheatnetState, EncounteredErrors, ExtendedStateReader};
 use cheatnet::trace_data::CallTrace;
+use debugging::ContractsDataStore;
 use execution::finalize_execution;
 use hints::hints_by_representation;
 use rand::prelude::StdRng;
@@ -408,6 +409,7 @@ fn extract_test_case_summary(
                 contracts_data,
                 versioned_program_path,
                 trace_args,
+                forge_config.output_config.gas_report,
             ),
             RunResult::Error(run_error) => {
                 let mut message = format!(
@@ -433,10 +435,9 @@ fn extract_test_case_summary(
                     test_statistics: (),
                     debugging_trace: build_debugging_trace(
                         &run_error.call_trace.borrow(),
-                        contracts_data,
+                        &ContractsDataStore::new(contracts_data, &run_error.fork_data),
                         trace_args,
                         case.name.clone(),
-                        &run_error.fork_data,
                     ),
                 }
             }
