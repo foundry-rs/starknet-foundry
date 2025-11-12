@@ -1,26 +1,34 @@
+use std::sync::Arc;
+
 use super::maat::env_ignore_fork_tests;
 use crate::{
     block_number_map::BlockNumberMap, scarb::config::ForkTarget, test_filter::TestsFilter,
 };
 use anyhow::{Result, anyhow};
 use cheatnet::runtime_extensions::forge_config_extension::config::{
-    BlockId, InlineForkConfig, OverriddenForkConfig, RawForkConfig,
+    BlockId, InlineForkConfig, OverriddenForkConfig, RawForgeConfig, RawForkConfig,
 };
 use conversions::byte_array::ByteArray;
 use forge_runner::{
     TestCaseFilter,
+    forge_config::ForgeTrackedResource,
     package_tests::{
+        TestCandidate, TestCase, TestTarget,
         with_config::TestTargetWithConfig,
         with_config_resolved::{
             ResolvedForkConfig, TestCaseResolvedConfig, TestCaseWithResolvedConfig,
             TestTargetWithResolvedConfig,
         },
     },
+    running::config_run::run_config_pass,
 };
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use starknet_api::block::BlockNumber;
+use universal_sierra_compiler_api::compile_raw_sierra_at_path;
 
+// TODO: Remove in next PRs
 #[tracing::instrument(skip_all, level = "debug")]
-pub async fn resolve_config(
+pub async fn resolve_config_deprecated(
     test_target: TestTargetWithConfig,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
@@ -57,6 +65,89 @@ pub async fn resolve_config(
         casm_program: test_target.casm_program,
         test_cases,
     })
+}
+
+#[tracing::instrument(skip_all, level = "debug")]
+pub async fn resolve_config(
+    test_target: TestTarget<TestCandidate>,
+    fork_targets: &[ForkTarget],
+    block_number_map: &mut BlockNumberMap,
+    tests_filter: &TestsFilter,
+    tracked_resource: &ForgeTrackedResource,
+) -> Result<TestTarget<TestCase>> {
+    let env_ignore_fork_tests = env_ignore_fork_tests();
+
+    let casm_program = Arc::new(compile_raw_sierra_at_path(
+        test_target.sierra_program_path.as_std_path(),
+    )?);
+
+    let raw_configs: Vec<_> = test_target
+        .test_cases
+        .par_iter()
+        .map(|test_candidate| {
+            let raw_config = run_config_pass(
+                &test_candidate.test_details,
+                &casm_program,
+                tracked_resource,
+            )?;
+            Ok((test_candidate, raw_config))
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    let mut test_cases = Vec::with_capacity(raw_configs.len());
+    for (test_candidate, raw_config) in raw_configs {
+        let resolved_config = resolved_config_from_raw(
+            raw_config,
+            tests_filter,
+            fork_targets,
+            block_number_map,
+            env_ignore_fork_tests,
+        )
+        .await?;
+
+        test_cases.push(TestCase::new(
+            &test_candidate.name,
+            test_candidate.test_details.clone(),
+            resolved_config,
+        ));
+    }
+
+    Ok(TestTarget {
+        tests_location: test_target.tests_location,
+        sierra_program: test_target.sierra_program,
+        sierra_program_path: test_target.sierra_program_path,
+        casm_program: Some(casm_program),
+        test_cases,
+    })
+}
+
+async fn resolved_config_from_raw(
+    raw_config: RawForgeConfig,
+    tests_filter: &TestsFilter,
+    fork_targets: &[ForkTarget],
+    block_number_map: &mut BlockNumberMap,
+    env_ignore_fork_tests: bool,
+) -> Result<TestCaseResolvedConfig> {
+    let ignored = raw_config.ignore.is_some_and(|v| v.is_ignored)
+        || (env_ignore_fork_tests && raw_config.fork.is_some());
+    let fork_config = if tests_filter.should_run(ignored) {
+        resolve_fork_config(raw_config.fork, block_number_map, fork_targets).await?
+    } else {
+        None
+    };
+
+    let resolved_config = TestCaseResolvedConfig {
+        available_gas: raw_config.available_gas,
+        ignored,
+        fork_config,
+        expected_result: raw_config.should_panic.into(),
+        fuzzer_config: raw_config.fuzzer,
+        disable_predeployed_contracts: raw_config
+            .disable_predeployed_contracts
+            .is_some_and(|v| v.is_disabled),
+    };
+
+    Ok(resolved_config)
 }
 
 async fn resolve_fork_config(
@@ -225,7 +316,7 @@ mod tests {
         );
 
         assert!(
-            resolve_config(
+            resolve_config_deprecated(
                 mocked_tests,
                 &[create_fork_target(
                     "definitely_non_existing",
@@ -261,7 +352,7 @@ mod tests {
             FailedTestsCache::default(),
         );
 
-        let resolved = resolve_config(
+        let resolved = resolve_config_deprecated(
             test_target,
             &[],
             &mut BlockNumberMap::default(),
@@ -301,7 +392,7 @@ mod tests {
             FailedTestsCache::default(),
         );
 
-        let resolved = resolve_config(
+        let resolved = resolve_config_deprecated(
             test_target,
             &fork_targets,
             &mut BlockNumberMap::default(),
@@ -345,7 +436,7 @@ mod tests {
             FailedTestsCache::default(),
         );
 
-        let resolved = resolve_config(
+        let resolved = resolve_config_deprecated(
             test_target,
             &fork_targets,
             &mut BlockNumberMap::default(),
@@ -401,7 +492,7 @@ mod tests {
             FailedTestsCache::default(),
         );
 
-        let resolved = resolve_config(
+        let resolved = resolve_config_deprecated(
             test_target,
             &fork_targets,
             &mut BlockNumberMap::default(),
@@ -469,7 +560,7 @@ mod tests {
             FailedTestsCache::default(),
         );
 
-        let resolved = resolve_config(
+        let resolved = resolve_config_deprecated(
             test_target,
             &fork_targets,
             &mut BlockNumberMap::default(),
@@ -526,7 +617,7 @@ mod tests {
             FailedTestsCache::default(),
         );
 
-        let resolved = resolve_config(
+        let resolved = resolve_config_deprecated(
             test_target,
             &fork_targets,
             &mut BlockNumberMap::default(),
@@ -575,7 +666,7 @@ mod tests {
             FailedTestsCache::default(),
         );
 
-        let resolved = resolve_config(
+        let resolved = resolve_config_deprecated(
             test_target,
             &[],
             &mut BlockNumberMap::default(),
@@ -623,7 +714,7 @@ mod tests {
             FailedTestsCache::default(),
         );
 
-        let resolved = resolve_config(
+        let resolved = resolve_config_deprecated(
             test_target,
             &fork_targets,
             &mut BlockNumberMap::default(),
@@ -667,7 +758,7 @@ mod tests {
             FailedTestsCache::default(),
         );
 
-        let resolved = resolve_config(
+        let resolved = resolve_config_deprecated(
             test_target,
             &fork_targets,
             &mut BlockNumberMap::default(),

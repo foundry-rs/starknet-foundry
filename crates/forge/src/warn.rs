@@ -1,7 +1,7 @@
 use crate::{MINIMAL_SNFORGE_STD_DEPRECATED_VERSION, MINIMAL_SNFORGE_STD_VERSION};
 use anyhow::{Result, anyhow};
 use forge_runner::backtrace::is_backtrace_enabled;
-use forge_runner::package_tests::with_config_resolved::TestTargetWithResolvedConfig;
+use forge_runner::package_tests::{TestCase, TestTarget};
 use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use indoc::formatdoc;
@@ -16,7 +16,7 @@ use std::sync::Arc;
 use url::Url;
 
 pub(crate) async fn warn_if_incompatible_rpc_version(
-    test_targets: &[TestTargetWithResolvedConfig],
+    test_targets: &[TestTarget<TestCase>],
     ui: Arc<UI>,
 ) -> Result<()> {
     let mut urls = HashSet::<Url>::new();

@@ -1,4 +1,5 @@
 use crate::utils::runner::TestCase;
+use anyhow::Result;
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::shared_cache::FailedTestsCache;
@@ -13,6 +14,7 @@ use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, ForgeTrackedResource, OutputConfig, TestRunnerConfig,
 };
+use forge_runner::package_tests::{TestCandidate, TestTarget};
 use forge_runner::test_target_summary::TestTargetSummary;
 use foundry_ui::UI;
 use scarb_api::ScarbCommand;
@@ -45,11 +47,16 @@ pub fn run_test_case(
     let rt = Runtime::new().expect("Could not instantiate Runtime");
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
+    let test_targets = raw_test_targets
+        .into_iter()
+        .map(TestTarget::from_raw)
+        .collect::<Result<Vec<TestTarget<TestCandidate>>>>()
+        .unwrap();
 
     let ui = Arc::new(UI::default());
     rt.block_on(run_for_package(
         RunForPackageArgs {
-            test_targets: raw_test_targets,
+            test_targets,
             package_name: "test_package".to_string(),
             tests_filter: TestsFilter::from_flags(
                 None,
