@@ -59,6 +59,9 @@ pub struct ForgeConfigFromScarb {
     /// Generate a coverage report for the executed tests which have passed and are not fuzz tests
     #[serde(default)]
     pub coverage: bool,
+    /// Display a table of L2 gas breakdown for each contract and selector
+    #[serde(default)]
+    pub gas_report: bool,
     /// Fork configuration profiles
     #[serde(default, deserialize_with = "validate_forks")]
     pub fork: Vec<ForkTarget>,

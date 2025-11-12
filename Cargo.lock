@@ -1735,7 +1735,7 @@ checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 
 [[package]]
 name = "cheatnet"
-version = "0.51.2"
+version = "0.52.0"
 dependencies = [
  "anyhow",
  "bimap",
@@ -1908,6 +1908,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fde0e0ec90c9dfb3b4b1a0891a7dcd0e2bffde2f7efed5fe7c9bb00e5bfb915e"
 dependencies = [
  "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "comfy-table"
+version = "7.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b03b7db8e0b4b2fdad6c551e634134e99ec000e5c8c3b6856c65e8bbaded7a3b"
+dependencies = [
+ "crossterm",
+ "unicode-segmentation",
+ "unicode-width 0.2.2",
 ]
 
 [[package]]
@@ -2289,6 +2300,29 @@ name = "crossbeam-utils"
 version = "0.8.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
+
+[[package]]
+name = "crossterm"
+version = "0.29.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8b9f2e4c67f833b660cdb0a3523065869fb35570177239812ed4c905aeff87b"
+dependencies = [
+ "bitflags 2.10.0",
+ "crossterm_winapi",
+ "document-features",
+ "parking_lot",
+ "rustix 1.1.2",
+ "winapi",
+]
+
+[[package]]
+name = "crossterm_winapi"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "acdd7c62a3665c7f6830a51635d9ac9b23ed385797f70a83bb8bafe9c572ab2b"
+dependencies = [
+ "winapi",
+]
 
 [[package]]
 name = "crunchy"
@@ -2777,7 +2811,7 @@ checksum = "780955b8b195a21ab8e4ac6b60dd1dbdcec1dc6c51c0617964b08c81785e12c9"
 
 [[package]]
 name = "docs"
-version = "0.51.2"
+version = "0.52.0"
 dependencies = [
  "anyhow",
  "camino",
@@ -2790,6 +2824,15 @@ dependencies = [
  "tempfile",
  "toml_edit 0.22.27",
  "walkdir",
+]
+
+[[package]]
+name = "document-features"
+version = "0.2.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d4b8a88685455ed29a21542a33abd9cb6510b6b129abadabdcef0f4c55bc8f61"
+dependencies = [
+ "litrs",
 ]
 
 [[package]]
@@ -3167,7 +3210,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.51.2"
+version = "0.52.0"
 dependencies = [
  "anyhow",
  "assert_fs",
@@ -3192,6 +3235,7 @@ dependencies = [
  "futures",
  "include_dir",
  "indoc",
+ "insta",
  "itertools 0.14.0",
  "num-bigint",
  "openssl",
@@ -3224,7 +3268,7 @@ dependencies = [
 
 [[package]]
 name = "forge_runner"
-version = "0.51.2"
+version = "0.52.0"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -3240,6 +3284,7 @@ dependencies = [
  "camino",
  "cheatnet",
  "clap",
+ "comfy-table",
  "console",
  "conversions",
  "debugging",
@@ -3282,7 +3327,7 @@ dependencies = [
 
 [[package]]
 name = "foundry-ui"
-version = "0.51.2"
+version = "0.52.0"
 dependencies = [
  "anyhow",
  "console",
@@ -4113,6 +4158,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "insta"
+version = "1.43.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "46fdb647ebde000f43b5b53f773c30cf9b0cb4300453208713fa38b2c70935a0"
+dependencies = [
+ "console",
+ "once_cell",
+ "regex",
+ "similar",
+]
+
+[[package]]
 name = "instant"
 version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4433,6 +4490,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "241eaef5fd12c88705a01fc1066c48c4b36e0dd4377dcdc7ec3942cea7a69956"
 
 [[package]]
+name = "litrs"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11d3d7f243d5c5a8b9bb5d6dd2b1602c0cb0b9db1621bafc7ed66e35ff9fe092"
+
+[[package]]
 name = "llvm-sys"
 version = "191.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4669,7 +4732,7 @@ checksum = "b52c1b33ff98142aecea13138bd399b68aa7ab5d9546c300988c345004001eea"
 
 [[package]]
 name = "native-api"
-version = "0.51.2"
+version = "0.52.0"
 dependencies = [
  "cairo-lang-starknet-classes",
  "cairo-native",
@@ -6744,7 +6807,7 @@ dependencies = [
 
 [[package]]
 name = "sncast"
-version = "0.51.2"
+version = "0.52.0"
 dependencies = [
  "anyhow",
  "async-trait",
