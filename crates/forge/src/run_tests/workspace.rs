@@ -13,6 +13,7 @@ use forge_runner::package_tests::{TestCandidate, TestTarget};
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
 use foundry_ui::UI;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use scarb_api::{
     metadata::{Metadata, PackageMetadata},
     target_dir_for_workspace,
@@ -51,19 +52,17 @@ fn collect_packages_with_tests(
     workspace_dirs: &WorkspaceDirs,
     packages: &[PackageMetadata],
 ) -> Result<Vec<(PackageMetadata, TestTargets)>> {
-    let mut result = Vec::new();
-
-    for package in packages {
-        let test_targets_raw = load_test_artifacts(&workspace_dirs.artifacts_dir, package)?;
-        let test_targets = test_targets_raw
-            .into_iter()
-            .map(TestTarget::from_raw)
-            .collect::<Result<Vec<_>>>()?;
-
-        result.push((package.clone(), test_targets));
-    }
-
-    Ok(result)
+    packages
+        .par_iter()
+        .map(|package| {
+            let test_targets_raw = load_test_artifacts(&workspace_dirs.artifacts_dir, package)?;
+            let test_targets = test_targets_raw
+                .into_iter()
+                .map(TestTarget::from_raw)
+                .collect::<Result<Vec<_>>>()?;
+            Ok((package.clone(), test_targets))
+        })
+        .collect()
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
