@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- `--gas-report` flag to display a table of L2 gas breakdown for each contract and selector
+
+## [0.52.0] - 2025-11-05
+
+### Forge
+
 #### Changed
 
 - Gas values in fuzzing test output are now displayed as whole numbers without fractional parts

@@ -25,7 +25,7 @@ pub async fn test(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus> {
 
     check_profile_compatibility(&args, &scarb_metadata)?;
 
-    let scarb_version: semver::Version = scarb_version()?.scarb;
+    let scarb_version = scarb_version()?.scarb;
 
     if scarb_version >= MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT {
         error_if_snforge_std_not_compatible(&scarb_metadata)?;

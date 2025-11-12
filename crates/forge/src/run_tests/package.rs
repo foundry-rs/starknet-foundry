@@ -104,6 +104,7 @@ impl RunForPackageArgs {
             args.save_trace_data,
             args.build_profile,
             args.coverage,
+            args.gas_report,
             args.max_n_steps,
             args.tracked_resource,
             contracts_data,
