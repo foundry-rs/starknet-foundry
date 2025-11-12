@@ -86,7 +86,7 @@ jobs:
         run: |
           rustup target add ${{ matrix.target }}
 
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: Swatinem/rust-cache@f13886b937689c021905a6b90929199931d60db1
 
       - name: Install cross
         if: matrix.cross
@@ -124,7 +124,7 @@ jobs:
           echo "OUTPUT_BINARY_PATH=./crates/${{ inputs.plugin_name }}/target/${TARGET}/release/${OUTPUT_BINARY}" >> $GITHUB_ENV
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: build-${{ inputs.plugin_name }}-${{ matrix.target }}
           path: ${{ env.OUTPUT_BINARY_PATH }}

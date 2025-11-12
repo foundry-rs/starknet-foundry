@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         with:
           cache: 'npm'
           cache-dependency-path: scripts/package-lock.json
@@ -29,7 +29,7 @@ jobs:
 
       - name: Get version from Cargo.toml
         id: lookupVersion
-        uses: mikefarah/yq@8bf425b4d1344db7cd469a8d10a390876e0c77fd
+        uses: mikefarah/yq@0ecdce24e83f0fa127940334be98c86b07b0c488
         with:
           cmd: yq -oy '.workspace.package.version' 'Cargo.toml'
 
@@ -125,7 +125,7 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: artifacts-dl
 
