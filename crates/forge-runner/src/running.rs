@@ -52,7 +52,6 @@ mod execution;
 mod hints;
 mod setup;
 mod syscall_handler;
-pub mod with_config;
 
 use crate::debugging::build_debugging_trace;
 pub use hints::hints_to_params;
