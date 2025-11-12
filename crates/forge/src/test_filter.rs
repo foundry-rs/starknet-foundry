@@ -1,7 +1,7 @@
 use crate::shared_cache::FailedTestsCache;
 use anyhow::Result;
-use forge_runner::package_tests::{TestCase, TestCaseDeprecated};
-use forge_runner::{TestCaseFilter, TestCaseIsIgnored};
+use forge_runner::TestCaseFilter;
+use forge_runner::package_tests::TestCase;
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -115,19 +115,6 @@ impl TestsFilter {
 }
 
 impl TestCaseFilter for TestsFilter {
-    fn should_be_run<T>(&self, test_case: &TestCaseDeprecated<T>) -> bool
-    where
-        T: TestCaseIsIgnored,
-    {
-        let ignored = test_case.config.is_ignored();
-
-        match self.ignored_filter {
-            IgnoredFilter::All => true,
-            IgnoredFilter::Ignored => ignored,
-            IgnoredFilter::NotIgnored => !ignored,
-        }
-    }
-
     fn should_run(&self, is_test_case_ignored: bool) -> bool {
         match self.ignored_filter {
             IgnoredFilter::All => true,

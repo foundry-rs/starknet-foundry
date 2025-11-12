@@ -59,7 +59,7 @@ pub async fn run_for_test_target(
         let case = Arc::new(case);
 
         tasks.push(run_for_test_case(
-            &case,
+            case,
             casm_program.clone().unwrap(),
             forge_config.clone(),
             tests.sierra_program_path.clone(),
