@@ -22,6 +22,7 @@ use forge_runner::{
     },
     running::config_run::run_config_pass,
 };
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use starknet_api::block::BlockNumber;
 use universal_sierra_compiler_api::compile_raw_sierra_at_path;
 
@@ -74,19 +75,27 @@ pub async fn resolve_config(
     tests_filter: &TestsFilter,
     tracked_resource: &ForgeTrackedResource,
 ) -> Result<TestTarget<TestCase>> {
-    let mut test_cases = Vec::with_capacity(test_target.test_cases.len());
     let env_ignore_fork_tests = env_ignore_fork_tests();
 
     let casm_program = Arc::new(compile_raw_sierra_at_path(
         test_target.sierra_program_path.as_std_path(),
     )?);
 
-    for test_candidate in test_target.test_cases {
-        let raw_config = run_config_pass(
-            &test_candidate.test_details,
-            &casm_program,
-            tracked_resource,
-        )?;
+    let raw_configs: Vec<_> = test_target
+        .test_cases
+        .par_iter()
+        .map(|test_candidate| {
+            let raw_config = run_config_pass(
+                &test_candidate.test_details,
+                &casm_program,
+                tracked_resource,
+            )?;
+            Ok((test_candidate, raw_config))
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    let mut test_cases = Vec::with_capacity(raw_configs.len());
+    for (test_candidate, raw_config) in raw_configs {
         let resolved_config = resolved_config_from_raw(
             raw_config,
             tests_filter,
@@ -96,13 +105,11 @@ pub async fn resolve_config(
         )
         .await?;
 
-        let test_case = TestCase::new(
+        test_cases.push(TestCase::new(
             &test_candidate.name,
-            test_candidate.test_details,
+            test_candidate.test_details.clone(),
             resolved_config,
-        );
-
-        test_cases.push(test_case);
+        ));
     }
 
     Ok(TestTarget {
