@@ -382,6 +382,7 @@ pub fn new(
         };
 
         cmd.env("SCARB_INIT_TEST_RUNNER", test_runner)
+            .env("SCARB_INIT_EMPTY", "true")
             .run()
             .context("Failed to initialize a new project")?;
 
