@@ -3,6 +3,7 @@ use clap::Args;
 use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
 use foundry_ui::UI;
+use shared::rpc::get_rpc_version;
 use sncast::helpers::artifacts::CastStarknetContractArtifacts;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
@@ -19,7 +20,7 @@ use starknet::core::types::{
 use starknet::providers::ProviderError;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
-    core::types::contract::{CompiledClass, SierraClass},
+    core::types::contract::{CompiledClass, SierraClass, hash_function_from_spec_version},
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
     signers::LocalWallet,
 };
@@ -97,7 +98,13 @@ pub async fn declare_with_artifacts(
     skip_on_already_declared: bool,
     ui: &UI,
 ) -> Result<DeclareResponse, StarknetCommandError> {
-    let casm_class_hash = compiled_casm.class_hash().map_err(anyhow::Error::from)?;
+    let spec_version = get_rpc_version(account.provider()).await?;
+    let hash_from_spec_version = hash_function_from_spec_version(&spec_version)
+        .ok_or(anyhow!("Unsupported RPC spec version: {spec_version}"))?;
+    let casm_class_hash = compiled_casm
+        .class_hash_with_hash_function(hash_from_spec_version)
+        .map_err(anyhow::Error::from)?;
+
     let class_hash = sierra_class.class_hash().map_err(anyhow::Error::from)?;
 
     let declaration = account.declare_v3(
