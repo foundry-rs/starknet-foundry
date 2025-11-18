@@ -97,6 +97,9 @@ jobs:
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
       - run: cargo test --profile ci -p forge --features skip_test_for_only_latest_scarb,skip_test_for_scarb_since_2_11 e2e
+        # TODO(#3937): remove env override once new RPC URL is available in tests.
+        env:
+          SNCAST_IGNORE_RPC_0_9_CHECK: "1"
 
   test-cast:
     if: github.event.repository.fork == false
@@ -127,6 +130,9 @@ jobs:
             starknet-devnet ${{ steps.get-devnet-version.outputs.version }}
 
       - run: cargo test --profile ci -p sncast
+        # TODO(#3937): remove env override once new RPC URL is available in tests.
+        env:
+          SNCAST_IGNORE_RPC_0_9_CHECK: "1"
 
   get-version:
     name: Get current foundry version

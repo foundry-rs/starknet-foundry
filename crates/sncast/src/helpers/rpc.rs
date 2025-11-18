@@ -140,6 +140,7 @@ mod tests {
     use starknet::providers::Provider;
 
     #[tokio::test]
+    #[ignore = "TODO: (#3937) New RPC URL is not available yet"]
     async fn test_mainnet_url_happy_case() {
         let provider = get_provider(&Network::free_mainnet_rpc(&FreeProvider::Alchemy)).unwrap();
         let spec_version = provider.spec_version().await.unwrap();
@@ -147,6 +148,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "TODO: (#3937) New RPC URL is not available yet"]
     async fn test_sepolia_url_happy_case() {
         let provider = get_provider(&Network::free_sepolia_rpc(&FreeProvider::Alchemy)).unwrap();
         let spec_version = provider.spec_version().await.unwrap();

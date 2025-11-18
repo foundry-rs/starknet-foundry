@@ -715,6 +715,7 @@ pub async fn test_happy_case_keystore_int_format() {
 }
 
 #[tokio::test]
+#[ignore = "TODO: (#3937) New RPC URL is not available yet"]
 pub async fn test_happy_case_default_name_generation() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
