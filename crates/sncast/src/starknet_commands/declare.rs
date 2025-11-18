@@ -99,10 +99,10 @@ pub async fn declare_with_artifacts(
     ui: &UI,
 ) -> Result<DeclareResponse, StarknetCommandError> {
     let spec_version = get_rpc_version(account.provider()).await?;
-    let hash_from_spec_version = hash_function_from_spec_version(&spec_version)
+    let hash_function = hash_function_from_spec_version(&spec_version)
         .ok_or(anyhow!("Unsupported RPC spec version: {spec_version}"))?;
     let casm_class_hash = compiled_casm
-        .class_hash_with_hash_function(hash_from_spec_version)
+        .class_hash_with_hash_function(hash_function)
         .map_err(anyhow::Error::from)?;
 
     let class_hash = sierra_class.class_hash().map_err(anyhow::Error::from)?;
