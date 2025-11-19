@@ -39,7 +39,7 @@ jobs:
         with:
           owner: foundry-rs
           repo: starknet-foundry
-          excludes: prerelease, draft
+          excludes: draft
 
       - name: Compare versions
         id: validVersion
