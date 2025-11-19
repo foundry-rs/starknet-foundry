@@ -161,6 +161,7 @@ async fn test_get_account_failed_to_convert_field_elements() {
 
 // TODO (#1690): Move this test to the shared crate and execute it for a real node
 #[tokio::test]
+#[ignore = "TODO: (#3937) New RPC URL is not available yet"]
 async fn test_supported_rpc_version_matches_devnet_version() {
     let provider = create_test_provider();
     let devnet_spec_version = get_rpc_version(&provider).await.unwrap();

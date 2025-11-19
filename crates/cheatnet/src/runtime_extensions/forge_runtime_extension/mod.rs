@@ -75,7 +75,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
     // `generic_array` which is a transitive dependency of multiple packages we depend on
     // now, shows a deprecation warning at asking to upgrade to version 1.x
-    #[expect(clippy::too_many_lines, deprecated)]
+    #[expect(clippy::too_many_lines)]
     fn handle_cheatcode(
         &mut self,
         selector: &str,

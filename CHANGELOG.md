@@ -7,11 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.53.0-rc.0] - 2025-11-18
+
 ### Forge
 
 #### Added
 
 - `--gas-report` flag to display a table of L2 gas breakdown for each contract and selector
+
+### Cast
+
+#### Changed
+
+- The supported RPC version is now 0.10.0-rc.1
 
 ## [0.52.0] - 2025-11-05
 

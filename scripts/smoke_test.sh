@@ -53,9 +53,10 @@ scarb cache clean
 
 # Check cast
 
-if ! $SNCAST_PATH call \
-    --url "$RPC_URL" \
-    --contract-address 0x06b248bde9ce00d69099304a527640bc9515a08f0b49e5168e2096656f207e1d \
-    --function "get" --calldata 0x1 | grep -q $'Success: Call completed\n\nResponse:     0x0\nResponse Raw: [0x0]'; then
-  exit 1
-fi
+# TODO: (#3937) New RPC URL is not available yet
+# if ! $SNCAST_PATH call \
+#     --url "$RPC_URL" \
+#     --contract-address 0x06b248bde9ce00d69099304a527640bc9515a08f0b49e5168e2096656f207e1d \
+#     --function "get" --calldata 0x1 | grep -q $'Success: Call completed\n\nResponse:     0x0\nResponse Raw: [0x0]'; then
+#   exit 1
+# fi
