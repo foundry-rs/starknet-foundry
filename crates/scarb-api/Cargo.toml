@@ -3,6 +3,9 @@ name = "scarb-api"
 version = "1.0.0"
 edition.workspace = true
 
+[features]
+cairo-native = ["dep:cairo-native", "dep:native-api"]
+
 [dependencies]
 anyhow.workspace = true
 shared.workspace = true
@@ -19,7 +22,12 @@ rayon.workspace = true
 itertools.workspace = true
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 foundry-ui = { path = "../foundry-ui" }
+cairo-native = { workspace = true, optional = true }
+cairo-lang-starknet-classes.workspace = true
+native-api = { path = "../native-api", optional = true }
+tracing.workspace = true
 
 [dev-dependencies]
 assert_fs.workspace = true
 indoc.workspace = true
+num-bigint.workspace = true

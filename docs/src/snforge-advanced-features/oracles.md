@@ -1,5 +1,10 @@
 # Oracles
 
+> ⚠️ **Warning**
+>
+> Oracles are an experimental feature.
+> To enable them, you must pass the `--experimental-oracles` flag to `snforge`.
+
 An [oracle][oracle docs] is an external process (like a script, binary, or web service)
 that exposes custom logic or data to a Cairo program at runtime. You use it to perform tasks the Cairo VM can't, such as
 accessing real-world data or executing complex, non-provable computations.

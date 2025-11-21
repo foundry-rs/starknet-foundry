@@ -1,4 +1,5 @@
 mod account;
+pub mod balance;
 mod call;
 mod class_hash;
 mod completions;

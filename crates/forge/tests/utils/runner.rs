@@ -1,4 +1,4 @@
-use crate::{
+use crate::utils::{
     get_assert_macros_version, get_std_name, get_std_path, tempdir_with_tool_versions,
     use_snforge_std_deprecated,
 };
@@ -16,9 +16,10 @@ use forge_runner::{
 };
 use foundry_ui::UI;
 use indoc::formatdoc;
+use scarb_api::metadata::metadata_for_dir;
 use scarb_api::{
-    ScarbCommand, StarknetContractArtifacts, get_contracts_artifacts_and_source_sierra_paths,
-    metadata::MetadataCommandExt, target_dir_for_workspace,
+    CompilationOpts, StarknetContractArtifacts, get_contracts_artifacts_and_source_sierra_paths,
+    target_dir_for_workspace,
 };
 use shared::command::CommandExt;
 use starknet_api::execution_resources::{GasAmount, GasVector};
@@ -61,7 +62,7 @@ impl Contract {
         })
     }
 
-    fn generate_sierra_and_casm(self, ui: &UI) -> Result<(String, String)> {
+    fn generate_contract_artifacts(self, ui: &UI) -> Result<StarknetContractArtifacts> {
         let dir = tempdir_with_tool_versions()?;
 
         let contract_path = dir.child("src/lib.cairo");
@@ -93,10 +94,7 @@ impl Contract {
             .output_checked()
             .context("Failed to build contracts with Scarb")?;
 
-        let scarb_metadata = ScarbCommand::metadata()
-            .current_dir(dir.path())
-            .inherit_stderr()
-            .run()?;
+        let scarb_metadata = metadata_for_dir(dir.path())?;
         let package = scarb_metadata
             .packages
             .iter()
@@ -104,14 +102,22 @@ impl Contract {
             .unwrap();
         let artifacts_dir = target_dir_for_workspace(&scarb_metadata).join("dev");
 
-        let contract =
-            get_contracts_artifacts_and_source_sierra_paths(&artifacts_dir, package, false, ui)
-                .unwrap()
-                .remove(&self.name)
-                .ok_or(anyhow!("there is no contract with name {}", self.name))?
-                .0;
+        let artifacts = get_contracts_artifacts_and_source_sierra_paths(
+            &artifacts_dir,
+            package,
+            ui,
+            CompilationOpts {
+                use_test_target_contracts: false,
+                #[cfg(feature = "cairo-native")]
+                run_native: true,
+            },
+        )
+        .unwrap()
+        .remove(&self.name)
+        .ok_or(anyhow!("there is no contract with name {}", self.name))?
+        .0;
 
-        Ok((contract.sierra, contract.casm))
+        Ok(artifacts)
     }
 }
 
@@ -216,15 +222,9 @@ impl<'a> TestCase {
             .into_iter()
             .map(|contract| {
                 let name = contract.name.clone();
-                let (sierra, casm) = contract.generate_sierra_and_casm(ui)?;
+                let artifacts = contract.generate_contract_artifacts(ui)?;
 
-                Ok((
-                    name,
-                    (
-                        StarknetContractArtifacts { sierra, casm },
-                        Utf8PathBuf::default(),
-                    ),
-                ))
+                Ok((name, (artifacts, Utf8PathBuf::default())))
             })
             .collect()
     }
@@ -238,14 +238,16 @@ impl<'a> TestCase {
     }
 }
 
+#[expect(clippy::crate_in_macro_def)]
 #[macro_export]
 macro_rules! test_case {
     ( $test_code:expr ) => ({
-        use $crate::runner::TestCase;
+        use crate::utils::runner::TestCase;
+
         TestCase::from($test_code, vec![]).unwrap()
     });
     ( $test_code:expr, $( $contract:expr ),*) => ({
-        use $crate::runner::TestCase;
+        use crate::utils::runner::TestCase;
 
         let contracts = vec![$($contract,)*];
         TestCase::from($test_code, contracts).unwrap()
@@ -305,7 +307,7 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
             }
             AnyTestCaseSummary::Single(case) => match case {
                 TestCaseSummary::Passed { gas_info: gas, .. } => {
-                    assert_gas_with_margin(*gas, asserted_gas)
+                    assert_gas_with_margin(gas.gas_used, asserted_gas)
                         && any_case
                             .name()
                             .unwrap()

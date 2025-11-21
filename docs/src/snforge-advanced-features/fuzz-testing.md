@@ -34,8 +34,8 @@ $ snforge test
 ```shell
 Collected 2 test(s) from fuzz_testing package
 Running 2 test(s) from src/
-[PASS] fuzz_testing::with_parameters::tests::test_sum (runs: 22, gas: {max: ~124, min: ~121, mean: ~123.00, std deviation: ~0.90})
-[PASS] fuzz_testing::basic_example::tests::test_sum (runs: 256, gas: {max: ~124, min: ~121, mean: ~123.00, std deviation: ~0.81})
+[PASS] fuzz_testing::with_parameters::tests::test_sum (runs: 22, (l1_gas: {max: ~0, min: ~0, mean: ~0, std deviation: ~0}, l1_data_gas: {max: ~0, min: ~0, mean: ~0, std deviation: ~0}, l2_gas: {max: ~1888390, min: ~1852630, mean: ~1881888, std deviation: ~9322}))
+[PASS] fuzz_testing::basic_example::tests::test_sum (runs: 256, (l1_gas: {max: ~0, min: ~0, mean: ~0, std deviation: ~0}, l1_data_gas: {max: ~0, min: ~0, mean: ~0, std deviation: ~0}, l2_gas: {max: ~1888390, min: ~1828790, mean: ~1882058, std deviation: ~8807}))
 Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
 Fuzzer seed: [..]
 ```

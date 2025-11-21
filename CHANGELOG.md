@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.53.0-rc.0] - 2025-11-18
+
+### Forge
+
+#### Added
+
+- `--gas-report` flag to display a table of L2 gas breakdown for each contract and selector
+
+### Cast
+
+#### Changed
+
+- The supported RPC version is now 0.10.0-rc.1
+
+## [0.52.0] - 2025-11-05
+
+### Forge
+
+#### Changed
+
+- Gas values in fuzzing test output are now displayed as whole numbers without fractional parts
+- Minimal recommended `Scarb` version is now `2.11.4` (updated from `2.10.1`)
+
+#### Fixed
+
+- A bug that prevented the `#[test_case]` attribute from being used on its own with cheatcodes
+
+### Cast
+
+#### Added 
+
+- Possibility to configure urls of predefined networks used by `--network` flag via `sncast` profile in `snfoundry.toml`
+
+## [0.51.2] - 2025-10-31
+
+### Cast
+
+#### Changed
+
+- Replaced the free RPC provider used.
+
+## [0.51.1] - 2025-10-23
+
+### Forge
+
+#### Fixed
+
+- A bug that caused `meta_tx_v0` to panic when tracked resources are Sierra gas.
+
+## [0.51.0] - 2025-10-21
+
 ### Forge
 
 #### Added
@@ -18,17 +69,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Updated the error message returned when calling a nonexistent method on a contract to better align with the format used by the network
-- Oracle support in `snforge` is now stable and no longer requires the `--experimental-oracles` CLI flag
+- The default tracked resource is now Sierra gas, so gas reporting results may differ compared to previous versions. For more information refer to the [documentation](https://foundry-rs.github.io/starknet-foundry/testing/gas-and-resource-estimation.html)
+- When using the `--detailed-resources` flag, the used Sierra gas key is now shown as `sierra gas` instead of `sierra_gas_consumption`
 
 ### Cast
 
 #### Added
 
-- Debug logging for `sncast` commands that can be enabled by setting `CAST_LOG` env variable.
+- Debug logging for `sncast` commands that can be enabled by setting `SNCAST_LOG` env variable.
 - `sncast declare` command now outputs a ready-to-use deployment command after successful declaration.
 - Possibility to use [`starknet-devnet`](https://github.com/0xSpaceShard/starknet-devnet) predeployed accounts directly in `sncast` without needing to import them. They are available under specific names - `devnet-1`, `devnet-2`, ..., `devnet-<N>`. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/integration_with_devnet.html#predeployed-accounts)
 - Support for `--network devnet` flag that attempts to auto-detect running `starknet-devnet` instance and connect to it.
 - Support for automatically declaring the contract when running `sncast deploy`, by providing `--contract-name` flag instead of `--class-hash`. 
+- `sncast balance` command to fetch the balance of an account for a specified token.
+
+#### Fixed
+
+- `sncast declare` now shows a correct error message when contract is already declared.
 
 ## [0.50.0] - 2025-09-29
 

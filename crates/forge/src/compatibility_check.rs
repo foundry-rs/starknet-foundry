@@ -143,7 +143,6 @@ mod tests {
         fixture::{FileWriteStr, PathChild},
     };
     use scarb_api::ScarbCommand;
-    use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
     #[test]
     fn happy_case() {
@@ -178,7 +177,7 @@ mod tests {
         });
         requirements_checker.add_requirement(Requirement {
             name: "Universal Sierra Compiler".to_string(),
-            command: RefCell::new(UniversalSierraCompilerCommand::new().arg("--version").command()),
+            command: RefCell::new(universal_sierra_compiler_api::version_command().unwrap()),
             minimal_version: Version::new(2, 0, 0),
              minimal_recommended_version: None,
             helper_text: "Reinstall `snforge` using the same installation method or follow instructions from https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#universal-sierra-compiler-update".to_string(),
@@ -300,7 +299,7 @@ mod tests {
         });
         requirements_checker.add_requirement(Requirement {
             name: "Universal Sierra Compiler".to_string(),
-            command: RefCell::new(UniversalSierraCompilerCommand::new().arg("--version").command()),
+            command: RefCell::new(universal_sierra_compiler_api::version_command().unwrap()),
             minimal_version: Version::new(2, 4, 0),
             minimal_recommended_version: None,
             helper_text: "Reinstall `snforge` using the same installation method or follow instructions from https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#universal-sierra-compiler-update".to_string(),

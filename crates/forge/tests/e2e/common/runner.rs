@@ -1,3 +1,8 @@
+use crate::utils::runner::replace_snforge_std_with_snforge_std_deprecated;
+use crate::utils::{
+    get_assert_macros_version, get_snforge_std_entry, get_std_name, get_std_path,
+    tempdir_with_tool_versions, use_snforge_std_deprecated,
+};
 use assert_fs::TempDir;
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
@@ -9,11 +14,6 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
 use std::{env, fs};
-use test_utils::runner::replace_snforge_std_with_snforge_std_deprecated;
-use test_utils::{
-    get_assert_macros_version, get_snforge_std_entry, get_std_name, get_std_path,
-    tempdir_with_tool_versions, use_snforge_std_deprecated,
-};
 use toml_edit::{DocumentMut, Item, value};
 use walkdir::WalkDir;
 
@@ -31,7 +31,29 @@ pub fn snforge_test_bin_path() -> PathBuf {
     cargo_bin!("snforge").to_path_buf()
 }
 
+/// Returns a command that runs `snforge test` in the given temporary directory.
+/// If the `cairo-native` feature is enabled, it adds the `--run-native` flag.
 pub(crate) fn test_runner<T: AsRef<Path>>(temp_dir: T) -> SnapboxCommand {
+    if cfg!(feature = "cairo-native") {
+        test_runner_native(temp_dir)
+    } else {
+        test_runner_vm(temp_dir)
+    }
+}
+
+/// Returns a command that runs `snforge test --run-native` in the given temporary directory.
+///
+/// This is useful for testing behavior that occurs only when the `--run-native` flag is passed.
+/// If the behavior is not specific to native execution, use `test_runner` instead.
+pub(crate) fn test_runner_native<T: AsRef<Path>>(temp_dir: T) -> SnapboxCommand {
+    runner(temp_dir).arg("test").arg("--run-native")
+}
+
+/// Returns a command that runs `snforge test` in the given temporary directory.
+///
+/// This is useful for testing behavior that occurs only in the VM execution.
+/// If the behavior is not specific to VM execution, use `test_runner` instead.
+pub(crate) fn test_runner_vm<T: AsRef<Path>>(temp_dir: T) -> SnapboxCommand {
     runner(temp_dir).arg("test")
 }
 

@@ -1,10 +1,10 @@
 use super::common::runner::{setup_package, test_runner};
+use crate::utils::use_snforge_std_deprecated;
 use assert_fs::TempDir;
 use assert_fs::fixture::{FileWriteStr, PathChild};
 use indoc::indoc;
 use shared::test_utils::output_assert::{AsOutput, assert_stdout_contains};
 use std::fs;
-use test_utils::use_snforge_std_deprecated;
 use toml_edit::{DocumentMut, value};
 
 #[test]
@@ -20,6 +20,23 @@ fn test_backtrace_missing_env() {
             Got an exception while executing a hint: Requested contract address 0x0000000000000000000000000000000000000000000000000000000000000123 is not deployed.
             note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace"
         },
+    );
+}
+
+#[cfg_attr(not(feature = "cairo-native"), ignore)]
+#[test]
+fn test_backtrace_native_execution() {
+    let temp = setup_package("backtrace_vm_error");
+
+    let output = test_runner(&temp)
+        .arg("--run-native")
+        .env("SNFORGE_BACKTRACE", "1")
+        .assert()
+        .code(2);
+
+    assert_stdout_contains(
+        output,
+        "[ERROR] Backtrace generation is not supported with `cairo-native` execution\n",
     );
 }
 

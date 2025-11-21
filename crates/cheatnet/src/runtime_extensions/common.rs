@@ -35,14 +35,15 @@ pub fn get_syscalls_gas_consumed(
                     panic!("Failed to get syscall gas cost for selector {selector:?}")
                 });
 
-            // `linear_factor` is relevant only for `deploy` syscall, for other syscalls it is 0
+            // `linear_factor` is relevant only for `deploy` and `meta_tx_v0` syscalls, for other syscalls it is 0
             // `base_syscall_cost` makes an assert that `linear_factor` is 0
             // Hence to get base cost for `deploy` we use `get_syscall_cost` with 0 as `linear_length`
             // For other syscalls we use `base_syscall_cost`, which is also an additional check that `linear_factor` is always 0 then
-            let base_cost = if let SyscallSelector::Deploy = selector {
-                syscall_gas_cost.get_syscall_cost(0)
-            } else {
-                syscall_gas_cost.base_syscall_cost()
+            let base_cost = match selector {
+                SyscallSelector::Deploy | SyscallSelector::MetaTxV0 => {
+                    syscall_gas_cost.get_syscall_cost(0)
+                }
+                _ => syscall_gas_cost.base_syscall_cost(),
             };
 
             // We want to calculate `base_cost * call_count + linear_cost * linear_factor`

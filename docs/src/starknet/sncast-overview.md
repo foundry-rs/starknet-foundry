@@ -71,6 +71,9 @@ For **devnet**, `sncast` will try to detect running `starknet-devnet` instance a
 If using `sncast` extensively, we recommend getting access to a dedicated RPC node and providing its URL to sncast with
 `--url` flag.
 
+> 📝 **Note**
+> You can configure URLs for predefined networks (used by the `--network` flag) in `snfoundry.toml` profiles. Read more in [snfoundry.toml Reference](../appendix/snfoundry-toml.md#sncastprofile-namenetworks).
+
 ### Arguments
 
 Some `sncast` commands (namely `call`, `deploy` and `invoke`) allow passing arguments to perform an action with on the blockchain.

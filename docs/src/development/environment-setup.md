@@ -36,9 +36,8 @@ about installing `cairo-profiler` [here](https://github.com/software-mansion/cai
 
 > ❗️ **Warning**
 > 
-> If you haven't pushed your branch to the remote yet (you've been working only locally), two tests will fail:
+> If you haven't pushed your branch to the remote yet (you've been working only locally) some tests may fail, including:
 > 
-> - `e2e::running::init_new_project_test`
 > - `e2e::running::simple_package_with_git_dependency`
 > 
 > After pushing the branch to the remote, those tests should pass.
@@ -49,8 +48,6 @@ Install [starknet-devnet](https://github.com/0xSpaceShard/starknet-devnet) via [
 ### Universal sierra compiler
 Install the latest [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler) version.
 
-
-
 ## Running Tests
 Tests can be run with:
 
@@ -58,6 +55,46 @@ Tests can be run with:
 $ cargo test
 ```
 
+## Cairo Native
+
+To develop Starknet Foundry with Cairo Native support, you need to enable the `cairo-native` feature in Cargo and
+install the required dependencies.
+
+### LLVM
+
+LLVM 19 is required to build forge with Cairo Native support and to run it.
+
+#### macOS
+
+On macOS in can be installed with
+
+```shell
+$ brew install llvm@19
+```
+
+Next, export the following environment variables:
+
+```
+LIBRARY_PATH=/opt/homebrew/lib
+MLIR_SYS_190_PREFIX="$(brew --prefix llvm@19)"
+LLVM_SYS_191_PREFIX="$(brew --prefix llvm@19)"
+TABLEGEN_190_PREFIX="$(brew --prefix llvm@19)"
+```
+
+#### Linux
+
+LLVM installation varies between distributions.
+See [here](https://llvm.org/docs/GettingStarted.html) and [here](https://releases.llvm.org/download.html) for more
+details.
+
+Next, export the following environment variables, note that the paths may differe depending on your distribution and
+installation method:
+
+```
+MLIR_SYS_190_PREFIX=/usr/lib/llvm-19
+LLVM_SYS_191_PREFIX=/usr/lib/llvm-19
+TABLEGEN_190_PREFIX=/usr/lib/llvm-19
+```
 
 ## Formatting and Lints
 
@@ -91,13 +128,9 @@ $ typos
 
 Some typos can be automatically fixed by running
 
-<details>
-<summary>Output:</summary>
-
 ```shell
 $ typos -w
 ```
-</details>
 
 ## Contributing
 

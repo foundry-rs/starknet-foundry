@@ -28,7 +28,7 @@ use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::io::Read;
 use std::sync::Arc;
-use universal_sierra_compiler_api::{SierraType, compile_sierra};
+use universal_sierra_compiler_api::compile_contract_sierra;
 use url::Url;
 
 #[derive(Debug)]
@@ -239,13 +239,10 @@ impl StateReader for ForkStateReader {
                     SierraVersion::extract_from_program(&flattened_class.sierra_program)
                         .expect("Unable to extract Sierra version from Sierra program");
 
-                match compile_sierra::<String>(&sierra_contract_class, &SierraType::Contract) {
+                match compile_contract_sierra(&sierra_contract_class) {
                     Ok(casm_contract_class_raw) => Ok(RunnableCompiledClass::V1(
-                        CompiledClassV1::try_from_json_string(
-                            &casm_contract_class_raw,
-                            sierra_version,
-                        )
-                        .expect("Unable to create RunnableCompiledClass::V1"),
+                        CompiledClassV1::try_from((casm_contract_class_raw, sierra_version))
+                            .expect("Unable to create RunnableCompiledClass::V1"),
                     )),
                     Err(err) => Err(StateReadError(err.to_string())),
                 }

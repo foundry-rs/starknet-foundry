@@ -39,7 +39,7 @@ jobs:
         with:
           owner: foundry-rs
           repo: starknet-foundry
-          excludes: prerelease, draft
+          excludes: draft
 
       - name: Compare versions
         id: validVersion
@@ -61,6 +61,7 @@ jobs:
     needs: verify-version
     if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
     uses: ./.github/workflows/_build-binaries.yml
+    secrets: inherit
     with:
       version: ${{ needs.verify-version.outputs.version }}
 

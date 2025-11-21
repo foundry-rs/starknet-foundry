@@ -12,7 +12,6 @@ network and perform actions on top of it.
 ## Test Contract
 
 We will demonstrate fork testing on an example of the `Pokemons` contract deployed on Sepolia network.
-We are going to use a free, open RPC endpoint - [Blast](https://blastapi.io/public-api/starknet).
 
 We first need to define the contract's interface along with all the structures used by its externals:
 ```rust
@@ -77,7 +76,7 @@ the same fork in tests.
 ```toml
 [[tool.snforge.fork]]
 name = "SEPOLIA_LATEST"
-url = "https://starknet-sepolia.public.blastapi.io/rpc/v0_7"
+url = "<YOUR_RPC_URL>"
 block_id.tag = "latest"
 ```
 

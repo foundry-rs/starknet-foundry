@@ -32,6 +32,14 @@ Available components:
 - `call-type`
 - `call-result`
 
+## `--run-native`
+
+_This flag is only available if `snforge` was built with `cairo-native` feature enabled_
+
+Run contracts on [`cairo-native`](https://github.com/lambdaclass/cairo_native) instead of the default `cairo-vm`.
+
+Note: Only contracts execution through native is supported, test code itself will still run on `cairo-vm`.
+
 ## `-e`, `--exact`
 
 Will only run a test with a name exactly matching the test filter.
@@ -118,9 +126,12 @@ Enabling this flag will slow down the compilation process, but the built contrac
 ## `--tracked-resource`
 
 Set tracked resource for test execution. Impacts overall test gas cost. Valid values:
-- `cairo-steps` (default): track cairo steps, uses vm `ExecutionResources` (steps, builtins, memory holes) to describe  resources consumed by the test.
-- `sierra-gas` (sierra 1.7.0+ is required): track sierra gas, uses cairo native `CallExecution` (sierra gas consumption) to describe computation resources consumed by the test.
-To learn more about fee calculation formula (and an impact of tracking sierra gas on it) please consult [starknet docs](https://docs.starknet.io/learn/protocol/fees#overall-fee)
+- `sierra-gas` (default): track sierra gas, uses cairo native `CallExecution` (sierra gas consumption) to describe computation resources consumed by the test.
+- `cairo-steps`: track cairo steps, uses vm `ExecutionResources` (steps, builtins, memory holes) to describe resources consumed by the test.
+To learn more about fee calculation formula (and the impact of tracking sierra gas on it) please consult [starknet docs](https://docs.starknet.io/learn/protocol/fees#overall-fee)
+
+## `--gas-report`
+Display a table of L2 gas breakdown for each contract and selector.
 
 ##  `-P`, `--profile` `<PROFILE>`
 Specify the profile to use by name.
@@ -130,6 +141,10 @@ Use Scarb release profile.
 
 ## `--dev`
 Use Scarb dev profile.
+
+## `--experimental-oracles`
+
+Enable experimental [oracles](../../snforge-advanced-features/oracles.md) support.
 
 ## `-h`, `--help`
 

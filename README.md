@@ -53,11 +53,7 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 - [ ] Test coverage reports (check out [cairo-coverage](https://github.com/software-mansion/cairo-coverage)) 🏗️
 - [ ] L1 ↔ L2 messaging and cross-chain testing
 
-## Performance
-
-![Performance plot](.github/images/plot.png)
-
-`snforge` achieves performance comparable to the Cairo Test Runner with improved user experience.
+See the [whole roadmap](./ROADMAP.md). 
 
 ## Getting Help
 

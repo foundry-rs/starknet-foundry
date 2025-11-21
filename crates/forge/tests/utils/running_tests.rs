@@ -1,4 +1,4 @@
-use crate::runner::TestCase;
+use crate::utils::runner::TestCase;
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::shared_cache::FailedTestsCache;
@@ -15,7 +15,8 @@ use forge_runner::forge_config::{
 };
 use forge_runner::test_target_summary::TestTargetSummary;
 use foundry_ui::UI;
-use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
+use scarb_api::ScarbCommand;
+use scarb_api::metadata::metadata_for_dir;
 use std::num::NonZeroU32;
 use std::sync::Arc;
 use tempfile::tempdir;
@@ -33,10 +34,7 @@ pub fn run_test_case(
         .run()
         .unwrap();
 
-    let metadata = ScarbCommand::metadata()
-        .current_dir(test.path().unwrap())
-        .run()
-        .unwrap();
+    let metadata = metadata_for_dir(test.path().unwrap()).unwrap();
 
     let package = metadata
         .packages
@@ -45,11 +43,8 @@ pub fn run_test_case(
         .unwrap();
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
-    let raw_test_targets = if false {
-        load_test_artifacts(&test.path().unwrap().join("target/release"), package).unwrap()
-    } else {
-        load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap()
-    };
+    let raw_test_targets =
+        load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
     let ui = Arc::new(UI::default());
     rt.block_on(run_for_package(
@@ -78,11 +73,13 @@ pub fn run_test_case(
                     contracts_data: ContractsData::try_from(test.contracts(&ui).unwrap()).unwrap(),
                     tracked_resource,
                     environment_variables: test.env().clone(),
+                    experimental_oracles: false,
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: false,
                     execution_data_to_save: ExecutionDataToSave::default(),
                     trace_args: TraceArgs::default(),
+                    gas_report: false,
                 }),
             }),
             fork_targets: vec![],

@@ -70,7 +70,7 @@ jobs:
 
             for file in ${plugin_name_underscores}_v*; do
               if [[ -f "$file" && ! "$file" =~ "${plugin_name_underscores}_v${overridden_version}" ]]; then
-                platform=$(echo "$file" | sed -E "s/${plugin_name_underscores}_v[0-9]+\.[0-9]+\.[0-9]+([-.].*)?_(.+)/\2/")
+                platform=$(echo "$file" | sed -E "s/${plugin_name_underscores}_v[0-9]+\.[0-9]+\.[0-9]+(-rc.[0-9]+)?_(.+)/\2/")
                 new_file="${plugin_name_underscores}_v${overridden_version}_${platform}"
                 mv "$file" "$new_file"
               fi

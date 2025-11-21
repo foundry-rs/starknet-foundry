@@ -6,8 +6,13 @@ on:
       - scripts/get_scarb_versions.sh
       - .github/workflows/scheduled.yml
   schedule:
-    - cron: '0 0 * * 3,0'
+    # Two schedules needed so we can distinguish between nightly and non-nightly runs
+    - cron: '0 0 * * 0'
+    - cron: '0 0 * * 3'
   workflow_dispatch:
+
+env:
+  ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
 
 jobs:
   get-scarb-versions:
@@ -92,6 +97,9 @@ jobs:
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
       - run: cargo test --profile ci -p forge --features skip_test_for_only_latest_scarb,skip_test_for_scarb_since_2_11 e2e
+        # TODO(#3937): remove env override once new RPC URL is available in tests.
+        env:
+          SNCAST_IGNORE_RPC_0_9_CHECK: "1"
 
   test-cast:
     if: github.event.repository.fork == false
@@ -122,6 +130,9 @@ jobs:
             starknet-devnet ${{ steps.get-devnet-version.outputs.version }}
 
       - run: cargo test --profile ci -p sncast
+        # TODO(#3937): remove env override once new RPC URL is available in tests.
+        env:
+          SNCAST_IGNORE_RPC_0_9_CHECK: "1"
 
   get-version:
     name: Get current foundry version
@@ -188,6 +199,7 @@ jobs:
   build-binaries:
     needs: [ get-version ]
     uses: ./.github/workflows/_build-binaries.yml
+    secrets: inherit
     with:
       version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
 
@@ -200,11 +212,19 @@ jobs:
       bin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
       std_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
 
+  create-nightly-release:
+    needs: [ test-binary ]
+    # Creating a nightly release will trigger a Maat experiment for it as well
+    # Publish nightly only on Sundays
+    if: ${{ (github.event_name == 'schedule') && (github.event.schedule == '0 0 * * 0') }}
+    secrets: inherit
+    uses:
+      ./.github/workflows/nightly.yml
 
   notify_if_failed:
     runs-on: ubuntu-latest
     if: always() && contains(needs.*.result, 'failure') && github.event_name == 'schedule'
-    needs: [ test-forge-unit-and-integration, test-forge-e2e, test-cast , build-plugin-binaries, build-binaries, publish-plugin, publish-std, test-binary ]
+    needs: [ create-nightly-release, test-forge-unit-and-integration, test-forge-e2e, test-cast , build-plugin-binaries, build-binaries, publish-plugin, publish-std, test-binary ]
     steps:
       - name: Notify that the workflow has failed
         uses: slackapi/slack-github-action@v2.0.0

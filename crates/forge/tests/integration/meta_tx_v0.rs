@@ -1,33 +1,68 @@
+use crate::utils::runner::{Contract, assert_passed};
+use crate::utils::running_tests::run_test_case;
+use crate::utils::test_case;
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
-use scarb_api::ScarbCommand;
-use semver::Version;
 use std::path::Path;
-use test_utils::runner::{Contract, assert_passed};
-use test_utils::running_tests::run_test_case;
-use test_utils::test_case;
 
-// TODO(#3704) Remove scarb version check
-fn skip_scarb_lt_2_11_0() -> bool {
-    let version_info = ScarbCommand::version()
-        .run()
-        .expect("Failed to get Scarb version");
+#[test]
+fn check_meta_tx_v0_syscall_work_without_cheats() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use result::ResultTrait;
+            use array::ArrayTrait;
+            use option::OptionTrait;
+            use traits::TryInto;
+            use starknet::ContractAddress;
+            use snforge_std::{
+                declare, ContractClassTrait, DeclareResultTrait
+            };
 
-    if version_info.scarb < Version::new(2, 11, 0) {
-        eprintln!("[IGNORED] `meta_tx_v0` syscall is not supported in Scarb < 2.11.0");
-        true
-    } else {
-        false
-    }
+            #[starknet::interface]
+            trait IMetaTxV0Test<TContractState> {
+                fn execute_meta_tx_v0(
+                    ref self: TContractState,
+                    target: starknet::ContractAddress,
+                    signature: Span<felt252>,
+                ) -> felt252;
+            }
+
+            #[test]
+            fn test_meta_tx_v0_verify_tx_context_modification() {
+                let checker_contract = declare("SimpleCheckerMetaTxV0").unwrap().contract_class();
+                let (checker_address, _) = checker_contract.deploy(@ArrayTrait::new()).unwrap();
+
+                let meta_contract = declare("MetaTxV0Test").unwrap().contract_class();
+                let (meta_address, _) = meta_contract.deploy(@ArrayTrait::new()).unwrap();
+                let meta_dispatcher = IMetaTxV0TestDispatcher { contract_address: meta_address };
+
+                let mut signature = ArrayTrait::new();
+
+                let result = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
+
+                assert(result == 1234567890, 'Result should be 1234567890');
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "SimpleCheckerMetaTxV0".to_string(),
+            Path::new("tests/data/contracts/meta_tx_v0_checkers.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "MetaTxV0Test".to_string(),
+            Path::new("tests/data/contracts/meta_tx_v0_test.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+    assert_passed(&result);
 }
 
 #[test]
 fn meta_tx_v0_with_cheat_caller_address() {
-    // TODO(#3704) Remove scarb version check
-    if skip_scarb_lt_2_11_0() {
-        return;
-    }
-
     let test = test_case!(
         indoc!(
             r#"
@@ -95,13 +130,12 @@ fn meta_tx_v0_with_cheat_caller_address() {
     assert_passed(&result);
 }
 
+#[cfg_attr(
+    feature = "cairo-native",
+    ignore = "Cheats in `meta_tx_v0` are not supported on `cairo-native`"
+)]
 #[test]
 fn meta_tx_v0_with_cheat_block_hash() {
-    // TODO(#3704) Remove scarb version check
-    if skip_scarb_lt_2_11_0() {
-        return;
-    }
-
     let test = test_case!(
         indoc!(
             r#"
@@ -165,17 +199,12 @@ fn meta_tx_v0_with_cheat_block_hash() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
     assert_passed(&result);
 }
 
 #[test]
 fn meta_tx_v0_verify_tx_context_modification() {
-    // TODO(#3704) Remove scarb version check
-    if skip_scarb_lt_2_11_0() {
-        return;
-    }
-
     let test = test_case!(
         indoc!(
             r#"
@@ -236,6 +265,6 @@ fn meta_tx_v0_verify_tx_context_modification() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
     assert_passed(&result);
 }

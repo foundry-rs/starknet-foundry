@@ -4,7 +4,6 @@ version = "1.0.0"
 edition.workspace = true
 
 [dependencies]
-anyhow.workspace = true
 shared.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -12,4 +11,7 @@ which.workspace = true
 tempfile.workspace = true
 num-bigint.workspace = true
 cairo-lang-casm.workspace = true
-camino.workspace = true
+cairo-lang-starknet-classes.workspace = true
+tracing.workspace = true
+strum_macros.workspace = true
+thiserror.workspace = true

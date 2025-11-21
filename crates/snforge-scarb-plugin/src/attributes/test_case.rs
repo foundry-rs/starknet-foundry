@@ -1,11 +1,14 @@
 use crate::args::Arguments;
 use crate::args::unnamed::UnnamedArgs;
+use crate::attributes::internal_config_statement::InternalConfigStatementCollector;
 use crate::attributes::test::{TestCollector, test_func_with_attrs};
 use crate::attributes::test_case::name::test_case_name;
 use crate::attributes::{AttributeInfo, ErrorExt};
-use crate::common::{has_fuzzer_attribute, into_proc_macro_result, with_parsed_values};
-use crate::format_ident;
+use crate::common::{
+    has_fuzzer_attribute, has_test_attribute, into_proc_macro_result, with_parsed_values,
+};
 use crate::utils::SyntaxNodeUtils;
+use crate::{create_single_token, format_ident};
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::FunctionWithBody;
@@ -40,7 +43,7 @@ fn test_case_internal(
 
     let func_name = func.declaration(db).name(db);
     let case_fn_name = test_case_name(&func_name.text(db), &args, args_db)?;
-    let filtered_fn_attrs = collect_attrs_excluding_test_without_fuzzer(func, db);
+    let filtered_fn_attrs = collect_preserved_attributes_for_test_case(func, db);
 
     let signature = func.declaration(db).signature(db).as_syntax_node();
     let signature = SyntaxNodeWithDb::new(&signature, db);
@@ -57,8 +60,20 @@ fn test_case_internal(
 
     let test_func_with_attrs = test_func_with_attrs(&case_fn_name, &func_name, &call_args);
 
+    // If the function has both `#[fuzzer]` and `#[test]` attributes, we do not need to add
+    // `#[__internal_config_statement]` attribute, since it will be handled by `#[test]`.
+    let skip_internal_config = has_fuzzer_attribute(db, func) && has_test_attribute(db, func);
+    let internal_config_attr = if skip_internal_config {
+        TokenStream::empty()
+    } else {
+        let internal_config = create_single_token(InternalConfigStatementCollector::ATTR_NAME);
+        quote!(#[#internal_config])
+    };
+
     let func_ident = quote!(
         #filtered_fn_attrs
+
+        #internal_config_attr
         fn #func_name #signature
         #func_body
     );
@@ -112,23 +127,27 @@ fn ensure_params_valid(
     Ok(())
 }
 
-fn collect_attrs_excluding_test_without_fuzzer(
+fn collect_preserved_attributes_for_test_case(
     func: &FunctionWithBody,
     func_db: &SimpleParserDatabase,
 ) -> TokenStream {
     let attr_list = func.attributes(func_db);
     let has_fuzzer = has_fuzzer_attribute(func_db, func);
 
-    // We do not want to copy the `#[test]` attribute if there is no `#[fuzzer]`
+    // We do not want to copy the `#[test]` attribute unless the function has `#[fuzzer]`.
+    // We also do not want to copy `#[__internal_config_statement]` because it will be added later.
     attr_list
         .elements(func_db)
         .filter(|attr| {
             let test_attr_text = format!("#[{}]", TestCollector::ATTR_NAME);
+            let internal_config_attr_text =
+                format!("#[{}]", InternalConfigStatementCollector::ATTR_NAME);
             let attr_text = attr.as_syntax_node().get_text(func_db);
             let attr_text = attr_text.trim();
             let is_test_attr = attr_text == test_attr_text;
+            let is_internal_config_attr = attr_text == internal_config_attr_text;
 
-            !is_test_attr || has_fuzzer
+            (!is_test_attr || has_fuzzer) && !is_internal_config_attr
         })
         .map(|attr| attr.to_token_stream(func_db))
         .fold(TokenStream::empty(), |mut acc, token| {

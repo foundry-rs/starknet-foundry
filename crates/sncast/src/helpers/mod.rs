@@ -1,4 +1,5 @@
 pub mod account;
+pub mod artifacts;
 pub mod block_explorer;
 pub mod braavos;
 pub mod command;
@@ -11,3 +12,4 @@ pub mod interactive;
 pub mod output_format;
 pub mod rpc;
 pub mod scarb_utils;
+pub mod token;

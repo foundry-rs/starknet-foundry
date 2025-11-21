@@ -13,6 +13,7 @@ use blockifier::execution::entry_point_execution::{
 use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::state::cached_state::CachedState;
 use cairo_vm::Felt252;
+use cairo_vm::types::program::Program;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use camino::{Utf8Path, Utf8PathBuf};
@@ -27,9 +28,9 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
     get_all_used_resources, update_top_call_l1_resources, update_top_call_resources,
     update_top_call_vm_trace,
 };
-use cheatnet::state::{
-    BlockInfoReader, CallTrace, CheatnetState, EncounteredErrors, ExtendedStateReader,
-};
+use cheatnet::state::{BlockInfoReader, CheatnetState, EncounteredErrors, ExtendedStateReader};
+use cheatnet::trace_data::CallTrace;
+use debugging::ContractsDataStore;
 use execution::finalize_execution;
 use hints::hints_by_representation;
 use rand::prelude::StdRng;
@@ -44,7 +45,7 @@ use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
-use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
+use universal_sierra_compiler_api::representation::RawCasmProgram;
 
 pub mod config_run;
 mod execution;
@@ -63,7 +64,7 @@ pub use syscall_handler::syscall_handler_offset;
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn run_test(
     case: Arc<TestCaseWithResolvedConfig>,
-    casm_program: Arc<AssembledProgramWithDebugInfo>,
+    casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -75,13 +76,17 @@ pub fn run_test(
         if send.is_closed() {
             return TestCaseSummary::Interrupted {};
         }
-        let run_result = run_test_case(
-            &case,
-            &casm_program,
-            &RuntimeConfig::from(&forge_config.test_runner_config),
-            None,
-            &versioned_program_path,
-        );
+
+        let run_result = case.try_into_program(&casm_program).and_then(|program| {
+            run_test_case(
+                &case,
+                &program,
+                &casm_program,
+                &RuntimeConfig::from(&forge_config.test_runner_config),
+                None,
+                &versioned_program_path,
+            )
+        });
 
         if send.is_closed() {
             return TestCaseSummary::Interrupted {};
@@ -92,9 +97,11 @@ pub fn run_test(
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn run_fuzz_test(
     case: Arc<TestCaseWithResolvedConfig>,
-    casm_program: Arc<AssembledProgramWithDebugInfo>,
+    program: Program,
+    casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -108,9 +115,9 @@ pub(crate) fn run_fuzz_test(
         if send.is_closed() | fuzzing_send.is_closed() {
             return TestCaseSummary::Interrupted {};
         }
-
         let run_result = run_test_case(
             &case,
+            &program,
             &casm_program,
             &RuntimeConfig::from(&forge_config.test_runner_config),
             Some(rng),
@@ -160,14 +167,14 @@ pub enum RunResult {
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn run_test_case(
     case: &TestCaseWithResolvedConfig,
-    casm_program: &AssembledProgramWithDebugInfo,
+    program: &Program,
+    casm_program: &RawCasmProgram,
     runtime_config: &RuntimeConfig,
     fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
     versioned_program_path: &Utf8Path,
 ) -> Result<RunResult> {
-    let program = case.try_into_program(casm_program)?;
     let (call, entry_point) =
-        setup::build_test_call_and_entry_point(&case.test_details, casm_program, &program);
+        setup::build_test_call_and_entry_point(&case.test_details, casm_program, program);
 
     let mut state_reader = ExtendedStateReader {
         dict_state_reader: cheatnet_constants::build_testing_state(),
@@ -200,7 +207,7 @@ pub fn run_test_case(
     } = setup::initialize_execution_context(
         call.clone(),
         &hints,
-        &program,
+        program,
         &mut cached_state,
         &mut context,
     )?;
@@ -231,6 +238,7 @@ pub fn run_test_case(
         environment_variables: runtime_config.environment_variables,
         contracts_data: runtime_config.contracts_data,
         fuzzer_rng,
+        experimental_oracles_enabled: runtime_config.experimental_oracles,
         oracle_hint_service: OracleHintService::new(Some(versioned_program_path.as_std_path())),
     };
 
@@ -402,6 +410,7 @@ fn extract_test_case_summary(
                 contracts_data,
                 versioned_program_path,
                 trace_args,
+                forge_config.output_config.gas_report,
             ),
             RunResult::Error(run_error) => {
                 let mut message = format!(
@@ -427,10 +436,9 @@ fn extract_test_case_summary(
                     test_statistics: (),
                     debugging_trace: build_debugging_trace(
                         &run_error.call_trace.borrow(),
-                        contracts_data,
+                        &ContractsDataStore::new(contracts_data, &run_error.fork_data),
                         trace_args,
                         case.name.clone(),
-                        &run_error.fork_data,
                     ),
                 }
             }

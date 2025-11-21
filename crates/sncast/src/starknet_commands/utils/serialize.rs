@@ -6,7 +6,7 @@ use foundry_ui::UI;
 use sncast::{
     get_class_hash_by_address, get_contract_class,
     helpers::{configuration::CastConfig, rpc::RpcArgs},
-    response::{errors::StarknetCommandError, serialize::SerializeResponse},
+    response::{errors::StarknetCommandError, utils::serialize::SerializeResponse},
 };
 use starknet::core::{
     types::{ContractClass, contract::AbiEntry},

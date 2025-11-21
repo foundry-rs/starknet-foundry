@@ -1,27 +1,27 @@
 use super::{
     resolve_config::resolve_config,
-    structs::{CollectedTestsCountMessage, TestsRunMessage, TestsSummaryMessage},
     test_target::{TestTargetRunResult, run_for_test_target},
 };
+use crate::scarb::load_package_config;
 use crate::{
     TestArgs,
     block_number_map::BlockNumberMap,
     combine_configs::combine_configs,
+    run_tests::messages::{
+        collected_tests_count::CollectedTestsCountMessage, tests_run::TestsRunMessage,
+        tests_summary::TestsSummaryMessage,
+    },
     scarb::{
         config::{ForgeConfigFromScarb, ForkTarget},
-        load_test_artifacts, should_compile_starknet_contract_target,
+        load_test_artifacts,
     },
     shared_cache::FailedTestsCache,
     test_filter::{NameFilter, TestsFilter},
-    warn::{
-        warn_if_available_gas_used_with_incompatible_scarb_version,
-        warn_if_incompatible_rpc_version,
-    },
+    warn::warn_if_incompatible_rpc_version,
 };
 use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use configuration::load_package_config;
 use console::Style;
 use forge_runner::{
     forge_config::ForgeConfig,
@@ -31,7 +31,7 @@ use forge_runner::{
     test_target_summary::TestTargetSummary,
 };
 use foundry_ui::{UI, components::labeled::LabeledMessage};
-use scarb_api::get_contracts_artifacts_and_source_sierra_paths;
+use scarb_api::{CompilationOpts, get_contracts_artifacts_and_source_sierra_paths};
 use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
 
@@ -83,11 +83,12 @@ impl RunForPackageArgs {
         let contracts = get_contracts_artifacts_and_source_sierra_paths(
             artifacts_dir,
             &package,
-            !should_compile_starknet_contract_target(
-                &scarb_metadata.app_version_info.version,
-                args.no_optimization,
-            ),
             ui,
+            CompilationOpts {
+                use_test_target_contracts: !args.no_optimization,
+                #[cfg(feature = "cairo-native")]
+                run_native: args.run_native,
+            },
         )?;
         let contracts_data = ContractsData::try_from(contracts)?;
 
@@ -101,6 +102,7 @@ impl RunForPackageArgs {
             args.save_trace_data,
             args.build_profile,
             args.coverage,
+            args.gas_report,
             args.max_n_steps,
             args.tracked_resource,
             contracts_data,
@@ -108,6 +110,7 @@ impl RunForPackageArgs {
             &forge_config_from_scarb,
             &args.additional_args,
             args.trace_args.clone(),
+            args.experimental_oracles,
         ));
 
         let test_filter = TestsFilter::from_flags(
@@ -185,7 +188,6 @@ pub async fn run_for_package(
         tests_filter.filter_tests(&mut test_target.test_cases)?;
     }
 
-    warn_if_available_gas_used_with_incompatible_scarb_version(&test_targets, &ui)?;
     warn_if_incompatible_rpc_version(&test_targets, ui.clone()).await?;
 
     let not_filtered = sum_test_cases(&test_targets);

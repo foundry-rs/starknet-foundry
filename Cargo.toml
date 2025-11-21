@@ -17,6 +17,7 @@ members = [
     "crates/debugging",
     "crates/testing/packages_validation",
     "crates/foundry-ui",
+    "crates/native-api",
 ]
 
 exclude = ["crates/snforge-scarb-plugin", "crates/snforge-scarb-plugin-deprecated"]
@@ -26,7 +27,7 @@ inherits = "release"
 debug-assertions = true
 
 [workspace.package]
-version = "0.50.0"
+version = "0.53.0-rc.0"
 edition = "2024"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
@@ -38,18 +39,19 @@ blockifier = { git = "https://github.com/software-mansion-labs/sequencer.git", b
 bigdecimal = "0.4.8"
 # TODO(#3770) Use starknet_api directly
 starknet_api = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.14.0" }
-cairo-lang-casm = { version = "2.12.3", features = ["serde"] }
-cairo-lang-sierra = "2.12.3"
-cairo-lang-utils = "2.12.3"
-cairo-lang-starknet = "2.12.3"
-cairo-lang-filesystem = "2.12.3"
-cairo-lang-diagnostics = "2.12.3"
-cairo-lang-sierra-type-size = "2.12.3"
-cairo-lang-syntax = "2.12.3"
-cairo-lang-test-plugin = "2.12.3"
-cairo-lang-starknet-classes = "2.12.3"
-cairo-lang-parser = "2.12.3"
-cairo-lang-sierra-to-casm = "2.12.3"
+cairo-native = "0.6.2"
+cairo-lang-casm = { version = "=2.12.3", features = ["serde"] }
+cairo-lang-sierra = "=2.12.3"
+cairo-lang-utils = "=2.12.3"
+cairo-lang-starknet = "=2.12.3"
+cairo-lang-filesystem = "=2.12.3"
+cairo-lang-diagnostics = "=2.12.3"
+cairo-lang-sierra-type-size = "=2.12.3"
+cairo-lang-syntax = "=2.12.3"
+cairo-lang-test-plugin = "=2.12.3"
+cairo-lang-starknet-classes = "=2.12.3"
+cairo-lang-parser = "=2.12.3"
+cairo-lang-sierra-to-casm = "=2.12.3"
 cairo-vm = "2.5.0"
 cairo-annotations = { version = "0.6.1", features = ["cairo-lang"] }
 dirs = "6.0.0"
@@ -70,7 +72,7 @@ rayon = "1.10"
 regex = "1.11.3"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.145"
-starknet = "0.17.0"
+starknet = { git = "https://github.com/software-mansion-labs/starknet-rs", rev = "6e3a394ebe9ded6c18fc56479fec9a196ff6f75e" }
 starknet-crypto = "0.8.1"
 tempfile = "3.23.0"
 thiserror = "2.0.17"
@@ -93,7 +95,7 @@ snapbox = "0.4.17"
 scarb-ui = "0.1.7"
 semver = "1.0.27"
 bimap = "0.6.3"
-primitive-types = "0.13.1"
+primitive-types = {  version =  "0.13.1", features = ["serde"] }
 shellexpand = "3.1.0"
 toml = "0.8.20"
 rpassword = "7.3.1"
@@ -128,3 +130,5 @@ tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 tracing = "0.1.41"
 tracing-chrome = "0.7.2"
 tracing-log = "0.2.0"
+comfy-table = "7"
+insta = { version = "1.43.1", features = ["filters"] }

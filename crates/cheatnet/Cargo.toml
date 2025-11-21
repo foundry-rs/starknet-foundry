@@ -5,6 +5,7 @@ edition.workspace = true
 
 [features]
 testing = []
+cairo-native = ["dep:cairo-native", "blockifier/cairo_native"]
 
 [dependencies]
 anyhow.workspace = true
@@ -43,7 +44,8 @@ p256.workspace = true
 shared.workspace = true
 rand.workspace = true
 foundry-ui = { path = "../foundry-ui" }
-scarb-oracle-hint-service.workspace =  true
+scarb-oracle-hint-service.workspace = true
+cairo-native = { workspace = true, optional = true }
 
 [dev-dependencies]
 ctor.workspace = true

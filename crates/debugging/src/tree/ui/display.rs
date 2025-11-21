@@ -31,14 +31,14 @@ impl NodeDisplay for TestName {
 impl NodeDisplay for ContractName {
     const TAG: &'static str = "contract name";
     fn string_pretty(&self) -> String {
-        self.0.to_string()
+        self.0.clone()
     }
 }
 
 impl NodeDisplay for Selector {
     const TAG: &'static str = "selector";
     fn string_pretty(&self) -> String {
-        self.0.to_string()
+        self.0.clone()
     }
 }
 

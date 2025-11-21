@@ -21,6 +21,7 @@ pub fn combine_configs(
     save_trace_data: bool,
     build_profile: bool,
     coverage: bool,
+    gas_report: bool,
     max_n_steps: Option<u32>,
     tracked_resource: ForgeTrackedResource,
     contracts_data: ContractsData,
@@ -28,6 +29,7 @@ pub fn combine_configs(
     forge_config_from_scarb: &ForgeConfigFromScarb,
     additional_args: &[OsString],
     trace_args: TraceArgs,
+    experimental_oracles: bool,
 ) -> ForgeConfig {
     let execution_data_to_save = ExecutionDataToSave::from_flags(
         save_trace_data || forge_config_from_scarb.save_trace_data,
@@ -51,11 +53,13 @@ pub fn combine_configs(
             contracts_data,
             tracked_resource,
             environment_variables: env::vars().collect(),
+            experimental_oracles,
         }),
         output_config: Arc::new(OutputConfig {
             trace_args,
             detailed_resources: detailed_resources || forge_config_from_scarb.detailed_resources,
             execution_data_to_save,
+            gas_report: gas_report || forge_config_from_scarb.gas_report,
         }),
     }
 }
@@ -74,6 +78,7 @@ mod tests {
             false,
             false,
             false,
+            false,
             None,
             ForgeTrackedResource::CairoSteps,
             ContractsData::default(),
@@ -81,6 +86,7 @@ mod tests {
             &ForgeConfigFromScarb::default(),
             &[],
             TraceArgs::default(),
+            false,
         );
         let config2 = combine_configs(
             false,
@@ -90,6 +96,7 @@ mod tests {
             false,
             false,
             false,
+            false,
             None,
             ForgeTrackedResource::CairoSteps,
             ContractsData::default(),
@@ -97,6 +104,7 @@ mod tests {
             &ForgeConfigFromScarb::default(),
             &[],
             TraceArgs::default(),
+            false,
         );
 
         assert_ne!(config.test_runner_config.fuzzer_seed, 0);
@@ -117,6 +125,7 @@ mod tests {
             false,
             false,
             false,
+            false,
             None,
             ForgeTrackedResource::CairoSteps,
             ContractsData::default(),
@@ -124,6 +133,7 @@ mod tests {
             &ForgeConfigFromScarb::default(),
             &[],
             TraceArgs::default(),
+            false,
         );
         assert_eq!(
             config,
@@ -138,11 +148,13 @@ mod tests {
                     cache_dir: Utf8PathBuf::default(),
                     contracts_data: ContractsData::default(),
                     environment_variables: config.test_runner_config.environment_variables.clone(),
+                    experimental_oracles: false,
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: false,
                     execution_data_to_save: ExecutionDataToSave::default(),
                     trace_args: TraceArgs::default(),
+                    gas_report: false,
                 }),
             }
         );
@@ -159,6 +171,7 @@ mod tests {
             save_trace_data: true,
             build_profile: true,
             coverage: true,
+            gas_report: true,
             max_n_steps: Some(1_000_000),
             tracked_resource: ForgeTrackedResource::CairoSteps,
         };
@@ -171,6 +184,7 @@ mod tests {
             false,
             false,
             false,
+            false,
             None,
             ForgeTrackedResource::CairoSteps,
             ContractsData::default(),
@@ -178,6 +192,7 @@ mod tests {
             &config_from_scarb,
             &[],
             TraceArgs::default(),
+            false,
         );
         assert_eq!(
             config,
@@ -192,6 +207,7 @@ mod tests {
                     cache_dir: Utf8PathBuf::default(),
                     contracts_data: ContractsData::default(),
                     environment_variables: config.test_runner_config.environment_variables.clone(),
+                    experimental_oracles: false,
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: true,
@@ -202,6 +218,7 @@ mod tests {
                         additional_args: vec![],
                     },
                     trace_args: TraceArgs::default(),
+                    gas_report: true,
                 }),
             }
         );
@@ -218,6 +235,7 @@ mod tests {
             save_trace_data: false,
             build_profile: false,
             coverage: false,
+            gas_report: false,
             max_n_steps: Some(1234),
             tracked_resource: ForgeTrackedResource::CairoSteps,
         };
@@ -229,6 +247,7 @@ mod tests {
             true,
             true,
             true,
+            true,
             Some(1_000_000),
             ForgeTrackedResource::CairoSteps,
             ContractsData::default(),
@@ -236,6 +255,7 @@ mod tests {
             &config_from_scarb,
             &[],
             TraceArgs::default(),
+            false,
         );
 
         assert_eq!(
@@ -251,6 +271,7 @@ mod tests {
                     cache_dir: Utf8PathBuf::default(),
                     contracts_data: ContractsData::default(),
                     environment_variables: config.test_runner_config.environment_variables.clone(),
+                    experimental_oracles: false,
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: true,
@@ -261,6 +282,7 @@ mod tests {
                         additional_args: vec![],
                     },
                     trace_args: TraceArgs::default(),
+                    gas_report: true,
                 }),
             }
         );

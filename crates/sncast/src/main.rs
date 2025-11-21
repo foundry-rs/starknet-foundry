@@ -1,3 +1,4 @@
+use crate::starknet_commands::balance::Balance;
 use crate::starknet_commands::declare::declare;
 use crate::starknet_commands::declare_from::DeclareFrom;
 use crate::starknet_commands::deploy::DeployArguments;
@@ -5,8 +6,9 @@ use crate::starknet_commands::multicall;
 use crate::starknet_commands::script::run_script_command;
 use crate::starknet_commands::utils::{self, Utils};
 use crate::starknet_commands::{
-    account, account::Account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke,
-    multicall::Multicall, script::Script, show_config::ShowConfig, tx_status::TxStatus,
+    account, account::Account as AccountCommand, call::Call, declare::Declare, deploy::Deploy,
+    invoke::Invoke, multicall::Multicall, script::Script, show_config::ShowConfig,
+    tx_status::TxStatus,
 };
 use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
@@ -37,6 +39,7 @@ use sncast::{
     ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
     get_contract_class,
 };
+use starknet::accounts::Account;
 use starknet::core::types::ContractClass;
 use starknet::core::types::contract::{AbiEntry, SierraClass};
 use starknet::core::utils::get_selector_from_name;
@@ -139,7 +142,7 @@ enum Commands {
     Multicall(Multicall),
 
     /// Create and deploy an account
-    Account(Account),
+    Account(AccountCommand),
 
     /// Show current configuration being used
     ShowConfig(ShowConfig),
@@ -160,6 +163,9 @@ enum Commands {
 
     /// Utility commands
     Utils(Utils),
+
+    /// Fetch balance of the account for specified token
+    Balance(Balance),
 }
 
 #[derive(Debug, Clone, clap::Args)]
@@ -329,7 +335,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     serde_json::from_str(&contract_artifacts.sierra)
                         .context("Failed to parse sierra artifact")?;
                 let network_flag = generate_network_flag(
-                    rpc.get_url(&config.url).await.ok().as_deref(),
+                    rpc.get_url(&config).await.ok().as_deref(),
                     rpc.network.as_ref(),
                 );
                 Some(DeployCommandMessage::new(
@@ -679,6 +685,25 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             Ok(())
         }
 
+        Commands::Balance(balance) => {
+            let provider = balance.rpc.get_provider(&config, ui).await?;
+            let account = get_account(
+                &config,
+                &provider,
+                &balance.rpc,
+                config.keystore.as_ref(),
+                ui,
+            )
+            .await?;
+
+            let result =
+                starknet_commands::balance::balance(account.address(), &provider, &balance).await?;
+
+            process_command_result("balance", Ok(result), ui, None);
+
+            Ok(())
+        }
+
         Commands::Script(_) => unreachable!(),
     }
 }
@@ -717,11 +742,11 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
 
     let global_config =
         load_config::<CastConfig>(Some(&global_config_path.clone()), cli.profile.as_deref())
-            .unwrap_or_else(|_| {
-                load_config::<CastConfig>(Some(&global_config_path), None).unwrap()
-            });
+            .or_else(|_| load_config::<CastConfig>(Some(&global_config_path), None))
+            .map_err(|err| anyhow::anyhow!(format!("Failed to load config: {err}")))?;
 
-    let local_config = load_config::<CastConfig>(None, cli.profile.as_deref())?;
+    let local_config = load_config::<CastConfig>(None, cli.profile.as_deref())
+        .map_err(|err| anyhow::anyhow!(format!("Failed to load config: {err}")))?;
 
     let mut combined_config = combine_cast_configs(&global_config, &local_config);
 

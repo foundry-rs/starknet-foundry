@@ -23,7 +23,7 @@ use std::sync::{Arc, Mutex};
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{Sender, channel};
 use tokio::task::JoinHandle;
-use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
+use universal_sierra_compiler_api::representation::RawCasmProgram;
 
 pub mod build_trace_data;
 pub mod coverage_api;
@@ -33,6 +33,7 @@ pub mod package_tests;
 pub mod profiler_api;
 pub mod test_case_summary;
 pub mod test_target_summary;
+pub mod tests_summary;
 
 pub mod backtrace;
 pub mod debugging;
@@ -113,7 +114,7 @@ pub fn maybe_generate_coverage(
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn run_for_test_case(
     case: Arc<TestCaseWithResolvedConfig>,
-    casm_program: Arc<AssembledProgramWithDebugInfo>,
+    casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -148,7 +149,7 @@ pub fn run_for_test_case(
 #[tracing::instrument(skip_all, level = "debug")]
 fn run_with_fuzzing(
     case: Arc<TestCaseWithResolvedConfig>,
-    casm_program: Arc<AssembledProgramWithDebugInfo>,
+    casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -176,9 +177,12 @@ fn run_with_fuzzing(
 
         let mut tasks = FuturesUnordered::new();
 
+        let program = case.try_into_program(&casm_program)?;
+
         for _ in 1..=fuzzer_runs.get() {
             tasks.push(run_fuzz_test(
                 case.clone(),
+                program.clone(),
                 casm_program.clone(),
                 forge_config.clone(),
                 versioned_program_path.clone(),
