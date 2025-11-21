@@ -90,9 +90,10 @@ fn works_with_few_attributes() {
                 core::array::ArrayTrait::span(@arr)
             }
 
-            #[__internal_config_statement]
             fn empty_fn() {
-
+                if snforge_std::_internals::is_config_run() {
+                    return;
+                }
             }
         ",
     );
@@ -107,7 +108,6 @@ fn works_with_few_attributes() {
     assert_output(
         &result,
         "
-            #[__internal_config_statement]
             fn empty_fn() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
@@ -137,7 +137,6 @@ fn works_with_few_attributes() {
     assert_output(
         &result,
         r#"
-            #[__internal_config_statement]
             fn empty_fn() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
@@ -192,9 +191,10 @@ fn works_with_fuzzer() {
                 core::array::ArrayTrait::span(@arr)
             }
 
-            #[__internal_config_statement]
             fn empty_fn() {
-
+                if snforge_std::_internals::is_config_run() {
+                    return;
+                }
             }
         ",
     );
@@ -211,8 +211,11 @@ fn works_with_fuzzer() {
         r"
             #[__fuzzer_config(runs: 123, seed: 321)]
             #[__fuzzer_wrapper]
-            #[__internal_config_statement]
-            fn empty_fn() {}
+            fn empty_fn() {
+                if snforge_std::_internals::is_config_run() {
+                    return;
+                }
+            }
         ",
     );
 }
@@ -262,8 +265,11 @@ fn works_with_fuzzer_before_test() {
 
             #[__fuzzer_config(runs: 123, seed: 321)]
             #[__fuzzer_wrapper]
-            #[__internal_config_statement]
-            fn empty_fn(f: felt252) {}
+            fn empty_fn(f: felt252) {
+                if snforge_std::_internals::is_config_run() {
+                    return;
+                }
+            }
         ",
     );
 
@@ -363,7 +369,6 @@ fn works_with_fuzzer_config_wrapper() {
             }
 
             #[fuzzer]
-            #[__internal_config_statement]
             fn empty_fn(f: felt252) {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
