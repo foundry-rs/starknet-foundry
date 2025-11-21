@@ -22,4 +22,4 @@ This will update your installation to the latest version with Blake hash support
 
 > 📝 **Note**
 >
-> For more detailed installation instructions, see the [Installation](installation.html) guide.
+> For more detailed installation instructions, see the [Installation](../getting-started/installation.md) guide.
