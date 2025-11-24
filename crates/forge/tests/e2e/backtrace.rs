@@ -236,31 +236,46 @@ fn test_backtrace_panic() {
             },
         );
     } else {
+        // TODO: (#3906) Remove this once we bump minimal scarb version to 2.13.
+        let stdout_snapshot = output.as_stdout();
+        let eq_location_suffix = ["232:13", "231:9"]
+            .into_iter()
+            .find(|location| stdout_snapshot.contains(&format!("lib.cairo:{location}")))
+            .unwrap_or_else(|| {
+                panic!(
+                    "Unexpected location for core::Felt252PartialEq::eq in stdout:\n{}",
+                    stdout_snapshot
+                )
+            });
+
         assert_stdout_contains(
             output,
-            indoc! {
-               "Failure data:
-                    0x417373657274206661696c6564 ('Assert failed')
-                error occurred in contract 'InnerContract'
-                stack backtrace:
-                   0: core::panic_with_const_felt252
-                       at [..]lib.cairo:364:5
-                   1: core::panic_with_const_felt252
-                       at [..]lib.cairo:364:5
-                   2: (inlined) core::Felt252PartialEq::eq
-                       at [..]lib.cairo:231:9
-                   3: (inlined) backtrace_panic::InnerContract::inner_call
-                       at [..]traits.cairo:441:10
-                   4: (inlined) backtrace_panic::InnerContract::InnerContract::inner
-                       at [..]lib.cairo:40:16
-                   5: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
-                       at [..]lib.cairo:35:13
+            format!(
+                indoc! {
+                   "Failure data:
+                        0x417373657274206661696c6564 ('Assert failed')
+                    error occurred in contract 'InnerContract'
+                    stack backtrace:
+                       0: core::panic_with_const_felt252
+                           at [..]lib.cairo:364:5
+                       1: core::panic_with_const_felt252
+                           at [..]lib.cairo:364:5
+                       2: (inlined) core::Felt252PartialEq::eq
+                           at [..]lib.cairo:{eq_location_suffix}
+                       3: (inlined) backtrace_panic::InnerContract::inner_call
+                           at [..]traits.cairo:441:10
+                       4: (inlined) backtrace_panic::InnerContract::InnerContract::inner
+                           at [..]lib.cairo:40:16
+                       5: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
+                           at [..]lib.cairo:35:13
 
-                error occurred in contract 'OuterContract'
-                stack backtrace:
-                   0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
-                       at [..]lib.cairo:15:9"
-            },
+                    error occurred in contract 'OuterContract'
+                    stack backtrace:
+                       0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+                           at [..]lib.cairo:15:9"
+                },
+                eq_location_suffix = eq_location_suffix,
+            ),
         );
     }
 }
