@@ -16,7 +16,7 @@ use sncast::helpers::account::load_accounts;
 use sncast::helpers::constants::{
     BRAAVOS_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH, READY_CLASS_HASH,
 };
-use starknet::core::types::TransactionReceipt::DeployAccount;
+use starknet_rust::core::types::TransactionReceipt::DeployAccount;
 use std::fs;
 use tempfile::{TempDir, tempdir};
 use test_case::test_case;

@@ -9,7 +9,7 @@ use serde::Serialize;
 use sncast::Network;
 use sncast::response::explorer_link::ExplorerError;
 use sncast::{helpers::scarb_utils, response::verify::VerifyResponse};
-use starknet::{
+use starknet_rust::{
     core::types::{BlockId, BlockTag},
     providers::{
         Provider,

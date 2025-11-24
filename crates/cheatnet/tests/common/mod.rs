@@ -31,10 +31,10 @@ use scarb_api::metadata::metadata_for_dir;
 use scarb_api::{
     CompilationOpts, get_contracts_artifacts_and_source_sierra_paths, target_dir_for_workspace,
 };
-use starknet::core::utils::get_selector_from_name;
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::transaction::fields::Calldata;
+use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::sync::Arc;

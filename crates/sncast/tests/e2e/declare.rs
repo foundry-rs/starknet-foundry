@@ -12,8 +12,8 @@ use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert
 use sncast::AccountType;
 use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
 use sncast::helpers::fee::FeeArgs;
-use starknet::core::types::TransactionReceipt::Declare;
-use starknet::core::types::{DeclareTransaction, Transaction, TransactionExecutionStatus};
+use starknet_rust::core::types::TransactionReceipt::Declare;
+use starknet_rust::core::types::{DeclareTransaction, Transaction, TransactionExecutionStatus};
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 use std::fs;
 use test_case::test_case;

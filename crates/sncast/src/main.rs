@@ -39,12 +39,12 @@ use sncast::{
     ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
     get_contract_class,
 };
-use starknet::accounts::Account;
-use starknet::core::types::ContractClass;
-use starknet::core::types::contract::{AbiEntry, SierraClass};
-use starknet::core::utils::get_selector_from_name;
-use starknet::providers::Provider;
 use starknet_commands::verify::Verify;
+use starknet_rust::accounts::Account;
+use starknet_rust::core::types::ContractClass;
+use starknet_rust::core::types::contract::{AbiEntry, SierraClass};
+use starknet_rust::core::utils::get_selector_from_name;
+use starknet_rust::providers::Provider;
 use starknet_types_core::felt::Felt;
 use tokio::runtime::Runtime;
 

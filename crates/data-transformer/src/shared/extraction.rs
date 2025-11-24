@@ -1,5 +1,5 @@
-use starknet::core::types::contract::{AbiEntry, AbiFunction, StateMutability};
-use starknet::core::utils::get_selector_from_name;
+use starknet_rust::core::types::contract::{AbiEntry, AbiFunction, StateMutability};
+use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
 
 pub fn extract_function_from_selector(

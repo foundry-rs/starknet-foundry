@@ -1,12 +1,12 @@
 use super::{BufferWriter, CairoSerialize};
 use crate::{IntoConv, byte_array::ByteArray};
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use starknet::core::types::{
-    ContractErrorData, ContractExecutionError, TransactionExecutionErrorData,
-};
 use starknet_api::core::EthAddress;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
 use starknet_api::transaction::fields::{Calldata, ContractAddressSalt};
+use starknet_rust::core::types::{
+    ContractErrorData, ContractExecutionError, TransactionExecutionErrorData,
+};
 use starknet_types_core::felt::Felt;
 use std::{
     cell::{Ref, RefCell},

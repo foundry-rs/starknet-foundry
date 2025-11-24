@@ -14,15 +14,15 @@ use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
 use runtime::starknet::context::SerializableGasPrices;
-use starknet::core::types::{
-    ContractClass as ContractClassStarknet, MaybePreConfirmedBlockWithTxHashes, StarknetError,
-};
-use starknet::core::utils::parse_cairo_short_string;
-use starknet::providers::ProviderError;
 use starknet_api::block::{BlockInfo, BlockNumber, BlockTimestamp};
 use starknet_api::contract_class::SierraVersion;
 use starknet_api::core::{ChainId, ClassHash, CompiledClassHash, ContractAddress, Nonce};
 use starknet_api::state::StorageKey;
+use starknet_rust::core::types::{
+    ContractClass as ContractClassStarknet, MaybePreConfirmedBlockWithTxHashes, StarknetError,
+};
+use starknet_rust::core::utils::parse_cairo_short_string;
+use starknet_rust::providers::ProviderError;
 use starknet_types_core::felt::Felt;
 use std::cell::{Ref, RefCell};
 use std::collections::HashMap;

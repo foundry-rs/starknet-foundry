@@ -8,7 +8,7 @@ use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::Expr;
 use conversions::serde::serialize::SerializeToFeltVec;
 use itertools::Itertools;
-use starknet::core::types::contract::{AbiEntry, AbiFunction};
+use starknet_rust::core::types::contract::{AbiEntry, AbiFunction};
 use starknet_types_core::felt::Felt;
 
 /// Interpret `calldata` as a comma-separated series of expressions in Cairo syntax and serialize it

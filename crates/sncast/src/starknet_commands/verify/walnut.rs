@@ -4,7 +4,7 @@ use foundry_ui::UI;
 use reqwest::StatusCode;
 use sncast::response::verify::VerifyResponse;
 use sncast::{Network, response::explorer_link::ExplorerError};
-use starknet::providers::{JsonRpcClient, jsonrpc::HttpTransport};
+use starknet_rust::providers::{JsonRpcClient, jsonrpc::HttpTransport};
 use std::env;
 use std::ffi::OsStr;
 use walkdir::WalkDir;

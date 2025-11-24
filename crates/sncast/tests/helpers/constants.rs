@@ -1,4 +1,4 @@
-use starknet::macros::felt;
+use starknet_rust::macros::felt;
 use starknet_types_core::felt::Felt;
 
 pub const ACCOUNT: &str = "user1";

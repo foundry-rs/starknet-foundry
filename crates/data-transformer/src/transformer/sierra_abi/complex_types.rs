@@ -14,7 +14,7 @@ use cairo_lang_syntax::node::ast::{
 };
 use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode};
 use itertools::Itertools;
-use starknet::core::types::contract::{AbiEntry, AbiEnum, AbiNamedMember, AbiStruct};
+use starknet_rust::core::types::contract::{AbiEntry, AbiEnum, AbiNamedMember, AbiStruct};
 use std::collections::HashSet;
 
 pub trait EnumOrStruct {

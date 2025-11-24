@@ -1553,7 +1553,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
- "starknet-curve 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "starknet-curve",
  "starknet-types-core",
  "stats_alloc",
  "tempfile",
@@ -1598,7 +1598,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "sha3",
- "starknet-crypto 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "starknet-crypto",
  "starknet-types-core",
  "thiserror 2.0.17",
  "zip",
@@ -1770,7 +1770,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shared",
- "starknet",
+ "starknet-rust",
  "starknet-types-core",
  "starknet_api",
  "tempfile",
@@ -2056,7 +2056,7 @@ dependencies = [
  "num-traits",
  "serde",
  "serde_json",
- "starknet",
+ "starknet-rust",
  "starknet-types-core",
  "starknet_api",
  "thiserror 2.0.17",
@@ -2480,7 +2480,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shared",
- "starknet",
+ "starknet-rust",
  "starknet-types-core",
  "test-case",
  "thiserror 2.0.17",
@@ -2521,7 +2521,7 @@ dependencies = [
  "ptree",
  "rayon",
  "serde_json",
- "starknet",
+ "starknet-rust",
  "starknet-types-core",
  "starknet_api",
  "thiserror 2.0.17",
@@ -3251,7 +3251,7 @@ dependencies = [
  "serde_json",
  "shared",
  "snapbox",
- "starknet",
+ "starknet-rust",
  "starknet-types-core",
  "starknet_api",
  "tempfile",
@@ -3303,7 +3303,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shared",
- "starknet",
+ "starknet-rust",
  "starknet-types-core",
  "starknet_api",
  "strum 0.27.2",
@@ -6065,7 +6065,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shared",
- "starknet",
+ "starknet-rust",
  "starknet-types-core",
  "starknet_api",
  "thiserror 2.0.17",
@@ -6336,7 +6336,7 @@ checksum = "c172d79f333e27291bd18c77aa2f290fca9d14eec4e9ce025d7c0aeaabac3422"
 dependencies = [
  "anyhow",
  "deno_task_shell",
- "starknet-core 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "starknet-core",
  "tokio",
  "tracing",
  "wasmtime",
@@ -6677,7 +6677,7 @@ dependencies = [
  "regex",
  "semver",
  "snapbox",
- "starknet",
+ "starknet-rust",
  "starknet-types-core",
  "starknet_api",
  "thiserror 2.0.17",
@@ -6852,8 +6852,8 @@ dependencies = [
  "shared",
  "shellexpand",
  "snapbox",
- "starknet",
- "starknet-crypto 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "starknet-rust",
+ "starknet-rust-crypto",
  "starknet-types-core",
  "strum 0.27.2",
  "strum_macros 0.27.2",
@@ -6927,49 +6927,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
 
 [[package]]
-name = "starknet"
-version = "0.17.0"
-source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e#6e3a394ebe9ded6c18fc56479fec9a196ff6f75e"
-dependencies = [
- "starknet-accounts",
- "starknet-contract",
- "starknet-core 0.16.0 (git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e)",
- "starknet-core-derive 0.1.0 (git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e)",
- "starknet-crypto 0.8.1 (git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e)",
- "starknet-macros",
- "starknet-providers",
- "starknet-signers",
-]
-
-[[package]]
-name = "starknet-accounts"
-version = "0.16.0"
-source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e#6e3a394ebe9ded6c18fc56479fec9a196ff6f75e"
-dependencies = [
- "async-trait",
- "auto_impl",
- "starknet-core 0.16.0 (git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e)",
- "starknet-crypto 0.8.1 (git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e)",
- "starknet-providers",
- "starknet-signers",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "starknet-contract"
-version = "0.16.0"
-source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e#6e3a394ebe9ded6c18fc56479fec9a196ff6f75e"
-dependencies = [
- "serde",
- "serde_json",
- "serde_with",
- "starknet-accounts",
- "starknet-core 0.16.0 (git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e)",
- "starknet-providers",
- "thiserror 1.0.69",
-]
-
-[[package]]
 name = "starknet-core"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6987,31 +6944,8 @@ dependencies = [
  "serde_json_pythonic",
  "serde_with",
  "sha3",
- "starknet-core-derive 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "starknet-crypto 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "starknet-types-core",
-]
-
-[[package]]
-name = "starknet-core"
-version = "0.16.0"
-source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e#6e3a394ebe9ded6c18fc56479fec9a196ff6f75e"
-dependencies = [
- "base64 0.21.7",
- "crypto-bigint",
- "flate2",
- "foldhash",
- "hex",
- "indexmap 2.12.0",
- "num-traits",
- "semver",
- "serde",
- "serde_json",
- "serde_json_pythonic",
- "serde_with",
- "sha3",
- "starknet-core-derive 0.1.0 (git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e)",
- "starknet-crypto 0.8.1 (git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e)",
+ "starknet-core-derive",
+ "starknet-crypto",
  "starknet-types-core",
 ]
 
@@ -7020,16 +6954,6 @@ name = "starknet-core-derive"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b08520b7d80eda7bf1a223e8db4f9bb5779a12846f15ebf8f8d76667eca7f5ad"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.110",
-]
-
-[[package]]
-name = "starknet-core-derive"
-version = "0.1.0"
-source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e#6e3a394ebe9ded6c18fc56479fec9a196ff6f75e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -7050,27 +6974,7 @@ dependencies = [
  "num-traits",
  "rfc6979",
  "sha2",
- "starknet-curve 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "starknet-types-core",
- "zeroize",
-]
-
-[[package]]
-name = "starknet-crypto"
-version = "0.8.1"
-source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e#6e3a394ebe9ded6c18fc56479fec9a196ff6f75e"
-dependencies = [
- "blake2",
- "crypto-bigint",
- "digest",
- "hex",
- "hmac",
- "num-bigint",
- "num-integer",
- "num-traits",
- "rfc6979",
- "sha2",
- "starknet-curve 0.6.0 (git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e)",
+ "starknet-curve",
  "starknet-types-core",
  "zeroize",
 ]
@@ -7085,26 +6989,121 @@ dependencies = [
 ]
 
 [[package]]
-name = "starknet-curve"
+name = "starknet-rust"
+version = "0.17.0"
+source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e#0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e"
+dependencies = [
+ "starknet-rust-accounts",
+ "starknet-rust-contract",
+ "starknet-rust-core",
+ "starknet-rust-core-derive",
+ "starknet-rust-macros",
+ "starknet-rust-providers",
+ "starknet-rust-signers",
+]
+
+[[package]]
+name = "starknet-rust-accounts"
+version = "0.17.0-rc.0"
+source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e#0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e"
+dependencies = [
+ "async-trait",
+ "auto_impl",
+ "starknet-rust-core",
+ "starknet-rust-crypto",
+ "starknet-rust-providers",
+ "starknet-rust-signers",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "starknet-rust-contract"
+version = "0.17.0-rc.0"
+source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e#0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e"
+dependencies = [
+ "serde",
+ "serde_json",
+ "serde_with",
+ "starknet-rust-accounts",
+ "starknet-rust-core",
+ "starknet-rust-providers",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "starknet-rust-core"
+version = "0.17.0-rc.0"
+source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e#0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e"
+dependencies = [
+ "base64 0.21.7",
+ "crypto-bigint",
+ "flate2",
+ "foldhash",
+ "hex",
+ "indexmap 2.12.0",
+ "num-traits",
+ "semver",
+ "serde",
+ "serde_json",
+ "serde_json_pythonic",
+ "serde_with",
+ "sha3",
+ "starknet-rust-core-derive",
+ "starknet-rust-crypto",
+ "starknet-types-core",
+]
+
+[[package]]
+name = "starknet-rust-core-derive"
+version = "0.1.0"
+source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e#0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.110",
+]
+
+[[package]]
+name = "starknet-rust-crypto"
+version = "0.9.0-rc.0"
+source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e#0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e"
+dependencies = [
+ "blake2",
+ "crypto-bigint",
+ "digest",
+ "hex",
+ "hmac",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "rfc6979",
+ "sha2",
+ "starknet-rust-curve",
+ "starknet-types-core",
+ "zeroize",
+]
+
+[[package]]
+name = "starknet-rust-curve"
 version = "0.6.0"
-source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e#6e3a394ebe9ded6c18fc56479fec9a196ff6f75e"
+source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e#0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e"
 dependencies = [
  "starknet-types-core",
 ]
 
 [[package]]
-name = "starknet-macros"
-version = "0.2.5"
-source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e#6e3a394ebe9ded6c18fc56479fec9a196ff6f75e"
+name = "starknet-rust-macros"
+version = "0.2.6-rc.0"
+source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e#0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e"
 dependencies = [
- "starknet-core 0.16.0 (git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e)",
+ "starknet-rust-core",
  "syn 2.0.110",
 ]
 
 [[package]]
-name = "starknet-providers"
-version = "0.16.0"
-source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e#6e3a394ebe9ded6c18fc56479fec9a196ff6f75e"
+name = "starknet-rust-providers"
+version = "0.17.0-rc.0"
+source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e#0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e"
 dependencies = [
  "async-trait",
  "auto_impl",
@@ -7116,15 +7115,15 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
- "starknet-core 0.16.0 (git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e)",
+ "starknet-rust-core",
  "thiserror 1.0.69",
  "url",
 ]
 
 [[package]]
-name = "starknet-signers"
-version = "0.14.0"
-source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e#6e3a394ebe9ded6c18fc56479fec9a196ff6f75e"
+name = "starknet-rust-signers"
+version = "0.15.0-rc.0"
+source = "git+https://github.com/software-mansion-labs/starknet-rs?rev=0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e#0fa6ea1c5ce76e352b6718a0f45adb5f27bc121e"
 dependencies = [
  "async-trait",
  "auto_impl",
@@ -7132,8 +7131,8 @@ dependencies = [
  "eth-keystore",
  "getrandom 0.2.16",
  "rand 0.8.5",
- "starknet-core 0.16.0 (git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e)",
- "starknet-crypto 0.8.1 (git+https://github.com/software-mansion-labs/starknet-rs?rev=6e3a394ebe9ded6c18fc56479fec9a196ff6f75e)",
+ "starknet-rust-core",
+ "starknet-rust-crypto",
  "thiserror 1.0.69",
 ]
 
@@ -7182,7 +7181,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha3",
- "starknet-crypto 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "starknet-crypto",
  "starknet-types-core",
  "strum 0.25.0",
  "strum_macros 0.25.3",

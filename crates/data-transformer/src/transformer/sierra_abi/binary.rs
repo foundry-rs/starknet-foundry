@@ -6,7 +6,7 @@ use cairo_lang_syntax::node::ast::{
     BinaryOperator, Expr, ExprBinary, ExprFunctionCall, PathSegment,
 };
 use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode};
-use starknet::core::types::contract::AbiEntry;
+use starknet_rust::core::types::contract::AbiEntry;
 
 impl SupportedCalldataKind for ExprBinary {
     fn transform(
