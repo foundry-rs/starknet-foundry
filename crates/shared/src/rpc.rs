@@ -33,5 +33,5 @@ pub async fn get_starknet_version(client: &JsonRpcClient<HttpTransport>) -> Resu
     client
         .starknet_version(BlockId::Tag(BlockTag::PreConfirmed))
         .await
-        .context("Error while calling RPC method spec_version")
+        .context("Error while getting Starknet version from the RPC provider")
 }
