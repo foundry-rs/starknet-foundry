@@ -19,8 +19,8 @@ use sncast::{
     AccountType, chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig,
 };
 use sncast::{WaitForTx, get_chain_id};
-use starknet::providers::Provider;
-use starknet::signers::SigningKey;
+use starknet_rust::providers::Provider;
+use starknet_rust::signers::SigningKey;
 use starknet_types_core::felt::Felt;
 use std::io::{self, IsTerminal};
 use std::{fs::OpenOptions, io::Write};

@@ -16,6 +16,6 @@ ptree.workspace = true
 rayon.workspace = true
 serde_json.workspace = true
 starknet-types-core.workspace = true
-starknet.workspace = true
+starknet-rust.workspace = true
 starknet_api.workspace = true
 thiserror.workspace = true

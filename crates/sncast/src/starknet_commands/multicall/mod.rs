@@ -11,7 +11,7 @@ use sncast::{
     helpers::{configuration::CastConfig, constants::DEFAULT_MULTICALL_CONTENTS},
     response::explorer_link::block_explorer_link_if_allowed,
 };
-use starknet::providers::Provider;
+use starknet_rust::providers::Provider;
 
 use crate::{process_command_result, starknet_commands};
 

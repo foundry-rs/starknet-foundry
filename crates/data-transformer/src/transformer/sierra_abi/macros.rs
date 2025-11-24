@@ -9,7 +9,7 @@ use cairo_lang_syntax::node::ast::{
     Expr, ExprInlineMacro, GenericArgValue, PathSegment, PathSegment::Simple,
 };
 use itertools::Itertools;
-use starknet::core::types::contract::AbiEntry;
+use starknet_rust::core::types::contract::AbiEntry;
 
 impl SupportedCalldataKind for ExprInlineMacro {
     fn transform(

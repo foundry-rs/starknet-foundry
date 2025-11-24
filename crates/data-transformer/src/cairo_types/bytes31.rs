@@ -1,5 +1,5 @@
 use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
-use starknet::core::types::FromStrError;
+use starknet_rust::core::types::FromStrError;
 use starknet_types_core::felt::Felt;
 use std::str::FromStr;
 

@@ -23,15 +23,15 @@ use sncast::state::state_file::{
 };
 use sncast::{AccountType, apply_optional_fields, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider};
-use starknet::accounts::{
+use starknet_rust::accounts::{
     Account, AccountFactory, ArgentAccountFactory, ExecutionV3, OpenZeppelinAccountFactory,
 };
-use starknet::core::types::{Call, InvokeTransactionResult, Transaction, TransactionReceipt};
-use starknet::core::utils::get_contract_address;
-use starknet::core::utils::get_selector_from_name;
-use starknet::providers::JsonRpcClient;
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::signers::{LocalWallet, SigningKey};
+use starknet_rust::core::types::{Call, InvokeTransactionResult, Transaction, TransactionReceipt};
+use starknet_rust::core::utils::get_contract_address;
+use starknet_rust::core::utils::get_selector_from_name;
+use starknet_rust::providers::JsonRpcClient;
+use starknet_rust::providers::jsonrpc::HttpTransport;
+use starknet_rust::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::env;

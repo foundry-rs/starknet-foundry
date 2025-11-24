@@ -1,10 +1,10 @@
 use anyhow::{Result, anyhow};
 use conversions::{IntoConv, string::IntoHexStr};
-use starknet::{
+use starknet_api::block::BlockNumber;
+use starknet_rust::{
     core::types::{BlockId, MaybePreConfirmedBlockWithTxHashes},
     providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport},
 };
-use starknet_api::block::BlockNumber;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use tokio::runtime::Handle;

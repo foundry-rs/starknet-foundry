@@ -21,13 +21,13 @@ use sncast::{
     AccountType, Network, check_class_hash_exists, check_if_legacy_contract,
     extract_or_generate_salt, get_chain_id, get_keystore_password, handle_account_factory_error,
 };
-use starknet::accounts::{
+use starknet_rust::accounts::{
     AccountDeploymentV3, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
 };
-use starknet::core::types::FeeEstimate;
-use starknet::providers::JsonRpcClient;
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::signers::{LocalWallet, SigningKey};
+use starknet_rust::core::types::FeeEstimate;
+use starknet_rust::providers::JsonRpcClient;
+use starknet_rust::providers::jsonrpc::HttpTransport;
+use starknet_rust::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
 use std::str::FromStr;
 

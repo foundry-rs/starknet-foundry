@@ -8,7 +8,7 @@ use sncast::{
     helpers::{configuration::CastConfig, rpc::RpcArgs},
     response::{errors::StarknetCommandError, utils::serialize::SerializeResponse},
 };
-use starknet::core::{
+use starknet_rust::core::{
     types::{ContractClass, contract::AbiEntry},
     utils::get_selector_from_name,
 };

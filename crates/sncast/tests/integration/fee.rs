@@ -1,5 +1,5 @@
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
-use starknet::core::types::FeeEstimate;
+use starknet_rust::core::types::FeeEstimate;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 
 #[tokio::test]

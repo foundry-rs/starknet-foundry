@@ -1,10 +1,10 @@
 use blockifier::state::state_api::State;
 use conversions::{FromConv, IntoConv};
-use starknet::core::crypto::pedersen_hash;
-use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::{ContractAddress, EntryPointSelector, PatriciaKey};
 use starknet_api::hash::StarkHash;
 use starknet_api::state::StorageKey;
+use starknet_rust::core::crypto::pedersen_hash;
+use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
 use starknet_types_core::felt::NonZeroFelt;
 

@@ -1,7 +1,7 @@
 use anyhow::{Result, ensure};
 use clap::Args;
 use conversions::serde::deserialize::CairoDeserialize;
-use starknet::core::types::FeeEstimate;
+use starknet_rust::core::types::FeeEstimate;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 
 #[derive(Args, Debug, Clone)]
@@ -172,7 +172,7 @@ fn parse_non_zero_felt(s: &str) -> Result<NonZeroFelt, String> {
 #[cfg(test)]
 mod tests {
     use super::FeeSettings;
-    use starknet::core::types::FeeEstimate;
+    use starknet_rust::core::types::FeeEstimate;
     use std::convert::TryFrom;
 
     #[tokio::test]

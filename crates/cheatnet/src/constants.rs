@@ -13,10 +13,10 @@ use runtime::starknet::constants::{
 };
 use runtime::starknet::context::ERC20_CONTRACT_ADDRESS;
 use runtime::starknet::state::DictStateReader;
-use starknet::core::utils::get_selector_from_name;
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::ClassHash;
 use starknet_api::{core::ContractAddress, transaction::fields::Calldata};
+use starknet_rust::core::utils::get_selector_from_name;
 
 // Mocked class hashes, those are not checked anywhere
 pub const TEST_ERC20_CONTRACT_CLASS_HASH: &str = "0x1010";

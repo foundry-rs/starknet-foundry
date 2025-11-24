@@ -6,9 +6,9 @@ use conversions::IntoConv;
 use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use scarb_api::StarknetContractArtifacts;
-use starknet::core::types::contract::{AbiEntry, SierraClass};
-use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::{ClassHash, EntryPointSelector};
+use starknet_rust::core::types::contract::{AbiEntry, SierraClass};
+use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 

@@ -1,7 +1,7 @@
-use starknet::core::types::contract::AbiEntry;
-use starknet::core::types::{BlockId, BlockTag, ContractClass};
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::{JsonRpcClient, Provider};
+use starknet_rust::core::types::contract::AbiEntry;
+use starknet_rust::core::types::{BlockId, BlockTag, ContractClass};
+use starknet_rust::providers::jsonrpc::HttpTransport;
+use starknet_rust::providers::{JsonRpcClient, Provider};
 use starknet_types_core::felt::Felt;
 use tokio::sync::OnceCell;
 use url::Url;

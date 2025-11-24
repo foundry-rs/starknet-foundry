@@ -16,8 +16,8 @@ use snapbox::cmd::cargo_bin;
 use sncast::AccountType;
 use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
 use sncast::helpers::fee::FeeArgs;
-use starknet::core::types::TransactionReceipt::Invoke;
-use starknet::core::types::{InvokeTransaction, Transaction, TransactionExecutionStatus};
+use starknet_rust::core::types::TransactionReceipt::Invoke;
+use starknet_rust::core::types::{InvokeTransaction, Transaction, TransactionExecutionStatus};
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 use test_case::test_case;
 

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Changed
+
+- Hash function used when declaring contracts is selected based on the Starknet version
+
 ## [0.53.0-rc.0] - 2025-11-18
 
 ### Forge
