@@ -168,3 +168,4 @@
 * [`Scarb.toml` Reference](appendix/scarb-toml.md)
 * [Starknet Foundry Github Action](appendix/starknet-foundry-github-action.md)
 * [Blake Hash Support](appendix/blake-hash-support.md)
+* [`snforge` 0.48.0 Migration Guide](appendix/0-48-0-migration-guide.md)
