@@ -3,7 +3,7 @@ use crate::{
 };
 use anyhow::{Result, ensure};
 use camino::Utf8PathBuf;
-use starknet::{
+use starknet_rust::{
     accounts::SingleOwnerAccount,
     providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport},
     signers::LocalWallet,

@@ -47,11 +47,11 @@ use sncast::state::hashing::{
     generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id,
 };
 use sncast::state::state_file::StateManager;
-use starknet::accounts::{Account, SingleOwnerAccount};
-use starknet::core::types::{BlockId, BlockTag::PreConfirmed};
-use starknet::providers::JsonRpcClient;
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::signers::LocalWallet;
+use starknet_rust::accounts::{Account, SingleOwnerAccount};
+use starknet_rust::core::types::{BlockId, BlockTag::PreConfirmed};
+use starknet_rust::providers::JsonRpcClient;
+use starknet_rust::providers::jsonrpc::HttpTransport;
+use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::fs;

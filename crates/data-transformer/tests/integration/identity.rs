@@ -1,7 +1,7 @@
 use crate::integration::get_abi;
 use data_transformer::{reverse_transform_input, transform};
 use primitive_types::U256;
-use starknet::core::utils::get_selector_from_name;
+use starknet_rust::core::utils::get_selector_from_name;
 use test_case::test_case;
 
 #[test_case("1010101_u32", "unsigned_fn"; "u32")]

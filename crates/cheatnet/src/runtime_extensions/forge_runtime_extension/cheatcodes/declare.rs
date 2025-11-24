@@ -11,8 +11,8 @@ use blockifier::state::{errors::StateError, state_api::State};
 use conversions::IntoConv;
 use conversions::serde::serialize::CairoSerialize;
 use scarb_api::StarknetContractArtifacts;
-use starknet::core::types::contract::SierraClass;
 use starknet_api::core::{ClassHash, CompiledClassHash};
+use starknet_rust::core::types::contract::SierraClass;
 
 #[derive(CairoSerialize)]
 pub enum DeclareResult {

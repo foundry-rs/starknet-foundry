@@ -4,9 +4,9 @@ use clap::Args;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::call::CallResponse;
 use sncast::response::errors::StarknetCommandError;
-use starknet::core::types::{BlockId, FunctionCall};
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::{JsonRpcClient, Provider};
+use starknet_rust::core::types::{BlockId, FunctionCall};
+use starknet_rust::providers::jsonrpc::HttpTransport;
+use starknet_rust::providers::{JsonRpcClient, Provider};
 use starknet_types_core::felt::Felt;
 
 #[derive(Args)]

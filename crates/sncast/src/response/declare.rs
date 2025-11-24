@@ -10,7 +10,7 @@ use foundry_ui::styling;
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use starknet::core::types::contract::{AbiConstructor, AbiEntry};
+use starknet_rust::core::types::contract::{AbiConstructor, AbiEntry};
 use starknet_types_core::felt::Felt;
 use std::fmt::Write;
 

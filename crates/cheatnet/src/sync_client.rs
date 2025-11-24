@@ -1,7 +1,7 @@
-use starknet::core::types::{BlockId, ContractClass, MaybePreConfirmedBlockWithTxHashes};
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::{JsonRpcClient, Provider, ProviderError};
 use starknet_api::block::BlockNumber;
+use starknet_rust::core::types::{BlockId, ContractClass, MaybePreConfirmedBlockWithTxHashes};
+use starknet_rust::providers::jsonrpc::HttpTransport;
+use starknet_rust::providers::{JsonRpcClient, Provider, ProviderError};
 use starknet_types_core::felt::Felt;
 use tokio::runtime::Runtime;
 use url::Url;

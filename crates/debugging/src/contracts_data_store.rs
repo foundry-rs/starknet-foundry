@@ -7,8 +7,8 @@ use cheatnet::forking::data::ForkData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
-use starknet::core::types::contract::{AbiEntry, SierraClass};
 use starknet_api::core::{ClassHash, EntryPointSelector};
+use starknet_rust::core::types::contract::{AbiEntry, SierraClass};
 use std::collections::HashMap;
 use std::hash::Hash;
 

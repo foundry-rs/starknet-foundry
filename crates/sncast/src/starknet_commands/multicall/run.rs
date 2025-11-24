@@ -10,12 +10,12 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::multicall::run::MulticallRunResponse;
 use sncast::{WaitForTx, extract_or_generate_salt, udc_uniqueness};
-use starknet::accounts::{Account, SingleOwnerAccount};
-use starknet::core::types::Call;
-use starknet::core::utils::{get_selector_from_name, get_udc_deployed_address};
-use starknet::providers::JsonRpcClient;
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::signers::LocalWallet;
+use starknet_rust::accounts::{Account, SingleOwnerAccount};
+use starknet_rust::core::types::Call;
+use starknet_rust::core::utils::{get_selector_from_name, get_udc_deployed_address};
+use starknet_rust::providers::JsonRpcClient;
+use starknet_rust::providers::jsonrpc::HttpTransport;
+use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 

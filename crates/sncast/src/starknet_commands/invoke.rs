@@ -8,12 +8,12 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::invoke::InvokeResponse;
 use sncast::{WaitForTx, apply_optional_fields, handle_wait_for_tx};
-use starknet::accounts::AccountError::Provider;
-use starknet::accounts::{Account, ConnectedAccount, ExecutionV3, SingleOwnerAccount};
-use starknet::core::types::{Call, InvokeTransactionResult};
-use starknet::providers::JsonRpcClient;
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::signers::LocalWallet;
+use starknet_rust::accounts::AccountError::Provider;
+use starknet_rust::accounts::{Account, ConnectedAccount, ExecutionV3, SingleOwnerAccount};
+use starknet_rust::core::types::{Call, InvokeTransactionResult};
+use starknet_rust::providers::JsonRpcClient;
+use starknet_rust::providers::jsonrpc::HttpTransport;
+use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 
 #[derive(Args, Clone, Debug)]

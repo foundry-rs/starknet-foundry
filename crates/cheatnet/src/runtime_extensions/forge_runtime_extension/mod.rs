@@ -44,9 +44,9 @@ use runtime::{
     SyscallHandlingResult,
 };
 use scarb_oracle_hint_service::OracleHintService;
-use starknet::signers::SigningKey;
 use starknet_api::execution_resources::GasAmount;
 use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
+use starknet_rust::signers::SigningKey;
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};

@@ -15,7 +15,7 @@ use crate::helpers::constants::{
 use conversions::string::IntoHexStr;
 use sncast::{ValidatedWaitParams, get_account};
 use sncast::{WaitForTx, handle_wait_for_tx, wait_for_tx};
-use starknet::contract::{ContractFactory, UdcSelector};
+use starknet_rust::contract::{ContractFactory, UdcSelector};
 use starknet_types_core::felt::Felt;
 
 #[tokio::test]
