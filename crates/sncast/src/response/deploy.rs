@@ -1,4 +1,3 @@
-use super::command::CommandResponse;
 use crate::helpers::block_explorer::LinkProvider;
 use crate::response::cast_message::{SncastCommandMessage, SncastMessage};
 use crate::response::declare::DeclareTransactionResponse;
@@ -15,8 +14,6 @@ pub enum DeployResponse {
     Standard(StandardDeployResponse),
     WithDeclare(DeployResponseWithDeclare),
 }
-
-impl CommandResponse for DeployResponse {}
 
 impl SncastCommandMessage for SncastMessage<DeployResponse> {
     fn text(&self) -> String {

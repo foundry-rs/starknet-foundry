@@ -1,4 +1,4 @@
-use super::{command::CommandResponse, explorer_link::OutputLink};
+use super::explorer_link::OutputLink;
 use crate::helpers::block_explorer::LinkProvider;
 use crate::response::cast_message::{SncastCommandMessage, SncastMessage};
 use conversions::string::IntoPaddedHexStr;
@@ -10,8 +10,6 @@ use serde::{Deserialize, Serialize};
 pub struct InvokeResponse {
     pub transaction_hash: PaddedFelt,
 }
-
-impl CommandResponse for InvokeResponse {}
 
 impl SncastCommandMessage for SncastMessage<InvokeResponse> {
     fn text(&self) -> String {

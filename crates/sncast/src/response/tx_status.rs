@@ -1,4 +1,3 @@
-use super::command::CommandResponse;
 use crate::response::cast_message::SncastCommandMessage;
 use crate::response::cast_message::SncastMessage;
 use conversions::serde::serialize::CairoSerialize;
@@ -25,8 +24,6 @@ pub struct TransactionStatusResponse {
     pub finality_status: FinalityStatus,
     pub execution_status: Option<ExecutionStatus>,
 }
-
-impl CommandResponse for TransactionStatusResponse {}
 
 impl SncastCommandMessage for SncastMessage<TransactionStatusResponse> {
     fn text(&self) -> String {

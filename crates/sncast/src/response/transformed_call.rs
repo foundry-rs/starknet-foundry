@@ -1,4 +1,3 @@
-use super::command::CommandResponse;
 use crate::response::call::CallResponse;
 use crate::response::cast_message::SncastCommandMessage;
 use crate::response::cast_message::SncastMessage;
@@ -15,8 +14,6 @@ pub struct TransformedCallResponse {
     pub response: String,
     pub response_raw: Vec<Felt>,
 }
-
-impl CommandResponse for TransformedCallResponse {}
 
 impl SncastCommandMessage for SncastMessage<TransformedCallResponse> {
     fn text(&self) -> String {

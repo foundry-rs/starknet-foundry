@@ -1,10 +1,7 @@
 use crate::response::cast_message::SncastCommandMessage;
 use crate::{
     helpers::block_explorer::LinkProvider,
-    response::{
-        cast_message::SncastMessage, command::CommandResponse, explorer_link::OutputLink,
-        invoke::InvokeResponse,
-    },
+    response::{cast_message::SncastMessage, explorer_link::OutputLink, invoke::InvokeResponse},
 };
 use conversions::string::IntoHexStr;
 use conversions::{padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
@@ -15,8 +12,6 @@ use serde::{Deserialize, Serialize};
 pub struct MulticallRunResponse {
     pub transaction_hash: PaddedFelt,
 }
-
-impl CommandResponse for MulticallRunResponse {}
 
 impl SncastCommandMessage for SncastMessage<MulticallRunResponse> {
     fn text(&self) -> String {

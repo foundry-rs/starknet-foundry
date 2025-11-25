@@ -1,5 +1,5 @@
 use crate::response::cast_message::SncastCommandMessage;
-use crate::response::{cast_message::SncastMessage, command::CommandResponse};
+use crate::response::cast_message::SncastMessage;
 use conversions::padded_felt::PaddedFelt;
 use conversions::{serde::serialize::CairoSerialize, string::IntoPaddedHexStr};
 use foundry_ui::styling;
@@ -9,8 +9,6 @@ use serde::{Deserialize, Serialize};
 pub struct ClassHashResponse {
     pub class_hash: PaddedFelt,
 }
-
-impl CommandResponse for ClassHashResponse {}
 
 impl SncastCommandMessage for SncastMessage<ClassHashResponse> {
     fn text(&self) -> String {

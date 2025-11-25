@@ -1,4 +1,3 @@
-use super::command::CommandResponse;
 use crate::helpers::block_explorer;
 use crate::response::cast_message::SncastCommandMessage;
 use crate::response::cast_message::SncastMessage;
@@ -19,8 +18,6 @@ pub struct ShowConfigResponse {
     pub show_explorer_links: bool,
     pub block_explorer: Option<block_explorer::Service>,
 }
-
-impl CommandResponse for ShowConfigResponse {}
 
 impl SncastCommandMessage for SncastMessage<ShowConfigResponse> {
     fn text(&self) -> String {

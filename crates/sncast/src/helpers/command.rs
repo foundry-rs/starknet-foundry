@@ -1,10 +1,10 @@
 use crate::response::{
-    cast_message::SncastMessage, command::CommandResponse, errors::ResponseError,
-    explorer_link::ExplorerLinksMessage,
+    cast_message::SncastMessage, errors::ResponseError, explorer_link::ExplorerLinksMessage,
 };
 use anyhow::Result;
 use foundry_ui::{Message, UI};
 
+use serde::Serialize;
 use std::process::ExitCode;
 
 pub fn process_command_result<T>(
@@ -14,7 +14,7 @@ pub fn process_command_result<T>(
     block_explorer_link: Option<ExplorerLinksMessage>,
 ) -> ExitCode
 where
-    T: CommandResponse,
+    T: Serialize,
     SncastMessage<T>: Message,
 {
     let cast_msg = result.map(|command_response| SncastMessage {

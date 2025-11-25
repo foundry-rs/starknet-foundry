@@ -1,8 +1,5 @@
 use crate::response::cast_message::{SncastCommandMessage, SncastMessage};
-use crate::{
-    helpers::block_explorer::LinkProvider,
-    response::{command::CommandResponse, explorer_link::OutputLink},
-};
+use crate::{helpers::block_explorer::LinkProvider, response::explorer_link::OutputLink};
 use conversions::padded_felt::PaddedFelt;
 use conversions::string::IntoPaddedHexStr;
 use foundry_ui::styling;
@@ -23,8 +20,6 @@ pub struct AccountCreateResponse {
     pub add_profile: Option<String>,
     pub message: String,
 }
-
-impl CommandResponse for AccountCreateResponse {}
 
 impl SncastCommandMessage for SncastMessage<AccountCreateResponse> {
     fn text(&self) -> String {

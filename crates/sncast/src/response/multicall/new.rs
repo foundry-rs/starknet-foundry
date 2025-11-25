@@ -1,6 +1,5 @@
 use crate::response::cast_message::SncastCommandMessage;
 use crate::response::cast_message::SncastMessage;
-use crate::response::command::CommandResponse;
 use camino::Utf8PathBuf;
 use foundry_ui::styling;
 use serde::Serialize;
@@ -10,8 +9,6 @@ pub struct MulticallNewResponse {
     pub path: Utf8PathBuf,
     pub content: String,
 }
-
-impl CommandResponse for MulticallNewResponse {}
 
 impl SncastCommandMessage for SncastMessage<MulticallNewResponse> {
     fn text(&self) -> String {

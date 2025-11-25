@@ -1,6 +1,5 @@
 use crate::response::cast_message::SncastCommandMessage;
 use crate::response::cast_message::SncastMessage;
-use crate::response::command::CommandResponse;
 use foundry_ui::styling;
 use serde::Serialize;
 
@@ -9,8 +8,6 @@ pub struct AccountImportResponse {
     pub add_profile: Option<String>,
     pub account_name: String,
 }
-
-impl CommandResponse for AccountImportResponse {}
 
 impl SncastCommandMessage for SncastMessage<AccountImportResponse> {
     fn text(&self) -> String {

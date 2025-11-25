@@ -1,6 +1,5 @@
 use crate::response::cast_message::SncastCommandMessage;
 use crate::response::cast_message::SncastMessage;
-use crate::response::command::CommandResponse;
 use foundry_ui::styling;
 use serde::Serialize;
 
@@ -9,8 +8,6 @@ pub struct ScriptRunResponse {
     pub status: String,
     pub message: Option<String>,
 }
-
-impl CommandResponse for ScriptRunResponse {}
 
 impl SncastCommandMessage for SncastMessage<ScriptRunResponse> {
     fn text(&self) -> String {

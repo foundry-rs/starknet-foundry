@@ -1,7 +1,7 @@
 use crate::response::cast_message::{SncastCommandMessage, SncastMessage};
 use crate::{
     helpers::block_explorer::LinkProvider,
-    response::{command::CommandResponse, explorer_link::OutputLink, invoke::InvokeResponse},
+    response::{explorer_link::OutputLink, invoke::InvokeResponse},
 };
 use conversions::string::IntoHexStr;
 use conversions::{padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
@@ -12,8 +12,6 @@ use serde::{Deserialize, Serialize};
 pub struct AccountDeployResponse {
     pub transaction_hash: PaddedFelt,
 }
-
-impl CommandResponse for AccountDeployResponse {}
 
 impl From<InvokeResponse> for AccountDeployResponse {
     fn from(value: InvokeResponse) -> Self {

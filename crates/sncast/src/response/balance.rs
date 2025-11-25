@@ -1,9 +1,6 @@
 use crate::{
     helpers::token::Token,
-    response::{
-        cast_message::{SncastCommandMessage, SncastMessage},
-        command::CommandResponse,
-    },
+    response::cast_message::{SncastCommandMessage, SncastMessage},
 };
 use foundry_ui::styling;
 use primitive_types::U256;
@@ -14,8 +11,6 @@ pub struct BalanceResponse {
     pub balance: U256,
     pub token: Option<Token>,
 }
-
-impl CommandResponse for BalanceResponse {}
 
 impl SncastCommandMessage for SncastMessage<BalanceResponse> {
     fn text(&self) -> String {

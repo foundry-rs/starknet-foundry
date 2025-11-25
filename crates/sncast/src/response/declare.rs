@@ -1,4 +1,4 @@
-use super::{command::CommandResponse, explorer_link::OutputLink};
+use super::explorer_link::OutputLink;
 use crate::helpers::block_explorer::LinkProvider;
 use crate::response::cast_message::{SncastCommandMessage, SncastMessage};
 use anyhow::Error;
@@ -19,8 +19,6 @@ pub struct DeclareTransactionResponse {
     pub class_hash: PaddedFelt,
     pub transaction_hash: PaddedFelt,
 }
-
-impl CommandResponse for DeclareTransactionResponse {}
 
 impl SncastCommandMessage for SncastMessage<DeclareTransactionResponse> {
     fn text(&self) -> String {

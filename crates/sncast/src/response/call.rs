@@ -1,4 +1,3 @@
-use super::command::CommandResponse;
 use crate::response::cast_message::SncastCommandMessage;
 use crate::response::cast_message::SncastMessage;
 use conversions::serde::serialize::CairoSerialize;
@@ -11,8 +10,6 @@ use starknet_types_core::felt::Felt;
 pub struct CallResponse {
     pub response: Vec<Felt>,
 }
-
-impl CommandResponse for CallResponse {}
 
 impl SncastCommandMessage for SncastMessage<CallResponse> {
     fn text(&self) -> String {
