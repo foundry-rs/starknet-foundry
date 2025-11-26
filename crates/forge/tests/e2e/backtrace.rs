@@ -236,7 +236,7 @@ fn test_backtrace_panic() {
             },
         );
     } else {
-        // TODO: (#3906) Remove this once we bump minimal scarb version to 2.13.
+        // TODO: (#3909) Remove this once we bump minimal scarb version to 2.13.
         let stdout_snapshot = output.as_stdout();
         let eq_location_suffix = ["232:13", "231:9"]
             .into_iter()
