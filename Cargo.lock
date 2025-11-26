@@ -246,6 +246,9 @@ name = "arbitrary"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
+dependencies = [
+ "derive_arbitrary",
+]
 
 [[package]]
 name = "ark-ec"
@@ -999,6 +1002,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairo-annotations"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c97ec125673123e432c0082c80ceeeb2c18516d97373565f9710b19a7aafb6c"
+dependencies = [
+ "cairo-lang-sierra",
+ "cairo-lang-sierra-to-casm",
+ "camino",
+ "derive_more 2.1.1",
+ "regex",
+ "serde",
+ "serde_json",
+ "starknet-types-core",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "cairo-debugger"
+version = "0.1.0"
+source = "git+https://github.com/software-mansion-labs/cairo-debugger?rev=975cb93f9e72b621f711bc746b836e551bc317d8#975cb93f9e72b621f711bc746b836e551bc317d8"
+dependencies = [
+ "anyhow",
+ "cairo-annotations 0.7.0",
+ "cairo-lang-sierra",
+ "cairo-vm",
+ "dap",
+ "scarb-metadata",
+ "serde_json",
+ "starknet-types-core",
+ "tracing",
+]
+
+[[package]]
 name = "cairo-lang-casm"
 version = "2.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1620,10 +1658,10 @@ dependencies = [
 [[package]]
 name = "cairo-vm"
 version = "2.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c21cacdf4e290ab5f0018f24d6bf97f8d3a8809bd09568550669270e7f9ed534"
+source = "git+https://github.com/software-mansion-labs/cairo-vm?rev=4675b55df938162dbefb546242bafaf7d2d51efd#4675b55df938162dbefb546242bafaf7d2d51efd"
 dependencies = [
  "anyhow",
+ "arbitrary",
  "bincode",
  "bitvec",
  "generic-array",
@@ -1791,7 +1829,7 @@ dependencies = [
  "anyhow",
  "bimap",
  "blockifier",
- "cairo-annotations",
+ "cairo-annotations 0.6.1",
  "cairo-lang-casm",
  "cairo-lang-starknet-classes",
  "cairo-lang-utils",
@@ -2482,6 +2520,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "dap"
+version = "0.4.1-alpha1"
+source = "git+https://github.com/software-mansion-labs/dap-rs?rev=d26a3005fc37bb5127734dbfb0d8cadb6d5ca14b#d26a3005fc37bb5127734dbfb0d8cadb6d5ca14b"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "darling"
 version = "0.14.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2726,6 +2774,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "derive_arbitrary"
+version = "1.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e567bd82dcff979e4b03460c307b3cdc9e96fde3d73bed1496d2bc75d9dd62a"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.114",
 ]
 
 [[package]]
@@ -3343,7 +3402,7 @@ dependencies = [
  "assert_fs",
  "axum",
  "blockifier",
- "cairo-annotations",
+ "cairo-annotations 0.6.1",
  "cairo-lang-sierra",
  "cairo-lang-starknet-classes",
  "cairo-vm",
@@ -3400,7 +3459,8 @@ version = "0.56.0"
 dependencies = [
  "anyhow",
  "blockifier",
- "cairo-annotations",
+ "cairo-annotations 0.6.1",
+ "cairo-debugger",
  "cairo-lang-casm",
  "cairo-lang-sierra",
  "cairo-lang-starknet-classes",
@@ -7381,6 +7441,7 @@ version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90d23b1bc014ee4cce40056ab3114bcbcdc2dbc1e845bbfb1f8bd0bab63507d4"
 dependencies = [
+ "arbitrary",
  "blake2",
  "digest",
  "lambdaworks-crypto",

@@ -6,6 +6,7 @@ use blockifier::execution::errors::PreExecutionError;
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::state_api::State;
+use cairo_debugger::CairoDebugger;
 use cairo_lang_casm::hints::Hint;
 use cairo_vm::types::builtin_name::BuiltinName;
 use cairo_vm::types::layout_name::LayoutName;
@@ -37,6 +38,7 @@ pub fn initialize_execution_context<'a>(
     program: &Program,
     state: &'a mut dyn State,
     context: &'a mut EntryPointExecutionContext,
+    debugger: Option<CairoDebugger>,
 ) -> Result<VmExecutionContext<'a>, PreExecutionError> {
     // Instantiate Cairo runner.
     let proof_mode = false;
@@ -51,6 +53,10 @@ pub fn initialize_execution_context<'a>(
         trace_enabled,
         disable_trace_padding,
     )?;
+
+    if let Some(debugger) = debugger {
+        runner.set_vm_hooks(Box::new(debugger));
+    }
 
     runner.initialize_function_runner_cairo_1(&builtins_from_program(program))?;
     let mut read_only_segments = ReadOnlySegments::default();

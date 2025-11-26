@@ -102,21 +102,10 @@ impl RunForPackageArgs {
         let forge_config_from_scarb =
             load_package_config::<ForgeConfigFromScarb>(scarb_metadata, &package.id)?;
         let forge_config = Arc::new(combine_configs(
-            args.exit_first,
-            args.fuzzer_runs,
-            args.fuzzer_seed,
-            args.detailed_resources,
-            args.save_trace_data,
-            args.build_profile,
-            args.coverage,
-            args.gas_report,
-            args.max_n_steps,
-            args.tracked_resource,
+            args,
             contracts_data,
             cache_dir.clone(),
             &forge_config_from_scarb,
-            &args.additional_args,
-            args.trace_args.clone(),
         ));
 
         let test_filter = TestsFilter::from_flags(
