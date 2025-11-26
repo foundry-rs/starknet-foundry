@@ -954,6 +954,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairo-debugger"
+version = "0.1.0"
+source = "git+https://github.com/software-mansion-labs/cairo-debugger?branch=poc#0b2754ebdbcf5cb072a46c54255a5239e5802ee5"
+dependencies = [
+ "anyhow",
+ "cairo-vm",
+ "dap",
+ "tracing",
+]
+
+[[package]]
 name = "cairo-lang-casm"
 version = "2.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1575,8 +1586,7 @@ dependencies = [
 [[package]]
 name = "cairo-vm"
 version = "2.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c21cacdf4e290ab5f0018f24d6bf97f8d3a8809bd09568550669270e7f9ed534"
+source = "git+https://github.com/software-mansion-labs/cairo-vm?branch=debugger-poc#da737295a360fa949f328ac9954cad0492491b92"
 dependencies = [
  "anyhow",
  "bincode",
@@ -2375,6 +2385,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0369ee1ad671834580515889b80f2ea915f23b8be8d0daa4bbaf2ac5c7590835"
 dependencies = [
  "cipher",
+]
+
+[[package]]
+name = "dap"
+version = "0.4.1-alpha1"
+source = "git+https://github.com/software-mansion-labs/dap-rs?branch=debugger-poc#4440a6fa4ffd26f88f1191ee2371a482fde2a539"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -3273,6 +3293,7 @@ dependencies = [
  "anyhow",
  "blockifier",
  "cairo-annotations",
+ "cairo-debugger",
  "cairo-lang-casm",
  "cairo-lang-sierra",
  "cairo-lang-sierra-type-size",

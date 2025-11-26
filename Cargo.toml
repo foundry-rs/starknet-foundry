@@ -132,3 +132,7 @@ tracing-chrome = "0.7.2"
 tracing-log = "0.2.0"
 comfy-table = "7"
 insta = { version = "1.43.1", features = ["filters"] }
+cairo-debugger = { git = "https://github.com/software-mansion-labs/cairo-debugger", branch = "poc" }
+
+[patch.crates-io]
+cairo-vm = { git = "https://github.com/software-mansion-labs/cairo-vm", branch = "debugger-poc" }
