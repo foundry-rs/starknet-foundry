@@ -50,3 +50,4 @@ strum_macros = "0.27"
 scarb-oracle-hint-service.workspace = true
 tracing.workspace = true
 comfy-table.workspace = true
+cairo-debugger.workspace = true
