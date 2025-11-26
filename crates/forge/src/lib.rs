@@ -225,6 +225,13 @@ pub struct TestArgs {
 
     #[command(flatten)]
     scarb_args: ScarbArgs,
+
+    /// Launch the given test in debug mode using cairo-debugger.
+    ///
+    /// It makes snforge act as a debug adapter, enabling communication with an editor/IDE
+    /// such as VSCode over DAP protocol.
+    #[arg(long, requires = "exact")]
+    launch_debugger: bool,
 }
 
 impl TestArgs {

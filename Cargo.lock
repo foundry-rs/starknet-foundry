@@ -138,7 +138,7 @@ dependencies = [
  "rlimit",
  "serde",
  "serde_json",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "tempfile",
  "thiserror 1.0.69",
@@ -246,6 +246,9 @@ name = "arbitrary"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
+dependencies = [
+ "derive_arbitrary",
+]
 
 [[package]]
 name = "ark-ec"
@@ -869,7 +872,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "strum 0.25.0",
  "strum_macros 0.25.3",
@@ -887,7 +890,7 @@ dependencies = [
  "pretty_assertions",
  "rstest",
  "serde_json",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "strum 0.25.0",
  "strum_macros 0.25.3",
@@ -992,10 +995,47 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "strum 0.27.2",
  "strum_macros 0.27.2",
  "thiserror 2.0.18",
+]
+
+[[package]]
+name = "cairo-annotations"
+version = "0.7.0"
+source = "git+https://github.com/software-mansion/cairo-annotations?rev=9fa3bff91bb97db51e180f2c6997c9de2e212029#9fa3bff91bb97db51e180f2c6997c9de2e212029"
+dependencies = [
+ "cairo-lang-sierra",
+ "cairo-lang-sierra-to-casm",
+ "cairo-lang-sierra-type-size",
+ "camino",
+ "derive_more 2.1.1",
+ "regex",
+ "serde",
+ "serde_json",
+ "starknet-types-core 1.0.0",
+ "strum 0.28.0",
+ "strum_macros 0.28.0",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "cairo-debugger"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cairo-annotations 0.7.0",
+ "cairo-lang-casm",
+ "cairo-lang-sierra",
+ "cairo-lang-sierra-to-casm",
+ "cairo-vm",
+ "dap",
+ "indexmap 2.13.0",
+ "scarb-metadata",
+ "serde_json",
+ "starknet-types-core 0.2.4",
+ "tracing",
 ]
 
 [[package]]
@@ -1267,7 +1307,7 @@ dependencies = [
  "rand 0.9.2",
  "sha2",
  "smol_str",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.18",
 ]
 
@@ -1321,7 +1361,7 @@ dependencies = [
  "serde_json",
  "sha3",
  "smol_str",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.18",
 ]
 
@@ -1398,7 +1438,7 @@ dependencies = [
  "itertools 0.14.0",
  "num-bigint",
  "num-traits",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.18",
 ]
 
@@ -1439,7 +1479,7 @@ dependencies = [
  "serde",
  "serde_json",
  "smol_str",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.18",
  "typetag",
 ]
@@ -1463,7 +1503,7 @@ dependencies = [
  "serde_json",
  "sha3",
  "smol_str",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.18",
 ]
 
@@ -1520,7 +1560,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "serde",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
 ]
 
 [[package]]
@@ -1599,7 +1639,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "starknet-curve",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "stats_alloc",
  "tempfile",
  "thiserror 2.0.18",
@@ -1620,10 +1660,10 @@ dependencies = [
 [[package]]
 name = "cairo-vm"
 version = "2.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c21cacdf4e290ab5f0018f24d6bf97f8d3a8809bd09568550669270e7f9ed534"
+source = "git+https://github.com/software-mansion-labs/cairo-vm?rev=4675b55df938162dbefb546242bafaf7d2d51efd#4675b55df938162dbefb546242bafaf7d2d51efd"
 dependencies = [
  "anyhow",
+ "arbitrary",
  "bincode",
  "bitvec",
  "generic-array",
@@ -1644,7 +1684,7 @@ dependencies = [
  "sha2",
  "sha3",
  "starknet-crypto",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.18",
  "zip",
 ]
@@ -1791,7 +1831,7 @@ dependencies = [
  "anyhow",
  "bimap",
  "blockifier",
- "cairo-annotations",
+ "cairo-annotations 0.6.1",
  "cairo-lang-casm",
  "cairo-lang-starknet-classes",
  "cairo-lang-utils",
@@ -1822,7 +1862,7 @@ dependencies = [
  "serde_json",
  "shared",
  "starknet-rust",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "tempfile",
  "test-case",
@@ -2141,7 +2181,7 @@ dependencies = [
  "serde",
  "serde_json",
  "starknet-rust",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "test-case",
  "thiserror 2.0.18",
@@ -2482,6 +2522,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "dap"
+version = "0.4.1-alpha1"
+source = "git+https://github.com/software-mansion-labs/dap-rs?rev=27542c413184732cd8cb5632c8349d605ed4fe04#27542c413184732cd8cb5632c8349d605ed4fe04"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "darling"
 version = "0.14.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2585,7 +2635,7 @@ dependencies = [
  "serde_json",
  "shared",
  "starknet-rust",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "test-case",
  "thiserror 2.0.18",
  "tokio",
@@ -2626,7 +2676,7 @@ dependencies = [
  "rayon",
  "serde_json",
  "starknet-rust",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "thiserror 2.0.18",
 ]
@@ -2726,6 +2776,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "derive_arbitrary"
+version = "1.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e567bd82dcff979e4b03460c307b3cdc9e96fde3d73bed1496d2bc75d9dd62a"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.114",
 ]
 
 [[package]]
@@ -3343,7 +3404,7 @@ dependencies = [
  "assert_fs",
  "axum",
  "blockifier",
- "cairo-annotations",
+ "cairo-annotations 0.6.1",
  "cairo-lang-sierra",
  "cairo-lang-starknet-classes",
  "cairo-vm",
@@ -3380,7 +3441,7 @@ dependencies = [
  "shared",
  "snapbox",
  "starknet-rust",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "tempfile",
  "test-case",
@@ -3400,7 +3461,8 @@ version = "0.56.0"
 dependencies = [
  "anyhow",
  "blockifier",
- "cairo-annotations",
+ "cairo-annotations 0.6.1",
+ "cairo-debugger",
  "cairo-lang-casm",
  "cairo-lang-sierra",
  "cairo-lang-starknet-classes",
@@ -3429,7 +3491,7 @@ dependencies = [
  "serde_json",
  "shared",
  "starknet-rust",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "strum 0.27.2",
  "strum_macros 0.27.2",
@@ -3458,7 +3520,7 @@ dependencies = [
  "console 0.16.2",
  "serde",
  "serde_json",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
 ]
 
 [[package]]
@@ -6217,7 +6279,7 @@ dependencies = [
  "serde_json",
  "shared",
  "starknet-rust",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "thiserror 2.0.18",
 ]
@@ -6879,7 +6941,7 @@ dependencies = [
  "semver",
  "snapbox",
  "starknet-rust",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "thiserror 2.0.18",
  "url",
@@ -6958,7 +7020,7 @@ name = "sizeof_internal"
 version = "0.16.0-rc.1"
 source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=v0.16.0-rc.1#d301ac673de353b7379003d95b77e1ecbdc43877"
 dependencies = [
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
 ]
 
 [[package]]
@@ -7083,7 +7145,7 @@ dependencies = [
  "snapbox",
  "starknet-rust",
  "starknet-rust-crypto",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "strum 0.27.2",
  "strum_macros 0.27.2",
  "tempfile",
@@ -7175,7 +7237,7 @@ dependencies = [
  "sha3",
  "starknet-core-derive",
  "starknet-crypto",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
 ]
 
 [[package]]
@@ -7204,7 +7266,7 @@ dependencies = [
  "rfc6979",
  "sha2",
  "starknet-curve",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "zeroize",
 ]
 
@@ -7214,7 +7276,7 @@ version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "22c898ae81b6409532374cf237f1bd752d068b96c6ad500af9ebbd0d9bb712f6"
 dependencies = [
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
 ]
 
 [[package]]
@@ -7283,7 +7345,7 @@ dependencies = [
  "sha3",
  "starknet-rust-core-derive",
  "starknet-rust-crypto",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
 ]
 
 [[package]]
@@ -7314,7 +7376,7 @@ dependencies = [
  "rfc6979",
  "sha2",
  "starknet-rust-curve",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "zeroize",
 ]
 
@@ -7324,7 +7386,7 @@ version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1977caca63a4e6439968abe0c9d8c0d2074df7641f1153e8a551f8200470d8da"
 dependencies = [
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
 ]
 
 [[package]]
@@ -7381,11 +7443,29 @@ version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90d23b1bc014ee4cce40056ab3114bcbcdc2dbc1e845bbfb1f8bd0bab63507d4"
 dependencies = [
+ "arbitrary",
  "blake2",
  "digest",
  "lambdaworks-crypto",
  "lambdaworks-math",
  "lazy_static 1.5.0",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "rand 0.9.2",
+ "serde",
+ "zeroize",
+]
+
+[[package]]
+name = "starknet-types-core"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a12690813e587969cb4a9e7d8ebdb069d4bb7ec8d03275c5f719310c8e1f07c"
+dependencies = [
+ "generic-array",
+ "lambdaworks-crypto",
+ "lambdaworks-math",
  "num-bigint",
  "num-integer",
  "num-traits",
@@ -7422,7 +7502,7 @@ dependencies = [
  "sha3",
  "sizeof",
  "starknet-crypto",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "strum 0.25.0",
  "strum_macros 0.25.3",
  "thiserror 1.0.69",
@@ -7487,6 +7567,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af23d6f6c1a224baef9d3f61e287d2761385a5b88fdab4eb4c6f11aeb54c4bcf"
 
 [[package]]
+name = "strum"
+version = "0.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9628de9b8791db39ceda2b119bbe13134770b56c138ec1d3af810d045c04f9bd"
+
+[[package]]
 name = "strum_macros"
 version = "0.25.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7504,6 +7590,18 @@ name = "strum_macros"
 version = "0.27.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7695ce3845ea4b33927c055a39dc438a45b059f7c1b3d91d38d10355fb8cbca7"
+dependencies = [
+ "heck 0.5.0",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.114",
+]
+
+[[package]]
+name = "strum_macros"
+version = "0.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab85eea0270ee17587ed4156089e10b9e6880ee688791d45a905f5b1ca36f664"
 dependencies = [
  "heck 0.5.0",
  "proc-macro2",
