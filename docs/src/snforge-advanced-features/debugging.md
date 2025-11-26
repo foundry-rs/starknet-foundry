@@ -1,10 +1,86 @@
 # Debugging
 
 When a contract call fails, the error message alone may not always provide enough information to identify the root cause
-of the issue. To aid in debugging, `snforge` offers following features:
+of the issue. To aid in debugging, `snforge` offers the following features:
 
+- [live debugging](debugging.md#live-debugging)
 - [trace](debugging.md#trace)
 - [backtrace](debugging.md#backtrace)
+
+
+## Live Debugging
+
+The `--launch-debugger` flag enables step-through, breakpoint-based debugging of a Cairo test. When used, `snforge`
+acts as a debug adapter communicating over [Debug Adapter Protocol](https://microsoft.github.io/debug-adapter-protocol/),
+enabling an editor/IDE to connect and control the execution of the test.
+
+> 📝 **Note**
+>
+> `--launch-debugger` requires `--exact` - only a single test can be debugged at a time.
+
+### Prerequisites
+
+Live debugging relies on debug information provided by Scarb. To generate the necessary debug information, you need
+to have:
+
+1. [Scarb](https://github.com/software-mansion/scarb) version `2.18.0` or higher
+2. `Scarb.toml` file with the following Cairo compiler configuration:
+
+```toml
+[profile.dev.cairo]
+unstable-add-statements-code-locations-debug-info = true
+unstable-add-statements-functions-debug-info = true
+add-functions-debug-info = true
+skip-optimizations = true
+```
+
+### Debugging in VSCode
+
+1. Open your Cairo project in VSCode.
+2. Make sure the latest [Cairo extension](https://marketplace.visualstudio.com/items?itemName=starkware.cairo1) is installed.
+3. Set breakpoints in your cairo files.
+4. Start a debugging session:
+   - Use the extension's **▶ Debug Test** code lens (displayed above each test function) to launch the debugger - 
+     it will invoke `snforge` with `--launch-debugger` automatically and start a debugging session.
+   
+     ![debugger lens image](images/debugger_lens.png)
+   
+   - Alternatively, create the debug configuration manually in `.vscode/launch.json` file and then start a debugging
+     session using **Run and Debug** view. Example content of the `.vscode/launch.json` file:
+   ```json
+   {
+       "version": "0.2.0",
+       "configurations": [
+           {
+               "type": "cairo",
+               "request": "launch",
+               "name": "my_pkg::tests::my_test debug",
+               "program": "snforge test --package my_pkg --launch-debugger --exact my_pkg::tests::my_test",
+               "processCwd": "${workspaceFolder}"
+           }
+       ]
+   }
+   ```
+
+Check [here](https://code.visualstudio.com/docs/debugtest/debugging) for details on how to interact with the VSCode UI.
+
+### Debugging in another IDE
+
+If you are using another IDE, you need to make sure that your DAP client establishes the connection with snforge's 
+debug adapter after it is launched. If you run:
+
+```shell
+$ snforge test --exact my_package::my_module::test_name --launch-debugger
+```
+
+`snforge` will start a TCP server and print the port it is listening on to stdout in the following format:
+
+```shell
+DEBUGGER PORT: 12345
+```
+
+Connect your DAP client to `localhost` on that port to begin the debugging session.
+
 
 ## Trace
 

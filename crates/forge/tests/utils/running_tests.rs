@@ -85,6 +85,7 @@ pub fn run_test_case(
                             .unwrap(),
                         tracked_resource,
                         environment_variables: test.env().clone(),
+                        launch_debugger: false,
                     }),
                     output_config: Arc::new(OutputConfig {
                         detailed_resources: false,
