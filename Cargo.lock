@@ -999,6 +999,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairo-annotations"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c97ec125673123e432c0082c80ceeeb2c18516d97373565f9710b19a7aafb6c"
+dependencies = [
+ "cairo-lang-sierra",
+ "cairo-lang-sierra-to-casm",
+ "camino",
+ "derive_more 2.1.1",
+ "regex",
+ "serde",
+ "serde_json",
+ "starknet-types-core",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
+ "thiserror 2.0.17",
+]
+
+[[package]]
+name = "cairo-debugger"
+version = "0.1.0"
+source = "git+https://github.com/software-mansion-labs/cairo-debugger?rev=6574741614f3f1cb081eb58936d3c2a924331a3b#6574741614f3f1cb081eb58936d3c2a924331a3b"
+dependencies = [
+ "anyhow",
+ "cairo-annotations 0.7.0",
+ "cairo-lang-sierra",
+ "cairo-vm",
+ "dap",
+ "scarb-metadata",
+ "serde_json",
+ "tracing",
+]
+
+[[package]]
 name = "cairo-lang-casm"
 version = "2.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1620,8 +1654,7 @@ dependencies = [
 [[package]]
 name = "cairo-vm"
 version = "2.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c21cacdf4e290ab5f0018f24d6bf97f8d3a8809bd09568550669270e7f9ed534"
+source = "git+https://github.com/software-mansion-labs/cairo-vm?rev=e8183f4#e8183f45cbbb723a7167450599fa586aab8b416a"
 dependencies = [
  "anyhow",
  "bincode",
@@ -1791,7 +1824,7 @@ dependencies = [
  "anyhow",
  "bimap",
  "blockifier",
- "cairo-annotations",
+ "cairo-annotations 0.6.1",
  "cairo-lang-casm",
  "cairo-lang-starknet-classes",
  "cairo-lang-utils",
@@ -2479,6 +2512,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0369ee1ad671834580515889b80f2ea915f23b8be8d0daa4bbaf2ac5c7590835"
 dependencies = [
  "cipher",
+]
+
+[[package]]
+name = "dap"
+version = "0.4.1-alpha1"
+source = "git+https://github.com/software-mansion-labs/dap-rs?rev=4440a6f#4440a6fa4ffd26f88f1191ee2371a482fde2a539"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -3343,7 +3386,7 @@ dependencies = [
  "assert_fs",
  "axum",
  "blockifier",
- "cairo-annotations",
+ "cairo-annotations 0.6.1",
  "cairo-lang-sierra",
  "cairo-lang-starknet-classes",
  "cairo-vm",
@@ -3399,7 +3442,8 @@ version = "0.55.0-rc.0"
 dependencies = [
  "anyhow",
  "blockifier",
- "cairo-annotations",
+ "cairo-annotations 0.6.1",
+ "cairo-debugger",
  "cairo-lang-casm",
  "cairo-lang-sierra",
  "cairo-lang-sierra-type-size",
