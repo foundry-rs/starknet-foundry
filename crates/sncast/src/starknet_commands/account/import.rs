@@ -15,10 +15,10 @@ use sncast::helpers::account::generate_account_name;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::import::AccountImportResponse;
 use sncast::{AccountType, check_class_hash_exists, get_chain_id, handle_rpc_error};
-use starknet::core::types::{BlockId, BlockTag, StarknetError};
-use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
-use starknet::providers::{Provider, ProviderError};
-use starknet::signers::SigningKey;
+use starknet_rust::core::types::{BlockId, BlockTag, StarknetError};
+use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
+use starknet_rust::providers::{Provider, ProviderError};
+use starknet_rust::signers::SigningKey;
 use starknet_types_core::felt::Felt;
 
 #[derive(Args, Debug)]

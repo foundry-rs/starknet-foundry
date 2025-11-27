@@ -4,8 +4,8 @@ use anyhow::Result;
 use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use semver::VersionReq;
-use starknet::providers::JsonRpcClient;
-use starknet::providers::jsonrpc::HttpTransport;
+use starknet_rust::providers::JsonRpcClient;
+use starknet_rust::providers::jsonrpc::HttpTransport;
 use std::fmt::Display;
 
 pub mod auto_completions;

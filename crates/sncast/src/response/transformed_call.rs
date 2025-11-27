@@ -7,7 +7,7 @@ use conversions::string::IntoHexStr;
 use data_transformer::reverse_transform_output;
 use foundry_ui::styling;
 use serde::Serialize;
-use starknet::core::types::{ContractClass, contract::AbiEntry};
+use starknet_rust::core::types::{ContractClass, contract::AbiEntry};
 use starknet_types_core::felt::Felt;
 
 #[derive(Serialize, Clone)]

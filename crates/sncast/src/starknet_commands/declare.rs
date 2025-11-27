@@ -3,7 +3,7 @@ use clap::Args;
 use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
 use foundry_ui::UI;
-use shared::rpc::get_rpc_version;
+use shared::rpc::get_starknet_version;
 use sncast::helpers::artifacts::CastStarknetContractArtifacts;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
@@ -12,15 +12,15 @@ use sncast::response::declare::{
 };
 use sncast::response::errors::{SNCastProviderError, SNCastStarknetError, StarknetCommandError};
 use sncast::{ErrorData, WaitForTx, apply_optional_fields, handle_wait_for_tx};
-use starknet::accounts::AccountError::Provider;
-use starknet::accounts::{ConnectedAccount, DeclarationV3};
-use starknet::core::types::{
+use starknet_rust::accounts::AccountError::Provider;
+use starknet_rust::accounts::{ConnectedAccount, DeclarationV3};
+use starknet_rust::core::types::{
     ContractExecutionError, DeclareTransactionResult, StarknetError, TransactionExecutionErrorData,
 };
-use starknet::providers::ProviderError;
-use starknet::{
+use starknet_rust::providers::ProviderError;
+use starknet_rust::{
     accounts::{Account, SingleOwnerAccount},
-    core::types::contract::{CompiledClass, SierraClass, hash_function_from_spec_version},
+    core::types::contract::{CompiledClass, SierraClass},
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
     signers::LocalWallet,
 };
@@ -98,9 +98,9 @@ pub async fn declare_with_artifacts(
     skip_on_already_declared: bool,
     ui: &UI,
 ) -> Result<DeclareResponse, StarknetCommandError> {
-    let spec_version = get_rpc_version(account.provider()).await?;
-    let hash_function = hash_function_from_spec_version(&spec_version)
-        .ok_or(anyhow!("Unsupported RPC spec version: {spec_version}"))?;
+    let starknet_version = get_starknet_version(account.provider()).await?;
+    let hash_function = CompiledClass::hash_function_from_starknet_version(&starknet_version)
+        .ok_or(anyhow!("Unsupported Starknet version: {starknet_version}"))?;
     let casm_class_hash = compiled_casm
         .class_hash_with_hash_function(hash_function)
         .map_err(anyhow::Error::from)?;

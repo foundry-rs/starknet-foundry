@@ -17,17 +17,17 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{Deserializer, Value};
 use shared::rpc::create_rpc_client;
-use starknet::accounts::{AccountFactory, AccountFactoryError};
-use starknet::core::types::{
+use starknet_rust::accounts::{AccountFactory, AccountFactoryError};
+use starknet_rust::core::types::{
     BlockId, BlockTag,
     BlockTag::{Latest, PreConfirmed},
     ContractClass, ContractErrorData,
     StarknetError::{ClassHashNotFound, ContractNotFound, TransactionHashNotFound},
 };
-use starknet::core::types::{ContractExecutionError, ExecutionResult};
-use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
-use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
-use starknet::{
+use starknet_rust::core::types::{ContractExecutionError, ExecutionResult};
+use starknet_rust::core::utils::UdcUniqueness::{NotUnique, Unique};
+use starknet_rust::core::utils::{UdcUniqueSettings, UdcUniqueness};
+use starknet_rust::{
     accounts::{ExecutionEncoding, SingleOwnerAccount},
     providers::{
         Provider, ProviderError,
@@ -638,7 +638,7 @@ pub async fn wait_for_tx(
     let retries = wait_params.get_retries();
     for i in (1..retries).rev() {
         match provider.get_transaction_status(tx_hash).await {
-            Ok(starknet::core::types::TransactionStatus::PreConfirmed(
+            Ok(starknet_rust::core::types::TransactionStatus::PreConfirmed(
                 ExecutionResult::Reverted { reason },
             )) => {
                 return Err(WaitForTransactionError::TransactionError(
@@ -648,8 +648,8 @@ pub async fn wait_for_tx(
                 ));
             }
             Ok(
-                starknet::core::types::TransactionStatus::AcceptedOnL2(execution_status)
-                | starknet::core::types::TransactionStatus::AcceptedOnL1(execution_status),
+                starknet_rust::core::types::TransactionStatus::AcceptedOnL2(execution_status)
+                | starknet_rust::core::types::TransactionStatus::AcceptedOnL1(execution_status),
             ) => {
                 return match execution_status {
                     ExecutionResult::Succeeded => Ok("Transaction accepted".to_string()),
@@ -662,7 +662,7 @@ pub async fn wait_for_tx(
                     }
                 };
             }
-            Ok(starknet::core::types::TransactionStatus::PreConfirmed(
+            Ok(starknet_rust::core::types::TransactionStatus::PreConfirmed(
                 ExecutionResult::Succeeded,
             )) => {
                 ui.inspect(|ui| {
@@ -674,8 +674,8 @@ pub async fn wait_for_tx(
                 });
             }
             Ok(
-                starknet::core::types::TransactionStatus::Received
-                | starknet::core::types::TransactionStatus::Candidate,
+                starknet_rust::core::types::TransactionStatus::Received
+                | starknet_rust::core::types::TransactionStatus::Candidate,
             )
             | Err(StarknetError(TransactionHashNotFound)) => {
                 ui.inspect(|ui| {
@@ -829,13 +829,13 @@ mod tests {
     };
     use camino::Utf8PathBuf;
     use conversions::string::IntoHexStr;
-    use starknet::core::types::{
+    use starknet_rust::core::types::{
         BlockId,
         BlockTag::{Latest, PreConfirmed},
         Felt,
     };
-    use starknet::core::utils::UdcUniqueSettings;
-    use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
+    use starknet_rust::core::utils::UdcUniqueSettings;
+    use starknet_rust::core::utils::UdcUniqueness::{NotUnique, Unique};
     use std::env;
 
     #[test]

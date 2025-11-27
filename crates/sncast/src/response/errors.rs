@@ -8,8 +8,8 @@ use conversions::byte_array::ByteArray;
 use foundry_ui::Message;
 use serde::Serialize;
 use serde_json::{Value, json};
-use starknet::core::types::{ContractErrorData, StarknetError, TransactionExecutionErrorData};
-use starknet::providers::ProviderError;
+use starknet_rust::core::types::{ContractErrorData, StarknetError, TransactionExecutionErrorData};
+use starknet_rust::providers::ProviderError;
 use thiserror::Error;
 
 #[derive(Serialize, Debug)]

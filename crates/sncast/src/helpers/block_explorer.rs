@@ -138,7 +138,7 @@ mod tests {
     };
     use conversions::padded_felt::PaddedFelt;
     use regex::Regex;
-    use starknet::macros::felt;
+    use starknet_rust::macros::felt;
     use test_case::test_case;
 
     const MAINNET_RESPONSE: DeployResponse = DeployResponse::Standard(StandardDeployResponse {

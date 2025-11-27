@@ -17,11 +17,11 @@ use snapbox::cmd::cargo_bin;
 use sncast::AccountType;
 use sncast::helpers::constants::OZ_CLASS_HASH;
 use sncast::helpers::fee::FeeArgs;
-use starknet::core::types::TransactionReceipt::Invoke;
-use starknet::core::types::{
+use starknet_rust::core::types::TransactionReceipt::Invoke;
+use starknet_rust::core::types::{
     BlockId, BlockTag, InvokeTransaction, Transaction, TransactionExecutionStatus,
 };
-use starknet::providers::Provider;
+use starknet_rust::providers::Provider;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 use test_case::test_case;
 use toml::Value;

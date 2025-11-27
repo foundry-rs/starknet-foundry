@@ -1,7 +1,7 @@
 use crate::runtime_extensions::forge_runtime_extension::contracts_data::build_name_selector_map;
-use starknet::core::types::ContractClass;
-use starknet::core::types::contract::AbiEntry;
 use starknet_api::core::{ClassHash, EntryPointSelector};
+use starknet_rust::core::types::ContractClass;
+use starknet_rust::core::types::contract::AbiEntry;
 use std::collections::HashMap;
 
 #[derive(Default)]

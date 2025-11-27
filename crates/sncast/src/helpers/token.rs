@@ -1,6 +1,6 @@
 use clap::ValueEnum;
 use serde::Serialize;
-use starknet::macros::felt;
+use starknet_rust::macros::felt;
 use starknet_types_core::felt::Felt;
 
 const STRK_CONTRACT_ADDRESS: Felt =

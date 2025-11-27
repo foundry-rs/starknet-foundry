@@ -8,12 +8,14 @@ use sncast::helpers::rpc::{FreeProvider, RpcArgs};
 use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::{SNCastProviderError, StarknetCommandError};
 use sncast::{Network, WaitForTx, get_block_id, get_provider};
-use starknet::accounts::SingleOwnerAccount;
-use starknet::core::types::contract::{AbiEntry, CompiledClass, SierraClass, SierraClassDebugInfo};
-use starknet::core::types::{ContractClass, FlattenedSierraClass};
-use starknet::providers::Provider;
-use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
-use starknet::signers::LocalWallet;
+use starknet_rust::accounts::SingleOwnerAccount;
+use starknet_rust::core::types::contract::{
+    AbiEntry, CompiledClass, SierraClass, SierraClassDebugInfo,
+};
+use starknet_rust::core::types::{ContractClass, FlattenedSierraClass};
+use starknet_rust::providers::Provider;
+use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
+use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 use universal_sierra_compiler_api::compile_contract_sierra;
 

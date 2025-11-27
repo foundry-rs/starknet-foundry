@@ -6,7 +6,7 @@ use clap::Args;
 use foundry_ui::UI;
 use shared::consts::RPC_URL_VERSION;
 use shared::verify_and_warn_if_incompatible_rpc_version;
-use starknet::providers::{JsonRpcClient, jsonrpc::HttpTransport};
+use starknet_rust::providers::{JsonRpcClient, jsonrpc::HttpTransport};
 use std::env;
 
 const ALCHEMY_API_KEY: &str = env!("ALCHEMY_API_KEY");
@@ -137,7 +137,7 @@ mod tests {
     use super::*;
     use semver::Version;
     use shared::rpc::is_expected_version;
-    use starknet::providers::Provider;
+    use starknet_rust::providers::Provider;
 
     #[tokio::test]
     #[ignore = "TODO: (#3937) New RPC URL is not available yet"]

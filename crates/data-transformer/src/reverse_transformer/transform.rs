@@ -6,7 +6,7 @@ use crate::shared::path::{PathSplitError, SplitResult, split};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::{Expr, ExprListParenthesized, ExprPath};
 use conversions::serde::deserialize::{BufferReadError, BufferReader};
-use starknet::core::types::contract::{AbiEntry, AbiEnum, AbiStruct};
+use starknet_rust::core::types::contract::{AbiEntry, AbiEnum, AbiStruct};
 use starknet_types_core::felt::Felt;
 
 /// An error that can occur during the transformation process.
