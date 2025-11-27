@@ -16,11 +16,16 @@ pub(crate) fn resolve_cheated_data_for_call(
     cheatnet_state: &mut CheatnetState,
 ) -> CheatedData {
     if let CallType::Delegate = entry_point.call_type {
-        cheatnet_state
-            .trace_data
-            .current_call_stack
-            .top_cheated_data()
-            .clone()
+        // For delegate calls, we use the cheated data from the caller context.
+        if cheatnet_state.trace_data.current_call_stack.size() == 1 {
+            cheatnet_state.get_cheated_data(entry_point.caller_address)
+        } else {
+            cheatnet_state
+                .trace_data
+                .current_call_stack
+                .top_cheated_data()
+                .clone()
+        }
     } else {
         let contract_address = entry_point.storage_address;
         let cheated_data = cheatnet_state.create_cheated_data(contract_address);
