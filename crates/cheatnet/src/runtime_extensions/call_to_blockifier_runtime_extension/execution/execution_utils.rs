@@ -16,7 +16,7 @@ pub(crate) fn resolve_cheated_data_for_call(
     cheatnet_state: &mut CheatnetState,
 ) -> CheatedData {
     if let CallType::Delegate = entry_point.call_type {
-        // For delegate calls, we use the cheated data from the caller context.
+        // Edge case, when delegate call is made by test contract
         if cheatnet_state.trace_data.current_call_stack.size() == 1 {
             cheatnet_state.get_cheated_data(entry_point.caller_address)
         } else {
