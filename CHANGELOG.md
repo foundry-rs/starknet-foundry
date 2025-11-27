@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Fixed
+
+- Cheatcodes are now reflected in called contract, when directly using a library call
+
 ## [0.53.0] - 2025-11-24
 
 ### Cast
