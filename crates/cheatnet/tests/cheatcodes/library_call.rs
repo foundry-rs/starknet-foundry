@@ -155,7 +155,7 @@ fn cheat_with_finite_span_works_with_library_call_from_actual_contract() {
         &[Felt::from(cheated_caller_address)],
     );
 
-    // We made one call, so the cheat should be removed now.
+    // We made one contract call, so the cheat should be removed now.
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
         &[Felt::try_from_hex_str(TEST_ADDRESS).unwrap()],
