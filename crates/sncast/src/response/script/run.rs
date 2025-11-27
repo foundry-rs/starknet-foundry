@@ -1,5 +1,4 @@
 use crate::response::cast_message::SncastCommandMessage;
-use crate::response::cast_message::SncastMessage;
 use foundry_ui::styling;
 use serde::Serialize;
 
@@ -9,14 +8,14 @@ pub struct ScriptRunResponse {
     pub message: Option<String>,
 }
 
-impl SncastCommandMessage for SncastMessage<ScriptRunResponse> {
+impl SncastCommandMessage for ScriptRunResponse {
     fn text(&self) -> String {
         let mut builder = styling::OutputBuilder::new()
             .success_message("Script execution completed")
             .blank_line()
-            .field("Status", &self.command_response.status);
+            .field("Status", &self.status);
 
-        if let Some(message) = &self.command_response.message {
+        if let Some(message) = &self.message {
             builder = builder.blank_line().text_field(message);
         }
 

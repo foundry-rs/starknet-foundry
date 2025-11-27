@@ -1,12 +1,12 @@
 use crate::starknet_commands::declare::declare_with_artifacts;
 use anyhow::{Context, Result};
 use clap::Args;
-use foundry_ui::UI;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::helpers::fee::FeeArgs;
 use sncast::helpers::rpc::{FreeProvider, RpcArgs};
 use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::{SNCastProviderError, StarknetCommandError};
+use sncast::response::ui::UI;
 use sncast::{Network, WaitForTx, get_block_id, get_provider};
 use starknet_rust::accounts::SingleOwnerAccount;
 use starknet_rust::core::types::contract::{
@@ -68,7 +68,8 @@ impl SourceRpcArgs {
         assert!(!url.is_empty(), "url cannot be empty");
 
         let provider = get_provider(&url)?;
-        verify_and_warn_if_incompatible_rpc_version(&provider, url, ui).await?;
+        // TODO(#3959) Remove `base_ui`
+        verify_and_warn_if_incompatible_rpc_version(&provider, url, ui.base_ui()).await?;
 
         Ok(provider)
     }

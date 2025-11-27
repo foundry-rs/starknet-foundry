@@ -1,5 +1,4 @@
 use crate::response::cast_message::SncastCommandMessage;
-use crate::response::cast_message::SncastMessage;
 use conversions::serde::serialize::CairoSerialize;
 use foundry_ui::styling;
 use serde::{Deserialize, Serialize};
@@ -10,9 +9,9 @@ pub struct SerializeResponse {
     pub calldata: Vec<Felt>,
 }
 
-impl SncastCommandMessage for SncastMessage<SerializeResponse> {
+impl SncastCommandMessage for SerializeResponse {
     fn text(&self) -> String {
-        let calldata = format!("{:?}", &self.command_response.calldata);
+        let calldata = format!("{:?}", &self.calldata);
 
         styling::OutputBuilder::new()
             .field("Calldata", &calldata)

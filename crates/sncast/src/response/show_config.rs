@@ -1,6 +1,5 @@
 use crate::helpers::block_explorer;
 use crate::response::cast_message::SncastCommandMessage;
-use crate::response::cast_message::SncastMessage;
 use camino::Utf8PathBuf;
 use foundry_ui::styling;
 use serde::Serialize;
@@ -19,43 +18,37 @@ pub struct ShowConfigResponse {
     pub block_explorer: Option<block_explorer::Service>,
 }
 
-impl SncastCommandMessage for SncastMessage<ShowConfigResponse> {
+impl SncastCommandMessage for ShowConfigResponse {
     fn text(&self) -> String {
         let builder = styling::OutputBuilder::new()
-            .if_some(self.command_response.profile.as_ref(), |b, profile| {
+            .if_some(self.profile.as_ref(), |b, profile| {
                 b.field("Profile", profile)
             })
-            .if_some(self.command_response.chain_id.as_ref(), |b, chain_id| {
+            .if_some(self.chain_id.as_ref(), |b, chain_id| {
                 b.field("Chain ID", chain_id)
             })
-            .if_some(self.command_response.rpc_url.as_ref(), |b, rpc_url| {
+            .if_some(self.rpc_url.as_ref(), |b, rpc_url| {
                 b.field("RPC URL", rpc_url)
             })
-            .if_some(self.command_response.account.as_ref(), |b, account| {
+            .if_some(self.account.as_ref(), |b, account| {
                 b.field("Account", account)
             })
-            .if_some(
-                self.command_response.accounts_file_path.as_ref(),
-                |b, path| b.field("Accounts File Path", path.as_ref()),
-            )
-            .if_some(self.command_response.keystore.as_ref(), |b, keystore| {
+            .if_some(self.accounts_file_path.as_ref(), |b, path| {
+                b.field("Accounts File Path", path.as_ref())
+            })
+            .if_some(self.keystore.as_ref(), |b, keystore| {
                 b.field("Keystore", keystore.as_ref())
             })
-            .if_some(self.command_response.wait_timeout.as_ref(), |b, timeout| {
+            .if_some(self.wait_timeout.as_ref(), |b, timeout| {
                 b.field("Wait Timeout", format!("{}s", &timeout).as_ref())
             })
-            .if_some(
-                self.command_response.wait_retry_interval.as_ref(),
-                |b, interval| b.field("Wait Retry Interval", format!("{}s", &interval).as_ref()),
-            )
-            .field(
-                "Show Explorer Links",
-                &self.command_response.show_explorer_links.to_string(),
-            )
-            .if_some(
-                self.command_response.block_explorer.as_ref(),
-                |b, explorer| b.field("Block Explorer", &format!("{explorer:?}",)),
-            );
+            .if_some(self.wait_retry_interval.as_ref(), |b, interval| {
+                b.field("Wait Retry Interval", format!("{}s", &interval).as_ref())
+            })
+            .field("Show Explorer Links", &self.show_explorer_links.to_string())
+            .if_some(self.block_explorer.as_ref(), |b, explorer| {
+                b.field("Block Explorer", &format!("{explorer:?}",))
+            });
 
         builder.build()
     }

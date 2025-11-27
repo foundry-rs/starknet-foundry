@@ -3,11 +3,11 @@ use crate::{Cli, starknet_commands::script::init::Init};
 use crate::{get_cast_config, process_command_result, starknet_commands};
 use anyhow::Context;
 use clap::{Args, Subcommand};
-use foundry_ui::UI;
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build, build_and_load_artifacts,
     get_package_metadata, get_scarb_metadata_with_deps,
 };
+use sncast::response::ui::UI;
 use sncast::{chain_id_to_network_name, get_chain_id, get_default_state_file_name};
 use tokio::runtime::Runtime;
 
@@ -53,7 +53,8 @@ pub fn run_script_command(
                     profile: cli.profile.clone().unwrap_or("dev".to_string()),
                 },
                 true,
-                ui,
+                // TODO(#3959) Remove `base_ui`
+                ui.base_ui(),
             )
             .expect("Failed to build artifacts");
             // TODO(#2042): remove duplicated compilation

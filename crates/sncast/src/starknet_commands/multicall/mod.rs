@@ -1,19 +1,21 @@
 use clap::{Args, Subcommand};
+use serde::Serialize;
+use serde_json::{Value, json};
 
 pub mod new;
 pub mod run;
 
-use foundry_ui::UI;
+use crate::{process_command_result, starknet_commands};
+use foundry_ui::Message;
 use new::New;
 use run::Run;
+use sncast::response::ui::UI;
 use sncast::{
     WaitForTx, get_account,
     helpers::{configuration::CastConfig, constants::DEFAULT_MULTICALL_CONTENTS},
     response::explorer_link::block_explorer_link_if_allowed,
 };
 use starknet_rust::providers::Provider;
-
-use crate::{process_command_result, starknet_commands};
 
 #[derive(Args)]
 #[command(about = "Execute multiple calls at once", long_about = None)]
@@ -34,6 +36,21 @@ pub async fn multicall(
     ui: &UI,
     wait_config: WaitForTx,
 ) -> anyhow::Result<()> {
+    #[derive(Serialize)]
+    struct MulticallMessage {
+        file_contents: String,
+    }
+
+    impl Message for MulticallMessage {
+        fn text(&self) -> String {
+            self.file_contents.clone()
+        }
+
+        fn json(&self) -> Value {
+            json!(self)
+        }
+    }
+
     match &multicall.command {
         starknet_commands::multicall::Commands::New(new) => {
             if let Some(output_path) = &new.output_path {
@@ -44,7 +61,12 @@ pub async fn multicall(
 
                 process_command_result("multicall new", result, ui, None);
             } else {
-                ui.println(&DEFAULT_MULTICALL_CONTENTS);
+                ui.print_message(
+                    "multicall_new",
+                    MulticallMessage {
+                        file_contents: DEFAULT_MULTICALL_CONTENTS.to_string(),
+                    },
+                );
             }
             Ok(())
         }

@@ -1,5 +1,4 @@
 use crate::response::cast_message::SncastCommandMessage;
-use crate::response::cast_message::SncastMessage;
 use foundry_ui::styling;
 use serde::Serialize;
 
@@ -9,16 +8,15 @@ pub struct AccountImportResponse {
     pub account_name: String,
 }
 
-impl SncastCommandMessage for SncastMessage<AccountImportResponse> {
+impl SncastCommandMessage for AccountImportResponse {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
             .success_message("Account imported successfully")
             .blank_line()
-            .field("Account Name", &self.command_response.account_name)
-            .if_some(
-                self.command_response.add_profile.as_ref(),
-                |builder, profile| builder.field("Add Profile", profile),
-            )
+            .field("Account Name", &self.account_name)
+            .if_some(self.add_profile.as_ref(), |builder, profile| {
+                builder.field("Add Profile", profile)
+            })
             .build()
     }
 }

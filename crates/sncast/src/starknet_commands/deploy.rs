@@ -1,11 +1,11 @@
 use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
-use foundry_ui::UI;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::deploy::StandardDeployResponse;
 use sncast::response::errors::StarknetCommandError;
+use sncast::response::ui::UI;
 use sncast::{WaitForTx, apply_optional_fields, handle_wait_for_tx};
 use sncast::{extract_or_generate_salt, udc_uniqueness};
 use starknet_rust::accounts::AccountError::Provider;

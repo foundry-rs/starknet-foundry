@@ -48,7 +48,10 @@ impl UI {
 
     /// Print a blank line to stdout.
     pub fn print_blank_line(&self) {
-        println!();
+        match self.output_format {
+            OutputFormat::Human => println!(),
+            OutputFormat::Json => {}
+        }
     }
 
     #[must_use]

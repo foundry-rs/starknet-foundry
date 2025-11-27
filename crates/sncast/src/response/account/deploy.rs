@@ -1,4 +1,4 @@
-use crate::response::cast_message::{SncastCommandMessage, SncastMessage};
+use crate::response::cast_message::SncastCommandMessage;
 use crate::{
     helpers::block_explorer::LinkProvider,
     response::{explorer_link::OutputLink, invoke::InvokeResponse},
@@ -21,15 +21,12 @@ impl From<InvokeResponse> for AccountDeployResponse {
     }
 }
 
-impl SncastCommandMessage for SncastMessage<AccountDeployResponse> {
+impl SncastCommandMessage for AccountDeployResponse {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
             .success_message("Account deployed")
             .blank_line()
-            .field(
-                "Transaction Hash",
-                &self.command_response.transaction_hash.into_hex_string(),
-            )
+            .field("Transaction Hash", &self.transaction_hash.into_hex_string())
             .build()
     }
 }
