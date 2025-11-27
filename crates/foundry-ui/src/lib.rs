@@ -50,4 +50,9 @@ impl UI {
     pub fn print_blank_line(&self) {
         println!();
     }
+
+    #[must_use]
+    pub fn output_format(&self) -> OutputFormat {
+        self.output_format
+    }
 }
