@@ -956,7 +956,7 @@ dependencies = [
 [[package]]
 name = "cairo-debugger"
 version = "0.1.0"
-source = "git+https://github.com/software-mansion-labs/cairo-debugger?branch=poc#0b2754ebdbcf5cb072a46c54255a5239e5802ee5"
+source = "git+https://github.com/software-mansion-labs/cairo-debugger?branch=support-pause-and-continue#07a7599de38754e8038757aa0d913bc2377b5394"
 dependencies = [
  "anyhow",
  "cairo-vm",

@@ -178,8 +178,7 @@ pub fn run_test_case(
     let (call, entry_point) =
         setup::build_test_call_and_entry_point(&case.test_details, casm_program, program);
 
-    let debugger = CairoDebugger::connect()?;
-    debugger.run()?;
+    let debugger = CairoDebugger::connect_and_initialize()?;
 
     let mut state_reader = ExtendedStateReader {
         dict_state_reader: cheatnet_constants::build_testing_state(),
