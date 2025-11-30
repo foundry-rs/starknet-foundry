@@ -46,9 +46,6 @@ fn test_script_init_happy_case() {
             [dependencies]
             sncast_std = "{cast_version}"
             starknet = ">={cairo_version}"
-
-            [dev-dependencies]
-            cairo_test = "{cairo_version}"
         "#
     );
 
