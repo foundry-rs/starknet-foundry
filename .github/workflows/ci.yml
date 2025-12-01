@@ -390,13 +390,15 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MDBOOK_VERSION: 0.4.52
+      # TODO(#3970): Use latest version after resolving issue
+      MDBOOK_VARIABLES_VERSION: 0.3.0
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-tools
       - name: Install mdBook
         run: |
           cargo install --version ${MDBOOK_VERSION} mdbook
-          cargo install mdbook-variables
+          cargo install --version ${MDBOOK_VARIABLES_VERSION} mdbook-variables
       - name: Install mdBook Link-Check
         run: |
           cargo install mdbook-linkcheck

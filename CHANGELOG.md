@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Cheatcodes are now reflected in called contract, when directly using a library call
 
+### Cast
+
+#### Changed
+
+- `sncast script init` now longer adds `cairo_test` as dependency in `Scarb.toml`
+
 ## [0.53.0] - 2025-11-24
 
 ### Cast
