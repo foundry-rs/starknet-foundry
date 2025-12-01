@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- Cheatcodes are now reflected in called contract, when directly using a library call
+- Cheatcodes are now reflected in called contract, when directly using a library call from test code
 
 ### Cast
 
