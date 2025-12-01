@@ -84,7 +84,7 @@ We use the `SafeLibraryDispatcher` like this:
 ```
 
 > 📝 **Note**
-> Library calls don't affect [cheat spans](https://foundry-rs.github.io/starknet-foundry/testing/using-cheatcodes.html#setting-cheatcode-span) to progress. As a result,  the cheated data is still in effect when making subsequent library calls.
+> Library calls don't trigger [cheat spans](https://foundry-rs.github.io/starknet-foundry/testing/using-cheatcodes.html#setting-cheatcode-span) progression. As a result, the cheatcode is still in effect when making subsequent library calls.
 
 > ⚠️ **Warning**
 >

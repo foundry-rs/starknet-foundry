@@ -187,7 +187,7 @@ To better understand the functionality of `CheatSpan`, here's a full example:
 ```
 
 > 📝 **Note**
-> [Library calls](https://foundry-rs.github.io/starknet-foundry/testing/testing-contract-internals.html#using-library-calls-with-the-test-state-context) don't affect cheat spans to progress. As a result,  the cheated data is still in effect when making subsequent library calls.
+> [Library calls](https://foundry-rs.github.io/starknet-foundry/testing/testing-contract-internals.html#using-library-calls-with-the-test-state-context) don't trigger cheat spans progression. As a result, the cheatcode is still in effect when making subsequent library calls.
 
 ### Cheating ERC-20 Token balance
 

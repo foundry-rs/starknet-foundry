@@ -19,6 +19,7 @@ pub(crate) fn resolve_cheated_data_for_call(
         // This is an edge case, when delegate call is made directly by test contract.
         // In such case, `top_cheated_data()` will have a default value (i.e. all fields are None),
         // so we need to get cheated data from the caller address, which is the test contract.
+        // See: https://github.com/foundry-rs/starknet-foundry/blob/62eb015ef06728ed9ddd89a0d0023e5f7f6cfe66/crates/cheatnet/src/trace_data.rs#L156
         if cheatnet_state.trace_data.current_call_stack.size() == 1 {
             cheatnet_state.get_cheated_data(entry_point.caller_address)
         } else {
