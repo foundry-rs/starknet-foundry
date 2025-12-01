@@ -1,10 +1,4 @@
-use crate::{
-    helpers::token::Token,
-    response::{
-        cast_message::{SncastCommandMessage, SncastMessage},
-        command::CommandResponse,
-    },
-};
+use crate::{helpers::token::Token, response::cast_message::SncastCommandMessage};
 use foundry_ui::styling;
 use primitive_types::U256;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
@@ -15,14 +9,12 @@ pub struct BalanceResponse {
     pub token: Option<Token>,
 }
 
-impl CommandResponse for BalanceResponse {}
-
-impl SncastCommandMessage for SncastMessage<BalanceResponse> {
+impl SncastCommandMessage for BalanceResponse {
     fn text(&self) -> String {
-        let balance_str = if let Some(token) = self.command_response.token {
-            format!("{} {}", self.command_response.balance, token)
+        let balance_str = if let Some(token) = self.token {
+            format!("{} {}", self.balance, token)
         } else {
-            self.command_response.balance.to_string()
+            self.balance.to_string()
         };
 
         styling::OutputBuilder::new()

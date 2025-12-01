@@ -1,8 +1,5 @@
-use crate::response::cast_message::{SncastCommandMessage, SncastMessage};
-use crate::{
-    helpers::block_explorer::LinkProvider,
-    response::{command::CommandResponse, explorer_link::OutputLink},
-};
+use crate::response::cast_message::SncastCommandMessage;
+use crate::{helpers::block_explorer::LinkProvider, response::explorer_link::OutputLink};
 use conversions::padded_felt::PaddedFelt;
 use conversions::string::IntoPaddedHexStr;
 use foundry_ui::styling;
@@ -24,23 +21,17 @@ pub struct AccountCreateResponse {
     pub message: String,
 }
 
-impl CommandResponse for AccountCreateResponse {}
-
-impl SncastCommandMessage for SncastMessage<AccountCreateResponse> {
+impl SncastCommandMessage for AccountCreateResponse {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
             .success_message("Account created")
             .blank_line()
-            .field(
-                "Address",
-                &self.command_response.address.into_padded_hex_str(),
-            )
-            .if_some(
-                self.command_response.add_profile.as_ref(),
-                |builder, profile| builder.field("Add Profile", profile),
-            )
+            .field("Address", &self.address.into_padded_hex_str())
+            .if_some(self.add_profile.as_ref(), |builder, profile| {
+                builder.field("Add Profile", profile)
+            })
             .blank_line()
-            .text_field(&self.command_response.message)
+            .text_field(&self.message)
             .build()
     }
 }

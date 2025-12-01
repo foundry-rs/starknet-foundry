@@ -2,7 +2,6 @@ use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
-use foundry_ui::UI;
 use shared::rpc::get_starknet_version;
 use sncast::helpers::artifacts::CastStarknetContractArtifacts;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
@@ -11,6 +10,7 @@ use sncast::response::declare::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
 };
 use sncast::response::errors::{SNCastProviderError, SNCastStarknetError, StarknetCommandError};
+use sncast::response::ui::UI;
 use sncast::{ErrorData, WaitForTx, apply_optional_fields, handle_wait_for_tx};
 use starknet_rust::accounts::AccountError::Provider;
 use starknet_rust::accounts::{ConnectedAccount, DeclarationV3};

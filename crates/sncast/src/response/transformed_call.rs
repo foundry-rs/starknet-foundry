@@ -1,7 +1,5 @@
-use super::command::CommandResponse;
 use crate::response::call::CallResponse;
 use crate::response::cast_message::SncastCommandMessage;
-use crate::response::cast_message::SncastMessage;
 use anyhow::Result;
 use conversions::string::IntoHexStr;
 use data_transformer::reverse_transform_output;
@@ -16,12 +14,9 @@ pub struct TransformedCallResponse {
     pub response_raw: Vec<Felt>,
 }
 
-impl CommandResponse for TransformedCallResponse {}
-
-impl SncastCommandMessage for SncastMessage<TransformedCallResponse> {
+impl SncastCommandMessage for TransformedCallResponse {
     fn text(&self) -> String {
         let response_raw_values = self
-            .command_response
             .response_raw
             .iter()
             .map(|felt| felt.into_hex_string())
@@ -31,7 +26,7 @@ impl SncastCommandMessage for SncastMessage<TransformedCallResponse> {
         styling::OutputBuilder::new()
             .success_message("Call completed")
             .blank_line()
-            .field("Response", &self.command_response.response)
+            .field("Response", &self.response)
             .field("Response Raw", &format!("[{response_raw_values}]"))
             .build()
     }
