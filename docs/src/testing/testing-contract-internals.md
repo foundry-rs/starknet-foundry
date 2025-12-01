@@ -82,6 +82,10 @@ We use the `SafeLibraryDispatcher` like this:
 ```rust
 {{#include ../../listings/testing_contract_internals/tests/using_library_calls.cairo}}
 ```
+
+> 📝 **Note**
+> Library calls don't affect [cheat spans](https://foundry-rs.github.io/starknet-foundry/testing/using-cheatcodes.html#setting-cheatcode-span) to progress. As a result,  the cheated data is still in effect when making subsequent library calls.
+
 > ⚠️ **Warning**
 >
 > This library call will write to the `test_address` memory segment, so it can potentially **overwrite** the changes
