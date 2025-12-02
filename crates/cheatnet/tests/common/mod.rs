@@ -244,6 +244,50 @@ pub fn call_contract(
     )
 }
 
+pub fn library_call_contract(
+    state: &mut dyn State,
+    cheatnet_state: &mut CheatnetState,
+    class_hash: &ClassHash,
+    entry_point_selector: EntryPointSelector,
+    calldata: &[Felt],
+) -> CallResult {
+    let calldata = create_execute_calldata(calldata);
+
+    let entry_point = CallEntryPoint {
+        class_hash: Some(*class_hash),
+        code_address: None,
+        entry_point_type: EntryPointType::External,
+        entry_point_selector,
+        calldata,
+        storage_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
+        caller_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
+        call_type: CallType::Delegate,
+        initial_gas: i64::MAX as u64,
+    };
+
+    let mut entry_point_execution_context = build_context(
+        &cheatnet_state.block_info,
+        None,
+        &TrackedResource::CairoSteps,
+    );
+    let hints = HashMap::new();
+
+    let mut syscall_hint_processor = build_syscall_hint_processor(
+        &entry_point,
+        state,
+        &mut entry_point_execution_context,
+        &hints,
+    );
+
+    call_entry_point(
+        &mut syscall_hint_processor,
+        cheatnet_state,
+        entry_point,
+        &AddressOrClassHash::ClassHash(*class_hash),
+        &mut (i64::MAX as u64),
+    )
+}
+
 #[expect(clippy::result_large_err)]
 pub fn call_contract_raw(
     state: &mut dyn State,

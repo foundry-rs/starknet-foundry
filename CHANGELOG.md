@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `get_current_vm_step` function to get the current step during test execution. For more see [docs](https://foundry-rs.github.io/starknet-foundry/snforge-library/testing/get_current_vm_step.html)
 
+#### Fixed
+
+- Cheatcodes are now reflected in called contract, when directly using a library call from test code
+
 ### Cast
 
 #### Added
