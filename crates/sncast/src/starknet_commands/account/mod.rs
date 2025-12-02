@@ -9,18 +9,18 @@ use camino::Utf8PathBuf;
 use clap::{Args, Subcommand};
 use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
-use foundry_ui::UI;
 use serde_json::json;
 use sncast::helpers::account::{generate_account_name, load_accounts};
 use sncast::helpers::interactive::prompt_to_add_account_as_default;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
+use sncast::response::ui::UI;
 use sncast::{
     AccountType, chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig,
 };
 use sncast::{WaitForTx, get_chain_id};
-use starknet::providers::Provider;
-use starknet::signers::SigningKey;
+use starknet_rust::providers::Provider;
+use starknet_rust::signers::SigningKey;
 use starknet_types_core::felt::Felt;
 use std::io::{self, IsTerminal};
 use std::{fs::OpenOptions, io::Write};
@@ -226,9 +226,10 @@ pub async fn account(
                 && let Err(err) = prompt_to_add_account_as_default(account_name.as_str())
             {
                 // TODO(#3436)
-                ui.eprintln(&format!(
-                    "Error: Failed to launch interactive prompt: {err}"
-                ));
+                ui.print_error(
+                    "account import",
+                    format!("Error: Failed to launch interactive prompt: {err}"),
+                );
             }
 
             process_command_result("account import", result, ui, None);
@@ -289,16 +290,17 @@ pub async fn account(
 
             if config.keystore.is_none()
                 && run_interactive_prompt
-                && let Err(err) = prompt_to_add_account_as_default(
+                && let Err(_) = prompt_to_add_account_as_default(
                     &deploy
                         .name
                         .expect("Must be provided if not using a keystore"),
                 )
             {
                 // TODO(#3436)
-                ui.eprintln(&format!(
-                    "Error: Failed to launch interactive prompt: {err}"
-                ));
+                ui.print_error(
+                    "account deploy",
+                    "Error: Failed to launch interactive prompt: {err}".to_string(),
+                );
             }
 
             let block_explorer_link =
@@ -323,10 +325,10 @@ pub async fn account(
         }
 
         Commands::List(options) => {
-            ui.println(&AccountsListMessage::new(
-                config.accounts_file,
-                options.display_private_keys,
-            )?);
+            ui.print_message(
+                "account delete",
+                AccountsListMessage::new(config.accounts_file, options.display_private_keys)?,
+            );
             Ok(())
         }
     }

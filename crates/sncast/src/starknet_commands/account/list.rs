@@ -12,6 +12,7 @@ use sncast::AccountType;
 use sncast::{AccountData, NestedMap, check_account_file_exists, read_and_parse_json_file};
 use std::collections::HashMap;
 use std::fmt::Write;
+
 #[derive(Args, Debug)]
 #[command(
     name = "list",
@@ -131,7 +132,6 @@ impl Message for AccountDataRepresentationMessage {
     }
 }
 
-#[derive(Serialize)]
 pub struct AccountsListMessage {
     accounts_file: Utf8PathBuf,
     accounts_file_path: String,

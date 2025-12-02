@@ -7,7 +7,6 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use console::style;
 use conversions::IntoConv;
-use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use serde_json::json;
 use sncast::helpers::braavos::BraavosAccountFactory;
@@ -17,17 +16,18 @@ use sncast::helpers::constants::{
 };
 use sncast::helpers::rpc::{RpcArgs, generate_network_flag};
 use sncast::response::account::create::AccountCreateResponse;
+use sncast::response::ui::UI;
 use sncast::{
     AccountType, Network, check_class_hash_exists, check_if_legacy_contract,
     extract_or_generate_salt, get_chain_id, get_keystore_password, handle_account_factory_error,
 };
-use starknet::accounts::{
+use starknet_rust::accounts::{
     AccountDeploymentV3, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
 };
-use starknet::core::types::FeeEstimate;
-use starknet::providers::JsonRpcClient;
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::signers::{LocalWallet, SigningKey};
+use starknet_rust::core::types::FeeEstimate;
+use starknet_rust::providers::JsonRpcClient;
+use starknet_rust::providers::jsonrpc::HttpTransport;
+use starknet_rust::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
 use std::str::FromStr;
 
@@ -69,7 +69,7 @@ pub async fn create(
 ) -> Result<AccountCreateResponse> {
     // TODO(#3556): Remove this warning once we drop Argent account type
     if create.account_type == AccountType::Argent {
-        ui.println(&WarningMessage::new(
+        ui.print_warning(WarningMessage::new(
             "Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account create` is deprecated, please use `ready` instead.",
         ));
         ui.print_blank_line();

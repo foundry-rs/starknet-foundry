@@ -2,9 +2,9 @@ use crate::integration::{NO_CONSTRUCTOR_CLASS_HASH, get_abi, init_class};
 use data_transformer::{reverse_transform_input, reverse_transform_output};
 use itertools::Itertools;
 use primitive_types::U256;
-use starknet::core::types::ContractClass;
-use starknet::core::types::contract::AbiEntry;
-use starknet::core::utils::get_selector_from_name;
+use starknet_rust::core::types::ContractClass;
+use starknet_rust::core::types::contract::AbiEntry;
+use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
 
 async fn assert_reverse_transformation(

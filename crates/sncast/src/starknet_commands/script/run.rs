@@ -23,7 +23,6 @@ use clap::Args;
 use conversions::byte_array::ByteArray;
 use conversions::serde::deserialize::BufferReader;
 use forge_runner::running::{has_segment_arena, syscall_handler_offset};
-use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use runtime::starknet::context::{SerializableBlockInfo, build_context};
 use runtime::starknet::state::DictStateReader;
@@ -43,15 +42,16 @@ use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::helpers::fee::{FeeArgs, ScriptFeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::script::run::ScriptRunResponse;
+use sncast::response::ui::UI;
 use sncast::state::hashing::{
     generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id,
 };
 use sncast::state::state_file::StateManager;
-use starknet::accounts::{Account, SingleOwnerAccount};
-use starknet::core::types::{BlockId, BlockTag::PreConfirmed};
-use starknet::providers::JsonRpcClient;
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::signers::LocalWallet;
+use starknet_rust::accounts::{Account, SingleOwnerAccount};
+use starknet_rust::core::types::{BlockId, BlockTag::PreConfirmed};
+use starknet_rust::providers::JsonRpcClient;
+use starknet_rust::providers::jsonrpc::HttpTransport;
+use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::fs;
@@ -438,7 +438,7 @@ fn warn_if_sncast_std_not_compatible(scarb_metadata: &Metadata, ui: &UI) -> Resu
         "sncast_std",
         &sncast_std_version_requirement,
     )? {
-        ui.println(&WarningMessage::new(&format!(
+        ui.print_warning(WarningMessage::new(&format!(
             "Package sncast_std version does not meet the recommended version requirement {sncast_std_version_requirement}, it might result in unexpected behaviour"
         )));
     }

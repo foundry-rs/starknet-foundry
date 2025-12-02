@@ -1,6 +1,7 @@
+use super::explorer::{ContractIdentifier, VerificationInterface};
 use anyhow::{Context, Result, anyhow};
 use camino::{Utf8Path, Utf8PathBuf};
-use foundry_ui::{UI, components::warning::WarningMessage};
+use foundry_ui::components::warning::WarningMessage;
 use itertools::Itertools;
 use reqwest::{self, StatusCode};
 use scarb_api::metadata::metadata_for_dir;
@@ -8,8 +9,9 @@ use scarb_metadata::{Metadata, PackageMetadata};
 use serde::Serialize;
 use sncast::Network;
 use sncast::response::explorer_link::ExplorerError;
+use sncast::response::ui::UI;
 use sncast::{helpers::scarb_utils, response::verify::VerifyResponse};
-use starknet::{
+use starknet_rust::{
     core::types::{BlockId, BlockTag},
     providers::{
         Provider,
@@ -20,8 +22,6 @@ use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, env, ffi::OsStr, fs, path::PathBuf};
 use url::Url;
 use walkdir::WalkDir;
-
-use super::explorer::{ContractIdentifier, VerificationInterface};
 
 const CAIRO_EXT: &str = "cairo";
 const VERIFY_ENDPOINT: &str = "/class-verify";
@@ -333,7 +333,7 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
             })?;
 
         if selected.manifest_metadata.license.is_none() {
-            ui.println(&WarningMessage::new("License not specified in Scarb.toml"));
+            ui.print_warning(WarningMessage::new("License not specified in Scarb.toml"));
         }
 
         let client = reqwest::Client::new();

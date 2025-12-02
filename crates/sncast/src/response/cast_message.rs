@@ -2,32 +2,21 @@ use foundry_ui::Message;
 use serde::Serialize;
 use serde_json::Value;
 
-use super::command::CommandResponse;
-#[derive(Serialize)]
-pub struct SncastMessage<T: CommandResponse> {
-    pub command: String,
-    pub command_response: T,
-}
+pub struct SncastMessage<T: SncastCommandMessage + Serialize>(pub T);
 
 pub trait SncastCommandMessage {
     fn text(&self) -> String;
 }
 
-impl<T: CommandResponse> Message for SncastMessage<T>
+impl<T> Message for SncastMessage<T>
 where
-    SncastMessage<T>: SncastCommandMessage,
+    T: SncastCommandMessage + Serialize,
 {
     fn text(&self) -> String {
-        SncastCommandMessage::text(self)
+        self.0.text()
     }
 
     fn json(&self) -> Value {
-        serde_json::to_value(&self.command_response).unwrap_or_else(|err| {
-            serde_json::json!({
-                "error": "Failed to serialize response",
-                "command": self.command,
-                "details": err.to_string()
-            })
-        })
+        serde_json::to_value(&self.0).expect("Should be serializable to JSON")
     }
 }

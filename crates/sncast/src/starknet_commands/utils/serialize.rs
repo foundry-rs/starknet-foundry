@@ -2,13 +2,13 @@ use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
 use data_transformer::transform;
-use foundry_ui::UI;
+use sncast::response::ui::UI;
 use sncast::{
     get_class_hash_by_address, get_contract_class,
     helpers::{configuration::CastConfig, rpc::RpcArgs},
     response::{errors::StarknetCommandError, utils::serialize::SerializeResponse},
 };
-use starknet::core::{
+use starknet_rust::core::{
     types::{ContractClass, contract::AbiEntry},
     utils::get_selector_from_name,
 };

@@ -6,13 +6,12 @@ use conversions::serde::serialize::CairoSerialize;
 use conversions::byte_array::ByteArray;
 
 use foundry_ui::Message;
-use serde::Serialize;
 use serde_json::{Value, json};
-use starknet::core::types::{ContractErrorData, StarknetError, TransactionExecutionErrorData};
-use starknet::providers::ProviderError;
+use starknet_rust::core::types::{ContractErrorData, StarknetError, TransactionExecutionErrorData};
+use starknet_rust::providers::ProviderError;
 use thiserror::Error;
 
-#[derive(Serialize, Debug)]
+#[derive(Debug)]
 pub struct ResponseError {
     command: String,
     error: String,
@@ -37,7 +36,9 @@ impl Message for ResponseError {
     }
 
     fn json(&self) -> Value {
-        json!(self)
+        json!({
+            "error": self.error,
+        })
     }
 }
 

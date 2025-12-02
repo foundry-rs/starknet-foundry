@@ -1,7 +1,7 @@
-use starknet::core::types::contract::AbiEntry;
-use starknet::core::types::{BlockId, BlockTag, ContractClass};
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::{JsonRpcClient, Provider};
+use starknet_rust::core::types::contract::AbiEntry;
+use starknet_rust::core::types::{BlockId, BlockTag, ContractClass};
+use starknet_rust::providers::jsonrpc::HttpTransport;
+use starknet_rust::providers::{JsonRpcClient, Provider};
 use starknet_types_core::felt::Felt;
 use tokio::sync::OnceCell;
 use url::Url;
@@ -21,6 +21,7 @@ const NO_CONSTRUCTOR_CLASS_HASH: Felt =
 static CLASS: OnceCell<ContractClass> = OnceCell::const_new();
 
 async fn init_class(class_hash: Felt) -> ContractClass {
+    // TODO: (#3937) New RPC URL is not available yet
     let client = JsonRpcClient::new(HttpTransport::new(
         Url::parse("http://188.34.188.184:7070/rpc/v0_9").unwrap(),
     ));

@@ -7,7 +7,7 @@ use sncast::helpers::token::Token;
 use sncast::response::balance::BalanceResponse;
 use sncast::response::errors::SNCastProviderError;
 use sncast::response::errors::StarknetCommandError;
-use starknet::{
+use starknet_rust::{
     core::{types::FunctionCall, utils::get_selector_from_name},
     providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport},
 };
@@ -116,7 +116,7 @@ fn erc20_balance_to_u256(balance: &[Felt]) -> Result<U256, Error> {
 mod tests {
     use super::*;
     use primitive_types::U256;
-    use starknet::macros::felt;
+    use starknet_rust::macros::felt;
     use starknet_types_core::felt::Felt;
 
     #[test]

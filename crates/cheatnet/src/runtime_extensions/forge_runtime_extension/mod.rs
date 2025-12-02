@@ -45,9 +45,9 @@ use runtime::{
     SyscallHandlingResult,
 };
 use scarb_oracle_hint_service::OracleHintService;
-use starknet::signers::SigningKey;
 use starknet_api::execution_resources::GasAmount;
 use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
+use starknet_rust::signers::SigningKey;
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
@@ -76,7 +76,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
     // `generic_array` which is a transitive dependency of multiple packages we depend on
     // now, shows a deprecation warning at asking to upgrade to version 1.x
-    #[expect(clippy::too_many_lines, deprecated)]
+    #[expect(clippy::too_many_lines)]
     fn handle_cheatcode(
         &mut self,
         selector: &str,

@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- `type` field to most responses when using `--json` output format.
+
+#### Changed
+
+- `sncast script init` now longer adds `cairo_test` as dependency in `Scarb.toml`
+
+#### Fixed
+
+- Restored missing `command` missing from some responses when using `--json` output format. 
+
+## [0.53.0] - 2025-11-24
+
+### Cast
+
+#### Changed
+
+- Hash function used when declaring contracts is selected based on the Starknet version
+
+## [0.53.0-rc.0] - 2025-11-18
+
+### Forge
+
+#### Added
+
+- `--gas-report` flag to display a table of L2 gas breakdown for each contract and selector
+
+### Cast
+
+#### Changed
+
+- The supported RPC version is now 0.10.0-rc.1
+
 ## [0.52.0] - 2025-11-05
 
 ### Forge

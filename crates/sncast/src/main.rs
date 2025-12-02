@@ -16,8 +16,8 @@ use clap::{CommandFactory, Parser, Subcommand};
 use configuration::load_config;
 use conversions::IntoConv;
 use data_transformer::transform;
+use foundry_ui::Message;
 use foundry_ui::components::warning::WarningMessage;
-use foundry_ui::{Message, UI};
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
@@ -28,6 +28,7 @@ use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
+use sncast::response::completions::CompletionsMessage;
 use sncast::response::declare::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse, DeployCommandMessage,
 };
@@ -35,16 +36,17 @@ use sncast::response::deploy::{DeployResponse, DeployResponseWithDeclare};
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transformed_call::transform_response;
+use sncast::response::ui::UI;
 use sncast::{
     ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
     get_contract_class,
 };
-use starknet::accounts::Account;
-use starknet::core::types::ContractClass;
-use starknet::core::types::contract::{AbiEntry, SierraClass};
-use starknet::core::utils::get_selector_from_name;
-use starknet::providers::Provider;
 use starknet_commands::verify::Verify;
+use starknet_rust::accounts::Account;
+use starknet_rust::core::types::ContractClass;
+use starknet_rust::core::types::contract::{AbiEntry, SierraClass};
+use starknet_rust::core::utils::get_selector_from_name;
+use starknet_rust::providers::Provider;
 use starknet_types_core::felt::Felt;
 use tokio::runtime::Runtime;
 
@@ -119,6 +121,28 @@ struct Cli {
 
     #[command(subcommand)]
     command: Commands,
+}
+
+impl Cli {
+    fn command_name(&self) -> String {
+        match self.command {
+            Commands::Declare(_) => "declare",
+            Commands::DeclareFrom(_) => "declare-from",
+            Commands::Deploy(_) => "deploy",
+            Commands::Call(_) => "call",
+            Commands::Invoke(_) => "invoke",
+            Commands::Multicall(_) => "multicall",
+            Commands::Account(_) => "account",
+            Commands::ShowConfig(_) => "show-config",
+            Commands::Script(_) => "script",
+            Commands::TxStatus(_) => "tx-status",
+            Commands::Verify(_) => "verify",
+            Commands::Completions(_) => "completions",
+            Commands::Utils(_) => "utils",
+            Commands::Balance(_) => "balance",
+        }
+        .to_string()
+    }
 }
 
 #[derive(Subcommand)]
@@ -298,7 +322,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     profile: cli.profile.unwrap_or("release".to_string()),
                 },
                 false,
-                ui,
+                // TODO(#3959) Remove `base_ui`
+                ui.base_ui(),
             )
             .expect("Failed to build contract");
 
@@ -352,7 +377,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             process_command_result("declare", result, ui, block_explorer_link);
 
             if let Some(deploy_command_message) = deploy_command_message {
-                ui.println(&deploy_command_message?);
+                ui.print_notification(deploy_command_message?);
             }
 
             Ok(())
@@ -426,7 +451,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         profile: cli.profile.unwrap_or("release".to_string()),
                     },
                     false,
-                    ui,
+                    // TODO(#3959) Remove `base_ui`
+                    ui.base_ui(),
                 )
                 .expect("Failed to build contract");
 
@@ -460,6 +486,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         Some(declare_transaction_response),
                     ),
                     Err(err) => {
+                        // TODO(#3960) This will return json output saying that `deploy` command was run
+                        //  even though the invoked command was declare.
                         process_command_result::<DeclareTransactionResponse>(
                             "deploy",
                             Err(err),
@@ -653,7 +681,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     profile: cli.profile.unwrap_or("release".to_string()),
                 },
                 false,
-                ui,
+                // TODO(#3959) Remove `base_ui`
+                ui.base_ui(),
             )
             .expect("Failed to build contract");
             let result = starknet_commands::verify::verify(
@@ -674,12 +703,17 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             // TODO(#3560): Remove this warning when the `completion` alias is removed
             if std::env::args().nth(1).as_deref() == Some("completion") {
-                let message = &WarningMessage::new(
+                let message = WarningMessage::new(
                     "Command `sncast completion` is deprecated and will be removed in the future. Please use `sncast completions` instead.",
                 );
 
                 // `#` is required since `sncast completion` generates a script and the output is used directly
-                ui.println(&format!("# {}", message.text()));
+                ui.print_message(
+                    "completion",
+                    CompletionsMessage {
+                        completions: format!("# {}", message.text()),
+                    },
+                );
             }
 
             Ok(())
@@ -735,8 +769,9 @@ fn config_with_cli(config: &mut CastConfig, cli: &Cli) {
 }
 
 fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
+    let command = cli.command_name();
     let global_config_path = get_global_config_path().unwrap_or_else(|err| {
-        ui.eprintln(&format!("Error getting global config path: {err}"));
+        ui.print_error(&command, format!("Error getting global config path: {err}"));
         Utf8PathBuf::new()
     });
 

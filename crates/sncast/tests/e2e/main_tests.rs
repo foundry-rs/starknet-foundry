@@ -36,6 +36,7 @@ async fn test_happy_case_from_sncast_config() {
 }
 
 #[tokio::test]
+#[ignore = "TODO: (#3937) New RPC URL is not available yet"]
 async fn test_happy_case_predefined_network() {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let args = vec![

@@ -17,11 +17,11 @@ use snapbox::cmd::cargo_bin;
 use sncast::AccountType;
 use sncast::helpers::constants::OZ_CLASS_HASH;
 use sncast::helpers::fee::FeeArgs;
-use starknet::core::types::TransactionReceipt::Invoke;
-use starknet::core::types::{
+use starknet_rust::core::types::TransactionReceipt::Invoke;
+use starknet_rust::core::types::{
     BlockId, BlockTag, InvokeTransaction, Transaction, TransactionExecutionStatus,
 };
-use starknet::providers::Provider;
+use starknet_rust::providers::Provider;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 use test_case::test_case;
 use toml::Value;
@@ -379,6 +379,8 @@ fn test_too_low_gas() {
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
+    // TODO Check extra blank line
+    println!("====\n{}\n====", output.as_stderr());
 
     assert_stderr_contains(
         output,
@@ -432,8 +434,8 @@ async fn test_json_output_format() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-            {"contract_address":"0x[..]","transaction_hash":"0x[..]"}
-            {"links":"contract: https://sepolia.starkscan.co/contract/0x[..]\ntransaction: https://sepolia.starkscan.co/tx/0x[..]\n","title":"deployment"}
+            {"command":"deploy","contract_address":"0x[..]","transaction_hash":"0x[..]","type":"response"}
+            {"links":"contract: https://sepolia.starkscan.co/contract/0x[..]\ntransaction: https://sepolia.starkscan.co/tx/0x[..]\n","title":"deployment","type":"notification"}
             "#},
     );
 }

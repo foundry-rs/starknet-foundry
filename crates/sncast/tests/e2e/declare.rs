@@ -12,8 +12,8 @@ use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert
 use sncast::AccountType;
 use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
 use sncast::helpers::fee::FeeArgs;
-use starknet::core::types::TransactionReceipt::Declare;
-use starknet::core::types::{DeclareTransaction, Transaction, TransactionExecutionStatus};
+use starknet_rust::core::types::TransactionReceipt::Declare;
+use starknet_rust::core::types::{DeclareTransaction, Transaction, TransactionExecutionStatus};
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 use std::fs;
 use test_case::test_case;
@@ -62,6 +62,47 @@ async fn test_happy_case_human_readable() {
         sncast --accounts-file accounts.json --account my_account deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
     " },
     );
+}
+
+#[tokio::test]
+async fn test_happy_case_json_output() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "test_happy_case_json_output",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--json",
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+    ];
+    let args = apply_test_resource_bounds_flags(args);
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_matches(indoc! {
+        r#"
+{"status":"compiling","message":"[..]"}
+{"type":"warn","message":"[..]"}
+{"type":"warn","message":"[..]"}
+{"status":"compiling","message":"[..]"}
+{"status":"finished","message":"[..]"}
+{"class_hash":"0x0[..]","command":"declare","transaction_hash":"0x0[..]","type":"response"}
+{"links":"class: https://sepolia.starkscan.co/class/0x0[..]/ntransaction: https://sepolia.starkscan.co/tx/0x0[..]/n","title":"declaration","type":"notification"}
+"#,
+    });
 }
 
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash"

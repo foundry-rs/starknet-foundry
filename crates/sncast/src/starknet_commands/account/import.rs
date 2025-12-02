@@ -8,17 +8,17 @@ use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
-use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::import::AccountImportResponse;
+use sncast::response::ui::UI;
 use sncast::{AccountType, check_class_hash_exists, get_chain_id, handle_rpc_error};
-use starknet::core::types::{BlockId, BlockTag, StarknetError};
-use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
-use starknet::providers::{Provider, ProviderError};
-use starknet::signers::SigningKey;
+use starknet_rust::core::types::{BlockId, BlockTag, StarknetError};
+use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
+use starknet_rust::providers::{Provider, ProviderError};
+use starknet_rust::signers::SigningKey;
 use starknet_types_core::felt::Felt;
 
 #[derive(Args, Debug)]
@@ -73,7 +73,7 @@ pub async fn import(
 ) -> Result<AccountImportResponse> {
     // TODO(#3556): Remove this warning once we drop Argent account type
     if import.account_type == AccountType::Argent {
-        ui.println(&WarningMessage::new(
+        ui.print_warning(WarningMessage::new(
                 "Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account import` is deprecated, please use `ready` instead.",
             ));
         ui.print_blank_line();

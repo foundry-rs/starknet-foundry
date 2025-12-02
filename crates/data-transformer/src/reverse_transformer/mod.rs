@@ -3,7 +3,7 @@ mod types;
 
 use crate::reverse_transformer::transform::{ReverseTransformer, TransformationError};
 use crate::shared::extraction::extract_function_from_selector;
-use starknet::core::types::contract::AbiEntry;
+use starknet_rust::core::types::contract::AbiEntry;
 use starknet_types_core::felt::Felt;
 
 #[derive(Debug, thiserror::Error)]

@@ -11,8 +11,8 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::selector_from_name;
 use cheatnet::state::{CheatSpan, CheatnetState};
 use conversions::IntoConv;
-use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::ContractAddress;
+use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
 use std::num::NonZeroUsize;
 

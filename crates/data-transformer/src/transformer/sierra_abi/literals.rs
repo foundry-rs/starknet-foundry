@@ -7,7 +7,7 @@ use cairo_lang_syntax::node::ast::{
     Expr, ExprUnary, TerminalFalse, TerminalLiteralNumber, TerminalShortString, TerminalString,
     TerminalTrue, UnaryOperator,
 };
-use starknet::core::types::contract::AbiEntry;
+use starknet_rust::core::types::contract::AbiEntry;
 use std::ops::Neg;
 
 impl SupportedCalldataKind for TerminalLiteralNumber {

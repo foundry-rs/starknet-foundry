@@ -16,7 +16,7 @@ use sncast::helpers::account::load_accounts;
 use sncast::helpers::constants::{
     BRAAVOS_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH, READY_CLASS_HASH,
 };
-use starknet::core::types::TransactionReceipt::DeployAccount;
+use starknet_rust::core::types::TransactionReceipt::DeployAccount;
 use std::fs;
 use tempfile::{TempDir, tempdir};
 use test_case::test_case;
@@ -608,7 +608,7 @@ pub async fn test_json_output_format() {
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r#"
-        {"transaction_hash":"0x0[..]"}
-        {"links":"transaction: https://sepolia.starkscan.co/tx/0x0[..]","title":"account deployment"}
+        {"command":"account deploy","transaction_hash":"0x0[..]","type":"response"}
+        {"links":"transaction: https://sepolia.starkscan.co/tx/0x0[..]","title":"account deployment","type":"notification"}
     "#});
 }

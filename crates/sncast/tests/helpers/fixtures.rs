@@ -1,10 +1,10 @@
+use super::fee::apply_test_resource_bounds_flags;
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use crate::helpers::runner::runner;
 use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
 use conversions::string::IntoHexStr;
 use core::str;
-use foundry_ui::UI;
 use fs_extra::dir::{CopyOptions, copy};
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
@@ -18,20 +18,21 @@ use sncast::helpers::constants::{
 use sncast::helpers::fee::FeeSettings;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::helpers::scarb_utils::get_package_metadata;
+use sncast::response::ui::UI;
 use sncast::state::state_file::{
     ScriptTransactionEntry, ScriptTransactionOutput, ScriptTransactionStatus,
 };
 use sncast::{AccountType, apply_optional_fields, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider};
-use starknet::accounts::{
+use starknet_rust::accounts::{
     Account, AccountFactory, ArgentAccountFactory, ExecutionV3, OpenZeppelinAccountFactory,
 };
-use starknet::core::types::{Call, InvokeTransactionResult, Transaction, TransactionReceipt};
-use starknet::core::utils::get_contract_address;
-use starknet::core::utils::get_selector_from_name;
-use starknet::providers::JsonRpcClient;
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::signers::{LocalWallet, SigningKey};
+use starknet_rust::core::types::{Call, InvokeTransactionResult, Transaction, TransactionReceipt};
+use starknet_rust::core::utils::get_contract_address;
+use starknet_rust::core::utils::get_selector_from_name;
+use starknet_rust::providers::JsonRpcClient;
+use starknet_rust::providers::jsonrpc::HttpTransport;
+use starknet_rust::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::env;
@@ -41,8 +42,6 @@ use std::io::{BufRead, Write};
 use tempfile::{TempDir, tempdir};
 use toml::Table;
 use url::Url;
-
-use super::fee::apply_test_resource_bounds_flags;
 
 const SCRIPT_ORIGIN_TIMESTAMP: u64 = 1_709_853_748;
 

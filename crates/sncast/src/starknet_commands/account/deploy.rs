@@ -2,7 +2,6 @@ use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
-use foundry_ui::UI;
 use serde_json::Map;
 use sncast::helpers::account::load_accounts;
 use sncast::helpers::braavos::BraavosAccountFactory;
@@ -11,20 +10,21 @@ use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::deploy::AccountDeployResponse;
 use sncast::response::invoke::InvokeResponse;
+use sncast::response::ui::UI;
 use sncast::{
     AccountType, WaitForTx, apply_optional_fields, chain_id_to_network_name,
     check_account_file_exists, get_account_data_from_accounts_file, get_account_data_from_keystore,
     get_keystore_password, handle_rpc_error, handle_wait_for_tx,
 };
-use starknet::accounts::{AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory};
-use starknet::accounts::{AccountFactoryError, ArgentAccountFactory};
-use starknet::core::types::BlockTag::PreConfirmed;
-use starknet::core::types::{BlockId, StarknetError::ClassHashNotFound};
-use starknet::core::utils::get_contract_address;
-use starknet::providers::ProviderError::StarknetError;
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::{JsonRpcClient, Provider};
-use starknet::signers::{LocalWallet, SigningKey};
+use starknet_rust::accounts::{AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory};
+use starknet_rust::accounts::{AccountFactoryError, ArgentAccountFactory};
+use starknet_rust::core::types::BlockTag::PreConfirmed;
+use starknet_rust::core::types::{BlockId, StarknetError::ClassHashNotFound};
+use starknet_rust::core::utils::get_contract_address;
+use starknet_rust::providers::ProviderError::StarknetError;
+use starknet_rust::providers::jsonrpc::HttpTransport;
+use starknet_rust::providers::{JsonRpcClient, Provider};
+use starknet_rust::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
 
 #[derive(Args, Debug)]

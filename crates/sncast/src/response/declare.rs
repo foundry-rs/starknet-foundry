@@ -1,16 +1,15 @@
-use super::{command::CommandResponse, explorer_link::OutputLink};
+use super::explorer_link::OutputLink;
 use crate::helpers::block_explorer::LinkProvider;
-use crate::response::cast_message::{SncastCommandMessage, SncastMessage};
+use crate::response::cast_message::SncastCommandMessage;
 use anyhow::Error;
 use camino::Utf8PathBuf;
 use conversions::string::IntoHexStr;
 use conversions::{IntoConv, padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
-use foundry_ui::Message;
-use foundry_ui::styling;
+use foundry_ui::{Message, styling};
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use starknet::core::types::contract::{AbiConstructor, AbiEntry};
+use starknet_rust::core::types::contract::{AbiConstructor, AbiEntry};
 use starknet_types_core::felt::Felt;
 use std::fmt::Write;
 
@@ -20,21 +19,13 @@ pub struct DeclareTransactionResponse {
     pub transaction_hash: PaddedFelt,
 }
 
-impl CommandResponse for DeclareTransactionResponse {}
-
-impl SncastCommandMessage for SncastMessage<DeclareTransactionResponse> {
+impl SncastCommandMessage for DeclareTransactionResponse {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
             .success_message("Declaration completed")
             .blank_line()
-            .field(
-                "Class Hash",
-                &self.command_response.class_hash.into_hex_string(),
-            )
-            .field(
-                "Transaction Hash",
-                &self.command_response.transaction_hash.into_hex_string(),
-            )
+            .field("Class Hash", &self.class_hash.into_hex_string())
+            .field("Transaction Hash", &self.transaction_hash.into_hex_string())
             .build()
     }
 }
@@ -152,6 +143,7 @@ impl Message for DeployCommandMessage {
     }
 
     fn json(&self) -> Value {
+        // TODO(#3960) JSON output support
         // This message is only helpful in human mode, we don't need it in JSON mode.
         Value::Null
     }

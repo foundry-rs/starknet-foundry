@@ -39,6 +39,7 @@ pub struct TestResultMessage {
     fuzzer_report: String,
     gas_usage: String,
     used_resources: String,
+    gas_report: String,
 }
 
 impl TestResultMessage {
@@ -75,14 +76,25 @@ impl TestResultMessage {
             String::new()
         };
 
-        let gas_usage = match test_result {
+        let (gas_usage, gas_report) = match test_result {
             AnyTestCaseSummary::Single(TestCaseSummary::Passed { gas_info, .. }) => {
-                format!(
-                    " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
-                    gas_info.l1_gas, gas_info.l1_data_gas, gas_info.l2_gas
+                let gas_report = gas_info
+                    .report_data
+                    .as_ref()
+                    .map(std::string::ToString::to_string)
+                    .unwrap_or_default();
+
+                (
+                    format!(
+                        " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
+                        gas_info.gas_used.l1_gas,
+                        gas_info.gas_used.l1_data_gas,
+                        gas_info.gas_used.l2_gas
+                    ),
+                    gas_report,
                 )
             }
-            _ => String::new(),
+            _ => (String::new(), String::new()),
         };
 
         let used_resources = match (show_detailed_resources, &test_result) {
@@ -102,6 +114,7 @@ impl TestResultMessage {
             fuzzer_report,
             gas_usage,
             used_resources,
+            gas_report,
         }
     }
 
@@ -138,10 +151,11 @@ impl Message for TestResultMessage {
 
         let fuzzer_report = &self.fuzzer_report;
         let gas_usage = &self.gas_usage;
+        let gas_report = &self.gas_report;
         let used_resources = &self.used_resources;
 
         format!(
-            "{result_header} {result_name}{fuzzer_report}{gas_usage}{used_resources}{result_msg}{result_debug_trace}"
+            "{result_header} {result_name}{fuzzer_report}{gas_usage}{used_resources}{result_msg}{result_debug_trace}{gas_report}"
         )
     }
 

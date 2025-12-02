@@ -9,13 +9,13 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
 };
 use cheatnet::trace_data::{CallTrace, CallTraceNode};
 use data_transformer::{reverse_transform_input, reverse_transform_output};
-use starknet::core::types::contract::AbiEntry;
 use starknet_api::core::ClassHash;
 use starknet_api::execution_utils::format_panic_data;
+use starknet_rust::core::types::contract::AbiEntry;
 
 pub struct Collector<'a> {
     call_trace: &'a CallTrace,
-    context: &'a Context,
+    context: &'a Context<'a>,
 }
 
 impl<'a> Collector<'a> {

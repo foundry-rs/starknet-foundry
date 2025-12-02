@@ -1,6 +1,6 @@
-use super::{command::CommandResponse, explorer_link::OutputLink};
+use super::explorer_link::OutputLink;
 use crate::helpers::block_explorer::LinkProvider;
-use crate::response::cast_message::{SncastCommandMessage, SncastMessage};
+use crate::response::cast_message::SncastCommandMessage;
 use conversions::string::IntoPaddedHexStr;
 use conversions::{padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
 use foundry_ui::styling;
@@ -11,16 +11,14 @@ pub struct InvokeResponse {
     pub transaction_hash: PaddedFelt,
 }
 
-impl CommandResponse for InvokeResponse {}
-
-impl SncastCommandMessage for SncastMessage<InvokeResponse> {
+impl SncastCommandMessage for InvokeResponse {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
             .success_message("Invoke completed")
             .blank_line()
             .field(
                 "Transaction Hash",
-                &self.command_response.transaction_hash.into_padded_hex_str(),
+                &self.transaction_hash.into_padded_hex_str(),
             )
             .build()
     }

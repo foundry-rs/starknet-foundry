@@ -1,15 +1,18 @@
-use anyhow::{Context, Ok, Result, ensure};
+use anyhow::{Context, Result, ensure};
 use camino::Utf8PathBuf;
-use foundry_ui::UI;
-use foundry_ui::components::warning::WarningMessage;
+use sncast::response::ui::UI;
 use std::fs;
 
 use clap::Args;
+use foundry_ui::components::warning::WarningMessage;
 use indoc::{formatdoc, indoc};
 use scarb_api::ScarbCommand;
+use scarb_api::version::scarb_version;
+use semver::Version;
 use sncast::helpers::constants::INIT_SCRIPTS_DIR;
 use sncast::helpers::scarb_utils::get_cairo_version;
 use sncast::response::script::init::ScriptInitResponse;
+use toml_edit::DocumentMut;
 
 #[derive(Args, Debug)]
 pub struct Init {
@@ -25,7 +28,7 @@ pub fn init(init_args: &Init, ui: &UI) -> Result<ScriptInitResponse> {
     let modify_files_result = add_dependencies(&script_root_dir_path)
         .and_then(|()| modify_files_in_src_dir(&init_args.script_name, &script_root_dir_path));
 
-    ui.println(&WarningMessage::new(
+    ui.print_warning(WarningMessage::new(
         &"The newly created script isn't auto-added to the workspace. For more details, please see https://foundry-rs.github.io/starknet-foundry/starknet/script.html#initialize-a-script",
     ));
 
@@ -58,6 +61,17 @@ fn get_script_root_dir_path(script_name: &str) -> Result<Utf8PathBuf> {
 }
 
 fn init_scarb_project(script_name: &str, script_root_dir: &Utf8PathBuf) -> Result<()> {
+    const SCARB_WITHOUT_CAIRO_TEST_TEMPLATE: Version = Version::new(2, 13, 0);
+
+    let version = scarb_version()?;
+
+    // TODO(#3910)
+    let test_runner = if version.scarb < SCARB_WITHOUT_CAIRO_TEST_TEMPLATE {
+        "cairo-test"
+    } else {
+        "none"
+    };
+
     ScarbCommand::new()
         .args([
             "new",
@@ -66,12 +80,15 @@ fn init_scarb_project(script_name: &str, script_root_dir: &Utf8PathBuf) -> Resul
             "--no-vcs",
             "--quiet",
             script_root_dir.as_str(),
-            "--test-runner",
-            "cairo-test",
         ])
-        .env("SCARB_INIT_TEST_RUNNER", "cairo-test")
+        .env("SCARB_INIT_TEST_RUNNER", test_runner)
         .run()
         .context("Failed to init Scarb project")?;
+
+    // TODO(#3910)
+    if version.scarb < SCARB_WITHOUT_CAIRO_TEST_TEMPLATE {
+        remove_cairo_test_dependency(script_root_dir)?;
+    }
 
     Ok(())
 }
@@ -160,8 +177,17 @@ fn overwrite_lib_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> Resul
 
 fn clean_created_dir_and_files(script_root_dir: &Utf8PathBuf, ui: &UI) {
     if fs::remove_dir_all(script_root_dir).is_err() {
-        ui.eprintln(&format!(
-            "Failed to clean created files by init command at {script_root_dir}"
-        ));
+        ui.print_error(
+            "script",
+            format!("Failed to clean created files by init command at {script_root_dir}"),
+        );
     }
+}
+
+fn remove_cairo_test_dependency(script_root_dir: &Utf8PathBuf) -> Result<()> {
+    let manifest_path = script_root_dir.join("Scarb.toml");
+    let mut document: DocumentMut = fs::read_to_string(&manifest_path)?.parse()?;
+    document.remove("dev-dependencies");
+    fs::write(manifest_path, document.to_string())?;
+    Ok(())
 }

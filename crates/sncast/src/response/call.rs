@@ -1,6 +1,4 @@
-use super::command::CommandResponse;
 use crate::response::cast_message::SncastCommandMessage;
-use crate::response::cast_message::SncastMessage;
 use conversions::serde::serialize::CairoSerialize;
 use conversions::string::IntoHexStr;
 use foundry_ui::styling;
@@ -12,12 +10,9 @@ pub struct CallResponse {
     pub response: Vec<Felt>,
 }
 
-impl CommandResponse for CallResponse {}
-
-impl SncastCommandMessage for SncastMessage<CallResponse> {
+impl SncastCommandMessage for CallResponse {
     fn text(&self) -> String {
         let response_values = self
-            .command_response
             .response
             .iter()
             .map(|felt| felt.into_hex_string())

@@ -3,10 +3,10 @@ use crate::helpers::{
     fixtures::{create_test_provider, invoke_contract},
 };
 use camino::Utf8PathBuf;
-use foundry_ui::UI;
 use sncast::helpers::{
     configuration::CastConfig, constants::UDC_ADDRESS, fee::FeeSettings, rpc::RpcArgs,
 };
+use sncast::response::ui::UI;
 
 use crate::helpers::constants::{
     CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA,
@@ -15,7 +15,7 @@ use crate::helpers::constants::{
 use conversions::string::IntoHexStr;
 use sncast::{ValidatedWaitParams, get_account};
 use sncast::{WaitForTx, handle_wait_for_tx, wait_for_tx};
-use starknet::contract::{ContractFactory, UdcSelector};
+use starknet_rust::contract::{ContractFactory, UdcSelector};
 use starknet_types_core::felt::Felt;
 
 #[tokio::test]

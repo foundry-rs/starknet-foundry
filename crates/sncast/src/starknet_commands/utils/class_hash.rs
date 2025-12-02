@@ -6,7 +6,7 @@ use sncast::{
     ErrorData,
     response::{errors::StarknetCommandError, utils::class_hash::ClassHashResponse},
 };
-use starknet::core::types::contract::SierraClass;
+use starknet_rust::core::types::contract::SierraClass;
 use std::collections::HashMap;
 
 #[derive(Args, Debug)]

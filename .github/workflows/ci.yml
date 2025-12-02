@@ -151,6 +151,9 @@ jobs:
         with:
           name: nextest-archive-${{ runner.os }}
       - name: nextest partition ${{ matrix.partition }}/3
+        # TODO(#3937): remove env override once new RPC URL is available in tests.
+        env:
+          SNCAST_IGNORE_RPC_0_9_CHECK: "1"
         run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}.tar.zst' e2e
 
   test-forge-e2e-native:
@@ -199,6 +202,9 @@ jobs:
         with:
           name: nextest-archive-${{ runner.os }}-native
       - name: nextest partition ${{ matrix.partition }}/3
+        # TODO(#3937): remove env override once new RPC URL is available in tests.
+        env:
+          SNCAST_IGNORE_RPC_0_9_CHECK: "1"
         run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst' e2e
 
   test-plugin-checks:
@@ -284,6 +290,9 @@ jobs:
       - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
       - uses: ./.github/actions/setup-tools
       - name: Run tests
+        # TODO(#3937): remove env override once new RPC URL is available in tests.
+        env:
+          SNCAST_IGNORE_RPC_0_9_CHECK: "1"
         run: cargo test --profile ci -p sncast
 
   test-conversions:
@@ -381,13 +390,15 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MDBOOK_VERSION: 0.4.52
+      # TODO(#3970): Use latest version after resolving issue
+      MDBOOK_VARIABLES_VERSION: 0.3.0
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-tools
       - name: Install mdBook
         run: |
           cargo install --version ${MDBOOK_VERSION} mdbook
-          cargo install mdbook-variables
+          cargo install --version ${MDBOOK_VARIABLES_VERSION} mdbook-variables
       - name: Install mdBook Link-Check
         run: |
           cargo install mdbook-linkcheck
