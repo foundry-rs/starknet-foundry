@@ -1012,8 +1012,8 @@ pub async fn test_json_output_format() {
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(temp_dir.path());
     snapbox.assert().stdout_matches(indoc! {r#"
-        {"add_profile":"Profile my_account successfully added to [..]/snfoundry.toml","address":"0x[..]","estimated_fee":"[..]","message":"Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee/n/nAfter prefunding the account, run:/nsncast --accounts-file accounts.json account deploy --url [..] --name my_account"}
-        {"links":"account: https://sepolia.starkscan.co/contract/0x[..]","title":"account creation"}
+        {"add_profile":"Profile my_account successfully added to [..]/snfoundry.toml","address":"0x[..]","command":"account create","estimated_fee":"[..]","message":"Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee/n/nAfter prefunding the account, run:/nsncast --accounts-file accounts.json account deploy --url [..] --name my_account","type":"response"}
+        {"links":"account: https://sepolia.starkscan.co/contract/0x[..]","title":"account creation","type":"notification"}
     "#});
 }
 

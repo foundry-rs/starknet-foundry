@@ -1,12 +1,11 @@
 use anyhow::{Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args, ValueEnum};
-use foundry_ui::UI;
-use foundry_ui::components::warning::WarningMessage;
 use promptly::prompt;
 use sncast::get_provider;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::FreeProvider;
+use sncast::response::ui::UI;
 use sncast::{Network, response::verify::VerifyResponse};
 use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, fmt};
@@ -18,6 +17,7 @@ pub mod walnut;
 
 use explorer::ContractIdentifier;
 use explorer::VerificationInterface;
+use foundry_ui::components::warning::WarningMessage;
 use sncast::helpers::artifacts::CastStarknetContractArtifacts;
 use voyager::Voyager;
 use walnut::WalnutVerificationInterface;
@@ -91,9 +91,10 @@ fn display_files_and_confirm(
     contract_name: &str,
 ) -> Result<()> {
     // Display files that will be uploaded
-    ui.println(&"The following files will be uploaded to verifier:");
+    // TODO(#3960) JSON output support
+    ui.print_notification("The following files will be uploaded to verifier:".to_string());
     for file_path in files_to_display {
-        ui.println(&file_path);
+        ui.print_notification(file_path);
     }
 
     // Ask for confirmation after showing files
@@ -186,7 +187,7 @@ pub async fn verify(
 
     // Handle test_files warning for Walnut
     if matches!(verifier, Verifier::Walnut) && test_files {
-        ui.println(&WarningMessage::new(
+        ui.print_warning(WarningMessage::new(
             "The `--test-files` option is ignored for Walnut verifier",
         ));
     }

@@ -1,12 +1,12 @@
 use anyhow::{Result, bail};
 use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args};
-use foundry_ui::UI;
 use promptly::prompt;
 use sncast::helpers::account::load_accounts;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::delete::AccountDeleteResponse;
+use sncast::response::ui::UI;
 use sncast::{chain_id_to_network_name, get_chain_id};
 
 #[derive(Args, Debug)]

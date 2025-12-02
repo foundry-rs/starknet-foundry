@@ -15,9 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Added
+
+- `type` field to most responses when using `--json` output format.
+
 #### Changed
 
 - `sncast script init` now longer adds `cairo_test` as dependency in `Scarb.toml`
+
+#### Fixed
+
+- Restored missing `command` missing from some responses when using `--json` output format. 
 
 ## [0.53.0] - 2025-11-24
 

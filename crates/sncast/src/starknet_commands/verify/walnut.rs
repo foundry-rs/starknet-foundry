@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
-use foundry_ui::UI;
 use reqwest::StatusCode;
+use sncast::response::ui::UI;
 use sncast::response::verify::VerifyResponse;
 use sncast::{Network, response::explorer_link::ExplorerError};
 use starknet_rust::providers::{JsonRpcClient, jsonrpc::HttpTransport};

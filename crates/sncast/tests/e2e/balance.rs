@@ -48,7 +48,7 @@ pub async fn happy_case_json() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r#"
-        {"balance":"[..]","token":"strk"}
+        {"balance":"[..]","command":"balance","token":"strk","type":"response"}
     "#});
 }
 

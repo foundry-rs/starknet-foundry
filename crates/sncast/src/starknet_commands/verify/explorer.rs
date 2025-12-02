@@ -1,7 +1,7 @@
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use foundry_ui::UI;
 use serde::Serialize;
+use sncast::response::ui::UI;
 use sncast::{Network, response::verify::VerifyResponse};
 use starknet_rust::providers::{JsonRpcClient, jsonrpc::HttpTransport};
 
