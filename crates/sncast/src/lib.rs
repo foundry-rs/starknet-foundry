@@ -7,8 +7,6 @@ use anyhow::{Context, Error, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use conversions::serde::serialize::CairoSerialize;
-use foundry_ui::UI;
-use foundry_ui::components::warning::WarningMessage;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::RngCore;
 use rand::rngs::OsRng;
@@ -49,7 +47,9 @@ pub mod helpers;
 pub mod response;
 pub mod state;
 
+use crate::response::ui::UI;
 use conversions::byte_array::ByteArray;
+use foundry_ui::components::warning::WarningMessage;
 
 pub type NestedMap<T> = HashMap<String, HashMap<String, T>>;
 
@@ -277,7 +277,7 @@ pub async fn get_account<'a>(
 
     match (is_devnet_account, exists_in_accounts_file) {
         (true, true) => {
-            ui.println(&WarningMessage::new(format!(
+            ui.print_warning(WarningMessage::new(format!(
                 "Using account {account} from accounts file {accounts_file}. \
                 To use an inbuilt devnet account, please rename your existing account or use an account with a different number."
             )));
@@ -633,7 +633,7 @@ pub async fn wait_for_tx(
     wait_params: ValidatedWaitParams,
     ui: Option<&UI>,
 ) -> Result<String, WaitForTransactionError> {
-    ui.inspect(|ui| ui.println(&format!("Transaction hash: {tx_hash:#x}")));
+    ui.inspect(|ui| ui.print_notification(format!("Transaction hash: {tx_hash:#x}")));
 
     let retries = wait_params.get_retries();
     for i in (1..retries).rev() {
@@ -667,8 +667,8 @@ pub async fn wait_for_tx(
             )) => {
                 ui.inspect(|ui| {
                     let remaining_time = wait_params.remaining_time(i);
-                    ui.println(&"Transaction status: PRE_CONFIRMED".to_string());
-                    ui.println(&format!(
+                    ui.print_notification("Transaction status: PRE_CONFIRMED".to_string());
+                    ui.print_notification(format!(
                         "Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)"
                     ));
                 });
@@ -680,15 +680,16 @@ pub async fn wait_for_tx(
             | Err(StarknetError(TransactionHashNotFound)) => {
                 ui.inspect(|ui| {
                         let remaining_time = wait_params.remaining_time(i);
-                        ui.println(&format!(
+                        ui.print_notification(format!(
                             "Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)"
                         ));
                     });
             }
             Err(ProviderError::RateLimited) => {
                 ui.inspect(|ui| {
-                    ui.println(
-                        &"Request rate limited while waiting for transaction to be accepted",
+                    ui.print_notification(
+                        "Request rate limited while waiting for transaction to be accepted"
+                            .to_string(),
                     );
                 });
                 sleep(Duration::from_secs(wait_params.get_retry_interval().into()));

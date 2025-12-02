@@ -1,10 +1,10 @@
 use anyhow::{Context, Result, ensure};
 use camino::Utf8PathBuf;
-use foundry_ui::UI;
-use foundry_ui::components::warning::WarningMessage;
+use sncast::response::ui::UI;
 use std::fs;
 
 use clap::Args;
+use foundry_ui::components::warning::WarningMessage;
 use indoc::{formatdoc, indoc};
 use scarb_api::ScarbCommand;
 use scarb_api::version::scarb_version;
@@ -28,7 +28,7 @@ pub fn init(init_args: &Init, ui: &UI) -> Result<ScriptInitResponse> {
     let modify_files_result = add_dependencies(&script_root_dir_path)
         .and_then(|()| modify_files_in_src_dir(&init_args.script_name, &script_root_dir_path));
 
-    ui.println(&WarningMessage::new(
+    ui.print_warning(WarningMessage::new(
         &"The newly created script isn't auto-added to the workspace. For more details, please see https://foundry-rs.github.io/starknet-foundry/starknet/script.html#initialize-a-script",
     ));
 
@@ -177,9 +177,10 @@ fn overwrite_lib_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> Resul
 
 fn clean_created_dir_and_files(script_root_dir: &Utf8PathBuf, ui: &UI) {
     if fs::remove_dir_all(script_root_dir).is_err() {
-        ui.eprintln(&format!(
-            "Failed to clean created files by init command at {script_root_dir}"
-        ));
+        ui.print_error(
+            "script",
+            format!("Failed to clean created files by init command at {script_root_dir}"),
+        );
     }
 }
 

@@ -164,6 +164,8 @@ fn test_happy_case_json() {
 
     let expected = json!(
         {
+            "command": "account delete",
+            "type": "response",
             "user3": {
               "address": "0x7e00d496e324876bbc8531f2d9a82bf154d1a04a50218ee74cdd372f75a551a",
               "public_key": "0x7e52885445756b313ea16849145363ccb73fb4ab0440dbac333cf9d13de82b9",
@@ -230,6 +232,8 @@ fn test_happy_case_with_private_keys_json() {
 
     let expected = json!(
         {
+          "command": "account delete",
+          "type": "response",
           "user3": {
               "address": "0x7e00d496e324876bbc8531f2d9a82bf154d1a04a50218ee74cdd372f75a551a",
               "private_key": "0xe3e70682c2094cac629f6fbed82c07cd",

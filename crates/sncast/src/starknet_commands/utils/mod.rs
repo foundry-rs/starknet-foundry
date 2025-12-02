@@ -1,5 +1,5 @@
 use clap::{Args, Subcommand};
-use foundry_ui::UI;
+use sncast::response::ui::UI;
 use sncast::{
     helpers::{
         configuration::CastConfig,
@@ -65,7 +65,8 @@ pub async fn utils(
                     profile,
                 },
                 false,
-                ui,
+                // TODO(#3959) Remove `base_ui`
+                ui.base_ui(),
             )
             .expect("Failed to build contract");
 

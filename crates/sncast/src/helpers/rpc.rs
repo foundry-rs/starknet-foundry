@@ -1,9 +1,9 @@
 use crate::helpers::configuration::CastConfig;
 use crate::helpers::devnet::detection;
+use crate::response::ui::UI;
 use crate::{Network, get_provider};
 use anyhow::{Result, bail};
 use clap::Args;
-use foundry_ui::UI;
 use shared::consts::RPC_URL_VERSION;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet_rust::providers::{JsonRpcClient, jsonrpc::HttpTransport};
@@ -41,7 +41,8 @@ impl RpcArgs {
         assert!(!url.is_empty(), "url cannot be empty");
         let provider = get_provider(&url)?;
 
-        verify_and_warn_if_incompatible_rpc_version(&provider, url, ui).await?;
+        // TODO(#3959) Remove `base_ui`
+        verify_and_warn_if_incompatible_rpc_version(&provider, url, ui.base_ui()).await?;
 
         Ok(provider)
     }

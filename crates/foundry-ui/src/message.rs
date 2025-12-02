@@ -2,7 +2,7 @@ use serde::Serialize;
 use serde_json::{Value, json};
 
 /// A typed object that can be either printed as a human-readable message or serialized as JSON.
-pub trait Message: Serialize {
+pub trait Message {
     /// Return textual (human) representation of this message.
     fn text(&self) -> String;
 

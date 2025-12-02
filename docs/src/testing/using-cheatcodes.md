@@ -186,6 +186,10 @@ To better understand the functionality of `CheatSpan`, here's a full example:
 {{#include ../../listings/using_cheatcodes_others/tests/caller_address/span.cairo}}
 ```
 
+> 📝 **Note**
+>
+> [Library calls](https://foundry-rs.github.io/starknet-foundry/testing/testing-contract-internals.html#using-library-calls-with-the-test-state-context) don't trigger cheat spans progression. As a result, the cheatcode is still in effect when making subsequent library calls.
+
 ### Cheating ERC-20 Token balance
 
 If you want to cheat the balance of an ERC-20 token (STRK, ETH or custom one), you can use the [`set_balance`](../appendix/cheatcodes/set_balance.md) cheatcode.

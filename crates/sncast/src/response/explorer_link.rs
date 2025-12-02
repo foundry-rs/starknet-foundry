@@ -2,13 +2,13 @@ use crate::Network;
 use crate::helpers::{block_explorer::LinkProvider, configuration::CastConfig, devnet::detection};
 use foundry_ui::Message;
 use serde::Serialize;
-use serde_json::{Value, json};
+use serde_json::Value;
 use starknet_types_core::felt::Felt;
 
 const SNCAST_FORCE_SHOW_EXPLORER_LINKS_ENV: &str = "SNCAST_FORCE_SHOW_EXPLORER_LINKS";
 
 // TODO(#3391): This code should be refactored to either use common `Message` trait or be directly
-// included in `sncast` output messages.
+//  included in `sncast` output messages.
 pub trait OutputLink {
     const TITLE: &'static str;
 
@@ -39,7 +39,8 @@ impl Message for ExplorerLinksMessage {
     }
 
     fn json(&self) -> Value {
-        json!(self)
+        // TODO(#3960) Fix JSON output support, currently links contain `\n` characters
+        serde_json::to_value(self).unwrap()
     }
 }
 
