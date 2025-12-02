@@ -1,22 +1,12 @@
 use snforge_std::testing::get_current_vm_step;
-use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
-use testing_reference::{ICounterSafeDispatcher, ICounterSafeDispatcherTrait};
 
 #[feature("safe_dispatcher")]
 fn setup() {
-    // Deploy contract
-    let (contract_address, _) = declare("Counter")
-        .unwrap()
-        .contract_class()
-        .deploy(@array![])
-        .unwrap();
+    let mut _counter = 0_u32;
 
-    let dispatcher = ICounterSafeDispatcher { contract_address };
-
-    // Increment counter a few times
-    dispatcher.increment();
-    dispatcher.increment();
-    dispatcher.increment();
+    while _counter < 1_000 {
+        _counter += 1;
+    }
 }
 
 #[test]
@@ -25,6 +15,6 @@ fn test_setup_steps() {
     setup();
     let steps_end = get_current_vm_step();
 
-    // Assert that setup used no more than 100 steps
-    assert!(steps_end - steps_start <= 100);
+    // Assert that setup used no more than 20_000 steps
+    assert!(steps_end - steps_start <= 20_000);
 }

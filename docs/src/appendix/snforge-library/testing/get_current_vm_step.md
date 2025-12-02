@@ -1,18 +1,12 @@
 # `get_current_vm_step`
 
-Gets the current step from Cairo VM during test execution.
+Gets the current step during test execution.
 
 ```rust
 fn get_current_vm_step() -> u32;
 ```
 
 ## Example
-
-Contract code:
-
-```rust
-{{#include ../../../../listings/testing_reference/src/lib.cairo}}
-```
 
 Test code:
 
