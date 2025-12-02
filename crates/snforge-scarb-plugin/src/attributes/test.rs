@@ -2,7 +2,7 @@ use super::{AttributeInfo, ErrorExt, internal_config_statement::InternalConfigSt
 use crate::asserts::assert_is_used_once;
 use crate::common::{has_fuzzer_attribute, has_test_case_attribute};
 use crate::external_inputs::ExternalInput;
-use crate::utils::{create_single_token, process_statements};
+use crate::utils::{create_single_token, get_statements};
 use crate::{
     args::Arguments,
     common::{into_proc_macro_result, with_parsed_values},
@@ -95,12 +95,7 @@ fn test_internal(
 
         let test_func_with_attrs = test_func_with_attrs(&test_func, &called_func, &call_args);
 
-        let statements = func
-            .body(db)
-            .statements(db)
-            .elements(db)
-            .collect::<Vec<_>>();
-        let (statements, if_content) = process_statements(db, &statements);
+        let (statements, if_content) = get_statements(db, func);
 
         Ok(quote!(
             #test_func_with_attrs

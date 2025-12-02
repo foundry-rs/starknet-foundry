@@ -84,13 +84,7 @@ pub fn get_statements(
         .statements(db)
         .elements(db)
         .collect::<Vec<_>>();
-    process_statements(db, &statements)
-}
 
-pub fn process_statements(
-    db: &SimpleParserDatabase,
-    statements: &[Statement],
-) -> (TokenStream, TokenStream) {
     let if_content = statements.first().and_then(|stmt| {
         // first statement is `if`
         let Statement::Expr(expr) = stmt else {
@@ -139,7 +133,7 @@ pub fn process_statements(
     let statements = if if_content.is_some() {
         &statements[1..]
     } else {
-        statements
+        &statements[..]
     }
     .iter()
     .map(|stmt| stmt.to_token_stream(db))
