@@ -128,8 +128,8 @@ checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
 
 [[package]]
 name = "apollo_compilation_utils"
-version = "0.15.0-rc.4"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.14.0#57447e3e8897d4e7ce7f3ec8d23af58d5b6bf1a7"
+version = "0.16.0-rc.1"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=v0.16.0-rc.1#d301ac673de353b7379003d95b77e1ecbdc43877"
 dependencies = [
  "apollo_infra_utils",
  "cairo-lang-sierra",
@@ -145,9 +145,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "apollo_compile_to_native"
+version = "0.16.0-rc.1"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=v0.16.0-rc.1#d301ac673de353b7379003d95b77e1ecbdc43877"
+dependencies = [
+ "apollo_compilation_utils",
+ "apollo_compile_to_native_types",
+ "apollo_infra_utils",
+ "cairo-lang-starknet-classes",
+ "cairo-native",
+ "tempfile",
+]
+
+[[package]]
 name = "apollo_compile_to_native_types"
-version = "0.15.0-rc.4"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.14.0#57447e3e8897d4e7ce7f3ec8d23af58d5b6bf1a7"
+version = "0.16.0-rc.1"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=v0.16.0-rc.1#d301ac673de353b7379003d95b77e1ecbdc43877"
 dependencies = [
  "apollo_config",
  "serde",
@@ -156,8 +169,8 @@ dependencies = [
 
 [[package]]
 name = "apollo_config"
-version = "0.15.0-rc.4"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.14.0#57447e3e8897d4e7ce7f3ec8d23af58d5b6bf1a7"
+version = "0.16.0-rc.1"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=v0.16.0-rc.1#d301ac673de353b7379003d95b77e1ecbdc43877"
 dependencies = [
  "apollo_infra_utils",
  "clap",
@@ -174,8 +187,8 @@ dependencies = [
 
 [[package]]
 name = "apollo_infra_utils"
-version = "0.15.0-rc.4"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.14.0#57447e3e8897d4e7ce7f3ec8d23af58d5b6bf1a7"
+version = "0.16.0-rc.1"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=v0.16.0-rc.1#d301ac673de353b7379003d95b77e1ecbdc43877"
 dependencies = [
  "apollo_proc_macros",
  "assert-json-diff",
@@ -184,6 +197,7 @@ dependencies = [
  "serde",
  "serde_json",
  "socket2 0.5.10",
+ "strum 0.25.0",
  "tempfile",
  "thiserror 1.0.69",
  "tokio",
@@ -192,8 +206,8 @@ dependencies = [
 
 [[package]]
 name = "apollo_metrics"
-version = "0.15.0-rc.4"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.14.0#57447e3e8897d4e7ce7f3ec8d23af58d5b6bf1a7"
+version = "0.16.0-rc.1"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=v0.16.0-rc.1#d301ac673de353b7379003d95b77e1ecbdc43877"
 dependencies = [
  "indexmap 2.12.1",
  "metrics",
@@ -204,8 +218,8 @@ dependencies = [
 
 [[package]]
 name = "apollo_proc_macros"
-version = "0.15.0-rc.4"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.14.0#57447e3e8897d4e7ce7f3ec8d23af58d5b6bf1a7"
+version = "0.16.0-rc.1"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=v0.16.0-rc.1#d301ac673de353b7379003d95b77e1ecbdc43877"
 dependencies = [
  "lazy_static 1.5.0",
  "proc-macro2",
@@ -785,11 +799,12 @@ dependencies = [
 
 [[package]]
 name = "blockifier"
-version = "0.15.0-rc.4"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.14.0#57447e3e8897d4e7ce7f3ec8d23af58d5b6bf1a7"
+version = "0.16.0-rc.1"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=v0.16.0-rc.1#d301ac673de353b7379003d95b77e1ecbdc43877"
 dependencies = [
  "anyhow",
  "apollo_compilation_utils",
+ "apollo_compile_to_native",
  "apollo_compile_to_native_types",
  "apollo_config",
  "apollo_infra_utils",
@@ -803,6 +818,7 @@ dependencies = [
  "cairo-lang-casm",
  "cairo-lang-runner",
  "cairo-lang-starknet-classes",
+ "cairo-lang-utils",
  "cairo-native",
  "cairo-vm",
  "dashmap",
@@ -834,11 +850,12 @@ dependencies = [
 
 [[package]]
 name = "blockifier_test_utils"
-version = "0.15.0-rc.4"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.14.0#57447e3e8897d4e7ce7f3ec8d23af58d5b6bf1a7"
+version = "0.16.0-rc.1"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=v0.16.0-rc.1#d301ac673de353b7379003d95b77e1ecbdc43877"
 dependencies = [
  "apollo_infra_utils",
  "cairo-lang-starknet-classes",
+ "expect-test",
  "pretty_assertions",
  "rstest",
  "serde_json",
@@ -2795,6 +2812,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "dissimilar"
+version = "1.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8975ffdaa0ef3661bfe02dbdcc06c9f829dfafe6a3c474de366a8d5e44276921"
+
+[[package]]
 name = "dlv-list"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3086,6 +3109,16 @@ dependencies = [
  "impl-serde 0.4.0",
  "primitive-types 0.12.2",
  "uint 0.9.5",
+]
+
+[[package]]
+name = "expect-test"
+version = "1.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "63af43ff4431e848fb47472a920f14fa71c24de13255a5692e93d4e90302acb0"
+dependencies = [
+ "dissimilar",
+ "once_cell",
 ]
 
 [[package]]
@@ -6743,6 +6776,33 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56199f7ddabf13fe5074ce809e7d3f42b42ae711800501b5b16ea82ad029c39d"
 
 [[package]]
+name = "sizeof"
+version = "0.16.0-rc.1"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=v0.16.0-rc.1#d301ac673de353b7379003d95b77e1ecbdc43877"
+dependencies = [
+ "sizeof_internal",
+ "sizeof_macro",
+]
+
+[[package]]
+name = "sizeof_internal"
+version = "0.16.0-rc.1"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=v0.16.0-rc.1#d301ac673de353b7379003d95b77e1ecbdc43877"
+dependencies = [
+ "starknet-types-core",
+]
+
+[[package]]
+name = "sizeof_macro"
+version = "0.16.0-rc.1"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=v0.16.0-rc.1#d301ac673de353b7379003d95b77e1ecbdc43877"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.111",
+]
+
+[[package]]
 name = "slab"
 version = "0.4.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7157,8 +7217,8 @@ dependencies = [
 
 [[package]]
 name = "starknet_api"
-version = "0.15.0-rc.4"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.14.0#57447e3e8897d4e7ce7f3ec8d23af58d5b6bf1a7"
+version = "0.16.0-rc.1"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=v0.16.0-rc.1#d301ac673de353b7379003d95b77e1ecbdc43877"
 dependencies = [
  "apollo_infra_utils",
  "base64 0.13.1",
@@ -7181,6 +7241,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha3",
+ "sizeof",
  "starknet-crypto",
  "starknet-types-core",
  "strum 0.25.0",

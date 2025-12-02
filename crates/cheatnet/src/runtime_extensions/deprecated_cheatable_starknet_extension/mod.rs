@@ -272,7 +272,6 @@ fn increment_syscall_count(
 }
 
 //blockifier/src/execution/deprecated_syscalls/mod.rs:303 (deploy)
-#[expect(clippy::result_large_err)]
 fn deploy(
     request: DeployRequest,
     _vm: &mut VirtualMachine,
@@ -326,7 +325,6 @@ fn deploy(
 }
 
 //blockifier/src/execution/deprecated_syscalls/mod.rs:182 (call_contract)
-#[expect(clippy::result_large_err)]
 fn call_contract(
     request: CallContractRequest,
     vm: &mut VirtualMachine,
@@ -367,7 +365,6 @@ fn call_contract(
 }
 
 // blockifier/src/execution/deprecated_syscalls/mod.rs:209 (delegate_call)
-#[expect(clippy::result_large_err)]
 fn delegate_call(
     request: CallContractRequest,
     vm: &mut VirtualMachine,
@@ -394,7 +391,6 @@ fn delegate_call(
 }
 
 // blockifier/src/execution/deprecated_syscalls/mod.rs:537 (library_call)
-#[expect(clippy::result_large_err)]
 fn library_call(
     request: LibraryCallRequest,
     vm: &mut VirtualMachine,
@@ -419,7 +415,6 @@ fn library_call(
 }
 
 // blockifier/src/execution/deprecated_syscalls/hint_processor.rs:393 (execute_inner_call)
-#[expect(clippy::result_large_err)]
 fn execute_inner_call(
     call: &mut CallEntryPoint,
     vm: &mut VirtualMachine,
@@ -452,7 +447,7 @@ fn execute_inner_call(
 }
 
 // blockifier/src/execution/deprecated_syscalls/hint_processor.rs:409 (execute_library_call)
-#[expect(clippy::too_many_arguments, clippy::result_large_err)]
+#[expect(clippy::too_many_arguments)]
 fn execute_library_call(
     syscall_handler: &mut DeprecatedSyscallHintProcessor<'_>,
     cheatnet_state: &mut CheatnetState,

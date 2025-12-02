@@ -19,7 +19,8 @@ impl MessageToL1 {
     ) -> MessageToL1 {
         Self {
             from_address,
-            to_address: ordered_message.message.to_address,
+            to_address: EthAddress::try_from(ordered_message.message.to_address)
+                .expect("this address should be valid"),
             payload: ordered_message
                 .message
                 .payload

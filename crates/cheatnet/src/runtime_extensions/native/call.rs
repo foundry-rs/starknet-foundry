@@ -13,7 +13,6 @@ use starknet_types_core::felt::Felt;
 
 // Based on https://github.com/software-mansion-labs/sequencer/blob/57447e3e8897d4e7ce7f3ec8d23af58d5b6bf1a7/crates/blockifier/src/execution/syscalls/syscall_base.rs#L435
 #[expect(clippy::mut_mut)]
-#[expect(clippy::result_large_err)]
 pub fn execute_inner_call(
     // region: Modified blockifier code
     syscall_handler_base: &mut SyscallHandlerBase,

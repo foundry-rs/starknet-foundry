@@ -35,10 +35,10 @@ license-file = "LICENSE"
 
 [workspace.dependencies]
 # TODO(#3770) Use blockifier directly
-blockifier = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.14.0", features = ["testing", "tracing", "node_api"] }
+blockifier = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "v0.16.0-rc.1", features = ["testing", "tracing", "node_api"] }
 bigdecimal = "0.4.8"
 # TODO(#3770) Use starknet_api directly
-starknet_api = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.14.0" }
+starknet_api = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "v0.16.0-rc.1" }
 cairo-native = "0.6.2"
 cairo-lang-casm = { version = "=2.12.3", features = ["serde"] }
 cairo-lang-sierra = "=2.12.3"
@@ -56,7 +56,7 @@ cairo-vm = "2.5.0"
 cairo-annotations = { version = "0.6.1", features = ["cairo-lang"] }
 dirs = "6.0.0"
 dialoguer = "0.11.0"
-starknet-types-core = { version = "0.2.2", features = ["hash", "prime-bigint"] }
+starknet-types-core = { version = "0.2.4", features = ["hash", "prime-bigint"] }
 anyhow = "1.0.100"
 assert_fs = "1.1.2"
 camino = { version = "1.2.1", features = ["serde1"] }
