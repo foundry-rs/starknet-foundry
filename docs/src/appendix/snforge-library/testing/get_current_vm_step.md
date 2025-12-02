@@ -32,5 +32,3 @@ Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 </details>
 <br>
-
-The test fails because the `setup` function exceeded the allowed number of steps (100 in this case).
