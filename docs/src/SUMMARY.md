@@ -129,6 +129,8 @@
     * [env](appendix/snforge-library/env.md)
     * [signature](appendix/snforge-library/signature.md)
     * [fuzzable](appendix/snforge-library/fuzzable.md)
+    * [testing](appendix/snforge-library/testing.md)
+        * [get_current_vm_step](appendix/snforge-library/testing/get_current_vm_step.md)
 * [`sncast` Commands](appendix/sncast.md)
     * [common flags](appendix/sncast/common.md)
     * [account](appendix/sncast/account/account.md)
