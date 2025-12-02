@@ -11,9 +11,6 @@ on:
     - cron: '0 0 * * 3'
   workflow_dispatch:
 
-env:
-  ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
-
 jobs:
   get-scarb-versions:
     if: github.event.repository.fork == false
@@ -199,7 +196,6 @@ jobs:
   build-binaries:
     needs: [ get-version ]
     uses: ./.github/workflows/_build-binaries.yml
-    secrets: inherit
     with:
       version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
 
