@@ -889,17 +889,14 @@ pub fn get_all_used_resources(
 }
 
 fn calculate_vm_steps_from_calls(top_call: &Rc<RefCell<CallTrace>>) -> usize {
-    // Resources from inner calls already include syscall resources used in them
-    let used_resources =
-        &top_call
-            .borrow()
-            .nested_calls
-            .iter()
-            .fold(ExecutionResources::default(), |acc, node| match node {
-                CallTraceNode::EntryPointCall(call_trace) => {
-                    &acc + &call_trace.borrow().used_execution_resources
-                }
-                CallTraceNode::DeployWithoutConstructor => acc,
-            });
-    used_resources.n_steps
+    top_call
+        .borrow()
+        .nested_calls
+        .iter()
+        .fold(0, |acc, node| match node {
+            CallTraceNode::EntryPointCall(call_trace) => {
+                acc + call_trace.borrow().used_execution_resources.n_steps
+            }
+            CallTraceNode::DeployWithoutConstructor => acc,
+        })
 }
