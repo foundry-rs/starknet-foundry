@@ -7,9 +7,6 @@ use clap::Args;
 use shared::consts::RPC_URL_VERSION;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet_rust::providers::{JsonRpcClient, jsonrpc::HttpTransport};
-use std::env;
-
-const ALCHEMY_API_KEY: &str = env!("ALCHEMY_API_KEY");
 
 #[derive(Args, Clone, Debug, Default)]
 #[group(required = false, multiple = false)]
@@ -66,22 +63,20 @@ impl RpcArgs {
 }
 
 pub enum FreeProvider {
-    Alchemy,
+    Zan,
 }
 
 impl FreeProvider {
     #[must_use]
     pub fn semi_random() -> Self {
-        Self::Alchemy
+        Self::Zan
     }
 
     #[must_use]
     pub fn mainnet_rpc(&self) -> String {
         match self {
-            FreeProvider::Alchemy => {
-                format!(
-                    "https://starknet-mainnet.g.alchemy.com/starknet/version/rpc/{RPC_URL_VERSION}/{ALCHEMY_API_KEY}"
-                )
+            FreeProvider::Zan => {
+                format!("https://api.zan.top/public/starknet-mainnet/rpc/{RPC_URL_VERSION}")
             }
         }
     }
@@ -89,10 +84,8 @@ impl FreeProvider {
     #[must_use]
     pub fn sepolia_rpc(&self) -> String {
         match self {
-            FreeProvider::Alchemy => {
-                format!(
-                    "https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/{RPC_URL_VERSION}/{ALCHEMY_API_KEY}"
-                )
+            FreeProvider::Zan => {
+                format!("https://api.zan.top/public/starknet-sepolia/rpc/{RPC_URL_VERSION}")
             }
         }
     }
@@ -143,7 +136,7 @@ mod tests {
     #[tokio::test]
     #[ignore = "TODO: (#3937) New RPC URL is not available yet"]
     async fn test_mainnet_url_happy_case() {
-        let provider = get_provider(&Network::free_mainnet_rpc(&FreeProvider::Alchemy)).unwrap();
+        let provider = get_provider(&Network::free_mainnet_rpc(&FreeProvider::Zan)).unwrap();
         let spec_version = provider.spec_version().await.unwrap();
         assert!(is_expected_version(&Version::parse(&spec_version).unwrap()));
     }
@@ -151,7 +144,7 @@ mod tests {
     #[tokio::test]
     #[ignore = "TODO: (#3937) New RPC URL is not available yet"]
     async fn test_sepolia_url_happy_case() {
-        let provider = get_provider(&Network::free_sepolia_rpc(&FreeProvider::Alchemy)).unwrap();
+        let provider = get_provider(&Network::free_sepolia_rpc(&FreeProvider::Zan)).unwrap();
         let spec_version = provider.spec_version().await.unwrap();
         assert!(is_expected_version(&Version::parse(&spec_version).unwrap()));
     }
@@ -186,6 +179,6 @@ mod tests {
         };
 
         let url = rpc_args.get_url(&config).await.unwrap();
-        assert_eq!(url, Network::free_mainnet_rpc(&FreeProvider::Alchemy));
+        assert_eq!(url, Network::free_mainnet_rpc(&FreeProvider::Zan));
     }
 }

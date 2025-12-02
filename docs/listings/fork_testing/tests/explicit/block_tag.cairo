@@ -4,7 +4,7 @@ const CONTRACT_ADDRESS: felt252 =
     0x0522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716;
 
 #[test]
-#[fork(url: "<YOUR_RPC_URL>", block_tag: latest)]
+#[fork(url: "https://api.zan.top/public/starknet-sepolia/rpc/v0_10", block_tag: latest)]
 fn test_using_forked_state() {
     let dispatcher = IPokemonGalleryDispatcher {
         contract_address: CONTRACT_ADDRESS.try_into().unwrap(),

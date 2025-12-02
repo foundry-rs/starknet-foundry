@@ -18,5 +18,5 @@ test = "snforge test"
 
 [[tool.snforge.fork]]
 name = "SEPOLIA_LATEST"
-url = "<YOUR_RPC_URL>"
+url = "https://api.zan.top/public/starknet-sepolia/rpc/v0_10"
 block_id.tag = "latest"
