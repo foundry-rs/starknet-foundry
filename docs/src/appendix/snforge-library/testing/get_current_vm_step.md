@@ -25,17 +25,10 @@ $ snforge test test_setup_steps
 
 ```shell
 Collected 1 test(s) from testing_reference package
-Running 0 test(s) from src/
 Running 1 test(s) from tests/
-[FAIL] testing_reference_integrationtest::tests::test_setup_steps
-
-Failure data:
-    "assertion failed: `steps_end - steps_start <= 100`."
-
-Tests: 0 passed, 1 failed, 0 ignored, 0 filtered out
-
-Failures:
-    testing_reference_integrationtest::tests::test_setup_steps
+[PASS] testing_reference_integrationtest::tests::test_setup_steps ([..])
+Running 0 test(s) from src/
+Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 </details>
 <br>
