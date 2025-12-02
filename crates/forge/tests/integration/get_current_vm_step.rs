@@ -17,12 +17,15 @@ fn test_get_current_vm_step() {
             const STEPS_MARGIN: u32 = 100;
 
             // 1173 = cost of 1 deploy syscall without calldata
+            // https://github.com/starkware-libs/sequencer/blob/b29c0e8c61f7b2340209e256cf87dfe9f2c811aa/crates/blockifier/resources/blockifier_versioned_constants_0_14_1.json#L185
             const DEPLOY_SYSCALL_STEPS: u32 = 1173;
 
             // 903 = steps of 1 call contract syscall
+            https://github.com/starkware-libs/sequencer/blob/b29c0e8c61f7b2340209e256cf87dfe9f2c811aa/crates/blockifier/resources/blockifier_versioned_constants_0_14_1.json#L162
             const CALL_CONTRACT_SYSCALL_STEPS: u32 = 903;
 
-            // 90 = steps of 1 call contract syscall
+            // 90 = steps of 1 call storage read syscall
+            https://github.com/starkware-libs/sequencer/blob/b29c0e8c61f7b2340209e256cf87dfe9f2c811aa/crates/blockifier/resources/blockifier_versioned_constants_0_14_1.json#L406
             const STORAGE_READ_SYSCALL_STEPS: u32 = 90;
 
             #[test]
