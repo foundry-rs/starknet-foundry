@@ -1,5 +1,5 @@
 use crate::common::assertions::ClassHashAssert;
-use crate::common::{call_contract, deploy};
+use crate::common::{call_contract, deploy, library_call_contract};
 use crate::common::{deploy_contract, state::create_cached_state};
 use blockifier::state::cached_state::CachedState;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
@@ -60,6 +60,21 @@ impl TestEnvironment {
             &mut self.cached_state,
             &mut self.cheatnet_state,
             contract_address,
+            selector_from_name(selector),
+            calldata,
+        )
+    }
+
+    pub fn library_call_contract(
+        &mut self,
+        class_hash: &ClassHash,
+        selector: &str,
+        calldata: &[Felt],
+    ) -> CallResult {
+        library_call_contract(
+            &mut self.cached_state,
+            &mut self.cheatnet_state,
+            class_hash,
             selector_from_name(selector),
             calldata,
         )
