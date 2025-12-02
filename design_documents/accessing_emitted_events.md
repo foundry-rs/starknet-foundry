@@ -179,7 +179,7 @@ It is designed to enable more simplified flow:
 use snforge_std::spy_events;
 use snforge_std::EventSpy;
 use snforge_std::EventFetcher;
-use snforge_std::EventAsserions;
+use snforge_std::EventAssertions;
 use snforge_std::event_name_hash;
 
 #[test]
