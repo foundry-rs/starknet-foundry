@@ -49,9 +49,7 @@ pub fn run_test_case(
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
     let test_targets = raw_test_targets
         .into_iter()
-        .map(TestTarget::from_raw)
-        .collect::<Result<Vec<TestTarget<TestCandidate>>>>()
-        .unwrap();
+        .collect::<Vec<TestTarget<TestCandidate>>>();
 
     let ui = Arc::new(UI::default());
     rt.block_on(run_for_package(

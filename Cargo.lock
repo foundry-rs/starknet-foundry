@@ -3175,6 +3175,7 @@ dependencies = [
  "blockifier",
  "cairo-annotations",
  "cairo-lang-sierra",
+ "cairo-lang-sierra-type-size",
  "cairo-lang-starknet-classes",
  "cairo-vm",
  "camino",

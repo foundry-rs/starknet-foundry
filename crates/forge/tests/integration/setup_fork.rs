@@ -5,7 +5,7 @@ use forge::block_number_map::BlockNumberMap;
 use forge::run_tests::package::run_for_package;
 use forge::scarb::config::ForkTarget;
 use forge::test_filter::TestsFilter;
-use forge_runner::package_tests::TestTarget;
+use forge_runner::package_tests::{TestCandidate, TestTarget};
 use foundry_ui::UI;
 use indoc::{formatdoc, indoc};
 use std::num::NonZeroU32;
@@ -130,9 +130,7 @@ fn fork_aliased_decorator() {
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
     let test_targets = raw_test_targets
         .into_iter()
-        .map(TestTarget::from_raw)
-        .collect::<Result<Vec<_>>>()
-        .unwrap();
+        .collect::<Vec<TestTarget<TestCandidate>>>();
 
     let ui = Arc::new(UI::default());
     let result = rt
@@ -225,10 +223,7 @@ fn fork_aliased_decorator_overrding() {
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
     let test_targets = raw_test_targets
         .into_iter()
-        .map(TestTarget::from_raw)
-        .collect::<Result<Vec<_>>>()
-        .unwrap();
-
+        .collect::<Vec<TestTarget<TestCandidate>>>();
     let ui = Arc::new(UI::default());
     let result = rt
         .block_on(run_for_package(

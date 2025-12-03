@@ -69,7 +69,7 @@ pub async fn resolve_config(
         tests_location: test_target.tests_location,
         sierra_program: test_target.sierra_program,
         sierra_program_path: test_target.sierra_program_path,
-        casm_program: Some(casm_program),
+        casm_program,
         test_cases,
     })
 }

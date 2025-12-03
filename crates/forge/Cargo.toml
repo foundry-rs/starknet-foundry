@@ -57,6 +57,7 @@ tracing-subscriber.workspace = true
 tracing.workspace = true
 tracing-chrome.workspace = true
 rayon.workspace = true
+cairo-lang-sierra-type-size.workspace = true
 
 [[bin]]
 name = "snforge"

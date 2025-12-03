@@ -60,7 +60,7 @@ pub async fn run_for_test_target(
 
         tasks.push(run_for_test_case(
             case,
-            casm_program.clone().unwrap(),
+            casm_program.clone(),
             forge_config.clone(),
             tests.sierra_program_path.clone(),
             send.clone(),

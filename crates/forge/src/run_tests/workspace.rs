@@ -54,11 +54,7 @@ fn collect_packages_with_tests(
     packages
         .par_iter()
         .map(|package| {
-            let test_targets_raw = load_test_artifacts(&workspace_dirs.artifacts_dir, package)?;
-            let test_targets = test_targets_raw
-                .into_iter()
-                .map(TestTarget::from_raw)
-                .collect::<Result<Vec<_>>>()?;
+            let test_targets = load_test_artifacts(&workspace_dirs.artifacts_dir, package)?;
             Ok((package.clone(), test_targets))
         })
         .collect()
