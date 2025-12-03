@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `sncast script init` now longer adds `cairo_test` as dependency in `Scarb.toml`
+- Replaced the free RPC provider to Zan
 
 #### Fixed
 

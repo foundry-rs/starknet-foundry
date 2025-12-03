@@ -5,7 +5,7 @@ const CONTRACT_ADDRESS: felt252 =
 
 #[test]
 #[fork(
-    url: "<YOUR_RPC_URL>",
+    url: "https://api.zan.top/public/starknet-sepolia/rpc/v0_10",
     block_hash: 0x0690f8d584b52c2798d76b3346217a516778abee9b1bd8e400beb4f05dd9a4e7,
 )]
 fn test_using_forked_state() {

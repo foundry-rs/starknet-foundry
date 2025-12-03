@@ -9,6 +9,7 @@ use indoc::{formatdoc, indoc};
 use itertools::Itertools;
 use regex::Regex;
 use scarb_api::ScarbCommand;
+use shared::consts::FREE_RPC_PROVIDER_URL;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::assert_matches;
 use snapbox::cmd::Command as SnapboxCommand;
@@ -189,7 +190,7 @@ fn get_expected_manifest_content(template: &Template, validate_snforge_std: bool
             r#"
             [[tool.snforge.fork]]
             name = "SEPOLIA_LATEST"
-            url = "<YOUR_RPC_PROVIDER"
+            url = "{FREE_RPC_PROVIDER_URL}"
             block_id = {{ tag = "latest" }}
         "#
         )
