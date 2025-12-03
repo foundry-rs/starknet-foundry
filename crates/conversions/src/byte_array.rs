@@ -3,7 +3,6 @@ use crate::serde::deserialize::{BufferReadError, BufferReadResult, BufferReader}
 use crate::{serde::serialize::SerializeToFeltVec, string::TryFromHexStr};
 use cairo_lang_utils::byte_array::{BYTE_ARRAY_MAGIC, BYTES_IN_WORD};
 use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
-use conversions::felt::ToShortString;
 use starknet_types_core::felt::Felt;
 use std::fmt;
 
@@ -54,26 +53,27 @@ impl ByteArray {
     }
 }
 
+fn get_pending_word_bytes(word: &Felt, len: usize) -> Vec<u8> {
+    word.to_bytes_be()[(32 - len)..32].to_vec()
+}
+
+fn get_full_word_bytes(word: &Felt) -> Vec<u8> {
+    word.to_bytes_be()[1..32].to_vec()
+}
+
 impl fmt::Display for ByteArray {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let words: String = self
+        let mut bytes: Vec<u8> = self
             .words
             .iter()
-            .map(|word| {
-                let word: String = word.to_short_string().map_err(|_| fmt::Error)?;
-                if word.len() != BYTES_IN_WORD {
-                    return Err(fmt::Error)?;
-                }
-                Ok(word)
-            })
-            .collect::<Result<Vec<String>, fmt::Error>>()?
-            .join("");
-        let pending_word = self
-            .pending_word
-            .to_short_string()
-            .map_err(|_| fmt::Error)?;
-
-        write!(f, "{words}{pending_word}")
+            .flat_map(get_full_word_bytes)
+            .collect::<Vec<u8>>();
+        bytes.extend(get_pending_word_bytes(
+            &self.pending_word,
+            self.pending_word_len,
+        ));
+        let string = String::from_utf8_lossy(&bytes).to_string();
+        write!(f, "{string}")
     }
 }
 
@@ -113,7 +113,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "a Display implementation returned an error unexpectedly: Error")]
     fn test_fmt_with_null_bytes() {
         let with_nulls = "Hello\0World\0Test";
         let array = ByteArray::from(with_nulls);
