@@ -128,6 +128,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Minimal supported `Scarb` version is now `2.10.0` (updated from `2.9.1`)
 - Minimal supported `snforge_std` and `snforge_std_deprecated` version is now `0.50.0`
+- `deploy` and `deploy_at` methods on `ContractClass` instance now fail immediately upon encountering an error, preventing the error from being caught. This change aligns with the behavior of the `deploy_syscall` on the network
 
 #### Fixed
 
@@ -153,10 +154,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for `meta_tx_v0` syscall with cheatcode compatibility
 - `snforge` now supports [oracles](https://docs.swmansion.com/cairo-oracle/) with `--experimental-oracles` flag.
 - `--trace-components` flag to allow selecting which components of the trace to do display. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#trace-components)
-
-### Changed
-
-- `deploy` and `deploy_at` methods on `ContractClass` instance now fail immediately upon encountering an error, preventing the error from being caught. This change aligns with the behavior of the `deploy_syscall` on the network
 
 ### Cast
 
