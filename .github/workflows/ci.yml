@@ -20,14 +20,14 @@ jobs:
     name: Test Forge / Unit Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
       - run: cargo test --profile ci --lib -p forge
 
   build-test-forge-nextest-archive:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
         with:
           setup-scarb: 'false'
@@ -39,7 +39,7 @@ jobs:
       - name: Build and archive tests
         run: cargo nextest archive --cargo-profile ci -p forge --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
       - name: Upload archive to workflow
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: nextest-archive-${{ runner.os }}
           path: nextest-archive-${{ runner.os }}.tar.zst
@@ -47,7 +47,7 @@ jobs:
   build-test-forge-nextest-archive-native:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
         with:
           install-llvm: 'true'
@@ -60,7 +60,7 @@ jobs:
       - name: Build and archive tests
         run: cargo nextest archive --cargo-profile ci -p forge --features cairo-native --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst'
       - name: Upload archive to workflow
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: nextest-archive-${{ runner.os }}-native
           path: nextest-archive-${{ runner.os }}-native.tar.zst
@@ -74,12 +74,12 @@ jobs:
       matrix:
         partition: [ 1, 2, 3 ]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: nextest-archive-${{ runner.os }}
       - name: nextest partition ${{ matrix.partition }}/3
@@ -94,12 +94,12 @@ jobs:
       matrix:
         partition: [ 1, 2, 3 ]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: nextest-archive-${{ runner.os }}-native
       - name: nextest partition ${{ matrix.partition }}/3
@@ -141,13 +141,13 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
       - uses: ./.github/actions/setup-tools
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: nextest-archive-${{ runner.os }}
       - name: nextest partition ${{ matrix.partition }}/3
@@ -192,13 +192,13 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
       - uses: ./.github/actions/setup-tools
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: nextest-archive-${{ runner.os }}-native
       - name: nextest partition ${{ matrix.partition }}/3
@@ -211,7 +211,7 @@ jobs:
     name: Test plugin across different scarb versions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
         # No setup scarb action is used because we want to install multiple versions of scarb through asdf
         with:
@@ -223,7 +223,7 @@ jobs:
     name: Test requirements check special conditions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
         with:
           setup-scarb: 'false'
@@ -240,7 +240,7 @@ jobs:
     name: Test Forge Runner
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
       - run: cargo test --profile ci -p forge_runner
 
@@ -248,7 +248,7 @@ jobs:
     name: Test Cheatnet
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
       - name: Run Cheatnet tests
         run: cargo test --profile ci -p cheatnet
@@ -257,7 +257,7 @@ jobs:
     name: Test Data Transformer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
       - name: Run Data Transformer tests
         run: cargo test --profile ci -p data-transformer
@@ -266,7 +266,7 @@ jobs:
     name: Test Forge Scarb Plugin
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
       - name: Run Forge Scarb Plugin tests
         working-directory: crates/snforge-scarb-plugin
@@ -276,7 +276,7 @@ jobs:
     name: Test Forge Scarb Plugin Deprecated
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
       - name: Run Forge Scarb Plugin tests
         working-directory: crates/snforge-scarb-plugin-deprecated
@@ -286,7 +286,7 @@ jobs:
     name: Test Cast
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
       - uses: ./.github/actions/setup-tools
       - name: Run tests
@@ -299,7 +299,7 @@ jobs:
     name: Test Conversions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
         with:
           setup-scarb: 'false'
@@ -311,7 +311,7 @@ jobs:
     name: Test Shared
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
         with:
           setup-scarb: 'false'
@@ -322,14 +322,14 @@ jobs:
     name: Test Scarb Api
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
       - run: cargo test --profile ci -p scarb-api
 
   scarbfmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: software-mansion/setup-scarb@v1
       - name: Check cairo files format
         run: |
@@ -346,12 +346,12 @@ jobs:
   rustfmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@0b1efabc08b657293548b77fb76cc02d26091c7e
         with:
           toolchain: stable
           components: rustfmt
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
       - name: Check formatting
         run: cargo fmt --check
 
@@ -369,7 +369,7 @@ jobs:
       # Make sure CI fails on all warnings - including Clippy lints.
       RUSTFLAGS: "-Dwarnings"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
         with:
           install-llvm: 'true'
@@ -393,7 +393,7 @@ jobs:
       # TODO(#3970): Use latest version after resolving issue
       MDBOOK_VARIABLES_VERSION: 0.3.0
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
       - name: Install mdBook
         run: |
@@ -417,6 +417,6 @@ jobs:
     name: Check typos
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: typos-action
-        uses: crate-ci/typos@v1.31.2
+        uses: crate-ci/typos@v1.40.0
