@@ -91,10 +91,9 @@ pub fn error_contains_constructor_selector(error: &str) -> bool {
     RE_PROXY_PREFIX
         .captures(error)
         .and_then(|caps| caps.get(0))
-        .map(|prefix| {
+        .is_some_and(|prefix| {
             prefix.as_str().contains("selector: ") && prefix.as_str().contains(CONSTRUCTOR_SELECTOR)
         })
-        .unwrap_or(false)
 }
 
 #[cfg(test)]
