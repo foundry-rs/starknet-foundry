@@ -74,6 +74,7 @@ fn parse_entrypoint(s: &str) -> Option<PanicDataFormat> {
     None
 }
 
+/// Tries to extract panic data from a raw Starknet error string.
 pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt>> {
     let captures = RE_PROXY_PREFIX.captures(err)?;
     let raw = captures.get(1)?.as_str();
