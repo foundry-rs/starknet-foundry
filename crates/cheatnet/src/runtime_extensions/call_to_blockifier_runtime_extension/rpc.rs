@@ -116,11 +116,11 @@ impl CallFailure {
             error => {
                 if let Some(panic) = Panic::try_from_error(&error.to_string()) {
                     match panic {
-                        Panic::InConstructor(data) => CallFailure::Error {
+                        Panic::Constructor(data) => CallFailure::Error {
                             msg: ByteArray::deserialize_with_magic(&data)
                                 .expect("Failed to deserialize panic data into ByteArray"),
                         },
-                        Panic::InEntrypoint(data) => CallFailure::Panic { panic_data: data },
+                        Panic::Entrypoint(data) => CallFailure::Panic { panic_data: data },
                     }
                 } else {
                     CallFailure::Error {
