@@ -1,8 +1,7 @@
-use std::sync::LazyLock;
-
 use conversions::byte_array::ByteArray;
 use regex::Regex;
 use starknet_types_core::felt::Felt;
+use std::sync::LazyLock;
 
 // Regex used to extract panic data from panicking proxy contract
 static RE_PROXY_PREFIX: LazyLock<Regex> = LazyLock::new(|| {
