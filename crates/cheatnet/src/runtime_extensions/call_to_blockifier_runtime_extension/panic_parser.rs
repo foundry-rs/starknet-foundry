@@ -50,7 +50,7 @@ fn parse_felts(s: &str) -> Option<PanicDataFormat> {
     // - with an array of Felts "("
     // The difference comes from the `format_panic_data` implementation in `blockifier`.
     // https://github.com/starkware-libs/sequencer/blob/8211fbf1e2660884c4a9e67ddd93680495afde12/crates/starknet_api/src/execution_utils.rs
-    if !(s.starts_with("0x") || s.starts_with("(")) {
+    if !(s.starts_with("0x") || s.starts_with('(')) {
         return None;
     }
 
