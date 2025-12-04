@@ -998,7 +998,7 @@ fn should_panic() {
 
             Got an exception while executing a hint: Hint Error: Panic message from constructor
 
-        Tests: 5 passed, 10 failed, 0 ignored, 0 filtered out
+        Tests: 5 passed, 11 failed, 0 ignored, 0 filtered out
 
         Failures:
             should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
