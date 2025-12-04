@@ -6,9 +6,7 @@ use crate::runtime_extensions::{
 };
 use blockifier::execution::call_info::ExecutionSummary;
 use blockifier::execution::syscalls::hint_processor::SyscallExecutionError;
-use blockifier::execution::syscalls::vm_syscall_utils::{
-    RevertData, SelfOrRevert, SyscallExecutorBaseError, TryExtractRevert,
-};
+use blockifier::execution::syscalls::vm_syscall_utils::SyscallExecutorBaseError;
 use blockifier::execution::{
     call_info::CallInfo,
     entry_point::{CallType, EntryPointExecutionResult},
@@ -37,30 +35,30 @@ pub struct UsedResources {
 }
 
 // TODO name
-#[derive(Debug)]
+#[derive(Debug, CairoSerialize)]
 pub struct CallSuccess {
     pub ret_data: Vec<Felt>,
 }
 
-impl TryExtractRevert for CallFailure {
-    fn try_extract_revert(self) -> SelfOrRevert<Self>
-    where
-        Self: Sized,
-    {
-        match self {
-            CallFailure::Panic { panic_data } => {
-                SelfOrRevert::Revert(RevertData::new_normal(panic_data))
-            }
-            CallFailure::Error(error) => SelfOrRevert::Original(error),
-        }
-    }
-
-    fn as_revert(revert_data: RevertData) -> Self {
-        Self::Panic {
-            panic_data: revert_data.error_data,
-        }
-    }
-}
+// impl TryExtractRevert for CallFailure {
+//     fn try_extract_revert(self) -> SelfOrRevert<Self>
+//     where
+//         Self: Sized,
+//     {
+//         match self {
+//             CallFailure::Panic { panic_data } => {
+//                 SelfOrRevert::Revert(RevertData::new_normal(panic_data))
+//             }
+//             CallFailure::Error(error) => SelfOrRevert::Original(error),
+//         }
+//     }
+//
+//     fn as_revert(revert_data: RevertData) -> Self {
+//         Self::Panic {
+//             panic_data: revert_data.error_data,
+//         }
+//     }
+// }
 
 impl From<CallFailure> for SyscallExecutionError {
     fn from(value: CallFailure) -> Self {

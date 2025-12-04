@@ -5,7 +5,7 @@ use crate::trace::types::{
 };
 use crate::{Context, Trace};
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    CallFailure, CallResult as CheatnetCallResult,
+    CallFailure, CallSuccess,
 };
 use cheatnet::trace_data::{CallTrace, CallTraceNode};
 use data_transformer::{reverse_transform_input, reverse_transform_output};
@@ -113,7 +113,7 @@ impl<'a> Collector<'a> {
 
     fn collect_transformed_call_result(&self, abi: &[AbiEntry]) -> TransformedCallResult {
         TransformedCallResult(match &self.call_trace.result {
-            CheatnetCallResult::Success { ret_data } => {
+            Ok(CallSuccess { ret_data }) => {
                 let ret_data = reverse_transform_output(
                     ret_data,
                     abi,
@@ -122,7 +122,7 @@ impl<'a> Collector<'a> {
                 .expect("call result should be successfully transformed");
                 format_result_message("success", &ret_data)
             }
-            CheatnetCallResult::Failure(failure) => match failure {
+            Err(failure) => match failure {
                 CallFailure::Panic { panic_data } => {
                     format_result_message("panic", &format_panic_data(panic_data))
                 }

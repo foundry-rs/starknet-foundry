@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use crate::state::CheatnetState;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::syscalls::hint_processor::{
-    create_retdata_segment, SyscallHintProcessor, OUT_OF_GAS_ERROR,
+    OUT_OF_GAS_ERROR, SyscallHintProcessor, create_retdata_segment,
 };
 use blockifier::execution::syscalls::syscall_base::SyscallResult;
 use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
@@ -24,7 +24,7 @@ use starknet_api::execution_resources::GasAmount;
 use starknet_types_core::felt::Felt;
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    call_entry_point, AddressOrClassHash,
+    AddressOrClassHash, call_entry_point,
 };
 
 use super::cheatable_starknet_runtime_extension::{
@@ -174,6 +174,7 @@ fn library_call_syscall(
 
 impl CallToBlockifierExtension<'_> {
     // crates/blockifier/src/execution/syscalls/vm_syscall_utils.rs:677 (execute_syscall)
+    #[expect(clippy::unused_self)]
     fn execute_syscall<Request, Response, ExecuteCallback, Error>(
         &mut self,
         vm: &mut VirtualMachine,
