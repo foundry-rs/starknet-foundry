@@ -3,10 +3,8 @@ use cairo_vm::{
     types::relocatable::{MaybeRelocatable, Relocatable},
     vm::vm_core::VirtualMachine,
 };
-use conversions::{
-    IntoConv,
-    serde::serialize::{SerializeToFeltVec, raw::RawFeltVec},
-};
+use conversions::serde::SerializedValue;
+use conversions::{IntoConv, serde::serialize::SerializeToFeltVec};
 use starknet_types_core::felt::Felt;
 
 fn get_cheated_block_info_ptr(
@@ -90,8 +88,10 @@ fn get_cheated_tx_info_ptr(
         new_tx_info[7] = MaybeRelocatable::Int(nonce);
     }
     if let Some(resource_bounds) = resource_bounds {
-        let (resource_bounds_start_ptr, resource_bounds_end_ptr) =
-            add_vec_memory_segment(&RawFeltVec::new(resource_bounds).serialize_to_vec(), vm);
+        let (resource_bounds_start_ptr, resource_bounds_end_ptr) = add_vec_memory_segment(
+            &SerializedValue::new(resource_bounds).serialize_to_vec(),
+            vm,
+        );
         new_tx_info[8] = resource_bounds_start_ptr.into();
         new_tx_info[9] = resource_bounds_end_ptr.into();
     }
