@@ -24,10 +24,12 @@ enum PanicDataFormat {
     EntryPoint(Vec<Felt>),
 }
 
-impl Into<Vec<Felt>> for PanicDataFormat {
-    fn into(self) -> Vec<Felt> {
-        match self {
-            Self::ByteArray(v) | Self::Felts(v) | Self::EntryPoint(v) => v,
+impl From<PanicDataFormat> for Vec<Felt> {
+    fn from(value: PanicDataFormat) -> Self {
+        match value {
+            PanicDataFormat::ByteArray(v)
+            | PanicDataFormat::Felts(v)
+            | PanicDataFormat::EntryPoint(v) => v,
         }
     }
 }
@@ -44,7 +46,7 @@ fn parse_byte_array(s: &str) -> Option<PanicDataFormat> {
 
 fn parse_felts(s: &str) -> Option<PanicDataFormat> {
     // Matches `panic_data` when a proxy contract panics, either:
-    // - with a single Felt "Ox"
+    // - with a single Felt "0x"
     // - with an array of Felts "("
     // The difference comes from the `format_panic_data` implementation in `blockifier`.
     // https://github.com/starkware-libs/sequencer/blob/8211fbf1e2660884c4a9e67ddd93680495afde12/crates/starknet_api/src/execution_utils.rs
