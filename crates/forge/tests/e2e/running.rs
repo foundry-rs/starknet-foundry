@@ -910,10 +910,10 @@ fn should_panic() {
 
     assert_stdout_contains(
         output,
-        indoc! { r"
-        Collected 14 test(s) from should_panic_test package
+        indoc! { r#"
+        Collected 16 test(s) from should_panic_test package
         Running 0 test(s) from src/
-        Running 14 test(s) from tests/
+        Running 16 test(s) from tests/
         [FAIL] should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
 
         Failure data:
@@ -977,7 +977,28 @@ fn should_panic() {
             Actual:    [0x6661696c696e6720636865636b] (failing check)
             Expected:  [0x0] ()
 
-        Tests: 5 passed, 9 failed, 0 ignored, 0 filtered out
+        [FAIL] should_panic_test_integrationtest::should_panic_test::deployment_with_panic_not_possible_to_catch
+
+        Failure data:
+            Got an exception while executing a hint: Execution failed. Failure reason:
+        Error in contract (contract address: [..], class hash: [..], selector: [..]):
+        "Panic message from constructor".
+
+
+
+            Got an exception while executing a hint: Execution failed. Failure reason:
+        Error in contract (contract address: [..], class hash: [..], selector: [..]):
+        "Panic message from constructor".
+
+        [FAIL] should_panic_test_integrationtest::should_panic_test::proxied_deployment_with_panic_not_possible_to_catch
+
+        Failure data:
+            Got an exception while executing a hint: Hint Error: Panic message from constructor
+
+
+            Got an exception while executing a hint: Hint Error: Panic message from constructor
+
+        Tests: 5 passed, 10 failed, 0 ignored, 0 filtered out
 
         Failures:
             should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
@@ -989,7 +1010,9 @@ fn should_panic() {
             should_panic_test_integrationtest::should_panic_test::should_panic_felt_with_byte_array
             should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
             should_panic_test_integrationtest::should_panic_test::should_panic_with_non_matching_data
-        "},
+            should_panic_test_integrationtest::should_panic_test::deployment_with_panic_not_possible_to_catch
+            should_panic_test_integrationtest::should_panic_test::proxied_deployment_with_panic_not_possible_to_catch
+        "#},
     );
 }
 

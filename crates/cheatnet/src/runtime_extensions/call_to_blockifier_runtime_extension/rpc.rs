@@ -1,9 +1,7 @@
 use super::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::non_reverting_execute_call_entry_point;
-use crate::runtime_extensions::{
-    call_to_blockifier_runtime_extension::panic_parser::try_extract_panic_data,
-    common::create_execute_calldata,
-};
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::panic::Panic;
+use crate::runtime_extensions::common::create_execute_calldata;
 use blockifier::execution::call_info::ExecutionSummary;
 use blockifier::execution::{
     call_info::CallInfo,
@@ -116,12 +114,17 @@ impl CallFailure {
                 }
             }
             error => {
-                let error_string = error.to_string();
-                if let Some(panic_data) = try_extract_panic_data(&error_string) {
-                    CallFailure::Panic { panic_data }
+                if let Some(panic) = Panic::try_from_error(&error.to_string()) {
+                    match panic {
+                        Panic::InConstructor(data) => CallFailure::Error {
+                            msg: ByteArray::deserialize_with_magic(&data)
+                                .expect("Failed to deserialize panic data into ByteArray"),
+                        },
+                        Panic::InEntrypoint(data) => CallFailure::Panic { panic_data: data },
+                    }
                 } else {
                     CallFailure::Error {
-                        msg: ByteArray::from(error_string.as_str()),
+                        msg: ByteArray::from(error.to_string().as_str()),
                     }
                 }
             }

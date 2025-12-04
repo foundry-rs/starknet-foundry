@@ -18,6 +18,9 @@ static RE_ENTRYPOINT: LazyLock<Regex> = LazyLock::new(|| {
         .unwrap()
 });
 
+const CONSTRUCTOR_SELECTOR: &str =
+    "0x028ffe4ff0f226a9107253e17a904099aa4f63a02a5621de0576e5aa71bc5194";
+
 enum PanicDataFormat {
     ByteArray(Vec<Felt>),
     Felts(Vec<Felt>),
@@ -82,6 +85,16 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt>> {
         .or_else(|| parse_felts(raw))
         .or_else(|| parse_entrypoint(err))
         .map(Into::into)
+}
+
+pub fn error_contains_constructor_selector(error: &str) -> bool {
+    RE_PROXY_PREFIX
+        .captures(error)
+        .and_then(|caps| caps.get(0))
+        .map(|prefix| {
+            prefix.as_str().contains("selector: ") && prefix.as_str().contains(CONSTRUCTOR_SELECTOR)
+        })
+        .unwrap_or(false)
 }
 
 #[cfg(test)]
