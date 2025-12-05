@@ -10,6 +10,10 @@ inputs:
     description: 'Whether to setup scarb'
     required: false
     default: 'true'
+  scarb-version:
+    description: 'Optional: Scarb version to install. If not set, uses version from .tool-versions'
+    required: false
+    default: ''
   setup-usc:
     description: 'Whether to setup universal-sierra-compiler'
     required: false
@@ -24,6 +28,8 @@ runs:
 
     - uses: software-mansion/setup-scarb@v1
       if: ${{ inputs.setup-scarb == 'true' }}
+      with:
+        scarb-version: ${{ inputs.scarb-version }}
 
     - uses: software-mansion/setup-universal-sierra-compiler@v1
       if: ${{ inputs.setup-usc == 'true' }}
