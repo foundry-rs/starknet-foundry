@@ -35,8 +35,9 @@ use cairo_vm::vm::{
 };
 use conversions::byte_array::ByteArray;
 use conversions::felt::{ToShortString, TryInferFormat};
+use conversions::serde::SerializedValue;
 use conversions::serde::deserialize::BufferReader;
-use conversions::serde::serialize::CairoSerialize;
+use conversions::serde::serialize::{CairoSerialize, SerializeToFeltVec};
 use data_transformer::cairo_types::CairoU256;
 use rand::prelude::StdRng;
 use runtime::{
@@ -64,8 +65,6 @@ pub struct ForgeExtension<'a> {
     pub environment_variables: &'a HashMap<String, String>,
     pub contracts_data: &'a ContractsData,
     pub fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
-    /// Whether `--experimental-oracles` flag has been enabled.
-    pub experimental_oracles_enabled: bool,
     pub oracle_hint_service: OracleHintService,
 }
 
@@ -86,18 +85,16 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             .oracle_hint_service
             .accept_cheatcode(selector.as_bytes())
         {
-            if !self.experimental_oracles_enabled {
-                return Err(anyhow!(
-                    "Oracles are an experimental feature. \
-                    To enable them, pass `--experimental-oracles` CLI flag."
-                )
-                .into());
-            }
-
             let output = self
                 .oracle_hint_service
                 .execute_cheatcode(oracle_selector, input_reader.into_remaining());
-            return Ok(CheatcodeHandlingResult::Handled(output));
+            let mut reader = BufferReader::new(&output);
+            let deserialized: Result<SerializedValue<Felt>, ByteArray> = reader.read()?;
+            let converted = deserialized
+                .map_err(|error| EnhancedHintError::OracleError { error })
+                .map(|r| r.serialize_to_vec())?;
+
+            return Ok(CheatcodeHandlingResult::Handled(converted));
         }
 
         match selector {
