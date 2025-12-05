@@ -1,6 +1,8 @@
 use super::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::non_reverting_execute_call_entry_point;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::panic::Panic;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::panic_parser::{
+    error_contains_constructor_selector, try_extract_panic_data,
+};
 use crate::runtime_extensions::common::create_execute_calldata;
 use blockifier::execution::call_info::ExecutionSummary;
 use blockifier::execution::{
@@ -114,17 +116,16 @@ impl CallFailure {
                 }
             }
             error => {
-                if let Some(panic) = Panic::try_from_error(&error.to_string()) {
-                    match panic {
-                        Panic::Constructor(data) => CallFailure::Error {
-                            msg: ByteArray::deserialize_with_magic(&data)
-                                .expect("Failed to deserialize panic data into ByteArray"),
-                        },
-                        Panic::Entrypoint(data) => CallFailure::Panic { panic_data: data },
-                    }
+                let error_string = error.to_string();
+                if error_contains_constructor_selector(&error_string) {
+                    return CallFailure::Error {
+                        msg: ByteArray::from(error_string.as_str()),
+                    };
+                } else if let Some(panic_data) = try_extract_panic_data(&error_string) {
+                    CallFailure::Panic { panic_data }
                 } else {
                     CallFailure::Error {
-                        msg: ByteArray::from(error.to_string().as_str()),
+                        msg: ByteArray::from(error_string.as_str()),
                     }
                 }
             }

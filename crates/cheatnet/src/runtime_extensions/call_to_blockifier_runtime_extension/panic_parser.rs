@@ -21,6 +21,9 @@ static RE_ENTRYPOINT: LazyLock<Regex> = LazyLock::new(|| {
 const CONSTRUCTOR_SELECTOR: &str =
     "0x028ffe4ff0f226a9107253e17a904099aa4f63a02a5621de0576e5aa71bc5194";
 
+static RE_CONSTRUCTOR_SELECTOR: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(&format!(r"selector:\s*{}", CONSTRUCTOR_SELECTOR)).unwrap());
+
 enum PanicDataFormat {
     ByteArray(Vec<Felt>),
     Felts(Vec<Felt>),
@@ -90,10 +93,7 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt>> {
 pub fn error_contains_constructor_selector(error: &str) -> bool {
     RE_PROXY_PREFIX
         .captures(error)
-        .and_then(|caps| caps.get(0))
-        .is_some_and(|prefix| {
-            prefix.as_str().contains("selector: ") && prefix.as_str().contains(CONSTRUCTOR_SELECTOR)
-        })
+        .is_some_and(|_| RE_CONSTRUCTOR_SELECTOR.is_match(error))
 }
 
 #[cfg(test)]
@@ -198,5 +198,25 @@ mod test {
     #[test_case("Custom Hint Error: Invalid trace: \"PANIC DATA\"", None; "invalid")]
     fn extracting_string_panic_data(data: &str, expected: Option<Vec<Felt>>) {
         assert_eq!(try_extract_panic_data(data), expected);
+    }
+
+    #[test_case(indoc!(r#"
+                    Failure data:
+                        Got an exception while executing a hint: Execution failed. Failure reason:
+                    Error in contract (contract address: 0x1, class hash: 0x2, selector: 0x028ffe4ff0f226a9107253e17a904099aa4f63a02a5621de0576e5aa71bc5194):
+                    "Panic message from constructor".
+                    "#
+                ),
+                    true; "happy case")]
+    #[test_case(indoc!(r#"
+                    Failure data:
+                        Got an exception while executing a hint: Execution failed. Failure reason:
+                    Error in contract (contract address: 0x1, class hash: 0x2, selector: 0x3):
+                    "Panic message from constructor".
+                    "#
+                ),
+                    false; "constructor selector hex not found")]
+    fn test_error_contains_constructor_selector(data: &str, expected: bool) {
+        assert_eq!(error_contains_constructor_selector(data), expected);
     }
 }
