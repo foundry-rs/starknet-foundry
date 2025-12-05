@@ -1,10 +1,10 @@
 use crate::consts::EXPECTED_RPC_VERSION;
 use crate::rpc::{get_rpc_version, is_expected_version};
 use anyhow::Result;
-use foundry_ui::components::warning::WarningMessage;
 use foundry_ui::UI;
-use starknet_rust::providers::jsonrpc::HttpTransport;
+use foundry_ui::components::warning::WarningMessage;
 use starknet_rust::providers::JsonRpcClient;
+use starknet_rust::providers::jsonrpc::HttpTransport;
 use std::fmt::Display;
 
 pub mod auto_completions;
