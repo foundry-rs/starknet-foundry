@@ -3,7 +3,7 @@ use anyhow::anyhow;
 use serde_json::Number;
 use std::env;
 
-fn resolve_env_variables(config: serde_json::Value) -> anyhow::Result<serde_json::Value> {
+pub fn resolve_env_variables(config: serde_json::Value) -> anyhow::Result<serde_json::Value> {
     match config {
         serde_json::Value::Object(map) => {
             let val = map

@@ -1,0 +1,4 @@
+[stubtool.user1]
+url = "http://127.0.0.1:5055/rpc"
+account = "user1"
+non-existing-field = "xyz"

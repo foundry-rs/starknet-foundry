@@ -42,6 +42,7 @@ impl NetworksConfig {
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct CastConfig {
     #[serde(default)]
     /// RPC url

@@ -1,9 +1,11 @@
-use crate::core::Profile;
+use crate::core::resolve_env_variables;
 use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
+use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs::File;
 use std::{env, fs};
-use toml::Value;
 
 pub mod core;
 pub mod test_utils;
@@ -20,6 +22,18 @@ pub trait Config {
         Self: Sized;
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+struct ConfigSchema<T> {
+    #[serde(flatten)]
+    pub tools: HashMap<String, ToolProfiles<T>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ToolProfiles<T> {
+    #[serde(flatten)]
+    pub profiles: HashMap<String, T>,
+}
+
 #[must_use]
 pub fn resolve_config_file() -> Utf8PathBuf {
     find_config_file().unwrap_or_else(|_| {
@@ -31,32 +45,38 @@ pub fn resolve_config_file() -> Utf8PathBuf {
     })
 }
 
-pub fn load_config<T: Config + Default>(
-    path: Option<&Utf8PathBuf>,
-    profile: Option<&str>,
-) -> Result<T> {
-    let config_path = path
+pub fn load_config<T>(path: Option<&Utf8PathBuf>, profile: Option<&str>) -> Result<T>
+where
+    T: Config + Default + Serialize + DeserializeOwned + Clone,
+{
+    let path = path
         .as_ref()
         .and_then(|p| search_config_upwards_relative_to(p).ok())
         .or_else(|| find_config_file().ok());
 
-    match config_path {
-        Some(path) => {
-            let raw_config_toml = fs::read_to_string(path)
-                .context("Failed to read snfoundry.toml config file")?
-                .parse::<Value>()
-                .context("Failed to parse snfoundry.toml config file")?;
+    let Some(config_path) = path else {
+        return Ok(T::default());
+    };
 
-            let raw_config_json = serde_json::to_value(raw_config_toml)
-                .context("Conversion from TOML value to JSON value should not fail.")?;
+    let raw = fs::read_to_string(config_path).context("Failed to read snfoundry.toml")?;
+    let toml_value: toml::Value =
+        toml::from_str(&raw).context("Failed to parse snfoundry.toml config file")?;
+    let json_value = serde_json::to_value(toml_value)?;
+    let resolved_json = resolve_env_variables(json_value)?;
+    let parsed: ConfigSchema<T> = serde_json::from_value(resolved_json)
+        .context("Failed to deserialize resolved config into ConfigSchema")?;
+    let tool_name = T::tool_name();
 
-            core::load_config(
-                raw_config_json,
-                profile.map_or_else(|| Profile::Default, |p| Profile::Some(p.to_string())),
-            )
-        }
-        None => Ok(T::default()),
-    }
+    let Some(tool_profiles) = parsed.tools.get(tool_name) else {
+        return Ok(T::default());
+    };
+
+    let profile_name = profile.unwrap_or("default");
+    let Some(profile_config) = tool_profiles.profiles.get(profile_name) else {
+        return Err(anyhow!("Profile [{profile_name}] not found in config"));
+    };
+
+    Ok(profile_config.clone())
 }
 
 pub fn search_config_upwards_relative_to(current_dir: &Utf8PathBuf) -> Result<Utf8PathBuf> {
@@ -79,11 +99,10 @@ pub fn find_config_file() -> Result<Utf8PathBuf> {
 
 #[cfg(test)]
 mod tests {
-    use std::fs::{self, File};
-
     use super::*;
     use crate::test_utils::copy_config_to_tempdir;
     use serde::{Deserialize, Serialize};
+    use std::fs::{self, File};
     use tempfile::tempdir;
 
     #[test]
@@ -149,7 +168,8 @@ mod tests {
         );
     }
 
-    #[derive(Debug, Default, Serialize, Deserialize)]
+    #[derive(Debug, Default, Serialize, Deserialize, Clone)]
+    #[serde(deny_unknown_fields)]
     pub struct StubConfig {
         #[serde(default)]
         pub url: String,
@@ -202,7 +222,7 @@ mod tests {
         assert_eq!(config.url, String::new());
     }
 
-    #[derive(Debug, Default, Serialize, Deserialize)]
+    #[derive(Debug, Default, Serialize, Deserialize, Clone)]
     pub struct StubComplexConfig {
         #[serde(default)]
         pub url: String,
@@ -212,7 +232,7 @@ mod tests {
         pub nested: StubComplexConfigNested,
     }
 
-    #[derive(Debug, Default, Serialize, Deserialize)]
+    #[derive(Debug, Default, Serialize, Deserialize, Clone)]
     pub struct StubComplexConfigNested {
         #[serde(
             default,
@@ -250,10 +270,12 @@ mod tests {
     #[test]
     #[expect(clippy::float_cmp)]
     fn resolve_env_vars() {
-        let tempdir =
-            copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", Some("childdir1"));
+        let tempdir = copy_config_to_tempdir(
+            "tests/data/stubtool_complex_snfoundry.toml",
+            Some("childdir1"),
+        );
         fs::copy(
-            "tests/data/stubtool_snfoundry.toml",
+            "tests/data/stubtool_complex_snfoundry.toml",
             tempdir.path().join("childdir1").join(CONFIG_FILENAME),
         )
         .expect("Failed to copy config file to temp dir");
@@ -290,6 +312,31 @@ mod tests {
         assert_eq!(
             config.nested.url_alt,
             String::from("nfsasnsidnnsailfbsbksdabdkdkl")
+        );
+    }
+
+    #[test]
+    fn config_with_unknown_field() {
+        let tempdir = copy_config_to_tempdir(
+            "tests/data/stubtool_with_unknown_field_snfoundry.toml",
+            None,
+        );
+
+        let config = load_config::<StubConfig>(
+            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            Some(&String::from("user1")),
+        );
+        assert!(config.is_err());
+
+        let err = config.unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("Failed to deserialize resolved config into ConfigSchema")
+        );
+        assert!(
+            err.root_cause()
+                .to_string()
+                .contains("unknown field `non-existing-field`")
         );
     }
 }
