@@ -13,7 +13,7 @@ async fn test_happy_case() {
     let args = vec!["script", "run", &script_name, "--url", URL];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         ...
         Success: Script execution completed
 

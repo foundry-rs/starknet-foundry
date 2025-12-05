@@ -24,7 +24,7 @@ pub async fn happy_case() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().stdout_matches(indoc! {r"
+    snapbox.assert().stdout_eq(indoc! {r"
         Balance: [..] strk
     "});
 }
@@ -47,7 +47,7 @@ pub async fn happy_case_json() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().stdout_matches(indoc! {r#"
+    snapbox.assert().stdout_eq(indoc! {r#"
         {"balance":"[..]","command":"balance","token":"strk","type":"response"}
     "#});
 }
@@ -74,7 +74,7 @@ pub async fn happy_case_with_token(token: &Token) {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().stdout_matches(formatdoc! {r"
+    snapbox.assert().stdout_eq(formatdoc! {r"
         Balance: [..] {token}
     "});
 }
@@ -98,7 +98,7 @@ pub async fn happy_case_with_block_id() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().stdout_matches(indoc! {r"
+    snapbox.assert().stdout_eq(indoc! {r"
         Balance: [..] strk
     "});
 }
@@ -122,7 +122,7 @@ pub async fn invalid_token() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    snapbox.assert().stderr_eq(indoc! {r"
         error: invalid value 'xyz' for '--token <TOKEN>'
           [possible values: strk, eth]
 
@@ -150,7 +150,7 @@ pub async fn happy_case_with_token_address() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().stdout_matches(indoc! {r"
+    snapbox.assert().stdout_eq(indoc! {r"
         Balance: [..]
     "});
 }
@@ -177,7 +177,7 @@ pub async fn happy_case_json_with_token_address() {
 
     assert!(!balance_str.contains("0x"));
 
-    output.stdout_matches(indoc! {r#"
+    output.stdout_eq(indoc! {r#"
         {"balance":"[..]"}
     "#});
 }

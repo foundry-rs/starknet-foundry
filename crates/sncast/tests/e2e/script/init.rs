@@ -18,7 +18,7 @@ fn test_script_init_happy_case() {
 
     let snapbox = runner(&["script", "init", script_name]).current_dir(temp_dir.path());
 
-    snapbox.assert().stdout_matches(formatdoc! {r"
+    snapbox.assert().stdout_eq(formatdoc! {r"
         [WARNING] [..]
         Success: Script initialization completed
         
@@ -78,7 +78,7 @@ fn test_script_init_happy_case() {
         )
     };
 
-    snapbox::assert_matches(expected_scarb_toml, scarb_toml_content);
+    snapbox::assert_data_eq!(scarb_toml_content, expected_scarb_toml);
 
     assert_eq!(
         lib_cairo_content,
