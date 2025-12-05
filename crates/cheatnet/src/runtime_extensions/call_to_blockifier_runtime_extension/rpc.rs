@@ -1,9 +1,9 @@
 use super::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::non_reverting_execute_call_entry_point;
-use crate::runtime_extensions::{
-    call_to_blockifier_runtime_extension::panic_parser::try_extract_panic_data,
-    common::create_execute_calldata,
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::panic_parser::{
+    error_contains_constructor_selector, try_extract_panic_data,
 };
+use crate::runtime_extensions::common::create_execute_calldata;
 use blockifier::execution::call_info::ExecutionSummary;
 use blockifier::execution::{
     call_info::CallInfo,
@@ -117,7 +117,11 @@ impl CallFailure {
             }
             error => {
                 let error_string = error.to_string();
-                if let Some(panic_data) = try_extract_panic_data(&error_string) {
+                if error_contains_constructor_selector(&error_string) {
+                    CallFailure::Error {
+                        msg: ByteArray::from(error_string.as_str()),
+                    }
+                } else if let Some(panic_data) = try_extract_panic_data(&error_string) {
                     CallFailure::Panic { panic_data }
                 } else {
                     CallFailure::Error {

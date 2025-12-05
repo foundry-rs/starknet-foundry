@@ -87,4 +87,3 @@ fn should_panic_felt_with_byte_array() {
 fn should_panic_expected_contains_error() {
     panic!("will");
 }
-

@@ -906,7 +906,10 @@ fn with_exit_first_flag() {
 fn should_panic() {
     let temp = setup_package("should_panic_test");
 
-    let output = test_runner(&temp).assert().code(1);
+    let output = test_runner(&temp)
+        .arg("should_panic_test_integrationtest::should_panic_test")
+        .assert()
+        .code(1);
 
     assert_stdout_contains(
         output,
@@ -977,7 +980,7 @@ fn should_panic() {
             Actual:    [0x6661696c696e6720636865636b] (failing check)
             Expected:  [0x0] ()
 
-        Tests: 5 passed, 9 failed, 0 ignored, 0 filtered out
+        Tests: 5 passed, 9 failed, 0 ignored, 2 filtered out
 
         Failures:
             should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
@@ -990,6 +993,96 @@ fn should_panic() {
             should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
             should_panic_test_integrationtest::should_panic_test::should_panic_with_non_matching_data
         "},
+    );
+}
+
+#[test]
+fn should_panic_with_deployment() {
+    let temp = setup_package("should_panic_test");
+
+    let output = test_runner(&temp)
+        .arg("should_panic_test_integrationtest::should_panic_with_deployment")
+        .assert()
+        .code(1);
+
+    #[cfg(not(feature = "cairo-native"))]
+    assert_stdout_contains(
+        output,
+        indoc! { r#"
+        Collected 2 test(s) from should_panic_test package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+
+        [FAIL] should_panic_test_integrationtest::should_panic_with_deployment::deployment_with_panic_not_possible_to_catch
+
+        Failure data:
+            Got an exception while executing a hint: Execution failed. Failure reason:
+        Error in contract (contract address: [..], class hash: [..], selector: 0x028ffe4ff0f226a9107253e17a904099aa4f63a02a5621de0576e5aa71bc5194):
+        "Panic message from constructor".
+
+
+
+            Got an exception while executing a hint: Execution failed. Failure reason:
+        Error in contract (contract address: [..], class hash: [..], selector: 0x028ffe4ff0f226a9107253e17a904099aa4f63a02a5621de0576e5aa71bc5194):
+        "Panic message from constructor".
+
+
+        note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace
+        [FAIL] should_panic_test_integrationtest::should_panic_with_deployment::proxied_deployment_with_panic_not_possible_to_catch
+
+        Failure data:
+            Got an exception while executing a hint: Hint Error: Error at pc=0:91:
+        Got an exception while executing a hint: Execution failed. Failure reason:
+        Error in contract (contract address: [..], class hash: [..], selector: 0x028ffe4ff0f226a9107253e17a904099aa4f63a02a5621de0576e5aa71bc5194):
+        "Panic message from constructor".
+
+
+
+
+            Got an exception while executing a hint: Hint Error: Error at pc=0:91:
+        Got an exception while executing a hint: Execution failed. Failure reason:
+        Error in contract (contract address: [..], class hash: [..], selector: 0x028ffe4ff0f226a9107253e17a904099aa4f63a02a5621de0576e5aa71bc5194):
+        "Panic message from constructor".
+
+
+
+        Tests: 0 passed, 2 failed, 0 ignored, 14 filtered out
+
+        Failures:
+            should_panic_test_integrationtest::should_panic_with_deployment::deployment_with_panic_not_possible_to_catch
+            should_panic_test_integrationtest::should_panic_with_deployment::proxied_deployment_with_panic_not_possible_to_catch
+        "#},
+    );
+
+    #[cfg(feature = "cairo-native")]
+    assert_stdout_contains(
+        output,
+        indoc! { r#"
+        Collected 2 test(s) from should_panic_test package
+        Running 2 test(s) from tests/
+        [FAIL] should_panic_test_integrationtest::should_panic_with_deployment::deployment_with_panic_not_possible_to_catch
+
+        Failure data:
+            Got an exception while executing a hint: Execution failed. Failure reason:
+        Error in contract (contract address: [..], class hash: [..], selector: 0x028ffe4ff0f226a9107253e17a904099aa4f63a02a5621de0576e5aa71bc5194):
+        "Panic message from constructor".
+
+
+        [FAIL] should_panic_test_integrationtest::should_panic_with_deployment::proxied_deployment_with_panic_not_possible_to_catch
+
+        Failure data:
+            Got an exception while executing a hint: Hint Error: Execution failed. Failure reason:
+        Error in contract (contract address: [..], class hash: [..], selector: 0x028ffe4ff0f226a9107253e17a904099aa4f63a02a5621de0576e5aa71bc5194):
+        "Panic message from constructor".
+
+
+        Running 0 test(s) from src/
+        Tests: 0 passed, 2 failed, 0 ignored, 14 filtered out
+
+        Failures:
+            should_panic_test_integrationtest::should_panic_with_deployment::deployment_with_panic_not_possible_to_catch
+            should_panic_test_integrationtest::should_panic_with_deployment::proxied_deployment_with_panic_not_possible_to_catch
+        "#},
     );
 }
 
