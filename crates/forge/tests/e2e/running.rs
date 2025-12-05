@@ -906,11 +906,14 @@ fn with_exit_first_flag() {
 fn should_panic() {
     let temp = setup_package("should_panic_test");
 
-    let output = test_runner(&temp).arg("should_panic_test").assert().code(1);
+    let output = test_runner(&temp)
+        .arg("should_panic_test_integrationtest::should_panic_test")
+        .assert()
+        .code(1);
 
     assert_stdout_contains(
         output,
-        indoc! { r#"
+        indoc! { r"
         Collected 16 test(s) from should_panic_test package
         Running 0 test(s) from src/
         Running 16 test(s) from tests/
@@ -989,7 +992,7 @@ fn should_panic() {
             should_panic_test_integrationtest::should_panic_test::should_panic_felt_with_byte_array
             should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
             should_panic_test_integrationtest::should_panic_test::should_panic_with_non_matching_data
-        "#},
+        "},
     );
 }
 
@@ -998,7 +1001,7 @@ fn should_panic_with_deployment() {
     let temp = setup_package("should_panic_test");
 
     let output = test_runner(&temp)
-        .arg("should_panic_with_deployment")
+        .arg("should_panic_test_integrationtest::should_panic_with_deployment")
         .assert()
         .code(1);
 
