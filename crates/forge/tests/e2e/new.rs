@@ -11,7 +11,7 @@ use regex::Regex;
 use scarb_api::ScarbCommand;
 use shared::consts::FREE_RPC_PROVIDER_URL;
 use shared::test_utils::output_assert::assert_stdout_contains;
-use snapbox::assert_matches;
+use snapbox::assert_data_eq;
 use snapbox::cmd::Command as SnapboxCommand;
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
@@ -348,5 +348,5 @@ fn assert_manifest_matches(expected: &str, actual: &str) {
         s.lines().sorted().join("\n")
     }
 
-    assert_matches(sort_lines(expected), sort_lines(actual));
+    assert_data_eq!(sort_lines(actual), sort_lines(expected));
 }

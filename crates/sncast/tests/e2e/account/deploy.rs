@@ -181,7 +181,7 @@ pub async fn test_valid_class_hash() {
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
 
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         Success: Account deployed
 
         Transaction Hash: 0x[..]
@@ -213,7 +213,7 @@ pub async fn test_valid_no_max_fee() {
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
 
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         Success: Account deployed
 
         Transaction Hash: 0x[..]
@@ -311,7 +311,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
 
-    snapbox.assert().stdout_matches(indoc! {r"
+    snapbox.assert().stdout_eq(indoc! {r"
         Success: Account deployed
 
         Transaction Hash: 0x[..]
@@ -576,7 +576,7 @@ pub async fn test_deploy_keystore_other_args() {
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
-    snapbox.assert().stdout_matches(indoc! {r"
+    snapbox.assert().stdout_eq(indoc! {r"
         Success: Account deployed
 
         Transaction Hash: 0x[..]
@@ -607,7 +607,7 @@ pub async fn test_json_output_format() {
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
-    snapbox.assert().stdout_matches(indoc! {r#"
+    snapbox.assert().stdout_eq(indoc! {r#"
         {"command":"account deploy","transaction_hash":"0x0[..]","type":"response"}
         {"links":"transaction: https://sepolia.starkscan.co/tx/0x0[..]","title":"account deployment","type":"notification"}
     "#});

@@ -92,7 +92,7 @@ async fn test_happy_case_json_output() {
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
 
-    snapbox.assert().success().stdout_matches(indoc! {
+    snapbox.assert().success().stdout_eq(indoc! {
         r#"
 {"status":"compiling","message":"[..]"}
 {"type":"warn","message":"[..]"}

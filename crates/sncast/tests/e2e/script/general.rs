@@ -47,7 +47,7 @@ async fn test_happy_case(account: &str) {
 
     let snapbox = runner(&args).current_dir(script_dir.path());
 
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         ...
         Success: Script execution completed
 
@@ -135,7 +135,7 @@ async fn test_incompatible_sncast_std_version() {
     let snapbox = runner(&args).current_dir(script_dir.path());
     let version = env!("CARGO_PKG_VERSION");
 
-    snapbox.assert().success().stdout_matches(formatdoc! {r"
+    snapbox.assert().success().stdout_eq(formatdoc! {r"
         ...
         [WARNING] Package sncast_std version does not meet the recommended version requirement ={version}, it might result in unexpected behaviour
         ...
@@ -199,7 +199,7 @@ async fn test_multiple_packages_happy_case() {
 
     let snapbox = runner(&args).current_dir(workspace_dir.path());
 
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         ...
         Success: Script execution completed
 
@@ -236,7 +236,7 @@ async fn test_run_script_display_debug_traits() {
 
     let snapbox = runner(&args).current_dir(script_dir.path());
 
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         ...
         test
         declare_nonce: [..]
@@ -291,7 +291,7 @@ async fn test_no_account_passed() {
     let args = vec!["script", "run", &script_name, "--url", URL];
 
     let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts");
-    snapbox.assert().success().stdout_matches(indoc! {r#"
+    snapbox.assert().success().stdout_eq(indoc! {r#"
         ...
         Success: Script execution completed
         
@@ -325,7 +325,7 @@ async fn test_missing_field() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    snapbox.assert().failure().stdout_matches(indoc! {r"
+    snapbox.assert().failure().stdout_eq(indoc! {r"
         ...
         error: Wrong number of arguments. Expected 3, found: 2
         ...
@@ -361,7 +361,7 @@ async fn test_run_script_twice_with_state_file_enabled() {
 
     let snapbox = runner(&args).current_dir(script_dir.path());
 
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         ...
         Success: Script execution completed
 
@@ -387,7 +387,7 @@ async fn test_run_script_twice_with_state_file_enabled() {
 
     let snapbox = runner(&args).current_dir(script_dir.path());
 
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         ...
         Success: Script execution completed
 
@@ -424,7 +424,7 @@ async fn test_state_file_contains_all_failed_txs() {
 
     let snapbox = runner(&args).current_dir(script_dir.path());
 
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         ...
         Success: Script execution completed
     "});
@@ -512,7 +512,7 @@ async fn test_state_file_rerun_failed_tx() {
 
     let snapbox = runner(&args).current_dir(script_dir.path());
 
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         ...
         Success: Script execution completed
         
@@ -557,7 +557,7 @@ async fn test_using_release_profile() {
 
     let snapbox = runner(&args).current_dir(script_dir.path());
 
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         ...
         Success: Script execution completed
         
