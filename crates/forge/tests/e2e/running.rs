@@ -1009,7 +1009,7 @@ fn should_panic_with_deployment() {
     assert_stdout_contains(
         output,
         indoc! { r#"
-        Collected 16 test(s) from should_panic_test package
+        Collected 2 test(s) from should_panic_test package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
 
@@ -1034,7 +1034,7 @@ fn should_panic_with_deployment() {
 
             Got an exception while executing a hint: Hint Error: Panic message from constructor
 
-        Tests: 0 passed, 2 failed, 0 ignored, 0 filtered out
+        Tests: 0 passed, 2 failed, 0 ignored, 14 filtered out
 
         Failures:
             should_panic_test_integrationtest::should_panic_with_deployment::deployment_with_panic_not_possible_to_catch
