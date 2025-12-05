@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - Restored missing `command` missing from some responses when using `--json` output format.
+- When deploying account with `--keystore` flag `sncast` now longer ask two times for password
 
 ## [0.53.0] - 2025-11-24
 
