@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- `#[should_panic]` attribute doesn't catch failures in the deploy syscall anymore (any failure, e.g. panic in the constructor or attempting to deploy to an existing address). This is because `deploy_syscall` on the real network returns an unrecoverable error. Read [here](https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-catching-errors-12) for more details
+- `#[should_panic]` attribute doesn't catch failures from deploy syscall anymore (any failure, e.g. panic in the constructor or attempting to deploy to an existing address). This is because `deploy_syscall` on the real network returns an unrecoverable error. Read [here](https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-catching-errors-12) for more details
 
 #### Fixed
 
