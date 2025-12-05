@@ -106,7 +106,7 @@ pub fn test_happy_case() {
     // Run test with an affirmative user input
     let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
 
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         Success: Account deleted
 
         Account successfully removed
@@ -131,7 +131,7 @@ pub fn test_happy_case_url() {
 
     let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
 
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         Success: Account deleted
 
         Account successfully removed
@@ -162,7 +162,7 @@ pub fn test_happy_case_with_yes_flag() {
     let output = snapbox.assert().success();
 
     assert!(output.as_stderr().is_empty());
-    output.stdout_matches(indoc! {r"
+    output.stdout_eq(indoc! {r"
         Success: Account deleted
 
         Account successfully removed

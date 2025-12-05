@@ -6,7 +6,7 @@ use scarb_api::ScarbCommand;
 use scarb_api::version::scarb_version_for_dir;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::cmd::Command;
-use toml_edit::ImDocument;
+use toml_edit::Document;
 
 #[test]
 #[cfg_attr(
@@ -23,7 +23,7 @@ fn new_with_new_scarb() {
 
     let manifest = temp.path().join("abc").join("Scarb.toml");
     let manifest = &std::fs::read_to_string(manifest).unwrap();
-    let manifest = ImDocument::parse(manifest).unwrap();
+    let manifest = Document::parse(manifest).unwrap();
 
     let snforge_std = manifest
         .get("dev-dependencies")
@@ -62,7 +62,7 @@ fn new_with_old_scarb() {
 
     let manifest = temp.path().join("abc").join("Scarb.toml");
     let manifest = &std::fs::read_to_string(manifest).unwrap();
-    let manifest = ImDocument::parse(manifest).unwrap();
+    let manifest = Document::parse(manifest).unwrap();
 
     let snforge_std = manifest
         .get("dev-dependencies")

@@ -42,7 +42,7 @@ pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().stdout_matches(indoc! {r"
+    snapbox.assert().stdout_eq(indoc! {r"
         Success: Account imported successfully
 
         Account Name: my_account_import
@@ -98,7 +98,7 @@ pub async fn test_happy_case_argent_with_deprecation_warning() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().stdout_matches(indoc! {r"
+    snapbox.assert().stdout_eq(indoc! {r"
         [WARNING] Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account import` is deprecated, please use `ready` instead.
         
         Success: Account imported successfully
@@ -202,7 +202,7 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().stderr_matches(formatdoc! {r"
+    snapbox.assert().stderr_eq(formatdoc! {r"
         Command: account import
         Error: Incorrect class hash {} for account address {} was provided
     ", DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS});
@@ -234,7 +234,7 @@ pub async fn test_nonexistent_account_address_and_nonexistent_class_hash() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    snapbox.assert().stderr_eq(indoc! {r"
         Command: account import
         Error: Class with hash 0x101 is not declared, try using --class-hash with a hash of the declared class
     "});
@@ -264,7 +264,7 @@ pub async fn test_nonexistent_account_address() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    snapbox.assert().stderr_eq(indoc! {r"
         Command: account import
         Error: Class hash for the account address 0x123 could not be found. Please provide the class hash
     "});
@@ -399,7 +399,7 @@ pub async fn test_detect_deployed() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().stdout_matches(indoc! {r"
+    snapbox.assert().stdout_eq(indoc! {r"
         Success: Account imported successfully
 
         Account Name: my_account_import
@@ -481,7 +481,7 @@ pub async fn test_private_key_from_file() {
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
 
-    snapbox.assert().stdout_matches(indoc! {r"
+    snapbox.assert().stdout_eq(indoc! {r"
         Success: Account imported successfully
 
         Account Name: my_account_import
@@ -731,7 +731,7 @@ pub async fn test_happy_case_valid_address_computation() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().stdout_matches(indoc! {r"
+    snapbox.assert().stdout_eq(indoc! {r"
         Success: Account imported successfully
 
         Account Name: my_account_import
@@ -789,7 +789,7 @@ pub async fn test_invalid_address_computation() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let computed_address = "0xaf550326d32c8106ef08d25cbc0dba06e5cd10a2201c2e9bc5ad4cbbce45e6";
-    snapbox.assert().stderr_matches(formatdoc! {r"
+    snapbox.assert().stderr_eq(formatdoc! {r"
         Command: account import
         Error: Computed address {computed_address} does not match the provided address 0x123. Please ensure that the provided salt, class hash, and account type are correct.
     "});
@@ -849,7 +849,7 @@ pub async fn test_happy_case_default_name_generation() {
 
     for i in 0..3 {
         let snapbox = runner(&import_args).current_dir(tempdir.path());
-        snapbox.assert().stdout_matches(formatdoc! {r"
+        snapbox.assert().stdout_eq(formatdoc! {r"
         Success: Account imported successfully
 
         Account Name: account-{id}
@@ -863,7 +863,7 @@ pub async fn test_happy_case_default_name_generation() {
     assert_eq!(contents_json, all_accounts_content);
 
     let snapbox = runner(&delete_args).current_dir(tempdir.path()).stdin("Y");
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         Success: Account deleted
 
         Account successfully removed
@@ -876,7 +876,7 @@ pub async fn test_happy_case_default_name_generation() {
     assert_eq!(contents_json, accounts_content_after_delete);
 
     let snapbox = runner(&import_args).current_dir(tempdir.path());
-    snapbox.assert().stdout_matches(indoc! {r"
+    snapbox.assert().stdout_eq(indoc! {r"
         Success: Account imported successfully
 
         Account Name: account-2
