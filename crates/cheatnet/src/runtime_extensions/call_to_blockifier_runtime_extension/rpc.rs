@@ -118,9 +118,9 @@ impl CallFailure {
             error => {
                 let error_string = error.to_string();
                 if error_contains_constructor_selector(&error_string) {
-                    return CallFailure::Error {
+                    CallFailure::Error {
                         msg: ByteArray::from(error_string.as_str()),
-                    };
+                    }
                 } else if let Some(panic_data) = try_extract_panic_data(&error_string) {
                     CallFailure::Panic { panic_data }
                 } else {

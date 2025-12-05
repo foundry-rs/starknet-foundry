@@ -22,7 +22,7 @@ const CONSTRUCTOR_SELECTOR: &str =
     "0x028ffe4ff0f226a9107253e17a904099aa4f63a02a5621de0576e5aa71bc5194";
 
 static RE_CONSTRUCTOR_SELECTOR: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(&format!(r"selector:\s*{}", CONSTRUCTOR_SELECTOR)).unwrap());
+    LazyLock::new(|| Regex::new(&format!(r"selector:\s*{CONSTRUCTOR_SELECTOR}")).unwrap());
 
 enum PanicDataFormat {
     ByteArray(Vec<Felt>),
