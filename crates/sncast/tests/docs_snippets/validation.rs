@@ -13,7 +13,6 @@ use shared::test_utils::output_assert::assert_stdout_contains;
 use tempfile::TempDir;
 
 #[test]
-#[ignore = "TODO: (#3937) New RPC URL is not available yet"]
 fn test_docs_snippets() {
     let root_dir_path = get_nth_ancestor(2);
     let docs_dir_path = root_dir_path.join("docs/src");

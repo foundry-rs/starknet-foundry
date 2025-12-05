@@ -534,6 +534,7 @@ fn test_scarb_build_fails_manifest_does_not_exist() {
 }
 
 #[test]
+#[ignore = "TODO(#3997) Restore this after devnet fixes fee issue"]
 fn test_too_low_gas() {
     let contract_path = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
