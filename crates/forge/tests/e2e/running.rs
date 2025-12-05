@@ -914,9 +914,9 @@ fn should_panic() {
     assert_stdout_contains(
         output,
         indoc! { r"
-        Collected 16 test(s) from should_panic_test package
+        Collected 14 test(s) from should_panic_test package
         Running 0 test(s) from src/
-        Running 16 test(s) from tests/
+        Running 14 test(s) from tests/
         [FAIL] should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
 
         Failure data:
@@ -980,7 +980,7 @@ fn should_panic() {
             Actual:    [0x6661696c696e6720636865636b] (failing check)
             Expected:  [0x0] ()
 
-        Tests: 5 passed, 9 failed, 0 ignored, 0 filtered out
+        Tests: 5 passed, 9 failed, 0 ignored, 2 filtered out
 
         Failures:
             should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
@@ -1046,7 +1046,7 @@ fn should_panic_with_deployment() {
     assert_stdout_contains(
         output,
         indoc! { r#"
-        Collected 16 test(s) from should_panic_test package
+        Collected 2 test(s) from should_panic_test package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
 
@@ -1062,7 +1062,7 @@ fn should_panic_with_deployment() {
         Failure data:
             Got an exception while executing a hint: Hint Error: Panic message from constructor
 
-        Tests: 0 passed, 2 failed, 0 ignored, 0 filtered out
+        Tests: 0 passed, 2 failed, 0 ignored, 14 filtered out
 
         Failures:
             should_panic_test_integrationtest::should_panic_with_deployment::deployment_with_panic_not_possible_to_catch
