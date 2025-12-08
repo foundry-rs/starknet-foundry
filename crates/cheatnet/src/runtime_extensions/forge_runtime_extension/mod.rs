@@ -19,6 +19,7 @@ use crate::runtime_extensions::{
 };
 use crate::trace_data::{CallTrace, CallTraceNode, GasReportData};
 use anyhow::{Context, Result, anyhow};
+use blockifier::blockifier_versioned_constants::VersionedConstants;
 use blockifier::bouncer::vm_resources_to_gas;
 use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::{
@@ -80,6 +81,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
         selector: &str,
         mut input_reader: BufferReader<'_>,
         extended_runtime: &mut Self::Runtime,
+        vm: &VirtualMachine,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         if let Some(oracle_selector) = self
             .oracle_hint_service
@@ -549,6 +551,33 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .cheat_block_hash(block_number, operation);
                 Ok(CheatcodeHandlingResult::from_serializable(()))
             }
+            "get_current_vm_step" => {
+                // Each contract call is executed in separate VM, hence all VM steps
+                // are calculated as sum of steps from calls + current VM steps.
+                // Since syscalls are added to VM resources after the execution, we need
+                // to include them manually here.
+                let top_call = extended_runtime
+                    .extended_runtime
+                    .extension
+                    .cheatnet_state
+                    .trace_data
+                    .current_call_stack
+                    .top();
+                let vm_steps_from_inner_calls = calculate_vm_steps_from_calls(&top_call);
+                let top_call_syscalls = &extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .base
+                    .syscalls_usage;
+                let vm_steps_from_syscalls = &VersionedConstants::latest_constants()
+                    .get_additional_os_syscall_resources(top_call_syscalls)
+                    .n_steps;
+                let total_vm_steps =
+                    vm_steps_from_inner_calls + vm_steps_from_syscalls + vm.get_current_step();
+
+                Ok(CheatcodeHandlingResult::from_serializable(total_vm_steps))
+            }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         }
     }
@@ -855,4 +884,17 @@ pub fn get_all_used_resources(
         execution_summary: summary,
         l1_handler_payload_lengths,
     }
+}
+
+fn calculate_vm_steps_from_calls(top_call: &Rc<RefCell<CallTrace>>) -> usize {
+    top_call
+        .borrow()
+        .nested_calls
+        .iter()
+        .fold(0, |acc, node| match node {
+            CallTraceNode::EntryPointCall(call_trace) => {
+                acc + call_trace.borrow().used_execution_resources.n_steps
+            }
+            CallTraceNode::DeployWithoutConstructor => acc,
+        })
 }

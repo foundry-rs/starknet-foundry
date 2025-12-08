@@ -2,6 +2,12 @@
 trait IHelloStarknet<TContractState> {
     fn increase_balance(ref self: TContractState, amount: felt252);
     fn get_balance(self: @TContractState) -> felt252;
+    fn call_other_contract(
+        self: @TContractState,
+        other_contract_address: felt252,
+        selector: felt252,
+        calldata: Option<Array<felt252>>,
+    ) -> Span<felt252>;
     fn do_a_panic(self: @TContractState);
     fn do_a_panic_with(self: @TContractState, panic_data: Array<felt252>);
     fn do_a_panic_with_bytearray(self: @TContractState);
@@ -10,6 +16,7 @@ trait IHelloStarknet<TContractState> {
 #[starknet::contract]
 mod HelloStarknet {
     use array::ArrayTrait;
+    use starknet::{SyscallResultTrait, syscalls};
 
     #[storage]
     struct Storage {
@@ -28,6 +35,23 @@ mod HelloStarknet {
             self.balance.read()
         }
 
+        fn call_other_contract(
+            self: @ContractState,
+            other_contract_address: felt252,
+            selector: felt252,
+            calldata: Option<Array<felt252>>,
+        ) -> Span<felt252> {
+            syscalls::call_contract_syscall(
+                other_contract_address.try_into().unwrap(),
+                selector,
+                match calldata {
+                    Some(data) => data.span(),
+                    None => array![].span(),
+                },
+            )
+                .unwrap_syscall()
+        }
+
         // Panics
         fn do_a_panic(self: @ContractState) {
             let mut arr = ArrayTrait::new();
@@ -43,7 +67,10 @@ mod HelloStarknet {
 
         // Panics with a bytearray
         fn do_a_panic_with_bytearray(self: @ContractState) {
-            assert!(false, "This is a very long\n and multiline message that is certain to fill the buffer");
+            assert!(
+                false,
+                "This is a very long\n and multiline message that is certain to fill the buffer",
+            );
         }
     }
 }

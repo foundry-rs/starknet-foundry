@@ -104,6 +104,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
         selector: &str,
         mut input_reader: BufferReader,
         _extended_runtime: &mut Self::Runtime,
+        _vm: &VirtualMachine,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         match selector {
             "call" => {
