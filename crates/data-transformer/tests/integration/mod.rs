@@ -21,9 +21,8 @@ const NO_CONSTRUCTOR_CLASS_HASH: Felt =
 static CLASS: OnceCell<ContractClass> = OnceCell::const_new();
 
 async fn init_class(class_hash: Felt) -> ContractClass {
-    // TODO: (#3937) New RPC URL is not available yet
     let client = JsonRpcClient::new(HttpTransport::new(
-        Url::parse("http://188.34.188.184:7070/rpc/v0_9").unwrap(),
+        Url::parse("http://188.34.188.184:7070/rpc/v0_10").unwrap(),
     ));
 
     client

@@ -13,7 +13,6 @@ use shared::test_utils::output_assert::assert_stdout_contains;
 use tempfile::TempDir;
 
 #[test]
-#[ignore = "TODO: (#3937) New RPC URL is not available yet"]
 fn test_docs_snippets() {
     let root_dir_path = get_nth_ancestor(2);
     let docs_dir_path = root_dir_path.join("docs/src");
@@ -58,10 +57,10 @@ fn test_docs_snippets() {
         .expect("Failed to copy the directory");
     }
 
-    let source_accouns_json_path = hello_sncast_dir.join("accounts.json");
+    let source_accounts_json_path = hello_sncast_dir.join("accounts.json");
     let target_accounts_json_path = tempdir.path().join("accounts.json");
 
-    fs::copy(&source_accouns_json_path, &target_accounts_json_path)
+    fs::copy(&source_accounts_json_path, &target_accounts_json_path)
         .expect("Failed to copy accounts.json");
     update_scarb_toml_dependencies(&tempdir).unwrap();
 

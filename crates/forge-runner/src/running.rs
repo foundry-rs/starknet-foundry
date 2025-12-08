@@ -238,7 +238,6 @@ pub fn run_test_case(
         environment_variables: runtime_config.environment_variables,
         contracts_data: runtime_config.contracts_data,
         fuzzer_rng,
-        experimental_oracles_enabled: runtime_config.experimental_oracles,
         oracle_hint_service: OracleHintService::new(Some(versioned_program_path.as_std_path())),
     };
 
@@ -321,10 +320,10 @@ pub fn run_test_case(
             Ok(call_info)
         }
         Err(error) => Err(match error {
-            EntryPointExecutionError::CairoRunError(CairoRunError::VmException(err)) => {
-                CairoRunError::VirtualMachine(err.inner_exc)
-            }
-            EntryPointExecutionError::CairoRunError(err) => err,
+            EntryPointExecutionError::CairoRunError(err_box) => match *err_box {
+                CairoRunError::VmException(err) => CairoRunError::VirtualMachine(err.inner_exc),
+                other => other,
+            },
             err => bail!(err),
         }),
     };

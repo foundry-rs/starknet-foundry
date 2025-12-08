@@ -10,22 +10,11 @@ updates:
     schedule:
       interval: "monthly"
     ignore:
-      - dependency-name: "cairo-lang-*"
+      - dependency-name: "cairo-*"
     groups:
-      reqwest:
+      all-dependencies:
         patterns:
-          - "reqwest*"
-        update-types:
-          - major
-          - minor
-      prod-deps:
-        exclude-patterns:
-          - "reqwest*"
-        dependency-type: production
-      dev-deps:
-        exclude-patterns:
-          - "reqwest*"
-        dependency-type: development
+          - "*"
 
 
   - package-ecosystem: "github-actions"

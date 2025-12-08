@@ -27,7 +27,6 @@ use cairo_vm::{
 use runtime::{ExtendedRuntime, StarknetRuntime};
 
 // blockifier/src/execution/cairo1_execution.rs:48 (execute_entry_point_call)
-#[expect(clippy::result_large_err)]
 pub(crate) fn execute_entry_point_call_cairo1(
     call: ExecutableCallEntryPoint,
     compiled_class_v1: &CompiledClassV1,
@@ -145,7 +144,6 @@ pub(crate) fn execute_entry_point_call_cairo1(
 }
 
 // crates/blockifier/src/execution/cairo1_execution.rs:236 (run_entry_point)
-#[expect(clippy::result_large_err)]
 pub fn cheatable_run_entry_point(
     runner: &mut CairoRunner,
     hint_processor: &mut dyn HintProcessor,
@@ -159,17 +157,22 @@ pub fn cheatable_run_entry_point(
     // endregion
     let args: Vec<&CairoArg> = args.iter().collect();
 
-    runner.run_from_entrypoint(
-        entry_point.pc(),
-        &args,
-        verify_secure,
-        Some(program_segment_size),
-        hint_processor,
-    )?;
+    runner
+        .run_from_entrypoint(
+            entry_point.pc(),
+            &args,
+            verify_secure,
+            Some(program_segment_size),
+            hint_processor,
+        )
+        .map_err(Box::new)?;
 
     // region: Modified blockifier code
     // Relocate trace to then collect it
-    runner.relocate(true).map_err(CairoRunError::from)?;
+    runner
+        .relocate(true)
+        .map_err(CairoRunError::from)
+        .map_err(Box::new)?;
     // endregion
 
     Ok(())

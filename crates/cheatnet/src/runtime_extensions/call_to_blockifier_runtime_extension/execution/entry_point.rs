@@ -56,7 +56,7 @@ pub struct ExecuteCallEntryPointExtraOptions {
 }
 
 // blockifier/src/execution/entry_point (CallEntryPoint::execute)
-#[expect(clippy::too_many_lines, clippy::result_large_err)]
+#[expect(clippy::too_many_lines)]
 pub fn execute_call_entry_point(
     entry_point: &mut CallEntryPoint, // Instead of 'self'
     state: &mut dyn State,
@@ -257,7 +257,6 @@ pub fn execute_call_entry_point(
 }
 
 // blockifier/src/execution/entry_point (CallEntryPoint::non_reverting_execute)
-#[expect(clippy::result_large_err)]
 pub fn non_reverting_execute_call_entry_point(
     entry_point: &mut CallEntryPoint, // Instead of 'self'
     state: &mut dyn State,
@@ -317,7 +316,6 @@ pub fn non_reverting_execute_call_entry_point(
 }
 
 // blockifier/src/execution/entry_point.rs (execute_constructor_entry_point)
-#[expect(clippy::result_large_err)]
 pub fn execute_constructor_entry_point(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,

@@ -5,7 +5,7 @@ use conversions::IntoConv;
 use serde_json::Map;
 use sncast::helpers::account::load_accounts;
 use sncast::helpers::braavos::BraavosAccountFactory;
-use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
+use sncast::helpers::constants::BRAAVOS_BASE_ACCOUNT_CLASS_HASH;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::deploy::AccountDeployResponse;
@@ -14,7 +14,7 @@ use sncast::response::ui::UI;
 use sncast::{
     AccountType, WaitForTx, apply_optional_fields, chain_id_to_network_name,
     check_account_file_exists, get_account_data_from_accounts_file, get_account_data_from_keystore,
-    get_keystore_password, handle_rpc_error, handle_wait_for_tx,
+    handle_rpc_error, handle_wait_for_tx,
 };
 use starknet_rust::accounts::{AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory};
 use starknet_rust::accounts::{AccountFactoryError, ArgentAccountFactory};
@@ -107,10 +107,7 @@ async fn deploy_from_keystore(
         bail!("Account already deployed");
     }
 
-    let private_key = SigningKey::from_keystore(
-        keystore_path,
-        get_keystore_password(KEYSTORE_PASSWORD_ENV_VAR)?.as_str(),
-    )?;
+    let private_key = SigningKey::from_secret_scalar(account_data.private_key);
     let public_key = account_data.public_key;
 
     if public_key != private_key.verifying_key().scalar() {

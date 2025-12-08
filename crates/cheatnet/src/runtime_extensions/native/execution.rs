@@ -22,7 +22,6 @@ use cairo_vm::types::builtin_name::BuiltinName;
 use std::collections::HashMap;
 use std::default::Default;
 
-#[expect(clippy::result_large_err)]
 pub(crate) fn execute_entry_point_call_native(
     call: &ExecutableCallEntryPoint,
     native_compiled_class_v1: &NativeCompiledClassV1,

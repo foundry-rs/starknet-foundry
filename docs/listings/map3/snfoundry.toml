@@ -1,4 +1,4 @@
 [sncast.default]
 url = "http://127.0.0.1:5050/rpc"
 # [sncast.default]
-# url = "<YOUR_RPC_URL>"
+# url = "https://api.zan.top/public/starknet-sepolia/rpc/v0_10"

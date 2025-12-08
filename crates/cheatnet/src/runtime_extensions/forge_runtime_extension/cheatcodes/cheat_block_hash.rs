@@ -120,7 +120,6 @@ impl CheatnetState {
         None
     }
 
-    #[expect(clippy::result_large_err)]
     pub fn get_block_hash_for_contract(
         &mut self,
         contract_address: ContractAddress,
