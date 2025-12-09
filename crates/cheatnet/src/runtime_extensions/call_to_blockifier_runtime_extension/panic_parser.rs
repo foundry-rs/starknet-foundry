@@ -62,7 +62,7 @@ fn parse_felts(s: &str) -> Option<PanicDataFormat> {
 
     let felts: Vec<Felt> = RE_HEX
         .find_iter(s)
-        .filter_map(|m| Felt::from_hex(m.as_str()).ok())
+        .map(|m| Felt::from_hex(m.as_str()).expect("Invalid felt in panic data"))
         .collect();
 
     Some(PanicDataFormat::Felts(felts))
