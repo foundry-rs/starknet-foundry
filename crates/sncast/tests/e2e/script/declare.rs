@@ -92,6 +92,7 @@ async fn test_same_contract_twice() {
 }
 
 #[tokio::test]
+#[ignore = "TODO(#3997) Restore this after devnet fixes fee issue"]
 async fn test_with_invalid_max_fee() {
     let contract_dir = duplicate_contract_directory_with_salt(
         SCRIPTS_DIR.to_owned() + "/map_script/contracts/",

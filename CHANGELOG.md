@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- `get_current_vm_step` function to get the current step during test execution. For more see [docs](https://foundry-rs.github.io/starknet-foundry/snforge-library/testing/get_current_vm_step.html)
+
 #### Changed
 
 - `#[should_panic]` attribute doesn't catch failures from deploy syscall anymore (any failure, e.g. panic in the constructor or attempting to deploy to an existing address). This is because `deploy_syscall` on the real network returns an unrecoverable error. Read [here](https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-catching-errors-12) for more details
@@ -29,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `sncast script init` now longer adds `cairo_test` as dependency in `Scarb.toml`
 - Replaced the free RPC provider to Zan
+- The supported RPC version is now 0.10.0
 
 #### Fixed
 
