@@ -1,12 +1,12 @@
 use std::marker::PhantomData;
 
 use crate::state::CheatnetState;
-use blockifier::execution::entry_point::{CallEntryPoint, CallType};
+use blockifier::execution::entry_point::{CallEntryPoint, CallType, ConstructorContext};
 use blockifier::execution::syscalls::hint_processor::{OUT_OF_GAS_ERROR, SyscallHintProcessor};
 use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
 use blockifier::execution::syscalls::vm_syscall_utils::{
-    CallContractRequest, LibraryCallRequest, RevertData, SingleSegmentResponse,
-    SyscallExecutorBaseError, SyscallRequestWrapper, SyscallSelector,
+    CallContractRequest, DeployRequest, DeployResponse, LibraryCallRequest, RevertData,
+    SingleSegmentResponse, SyscallExecutorBaseError, SyscallRequestWrapper, SyscallSelector,
 };
 use blockifier::execution::{
     execution_utils::ReadOnlySegment,
@@ -17,7 +17,7 @@ use cairo_vm::types::relocatable::MaybeRelocatable;
 use cairo_vm::vm::{errors::hint_errors::HintError, vm_core::VirtualMachine};
 use runtime::{ExtendedRuntime, ExtensionLogic, SyscallHandlingResult};
 use starknet_api::contract_class::EntryPointType;
-use starknet_api::core::ContractAddress;
+use starknet_api::core::{ContractAddress, calculate_contract_address};
 use starknet_api::execution_resources::GasAmount;
 use starknet_types_core::felt::Felt;
 
@@ -29,6 +29,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
 };
 
 use super::cheatable_starknet_runtime_extension::CheatableStarknetRuntime;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::cheated_syscalls::execute_deployment;
 use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::TEST_ADDRESS;
 
@@ -68,9 +69,13 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
 
                 Ok(SyscallHandlingResult::Handled)
             }
+            SyscallSelector::Deploy => {
+                execute_syscall::<DeployRequest>(selector, vm, extended_runtime)?;
+
+                Ok(SyscallHandlingResult::Handled)
+            }
             SyscallSelector::DelegateCall
             | SyscallSelector::DelegateL1Handler
-            | SyscallSelector::Deploy
             | SyscallSelector::EmitEvent
             | SyscallSelector::GetBlockHash
             | SyscallSelector::GetBlockNumber
@@ -179,6 +184,68 @@ impl ExecuteCall for LibraryCallRequest {
     }
 }
 
+impl ExecuteCall for DeployRequest {
+    fn execute_call(
+        self: DeployRequest,
+        syscall_handler: &mut SyscallHintProcessor,
+        cheatnet_state: &mut CheatnetState,
+        remaining_gas: &mut u64,
+    ) -> CallResult {
+        // Increment the Deploy syscall's linear cost counter by the number of elements in the
+        // constructor calldata
+        syscall_handler.base.increment_syscall_linear_factor_by(
+            &SyscallSelector::Deploy,
+            self.constructor_calldata.0.len(),
+        );
+
+        let deployer_address = syscall_handler.base.call.storage_address;
+        let deployer_address_for_calculation = if self.deploy_from_zero {
+            ContractAddress::default()
+        } else {
+            deployer_address
+        };
+
+        // region: Modified blockifier code
+        let deployed_contract_address =
+            if let Some(contract_address) = cheatnet_state.next_address_for_deployment() {
+                contract_address
+            } else {
+                calculate_contract_address(
+                    self.contract_address_salt,
+                    self.class_hash,
+                    &self.constructor_calldata,
+                    deployer_address_for_calculation,
+                )
+                .expect("Failed to calculate contract address")
+            };
+        // endregion
+
+        let ctor_context = ConstructorContext {
+            class_hash: self.class_hash,
+            code_address: Some(deployed_contract_address),
+            storage_address: deployed_contract_address,
+            caller_address: deployer_address,
+        };
+        let exec_result = execute_deployment(
+            syscall_handler.base.state,
+            cheatnet_state,
+            syscall_handler.base.context,
+            &ctor_context,
+            self.constructor_calldata,
+            remaining_gas,
+        );
+
+        let result =
+            CallResult::from_execution_result_deploy(&exec_result, &deployed_contract_address);
+
+        if let Ok(call_info) = exec_result {
+            syscall_handler.base.inner_calls.push(call_info);
+        }
+
+        result
+    }
+}
+
 // crates/blockifier/src/execution/syscalls/vm_syscall_utils.rs:677 (execute_syscall)
 fn execute_syscall<Request: ExecuteCall + SyscallRequest>(
     selector: SyscallSelector,
@@ -249,8 +316,44 @@ fn write_call_response(
     gas_counter: u64,
     call_result: CallResult,
 ) -> Result<(), HintError> {
-    let response_wrapper: SyscallResponseWrapper<SingleSegmentResponse> = match call_result {
+    match call_result {
         CallResult::Success { ret_data } => {
+            let memory_segment_start_ptr = syscall_handler.read_only_segments.allocate(
+                vm,
+                &ret_data
+                    .clone()
+                    .into_iter()
+                    .map(MaybeRelocatable::Int)
+                    .collect::<Vec<MaybeRelocatable>>(),
+            )?;
+
+            SyscallResponseWrapper::<SingleSegmentResponse>::Success {
+                gas_counter,
+                response: SingleSegmentResponse {
+                    segment: ReadOnlySegment {
+                        start_ptr: memory_segment_start_ptr,
+                        length: ret_data.len(),
+                    },
+                },
+            }
+            .write(vm, &mut syscall_handler.syscall_ptr)?;
+        }
+        CallResult::Failure(failure_type) => match failure_type {
+            CallFailure::Panic { panic_data } => {
+                SyscallResponseWrapper::<SingleSegmentResponse>::Failure {
+                    gas_counter,
+                    revert_data: RevertData::new_normal(panic_data),
+                }
+                .write(vm, &mut syscall_handler.syscall_ptr)?;
+            }
+            CallFailure::Error { msg } => {
+                return Err(HintError::CustomHint(Box::from(msg.to_string())));
+            }
+        },
+        CallResult::DeploySuccess {
+            ret_data,
+            contract_address,
+        } => {
             let memory_segment_start_ptr = syscall_handler.read_only_segments.allocate(
                 vm,
                 &ret_data
@@ -262,26 +365,17 @@ fn write_call_response(
 
             SyscallResponseWrapper::Success {
                 gas_counter,
-                response: SingleSegmentResponse {
-                    segment: ReadOnlySegment {
+                response: DeployResponse {
+                    contract_address,
+                    constructor_retdata: ReadOnlySegment {
                         start_ptr: memory_segment_start_ptr,
                         length: ret_data.len(),
                     },
                 },
             }
+            .write(vm, &mut syscall_handler.syscall_ptr)?;
         }
-        CallResult::Failure(failure_type) => match failure_type {
-            CallFailure::Panic { panic_data } => SyscallResponseWrapper::Failure {
-                gas_counter,
-                revert_data: RevertData::new_normal(panic_data),
-            },
-            CallFailure::Error { msg } => {
-                return Err(HintError::CustomHint(Box::from(msg.to_string())));
-            }
-        },
-    };
-
-    response_wrapper.write(vm, &mut syscall_handler.syscall_ptr)?;
+    }
 
     Ok(())
 }

@@ -34,7 +34,13 @@ pub struct UsedResources {
 /// Enum representing possible call execution result, along with the data
 #[derive(Debug, Clone, CairoSerialize)]
 pub enum CallResult {
-    Success { ret_data: Vec<Felt> },
+    Success {
+        ret_data: Vec<Felt>,
+    },
+    DeploySuccess {
+        ret_data: Vec<Felt>,
+        contract_address: ContractAddress,
+    },
     Failure(CallFailure),
 }
 
@@ -115,6 +121,9 @@ impl CallFailure {
                     msg: ByteArray::from(msg.as_str()),
                 }
             }
+            EntryPointExecutionError::CairoRunError(err) => CallFailure::Error {
+                msg: ByteArray::from(err.to_string().as_str()),
+            },
             error => {
                 let error_string = error.to_string();
                 if let Some(panic_data) = try_extract_panic_data(&error_string) {
@@ -138,6 +147,35 @@ impl CallResult {
         match result {
             Ok(call_info) => Self::from_non_error(call_info),
             Err(err) => Self::from_err(err, starknet_identifier),
+        }
+    }
+
+    #[must_use]
+    pub fn from_execution_result_deploy(
+        result: &EntryPointExecutionResult<CallInfo>,
+        contract_address: &ContractAddress,
+    ) -> Self {
+        match result {
+            Ok(call_info) => Self::from_non_error_deploy(call_info, contract_address),
+            Err(err) => {
+                Self::from_err(err, &AddressOrClassHash::ContractAddress(*contract_address))
+            }
+        }
+    }
+
+    #[must_use]
+    pub fn from_non_error_deploy(call_info: &CallInfo, contract_address: &ContractAddress) -> Self {
+        let return_data = &call_info.execution.retdata.0;
+
+        if call_info.execution.failed {
+            return CallResult::Failure(CallFailure::Panic {
+                panic_data: return_data.clone(),
+            });
+        }
+
+        CallResult::DeploySuccess {
+            ret_data: return_data.clone(),
+            contract_address: *contract_address,
         }
     }
 

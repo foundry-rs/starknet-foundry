@@ -117,6 +117,18 @@ impl<'a> Collector<'a> {
                 .expect("call result should be successfully transformed");
                 format_result_message("success", &ret_data)
             }
+            CheatnetCallResult::DeploySuccess {
+                ret_data,
+                contract_address: _contract_address,
+            } => {
+                let ret_data = reverse_transform_output(
+                    ret_data,
+                    abi,
+                    &self.call_trace.entry_point.entry_point_selector.0,
+                )
+                .expect("ret data should be successfully transformed");
+                format_result_message("success", &ret_data)
+            }
             CheatnetCallResult::Failure(failure) => match failure {
                 CallFailure::Panic { panic_data } => {
                     format_result_message("panic", &format_panic_data(panic_data))
