@@ -18,9 +18,9 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use conversions::byte_array::ByteArray;
+use conversions::serde::SerializedValue;
 use conversions::serde::deserialize::BufferReadError;
 use conversions::serde::deserialize::BufferReader;
-use conversions::serde::serialize::raw::RawFeltVec;
 use conversions::serde::serialize::{CairoSerialize, SerializeToFeltVec};
 use indoc::indoc;
 use shared::vm::VirtualMachineExt;
@@ -279,6 +279,7 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
             &selector,
             BufferReader::new(&inputs),
             &mut self.extended_runtime,
+            vm,
         );
 
         let res = match result {
@@ -294,7 +295,7 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
                 return res;
             }
             // it is serialized again to add `Result` discriminator
-            Ok(CheatcodeHandlingResult::Handled(res)) => Ok(RawFeltVec::new(res)),
+            Ok(CheatcodeHandlingResult::Handled(res)) => Ok(SerializedValue::new(res)),
             Err(err) => Err(ByteArray::from(err.to_string().as_str())),
         }
         .serialize_to_vec();
@@ -423,6 +424,7 @@ pub trait ExtensionLogic {
         _selector: &str,
         _input_reader: BufferReader,
         _extended_runtime: &mut Self::Runtime,
+        _vm: &VirtualMachine,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         Ok(CheatcodeHandlingResult::Forwarded)
     }
@@ -470,6 +472,8 @@ pub enum EnhancedHintError {
     StarknetApi(#[from] StarknetApiError),
     #[error("Failed to parse {path} file")]
     FileParsing { path: String },
+    #[error("{error}")]
+    OracleError { error: ByteArray },
 }
 
 impl From<BufferReadError> for EnhancedHintError {

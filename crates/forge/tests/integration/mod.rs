@@ -19,6 +19,7 @@ mod gas;
 mod generate_random_felt;
 mod get_available_gas;
 mod get_class_hash;
+mod get_current_vm_step;
 mod interact_with_state;
 mod l1_handler_executor;
 mod message_to_l1;

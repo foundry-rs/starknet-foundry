@@ -148,9 +148,6 @@ jobs:
         with:
           name: nextest-archive-${{ runner.os }}
       - name: nextest partition ${{ matrix.partition }}/3
-        # TODO(#3937): remove env override once new RPC URL is available in tests.
-        env:
-          SNCAST_IGNORE_RPC_0_9_CHECK: "1"
         run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}.tar.zst' e2e
 
   test-forge-e2e-native:
@@ -199,9 +196,6 @@ jobs:
         with:
           name: nextest-archive-${{ runner.os }}-native
       - name: nextest partition ${{ matrix.partition }}/3
-        # TODO(#3937): remove env override once new RPC URL is available in tests.
-        env:
-          SNCAST_IGNORE_RPC_0_9_CHECK: "1"
         run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst' e2e
 
   test-plugin-checks:
@@ -259,6 +253,16 @@ jobs:
       - name: Run Data Transformer tests
         run: cargo test --profile ci -p data-transformer
 
+  test-forge-oracles:
+    name: Test Oracles in Forge
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup-tools
+        with:
+          scarb-version: '2.13.1'
+      - run: cargo test --profile ci -p forge --features run_test_for_scarb_since_2_13_1 e2e::oracles
+
   test-forge-scarb-plugin:
     name: Test Forge Scarb Plugin
     runs-on: ubuntu-latest
@@ -287,9 +291,6 @@ jobs:
       - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
       - uses: ./.github/actions/setup-tools
       - name: Run tests
-        # TODO(#3937): remove env override once new RPC URL is available in tests.
-        env:
-          SNCAST_IGNORE_RPC_0_9_CHECK: "1"
         run: cargo test --profile ci -p sncast
 
   test-conversions:

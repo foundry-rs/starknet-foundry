@@ -21,9 +21,7 @@ pub fn add_backtrace_footer(
     let backtrace = if is_backtrace_enabled() {
         get_backtrace(contracts_data, encountered_errors)
     } else {
-        format!(
-            "{message}\nnote: run with `{BACKTRACE_ENV}=1` environment variable to display a backtrace"
-        )
+        format!("note: run with `{BACKTRACE_ENV}=1` environment variable to display a backtrace")
     };
 
     format!("{message}\n{backtrace}")
