@@ -55,14 +55,14 @@ cairo-lang-sierra-to-casm = "=2.12.3"
 cairo-vm = "2.5.0"
 cairo-annotations = { version = "0.6.1", features = ["cairo-lang"] }
 dirs = "6.0.0"
-dialoguer = "0.11.0"
+dialoguer = "0.12.0"
 starknet-types-core = { version = "0.2.4", features = ["hash", "prime-bigint"] }
 anyhow = "1.0.100"
 assert_fs = "1.1.2"
 camino = { version = "1.2.1", features = ["serde1"] }
 clap = { version = "4.5.48", features = ["derive", "deprecated"] }
 clap_complete = "4.5.58"
-console = "0.15.11"
+console = "0.16.1"
 include_dir = "0.7.4"
 indoc = "2"
 itertools = "0.14.0"
@@ -76,7 +76,7 @@ starknet-rust = "0.18.0"
 starknet-rust-crypto = "0.9.0"
 tempfile = "3.23.0"
 thiserror = "2.0.17"
-ctor = "0.4.1"
+ctor = "0.6.3"
 url = { "version" = "2.5.4", "features" = ["serde"] }
 tokio = { version = "1.44.0", features = ["full"] }
 futures = "0.3.31"
@@ -91,20 +91,20 @@ docs = { path = "./crates/docs" }
 test-case = "3.3.1"
 scarb-metadata = "1.14.0"
 flatten-serde-json = "0.1.0"
-snapbox = "0.4.17"
+snapbox = "0.6.23"
 scarb-ui = "0.1.7"
 semver = "1.0.27"
 bimap = "0.6.3"
-primitive-types = {  version =  "0.13.1", features = ["serde"] }
+primitive-types = {  version =  "0.14.0", features = ["serde"] }
 shellexpand = "3.1.0"
-toml = "0.8.20"
+toml = "0.9.8"
 rpassword = "7.3.1"
 promptly = "0.3.1"
 ptree = "0.5.2"
 reqwest = { version = "0.12.21", features = ["json"] }
 fs_extra = "1.3.0"
 openssl = { version = "0.10", features = ["vendored"] }
-toml_edit = "0.22.24"
+toml_edit = "0.23.9"
 axum = "0.8.6"
 fs2 = "0.4.3"
 flate2 = "1.1.0"
@@ -112,12 +112,12 @@ k256 = { version = "0.13.4", features = ["sha256", "ecdsa", "serde"] }
 p256 = { version = "0.13.2", features = ["sha256", "ecdsa", "serde"] }
 glob = "0.3.2"
 sha3 = "0.10.8"
-base16ct = { version = "0.2.0", features = ["alloc"] }
+base16ct = { version = "0.3.0", features = ["alloc"] }
 async-trait = "0.1.87"
 serde_path_to_error = "0.1.20"
 wiremock = "0.6.3"
 const-hex = "1.16.0"
-indicatif = "0.17.11"
+indicatif = "0.18.3"
 shell-words = "1.1.0"
 sanitize-filename = "0.6.0"
 derive_more = { version = "2.0.1", features = ["display"] }
