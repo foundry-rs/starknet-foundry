@@ -433,6 +433,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                                     )
                                     .unwrap();
 
+                                let signature = signature.normalize_s().unwrap_or(signature);
+
                                 Ok(signature.split_bytes())
                             } else {
                                 Err(SignError::InvalidSecretKey)
@@ -448,6 +450,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                                         &msg_hash.to_be_bytes(),
                                     )
                                     .unwrap();
+
+                                let signature = signature.normalize_s().unwrap_or(signature);
 
                                 Ok(signature.split_bytes())
                             } else {
