@@ -29,10 +29,10 @@ fn check_if_native_disabled(test_args: &TestArgs) -> anyhow::Result<()> {
 
 /// Checks if the runtime profile settings in the provided from [`Metadata`] contain the required entries for backtrace generation.
 fn check_profile(scarb_metadata: &Metadata) -> anyhow::Result<()> {
-    // TODO(#3679): Add `panic-backtrace = true` entry when we decide to bump minimal scarb version to 2.12.
     const BACKTRACE_REQUIRED_ENTRIES: &[(&str, &str)] = &[
         ("unstable-add-statements-functions-debug-info", "true"),
         ("unstable-add-statements-code-locations-debug-info", "true"),
+        ("panic-backtrace", "true"),
     ];
 
     let manifest = get_manifest(scarb_metadata)?;
@@ -48,6 +48,7 @@ fn check_profile(scarb_metadata: &Metadata) -> anyhow::Result<()> {
             [profile.{profile}.cairo]
             unstable-add-statements-functions-debug-info = true
             unstable-add-statements-code-locations-debug-info = true
+            panic-backtrace = true
             ... other entries ...
             ",
             profile = scarb_metadata.current_profile
