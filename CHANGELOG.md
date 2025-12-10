@@ -18,6 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Signature generation now enforces the low-s rule
 - Fixed a bug that caused a slowdown in test execution
 
+#### Removed
+
+- The deprecated `snforge completion`. Use `snforge completions` instead.
+
+### Cast
+
+#### Removed
+
+- The deprecated `sncast completion`. Use `sncast completions` instead.
+
 ## [0.54.0] - 2025-12-09
 
 ### Forge
