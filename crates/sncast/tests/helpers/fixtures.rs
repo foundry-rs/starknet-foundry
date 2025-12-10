@@ -551,7 +551,7 @@ pub fn get_address_from_keystore(
     .unwrap();
     let class_hash = match account_type {
         AccountType::Braavos => BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
-        AccountType::OpenZeppelin | AccountType::Argent | AccountType::Ready => Felt::from_hex(
+        AccountType::OpenZeppelin | AccountType::Ready => Felt::from_hex(
             deployment
                 .get("class_hash")
                 .and_then(serde_json::Value::as_str)
@@ -566,7 +566,7 @@ pub fn get_address_from_keystore(
         }
         // This is a serialization of `Signer` enum for the variant `StarknetSigner` from the Ready account code
         // One stands for `None` for the guardian argument
-        AccountType::Argent | AccountType::Ready => {
+        AccountType::Ready => {
             vec![Felt::ZERO, private_key.verifying_key().scalar(), Felt::ONE]
         }
     };
@@ -635,7 +635,6 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
     let class_hash = &class_hash.into_hex_string();
     let account_type = match account_type {
         AccountType::OpenZeppelin => "oz",
-        AccountType::Argent => "argent",
         AccountType::Ready => "ready",
         AccountType::Braavos => "braavos",
     };

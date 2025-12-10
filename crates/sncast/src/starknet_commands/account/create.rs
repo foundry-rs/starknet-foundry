@@ -7,7 +7,6 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use console::style;
 use conversions::IntoConv;
-use foundry_ui::components::warning::WarningMessage;
 use serde_json::json;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{
@@ -16,7 +15,6 @@ use sncast::helpers::constants::{
 };
 use sncast::helpers::rpc::{RpcArgs, generate_network_flag};
 use sncast::response::account::create::AccountCreateResponse;
-use sncast::response::ui::UI;
 use sncast::{
     AccountType, Network, check_class_hash_exists, check_if_legacy_contract,
     extract_or_generate_salt, get_chain_id, get_keystore_password, handle_account_factory_error,
@@ -65,20 +63,11 @@ pub async fn create(
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: Felt,
     create: &Create,
-    ui: &UI,
 ) -> Result<AccountCreateResponse> {
-    // TODO(#3556): Remove this warning once we drop Argent account type
-    if create.account_type == AccountType::Argent {
-        ui.print_warning(WarningMessage::new(
-            "Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account create` is deprecated, please use `ready` instead.",
-        ));
-        ui.print_blank_line();
-    }
-
     let salt = extract_or_generate_salt(create.salt);
     let class_hash = create.class_hash.unwrap_or(match create.account_type {
         AccountType::OpenZeppelin => OZ_CLASS_HASH,
-        AccountType::Argent | AccountType::Ready => READY_CLASS_HASH,
+        AccountType::Ready => READY_CLASS_HASH,
         AccountType::Braavos => BRAAVOS_CLASS_HASH,
     });
     check_class_hash_exists(provider, class_hash).await?;
@@ -176,7 +165,7 @@ async fn generate_account(
                 OpenZeppelinAccountFactory::new(class_hash, chain_id, signer, provider).await?;
             get_address_and_deployment_fee(factory, salt).await?
         }
-        AccountType::Argent | AccountType::Ready => {
+        AccountType::Ready => {
             let factory =
                 ArgentAccountFactory::new(class_hash, chain_id, None, signer, provider).await?;
 
@@ -273,12 +262,11 @@ fn create_to_keystore(
                 }
             })
         }
-        AccountType::Argent | AccountType::Ready => {
+        AccountType::Ready => {
             json!({
                 "version": 1,
                 "variant": {
-                    // TODO(#3556): Remove hardcoded "argent" and use format! with `AccountType::Ready`
-                    "type": "argent",
+                    "type": AccountType::Ready,
                     "version": 1,
                     "owner": format!("{:#x}", private_key.verifying_key().scalar()),
                     "guardian": "0x0",

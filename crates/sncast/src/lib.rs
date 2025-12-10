@@ -58,7 +58,6 @@ pub type NestedMap<T> = HashMap<String, HashMap<String, T>>;
 pub enum AccountType {
     #[serde(rename = "open_zeppelin")]
     OpenZeppelin,
-    Argent,
     Ready,
     Braavos,
 }
@@ -69,7 +68,6 @@ impl FromStr for AccountType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "open_zeppelin" | "open-zeppelin" | "oz" => Ok(AccountType::OpenZeppelin),
-            "argent" => Ok(AccountType::Argent),
             "ready" => Ok(AccountType::Ready),
             "braavos" => Ok(AccountType::Braavos),
             account_type => Err(anyhow!("Invalid account type = {account_type}")),
@@ -437,7 +435,7 @@ pub fn get_account_data_from_keystore(
         .and_then(|account_type| account_type.parse().ok());
 
     let public_key = match account_type.context("Failed to get type key")? {
-        AccountType::Argent | AccountType::Ready => parse_to_felt("/variant/owner"),
+        AccountType::Ready => parse_to_felt("/variant/owner"),
         AccountType::OpenZeppelin => parse_to_felt("/variant/public_key"),
         AccountType::Braavos => get_braavos_account_public_key(&account_info)?,
     }
