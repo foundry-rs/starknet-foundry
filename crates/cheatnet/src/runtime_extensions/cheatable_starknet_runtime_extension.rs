@@ -71,14 +71,6 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                     SyscallSelector::LibraryCall,
                 )
                 .map(|()| SyscallHandlingResult::Handled),
-            SyscallSelector::Deploy => self
-                .execute_syscall(
-                    syscall_handler,
-                    vm,
-                    cheated_syscalls::deploy_syscall,
-                    SyscallSelector::Deploy,
-                )
-                .map(|()| SyscallHandlingResult::Handled),
             SyscallSelector::GetBlockHash => self
                 .execute_syscall(
                     syscall_handler,
@@ -113,6 +105,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                 .map(|()| SyscallHandlingResult::Handled),
             SyscallSelector::DelegateCall
             | SyscallSelector::DelegateL1Handler
+            | SyscallSelector::Deploy
             | SyscallSelector::EmitEvent
             | SyscallSelector::GetBlockNumber
             | SyscallSelector::GetBlockTimestamp

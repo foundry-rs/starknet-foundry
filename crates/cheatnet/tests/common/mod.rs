@@ -71,6 +71,7 @@ pub fn recover_data(output: CallResult) -> Vec<Felt> {
             CallFailure::Panic { panic_data, .. } => panic_data,
             CallFailure::Error { msg, .. } => panic!("Call failed with message: {msg}"),
         },
+        CallResult::DeploySuccess { .. } => unreachable!(),
     }
 }
 
