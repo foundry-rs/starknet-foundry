@@ -34,7 +34,6 @@ use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::TEST_ADDRESS;
 
 pub mod execution;
-pub mod panic_parser;
 pub mod rpc;
 
 pub struct CallToBlockifierExtension<'a> {

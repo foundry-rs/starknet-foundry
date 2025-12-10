@@ -90,6 +90,9 @@ pub(crate) fn execute_entry_point_call_cairo1(
             &mut runner,
             cheatable_runtime.extension.cheatnet_state,
         );
+        // TODO check this
+        // Always finalize hint handler so we have revert info
+        cheatable_runtime.extended_runtime.hint_handler.finalize();
     })?;
 
     let trace = get_relocated_vm_trace(&mut runner);
