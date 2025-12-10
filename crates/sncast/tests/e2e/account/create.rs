@@ -8,9 +8,7 @@ use crate::helpers::env::set_create_keystore_password_env;
 use camino::Utf8PathBuf;
 use conversions::string::IntoHexStr;
 use serde_json::{json, to_string_pretty};
-use shared::test_utils::output_assert::{
-    AsOutput, assert_stderr_contains, assert_stdout, assert_stdout_contains,
-};
+use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
 use snapbox::assert_data_eq;
 use sncast::AccountType;
 use sncast::helpers::constants::{
@@ -80,74 +78,6 @@ pub async fn test_happy_case(account_type: &str) {
                     "public_key": "0x[..]",
                     "salt": "0x1",
                     "type": get_formatted_account_type(account_type)
-                }
-            }
-        }
-    );
-
-    assert_data_eq!(contents, to_string_pretty(&expected).unwrap());
-}
-
-// TODO(#3556): Remove this test once we drop Argent account type
-#[tokio::test]
-pub async fn test_happy_case_argent_with_deprecation_warning() {
-    let temp_dir = tempdir().expect("Unable to create a temporary directory");
-    let accounts_file = "accounts.json";
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file,
-        "account",
-        "create",
-        "--url",
-        URL,
-        "--name",
-        "my_account",
-        "--salt",
-        "0x1",
-        "--type",
-        "argent",
-    ];
-
-    let snapbox = runner(&args)
-        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
-
-    assert_stdout(
-        output,
-        indoc! {r"
-        [WARNING] Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account create` is deprecated, please use `ready` instead.
-        
-        Success: Account created
-
-        Address: 0x0[..]
-        
-        Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
-
-        After prefunding the account, run:
-        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
-
-        To see account creation details, visit:
-        account: [..]
-        "},
-    );
-
-    let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
-        .expect("Unable to read created file");
-
-    let expected = json!(
-        {
-            "alpha-sepolia": {
-                "my_account": {
-                    "address": "0x[..]",
-                    "class_hash": "0x[..]",
-                    "deployed": false,
-                    "legacy": false,
-                    "private_key": "0x[..]",
-                    "public_key": "0x[..]",
-                    "salt": "0x1",
-                    "type": "ready"
                 }
             }
         }
@@ -458,58 +388,6 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     assert_data_eq!(
         contents,
         get_keystore_account_pattern(account_type.parse().unwrap(), None),
-    );
-}
-
-// TODO(#3556): Remove this test once we drop Argent account type
-#[tokio::test]
-pub async fn test_happy_case_keystore_argent_with_deprecation_warning() {
-    let temp_dir = tempdir().expect("Unable to create a temporary directory");
-    let keystore_file = "my_key.json";
-    let account_file = "my_account.json";
-    set_create_keystore_password_env();
-
-    let args = vec![
-        "--keystore",
-        keystore_file,
-        "--account",
-        account_file,
-        "account",
-        "create",
-        "--url",
-        URL,
-        "--type",
-        "argent",
-    ];
-
-    let snapbox = runner(&args)
-        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(temp_dir.path());
-
-    snapbox.assert().stdout_eq(formatdoc! {r"
-        [WARNING] Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account create` is deprecated, please use `ready` instead.
-        
-        Success: Account created
-
-        Address: 0x0[..]
-        
-        Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
-
-        After prefunding the account, run:
-        sncast --account {} --keystore {} account deploy --url {}
-
-        To see account creation details, visit:
-        account: [..]
-    ", account_file, keystore_file, URL});
-
-    assert!(temp_dir.path().join(keystore_file).exists());
-
-    let contents = fs::read_to_string(temp_dir.path().join(account_file))
-        .expect("Unable to read created file");
-
-    assert_data_eq!(
-        contents,
-        get_keystore_account_pattern("argent".parse().unwrap(), None),
     );
 }
 
@@ -864,13 +742,12 @@ fn get_keystore_account_pattern(account_type: AccountType, class_hash: Option<&s
                 }
             )
         }
-        AccountType::Argent | AccountType::Ready => {
+        AccountType::Ready => {
             json!(
                 {
                     "version": 1,
                     "variant": {
-                        // TODO(#3556): Remove hardcoded "argent" and use format! with `AccountType::Ready`
-                        "type": "argent",
+                        "type": AccountType::Ready,
                         "version": 1,
                         "owner": "0x[..]",
                         "guardian": "0x0"
