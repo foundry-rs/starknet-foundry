@@ -120,7 +120,7 @@ fn syntax() {
         note: this error originates in the attribute macro: `fuzzer`
         note: this error originates in the attribute macro: `fork`
         
-        error: could not compile `syntax_integrationtest` due to previous error
+        error: could not compile `syntax_integrationtest` due to 14 previous errors and 1 warning
     "#},
     );
 }
@@ -168,7 +168,7 @@ fn semantic() {
         note: this error originates in the attribute macro: `ignore`
         note: this error originates in the attribute macro: `__internal_config_statement`
         
-        error: could not compile `semantic_integrationtest` due to previous error
+        error: could not compile `semantic_integrationtest` due to 1 previous error and 2 warnings
         "},
     );
 }
@@ -225,7 +225,7 @@ fn parameters() {
         ^^^^^^^^^^^^^^^^^^
         note: this error originates in the attribute macro: `test`
         
-        error: could not compile `parameters_integrationtest` due to previous error
+        error: could not compile `parameters_integrationtest` due to 6 previous errors and 1 warning
     "#},
     );
 }
@@ -329,7 +329,7 @@ fn multiple() {
         note: this error originates in the attribute macro: `ignore`
         note: this error originates in the attribute macro: `__internal_config_statement`
         
-        error: could not compile `multiple_integrationtest` due to previous error
+        error: could not compile `multiple_integrationtest` due to 11 previous errors and 1 warning
     "#},
     );
 }
@@ -365,7 +365,7 @@ fn generic() {
         note: this error originates in the attribute macro: `ignore`
         note: this error originates in the attribute macro: `__internal_config_statement`
         
-        error: could not compile `generic_integrationtest` due to previous error
+        error: could not compile `generic_integrationtest` due to 1 previous error and 1 warning
     "},
     );
 }
@@ -401,7 +401,7 @@ fn inline_macros() {
         note: this error originates in the attribute macro: `ignore`
         note: this error originates in the attribute macro: `__internal_config_statement`
         
-        error: could not compile `inline_macros_integrationtest` due to previous error
+        error: could not compile `inline_macros_integrationtest` due to 1 previous error and 1 warning
     "},
     );
 }
@@ -452,7 +452,7 @@ fn different_attributes() {
             {attribute}
             {expected_underline}
             
-            error: could not compile `attributes_integrationtest` due to previous error
+            error: could not compile `attributes_integrationtest` due to 2 previous errors and 1 warning
     "},
         );
     }
@@ -493,7 +493,7 @@ fn test_case() {
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         note: this error originates in the attribute macro: `test`
 
-        error: could not compile `test_case_attr_integrationtest` due to previous error
+        error: could not compile `test_case_attr_integrationtest` due to 3 previous errors and 1 warning
     "},
     );
 }

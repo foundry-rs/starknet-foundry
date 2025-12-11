@@ -319,7 +319,7 @@ fn no_fuzzer_attribute() {
          --> [..]no_attribute.cairo:1:1
         #[test]
 
-        error: could not compile `fuzzing_integrationtest` due to previous error
+        error: could not compile `fuzzing_integrationtest` due to 1 previous error and 1 warning
         [ERROR] Failed to build test artifacts with Scarb: `scarb` exited with error
         "},
     );

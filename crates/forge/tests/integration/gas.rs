@@ -1205,7 +1205,7 @@ fn declare_cost_is_omitted_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(25_850),
+            l2_gas: GasAmount(25_980),
         },
     );
 }
