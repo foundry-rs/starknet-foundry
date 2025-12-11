@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Fixed
+
+- When using `account create` or `account import` commands without specifying `--network` or `--url`, url from snfoundry.toml is now used correctly (if present)
+
 ## [0.54.0] - 2025-12-09
 
 ### Forge
