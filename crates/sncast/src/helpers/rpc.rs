@@ -110,14 +110,14 @@ impl Network {
 }
 
 #[must_use]
-pub fn generate_network_flag(rpc_args: &RpcArgs, config_url: String) -> String {
+pub fn generate_network_flag(rpc_args: &RpcArgs, config_url: &str) -> String {
     if let Some(network) = &rpc_args.network {
         format!("--network {network}")
     } else if let Some(rpc_url) = &rpc_args.url {
         format!("--url {rpc_url}")
     } else if !config_url.is_empty() {
         // Since url is defined in config, no need to pass any flag
-        format!("")
+        String::new()
     } else {
         unreachable!(
             "`--rpc_url` or `--network` must be provided or url must be set in snfoundry.toml"
