@@ -5,10 +5,6 @@ use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
 
 #[test]
-#[cfg_attr(
-    feature = "skip_test_for_scarb_since_2_11",
-    ignore = "Skipping test because feature skip_test_for_scarb_since_2_11 enabled"
-)]
 fn get_contract_address_in_interact_with_state() {
     let test = test_case!(
         indoc!(
