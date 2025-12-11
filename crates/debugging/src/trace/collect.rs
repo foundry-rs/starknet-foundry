@@ -123,10 +123,12 @@ impl<'a> Collector<'a> {
                 format_result_message("success", &ret_data)
             }
             Err(failure) => match failure {
-                CallFailure::Panic { panic_data } => {
+                CallFailure::Recoverable { panic_data } => {
                     format_result_message("panic", &format_panic_data(panic_data))
                 }
-                CallFailure::Error { msg } => format_result_message("error", &msg.to_string()),
+                CallFailure::Unrecoverable { msg } => {
+                    format_result_message("error", &msg.to_string())
+                }
             },
         })
     }

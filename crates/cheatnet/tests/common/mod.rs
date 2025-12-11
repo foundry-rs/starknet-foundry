@@ -68,8 +68,8 @@ pub fn recover_data(output: CallResult) -> Vec<Felt> {
     match output {
         Ok(CallSuccess { ret_data, .. }) => ret_data,
         Err(failure_type) => match failure_type {
-            CallFailure::Panic { panic_data, .. } => panic_data,
-            CallFailure::Error { msg, .. } => panic!("Call failed with message: {msg}"),
+            CallFailure::Recoverable { panic_data, .. } => panic_data,
+            CallFailure::Unrecoverable { msg, .. } => panic!("Call failed with message: {msg}"),
         },
     }
 }

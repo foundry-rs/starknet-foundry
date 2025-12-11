@@ -63,10 +63,10 @@ pub struct CallSuccess {
 impl From<CallFailure> for SyscallExecutionError {
     fn from(value: CallFailure) -> Self {
         match value {
-            CallFailure::Panic { panic_data } => Self::Revert {
+            CallFailure::Recoverable { panic_data } => Self::Revert {
                 error_data: panic_data,
             },
-            CallFailure::Error { msg } => Self::SyscallExecutorBase(
+            CallFailure::Unrecoverable { msg } => Self::SyscallExecutorBase(
                 SyscallExecutorBaseError::Hint(HintError::CustomHint(Box::from(msg.to_string()))),
             ),
         }
@@ -75,13 +75,13 @@ impl From<CallFailure> for SyscallExecutionError {
 
 pub type CallResult = Result<CallSuccess, CallFailure>;
 
-/// Enum representing possible call failure and its type.
-/// `Panic` - Recoverable, meant to be caught by the user.
-/// `Error` - Unrecoverable, equivalent of panic! in rust.
+/// Enum representing a possible call failure and its type.
+/// `Recoverable` - Meant to be caught by the user.
+/// `Unrecoverable` - Equivalent of panic! in rust.
 #[derive(Debug, Clone, CairoSerialize)]
 pub enum CallFailure {
-    Panic { panic_data: Vec<Felt> },
-    Error { msg: ByteArray },
+    Recoverable { panic_data: Vec<Felt> },
+    Unrecoverable { msg: ByteArray },
 }
 
 pub enum AddressOrClassHash {
@@ -105,11 +105,11 @@ impl CallFailure {
                 if err_data_str.contains("Failed to deserialize param #")
                     || err_data_str.contains("Input too long for arguments")
                 {
-                    CallFailure::Error {
+                    CallFailure::Unrecoverable {
                         msg: ByteArray::from(err_data_str.as_str()),
                     }
                 } else {
-                    CallFailure::Panic {
+                    CallFailure::Recoverable {
                         panic_data: err_data,
                     }
                 }
@@ -131,7 +131,7 @@ impl CallFailure {
 
                 let panic_data_felts = ByteArray::from(msg.as_str()).serialize_with_magic();
 
-                CallFailure::Panic {
+                CallFailure::Recoverable {
                     panic_data: panic_data_felts,
                 }
             }
@@ -143,21 +143,21 @@ impl CallFailure {
 
                 let panic_data_felts = ByteArray::from(msg.as_str()).serialize_with_magic();
 
-                CallFailure::Panic {
+                CallFailure::Recoverable {
                     panic_data: panic_data_felts,
                 }
             }
             EntryPointExecutionError::StateError(StateError::StateReadError(msg)) => {
-                CallFailure::Error {
+                CallFailure::Unrecoverable {
                     msg: ByteArray::from(msg.as_str()),
                 }
             }
             error => {
                 let error_string = error.to_string();
                 if let Some(panic_data) = try_extract_panic_data(&error_string) {
-                    CallFailure::Panic { panic_data }
+                    CallFailure::Recoverable { panic_data }
                 } else {
-                    CallFailure::Error {
+                    CallFailure::Unrecoverable {
                         msg: ByteArray::from(error_string.as_str()),
                     }
                 }
@@ -180,7 +180,7 @@ pub fn from_non_error(call_info: &CallInfo) -> Result<CallSuccess, CallFailure> 
     let return_data = &call_info.execution.retdata.0;
 
     if call_info.execution.failed {
-        return Err(CallFailure::Panic {
+        return Err(CallFailure::Recoverable {
             panic_data: return_data.clone(),
         });
     }

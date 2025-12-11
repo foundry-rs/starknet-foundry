@@ -20,7 +20,7 @@ pub fn assert_panic(call_contract_output: CallResult, expected_data: &[Felt]) {
     assert!(matches!(
         call_contract_output,
         Err(
-            CallFailure::Panic { panic_data, .. }
+            CallFailure::Recoverable { panic_data, .. }
         )
         if panic_data == expected_data
     ));
@@ -31,7 +31,7 @@ pub fn assert_error(call_contract_output: CallResult, expected_data: impl Into<B
     assert!(matches!(
         call_contract_output,
         Err(
-            CallFailure::Error { msg, .. }
+            CallFailure::Unrecoverable { msg, .. }
         )
         if msg == expected_data.into(),
     ));

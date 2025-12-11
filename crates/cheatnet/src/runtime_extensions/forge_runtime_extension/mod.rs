@@ -265,10 +265,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     &payload,
                 ) {
                     Ok(_) => Ok(CheatcodeHandlingResult::from_serializable(0_u8)),
-                    Err(CallFailure::Panic { panic_data }) => Ok(
+                    Err(CallFailure::Recoverable { panic_data }) => Ok(
                         CheatcodeHandlingResult::from_serializable(Err::<(), _>(panic_data)),
                     ),
-                    Err(CallFailure::Error { msg }) => Err(EnhancedHintError::from(
+                    Err(CallFailure::Unrecoverable { msg }) => Err(EnhancedHintError::from(
                         HintError::CustomHint(Box::from(msg.to_string())),
                     )),
                 }
