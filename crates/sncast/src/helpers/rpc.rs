@@ -27,12 +27,6 @@ impl RpcArgs {
         config: &CastConfig,
         ui: &UI,
     ) -> Result<JsonRpcClient<HttpTransport>> {
-        if self.network.is_some() && !config.url.is_empty() {
-            bail!(
-                "The argument '--network' cannot be used when `url` is defined in `snfoundry.toml` for the active profile"
-            )
-        }
-
         let url = self.get_url(config).await?;
 
         assert!(!url.is_empty(), "url cannot be empty");
@@ -116,13 +110,18 @@ impl Network {
 }
 
 #[must_use]
-pub fn generate_network_flag(rpc_url: Option<&str>, network: Option<&Network>) -> String {
-    if let Some(network) = network {
+pub fn generate_network_flag(rpc_args: &RpcArgs, config_url: String) -> String {
+    if let Some(network) = &rpc_args.network {
         format!("--network {network}")
-    } else if let Some(rpc_url) = rpc_url {
+    } else if let Some(rpc_url) = &rpc_args.url {
         format!("--url {rpc_url}")
+    } else if !config_url.is_empty() {
+        // Since url is defined in config, no need to pass any flag
+        format!("")
     } else {
-        unreachable!("Either `--rpc_url` or `--network` must be provided.")
+        unreachable!(
+            "`--rpc_url` or `--network` must be provided or url must be set in snfoundry.toml"
+        );
     }
 }
 

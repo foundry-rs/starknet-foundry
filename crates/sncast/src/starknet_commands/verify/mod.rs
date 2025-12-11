@@ -4,7 +4,7 @@ use clap::{ArgGroup, Args, ValueEnum};
 use promptly::prompt;
 use sncast::get_provider;
 use sncast::helpers::configuration::CastConfig;
-use sncast::helpers::rpc::FreeProvider;
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::ui::UI;
 use sncast::{Network, response::verify::VerifyResponse};
 use starknet_types_core::felt::Felt;
@@ -137,19 +137,11 @@ pub async fn verify(
     } = args;
 
     let url_provided = url.is_some();
-    let rpc_url = match url {
-        Some(url) => url,
-        None => {
-            if config.url.is_empty() {
-                let network =
-                    network.ok_or_else(|| anyhow!("Either --network or --url must be provided"))?;
-                let free_rpc_provider = network.url(&FreeProvider::semi_random()).await?;
-                Url::parse(&free_rpc_provider)?
-            } else {
-                Url::parse(&config.url)?
-            }
-        }
+    let rpc_args = RpcArgs {
+        network,
+        url: url.map(|u| u.to_string()),
     };
+    let rpc_url = rpc_args.get_url(config).await?;
     let provider = get_provider(rpc_url.as_str())?;
 
     // Build JSON Payload for the verification request

@@ -1045,3 +1045,21 @@ pub async fn test_no_explorer_links_on_localhost() {
             .contains("To see account creation details, visit:")
     );
 }
+
+#[tokio::test]
+pub async fn test_use_url_from_config() {
+    let accounts_file = "accounts.json";
+    let temp_dir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+
+    copy_file(
+        "tests/data/accounts/accounts.json",
+        temp_dir.path().join(accounts_file),
+    );
+    let args = vec!["--accounts-file", accounts_file, "account", "create"];
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(temp_dir.path());
+
+    snapbox.assert().success();
+}

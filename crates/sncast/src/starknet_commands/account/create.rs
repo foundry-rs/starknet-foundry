@@ -10,6 +10,7 @@ use conversions::IntoConv;
 use foundry_ui::components::warning::WarningMessage;
 use serde_json::json;
 use sncast::helpers::braavos::BraavosAccountFactory;
+use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
     BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, CREATE_KEYSTORE_PASSWORD_ENV_VAR,
     OZ_CLASS_HASH, READY_CLASS_HASH,
@@ -18,8 +19,8 @@ use sncast::helpers::rpc::{RpcArgs, generate_network_flag};
 use sncast::response::account::create::AccountCreateResponse;
 use sncast::response::ui::UI;
 use sncast::{
-    AccountType, Network, check_class_hash_exists, check_if_legacy_contract,
-    extract_or_generate_salt, get_chain_id, get_keystore_password, handle_account_factory_error,
+    AccountType, check_class_hash_exists, check_if_legacy_contract, extract_or_generate_salt,
+    get_chain_id, get_keystore_password, handle_account_factory_error,
 };
 use starknet_rust::accounts::{
     AccountDeploymentV3, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
@@ -65,6 +66,7 @@ pub async fn create(
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: Felt,
     create: &Create,
+    config: &CastConfig,
     ui: &UI,
 ) -> Result<AccountCreateResponse> {
     // TODO(#3556): Remove this warning once we drop Argent account type
@@ -124,19 +126,15 @@ pub async fn create(
         let deploy_command = generate_deploy_command_with_keystore(
             account,
             keystore,
-            create.rpc.url.as_deref(),
-            create.rpc.network.as_ref(),
+            &create.rpc,
+            config.url.clone(),
         );
         message.push_str(&deploy_command);
     } else {
         write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
 
-        let deploy_command = generate_deploy_command(
-            accounts_file,
-            create.rpc.url.as_deref(),
-            create.rpc.network.as_ref(),
-            account,
-        );
+        let deploy_command =
+            generate_deploy_command(accounts_file, &create.rpc, config.url.clone(), account);
         message.push_str(&deploy_command);
     }
 
@@ -338,8 +336,8 @@ fn write_account_to_file(
 
 fn generate_deploy_command(
     accounts_file: &Utf8PathBuf,
-    rpc_url: Option<&str>,
-    network: Option<&Network>,
+    rpc_args: &RpcArgs,
+    config_url: String,
     account: &str,
 ) -> String {
     let accounts_flag = if accounts_file
@@ -351,7 +349,7 @@ fn generate_deploy_command(
         format!(" --accounts-file {accounts_file}")
     };
 
-    let network_flag = generate_network_flag(rpc_url, network);
+    let network_flag = generate_network_flag(&rpc_args, config_url);
 
     format!(
         "\n\nAfter prefunding the account, run:\n\
@@ -362,10 +360,10 @@ fn generate_deploy_command(
 fn generate_deploy_command_with_keystore(
     account: &str,
     keystore: &Utf8PathBuf,
-    rpc_url: Option<&str>,
-    network: Option<&Network>,
+    rpc_args: &RpcArgs,
+    config_url: String,
 ) -> String {
-    let network_flag = generate_network_flag(rpc_url, network);
+    let network_flag = generate_network_flag(&rpc_args, config_url);
 
     format!(
         "\n\nAfter prefunding the account, run:\n\

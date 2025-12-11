@@ -359,10 +359,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 let contract_definition: SierraClass =
                     serde_json::from_str(&contract_artifacts.sierra)
                         .context("Failed to parse sierra artifact")?;
-                let network_flag = generate_network_flag(
-                    rpc.get_url(&config).await.ok().as_deref(),
-                    rpc.network.as_ref(),
-                );
+                let network_flag = generate_network_flag(&rpc, config.url.clone());
                 Some(DeployCommandMessage::new(
                     &contract_definition.abi,
                     response,
