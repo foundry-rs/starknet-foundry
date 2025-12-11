@@ -349,7 +349,7 @@ fn generate_deploy_command(
         format!(" --accounts-file {accounts_file}")
     };
 
-    let network_flag = generate_network_flag(&rpc_args, config_url);
+    let network_flag = generate_network_flag(&rpc_args, &config_url);
 
     format!(
         "\n\nAfter prefunding the account, run:\n\
@@ -363,7 +363,7 @@ fn generate_deploy_command_with_keystore(
     rpc_args: &RpcArgs,
     config_url: String,
 ) -> String {
-    let network_flag = generate_network_flag(&rpc_args, config_url);
+    let network_flag = generate_network_flag(&rpc_args, &config_url);
 
     format!(
         "\n\nAfter prefunding the account, run:\n\
