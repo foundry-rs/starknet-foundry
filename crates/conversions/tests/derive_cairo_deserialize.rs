@@ -84,6 +84,7 @@ fn work_on_enum() {
 
 #[test]
 #[should_panic(expected = "called `Result::unwrap()` on an `Err` value: ParseFailed")]
+#[allow(unreachable_code)]
 fn fail_on_empty_enum() {
     #[derive(CairoDeserialize, Debug, PartialEq, Eq)]
     enum Foo {}
