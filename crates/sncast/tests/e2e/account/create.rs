@@ -241,8 +241,10 @@ pub async fn test_happy_case_generate_salt() {
     assert!(contents.contains("type"));
 }
 
+#[test_case("--url", URL; "with_url")]
+#[test_case("--network", "sepolia"; "with_network")]
 #[tokio::test]
-pub async fn test_happy_case_add_profile() {
+pub async fn test_happy_case_add_profile(flag: &str, value: &str) {
     let tempdir = tempdir().expect("Failed to create a temporary directory");
     let accounts_file = "accounts.json";
 
@@ -251,8 +253,8 @@ pub async fn test_happy_case_add_profile() {
         accounts_file,
         "account",
         "create",
-        "--url",
-        URL,
+        flag,
+        value,
         "--name",
         "my_account",
         "--add-profile",
@@ -274,6 +276,11 @@ pub async fn test_happy_case_add_profile() {
         .expect("Unable to read snfoundry.toml");
     assert!(contents.contains("[sncast.my_account]"));
     assert!(contents.contains("account = \"my_account\""));
+    assert!(contents.contains(&format!(
+        "{} = \"{}\"",
+        flag.trim_start_matches("--"),
+        value
+    )));
 }
 
 #[tokio::test]

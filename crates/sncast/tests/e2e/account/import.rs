@@ -272,7 +272,9 @@ pub async fn test_nonexistent_account_address() {
 }
 
 #[tokio::test]
-pub async fn test_happy_case_add_profile() {
+#[test_case("--url", URL; "with_url")]
+#[test_case("--network", "sepolia"; "with_network")]
+pub async fn test_happy_case_add_profile(flag: &str, value: &str) {
     let tempdir = tempdir().expect("Failed to create a temporary directory");
     let accounts_file = "accounts.json";
 
@@ -281,8 +283,8 @@ pub async fn test_happy_case_add_profile() {
         accounts_file,
         "account",
         "import",
-        "--url",
-        URL,
+        flag,
+        value,
         "--name",
         "my_account_import",
         "--address",
@@ -337,6 +339,11 @@ pub async fn test_happy_case_add_profile() {
     assert!(contents.contains("[sncast.my_account_import]"));
     assert!(contents.contains("account = \"my_account_import\""));
     assert!(contents.contains(&format!("url = \"{URL}\"")));
+    assert!(contents.contains(&format!(
+        "{} = \"{}\"",
+        flag.trim_start_matches("--"),
+        value
+    )));
 }
 
 #[tokio::test]

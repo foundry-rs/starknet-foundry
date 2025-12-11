@@ -131,7 +131,21 @@ pub fn add_created_profile_to_configuration(
     let toml_string = {
         let mut new_profile = toml::value::Table::new();
 
-        new_profile.insert("url".to_string(), Value::String(cast_config.url.clone()));
+        match (&cast_config.url, cast_config.network) {
+            (url, Some(_)) if !url.is_empty() => {
+                bail!("Cannot use both 'url' and 'network' fields in the profile");
+            }
+            (url, None) if !url.is_empty() => {
+                new_profile.insert("url".to_string(), Value::String(url.clone()));
+            }
+            (_, Some(network)) => {
+                new_profile.insert(
+                    "network".to_string(),
+                    Value::String(format!("{network}").to_lowercase()),
+                );
+            }
+            _ => {}
+        }
         new_profile.insert(
             "account".to_string(),
             Value::String(cast_config.account.clone()),

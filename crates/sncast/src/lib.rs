@@ -89,7 +89,7 @@ pub const MAINNET: Felt =
 pub const SEPOLIA: Felt =
     Felt::from_hex_unchecked(const_hex::const_encode::<10, true>(b"SN_SEPOLIA").as_str());
 
-#[derive(ValueEnum, Clone, Copy, Debug, PartialEq)]
+#[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Network {
     Mainnet,
     Sepolia,

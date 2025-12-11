@@ -48,6 +48,9 @@ pub struct CastConfig {
     pub url: String,
 
     #[serde(default)]
+    pub network: Option<Network>,
+
+    #[serde(default)]
     pub account: String,
 
     #[serde(
@@ -87,6 +90,7 @@ impl Default for CastConfig {
     fn default() -> Self {
         Self {
             url: String::default(),
+            network: None,
             account: String::default(),
             accounts_file: Utf8PathBuf::default(),
             keystore: None,
