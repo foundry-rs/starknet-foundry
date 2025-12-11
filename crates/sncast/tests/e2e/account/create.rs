@@ -1050,11 +1050,11 @@ pub async fn test_no_explorer_links_on_localhost() {
 pub async fn test_use_url_from_config() {
     let accounts_file = "accounts.json";
     let temp_dir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
-
     copy_file(
         "tests/data/accounts/accounts.json",
         temp_dir.path().join(accounts_file),
     );
+
     let args = vec!["--accounts-file", accounts_file, "account", "create"];
 
     let snapbox = runner(&args)
