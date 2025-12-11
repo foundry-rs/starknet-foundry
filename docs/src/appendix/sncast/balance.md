@@ -35,3 +35,5 @@ Optional.
 Use predefined network with public provider
 
 Possible values: `mainnet`, `sepolia`.
+
+Overrides network from `snfoundry.toml`.
