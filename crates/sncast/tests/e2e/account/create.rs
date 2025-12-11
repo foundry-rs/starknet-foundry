@@ -277,8 +277,8 @@ pub async fn test_happy_case_add_profile(flag: &str, value: &str) {
         .expect("Unable to read snfoundry.toml");
 
     let expected_lines = [
-        "[sncast.my_account_import]",
-        "account = \"my_account_import\"",
+        "[sncast.my_account]",
+        "account = \"my_account\"",
         "accounts-file = \"accounts.json\"",
         &format!("{} = \"{}\"", flag.trim_start_matches("--"), value),
     ];
