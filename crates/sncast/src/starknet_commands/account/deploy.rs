@@ -205,7 +205,7 @@ async fn get_deployment_result(
     ui: &UI,
 ) -> Result<InvokeResponse> {
     match account_type {
-        AccountType::Argent | AccountType::Ready => {
+        AccountType::Ready => {
             let factory = ArgentAccountFactory::new(
                 class_hash,
                 chain_id,
@@ -390,7 +390,7 @@ pub(crate) fn compute_account_address(
     chain_id: Felt,
 ) -> Felt {
     match account_type {
-        AccountType::Argent | AccountType::Ready => get_contract_address(
+        AccountType::Ready => get_contract_address(
             salt,
             class_hash,
             &[private_key.verifying_key().scalar(), Felt::ZERO],
