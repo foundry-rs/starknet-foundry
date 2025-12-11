@@ -48,7 +48,7 @@ pub struct Create {
     pub salt: Option<Felt>,
 
     /// If passed, a profile with provided name and corresponding data will be created in snfoundry.toml
-    #[arg(long, conflicts_with = "network")]
+    #[arg(long)]
     pub add_profile: Option<String>,
 
     /// Custom contract class hash of declared contract
