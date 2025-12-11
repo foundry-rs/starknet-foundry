@@ -59,6 +59,7 @@ pub struct Create {
     pub rpc: RpcArgs,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn create(
     account: &str,
     accounts_file: &Utf8PathBuf,
@@ -123,18 +124,14 @@ pub async fn create(
             legacy,
         )?;
 
-        let deploy_command = generate_deploy_command_with_keystore(
-            account,
-            keystore,
-            &create.rpc,
-            config.url.clone(),
-        );
+        let deploy_command =
+            generate_deploy_command_with_keystore(account, keystore, &create.rpc, &config.url);
         message.push_str(&deploy_command);
     } else {
         write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
 
         let deploy_command =
-            generate_deploy_command(accounts_file, &create.rpc, config.url.clone(), account);
+            generate_deploy_command(accounts_file, &create.rpc, &config.url, account);
         message.push_str(&deploy_command);
     }
 
@@ -337,7 +334,7 @@ fn write_account_to_file(
 fn generate_deploy_command(
     accounts_file: &Utf8PathBuf,
     rpc_args: &RpcArgs,
-    config_url: String,
+    config_url: &str,
     account: &str,
 ) -> String {
     let accounts_flag = if accounts_file
@@ -349,7 +346,7 @@ fn generate_deploy_command(
         format!(" --accounts-file {accounts_file}")
     };
 
-    let network_flag = generate_network_flag(&rpc_args, &config_url);
+    let network_flag = generate_network_flag(rpc_args, &config_url);
 
     format!(
         "\n\nAfter prefunding the account, run:\n\
@@ -361,9 +358,9 @@ fn generate_deploy_command_with_keystore(
     account: &str,
     keystore: &Utf8PathBuf,
     rpc_args: &RpcArgs,
-    config_url: String,
+    config_url: &str,
 ) -> String {
-    let network_flag = generate_network_flag(&rpc_args, &config_url);
+    let network_flag = generate_network_flag(rpc_args, &config_url);
 
     format!(
         "\n\nAfter prefunding the account, run:\n\
