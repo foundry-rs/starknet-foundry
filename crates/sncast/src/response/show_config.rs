@@ -1,5 +1,5 @@
 use crate::helpers::block_explorer;
-use crate::helpers::configuration::RpcConfig;
+use crate::helpers::config::RpcConfig;
 use crate::response::cast_message::SncastCommandMessage;
 use camino::Utf8PathBuf;
 use foundry_ui::styling;

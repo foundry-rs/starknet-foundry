@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use super::deploy::compute_account_address;
+use crate::account::RpcConfig;
 use crate::starknet_commands::account::{
     generate_add_profile_message, prepare_account_json, write_account_to_accounts_file,
 };
@@ -11,7 +12,6 @@ use conversions::string::{TryFromDecStr, TryFromHexStr};
 use foundry_ui::components::warning::WarningMessage;
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
-use sncast::helpers::configuration::RpcConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::import::AccountImportResponse;
 use sncast::response::ui::UI;

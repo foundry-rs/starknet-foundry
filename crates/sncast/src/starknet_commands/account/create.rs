@@ -10,7 +10,8 @@ use conversions::IntoConv;
 use foundry_ui::components::warning::WarningMessage;
 use serde_json::json;
 use sncast::helpers::braavos::BraavosAccountFactory;
-use sncast::helpers::configuration::{CastConfig, RpcConfig};
+use sncast::helpers::config::RpcConfig;
+use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
     BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, CREATE_KEYSTORE_PASSWORD_ENV_VAR,
     OZ_CLASS_HASH, READY_CLASS_HASH,

@@ -1,7 +1,8 @@
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::Args;
-use sncast::helpers::configuration::{CastConfig, RpcConfig};
+use sncast::helpers::config::RpcConfig;
+use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::show_config::ShowConfigResponse;
 use sncast::{chain_id_to_network_name, get_chain_id};

@@ -1,4 +1,5 @@
-use crate::helpers::configuration::{CastConfig, RpcConfig};
+use crate::helpers::config::RpcConfig;
+use crate::helpers::configuration::CastConfig;
 use crate::helpers::devnet::detection;
 use crate::response::ui::UI;
 use crate::{Network, get_provider};

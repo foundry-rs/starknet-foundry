@@ -1,12 +1,9 @@
 use super::block_explorer;
-use crate::{Network, ValidatedWaitParams, helpers::rpc::FreeProvider};
+use crate::{Network, ValidatedWaitParams, helpers::config::RpcConfigWrapper};
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use configuration::Config;
-use serde::Deserializer;
-use serde::de::Error;
 use serde::{Deserialize, Serialize};
-use url::Url;
 
 #[must_use]
 pub const fn show_explorer_links_default() -> bool {
@@ -43,62 +40,6 @@ impl NetworksConfig {
         }
     }
 }
-
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
-pub enum RpcConfig {
-    Url(Url),
-    Network(Network),
-}
-
-#[derive(Serialize, Clone, Debug, PartialEq)]
-pub struct RpcConfigWrapper {
-    pub rpc_config: Option<RpcConfig>,
-}
-
-impl RpcConfig {
-    pub async fn url(&self) -> Result<Url> {
-        match self {
-            RpcConfig::Url(url) => Ok(url.clone()),
-            RpcConfig::Network(network) => {
-                let url_str = network.url(&FreeProvider::semi_random()).await?;
-                Ok(Url::parse(&url_str)?)
-            }
-        }
-    }
-}
-
-impl<'de> Deserialize<'de> for RpcConfigWrapper {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        #[derive(Deserialize)]
-        struct Raw {
-            url: Option<String>,
-            network: Option<Network>,
-        }
-
-        let raw = Raw::deserialize(deserializer)?;
-
-        match (raw.url, raw.network) {
-            (Some(url), None) => {
-                let parsed =
-                    Url::parse(&url).map_err(|e| D::Error::custom(format!("Invalid URL: {e}")))?;
-                Ok(Self {
-                    rpc_config: Some(RpcConfig::Url(parsed)),
-                })
-            }
-            (None, Some(net)) => Ok(Self {
-                rpc_config: Some(RpcConfig::Network(net)),
-            }),
-            (None, None) => Ok(Self { rpc_config: None }),
-            (Some(_), Some(_)) => Err(D::Error::custom(
-                "Only one of `url` or `network` may be provided",
-            )),
-        }
-    }
-}
-
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
 pub struct CastConfig {
     #[serde(flatten)]

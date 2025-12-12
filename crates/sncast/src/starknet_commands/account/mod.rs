@@ -11,7 +11,7 @@ use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
 use serde_json::json;
 use sncast::helpers::account::{generate_account_name, load_accounts};
-use sncast::helpers::configuration::RpcConfig;
+use sncast::helpers::config::RpcConfig;
 use sncast::helpers::interactive::prompt_to_add_account_as_default;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
@@ -364,9 +364,9 @@ pub async fn account(
 
 #[cfg(test)]
 mod tests {
+    use crate::account::RpcConfig;
     use camino::Utf8PathBuf;
     use configuration::test_utils::copy_config_to_tempdir;
-    use sncast::helpers::configuration::RpcConfig;
     use std::fs;
     use url::Url;
 
