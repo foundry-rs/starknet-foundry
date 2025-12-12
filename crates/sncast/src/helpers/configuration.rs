@@ -40,6 +40,7 @@ impl NetworksConfig {
         }
     }
 }
+
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
 pub struct CastConfig {
     #[serde(flatten)]
