@@ -21,9 +21,12 @@ Overrides url from `snfoundry.toml`.
 ## `--network <NETWORK>`
 Optional.
 
-Use predefined network with a public provider
+Use predefined network with public provider
 
 Possible values: `mainnet`, `sepolia`, `devnet`.
+
+Overrides network from `snfoundry.toml`.
+
 
 ## `--type, -t <ACCOUNT_TYPE>`
 Optional. Required if `--class-hash` is passed.

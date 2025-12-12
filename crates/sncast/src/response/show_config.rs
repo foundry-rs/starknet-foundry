@@ -1,15 +1,15 @@
 use crate::helpers::block_explorer;
+use crate::helpers::configuration::RpcConfig;
 use crate::response::cast_message::SncastCommandMessage;
 use camino::Utf8PathBuf;
 use foundry_ui::styling;
 use serde::Serialize;
-use url::Url;
 
 #[derive(Serialize, Clone)]
 pub struct ShowConfigResponse {
     pub profile: Option<String>,
     pub chain_id: Option<String>,
-    pub rpc_url: Option<Url>,
+    pub rpc_config: Option<RpcConfig>,
     pub account: Option<String>,
     pub accounts_file_path: Option<Utf8PathBuf>,
     pub keystore: Option<Utf8PathBuf>,
@@ -28,8 +28,9 @@ impl SncastCommandMessage for ShowConfigResponse {
             .if_some(self.chain_id.as_ref(), |b, chain_id| {
                 b.field("Chain ID", chain_id)
             })
-            .if_some(self.rpc_url.as_ref(), |b, rpc_url| {
-                b.field("RPC URL", rpc_url.as_ref())
+            .if_some(self.rpc_config.as_ref(), |b, rpc_config| match rpc_config {
+                RpcConfig::Url(url) => b.field("RPC URL", url.as_str()),
+                RpcConfig::Network(network) => b.field("Network", &network.to_string()),
             })
             .if_some(self.account.as_ref(), |b, account| {
                 b.field("Account", account)

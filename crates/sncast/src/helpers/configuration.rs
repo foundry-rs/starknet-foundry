@@ -1,8 +1,10 @@
 use super::block_explorer;
-use crate::{Network, ValidatedWaitParams};
+use crate::{Network, ValidatedWaitParams, helpers::rpc::FreeProvider};
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use configuration::Config;
+use serde::Deserializer;
+use serde::de::Error;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
@@ -43,10 +45,64 @@ impl NetworksConfig {
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
+pub enum RpcConfig {
+    Url(Url),
+    Network(Network),
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq)]
+pub struct RpcConfigWrapper {
+    pub rpc_config: Option<RpcConfig>,
+}
+
+impl RpcConfig {
+    pub async fn url(&self) -> Result<Url> {
+        match self {
+            RpcConfig::Url(url) => Ok(url.clone()),
+            RpcConfig::Network(network) => {
+                let url_str = network.url(&FreeProvider::semi_random()).await?;
+                Ok(Url::parse(&url_str)?)
+            }
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for RpcConfigWrapper {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct Raw {
+            url: Option<String>,
+            network: Option<Network>,
+        }
+
+        let raw = Raw::deserialize(deserializer)?;
+
+        match (raw.url, raw.network) {
+            (Some(url), None) => {
+                let parsed =
+                    Url::parse(&url).map_err(|e| D::Error::custom(format!("Invalid URL: {e}")))?;
+                Ok(Self {
+                    rpc_config: Some(RpcConfig::Url(parsed)),
+                })
+            }
+            (None, Some(net)) => Ok(Self {
+                rpc_config: Some(RpcConfig::Network(net)),
+            }),
+            (None, None) => Ok(Self { rpc_config: None }),
+            (Some(_), Some(_)) => Err(D::Error::custom(
+                "Only one of `url` or `network` may be provided",
+            )),
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
 pub struct CastConfig {
-    #[serde(default)]
-    /// RPC url
-    pub url: Option<Url>,
+    #[serde(flatten)]
+    pub rpc_wrapper: RpcConfigWrapper,
 
     #[serde(default)]
     pub account: String,
@@ -87,7 +143,7 @@ pub struct CastConfig {
 impl Default for CastConfig {
     fn default() -> Self {
         Self {
-            url: None,
+            rpc_wrapper: RpcConfigWrapper { rpc_config: None },
             account: String::default(),
             accounts_file: Utf8PathBuf::default(),
             keystore: None,

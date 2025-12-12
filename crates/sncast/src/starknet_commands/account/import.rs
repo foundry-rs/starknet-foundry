@@ -11,6 +11,7 @@ use conversions::string::{TryFromDecStr, TryFromHexStr};
 use foundry_ui::components::warning::WarningMessage;
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
+use sncast::helpers::configuration::RpcConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::import::AccountImportResponse;
 use sncast::response::ui::UI;
@@ -53,7 +54,7 @@ pub struct Import {
     pub salt: Option<Felt>,
 
     /// If passed, a profile with the provided name and corresponding data will be created in snfoundry.toml
-    #[arg(long, conflicts_with = "network")]
+    #[arg(long)]
     pub add_profile: Option<String>,
 
     #[command(flatten)]
@@ -69,6 +70,7 @@ pub async fn import(
     accounts_file: &Utf8PathBuf,
     provider: &JsonRpcClient<HttpTransport>,
     import: &Import,
+    rpc_config: Option<&RpcConfig>,
     ui: &UI,
 ) -> Result<AccountImportResponse> {
     // TODO(#3556): Remove this warning once we drop Argent account type
@@ -161,6 +163,7 @@ pub async fn import(
         &account_name,
         accounts_file,
         None,
+        rpc_config,
     )?;
 
     Ok(AccountImportResponse {

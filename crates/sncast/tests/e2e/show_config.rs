@@ -122,3 +122,22 @@ async fn test_show_config_no_url() {
         Show Explorer Links: false
     "});
 }
+
+#[tokio::test]
+async fn test_show_config_with_network() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let args = vec!["--profile", "profile7", "show-config"];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_eq(formatdoc! {r"
+        Profile:             profile7
+        Chain ID:            alpha-sepolia
+        Network:             sepolia
+        Account:             user1
+        Accounts File Path:  /path/to/account.json
+        Wait Timeout:        300s
+        Wait Retry Interval: 5s
+        Show Explorer Links: true
+    "});
+}

@@ -89,7 +89,12 @@ pub fn combine_cast_configs(global_config: &CastConfig, local_config: &CastConfi
     networks.override_with(&local_config.networks);
 
     CastConfig {
-        url: clone_field!(global_config, local_config, default_cast_config, url),
+        rpc_wrapper: clone_field!(
+            global_config,
+            local_config,
+            default_cast_config,
+            rpc_wrapper
+        ),
         account: clone_field!(global_config, local_config, default_cast_config, account),
         accounts_file: clone_field!(
             global_config,

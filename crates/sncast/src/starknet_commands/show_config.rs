@@ -1,7 +1,7 @@
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::Args;
-use sncast::helpers::configuration::CastConfig;
+use sncast::helpers::configuration::{CastConfig, RpcConfig};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::show_config::ShowConfigResponse;
 use sncast::{chain_id_to_network_name, get_chain_id};
@@ -28,7 +28,14 @@ pub async fn show_config(
         None
     };
 
-    let rpc_url = show.rpc.url.clone().or(cast_config.url);
+    let rpc_config = if let Some(url) = &show.rpc.url {
+        Some(RpcConfig::Url(url.clone()))
+    } else if let Some(network) = show.rpc.network {
+        Some(RpcConfig::Network(network))
+    } else {
+        cast_config.rpc_wrapper.rpc_config.clone()
+    };
+
     let account = Some(cast_config.account).filter(|p| !p.is_empty());
     let mut accounts_file_path =
         Some(cast_config.accounts_file).filter(|p| p != &Utf8PathBuf::default());
@@ -43,7 +50,7 @@ pub async fn show_config(
     Ok(ShowConfigResponse {
         profile,
         chain_id,
-        rpc_url,
+        rpc_config,
         account,
         accounts_file_path,
         keystore,

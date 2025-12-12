@@ -11,6 +11,7 @@ use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
 use serde_json::json;
 use sncast::helpers::account::{generate_account_name, load_accounts};
+use sncast::helpers::configuration::RpcConfig;
 use sncast::helpers::interactive::prompt_to_add_account_as_default;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
@@ -114,8 +115,11 @@ pub fn write_account_to_accounts_file(
 
 pub fn add_created_profile_to_configuration(
     profile: Option<&str>,
-    cast_config: &CastConfig,
+    account: &str,
+    accounts_file: &Utf8PathBuf,
+    keystore: Option<&Utf8PathBuf>,
     path: &Utf8PathBuf,
+    rpc_config: Option<&RpcConfig>,
 ) -> Result<()> {
     if !load_config::<CastConfig>(Some(path), profile)
         .unwrap_or_default()
@@ -131,24 +135,28 @@ pub fn add_created_profile_to_configuration(
     let toml_string = {
         let mut new_profile = toml::value::Table::new();
 
-        if let Some(url) = &cast_config.url {
-            new_profile.insert("url".to_string(), Value::String(url.to_string()));
+        if let Some(rpc_config) = &rpc_config {
+            match rpc_config {
+                RpcConfig::Url(url) => {
+                    new_profile.insert("url".to_string(), Value::String(url.to_string()));
+                }
+                RpcConfig::Network(network) => {
+                    new_profile.insert("network".to_string(), Value::String(network.to_string()));
+                }
+            }
         }
-        new_profile.insert(
-            "account".to_string(),
-            Value::String(cast_config.account.clone()),
-        );
-        if let Some(keystore) = cast_config.keystore.clone() {
+        new_profile.insert("account".to_string(), Value::String(account.to_owned()));
+        if let Some(keystore) = keystore {
             new_profile.insert("keystore".to_string(), Value::String(keystore.to_string()));
         } else {
             new_profile.insert(
                 "accounts-file".to_string(),
-                Value::String(cast_config.accounts_file.to_string()),
+                Value::String(accounts_file.to_string()),
             );
         }
         let mut profile_config = toml::value::Table::new();
         profile_config.insert(
-            profile.map_or_else(|| cast_config.account.clone(), ToString::to_string),
+            profile.map_or_else(|| account.to_owned(), ToString::to_string),
             Value::Table(new_profile),
         );
 
@@ -174,25 +182,41 @@ pub fn add_created_profile_to_configuration(
 
 fn generate_add_profile_message(
     profile_name: Option<&String>,
-    rpc: &RpcArgs,
+    rpc_args: &RpcArgs,
     account_name: &str,
     accounts_file: &Utf8PathBuf,
-    keystore: Option<Utf8PathBuf>,
+    keystore: Option<&Utf8PathBuf>,
+    rpc_config: Option<&RpcConfig>,
 ) -> Result<Option<String>> {
     if let Some(profile_name) = profile_name {
-        let url = rpc
-            .url
-            .clone()
-            .expect("the argument '--network' should not be used with '--add-profile' argument");
-        let config = CastConfig {
-            url: Some(url),
-            account: account_name.into(),
-            accounts_file: accounts_file.into(),
-            keystore,
-            ..Default::default()
+        // let rpc_config = match (&rpc_args.url, &rpc_args.network) {
+        //     (Some(url), None) => Some(RpcConfig::Url(url.clone())),
+        //     (None, Some(network)) => Some(RpcConfig::Network(network.clone())),
+        //     (Some(_), Some(_)) => unreachable!(),
+        //     (None, None) => {
+        //         if let Some(rpc_config) = rpc_config {
+        //             Some(rpc_config.clone())
+        //         } else {
+        //             None
+        //         }
+        //     }
+        // };
+        let rpc_config = if let Some(url) = &rpc_args.url {
+            Some(RpcConfig::Url(url.clone()))
+        } else if let Some(network) = &rpc_args.network {
+            Some(RpcConfig::Network(*network))
+        } else {
+            rpc_config.cloned()
         };
         let config_path = resolve_config_file();
-        add_created_profile_to_configuration(Some(profile_name), &config, &config_path)?;
+        add_created_profile_to_configuration(
+            Some(profile_name),
+            account_name,
+            &accounts_file.clone(),
+            keystore,
+            &config_path,
+            rpc_config.as_ref(),
+        )?;
         Ok(Some(format!(
             "Profile {profile_name} successfully added to {config_path}",
         )))
@@ -216,6 +240,7 @@ pub async fn account(
                 &config.accounts_file,
                 &provider,
                 &import,
+                config.rpc_wrapper.rpc_config.as_ref(),
                 ui,
             )
             .await;
@@ -341,8 +366,7 @@ pub async fn account(
 mod tests {
     use camino::Utf8PathBuf;
     use configuration::test_utils::copy_config_to_tempdir;
-    use sncast::helpers::configuration::CastConfig;
-    use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
+    use sncast::helpers::configuration::RpcConfig;
     use std::fs;
     use url::Url;
 
@@ -352,16 +376,13 @@ mod tests {
     fn test_add_created_profile_to_configuration_happy_case() {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let path = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
-        let config = CastConfig {
-            url: Some(Url::parse("http://some-url.com").unwrap()),
-            account: String::from("some-name"),
-            accounts_file: "accounts".into(),
-            ..Default::default()
-        };
         let res = add_created_profile_to_configuration(
             Some(&String::from("some-name")),
-            &config,
+            "some-name",
+            &Utf8PathBuf::from("accounts"),
+            None,
             &path.clone(),
+            Some(&RpcConfig::Url(Url::parse("http://some-url.com/").unwrap())),
         );
         assert!(res.is_ok());
 
@@ -377,16 +398,13 @@ mod tests {
     #[test]
     fn test_add_created_profile_to_configuration_profile_already_exists() {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
-        let config = CastConfig {
-            url: Some(Url::parse("http://127.0.0.1:5055/rpc").unwrap()),
-            account: String::from("user1"),
-            accounts_file: DEFAULT_ACCOUNTS_FILE.into(),
-            ..Default::default()
-        };
         let res = add_created_profile_to_configuration(
             Some(&String::from("default")),
-            &config,
+            "some-name",
+            &Utf8PathBuf::from("accounts"),
+            None,
             &Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap(),
+            Some(&RpcConfig::Url(Url::parse("http://some-url.com/").unwrap())),
         );
         assert!(res.is_err());
     }

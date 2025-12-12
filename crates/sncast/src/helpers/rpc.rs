@@ -1,4 +1,4 @@
-use crate::helpers::configuration::CastConfig;
+use crate::helpers::configuration::{CastConfig, RpcConfig};
 use crate::helpers::devnet::detection;
 use crate::response::ui::UI;
 use crate::{Network, get_provider};
@@ -16,7 +16,7 @@ pub struct RpcArgs {
     #[arg(short, long)]
     pub url: Option<Url>,
 
-    /// Use predefined network with a public provider. Note that this option may result in rate limits or other unexpected behavior.
+    /// Use predefined network with public provider. Note that this option may result in rate limits or other unexpected behavior.
     /// For devnet, attempts to auto-detect running starknet-devnet instance.
     #[arg(long)]
     pub network: Option<Network>,
@@ -40,10 +40,10 @@ impl RpcArgs {
     }
 
     pub async fn get_url(&self, config: &CastConfig) -> Result<String> {
-        match (&self.network, &self.url, &config.url) {
+        match (&self.network, &self.url, &config.rpc_wrapper.rpc_config) {
             (Some(network), None, _) => self.resolve_network_url(network, config).await,
             (None, Some(url), _) => Ok(url.to_string().clone()),
-            (None, None, Some(url)) => Ok(url.to_string()),
+            (None, None, Some(rpc_config)) => Ok(rpc_config.url().await?.to_string()),
             _ => bail!("Either `--network` or `--url` must be provided."),
         }
     }
@@ -111,12 +111,12 @@ impl Network {
 }
 
 #[must_use]
-pub fn generate_network_flag(rpc_args: &RpcArgs, config_url: Option<&Url>) -> String {
+pub fn generate_network_flag(rpc_args: &RpcArgs, rpc_config: Option<&RpcConfig>) -> String {
     if let Some(network) = &rpc_args.network {
         format!("--network {network}")
     } else if let Some(rpc_url) = &rpc_args.url {
         format!("--url {rpc_url}")
-    } else if config_url.is_some() {
+    } else if rpc_config.is_some() {
         // Since url is defined in config, no need to pass any flag
         String::new()
     } else {
