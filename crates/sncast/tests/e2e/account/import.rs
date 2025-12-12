@@ -5,6 +5,7 @@ use crate::helpers::constants::{
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use configuration::CONFIG_FILENAME;
+use configuration::test_utils::copy_config_to_tempdir;
 use conversions::string::IntoHexStr;
 use indoc::{formatdoc, indoc};
 use serde_json::json;
@@ -887,4 +888,28 @@ pub async fn test_happy_case_default_name_generation() {
     let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
 
     assert_eq!(contents_json, all_accounts_content);
+}
+
+#[tokio::test]
+pub async fn test_use_url_from_config() {
+    let temp_dir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let accounts_file = "accounts.json";
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "import",
+        "--address",
+        "0x123",
+        "--private-key",
+        "0x456",
+        "--type",
+        "oz",
+    ];
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(temp_dir.path());
+
+    snapbox.assert().success();
 }
