@@ -18,6 +18,7 @@ use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 use universal_sierra_compiler_api::compile_contract_sierra;
+use url::Url;
 
 #[derive(Args)]
 #[command(about = "Declare a contract by fetching it from a different Starknet instance", long_about = None)]
@@ -51,7 +52,7 @@ pub struct DeclareFrom {
 pub struct SourceRpcArgs {
     /// RPC provider url address
     #[arg(short, long)]
-    pub source_url: Option<String>,
+    pub source_url: Option<Url>,
 
     /// Use predefined network with a public provider. Note that this option may result in rate limits or other unexpected behavior
     #[arg(long)]

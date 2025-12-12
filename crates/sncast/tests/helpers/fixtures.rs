@@ -207,7 +207,7 @@ pub async fn invoke_contract(
         ..Default::default()
     };
     let rpc_args = RpcArgs {
-        url: Some(URL.to_string()),
+        url: Some(Url::parse(URL).expect("Failed to parse URL")),
         network: None,
     };
     let account = get_account(&config, &provider, &rpc_args, None, &UI::default())

@@ -11,7 +11,7 @@ use sncast::response::ui::UI;
 use sncast::{check_if_legacy_contract, get_account, get_provider};
 use starknet_rust::accounts::Account;
 use starknet_rust::macros::felt;
-use url::ParseError;
+use url::{ParseError, Url};
 
 #[tokio::test]
 async fn test_get_provider() {
@@ -45,7 +45,7 @@ async fn test_get_account() {
         ..Default::default()
     };
     let rpc_args = RpcArgs {
-        url: Some(URL.to_string()),
+        url: Some(Url::parse(URL).expect("Failed to parse URL")),
         network: None,
     };
     let account = get_account(&config, &provider, &rpc_args, None, &UI::default())
@@ -68,7 +68,7 @@ async fn test_get_account_no_file() {
         ..Default::default()
     };
     let rpc_args = RpcArgs {
-        url: Some(URL.to_string()),
+        url: Some(Url::parse(URL).expect("Failed to parse URL")),
         network: None,
     };
     let account = get_account(&config, &provider, &rpc_args, None, &UI::default()).await;
@@ -88,7 +88,7 @@ async fn test_get_account_invalid_file() {
         ..Default::default()
     };
     let rpc_args = RpcArgs {
-        url: Some(URL.to_string()),
+        url: Some(Url::parse(URL).expect("Failed to parse URL")),
         network: None,
     };
     let account = get_account(&config, &provider, &rpc_args, None, &UI::default()).await;
@@ -108,7 +108,7 @@ async fn test_get_account_no_account() {
         ..Default::default()
     };
     let rpc_args = RpcArgs {
-        url: Some(URL.to_string()),
+        url: Some(Url::parse(URL).expect("Failed to parse URL")),
         network: None,
     };
     let account = get_account(&config, &provider, &rpc_args, None, &UI::default()).await;
@@ -128,7 +128,7 @@ async fn test_get_account_no_user_for_network() {
         ..Default::default()
     };
     let rpc_args = RpcArgs {
-        url: Some(URL.to_string()),
+        url: Some(Url::parse(URL).expect("Failed to parse URL")),
         network: None,
     };
     let account = get_account(&config, &provider, &rpc_args, None, &UI::default()).await;
@@ -148,7 +148,7 @@ async fn test_get_account_failed_to_convert_field_elements() {
         ..Default::default()
     };
     let rpc_args = RpcArgs {
-        url: Some(URL.to_string()),
+        url: Some(Url::parse(URL).expect("Failed to parse URL")),
         network: None,
     };
     let account1 = get_account(&config, &provider, &rpc_args, None, &UI::default()).await;

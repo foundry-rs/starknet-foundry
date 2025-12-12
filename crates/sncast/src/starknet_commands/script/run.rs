@@ -56,6 +56,7 @@ use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::fs;
 use tokio::runtime::Runtime;
+use url::Url;
 
 mod script_runtime;
 
@@ -362,7 +363,7 @@ pub fn run(
         None
     } else {
         let rpc_args = RpcArgs {
-            url: Some(url.to_string()),
+            url: Some(Url::parse(url)?),
             network: None,
         };
         Some(tokio_runtime.block_on(get_account(

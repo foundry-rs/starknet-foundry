@@ -7,13 +7,14 @@ use clap::Args;
 use shared::consts::RPC_URL_VERSION;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet_rust::providers::{JsonRpcClient, jsonrpc::HttpTransport};
+use url::Url;
 
 #[derive(Args, Clone, Debug, Default)]
 #[group(required = false, multiple = false)]
 pub struct RpcArgs {
     /// RPC provider url address; overrides url from snfoundry.toml
     #[arg(short, long)]
-    pub url: Option<String>,
+    pub url: Option<Url>,
 
     /// Use predefined network with a public provider. Note that this option may result in rate limits or other unexpected behavior.
     /// For devnet, attempts to auto-detect running starknet-devnet instance.
@@ -41,8 +42,8 @@ impl RpcArgs {
     pub async fn get_url(&self, config: &CastConfig) -> Result<String> {
         match (&self.network, &self.url, &config.url) {
             (Some(network), None, _) => self.resolve_network_url(network, config).await,
-            (None, Some(url), _) => Ok(url.clone()),
-            (None, None, url) if !url.is_empty() => Ok(url.clone()),
+            (None, Some(url), _) => Ok(url.to_string().clone()),
+            (None, None, Some(url)) => Ok(url.to_string()),
             _ => bail!("Either `--network` or `--url` must be provided."),
         }
     }
@@ -110,12 +111,12 @@ impl Network {
 }
 
 #[must_use]
-pub fn generate_network_flag(rpc_args: &RpcArgs, config_url: &str) -> String {
+pub fn generate_network_flag(rpc_args: &RpcArgs, config_url: Option<&Url>) -> String {
     if let Some(network) = &rpc_args.network {
         format!("--network {network}")
     } else if let Some(rpc_url) = &rpc_args.url {
         format!("--url {rpc_url}")
-    } else if !config_url.is_empty() {
+    } else if config_url.is_some() {
         // Since url is defined in config, no need to pass any flag
         String::new()
     } else {

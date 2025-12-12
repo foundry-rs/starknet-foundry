@@ -4,6 +4,7 @@ use anyhow::Result;
 use camino::Utf8PathBuf;
 use configuration::Config;
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 #[must_use]
 pub const fn show_explorer_links_default() -> bool {
@@ -45,7 +46,7 @@ impl NetworksConfig {
 pub struct CastConfig {
     #[serde(default)]
     /// RPC url
-    pub url: String,
+    pub url: Option<Url>,
 
     #[serde(default)]
     pub account: String,
@@ -86,7 +87,7 @@ pub struct CastConfig {
 impl Default for CastConfig {
     fn default() -> Self {
         Self {
-            url: String::default(),
+            url: None,
             account: String::default(),
             accounts_file: Utf8PathBuf::default(),
             keystore: None,
