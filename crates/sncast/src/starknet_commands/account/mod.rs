@@ -191,8 +191,8 @@ fn generate_add_profile_message(
     if let Some(profile_name) = profile_name {
         let rpc_config = if let Some(url) = &rpc_args.url {
             Some(RpcConfig::Url(url.clone()))
-        } else if rpc_args.network.is_some() {
-            bail!("the argument '--network' should not be used with '--add-profile' argument");
+        } else if let Some(network) = rpc_args.network {
+            Some(RpcConfig::Network(network))
         } else {
             rpc_config.cloned()
         };
