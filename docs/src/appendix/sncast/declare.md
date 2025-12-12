@@ -26,7 +26,6 @@ Possible values: `mainnet`, `sepolia`, `devnet`.
 
 Overrides network from `snfoundry.toml`.
 
-
 ## `--max-fee, -m <MAX_FEE>`
 Optional.
 

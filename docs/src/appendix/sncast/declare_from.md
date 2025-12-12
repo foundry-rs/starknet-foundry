@@ -26,7 +26,6 @@ Possible values: `mainnet`, `sepolia`, `devnet`.
 
 Overrides network from `snfoundry.toml`.
 
-
 ## `--source-url, -u <RPC_URL>`
 Optional.
 

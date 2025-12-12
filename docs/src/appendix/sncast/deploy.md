@@ -26,7 +26,6 @@ Possible values: `mainnet`, `sepolia`, `devnet`.
 
 Overrides network from `snfoundry.toml`.
 
-
 ## `--constructor-calldata, -c <CONSTRUCTOR_CALLDATA>`
 Optional.
 Conflicts with: [`--arguments`](#--arguments)

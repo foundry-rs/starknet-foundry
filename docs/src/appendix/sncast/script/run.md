@@ -26,7 +26,6 @@ Possible values: `mainnet`, `sepolia`, `devnet`.
 
 Overrides network from `snfoundry.toml`.
 
-
 ## `--package <NAME>`
 Optional.
 
