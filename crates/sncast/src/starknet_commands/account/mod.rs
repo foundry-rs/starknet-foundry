@@ -189,18 +189,6 @@ fn generate_add_profile_message(
     rpc_config: Option<&RpcConfig>,
 ) -> Result<Option<String>> {
     if let Some(profile_name) = profile_name {
-        // let rpc_config = match (&rpc_args.url, &rpc_args.network) {
-        //     (Some(url), None) => Some(RpcConfig::Url(url.clone())),
-        //     (None, Some(network)) => Some(RpcConfig::Network(network.clone())),
-        //     (Some(_), Some(_)) => unreachable!(),
-        //     (None, None) => {
-        //         if let Some(rpc_config) = rpc_config {
-        //             Some(rpc_config.clone())
-        //         } else {
-        //             None
-        //         }
-        //     }
-        // };
         let rpc_config = if let Some(url) = &rpc_args.url {
             Some(RpcConfig::Url(url.clone()))
         } else if let Some(network) = &rpc_args.network {
