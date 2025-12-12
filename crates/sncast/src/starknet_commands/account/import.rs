@@ -54,7 +54,7 @@ pub struct Import {
     pub salt: Option<Felt>,
 
     /// If passed, a profile with the provided name and corresponding data will be created in snfoundry.toml
-    #[arg(long)]
+    #[arg(long, conflicts_with = "network")]
     pub add_profile: Option<String>,
 
     #[command(flatten)]
