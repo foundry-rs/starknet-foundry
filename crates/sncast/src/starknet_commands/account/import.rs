@@ -11,6 +11,7 @@ use conversions::string::{TryFromDecStr, TryFromHexStr};
 use foundry_ui::components::warning::WarningMessage;
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
+use sncast::helpers::config::RpcConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::import::AccountImportResponse;
 use sncast::response::ui::UI;
