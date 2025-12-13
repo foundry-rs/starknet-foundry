@@ -352,11 +352,12 @@ pub async fn account(
 
 #[cfg(test)]
 mod tests {
-    use crate::account::RpcConfig;
     use camino::Utf8PathBuf;
     use configuration::test_utils::copy_config_to_tempdir;
     use sncast::helpers::{
-        config::RpcConfigWrapper, configuration::CastConfig, constants::DEFAULT_ACCOUNTS_FILE,
+        config::{RpcConfig, RpcConfigWrapper},
+        configuration::CastConfig,
+        constants::DEFAULT_ACCOUNTS_FILE,
     };
     use std::fs;
     use url::Url;
