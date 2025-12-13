@@ -2,6 +2,7 @@ use sncast::helpers::devnet::detection::{DevnetDetectionError, detect_devnet_url
 use std::net::TcpStream;
 use std::process::{Child, Command, Stdio};
 use std::time::{Duration, Instant};
+use url::Url;
 
 use crate::helpers::constants::URL;
 
@@ -18,7 +19,7 @@ async fn test_detect_devnet_url() {
         .await
         .expect("Failed to detect devnet URL");
 
-    assert_eq!(result, URL.replace("/rpc", ""));
+    assert_eq!(result, Url::parse(&URL.replace("/rpc", "")).unwrap());
 }
 
 async fn test_multiple_devnet_instances_error() {

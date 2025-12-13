@@ -11,29 +11,12 @@ use sncast::response::ui::UI;
 use sncast::{check_if_legacy_contract, get_account, get_provider};
 use starknet_rust::accounts::Account;
 use starknet_rust::macros::felt;
-use url::{ParseError, Url};
+use url::Url;
 
 #[tokio::test]
 async fn test_get_provider() {
-    let provider = get_provider(URL);
+    let provider = get_provider(&Url::parse(URL).unwrap());
     assert!(provider.is_ok());
-}
-
-#[tokio::test]
-async fn test_get_provider_invalid_url() {
-    let provider = get_provider("what");
-    let err = provider.unwrap_err();
-    assert!(err.is::<ParseError>());
-}
-
-#[tokio::test]
-async fn test_get_provider_empty_url() {
-    let provider = get_provider("");
-    let err = provider.unwrap_err();
-    assert!(
-        err.to_string()
-            .contains("RPC url not passed nor found in snfoundry.toml")
-    );
 }
 
 #[tokio::test]

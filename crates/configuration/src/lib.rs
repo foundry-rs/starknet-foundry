@@ -79,12 +79,12 @@ pub fn find_config_file() -> Result<Utf8PathBuf> {
 
 #[cfg(test)]
 mod tests {
-    use std::fs::{self, File};
-
     use super::*;
     use crate::test_utils::copy_config_to_tempdir;
     use serde::{Deserialize, Serialize};
+    use std::fs::{self, File};
     use tempfile::tempdir;
+    use url::Url;
 
     #[test]
     fn find_config_in_current_dir() {
@@ -151,8 +151,7 @@ mod tests {
 
     #[derive(Debug, Default, Serialize, Deserialize)]
     pub struct StubConfig {
-        #[serde(default)]
-        pub url: String,
+        pub url: Option<Url>,
         #[serde(default)]
         pub account: String,
     }
@@ -162,7 +161,8 @@ mod tests {
         }
 
         fn from_raw(config: serde_json::Value) -> Result<Self> {
-            Ok(serde_json::from_value::<StubConfig>(config)?)
+            serde_json::from_value::<Self>(config)
+                .map_err(|e| anyhow!("Failed to parse stubtool config: {e}"))
         }
     }
     #[test]
@@ -174,7 +174,10 @@ mod tests {
         )
         .unwrap();
         assert_eq!(config.account, String::from("user3"));
-        assert_eq!(config.url, String::from("http://127.0.0.1:5050/rpc"));
+        assert_eq!(
+            config.url,
+            Some(Url::parse("http://127.0.0.1:5050/rpc").unwrap())
+        );
     }
 
     #[test]
@@ -186,7 +189,25 @@ mod tests {
         )
         .unwrap();
         assert_eq!(config.account, String::from("user1"));
-        assert_eq!(config.url, String::from("http://127.0.0.1:5055/rpc"));
+        assert_eq!(
+            config.url,
+            Some(Url::parse("http://127.0.0.1:5055/rpc").unwrap())
+        );
+    }
+    #[test]
+    fn load_config_invalid_url() {
+        let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None);
+        let err = load_config::<StubConfig>(
+            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            Some(&String::from("profile6")),
+        )
+        .unwrap_err();
+
+        assert!(err.to_string().contains("Failed to parse stubtool config"));
+        assert!(
+            err.to_string()
+                .contains("relative URL without a base: \"invalid_url\"")
+        );
     }
 
     #[test]
@@ -199,7 +220,7 @@ mod tests {
         .unwrap();
 
         assert_eq!(config.account, String::new());
-        assert_eq!(config.url, String::new());
+        assert_eq!(config.url, None);
     }
 
     #[derive(Debug, Default, Serialize, Deserialize)]
@@ -231,7 +252,8 @@ mod tests {
         }
 
         fn from_raw(config: serde_json::Value) -> Result<Self> {
-            Ok(serde_json::from_value::<StubComplexConfig>(config)?)
+            serde_json::from_value::<Self>(config)
+                .map_err(|e| anyhow!("Failed to parse stubtool config: {e}"))
         }
     }
 

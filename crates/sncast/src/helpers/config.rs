@@ -28,10 +28,7 @@ impl RpcConfig {
     pub async fn url(&self) -> Result<Url> {
         match self {
             RpcConfig::Url(url) => Ok(url.clone()),
-            RpcConfig::Network(network) => {
-                let url_str = network.url(&FreeProvider::semi_random()).await?;
-                Ok(Url::parse(&url_str)?)
-            }
+            RpcConfig::Network(network) => Ok(network.url(&FreeProvider::semi_random()).await?),
         }
     }
 }

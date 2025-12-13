@@ -1,8 +1,8 @@
 mod direct;
 mod docker;
 mod flag_parsing;
-
 use std::process::Command;
+use url::Url;
 
 use crate::helpers::devnet::provider::DevnetProvider;
 
@@ -31,9 +31,14 @@ pub enum DevnetDetectionError {
         "Found starknet-devnet process, but could not reach it. Please use `--url <URL>` to specify the correct URL."
     )]
     ProcessNotReachable,
+    #[error("Failed to parse devnet URL.")]
+    InvalidUrl {
+        #[source]
+        source: url::ParseError,
+    },
 }
 
-pub async fn detect_devnet_url() -> Result<String, DevnetDetectionError> {
+pub async fn detect_devnet_url() -> Result<Url, DevnetDetectionError> {
     detect_devnet_from_processes().await
 }
 
@@ -42,11 +47,12 @@ pub async fn is_devnet_running() -> bool {
     detect_devnet_from_processes().await.is_ok()
 }
 
-async fn detect_devnet_from_processes() -> Result<String, DevnetDetectionError> {
+async fn detect_devnet_from_processes() -> Result<Url, DevnetDetectionError> {
     match find_devnet_process_info() {
         Ok(info) => {
             if is_devnet_url_reachable(&info.host, info.port).await {
-                Ok(format!("http://{}:{}", info.host, info.port))
+                Ok(Url::parse(&format!("http://{}:{}", info.host, info.port))
+                    .map_err(|e| DevnetDetectionError::InvalidUrl { source: e })?)
             } else {
                 Err(DevnetDetectionError::ProcessNotReachable)
             }
@@ -54,9 +60,10 @@ async fn detect_devnet_from_processes() -> Result<String, DevnetDetectionError> 
         Err(DevnetDetectionError::NoInstance | DevnetDetectionError::CommandFailed) => {
             // Fallback to default starknet-devnet URL if reachable
             if is_devnet_url_reachable(DEFAULT_DEVNET_HOST, DEFAULT_DEVNET_PORT).await {
-                Ok(format!(
+                Ok(Url::parse(&format!(
                     "http://{DEFAULT_DEVNET_HOST}:{DEFAULT_DEVNET_PORT}"
                 ))
+                .map_err(|e| DevnetDetectionError::InvalidUrl { source: e })?)
             } else {
                 Err(DevnetDetectionError::NoInstance)
             }
