@@ -7,13 +7,14 @@ use clap::Args;
 use shared::consts::RPC_URL_VERSION;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet_rust::providers::{JsonRpcClient, jsonrpc::HttpTransport};
+use url::Url;
 
 #[derive(Args, Clone, Debug, Default)]
 #[group(required = false, multiple = false)]
 pub struct RpcArgs {
     /// RPC provider url address; overrides url from snfoundry.toml
     #[arg(short, long)]
-    pub url: Option<String>,
+    pub url: Option<Url>,
 
     /// Use predefined network with a public provider. Note that this option may result in rate limits or other unexpected behavior.
     /// For devnet, attempts to auto-detect running starknet-devnet instance.
@@ -28,8 +29,6 @@ impl RpcArgs {
         ui: &UI,
     ) -> Result<JsonRpcClient<HttpTransport>> {
         let url = self.get_url(config).await?;
-
-        assert!(!url.is_empty(), "url cannot be empty");
         let provider = get_provider(&url)?;
 
         // TODO(#3959) Remove `base_ui`
@@ -38,16 +37,15 @@ impl RpcArgs {
         Ok(provider)
     }
 
-    pub async fn get_url(&self, config: &CastConfig) -> Result<String> {
+    pub async fn get_url(&self, config: &CastConfig) -> Result<Url> {
         match (&self.network, &self.url, &config.url) {
             (Some(network), None, _) => self.resolve_network_url(network, config).await,
-            (None, Some(url), _) => Ok(url.clone()),
-            (None, None, url) if !url.is_empty() => Ok(url.clone()),
+            (None, Some(url), _) | (None, None, Some(url)) => Ok(url.clone()),
             _ => bail!("Either `--network` or `--url` must be provided."),
         }
     }
 
-    async fn resolve_network_url(&self, network: &Network, config: &CastConfig) -> Result<String> {
+    async fn resolve_network_url(&self, network: &Network, config: &CastConfig) -> Result<Url> {
         if let Some(custom_url) = config.networks.get_url(*network) {
             Ok(custom_url.clone())
         } else {
@@ -67,26 +65,28 @@ impl FreeProvider {
     }
 
     #[must_use]
-    pub fn mainnet_rpc(&self) -> String {
+    pub fn mainnet_rpc(&self) -> Url {
         match self {
-            FreeProvider::Zan => {
-                format!("https://api.zan.top/public/starknet-mainnet/rpc/{RPC_URL_VERSION}")
-            }
+            FreeProvider::Zan => Url::parse(&format!(
+                "https://api.zan.top/public/starknet-mainnet/rpc/{RPC_URL_VERSION}"
+            ))
+            .expect("Failed to parse URL"),
         }
     }
 
     #[must_use]
-    pub fn sepolia_rpc(&self) -> String {
+    pub fn sepolia_rpc(&self) -> Url {
         match self {
-            FreeProvider::Zan => {
-                format!("https://api.zan.top/public/starknet-sepolia/rpc/{RPC_URL_VERSION}")
-            }
+            FreeProvider::Zan => Url::parse(&format!(
+                "https://api.zan.top/public/starknet-sepolia/rpc/{RPC_URL_VERSION}"
+            ))
+            .expect("Failed to parse URL"),
         }
     }
 }
 
 impl Network {
-    pub async fn url(self, provider: &FreeProvider) -> Result<String> {
+    pub async fn url(self, provider: &FreeProvider) -> Result<Url> {
         match self {
             Network::Mainnet => Ok(Self::free_mainnet_rpc(provider)),
             Network::Sepolia => Ok(Self::free_sepolia_rpc(provider)),
@@ -94,15 +94,15 @@ impl Network {
         }
     }
 
-    fn free_mainnet_rpc(provider: &FreeProvider) -> String {
+    fn free_mainnet_rpc(provider: &FreeProvider) -> Url {
         provider.mainnet_rpc()
     }
 
-    fn free_sepolia_rpc(provider: &FreeProvider) -> String {
+    fn free_sepolia_rpc(provider: &FreeProvider) -> Url {
         provider.sepolia_rpc()
     }
 
-    async fn devnet_rpc(_provider: &FreeProvider) -> Result<String> {
+    async fn devnet_rpc(_provider: &FreeProvider) -> Result<Url> {
         detection::detect_devnet_url()
             .await
             .map_err(|e| anyhow::anyhow!(e))
@@ -110,12 +110,12 @@ impl Network {
 }
 
 #[must_use]
-pub fn generate_network_flag(rpc_args: &RpcArgs, config_url: &str) -> String {
+pub fn generate_network_flag(rpc_args: &RpcArgs, config_url: Option<&Url>) -> String {
     if let Some(network) = &rpc_args.network {
         format!("--network {network}")
     } else if let Some(rpc_url) = &rpc_args.url {
         format!("--url {rpc_url}")
-    } else if !config_url.is_empty() {
+    } else if config_url.is_some() {
         // Since url is defined in config, no need to pass any flag
         String::new()
     } else {
@@ -150,9 +150,9 @@ mod tests {
     async fn test_custom_network_url_from_config() {
         let mut config = CastConfig::default();
         config.networks.mainnet =
-            Some("https://starknet-mainnet.infura.io/v3/custom-api-key".to_string());
+            Some(Url::parse("https://starknet-mainnet.infura.io/v3/custom-api-key").unwrap());
         config.networks.sepolia =
-            Some("https://starknet-sepolia.g.alchemy.com/v2/custom-api-key".to_string());
+            Some(Url::parse("https://starknet-sepolia.g.alchemy.com/v2/custom-api-key").unwrap());
 
         let rpc_args = RpcArgs {
             url: None,
@@ -162,7 +162,7 @@ mod tests {
         let url = rpc_args.get_url(&config).await.unwrap();
         assert_eq!(
             url,
-            "https://starknet-mainnet.infura.io/v3/custom-api-key".to_string()
+            Url::parse("https://starknet-mainnet.infura.io/v3/custom-api-key").unwrap()
         );
     }
 
@@ -176,6 +176,6 @@ mod tests {
         };
 
         let url = rpc_args.get_url(&config).await.unwrap();
-        assert_eq!(url, Network::free_mainnet_rpc(&FreeProvider::Zan));
+        assert_eq!(url, Network::free_mainnet_rpc(&FreeProvider::Zan).clone());
     }
 }

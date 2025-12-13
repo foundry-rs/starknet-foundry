@@ -131,7 +131,9 @@ pub fn add_created_profile_to_configuration(
     let toml_string = {
         let mut new_profile = toml::value::Table::new();
 
-        new_profile.insert("url".to_string(), Value::String(cast_config.url.clone()));
+        if let Some(url) = &cast_config.url {
+            new_profile.insert("url".to_string(), Value::String(url.to_string()));
+        }
         new_profile.insert(
             "account".to_string(),
             Value::String(cast_config.account.clone()),
@@ -183,7 +185,7 @@ fn generate_add_profile_message(
             .clone()
             .expect("the argument '--network' should not be used with '--add-profile' argument");
         let config = CastConfig {
-            url,
+            url: Some(url),
             account: account_name.into(),
             accounts_file: accounts_file.into(),
             keystore,
@@ -342,6 +344,7 @@ mod tests {
     use sncast::helpers::configuration::CastConfig;
     use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
     use std::fs;
+    use url::Url;
 
     use crate::starknet_commands::account::add_created_profile_to_configuration;
 
@@ -350,7 +353,7 @@ mod tests {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let path = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
         let config = CastConfig {
-            url: String::from("http://some-url"),
+            url: Some(Url::parse("http://some-url.com").unwrap()),
             account: String::from("some-name"),
             accounts_file: "accounts".into(),
             ..Default::default()
@@ -364,9 +367,10 @@ mod tests {
 
         let contents =
             fs::read_to_string(path.join("snfoundry.toml")).expect("Failed to read snfoundry.toml");
+
         assert!(contents.contains("[sncast.some-name]"));
         assert!(contents.contains("account = \"some-name\""));
-        assert!(contents.contains("url = \"http://some-url\""));
+        assert!(contents.contains("url = \"http://some-url.com/\""));
         assert!(contents.contains("accounts-file = \"accounts\""));
     }
 
@@ -374,7 +378,7 @@ mod tests {
     fn test_add_created_profile_to_configuration_profile_already_exists() {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let config = CastConfig {
-            url: String::from("http://127.0.0.1:5055/rpc"),
+            url: Some(Url::parse("http://127.0.0.1:5055/rpc").unwrap()),
             account: String::from("user1"),
             accounts_file: DEFAULT_ACCOUNTS_FILE.into(),
             ..Default::default()
