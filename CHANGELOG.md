@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `network` field can now be configured in `snfoundry.toml`
 
+#### Changed
+
+- `--network` flag no longer conflicts with `--add-profile` flag
+
 #### Fixed
 
 - When using `account create` or `account import` commands without specifying `--network` or `--url`, url from snfoundry.toml is now used correctly (if present)
