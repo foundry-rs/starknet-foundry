@@ -17,7 +17,7 @@ pub struct RpcArgs {
     #[arg(short, long)]
     pub url: Option<Url>,
 
-    /// Use predefined network with public provider. Note that this option may result in rate limits or other unexpected behavior.
+    /// Use predefined network with a public provider. Note that this option may result in rate limits or other unexpected behavior.
     /// For devnet, attempts to auto-detect running starknet-devnet instance.
     #[arg(long)]
     pub network: Option<Network>,

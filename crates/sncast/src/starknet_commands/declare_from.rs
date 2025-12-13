@@ -54,7 +54,7 @@ pub struct SourceRpcArgs {
     #[arg(short, long)]
     pub source_url: Option<Url>,
 
-    /// Use predefined network with public provider. Note that this option may result in rate limits or other unexpected behavior
+    /// Use predefined network with a public provider. Note that this option may result in rate limits or other unexpected behavior
     #[arg(long)]
     pub source_network: Option<Network>,
 }
