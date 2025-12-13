@@ -3372,7 +3372,7 @@ dependencies = [
  "strum 0.27.2",
  "strum_macros 0.27.2",
  "tokio",
- "toml_edit 0.23.7",
+ "toml_edit 0.23.9",
  "tracing",
  "universal-sierra-compiler-api",
  "url",
