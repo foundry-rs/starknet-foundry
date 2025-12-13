@@ -24,11 +24,15 @@ account = "user3"
 
 [stubtool.profile5]
 url = "http://127.0.0.1:5055/rpc"
+
+[stubtool.profile6]
+url = "invalid_url"
 account = "user8"
 
 [stubtool.with-envs]
 url = "$VALUE_STRING123132"
 account = "$VALUE_INT123132"
+
 [stubtool.with-envs.nested]
 list-example = [ "$VALUE_BOOL1231321", "$VALUE_BOOL1231322"  ]
 url-nested = "$VALUE_FLOAT123132"

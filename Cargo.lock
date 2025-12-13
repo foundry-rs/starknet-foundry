@@ -1987,6 +1987,7 @@ dependencies = [
  "serde_json",
  "tempfile",
  "toml 0.9.8",
+ "url",
 ]
 
 [[package]]
@@ -2874,7 +2875,7 @@ dependencies = [
  "serde_json",
  "shell-words",
  "tempfile",
- "toml_edit 0.23.7",
+ "toml_edit 0.23.9",
  "walkdir",
 ]
 
@@ -3319,7 +3320,7 @@ dependencies = [
  "tempfile",
  "test-case",
  "tokio",
- "toml_edit 0.23.7",
+ "toml_edit 0.23.9",
  "tracing",
  "tracing-chrome",
  "tracing-subscriber",
@@ -3371,7 +3372,7 @@ dependencies = [
  "strum 0.27.2",
  "strum_macros 0.27.2",
  "tokio",
- "toml_edit 0.23.7",
+ "toml_edit 0.23.9",
  "tracing",
  "universal-sierra-compiler-api",
  "url",
@@ -6972,7 +6973,7 @@ dependencies = [
  "thiserror 2.0.17",
  "tokio",
  "toml 0.9.8",
- "toml_edit 0.23.7",
+ "toml_edit 0.23.9",
  "tracing",
  "tracing-log",
  "tracing-subscriber",

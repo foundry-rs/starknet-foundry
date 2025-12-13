@@ -30,8 +30,6 @@ impl RpcArgs {
         ui: &UI,
     ) -> Result<JsonRpcClient<HttpTransport>> {
         let url = self.get_url(config).await?;
-
-        assert!(!url.is_empty(), "url cannot be empty");
         let provider = get_provider(&url)?;
 
         // TODO(#3959) Remove `base_ui`
@@ -40,16 +38,16 @@ impl RpcArgs {
         Ok(provider)
     }
 
-    pub async fn get_url(&self, config: &CastConfig) -> Result<String> {
+    pub async fn get_url(&self, config: &CastConfig) -> Result<Url> {
         match (&self.network, &self.url, &config.rpc_wrapper.rpc_config) {
             (Some(network), None, _) => self.resolve_network_url(network, config).await,
-            (None, Some(url), _) => Ok(url.to_string().clone()),
-            (None, None, Some(rpc_config)) => Ok(rpc_config.url().await?.to_string()),
+            (None, Some(url), _) => Ok(url.clone()),
+            (None, None, Some(rpc_config)) => Ok(rpc_config.url().await?),
             _ => bail!("Either `--network` or `--url` must be provided."),
         }
     }
 
-    async fn resolve_network_url(&self, network: &Network, config: &CastConfig) -> Result<String> {
+    async fn resolve_network_url(&self, network: &Network, config: &CastConfig) -> Result<Url> {
         if let Some(custom_url) = config.networks.get_url(*network) {
             Ok(custom_url.clone())
         } else {
@@ -69,26 +67,28 @@ impl FreeProvider {
     }
 
     #[must_use]
-    pub fn mainnet_rpc(&self) -> String {
+    pub fn mainnet_rpc(&self) -> Url {
         match self {
-            FreeProvider::Zan => {
-                format!("https://api.zan.top/public/starknet-mainnet/rpc/{RPC_URL_VERSION}")
-            }
+            FreeProvider::Zan => Url::parse(&format!(
+                "https://api.zan.top/public/starknet-mainnet/rpc/{RPC_URL_VERSION}"
+            ))
+            .expect("Failed to parse URL"),
         }
     }
 
     #[must_use]
-    pub fn sepolia_rpc(&self) -> String {
+    pub fn sepolia_rpc(&self) -> Url {
         match self {
-            FreeProvider::Zan => {
-                format!("https://api.zan.top/public/starknet-sepolia/rpc/{RPC_URL_VERSION}")
-            }
+            FreeProvider::Zan => Url::parse(&format!(
+                "https://api.zan.top/public/starknet-sepolia/rpc/{RPC_URL_VERSION}"
+            ))
+            .expect("Failed to parse URL"),
         }
     }
 }
 
 impl Network {
-    pub async fn url(self, provider: &FreeProvider) -> Result<String> {
+    pub async fn url(self, provider: &FreeProvider) -> Result<Url> {
         match self {
             Network::Mainnet => Ok(Self::free_mainnet_rpc(provider)),
             Network::Sepolia => Ok(Self::free_sepolia_rpc(provider)),
@@ -96,15 +96,15 @@ impl Network {
         }
     }
 
-    fn free_mainnet_rpc(provider: &FreeProvider) -> String {
+    fn free_mainnet_rpc(provider: &FreeProvider) -> Url {
         provider.mainnet_rpc()
     }
 
-    fn free_sepolia_rpc(provider: &FreeProvider) -> String {
+    fn free_sepolia_rpc(provider: &FreeProvider) -> Url {
         provider.sepolia_rpc()
     }
 
-    async fn devnet_rpc(_provider: &FreeProvider) -> Result<String> {
+    async fn devnet_rpc(_provider: &FreeProvider) -> Result<Url> {
         detection::detect_devnet_url()
             .await
             .map_err(|e| anyhow::anyhow!(e))
@@ -152,9 +152,9 @@ mod tests {
     async fn test_custom_network_url_from_config() {
         let mut config = CastConfig::default();
         config.networks.mainnet =
-            Some("https://starknet-mainnet.infura.io/v3/custom-api-key".to_string());
+            Some(Url::parse("https://starknet-mainnet.infura.io/v3/custom-api-key").unwrap());
         config.networks.sepolia =
-            Some("https://starknet-sepolia.g.alchemy.com/v2/custom-api-key".to_string());
+            Some(Url::parse("https://starknet-sepolia.g.alchemy.com/v2/custom-api-key").unwrap());
 
         let rpc_args = RpcArgs {
             url: None,
@@ -164,7 +164,7 @@ mod tests {
         let url = rpc_args.get_url(&config).await.unwrap();
         assert_eq!(
             url,
-            "https://starknet-mainnet.infura.io/v3/custom-api-key".to_string()
+            Url::parse("https://starknet-mainnet.infura.io/v3/custom-api-key").unwrap()
         );
     }
 
@@ -178,6 +178,6 @@ mod tests {
         };
 
         let url = rpc_args.get_url(&config).await.unwrap();
-        assert_eq!(url, Network::free_mainnet_rpc(&FreeProvider::Zan));
+        assert_eq!(url, Network::free_mainnet_rpc(&FreeProvider::Zan).clone());
     }
 }

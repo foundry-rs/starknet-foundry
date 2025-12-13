@@ -145,12 +145,11 @@ pub async fn verify(
             } else {
                 let network =
                     network.ok_or_else(|| anyhow!("Either --network or --url must be provided"))?;
-                let free_rpc_provider = network.url(&FreeProvider::semi_random()).await?;
-                Url::parse(&free_rpc_provider)?
+                network.url(&FreeProvider::semi_random()).await?
             }
         }
     };
-    let provider = get_provider(rpc_url.as_str())?;
+    let provider = get_provider(&rpc_url)?;
 
     // Build JSON Payload for the verification request
     // get the parent dir of the manifest path

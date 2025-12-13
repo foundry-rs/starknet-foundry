@@ -90,7 +90,7 @@ pub async fn deploy_latest_oz_account() {
     .await;
 }
 pub async fn deploy_ready_account() {
-    let provider = get_provider(URL).expect("Failed to get the provider");
+    let provider = get_provider(&Url::parse(URL).unwrap()).expect("Failed to get the provider");
     let chain_id = get_chain_id(&provider)
         .await
         .expect("Failed to get chain id");
@@ -111,7 +111,7 @@ pub async fn deploy_ready_account() {
 }
 
 pub async fn deploy_braavos_account() {
-    let provider = get_provider(URL).expect("Failed to get the provider");
+    let provider = get_provider(&Url::parse(URL).unwrap()).expect("Failed to get the provider");
     let chain_id = get_chain_id(&provider)
         .await
         .expect("Failed to get chain id");
@@ -132,7 +132,7 @@ pub async fn deploy_braavos_account() {
 }
 
 async fn deploy_oz_account(address: &str, class_hash: &str, salt: &str, private_key: SigningKey) {
-    let provider = get_provider(URL).expect("Failed to get the provider");
+    let provider = get_provider(&Url::parse(URL).unwrap()).expect("Failed to get the provider");
     let chain_id = get_chain_id(&provider)
         .await
         .expect("Failed to get chain id");
@@ -200,7 +200,7 @@ pub async fn invoke_contract(
     fee_settings: FeeSettings,
     constructor_calldata: &[&str],
 ) -> InvokeTransactionResult {
-    let provider = get_provider(URL).expect("Could not get the provider");
+    let provider = get_provider(&Url::parse(URL).unwrap()).expect("Could not get the provider");
     let config = CastConfig {
         account: account.to_string(),
         accounts_file: Utf8PathBuf::from(ACCOUNT_FILE_PATH),
