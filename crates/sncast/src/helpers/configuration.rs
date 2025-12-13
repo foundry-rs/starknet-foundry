@@ -1,6 +1,7 @@
 use super::block_explorer;
 use crate::{Network, ValidatedWaitParams};
 use anyhow::Result;
+use anyhow::anyhow;
 use camino::Utf8PathBuf;
 use configuration::Config;
 use serde::{Deserialize, Serialize};
@@ -14,14 +15,14 @@ pub const fn show_explorer_links_default() -> bool {
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Default)]
 #[serde(deny_unknown_fields)]
 pub struct NetworksConfig {
-    pub mainnet: Option<String>,
-    pub sepolia: Option<String>,
-    pub devnet: Option<String>,
+    pub mainnet: Option<Url>,
+    pub sepolia: Option<Url>,
+    pub devnet: Option<Url>,
 }
 
 impl NetworksConfig {
     #[must_use]
-    pub fn get_url(&self, network: Network) -> Option<&String> {
+    pub fn get_url(&self, network: Network) -> Option<&Url> {
         match network {
             Network::Mainnet => self.mainnet.as_ref(),
             Network::Sepolia => self.sepolia.as_ref(),
@@ -105,7 +106,8 @@ impl Config for CastConfig {
     }
 
     fn from_raw(config: serde_json::Value) -> Result<Self> {
-        Ok(serde_json::from_value::<CastConfig>(config)?)
+        serde_json::from_value::<Self>(config)
+            .map_err(|e| anyhow!("Failed to parse cast config: {e}"))
     }
 }
 
@@ -116,34 +118,34 @@ mod tests {
     #[test]
     fn test_networks_config_get() {
         let networks = NetworksConfig {
-            mainnet: Some("https://mainnet.example.com".to_string()),
-            sepolia: Some("https://sepolia.example.com".to_string()),
-            devnet: Some("https://devnet.example.com".to_string()),
+            mainnet: Some(Url::parse("https://mainnet.example.com").unwrap()),
+            sepolia: Some(Url::parse("https://sepolia.example.com").unwrap()),
+            devnet: Some(Url::parse("https://devnet.example.com").unwrap()),
         };
 
         assert_eq!(
             networks.get_url(Network::Mainnet),
-            Some(&"https://mainnet.example.com".to_string())
+            Some(&Url::parse("https://mainnet.example.com").unwrap())
         );
         assert_eq!(
             networks.get_url(Network::Sepolia),
-            Some(&"https://sepolia.example.com".to_string())
+            Some(&Url::parse("https://sepolia.example.com").unwrap())
         );
         assert_eq!(
             networks.get_url(Network::Devnet),
-            Some(&"https://devnet.example.com".to_string())
+            Some(&Url::parse("https://devnet.example.com").unwrap())
         );
     }
 
     #[test]
     fn test_networks_config_override() {
         let mut global = NetworksConfig {
-            mainnet: Some("https://global-mainnet.example.com".to_string()),
-            sepolia: Some("https://global-sepolia.example.com".to_string()),
+            mainnet: Some(Url::parse("https://global-mainnet.example.com").unwrap()),
+            sepolia: Some(Url::parse("https://global-sepolia.example.com").unwrap()),
             devnet: None,
         };
         let local = NetworksConfig {
-            mainnet: Some("https://local-mainnet.example.com".to_string()),
+            mainnet: Some(Url::parse("https://local-mainnet.example.com").unwrap()),
             sepolia: None,
             devnet: None,
         };
@@ -153,12 +155,12 @@ mod tests {
         // Local mainnet should override global
         assert_eq!(
             global.mainnet,
-            Some("https://local-mainnet.example.com".to_string())
+            Some(Url::parse("https://local-mainnet.example.com").unwrap())
         );
         // Global sepolia should remain
         assert_eq!(
             global.sepolia,
-            Some("https://global-sepolia.example.com".to_string())
+            Some(Url::parse("https://global-sepolia.example.com").unwrap())
         );
     }
 

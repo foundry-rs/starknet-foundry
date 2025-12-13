@@ -281,7 +281,7 @@ pub fn run(
     package_metadata: &PackageMetadata,
     artifacts: &mut HashMap<String, CastStarknetContractArtifacts>,
     provider: &JsonRpcClient<HttpTransport>,
-    url: &str,
+    url: &Url,
     tokio_runtime: Runtime,
     config: &CastConfig,
     state_file_path: Option<Utf8PathBuf>,
@@ -363,7 +363,7 @@ pub fn run(
         None
     } else {
         let rpc_args = RpcArgs {
-            url: Some(Url::parse(url)?),
+            url: Some(url.clone()),
             network: None,
         };
         Some(tokio_runtime.block_on(get_account(

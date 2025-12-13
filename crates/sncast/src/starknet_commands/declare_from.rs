@@ -66,8 +66,6 @@ impl SourceRpcArgs {
             .await
             .context("Either `--source-network` or `--source-url` must be provided")?;
 
-        assert!(!url.is_empty(), "url cannot be empty");
-
         let provider = get_provider(&url)?;
         // TODO(#3959) Remove `base_ui`
         verify_and_warn_if_incompatible_rpc_version(&provider, url, ui.base_ui()).await?;
@@ -76,14 +74,12 @@ impl SourceRpcArgs {
     }
 
     #[must_use]
-    async fn get_url(&self) -> Option<String> {
+    async fn get_url(&self) -> Option<Url> {
         if let Some(network) = self.source_network {
             let free_provider = FreeProvider::semi_random();
             Some(network.url(&free_provider).await.ok()?)
         } else {
-            self.source_url
-                .as_ref()
-                .map(std::string::ToString::to_string)
+            self.source_url.clone()
         }
     }
 }

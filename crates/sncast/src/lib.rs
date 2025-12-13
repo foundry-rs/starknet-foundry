@@ -42,6 +42,7 @@ use std::thread::sleep;
 use std::time::Duration;
 use std::{env, fs};
 use thiserror::Error;
+use url::Url;
 
 pub mod helpers;
 pub mod response;
@@ -194,9 +195,8 @@ impl Default for ValidatedWaitParams {
     }
 }
 
-pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
-    raise_if_empty(url, "RPC url")?;
-    create_rpc_client(url)
+pub fn get_provider(url: &Url) -> Result<JsonRpcClient<HttpTransport>> {
+    create_rpc_client(url.clone())
 }
 
 pub async fn get_chain_id(provider: &JsonRpcClient<HttpTransport>) -> Result<Felt> {
@@ -480,7 +480,9 @@ pub fn get_account_data_from_accounts_file(
     chain_id: Felt,
     path: &Utf8PathBuf,
 ) -> Result<AccountData> {
-    raise_if_empty(name, "Account name")?;
+    if name.is_empty() {
+        bail!("Account name not passed nor found in snfoundry.toml")
+    }
     check_account_file_exists(path)?;
 
     let accounts: HashMap<String, HashMap<String, AccountData>> = read_and_parse_json_file(path)?;
@@ -742,13 +744,6 @@ pub async fn handle_wait_for_tx<T>(
     }
 
     Ok(return_value)
-}
-
-pub fn raise_if_empty(value: &str, value_name: &str) -> Result<()> {
-    if value.is_empty() {
-        bail!("{value_name} not passed nor found in snfoundry.toml")
-    }
-    Ok(())
 }
 
 pub fn check_account_file_exists(accounts_file_path: &Utf8PathBuf) -> Result<()> {
