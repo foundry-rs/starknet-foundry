@@ -1,7 +1,6 @@
 use std::str::FromStr;
 
 use super::deploy::compute_account_address;
-use crate::account::RpcConfig;
 use crate::starknet_commands::account::{
     generate_add_profile_message, prepare_account_json, write_account_to_accounts_file,
 };

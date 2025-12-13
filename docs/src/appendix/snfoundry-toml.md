@@ -36,7 +36,6 @@ The `network` field specifies the predefined or custom network to use. It's mutu
 network = "sepolia"
 ```
 
-
 #### `accounts-file`
 
 The `accounts-file` field specifies the path to a file containing account information. 
