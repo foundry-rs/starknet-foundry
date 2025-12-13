@@ -140,8 +140,8 @@ pub async fn verify(
     let rpc_url = match url {
         Some(url) => url,
         None => {
-            if let Some(config_url) = &config.url {
-                config_url.clone()
+            if let Some(rpc_config) = &config.rpc_wrapper.rpc_config {
+                rpc_config.url().await?
             } else {
                 let network =
                     network.ok_or_else(|| anyhow!("Either --network or --url must be provided"))?;

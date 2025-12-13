@@ -1,3 +1,4 @@
+use crate::helpers::config::RpcConfig;
 use crate::helpers::configuration::CastConfig;
 use crate::helpers::devnet::detection;
 use crate::response::ui::UI;
@@ -38,9 +39,10 @@ impl RpcArgs {
     }
 
     pub async fn get_url(&self, config: &CastConfig) -> Result<Url> {
-        match (&self.network, &self.url, &config.url) {
+        match (&self.network, &self.url, &config.rpc_wrapper.rpc_config) {
             (Some(network), None, _) => self.resolve_network_url(network, config).await,
-            (None, Some(url), _) | (None, None, Some(url)) => Ok(url.clone()),
+            (None, Some(url), _) => Ok(url.clone()),
+            (None, None, Some(rpc_config)) => Ok(rpc_config.url().await?),
             _ => bail!("Either `--network` or `--url` must be provided."),
         }
     }
@@ -110,12 +112,12 @@ impl Network {
 }
 
 #[must_use]
-pub fn generate_network_flag(rpc_args: &RpcArgs, config_url: Option<&Url>) -> String {
+pub fn generate_network_flag(rpc_args: &RpcArgs, rpc_config: Option<&RpcConfig>) -> String {
     if let Some(network) = &rpc_args.network {
         format!("--network {network}")
     } else if let Some(rpc_url) = &rpc_args.url {
         format!("--url {rpc_url}")
-    } else if config_url.is_some() {
+    } else if rpc_config.is_some() {
         // Since url is defined in config, no need to pass any flag
         String::new()
     } else {
