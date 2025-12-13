@@ -62,7 +62,7 @@ impl<'de> Deserialize<'de> for RpcConfigWrapper {
             }),
             (None, None) => Ok(Self { rpc_config: None }),
             (Some(_), Some(_)) => Err(D::Error::custom(
-                "Only one of `url` or `network` may be provided",
+                "Only one of `url` and`network` may be provided",
             )),
         }
     }

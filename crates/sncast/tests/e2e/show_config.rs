@@ -1,6 +1,7 @@
 use crate::helpers::{constants::URL, runner::runner};
 use configuration::test_utils::copy_config_to_tempdir;
 use indoc::formatdoc;
+use shared::test_utils::output_assert::assert_stderr_contains;
 
 #[tokio::test]
 async fn test_show_config_from_snfoundry_toml() {
@@ -140,4 +141,18 @@ async fn test_show_config_with_network() {
         Wait Retry Interval: 5s
         Show Explorer Links: true
     "});
+}
+
+#[tokio::test]
+async fn test_only_one_from_url_and_network_allowed() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let args = vec!["--profile", "url_and_network", "show-config"];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "Error: Failed to load config: Only one of `url` and`network` may be provided",
+    );
 }
