@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Changed
+
+- Error message for already declared contracts now includes the class hash
+
 ## [0.54.0] - 2025-12-09
 
 ### Forge
