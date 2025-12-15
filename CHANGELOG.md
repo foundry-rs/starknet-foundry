@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- Signature generation now enforces the canonical low-s rule
+- Signature generation now enforces the low-s rule
 
 ## [0.54.0] - 2025-12-09
 
