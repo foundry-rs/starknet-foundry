@@ -250,8 +250,7 @@ mod tests {
         }
 
         fn from_raw(config: serde_json::Value) -> Result<Self> {
-            serde_json::from_value::<Self>(config)
-                .map_err(|e| anyhow!("Failed to parse stubtool config: {e}"))
+            Ok(serde_json::from_value::<Self>(config)?)
         }
     }
 
