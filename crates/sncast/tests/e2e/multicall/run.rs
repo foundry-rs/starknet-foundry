@@ -43,7 +43,7 @@ async fn test_happy_case(account: &str) {
         "Multicall error, stderr: \n{stderr_str}",
     );
 
-    output.stdout_matches(indoc! {r"
+    output.stdout_eq(indoc! {r"
         Success: Multicall completed
 
         Transaction Hash: 0x[..]
@@ -88,7 +88,7 @@ async fn test_calldata_ids() {
         "Multicall error, stderr: \n{stderr_str}",
     );
 
-    output.stdout_matches(indoc! {r"
+    output.stdout_eq(indoc! {r"
         Success: Multicall completed
 
         Transaction Hash: 0x[..]
@@ -271,7 +271,7 @@ async fn test_numeric_inputs() {
         "Multicall error, stderr: \n{stderr_str}",
     );
 
-    output.stdout_matches(indoc! {r"
+    output.stdout_eq(indoc! {r"
         Success: Multicall completed
 
         Transaction Hash: 0x[..]
@@ -312,7 +312,7 @@ async fn test_numeric_overflow() {
         indoc! {r"
         Command: multicall run
         Error: Failed to parse [..]
-        number too large to fit in target type
+        u64 value was too large
         "},
     );
 }
