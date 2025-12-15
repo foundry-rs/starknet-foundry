@@ -31,11 +31,8 @@ pub enum DevnetDetectionError {
         "Found starknet-devnet process, but could not reach it. Please use `--url <URL>` to specify the correct URL."
     )]
     ProcessNotReachable,
-    #[error("Failed to parse devnet URL: {source}")]
-    InvalidUrl {
-        #[source]
-        source: url::ParseError,
-    },
+    #[error("Failed to parse devnet URL: {0}")]
+    InvalidUrl(#[from] url::ParseError),
 }
 
 pub async fn detect_devnet_url() -> Result<Url, DevnetDetectionError> {
@@ -51,8 +48,7 @@ async fn detect_devnet_from_processes() -> Result<Url, DevnetDetectionError> {
     match find_devnet_process_info() {
         Ok(info) => {
             if is_devnet_url_reachable(&info.host, info.port).await {
-                Ok(Url::parse(&format!("http://{}:{}", info.host, info.port))
-                    .map_err(|e| DevnetDetectionError::InvalidUrl { source: e })?)
+                Ok(Url::parse(&format!("http://{}:{}", info.host, info.port))?)
             } else {
                 Err(DevnetDetectionError::ProcessNotReachable)
             }
@@ -62,8 +58,7 @@ async fn detect_devnet_from_processes() -> Result<Url, DevnetDetectionError> {
             if is_devnet_url_reachable(DEFAULT_DEVNET_HOST, DEFAULT_DEVNET_PORT).await {
                 Ok(Url::parse(&format!(
                     "http://{DEFAULT_DEVNET_HOST}:{DEFAULT_DEVNET_PORT}"
-                ))
-                .map_err(|e| DevnetDetectionError::InvalidUrl { source: e })?)
+                ))?)
             } else {
                 Err(DevnetDetectionError::NoInstance)
             }
