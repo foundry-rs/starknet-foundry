@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cheatcodes are now reflected in called contract, when directly using a library call from test code
 - Oracles are fully supported for Scarb versions >= 2.13.1. Bugs related to oracles' output handling have been fixed.
   Removed the `--experimental-oracles` flag.`
+- Signature generation now enforces the canonical low-s rule
 
 ### Cast
 

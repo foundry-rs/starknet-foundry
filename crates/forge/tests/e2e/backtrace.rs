@@ -240,6 +240,7 @@ fn test_backtrace_panic() {
     } else {
         let scarb_version = scarb_version().unwrap().scarb;
 
+        // TODO: (#4022) Investigate `(inlined)`regression in scarb 2.14.0
         let expected = if scarb_version >= Version::new(2, 14, 0) {
             indoc! {
                 "Failure data:
