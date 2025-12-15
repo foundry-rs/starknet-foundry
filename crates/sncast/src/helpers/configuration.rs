@@ -104,7 +104,7 @@ impl Config for CastConfig {
     }
 
     fn from_raw(config: serde_json::Value) -> Result<Self> {
-        serde_json::from_value::<Self>(config).map_err(anyhow::Error::from)
+        Ok(serde_json::from_value::<Self>(config)?)
     }
 }
 

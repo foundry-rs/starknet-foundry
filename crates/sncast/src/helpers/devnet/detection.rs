@@ -31,7 +31,7 @@ pub enum DevnetDetectionError {
         "Found starknet-devnet process, but could not reach it. Please use `--url <URL>` to specify the correct URL."
     )]
     ProcessNotReachable,
-    #[error("Failed to parse devnet URL.")]
+    #[error("Failed to parse devnet URL: {source}")]
     InvalidUrl {
         #[source]
         source: url::ParseError,
