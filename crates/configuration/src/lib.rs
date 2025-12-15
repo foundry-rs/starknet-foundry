@@ -3,7 +3,7 @@ use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
 use std::fs::File;
 use std::{env, fs};
-use toml::Value;
+use toml::Table;
 
 pub mod core;
 pub mod test_utils;
@@ -44,7 +44,7 @@ pub fn load_config<T: Config + Default>(
         Some(path) => {
             let raw_config_toml = fs::read_to_string(path)
                 .context("Failed to read snfoundry.toml config file")?
-                .parse::<Value>()
+                .parse::<Table>()
                 .context("Failed to parse snfoundry.toml config file")?;
 
             let raw_config_json = serde_json::to_value(raw_config_toml)

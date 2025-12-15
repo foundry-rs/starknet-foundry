@@ -80,7 +80,7 @@ async fn test_same_contract_twice() {
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
-    snapbox.assert().success().stdout_matches(indoc! {"
+    snapbox.assert().success().stdout_eq(indoc! {"
         ...
         success
         DeclareResult::Success(DeclareTransactionResult { class_hash: [..], transaction_hash: [..] })
@@ -92,6 +92,7 @@ async fn test_same_contract_twice() {
 }
 
 #[tokio::test]
+#[ignore = "TODO(#3997) Restore this after devnet fixes fee issue"]
 async fn test_with_invalid_max_fee() {
     let contract_dir = duplicate_contract_directory_with_salt(
         SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
@@ -118,7 +119,7 @@ async fn test_with_invalid_max_fee() {
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         ...
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientResourcesForValidate(())))
         Success: Script execution completed
@@ -154,7 +155,7 @@ async fn test_with_invalid_nonce() {
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         ...
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InvalidTransactionNonce(())))
         Success: Script execution completed
@@ -191,7 +192,7 @@ async fn test_insufficient_account_balance() {
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         ...
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientAccountBalance(())))
         Success: Script execution completed
@@ -232,7 +233,7 @@ async fn test_sncast_timed_out() {
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         ...
         ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TimedOut(()))
         Success: Script execution completed
@@ -269,7 +270,7 @@ async fn test_fee_settings() {
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         ...
         success
         Success: Script execution completed

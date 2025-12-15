@@ -92,7 +92,7 @@ async fn test_happy_case_json_output() {
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
 
-    snapbox.assert().success().stdout_matches(indoc! {
+    snapbox.assert().success().stdout_eq(indoc! {
         r#"
 {"status":"compiling","message":"[..]"}
 {"type":"warn","message":"[..]"}
@@ -534,6 +534,7 @@ fn test_scarb_build_fails_manifest_does_not_exist() {
 }
 
 #[test]
+#[ignore = "TODO(#3997) Restore this after devnet fixes fee issue"]
 fn test_too_low_gas() {
     let contract_path = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",

@@ -11,7 +11,7 @@ use serde_json::{json, to_string_pretty};
 use shared::test_utils::output_assert::{
     AsOutput, assert_stderr_contains, assert_stdout, assert_stdout_contains,
 };
-use snapbox::assert_matches;
+use snapbox::assert_data_eq;
 use sncast::AccountType;
 use sncast::helpers::constants::{
     BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH,
@@ -85,7 +85,7 @@ pub async fn test_happy_case(account_type: &str) {
         }
     );
 
-    assert_matches(to_string_pretty(&expected).unwrap(), contents);
+    assert_data_eq!(contents, to_string_pretty(&expected).unwrap());
 }
 
 // TODO(#3556): Remove this test once we drop Argent account type
@@ -153,7 +153,7 @@ pub async fn test_happy_case_argent_with_deprecation_warning() {
         }
     );
 
-    assert_matches(to_string_pretty(&expected).unwrap(), contents);
+    assert_data_eq!(contents, to_string_pretty(&expected).unwrap());
 }
 
 #[tokio::test]
@@ -214,7 +214,7 @@ pub async fn test_happy_case_generate_salt() {
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(temp_dir.path());
 
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         Success: Account created
 
         Address: 0x0[..]
@@ -302,7 +302,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(temp_dir.path());
 
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         Success: Account created
 
         Address: 0x0[..]
@@ -436,7 +436,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(temp_dir.path());
 
-    snapbox.assert().stdout_matches(formatdoc! {r"
+    snapbox.assert().stdout_eq(formatdoc! {r"
         Success: Account created
 
         Address: 0x0[..]
@@ -455,9 +455,9 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     let contents = fs::read_to_string(temp_dir.path().join(account_file))
         .expect("Unable to read created file");
 
-    assert_matches(
-        get_keystore_account_pattern(account_type.parse().unwrap(), None),
+    assert_data_eq!(
         contents,
+        get_keystore_account_pattern(account_type.parse().unwrap(), None),
     );
 }
 
@@ -486,7 +486,7 @@ pub async fn test_happy_case_keystore_argent_with_deprecation_warning() {
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(temp_dir.path());
 
-    snapbox.assert().stdout_matches(formatdoc! {r"
+    snapbox.assert().stdout_eq(formatdoc! {r"
         [WARNING] Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account create` is deprecated, please use `ready` instead.
         
         Success: Account created
@@ -507,9 +507,9 @@ pub async fn test_happy_case_keystore_argent_with_deprecation_warning() {
     let contents = fs::read_to_string(temp_dir.path().join(account_file))
         .expect("Unable to read created file");
 
-    assert_matches(
-        get_keystore_account_pattern("argent".parse().unwrap(), None),
+    assert_data_eq!(
         contents,
+        get_keystore_account_pattern("argent".parse().unwrap(), None),
     );
 }
 
@@ -692,7 +692,7 @@ pub async fn test_happy_case_keystore_int_format() {
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(temp_dir.path());
 
-    snapbox.assert().stdout_matches(formatdoc! {r"
+    snapbox.assert().stdout_eq(formatdoc! {r"
         Success: Account created
 
         Address: [..]
@@ -715,7 +715,6 @@ pub async fn test_happy_case_keystore_int_format() {
 }
 
 #[tokio::test]
-#[ignore = "TODO: (#3937) New RPC URL is not available yet"]
 pub async fn test_happy_case_default_name_generation() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
@@ -747,7 +746,7 @@ pub async fn test_happy_case_default_name_generation() {
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path())
         .assert()
-        .stdout_matches(formatdoc! {r"
+        .stdout_eq(formatdoc! {r"
             Success: Account created
 
             Address: 0x0[..]
@@ -780,7 +779,7 @@ pub async fn test_happy_case_default_name_generation() {
         .stdin("Y")
         .assert()
         .success()
-        .stdout_matches(indoc! {r"
+        .stdout_eq(indoc! {r"
         Success: Account deleted
 
         Account successfully removed
@@ -835,7 +834,7 @@ pub async fn test_happy_case_default_name_generation() {
         }
     );
 
-    assert_matches(to_string_pretty(&expected).unwrap(), contents);
+    assert_data_eq!(contents, to_string_pretty(&expected).unwrap());
 }
 
 fn get_formatted_account_type(account_type: &str) -> &str {
@@ -1011,7 +1010,7 @@ pub async fn test_json_output_format() {
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(temp_dir.path());
-    snapbox.assert().stdout_matches(indoc! {r#"
+    snapbox.assert().stdout_eq(indoc! {r#"
         {"add_profile":"Profile my_account successfully added to [..]/snfoundry.toml","address":"0x[..]","command":"account create","estimated_fee":"[..]","message":"Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee/n/nAfter prefunding the account, run:/nsncast --accounts-file accounts.json account deploy --url [..] --name my_account","type":"response"}
         {"links":"account: https://sepolia.starkscan.co/contract/0x[..]","title":"account creation","type":"notification"}
     "#});

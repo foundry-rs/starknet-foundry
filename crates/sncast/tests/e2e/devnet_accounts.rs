@@ -150,7 +150,6 @@ pub async fn use_devnet_account_with_network_not_being_devnet() {
 #[test_case("mainnet")]
 #[test_case("sepolia")]
 #[tokio::test]
-#[ignore = "TODO: (#3937) New RPC URL is not available yet"]
 pub async fn use_devnet_account_with_network_flags(network: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 

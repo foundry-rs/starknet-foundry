@@ -12,7 +12,7 @@ use crate::helpers::shell::os_specific_shell;
 use camino::Utf8PathBuf;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
-use snapbox::cmd::cargo_bin;
+use snapbox::cargo_bin;
 use sncast::AccountType;
 use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
 use sncast::helpers::fee::FeeArgs;
@@ -267,6 +267,7 @@ fn test_wrong_calldata() {
 }
 
 #[test]
+#[ignore = "TODO(#3997) Restore this after devnet fixes fee issue"]
 fn test_too_low_gas() {
     let args = vec![
         "--accounts-file",

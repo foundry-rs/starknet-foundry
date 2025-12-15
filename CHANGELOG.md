@@ -11,10 +11,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
+- Signature generation now enforces the canonical low-s rule
+
+## [0.54.0] - 2025-12-09
+
+### Forge
+
+#### Added
+
+- `get_current_vm_step` function to get the current step during test execution. For more see [docs](https://foundry-rs.github.io/starknet-foundry/snforge-library/testing/get_current_vm_step.html)
+
+#### Fixed
+
 - Cheatcodes are now reflected in called contract, when directly using a library call from test code
 - Oracles are fully supported for Scarb versions >= 2.13.1. Bugs related to oracles' output handling have been fixed.
   Removed the `--experimental-oracles` flag.`
-- Signature generation now enforces the canonical low-s rule
+- Fixed a bug that caused failure data to be displayed twice
 
 ### Cast
 
@@ -26,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `sncast script init` now longer adds `cairo_test` as dependency in `Scarb.toml`
 - Replaced the free RPC provider to Zan
+- The supported RPC version is now 0.10.0
 
 #### Fixed
 
