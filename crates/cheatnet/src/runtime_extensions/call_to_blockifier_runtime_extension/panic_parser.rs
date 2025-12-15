@@ -35,7 +35,7 @@ impl From<PanicDataFormat> for Vec<Felt> {
 }
 
 fn parse_byte_array(s: &str) -> Option<PanicDataFormat> {
-    if !s.starts_with('"') {
+    if !s.starts_with('\"') {
         return None;
     }
 
