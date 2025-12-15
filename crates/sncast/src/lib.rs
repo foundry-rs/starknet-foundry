@@ -196,7 +196,7 @@ impl Default for ValidatedWaitParams {
 }
 
 pub fn get_provider(url: &Url) -> Result<JsonRpcClient<HttpTransport>> {
-    create_rpc_client(url.clone())
+    create_rpc_client(url)
 }
 
 pub async fn get_chain_id(provider: &JsonRpcClient<HttpTransport>) -> Result<Felt> {

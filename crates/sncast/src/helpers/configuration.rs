@@ -1,7 +1,6 @@
 use super::block_explorer;
 use crate::{Network, ValidatedWaitParams};
 use anyhow::Result;
-use anyhow::anyhow;
 use camino::Utf8PathBuf;
 use configuration::Config;
 use serde::{Deserialize, Serialize};
@@ -106,8 +105,7 @@ impl Config for CastConfig {
     }
 
     fn from_raw(config: serde_json::Value) -> Result<Self> {
-        serde_json::from_value::<Self>(config)
-            .map_err(|e| anyhow!("Failed to parse cast config: {e}"))
+        Ok(serde_json::from_value::<Self>(config)?)
     }
 }
 

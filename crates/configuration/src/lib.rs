@@ -161,8 +161,7 @@ mod tests {
         }
 
         fn from_raw(config: serde_json::Value) -> Result<Self> {
-            serde_json::from_value::<Self>(config)
-                .map_err(|e| anyhow!("Failed to parse stubtool config: {e}"))
+            Ok(serde_json::from_value::<Self>(config)?)
         }
     }
     #[test]
@@ -203,7 +202,6 @@ mod tests {
         )
         .unwrap_err();
 
-        assert!(err.to_string().contains("Failed to parse stubtool config"));
         assert!(
             err.to_string()
                 .contains("relative URL without a base: \"invalid_url\"")
