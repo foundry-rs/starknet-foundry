@@ -5,17 +5,15 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 use blockifier::context::TransactionContext;
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::execution_utils::ReadOnlySegment;
-use blockifier::execution::syscalls::hint_processor::create_retdata_segment;
 use blockifier::execution::syscalls::hint_processor::{
     INVALID_ARGUMENT, SyscallExecutionError, SyscallHintProcessor,
 };
 use blockifier::execution::syscalls::syscall_base::SyscallResult;
 use blockifier::execution::syscalls::vm_syscall_utils::{
-    CallContractRequest, CallContractResponse, DeployRequest, DeployResponse, EmptyRequest,
-    GetBlockHashRequest, GetBlockHashResponse, GetExecutionInfoResponse, LibraryCallRequest,
-    LibraryCallResponse, MetaTxV0Request, MetaTxV0Response, StorageReadRequest,
-    StorageReadResponse, StorageWriteRequest, StorageWriteResponse, SyscallSelector,
-    TryExtractRevert,
+    CallContractRequest, CallContractResponse, EmptyRequest, GetBlockHashRequest,
+    GetBlockHashResponse, GetExecutionInfoResponse, LibraryCallRequest, LibraryCallResponse,
+    MetaTxV0Request, MetaTxV0Response, StorageReadRequest, StorageReadResponse,
+    StorageWriteRequest, StorageWriteResponse, SyscallSelector, TryExtractRevert,
 };
 use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
 use blockifier::state::errors::StateError;
@@ -39,7 +37,7 @@ use starknet_api::transaction::fields::TransactionSignature;
 use starknet_api::transaction::{TransactionHasher, TransactionOptions, signed_tx_version};
 use starknet_api::{
     contract_class::EntryPointType,
-    core::{ClassHash, ContractAddress, Nonce, calculate_contract_address},
+    core::{ClassHash, ContractAddress, Nonce},
     transaction::{
         InvokeTransactionV0, TransactionVersion,
         fields::{Calldata, Fee},
@@ -62,68 +60,6 @@ pub fn get_execution_info_syscall(
 
     Ok(GetExecutionInfoResponse {
         execution_info_ptr: ptr_cheated_exec_info,
-    })
-}
-
-// blockifier/src/execution/syscalls/mod.rs:222 (deploy_syscall)
-pub fn deploy_syscall(
-    request: DeployRequest,
-    vm: &mut VirtualMachine,
-    syscall_handler: &mut SyscallHintProcessor<'_>,
-    cheatnet_state: &mut CheatnetState,
-    remaining_gas: &mut u64,
-) -> SyscallResult<DeployResponse> {
-    // Increment the Deploy syscall's linear cost counter by the number of elements in the
-    // constructor calldata
-    syscall_handler.base.increment_syscall_linear_factor_by(
-        &SyscallSelector::Deploy,
-        request.constructor_calldata.0.len(),
-    );
-
-    let deployer_address = syscall_handler.base.call.storage_address;
-    let deployer_address_for_calculation = if request.deploy_from_zero {
-        ContractAddress::default()
-    } else {
-        deployer_address
-    };
-
-    // region: Modified blockifier code
-    let deployed_contract_address =
-        if let Some(contract_address) = cheatnet_state.next_address_for_deployment() {
-            contract_address
-        } else {
-            calculate_contract_address(
-                request.contract_address_salt,
-                request.class_hash,
-                &request.constructor_calldata,
-                deployer_address_for_calculation,
-            )?
-        };
-    // endregion
-
-    let ctor_context = ConstructorContext {
-        class_hash: request.class_hash,
-        code_address: Some(deployed_contract_address),
-        storage_address: deployed_contract_address,
-        caller_address: deployer_address,
-    };
-    let call_info = execute_deployment(
-        syscall_handler.base.state,
-        cheatnet_state,
-        syscall_handler.base.context,
-        &ctor_context,
-        request.constructor_calldata,
-        remaining_gas,
-    )?;
-
-    let constructor_retdata =
-        create_retdata_segment(vm, syscall_handler, &call_info.execution.retdata.0)?;
-
-    syscall_handler.base.inner_calls.push(call_info);
-
-    Ok(DeployResponse {
-        contract_address: deployed_contract_address,
-        constructor_retdata,
     })
 }
 

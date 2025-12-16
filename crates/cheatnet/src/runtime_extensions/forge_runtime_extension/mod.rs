@@ -276,6 +276,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     CallResult::Failure(CallFailure::Error { msg }) => Err(
                         EnhancedHintError::from(HintError::CustomHint(Box::from(msg.to_string()))),
                     ),
+                    _ => unreachable!(),
                 }
             }
             "read_txt" => {

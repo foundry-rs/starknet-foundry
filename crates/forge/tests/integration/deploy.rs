@@ -1,4 +1,4 @@
-use crate::utils::runner::{Contract, assert_passed};
+use crate::utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
 use crate::utils::running_tests::run_test_case;
 use crate::utils::test_case;
 use forge_runner::forge_config::ForgeTrackedResource;
@@ -256,4 +256,95 @@ fn verify_precalculate_address() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
+}
+
+#[test]
+fn panic_in_constructor() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
+        use starknet::SyscallResultTrait;
+
+        #[test]
+        #[should_panic(expected: 'Initial balance cannot be 0')]
+        fn constructor_panic() {
+            let contract = declare("DeployChecker").unwrap().contract_class();
+            let constructor_calldata = array![0];
+
+            contract.deploy(@constructor_calldata).unwrap_syscall();
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "DeployChecker".to_string(),
+            Path::new("tests/data/contracts/deploy_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+}
+
+#[test]
+fn hard_error_inside_contract() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
+        use starknet::SyscallResultTrait;
+
+        #[test]
+        #[should_panic]
+        fn error_inside_contract() {
+            let contract = declare("DeployChecker").unwrap().contract_class();
+            let deployer_contract = declare("Deployer").unwrap().contract_class();
+            let (contract_address, _) = deployer_contract.deploy(@array![]).unwrap_syscall();
+
+            starknet::syscalls::call_contract_syscall(
+                contract_address,
+                selector!("deploy_contract"),
+                array![(*contract.class_hash).into(), 0].span(),
+            ).unwrap_syscall();
+        }
+    "#
+        ),
+        Contract::new(
+            "Deployer",
+            indoc!(
+                r"
+                #[starknet::contract]
+                mod Deployer {
+                    use starknet::SyscallResultTrait;
+                    #[storage]
+                    struct Storage {
+                    }
+
+                    #[external(v0)]
+                    fn deploy_contract(self: @ContractState, contract_class_hash: starknet::ClassHash, initial_balance: felt252) {
+                        starknet::syscalls::deploy_syscall(
+                            contract_class_hash, 0x1, array![initial_balance].span(), false,
+                        ).unwrap_syscall();
+                    }
+                }
+                "
+            )
+        ),
+        Contract::from_code_path(
+            "DeployChecker".to_string(),
+            Path::new("tests/data/contracts/deploy_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
+        "error_inside_contract",
+        "Initial balance cannot be 0",
+    );
 }
