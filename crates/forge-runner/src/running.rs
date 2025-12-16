@@ -30,7 +30,6 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 };
 use cheatnet::state::{BlockInfoReader, CheatnetState, EncounteredErrors, ExtendedStateReader};
 use cheatnet::trace_data::CallTrace;
-use debugging::ContractsDataStore;
 use execution::finalize_execution;
 use hints::hints_by_representation;
 use rand::prelude::StdRng;
@@ -435,9 +434,10 @@ fn extract_test_case_summary(
                     test_statistics: (),
                     debugging_trace: build_debugging_trace(
                         &run_error.call_trace.borrow(),
-                        &ContractsDataStore::new(contracts_data, &run_error.fork_data),
+                        contracts_data,
                         trace_args,
                         case.name.clone(),
+                        &run_error.fork_data,
                     ),
                 }
             }
