@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Fixed
+
+- Fixed parsing account's balance in `sncast balance` command
+
 ## [0.54.0] - 2025-12-09
 
 ### Forge
