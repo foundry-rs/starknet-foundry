@@ -15,7 +15,7 @@ use starknet_rust::core::types::contract::AbiEntry;
 
 pub struct Collector<'a> {
     call_trace: &'a CallTrace,
-    context: &'a Context<'a>,
+    context: &'a Context,
 }
 
 impl<'a> Collector<'a> {

@@ -400,7 +400,6 @@ async fn test_run_script_twice_with_state_file_enabled() {
 }
 
 #[tokio::test]
-#[ignore = "TODO(#3519) find why it was ignored"]
 async fn test_state_file_contains_all_failed_txs() {
     let script_dir = copy_script_directory_to_tempdir(
         SCRIPTS_DIR.to_owned() + "/state_file/",
@@ -427,6 +426,8 @@ async fn test_state_file_contains_all_failed_txs() {
     snapbox.assert().success().stdout_eq(indoc! {r"
         ...
         Success: Script execution completed
+
+        Status: success
     "});
 
     let state_file_path = Utf8PathBuf::from_path_buf(
