@@ -270,17 +270,18 @@ fn contract_range_check_cost_cairo_steps() {
 
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
+    // TODO: (#4031) Change test that the range check will be most costly factor, not steps
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
-    // 9 = cost of 202 range check builtins (because int(0.04 * 245) = 10)
-    // 0 l1_gas + 96 l1_data_gas + 10 * (100 / 0.0025) l2 gas
+    // 6 = cost of 2344 cairo steps (because int(0.0025 * 2344) = 6)
+    // 0 l1_gas + 96 l1_data_gas + 6 * (100 / 0.0025) l2 gas
     assert_gas(
         &result,
         "contract_range_check_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(400_000),
+            l2_gas: GasAmount(240_000),
         },
     );
 }
@@ -1205,7 +1206,7 @@ fn declare_cost_is_omitted_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(25_850),
+            l2_gas: GasAmount(25_980),
         },
     );
 }
@@ -1252,7 +1253,7 @@ fn deploy_syscall_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(186_210),
+            l2_gas: GasAmount(185_100),
         },
     );
 }
@@ -1292,7 +1293,7 @@ fn snforge_std_deploy_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(189_480),
+            l2_gas: GasAmount(188_370),
         },
     );
 }
@@ -1771,7 +1772,7 @@ fn nested_call_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(288),
-            l2_gas: GasAmount(1_943_202),
+            l2_gas: GasAmount(1_936_402),
         },
     );
 }
@@ -1846,7 +1847,7 @@ fn nested_call_cost_in_forked_contract_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(1_812_102),
+            l2_gas: GasAmount(1_808_492),
         },
     );
 }
