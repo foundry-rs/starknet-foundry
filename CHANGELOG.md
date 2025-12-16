@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Fixed
+
+- Fixed a bug that caused a slowdown in test execution
+
 ## [0.54.0] - 2025-12-09
 
 ### Forge
