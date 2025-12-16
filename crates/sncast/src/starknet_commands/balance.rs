@@ -99,6 +99,7 @@ fn erc20_balance_to_u256(balance: &[Felt]) -> Result<U256, Error> {
             "Balance response should contain exactly two values"
         ));
     }
+
     let low: u128 = balance[0].to_string().parse()?;
     let high: u128 = balance[1].to_string().parse()?;
 
