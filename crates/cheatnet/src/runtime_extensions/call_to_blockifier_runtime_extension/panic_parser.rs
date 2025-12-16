@@ -1,62 +1,88 @@
 use conversions::byte_array::ByteArray;
 use regex::Regex;
 use starknet_types_core::felt::Felt;
+use std::sync::LazyLock;
 
-#[must_use]
-pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt>> {
-    // Regex used to extract panic data from panicking proxy contract
-    let re_error_prefix = Regex::new(
-        r"[\s\S]*Execution failed\. Failure reason:\nError in contract \(.+\):\n([\s\S]*).",
-    )
-    .expect("Could not create string panic_data matching regex");
+// Regex used to extract panic data from panicking proxy contract
+static RE_PROXY_PREFIX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"[\s\S]*Execution failed\. Failure reason:\nError in contract \(.+\):\n([\s\S]*)\.")
+        .unwrap()
+});
 
-    let re_hex = Regex::new("0x[0-9a-fA-F]+").expect("Could not create hex matching regex");
+static RE_HEX: LazyLock<Regex> = LazyLock::new(|| Regex::new("0x[0-9a-fA-F]+").unwrap());
 
-    // CairoVM returns felts padded to 64 characters after 0x, unlike the spec's 63.
-    // This regex (0x[a-fA-F0-9]{0,64}) handles the padded form and is different from the spec.
-    let re_entry_point = Regex::new(
-        r"Entry point EntryPointSelector\((0x[a-fA-F0-9]{0,64})\) not found in contract\.",
-    )
-    .expect("Could not create entry point panic_data matching regex");
+// CairoVM returns felts padded to 64 characters after 0x, unlike the spec's 63.
+// This regex (0x[a-fA-F0-9]{0,64}) handles the padded form and is different from the spec.
+static RE_ENTRYPOINT: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"Entry point EntryPointSelector\((0x[a-fA-F0-9]{0,64})\) not found in contract\.")
+        .unwrap()
+});
 
-    if let Some(captures) = re_error_prefix.captures(err)
-        && let Some(panic_data) = captures.get(1)
-    {
-        let string_match_str = panic_data.as_str();
+enum PanicDataFormat {
+    ByteArray(Vec<Felt>),
+    Felts(Vec<Felt>),
+    EntryPoint(Vec<Felt>),
+}
 
-        // Matches panic_data when proxy contract panicked with `ByteArray`
-        if string_match_str.starts_with('\"') {
-            let error = string_match_str.trim_matches('"');
-            let panic_data_felts: Vec<Felt> = ByteArray::from(error).serialize_with_magic();
-
-            return Some(panic_data_felts);
-        }
-
-        // Matches `panic_data` when a proxy contract panics, either:
-        // - with a single Felt "Ox"
-        // - with an array of Felts "("
-        // The difference comes from the `format_panic_data` implementation in `blockifier`.
-        // https://github.com/starkware-libs/sequencer/blob/8211fbf1e2660884c4a9e67ddd93680495afde12/crates/starknet_api/src/execution_utils.rs
-        if string_match_str.starts_with("0x") || string_match_str.starts_with('(') {
-            let panic_data_felts: Vec<Felt> = re_hex
-                .find_iter(string_match_str)
-                .map(|s| Felt::from_hex(s.as_str()).unwrap())
-                .collect();
-            return Some(panic_data_felts);
+impl From<PanicDataFormat> for Vec<Felt> {
+    fn from(value: PanicDataFormat) -> Self {
+        match value {
+            PanicDataFormat::ByteArray(v)
+            | PanicDataFormat::Felts(v)
+            | PanicDataFormat::EntryPoint(v) => v,
         }
     }
+}
 
+fn parse_byte_array(s: &str) -> Option<PanicDataFormat> {
+    if !s.starts_with('\"') {
+        return None;
+    }
+
+    let inner = s.trim_matches('"');
+    let felts = ByteArray::from(inner).serialize_with_magic();
+    Some(PanicDataFormat::ByteArray(felts))
+}
+
+fn parse_felts(s: &str) -> Option<PanicDataFormat> {
+    // Matches `panic_data` when a proxy contract panics, either:
+    // - with a single Felt "0x"
+    // - with an array of Felts "("
+    // The difference comes from the `format_panic_data` implementation in `blockifier`.
+    // https://github.com/starkware-libs/sequencer/blob/8211fbf1e2660884c4a9e67ddd93680495afde12/crates/starknet_api/src/execution_utils.rs
+    if !(s.starts_with("0x") || s.starts_with('(')) {
+        return None;
+    }
+
+    let felts: Vec<Felt> = RE_HEX
+        .find_iter(s)
+        .map(|m| Felt::from_hex(m.as_str()).expect("Invalid felt in panic data"))
+        .collect();
+
+    Some(PanicDataFormat::Felts(felts))
+}
+
+fn parse_entrypoint(s: &str) -> Option<PanicDataFormat> {
     // These felts were chosen from `CairoHintProcessor` in order to be consistent with `cairo-test`:
     // https://github.com/starkware-libs/cairo/blob/2ad7718591a8d2896fec2b435c509ee5a3da9fad/crates/cairo-lang-runner/src/casm_run/mod.rs#L1055-L1057
-    if let Some(_captures) = re_entry_point.captures(err) {
-        let panic_data_felts = vec![
+    if RE_ENTRYPOINT.captures(s).is_some() {
+        return Some(PanicDataFormat::EntryPoint(vec![
             Felt::from_bytes_be_slice("ENTRYPOINT_NOT_FOUND".as_bytes()),
             Felt::from_bytes_be_slice("ENTRYPOINT_FAILED".as_bytes()),
-        ];
-        return Some(panic_data_felts);
+        ]));
     }
-
     None
+}
+
+/// Tries to extract panic data from a raw Starknet error string.
+pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt>> {
+    let captures = RE_PROXY_PREFIX.captures(err)?;
+    let raw = captures.get(1)?.as_str();
+
+    parse_byte_array(raw)
+        .or_else(|| parse_felts(raw))
+        .or_else(|| parse_entrypoint(err))
+        .map(Into::into)
 }
 
 #[cfg(test)]
