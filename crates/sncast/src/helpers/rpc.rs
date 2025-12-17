@@ -120,7 +120,7 @@ pub fn generate_network_flag(rpc_args: &RpcArgs, config_url: &str) -> String {
         String::new()
     } else {
         unreachable!(
-            "`--rpc_url` or `--network` must be provided or url must be set in snfoundry.toml"
+            "`--url` or `--network` must be provided or url must be set in snfoundry.toml"
         );
     }
 }
