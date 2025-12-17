@@ -169,6 +169,11 @@ pub async fn declare_with_artifacts(
                 class_hash: class_hash.into_(),
             }))
         }
+        Err(Provider(ProviderError::StarknetError(StarknetError::ClassAlreadyDeclared))) => Err(
+            StarknetCommandError::ProviderError(SNCastProviderError::StarknetError(
+                SNCastStarknetError::ClassAlreadyDeclared(class_hash.into_()),
+            )),
+        ),
         Err(Provider(ProviderError::StarknetError(StarknetError::TransactionExecutionError(
             TransactionExecutionErrorData {
                 execution_error: ContractExecutionError::Message(message),
@@ -181,7 +186,9 @@ pub async fn declare_with_artifacts(
                 }))
             } else {
                 Err(StarknetCommandError::ProviderError(
-                    SNCastProviderError::StarknetError(SNCastStarknetError::ClassAlreadyDeclared),
+                    SNCastProviderError::StarknetError(SNCastStarknetError::ClassAlreadyDeclared(
+                        class_hash.into_(),
+                    )),
                 ))
             }
         }
