@@ -36,7 +36,7 @@ jobs:
       - name: Build and archive tests
         run: cargo nextest archive --cargo-profile ci -p forge --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
       - name: Upload archive to workflow
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: nextest-archive-${{ runner.os }}
           path: nextest-archive-${{ runner.os }}.tar.zst
@@ -57,7 +57,7 @@ jobs:
       - name: Build and archive tests
         run: cargo nextest archive --cargo-profile ci -p forge --features cairo-native --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst'
       - name: Upload archive to workflow
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: nextest-archive-${{ runner.os }}-native
           path: nextest-archive-${{ runner.os }}-native.tar.zst
