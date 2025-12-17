@@ -4,7 +4,7 @@
 
 > ⚠️⚠️⚠️ Highly experimental code, a subject to change ⚠️⚠️⚠️
 
-Starknet Foundry cast can be used to run deployment scripts written in Cairo, using `script run` subcommand.
+`sncast` can be used to run deployment scripts written in Cairo, using `script run` subcommand.
 It aims to provide similar functionality to Foundry's `forge script`.
 
 To start writing a deployment script in Cairo just add `sncast_std` as a dependency to you scarb package and make sure to
