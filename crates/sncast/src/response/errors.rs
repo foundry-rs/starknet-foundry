@@ -1,6 +1,7 @@
 use crate::{ErrorData, WaitForTransactionError, handle_rpc_error};
 use anyhow::anyhow;
 use console::style;
+use conversions::padded_felt::PaddedFelt;
 use conversions::serde::serialize::CairoSerialize;
 
 use conversions::byte_array::ByteArray;
@@ -105,8 +106,8 @@ pub enum SNCastStarknetError {
     ContractError(ContractErrorData),
     #[error("Transaction execution error = {0:?}")]
     TransactionExecutionError(TransactionExecutionErrorData),
-    #[error("Contract with the same class hash is already declared")]
-    ClassAlreadyDeclared,
+    #[error("Contract with class hash {0:#x} is already declared")]
+    ClassAlreadyDeclared(PaddedFelt),
     #[error("Invalid transaction nonce")]
     InvalidTransactionNonce,
     #[error("The transaction's resources don't cover validation or the minimal transaction fee")]
@@ -148,7 +149,11 @@ impl From<StarknetError> for SNCastStarknetError {
             StarknetError::TransactionExecutionError(err) => {
                 SNCastStarknetError::TransactionExecutionError(err)
             }
-            StarknetError::ClassAlreadyDeclared => SNCastStarknetError::ClassAlreadyDeclared,
+            StarknetError::ClassAlreadyDeclared => {
+                unreachable!(
+                    "ClassAlreadyDeclared error requires class hash parameter which is present in StarknetError::ClassAlreadyDeclared. This conversion should not be used."
+                )
+            }
             StarknetError::InvalidTransactionNonce(_) => {
                 SNCastStarknetError::InvalidTransactionNonce
             }
