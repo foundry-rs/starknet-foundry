@@ -3,7 +3,6 @@ use crate::serde::deserialize::{BufferReadError, BufferReadResult, BufferReader}
 use crate::{serde::serialize::SerializeToFeltVec, string::TryFromHexStr};
 use cairo_lang_utils::byte_array::{BYTE_ARRAY_MAGIC, BYTES_IN_WORD};
 use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
-use conversions::felt::ToShortString;
 use starknet_types_core::felt::Felt;
 use std::fmt;
 
@@ -54,32 +53,45 @@ impl ByteArray {
     }
 }
 
+fn get_pending_word_bytes(word: &Felt, len: usize) -> Vec<u8> {
+    word.to_bytes_be()[(32 - len)..32].to_vec()
+}
+
+fn get_full_word_bytes(word: &Felt) -> Vec<u8> {
+    word.to_bytes_be()[1..32].to_vec()
+}
+
 impl fmt::Display for ByteArray {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let words: String = self
-            .words
-            .iter()
-            .map(|word| {
-                let word: String = word.to_short_string().map_err(|_| fmt::Error)?;
-                if word.len() != BYTES_IN_WORD {
-                    return Err(fmt::Error)?;
-                }
-                Ok(word)
-            })
-            .collect::<Result<Vec<String>, fmt::Error>>()?
-            .join("");
-        let pending_word = self
-            .pending_word
-            .to_short_string()
-            .map_err(|_| fmt::Error)?;
+        let mut bytes = Vec::new();
 
-        write!(f, "{words}{pending_word}")
+        for word in &self.words {
+            bytes.extend_from_slice(&get_full_word_bytes(word));
+        }
+
+        bytes.extend(get_pending_word_bytes(
+            &self.pending_word,
+            self.pending_word_len,
+        ));
+
+        for b in bytes {
+            match b {
+                0x20..=0x7E => write!(f, "{}", b as char)?,
+                b'\n' => write!(f, "\n")?,
+                b'\r' => write!(f, "\r")?,
+                b'\t' => write!(f, "\t")?,
+                _ => write!(f, "\\x{:02x}", b)?,
+            }
+        }
+
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use test_case::test_case;
 
     #[test]
     fn test_fmt_empty() {
@@ -112,12 +124,20 @@ mod tests {
         assert_eq!(array.to_string(), special_chars);
     }
 
-    #[test]
-    #[should_panic(expected = "a Display implementation returned an error unexpectedly: Error")]
-    fn test_fmt_with_null_bytes() {
-        let with_nulls = "Hello\0World\0Test";
-        let array = ByteArray::from(with_nulls);
-        assert_eq!(array.to_string(), with_nulls);
+    #[test_case("Hello\0World", "Hello\\x00World"; "single null byte")]
+    #[test_case("\0\0", "\\x00\\x00"; "two null bytes")]
+    #[test_case("\x01\x02ABC", "\\x01\\x02ABC"; "control chars 0x01 0x02")]
+    #[test_case("\x07Bell", "\\x07Bell"; "bell character")]
+    #[test_case("\x1fEnd", "\\x1fEnd"; "unit separator")]
+    #[test_case("Line1\nLine2", "Line1\nLine2"; "newline preserved")]
+    #[test_case("Col1\tCol2", "Col1\tCol2"; "tab preserved")]
+    #[test_case("CR\rLF", "CR\rLF"; "carriage return preserved")]
+    #[test_case("A\x00B\x01C", "A\\x00B\\x01C"; "mixed printable and escaped")]
+    #[test_case("\x7f", "\\x7f"; "delete character")]
+    fn test_fmt_escaping_non_printable_bytes(input: &str, expected: &str) {
+        let array = ByteArray::from(input);
+        let output = array.to_string();
+        assert_eq!(output, expected);
     }
 
     #[test]
