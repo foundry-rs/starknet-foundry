@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Changed
+
+- Error message for already declared contracts now includes the class hash
+
 #### Removed
 
 - The deprecated `sncast completion`. Use `sncast completions` instead.
