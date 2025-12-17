@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Error message for already declared contracts now includes the class hash
 
+#### Fixed
+
+- When using `account create` or `account import` commands without specifying `--network` or `--url`, url from snfoundry.toml is now used correctly (if present)
+
 #### Removed
 
 - The deprecated `sncast completion`. Use `sncast completions` instead.
