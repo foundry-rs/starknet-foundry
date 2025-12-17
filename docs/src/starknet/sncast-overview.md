@@ -32,7 +32,7 @@ Let's use `sncast` to call a contract's function:
 <!-- TODO(#2736) -->
 <!-- { "ignored": true } -->
 ```shell
-$ sncast --account my_account \
+$ sncast \
     call \
     --network sepolia \
     --contract-address 0x522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716 \
