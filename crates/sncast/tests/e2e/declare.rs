@@ -351,7 +351,7 @@ async fn test_contract_already_declared() {
         output,
         indoc! {r"
         Command: declare
-        Error: Contract with the same class hash is already declared
+        Error: Contract with class hash 0x0[..] is already declared
         "},
     );
 }
@@ -390,7 +390,7 @@ async fn test_contract_already_declared_estimate_fee() {
         output,
         indoc! {r"
         Command: declare
-        Error: Contract with the same class hash is already declared
+        Error: Contract with class hash 0x0[..] is already declared
         "},
     );
 }
