@@ -6,8 +6,8 @@ use derive_more::Display;
 use forge_runner::CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::ForgeTrackedResource;
+use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
-use foundry_ui::{Message, UI};
 use run_tests::workspace::run_for_workspace;
 use scarb_api::ScarbCommand;
 use scarb_api::metadata::metadata;
@@ -35,7 +35,7 @@ mod warn;
 pub const CAIRO_EDITION: &str = "2024_07";
 
 const MINIMAL_SCARB_VERSION: Version = Version::new(2, 10, 0);
-const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 11, 4);
+const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 12, 2);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
 const MINIMAL_SNFORGE_STD_VERSION: Version = Version::new(0, 50, 0);
 const MINIMAL_SNFORGE_STD_DEPRECATED_VERSION: Version = Version::new(0, 50, 0);
@@ -100,8 +100,6 @@ enum ForgeSubcommand {
     /// Check if all `snforge` requirements are installed
     CheckRequirements,
     /// Generate completions script
-    // TODO(#3560): Remove the `completion` alias
-    #[command(alias = "completion")]
     Completions(Completions),
 }
 
@@ -335,17 +333,6 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
         }
         ForgeSubcommand::Completions(completions) => {
             generate_completions(completions.shell, &mut Cli::command())?;
-
-            // TODO(#3560): Remove this warning when the `completion` alias is removed
-            if std::env::args().nth(1).as_deref() == Some("completion") {
-                let message = &WarningMessage::new(
-                    "Command `snforge completion` is deprecated and will be removed in the future. Please use `snforge completions` instead.",
-                );
-
-                // `#` is required since `snforge completions` generates a script and the output is used directly
-                ui.println(&format!("# {}", message.text()));
-            }
-
             Ok(ExitStatus::Success)
         }
     }
