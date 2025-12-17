@@ -7,11 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- Minimal recommended `Scarb` version is now `2.12.2` (updated from `2.11.4`)
+
+#### Fixed
+
+- Signature generation now enforces the low-s rule
+- Fixed a bug that caused a slowdown in test execution
+
+#### Removed
+
+- The deprecated `snforge completion`. Use `snforge completions` instead.
+
 ### Cast
 
 #### Fixed
 
 - When using `account create` or `account import` commands without specifying `--network` or `--url`, url from snfoundry.toml is now used correctly (if present)
+
+#### Removed
+
+- The deprecated `sncast completion`. Use `sncast completions` instead.
 
 ## [0.54.0] - 2025-12-09
 

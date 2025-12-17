@@ -65,6 +65,7 @@ async fn test_show_config_from_cli_and_snfoundry_toml() {
         Wait Timeout:        300s
         Wait Retry Interval: 5s
         Show Explorer Links: true
+        Block Explorer:      Voyager
     ", URL});
 }
 

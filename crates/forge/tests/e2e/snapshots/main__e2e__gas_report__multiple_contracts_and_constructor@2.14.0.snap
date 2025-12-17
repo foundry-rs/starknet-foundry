@@ -2,7 +2,7 @@
 source: crates/forge/tests/e2e/gas_report.rs
 expression: stdout
 ---
-[PASS] simple_package_with_cheats_integrationtest::contract::call_and_invoke_proxy (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~868670)
+[PASS] simple_package_with_cheats_integrationtest::contract::call_and_invoke_proxy (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~862170)
 ╭------------------------+-------+-------+-------+---------+---------╮
 | HelloStarknet Contract |       |       |       |         |         |
 +====================================================================+
