@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
+- When using `account create` or `account import` commands without specifying `--network` or `--url`, url from snfoundry.toml is now used correctly (if present)
 - Fixed account's balance value from `sncast balance` command
 
 #### Removed

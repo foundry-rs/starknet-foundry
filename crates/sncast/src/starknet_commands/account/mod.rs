@@ -254,6 +254,7 @@ pub async fn account(
                 &provider,
                 chain_id,
                 &create,
+                &config,
                 ui,
             )
             .await;
