@@ -131,7 +131,7 @@ mod tests {
             Felt::from_hex("0x2").unwrap(),
         ];
         let result = erc20_balance_to_u256(&balance).unwrap();
-        let expected = U256::from_dec_str("680564733841877041525364481164555130389").unwrap();
+        let expected = U256::from_dec_str("680564733841876926945195958937245974527").unwrap();
         assert_eq!(result, expected);
     }
 
