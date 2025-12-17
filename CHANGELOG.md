@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Changed
+
+- Error message for already declared contracts now includes the class hash
+
 #### Fixed
 
 - Fixed account's balance value from `sncast balance` command
