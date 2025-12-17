@@ -100,8 +100,8 @@ fn erc20_balance_to_u256(balance: &[Felt]) -> Result<U256, Error> {
         ));
     }
 
-    let low: u128 = balance[0].to_string().parse()?;
-    let high: u128 = balance[1].to_string().parse()?;
+    let low: u128 = balance[0].try_into()?;
+    let high: u128 = balance[1].try_into()?;
 
     let mut bytes = [0u8; 32];
     bytes[0..16].copy_from_slice(&low.to_le_bytes());
