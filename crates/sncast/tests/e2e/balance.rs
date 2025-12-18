@@ -16,7 +16,7 @@ pub async fn happy_case() {
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
-        "user1",
+        "balance-test",
         "balance",
         "--url",
         URL,
@@ -25,7 +25,7 @@ pub async fn happy_case() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_eq(indoc! {r"
-        Balance: [..] strk
+        Balance: 109394843313476728397 strk
     "});
 }
 
