@@ -1317,3 +1317,52 @@ fn test_interact_with_state() {
     "},
     );
 }
+
+#[test]
+fn max_threads_option() {
+    let temp = setup_package("simple_package");
+    let output = test_runner(&temp)
+        .arg("--max-threads")
+        .arg("2")
+        .assert()
+        .code(1); // Expecting same failure as simple_package test
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 13 test(s) from simple_package package
+        Running 2 test(s) from src/
+        [PASS] simple_package::tests::test_fib [..]
+        [IGNORE] simple_package::tests::ignored_test
+        Running 11 test(s) from tests/
+        [PASS] simple_package_integrationtest::contract::call_and_invoke [..]
+        [PASS] simple_package_integrationtest::ext_function_test::test_my_test [..]
+        [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
+        [PASS] simple_package_integrationtest::ext_function_test::test_simple [..]
+        [PASS] simple_package_integrationtest::test_simple::test_simple [..]
+        [PASS] simple_package_integrationtest::test_simple::test_simple2 [..]
+        [PASS] simple_package_integrationtest::test_simple::test_two [..]
+        [PASS] simple_package_integrationtest::test_simple::test_two_and_two [..]
+        [FAIL] simple_package_integrationtest::test_simple::test_failing
+
+        Failure data:
+            0x6661696c696e6720636865636b ('failing check')
+
+        [FAIL] simple_package_integrationtest::test_simple::test_another_failing
+
+        Failure data:
+            0x6661696c696e6720636865636b ('failing check')
+
+        [PASS] simple_package_integrationtest::without_prefix::five [..]
+        Tests: 9 passed, 2 failed, 2 ignored, 0 filtered out
+
+        Failures:
+            simple_package_integrationtest::test_simple::test_failing
+            simple_package_integrationtest::test_simple::test_another_failing
+        "},
+    );
+}

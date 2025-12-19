@@ -91,6 +91,7 @@ fn get_forge_config_for_package() {
             build_profile: false,
             coverage: false,
             gas_report: false,
+            max_threads: None,
         }
     );
 }
@@ -329,6 +330,7 @@ fn get_forge_config_resolves_env_variables() {
             build_profile: false,
             coverage: false,
             gas_report: false,
+            max_threads: None,
         }
     );
 }
