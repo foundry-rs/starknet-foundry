@@ -39,8 +39,6 @@ jobs:
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
-        with:
-          cache-on-failure: true
       - uses: actions/setup-node@v6
       - name: Install sitemap CLI
         run: |
