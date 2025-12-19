@@ -387,9 +387,8 @@ jobs:
     name: Test Building Docs
     runs-on: ubuntu-latest
     env:
-      MDBOOK_VERSION: 0.4.52
-      # TODO(#3970): Use latest version after resolving issue
-      MDBOOK_VARIABLES_VERSION: 0.3.0
+      MDBOOK_VERSION: 0.5.2
+      MDBOOK_VARIABLES_VERSION: 0.4.0
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools

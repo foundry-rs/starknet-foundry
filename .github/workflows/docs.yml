@@ -30,9 +30,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      MDBOOK_VERSION: 0.4.52
-      # TODO(#3970): Use latest version after resolving issue
-      MDBOOK_VARIABLES_VERSION: 0.3.0
+      MDBOOK_VERSION: 0.5.2
+      MDBOOK_VARIABLES_VERSION: 0.4.0
     steps:
       - uses: dtolnay/rust-toolchain@0b1efabc08b657293548b77fb76cc02d26091c7e
         with:
