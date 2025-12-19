@@ -36,6 +36,7 @@ pub const CAIRO_EDITION: &str = "2024_07";
 
 const MINIMAL_SCARB_VERSION: Version = Version::new(2, 10, 0);
 const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 12, 2);
+const MAXIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 12, 2);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
 const MINIMAL_SNFORGE_STD_VERSION: Version = Version::new(0, 50, 0);
 const MINIMAL_SNFORGE_STD_DEPRECATED_VERSION: Version = Version::new(0, 50, 0);
@@ -346,6 +347,7 @@ fn check_requirements(output_on_success: bool, ui: &UI) -> Result<()> {
         command: RefCell::new(ScarbCommand::new().arg("--version").command()),
         minimal_version: MINIMAL_SCARB_VERSION,
         minimal_recommended_version: Some(MINIMAL_RECOMMENDED_SCARB_VERSION),
+        maximal_recommended_version: Some(MAXIMAL_RECOMMENDED_SCARB_VERSION),
         helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
             .to_string(),
         version_parser: create_version_parser("Scarb", r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)"),
@@ -356,6 +358,7 @@ fn check_requirements(output_on_success: bool, ui: &UI) -> Result<()> {
         command: RefCell::new(universal_sierra_compiler_api::version_command()?),
         minimal_version: MINIMAL_USC_VERSION,
         minimal_recommended_version: None,
+        maximal_recommended_version: None,
         helper_text: "Reinstall `snforge` using the same installation method or follow instructions from https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#universal-sierra-compiler-update".to_string(),
         version_parser: create_version_parser(
             "Universal Sierra Compiler",

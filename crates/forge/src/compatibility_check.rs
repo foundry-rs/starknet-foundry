@@ -15,6 +15,7 @@ pub struct Requirement<'a> {
     pub helper_text: String,
     pub minimal_version: Version,
     pub minimal_recommended_version: Option<Version>,
+    pub maximal_recommended_version: Option<Version>,
 }
 
 impl Requirement<'_> {
@@ -25,10 +26,14 @@ impl Requirement<'_> {
 
         let output = if let Ok(version) = version {
             is_valid = version >= self.minimal_version;
-            let is_recommended = self
+            let is_min_recommended = self
                 .minimal_recommended_version
                 .as_ref()
                 .is_none_or(|minimal_recommended_version| version >= *minimal_recommended_version);
+            let is_max_recommended = self
+                .maximal_recommended_version
+                .as_ref()
+                .is_none_or(|maximal_recommended_version| version <= *maximal_recommended_version);
 
             let min_version_to_display = self
                 .minimal_recommended_version
@@ -41,12 +46,20 @@ impl Requirement<'_> {
                     "❌ {} Version {} doesn't satisfy minimal {}\n{}",
                     self.name, version, min_version_to_display, self.helper_text
                 )
-            } else if !is_recommended {
+            } else if !is_min_recommended {
                 format!(
                     "⚠️  {} Version {} doesn't satisfy minimal recommended {}\n{}",
                     self.name,
                     version,
                     self.minimal_recommended_version.as_ref().unwrap(),
+                    self.helper_text
+                )
+            } else if !is_max_recommended {
+                format!(
+                    "⚠️  {} Version {} doesn't satisfy maximal recommended {}\n{}",
+                    self.name,
+                    version,
+                    self.maximal_recommended_version.as_ref().unwrap(),
                     self.helper_text
                 )
             } else {
@@ -162,12 +175,14 @@ mod tests {
                 .to_string(),
             minimal_version: Version::new(1, 80, 1),
             minimal_recommended_version: None,
+            maximal_recommended_version: None,
         });
         requirements_checker.add_requirement(Requirement {
             name: "Scarb".to_string(),
             command: RefCell::new(ScarbCommand::new().arg("--version").command()),
             minimal_version: MINIMAL_SCARB_VERSION,
             minimal_recommended_version: Some(Version::new(2, 9, 4)),
+            maximal_recommended_version: None,
             helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
                 .to_string(),
             version_parser: create_version_parser(
@@ -180,6 +195,7 @@ mod tests {
             command: RefCell::new(universal_sierra_compiler_api::version_command().unwrap()),
             minimal_version: Version::new(2, 0, 0),
              minimal_recommended_version: None,
+            maximal_recommended_version: None,
             helper_text: "Reinstall `snforge` using the same installation method or follow instructions from https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#universal-sierra-compiler-update".to_string(),
             version_parser: create_version_parser(
                 "Universal Sierra Compiler",
@@ -213,6 +229,7 @@ mod tests {
                 .to_string(),
             minimal_version: Version::new(999, 0, 0),
             minimal_recommended_version: None,
+            maximal_recommended_version: None,
         });
 
         let (validation_output, is_valid) = requirements_checker.check_and_prepare_output();
@@ -229,6 +246,7 @@ mod tests {
             command: RefCell::new(ScarbCommand::new().arg("--version").command()),
             minimal_version: MINIMAL_SCARB_VERSION,
             minimal_recommended_version: Some(Version::new(999, 0, 0)),
+            maximal_recommended_version: None,
             helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
                 .to_string(),
             version_parser: create_version_parser(
@@ -255,6 +273,7 @@ mod tests {
             command: RefCell::new(ScarbCommand::new().arg("--version").command()),
             minimal_version: Version::new(111, 0, 0),
             minimal_recommended_version: Some(Version::new(999, 0, 0)),
+            maximal_recommended_version: None,
             helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
                 .to_string(),
             version_parser: create_version_parser(
@@ -290,6 +309,7 @@ mod tests {
             ),
             minimal_version: Version::new(2, 8, 5),
             minimal_recommended_version: Some(Version::new(2, 9, 4)),
+            maximal_recommended_version: None,
             helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
                 .to_string(),
             version_parser: create_version_parser(
@@ -302,6 +322,7 @@ mod tests {
             command: RefCell::new(universal_sierra_compiler_api::version_command().unwrap()),
             minimal_version: Version::new(2, 4, 0),
             minimal_recommended_version: None,
+            maximal_recommended_version: None,
             helper_text: "Reinstall `snforge` using the same installation method or follow instructions from https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#universal-sierra-compiler-update".to_string(),
             version_parser: create_version_parser(
                 "Universal Sierra Compiler",
@@ -319,5 +340,32 @@ mod tests {
             )
         );
         assert!(validation_output.contains("✅ Universal Sierra Compiler"));
+    }
+
+    #[test]
+    fn warning_maximal_version() {
+        let mut requirements_checker = RequirementsChecker::new(true);
+        requirements_checker.add_requirement(Requirement {
+            name: "Scarb".to_string(),
+            command: RefCell::new(ScarbCommand::new().arg("--version").command()),
+            minimal_version: MINIMAL_SCARB_VERSION,
+            minimal_recommended_version: Some(Version::new(2, 9, 4)),
+            maximal_recommended_version: Some(Version::new(2, 9, 0)),
+            helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
+                .to_string(),
+            version_parser: create_version_parser(
+                "Scarb",
+                r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)",
+            ),
+        });
+
+        let (validation_output, is_valid) = requirements_checker.check_and_prepare_output();
+
+        let ui = UI::default();
+        ui.println(&validation_output);
+
+        assert!(is_valid);
+        assert!(validation_output.contains("⚠️  Scarb Version"));
+        assert!(validation_output.contains("doesn't satisfy maximal recommended 2.9.0"));
     }
 }
