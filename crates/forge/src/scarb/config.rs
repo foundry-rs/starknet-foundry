@@ -222,4 +222,24 @@ mod tests {
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains(expected_error));
     }
+
+    #[test]
+    fn test_max_threads_deserialization() {
+        let json_str = json!({
+            "max_threads": 8
+        })
+        .to_string();
+
+        let config = serde_json::from_str::<ForgeConfigFromScarb>(&json_str).unwrap();
+        assert_eq!(config.max_threads, Some(8));
+    }
+
+    #[test]
+    fn test_max_threads_default() {
+        let json_str = json!({})
+            .to_string();
+
+        let config = serde_json::from_str::<ForgeConfigFromScarb>(&json_str).unwrap();
+        assert_eq!(config.max_threads, None);
+    }
 }
