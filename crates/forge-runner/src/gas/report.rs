@@ -61,20 +61,22 @@ impl SingleTestGasInfo {
         while let Some(call_trace_node) = stack.pop() {
             if let CallTraceNode::EntryPointCall(call) = call_trace_node {
                 let call = call.borrow();
-                let class_hash = call.entry_point.class_hash.expect(
-                    "class_hash should be set in `fn execute_call_entry_point` in cheatnet",
-                );
 
-                let contract_id = get_contract_id(contracts_data, class_hash);
-                let selector = get_selector(contracts_data, call.entry_point.entry_point_selector);
-                let gas = call
-                    .gas_report_data
-                    .as_ref()
-                    .expect("Gas report data must be updated after test execution")
-                    .get_gas();
+                // Class hash should be `None` only in case of a mock call.
+                // Otherwise, it is set in `execute_call_entry_point`.
+                if let Some(class_hash) = call.entry_point.class_hash {
+                    let contract_id = get_contract_id(contracts_data, class_hash);
+                    let selector =
+                        get_selector(contracts_data, call.entry_point.entry_point_selector);
+                    let gas = call
+                        .gas_report_data
+                        .as_ref()
+                        .expect("Gas report data must be updated after test execution")
+                        .get_gas();
 
-                report_data.update_entry(contract_id, selector, gas);
-                stack.extend(call.nested_calls.clone());
+                    report_data.update_entry(contract_id, selector, gas);
+                    stack.extend(call.nested_calls.clone());
+                }
             }
         }
         report_data.finalize();
