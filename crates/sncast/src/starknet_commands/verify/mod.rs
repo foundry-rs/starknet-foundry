@@ -140,17 +140,16 @@ pub async fn verify(
     let rpc_url = match url {
         Some(url) => url,
         None => {
-            if config.url.is_empty() {
+            if let Some(config_url) = &config.url {
+                config_url.clone()
+            } else {
                 let network =
                     network.ok_or_else(|| anyhow!("Either --network or --url must be provided"))?;
-                let free_rpc_provider = network.url(&FreeProvider::semi_random()).await?;
-                Url::parse(&free_rpc_provider)?
-            } else {
-                Url::parse(&config.url)?
+                network.url(&FreeProvider::semi_random()).await?
             }
         }
     };
-    let provider = get_provider(rpc_url.as_str())?;
+    let provider = get_provider(&rpc_url)?;
 
     // Build JSON Payload for the verification request
     // get the parent dir of the manifest path
@@ -177,10 +176,6 @@ pub async fn verify(
         (Some(network), _) => network,
         (None, true) => Network::Sepolia, // --url provided but no --network
         (None, false) => {
-            // This case should be handled by the rpc_url logic above, but add explicit check
-            if config.url.is_empty() {
-                return Err(anyhow!("Either --network or --url must be provided"));
-            }
             Network::Sepolia // fallback when config.url is set
         }
     };
