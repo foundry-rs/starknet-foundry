@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Signature generation now enforces the low-s rule
 - Fixed a bug that caused a slowdown in test execution
+- Panic that occurred in debug trace and gas report when using mock calls
 
 #### Removed
 
