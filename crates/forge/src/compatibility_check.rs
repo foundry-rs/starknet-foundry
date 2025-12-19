@@ -348,9 +348,9 @@ mod tests {
         requirements_checker.add_requirement(Requirement {
             name: "Scarb".to_string(),
             command: RefCell::new(ScarbCommand::new().arg("--version").command()),
-            minimal_version: MINIMAL_SCARB_VERSION,
+            minimal_version: Version::new(2, 8, 0),
             minimal_recommended_version: Some(Version::new(2, 9, 4)),
-            maximal_recommended_version: Some(Version::new(2, 9, 0)),
+            maximal_recommended_version: Some(Version::new(2, 11, 0)),
             helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
                 .to_string(),
             version_parser: create_version_parser(
@@ -366,6 +366,6 @@ mod tests {
 
         assert!(is_valid);
         assert!(validation_output.contains("⚠️  Scarb Version"));
-        assert!(validation_output.contains("doesn't satisfy maximal recommended 2.9.0"));
+        assert!(validation_output.contains("doesn't satisfy maximal recommended 2.11.0"));
     }
 }
