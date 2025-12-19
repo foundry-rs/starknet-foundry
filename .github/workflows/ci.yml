@@ -398,7 +398,8 @@ jobs:
           cargo install --version ${MDBOOK_VARIABLES_VERSION} mdbook-variables
       - name: Install mdBook Link-Check
         run: |
-          cargo install mdbook-linkcheck
+          cargo install mdbook-linkcheck2
+          ln -sf ~/.cargo/bin/mdbook-linkcheck2 ~/.cargo/bin/mdbook-linkcheck
       - name: Build with mdBook
         run: |
           # TODO(#2781): Use `mdbook build`

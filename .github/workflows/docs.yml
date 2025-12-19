@@ -48,7 +48,8 @@ jobs:
           cargo install --version ${MDBOOK_VARIABLES_VERSION} mdbook-variables
       - name: Install mdBook Link-Check
         run: |
-          cargo install mdbook-linkcheck
+          cargo install mdbook-linkcheck2
+          ln -sf ~/.cargo/bin/mdbook-linkcheck2 ~/.cargo/bin/mdbook-linkcheck
       - name: Install Scarb
         uses: software-mansion/setup-scarb@v1
         with:
