@@ -1,20 +1,21 @@
 use forge::{ExitStatus, main_execution};
 use foundry_ui::{UI, components::error::ErrorMessage};
 use std::io::IsTerminal;
+use std::process::ExitCode;
 use std::sync::Arc;
 use std::{env, io};
 
-fn main() {
+fn main() -> ExitCode {
     let _guard = init_logging();
     let ui = Arc::new(UI::default());
     match main_execution(ui.clone()) {
-        Ok(ExitStatus::Success) => std::process::exit(0),
-        Ok(ExitStatus::Failure) => std::process::exit(1),
+        Ok(ExitStatus::Success) => ExitCode::SUCCESS,
+        Ok(ExitStatus::Failure) => ExitCode::from(1),
         Err(error) => {
             ui.println(&ErrorMessage::from(error));
-            std::process::exit(2);
+            ExitCode::from(2)
         }
-    };
+    }
 }
 
 fn init_logging() -> Option<impl Drop> {
