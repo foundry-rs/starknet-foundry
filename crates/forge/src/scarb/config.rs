@@ -71,7 +71,8 @@ pub struct ForgeConfigFromScarb {
     /// Set tracked resource
     #[serde(default)]
     pub tracked_resource: ForgeTrackedResource,
-    /// Maximum number of threads to use for running tests
+    /// Maximum number of threads to use for running tests.
+    /// Note: This is read directly in main execution and not passed through combine_configs.
     pub max_threads: Option<usize>,
 }
 
