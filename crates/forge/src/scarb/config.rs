@@ -12,6 +12,7 @@ pub const SCARB_MANIFEST_TEMPLATE_CONTENT: &str = r#"
 # exit_first = true                                          # Stop tests execution immediately upon the first failure
 # fuzzer_runs = 1234                                         # Number of runs of the random fuzzer
 # fuzzer_seed = 1111                                         # Seed for the random fuzzer
+# max_threads = 8                                            # Maximum number of threads to use for running tests
 
 # [[tool.snforge.fork]]                                      # Used for fork testing
 # name = "SOME_NAME"                                         # Fork name
@@ -70,6 +71,8 @@ pub struct ForgeConfigFromScarb {
     /// Set tracked resource
     #[serde(default)]
     pub tracked_resource: ForgeTrackedResource,
+    /// Maximum number of threads to use for running tests
+    pub max_threads: Option<usize>,
 }
 
 #[derive(Debug, PartialEq, Clone, Deserialize)]
