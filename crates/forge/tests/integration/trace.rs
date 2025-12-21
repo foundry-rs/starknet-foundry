@@ -492,7 +492,7 @@ fn trace_failed_call() {
                                     result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
                                 }
                             ],
-                            result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
+                            result: CallResult::Failure(CallFailure::Panic(array![482670963043, 23583600924385842957889778338389964899652]))
                         },
                         CallTrace {
                             entry_point: CallEntryPoint {
@@ -840,7 +840,7 @@ fn trace_failed_library_call_from_test() {
                                     result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
                                 }
                             ],
-                            result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
+                            result: CallResult::Failure(CallFailure::Panic(array![482670963043, 23583600924385842957889778338389964899652]))
                         },
                         CallTrace {
                             entry_point: CallEntryPoint {

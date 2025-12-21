@@ -16,11 +16,33 @@ trait Failing<TContractState> {
     fn fail(self: @TContractState, data: Array<felt252>);
 }
 
+#[starknet::interface]
+trait Nested<TContractState> {
+    fn nested(ref self: TContractState, contract_address: ContractAddress);
+}
+
+
+#[starknet::contract]
+mod FailingContract {
+    use crate::Failing;
+
+    #[storage]
+    struct Storage {}
+
+
+    impl FailingImpl of Failing<ContractState> {
+        fn fail(self: @ContractState, data: Array<felt252>) {
+            panic_with_felt252('panicked');
+        }
+    }
+}
+
 #[starknet::contract]
 mod SimpleContract {
     use core::array::ArrayTrait;
     use core::traits::Into;
     use starknet::{ContractAddress, get_contract_address};
+    use crate::{FailingSafeDispatcher, FailingSafeDispatcherTrait, Nested};
     use super::{
         Failing, RecursiveCall, RecursiveCaller, RecursiveCallerDispatcher,
         RecursiveCallerDispatcherTrait,
@@ -55,6 +77,17 @@ mod SimpleContract {
     impl FailingImpl of Failing<ContractState> {
         fn fail(self: @ContractState, data: Array<felt252>) {
             panic(data);
+        }
+    }
+
+    #[abi(embed_v0)]
+    impl NestedImpl of Nested<ContractState> {
+        #[feature("safe_dispatcher")]
+        fn nested(ref self: ContractState, contract_address: ContractAddress) {
+            let dispatcher = FailingSafeDispatcher { contract_address };
+            if let Ok(_) = dispatcher.fail(array![]) {
+                panic!("should have panicked")
+            }
         }
     }
 }

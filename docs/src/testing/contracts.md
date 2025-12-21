@@ -51,7 +51,7 @@ Running 2 test(s) from tests/
 [FAIL] testing_smart_contracts_handling_errors_integrationtest::panic::failing
 
 Failure data:
-    (0x50414e4943 ('PANIC'), 0x444159544148 ('DAYTAH'))
+    (0x50414e4943 ('PANIC'), 0x444159544148 ('DAYTAH'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
 
 [PASS] testing_smart_contracts_handling_errors_integrationtest::handle_panic::handling_string_errors (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~280000)
 Running 0 test(s) from src/
@@ -95,7 +95,7 @@ Running 2 test(s) from tests/
 [FAIL] testing_smart_contracts_handling_errors_integrationtest::panic::failing
 
 Failure data:
-    (0x50414e4943 ('PANIC'), 0x444159544148 ('DAYTAH'))
+    (0x50414e4943 ('PANIC'), 0x444159544148 ('DAYTAH'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
 
 [PASS] testing_smart_contracts_handling_errors_integrationtest::handle_panic::handling_string_errors (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~280000)
 Running 0 test(s) from src/
