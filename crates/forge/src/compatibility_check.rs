@@ -24,54 +24,53 @@ impl Requirement<'_> {
         let version = self.get_version();
         let mut is_valid;
 
-        let output = if let Ok(version) = version {
-            is_valid = version >= self.minimal_version;
-            let is_min_recommended = self
-                .minimal_recommended_version
-                .as_ref()
-                .is_none_or(|minimal_recommended_version| version >= *minimal_recommended_version);
-            let is_max_recommended = self
-                .maximal_recommended_version
-                .as_ref()
-                .is_none_or(|maximal_recommended_version| version <= *maximal_recommended_version);
+        let output =
+            if let Ok(version) = version {
+                is_valid = version >= self.minimal_version;
+                let is_min_recommended = self.minimal_recommended_version.as_ref().is_none_or(
+                    |minimal_recommended_version| version >= *minimal_recommended_version,
+                );
+                let is_max_recommended = self.maximal_recommended_version.as_ref().is_none_or(
+                    |maximal_recommended_version| version <= *maximal_recommended_version,
+                );
 
-            let min_version_to_display = self
-                .minimal_recommended_version
-                .as_ref()
-                .unwrap_or(&self.minimal_version);
+                let min_version_to_display = self
+                    .minimal_recommended_version
+                    .as_ref()
+                    .unwrap_or(&self.minimal_version);
 
-            if !is_valid {
+                if !is_valid {
+                    is_valid = false;
+                    format!(
+                        "❌ {} Version {} doesn't satisfy minimal {}\n{}",
+                        self.name, version, min_version_to_display, self.helper_text
+                    )
+                } else if !is_min_recommended {
+                    format!(
+                        "⚠️  {} Version {} doesn't satisfy minimal recommended {}\n{}",
+                        self.name,
+                        version,
+                        self.minimal_recommended_version.as_ref().unwrap(),
+                        self.helper_text
+                    )
+                } else if !is_max_recommended {
+                    format!(
+                        "⚠️  {} Version {} doesn't satisfy maximal recommended {}\n{}",
+                        self.name,
+                        version,
+                        self.maximal_recommended_version.as_ref().unwrap(),
+                        self.helper_text
+                    )
+                } else {
+                    format!("✅ {} {}", self.name, version)
+                }
+            } else {
                 is_valid = false;
                 format!(
-                    "❌ {} Version {} doesn't satisfy minimal {}\n{}",
-                    self.name, version, min_version_to_display, self.helper_text
+                    "❌ {} is not installed or not added to the PATH\n{}\n",
+                    self.name, self.helper_text
                 )
-            } else if !is_min_recommended {
-                format!(
-                    "⚠️  {} Version {} doesn't satisfy minimal recommended {}\n{}",
-                    self.name,
-                    version,
-                    self.minimal_recommended_version.as_ref().unwrap(),
-                    self.helper_text
-                )
-            } else if !is_max_recommended {
-                format!(
-                    "⚠️  {} Version {} doesn't satisfy maximal recommended {}\n{}",
-                    self.name,
-                    version,
-                    self.maximal_recommended_version.as_ref().unwrap(),
-                    self.helper_text
-                )
-            } else {
-                format!("✅ {} {}", self.name, version)
-            }
-        } else {
-            is_valid = false;
-            format!(
-                "❌ {} is not installed or not added to the PATH\n{}\n",
-                self.name, self.helper_text
-            )
-        };
+            };
 
         (is_valid, output)
     }
