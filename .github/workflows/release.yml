@@ -43,6 +43,8 @@ jobs:
 
       - name: Compare versions
         id: validVersion
+        # Check if triggered by branch push
+        if: startsWith(github.ref, 'refs/heads/')
         run: |
           RELEASE_VERSION=${{ steps.lookupVersionRelease.outputs.release }}
           COMMIT_VERSION=${{ steps.lookupVersion.outputs.result }}
@@ -51,6 +53,23 @@ jobs:
           IS_VALID=$(node ./scripts/compareVersions.js $RELEASE_VERSION $COMMIT_VERSION)
           echo "versionIsValid=$IS_VALID" >> "$GITHUB_OUTPUT"
           echo "version=$COMMIT_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Verify release does not already exist
+        # Check if triggered by tag push
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Release $TAG_NAME already exists – aborting"
+            exit 1
+          fi
+
+          echo "versionIsValid=true" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG_NAME#v}" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
       - name: Output job skipped
         if: ${{ steps.validVersion.outputs.versionIsValid == 'false' }}
