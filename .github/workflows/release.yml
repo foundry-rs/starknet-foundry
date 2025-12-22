@@ -33,23 +33,13 @@ jobs:
         with:
           cmd: yq -oy '.workspace.package.version' 'Cargo.toml'
 
-      - name: Get version from the latest releases (master)
+      - name: Get version from the latest releases
         id: lookupVersionRelease
-        if: github.ref == 'refs/heads/master'
         uses: pozetroninc/github-action-get-latest-release@master
         with:
           owner: foundry-rs
           repo: starknet-foundry
           excludes: draft
-
-      - name: Get version from the latest releases (other branches)
-        id: lookupVersionRelease
-        if: github.ref != 'refs/heads/master'
-        uses: pozetroninc/github-action-get-latest-release@master
-        with:
-          owner: foundry-rs
-          repo: starknet-foundry
-          excludes: prerelease, draft
 
       - name: Compare versions
         id: validVersion
