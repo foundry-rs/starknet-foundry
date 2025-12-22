@@ -32,7 +32,8 @@ Let's use `sncast` to call a contract's function:
 <!-- TODO(#2736) -->
 <!-- { "ignored": true } -->
 ```shell
-$ sncast call \
+$ sncast \
+    call \
     --network sepolia \
     --contract-address 0x522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716 \
     --function "pokemon" \
@@ -78,13 +79,13 @@ If using `sncast` extensively, we recommend getting access to a dedicated RPC no
 
 Some `sncast` commands (namely `call`, `deploy` and `invoke`) allow passing arguments to perform an action with on the blockchain.
 
-Under the hood cast always send request with serialized form of arguments, but it can be passed in 
-human-readable form thanks to the [calldata transformation](./calldata-transformation.md) feature present in Cast.
+Under the hood `sncast` always sends request with a serialized form of arguments, but it can be passed in 
+human-readable form thanks to the [calldata transformation](./calldata-transformation.md) feature present in `sncast`.
 
 In the example above we called a function with a deserialized argument: `'"Charizard"'`, passed using `--arguments` flag.
 
 > ⚠️ **Warning**
-> Cast will not verify the serialized calldata. Any errors caused by passing improper calldata in a serialized form will originate from the network.
+> `sncast` will not verify the serialized calldata. Any errors caused by passing improper calldata in a serialized form will originate from the network.
 > Basic static analysis is possible only when passing expressions - see [calldata transformation](./calldata-transformation.md).
 
 

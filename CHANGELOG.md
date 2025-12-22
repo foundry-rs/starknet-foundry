@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Fixed
+
+- Byte arrays containing non-printable characters are now displayed correctly in fuzz test output
+
+## [0.55.0-rc.0] - 2025-12-18
+
+### Forge
+
 #### Changed
 
 - Minimal recommended `Scarb` version is now `2.12.2` (updated from `2.11.4`)
@@ -17,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Signature generation now enforces the low-s rule
 - Fixed a bug that caused a slowdown in test execution
-- Byte arrays containing non-printable characters are now displayed correctly in fuzz test output
+- Panic that occurred in debug trace and gas report when using mock calls
 
 #### Removed
 
@@ -32,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - When using `account create` or `account import` commands without specifying `--network` or `--url`, url from snfoundry.toml is now used correctly (if present)
+- Fixed account's balance value from `sncast balance` command
 
 #### Removed
 

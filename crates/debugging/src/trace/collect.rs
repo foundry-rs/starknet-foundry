@@ -66,12 +66,17 @@ impl<'a> Collector<'a> {
             .nested_calls
             .iter()
             .filter_map(CallTraceNode::extract_entry_point_call)
-            .map(|call_trace| {
-                Collector {
-                    call_trace: &call_trace.borrow(),
-                    context: self.context,
-                }
-                .collect_contract_trace()
+            .filter_map(|call_trace| {
+                let call_trace = call_trace.borrow();
+
+                // Filter mock calls that have empty class hashes.
+                call_trace.entry_point.class_hash.is_some().then(|| {
+                    Collector {
+                        call_trace: &call_trace,
+                        context: self.context,
+                    }
+                    .collect_contract_trace()
+                })
             })
             .collect()
     }
@@ -141,7 +146,7 @@ impl<'a> Collector<'a> {
             .entry_point
             .class_hash
             .as_ref()
-            .expect("class_hash should be set in `fn execute_call_entry_point` in cheatnet")
+            .expect("Entries with empty class hash are filtered in `collect_nested_calls`")
     }
 
     fn contracts_data_store(&self) -> &ContractsDataStore {

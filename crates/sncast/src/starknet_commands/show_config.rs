@@ -28,7 +28,7 @@ pub async fn show_config(
         None
     };
 
-    let rpc_url = Some(show.rpc.url.clone().unwrap_or(cast_config.url)).filter(|p| !p.is_empty());
+    let rpc_url = show.rpc.url.clone().or(cast_config.url);
     let account = Some(cast_config.account).filter(|p| !p.is_empty());
     let mut accounts_file_path =
         Some(cast_config.accounts_file).filter(|p| p != &Utf8PathBuf::default());

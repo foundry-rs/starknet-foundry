@@ -56,6 +56,7 @@ use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::fs;
 use tokio::runtime::Runtime;
+use url::Url;
 
 mod script_runtime;
 
@@ -280,7 +281,7 @@ pub fn run(
     package_metadata: &PackageMetadata,
     artifacts: &mut HashMap<String, CastStarknetContractArtifacts>,
     provider: &JsonRpcClient<HttpTransport>,
-    url: &str,
+    url: &Url,
     tokio_runtime: Runtime,
     config: &CastConfig,
     state_file_path: Option<Utf8PathBuf>,
@@ -362,7 +363,7 @@ pub fn run(
         None
     } else {
         let rpc_args = RpcArgs {
-            url: Some(url.to_string()),
+            url: Some(url.clone()),
             network: None,
         };
         Some(tokio_runtime.block_on(get_account(
