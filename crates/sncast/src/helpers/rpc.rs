@@ -38,7 +38,6 @@ impl RpcArgs {
     }
 
     pub async fn get_url(&self, config: &CastConfig) -> Result<Url> {
-        // url from config if its not none, otherwise resolve url from confir network if its not none, otherwise none
         let url_from_config = match (&config.url, &config.network) {
             (Some(url), _) => Some(url.clone()),
             (None, Some(network)) => Some(network.url(&FreeProvider::semi_random()).await?),
