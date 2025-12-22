@@ -2,7 +2,7 @@
 source: crates/forge/tests/e2e/gas_report.rs
 expression: stdout
 ---
-[PASS] forking::tests::test_track_resources (l1_gas: ~0, l1_data_gas: ~320, l2_gas: ~509780)
+[PASS] forking::tests::test_track_resources (l1_gas: ~0, l1_data_gas: ~320, l2_gas: ~508160)
 ╭---------------------------+-------+-------+-------+---------+---------╮
 | forked contract           |       |       |       |         |         |
 | (class hash: 0x06a7…1550) |       |       |       |         |         |

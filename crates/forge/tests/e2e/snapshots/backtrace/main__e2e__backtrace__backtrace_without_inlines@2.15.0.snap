@@ -24,7 +24,7 @@ stack backtrace:
    1: backtrace_vm_error::InnerContract::InnerContract::inner
        at [..]lib.cairo:38:13
    2: backtrace_vm_error::InnerContract::__wrapper__InnerContract__inner
-       at [..]lib.cairo:37:9
+       at [..]lib.cairo:35:5
 
 error occurred in contract 'OuterContract'
 stack backtrace:
@@ -33,7 +33,7 @@ stack backtrace:
    1: backtrace_vm_error::OuterContract::OuterContract::outer
        at [..]lib.cairo:17:13
    2: backtrace_vm_error::OuterContract::__wrapper__OuterContract__outer
-       at [..]lib.cairo:15:9
+       at [..]lib.cairo:13:5
 
 [FAIL] backtrace_vm_error::Test::test_fork_unwrapped_call_contract_syscall
 
@@ -56,7 +56,7 @@ stack backtrace:
    1: backtrace_vm_error::OuterContract::OuterContract::outer
        at [..]lib.cairo:17:13
    2: backtrace_vm_error::OuterContract::__wrapper__OuterContract__outer
-       at [..]lib.cairo:15:9
+       at [..]lib.cairo:13:5
 
 
 Failures:

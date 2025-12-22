@@ -389,7 +389,7 @@ fn inline_macros() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        error: Plugin diagnostic: Macro can not be parsed as legacy macro. Expected an argument list wrapped in either parentheses, brackets, or braces.
+        error: Plugin diagnostic: Macro cannot be parsed as legacy macro. Expected an argument list wrapped in either parentheses, brackets, or braces.
          --> [..]/tests/contract.cairo:23:5
             print!('balance {}'; balance);
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
