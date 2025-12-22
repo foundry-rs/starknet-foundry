@@ -2096,6 +2096,7 @@ dependencies = [
  "starknet-rust",
  "starknet-types-core",
  "starknet_api",
+ "test-case",
  "thiserror 2.0.17",
 ]
 

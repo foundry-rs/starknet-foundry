@@ -21,3 +21,5 @@ num-traits.workspace = true
 itertools.workspace = true
 cairo-serde-macros = { path = "cairo-serde-macros" }
 
+[dev-dependencies]
+test-case.workspace = true
