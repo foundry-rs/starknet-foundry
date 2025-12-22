@@ -33,7 +33,7 @@ jobs:
         with:
           cmd: yq -oy '.workspace.package.version' 'Cargo.toml'
 
-      - name: Get version from latest stable releases (master)
+      - name: Get version from latest releases (master)
         id: lookupVersionRelease
         if: github.ref == 'refs/heads/master'
         uses: pozetroninc/github-action-get-latest-release@master
