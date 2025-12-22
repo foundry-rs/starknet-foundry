@@ -10,6 +10,7 @@ use starknet_rust::{
 };
 use std::collections::{HashMap, HashSet};
 use std::fs;
+use url::Url;
 
 use crate::{AccountData, read_and_parse_json_file};
 use anyhow::Context;
@@ -82,14 +83,14 @@ pub fn is_devnet_account(account: &str) -> bool {
 pub async fn get_account_from_devnet<'a>(
     account: &str,
     provider: &'a JsonRpcClient<HttpTransport>,
-    url: &str,
+    url: &Url,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
     let account_number: u8 = account
         .strip_prefix("devnet-")
         .map(|s| s.parse::<u8>().expect("Invalid devnet account number"))
         .context("Failed to parse devnet account number")?;
 
-    let devnet_provider = DevnetProvider::new(url);
+    let devnet_provider = DevnetProvider::new(url.as_ref());
     devnet_provider.ensure_alive().await?;
 
     let devnet_config = devnet_provider.get_config().await;

@@ -7,6 +7,7 @@ use sncast::helpers::{
     configuration::CastConfig, constants::UDC_ADDRESS, fee::FeeSettings, rpc::RpcArgs,
 };
 use sncast::response::ui::UI;
+use url::Url;
 
 use crate::helpers::constants::{
     CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA,
@@ -44,7 +45,7 @@ async fn test_rejected_transaction() {
         ..Default::default()
     };
     let rpc_args = RpcArgs {
-        url: Some(URL.to_string()),
+        url: Some(Url::parse(URL).unwrap()),
         network: None,
     };
     let account = get_account(&config, &provider, &rpc_args, None, &UI::default())
