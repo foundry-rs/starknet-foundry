@@ -54,6 +54,7 @@ jobs:
           echo "version=$COMMIT_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Verify release does not already exist
+        id: validVersion
         if: github.ref_type == 'tag'
         run: |
           TAG_NAME="${GITHUB_REF#refs/tags/}"
