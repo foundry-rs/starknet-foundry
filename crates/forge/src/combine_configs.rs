@@ -168,7 +168,6 @@ mod tests {
             gas_report: true,
             max_n_steps: Some(1_000_000),
             tracked_resource: ForgeTrackedResource::CairoSteps,
-            max_threads: None,
         };
 
         let config = combine_configs(
@@ -231,7 +230,6 @@ mod tests {
             gas_report: false,
             max_n_steps: Some(1234),
             tracked_resource: ForgeTrackedResource::CairoSteps,
-            max_threads: None,
         };
         let config = combine_configs(
             true,

@@ -10,7 +10,7 @@ use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::ScarbCommand;
-use scarb_api::metadata::{metadata, metadata_with_opts};
+use scarb_api::metadata::metadata;
 use scarb_ui::args::{FeaturesSpec, PackagesFilter, ProfileSpec};
 use semver::Version;
 use shared::auto_completions::{Completions, generate_completions};
@@ -320,33 +320,12 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
             
             // Determine the number of threads to use
             let cores = if let Some(max_threads) = args.max_threads {
-                // CLI argument takes precedence
                 max_threads
+            } else if let Ok(available_cores) = available_parallelism() {
+                available_cores.get()
             } else {
-                // Try to get from Scarb config, fallback to available parallelism
-                let scarb_metadata = metadata_with_opts(scarb_api::metadata::MetadataOpts {
-                    profile: args.scarb_args.profile.specified(),
-                    ..scarb_api::metadata::MetadataOpts::default()
-                });
-                
-                let mut threads_from_config = None;
-                if let Ok(metadata) = scarb_metadata {
-                    // Try to get max_threads from the first package's config
-                    if let Some(package) = metadata.packages.first() {
-                        if let Ok(forge_config) = scarb::load_package_config::<scarb::config::ForgeConfigFromScarb>(&metadata, &package.id) {
-                            threads_from_config = forge_config.max_threads;
-                        }
-                    }
-                }
-                
-                threads_from_config.unwrap_or_else(|| {
-                    if let Ok(available_cores) = available_parallelism() {
-                        available_cores.get()
-                    } else {
-                        ui.eprintln(&"Failed to get the number of available cores, defaulting to 1");
-                        1
-                    }
-                })
+                ui.eprintln(&"Failed to get the number of available cores, defaulting to 1");
+                1
             };
 
             let rt = Builder::new_multi_thread()
