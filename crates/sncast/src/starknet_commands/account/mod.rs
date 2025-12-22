@@ -11,7 +11,6 @@ use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
 use serde_json::json;
 use sncast::helpers::account::{generate_account_name, load_accounts};
-use sncast::helpers::config::{RpcConfig, RpcConfigWrapper};
 use sncast::helpers::interactive::prompt_to_add_account_as_default;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
@@ -132,15 +131,10 @@ pub fn add_created_profile_to_configuration(
     let toml_string = {
         let mut new_profile = toml::value::Table::new();
 
-        if let Some(rpc_config) = &cast_config.rpc_wrapper.rpc_config {
-            match rpc_config {
-                RpcConfig::Url(url) => {
-                    new_profile.insert("url".to_string(), Value::String(url.to_string()));
-                }
-                RpcConfig::Network(network) => {
-                    new_profile.insert("network".to_string(), Value::String(network.to_string()));
-                }
-            }
+        if let Some(url) = &cast_config.url {
+            new_profile.insert("url".to_string(), Value::String(url.to_string()));
+        } else if let Some(network) = &cast_config.network {
+            new_profile.insert("network".to_string(), Value::String(network.to_string()));
         }
         new_profile.insert(
             "account".to_string(),
@@ -186,18 +180,18 @@ fn generate_add_profile_message(
     account_name: &str,
     accounts_file: &Utf8PathBuf,
     keystore: Option<&Utf8PathBuf>,
-    rpc_config: Option<&RpcConfig>,
+    config: &CastConfig,
 ) -> Result<Option<String>> {
     if let Some(profile_name) = profile_name {
-        let rpc_config = if let Some(url) = &rpc_args.url {
-            Some(RpcConfig::Url(url.clone()))
-        } else if rpc_args.network.is_some() {
+        if rpc_args.network.is_some() {
             bail!("the argument '--network' should not be used with '--add-profile' argument");
-        } else {
-            rpc_config.cloned()
-        };
+        }
+
+        let url = rpc_args.url.clone().or(config.url.clone());
+        let network = rpc_args.network.or(config.network);
         let config = CastConfig {
-            rpc_wrapper: RpcConfigWrapper { rpc_config },
+            url,
+            network,
             account: account_name.into(),
             accounts_file: accounts_file.into(),
             keystore: keystore.map(std::convert::Into::into),
@@ -228,7 +222,7 @@ pub async fn account(
                 &config.accounts_file,
                 &provider,
                 &import,
-                config.rpc_wrapper.rpc_config.as_ref(),
+                &config,
                 ui,
             )
             .await;
@@ -354,11 +348,7 @@ pub async fn account(
 mod tests {
     use camino::Utf8PathBuf;
     use configuration::test_utils::copy_config_to_tempdir;
-    use sncast::helpers::{
-        config::{RpcConfig, RpcConfigWrapper},
-        configuration::CastConfig,
-        constants::DEFAULT_ACCOUNTS_FILE,
-    };
+    use sncast::helpers::{configuration::CastConfig, constants::DEFAULT_ACCOUNTS_FILE};
     use std::fs;
     use url::Url;
 
@@ -369,9 +359,8 @@ mod tests {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let path = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
         let config = CastConfig {
-            rpc_wrapper: RpcConfigWrapper {
-                rpc_config: Some(RpcConfig::Url(Url::parse("http://some-url.com/").unwrap())),
-            },
+            url: Some(Url::parse("http://some-url.com/").unwrap()),
+            network: None,
             account: String::from("some-name"),
             accounts_file: "accounts".into(),
             ..Default::default()
@@ -396,9 +385,8 @@ mod tests {
     fn test_add_created_profile_to_configuration_profile_already_exists() {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let config = CastConfig {
-            rpc_wrapper: RpcConfigWrapper {
-                rpc_config: Some(RpcConfig::Url(Url::parse("http://some-url.com/").unwrap())),
-            },
+            url: Some(Url::parse("http://some-url.com/").unwrap()),
+            network: None,
             account: String::from("user1"),
             accounts_file: DEFAULT_ACCOUNTS_FILE.into(),
             ..Default::default()

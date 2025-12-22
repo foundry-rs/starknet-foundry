@@ -10,7 +10,6 @@ use conversions::IntoConv;
 use foundry_ui::components::warning::WarningMessage;
 use serde_json::json;
 use sncast::helpers::braavos::BraavosAccountFactory;
-use sncast::helpers::config::RpcConfig;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
     BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, CREATE_KEYSTORE_PASSWORD_ENV_VAR,
@@ -125,22 +124,13 @@ pub async fn create(
             legacy,
         )?;
 
-        let deploy_command = generate_deploy_command_with_keystore(
-            account,
-            keystore,
-            &create.rpc,
-            config.rpc_wrapper.rpc_config.as_ref(),
-        );
+        let deploy_command =
+            generate_deploy_command_with_keystore(account, keystore, &create.rpc, config);
         message.push_str(&deploy_command);
     } else {
         write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
 
-        let deploy_command = generate_deploy_command(
-            accounts_file,
-            &create.rpc,
-            config.rpc_wrapper.rpc_config.as_ref(),
-            account,
-        );
+        let deploy_command = generate_deploy_command(accounts_file, &create.rpc, config, account);
         message.push_str(&deploy_command);
     }
 
@@ -150,7 +140,7 @@ pub async fn create(
         account,
         accounts_file,
         keystore.cloned().as_ref(),
-        config.rpc_wrapper.rpc_config.as_ref(),
+        config,
     )?;
 
     Ok(AccountCreateResponse {
@@ -344,7 +334,7 @@ fn write_account_to_file(
 fn generate_deploy_command(
     accounts_file: &Utf8PathBuf,
     rpc_args: &RpcArgs,
-    rpc_config: Option<&RpcConfig>,
+    config: &CastConfig,
     account: &str,
 ) -> String {
     let accounts_flag = if accounts_file
@@ -356,7 +346,7 @@ fn generate_deploy_command(
         format!(" --accounts-file {accounts_file}")
     };
 
-    let network_flag = generate_network_flag(rpc_args, rpc_config);
+    let network_flag = generate_network_flag(rpc_args, config);
 
     format!(
         "\n\nAfter prefunding the account, run:\n\
@@ -368,9 +358,9 @@ fn generate_deploy_command_with_keystore(
     account: &str,
     keystore: &Utf8PathBuf,
     rpc_args: &RpcArgs,
-    rpc_config: Option<&RpcConfig>,
+    config: &CastConfig,
 ) -> String {
-    let network_flag = generate_network_flag(rpc_args, rpc_config);
+    let network_flag = generate_network_flag(rpc_args, config);
 
     format!(
         "\n\nAfter prefunding the account, run:\n\

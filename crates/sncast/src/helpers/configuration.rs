@@ -1,5 +1,5 @@
 use super::block_explorer;
-use crate::{Network, ValidatedWaitParams, helpers::config::RpcConfigWrapper};
+use crate::{Network, ValidatedWaitParams};
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use configuration::Config;
@@ -44,8 +44,13 @@ impl NetworksConfig {
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
 pub struct CastConfig {
-    #[serde(flatten)]
-    pub rpc_wrapper: RpcConfigWrapper,
+    #[serde(default)]
+    /// RPC url
+    pub url: Option<Url>,
+
+    #[serde(default)]
+    /// RPC network
+    pub network: Option<Network>,
 
     #[serde(default)]
     pub account: String,
@@ -86,7 +91,8 @@ pub struct CastConfig {
 impl Default for CastConfig {
     fn default() -> Self {
         Self {
-            rpc_wrapper: RpcConfigWrapper { rpc_config: None },
+            url: None,
+            network: None,
             account: String::default(),
             accounts_file: Utf8PathBuf::default(),
             keystore: None,

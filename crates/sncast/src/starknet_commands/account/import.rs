@@ -11,7 +11,7 @@ use conversions::string::{TryFromDecStr, TryFromHexStr};
 use foundry_ui::components::warning::WarningMessage;
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
-use sncast::helpers::config::RpcConfig;
+use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::import::AccountImportResponse;
 use sncast::response::ui::UI;
@@ -70,7 +70,7 @@ pub async fn import(
     accounts_file: &Utf8PathBuf,
     provider: &JsonRpcClient<HttpTransport>,
     import: &Import,
-    rpc_config: Option<&RpcConfig>,
+    config: &CastConfig,
     ui: &UI,
 ) -> Result<AccountImportResponse> {
     // TODO(#3556): Remove this warning once we drop Argent account type
@@ -163,7 +163,7 @@ pub async fn import(
         &account_name,
         accounts_file,
         None,
-        rpc_config,
+        config,
     )?;
 
     Ok(AccountImportResponse {
