@@ -69,7 +69,7 @@ jobs:
           fi
 
           if gh release view "$TAG_NAME" >/dev/null 2>&1; then
-            echo "Release $TAG_NAME already exists – aborting"
+            echo "Release $TAG_NAME already exists - aborting"
             exit 1
           fi
 
