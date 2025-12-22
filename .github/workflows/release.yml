@@ -42,19 +42,21 @@ jobs:
           excludes: draft
 
       - name: Compare versions
-        id: validVersion
+        id: compareVersion
         if: github.ref_type == 'branch'
         run: |
           RELEASE_VERSION=${{ steps.lookupVersionRelease.outputs.release }}
           COMMIT_VERSION=${{ steps.lookupVersion.outputs.result }}
+
           echo "Project version from newest release = $RELEASE_VERSION"
           echo "Project version from this commit = $COMMIT_VERSION"
+
           IS_VALID=$(node ./scripts/compareVersions.js $RELEASE_VERSION $COMMIT_VERSION)
           echo "versionIsValid=$IS_VALID" >> "$GITHUB_OUTPUT"
           echo "version=$COMMIT_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Verify release does not already exist
-        id: validVersion
+        id: verifyTag
         if: github.ref_type == 'tag'
         run: |
           TAG_NAME="$GITHUB_REF_NAME"
@@ -75,6 +77,17 @@ jobs:
           echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set validation result
+        id: validVersion
+        run: |
+          if [ "${{ github.ref_type }}" = "branch" ]; then
+            echo "versionIsValid=${{ steps.compareVersion.outputs.versionIsValid }}" >> "$GITHUB_OUTPUT"
+            echo "version=${{ steps.compareVersion.outputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "versionIsValid=${{ steps.verifyTag.outputs.versionIsValid }}" >> "$GITHUB_OUTPUT"
+            echo "version=${{ steps.verifyTag.outputs.version }}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Output job skipped
         if: ${{ steps.validVersion.outputs.versionIsValid == 'false' }}
