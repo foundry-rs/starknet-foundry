@@ -13,9 +13,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `network` field can now be configured in `snfoundry.toml`
 
+## [0.55.0-rc.0] - 2025-12-18
+
+### Forge
+
+#### Changed
+
+- Minimal recommended `Scarb` version is now `2.12.2` (updated from `2.11.4`)
+
+#### Fixed
+
+- Signature generation now enforces the low-s rule
+- Fixed a bug that caused a slowdown in test execution
+- Panic that occurred in debug trace and gas report when using mock calls
+
+#### Removed
+
+- The deprecated `snforge completion`. Use `snforge completions` instead.
+
+### Cast
+
+#### Changed
+
+- Error message for already declared contracts now includes the class hash
+
 #### Fixed
 
 - When using `account create` or `account import` commands without specifying `--network` or `--url`, url from snfoundry.toml is now used correctly (if present)
+- Fixed account's balance value from `sncast balance` command
+
+#### Removed
+
+- The deprecated `sncast completion`. Use `sncast completions` instead.
 
 ## [0.54.0] - 2025-12-09
 

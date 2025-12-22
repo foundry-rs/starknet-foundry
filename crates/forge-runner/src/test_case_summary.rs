@@ -294,17 +294,20 @@ impl TestCaseSummary<Single> {
     ) -> Self {
         let name = test_case.name.clone();
 
-        let contracts_data_store = ContractsDataStore::new(contracts_data, &fork_data);
         let debugging_trace = build_debugging_trace(
             &call_trace.borrow(),
-            &contracts_data_store,
+            contracts_data,
             trace_args,
             name.clone(),
+            &fork_data,
         );
 
         let gas_info = SingleTestGasInfo::new(gas_used);
         let gas_info = if gas_report_enabled {
-            gas_info.get_with_report_data(&call_trace.borrow(), &contracts_data_store)
+            gas_info.get_with_report_data(
+                &call_trace.borrow(),
+                &ContractsDataStore::new(contracts_data, &fork_data),
+            )
         } else {
             gas_info
         };

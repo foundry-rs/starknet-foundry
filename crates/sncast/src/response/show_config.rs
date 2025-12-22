@@ -4,6 +4,7 @@ use crate::response::cast_message::SncastCommandMessage;
 use camino::Utf8PathBuf;
 use foundry_ui::styling;
 use serde::Serialize;
+use url::Url;
 
 #[derive(Serialize, Clone)]
 pub struct ShowConfigResponse {

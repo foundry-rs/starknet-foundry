@@ -100,10 +100,8 @@ fn erc20_balance_to_u256(balance: &[Felt]) -> Result<U256, Error> {
         ));
     }
 
-    let low: u128 = u128::from_str_radix(&balance[0].to_string(), 16)
-        .map_err(|_| anyhow::anyhow!("Failed to parse low part of balance as u128"))?;
-    let high = u128::from_str_radix(&balance[1].to_string(), 16)
-        .map_err(|_| anyhow::anyhow!("Failed to parse high part of balance as u128"))?;
+    let low: u128 = balance[0].try_into()?;
+    let high: u128 = balance[1].try_into()?;
 
     let mut bytes = [0u8; 32];
     bytes[0..16].copy_from_slice(&low.to_le_bytes());
@@ -133,7 +131,7 @@ mod tests {
             Felt::from_hex("0x2").unwrap(),
         ];
         let result = erc20_balance_to_u256(&balance).unwrap();
-        let expected = U256::from_dec_str("680564733841877041525364481164555130389").unwrap();
+        let expected = U256::from_dec_str("680564733841876926945195958937245974527").unwrap();
         assert_eq!(result, expected);
     }
 

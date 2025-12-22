@@ -16,8 +16,6 @@ use clap::{CommandFactory, Parser, Subcommand};
 use configuration::load_config;
 use conversions::IntoConv;
 use data_transformer::transform;
-use foundry_ui::Message;
-use foundry_ui::components::warning::WarningMessage;
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
@@ -28,7 +26,6 @@ use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
-use sncast::response::completions::CompletionsMessage;
 use sncast::response::declare::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse, DeployCommandMessage,
 };
@@ -181,8 +178,6 @@ enum Commands {
     Verify(Verify),
 
     /// Generate completions script
-    // TODO(#3560): Remove the `completion` alias
-    #[command(alias = "completion")]
     Completions(Completions),
 
     /// Utility commands
@@ -698,22 +693,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Completions(completions) => {
             generate_completions(completions.shell, &mut Cli::command())?;
-
-            // TODO(#3560): Remove this warning when the `completion` alias is removed
-            if std::env::args().nth(1).as_deref() == Some("completion") {
-                let message = WarningMessage::new(
-                    "Command `sncast completion` is deprecated and will be removed in the future. Please use `sncast completions` instead.",
-                );
-
-                // `#` is required since `sncast completion` generates a script and the output is used directly
-                ui.print_message(
-                    "completion",
-                    CompletionsMessage {
-                        completions: format!("# {}", message.text()),
-                    },
-                );
-            }
-
             Ok(())
         }
 

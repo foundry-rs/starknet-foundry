@@ -1,7 +1,7 @@
 use super::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::non_reverting_execute_call_entry_point;
 use crate::runtime_extensions::{
-    call_to_blockifier_runtime_extension::panic_data::try_extract_panic_data,
+    call_to_blockifier_runtime_extension::panic_parser::try_extract_panic_data,
     common::create_execute_calldata,
 };
 use blockifier::execution::call_info::ExecutionSummary;
