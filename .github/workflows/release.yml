@@ -57,7 +57,14 @@ jobs:
         id: validVersion
         if: github.ref_type == 'tag'
         run: |
-          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          TAG_NAME="$GITHUB_REF_NAME"
+          TAG_VERSION="${TAG_NAME#v}"
+          CARGO_VERSION="${{ steps.lookupVersion.outputs.result }}"
+
+          if [ "$TAG_VERSION" != "$CARGO_VERSION" ]; then
+            echo "Tag version ($TAG_VERSION) does not match Cargo.toml version ($CARGO_VERSION)"
+            exit 1
+          fi
 
           if gh release view "$TAG_NAME" >/dev/null 2>&1; then
             echo "Release $TAG_NAME already exists – aborting"
@@ -65,14 +72,13 @@ jobs:
           fi
 
           echo "versionIsValid=true" >> "$GITHUB_OUTPUT"
-          echo "version=${TAG_NAME#v}" >> "$GITHUB_OUTPUT"
+          echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-
       - name: Output job skipped
         if: ${{ steps.validVersion.outputs.versionIsValid == 'false' }}
-        run: echo "Version from commit is not greater from newest release, skipping build"
+        run: echo "Release validation failed, skipping build"
 
   build-binaries:
     name: Build binaries
