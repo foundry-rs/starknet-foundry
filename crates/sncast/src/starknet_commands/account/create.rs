@@ -32,7 +32,6 @@ use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
 use std::str::FromStr;
-use url::Url;
 
 #[derive(Args, Debug)]
 #[command(about = "Create an account with all important secrets")]
