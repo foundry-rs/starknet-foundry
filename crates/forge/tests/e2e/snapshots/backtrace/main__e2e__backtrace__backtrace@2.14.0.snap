@@ -1,0 +1,55 @@
+---
+source: crates/forge/tests/e2e/backtrace.rs
+expression: stdout
+---
+[FAIL] backtrace_vm_error::Test::test_unwrapped_call_contract_syscall
+
+Failure data:
+    Got an exception while executing a hint: Hint Error: Error at pc=0:86:
+Got an exception while executing a hint: Error at pc=0:57:
+Got an exception while executing a hint: Requested contract address 0x0000000000000000000000000000000000000000000000000000000000000123 is not deployed.
+
+
+
+error occurred in contract 'InnerContract'
+stack backtrace:
+   0: (inlined) backtrace_vm_error::InnerContract::inner_call
+       at [..]lib.cairo:48:9
+   1: (inlined) backtrace_vm_error::InnerContract::InnerContract::inner
+       at [..]lib.cairo:38:13
+   2: backtrace_vm_error::InnerContract::__wrapper__InnerContract__inner
+       at [..]lib.cairo:37:9
+
+error occurred in contract 'OuterContract'
+stack backtrace:
+   0: (inlined) backtrace_vm_error::IInnerContractDispatcherImpl::inner
+       at [..]lib.cairo:22:1
+   1: (inlined) backtrace_vm_error::OuterContract::OuterContract::outer
+       at [..]lib.cairo:17:13
+   2: backtrace_vm_error::OuterContract::__wrapper__OuterContract__outer
+       at [..]lib.cairo:15:9
+
+[FAIL] backtrace_vm_error::Test::test_fork_unwrapped_call_contract_syscall
+
+Failure data:
+    Got an exception while executing a hint: Hint Error: Error at pc=0:86:
+Got an exception while executing a hint: Error at pc=0:86:
+Got an exception while executing a hint: Requested contract address 0x0000000000000000000000000000000000000000000000000000000000000123 is not deployed.
+
+
+
+error occurred in forked contract with class hash: 0x1a92e0ec431585e5c19b98679e582ebc07d43681ba1cc9c55dcb5ba0ce721a1
+
+error occurred in contract 'OuterContract'
+stack backtrace:
+   0: (inlined) backtrace_vm_error::IInnerContractDispatcherImpl::inner
+       at [..]lib.cairo:22:1
+   1: (inlined) backtrace_vm_error::OuterContract::OuterContract::outer
+       at [..]lib.cairo:17:13
+   2: backtrace_vm_error::OuterContract::__wrapper__OuterContract__outer
+       at [..]lib.cairo:15:9
+
+
+Failures:
+    backtrace_vm_error::Test::test_unwrapped_call_contract_syscall
+    backtrace_vm_error::Test::test_fork_unwrapped_call_contract_syscall
