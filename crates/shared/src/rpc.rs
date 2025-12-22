@@ -7,9 +7,8 @@ use starknet_rust::providers::{JsonRpcClient, Provider};
 use std::str::FromStr;
 use url::Url;
 
-pub fn create_rpc_client(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
-    let parsed_url = Url::parse(url).with_context(|| format!("Failed to parse URL: {url}"))?;
-    let client = JsonRpcClient::new(HttpTransport::new(parsed_url));
+pub fn create_rpc_client(url: &Url) -> Result<JsonRpcClient<HttpTransport>> {
+    let client = JsonRpcClient::new(HttpTransport::new(url.clone()));
     Ok(client)
 }
 

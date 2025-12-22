@@ -7,6 +7,7 @@ use sncast::helpers::{
     configuration::CastConfig, constants::UDC_ADDRESS, fee::FeeSettings, rpc::RpcArgs,
 };
 use sncast::response::ui::UI;
+use url::Url;
 
 use crate::helpers::constants::{
     CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA,
@@ -35,7 +36,6 @@ async fn test_happy_path() {
 }
 
 #[tokio::test]
-#[ignore = "TODO(#3997) Restore this after devnet fixes fee issue"]
 async fn test_rejected_transaction() {
     let provider = create_test_provider();
     let config = CastConfig {
@@ -44,7 +44,7 @@ async fn test_rejected_transaction() {
         ..Default::default()
     };
     let rpc_args = RpcArgs {
-        url: Some(URL.to_string()),
+        url: Some(Url::parse(URL).unwrap()),
         network: None,
     };
     let account = get_account(&config, &provider, &rpc_args, None, &UI::default())
@@ -74,7 +74,6 @@ async fn test_rejected_transaction() {
 #[should_panic(
     expected = "Transaction execution failed: Provider(StarknetError(InsufficientResourcesForValidate))"
 )]
-#[ignore = "TODO(#3997) Restore this after devnet fixes fee issue"]
 async fn test_wait_for_reverted_transaction() {
     let provider = create_test_provider();
     let salt = "0x029c81e6487b5f9278faa6f454cda3c8eca259f99877faab823b3704327cd695";
