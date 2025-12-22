@@ -19,7 +19,7 @@ stack backtrace:
    3: backtrace_panic::InnerContract::unsafe_new_contract_state
        at [..]lib.cairo:29:5
    4: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
-       at [..]lib.cairo:34:9
+       at [..]lib.cairo:32:5
 
 error occurred in contract 'OuterContract'
 stack backtrace:
@@ -30,7 +30,7 @@ stack backtrace:
    2: backtrace_panic::OuterContract::OuterContract::outer
        at [..]lib.cairo:17:13
    3: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
-       at [..]lib.cairo:15:9
+       at [..]lib.cairo:13:5
 
 [FAIL] backtrace_panic::Test::test_fork_contract_panics
 
@@ -48,7 +48,7 @@ stack backtrace:
    2: backtrace_panic::OuterContract::OuterContract::outer
        at [..]lib.cairo:17:13
    3: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
-       at [..]lib.cairo:15:9
+       at [..]lib.cairo:13:5
 
 
 Failures:

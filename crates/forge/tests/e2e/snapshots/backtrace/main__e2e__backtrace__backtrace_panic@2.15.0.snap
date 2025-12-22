@@ -14,19 +14,13 @@ stack backtrace:
        at [..]lib.cairo:364:5
    1: core::panic_with_const_felt252
        at [..]lib.cairo:364:5
-   2: (inlined) core::Felt252PartialEq::eq
-       at [..]lib.cairo:231:9
-   3: (inlined) backtrace_panic::InnerContract::inner_call
-       at [..]traits.cairo:441:10
-   4: (inlined) backtrace_panic::InnerContract::InnerContract::inner
-       at [..]lib.cairo:40:16
-   5: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
-       at [..]lib.cairo:35:13
+   2: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
+       at [..]lib.cairo:32:5
 
 error occurred in contract 'OuterContract'
 stack backtrace:
    0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
-       at [..]lib.cairo:15:9
+       at [..]lib.cairo:13:5
 
 [FAIL] backtrace_panic::Test::test_fork_contract_panics
 
@@ -38,7 +32,7 @@ error occurred in forked contract with class hash: 0x554cb276fb5eb0788344f5431b9
 error occurred in contract 'OuterContract'
 stack backtrace:
    0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
-       at [..]lib.cairo:15:9
+       at [..]lib.cairo:13:5
 
 
 Failures:
