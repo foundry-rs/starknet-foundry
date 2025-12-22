@@ -33,7 +33,7 @@ jobs:
         with:
           cmd: yq -oy '.workspace.package.version' 'Cargo.toml'
 
-      - name: Get version from latest releases (master)
+      - name: Get version from the latest releases (master)
         id: lookupVersionRelease
         if: github.ref == 'refs/heads/master'
         uses: pozetroninc/github-action-get-latest-release@master
@@ -42,7 +42,7 @@ jobs:
           repo: starknet-foundry
           excludes: draft
 
-      - name: Get version from latest releases (other branches)
+      - name: Get version from the latest releases (other branches)
         id: lookupVersionRelease
         if: github.ref != 'refs/heads/master'
         uses: pozetroninc/github-action-get-latest-release@master
