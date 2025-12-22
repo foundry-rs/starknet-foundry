@@ -53,12 +53,14 @@ impl ByteArray {
     }
 }
 
-fn get_pending_word_bytes(word: &Felt, len: usize) -> Vec<u8> {
-    word.to_bytes_be()[(32 - len)..32].to_vec()
+fn extend_full_word_bytes(out: &mut Vec<u8>, word: &Felt) {
+    let buf = word.to_bytes_be();
+    out.extend_from_slice(&buf[1..32]);
 }
 
-fn get_full_word_bytes(word: &Felt) -> Vec<u8> {
-    word.to_bytes_be()[1..32].to_vec()
+fn extend_pending_word_bytes(out: &mut Vec<u8>, word: &Felt, len: usize) {
+    let buf = word.to_bytes_be();
+    out.extend_from_slice(&buf[(32 - len)..32]);
 }
 
 impl fmt::Display for ByteArray {
@@ -66,20 +68,18 @@ impl fmt::Display for ByteArray {
         let mut bytes = Vec::new();
 
         for word in &self.words {
-            bytes.extend_from_slice(&get_full_word_bytes(word));
+            // bytes.extend_from_slice(&get_full_word_bytes(word));
+            extend_full_word_bytes(&mut bytes, word);
         }
 
-        bytes.extend(get_pending_word_bytes(
-            &self.pending_word,
-            self.pending_word_len,
-        ));
+        extend_pending_word_bytes(&mut bytes, &self.pending_word, self.pending_word_len);
 
         for b in bytes {
             match b {
                 // Printable ASCII characters
                 0x20..=0x7E => write!(f, "{}", b as char)?,
                 // Common whitespace characters
-                b'\n' => writeln!(f)?,
+                b'\n' => write!(f, "\n")?,
                 b'\r' => write!(f, "\r")?,
                 b'\t' => write!(f, "\t")?,
                 // Escape all other bytes to avoid panics (important for fuzz tests)
