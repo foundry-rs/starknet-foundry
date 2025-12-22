@@ -40,7 +40,7 @@ jobs:
         with:
           owner: foundry-rs
           repo: starknet-foundry
-          excludes: prerelease, draft
+          excludes: draft
 
       - name: Get version from latest releases (other branches)
         id: lookupVersionRelease
@@ -49,7 +49,7 @@ jobs:
         with:
           owner: foundry-rs
           repo: starknet-foundry
-          excludes: draft
+          excludes: prerelease, draft
 
       - name: Compare versions
         id: validVersion
