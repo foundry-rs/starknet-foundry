@@ -79,7 +79,7 @@ impl fmt::Display for ByteArray {
                 // Printable ASCII characters
                 0x20..=0x7E => write!(f, "{}", b as char)?,
                 // Common whitespace characters
-                b'\n' => write!(f, "\n")?,
+                b'\n' => writeln!(f)?,
                 b'\r' => write!(f, "\r")?,
                 b'\t' => write!(f, "\t")?,
                 // Escape all other bytes to avoid panics (important for fuzz tests)
