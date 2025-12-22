@@ -11,7 +11,6 @@ use test_case::test_case;
 #[test_case("ready"; "ready_account")]
 #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
-#[ignore = "TODO(#3997) Restore this after devnet fixes fee issue"]
 async fn test_insufficient_resource_for_validate(account: &str) {
     let script_dir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/invoke", Vec::<String>::new());
