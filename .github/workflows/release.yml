@@ -43,8 +43,7 @@ jobs:
 
       - name: Compare versions
         id: validVersion
-        # Check if triggered by branch push
-        if: startsWith(github.ref, 'refs/heads/')
+        if: github.ref_type == 'branch'
         run: |
           RELEASE_VERSION=${{ steps.lookupVersionRelease.outputs.release }}
           COMMIT_VERSION=${{ steps.lookupVersion.outputs.result }}
@@ -55,8 +54,7 @@ jobs:
           echo "version=$COMMIT_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Verify release does not already exist
-        # Check if triggered by tag push
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.ref_type == 'tag'
         run: |
           TAG_NAME="${GITHUB_REF#refs/tags/}"
 
