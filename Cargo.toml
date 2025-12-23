@@ -104,7 +104,7 @@ ptree = "0.5.2"
 reqwest = { version = "0.12.21", features = ["json"] }
 fs_extra = "1.3.0"
 openssl = { version = "0.10", features = ["vendored"] }
-toml_edit = "0.23.7"
+toml_edit = "0.24.0"
 axum = "0.8.6"
 fs2 = "0.4.3"
 flate2 = "1.1.0"
@@ -131,4 +131,4 @@ tracing = "0.1.43"
 tracing-chrome = "0.7.2"
 tracing-log = "0.2.0"
 comfy-table = "7"
-insta = { version = "1.44.3", features = ["filters"] }
+insta = { version = "1.45.0", features = ["filters"] }

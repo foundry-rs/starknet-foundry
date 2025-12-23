@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Forge
+
+#### Changed
+
+- Minimal recommended `Scarb` version is now `2.13.1` (updated from `2.12.2`)
+
 ### Cast
 
 #### Added

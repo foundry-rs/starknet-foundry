@@ -203,7 +203,6 @@ jobs:
       std_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
 
   create-nightly-release:
-    needs: [ test-binary ]
     # Creating a nightly release will trigger a Maat experiment for it as well
     # Publish nightly only on Sundays
     if: ${{ (github.event_name == 'schedule') && (github.event.schedule == '0 0 * * 0') }}

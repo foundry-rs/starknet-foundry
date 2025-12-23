@@ -36,7 +36,6 @@ async fn test_happy_path() {
 }
 
 #[tokio::test]
-#[ignore = "TODO(#3997) Restore this after devnet fixes fee issue"]
 async fn test_rejected_transaction() {
     let provider = create_test_provider();
     let config = CastConfig {
@@ -75,7 +74,6 @@ async fn test_rejected_transaction() {
 #[should_panic(
     expected = "Transaction execution failed: Provider(StarknetError(InsufficientResourcesForValidate))"
 )]
-#[ignore = "TODO(#3997) Restore this after devnet fixes fee issue"]
 async fn test_wait_for_reverted_transaction() {
     let provider = create_test_provider();
     let salt = "0x029c81e6487b5f9278faa6f454cda3c8eca259f99877faab823b3704327cd695";
