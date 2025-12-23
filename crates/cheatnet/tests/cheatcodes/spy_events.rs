@@ -28,7 +28,9 @@ fn spy_events_zero_offset() {
 
     let contract_address = test_env.deploy("SpyEventsChecker", &[]);
 
-    test_env.call_contract(&contract_address, "emit_one_event", &[Felt::from(123)]);
+    test_env
+        .call_contract(&contract_address, "emit_one_event", &[Felt::from(123)])
+        .unwrap();
 
     let events = test_env.get_events(0);
 
@@ -43,7 +45,9 @@ fn spy_events_zero_offset() {
         "Wrong event"
     );
 
-    test_env.call_contract(&contract_address, "emit_one_event", &[Felt::from(123)]);
+    test_env
+        .call_contract(&contract_address, "emit_one_event", &[Felt::from(123)])
+        .unwrap();
 
     let length = test_env.get_events(0).len();
     assert_eq!(length, 2, "There should be one more new event");
@@ -55,9 +59,15 @@ fn spy_events_some_offset() {
 
     let contract_address = test_env.deploy("SpyEventsChecker", &[]);
 
-    test_env.call_contract(&contract_address, "emit_one_event", &[Felt::from(123)]);
-    test_env.call_contract(&contract_address, "emit_one_event", &[Felt::from(123)]);
-    test_env.call_contract(&contract_address, "emit_one_event", &[Felt::from(123)]);
+    test_env
+        .call_contract(&contract_address, "emit_one_event", &[Felt::from(123)])
+        .unwrap();
+    test_env
+        .call_contract(&contract_address, "emit_one_event", &[Felt::from(123)])
+        .unwrap();
+    test_env
+        .call_contract(&contract_address, "emit_one_event", &[Felt::from(123)])
+        .unwrap();
 
     let events = test_env.get_events(2);
 
@@ -76,7 +86,9 @@ fn spy_events_some_offset() {
         "Wrong event"
     );
 
-    test_env.call_contract(&contract_address, "emit_one_event", &[Felt::from(123)]);
+    test_env
+        .call_contract(&contract_address, "emit_one_event", &[Felt::from(123)])
+        .unwrap();
 
     let length = test_env.get_events(2).len();
     assert_eq!(length, 2, "There should be one more new event");
@@ -89,16 +101,18 @@ fn check_events_order() {
     let spy_events_checker_address = test_env.deploy("SpyEventsChecker", &[]);
     let spy_events_order_checker_address = test_env.deploy("SpyEventsOrderChecker", &[]);
 
-    test_env.call_contract(
-        &spy_events_order_checker_address,
-        "emit_and_call_another",
-        &[
-            Felt::from(123),
-            Felt::from(234),
-            Felt::from(345),
-            spy_events_checker_address.into_(),
-        ],
-    );
+    test_env
+        .call_contract(
+            &spy_events_order_checker_address,
+            "emit_and_call_another",
+            &[
+                Felt::from(123),
+                Felt::from(234),
+                Felt::from(345),
+                spy_events_checker_address.into_(),
+            ],
+        )
+        .unwrap();
 
     let events = test_env.get_events(0);
 
@@ -140,11 +154,13 @@ fn library_call_emits_event() {
     let class_hash = test_env.declare("SpyEventsChecker", &contracts_data);
     let contract_address = test_env.deploy("SpyEventsLibCall", &[]);
 
-    test_env.call_contract(
-        &contract_address,
-        "call_lib_call",
-        &[Felt::from(123), class_hash.into_()],
-    );
+    test_env
+        .call_contract(
+            &contract_address,
+            "call_lib_call",
+            &[Felt::from(123), class_hash.into_()],
+        )
+        .unwrap();
 
     let events = test_env.get_events(0);
 
@@ -194,11 +210,13 @@ fn test_nested_calls() {
     let spy_events_checker_top_proxy_address =
         test_env.deploy_wrapper(&class_hash, &[spy_events_checker_proxy_address.into_()]);
 
-    test_env.call_contract(
-        &spy_events_checker_top_proxy_address,
-        "emit_one_event",
-        &[Felt::from(123)],
-    );
+    test_env
+        .call_contract(
+            &spy_events_checker_top_proxy_address,
+            "emit_one_event",
+            &[Felt::from(123)],
+        )
+        .unwrap();
 
     let events = test_env.get_events(0);
 
@@ -250,11 +268,13 @@ fn use_multiple_spies() {
     // - spy_events_checker_top_proxy_address,
     // - spy_events_checker_proxy_address,
     // - spy_events_checker_address
-    test_env.call_contract(
-        &spy_events_checker_top_proxy_address,
-        "emit_one_event",
-        &[Felt::from(123)],
-    );
+    test_env
+        .call_contract(
+            &spy_events_checker_top_proxy_address,
+            "emit_one_event",
+            &[Felt::from(123)],
+        )
+        .unwrap();
 
     let events1 = test_env.get_events(0);
     let events2 = test_env.get_events(1);
@@ -299,11 +319,13 @@ fn test_emitted_by_emit_events_syscall() {
 
     let contract_address = test_env.deploy("SpyEventsChecker", &[]);
 
-    test_env.call_contract(
-        &contract_address,
-        "emit_event_syscall",
-        &[Felt::from(123), Felt::from(456)],
-    );
+    test_env
+        .call_contract(
+            &contract_address,
+            "emit_event_syscall",
+            &[Felt::from(123), Felt::from(456)],
+        )
+        .unwrap();
 
     let events = test_env.get_events(0);
 
@@ -344,7 +366,8 @@ fn capture_cairo0_event() {
         &contract_address,
         selector,
         &[cairo0_contract_address],
-    );
+    )
+    .unwrap();
 
     let events = cheatnet_state.get_events(0);
 

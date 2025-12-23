@@ -2,7 +2,7 @@ use crate::{
     cheatcodes::test_environment::TestEnvironment,
     common::{assertions::assert_success, get_contracts, state::create_fork_cached_state_at},
 };
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallSuccess;
 use conversions::string::TryFromHexStr;
 use num_traits::Zero;
 use starknet_api::core::{ClassHash, ContractAddress};
@@ -45,7 +45,7 @@ fn fork() {
 
     assert!(matches!(
         output,
-        CallResult::Success { ret_data, .. } if ret_data != [Felt::zero()],
+        Ok(CallSuccess { ret_data, .. }) if ret_data != [Felt::zero()],
     ));
 
     test_env.replace_class_for_contract(contract, class_hash);

@@ -1,6 +1,6 @@
 use crate::common::call_contract;
 use crate::common::state::create_fork_cached_state;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallSuccess;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::selector_from_name;
 use cheatnet::state::CheatnetState;
 use conversions::string::TryFromHexStr;
@@ -30,7 +30,7 @@ fn cheat_caller_address_cairo0_contract(selector: &str) {
         &[],
     );
 
-    let CallResult::Success { ret_data } = output else {
+    let Ok(CallSuccess { ret_data }) = output else {
         panic!("Wrong call output")
     };
     let caller = &ret_data[0];
@@ -44,7 +44,7 @@ fn cheat_caller_address_cairo0_contract(selector: &str) {
         selector,
         &[],
     );
-    let CallResult::Success { ret_data } = output else {
+    let Ok(CallSuccess { ret_data }) = output else {
         panic!("Wrong call output")
     };
     let cheated_caller_address = &ret_data[0];
@@ -58,7 +58,7 @@ fn cheat_caller_address_cairo0_contract(selector: &str) {
         selector,
         &[],
     );
-    let CallResult::Success { ret_data } = output else {
+    let Ok(CallSuccess { ret_data }) = output else {
         panic!("Wrong call output")
     };
     let uncheated_caller_address = &ret_data[0];
@@ -84,7 +84,7 @@ fn cheat_block_number_cairo0_contract(selector: &str) {
         selector,
         &[],
     );
-    let CallResult::Success { ret_data } = output else {
+    let Ok(CallSuccess { ret_data }) = output else {
         panic!("Wrong call output")
     };
     let block_number = &ret_data[0];
@@ -98,7 +98,7 @@ fn cheat_block_number_cairo0_contract(selector: &str) {
         selector,
         &[],
     );
-    let CallResult::Success { ret_data } = output else {
+    let Ok(CallSuccess { ret_data }) = output else {
         panic!("Wrong call output")
     };
     let cheated_block_number = &ret_data[0];
@@ -112,7 +112,7 @@ fn cheat_block_number_cairo0_contract(selector: &str) {
         selector,
         &[],
     );
-    let CallResult::Success { ret_data } = output else {
+    let Ok(CallSuccess { ret_data }) = output else {
         panic!("Wrong call output")
     };
     let uncheated_block_number = &ret_data[0];
@@ -138,7 +138,7 @@ fn cheat_block_timestamp_cairo0_contract(selector: &str) {
         selector,
         &[],
     );
-    let CallResult::Success { ret_data } = output else {
+    let Ok(CallSuccess { ret_data }) = output else {
         panic!("Wrong call output")
     };
     let block_timestamp = &ret_data[0];
@@ -151,7 +151,7 @@ fn cheat_block_timestamp_cairo0_contract(selector: &str) {
         selector,
         &[],
     );
-    let CallResult::Success { ret_data } = output else {
+    let Ok(CallSuccess { ret_data }) = output else {
         panic!("Wrong call output")
     };
     let cheated_block_timestamp = &ret_data[0];
@@ -165,7 +165,7 @@ fn cheat_block_timestamp_cairo0_contract(selector: &str) {
         selector,
         &[],
     );
-    let CallResult::Success { ret_data } = output else {
+    let Ok(CallSuccess { ret_data }) = output else {
         panic!("Wrong call output")
     };
     let uncheated_block_timestamp = &ret_data[0];

@@ -170,15 +170,17 @@ fn handling_errors() {
             match safe_dispatcher.do_a_panic_with(panic_data) {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                 Result::Err(panic_data) => {
-                    assert(panic_data.len() == 1, 'Wrong panic_data len');
+                    assert(panic_data.len() == 2, 'Wrong panic_data len');
                     assert(*panic_data.at(0) == 'capybara', *panic_data.at(0));
+                    assert(*panic_data.at(1) == 'ENTRYPOINT_FAILED', *panic_data.at(0));
                 }
             };
 
             match safe_dispatcher.do_a_panic_with(ArrayTrait::new()) {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                 Result::Err(panic_data) => {
-                    assert(panic_data.len() == 0, 'Non-empty panic_data');
+                    assert(panic_data.len() == 1, 'Non-empty panic_data');
+                    assert(*panic_data.at(0) == 'ENTRYPOINT_FAILED', *panic_data.at(0));
                 }
             };
         }

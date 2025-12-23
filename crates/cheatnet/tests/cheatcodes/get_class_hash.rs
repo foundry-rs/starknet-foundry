@@ -52,7 +52,8 @@ fn get_class_hash_upgrade() {
         &contract_address,
         selector,
         &[hello_starknet_class_hash.into_()],
-    );
+    )
+    .unwrap();
 
     assert_eq!(
         hello_starknet_class_hash,

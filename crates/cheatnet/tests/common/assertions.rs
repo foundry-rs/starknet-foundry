@@ -1,5 +1,5 @@
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    CallFailure, CallResult,
+    CallFailure, CallResult, CallSuccess,
 };
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::DeclareResult;
 use conversions::byte_array::ByteArray;
@@ -10,7 +10,7 @@ use starknet_types_core::felt::Felt;
 pub fn assert_success(call_contract_output: CallResult, expected_data: &[Felt]) {
     assert!(matches!(
         call_contract_output,
-        CallResult::Success { ret_data, .. }
+        Ok(CallSuccess { ret_data, .. })
         if ret_data == expected_data,
     ));
 }
@@ -19,8 +19,8 @@ pub fn assert_success(call_contract_output: CallResult, expected_data: &[Felt]) 
 pub fn assert_panic(call_contract_output: CallResult, expected_data: &[Felt]) {
     assert!(matches!(
         call_contract_output,
-        CallResult::Failure(
-            CallFailure::Panic { panic_data, .. }
+        Err(
+            CallFailure::Recoverable { panic_data, .. }
         )
         if panic_data == expected_data
     ));
@@ -30,8 +30,8 @@ pub fn assert_panic(call_contract_output: CallResult, expected_data: &[Felt]) {
 pub fn assert_error(call_contract_output: CallResult, expected_data: impl Into<ByteArray>) {
     assert!(matches!(
         call_contract_output,
-        CallResult::Failure(
-            CallFailure::Error { msg, .. }
+        Err(
+            CallFailure::Unrecoverable { msg, .. }
         )
         if msg == expected_data.into(),
     ));
