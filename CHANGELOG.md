@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Minimal recommended `Scarb` version is now `2.13.1` (updated from `2.12.2`)
 
+### Cast
+
+#### Added
+
+- `network` field can now be configured in `snfoundry.toml`
+
 ## [0.55.0-rc.0] - 2025-12-18
 
 ### Forge

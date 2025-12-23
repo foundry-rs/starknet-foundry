@@ -142,6 +142,8 @@ pub async fn verify(
         None => {
             if let Some(config_url) = &config.url {
                 config_url.clone()
+            } else if let Some(network) = &config.network {
+                network.url(&FreeProvider::semi_random()).await?
             } else {
                 let network =
                     network.ok_or_else(|| anyhow!("Either --network or --url must be provided"))?;

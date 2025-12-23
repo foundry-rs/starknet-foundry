@@ -25,6 +25,8 @@ Use predefined network with a public provider
 
 Possible values: `mainnet`, `sepolia`, `devnet`.
 
+Overrides network from `snfoundry.toml`.
+
 ## `--type, -t <ACCOUNT_TYPE>`
 Optional. Required if `--class-hash` is passed.
 

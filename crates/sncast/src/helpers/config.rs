@@ -90,6 +90,7 @@ pub fn combine_cast_configs(global_config: &CastConfig, local_config: &CastConfi
 
     CastConfig {
         url: clone_field!(global_config, local_config, default_cast_config, url),
+        network: clone_field!(global_config, local_config, default_cast_config, network),
         account: clone_field!(global_config, local_config, default_cast_config, account),
         accounts_file: clone_field!(
             global_config,

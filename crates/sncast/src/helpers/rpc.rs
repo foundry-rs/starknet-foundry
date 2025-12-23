@@ -38,9 +38,15 @@ impl RpcArgs {
     }
 
     pub async fn get_url(&self, config: &CastConfig) -> Result<Url> {
-        match (&self.network, &self.url, &config.url) {
+        let url_from_config = match (&config.url, &config.network) {
+            (Some(url), _) => Some(url.clone()),
+            (None, Some(network)) => Some(self.resolve_network_url(network, config).await?),
+            (None, None) => None,
+        };
+        match (&self.network, &self.url, &url_from_config) {
             (Some(network), None, _) => self.resolve_network_url(network, config).await,
-            (None, Some(url), _) | (None, None, Some(url)) => Ok(url.clone()),
+            (None, Some(url), _) => Ok(url.clone()),
+            (None, None, Some(url_from_config)) => Ok(url_from_config.clone()),
             _ => bail!("Either `--network` or `--url` must be provided."),
         }
     }
@@ -110,17 +116,17 @@ impl Network {
 }
 
 #[must_use]
-pub fn generate_network_flag(rpc_args: &RpcArgs, config_url: Option<&Url>) -> String {
+pub fn generate_network_flag(rpc_args: &RpcArgs, config: &CastConfig) -> String {
     if let Some(network) = &rpc_args.network {
         format!("--network {network}")
     } else if let Some(rpc_url) = &rpc_args.url {
         format!("--url {rpc_url}")
-    } else if config_url.is_some() {
-        // Since url is defined in config, no need to pass any flag
+    } else if config.url.is_some() || config.network.is_some() {
+        // Since url or network is defined in config, no need to pass any flag
         String::new()
     } else {
         unreachable!(
-            "`--url` or `--network` must be provided or url must be set in snfoundry.toml"
+            "`--url` or `--network` must be provided or url or network fields must be set in snfoundry.toml"
         );
     }
 }
