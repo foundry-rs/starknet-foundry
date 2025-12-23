@@ -79,6 +79,7 @@ pub struct Cli {
 }
 
 #[derive(Subcommand, Debug)]
+#[allow(clippy::large_enum_variant)]
 enum ForgeSubcommand {
     /// Run tests for a project in the current directory
     Test {
@@ -317,7 +318,7 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
         ForgeSubcommand::Test { mut args } => {
             args.normalize();
             check_requirements(false, &ui)?;
-            
+
             // Determine the number of threads to use
             let cores = if let Some(max_threads) = args.max_threads {
                 // Validate that max_threads doesn't exceed available parallelism

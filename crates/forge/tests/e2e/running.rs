@@ -1376,8 +1376,5 @@ fn max_threads_exceeds_available() {
         .assert()
         .failure();
 
-    assert_stdout_contains(
-        output,
-        "max-threads (999999) exceeds available parallelism",
-    );
+    assert_stdout_contains(output, "max-threads (999999) exceeds available parallelism");
 }
