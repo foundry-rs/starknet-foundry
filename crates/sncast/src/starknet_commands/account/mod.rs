@@ -183,8 +183,11 @@ fn generate_add_profile_message(
     config: &CastConfig,
 ) -> Result<Option<String>> {
     if let Some(profile_name) = profile_name {
-        let url = rpc_args.url.clone().or(config.url.clone());
-        let network = rpc_args.network.or(config.network);
+        let (url, network) = if rpc_args.url.is_some() || rpc_args.network.is_some() {
+            (rpc_args.url.clone(), rpc_args.network)
+        } else {
+            (config.url.clone(), config.network)
+        };
         let config = CastConfig {
             url,
             network,
