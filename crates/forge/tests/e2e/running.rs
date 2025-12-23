@@ -1366,3 +1366,18 @@ fn max_threads_option() {
         "},
     );
 }
+
+#[test]
+fn max_threads_exceeds_available() {
+    let temp = setup_package("simple_package");
+    let output = test_runner(&temp)
+        .arg("--max-threads")
+        .arg("999999")
+        .assert()
+        .failure();
+
+    assert_stdout_contains(
+        output,
+        "max-threads (999999) exceeds available parallelism",
+    );
+}

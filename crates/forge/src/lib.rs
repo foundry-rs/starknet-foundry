@@ -320,6 +320,17 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
             
             // Determine the number of threads to use
             let cores = if let Some(max_threads) = args.max_threads {
+                // Validate that max_threads doesn't exceed available parallelism
+                if let Ok(available_cores) = available_parallelism() {
+                    let available = available_cores.get();
+                    if max_threads > available {
+                        anyhow::bail!(
+                            "max-threads ({}) exceeds available parallelism ({})",
+                            max_threads,
+                            available
+                        );
+                    }
+                }
                 max_threads
             } else if let Ok(available_cores) = available_parallelism() {
                 available_cores.get()
