@@ -104,7 +104,7 @@ fn display_files_and_confirm(
         );
         let input: String = prompt(prompt_text)?;
 
-        if !input.starts_with('Y') {
+        if !input.to_lowercase().starts_with('y') {
             bail!("Verification aborted");
         }
     }
@@ -140,8 +140,10 @@ pub async fn verify(
     let rpc_url = match url {
         Some(url) => url,
         None => {
-            if let Some(rpc_config) = &config.rpc_wrapper.rpc_config {
-                rpc_config.url().await?
+            if let Some(config_url) = &config.url {
+                config_url.clone()
+            } else if let Some(network) = &config.network {
+                network.url(&FreeProvider::semi_random()).await?
             } else {
                 let network =
                     network.ok_or_else(|| anyhow!("Either --network or --url must be provided"))?;

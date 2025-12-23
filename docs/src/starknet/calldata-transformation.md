@@ -23,7 +23,7 @@ $ sncast call \
 ```
 
 > 💡 **Info**
-> Cast **doesn't verify serialized calldata against the ABI**.\
+> `sncast` **doesn't verify serialized calldata against the ABI**.\
 > Only expression transformation checks types and arities of functions called on chain.
 
 ## Using `--arguments`
@@ -31,7 +31,7 @@ $ sncast call \
 Instead of serializing calldata yourself, `sncast` allows passing it in a far more handy, human-readable form - as a
 list of comma-separated Cairo expressions wrapped in single quotes. This can be achieved by using the `--arguments`
 flag.
-Cast will perform serialization automatically, based on an ABI of the contract
+`sncast` will perform serialization automatically, based on an ABI of the contract
 we interact with, following
 the [Starknet specification](https://www.starknet.io/cairo-book/ch102-04-serialization-of-cairo-types.html).
 
@@ -99,7 +99,7 @@ Calldata: [0x24, 0x60]
 
 ## Supported Expressions
 
-Cast supports most important Cairo corelib types:
+`sncast` supports most important Cairo corelib types:
 
 * `bool`
 * signed integers (`i8`, `i16`, `i32`, `i64`, `i128`)

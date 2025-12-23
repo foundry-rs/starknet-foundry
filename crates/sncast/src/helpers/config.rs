@@ -1,69 +1,12 @@
 use crate::ValidatedWaitParams;
 use crate::helpers::configuration::{CastConfig, show_explorer_links_default};
 use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
-use crate::{Network, helpers::rpc::FreeProvider};
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use indoc::formatdoc;
-use serde::Deserializer;
-use serde::de::Error;
-use serde::{Deserialize, Serialize};
 use std::fs;
 use std::fs::File;
 use std::io::Write;
-use url::Url;
-
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
-pub enum RpcConfig {
-    Url(Url),
-    Network(Network),
-}
-
-#[derive(Serialize, Clone, Debug, PartialEq)]
-pub struct RpcConfigWrapper {
-    pub rpc_config: Option<RpcConfig>,
-}
-
-impl RpcConfig {
-    pub async fn url(&self) -> Result<Url> {
-        match self {
-            RpcConfig::Url(url) => Ok(url.clone()),
-            RpcConfig::Network(network) => Ok(network.url(&FreeProvider::semi_random()).await?),
-        }
-    }
-}
-
-impl<'de> Deserialize<'de> for RpcConfigWrapper {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        #[derive(Deserialize)]
-        struct Raw {
-            url: Option<String>,
-            network: Option<Network>,
-        }
-
-        let raw = Raw::deserialize(deserializer)?;
-
-        match (raw.url, raw.network) {
-            (Some(url), None) => {
-                let parsed =
-                    Url::parse(&url).map_err(|e| D::Error::custom(format!("Invalid URL: {e}")))?;
-                Ok(Self {
-                    rpc_config: Some(RpcConfig::Url(parsed)),
-                })
-            }
-            (None, Some(net)) => Ok(Self {
-                rpc_config: Some(RpcConfig::Network(net)),
-            }),
-            (None, None) => Ok(Self { rpc_config: None }),
-            (Some(_), Some(_)) => Err(D::Error::custom(
-                "Only one of `url` and `network` may be provided",
-            )),
-        }
-    }
-}
 
 pub fn get_global_config_path() -> Result<Utf8PathBuf> {
     let global_config_dir = {
@@ -146,12 +89,8 @@ pub fn combine_cast_configs(global_config: &CastConfig, local_config: &CastConfi
     networks.override_with(&local_config.networks);
 
     CastConfig {
-        rpc_wrapper: clone_field!(
-            global_config,
-            local_config,
-            default_cast_config,
-            rpc_wrapper
-        ),
+        url: clone_field!(global_config, local_config, default_cast_config, url),
+        network: clone_field!(global_config, local_config, default_cast_config, network),
         account: clone_field!(global_config, local_config, default_cast_config, account),
         accounts_file: clone_field!(
             global_config,

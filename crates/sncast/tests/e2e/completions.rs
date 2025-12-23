@@ -2,8 +2,7 @@ use crate::helpers::runner::runner;
 use clap::ValueEnum;
 use clap_complete::Shell;
 use indoc::formatdoc;
-use indoc::indoc;
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use shared::test_utils::output_assert::assert_stderr_contains;
 
 #[test]
 fn test_happy_case() {
@@ -38,23 +37,4 @@ fn test_generate_completions_unsupported_shell() {
             "
         ),
     );
-}
-
-#[test]
-fn test_deprecated_alias() {
-    for variant in Shell::value_variants() {
-        let shell = variant.to_string();
-        let args = vec!["completion", shell.as_str()];
-
-        let output = runner(&args).assert().success();
-
-        assert_stdout_contains(
-            output,
-            indoc!(
-                r"
-                # [WARNING] Command `sncast completion` is deprecated and will be removed in the future. Please use `sncast completions` instead.
-                "
-            ),
-        );
-    }
 }

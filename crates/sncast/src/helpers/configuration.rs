@@ -1,5 +1,5 @@
 use super::block_explorer;
-use crate::{Network, ValidatedWaitParams, helpers::config::RpcConfigWrapper};
+use crate::{Network, ValidatedWaitParams};
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use configuration::Config;
@@ -44,8 +44,13 @@ impl NetworksConfig {
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
 pub struct CastConfig {
-    #[serde(flatten)]
-    pub rpc_wrapper: RpcConfigWrapper,
+    #[serde(default)]
+    /// RPC url
+    pub url: Option<Url>,
+
+    #[serde(default)]
+    /// RPC network
+    pub network: Option<Network>,
 
     #[serde(default)]
     pub account: String,
@@ -83,10 +88,22 @@ pub struct CastConfig {
     pub networks: NetworksConfig,
 }
 
+impl CastConfig {
+    pub fn validate(&self) -> anyhow::Result<()> {
+        match (&self.url, &self.network) {
+            (Some(_), Some(_)) => {
+                anyhow::bail!("Only one of `url` or `network` may be specified")
+            }
+            _ => Ok(()),
+        }
+    }
+}
+
 impl Default for CastConfig {
     fn default() -> Self {
         Self {
-            rpc_wrapper: RpcConfigWrapper { rpc_config: None },
+            url: None,
+            network: None,
             account: String::default(),
             accounts_file: Utf8PathBuf::default(),
             keystore: None,
@@ -104,7 +121,9 @@ impl Config for CastConfig {
     }
 
     fn from_raw(config: serde_json::Value) -> Result<Self> {
-        serde_json::from_value::<Self>(config).map_err(anyhow::Error::from)
+        let config = serde_json::from_value::<Self>(config)?;
+        config.validate()?;
+        Ok(config)
     }
 }
 

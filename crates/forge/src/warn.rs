@@ -1,10 +1,8 @@
 use crate::{MINIMAL_SNFORGE_STD_DEPRECATED_VERSION, MINIMAL_SNFORGE_STD_VERSION};
 use anyhow::{Result, anyhow};
-use forge_runner::backtrace::is_backtrace_enabled;
 use forge_runner::package_tests::with_config_resolved::TestTargetWithResolvedConfig;
 use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
-use indoc::formatdoc;
 use scarb_api::package_matches_version_requirement;
 use scarb_metadata::Metadata;
 use semver::{Comparator, Op, Version, VersionReq};
@@ -37,7 +35,7 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
     for url in urls {
         let ui = ui.clone();
         handles.push(tokio::spawn(async move {
-            let client = create_rpc_client(url.clone())?;
+            let client = create_rpc_client(&url)?;
 
             verify_and_warn_if_incompatible_rpc_version(&client, &url, &ui).await
         }));
@@ -161,38 +159,4 @@ pub fn warn_if_snforge_std_does_not_match_package_version(
         )));
     }
     Ok(())
-}
-
-// TODO(#3679): Remove this function when we decide to bump minimal scarb version to 2.12.
-pub(crate) fn warn_if_backtrace_without_panic_hint(scarb_metadata: &Metadata, ui: &UI) {
-    if is_backtrace_enabled() {
-        let is_panic_backtrace_set = scarb_metadata
-            .compilation_units
-            .iter()
-            .filter(|unit| {
-                unit.target.name.contains("unittest")
-                    || unit.target.name.contains("integrationtest")
-            })
-            .all(|unit| match &unit.compiler_config {
-                serde_json::Value::Object(map) => map
-                    .get("panic_backtrace")
-                    .is_some_and(|v| v == &serde_json::Value::Bool(true)),
-                _ => false,
-            });
-
-        if !is_panic_backtrace_set {
-            let message = formatdoc! {
-                "Scarb version should be 2.12 or higher and `Scarb.toml` should have the following Cairo compiler configuration to get accurate backtrace results:
-
-                [profile.{profile}.cairo]
-                unstable-add-statements-functions-debug-info = true
-                unstable-add-statements-code-locations-debug-info = true
-                panic-backtrace = true # only for scarb 2.12 or higher
-                ... other entries ...
-                ",
-                profile = scarb_metadata.current_profile
-            };
-            ui.println(&WarningMessage::new(message));
-        }
-    }
 }
