@@ -78,21 +78,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set validation result
-        id: validVersion
-        run: |
-          if [ "${{ github.ref_type }}" = "branch" ]; then
-            echo "versionIsValid=${{ steps.compareVersion.outputs.versionIsValid }}" >> "$GITHUB_OUTPUT"
-            echo "version=${{ steps.compareVersion.outputs.version }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "versionIsValid=${{ steps.verifyTag.outputs.versionIsValid }}" >> "$GITHUB_OUTPUT"
-            echo "version=${{ steps.verifyTag.outputs.version }}" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Output job skipped
-        if: ${{ steps.validVersion.outputs.versionIsValid == 'false' }}
-        run: echo "Release validation failed, skipping build"
-
   build-binaries:
     name: Build binaries
     needs: verify-version
