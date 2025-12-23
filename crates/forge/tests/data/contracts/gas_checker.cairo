@@ -34,68 +34,9 @@ mod GasChecker {
 
         fn range_check(self: @ContractState) {
             // Felt into ContractAddress conversion uses RangeCheck as implicit argument
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
-            let _x: ContractAddress = 1234.try_into().unwrap();
+            for _ in 0..1000_u16 {
+                let _x: ContractAddress = 1234.try_into().unwrap();
+            }
         }
 
         fn bitwise(self: @ContractState, repetitions: u32) {
