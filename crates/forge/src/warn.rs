@@ -35,7 +35,7 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
     for url in urls {
         let ui = ui.clone();
         handles.push(tokio::spawn(async move {
-            let client = create_rpc_client(url.as_ref())?;
+            let client = create_rpc_client(&url)?;
 
             verify_and_warn_if_incompatible_rpc_version(&client, &url, &ui).await
         }));

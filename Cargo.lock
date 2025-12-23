@@ -1987,6 +1987,7 @@ dependencies = [
  "serde_json",
  "tempfile",
  "toml 0.9.10+spec-1.1.0",
+ "url",
 ]
 
 [[package]]
@@ -2874,7 +2875,7 @@ dependencies = [
  "serde_json",
  "shell-words",
  "tempfile",
- "toml_edit 0.23.10+spec-1.0.0",
+ "toml_edit 0.24.0+spec-1.1.0",
  "walkdir",
 ]
 
@@ -3319,7 +3320,7 @@ dependencies = [
  "tempfile",
  "test-case",
  "tokio",
- "toml_edit 0.23.10+spec-1.0.0",
+ "toml_edit 0.24.0+spec-1.1.0",
  "tracing",
  "tracing-chrome",
  "tracing-subscriber",
@@ -3371,7 +3372,7 @@ dependencies = [
  "strum 0.27.2",
  "strum_macros 0.27.2",
  "tokio",
- "toml_edit 0.23.10+spec-1.0.0",
+ "toml_edit 0.24.0+spec-1.1.0",
  "tracing",
  "universal-sierra-compiler-api",
  "url",
@@ -4228,14 +4229,15 @@ dependencies = [
 
 [[package]]
 name = "insta"
-version = "1.44.3"
+version = "1.45.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5c943d4415edd8153251b6f197de5eb1640e56d84e8d9159bea190421c73698"
+checksum = "b76866be74d68b1595eb8060cb9191dca9c021db2316558e52ddc5d55d41b66c"
 dependencies = [
  "console 0.15.11",
  "once_cell",
  "regex",
  "similar",
+ "tempfile",
 ]
 
 [[package]]
@@ -6972,7 +6974,7 @@ dependencies = [
  "thiserror 2.0.17",
  "tokio",
  "toml 0.9.10+spec-1.1.0",
- "toml_edit 0.23.10+spec-1.0.0",
+ "toml_edit 0.24.0+spec-1.1.0",
  "tracing",
  "tracing-log",
  "tracing-subscriber",
@@ -7842,6 +7844,18 @@ name = "toml_edit"
 version = "0.23.10+spec-1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "84c8b9f757e028cee9fa244aea147aab2a9ec09d5325a9b01e0a49730c2b5269"
+dependencies = [
+ "indexmap 2.12.1",
+ "toml_datetime 0.7.5+spec-1.1.0",
+ "toml_parser",
+ "winnow",
+]
+
+[[package]]
+name = "toml_edit"
+version = "0.24.0+spec-1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8c740b185920170a6d9191122cafef7010bd6270a3824594bff6784c04d7f09e"
 dependencies = [
  "indexmap 2.12.1",
  "toml_datetime 0.7.5+spec-1.1.0",

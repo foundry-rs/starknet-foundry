@@ -31,6 +31,7 @@ use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
 use std::str::FromStr;
+use url::Url;
 
 #[derive(Args, Debug)]
 #[command(about = "Create an account with all important secrets")]
@@ -124,14 +125,18 @@ pub async fn create(
             legacy,
         )?;
 
-        let deploy_command =
-            generate_deploy_command_with_keystore(account, keystore, &create.rpc, &config.url);
+        let deploy_command = generate_deploy_command_with_keystore(
+            account,
+            keystore,
+            &create.rpc,
+            config.url.as_ref(),
+        );
         message.push_str(&deploy_command);
     } else {
         write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
 
         let deploy_command =
-            generate_deploy_command(accounts_file, &create.rpc, &config.url, account);
+            generate_deploy_command(accounts_file, &create.rpc, config.url.as_ref(), account);
         message.push_str(&deploy_command);
     }
 
@@ -334,7 +339,7 @@ fn write_account_to_file(
 fn generate_deploy_command(
     accounts_file: &Utf8PathBuf,
     rpc_args: &RpcArgs,
-    config_url: &str,
+    config_url: Option<&Url>,
     account: &str,
 ) -> String {
     let accounts_flag = if accounts_file
@@ -358,7 +363,7 @@ fn generate_deploy_command_with_keystore(
     account: &str,
     keystore: &Utf8PathBuf,
     rpc_args: &RpcArgs,
-    config_url: &str,
+    config_url: Option<&Url>,
 ) -> String {
     let network_flag = generate_network_flag(rpc_args, config_url);
 

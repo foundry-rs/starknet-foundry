@@ -1,4 +1,5 @@
 use super::common::runner::runner;
+use crate::utils::tempdir_with_tool_versions;
 use assert_fs::prelude::PathChild;
 use camino::Utf8PathBuf;
 use forge::Template;
@@ -13,7 +14,7 @@ use toml_edit::DocumentMut;
 #[test_case(&Template::BalanceContract; "balance-contract")]
 #[test_case(&Template::Erc20Contract; "erc20-contract")]
 fn validate_templates(template: &Template) {
-    let temp_dir = assert_fs::TempDir::new().expect("Unable to create a temporary directory");
+    let temp_dir = tempdir_with_tool_versions().expect("Unable to create a temporary directory");
     let package_name = format!("{}_test", template.to_string().replace('-', "_"));
     let snforge_std = Utf8PathBuf::from("../../snforge_std")
         .canonicalize_utf8()

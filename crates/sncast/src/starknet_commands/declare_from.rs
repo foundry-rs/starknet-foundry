@@ -18,6 +18,7 @@ use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 use universal_sierra_compiler_api::compile_contract_sierra;
+use url::Url;
 
 #[derive(Args)]
 #[command(about = "Declare a contract by fetching it from a different Starknet instance", long_about = None)]
@@ -51,7 +52,7 @@ pub struct DeclareFrom {
 pub struct SourceRpcArgs {
     /// RPC provider url address
     #[arg(short, long)]
-    pub source_url: Option<String>,
+    pub source_url: Option<Url>,
 
     /// Use predefined network with a public provider. Note that this option may result in rate limits or other unexpected behavior
     #[arg(long)]
@@ -65,8 +66,6 @@ impl SourceRpcArgs {
             .await
             .context("Either `--source-network` or `--source-url` must be provided")?;
 
-        assert!(!url.is_empty(), "url cannot be empty");
-
         let provider = get_provider(&url)?;
         // TODO(#3959) Remove `base_ui`
         verify_and_warn_if_incompatible_rpc_version(&provider, url, ui.base_ui()).await?;
@@ -75,14 +74,12 @@ impl SourceRpcArgs {
     }
 
     #[must_use]
-    async fn get_url(&self) -> Option<String> {
+    async fn get_url(&self) -> Option<Url> {
         if let Some(network) = self.source_network {
             let free_provider = FreeProvider::semi_random();
             Some(network.url(&free_provider).await.ok()?)
         } else {
-            self.source_url
-                .as_ref()
-                .map(std::string::ToString::to_string)
+            self.source_url.clone()
         }
     }
 }
