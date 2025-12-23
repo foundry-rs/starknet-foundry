@@ -270,18 +270,17 @@ fn contract_range_check_cost_cairo_steps() {
 
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
-    // TODO: (#4031) Change test that the range check will be most costly factor, not steps
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
-    // 6 = cost of 2344 cairo steps (because int(0.0025 * 2344) = 6)
-    // 0 l1_gas + 96 l1_data_gas + 6 * (100 / 0.0025) l2 gas
+    // 43 = cost of 1052 range check builtins (because int(0.04 * 1052) = 43)
+    // 0 l1_gas + 96 l1_data_gas + 43 * (100 / 0.0025) l2 gas
     assert_gas(
         &result,
         "contract_range_check_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(240_000),
+            l2_gas: GasAmount(1_720_000),
         },
     );
 }
