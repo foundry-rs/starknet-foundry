@@ -42,19 +42,41 @@ jobs:
           excludes: draft
 
       - name: Compare versions
-        id: validVersion
+        id: compareVersion
+        if: github.ref_type == 'branch'
         run: |
           RELEASE_VERSION=${{ steps.lookupVersionRelease.outputs.release }}
           COMMIT_VERSION=${{ steps.lookupVersion.outputs.result }}
+
           echo "Project version from newest release = $RELEASE_VERSION"
           echo "Project version from this commit = $COMMIT_VERSION"
+
           IS_VALID=$(node ./scripts/compareVersions.js $RELEASE_VERSION $COMMIT_VERSION)
           echo "versionIsValid=$IS_VALID" >> "$GITHUB_OUTPUT"
           echo "version=$COMMIT_VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Output job skipped
-        if: ${{ steps.validVersion.outputs.versionIsValid == 'false' }}
-        run: echo "Version from commit is not greater from newest release, skipping build"
+      - name: Verify release does not already exist
+        id: verifyTag
+        if: github.ref_type == 'tag'
+        run: |
+          TAG_NAME="$GITHUB_REF_NAME"
+          TAG_VERSION="${TAG_NAME#v}"
+          CARGO_VERSION="${{ steps.lookupVersion.outputs.result }}"
+
+          if [ "$TAG_VERSION" != "$CARGO_VERSION" ]; then
+            echo "Tag version ($TAG_VERSION) does not match Cargo.toml version ($CARGO_VERSION)"
+            exit 1
+          fi
+
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Release $TAG_NAME already exists - aborting"
+            exit 1
+          fi
+
+          echo "versionIsValid=true" >> "$GITHUB_OUTPUT"
+          echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-binaries:
     name: Build binaries
