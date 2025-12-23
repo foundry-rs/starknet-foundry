@@ -15,6 +15,7 @@ jobs:
     name: Verify that version that triggered this workflow is greater than most recent  release
     runs-on: ubuntu-latest
     outputs:
+      # Steps `compareVersion` and `verifyTag` are mutually exclusive, only one of them will run
       versionIsValid: ${{ steps.compareVersion.outputs.versionIsValid }}${{ steps.verifyTag.outputs.versionIsValid }}
       version: ${{ steps.compareVersion.outputs.version }}${{ steps.verifyTag.outputs.version }}
     steps:
