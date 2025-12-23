@@ -154,6 +154,6 @@ async fn test_only_one_from_url_and_network_allowed() {
 
     assert_stderr_contains(
         output,
-        "Error: Failed to load config: Only one of `url` and `network` may be provided",
+        "Error: Failed to load config: Only one of `url` or `network` may be specified",
     );
 }

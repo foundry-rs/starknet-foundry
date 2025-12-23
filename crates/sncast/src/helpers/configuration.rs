@@ -88,6 +88,17 @@ pub struct CastConfig {
     pub networks: NetworksConfig,
 }
 
+impl CastConfig {
+    pub fn validate(&self) -> anyhow::Result<()> {
+        match (&self.url, &self.network) {
+            (Some(_), Some(_)) => {
+                anyhow::bail!("Only one of `url` or `network` may be specified")
+            }
+            _ => Ok(()),
+        }
+    }
+}
+
 impl Default for CastConfig {
     fn default() -> Self {
         Self {
@@ -110,7 +121,9 @@ impl Config for CastConfig {
     }
 
     fn from_raw(config: serde_json::Value) -> Result<Self> {
-        Ok(serde_json::from_value::<Self>(config)?)
+        let config = serde_json::from_value::<Self>(config)?;
+        config.validate()?;
+        Ok(config)
     }
 }
 
