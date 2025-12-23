@@ -1,5 +1,5 @@
 use crate::compatibility_check::{Requirement, RequirementsChecker, create_version_parser};
-use anyhow::Result;
+use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use derive_more::Display;
@@ -322,23 +322,21 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
             // Determine the number of threads to use
             let cores = if let Some(max_threads) = args.max_threads {
                 // Validate that max_threads doesn't exceed available parallelism
-                // If we can't detect available cores, we skip validation and trust the user
-                if let Ok(available_cores) = available_parallelism() {
-                    let available = available_cores.get();
-                    if max_threads > available {
-                        anyhow::bail!(
-                            "max-threads ({}) exceeds available parallelism ({})",
-                            max_threads,
-                            available
-                        );
-                    }
+                let available_cores = available_parallelism()
+                    .context("Failed to get the number of available cores")?;
+                let available = available_cores.get();
+                if max_threads > available {
+                    anyhow::bail!(
+                        "max-threads ({}) exceeds available parallelism ({})",
+                        max_threads,
+                        available
+                    );
                 }
                 max_threads
-            } else if let Ok(available_cores) = available_parallelism() {
-                available_cores.get()
             } else {
-                ui.eprintln(&"Failed to get the number of available cores, defaulting to 1");
-                1
+                available_parallelism()
+                    .context("Failed to get the number of available cores")?
+                    .get()
             };
 
             let rt = Builder::new_multi_thread()
