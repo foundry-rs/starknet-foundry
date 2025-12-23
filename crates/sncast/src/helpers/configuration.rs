@@ -129,9 +129,8 @@ impl Config for CastConfig {
 
 #[cfg(test)]
 mod tests {
-    use url::Url;
-
     use super::*;
+    use url::Url;
 
     #[test]
     fn test_networks_config_get() {
