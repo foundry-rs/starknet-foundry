@@ -124,7 +124,7 @@ jobs:
           echo "OUTPUT_BINARY_PATH=./crates/${{ inputs.plugin_name }}/target/${TARGET}/release/${OUTPUT_BINARY}" >> $GITHUB_ENV
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: build-${{ inputs.plugin_name }}-${{ matrix.target }}
           path: ${{ env.OUTPUT_BINARY_PATH }}
