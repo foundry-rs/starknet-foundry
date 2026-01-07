@@ -88,6 +88,7 @@ pub struct CastConfig {
     pub networks: NetworksConfig,
 }
 
+// TODO(#4027)
 impl CastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
         match (&self.url, &self.network) {

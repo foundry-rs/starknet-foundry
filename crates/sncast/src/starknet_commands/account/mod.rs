@@ -187,8 +187,8 @@ fn generate_add_profile_message(
             bail!("the argument '--network' should not be used with '--add-profile' argument");
         }
 
-        let (url, network) = if rpc_args.url.is_some() || rpc_args.network.is_some() {
-            (rpc_args.url.clone(), rpc_args.network)
+        let (url, network) = if rpc_args.url.is_some() {
+            (rpc_args.url.clone(), None)
         } else {
             (config.url.clone(), config.network)
         };
@@ -197,7 +197,7 @@ fn generate_add_profile_message(
             network,
             account: account_name.into(),
             accounts_file: accounts_file.into(),
-            keystore: keystore.map(std::convert::Into::into),
+            keystore: keystore.cloned(),
             ..Default::default()
         };
         let config_path = resolve_config_file();
