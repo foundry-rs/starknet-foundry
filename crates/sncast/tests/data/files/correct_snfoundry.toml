@@ -41,9 +41,3 @@ accounts-file = "/path/to/account.json"
 [sncast.no_url]
 accounts-file = "../account-file"
 account = "user1"
-
-[sncast.url_and_network]
-account = "user1"
-url = "http://some.url"
-network = "sepolia"
-accounts-file = "/path/to/account.json"

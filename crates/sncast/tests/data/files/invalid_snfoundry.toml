@@ -1,0 +1,5 @@
+[sncast.url_and_network]
+account = "user1"
+url = "http://some.url"
+network = "sepolia"
+accounts-file = "/path/to/account.json"

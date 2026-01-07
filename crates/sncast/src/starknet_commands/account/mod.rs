@@ -193,7 +193,7 @@ fn generate_add_profile_message(
             network,
             account: account_name.into(),
             accounts_file: accounts_file.into(),
-            keystore: keystore.map(std::convert::Into::into),
+            keystore: keystore.cloned(),
             ..Default::default()
         };
         let config_path = resolve_config_file();
