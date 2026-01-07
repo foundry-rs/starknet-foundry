@@ -29,7 +29,7 @@ url = "http://example.com"
 
 #### `network`
 
-The `network` field specifies the predefined or custom network to use. It's mutually exclusive with the `url` field.
+The `network` field specifies the network to use. It's mutually exclusive with the `url` field.
 
 ```toml
 [sncast.myprofile]
