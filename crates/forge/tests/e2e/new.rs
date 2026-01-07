@@ -201,7 +201,7 @@ fn get_expected_manifest_content(template: &Template, validate_snforge_std: bool
     let (dependencies, target_contract_entry) = match template {
         Template::BalanceContract => ("starknet = \"[..]\"", target_contract_entry),
         Template::Erc20Contract => (
-            "openzeppelin_token = \"[..]\"\nstarknet = \"[..]\"",
+            "openzeppelin_interfaces = \"[..]\"\nopenzeppelin_token = \"[..]\"\nopenzeppelin_utils = \"[..]\"\nstarknet = \"[..]\"",
             target_contract_entry,
         ),
         Template::CairoProgram => ("", ""),

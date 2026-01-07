@@ -21,7 +21,7 @@ pub trait ITokenSender<TContractState> {
 
 #[starknet::contract]
 pub mod TokenSender {
-    use openzeppelin_token::erc20::{ERC20ABIDispatcher, ERC20ABIDispatcherTrait};
+    use openzeppelin_interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use starknet::{ContractAddress, get_caller_address, get_contract_address};
     use super::TransferRequest;
 
@@ -55,7 +55,7 @@ pub mod TokenSender {
             transfer_list: Array<TransferRequest>,
         ) {
             // Create an ERC20 dispatcher to interact with the given token contract.
-            let erc20 = ERC20ABIDispatcher { contract_address: token_address };
+            let erc20 = IERC20Dispatcher { contract_address: token_address };
 
             // Compute total amount to be transferred.
             let mut total_amount: u256 = 0;
