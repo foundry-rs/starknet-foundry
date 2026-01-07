@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Minimal recommended `Scarb` version is now `2.12.2` (updated from `2.11.4`)
+- Template created by `snforge new --template erc20-contract` now uses `openzeppelin_token` version `3.0.0` (updated from `1.0.0`)
 
 #### Fixed
 
