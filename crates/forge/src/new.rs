@@ -15,8 +15,8 @@ use std::path::{Path, PathBuf};
 use toml_edit::{Array, ArrayOfTables, DocumentMut, Item, Table, Value, value};
 
 const OZ_INTERFACES_VERSION: Version = Version::new(2, 1, 0);
-const OZ_TOKEN_VERSION: Version = Version::new(2, 0, 0);
-const OZ_UTILS_VERSION: Version = Version::new(2, 0, 0);
+const OZ_TOKEN_VERSION: Version = Version::new(3, 0, 0);
+const OZ_UTILS_VERSION: Version = Version::new(2, 1, 0);
 
 static TEMPLATES_DIR: Dir = include_dir!("snforge_templates");
 
@@ -26,7 +26,6 @@ struct Dependency {
     name: String,
     version: String,
     dev: bool,
-    exact: bool,
 }
 
 impl Dependency {
@@ -42,39 +41,6 @@ impl Dependency {
             .run()
             .context(format!("Failed to add {} dependency", self.name))?;
 
-        if self.exact {
-            self.pin_to_exact_version(scarb_manifest_path)?;
-        }
-
-        Ok(())
-    }
-
-    fn pin_to_exact_version(&self, scarb_manifest_path: &PathBuf) -> Result<()> {
-        let toml_content = fs::read_to_string(scarb_manifest_path)?;
-        let mut document: DocumentMut = toml_content.parse().context("Invalid Scarb.toml")?;
-
-        let dep_section = if self.dev {
-            "dev-dependencies"
-        } else {
-            "dependencies"
-        };
-        let deps = document
-            .get_mut(dep_section)
-            .and_then(|d| d.as_table_mut())
-            .context(format!("Failed to get [{dep_section}] from Scarb.toml"))?;
-        let dep_req = deps.get_mut(&self.name).context(format!(
-            "Failed to get dependency `{}` from Scarb.toml",
-            self.name
-        ))?;
-        let version_str = dep_req
-            .as_value()
-            .and_then(|v| v.as_str())
-            .context(format!(
-                "Dependency `{}` is not specified as requirement string",
-                self.name
-            ))?;
-        *dep_req = value(format!("= {version_str}"));
-        fs::write(scarb_manifest_path, document.to_string())?;
         Ok(())
     }
 }
@@ -102,7 +68,6 @@ impl TemplateManifestConfig {
                 name: snforge_package.to_string(),
                 version: snforge_version.to_string(),
                 dev: true,
-                exact: false,
             }
             .add(scarb_manifest_path)?;
         }
@@ -159,7 +124,6 @@ impl TryFrom<&Template> for TemplateManifestConfig {
                     name: "starknet".to_string(),
                     version: cairo_version.to_string(),
                     dev: false,
-                    exact: false,
                 }],
                 contract_target: true,
                 fork_config: false,
@@ -170,25 +134,21 @@ impl TryFrom<&Template> for TemplateManifestConfig {
                         name: "starknet".to_string(),
                         version: cairo_version.to_string(),
                         dev: false,
-                        exact: false,
                     },
                     Dependency {
                         name: "openzeppelin_interfaces".to_string(),
                         version: OZ_INTERFACES_VERSION.to_string(),
                         dev: false,
-                        exact: false,
                     },
                     Dependency {
                         name: "openzeppelin_token".to_string(),
                         version: OZ_TOKEN_VERSION.to_string(),
                         dev: false,
-                        exact: false,
                     },
                     Dependency {
                         name: "openzeppelin_utils".to_string(),
                         version: OZ_UTILS_VERSION.to_string(),
                         dev: false,
-                        exact: true,
                     },
                 ],
                 contract_target: true,
