@@ -139,7 +139,7 @@ pub async fn create(
         &create.rpc,
         account,
         accounts_file,
-        keystore.cloned().as_ref(),
+        keystore.cloned(),
         config,
     )?;
 
