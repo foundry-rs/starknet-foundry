@@ -115,6 +115,26 @@ fn accepts_string() {
 }
 
 #[test]
+fn fails_with_unexpected_args() {
+    let args = quote!((url: "http://example.com", block_number: 23, tomato: 123, hello: "world"));
+
+    let result = fork(args, empty_function());
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(formatdoc!(
+            r#"
+                All options failed
+                - variant: #[fork] unexpected argument(s): <hello>, <tomato>
+                - variant: #[fork] expected arguments: 1, got: 0
+                - variant: #[fork] can be used with unnamed arguments only
+                Resolve at least one of them
+            "#
+        ))],
+    );
+}
+
+#[test]
 fn accepts_inline_config() {
     let args = quote!((url: "http://example.com", block_number: 23));
 
