@@ -1,4 +1,3 @@
-use crate::args::Arguments;
 use crate::args::unnamed::UnnamedArgs;
 use crate::attributes::ErrorExt;
 use crate::attributes::test_case::TestCaseCollector;
@@ -42,13 +41,11 @@ fn generate_case_suffix(unnamed_args: &UnnamedArgs, db: &SimpleParserDatabase) -
 
 pub fn test_case_name(
     func_name: &str,
-    arguments: &Arguments,
+    name_arg: Option<&Expr>,
+    unnamed_args: &UnnamedArgs,
     db: &SimpleParserDatabase,
 ) -> Result<String, Diagnostics> {
-    let named_args = arguments.named();
-    let test_case_name = named_args.as_once_optional("name")?;
-
-    let suffix = if let Some(expr) = test_case_name {
+    let suffix = if let Some(expr) = name_arg {
         match expr {
             Expr::ShortString(_) | Expr::String(_) => {}
             _ => {
@@ -59,7 +56,7 @@ pub fn test_case_name(
         }
         sanitize_expr(expr, db)
     } else {
-        generate_case_suffix(&arguments.unnamed(), db)
+        generate_case_suffix(unnamed_args, db)
     };
 
     Ok(format!("{func_name}_{suffix}"))
