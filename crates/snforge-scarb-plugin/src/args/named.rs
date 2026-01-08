@@ -1,5 +1,7 @@
+use crate::attributes::{AttributeInfo, ErrorExt};
 use cairo_lang_macro::Diagnostic;
 use cairo_lang_syntax::node::ast::Expr;
+use indoc::formatdoc;
 use smol_str::SmolStr;
 use std::{
     collections::HashMap,
@@ -24,6 +26,26 @@ impl DerefMut for NamedArgs {
 }
 
 impl NamedArgs {
+    pub fn allow_only<T: AttributeInfo>(&self, expected: &[&str]) -> Result<(), Diagnostic> {
+        let unexpected = self
+            .0
+            .keys()
+            .filter(|k| !expected.contains(&k.as_str()))
+            .collect::<Vec<_>>();
+
+        if unexpected.is_empty() {
+            return Ok(());
+        };
+        Err(T::error(formatdoc!(
+            "unexpected argument(s): {}",
+            unexpected
+                .iter()
+                .map(|k| format!("<{}>", k.as_str()))
+                .collect::<Vec<_>>()
+                .join(", ")
+        )))
+    }
+
     pub fn as_once(&self, arg: &str) -> Result<&Expr, Diagnostic> {
         let exprs = self
             .0
