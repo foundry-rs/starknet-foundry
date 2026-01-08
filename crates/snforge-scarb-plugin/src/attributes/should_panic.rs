@@ -29,6 +29,8 @@ impl AttributeCollector for ShouldPanicCollector {
     ) -> Result<TokenStream, Diagnostics> {
         let named_args = args.named_only::<Self>()?;
 
+        named_args.allow_only::<Self>(&["expected"])?;
+
         let expected = named_args.as_once_optional("expected")?;
 
         let expected = expected
