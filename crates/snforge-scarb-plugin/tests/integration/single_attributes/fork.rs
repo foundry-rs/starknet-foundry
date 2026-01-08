@@ -123,13 +123,13 @@ fn fails_with_unexpected_args() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(formatdoc!(
-            r#"
+            "
                 All options failed
                 - variant: #[fork] unexpected argument(s): <hello>, <tomato>
                 - variant: #[fork] expected arguments: 1, got: 0
                 - variant: #[fork] can be used with unnamed arguments only
                 Resolve at least one of them
-            "#
+            "
         ))],
     );
 }
