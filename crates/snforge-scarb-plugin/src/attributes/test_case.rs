@@ -45,7 +45,7 @@ fn test_case_internal(
     ensure_params_valid(func, &args.unnamed(), db)?;
 
     let func_name = func.declaration(db).name(db);
-    
+
     let name_arg = named_args.as_once_optional("name")?;
     let case_fn_name = test_case_name(&func_name.text(db), name_arg, &unnamed_args, args_db)?;
     let filtered_fn_attrs = collect_preserved_attributes_for_test_case(func, db);
