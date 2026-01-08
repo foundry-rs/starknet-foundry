@@ -35,7 +35,7 @@ impl NamedArgs {
 
         if unexpected.is_empty() {
             return Ok(());
-        };
+        }
 
         // Sort for deterministic output
         unexpected.sort_by_key(|k| k.as_str());
