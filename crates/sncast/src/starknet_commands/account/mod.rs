@@ -179,7 +179,7 @@ fn generate_add_profile_message(
     rpc_args: &RpcArgs,
     account_name: &str,
     accounts_file: &Utf8PathBuf,
-    keystore: Option<&Utf8PathBuf>,
+    keystore: Option<Utf8PathBuf>,
     config: &CastConfig,
 ) -> Result<Option<String>> {
     if let Some(profile_name) = profile_name {
@@ -193,7 +193,7 @@ fn generate_add_profile_message(
             network,
             account: account_name.into(),
             accounts_file: accounts_file.into(),
-            keystore: keystore.cloned(),
+            keystore,
             ..Default::default()
         };
         let config_path = resolve_config_file();

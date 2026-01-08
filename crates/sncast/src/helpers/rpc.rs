@@ -38,15 +38,13 @@ impl RpcArgs {
     }
 
     pub async fn get_url(&self, config: &CastConfig) -> Result<Url> {
-        let url_from_config = match (&config.url, &config.network) {
-            (Some(url), _) => Some(url.clone()),
-            (None, Some(network)) => Some(self.resolve_network_url(network, config).await?),
-            (None, None) => None,
-        };
-        match (&self.network, &self.url, &url_from_config) {
-            (Some(network), None, _) => self.resolve_network_url(network, config).await,
-            (None, Some(url), _) => Ok(url.clone()),
-            (None, None, Some(url_from_config)) => Ok(url_from_config.clone()),
+        match (&self.network, &self.url, &config.url, &config.network) {
+            (Some(network), None, _, _) => self.resolve_network_url(network, config).await,
+            (None, Some(url), _, _) => Ok(url.clone()),
+            (None, None, Some(config_url), None) => Ok(config_url.clone()),
+            (None, None, None, Some(config_network)) => {
+                self.resolve_network_url(config_network, config).await
+            }
             _ => bail!("Either `--network` or `--url` must be provided."),
         }
     }

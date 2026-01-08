@@ -49,7 +49,6 @@ pub struct CastConfig {
     pub url: Option<Url>,
 
     #[serde(default)]
-    /// RPC network
     pub network: Option<Network>,
 
     #[serde(default)]

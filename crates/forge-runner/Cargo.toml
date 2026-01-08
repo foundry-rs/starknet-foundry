@@ -10,7 +10,6 @@ anyhow.workspace = true
 cairo-lang-casm.workspace = true
 cairo-lang-sierra.workspace = true
 cairo-lang-utils.workspace = true
-cairo-lang-starknet.workspace = true
 cairo-lang-sierra-type-size.workspace = true
 cairo-lang-test-plugin.workspace = true
 cairo-lang-starknet-classes.workspace = true
@@ -28,16 +27,13 @@ cairo-vm.workspace = true
 itertools.workspace = true
 indoc.workspace = true
 camino.workspace = true
-toml_edit.workspace = true
 serde_json.workspace = true
-semver.workspace = true
 console.workspace = true
 serde.workspace = true
 rayon.workspace = true
 cheatnet = { path = "../cheatnet" }
 runtime = { path = "../runtime" }
 conversions = { path = "../conversions" }
-scarb-api = { path = "../scarb-api" }
 shared = { path = "../shared" }
 debugging = { path = "../debugging" }
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
