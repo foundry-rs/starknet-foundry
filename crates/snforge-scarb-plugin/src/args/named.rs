@@ -27,7 +27,7 @@ impl DerefMut for NamedArgs {
 
 impl NamedArgs {
     pub fn allow_only<T: AttributeInfo>(&self, expected: &[&str]) -> Result<(), Diagnostic> {
-        let unexpected = self
+        let mut unexpected = self
             .0
             .keys()
             .filter(|k| !expected.contains(&k.as_str()))
@@ -36,6 +36,10 @@ impl NamedArgs {
         if unexpected.is_empty() {
             return Ok(());
         };
+
+        // Sort for deterministic output
+        unexpected.sort_by_key(|k| k.as_str());
+
         Err(T::error(formatdoc!(
             "unexpected argument(s): {}",
             unexpected
