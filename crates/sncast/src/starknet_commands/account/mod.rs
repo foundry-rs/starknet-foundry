@@ -183,12 +183,8 @@ fn generate_add_profile_message(
     config: &CastConfig,
 ) -> Result<Option<String>> {
     if let Some(profile_name) = profile_name {
-        if rpc_args.network.is_some() {
-            bail!("the argument '--network' should not be used with '--add-profile' argument");
-        }
-
-        let (url, network) = if rpc_args.url.is_some() {
-            (rpc_args.url.clone(), None)
+        let (url, network) = if rpc_args.url.is_some() || rpc_args.network.is_some() {
+            (rpc_args.url.clone(), rpc_args.network)
         } else {
             (config.url.clone(), config.network)
         };

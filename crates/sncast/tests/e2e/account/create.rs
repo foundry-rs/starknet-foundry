@@ -242,8 +242,10 @@ pub async fn test_happy_case_generate_salt() {
 }
 
 #[tokio::test]
-pub async fn test_happy_case_add_profile() {
-    let tempdir = tempdir().expect("Failed to create a temporary directory");
+#[test_case("--url", URL; "with_url")]
+#[test_case("--network", "sepolia"; "with_network")]
+pub async fn test_happy_case_add_profile(rpc_flag: &str, rpc_value: &str) {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -251,8 +253,8 @@ pub async fn test_happy_case_add_profile() {
         accounts_file,
         "account",
         "create",
-        "--url",
-        URL,
+        rpc_flag,
+        rpc_value,
         "--name",
         "my_account",
         "--add-profile",
@@ -272,8 +274,15 @@ pub async fn test_happy_case_add_profile() {
 
     let contents = fs::read_to_string(tempdir.path().join("snfoundry.toml"))
         .expect("Unable to read snfoundry.toml");
-    assert!(contents.contains("[sncast.my_account]"));
-    assert!(contents.contains("account = \"my_account\""));
+    let expected_lines = [
+        "[sncast.my_account]",
+        "account = \"my_account\"",
+        "accounts-file = \"accounts.json\"",
+        &format!("{} = \"{}\"", rpc_flag.trim_start_matches("--"), rpc_value),
+    ];
+    let expected_block = expected_lines.join("\n");
+
+    assert!(contents.contains(&expected_block));
 }
 
 #[tokio::test]
@@ -321,35 +330,6 @@ pub async fn test_happy_case_accounts_file_already_exists() {
     assert!(contents.contains("my_account"));
     assert!(contents.contains("deployed"));
     assert!(contents.contains("legacy"));
-}
-
-#[tokio::test]
-pub async fn test_add_profile_with_network() {
-    let tempdir = tempdir().expect("Failed to create a temporary directory");
-    let accounts_file = "accounts.json";
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file,
-        "account",
-        "create",
-        "--network",
-        "sepolia",
-        "--name",
-        "my_account",
-        "--add-profile",
-        "my_account",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert();
-
-    assert_stderr_contains(
-        output,
-        indoc! {r"
-        error: the argument '--network <NETWORK>' cannot be used with '--add-profile <ADD_PROFILE>'
-    "},
-    );
 }
 
 #[tokio::test]
