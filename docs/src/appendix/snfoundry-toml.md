@@ -18,11 +18,22 @@ If it is not found, default values will be used.
 All fields are optional and do not have to be provided. In case a field is not defined in a manifest file, it must be provided in CLI when executing a relevant `sncast` command.
 Profiles allow you to define different sets of configurations for various environments or use cases. For more details, see the [profiles explanation](../projects/configuration.md).
 
-The `url` field specifies the address of RPC provider.
+#### `url`
+
+The `url` field specifies the address of RPC provider. It's mutually exclusive with the `network` field.
 
 ```toml
 [sncast.myprofile]
 url = "http://example.com"
+```
+
+#### `network`
+
+The `network` field specifies the network to use. It's mutually exclusive with the `url` field.
+
+```toml
+[sncast.myprofile]
+network = "sepolia"
 ```
 
 #### `accounts-file`

@@ -267,7 +267,6 @@ fn test_wrong_calldata() {
 }
 
 #[test]
-#[ignore = "TODO(#3997) Restore this after devnet fixes fee issue"]
 fn test_too_low_gas() {
     let args = vec![
         "--accounts-file",

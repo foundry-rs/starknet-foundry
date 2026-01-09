@@ -141,6 +141,19 @@ fn does_not_work_with_unnamed_arg() {
 }
 
 #[test]
+fn fails_with_unexpected_args() {
+    let args = quote!((sth: 1000));
+    let result = available_gas(args, empty_function());
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(formatdoc!(
+            "#[available_gas] unexpected argument(s): <sth>"
+        ))],
+    );
+}
+
+#[test]
 fn handles_number_overflow_l1() {
     let args = quote!((l1_gas: 18446744073709551616));
 

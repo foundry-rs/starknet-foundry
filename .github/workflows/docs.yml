@@ -34,11 +34,11 @@ jobs:
       # TODO(#3970): Use latest version after resolving issue
       MDBOOK_VARIABLES_VERSION: 0.3.0
     steps:
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@0b1efabc08b657293548b77fb76cc02d26091c7e
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
-      - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
       - name: Install sitemap CLI
         run: |
@@ -55,16 +55,10 @@ jobs:
         with:
           scarb-version: latest
       - name: Generate and build snforge_std docs
-        run: |
-          scarb doc
-          pushd target/doc/snforge_std
-          mdbook build
+        run: scarb doc --build
         working-directory: ./snforge_std
       - name: Generate and build sncast_std docs
-        run: |
-          scarb doc
-          pushd target/doc/sncast_std
-          mdbook build
+        run: scarb doc --build
         working-directory: ./sncast_std
       - name: Setup Pages
         id: pages
@@ -80,11 +74,6 @@ jobs:
         run: |
           mkdir -p ./docs/book/html/sncast_std
           cp -r ./sncast_std/target/doc/sncast_std/book/* ./docs/book/html/sncast_std/
-      - name: Apply custom highlighting
-        run: |
-          curl -o highlight.js https://raw.githubusercontent.com/software-mansion/scarb/main/extensions/scarb-doc/theme/highlight.js
-          cp highlight.js ./docs/book/html/sncast_std/highlight.js
-          cp highlight.js ./docs/book/html/snforge_std/highlight.js
       - name: Generate sitemap
         run: |
           sscli --base https://foundry-rs.github.io/starknet-foundry

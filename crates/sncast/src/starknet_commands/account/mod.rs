@@ -133,6 +133,8 @@ pub fn add_created_profile_to_configuration(
 
         if let Some(url) = &cast_config.url {
             new_profile.insert("url".to_string(), Value::String(url.to_string()));
+        } else if let Some(network) = &cast_config.network {
+            new_profile.insert("network".to_string(), Value::String(network.to_string()));
         }
         new_profile.insert(
             "account".to_string(),
@@ -174,18 +176,21 @@ pub fn add_created_profile_to_configuration(
 
 fn generate_add_profile_message(
     profile_name: Option<&String>,
-    rpc: &RpcArgs,
+    rpc_args: &RpcArgs,
     account_name: &str,
     accounts_file: &Utf8PathBuf,
     keystore: Option<Utf8PathBuf>,
+    config: &CastConfig,
 ) -> Result<Option<String>> {
     if let Some(profile_name) = profile_name {
-        let url = rpc
-            .url
-            .clone()
-            .expect("the argument '--network' should not be used with '--add-profile' argument");
+        let (url, network) = if rpc_args.url.is_some() || rpc_args.network.is_some() {
+            (rpc_args.url.clone(), rpc_args.network)
+        } else {
+            (config.url.clone(), config.network)
+        };
         let config = CastConfig {
-            url: Some(url),
+            url,
+            network,
             account: account_name.into(),
             accounts_file: accounts_file.into(),
             keystore,
@@ -216,6 +221,7 @@ pub async fn account(
                 &config.accounts_file,
                 &provider,
                 &import,
+                &config,
                 ui,
             )
             .await;
@@ -341,8 +347,7 @@ pub async fn account(
 mod tests {
     use camino::Utf8PathBuf;
     use configuration::test_utils::copy_config_to_tempdir;
-    use sncast::helpers::configuration::CastConfig;
-    use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
+    use sncast::helpers::{configuration::CastConfig, constants::DEFAULT_ACCOUNTS_FILE};
     use std::fs;
     use url::Url;
 
@@ -353,7 +358,8 @@ mod tests {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let path = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
         let config = CastConfig {
-            url: Some(Url::parse("http://some-url.com").unwrap()),
+            url: Some(Url::parse("http://some-url.com/").unwrap()),
+            network: None,
             account: String::from("some-name"),
             accounts_file: "accounts".into(),
             ..Default::default()
@@ -378,7 +384,8 @@ mod tests {
     fn test_add_created_profile_to_configuration_profile_already_exists() {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let config = CastConfig {
-            url: Some(Url::parse("http://127.0.0.1:5055/rpc").unwrap()),
+            url: Some(Url::parse("http://some-url.com/").unwrap()),
+            network: None,
             account: String::from("user1"),
             accounts_file: DEFAULT_ACCOUNTS_FILE.into(),
             ..Default::default()

@@ -41,6 +41,8 @@ impl AttributeCollector for FuzzerCollector {
     ) -> Result<TokenStream, Diagnostics> {
         let named_args = args.named_only::<Self>()?;
 
+        named_args.allow_only::<Self>(&["seed", "runs"])?;
+
         let seed = named_args
             .as_once_optional("seed")?
             .map(|arg| Number::parse_from_expr::<Self>(db, arg, "seed"))

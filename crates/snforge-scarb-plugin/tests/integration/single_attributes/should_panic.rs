@@ -196,3 +196,17 @@ fn is_used_once() {
         )],
     );
 }
+
+#[test]
+fn fails_with_unexpected_args() {
+    let args = quote!((expected: "panic", tomato: 123));
+
+    let result = should_panic(args, empty_function());
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(
+            "#[should_panic] unexpected argument(s): <tomato>",
+        )],
+    );
+}

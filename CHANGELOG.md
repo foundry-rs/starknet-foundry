@@ -7,11 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Forge
+
+#### Changed
+
+- Minimal recommended `Scarb` version is now `2.13.1` (updated from `2.12.2`)
+- `snforge_scarb_plugin` now emits an error if unexpected named args are passed to `#[available_gas]`, `#[fork]`, `#[fuzzer]`, `#[should_panic]` and `#[test_case]` attributes
+
 ### Forge
 
 #### Fixed
 
 - Byte arrays containing non-printable characters are now displayed correctly in fuzz test output
+
+### Cast
+
+#### Added
+
+- `network` field can now be configured in `snfoundry.toml`
+
+#### Changed
+
+- `--network` flag can be used with `--add-profile` flag
 
 ## [0.55.0-rc.0] - 2025-12-18
 

@@ -33,6 +33,11 @@ account = "user1"
 wait-params = { timeout = 500, retry-interval = 10 }
 show-explorer-links = false
 
+[sncast.profile7]
+network = "sepolia"
+account = "user1"
+accounts-file = "/path/to/account.json"
+
 [sncast.no_url]
 accounts-file = "../account-file"
 account = "user1"

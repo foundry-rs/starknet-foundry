@@ -29,6 +29,8 @@ pub async fn show_config(
     };
 
     let rpc_url = show.rpc.url.clone().or(cast_config.url);
+    let network = show.rpc.network.or(cast_config.network);
+
     let account = Some(cast_config.account).filter(|p| !p.is_empty());
     let mut accounts_file_path =
         Some(cast_config.accounts_file).filter(|p| p != &Utf8PathBuf::default());
@@ -44,6 +46,7 @@ pub async fn show_config(
         profile,
         chain_id,
         rpc_url,
+        network,
         account,
         accounts_file_path,
         keystore,

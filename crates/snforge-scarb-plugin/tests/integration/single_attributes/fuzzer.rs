@@ -479,3 +479,17 @@ fn is_used_once() {
         )],
     );
 }
+
+#[test]
+fn fails_with_unexpected_args() {
+    let args = quote!((runs: 100, tomato: 123));
+
+    let result = fuzzer_config(args, empty_function());
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(
+            "#[fuzzer] unexpected argument(s): <tomato>",
+        )],
+    );
+}

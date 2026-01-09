@@ -49,6 +49,9 @@ pub struct CastConfig {
     pub url: Option<Url>,
 
     #[serde(default)]
+    pub network: Option<Network>,
+
+    #[serde(default)]
     pub account: String,
 
     #[serde(
@@ -84,10 +87,23 @@ pub struct CastConfig {
     pub networks: NetworksConfig,
 }
 
+// TODO(#4027)
+impl CastConfig {
+    pub fn validate(&self) -> anyhow::Result<()> {
+        match (&self.url, &self.network) {
+            (Some(_), Some(_)) => {
+                anyhow::bail!("Only one of `url` or `network` may be specified")
+            }
+            _ => Ok(()),
+        }
+    }
+}
+
 impl Default for CastConfig {
     fn default() -> Self {
         Self {
             url: None,
+            network: None,
             account: String::default(),
             accounts_file: Utf8PathBuf::default(),
             keystore: None,
@@ -105,13 +121,16 @@ impl Config for CastConfig {
     }
 
     fn from_raw(config: serde_json::Value) -> Result<Self> {
-        Ok(serde_json::from_value::<Self>(config)?)
+        let config = serde_json::from_value::<Self>(config)?;
+        config.validate()?;
+        Ok(config)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use url::Url;
 
     #[test]
     fn test_networks_config_get() {

@@ -33,6 +33,9 @@ fn from_resource_bounds(
     args: &Arguments,
 ) -> Result<TokenStream, Diagnostic> {
     let named_args = args.named_only::<AvailableGasCollector>()?;
+
+    named_args.allow_only::<AvailableGasCollector>(&["l1_gas", "l1_data_gas", "l2_gas"])?;
+
     let max = u64::MAX;
     let l1_gas = named_args
         .as_once_optional("l1_gas")?

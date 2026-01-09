@@ -31,7 +31,6 @@ use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
 use std::str::FromStr;
-use url::Url;
 
 #[derive(Args, Debug)]
 #[command(about = "Create an account with all important secrets")]
@@ -49,7 +48,7 @@ pub struct Create {
     pub salt: Option<Felt>,
 
     /// If passed, a profile with provided name and corresponding data will be created in snfoundry.toml
-    #[arg(long, conflicts_with = "network")]
+    #[arg(long)]
     pub add_profile: Option<String>,
 
     /// Custom contract class hash of declared contract
@@ -125,18 +124,13 @@ pub async fn create(
             legacy,
         )?;
 
-        let deploy_command = generate_deploy_command_with_keystore(
-            account,
-            keystore,
-            &create.rpc,
-            config.url.as_ref(),
-        );
+        let deploy_command =
+            generate_deploy_command_with_keystore(account, keystore, &create.rpc, config);
         message.push_str(&deploy_command);
     } else {
         write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
 
-        let deploy_command =
-            generate_deploy_command(accounts_file, &create.rpc, config.url.as_ref(), account);
+        let deploy_command = generate_deploy_command(accounts_file, &create.rpc, config, account);
         message.push_str(&deploy_command);
     }
 
@@ -146,6 +140,7 @@ pub async fn create(
         account,
         accounts_file,
         keystore.cloned(),
+        config,
     )?;
 
     Ok(AccountCreateResponse {
@@ -339,7 +334,7 @@ fn write_account_to_file(
 fn generate_deploy_command(
     accounts_file: &Utf8PathBuf,
     rpc_args: &RpcArgs,
-    config_url: Option<&Url>,
+    config: &CastConfig,
     account: &str,
 ) -> String {
     let accounts_flag = if accounts_file
@@ -351,7 +346,7 @@ fn generate_deploy_command(
         format!(" --accounts-file {accounts_file}")
     };
 
-    let network_flag = generate_network_flag(rpc_args, config_url);
+    let network_flag = generate_network_flag(rpc_args, config);
 
     format!(
         "\n\nAfter prefunding the account, run:\n\
@@ -363,9 +358,9 @@ fn generate_deploy_command_with_keystore(
     account: &str,
     keystore: &Utf8PathBuf,
     rpc_args: &RpcArgs,
-    config_url: Option<&Url>,
+    config: &CastConfig,
 ) -> String {
-    let network_flag = generate_network_flag(rpc_args, config_url);
+    let network_flag = generate_network_flag(rpc_args, config);
 
     format!(
         "\n\nAfter prefunding the account, run:\n\
