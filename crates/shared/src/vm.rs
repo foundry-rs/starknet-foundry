@@ -1,11 +1,7 @@
-use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::vm_core::VirtualMachine;
+use std::iter::once;
 
 pub trait VirtualMachineExt {
-    /// Returns the values (fp, pc) corresponding to each call instruction in the traceback.
-    /// Returns the most recent call last.
-    fn get_traceback_entries(&self) -> Vec<(Relocatable, Relocatable)>;
-
     /// Return the relocated pc values corresponding to each call instruction in the traceback.
     /// Returns the most recent call first.
     /// # Note
@@ -19,23 +15,19 @@ pub trait VirtualMachineExt {
     /// to compute their relocated values. However, the relocation table is not publicly
     /// accessible from within the VM, and accessing it would require replicating significant
     /// amounts of internal implementation code.
+    fn get_reversed_pc_traceback(&self) -> Vec<usize>;
+}
+
+impl VirtualMachineExt for VirtualMachine {
     fn get_reversed_pc_traceback(&self) -> Vec<usize> {
         self.get_traceback_entries()
             .into_iter()
+            // The cairo-vm implementation doesn't include the start location, so we add it manually.
+            .chain(once((self.get_fp(), self.get_pc())))
             .rev()
             .map(|(_, pc)| pc)
             .filter(|pc| pc.segment_index == 0)
             .map(|pc| pc.offset + 1)
             .collect()
-    }
-}
-
-impl VirtualMachineExt for VirtualMachine {
-    fn get_traceback_entries(&self) -> Vec<(Relocatable, Relocatable)> {
-        let mut entries = VirtualMachine::get_traceback_entries(self);
-
-        // The cairo-vm implementation doesn't include the start location, so we add it manually.
-        entries.push((self.get_fp(), self.get_pc()));
-        entries
     }
 }
