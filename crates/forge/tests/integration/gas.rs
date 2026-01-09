@@ -236,9 +236,6 @@ fn range_check_cost_cairo_steps() {
     );
 }
 
-/// Declare, deploy and function call consume 13 `range_check_builtin`s
-/// `range_check` function consumes 9, so
-/// overall cost will be 22 * range check builtin cost.
 #[test]
 fn contract_range_check_cost_cairo_steps() {
     let test = test_case!(
