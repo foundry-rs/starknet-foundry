@@ -163,9 +163,24 @@ panic-backtrace = true # only for scarb 2.12 or later
 > 📝 **Note**
 >
 > That `unstable-add-statements-code-locations-debug-info = true` and
-`unstable-add-statements-functions-debug-info = true` will slow down the compilation and cause it to use more system
+> `unstable-add-statements-functions-debug-info = true` will slow down the compilation and cause it to use more system
 > memory. It will also make the compilation artifacts larger. So it is only recommended to add these flags when you need
 > their functionality.
+
+> 📝 **Note**
+>
+> You can get backtrace output with minimal compiler optimizations by adding `skip-optimizations = true` to your
+> `Scarb.toml` (requires Scarb >= 2.14.0). This will skip as much compiler optimization as possible when compiling to Sierra.
+> Learn more about this option in the [Scarb documentation](https://docs.swmansion.com/scarb/docs/reference/manifest.html#skip-optimizations).
+>
+> ```toml
+> [cairo]
+> skip-optimizations = true
+> ```
+>
+> ⚠️ **Warning**: Setting `skip-optimizations = true` may result in faster compilation, but **much** slower execution
+> of the compiled code. If you need to deploy your contracts on Starknet, you should **never** compile them with this
+> field set to `true`.
 
 ### Usage
 
