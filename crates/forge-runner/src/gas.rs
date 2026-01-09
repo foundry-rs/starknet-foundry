@@ -1,22 +1,18 @@
+use crate::gas::resources::GasCalculationResources;
 use crate::test_case_summary::{Single, TestCaseSummary};
-use blockifier::abi::constants;
 use blockifier::context::TransactionContext;
-use blockifier::execution::call_info::EventSummary;
-use blockifier::fee::resources::{
-    ArchivalDataResources, ComputationResources, MessageResources, StarknetResources,
-    StateResources, TransactionResources,
-};
+use blockifier::fee::resources::{StarknetResources, StateResources, TransactionResources};
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
 use blockifier::transaction::objects::HasRelatedFeeType;
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableResourceBoundsConfig;
 use cheatnet::state::ExtendedStateReader;
-use starknet_api::execution_resources::{GasAmount, GasVector};
+use starknet_api::execution_resources::GasVector;
 use starknet_api::transaction::fields::GasVectorComputationMode;
 
 pub mod report;
+pub mod resources;
 pub mod stats;
 mod utils;
 
@@ -24,43 +20,20 @@ mod utils;
 pub fn calculate_used_gas(
     transaction_context: &TransactionContext,
     state: &mut CachedState<ExtendedStateReader>,
-    resources: UsedResources,
+    used_resources: UsedResources,
 ) -> Result<GasVector, StateError> {
     let versioned_constants = transaction_context.block_context.versioned_constants();
-
-    let message_resources = get_messages_resources(
-        &resources.execution_summary.l2_to_l1_payload_lengths,
-        &resources.l1_handler_payload_lengths,
-    );
-
-    let state_resources = get_state_resources(transaction_context, state)?;
-
-    let archival_data_resources =
-        get_archival_data_resources(resources.execution_summary.event_summary);
+    let resources = GasCalculationResources::from_used_resources(&used_resources);
 
     let starknet_resources = StarknetResources {
-        archival_data: archival_data_resources,
-        messages: message_resources,
-        state: state_resources,
-    };
-    let computation_resources = ComputationResources {
-        tx_vm_resources: resources
-            .execution_summary
-            .charged_resources
-            .vm_resources
-            .clone(),
-        // OS resources (transaction type related costs) and fee transfer resources are not included
-        // as they are not relevant for test execution (see documentation for details):
-        // https://github.com/foundry-rs/starknet-foundry/blob/979caf23c5d1085349e253d75682dd0e2527e321/docs/src/testing/gas-and-resource-estimation.md?plain=1#L75
-        os_vm_resources: ExecutionResources::default(),
-        n_reverted_steps: 0, // TODO(#3681)
-        sierra_gas: resources.execution_summary.charged_resources.gas_consumed,
-        reverted_sierra_gas: GasAmount::ZERO, // TODO(#3681)
+        archival_data: resources.to_archival_resources(),
+        messages: resources.to_message_resources(),
+        state: get_state_resources(transaction_context, state)?,
     };
 
     let transaction_resources = TransactionResources {
         starknet_resources,
-        computation: computation_resources,
+        computation: resources.to_computation_resources(),
     };
 
     let use_kzg_da = transaction_context.block_context.block_info().use_kzg_da;
@@ -69,51 +42,6 @@ pub fn calculate_used_gas(
         use_kzg_da,
         &GasVectorComputationMode::All,
     ))
-}
-
-fn get_archival_data_resources(event_summary: EventSummary) -> ArchivalDataResources {
-    // calldata length, signature length and code size are set to 0, because
-    // we don't include them in estimations
-    // ref: https://github.com/foundry-rs/starknet-foundry/blob/5ce15b029135545452588c00aae580c05eb11ca8/docs/src/testing/gas-and-resource-estimation.md?plain=1#L73
-    ArchivalDataResources {
-        event_summary,
-        calldata_length: 0,
-        signature_length: 0,
-        code_size: 0,
-    }
-}
-
-// Put together from a few blockifier functions
-// In a transaction (blockifier), there's only one l1_handler possible so we have to calculate those costs manually
-// (it's not the case in a scope of the test)
-fn get_messages_resources(
-    l2_to_l1_payloads_lengths: &[usize],
-    l1_handler_payloads_lengths: &[usize],
-) -> MessageResources {
-    let l2_to_l1_segment_length = l2_to_l1_payloads_lengths
-        .iter()
-        .map(|payload_length| constants::L2_TO_L1_MSG_HEADER_SIZE + payload_length)
-        .sum::<usize>();
-
-    let l1_to_l2_segment_length = l1_handler_payloads_lengths
-        .iter()
-        .map(|payload_length| constants::L1_TO_L2_MSG_HEADER_SIZE + payload_length)
-        .sum::<usize>();
-    let message_segment_length = l2_to_l1_segment_length + l1_to_l2_segment_length;
-
-    MessageResources {
-        l2_to_l1_payload_lengths: l2_to_l1_payloads_lengths.to_vec(),
-        message_segment_length,
-        // The logic for calculating gas vector treats `l1_handler_payload_size` being `Some`
-        // as indication that L1 handler was used and adds gas cost for that.
-        //
-        // We need to set it to `None` if length is 0 to avoid including this extra cost.
-        l1_handler_payload_size: if l1_to_l2_segment_length > 0 {
-            Some(l1_to_l2_segment_length)
-        } else {
-            None
-        },
-    }
 }
 
 fn get_state_resources(
