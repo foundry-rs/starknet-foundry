@@ -109,3 +109,17 @@ fn function_without_params() {
         )],
     );
 }
+
+#[test]
+fn fails_with_unexpected_named_args() {
+    let args = quote!((name: "test", tomato: 123, 1, 2, 3));
+
+    let result = test_case(args, function_with_params());
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(
+            "#[test_case] unexpected argument(s): <tomato>",
+        )],
+    );
+}

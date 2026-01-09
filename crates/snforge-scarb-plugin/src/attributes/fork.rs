@@ -42,6 +42,8 @@ impl AttributeCollector for ForkCollector {
 fn inline_args(db: &SimpleParserDatabase, args: &Arguments) -> Result<TokenStream, Diagnostic> {
     let named_args = args.named_only::<ForkCollector>()?;
 
+    named_args.allow_only::<ForkCollector>(&["url", "block_hash", "block_number", "block_tag"])?;
+
     let block_id = named_args.one_of_once(&[
         BlockIdVariants::Hash,
         BlockIdVariants::Number,
@@ -81,6 +83,8 @@ fn overridden_args(db: &SimpleParserDatabase, args: &Arguments) -> Result<TokenS
     let &[arg] = args.unnamed().of_length::<1, ForkCollector>()?;
 
     let named_args = args.named();
+    named_args.allow_only::<ForkCollector>(&["block_hash", "block_number", "block_tag"])?;
+
     let block_id = named_args.one_of_once(&[
         BlockIdVariants::Hash,
         BlockIdVariants::Number,
