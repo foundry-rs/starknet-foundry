@@ -68,7 +68,6 @@ impl fmt::Display for ByteArray {
         let mut bytes = Vec::new();
 
         for word in &self.words {
-            // bytes.extend_from_slice(&get_full_word_bytes(word));
             extend_full_word_bytes(&mut bytes, word);
         }
 
