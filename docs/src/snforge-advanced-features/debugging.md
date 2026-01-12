@@ -231,8 +231,8 @@ stack backtrace:
 
 ### Advanced Configuration
 
-For the most detailed backtrace information, you can skip as much compiler optimization as possible by adding `skip-optimizations = true` to your `Scarb.toml` (requires Scarb >= 2.14.0). 
-This configuration preserves more code structure during compilation, allowing `snforge` to provide more complete and accurate backtrace information with better correspondence to your source code.
+For the most detailed backtrace information, you can add `skip-optimizations = true` to your `Scarb.toml` (requires Scarb >= 2.14.0).
+This skips as much compiler optimization as possible, keeping the compiled code closer to the original and allowing `snforge` to provide more complete and accurate backtrace information.
 
 ```toml
 [cairo]
