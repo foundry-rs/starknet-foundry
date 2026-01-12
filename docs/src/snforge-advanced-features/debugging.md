@@ -145,7 +145,7 @@ Here's what each tag in the trace represents:
 Backtrace feature relies on debug information provided by Scarb. To generate the necessary debug information, you need
 to have:
 
-1. [Scarb](https://github.com/software-mansion/scarb) version `2.8.0` or higher
+1. [Scarb](https://github.com/software-mansion/scarb) version `2.12.0` or higher
 2. `Scarb.toml` file with the following Cairo compiler configuration:
 
 ```toml
