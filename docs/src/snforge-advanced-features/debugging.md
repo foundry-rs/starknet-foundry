@@ -148,16 +148,11 @@ to have:
 1. [Scarb](https://github.com/software-mansion/scarb) version `2.8.0` or higher
 2. `Scarb.toml` file with the following Cairo compiler configuration:
 
-> 📝 **Note**
->
-> If you are using scarb 2.12 or later there is a way to improve backtrace for panic in contracts if
-> you set `panic-backtrace = true`
-
 ```toml
 [profile.dev.cairo]
 unstable-add-statements-code-locations-debug-info = true
 unstable-add-statements-functions-debug-info = true
-panic-backtrace = true # only for scarb 2.12 or later
+panic-backtrace = true
 ```
 
 > 📝 **Note**
@@ -166,21 +161,6 @@ panic-backtrace = true # only for scarb 2.12 or later
 > `unstable-add-statements-functions-debug-info = true` will slow down the compilation and cause it to use more system
 > memory. It will also make the compilation artifacts larger. So it is only recommended to add these flags when you need
 > their functionality.
-
-> 📝 **Note**
->
-> You can get backtrace output with minimal compiler optimizations by adding `skip-optimizations = true` to your
-> `Scarb.toml` (requires Scarb >= 2.14.0). This will skip as much compiler optimization as possible when compiling to Sierra.
-> Learn more about this option in the [Scarb documentation](https://docs.swmansion.com/scarb/docs/reference/manifest.html#skip-optimizations).
->
-> ```toml
-> [cairo]
-> skip-optimizations = true
-> ```
->
-> ⚠️ **Warning**: Setting `skip-optimizations = true` may result in faster compilation, but **much** slower execution
-> of the compiled code. If you need to deploy your contracts on Starknet, you should **never** compile them with this
-> field set to `true`.
 
 ### Usage
 
@@ -249,3 +229,18 @@ stack backtrace:
 </details>
 <br>
 
+### Advanced Configuration
+
+For the most detailed backtrace information, you can skip as much compiler optimization as possible by adding `skip-optimizations = true` to your `Scarb.toml` (requires Scarb >= 2.14.0). 
+This configuration preserves more code structure during compilation, allowing `snforge` to provide more complete and accurate backtrace information with better correspondence to your source code.
+
+```toml
+[cairo]
+skip-optimizations = true
+```
+
+Learn more about this option in the [Scarb documentation](https://docs.swmansion.com/scarb/docs/reference/manifest.html#skip-optimizations).
+
+> ⚠️ **Warning**: Setting `skip-optimizations = true` may result in faster compilation, but **much** slower execution
+> of the compiled code. If you need to deploy your contracts on Starknet, you should **never** compile them with this
+> field set to `true`.
