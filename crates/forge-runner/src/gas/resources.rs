@@ -7,7 +7,6 @@ use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use starknet_api::execution_resources::GasAmount;
 
-/// Resources that affect gas calculation and are displayed by `--detailed-resources`.
 pub struct GasCalculationResources {
     pub sierra_gas: GasAmount,
     pub vm_resources: ExecutionResources,
