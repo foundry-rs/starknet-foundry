@@ -119,10 +119,6 @@ impl GasCalculationResources {
 }
 
 fn format_syscalls(syscalls: &SyscallUsageMap) -> String {
-    if syscalls.is_empty() {
-        return String::new();
-    }
-
     let mut syscall_usage: Vec<_> = syscalls
         .iter()
         .map(|(selector, usage)| (selector, usage.call_count))
@@ -148,9 +144,6 @@ fn format_vm_resources(vm_resources: &ExecutionResources) -> String {
 }
 
 fn format_events(events: &EventSummary) -> String {
-    if events.n_events == 0 {
-        return String::new();
-    }
     format!(
         "\n        events: (count: {}, keys: {}, data size: {})",
         events.n_events, events.total_event_keys, events.total_event_data_size
@@ -161,17 +154,10 @@ fn format_messages(l2_to_l1: &[usize], l1_handler: &[usize]) -> String {
     let l2_to_l1_count = l2_to_l1.len();
     let l1_handler_count = l1_handler.len();
 
-    if l2_to_l1_count == 0 && l1_handler_count == 0 {
-        return String::new();
-    }
-
     let mut content = vec![];
-    if l2_to_l1_count > 0 {
-        content.push(format!("l2 to l1: {l2_to_l1_count}"));
-    }
-    if l1_handler_count > 0 {
-        content.push(format!("l1 handler: {l1_handler_count}"));
-    }
+    content.push(format!("l2 to l1: {l2_to_l1_count}"));
+    content.push(format!("l1 handler: {l1_handler_count}"));
+
     format!("\n        messages: ({})", content.join(", "))
 }
 
