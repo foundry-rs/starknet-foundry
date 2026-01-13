@@ -87,6 +87,7 @@ impl GasCalculationResources {
     }
 
     pub fn format_for_display(&self, tracked_resource: ForgeTrackedResource) -> String {
+        // Ensure all resources used for calculation are getting displayed.
         let Self {
             sierra_gas,
             vm_resources,
