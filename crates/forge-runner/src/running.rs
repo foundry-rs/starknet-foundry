@@ -362,11 +362,8 @@ pub fn run_test_case(
         Ok(result) => {
             let used_resources =
                 get_all_used_resources(&result, &call_trace_ref, &transaction_context);
-            let gas_used = calculate_used_gas(
-                &transaction_context,
-                &mut cached_state,
-                &used_resources,
-            )?;
+            let gas_used =
+                calculate_used_gas(&transaction_context, &mut cached_state, &used_resources)?;
 
             RunResult::Completed(Box::new(RunCompleted {
                 status: if result.execution.failed {

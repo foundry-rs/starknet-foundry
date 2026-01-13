@@ -61,7 +61,7 @@ impl GasCalculationResources {
         let message_segment_length = l2_to_l1_segment_length + l1_to_l2_segment_length;
 
         MessageResources {
-            l2_to_l1_payload_lengths: self.l2_to_l1_payload_lengths.to_vec(),
+            l2_to_l1_payload_lengths: self.l2_to_l1_payload_lengths.clone(),
             message_segment_length,
             // The logic for calculating gas vector treats `l1_handler_payload_size` being `Some`
             // as indication that L1 handler was used and adds gas cost for that.
