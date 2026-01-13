@@ -365,7 +365,7 @@ pub fn run_test_case(
             let gas_used = calculate_used_gas(
                 &transaction_context,
                 &mut cached_state,
-                used_resources.clone(),
+                &used_resources,
             )?;
 
             RunResult::Completed(Box::new(RunCompleted {

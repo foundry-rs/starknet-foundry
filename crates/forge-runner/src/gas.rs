@@ -20,10 +20,10 @@ mod utils;
 pub fn calculate_used_gas(
     transaction_context: &TransactionContext,
     state: &mut CachedState<ExtendedStateReader>,
-    used_resources: UsedResources,
+    used_resources: &UsedResources,
 ) -> Result<GasVector, StateError> {
     let versioned_constants = transaction_context.block_context.versioned_constants();
-    let resources = GasCalculationResources::from_used_resources(&used_resources);
+    let resources = GasCalculationResources::from_used_resources(used_resources);
 
     let starknet_resources = StarknetResources {
         archival_data: resources.to_archival_resources(),
