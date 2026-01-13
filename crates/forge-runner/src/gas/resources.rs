@@ -32,8 +32,9 @@ impl GasCalculationResources {
     pub fn to_computation_resources(&self) -> ComputationResources {
         ComputationResources {
             tx_vm_resources: self.vm_resources.clone(),
-            // OS resources and fee transfer resources are not included as they are not relevant
-            // for test execution: https://github.com/foundry-rs/starknet-foundry/blob/979caf23c5d1085349e253d75682dd0e2527e321/docs/src/testing/gas-and-resource-estimation.md?plain=1#L75
+            // OS resources (transaction type related costs) and fee transfer resources are not included
+            // as they are not relevant for test execution (see documentation for details):
+            // https://github.com/foundry-rs/starknet-foundry/blob/979caf23c5d1085349e253d75682dd0e2527e321/docs/src/testing/gas-and-resource-estimation.md?plain=1#L75
             os_vm_resources: ExecutionResources::default(),
             n_reverted_steps: 0, // TODO(#3681)
             sierra_gas: self.sierra_gas,
@@ -41,28 +42,30 @@ impl GasCalculationResources {
         }
     }
 
-    // Put together from a few blockifier functions.
-    // In a transaction (blockifier), there's only one l1_handler possible so we calculate those costs manually.
+    // Put together from a few blockifier functions
+    // In a transaction (blockifier), there's only one l1_handler possible so we have to calculate those costs manually
+    // (it's not the case in a scope of the test)
     pub fn to_message_resources(&self) -> MessageResources {
-        let l2_to_l1_segment_length: usize = self
+        let l2_to_l1_segment_length = self
             .l2_to_l1_payload_lengths
             .iter()
             .map(|payload_length| constants::L2_TO_L1_MSG_HEADER_SIZE + payload_length)
-            .sum();
+            .sum::<usize>();
 
-        let l1_to_l2_segment_length: usize = self
+        let l1_to_l2_segment_length = self
             .l1_handler_payload_lengths
             .iter()
             .map(|payload_length| constants::L1_TO_L2_MSG_HEADER_SIZE + payload_length)
-            .sum();
+            .sum::<usize>();
 
         let message_segment_length = l2_to_l1_segment_length + l1_to_l2_segment_length;
 
         MessageResources {
-            l2_to_l1_payload_lengths: self.l2_to_l1_payload_lengths.clone(),
+            l2_to_l1_payload_lengths: self.l2_to_l1_payload_lengths.to_vec(),
             message_segment_length,
             // The logic for calculating gas vector treats `l1_handler_payload_size` being `Some`
             // as indication that L1 handler was used and adds gas cost for that.
+            //
             // We need to set it to `None` if length is 0 to avoid including this extra cost.
             l1_handler_payload_size: if l1_to_l2_segment_length > 0 {
                 Some(l1_to_l2_segment_length)
@@ -73,7 +76,8 @@ impl GasCalculationResources {
     }
 
     pub fn to_archival_resources(&self) -> ArchivalDataResources {
-        // calldata length, signature length and code size are set to 0, because we don't include them in estimations
+        // calldata length, signature length and code size are set to 0, because
+        // we don't include them in estimations
         // ref: https://github.com/foundry-rs/starknet-foundry/blob/5ce15b029135545452588c00aae580c05eb11ca8/docs/src/testing/gas-and-resource-estimation.md?plain=1#L73
         ArchivalDataResources {
             event_summary: self.events.clone(),
@@ -119,6 +123,7 @@ impl GasCalculationResources {
             .iter()
             .map(|(selector, usage)| (selector, usage.call_count))
             .collect();
+        // Sort syscalls by call count
         syscall_usage.sort_by(|a, b| b.1.cmp(&a.1));
         format_items(&syscall_usage)
     }
