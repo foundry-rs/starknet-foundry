@@ -151,14 +151,10 @@ fn format_events(events: &EventSummary) -> String {
 }
 
 fn format_messages(l2_to_l1: &[usize], l1_handler: &[usize]) -> String {
-    let l2_to_l1_count = l2_to_l1.len();
-    let l1_handler_count = l1_handler.len();
-
-    let mut content = vec![];
-    content.push(format!("l2 to l1: {l2_to_l1_count}"));
-    content.push(format!("l1 handler: {l1_handler_count}"));
-
-    format!("\n        messages: ({})", content.join(", "))
+    format!("\n        messages: (l2 to l1: {}, l1 handler: {})", 
+        l2_to_l1.len(),
+        l1_handler.len()
+    )
 }
 
 fn sort_by_value<'a, K, V, M>(map: M) -> Vec<(&'a K, &'a V)>
