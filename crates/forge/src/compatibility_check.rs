@@ -24,53 +24,57 @@ impl Requirement<'_> {
         let version = self.get_version();
         let mut is_valid;
 
-        let output =
-            if let Ok(version) = version {
-                is_valid = version >= self.minimal_version;
-                let is_min_recommended = self.minimal_recommended_version.as_ref().is_none_or(
-                    |minimal_recommended_version| version >= *minimal_recommended_version,
-                );
-                let is_max_recommended = self.maximal_recommended_version.as_ref().is_none_or(
-                    |maximal_recommended_version| version <= *maximal_recommended_version,
-                );
+        let output = if let Ok(version) = version {
+            is_valid = version >= self.minimal_version;
 
-                let min_version_to_display = self
-                    .minimal_recommended_version
-                    .as_ref()
-                    .unwrap_or(&self.minimal_version);
+            let is_min_recommended = self.minimal_recommended_version.as_ref().is_none_or(
+                |minimal_recommended_version| {
+                    Self::version_satisfies_min(&version, minimal_recommended_version)
+                },
+            );
+            let is_max_recommended = self.maximal_recommended_version.as_ref().is_none_or(
+                |maximal_recommended_version| {
+                    Self::version_satisfies_max(&version, maximal_recommended_version)
+                },
+            );
 
-                if !is_valid {
-                    is_valid = false;
-                    format!(
-                        "❌ {} Version {} doesn't satisfy minimal {}\n{}",
-                        self.name, version, min_version_to_display, self.helper_text
-                    )
-                } else if !is_min_recommended {
-                    format!(
-                        "⚠️  {} Version {} doesn't satisfy minimal recommended {}\n{}",
-                        self.name,
-                        version,
-                        self.minimal_recommended_version.as_ref().unwrap(),
-                        self.helper_text
-                    )
-                } else if !is_max_recommended {
-                    format!(
-                        "⚠️  {} Version {} doesn't satisfy maximal recommended {}\n{}",
-                        self.name,
-                        version,
-                        self.maximal_recommended_version.as_ref().unwrap(),
-                        self.helper_text
-                    )
-                } else {
-                    format!("✅ {} {}", self.name, version)
-                }
-            } else {
+            let min_version_to_display = self
+                .minimal_recommended_version
+                .as_ref()
+                .unwrap_or(&self.minimal_version);
+
+            if !is_valid {
                 is_valid = false;
                 format!(
-                    "❌ {} is not installed or not added to the PATH\n{}\n",
-                    self.name, self.helper_text
+                    "❌ {} Version {} doesn't satisfy minimal {}\n{}",
+                    self.name, version, min_version_to_display, self.helper_text
                 )
-            };
+            } else if !is_min_recommended {
+                format!(
+                    "⚠️  {} Version {} doesn't satisfy minimal recommended {}\n{}",
+                    self.name,
+                    version,
+                    self.minimal_recommended_version.as_ref().unwrap(),
+                    self.helper_text
+                )
+            } else if !is_max_recommended {
+                format!(
+                    "⚠️  {} Version {} doesn't satisfy maximal recommended {}\n{}",
+                    self.name,
+                    version,
+                    self.maximal_recommended_version.as_ref().unwrap(),
+                    self.helper_text
+                )
+            } else {
+                format!("✅ {} {}", self.name, version)
+            }
+        } else {
+            is_valid = false;
+            format!(
+                "❌ {} is not installed or not added to the PATH\n{}\n",
+                self.name, self.helper_text
+            )
+        };
 
         (is_valid, output)
     }
@@ -82,6 +86,14 @@ impl Requirement<'_> {
             .to_string();
 
         (self.version_parser)(&raw_version)
+    }
+
+    fn version_satisfies_min(version: &Version, required: &Version) -> bool {
+        version >= required
+    }
+
+    fn version_satisfies_max(version: &Version, required: &Version) -> bool {
+        (version.major, version.minor) <= (required.major, required.minor)
     }
 }
 
@@ -366,5 +378,31 @@ mod tests {
         assert!(is_valid);
         assert!(validation_output.contains("⚠️  Scarb Version"));
         assert!(validation_output.contains("doesn't satisfy maximal recommended 2.11.0"));
+    }
+
+    #[test]
+    fn test_version_satisfies_min() {
+        assert!(Requirement::version_satisfies_min(
+            &Version::new(2, 15, 5),
+            &Version::new(2, 15, 0)
+        ));
+
+        assert!(!Requirement::version_satisfies_min(
+            &Version::new(2, 15, 0),
+            &Version::new(2, 15, 2)
+        ));
+    }
+
+    #[test]
+    fn test_version_satisfies_max() {
+        assert!(Requirement::version_satisfies_max(
+            &Version::new(2, 15, 5),
+            &Version::new(2, 15, 0)
+        ));
+
+        assert!(!Requirement::version_satisfies_max(
+            &Version::new(2, 16, 0),
+            &Version::new(2, 15, 0)
+        ));
     }
 }
