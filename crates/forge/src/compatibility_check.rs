@@ -381,6 +381,19 @@ mod tests {
     }
 
     #[test]
+    fn test_version_satisfies_min() {
+        assert!(Requirement::version_satisfies_min(
+            &Version::new(2, 15, 5),
+            &Version::new(2, 15, 0)
+        ));
+
+        assert!(!Requirement::version_satisfies_min(
+            &Version::new(2, 15, 0),
+            &Version::new(2, 15, 2)
+        ));
+    }
+
+    #[test]
     fn test_version_satisfies_max() {
         assert!(Requirement::version_satisfies_max(
             &Version::new(2, 15, 5),
