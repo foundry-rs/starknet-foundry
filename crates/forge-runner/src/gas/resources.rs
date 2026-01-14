@@ -106,10 +106,10 @@ impl GasCalculationResources {
                 format!("{vm_resources_output}{syscalls}{events}{messages}\n")
             }
             ForgeTrackedResource::SierraGas => {
-                let vm_output = if *vm_resources != ExecutionResources::default() {
-                    vm_resources_output.clone()
-                } else {
+                let vm_output = if *vm_resources == ExecutionResources::default() {
                     String::new()
+                } else {
+                    vm_resources_output.clone()
                 };
                 let sierra_gas = format!("\n        sierra gas: {}", sierra_gas.0);
                 format!("{sierra_gas}{syscalls}{events}{messages}{vm_output}\n",)
@@ -151,7 +151,7 @@ fn format_events(events: &EventSummary) -> String {
 }
 
 fn format_messages(l2_to_l1: &[usize], l1_handler: &[usize]) -> String {
-    format!("\n        messages: (l2 to l1: {}, l1 handler: {})", 
+    format!("\n        messages: (l2 to l1: {}, l1 handler: {})",
         l2_to_l1.len(),
         l1_handler.len()
     )
