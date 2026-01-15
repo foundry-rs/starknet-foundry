@@ -151,7 +151,8 @@ fn format_events(events: &EventSummary) -> String {
 }
 
 fn format_messages(l2_to_l1: &[usize], l1_handler: &[usize]) -> String {
-    format!("\n        messages: (l2 to l1: {}, l1 handler: {})",
+    format!(
+        "\n        messages: (l2 to l1: {}, l1 handler: {})",
         l2_to_l1.len(),
         l1_handler.len()
     )
