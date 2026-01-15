@@ -3369,6 +3369,7 @@ dependencies = [
  "packages_validation",
  "project-root",
  "rand 0.8.5",
+ "rayon",
  "regex",
  "scarb-api",
  "scarb-metadata",

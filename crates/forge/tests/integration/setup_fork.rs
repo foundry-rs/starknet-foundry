@@ -1,4 +1,7 @@
 use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
+use forge_runner::package_tests::TestTarget;
+use forge_runner::package_tests::with_config::TestCaseConfig;
+use forge_runner::running::with_config::test_target_with_config;
 use foundry_ui::UI;
 use indoc::{formatdoc, indoc};
 use std::num::NonZeroU32;
@@ -127,12 +130,16 @@ fn fork_aliased_decorator() {
 
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
+    let test_targets = raw_test_targets
+        .into_iter()
+        .map(|tt_raw| test_target_with_config(tt_raw, &ForgeTrackedResource::CairoSteps).unwrap())
+        .collect::<Vec<TestTarget<TestCaseConfig>>>();
 
     let ui = Arc::new(UI::default());
     let result = rt
         .block_on(run_for_package(
             RunForPackageArgs {
-                test_targets: raw_test_targets,
+                test_targets,
                 package_name: "test_package".to_string(),
                 tests_filter: TestsFilter::from_flags(
                     None,
@@ -217,12 +224,16 @@ fn fork_aliased_decorator_overrding() {
 
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
+    let test_targets = raw_test_targets
+        .into_iter()
+        .map(|tt_raw| test_target_with_config(tt_raw, &ForgeTrackedResource::CairoSteps).unwrap())
+        .collect::<Vec<TestTarget<TestCaseConfig>>>();
 
     let ui = Arc::new(UI::default());
     let result = rt
         .block_on(run_for_package(
             RunForPackageArgs {
-                test_targets: raw_test_targets,
+                test_targets,
                 package_name: "test_package".to_string(),
                 tests_filter: TestsFilter::from_flags(
                     None,

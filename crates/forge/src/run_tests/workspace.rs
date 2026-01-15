@@ -3,6 +3,7 @@ use crate::profile_validation::check_profile_compatibility;
 use crate::run_tests::messages::latest_blocks_numbers::LatestBlocksNumbersMessage;
 use crate::run_tests::messages::overall_summary::OverallSummaryMessage;
 use crate::run_tests::messages::tests_failure_summary::TestsFailureSummaryMessage;
+use crate::scarb::load_test_artifacts;
 use crate::warn::{
     error_if_snforge_std_deprecated_missing, error_if_snforge_std_deprecated_not_compatible,
     error_if_snforge_std_not_compatible,
@@ -15,9 +16,15 @@ use crate::{
     warn::warn_if_snforge_std_does_not_match_package_version,
 };
 use anyhow::{Context, Result};
+use camino::Utf8PathBuf;
+use forge_runner::forge_config::ForgeTrackedResource;
+use forge_runner::package_tests::TestTarget;
+use forge_runner::package_tests::with_config::TestCaseConfig;
+use forge_runner::running::with_config::test_target_with_config;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
 use foundry_ui::UI;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use scarb_api::version::scarb_version;
 use scarb_api::{
@@ -28,6 +35,24 @@ use scarb_ui::args::PackagesFilter;
 use shared::consts::SNFORGE_TEST_FILTER;
 use std::env;
 use std::sync::Arc;
+
+fn collect_packages_with_tests(
+    artifacts_dir: &Utf8PathBuf,
+    packages: &[PackageMetadata],
+    tracked_resource: &ForgeTrackedResource,
+) -> Result<Vec<(PackageMetadata, Vec<TestTarget<TestCaseConfig>>)>> {
+    packages
+        .par_iter()
+        .map(|package| {
+            let test_targets_raw = load_test_artifacts(&artifacts_dir, package)?;
+            let test_targets = test_targets_raw
+                .into_iter()
+                .map(|tt_raw| test_target_with_config(tt_raw, tracked_resource))
+                .collect::<Result<Vec<_>>>()?;
+            Ok((package.clone(), test_targets))
+        })
+        .collect()
+}
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus> {
@@ -89,13 +114,17 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
 
     let workspace_root = &scarb_metadata.workspace.root;
     let cache_dir = workspace_root.join(CACHE_DIR);
+
+    let packages =
+        collect_packages_with_tests(&artifacts_dir_path, &packages, &args.tracked_resource)?;
     let packages_len = packages.len();
 
-    for package in packages {
-        env::set_current_dir(&package.root)?;
+    for (package_metadata, test_targets) in packages {
+        env::set_current_dir(&package_metadata.root)?;
 
         let args = RunForPackageArgs::build(
-            package,
+            test_targets,
+            package_metadata,
             &scarb_metadata,
             &args,
             &cache_dir,

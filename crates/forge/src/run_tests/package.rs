@@ -11,10 +11,7 @@ use crate::{
         collected_tests_count::CollectedTestsCountMessage, tests_run::TestsRunMessage,
         tests_summary::TestsSummaryMessage,
     },
-    scarb::{
-        config::{ForgeConfigFromScarb, ForkTarget},
-        load_test_artifacts,
-    },
+    scarb::config::{ForgeConfigFromScarb, ForkTarget},
     shared_cache::FailedTestsCache,
     test_filter::{NameFilter, TestsFilter},
     warn::warn_if_incompatible_rpc_version,
@@ -25,8 +22,9 @@ use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::Contr
 use console::Style;
 use forge_runner::{
     forge_config::ForgeConfig,
-    package_tests::{raw::TestTargetRaw, with_config_resolved::TestTargetWithResolvedConfig},
-    running::with_config::test_target_with_config,
+    package_tests::{
+        TestTarget, with_config::TestCaseConfig, with_config_resolved::TestTargetWithResolvedConfig,
+    },
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
 };
@@ -61,7 +59,7 @@ impl PackageTestResult {
 }
 
 pub struct RunForPackageArgs {
-    pub test_targets: Vec<TestTargetRaw>,
+    pub test_targets: Vec<TestTarget<TestCaseConfig>>,
     pub tests_filter: TestsFilter,
     pub forge_config: Arc<ForgeConfig>,
     pub fork_targets: Vec<ForkTarget>,
@@ -71,6 +69,7 @@ pub struct RunForPackageArgs {
 impl RunForPackageArgs {
     #[tracing::instrument(skip_all, level = "debug")]
     pub fn build(
+        test_targets: Vec<TestTarget<TestCaseConfig>>,
         package: PackageMetadata,
         scarb_metadata: &Metadata,
         args: &TestArgs,
@@ -78,8 +77,6 @@ impl RunForPackageArgs {
         artifacts_dir: &Utf8Path,
         ui: &UI,
     ) -> Result<RunForPackageArgs> {
-        let raw_test_targets = load_test_artifacts(artifacts_dir, &package)?;
-
         let contracts = get_contracts_artifacts_and_source_sierra_paths(
             artifacts_dir,
             &package,
@@ -123,7 +120,7 @@ impl RunForPackageArgs {
         );
 
         Ok(RunForPackageArgs {
-            test_targets: raw_test_targets,
+            test_targets,
             forge_config,
             tests_filter: test_filter,
             fork_targets: forge_config_from_scarb.fork,
@@ -134,20 +131,14 @@ impl RunForPackageArgs {
 
 #[tracing::instrument(skip_all, level = "debug")]
 async fn test_package_with_config_resolved(
-    test_targets: Vec<TestTargetRaw>,
+    test_targets: Vec<TestTarget<TestCaseConfig>>,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
-    forge_config: &ForgeConfig,
     tests_filter: &TestsFilter,
 ) -> Result<Vec<TestTargetWithResolvedConfig>> {
     let mut test_targets_with_resolved_config = Vec::with_capacity(test_targets.len());
 
     for test_target in test_targets {
-        let test_target = test_target_with_config(
-            test_target,
-            &forge_config.test_runner_config.tracked_resource,
-        )?;
-
         let test_target =
             resolve_config(test_target, fork_targets, block_number_map, tests_filter).await?;
 
@@ -177,7 +168,6 @@ pub async fn run_for_package(
         test_targets,
         &fork_targets,
         block_number_map,
-        &forge_config,
         &tests_filter,
     )
     .await?;

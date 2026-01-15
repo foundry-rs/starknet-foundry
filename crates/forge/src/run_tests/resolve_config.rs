@@ -10,7 +10,8 @@ use conversions::byte_array::ByteArray;
 use forge_runner::{
     TestCaseFilter,
     package_tests::{
-        with_config::TestTargetWithConfig,
+        TestCase, TestTarget,
+        with_config::TestCaseConfig,
         with_config_resolved::{
             ResolvedForkConfig, TestCaseResolvedConfig, TestCaseWithResolvedConfig,
             TestTargetWithResolvedConfig,
@@ -21,7 +22,7 @@ use starknet_api::block::BlockNumber;
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub async fn resolve_config(
-    test_target: TestTargetWithConfig,
+    test_target: TestTarget<TestCaseConfig>,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
     tests_filter: &TestsFilter,
@@ -30,23 +31,18 @@ pub async fn resolve_config(
     let env_ignore_fork_tests = env_ignore_fork_tests();
 
     for case in test_target.test_cases {
+        let resolved_config = resolved_config(
+            &case,
+            tests_filter,
+            fork_targets,
+            block_number_map,
+            env_ignore_fork_tests,
+        )
+        .await?;
         test_cases.push(TestCaseWithResolvedConfig::new(
             &case.name,
             case.test_details.clone(),
-            TestCaseResolvedConfig {
-                available_gas: case.config.available_gas,
-                ignored: case.config.ignored
-                    || (env_ignore_fork_tests && case.config.fork_config.is_some()),
-                fork_config: if tests_filter.should_be_run(&case) {
-                    resolve_fork_config(case.config.fork_config, block_number_map, fork_targets)
-                        .await?
-                } else {
-                    None
-                },
-                expected_result: case.config.expected_result,
-                fuzzer_config: case.config.fuzzer_config,
-                disable_predeployed_contracts: case.config.disable_predeployed_contracts,
-            },
+            resolved_config,
         ));
     }
 
@@ -57,6 +53,36 @@ pub async fn resolve_config(
         casm_program: test_target.casm_program,
         test_cases,
     })
+}
+
+async fn resolved_config(
+    case: &TestCase<TestCaseConfig>,
+    tests_filter: &TestsFilter,
+    fork_targets: &[ForkTarget],
+    block_number_map: &mut BlockNumberMap,
+    env_ignore_fork_tests: bool,
+) -> Result<TestCaseResolvedConfig> {
+    let fork_config = if tests_filter.should_be_run(&case) {
+        resolve_fork_config(
+            case.config.fork_config.clone(),
+            block_number_map,
+            fork_targets,
+        )
+        .await?
+    } else {
+        None
+    };
+    let resolved_config = TestCaseResolvedConfig {
+        available_gas: case.config.available_gas.clone(),
+        ignored: case.config.ignored
+            || (env_ignore_fork_tests && case.config.fork_config.is_some()),
+        expected_result: case.config.expected_result.clone(),
+        fork_config,
+        fuzzer_config: case.config.fuzzer_config.clone(),
+        disable_predeployed_contracts: case.config.disable_predeployed_contracts.clone(),
+    };
+
+    Ok(resolved_config)
 }
 
 async fn resolve_fork_config(
@@ -137,7 +163,9 @@ mod tests {
     use cairo_lang_sierra::program::ProgramArtifact;
     use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
     use forge_runner::package_tests::TestTargetLocation;
-    use forge_runner::package_tests::with_config::{TestCaseConfig, TestCaseWithConfig};
+    use forge_runner::package_tests::with_config::{
+        TestCaseConfig, TestCaseWithConfig, TestTargetWithConfig,
+    };
     use forge_runner::{expected_result::ExpectedTestResult, package_tests::TestDetails};
     use std::sync::Arc;
     use universal_sierra_compiler_api::compile_raw_sierra;
@@ -185,8 +213,10 @@ mod tests {
         }
     }
 
-    fn create_test_target_with_cases(test_cases: Vec<TestCaseWithConfig>) -> TestTargetWithConfig {
-        TestTargetWithConfig {
+    fn create_test_target_with_cases(
+        test_cases: Vec<TestCase<TestCaseConfig>>,
+    ) -> TestTargetWithConfig {
+        TestTarget {
             sierra_program: program_for_testing(),
             sierra_program_path: Arc::default(),
             casm_program: Arc::new(
