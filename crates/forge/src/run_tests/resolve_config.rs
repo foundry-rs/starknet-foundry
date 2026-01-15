@@ -73,12 +73,12 @@ async fn resolved_config(
         None
     };
     let resolved_config = TestCaseResolvedConfig {
-        available_gas: case.config.available_gas,
-        ignored: case.config.ignored
+        available_gas: case.config.available_gas.clone(),
+        ignored: case.config.ignored.clone()
             || (env_ignore_fork_tests && case.config.fork_config.is_some()),
-        expected_result: case.config.expected_result,
+        expected_result: case.config.expected_result.clone(),
         fork_config,
-        fuzzer_config: case.config.fuzzer_config,
+        fuzzer_config: case.config.fuzzer_config.clone(),
         disable_predeployed_contracts: case.config.disable_predeployed_contracts,
     };
 
