@@ -242,7 +242,7 @@ pub async fn test_happy_case_generate_salt() {
 }
 
 #[test_case("--url", URL; "with_url")]
-#[test_case("--network", "sepolia"; "with_network")]
+#[test_case("--network", "devnet"; "with_network")]
 #[tokio::test]
 pub async fn test_happy_case_add_profile(rpc_flag: &str, rpc_value: &str) {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
