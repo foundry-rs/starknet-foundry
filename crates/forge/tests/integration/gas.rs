@@ -3,6 +3,8 @@ use crate::utils::running_tests::run_test_case;
 use crate::utils::test_case;
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::{formatdoc, indoc};
+use scarb_api::version::scarb_version;
+use semver::Version;
 use shared::test_utils::node_url::node_rpc_url;
 use starknet_api::execution_resources::{GasAmount, GasVector};
 use std::path::Path;
@@ -268,18 +270,34 @@ fn contract_range_check_cost_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
-    // 96 = cost of deploy (see snforge_std_deploy_cost test)
-    // 43 = cost of 1052 range check builtins (because int(0.04 * 1052) = 43)
-    // 0 l1_gas + 96 l1_data_gas + 43 * (100 / 0.0025) l2 gas
-    assert_gas(
-        &result,
-        "contract_range_check_cost",
-        GasVector {
-            l1_gas: GasAmount(0),
-            l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(1_720_000),
-        },
-    );
+
+    let scarb_version = scarb_version().expect("Failed to get scarb version").scarb;
+
+    // TODO(#4087): Remove this when bumping minimal recommended Scarb version to 2.14.0
+    if scarb_version >= Version::new(2, 14, 0) {
+        // 96 = cost of deploy (see snforge_std_deploy_cost test)
+        // 43 = cost of 1052 range check builtins (because int(0.04 * 1052) = 43)
+        // 0 l1_gas + 96 l1_data_gas + 43 * (100 / 0.0025) l2 gas
+        assert_gas(
+            &result,
+            "contract_range_check_cost",
+            GasVector {
+                l1_gas: GasAmount(0),
+                l1_data_gas: GasAmount(96),
+                l2_gas: GasAmount(1_720_000),
+            },
+        );
+    } else {
+        assert_gas(
+            &result,
+            "contract_range_check_cost",
+            GasVector {
+                l1_gas: GasAmount(0),
+                l1_data_gas: GasAmount(96),
+                l2_gas: GasAmount(6_520_000),
+            },
+        );
+    }
 }
 
 #[test]
