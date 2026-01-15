@@ -23,7 +23,7 @@ use console::Style;
 use forge_runner::{
     forge_config::ForgeConfig,
     package_tests::{
-        TestTarget, with_config::TestCaseConfig, with_config_resolved::TestTargetWithResolvedConfig,
+        with_config::TestTargetWithConfig, with_config_resolved::TestTargetWithResolvedConfig,
     },
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
@@ -59,7 +59,7 @@ impl PackageTestResult {
 }
 
 pub struct RunForPackageArgs {
-    pub test_targets: Vec<TestTarget<TestCaseConfig>>,
+    pub test_targets: Vec<TestTargetWithConfig>,
     pub tests_filter: TestsFilter,
     pub forge_config: Arc<ForgeConfig>,
     pub fork_targets: Vec<ForkTarget>,
@@ -69,7 +69,7 @@ pub struct RunForPackageArgs {
 impl RunForPackageArgs {
     #[tracing::instrument(skip_all, level = "debug")]
     pub fn build(
-        test_targets: Vec<TestTarget<TestCaseConfig>>,
+        test_targets: Vec<TestTargetWithConfig>,
         package: PackageMetadata,
         scarb_metadata: &Metadata,
         args: &TestArgs,
@@ -131,7 +131,7 @@ impl RunForPackageArgs {
 
 #[tracing::instrument(skip_all, level = "debug")]
 async fn test_package_with_config_resolved(
-    test_targets: Vec<TestTarget<TestCaseConfig>>,
+    test_targets: Vec<TestTargetWithConfig>,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
     tests_filter: &TestsFilter,

@@ -10,8 +10,8 @@ use conversions::byte_array::ByteArray;
 use forge_runner::{
     TestCaseFilter,
     package_tests::{
-        TestCase, TestTarget,
-        with_config::TestCaseConfig,
+        TestCase,
+        with_config::{TestCaseConfig, TestTargetWithConfig},
         with_config_resolved::{
             ResolvedForkConfig, TestCaseResolvedConfig, TestCaseWithResolvedConfig,
             TestTargetWithResolvedConfig,
@@ -22,7 +22,7 @@ use starknet_api::block::BlockNumber;
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub async fn resolve_config(
-    test_target: TestTarget<TestCaseConfig>,
+    test_target: TestTargetWithConfig,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
     tests_filter: &TestsFilter,
@@ -162,10 +162,10 @@ mod tests {
     use crate::shared_cache::FailedTestsCache;
     use cairo_lang_sierra::program::ProgramArtifact;
     use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
-    use forge_runner::package_tests::TestTargetLocation;
     use forge_runner::package_tests::with_config::{
         TestCaseConfig, TestCaseWithConfig, TestTargetWithConfig,
     };
+    use forge_runner::package_tests::{TestTarget, TestTargetLocation};
     use forge_runner::{expected_result::ExpectedTestResult, package_tests::TestDetails};
     use std::sync::Arc;
     use universal_sierra_compiler_api::compile_raw_sierra;

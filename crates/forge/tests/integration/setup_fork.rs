@@ -1,6 +1,5 @@
 use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
-use forge_runner::package_tests::TestTarget;
-use forge_runner::package_tests::with_config::TestCaseConfig;
+use forge_runner::package_tests::with_config::TestTargetWithConfig;
 use forge_runner::running::with_config::test_target_with_config;
 use foundry_ui::UI;
 use indoc::{formatdoc, indoc};
@@ -133,7 +132,7 @@ fn fork_aliased_decorator() {
     let test_targets = raw_test_targets
         .into_iter()
         .map(|tt_raw| test_target_with_config(tt_raw, &ForgeTrackedResource::CairoSteps).unwrap())
-        .collect::<Vec<TestTarget<TestCaseConfig>>>();
+        .collect::<Vec<TestTargetWithConfig>>();
 
     let ui = Arc::new(UI::default());
     let result = rt
@@ -227,7 +226,7 @@ fn fork_aliased_decorator_overrding() {
     let test_targets = raw_test_targets
         .into_iter()
         .map(|tt_raw| test_target_with_config(tt_raw, &ForgeTrackedResource::CairoSteps).unwrap())
-        .collect::<Vec<TestTarget<TestCaseConfig>>>();
+        .collect::<Vec<TestTargetWithConfig>>();
 
     let ui = Arc::new(UI::default());
     let result = rt

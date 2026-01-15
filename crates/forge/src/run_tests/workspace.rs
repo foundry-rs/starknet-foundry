@@ -18,8 +18,7 @@ use crate::{
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use forge_runner::forge_config::ForgeTrackedResource;
-use forge_runner::package_tests::TestTarget;
-use forge_runner::package_tests::with_config::TestCaseConfig;
+use forge_runner::package_tests::with_config::TestTargetWithConfig;
 use forge_runner::running::with_config::test_target_with_config;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
@@ -40,7 +39,7 @@ fn collect_packages_with_tests(
     artifacts_dir: &Utf8PathBuf,
     packages: &[PackageMetadata],
     tracked_resource: &ForgeTrackedResource,
-) -> Result<Vec<(PackageMetadata, Vec<TestTarget<TestCaseConfig>>)>> {
+) -> Result<Vec<(PackageMetadata, Vec<TestTargetWithConfig>)>> {
     packages
         .par_iter()
         .map(|package| {
