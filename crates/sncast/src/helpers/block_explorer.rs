@@ -174,35 +174,35 @@ mod tests {
         assert!(transaction_response.is_ok());
     }
 
-    #[tokio::test]
     #[test_case(Network::Mainnet, &MAINNET_RESPONSE; "mainnet")]
     #[test_case(Network::Sepolia, &SEPOLIA_RESPONSE; "sepolia")]
+    #[tokio::test]
     async fn test_happy_case_starkscan(network: Network, response: &DeployResponse) {
         let provider = Service::Voyager.as_provider(network).unwrap();
         let result = response.format_links(provider);
         assert_valid_links(&result).await;
     }
 
-    #[tokio::test]
     #[test_case(Network::Mainnet, &MAINNET_RESPONSE; "mainnet")]
     #[test_case(Network::Sepolia, &SEPOLIA_RESPONSE; "sepolia")]
+    #[tokio::test]
     async fn test_happy_case_voyager(network: Network, response: &DeployResponse) {
         let provider = Service::Voyager.as_provider(network).unwrap();
         let result = response.format_links(provider);
         assert_valid_links(&result).await;
     }
 
-    #[tokio::test]
     #[test_case(Service::ViewBlock; "viewblock")]
     #[test_case(Service::OkLink; "oklink")]
+    #[tokio::test]
     async fn test_happy_case_mainnet(explorer: Service) {
         let result = MAINNET_RESPONSE.format_links(explorer.as_provider(Network::Mainnet).unwrap());
         assert_valid_links(&result).await;
     }
 
-    #[tokio::test]
     #[test_case(Service::ViewBlock; "viewblock")]
     #[test_case(Service::OkLink; "oklink")]
+    #[tokio::test]
     async fn test_fail_on_sepolia(explorer: Service) {
         assert!(explorer.as_provider(Network::Sepolia).is_err());
     }

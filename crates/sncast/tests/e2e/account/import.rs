@@ -271,9 +271,9 @@ pub async fn test_nonexistent_account_address() {
     "});
 }
 
-#[tokio::test]
 #[test_case("--url", URL; "with_url")]
 #[test_case("--network", "sepolia"; "with_network")]
+#[tokio::test]
 pub async fn test_happy_case_add_profile(rpc_flag: &str, rpc_value: &str) {
     let tempdir = tempdir().expect("Failed to create a temporary directory");
     let accounts_file = "accounts.json";
