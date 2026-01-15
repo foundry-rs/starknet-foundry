@@ -109,7 +109,28 @@ fn test_backtrace_panic() {
         .assert()
         .failure();
 
-    // TODO: (#4022) Investigate `(inlined)`regression in scarb 2.14.0
+    assert_cleaned_output!(output);
+}
+
+#[test]
+fn test_backtrace_panic_without_optimizations() {
+    let temp = setup_package("backtrace_panic");
+
+    let manifest_path = temp.child("Scarb.toml");
+
+    let mut scarb_toml = fs::read_to_string(&manifest_path)
+        .unwrap()
+        .parse::<DocumentMut>()
+        .unwrap();
+
+    scarb_toml["cairo"]["skip-optimizations"] = value(true);
+    manifest_path.write_str(&scarb_toml.to_string()).unwrap();
+
+    let output = test_runner(&temp)
+        .env("SNFORGE_BACKTRACE", "1")
+        .assert()
+        .failure();
+
     assert_cleaned_output!(output);
 }
 
