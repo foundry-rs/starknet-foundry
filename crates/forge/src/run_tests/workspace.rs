@@ -38,15 +38,15 @@ use std::sync::Arc;
 fn collect_packages_with_tests(
     artifacts_dir: &Utf8PathBuf,
     packages: &[PackageMetadata],
-    tracked_resource: &ForgeTrackedResource,
+    tracked_resource: ForgeTrackedResource,
 ) -> Result<Vec<(PackageMetadata, Vec<TestTargetWithConfig>)>> {
     packages
         .par_iter()
         .map(|package| {
-            let test_targets_raw = load_test_artifacts(&artifacts_dir, package)?;
+            let test_targets_raw = load_test_artifacts(artifacts_dir, package)?;
             let test_targets = test_targets_raw
                 .into_iter()
-                .map(|tt_raw| test_target_with_config(tt_raw, tracked_resource))
+                .map(|tt_raw| test_target_with_config(tt_raw, &tracked_resource))
                 .collect::<Result<Vec<_>>>()?;
             Ok((package.clone(), test_targets))
         })
@@ -115,7 +115,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     let cache_dir = workspace_root.join(CACHE_DIR);
 
     let packages =
-        collect_packages_with_tests(&artifacts_dir_path, &packages, &args.tracked_resource)?;
+        collect_packages_with_tests(&artifacts_dir_path, &packages, args.tracked_resource)?;
     let packages_len = packages.len();
 
     for (package_metadata, test_targets) in packages {

@@ -62,7 +62,7 @@ async fn resolved_config(
     block_number_map: &mut BlockNumberMap,
     env_ignore_fork_tests: bool,
 ) -> Result<TestCaseResolvedConfig> {
-    let fork_config = if tests_filter.should_be_run(&case) {
+    let fork_config = if tests_filter.should_be_run(case) {
         resolve_fork_config(
             case.config.fork_config.clone(),
             block_number_map,
@@ -73,13 +73,13 @@ async fn resolved_config(
         None
     };
     let resolved_config = TestCaseResolvedConfig {
-        available_gas: case.config.available_gas.clone(),
+        available_gas: case.config.available_gas,
         ignored: case.config.ignored
             || (env_ignore_fork_tests && case.config.fork_config.is_some()),
-        expected_result: case.config.expected_result.clone(),
+        expected_result: case.config.expected_result,
         fork_config,
-        fuzzer_config: case.config.fuzzer_config.clone(),
-        disable_predeployed_contracts: case.config.disable_predeployed_contracts.clone(),
+        fuzzer_config: case.config.fuzzer_config,
+        disable_predeployed_contracts: case.config.disable_predeployed_contracts,
     };
 
     Ok(resolved_config)
