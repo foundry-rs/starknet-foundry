@@ -1,3 +1,4 @@
+# NOTE: This is a draft created for the future if we continue integration with the native.
 # TODO(#3790) this is currently unused, integrate into nightly release flow
 name: Build Native binaries
 
@@ -114,5 +115,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v5
         with:
+          # TODO(#3790): Perhaps this name needs to be changed to avoid conflicts with `_build-binaries.yml` workflow
           name: build-${{ matrix.target }}
           path: ${{ env.PKG_FULL_NAME }}.*

@@ -129,3 +129,4 @@ jobs:
           name: build-${{ inputs.plugin_name }}-${{ matrix.target }}
           path: ${{ env.OUTPUT_BINARY_PATH }}
           compression-level: 0
+          overwrite: true
