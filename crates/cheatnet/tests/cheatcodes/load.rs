@@ -25,7 +25,9 @@ fn load_simple_state() {
     let class_hash = test_env.declare("HelloStarknet", &contracts_data);
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
 
-    test_env.call_contract(&contract_address, "increase_balance", &[Felt::from(420)]);
+    test_env
+        .call_contract(&contract_address, "increase_balance", &[Felt::from(420)])
+        .unwrap();
 
     let balance_value = test_env.load(contract_address, variable_address("balance"));
 
@@ -46,7 +48,9 @@ fn load_state_map_simple_value() {
 
     let map_key = Felt::from(420);
     let inserted_value = Felt::from(69);
-    test_env.call_contract(&contract_address, "insert", &[map_key, inserted_value]);
+    test_env
+        .call_contract(&contract_address, "insert", &[map_key, inserted_value])
+        .unwrap();
 
     let var_address = map_entry_address("values", &[map_key]);
     let map_value = test_env.load(contract_address, var_address);

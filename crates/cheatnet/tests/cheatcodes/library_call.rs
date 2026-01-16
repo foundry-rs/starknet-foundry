@@ -1,7 +1,7 @@
 use crate::cheatcodes::test_environment::TestEnvironment;
 use crate::common::assertions::assert_success;
 use crate::common::get_contracts;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallSuccess;
 use cheatnet::state::CheatSpan;
 use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::TEST_ADDRESS;
@@ -120,7 +120,7 @@ fn global_cheat_works_with_library_call_from_actual_contract() {
 
     let set_class_hash_result =
         test_env.call_contract(&contract_address, "set_class_hash", &[class_hash.into()]);
-    assert!(matches!(set_class_hash_result, CallResult::Success { .. }));
+    assert!(matches!(set_class_hash_result, Ok(CallSuccess { .. })));
 
     test_env
         .cheatnet_state
@@ -149,7 +149,7 @@ fn cheat_with_finite_span_works_with_library_call_from_actual_contract() {
 
     let set_class_hash_result =
         test_env.call_contract(&contract_address, "set_class_hash", &[class_hash.into()]);
-    assert!(matches!(set_class_hash_result, CallResult::Success { .. }));
+    assert!(matches!(set_class_hash_result, Ok(CallSuccess { .. })));
 
     let cheated_caller_address = 123_u8;
 
@@ -181,7 +181,7 @@ fn cheat_with_indefinite_span_works_with_library_call_from_actual_contract() {
 
     let set_class_hash_result =
         test_env.call_contract(&contract_address, "set_class_hash", &[class_hash.into()]);
-    assert!(matches!(set_class_hash_result, CallResult::Success { .. }));
+    assert!(matches!(set_class_hash_result, Ok(CallSuccess { .. })));
 
     let cheated_caller_address = 123_u8;
 

@@ -4,15 +4,11 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 use crate::state::CheatnetState;
 use anyhow::Result;
 use blockifier::execution::syscalls::hint_processor::OUT_OF_GAS_ERROR;
-use blockifier::execution::syscalls::syscall_base::SyscallResult;
+use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
 use blockifier::execution::syscalls::vm_syscall_utils::{
-    RevertData, SyscallExecutorBaseError, SyscallRequest, SyscallRequestWrapper, SyscallResponse,
-    SyscallResponseWrapper, SyscallSelector,
-};
-use blockifier::execution::{
-    common_hints::HintExecutionResult,
-    syscalls::hint_processor::{SyscallExecutionError, SyscallHintProcessor},
+    RevertData, SelfOrRevert, SyscallExecutorBaseError, SyscallRequest, SyscallRequestWrapper,
+    SyscallResponse, SyscallResponseWrapper, SyscallSelector, TryExtractRevert,
 };
 use blockifier::utils::u64_from_usize;
 use cairo_vm::{
@@ -47,70 +43,70 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
         // This match must remain exhaustive so that if a new syscall is introduced,
         // we will explicitly add support for it.
         match selector {
-            SyscallSelector::GetExecutionInfo => self
+            SyscallSelector::GetExecutionInfo => Ok(self
                 .execute_syscall(
                     syscall_handler,
                     vm,
                     cheated_syscalls::get_execution_info_syscall,
                     SyscallSelector::GetExecutionInfo,
                 )
-                .map(|()| SyscallHandlingResult::Handled),
-            SyscallSelector::CallContract => self
+                .map(|()| SyscallHandlingResult::Handled)?),
+            SyscallSelector::CallContract => Ok(self
                 .execute_syscall(
                     syscall_handler,
                     vm,
                     cheated_syscalls::call_contract_syscall,
                     SyscallSelector::CallContract,
                 )
-                .map(|()| SyscallHandlingResult::Handled),
-            SyscallSelector::LibraryCall => self
+                .map(|()| SyscallHandlingResult::Handled)?),
+            SyscallSelector::LibraryCall => Ok(self
                 .execute_syscall(
                     syscall_handler,
                     vm,
                     cheated_syscalls::library_call_syscall,
                     SyscallSelector::LibraryCall,
                 )
-                .map(|()| SyscallHandlingResult::Handled),
-            SyscallSelector::Deploy => self
+                .map(|()| SyscallHandlingResult::Handled)?),
+            SyscallSelector::Deploy => Ok(self
                 .execute_syscall(
                     syscall_handler,
                     vm,
                     cheated_syscalls::deploy_syscall,
                     SyscallSelector::Deploy,
                 )
-                .map(|()| SyscallHandlingResult::Handled),
-            SyscallSelector::GetBlockHash => self
+                .map(|()| SyscallHandlingResult::Handled)?),
+            SyscallSelector::GetBlockHash => Ok(self
                 .execute_syscall(
                     syscall_handler,
                     vm,
                     cheated_syscalls::get_block_hash_syscall,
                     SyscallSelector::GetBlockHash,
                 )
-                .map(|()| SyscallHandlingResult::Handled),
-            SyscallSelector::StorageRead => self
+                .map(|()| SyscallHandlingResult::Handled)?),
+            SyscallSelector::StorageRead => Ok(self
                 .execute_syscall(
                     syscall_handler,
                     vm,
                     cheated_syscalls::storage_read,
                     SyscallSelector::StorageRead,
                 )
-                .map(|()| SyscallHandlingResult::Handled),
-            SyscallSelector::StorageWrite => self
+                .map(|()| SyscallHandlingResult::Handled)?),
+            SyscallSelector::StorageWrite => Ok(self
                 .execute_syscall(
                     syscall_handler,
                     vm,
                     cheated_syscalls::storage_write,
                     SyscallSelector::StorageWrite,
                 )
-                .map(|()| SyscallHandlingResult::Handled),
-            SyscallSelector::MetaTxV0 => self
+                .map(|()| SyscallHandlingResult::Handled)?),
+            SyscallSelector::MetaTxV0 => Ok(self
                 .execute_syscall(
                     syscall_handler,
                     vm,
                     cheated_syscalls::meta_tx_v0_syscall,
                     SyscallSelector::MetaTxV0,
                 )
-                .map(|()| SyscallHandlingResult::Handled),
+                .map(|()| SyscallHandlingResult::Handled)?),
             SyscallSelector::DelegateCall
             | SyscallSelector::DelegateL1Handler
             | SyscallSelector::EmitEvent
@@ -171,25 +167,35 @@ pub fn felt_from_ptr_immutable(
     Ok(felt)
 }
 
+// TODO name
+pub trait CheatableStarknetRuntimeError: TryExtractRevert + From<SyscallExecutorBaseError> {}
+
+impl<T> CheatableStarknetRuntimeError for T where
+    T: TryExtractRevert + From<SyscallExecutorBaseError>
+{
+}
+
 impl CheatableStarknetRuntimeExtension<'_> {
+    // TODO make public in blockifier and use directly
     // crates/blockifier/src/execution/syscalls/vm_syscall_utils.rs:677 (execute_syscall)
-    fn execute_syscall<Request, Response, ExecuteCallback>(
+    fn execute_syscall<Request, Response, ExecuteCallback, Error>(
         &mut self,
         syscall_handler: &mut SyscallHintProcessor,
         vm: &mut VirtualMachine,
         execute_callback: ExecuteCallback,
         selector: SyscallSelector,
-    ) -> HintExecutionResult
+    ) -> Result<(), Error>
     where
         Request: SyscallRequest + std::fmt::Debug,
         Response: SyscallResponse + std::fmt::Debug,
+        Error: CheatableStarknetRuntimeError,
         ExecuteCallback: FnOnce(
             Request,
             &mut VirtualMachine,
             &mut SyscallHintProcessor<'_>,
             &mut CheatnetState,
             &mut u64, // Remaining gas.
-        ) -> SyscallResult<Response>,
+        ) -> Result<Response, Error>,
     {
         // Increment, since the selector was peeked into before
         syscall_handler.syscall_ptr += 1;
@@ -244,18 +250,19 @@ impl CheatableStarknetRuntimeExtension<'_> {
             self.cheatnet_state,
             &mut remaining_gas,
         );
+
         let response = match original_response {
             Ok(response) => SyscallResponseWrapper::Success {
                 gas_counter: remaining_gas,
                 response,
             },
-            Err(SyscallExecutionError::Revert { error_data: data }) => {
-                SyscallResponseWrapper::Failure {
+            Err(error) => match error.try_extract_revert() {
+                SelfOrRevert::Revert(data) => SyscallResponseWrapper::Failure {
                     gas_counter: remaining_gas,
-                    revert_data: RevertData::new_normal(data),
-                }
-            }
-            Err(error) => return Err(error.into()),
+                    revert_data: data,
+                },
+                SelfOrRevert::Original(err) => return Err(err),
+            },
         };
 
         response.write(vm, &mut syscall_handler.syscall_ptr)?;

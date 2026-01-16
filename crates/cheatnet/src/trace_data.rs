@@ -1,4 +1,6 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
+    CallResult, CallSuccess,
+};
 use crate::runtime_extensions::common::sum_syscall_usage;
 use crate::state::CheatedData;
 use blockifier::blockifier_versioned_constants::VersionedConstants;
@@ -202,7 +204,7 @@ impl CallTrace {
             used_syscalls_vm_resources: SyscallUsageMap::default(),
             used_syscalls_sierra_gas: SyscallUsageMap::default(),
             nested_calls: vec![],
-            result: CallResult::Success { ret_data: vec![] },
+            result: Ok(CallSuccess { ret_data: vec![] }),
             vm_trace: None,
             gas_consumed: u64::default(),
             events: vec![],
