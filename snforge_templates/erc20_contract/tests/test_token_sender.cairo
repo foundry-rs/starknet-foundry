@@ -1,4 +1,4 @@
-use openzeppelin_token::erc20::{ERC20ABIDispatcher, ERC20ABIDispatcherTrait};
+use openzeppelin_interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use snforge_std::{
     CheatSpan, ContractClassTrait, DeclareResultTrait, EventSpyAssertionsTrait,
     cheat_caller_address, declare, spy_events,
@@ -33,7 +33,7 @@ fn setup() -> (ContractAddress, ContractAddress) {
 #[test]
 fn test_single_send() {
     let (erc20_address, token_sender_address) = setup();
-    let erc20 = ERC20ABIDispatcher { contract_address: erc20_address };
+    let erc20 = IERC20Dispatcher { contract_address: erc20_address };
 
     let sender_account = contract_address_const::<1>();
     let target_account = contract_address_const::<2>();
@@ -67,7 +67,7 @@ fn test_single_send() {
 #[fuzzer]
 fn test_single_send_fuzz(transfer_value: u256) {
     let (erc20_address, token_sender_address) = setup();
-    let erc20 = ERC20ABIDispatcher { contract_address: erc20_address };
+    let erc20 = IERC20Dispatcher { contract_address: erc20_address };
 
     let sender_account = contract_address_const::<1>();
     let target_account_1 = contract_address_const::<2>();
@@ -118,7 +118,7 @@ fn test_single_send_fuzz(transfer_value: u256) {
 #[test]
 fn test_multisend() {
     let (erc20_address, token_sender_address) = setup();
-    let erc20 = ERC20ABIDispatcher { contract_address: erc20_address };
+    let erc20 = IERC20Dispatcher { contract_address: erc20_address };
 
     let sender_account = contract_address_const::<1>();
     let target_account_1 = contract_address_const::<2>();
