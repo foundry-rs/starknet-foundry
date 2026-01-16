@@ -87,58 +87,75 @@ impl GasCalculationResources {
     }
 
     pub fn format_for_display(&self, tracked_resource: ForgeTrackedResource) -> String {
-        let syscalls = self.format_syscalls();
-        let vm_resources_output = self.format_vm_resources();
+        // Ensure all resources used for calculation are getting displayed.
+        let Self {
+            sierra_gas,
+            vm_resources,
+            syscalls,
+            events,
+            l2_to_l1_payload_lengths,
+            l1_handler_payload_lengths,
+        } = self;
+        let syscalls = format_syscalls(syscalls);
+        let events = format_events(events);
+        let messages = format_messages(l2_to_l1_payload_lengths, l1_handler_payload_lengths);
+        let vm_resources_output = format_vm_resources(vm_resources);
 
         match tracked_resource {
             ForgeTrackedResource::CairoSteps => {
-                format!(
-                    "{vm_resources_output}
-        syscalls: ({syscalls})
-        "
-                )
+                format!("{vm_resources_output}{syscalls}{events}{messages}\n")
             }
             ForgeTrackedResource::SierraGas => {
-                let mut output = format!(
-                    "
-        sierra gas: {}
-        syscalls: ({syscalls})",
-                    self.sierra_gas.0
-                );
-
-                if self.vm_resources != ExecutionResources::default() {
-                    output.push_str(&vm_resources_output);
-                }
-                output.push('\n');
-
-                output
+                let vm_output = if *vm_resources == ExecutionResources::default() {
+                    String::new()
+                } else {
+                    vm_resources_output.clone()
+                };
+                let sierra_gas = format!("\n        sierra gas: {}", sierra_gas.0);
+                format!("{sierra_gas}{syscalls}{events}{messages}{vm_output}\n",)
             }
         }
     }
+}
 
-    fn format_syscalls(&self) -> String {
-        let mut syscall_usage: Vec<_> = self
-            .syscalls
-            .iter()
-            .map(|(selector, usage)| (selector, usage.call_count))
-            .collect();
-        // Sort syscalls by call count
-        syscall_usage.sort_by(|a, b| b.1.cmp(&a.1));
-        format_items(&syscall_usage)
-    }
+fn format_syscalls(syscalls: &SyscallUsageMap) -> String {
+    let mut syscall_usage: Vec<_> = syscalls
+        .iter()
+        .map(|(selector, usage)| (selector, usage.call_count))
+        .collect();
+    // Sort syscalls by call count
+    syscall_usage.sort_by(|a, b| b.1.cmp(&a.1));
 
-    fn format_vm_resources(&self) -> String {
-        let sorted_builtins = sort_by_value(&self.vm_resources.builtin_instance_counter);
-        let builtins = format_items(&sorted_builtins);
+    let content = format_items(&syscall_usage);
+    format!("\n        syscalls: ({content})")
+}
 
-        format!(
-            "
+fn format_vm_resources(vm_resources: &ExecutionResources) -> String {
+    let sorted_builtins = sort_by_value(&vm_resources.builtin_instance_counter);
+    let builtins = format_items(&sorted_builtins);
+
+    format!(
+        "
         steps: {}
         memory holes: {}
         builtins: ({})",
-            self.vm_resources.n_steps, self.vm_resources.n_memory_holes, builtins
-        )
-    }
+        vm_resources.n_steps, vm_resources.n_memory_holes, builtins
+    )
+}
+
+fn format_events(events: &EventSummary) -> String {
+    format!(
+        "\n        events: (count: {}, keys: {}, data size: {})",
+        events.n_events, events.total_event_keys, events.total_event_data_size
+    )
+}
+
+fn format_messages(l2_to_l1: &[usize], l1_handler: &[usize]) -> String {
+    format!(
+        "\n        messages: (l2 to l1: {}, l1 handler: {})",
+        l2_to_l1.len(),
+        l1_handler.len()
+    )
 }
 
 fn sort_by_value<'a, K, V, M>(map: M) -> Vec<(&'a K, &'a V)>
