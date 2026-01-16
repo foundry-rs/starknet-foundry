@@ -40,7 +40,10 @@ VERSION_UNDERSCORED=$(echo "$VERSION" | tr '.' '_')
 
 DIRECTORY="crates/forge/tests/data/forking/.snfoundry_cache"
 OLD_FILE_PATH=$(find "$DIRECTORY" -type f -regex '.*_v[0-9][a-z0-9_-]*\.json')
-NEW_FILE_PATH=$(echo "$OLD_FILE_PATH" | sed -E "s/_v[a-z0-9_-]+\.json$/_v${VERSION_UNDERSCORED}.json/")
+
+# Strip the shortest match of "_v*" starting from the end of the string
+OLD_FILE_PATH_BASE="${OLD_FILE_PATH%_v*}"
+NEW_FILE_PATH="${OLD_FILE_PATH_BASE}_v${VERSION_UNDERSCORED}.json"
 
 mv "$OLD_FILE_PATH" "$NEW_FILE_PATH"
 
