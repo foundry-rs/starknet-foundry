@@ -14,7 +14,9 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use toml_edit::{Array, ArrayOfTables, DocumentMut, Item, Table, Value, value};
 
-const OZ_VERSION: Version = Version::new(1, 0, 0);
+const OZ_INTERFACES_VERSION: Version = Version::new(2, 1, 0);
+const OZ_TOKEN_VERSION: Version = Version::new(3, 0, 0);
+const OZ_UTILS_VERSION: Version = Version::new(2, 1, 0);
 
 static TEMPLATES_DIR: Dir = include_dir!("snforge_templates");
 
@@ -134,8 +136,18 @@ impl TryFrom<&Template> for TemplateManifestConfig {
                         dev: false,
                     },
                     Dependency {
+                        name: "openzeppelin_interfaces".to_string(),
+                        version: OZ_INTERFACES_VERSION.to_string(),
+                        dev: false,
+                    },
+                    Dependency {
                         name: "openzeppelin_token".to_string(),
-                        version: OZ_VERSION.to_string(),
+                        version: OZ_TOKEN_VERSION.to_string(),
+                        dev: false,
+                    },
+                    Dependency {
+                        name: "openzeppelin_utils".to_string(),
+                        version: OZ_UTILS_VERSION.to_string(),
                         dev: false,
                     },
                 ],
