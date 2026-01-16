@@ -373,6 +373,16 @@ pub fn new(
     let name = infer_name(name, &path)?;
     let scarb_version = scarb_version()?.scarb;
 
+    if matches!(template, Template::Erc20Contract) {
+        let min_scarb_version = Version::new(2, 15, 1);
+        ensure!(
+            scarb_version >= min_scarb_version,
+            format!(
+                "The `erc20-contract` template requires Scarb version {min_scarb_version} or higher. Current Scarb version: {scarb_version}. Please update Scarb to use this template."
+            )
+        );
+    }
+
     fs::create_dir_all(&path)?;
     let project_path = path.canonicalize()?;
     let scarb_manifest_path = project_path.join("Scarb.toml");
