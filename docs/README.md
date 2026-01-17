@@ -11,7 +11,8 @@ $ cargo install mdbook
 Install necessary mdBook extensions
 
 ```shell
-$ cargo install mdbook-linkcheck
+$ cargo install mdbook-linkcheck2
+$ ln -sf ~/.cargo/bin/mdbook-linkcheck2 ~/.cargo/bin/mdbook-linkcheck
 ```
 
 ```shell
