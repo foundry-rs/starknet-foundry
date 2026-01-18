@@ -1,6 +1,6 @@
 use regex::Regex;
 use snapbox::cmd::OutputAssert;
-use std::fmt::Write as _;
+use std::fmt::Write;
 
 pub trait AsOutput {
     fn as_stdout(&self) -> &str;
@@ -26,17 +26,19 @@ impl AsOutput for String {
 }
 
 fn find_with_wildcard(line: &str, actual: &[&str]) -> Option<usize> {
-    let escaped = regex::escape(line);
-    let replaced = escaped.replace("\\[\\.\\.\\]", ".*");
-    let wrapped = format!("^{replaced}$");
-    let re = Regex::new(wrapped.as_str()).unwrap();
-
-    actual.iter().position(|other| re.is_match(other))
+    actual.iter().position(|&actual_line| {
+        if line.contains('*') {
+            let pattern = regex::escape(line).replace("\\*", ".*");
+            let re = Regex::new(&format!("^{pattern}$")).unwrap();
+            re.is_match(actual_line)
+        } else {
+            actual_line == line
+        }
+    })
 }
 
 fn is_present(line: &str, actual: &mut Vec<&str>) -> bool {
-    let position = find_with_wildcard(line, actual);
-    if let Some(position) = position {
+    if let Some(position) = find_with_wildcard(line, actual) {
         actual.remove(position);
         return true;
     }
@@ -65,46 +67,45 @@ fn assert_output_contains(output: &str, lines: &str, assert_prefix: Option<Strin
         }
     }
 
-    if let Some(assert_prefix) = assert_prefix {
-        assert!(contains, "{assert_prefix} Output does not match:\n\n{out}");
-    } else {
-        assert!(contains, "Output does not match:\n\n{out}");
-    }
+    let prefix = assert_prefix.unwrap_or_else(|| "".to_string());
+
+    assert!(
+        contains,
+        "{prefix}Output does not contain expected lines.\n\
+         Expected to contain:\n{out}\n\n\
+         Actual full output:\n{output}"
+    );
 }
 
-#[expect(clippy::needless_pass_by_value)]
 pub fn case_assert_stdout_contains(case: String, output: impl AsOutput, lines: impl AsRef<str>) {
     let stdout = output.as_stdout();
-
     assert_output_contains(stdout, lines.as_ref(), Some(format!("Case {case}: ")));
 }
 
-#[expect(clippy::needless_pass_by_value)]
 pub fn assert_stdout_contains(output: impl AsOutput, lines: impl AsRef<str>) {
     let stdout = output.as_stdout();
-
     assert_output_contains(stdout, lines.as_ref(), None);
 }
 
-#[expect(clippy::needless_pass_by_value)]
 pub fn assert_stderr_contains(output: impl AsOutput, lines: impl AsRef<str>) {
     let stderr = output.as_stderr();
-
     assert_output_contains(stderr, lines.as_ref(), None);
 }
 
 fn assert_output(output: &str, lines: &str) {
     let converted_pattern = regex::escape(lines).replace(r"\[\.\.\]", ".*");
     let re = Regex::new(&converted_pattern).unwrap();
+
     assert!(
         re.is_match(output),
-        "Pattern not found in output. Expected pattern:\n{lines}\n\nGot:\n{output}",
+        "Pattern not found in output.\n\
+         Expected pattern:\n{lines}\n\n\
+         Actual full output:\n{output}",
     );
 }
 
 #[expect(clippy::needless_pass_by_value)]
 pub fn assert_stdout(output: impl AsOutput, lines: impl AsRef<str>) {
     let stdout = output.as_stdout();
-
     assert_output(stdout, lines.as_ref());
 }
