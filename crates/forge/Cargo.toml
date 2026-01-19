@@ -30,6 +30,7 @@ scarb-api = { path = "../scarb-api" }
 forge_runner = { path = "../forge-runner" }
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 cairo-lang-sierra.workspace = true
+cairo-lang-starknet-classes.workspace = true
 cairo-annotations.workspace = true
 starknet-types-core.workspace = true
 regex.workspace = true
@@ -59,6 +60,8 @@ tracing-subscriber.workspace = true
 tracing.workspace = true
 tracing-chrome.workspace = true
 rayon.workspace = true
+tempfile.workspace = true
+fs_extra.workspace = true
 
 [[bin]]
 name = "snforge"
@@ -68,7 +71,6 @@ path = "src/main.rs"
 assert_fs.workspace = true
 snapbox.workspace = true
 axum.workspace = true
-tempfile.workspace = true
 cairo-lang-starknet-classes.workspace = true
 walkdir.workspace = true
 test-case.workspace = true

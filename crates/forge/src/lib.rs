@@ -26,6 +26,7 @@ mod clean;
 mod combine_configs;
 mod compatibility_check;
 mod new;
+mod optimize_inlining;
 mod profile_validation;
 pub mod run_tests;
 pub mod scarb;
@@ -101,6 +102,11 @@ enum ForgeSubcommand {
     CheckRequirements,
     /// Generate completions script
     Completions(Completions),
+    /// Find optimal inlining-strategy value to minimize gas cost
+    OptimizeInlining {
+        #[command(flatten)]
+        args: optimize_inlining::OptimizeInliningArgs,
+    },
 }
 
 #[derive(Parser, Debug)]
@@ -130,7 +136,7 @@ enum ColorOption {
     Never,
 }
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[expect(clippy::struct_excessive_bools)]
 pub struct TestArgs {
     /// Name used to filter tests
@@ -242,7 +248,7 @@ impl TestArgs {
     }
 }
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 pub struct ScarbArgs {
     #[command(flatten)]
     packages_filter: PackagesFilter,
@@ -323,6 +329,10 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
                 ui.eprintln(&"Failed to get the number of available cores, defaulting to 1");
                 1
             };
+            let cores = std::env::var_os("SNFORGE_PARALLEL")
+                .and_then(|p| p.to_str().map(|s| s.to_string()))
+                .and_then(|p| p.parse::<usize>().ok())
+                .unwrap_or(cores);
 
             let rt = Builder::new_multi_thread()
                 .max_blocking_threads(cores)
@@ -338,6 +348,10 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
         ForgeSubcommand::Completions(completions) => {
             generate_completions(completions.shell, &mut Cli::command())?;
             Ok(ExitStatus::Success)
+        }
+        ForgeSubcommand::OptimizeInlining { args } => {
+            check_requirements(false, &ui)?;
+            optimize_inlining::optimize_inlining(args, ui)
         }
     }
 }

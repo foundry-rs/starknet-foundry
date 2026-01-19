@@ -24,6 +24,7 @@ pub fn compile_contract_sierra(sierra_json: &Value) -> Result<CasmContractClass,
 }
 
 /// Compiles Sierra JSON file at the given path of a contract into [`CasmContractClass`].
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn compile_contract_sierra_at_path(
     sierra_file_path: &Path,
 ) -> Result<CasmContractClass, CompilationError> {
@@ -32,12 +33,14 @@ pub fn compile_contract_sierra_at_path(
 }
 
 /// Compiles Sierra JSON of a raw program into [`RawCasmProgram`].
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn compile_raw_sierra(sierra_json: &Value) -> Result<RawCasmProgram, CompilationError> {
     let json = compile_sierra(sierra_json, SierraType::Raw)?;
     serde_json::from_str(&json).map_err(CompilationError::Deserialization)
 }
 
 /// Compiles Sierra JSON file at the given path of a raw program into [`RawCasmProgram`].
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn compile_raw_sierra_at_path(
     sierra_file_path: &Path,
 ) -> Result<RawCasmProgram, CompilationError> {

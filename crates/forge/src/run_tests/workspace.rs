@@ -29,6 +29,21 @@ use std::sync::Arc;
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus> {
+    let WorkspaceExecutionSummary { all_tests } = execute_workspace(args, ui).await?;
+    let has_failures = extract_failed_tests(&all_tests).next().is_some();
+    Ok(if has_failures {
+        ExitStatus::Failure
+    } else {
+        ExitStatus::Success
+    })
+}
+
+#[derive(Debug)]
+pub struct WorkspaceExecutionSummary {
+    pub all_tests: Vec<TestTargetSummary>,
+}
+
+pub async fn execute_workspace(args: TestArgs, ui: Arc<UI>) -> Result<WorkspaceExecutionSummary> {
     match args.color {
         // SAFETY: This runs in a single-threaded environment.
         ColorOption::Always => unsafe { env::set_var("CLICOLOR_FORCE", "1") },
@@ -93,6 +108,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         .unwrap_or_default();
 
     for package in packages {
+        let cwd = env::current_dir()?;
         env::set_current_dir(&package.root)?;
 
         let args = RunForPackageArgs::build(
@@ -111,10 +127,12 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         all_tests.extend(result.summaries());
 
         total_filtered_count = calculate_total_filtered_count(total_filtered_count, filtered);
+        // Restore the original working directory.
+        env::set_current_dir(&cwd)?;
     }
 
     let overall_summary = OverallSummaryMessage::new(&all_tests, total_filtered_count);
-    let all_failed_tests: Vec<AnyTestCaseSummary> = extract_failed_tests(all_tests).collect();
+    let all_failed_tests: Vec<&AnyTestCaseSummary> = extract_failed_tests(&all_tests).collect();
 
     FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
 
@@ -151,11 +169,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         unset_forge_test_filter();
     }
 
-    Ok(if all_failed_tests.is_empty() {
-        ExitStatus::Success
-    } else {
-        ExitStatus::Failure
-    })
+    Ok(WorkspaceExecutionSummary { all_tests })
 }
 
 fn calculate_total_filtered_count(
@@ -172,12 +186,12 @@ fn calculate_total_filtered_count(
 
 #[tracing::instrument(skip_all, level = "debug")]
 fn extract_failed_tests(
-    tests_summaries: Vec<TestTargetSummary>,
-) -> impl Iterator<Item = AnyTestCaseSummary> {
+    tests_summaries: &[TestTargetSummary],
+) -> impl Iterator<Item = &AnyTestCaseSummary> {
     tests_summaries
-        .into_iter()
-        .flat_map(|summary| summary.test_case_summaries)
-        .filter(AnyTestCaseSummary::is_failed)
+        .iter()
+        .flat_map(|summary| &summary.test_case_summaries)
+        .filter(|s| s.is_failed())
 }
 
 fn set_forge_test_filter(test_filter: String) {
