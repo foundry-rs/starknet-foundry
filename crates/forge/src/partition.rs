@@ -152,3 +152,39 @@ fn collect_test_case_names(test_target_raw: &TestTargetRaw) -> Result<Vec<String
 
     Ok(test_case_names)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_case::test_case;
+
+    #[test]
+    fn test_happy_case() {
+        let partition = "2/5".parse::<Partition>().unwrap();
+        assert_eq!(partition.index, 2);
+        assert_eq!(partition.total, 5);
+    }
+
+    #[test]
+    fn test_invalid_format() {
+        let err = "2-5".parse::<Partition>().unwrap_err();
+        assert_eq!(err, "Partition must be in the format <INDEX>/<TOTAL>");
+    }
+
+    #[test_case("-1/5", "INDEX")]
+    #[test_case("2/-5", "TOTAL")]
+    #[test_case("a/5", "INDEX")]
+    #[test_case("2/b", "TOTAL")]
+    fn test_invalid_integer(partition: &str, invalid_part: &str) {
+        let err = partition.parse::<Partition>().unwrap_err();
+        assert_eq!(err, format!("{invalid_part} must be a positive integer"));
+    }
+
+    #[test_case("0/5")]
+    #[test_case("6/5")]
+    #[test_case("2/0")]
+    fn test_out_of_bounds(partition: &str) {
+        let err = partition.parse::<Partition>().unwrap_err();
+        assert_eq!(err, "Invalid partition values: ensure 1 <= INDEX <= TOTAL");
+    }
+}
