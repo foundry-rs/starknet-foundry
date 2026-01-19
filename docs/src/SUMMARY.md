@@ -40,6 +40,7 @@
 * [Debugging](snforge-advanced-features/debugging.md)
 * [Oracles](snforge-advanced-features/oracles.md)
 * [Parametrized Tests](snforge-advanced-features/parametrized-testing.md)
+* [Tests Partitioning](snforge-advanced-features/tests-partitioning.md)
 
 ---
 

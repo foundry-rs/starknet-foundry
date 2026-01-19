@@ -133,6 +133,11 @@ To learn more about fee calculation formula (and the impact of tracking sierra g
 ## `--gas-report`
 Display a table of L2 gas breakdown for each contract and selector.
 
+## `--partition <INDEX/TOTAL>`
+
+If specified, divides tests into partitions and runs specified partition.
+`<PARTITION>` is in the format `INDEX/TOTAL`, where `INDEX` is the 1-based index of the partition to run, and `TOTAL` is the number of partitions.
+
 ##  `-P`, `--profile` `<PROFILE>`
 Specify the profile to use by name.
 

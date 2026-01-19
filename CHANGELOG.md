@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- Partitioned test execution with `--partition <INDEX/TOTAL>` flag. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/tests-partitioning.html)
+
 ## [0.55.0] - 2026-01-13
 
-## Forge
+### Forge
 
 #### Changed
 
