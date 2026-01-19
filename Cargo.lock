@@ -3359,6 +3359,7 @@ dependencies = [
  "docs",
  "forge_runner",
  "foundry-ui",
+ "fs_extra",
  "futures",
  "include_dir",
  "indoc",

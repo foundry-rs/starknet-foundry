@@ -31,6 +31,7 @@ pub enum SierraType {
 }
 
 /// Compiles the given Sierra JSON into the specified type using the `universal-sierra-compiler`.
+#[tracing::instrument(skip_all, level = "debug")]
 pub fn compile_sierra(
     sierra_json: &Value,
     sierra_type: SierraType,
