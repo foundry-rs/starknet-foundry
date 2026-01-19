@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::fs;
 use universal_sierra_compiler_api::compile_contract_sierra_at_path;
 
-mod deserialized;
+pub mod deserialized;
 mod representation;
 
 /// Contains compiled Starknet artifacts
@@ -194,6 +194,7 @@ mod tests {
                     contract_name: "contract1".to_string(),
                     artifacts: StarknetContractArtifactPaths {
                         sierra: Utf8PathBuf::from("mock/path1/contract1.sierra"),
+                        casm: None,
                     },
                 }],
             },
@@ -209,6 +210,7 @@ mod tests {
                     contract_name: "contract2".to_string(),
                     artifacts: StarknetContractArtifactPaths {
                         sierra: Utf8PathBuf::from("mock/path2/contract2.sierra"),
+                        casm: None,
                     },
                 }],
             },
