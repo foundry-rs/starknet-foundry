@@ -2,7 +2,6 @@ use super::{
     resolve_config::resolve_config,
     test_target::{TestTargetRunResult, run_for_test_target},
 };
-use crate::scarb::load_package_config;
 use crate::{
     TestArgs,
     block_number_map::BlockNumberMap,
@@ -19,13 +18,19 @@ use crate::{
     test_filter::{NameFilter, TestsFilter},
     warn::warn_if_incompatible_rpc_version,
 };
+use crate::{partition::PartitioningConfig, scarb::load_package_config};
 use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use console::Style;
 use forge_runner::{
     forge_config::ForgeConfig,
-    package_tests::{raw::TestTargetRaw, with_config_resolved::TestTargetWithResolvedConfig},
+    package_tests::{
+        raw::TestTargetRaw,
+        with_config_resolved::{
+            TestCaseWithResolvedConfig, TestTargetWithResolvedConfig, sanitize_test_case_name,
+        },
+    },
     running::with_config::test_target_with_config,
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
@@ -76,6 +81,7 @@ impl RunForPackageArgs {
         args: &TestArgs,
         cache_dir: &Utf8PathBuf,
         artifacts_dir: &Utf8Path,
+        partitioning_config: PartitioningConfig,
         ui: &UI,
     ) -> Result<RunForPackageArgs> {
         let raw_test_targets = load_test_artifacts(artifacts_dir, &package)?;
@@ -120,6 +126,7 @@ impl RunForPackageArgs {
             args.include_ignored,
             args.rerun_failed,
             FailedTestsCache::new(cache_dir),
+            partitioning_config,
         );
 
         Ok(RunForPackageArgs {
@@ -157,8 +164,30 @@ async fn test_package_with_config_resolved(
     Ok(test_targets_with_resolved_config)
 }
 
-fn sum_test_cases(test_targets: &[TestTargetWithResolvedConfig]) -> usize {
-    test_targets.iter().map(|tc| tc.test_cases.len()).sum()
+fn sum_test_cases_from_package(
+    test_targets: &[TestTargetWithResolvedConfig],
+    partitioning_config: &PartitioningConfig,
+) -> usize {
+    test_targets
+        .iter()
+        .map(|tt| sum_test_cases_from_test_target(tt.test_cases.clone(), partitioning_config))
+        .sum()
+}
+
+fn sum_test_cases_from_test_target(
+    test_cases: Vec<TestCaseWithResolvedConfig>,
+    partitioning_config: &PartitioningConfig,
+) -> usize {
+    match partitioning_config {
+        PartitioningConfig::None => test_cases.len(),
+        PartitioningConfig::Enabled { partition, mapping } => test_cases
+            .into_iter()
+            .filter(|test_case| {
+                mapping.get_partition_number(&sanitize_test_case_name(&test_case.name))
+                    == partition.index()
+            })
+            .count(),
+    }
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
@@ -181,7 +210,7 @@ pub async fn run_for_package(
         &tests_filter,
     )
     .await?;
-    let all_tests = sum_test_cases(&test_targets);
+    let all_tests = sum_test_cases_from_package(&test_targets, &tests_filter.partitioning_config);
 
     for test_target in &mut test_targets {
         tests_filter.filter_tests(&mut test_target.test_cases)?;
@@ -189,7 +218,8 @@ pub async fn run_for_package(
 
     warn_if_incompatible_rpc_version(&test_targets, ui.clone()).await?;
 
-    let not_filtered = sum_test_cases(&test_targets);
+    let not_filtered =
+        sum_test_cases_from_package(&test_targets, &tests_filter.partitioning_config);
     ui.println(&CollectedTestsCountMessage {
         tests_num: not_filtered,
         package_name: package_name.clone(),
@@ -201,7 +231,10 @@ pub async fn run_for_package(
         let ui = ui.clone();
         ui.println(&TestsRunMessage::new(
             test_target.tests_location,
-            test_target.test_cases.len(),
+            sum_test_cases_from_test_target(
+                test_target.test_cases.clone(),
+                &tests_filter.partitioning_config,
+            ),
         ));
 
         let summary =

@@ -1,6 +1,7 @@
 use crate::utils::runner::TestCase;
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
+use forge::partition::PartitioningConfig;
 use forge::shared_cache::FailedTestsCache;
 use forge::{
     block_number_map::BlockNumberMap,
@@ -59,6 +60,7 @@ pub fn run_test_case(
                 false,
                 false,
                 FailedTestsCache::default(),
+                PartitioningConfig::None,
             ),
             forge_config: Arc::new(ForgeConfig {
                 test_runner_config: Arc::new(TestRunnerConfig {

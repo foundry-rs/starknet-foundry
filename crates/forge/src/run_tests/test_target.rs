@@ -1,5 +1,6 @@
 use anyhow::Result;
 use forge_runner::messages::TestResultMessage;
+use forge_runner::{ExcludeReason, FilterResult};
 use forge_runner::{
     TestCaseFilter,
     forge_config::ForgeConfig,
@@ -39,15 +40,30 @@ pub async fn run_for_test_target(
 
     for case in tests.test_cases {
         let case_name = case.name.clone();
+        let filter_result = tests_filter.filter(&case);
 
-        if !tests_filter.should_be_run(&case) {
-            tasks.push(tokio::task::spawn(async {
-                // TODO TestCaseType should also be encoded in the test case definition
-                Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
-                    name: case_name,
-                }))
-            }));
-            continue;
+        match filter_result {
+            FilterResult::Excluded(reason) => {
+                match reason {
+                    ExcludeReason::ExcludedFromPartition => {
+                        tasks.push(tokio::task::spawn(async {
+                            Ok(AnyTestCaseSummary::Single(
+                                TestCaseSummary::ExcludedFromPartition {},
+                            ))
+                        }));
+                    }
+                    ExcludeReason::Ignored => {
+                        tasks.push(tokio::task::spawn(async {
+                            // TODO TestCaseType should also be encoded in the test case definition
+                            Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
+                                name: case_name,
+                            }))
+                        }));
+                    }
+                }
+                continue;
+            }
+            FilterResult::Included => {}
         }
 
         let case = Arc::new(case);
@@ -68,7 +84,7 @@ pub async fn run_for_test_target(
     while let Some(task) = tasks.next().await {
         let result = task??;
 
-        if !result.is_interrupted() {
+        if !result.is_interrupted() && !result.is_excluded_from_partition() {
             let test_result_message = TestResultMessage::new(
                 &result,
                 forge_config.output_config.detailed_resources,
