@@ -31,6 +31,7 @@ mod clean;
 mod combine_configs;
 mod compatibility_check;
 mod new;
+mod optimize_inlining;
 mod profile_validation;
 pub mod run_tests;
 pub mod scarb;
@@ -106,6 +107,11 @@ enum ForgeSubcommand {
     CheckRequirements,
     /// Generate completions script
     Completions(Completions),
+    /// Find optimal inlining-strategy value to minimize gas cost
+    OptimizeInlining {
+        #[command(flatten)]
+        args: Box<optimize_inlining::OptimizeInliningArgs>,
+    },
 }
 
 #[derive(Parser, Debug)]
@@ -306,6 +312,12 @@ pub enum ExitStatus {
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
     let cli = Cli::parse();
+    let cores = if let Ok(available_cores) = available_parallelism() {
+        available_cores.get()
+    } else {
+        ui.eprintln(&"Failed to get the number of available cores, defaulting to 1");
+        1
+    };
 
     match cli.subcommand {
         ForgeSubcommand::New { args } => {
@@ -346,6 +358,10 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
         ForgeSubcommand::Completions(completions) => {
             generate_completions(completions.shell, &mut Cli::command())?;
             Ok(ExitStatus::Success)
+        }
+        ForgeSubcommand::OptimizeInlining { args } => {
+            check_requirements(false, &ui)?;
+            optimize_inlining::optimize_inlining(&args, cores, &ui)
         }
     }
 }
