@@ -57,8 +57,19 @@ const BUILTINS: [&str; 11] = [
     "MulMod",
 ];
 
+#[derive(Debug)]
+pub enum FilterResult {
+    Included,
+    Excluded(ExcludeReason),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExcludeReason {
+    Ignored,
+}
+
 pub trait TestCaseFilter {
-    fn should_be_run<T>(&self, test_case: &TestCase<T>) -> bool
+    fn filter<T>(&self, test_case: &TestCase<T>) -> FilterResult
     where
         T: TestCaseIsIgnored;
 }

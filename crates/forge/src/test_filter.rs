@@ -2,7 +2,7 @@ use crate::shared_cache::FailedTestsCache;
 use anyhow::Result;
 use forge_runner::package_tests::TestCase;
 use forge_runner::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
-use forge_runner::{TestCaseFilter, TestCaseIsIgnored};
+use forge_runner::{ExcludeReason, FilterResult, TestCaseFilter, TestCaseIsIgnored};
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -119,17 +119,27 @@ impl TestsFilter {
 }
 
 impl TestCaseFilter for TestsFilter {
-    fn should_be_run<T>(&self, test_case: &TestCase<T>) -> bool
+    fn filter<T>(&self, test_case: &TestCase<T>) -> FilterResult
     where
         T: TestCaseIsIgnored,
     {
         let ignored = test_case.config.is_ignored();
 
         match self.ignored_filter {
-            IgnoredFilter::All => true,
-            IgnoredFilter::Ignored => ignored,
-            IgnoredFilter::NotIgnored => !ignored,
+            IgnoredFilter::All => {}
+            IgnoredFilter::Ignored => {
+                if !ignored {
+                    return FilterResult::Excluded(ExcludeReason::Ignored);
+                }
+            }
+            IgnoredFilter::NotIgnored => {
+                if ignored {
+                    return FilterResult::Excluded(ExcludeReason::Ignored);
+                }
+            }
         }
+
+        FilterResult::Included
     }
 }
 

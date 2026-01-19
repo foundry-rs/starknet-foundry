@@ -30,6 +30,9 @@ pub async fn resolve_config(
     let env_ignore_fork_tests = env_ignore_fork_tests();
 
     for case in test_target.test_cases {
+        let filter_result = tests_filter.filter(&case);
+        let should_resolve_fork = matches!(filter_result, forge_runner::FilterResult::Included);
+
         test_cases.push(TestCaseWithResolvedConfig::new(
             &case.name,
             case.test_details.clone(),
@@ -37,7 +40,7 @@ pub async fn resolve_config(
                 available_gas: case.config.available_gas,
                 ignored: case.config.ignored
                     || (env_ignore_fork_tests && case.config.fork_config.is_some()),
-                fork_config: if tests_filter.should_be_run(&case) {
+                fork_config: if should_resolve_fork {
                     resolve_fork_config(case.config.fork_config, block_number_map, fork_targets)
                         .await?
                 } else {
