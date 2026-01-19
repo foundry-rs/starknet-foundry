@@ -1,0 +1,6 @@
+---
+source: crates/forge/tests/e2e/optimize_inlining.rs
+expression: graph_bytes
+extension: png
+snapshot_kind: binary
+---

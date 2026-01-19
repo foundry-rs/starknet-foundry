@@ -25,6 +25,7 @@ mod fuzzing;
 mod gas_report;
 mod io_operations;
 mod new;
+mod optimize_inlining;
 mod oracles;
 mod package_warnings;
 mod partitioning;
