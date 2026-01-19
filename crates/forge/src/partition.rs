@@ -9,6 +9,7 @@ pub struct Partition {
 }
 
 impl Partition {
+    #[must_use]
     pub fn index(&self) -> usize {
         self.index
     }
