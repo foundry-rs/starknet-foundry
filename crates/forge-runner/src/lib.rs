@@ -66,6 +66,7 @@ pub enum FilterResult {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExcludeReason {
     Ignored,
+    ExcludedFromPartition,
 }
 
 pub trait TestCaseFilter {

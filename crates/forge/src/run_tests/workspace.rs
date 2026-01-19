@@ -1,4 +1,5 @@
 use super::package::RunForPackageArgs;
+use crate::partition::PartitionConfig;
 use crate::profile_validation::check_profile_compatibility;
 use crate::run_tests::messages::latest_blocks_numbers::LatestBlocksNumbersMessage;
 use crate::run_tests::messages::overall_summary::OverallSummaryMessage;
@@ -91,6 +92,12 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     let cache_dir = workspace_root.join(CACHE_DIR);
     let packages_len = packages.len();
 
+    let partitioning_config = if let Some(partition) = &args.partition {
+        PartitionConfig::new(*partition, &packages, &artifacts_dir_path)?
+    } else {
+        PartitionConfig::None
+    };
+
     for package in packages {
         env::set_current_dir(&package.root)?;
 
@@ -100,6 +107,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
             &args,
             &cache_dir,
             &artifacts_dir_path,
+            partitioning_config.clone(),
             &ui,
         )?;
 
@@ -108,11 +116,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         let filtered = result.filtered();
         all_tests.extend(result.summaries());
 
-        // Accumulate filtered test counts across packages. When using --exact flag,
-        // result.filtered_count is None, so total_filtered_count becomes None too.
-        total_filtered_count = total_filtered_count
-            .zip(filtered)
-            .map(|(total, filtered)| total + filtered);
+        total_filtered_count = calculate_total_filtered_count(total_filtered_count, filtered);
     }
 
     let overall_summary = OverallSummaryMessage::new(&all_tests, total_filtered_count);
@@ -144,6 +148,17 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     } else {
         ExitStatus::Failure
     })
+}
+
+fn calculate_total_filtered_count(
+    total_filtered_count: Option<usize>,
+    filtered: Option<usize>,
+) -> Option<usize> {
+    // Accumulate filtered test counts across packages. When using `--exact` flag,
+    // `result.filtered_count` is None, so `total_filtered_count` becomes None too.
+    total_filtered_count
+        .zip(filtered)
+        .map(|(total, filtered)| total + filtered)
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
