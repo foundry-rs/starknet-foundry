@@ -1,7 +1,7 @@
 use super::{TestCase, TestTarget};
 use crate::{
-    TestCaseIsIgnored,
     expected_result::{ExpectedPanicValue, ExpectedTestResult},
+    filtering::TestCaseIsIgnored,
 };
 use cheatnet::runtime_extensions::forge_config_extension::config::{
     Expected, RawAvailableResourceBoundsConfig, RawForgeConfig, RawForkConfig, RawFuzzerConfig,

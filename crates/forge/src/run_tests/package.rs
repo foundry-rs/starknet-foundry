@@ -179,15 +179,17 @@ fn sum_test_cases_from_test_target(
     partitioning_config: &PartitionConfig,
 ) -> usize {
     match partitioning_config {
-        PartitionConfig::None => test_cases.len(),
+        PartitionConfig::Disabled => test_cases.len(),
         PartitionConfig::Enabled {
             partition,
             partition_map,
         } => test_cases
             .into_iter()
             .filter(|test_case| {
-                partition_map.get_partition_number(&sanitize_test_case_name(&test_case.name))
-                    == partition.index()
+                let assigned_partition_number = partition_map
+                    .get_partition_number(&sanitize_test_case_name(&test_case.name))
+                    .expect("Failed to get assigned partition number from partition map");
+                assigned_partition_number == partition.index()
             })
             .count(),
     }
