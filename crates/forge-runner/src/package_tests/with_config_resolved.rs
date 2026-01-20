@@ -1,5 +1,7 @@
 use super::{TestCase, TestTarget};
-use crate::{TestCaseIsIgnored, expected_result::ExpectedTestResult, package_tests::TestDetails};
+use crate::{
+    expected_result::ExpectedTestResult, filtering::TestCaseIsIgnored, package_tests::TestDetails,
+};
 use anyhow::Result;
 use cairo_vm::types::program::Program;
 use cheatnet::runtime_extensions::forge_config_extension::config::{
