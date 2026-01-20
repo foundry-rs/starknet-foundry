@@ -184,7 +184,7 @@ fn sum_test_cases_from_test_target(
             partition,
             partition_map,
         } => test_cases
-            .into_iter()
+            .iter()
             .filter(|test_case| {
                 let assigned_index = partition_map
                     .get_assigned_index(&sanitize_test_case_name(&test_case.name))
