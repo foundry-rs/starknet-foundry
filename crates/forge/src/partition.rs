@@ -34,10 +34,6 @@ impl FromStr for Partition {
             return Err("Partition must be in the format <INDEX>/<TOTAL>".to_string());
         }
 
-        println!(
-            "Parsing partition: index_str = {}, total_str = {}",
-            index_str, total_str
-        );
         let index = index_str
             .parse::<NonZeroUsize>()
             .map_err(|_| "INDEX must be a positive integer".to_string())?;
