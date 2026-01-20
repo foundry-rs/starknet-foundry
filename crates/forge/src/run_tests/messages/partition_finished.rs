@@ -1,9 +1,8 @@
+use crate::partition::Partition;
 use console::style;
 use foundry_ui::{Message, components::labeled::LabeledMessage};
 use serde::Serialize;
 use serde_json::{Value, json};
-
-use crate::partition::Partition;
 
 #[derive(Serialize)]
 pub struct PartitionFinishedMessage {
