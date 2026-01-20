@@ -1,6 +1,6 @@
 use crate::forge_config::ForgeTrackedResource;
+use crate::gas::resources::GasCalculationResources;
 use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary};
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use console::style;
 use foundry_ui::Message;
@@ -180,76 +180,6 @@ fn format_detailed_resources(
     used_resources: &UsedResources,
     tracked_resource: ForgeTrackedResource,
 ) -> String {
-    // Sort syscalls by call count
-    let mut syscall_usage: Vec<_> = used_resources
-        .syscall_usage
-        .iter()
-        .map(|(selector, usage)| (selector, usage.call_count))
-        .collect();
-    syscall_usage.sort_by(|a, b| b.1.cmp(&a.1));
-
-    let format_vm_resources = |vm_resources: &ExecutionResources| -> String {
-        let sorted_builtins = sort_by_value(&vm_resources.builtin_instance_counter);
-        let builtins = format_items(&sorted_builtins);
-
-        format!(
-            "
-        steps: {}
-        memory holes: {}
-        builtins: ({})",
-            vm_resources.n_steps, vm_resources.n_memory_holes, builtins
-        )
-    };
-
-    let syscalls = format_items(&syscall_usage);
-
-    let charged_resources = &used_resources.execution_summary.charged_resources;
-    let vm_resources_output = format_vm_resources(&charged_resources.vm_resources);
-
-    match tracked_resource {
-        ForgeTrackedResource::CairoSteps => {
-            format!(
-                "{vm_resources_output}
-        syscalls: ({syscalls})
-        "
-            )
-        }
-        ForgeTrackedResource::SierraGas => {
-            let mut output = format!(
-                "
-        sierra gas: {}
-        syscalls: ({syscalls})",
-                charged_resources.gas_consumed.0
-            );
-
-            if charged_resources.vm_resources != ExecutionResources::default() {
-                output.push_str(&vm_resources_output);
-            }
-            output.push('\n');
-
-            output
-        }
-    }
-}
-
-fn sort_by_value<'a, K, V, M>(map: M) -> Vec<(&'a K, &'a V)>
-where
-    M: IntoIterator<Item = (&'a K, &'a V)>,
-    V: Ord,
-{
-    let mut sorted: Vec<_> = map.into_iter().collect();
-    sorted.sort_by(|a, b| b.1.cmp(a.1));
-    sorted
-}
-
-fn format_items<K, V>(items: &[(K, V)]) -> String
-where
-    K: std::fmt::Debug,
-    V: std::fmt::Display,
-{
-    items
-        .iter()
-        .map(|(key, value)| format!("{key:?}: {value}"))
-        .collect::<Vec<String>>()
-        .join(", ")
+    GasCalculationResources::from_used_resources(used_resources)
+        .format_for_display(tracked_resource)
 }
