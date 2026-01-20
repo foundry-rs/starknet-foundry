@@ -98,7 +98,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         ui.println(&PartitionStartedMessage::new(*partition));
         PartitionConfig::new(*partition, &packages, &artifacts_dir_path)?
     } else {
-        PartitionConfig::None
+        PartitionConfig::Disabled
     };
 
     for package in packages {

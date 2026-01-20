@@ -60,7 +60,7 @@ pub fn run_test_case(
                 false,
                 false,
                 FailedTestsCache::default(),
-                PartitionConfig::None,
+                PartitionConfig::Disabled,
             ),
             forge_config: Arc::new(ForgeConfig {
                 test_runner_config: Arc::new(TestRunnerConfig {
