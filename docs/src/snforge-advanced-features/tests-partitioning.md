@@ -9,7 +9,7 @@ When this flag is provided, `snforge` will divide all collected tests into `TOTA
 
 ## Example
 
-Let's consider package with the following 7 tests:
+Let's consider package a with the following 7 tests:
 
 ```rust
 {{#include ../../listings/tests_partitioning/tests/example.cairo}}
@@ -41,4 +41,4 @@ Finished partition run: 1/2
 </details>
 
 
-See example Github Actions workflow demonstrating partitioned test execution [here](../appendix/starknet-foundry-github-action.html#workflow-with-partitioned-tests).
+See example GitHub Actions workflow demonstrating partitioned test execution [here](../appendix/starknet-foundry-github-action.html#workflow-with-partitioned-tests).
