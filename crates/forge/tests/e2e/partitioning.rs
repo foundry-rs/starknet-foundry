@@ -32,6 +32,7 @@ fn test_whole_workspace_partition_1_2() {
         [..]Compiling[..]
         [..]Finished[..]
 
+        Running partition run: 1/2
 
         Collected 2 test(s) from package_a package
         Running 1 test(s) from tests/
@@ -78,6 +79,7 @@ fn test_whole_workspace_partition_2_2() {
         [..]Compiling[..]
         [..]Finished[..]
 
+        Running partition run: 2/2
 
         Collected 2 test(s) from package_a package
         Running 1 test(s) from tests/
@@ -129,6 +131,7 @@ fn test_whole_workspace_partition_1_3() {
         [..]Compiling[..]
         [..]Finished[..]
 
+        Running partition run: 1/3
 
         Collected 2 test(s) from package_a package
         Running 1 test(s) from src/
@@ -173,6 +176,7 @@ fn test_whole_workspace_partition_2_3() {
         [..]Compiling[..]
         [..]Finished[..]
 
+        Running partition run: 2/3
 
         Collected 1 test(s) from package_a package
         Running 0 test(s) from tests/
@@ -222,6 +226,7 @@ fn test_whole_workspace_partition_3_3() {
         [..]Compiling[..]
         [..]Finished[..]
 
+        Running partition run: 3/3
 
         Collected 1 test(s) from package_a package
         Running 1 test(s) from tests/
@@ -265,6 +270,7 @@ fn test_works_with_name_filter() {
         [..]Compiling[..]
         [..]Finished[..]
 
+        Running partition run: 1/3
 
         Collected 1 test(s) from package_a package
         Running 0 test(s) from tests/

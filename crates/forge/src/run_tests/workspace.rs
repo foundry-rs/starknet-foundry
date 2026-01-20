@@ -95,6 +95,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     let packages_len = packages.len();
 
     let partitioning_config = if let Some(partition) = &args.partition {
+        ui.print_blank_line();
         ui.println(&PartitionStartedMessage::new(*partition));
         PartitionConfig::new(*partition, &packages, &artifacts_dir_path)?
     } else {
