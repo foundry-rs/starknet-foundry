@@ -4,7 +4,9 @@ use std::str::FromStr;
 /// Represents a specific partition in a partitioned test run.
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
 pub struct Partition {
+    /// The 1-based index of the partition to run.
     index: usize,
+    /// The total number of partitions in the run.
     total: usize,
 }
 
@@ -50,16 +52,19 @@ mod tests {
     use super::*;
     use test_case::test_case;
 
-    #[test]
-    fn test_happy_case() {
-        let partition = "2/5".parse::<Partition>().unwrap();
-        assert_eq!(partition.index, 2);
-        assert_eq!(partition.total, 5);
+    #[test_case("1/1", 1, 1)]
+    #[test_case("2/5", 2, 5)]
+    fn test_happy_case(partition: &str, expected_index: usize, expected_total: usize) {
+        let partition = partition.parse::<Partition>().unwrap();
+        assert_eq!(partition.index, expected_index);
+        assert_eq!(partition.total, expected_total);
     }
 
-    #[test]
-    fn test_invalid_format() {
-        let err = "2-5".parse::<Partition>().unwrap_err();
+    #[test_case("1-2"; "using hyphen instead of slash")]
+    #[test_case("1/2/3"; "too many parts")]
+    #[test_case("12"; "no separator")]
+    fn test_invalid_format(partition: &str) {
+        let err = partition.parse::<Partition>().unwrap_err();
         assert_eq!(err, "Partition must be in the format <INDEX>/<TOTAL>");
     }
 
