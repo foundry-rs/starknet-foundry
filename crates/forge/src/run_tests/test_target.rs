@@ -1,8 +1,7 @@
 use anyhow::Result;
+use forge_runner::filtering::{ExcludeReason, FilterResult, TestCaseFilter};
 use forge_runner::messages::TestResultMessage;
-use forge_runner::{ExcludeReason, FilterResult};
 use forge_runner::{
-    TestCaseFilter,
     forge_config::ForgeConfig,
     maybe_generate_coverage, maybe_save_trace_and_profile,
     package_tests::with_config_resolved::TestTargetWithResolvedConfig,
