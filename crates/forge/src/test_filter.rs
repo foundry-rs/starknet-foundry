@@ -1,11 +1,9 @@
 use crate::partition::PartitionConfig;
 use crate::shared_cache::FailedTestsCache;
 use anyhow::Result;
+use forge_runner::filtering::{ExcludeReason, FilterResult, TestCaseFilter, TestCaseIsIgnored};
 use forge_runner::package_tests::TestCase;
-use forge_runner::package_tests::with_config_resolved::{
-    TestCaseWithResolvedConfig, sanitize_test_case_name,
-};
-use forge_runner::{ExcludeReason, FilterResult, TestCaseFilter, TestCaseIsIgnored};
+use forge_runner::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -138,9 +136,12 @@ impl TestCaseFilter for TestsFilter {
                 partition_map,
             } => {
                 let sanitized_test_case_name = sanitize_test_case_name(&test_case.name);
-                let partition_number =
-                    partition_map.get_partition_number(&sanitized_test_case_name);
-                if partition_number != partition.index() {
+                let partition_number = partition_map
+                    .get_partition_number(&sanitized_test_case_name)
+                    .expect("Failed to get partition number");
+                let partition_index = partition.index();
+
+                if partition_number != partition_index {
                     return FilterResult::Excluded(ExcludeReason::ExcludedFromPartition);
                 }
             }

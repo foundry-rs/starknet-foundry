@@ -8,7 +8,7 @@ use cheatnet::runtime_extensions::forge_config_extension::config::{
 };
 use conversions::byte_array::ByteArray;
 use forge_runner::{
-    TestCaseFilter,
+    filtering::{FilterResult, TestCaseFilter},
     package_tests::{
         with_config::TestTargetWithConfig,
         with_config_resolved::{
@@ -31,7 +31,8 @@ pub async fn resolve_config(
 
     for case in test_target.test_cases {
         let filter_result = tests_filter.filter(&case);
-        let should_resolve_fork = matches!(filter_result, forge_runner::FilterResult::Included);
+        let should_resolve_fork = matches!(filter_result, FilterResult::Included);
+
         test_cases.push(TestCaseWithResolvedConfig::new(
             &case.name,
             case.test_details.clone(),
