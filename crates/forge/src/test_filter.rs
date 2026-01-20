@@ -40,6 +40,7 @@ pub enum IgnoredFilter {
 impl TestsFilter {
     #[must_use]
     #[expect(clippy::fn_params_excessive_bools)]
+    #[expect(clippy::too_many_arguments)]
     pub fn from_flags(
         test_name_filter: Option<String>,
         exact_match: bool,
