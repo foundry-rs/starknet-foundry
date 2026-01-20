@@ -120,7 +120,7 @@ impl PartitionMap {
         for (i, test_case_name) in test_case_names.iter().enumerate() {
             let partition_index_1_based = (i % total_partitions) + 1;
             partition_map.insert(
-                sanitize_test_case_name(&test_case_name),
+                sanitize_test_case_name(test_case_name),
                 partition_index_1_based,
             );
         }
@@ -128,6 +128,7 @@ impl PartitionMap {
         Ok(Self(partition_map))
     }
 
+    #[must_use]
     pub fn get_partition_number(&self, test_case_name: &str) -> usize {
         self.0
             .get(test_case_name)
