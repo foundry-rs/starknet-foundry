@@ -3,7 +3,7 @@
 When your test suite contains a large number of tests (especially fuzz tests), it can be helpful to split them into partitions and run each partition separately, for example in parallel CI jobs.
 
 
-`snforge` supports this via the `--partition <INDEX/TOTAL>` flag.
+`snforge` supports this via the `--partition <INDEX>/<TOTAL>` flag.
 
 When this flag is provided, `snforge` will divide all collected tests into `TOTAL` partitions and run only the partition with the given `INDEX` (1-based).
 
