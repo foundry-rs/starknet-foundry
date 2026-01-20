@@ -144,7 +144,7 @@ impl TestCaseFilter for TestsFilter {
                 let partition_index = partition.index();
 
                 if assigned_index != partition_index {
-                    return FilterResult::Excluded(ExcludeReason::Ignored);
+                    return FilterResult::Excluded(ExcludeReason::ExcludedFromPartition);
                 }
             }
             PartitionConfig::Disabled => {}
