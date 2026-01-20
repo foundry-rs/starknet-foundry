@@ -33,8 +33,25 @@ jobs:
         uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
+      - name: Determine test features
+        id: test_features
+        run: |
+          # Get Scarb version from .tool-versions
+          SCARB_VERSION=$(grep "^scarb " .tool-versions | awk '{print $2}')
+          
+          if [ "$(printf '%s\n' "2.15.1" "$SCARB_VERSION" | sort -V | head -n1)" = "2.15.1" ]; then
+            FEATURES="run_test_for_scarb_since_2_15_1"
+          else
+            FEATURES=""
+          fi
+          echo "features=$FEATURES" >> "$GITHUB_OUTPUT"
       - name: Build and archive tests
-        run: cargo nextest archive --cargo-profile ci -p forge --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
+        run: |
+          if [ -n "${{ steps.test_features.outputs.features }}" ]; then
+            cargo nextest archive --cargo-profile ci -p forge --features "${{ steps.test_features.outputs.features }}" --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
+          else
+            cargo nextest archive --cargo-profile ci -p forge --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
+          fi
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v5
         with:
@@ -54,8 +71,20 @@ jobs:
         uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
+      - name: Determine test features
+        id: test_features
+        run: |
+          # Get Scarb version from .tool-versions
+          SCARB_VERSION=$(grep "^scarb " .tool-versions | awk '{print $2}')
+
+          if [ "$(printf '%s\n' "2.15.1" "$SCARB_VERSION" | sort -V | head -n1)" = "2.15.1" ]; then
+            FEATURES="cairo-native,run_test_for_scarb_since_2_15_1"
+          else
+            FEATURES="cairo-native"
+          fi
+          echo "features=$FEATURES" >> "$GITHUB_OUTPUT"
       - name: Build and archive tests
-        run: cargo nextest archive --cargo-profile ci -p forge --features cairo-native --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst'
+        run: cargo nextest archive --cargo-profile ci -p forge --features "${{ steps.test_features.outputs.features }}" --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst'
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v5
         with:
