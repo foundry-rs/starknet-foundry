@@ -65,7 +65,7 @@ pub enum FilterResult {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExcludeReason {
-    Ignored,
+    ExcludedByIgnoreFilter,
 }
 
 pub trait TestCaseFilter {

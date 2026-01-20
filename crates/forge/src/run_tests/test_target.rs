@@ -45,7 +45,7 @@ pub async fn run_for_test_target(
         match filter_result {
             FilterResult::Excluded(reason) => {
                 match reason {
-                    ExcludeReason::Ignored => {
+                    ExcludeReason::ExcludedByIgnoreFilter => {
                         tasks.push(tokio::task::spawn(async {
                             Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
                                 name: case_name,
