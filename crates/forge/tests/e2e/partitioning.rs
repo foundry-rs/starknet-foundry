@@ -59,6 +59,7 @@ fn test_whole_workspace_partition_1_2() {
 
 
         Tests summary: 7 passed, 0 failed, 0 ignored, 0 filtered out
+        Finished partition run: 1/2
     "},
     );
 }
@@ -109,6 +110,7 @@ fn test_whole_workspace_partition_2_2() {
             package_b_integrationtest::tests::test_h
 
         Tests summary: 4 passed, 1 failed, 1 ignored, 0 filtered out
+        Finished partition run: 2/2
     "#},
     );
 }
@@ -152,6 +154,7 @@ fn test_whole_workspace_partition_1_3() {
 
 
         Tests summary: 5 passed, 0 failed, 0 ignored, 0 filtered out
+        Finished partition run: 1/3
     "},
     );
 }
@@ -200,6 +203,7 @@ fn test_whole_workspace_partition_2_3() {
             package_b_integrationtest::tests::test_h
 
         Tests summary: 2 passed, 1 failed, 1 ignored, 0 filtered out
+        Finished partition run: 2/3
     "#},
     );
 }
@@ -242,6 +246,7 @@ fn test_whole_workspace_partition_3_3() {
 
 
         Tests summary: 4 passed, 0 failed, 0 ignored, 0 filtered out
+        Finished partition run: 3/3
     "},
     );
 }
@@ -281,6 +286,7 @@ fn test_works_with_name_filter() {
 
 
         Tests summary: 1 passed, 0 failed, 0 ignored, 4 filtered out
+        Finished partition run: 1/3
     "},
     );
 }
