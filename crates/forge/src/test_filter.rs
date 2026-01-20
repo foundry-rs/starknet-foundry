@@ -138,12 +138,12 @@ impl TestCaseFilter for TestsFilter {
                 partition_map,
             } => {
                 let sanitized_test_case_name = sanitize_test_case_name(&test_case.name);
-                let assigned_partition_number = partition_map
-                    .get_partition_number(&sanitized_test_case_name)
+                let assigned_index = partition_map
+                    .get_assigned_index(&sanitized_test_case_name)
                     .expect("Failed to get assigned partition index from partition map");
                 let partition_index = partition.index();
 
-                if assigned_partition_number != partition_index {
+                if assigned_index != partition_index {
                     return FilterResult::Excluded(ExcludeReason::Ignored);
                 }
             }
