@@ -51,6 +51,11 @@ impl Partition {
     pub fn index(&self) -> usize {
         self.index
     }
+
+    #[must_use]
+    pub fn total(&self) -> usize {
+        self.total
+    }
 }
 
 impl FromStr for Partition {
