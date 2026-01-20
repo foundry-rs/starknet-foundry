@@ -186,10 +186,10 @@ fn sum_test_cases_from_test_target(
         } => test_cases
             .into_iter()
             .filter(|test_case| {
-                let assigned_partition_number = partition_map
-                    .get_partition_number(&sanitize_test_case_name(&test_case.name))
+                let assigned_index = partition_map
+                    .get_assigned_index(&sanitize_test_case_name(&test_case.name))
                     .expect("Failed to get assigned partition number from partition map");
-                assigned_partition_number == partition.index()
+                assigned_index == partition.index()
             })
             .count(),
     }

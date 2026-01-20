@@ -134,7 +134,8 @@ impl PartitionMap {
         Ok(Self(partition_map))
     }
 
-    pub fn get_partition_number(&self, test_full_path: &str) -> Option<usize> {
+    #[must_use]
+    pub fn get_assigned_index(&self, test_full_path: &str) -> Option<usize> {
         self.0.get(test_full_path).copied()
     }
 }
