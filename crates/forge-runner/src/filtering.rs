@@ -14,6 +14,8 @@ pub enum FilterResult {
 pub enum ExcludeReason {
     /// Test case is ignored.
     Ignored,
+    /// Test case is excluded from the current partition.
+    ExcludedFromPartition,
 }
 
 pub trait TestCaseFilter {

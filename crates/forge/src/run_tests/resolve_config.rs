@@ -226,7 +226,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::None,
+            PartitionConfig::Disabled,
         );
 
         assert!(
@@ -264,7 +264,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::None,
+            PartitionConfig::Disabled,
         );
 
         let resolved = resolve_config(
@@ -305,7 +305,7 @@ mod tests {
             true,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::None,
+            PartitionConfig::Disabled,
         );
 
         let resolved = resolve_config(
@@ -350,7 +350,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::None,
+            PartitionConfig::Disabled,
         );
 
         let resolved = resolve_config(
@@ -407,7 +407,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::None,
+            PartitionConfig::Disabled,
         );
 
         let resolved = resolve_config(
@@ -476,7 +476,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::None,
+            PartitionConfig::Disabled,
         );
 
         let resolved = resolve_config(
@@ -534,7 +534,7 @@ mod tests {
             true,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::None,
+            PartitionConfig::Disabled,
         );
 
         let resolved = resolve_config(
@@ -584,7 +584,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::None,
+            PartitionConfig::Disabled,
         );
 
         let resolved = resolve_config(
@@ -633,7 +633,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::None,
+            PartitionConfig::Disabled,
         );
 
         let resolved = resolve_config(
@@ -678,7 +678,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::None,
+            PartitionConfig::Disabled,
         );
 
         let resolved = resolve_config(
