@@ -3,10 +3,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedRe
 use crate::runtime_extensions::common::sum_syscall_usage;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
 use crate::runtime_extensions::{
-    call_to_blockifier_runtime_extension::{
-        CallToBlockifierRuntime,
-        rpc::{CallFailure, CallResult},
-    },
+    call_to_blockifier_runtime_extension::{CallToBlockifierRuntime, rpc::CallFailure},
     common::get_relocated_vm_trace,
     forge_runtime_extension::cheatcodes::{
         CheatcodeError,
@@ -274,15 +271,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     from_address,
                     &payload,
                 ) {
-                    CallResult::Success { .. } => {
-                        Ok(CheatcodeHandlingResult::from_serializable(0_u8))
-                    }
-                    CallResult::Failure(CallFailure::Panic { panic_data }) => Ok(
+                    Ok(_) => Ok(CheatcodeHandlingResult::from_serializable(0_u8)),
+                    Err(CallFailure::Recoverable { panic_data }) => Ok(
                         CheatcodeHandlingResult::from_serializable(Err::<(), _>(panic_data)),
                     ),
-                    CallResult::Failure(CallFailure::Error { msg }) => Err(
-                        EnhancedHintError::from(HintError::CustomHint(Box::from(msg.to_string()))),
-                    ),
+                    Err(CallFailure::Unrecoverable { msg }) => Err(EnhancedHintError::from(
+                        HintError::CustomHint(Box::from(msg.to_string())),
+                    )),
                 }
             }
             "read_txt" => {
