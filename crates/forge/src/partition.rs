@@ -1,23 +1,23 @@
 use serde::Serialize;
-use std::str::FromStr;
+use std::{num::NonZeroUsize, str::FromStr};
 
 /// Represents a specific partition in a partitioned test run.
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
 pub struct Partition {
     /// The 1-based index of the partition to run.
-    index: usize,
+    index: NonZeroUsize,
     /// The total number of partitions in the run.
-    total: usize,
+    total: NonZeroUsize,
 }
 
 impl Partition {
     #[must_use]
-    pub fn index(&self) -> usize {
+    pub fn index(&self) -> NonZeroUsize {
         self.index
     }
 
     #[must_use]
-    pub fn total(&self) -> usize {
+    pub fn total(&self) -> NonZeroUsize {
         self.total
     }
 }
@@ -26,20 +26,18 @@ impl FromStr for Partition {
     type Err = String;
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let parts: Vec<&str> = s.split('/').collect();
+        let (index_str, total_str) = s
+            .split_once('/')
+            .ok_or_else(|| "Partition must be in the format <INDEX>/<TOTAL>".to_string())?;
 
-        if parts.len() != 2 {
-            return Err("Partition must be in the format <INDEX>/<TOTAL>".to_string());
-        }
-
-        let index = parts[0]
-            .parse::<usize>()
+        let index = index_str
+            .parse::<NonZeroUsize>()
             .map_err(|_| "INDEX must be a positive integer".to_string())?;
-        let total = parts[1]
-            .parse::<usize>()
+        let total = total_str
+            .parse::<NonZeroUsize>()
             .map_err(|_| "TOTAL must be a positive integer".to_string())?;
 
-        if index == 0 || total == 0 || index > total {
+        if index > total {
             return Err("Invalid partition values: ensure 1 <= INDEX <= TOTAL".to_string());
         }
 
@@ -56,8 +54,14 @@ mod tests {
     #[test_case("2/5", 2, 5)]
     fn test_happy_case(partition: &str, expected_index: usize, expected_total: usize) {
         let partition = partition.parse::<Partition>().unwrap();
-        assert_eq!(partition.index, expected_index);
-        assert_eq!(partition.total, expected_total);
+        assert_eq!(
+            partition.index,
+            NonZeroUsize::try_from(expected_index).unwrap()
+        );
+        assert_eq!(
+            partition.total,
+            NonZeroUsize::try_from(expected_total).unwrap()
+        );
     }
 
     #[test_case("1-2"; "using hyphen instead of slash")]
