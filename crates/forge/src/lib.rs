@@ -219,7 +219,7 @@ pub struct TestArgs {
     gas_report: bool,
 
     /// If specified, divides tests into partitions and runs specified partition.
-    /// <PARTITION> is in the format INDEX/TOTAL, where INDEX is the 1-based index of the partition to run, and TOTAL is the number of partitions.
+    /// `<INDEX>/<TOTAL>` should include `INDEX` - the 1-based index of the partition to run, and `TOTAL` which is the number of partitions.
     #[arg(long, conflicts_with = "exact")]
     partition: Option<Partition>,
 
