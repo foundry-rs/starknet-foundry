@@ -129,12 +129,12 @@ impl TestCaseFilter for TestsFilter {
             IgnoredFilter::All => {}
             IgnoredFilter::Ignored => {
                 if !ignored {
-                    return FilterResult::Excluded(ExcludeReason::ExcludedByIgnoreFilter);
+                    return FilterResult::Excluded(ExcludeReason::Ignored);
                 }
             }
             IgnoredFilter::NotIgnored => {
                 if ignored {
-                    return FilterResult::Excluded(ExcludeReason::ExcludedByIgnoreFilter);
+                    return FilterResult::Excluded(ExcludeReason::Ignored);
                 }
             }
         }

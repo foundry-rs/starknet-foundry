@@ -12,8 +12,8 @@ pub enum FilterResult {
 /// Reason for excluding a test case.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExcludeReason {
-    /// Test case is excluded by the ignore filter.
-    ExcludedByIgnoreFilter,
+    /// Test case is ignored.
+    Ignored,
 }
 
 pub trait TestCaseFilter {
