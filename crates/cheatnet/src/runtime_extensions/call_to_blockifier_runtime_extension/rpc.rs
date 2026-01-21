@@ -223,7 +223,7 @@ pub fn call_entry_point(
         cheatnet_state,
         syscall_handler.base.context,
         remaining_gas,
-    );
+    ).map_err(|err| CallFailure::from_execution_error(&err, starknet_identifier));;
 
     let result = from_execution_result(&exec_result, starknet_identifier);
 
