@@ -123,12 +123,14 @@ impl PartitionMap {
 
         for (i, test_full_path) in test_full_paths.iter().enumerate() {
             let sanitized_full_path = sanitize_test_case_name(test_full_path);
-            if partition_map.contains_key(&sanitized_full_path) {
-                unreachable!("Test case full path should be unique");
-            }
             let partition_index_1_based = (i % total_partitions) + 1;
             let partition_index_1_based = NonZeroUsize::try_from(partition_index_1_based)?;
-            partition_map.insert(sanitized_full_path, partition_index_1_based);
+            if partition_map
+                .insert(sanitized_full_path, partition_index_1_based)
+                .is_some()
+            {
+                unreachable!("Test case full path should be unique");
+            }
         }
 
         Ok(Self(partition_map))
