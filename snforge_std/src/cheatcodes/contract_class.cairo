@@ -69,7 +69,7 @@ impl ContractClassImpl of ContractClassTrait {
         let salt: felt252 = execute_cheatcode_and_deserialize::<'get_salt'>(array![].span());
 
         // Internal cheatcode to mark next `deploy_syscall` as coming from cheatcode.
-        // This allows `deploy` cheatcode to be revertible and thus catchable at test level (unlike `deploy_syscall`).
+        // This allows `deploy_syscall` to be handled differently when coming from cheatcode.
         execute_cheatcode_and_deserialize::<'start_cheatcode_deploy', ()>(array![].span());
 
         starknet::syscalls::deploy_syscall(
