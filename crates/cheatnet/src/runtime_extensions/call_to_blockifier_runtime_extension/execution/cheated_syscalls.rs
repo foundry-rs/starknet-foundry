@@ -1,9 +1,11 @@
 use super::calls::{execute_inner_call, execute_library_call};
 use super::execution_info::get_cheated_exec_info_ptr;
+use super::execution_utils::clear_events_and_messages_from_reverted_call;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_constructor_entry_point;
 use blockifier::context::TransactionContext;
 use blockifier::execution::common_hints::ExecutionMode;
+use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::execution::execution_utils::ReadOnlySegment;
 use blockifier::execution::syscalls::hint_processor::create_retdata_segment;
 use blockifier::execution::syscalls::hint_processor::{
@@ -45,6 +47,7 @@ use starknet_api::{
         fields::{Calldata, Fee},
     },
 };
+use starknet_types_core::felt::Felt;
 use std::sync::Arc;
 
 pub fn get_execution_info_syscall(
@@ -62,6 +65,26 @@ pub fn get_execution_info_syscall(
 
     Ok(GetExecutionInfoResponse {
         execution_info_ptr: ptr_cheated_exec_info,
+    })
+}
+
+/// Converts `deploy_syscall` failure into catchable [`SyscallExecutionError::Revert`] error.
+fn convert_deploy_failure_to_revert(
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    revert_idx: usize,
+    raw_retdata: Vec<Felt>,
+) -> SyscallResult<DeployResponse> {
+    syscall_handler
+        .base
+        .context
+        .revert(revert_idx, syscall_handler.base.state)?;
+
+    if let Some(reverted_call) = syscall_handler.base.inner_calls.last_mut() {
+        clear_events_and_messages_from_reverted_call(reverted_call);
+    }
+
+    Err(SyscallExecutionError::Revert {
+        error_data: raw_retdata,
     })
 }
 
@@ -107,19 +130,46 @@ pub fn deploy_syscall(
         storage_address: deployed_contract_address,
         caller_address: deployer_address,
     };
-    let call_info = execute_deployment(
+
+    // Check if this deploy comes from the cheatcode
+    // This allows us to make `deploy_syscall` revertible, only when used via the cheatcode
+    let from_cheatcode = cheatnet_state.take_next_deploy_from_cheatcode();
+
+    let revert_idx = syscall_handler.base.context.revert_infos.0.len();
+
+    let call_info = match execute_deployment(
         syscall_handler.base.state,
         cheatnet_state,
         syscall_handler.base.context,
         &ctor_context,
         request.constructor_calldata,
         remaining_gas,
-    )?;
+    ) {
+        Ok(info) => info,
+        Err(EntryPointExecutionError::ExecutionFailed { error_trace }) if from_cheatcode => {
+            let panic_data = error_trace.last_retdata.0.clone();
+            return convert_deploy_failure_to_revert(
+                syscall_handler,
+                revert_idx,
+                panic_data,
+            );
+        }
+        Err(err) => return Err(err.into()),
+    };
+    let failed = call_info.execution.failed;
+    let raw_retdata = call_info.execution.retdata.0.clone();
+    syscall_handler.base.inner_calls.push(call_info);
+    
+    if failed && from_cheatcode {
+        return convert_deploy_failure_to_revert(
+            syscall_handler,
+            revert_idx,
+            raw_retdata,
+        );
+    }
 
     let constructor_retdata =
-        create_retdata_segment(vm, syscall_handler, &call_info.execution.retdata.0)?;
-
-    syscall_handler.base.inner_calls.push(call_info);
+        create_retdata_segment(vm, syscall_handler, &raw_retdata)?;
 
     Ok(DeployResponse {
         contract_address: deployed_contract_address,
