@@ -66,7 +66,7 @@ pub async fn run_for_test_target(
             send.clone(),
         );
 
-        tasks.push(async move { Ok(handle.await??) }.boxed());
+        tasks.push(async move { handle.await? }.boxed());
     }
 
     let mut results = vec![];
