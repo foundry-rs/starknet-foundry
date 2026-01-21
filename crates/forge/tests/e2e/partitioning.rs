@@ -293,5 +293,5 @@ fn test_works_with_coverage() {
         .assert()
         .success();
 
-    assert!(temp.join("coverage.lcov").is_file());
+    assert!(temp.join("coverage/coverage.lcov").is_file());
 }
