@@ -148,28 +148,19 @@ pub fn deploy_syscall(
         Ok(info) => info,
         Err(EntryPointExecutionError::ExecutionFailed { error_trace }) if from_cheatcode => {
             let panic_data = error_trace.last_retdata.0.clone();
-            return convert_deploy_failure_to_revert(
-                syscall_handler,
-                revert_idx,
-                panic_data,
-            );
+            return convert_deploy_failure_to_revert(syscall_handler, revert_idx, panic_data);
         }
         Err(err) => return Err(err.into()),
     };
     let failed = call_info.execution.failed;
     let raw_retdata = call_info.execution.retdata.0.clone();
     syscall_handler.base.inner_calls.push(call_info);
-    
+
     if failed && from_cheatcode {
-        return convert_deploy_failure_to_revert(
-            syscall_handler,
-            revert_idx,
-            raw_retdata,
-        );
+        return convert_deploy_failure_to_revert(syscall_handler, revert_idx, raw_retdata);
     }
 
-    let constructor_retdata =
-        create_retdata_segment(vm, syscall_handler, &raw_retdata)?;
+    let constructor_retdata = create_retdata_segment(vm, syscall_handler, &raw_retdata)?;
 
     Ok(DeployResponse {
         contract_address: deployed_contract_address,
