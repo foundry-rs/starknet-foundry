@@ -285,6 +285,7 @@ fn test_works_with_name_filter() {
     );
 }
 
+#[cfg(not(feature = "cairo-native"))]
 #[test]
 fn test_works_with_coverage() {
     let temp = setup_package("partitioning");
