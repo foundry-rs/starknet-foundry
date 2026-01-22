@@ -273,16 +273,6 @@ jobs:
         working-directory: crates/snforge-scarb-plugin
         run: cargo test --profile ci
 
-  test-forge-scarb-plugin-deprecated:
-    name: Test Forge Scarb Plugin Deprecated
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-tools
-      - name: Run Forge Scarb Plugin tests
-        working-directory: crates/snforge-scarb-plugin-deprecated
-        run: cargo test --profile ci
-
   test-cast:
     name: Test Cast
     runs-on: ubuntu-latest
@@ -331,7 +321,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
       - name: Check cairo files format
         run: |
-          output=$(find . -type f -name "Scarb.toml" -not -path "*/snforge_std_deprecated/*" -execdir sh -c '
+          output=$(find . -type f -name "Scarb.toml" -execdir sh -c '
               echo "Running \"scarb fmt\" in directory: $PWD"
               scarb fmt --check
           ' \;)
@@ -357,10 +347,6 @@ jobs:
         run: cargo fmt --check
         working-directory: crates/snforge-scarb-plugin
 
-      - name: Check formatting snforge-scarb-plugin-deprecated
-        run: cargo fmt --check
-        working-directory: crates/snforge-scarb-plugin-deprecated
-
   clippy:
     runs-on: ubuntu-latest
     env:
@@ -378,10 +364,6 @@ jobs:
       - name: Lint snforge-scarb-plugin
         run: cargo lint
         working-directory: crates/snforge-scarb-plugin
-
-      - name: Lint snforge-scarb-plugin-deprecated
-        run: cargo lint
-        working-directory: crates/snforge-scarb-plugin-deprecated
 
   build-docs:
     name: Test Building Docs
