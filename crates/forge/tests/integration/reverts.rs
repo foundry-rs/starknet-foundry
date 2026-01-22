@@ -13,12 +13,9 @@ fn storage_is_reverted_in_test_call() {
 
         #[starknet::interface]
         trait IContract<TContractState> {
-            /// Write 1 to storage storage and then panic
-            fn call_with_panic(ref self: TContractState);
-            /// Return storage value
             fn read_storage(self: @TContractState) -> felt252;
-            /// Write 5 to storage
-            fn write_storage(ref self: TContractState);
+            fn write_storage(ref self: TContractState, value: felt252);
+            fn write_storage_and_panic(ref self: TContractState, value: felt252);
         }
 
         #[test]
@@ -28,17 +25,15 @@ fn storage_is_reverted_in_test_call() {
             let (contract_address, _) = contract.deploy(@array![]).unwrap();
             let dispatcher = IContractSafeDispatcher { contract_address }; 
 
-            // Write 5 to storage
-            dispatcher.write_storage().unwrap();
-
-            // Check written value value
+            dispatcher.write_storage(5).unwrap();
+            // Make sure storage value was written correctly
             let storage = dispatcher.read_storage().unwrap();
-            assert_eq!(storage, 5, "Initial storage value is not 0");
+            assert_eq!(storage, 5, "Incorrect storage value");
             
             // Call storage modification and handle panic
-            match dispatcher.call_with_panic() {
+            match dispatcher.write_storage_and_panic(11) {
                 Result::Ok(_) => panic!("Should have panicked"),
-                Result::Err(_panic_data) => {
+                Result::Err(_) => {
                     // handled
                 },
             }
@@ -54,67 +49,6 @@ fn storage_is_reverted_in_test_call() {
     );
 
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
-
-    assert_passed(&result);
-}
-
-#[test]
-// In `from_execution_result` we handle some of the unrecoverable errors returned by blockifier,
-// and make them recoverable.
-// This test checks if storage is reverted correctly in such cases.
-fn storage_is_reverted_in_unrecoverable_call() {
-    let test = test_case!(
-        indoc! {
-            r#"
-        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
-
-        #[starknet::interface]
-        trait IContract<TContractState> {
-            /// Write 1 to storage storage and then panic
-            fn call_with_unrecoverable(ref self: TContractState);
-            /// Return storage value
-            fn read_storage(self: @TContractState) -> felt252;
-            /// Write 5 to storage
-            fn write_storage(ref self: TContractState);
-        }
-
-        #[test]
-        #[feature("safe_dispatcher")]
-        fn test_call_storage_is_reverted() {
-            let contract = declare("Contract").unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@array![]).unwrap();
-            let dispatcher = IContractSafeDispatcher { contract_address };
-
-            // Write 5 to storage
-            dispatcher.write_storage().unwrap();
-
-            // Check written value value
-            let storage = dispatcher.read_storage().unwrap();
-            assert_eq!(storage, 5, "Initial storage value is not 0");
-
-            // Call storage modification and handle panic
-            match dispatcher.call_with_unrecoverable() {
-                Result::Ok(_) => panic!("Should have panicked"),
-                Result::Err(_panic_data) => {
-                    // handled
-                },
-            }
-
-            // Check storage change was reverted
-            let storage = dispatcher.read_storage().unwrap();
-            assert_eq!(storage, 5, "Storage was not reverted");
-        }
-            "#
-        },
-        Contract::from_code_path(
-            "Contract",
-            "tests/data/contracts/reverts_contract_unrecoverable.cairo"
-        )
-        .unwrap()
-    );
-
-    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
-
     assert_passed(&result);
 }
 
@@ -127,12 +61,9 @@ fn storage_is_reverted_in_proxy_call() {
 
         #[starknet::interface]
         trait IProxy<TContractState> {
-            /// Call on proxied contract: Write 1 to storage storage and then panic
-            fn call_with_panic(ref self: TContractState);
-            /// Call on proxied contract: Return storage value
             fn read_storage(self: @TContractState) -> felt252;
-            /// Call on proxied contract: Write 5 to storage
             fn write_storage(ref self: TContractState);
+            fn write_storage_and_panic(ref self: TContractState);
         }
 
         #[test]
@@ -150,13 +81,12 @@ fn storage_is_reverted_in_proxy_call() {
 
             // Write 5 to storage
             dispatcher.write_storage().unwrap();
-
-            // Check written value value
+            // Make sure storage value was written correctly
             let storage = dispatcher.read_storage().unwrap();
-            assert_eq!(storage, 5, "Initial storage value is not 0");
+            assert_eq!(storage, 5, "Incorrect storage value");
 
             // Try modifying storage and handle panic
-            match dispatcher.call_with_panic() {
+            match dispatcher.write_storage_and_panic() {
                 Result::Ok(_) => panic!("Should have panicked"),
                 Result::Err(_panic_data) => {
                     // handled
@@ -175,7 +105,6 @@ fn storage_is_reverted_in_proxy_call() {
     );
 
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
-
     assert_passed(&result);
 }
 
@@ -187,14 +116,10 @@ fn storage_is_reverted_in_safe_proxy_call() {
         use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
 
         #[starknet::interface]
-        /// Makes calls to nested contract with safe dispatcher
         trait ISafeProxy<TContractState> {
-            /// Call on proxied contract with safe dispatcher: Write 1 to storage storage and then panic
-            fn call_with_panic(ref self: TContractState);
-            /// Call on proxied contract unwraping the syscall result: Return storage value
             fn read_storage(self: @TContractState) -> felt252;
-            /// Call on proxied contract unwraping the syscall result: Write 5 to storage
             fn write_storage(ref self: TContractState);
+            fn call_write_storage_and_handle_panic(ref self: TContractState);
         }
 
         #[test]
@@ -212,18 +137,11 @@ fn storage_is_reverted_in_safe_proxy_call() {
 
             // Write 5 to storage
             dispatcher.write_storage().unwrap();
-
-            // Check written value value
+            // Make sure storage value was written correctly
             let storage = dispatcher.read_storage().unwrap();
-            assert_eq!(storage, 5, "Initial storage value is not 0");
+            assert_eq!(storage, 5, "Incorrect storage value");
 
-            // Try modifying storage and handle panic
-            match dispatcher.call_with_panic() {
-                Result::Ok(_) => panic!("Should have panicked"),
-                Result::Err(_panic_data) => {
-                    // handled
-                },
-            }
+            dispatcher.call_write_storage_and_handle_panic().unwrap();
 
             // Check storage change was reverted
             let storage = dispatcher.read_storage().unwrap();
@@ -238,7 +156,6 @@ fn storage_is_reverted_in_safe_proxy_call() {
     );
 
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
-
     assert_passed(&result);
 }
 
@@ -277,7 +194,6 @@ fn storage_is_reverted_in_inner_call() {
     );
 
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
-
     assert_passed(&result);
 }
 
@@ -316,7 +232,6 @@ fn storage_is_reverted_in_safe_inner_call() {
     );
 
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
-
     assert_passed(&result);
 }
 

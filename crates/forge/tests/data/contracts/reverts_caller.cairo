@@ -8,15 +8,16 @@ trait ICaller<TContractState> {
 
 #[starknet::interface]
 trait IContract<TContractState> {
-    /// Write `value` to storage and then panic
-    fn write_storage_and_panic(ref self: TContractState, value: felt252);
     /// Return storage value
     fn read_storage(self: @TContractState) -> felt252;
     /// Write `value` to storage and emits event
     fn write_storage(ref self: TContractState, value: felt252);
+    /// Write `value` to storage and then panic
+    fn write_storage_and_panic(ref self: TContractState, value: felt252);
 }
 
 #[starknet::contract]
+#[feature("safe_dispatcher")]
 mod Caller {
     use starknet::ContractAddress;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
@@ -35,7 +36,7 @@ mod Caller {
     #[abi(embed_v0)]
     impl ICallerImpl of ICaller<ContractState> {
         fn call(ref self: ContractState) {
-            let contract_address = self.addr.read();
+            let contract_address = self.address.read();
             let dispatcher = IContractSafeDispatcher { contract_address };
 
             dispatcher.write_storage(43).unwrap();

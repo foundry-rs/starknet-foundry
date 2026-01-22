@@ -1,11 +1,11 @@
 #[starknet::interface]
 trait IContract<TContractState> {
-    /// Write `value` to storage and then panic
-    fn write_storage_and_panic(ref self: TContractState, value: felt252);
     /// Return storage value
     fn read_storage(self: @TContractState) -> felt252;
     /// Write `value` to storage and emits event
     fn write_storage(ref self: TContractState, value: felt252);
+    /// Write `value` to storage and then panic
+    fn write_storage_and_panic(ref self: TContractState, value: felt252);
 }
 
 #[starknet::contract]
