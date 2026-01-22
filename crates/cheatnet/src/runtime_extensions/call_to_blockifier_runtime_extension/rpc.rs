@@ -1,15 +1,20 @@
 use super::CheatnetState;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::non_reverting_execute_call_entry_point;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
+    ExecuteCallEntryPointExtraOptions, clear_handled_errors, execute_call_entry_point,
+};
 use crate::runtime_extensions::{
     call_to_blockifier_runtime_extension::panic_parser::try_extract_panic_data,
     common::create_execute_calldata,
 };
-use blockifier::execution::call_info::ExecutionSummary;
-use blockifier::execution::syscalls::hint_processor::SyscallExecutionError;
+use blockifier::execution::call_info::{CallExecution, ExecutionSummary, Retdata};
+use blockifier::execution::contract_class::TrackedResource;
+use blockifier::execution::syscalls::hint_processor::{
+    ENTRYPOINT_FAILED_ERROR, SyscallExecutionError,
+};
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallExecutorBaseError;
 use blockifier::execution::{
     call_info::CallInfo,
-    entry_point::{CallType, EntryPointExecutionResult},
+    entry_point::CallType,
     errors::{EntryPointExecutionError, PreExecutionError},
     syscalls::hint_processor::SyscallHintProcessor,
 };
@@ -149,16 +154,6 @@ impl CallFailure {
     }
 }
 
-pub fn from_execution_result(
-    result: &EntryPointExecutionResult<CallInfo>,
-    starknet_identifier: &AddressOrClassHash,
-) -> Result<CallSuccess, CallFailure> {
-    match result {
-        Ok(call_info) => from_non_error(call_info),
-        Err(err) => from_error(err, starknet_identifier),
-    }
-}
-
 pub fn from_non_error(call_info: &CallInfo) -> Result<CallSuccess, CallFailure> {
     let return_data = &call_info.execution.retdata.0;
 
@@ -217,19 +212,98 @@ pub fn call_entry_point(
     starknet_identifier: &AddressOrClassHash,
     remaining_gas: &mut u64,
 ) -> Result<CallSuccess, CallFailure> {
-    let exec_result = non_reverting_execute_call_entry_point(
+    let revert_idx = syscall_handler.base.context.revert_infos.0.len();
+    let result = execute_call_entry_point(
         &mut entry_point,
         syscall_handler.base.state,
         cheatnet_state,
         syscall_handler.base.context,
         remaining_gas,
-    ).map_err(|err| CallFailure::from_execution_error(&err, starknet_identifier));;
+        &ExecuteCallEntryPointExtraOptions {
+            trace_data_handled_by_revert_call: false,
+        },
+    )
+    .map_err(|err| CallFailure::from_execution_error(&err, starknet_identifier));
 
-    let result = from_execution_result(&exec_result, starknet_identifier);
+    let call_info = match result {
+        Ok(call_info) => call_info,
+        Err(CallFailure::Recoverable { panic_data }) => {
+            let storage_class_hash = syscall_handler
+                .base
+                .state
+                .get_class_hash_at(entry_point.storage_address)
+                .expect("There should be a class hash at the storage address");
+            let maybe_replacement_class = cheatnet_state
+                .replaced_bytecode_contracts
+                .get(&entry_point.storage_address)
+                .copied();
+            let class_hash = entry_point
+                .class_hash
+                .or(maybe_replacement_class)
+                .unwrap_or(storage_class_hash);
 
-    if let Ok(call_info) = exec_result {
-        syscall_handler.base.inner_calls.push(call_info);
+            let current_tracked_resource = syscall_handler
+                .base
+                .state
+                .get_compiled_class(class_hash)
+                .map(|compiled_class| {
+                    compiled_class.get_current_tracked_resource(syscall_handler.base.context)
+                })
+                .unwrap_or(TrackedResource::SierraGas);
+
+            CallInfo {
+                call: entry_point.into_executable(class_hash).into(),
+                execution: CallExecution {
+                    retdata: Retdata(panic_data.clone()),
+                    failed: true,
+                    gas_consumed: 0,
+                    ..CallExecution::default()
+                },
+                tracked_resource: current_tracked_resource,
+                ..CallInfo::default()
+            }
+        }
+        Err(err) => {
+            return Err(err);
+        }
+    };
+
+    let mut raw_retdata = call_info.execution.retdata.0.clone();
+    let failed = call_info.execution.failed;
+    syscall_handler.base.inner_calls.push(call_info.clone());
+
+    if failed {
+        clear_handled_errors(&call_info, cheatnet_state);
+
+        syscall_handler
+            .base
+            .context
+            .revert(revert_idx, syscall_handler.base.state)
+            .expect("Failed to revert state");
+
+        // Delete events and l2_to_l1_messages from the reverted call.
+        let reverted_call = syscall_handler.base.inner_calls.last_mut().unwrap();
+        let mut stack: Vec<&mut CallInfo> = vec![reverted_call];
+        while let Some(call_info) = stack.pop() {
+            call_info.execution.events.clear();
+            call_info.execution.l2_to_l1_messages.clear();
+            // Add inner calls that did not fail to the stack.
+            // The events and l2_to_l1_messages of the failed calls were already cleared.
+            stack.extend(
+                call_info
+                    .inner_calls
+                    .iter_mut()
+                    .filter(|call_info| !call_info.execution.failed),
+            );
+        }
+
+        raw_retdata.push(Felt::from_hex(ENTRYPOINT_FAILED_ERROR).expect("Conversion should work"));
+        return Err(CallFailure::Recoverable {
+            panic_data: raw_retdata,
+        });
     }
 
-    result
+    Ok(CallSuccess {
+        ret_data: raw_retdata,
+    })
 }
