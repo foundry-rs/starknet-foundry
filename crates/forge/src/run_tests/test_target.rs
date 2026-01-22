@@ -10,8 +10,6 @@ use forge_runner::{
     test_target_summary::TestTargetSummary,
 };
 use foundry_ui::UI;
-use futures::FutureExt;
-use futures::future::{self, BoxFuture};
 use futures::{StreamExt, stream::FuturesUnordered};
 use std::sync::Arc;
 use tokio::sync::mpsc::channel;
@@ -31,8 +29,7 @@ pub async fn run_for_test_target(
 ) -> Result<TestTargetRunResult> {
     let casm_program = tests.casm_program.clone();
 
-    let mut tasks: FuturesUnordered<BoxFuture<'static, Result<AnyTestCaseSummary>>> =
-        FuturesUnordered::new();
+    let mut tasks = FuturesUnordered::new();
     // Initiate two channels to manage the `--exit-first` flag.
     // Owing to `cheatnet` fork's utilization of its own Tokio runtime for RPC requests,
     // test execution must occur within a `tokio::spawn_blocking`.
@@ -42,31 +39,40 @@ pub async fn run_for_test_target(
 
     for case in tests.test_cases {
         let case_name = case.name.clone();
-        match tests_filter.filter(&case) {
+        let filter_result = tests_filter.filter(&case);
+
+        match filter_result {
             FilterResult::Excluded(reason) => {
-                let summary = match reason {
+                match reason {
                     ExcludeReason::ExcludedFromPartition => {
-                        AnyTestCaseSummary::Single(TestCaseSummary::ExcludedFromPartition {})
+                        tasks.push(tokio::task::spawn(async {
+                            Ok(AnyTestCaseSummary::Single(
+                                TestCaseSummary::ExcludedFromPartition {},
+                            ))
+                        }));
                     }
                     ExcludeReason::Ignored => {
-                        AnyTestCaseSummary::Single(TestCaseSummary::Ignored { name: case_name })
+                        tasks.push(tokio::task::spawn(async {
+                            Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
+                                name: case_name,
+                            }))
+                        }));
                     }
-                };
-                tasks.push(future::ready(Ok(summary)).boxed());
+                }
                 continue;
             }
             FilterResult::Included => {}
         }
 
-        let handle = run_for_test_case(
-            Arc::new(case),
+        let case = Arc::new(case);
+
+        tasks.push(run_for_test_case(
+            case,
             casm_program.clone(),
             forge_config.clone(),
             tests.sierra_program_path.clone(),
             send.clone(),
-        );
-
-        tasks.push(async move { handle.await? }.boxed());
+        ));
     }
 
     let mut results = vec![];
@@ -74,7 +80,7 @@ pub async fn run_for_test_target(
     let mut interrupted = false;
 
     while let Some(task) = tasks.next().await {
-        let result = task?;
+        let result = task??;
 
         if !result.is_interrupted() && !result.is_excluded_from_partition() {
             let test_result_message = TestResultMessage::new(
