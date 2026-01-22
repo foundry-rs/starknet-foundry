@@ -50,8 +50,7 @@ pub enum TestTargetLocation {
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct TestDetails {
     pub sierra_entry_point_statement_idx: usize,
-    pub parameter_types: Vec<(GenericTypeId, i16)>,
-    pub return_types: Vec<(GenericTypeId, i16)>,
+    pub parameter_types: Vec<GenericTypeId>,
 }
 
 impl TestDetails {
@@ -59,7 +58,7 @@ impl TestDetails {
     pub fn builtins(&self) -> Vec<BuiltinName> {
         let mut builtins = vec![];
         for (builtin_name, builtin_ty) in BUILTIN_ORDER {
-            if self.parameter_types.iter().any(|(ty, _)| ty == &builtin_ty) {
+            if self.parameter_types.iter().any(|ty| ty == &builtin_ty) {
                 builtins.push(builtin_name);
             }
         }
