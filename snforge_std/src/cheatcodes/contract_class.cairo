@@ -70,7 +70,7 @@ impl ContractClassImpl of ContractClassTrait {
 
         // Internal cheatcode to mark next `deploy_syscall` as coming from cheatcode.
         // This allows `deploy_syscall` to be handled differently when coming from cheatcode.
-        execute_cheatcode_and_deserialize::<'start_cheatcode_deploy', ()>(array![].span());
+        execute_cheatcode_and_deserialize::<'set_next_deploy_from_cheatcode', ()>(array![].span());
 
         starknet::syscalls::deploy_syscall(
             *self.class_hash, salt, constructor_calldata.span(), false,
