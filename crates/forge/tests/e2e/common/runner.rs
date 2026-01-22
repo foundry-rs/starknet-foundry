@@ -113,8 +113,7 @@ pub(crate) fn setup_package_with_file_patterns(
         .replace('\\', "/");
 
     if is_workspace {
-        scarb_toml["workspace"]["dependencies"]["snforge_std"]["path"] =
-            value(snforge_std_path);
+        scarb_toml["workspace"]["dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
     } else {
         scarb_toml["dev-dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
     }

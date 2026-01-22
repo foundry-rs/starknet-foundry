@@ -154,10 +154,10 @@ fn validate_init(project_path: &PathBuf, validate_snforge_std: bool, template: &
 }
 
 fn get_expected_manifest_content(template: &Template, validate_snforge_std: bool) -> String {
-    let snforge_std_assert = if !validate_snforge_std {
-        ""
-    } else {
+    let snforge_std_assert = if validate_snforge_std {
         "\nsnforge_std = \"[..]\""
+    } else {
+        ""
     };
 
     let target_contract_entry = "[[target.starknet-contract]]\nsierra = true";
