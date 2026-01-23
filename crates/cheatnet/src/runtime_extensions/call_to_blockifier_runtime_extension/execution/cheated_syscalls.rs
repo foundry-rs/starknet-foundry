@@ -156,9 +156,9 @@ pub fn deploy_syscall(
     let raw_retdata = call_info.execution.retdata.0.clone();
     syscall_handler.base.inner_calls.push(call_info);
 
-    // This should be unreachable with the current implementation of `execute_deployment`
-    // This check is kept in case of future changes + to be aligned with revert handling elsewhere.
     if failed && from_cheatcode {
+        // This should be unreachable with the current implementation of `execute_deployment`
+        // This check is kept in case of future changes + to be aligned with revert handling elsewhere.
         return convert_deploy_failure_to_revert(syscall_handler, revert_idx, raw_retdata);
     }
 
