@@ -24,7 +24,7 @@ fn test_error_handled_in_contract() {
     dispatcher.catch_panic_and_handle();
 }
 
-#[should_panic(expected: 'Different panic')]
+#[should_panic(expected: ('Different panic', 'ENTRYPOINT_FAILED',))]
 #[test]
 fn test_handle_and_panic() {
     let contract_address = deploy_contracts();
