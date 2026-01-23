@@ -8,8 +8,7 @@ use anyhow::{Result, anyhow};
 use camino::Utf8Path;
 use forge_runner::package_tests::raw::TestTargetRaw;
 use forge_runner::package_tests::with_config_resolved::sanitize_test_case_name;
-use rayon::iter::IntoParallelRefIterator;
-use rayon::iter::ParallelIterator;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use scarb_api::metadata::PackageMetadata;
 use serde::Serialize;
 
@@ -102,7 +101,7 @@ impl PartitionMap {
         total_partitions: NonZeroUsize,
     ) -> Result<Self> {
         let mut test_full_paths: Vec<String> = packages
-            .par_iter()
+            .iter()
             .map(|package| -> Result<Vec<String>> {
                 let raw_test_targets = load_test_artifacts(artifacts_dir, package)?;
 
