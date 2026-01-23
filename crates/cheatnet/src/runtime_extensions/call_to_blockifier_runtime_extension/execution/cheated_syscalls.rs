@@ -35,12 +35,12 @@ use cairo_vm::vm::vm_core::VirtualMachine;
 use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::TEST_ADDRESS;
 use starknet_api::abi::abi_utils::selector_from_name;
+use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::EntryPointSelector;
 use starknet_api::transaction::constants::EXECUTE_ENTRY_POINT_NAME;
 use starknet_api::transaction::fields::TransactionSignature;
 use starknet_api::transaction::{TransactionHasher, TransactionOptions, signed_tx_version};
 use starknet_api::{
-    contract_class::EntryPointType,
     core::{ClassHash, ContractAddress, Nonce, calculate_contract_address},
     transaction::{
         InvokeTransactionV0, TransactionVersion,
@@ -73,13 +73,15 @@ fn convert_deploy_failure_to_revert(
     syscall_handler: &mut SyscallHintProcessor<'_>,
     revert_idx: usize,
     raw_retdata: Vec<Felt>,
+    call_info_was_added: bool,
 ) -> SyscallResult<DeployResponse> {
     syscall_handler
         .base
         .context
         .revert(revert_idx, syscall_handler.base.state)?;
 
-    if let Some(reverted_call) = syscall_handler.base.inner_calls.last_mut() {
+    if call_info_was_added && let Some(reverted_call) = syscall_handler.base.inner_calls.last_mut()
+    {
         clear_events_and_messages_from_reverted_call(reverted_call);
     }
 
@@ -148,7 +150,12 @@ pub fn deploy_syscall(
         Ok(info) => info,
         Err(EntryPointExecutionError::ExecutionFailed { error_trace }) if from_cheatcode => {
             let panic_data = error_trace.last_retdata.0.clone();
-            return convert_deploy_failure_to_revert(syscall_handler, revert_idx, panic_data);
+            return convert_deploy_failure_to_revert(
+                syscall_handler,
+                revert_idx,
+                panic_data,
+                false,
+            );
         }
         Err(err) => return Err(err.into()),
     };
@@ -159,7 +166,7 @@ pub fn deploy_syscall(
     if failed && from_cheatcode {
         // This should be unreachable with the current implementation of `execute_deployment`
         // This check is kept in case of future changes + to be aligned with revert handling elsewhere.
-        return convert_deploy_failure_to_revert(syscall_handler, revert_idx, raw_retdata);
+        return convert_deploy_failure_to_revert(syscall_handler, revert_idx, raw_retdata, true);
     }
 
     let constructor_retdata = create_retdata_segment(vm, syscall_handler, &raw_retdata)?;
