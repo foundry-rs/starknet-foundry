@@ -92,3 +92,4 @@ jobs:
         with:
           name: build-${{ matrix.target }}
           path: ${{ env.PKG_FULL_NAME }}.*
+          overwrite: true

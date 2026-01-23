@@ -1,5 +1,5 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
-use blockifier::execution::call_info::CallInfo;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::execution_utils::clear_events_and_messages_from_reverted_call;
 use blockifier::execution::syscalls::hint_processor::ENTRYPOINT_FAILED_ERROR;
 use blockifier::execution::{
     entry_point::{CallEntryPoint, CallType},
@@ -52,19 +52,7 @@ pub fn execute_inner_call(
 
         // Delete events and l2_to_l1_messages from the reverted call.
         let reverted_call = syscall_handler.base.inner_calls.last_mut().unwrap();
-        let mut stack: Vec<&mut CallInfo> = vec![reverted_call];
-        while let Some(call_info) = stack.pop() {
-            call_info.execution.events.clear();
-            call_info.execution.l2_to_l1_messages.clear();
-            // Add inner calls that did not fail to the stack.
-            // The events and l2_to_l1_messages of the failed calls were already cleared.
-            stack.extend(
-                call_info
-                    .inner_calls
-                    .iter_mut()
-                    .filter(|call_info| !call_info.execution.failed),
-            );
-        }
+        clear_events_and_messages_from_reverted_call(reverted_call);
 
         raw_retdata
             .push(Felt::from_hex(ENTRYPOINT_FAILED_ERROR).map_err(SyscallExecutionError::from)?);
