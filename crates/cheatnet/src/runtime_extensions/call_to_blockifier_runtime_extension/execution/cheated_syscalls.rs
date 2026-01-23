@@ -133,7 +133,7 @@ pub fn deploy_syscall(
 
     // Check if this deploy comes from the cheatcode
     // This allows us to make `deploy_syscall` revertible, only when used via the cheatcode
-    let from_cheatcode = cheatnet_state.take_next_deploy_from_cheatcode();
+    let from_cheatcode = cheatnet_state.take_next_syscall_from_cheatcode();
 
     let revert_idx = syscall_handler.base.context.revert_infos.0.len();
 

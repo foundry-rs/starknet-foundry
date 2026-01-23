@@ -240,7 +240,7 @@ pub struct CheatnetState {
     pub detected_messages_to_l1: Vec<MessageToL1>,
     pub deploy_salt_base: u32,
     pub next_deploy_at_address: Option<ContractAddress>,
-    pub next_deploy_from_cheatcode: bool,
+    pub next_syscall_from_cheatcode: bool,
     pub block_info: BlockInfo,
     pub trace_data: TraceData,
     pub encountered_errors: EncounteredErrors,
@@ -269,7 +269,7 @@ impl Default for CheatnetState {
             detected_messages_to_l1: vec![],
             deploy_salt_base: 0,
             next_deploy_at_address: None,
-            next_deploy_from_cheatcode: false,
+            next_syscall_from_cheatcode: false,
             block_info: SerializableBlockInfo::default().into(),
             trace_data: TraceData {
                 current_call_stack: NotEmptyCallStack::from(test_call),
@@ -345,12 +345,12 @@ impl CheatnetState {
         self.next_deploy_at_address.take()
     }
 
-    pub fn set_next_deploy_from_cheatcode(&mut self) {
-        self.next_deploy_from_cheatcode = true;
+    pub fn set_next_syscall_from_cheatcode(&mut self) {
+        self.next_syscall_from_cheatcode = true;
     }
 
-    pub fn take_next_deploy_from_cheatcode(&mut self) -> bool {
-        std::mem::take(&mut self.next_deploy_from_cheatcode)
+    pub fn take_next_syscall_from_cheatcode(&mut self) -> bool {
+        std::mem::take(&mut self.next_syscall_from_cheatcode)
     }
 
     #[must_use]

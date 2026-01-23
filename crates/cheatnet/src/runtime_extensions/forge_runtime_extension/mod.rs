@@ -198,10 +198,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 Ok(CheatcodeHandlingResult::from_serializable(()))
             }
-            // Internal cheatcode to mark next `deploy_syscall` as coming from cheatcode.
-            "set_next_deploy_from_cheatcode" => {
+            // Internal cheatcode to mark next syscall as coming from cheatcode.
+                "set_next_syscall_from_cheatcode" => {
                 let state = &mut *extended_runtime.extended_runtime.extension.cheatnet_state;
-                state.set_next_deploy_from_cheatcode();
+                state.set_next_syscall_from_cheatcode();
 
                 Ok(CheatcodeHandlingResult::from_serializable(()))
             }
