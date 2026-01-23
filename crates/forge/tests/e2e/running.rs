@@ -1090,6 +1090,8 @@ fn detailed_resources_flag_cairo_steps() {
                 memory holes: [..]
                 builtins: ([..])
                 syscalls: ([..])
+                events: (count: [..], keys: [..], data size: [..])
+                messages: ([..])
         Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
         "},
     );
@@ -1117,6 +1119,8 @@ fn detailed_resources_flag() {
         [PASS] erc20_package_integrationtest::test_complex::complex[..]
                 sierra gas: [..]
                 syscalls: ([..])
+                events: (count: [..], keys: [..], data size: [..])
+                messages: ([..])
         Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
         "},
     );
@@ -1143,6 +1147,8 @@ fn detailed_resources_mixed_resources() {
         [PASS] forking::tests::test_track_resources [..]
                 sierra gas: [..]
                 syscalls: ([..])
+                events: ([..])
+                messages: ([..])
                 steps: [..]
                 memory holes: [..]
                 builtins: (range_check: [..])
