@@ -177,13 +177,8 @@ mod tests {
             test_details: TestDetails {
                 sierra_entry_point_statement_idx: 100,
                 parameter_types: vec![
-                    (GenericTypeId("RangeCheck".into()), 1),
-                    (GenericTypeId("GasBuiltin".into()), 1),
-                ],
-                return_types: vec![
-                    (GenericTypeId("RangeCheck".into()), 1),
-                    (GenericTypeId("GasBuiltin".into()), 1),
-                    (GenericTypeId("Enum".into()), 3),
+                    GenericTypeId("RangeCheck".into()),
+                    GenericTypeId("GasBuiltin".into()),
                 ],
             },
         }

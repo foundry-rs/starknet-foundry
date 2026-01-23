@@ -3403,7 +3403,6 @@ dependencies = [
  "cairo-annotations",
  "cairo-lang-casm",
  "cairo-lang-sierra",
- "cairo-lang-sierra-type-size",
  "cairo-lang-starknet-classes",
  "cairo-lang-test-plugin",
  "cairo-lang-utils",
