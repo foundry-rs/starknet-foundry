@@ -6,7 +6,7 @@ use crate::profile_validation::backtrace::check_backtrace_compatibility;
 use crate::profile_validation::coverage::check_coverage_compatibility;
 use forge_runner::backtrace::is_backtrace_enabled;
 use scarb_metadata::Metadata;
-use std::fs;
+use std::{env, fs};
 use toml_edit::{DocumentMut, Table};
 
 /// Checks if current profile provided in [`Metadata`] can be used to run coverage and backtrace if applicable.
@@ -17,7 +17,7 @@ pub fn check_profile_compatibility(
     if test_args.coverage {
         check_coverage_compatibility(scarb_metadata)?;
     }
-    if is_backtrace_enabled() {
+    if is_backtrace_enabled() && !skip_backtrace_check() {
         check_backtrace_compatibility(test_args, scarb_metadata)?;
     }
     Ok(())
@@ -58,4 +58,10 @@ fn contains_entry_with_value(table: &Table, key: &str, value: &str) -> bool {
             false
         }
     })
+}
+
+/// Check if the `SNFORGE_SKIP_BACKTRACE_CHECK` environment variable is set to `true`.
+fn skip_backtrace_check() -> bool {
+    const SKIP_BACKTRACE_ENV: &str = "SNFORGE_SKIP_BACKTRACE_CHECK";
+    env::var(SKIP_BACKTRACE_ENV).is_ok_and(|value| value == "true")
 }
