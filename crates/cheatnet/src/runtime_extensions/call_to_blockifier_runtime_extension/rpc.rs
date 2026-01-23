@@ -45,6 +45,10 @@ impl From<CallFailure> for SyscallExecutionError {
             CallFailure::Recoverable { panic_data } => Self::Revert {
                 error_data: panic_data,
             },
+            // TODO(#3307):
+            // `SyscallExecutorBaseError::Hint` is chosen arbitrary to enable conversion by `try_extract_revert`
+            // in `execute_syscall` function.
+            // Ideally, we should pass the actual received error instead of a string.
             CallFailure::Unrecoverable { msg } => Self::SyscallExecutorBase(
                 SyscallExecutorBaseError::Hint(HintError::CustomHint(Box::from(msg.to_string()))),
             ),
