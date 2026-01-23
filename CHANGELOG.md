@@ -12,8 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `--detailed-resources` output now includes all gas-related resources
-- `deploy` and `deploy_at` methods on `ContractClass` instance now allow errors to be caught instead of failing immediately. This change diverges from the behavior of the `deploy_syscall` on the network, where this errors are not revertible and cannot be caught.
-
+- `deploy` and `deploy_at` methods on `ContractClass` instance now allow errors to be caught instead of failing immediately. This change diverges from the behavior of the `deploy_syscall` on the network, where such errors cannot be caught.
 ## [0.55.0] - 2026-01-13
 
 ## Forge
