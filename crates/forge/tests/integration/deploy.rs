@@ -257,3 +257,66 @@ fn verify_precalculate_address() {
 
     assert_passed(&result);
 }
+
+#[test]
+fn deploy_constructor_panic_catchable() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
+
+        #[test]
+        fn deploy_constructor_panic_returns_error_in_result() {
+            let contract = declare("DeployChecker").unwrap().contract_class();
+            let constructor_calldata = array![0];
+            
+            let result = contract.deploy(@constructor_calldata);
+
+            match result {
+                Result::Ok(_) => panic!("Expected deployment to fail"),
+                Result::Err(panic_data) => {
+                    assert!(*panic_data.at(0) == 'Initial balance cannot be 0', "Wrong panic message");
+                }
+            }
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "DeployChecker".to_string(),
+            Path::new("tests/data/contracts/deploy_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    assert_passed(&result);
+}
+
+#[test]
+fn deploy_constructor_panic_catchable_via_should_panic() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
+        use starknet::SyscallResultTrait;
+
+        #[test]
+        #[should_panic(expected: 'Initial balance cannot be 0')]
+        fn deploy_constructor_panic_should_be_catchable() {
+            let contract = declare("DeployChecker").unwrap().contract_class();
+            let constructor_calldata = array![0];
+            
+            contract.deploy(@constructor_calldata).unwrap_syscall();
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "DeployChecker".to_string(),
+            Path::new("tests/data/contracts/deploy_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    assert_passed(&result);
+}

@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `--detailed-resources` output now includes all gas-related resources
-
+- `deploy` and `deploy_at` methods on `ContractClass` instance now allow constructor errors to be caught instead of failing immediately. This change diverges from the behavior of the `deploy_syscall` on the network, where such errors cannot be caught.
 ## [0.55.0] - 2026-01-13
 
 ## Forge
@@ -21,7 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Minimal recommended `Scarb` version is now `2.13.1` (updated from `2.12.2`)
 - `snforge_scarb_plugin` now emits an error if unexpected named args are passed to `#[available_gas]`, `#[fork]`, `#[fuzzer]`, `#[should_panic]` and `#[test_case]` attributes
-- `--detailed-resources` output now includes all gas-related resources
 
 #### Fixed
 

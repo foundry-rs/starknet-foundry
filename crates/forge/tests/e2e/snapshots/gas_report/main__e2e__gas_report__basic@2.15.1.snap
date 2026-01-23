@@ -2,7 +2,7 @@
 source: crates/forge/tests/e2e/gas_report.rs
 expression: stdout
 ---
-[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~510240)
+[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~513510)
 ╭------------------------+-------+-------+-------+---------+---------╮
 | HelloStarknet Contract |       |       |       |         |         |
 +====================================================================+
