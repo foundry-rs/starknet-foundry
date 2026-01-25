@@ -73,6 +73,25 @@ pub(crate) fn update_trace_data(
     );
 }
 
+/// Clears `events` and `l2_to_l1_messages` from a reverted call and all its inner calls that did not fail.
+/// This is part of `execute_inner_call` function in Blockifier.
+/// <https://github.com/software-mansion-labs/sequencer/blob/v0.16.0-rc.1/crates/blockifier/src/execution/syscalls/syscall_base.rs#L441-L453>
+pub(crate) fn clear_events_and_messages_from_reverted_call(reverted_call: &mut CallInfo) {
+    let mut stack: Vec<&mut CallInfo> = vec![reverted_call];
+    while let Some(call_info) = stack.pop() {
+        call_info.execution.events.clear();
+        call_info.execution.l2_to_l1_messages.clear();
+        // Add inner calls that did not fail to the stack.
+        // The events and l2_to_l1_messages of the failed calls were already cleared.
+        stack.extend(
+            call_info
+                .inner_calls
+                .iter_mut()
+                .filter(|call_info| !call_info.execution.failed),
+        );
+    }
+}
+
 pub(crate) fn exit_error_call(
     error: &EntryPointExecutionError,
     cheatnet_state: &mut CheatnetState,
