@@ -35,7 +35,6 @@ use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::transaction::fields::Calldata;
 use starknet_rust::core::utils::get_selector_from_name;
-use starknet_rust::macros::felt;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -43,10 +42,6 @@ use std::sync::Arc;
 pub mod assertions;
 pub mod cache;
 pub mod state;
-
-// blockifier::execution::syscalls::hint_processor::ENTRYPOINT_FAILED_ERROR
-pub(crate) const ENTRYPOINT_FAILED_ERROR: Felt =
-    felt!("0x000000000000000000000000000000454e545259504f494e545f4641494c4544");
 
 fn build_syscall_hint_processor<'a>(
     call_entry_point: &CallEntryPoint,

@@ -1,6 +1,7 @@
 use crate::common::assertions::assert_panic;
 use crate::common::call_contract;
-use crate::common::{ENTRYPOINT_FAILED_ERROR, deploy_contract, state::create_cached_state};
+use crate::common::{deploy_contract, state::create_cached_state};
+use blockifier::execution::syscalls::hint_processor::ENTRYPOINT_FAILED_ERROR_FELT;
 use cairo_lang_utils::byte_array::BYTE_ARRAY_MAGIC;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::selector_from_name;
 use cheatnet::state::CheatnetState;
@@ -32,7 +33,7 @@ fn call_contract_failed() {
         output,
         &[
             Felt::from_short_string("Input too long for arguments").unwrap(),
-            ENTRYPOINT_FAILED_ERROR,
+            ENTRYPOINT_FAILED_ERROR_FELT,
         ],
     );
 }
@@ -62,7 +63,7 @@ fn call_contract_panic() {
             Felt::from(0),
             Felt::MAX,
             Felt::from_short_string("shortstring2").unwrap(),
-            ENTRYPOINT_FAILED_ERROR,
+            ENTRYPOINT_FAILED_ERROR_FELT,
         ],
     );
 }
@@ -104,8 +105,8 @@ fn call_proxied_contract_bytearray_panic() {
             Felt::from_short_string("line string, that will for sure").unwrap(),
             Felt::from_short_string(" saturate the pending_word").unwrap(),
             Felt::from(26),
-            ENTRYPOINT_FAILED_ERROR,
-            ENTRYPOINT_FAILED_ERROR,
+            ENTRYPOINT_FAILED_ERROR_FELT,
+            ENTRYPOINT_FAILED_ERROR_FELT,
         ],
     );
 }
@@ -148,7 +149,7 @@ fn call_proxied_contract_felts_panic(input: &[Felt], expected_panic: &[Felt]) {
         output,
         &[
             expected_panic,
-            &[ENTRYPOINT_FAILED_ERROR, ENTRYPOINT_FAILED_ERROR],
+            &[ENTRYPOINT_FAILED_ERROR_FELT, ENTRYPOINT_FAILED_ERROR_FELT],
         ]
         .concat(),
     );
