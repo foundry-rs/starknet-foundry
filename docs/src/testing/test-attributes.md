@@ -67,6 +67,10 @@ Asserting that the function panics (any with any panic data):
 #[should_panic]
 ```
 
+> 📝 **Note**
+> `#[should_panic]` does not validate generic errors that are always returned when an entrypoint fails i.e. `ENTRYPOINT_FAILED` or `ENTRYPOINT_NOT_FOUND`.
+> Therefore, there is no need to include them in the `expected` field.
+
 ### `#[available_gas]`
 
 Sets a gas limit for the test.
