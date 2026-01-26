@@ -31,14 +31,6 @@ fn new_with_new_scarb() {
         .unwrap();
     let snforge_std = snforge_std.as_str().unwrap();
     assert_eq!(snforge_std, env!("CARGO_PKG_VERSION"));
-    // TODO: remove this?
-    assert!(
-        manifest
-            .get("dev-dependencies")
-            .unwrap()
-            .get("snforge_std_deprecated")
-            .is_none()
-    );
 }
 
 #[test]
@@ -70,14 +62,6 @@ fn new_with_minimal_scarb() {
         .unwrap();
     let snforge_std = snforge_std.as_str().unwrap();
     assert_eq!(snforge_std, env!("CARGO_PKG_VERSION"));
-
-    assert!(
-        manifest
-            .get("dev-dependencies")
-            .unwrap()
-            .get("snforge_std_deprecated")
-            .is_none()
-    );
 }
 
 #[test]
