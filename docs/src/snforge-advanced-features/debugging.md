@@ -178,7 +178,7 @@ $ snforge test
 
 ```shell
 Failure data:
-    0x417373657274206661696c6564 ('Assert failed')
+    (0x417373657274206661696c6564 ('Assert failed'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
 note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace
 ```
 </details>
@@ -201,7 +201,7 @@ $ SNFORGE_BACKTRACE=1 snforge test
 
 ```shell
 "Failure data:
-    0x417373657274206661696c6564 ('Assert failed')
+    (0x417373657274206661696c6564 ('Assert failed'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
 error occurred in contract 'InnerContract'
 stack backtrace:
    0: (inlined) core::array::ArrayImpl::append
