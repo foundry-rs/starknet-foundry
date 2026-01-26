@@ -3,8 +3,7 @@
 Starting from version 0.56.0, `snforge` requires Scarb version 2.12.0 or newer.
 This is due to the migration to the Scarb V2 version of procedural macros, which are used to handle arguments like `#[test]`
 in `snforge`.
-Thanks to this migration, tools like the Cairo plugin for VSCode will start showing better, more descriptive
-errors.
+Thanks to this migration, tools like the Cairo plugin for VSCode shows better, more descriptive error.
 
 ## Scarb Versions >= 2.12.0
 
