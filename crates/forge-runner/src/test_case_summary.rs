@@ -7,6 +7,9 @@ use crate::gas::report::SingleTestGasInfo;
 use crate::gas::stats::GasStats;
 use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use crate::running::{RunCompleted, RunStatus};
+use blockifier::execution::syscalls::hint_processor::{
+    ENTRYPOINT_FAILED_ERROR_FELT, ENTRYPOINT_NOT_FOUND_ERROR_FELT,
+};
 use cairo_annotations::trace_data::VersionedCallTrace as VersionedProfilerCallTrace;
 use camino::Utf8Path;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
@@ -19,6 +22,11 @@ use starknet_api::execution_resources::GasVector;
 use starknet_types_core::felt::Felt;
 use std::fmt;
 use std::option::Option;
+
+const GENERIC_ERRORS: [Felt; 2] = [
+    ENTRYPOINT_FAILED_ERROR_FELT,
+    ENTRYPOINT_NOT_FOUND_ERROR_FELT,
+];
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasFuzzingInfo {
@@ -261,7 +269,9 @@ fn check_if_matching_and_get_message(
     };
 
     match expected_data {
-        Some(expected) if is_matching(actual_panic_value, expected) => (true, None),
+        Some(expected) if is_matching_should_panic_data(actual_panic_value, expected) => {
+            (true, None)
+        }
         Some(expected) => {
             let panic_string = convert_felts_to_byte_array_string(actual_panic_value)
                 .unwrap_or_else(|| join_short_strings(actual_panic_value));
@@ -396,14 +406,20 @@ fn join_short_strings(data: &[Felt]) -> String {
         .join(", ")
 }
 
-fn is_matching(data: &[Felt], pattern: &[Felt]) -> bool {
+fn is_matching_should_panic_data(data: &[Felt], pattern: &[Felt]) -> bool {
     let data_str = convert_felts_to_byte_array_string(data);
     let pattern_str = convert_felts_to_byte_array_string(pattern);
 
     if let (Some(data), Some(pattern)) = (data_str, pattern_str) {
         data.contains(&pattern) // If both data and pattern are byte arrays, pattern should be a substring of data
     } else {
-        data == pattern // Otherwise, data should be equal to pattern
+        // Before comparing actual with expected data, remove generic errors from the data.
+        let filtered: Vec<Felt> = data
+            .iter()
+            .copied()
+            .filter(|e| !GENERIC_ERRORS.contains(e))
+            .collect();
+        filtered.as_slice() == pattern
     }
 }
 fn convert_felts_to_byte_array_string(data: &[Felt]) -> Option<String> {
