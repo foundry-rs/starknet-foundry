@@ -3,9 +3,9 @@ use starknet::SyscallResultTrait;
 #[starknet::interface]
 /// Makes calls to nested contract with safe dispatcher
 trait ISafeProxy<TContractState> {
-    /// Call on proxied contract unwraping the syscall result: Return storage value
+    /// Call on proxied contract unwrapping the syscall result: Return storage value
     fn read_storage(self: @TContractState) -> felt252;
-    /// Call on proxied contract unwraping the syscall result: Write 5 to storage
+    /// Call on proxied contract unwrapping the syscall result: Write 5 to storage
     fn write_storage(ref self: TContractState);
     /// Call on proxied contract with safe dispatcher: Write 1 to storage and then panic
     fn call_write_storage_and_handle_panic(ref self: TContractState);
