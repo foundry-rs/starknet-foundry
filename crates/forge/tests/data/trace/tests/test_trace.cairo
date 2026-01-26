@@ -32,7 +32,9 @@ fn test_trace() {
     let failing_dispatcher = FailingSafeDispatcher { contract_address: contract_address_A };
     match failing_dispatcher.fail(array![1, 2, 3, 4, 5]) {
         Result::Ok(_) => panic_with_felt252('shouldve panicked'),
-        Result::Err(panic_data) => { assert(panic_data == array![1, 2, 3, 4, 5, 0x454e545259504f494e545f4641494c4544], ''); },
+        Result::Err(panic_data) => {
+            assert(panic_data == array![1, 2, 3, 4, 5, 0x454e545259504f494e545f4641494c4544], '');
+        },
     }
 
     println!("{}", get_call_trace());
