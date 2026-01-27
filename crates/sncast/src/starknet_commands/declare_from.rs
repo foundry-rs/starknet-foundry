@@ -15,7 +15,7 @@ use starknet_rust::core::types::contract::{
 use starknet_rust::core::types::{ContractClass, FlattenedSierraClass};
 use starknet_rust::providers::Provider;
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
-use starknet_rust::signers::LocalWallet;
+use starknet_rust::signers::Signer;
 use starknet_types_core::felt::Felt;
 use universal_sierra_compiler_api::compile_contract_sierra;
 use url::Url;
@@ -84,14 +84,17 @@ impl SourceRpcArgs {
     }
 }
 
-pub async fn declare_from(
+pub async fn declare_from<S>(
     declare_from: DeclareFrom,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     wait_config: WaitForTx,
     skip_on_already_declared: bool,
     source_provider: &JsonRpcClient<HttpTransport>,
     ui: &UI,
-) -> Result<DeclareResponse, StarknetCommandError> {
+) -> Result<DeclareResponse, StarknetCommandError>
+where
+    S: Signer + Sync + Send,
+{
     let block_id = get_block_id(&declare_from.block_id)?;
     let class = source_provider
         .get_class(block_id, declare_from.class_hash)

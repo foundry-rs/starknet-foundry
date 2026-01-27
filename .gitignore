@@ -16,3 +16,8 @@ snfoundry_trace/
 coverage/
 **/.forge_e2e_cache/
 *.snap.new
+
+# TODO: Remove
+tmp/app-starknet/
+target-docker/
+target-docker-home/

@@ -14,7 +14,7 @@ use starknet_rust::contract::{ContractFactory, DeploymentV3, UdcSelector};
 use starknet_rust::core::utils::get_udc_deployed_address;
 use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
-use starknet_rust::signers::LocalWallet;
+use starknet_rust::signers::Signer;
 use starknet_types_core::felt::Felt;
 
 #[derive(Args, Debug, Clone)]
@@ -74,17 +74,20 @@ pub struct DeployArguments {
 }
 
 #[expect(clippy::ptr_arg, clippy::too_many_arguments)]
-pub async fn deploy(
+pub async fn deploy<S>(
     class_hash: Felt,
     calldata: &Vec<Felt>,
     salt: Option<Felt>,
     unique: bool,
     fee_args: FeeArgs,
     nonce: Option<Felt>,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     wait_config: WaitForTx,
     ui: &UI,
-) -> Result<StandardDeployResponse, StarknetCommandError> {
+) -> Result<StandardDeployResponse, StarknetCommandError>
+where
+    S: Signer + Sync + Send,
+{
     let salt = extract_or_generate_salt(salt);
 
     // TODO(#3628): Use `ContractFactory::new` once new UDC address is the default one in starknet-rs

@@ -298,6 +298,31 @@ jobs:
       - name: Run tests
         run: cargo test --profile ci -p sncast
 
+  ledger:
+    name: Ledger tests
+    runs-on: ubuntu-latest
+    container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v6
+
+      - name: Install stable Rust toolchain
+        run: |
+          rustup toolchain install stable
+          rustup default stable
+
+      - name: Use Rust cache
+        uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
+        with:
+          cache-on-failure: true
+
+      - name: Run ledger integration tests
+        run: |
+          cargo test --package sncast \
+            ledger:: \
+            -- --ignored
+
   test-conversions:
     name: Test Conversions
     runs-on: ubuntu-latest

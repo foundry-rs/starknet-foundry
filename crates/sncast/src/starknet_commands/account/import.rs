@@ -63,6 +63,10 @@ pub struct Import {
     /// If passed, the command will not trigger an interactive prompt to add an account as a default
     #[arg(long)]
     pub silent: bool,
+
+    /// Ledger derivation path (e.g., m/2645'/1195502025'/1148870696'/0'/0'/0)
+    #[arg(long)]
+    pub ledger_path: Option<String>,
 }
 
 pub async fn import(
@@ -153,6 +157,7 @@ pub async fn import(
         import.account_type,
         Some(class_hash),
         import.salt,
+        import.ledger_path.clone(),
     );
 
     write_account_to_accounts_file(&account_name, accounts_file, chain_id, account_json.clone())?;

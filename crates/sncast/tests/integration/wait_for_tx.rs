@@ -47,9 +47,20 @@ async fn test_rejected_transaction() {
         url: Some(Url::parse(URL).unwrap()),
         network: None,
     };
-    let account = get_account(&config, &provider, &rpc_args, None, &UI::default())
-        .await
-        .expect("Could not get the account");
+    let account = get_account(
+        &config,
+        &provider,
+        &rpc_args,
+        &sncast::SignerSource::AccountsFile,
+        &UI::default(),
+    )
+    .await
+    .expect("Could not get the account");
+
+    let account = match account {
+        sncast::AccountVariant::LocalWallet(acc) => acc,
+        sncast::AccountVariant::Ledger(_) => panic!("Ledger account not supported in tests"),
+    };
 
     let factory = ContractFactory::new_with_udc(
         MAP_CONTRACT_CLASS_HASH_SEPOLIA.parse().unwrap(),
@@ -60,9 +71,12 @@ async fn test_rejected_transaction() {
         .deploy_v3(Vec::new(), Felt::ONE, false)
         .l1_gas(1)
         .l2_gas(1)
-        .l1_data_gas(1);
+        .l1_data_gas(1)
+        .send()
+        .await
+        .map_err(|e| anyhow::anyhow!(e));
 
-    let resp = deployment.send().await.unwrap_err();
+    let resp = deployment.unwrap_err();
 
     assert!(
         resp.to_string()

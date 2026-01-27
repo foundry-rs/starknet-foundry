@@ -1,6 +1,6 @@
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{WaitForTx, get_account};
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result, anyhow, bail};
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::ExecutableCallEntryPoint;
 use blockifier::execution::execution_utils::ReadOnlySegments;
@@ -35,6 +35,7 @@ use scarb_metadata::{Metadata, PackageMetadata};
 use script_runtime::CastScriptRuntime;
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::utils::build_readable_text;
+use sncast::AccountVariant;
 use sncast::get_nonce;
 use sncast::helpers::artifacts::CastStarknetContractArtifacts;
 use sncast::helpers::configuration::CastConfig;
@@ -366,13 +367,13 @@ pub fn run(
             url: Some(url.clone()),
             network: None,
         };
-        Some(tokio_runtime.block_on(get_account(
-            config,
-            provider,
-            &rpc_args,
-            config.keystore.as_ref(),
-            ui,
-        ))?)
+        let signer_source = sncast::SignerSource::from_options(config.keystore.clone(), None);
+        let account_variant =
+            tokio_runtime.block_on(get_account(config, provider, &rpc_args, &signer_source, ui))?;
+        match account_variant {
+            AccountVariant::LocalWallet(acc) => Some(acc),
+            AccountVariant::Ledger(_) => bail!("Ledger is not supported for scripts"),
+        }
     };
     let state = StateManager::from(state_file_path)?;
 

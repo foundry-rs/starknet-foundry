@@ -210,9 +210,15 @@ pub async fn invoke_contract(
         url: Some(Url::parse(URL).expect("Failed to parse URL")),
         network: None,
     };
-    let account = get_account(&config, &provider, &rpc_args, None, &UI::default())
-        .await
-        .expect("Could not get the account");
+    let account = get_account(
+        &config,
+        &provider,
+        &rpc_args,
+        &sncast::SignerSource::AccountsFile,
+        &UI::default(),
+    )
+    .await
+    .expect("Could not get the account");
 
     let mut calldata: Vec<Felt> = vec![];
 
@@ -230,6 +236,11 @@ pub async fn invoke_contract(
         calldata,
     };
 
+    let account = match account {
+        sncast::AccountVariant::LocalWallet(acc) => acc,
+        sncast::AccountVariant::Ledger(_) => panic!("Ledger account not supported in test"),
+    };
+
     let execution = account.execute_v3(vec![call]);
     let execution = apply_optional_fields!(
         execution,
@@ -240,10 +251,10 @@ pub async fn invoke_contract(
         fee_settings.l1_data_gas => ExecutionV3::l1_data_gas,
         fee_settings.l1_data_gas_price => ExecutionV3::l1_data_gas_price
     );
-
     execution
         .send()
         .await
+        .map_err(|e| anyhow::anyhow!(e))
         .expect("Transaction execution failed")
 }
 

@@ -9,7 +9,6 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::ui::UI;
 use sncast::{check_if_legacy_contract, get_account, get_provider};
-use starknet_rust::accounts::Account;
 use starknet_rust::macros::felt;
 use url::Url;
 
@@ -31,9 +30,15 @@ async fn test_get_account() {
         url: Some(Url::parse(URL).expect("Failed to parse URL")),
         network: None,
     };
-    let account = get_account(&config, &provider, &rpc_args, None, &UI::default())
-        .await
-        .unwrap();
+    let account = get_account(
+        &config,
+        &provider,
+        &rpc_args,
+        &sncast::SignerSource::AccountsFile,
+        &UI::default(),
+    )
+    .await
+    .unwrap();
 
     assert_eq!(account.chain_id(), felt!("0x534e5f5345504f4c4941"));
     assert_eq!(
@@ -54,7 +59,14 @@ async fn test_get_account_no_file() {
         url: Some(Url::parse(URL).expect("Failed to parse URL")),
         network: None,
     };
-    let account = get_account(&config, &provider, &rpc_args, None, &UI::default()).await;
+    let account = get_account(
+        &config,
+        &provider,
+        &rpc_args,
+        &sncast::SignerSource::AccountsFile,
+        &UI::default(),
+    )
+    .await;
     let err = account.unwrap_err();
     assert!(
         err.to_string()
@@ -74,7 +86,14 @@ async fn test_get_account_invalid_file() {
         url: Some(Url::parse(URL).expect("Failed to parse URL")),
         network: None,
     };
-    let account = get_account(&config, &provider, &rpc_args, None, &UI::default()).await;
+    let account = get_account(
+        &config,
+        &provider,
+        &rpc_args,
+        &sncast::SignerSource::AccountsFile,
+        &UI::default(),
+    )
+    .await;
     let err = account.unwrap_err();
     assert!(err
         .to_string()
@@ -94,7 +113,14 @@ async fn test_get_account_no_account() {
         url: Some(Url::parse(URL).expect("Failed to parse URL")),
         network: None,
     };
-    let account = get_account(&config, &provider, &rpc_args, None, &UI::default()).await;
+    let account = get_account(
+        &config,
+        &provider,
+        &rpc_args,
+        &sncast::SignerSource::AccountsFile,
+        &UI::default(),
+    )
+    .await;
     let err = account.unwrap_err();
     assert!(
         err.to_string()
@@ -114,7 +140,14 @@ async fn test_get_account_no_user_for_network() {
         url: Some(Url::parse(URL).expect("Failed to parse URL")),
         network: None,
     };
-    let account = get_account(&config, &provider, &rpc_args, None, &UI::default()).await;
+    let account = get_account(
+        &config,
+        &provider,
+        &rpc_args,
+        &sncast::SignerSource::AccountsFile,
+        &UI::default(),
+    )
+    .await;
     let err = account.unwrap_err();
     assert!(
         err.to_string()
@@ -134,7 +167,14 @@ async fn test_get_account_failed_to_convert_field_elements() {
         url: Some(Url::parse(URL).expect("Failed to parse URL")),
         network: None,
     };
-    let account1 = get_account(&config, &provider, &rpc_args, None, &UI::default()).await;
+    let account1 = get_account(
+        &config,
+        &provider,
+        &rpc_args,
+        &sncast::SignerSource::AccountsFile,
+        &UI::default(),
+    )
+    .await;
     let err = account1.unwrap_err();
 
     assert!(err.to_string().contains(

@@ -2,5 +2,5 @@ mod create;
 mod delete;
 mod deploy;
 mod helpers;
-mod import;
-mod list;
+pub mod import;
+pub mod list;
