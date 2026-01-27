@@ -2,7 +2,7 @@
 source: crates/forge/tests/e2e/backtrace.rs
 expression: stdout
 ---
-[PASS] dispatchers_integrationtest::test::test_handle_and_panic (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~577860)
+[PASS] dispatchers_integrationtest::test::test_handle_and_panic (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~584800)
 
 error occurred in contract 'ErrorHandler'
 stack backtrace:
