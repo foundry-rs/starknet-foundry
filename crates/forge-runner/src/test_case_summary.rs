@@ -7,9 +7,7 @@ use crate::gas::report::SingleTestGasInfo;
 use crate::gas::stats::GasStats;
 use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use crate::running::{RunCompleted, RunStatus};
-use blockifier::execution::syscalls::hint_processor::{
-    ENTRYPOINT_FAILED_ERROR_FELT, ENTRYPOINT_NOT_FOUND_ERROR_FELT,
-};
+use blockifier::execution::syscalls::hint_processor::ENTRYPOINT_FAILED_ERROR_FELT;
 use cairo_annotations::trace_data::VersionedCallTrace as VersionedProfilerCallTrace;
 use camino::Utf8Path;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
@@ -22,11 +20,6 @@ use starknet_api::execution_resources::GasVector;
 use starknet_types_core::felt::Felt;
 use std::fmt;
 use std::option::Option;
-
-const GENERIC_ERRORS: [Felt; 2] = [
-    ENTRYPOINT_FAILED_ERROR_FELT,
-    ENTRYPOINT_NOT_FOUND_ERROR_FELT,
-];
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasFuzzingInfo {
@@ -413,13 +406,19 @@ fn is_matching_should_panic_data(data: &[Felt], pattern: &[Felt]) -> bool {
     if let (Some(data), Some(pattern)) = (data_str, pattern_str) {
         data.contains(&pattern) // If both data and pattern are byte arrays, pattern should be a substring of data
     } else {
-        // Before comparing actual with expected data, remove generic errors from the data.
-        let filtered: Vec<Felt> = data
-            .iter()
-            .copied()
-            .filter(|e| !GENERIC_ERRORS.contains(e))
-            .collect();
-        filtered.as_slice() == pattern
+        // Compare logic depends on the presence of `ENTRYPOINT_FAILED_ERROR` in the expected data.
+        if pattern.contains(&ENTRYPOINT_FAILED_ERROR_FELT) {
+            // If data includes `ENTRYPOINT_FAILED_ERROR` compare as is.
+            data == pattern
+        } else {
+            // Otherwise, remove all generic errors and then compare.
+            let filtered: Vec<Felt> = data
+                .iter()
+                .copied()
+                .filter(|f| f != &ENTRYPOINT_FAILED_ERROR_FELT)
+                .collect();
+            filtered.as_slice() == pattern
+        }
     }
 }
 fn convert_felts_to_byte_array_string(data: &[Felt]) -> Option<String> {
