@@ -3369,6 +3369,7 @@ dependencies = [
  "packages_validation",
  "project-root",
  "rand 0.8.5",
+ "rayon",
  "regex",
  "scarb-api",
  "scarb-metadata",
@@ -8312,9 +8313,11 @@ checksum = "81e544489bf3d8ef66c953931f56617f423cd4b5494be343d9b9d3dda037b9a3"
 name = "universal-sierra-compiler-api"
 version = "1.0.0"
 dependencies = [
+ "anyhow",
  "cairo-lang-casm",
  "cairo-lang-starknet-classes",
  "num-bigint",
+ "rayon",
  "serde",
  "serde_json",
  "shared",
@@ -8322,6 +8325,7 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.18",
  "tracing",
+ "uv-once-map",
  "which",
 ]
 
@@ -8380,6 +8384,17 @@ checksum = "ee48d38b119b0cd71fe4141b30f5ba9c7c5d9f4e7a3a8b4a674e4b6ef789976f"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "uv-once-map"
+version = "0.0.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "17ccfda7f4d0c25f0c69c0658e57b1e0fc8082d70dd3362e8cec31f8f564a762"
+dependencies = [
+ "dashmap",
+ "futures",
+ "tokio",
 ]
 
 [[package]]
