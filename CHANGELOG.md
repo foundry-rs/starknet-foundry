@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Partitioned test execution with `--partition <INDEX>/<TOTAL>` flag. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/tests-partitioning.html)
 
+#### Changed
+
+- `--detailed-resources` output now includes all gas-related resources
+
 ## [0.55.0] - 2026-01-13
 
 ### Forge
@@ -21,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Minimal recommended `Scarb` version is now `2.13.1` (updated from `2.12.2`)
 - `snforge_scarb_plugin` now emits an error if unexpected named args are passed to `#[available_gas]`, `#[fork]`, `#[fuzzer]`, `#[should_panic]` and `#[test_case]` attributes
+- `--detailed-resources` output now includes all gas-related resources
 
 #### Fixed
 

@@ -8,8 +8,7 @@ use anyhow::{Result, anyhow};
 use camino::Utf8Path;
 use forge_runner::package_tests::raw::TestTargetRaw;
 use forge_runner::package_tests::with_config_resolved::sanitize_test_case_name;
-use rayon::iter::IntoParallelRefIterator;
-use rayon::iter::ParallelIterator;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use scarb_api::metadata::PackageMetadata;
 use serde::Serialize;
 
@@ -102,7 +101,7 @@ impl PartitionMap {
         total_partitions: NonZeroUsize,
     ) -> Result<Self> {
         let mut test_full_paths: Vec<String> = packages
-            .par_iter()
+            .iter()
             .map(|package| -> Result<Vec<String>> {
                 let raw_test_targets = load_test_artifacts(artifacts_dir, package)?;
 
@@ -127,12 +126,14 @@ impl PartitionMap {
 
         for (i, test_full_path) in test_full_paths.iter().enumerate() {
             let sanitized_full_path = sanitize_test_case_name(test_full_path);
-            if partition_map.contains_key(&sanitized_full_path) {
-                unreachable!("Test case full path should be unique");
-            }
             let partition_index_1_based = (i % total_partitions) + 1;
             let partition_index_1_based = NonZeroUsize::try_from(partition_index_1_based)?;
-            partition_map.insert(sanitized_full_path, partition_index_1_based);
+            if partition_map
+                .insert(sanitized_full_path, partition_index_1_based)
+                .is_some()
+            {
+                unreachable!("Test case full path should be unique");
+            }
         }
 
         Ok(Self(partition_map))
