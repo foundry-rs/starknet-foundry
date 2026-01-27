@@ -121,7 +121,7 @@ fn fuzzer_wrapper_internal(
                     #func_name(#blank_values_for_config_run);
 
                     return;
-                }
+                };
                 #fuzzer_assignments
                 #func_name(#arguments_list);
             }

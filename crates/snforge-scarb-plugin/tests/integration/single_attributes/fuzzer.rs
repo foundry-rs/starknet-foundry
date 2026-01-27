@@ -63,7 +63,7 @@ fn config_works_with_runs_only() {
                     starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
                     return;
-                }
+                };
             }
         ",
     );
@@ -93,7 +93,7 @@ fn config_works_with_seed_only() {
                     starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
                     return;
-                }
+                };
             }
         ",
     );
@@ -123,7 +123,7 @@ fn config_works_with_both_args() {
                     starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
                     return;
-                }
+                };
             }
         ",
     );
@@ -153,7 +153,7 @@ fn config_wrapper_work_without_args() {
                     starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
                     return;
-                }
+                };
             }
         ",
     );
@@ -183,7 +183,7 @@ fn config_wrapper_work_without_args() {
                     empty_fn();
 
                     return;
-                }
+                };
                 empty_fn();
             }
 
@@ -218,7 +218,7 @@ fn config_wrapper_work_with_both_args() {
                     starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
                     return;
-                }
+                };
             }
         ",
     );
@@ -248,7 +248,7 @@ fn config_wrapper_work_with_both_args() {
                     empty_fn();
 
                     return;
-                }
+                };
                 empty_fn();
             }
 
@@ -286,7 +286,7 @@ fn config_wrapper_work_with_fn_with_single_param() {
                     starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
                     return;
-                }
+                };
             }
         ",
     );
@@ -316,7 +316,7 @@ fn config_wrapper_work_with_fn_with_single_param() {
                     empty_fn(snforge_std::fuzzable::Fuzzable::blank());
 
                     return;
-                }
+                };
                 let f = snforge_std::fuzzable::Fuzzable::<felt252>::generate();
                 snforge_std::_internals::save_fuzzer_arg(@f);
                 empty_fn(f);
@@ -355,7 +355,7 @@ fn config_wrapper_work_with_fn_with_params() {
                     starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
                     return;
-                }
+                };
             }
         ",
     );
@@ -385,7 +385,7 @@ fn config_wrapper_work_with_fn_with_params() {
                     empty_fn(snforge_std::fuzzable::Fuzzable::blank(), snforge_std::fuzzable::Fuzzable::blank());
 
                     return;
-                }
+                };
                 let f = snforge_std::fuzzable::Fuzzable::<felt252>::generate();
                 snforge_std::_internals::save_fuzzer_arg(@f);
                 let u = snforge_std::fuzzable::Fuzzable::<u32>::generate();
@@ -419,7 +419,7 @@ fn wrapper_handle_attributes() {
                     empty_fn();
 
                     return;
-                }
+                };
                 empty_fn();
             }
 

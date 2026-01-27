@@ -24,7 +24,7 @@ fn work_with_empty() {
 
                     starknet::testing::cheatcode::<'set_config_should_panic'>(data.span());
                     return;
-                }
+                };
             }
         ",
     );
@@ -52,7 +52,7 @@ fn work_with_expected_string() {
 
                     starknet::testing::cheatcode::<'set_config_should_panic'>(data.span());
                     return;
-                }
+                };
             }
         "#,
     );
@@ -80,7 +80,7 @@ fn work_with_expected_string_escaped() {
 
                     starknet::testing::cheatcode::<'set_config_should_panic'>(data.span());
                     return;
-                }
+                };
             }
         "#,
     );
@@ -111,7 +111,7 @@ fn work_with_expected_short_string() {
 
                     starknet::testing::cheatcode::<'set_config_should_panic'>(data.span());
                     return;
-                }
+                };
             }
         ",
     );
@@ -142,7 +142,7 @@ fn work_with_expected_short_string_escaped() {
 
                     starknet::testing::cheatcode::<'set_config_should_panic'>(data.span());
                     return;
-                }
+                };
             }
         ",
     );
@@ -173,7 +173,7 @@ fn work_with_expected_tuple() {
 
                     starknet::testing::cheatcode::<'set_config_should_panic'>(data.span());
                     return;
-                }
+                };
             }
         ",
     );

@@ -107,7 +107,7 @@ fn test_internal(
                    #if_content
 
                    return;
-               }
+               };
 
                #statements
            }

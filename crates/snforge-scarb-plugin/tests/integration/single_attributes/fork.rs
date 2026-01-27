@@ -108,7 +108,7 @@ fn accepts_string() {
                     starknet::testing::cheatcode::<'set_config_fork'>(data.span());
 
                     return;
-                }
+                };
             }
         "#,
     );
@@ -161,7 +161,7 @@ fn accepts_inline_config() {
                     starknet::testing::cheatcode::<'set_config_fork'>(data.span());
 
                     return;
-                }
+                };
             }
         "#,
     );
@@ -194,7 +194,7 @@ fn overriding_config_name_first() {
                     starknet::testing::cheatcode::<'set_config_fork'>(data.span());
 
                     return;
-                }
+                };
             }
         "#,
     );
@@ -227,7 +227,7 @@ fn overriding_config_name_second() {
                     starknet::testing::cheatcode::<'set_config_fork'>(data.span());
 
                     return;
-                }
+                };
             }
         "#,
     );

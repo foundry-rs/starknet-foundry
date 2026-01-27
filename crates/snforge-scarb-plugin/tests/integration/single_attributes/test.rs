@@ -32,7 +32,7 @@ fn appends_internal_config_and_executable() {
             fn empty_fn() {
                 if snforge_std::_internals::is_config_run() {
                     return;
-                }
+                };
             }
         ",
     );
