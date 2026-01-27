@@ -7,15 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## Forge
+### Forge
 
 #### Changed
 
 - `--detailed-resources` output now includes all gas-related resources
 - `deploy` and `deploy_at` methods on `ContractClass` instance now allow constructor errors to be caught instead of failing immediately. This change diverges from the behavior of the `deploy_syscall` on the network, where such errors cannot be caught.
+
+#### Fixed
+
+- `snforge_scarb_plugin` now correctly generates code in tests with function code starting with `[`
+
 ## [0.55.0] - 2026-01-13
 
-## Forge
+### Forge
 
 #### Changed
 
