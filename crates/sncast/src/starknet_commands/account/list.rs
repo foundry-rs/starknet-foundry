@@ -50,7 +50,8 @@ pub struct AccountDataRepresentationMessage {
 impl AccountDataRepresentationMessage {
     fn new(account: &AccountData, display_private_key: bool) -> Self {
         Self {
-            private_key: display_private_key.then(|| account.private_key.into_hex_string()),
+            private_key: display_private_key
+                .then(|| account.private_key.expect("TODO:").into_hex_string()),
             public_key: account.public_key.into_hex_string(),
             network: None,
             address: account.address.map(IntoHexStr::into_hex_string),

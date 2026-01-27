@@ -14,7 +14,7 @@ use starknet_rust::core::types::contract::{AbiEntry, SierraClass, SierraClassDeb
 use starknet_rust::core::types::{BlockId, ContractClass, FlattenedSierraClass};
 use starknet_rust::providers::Provider;
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
-use starknet_rust::signers::LocalWallet;
+use starknet_rust::signers::Signer;
 use starknet_types_core::felt::Felt;
 use std::path::PathBuf;
 use url::Url;
@@ -100,14 +100,17 @@ pub enum ContractSource {
     },
 }
 
-pub async fn declare_from(
+pub async fn declare_from<S>(
     contract_source: ContractSource,
     common_args: &DeclareCommonArgs,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     wait_config: WaitForTx,
     skip_on_already_declared: bool,
     ui: &UI,
-) -> Result<DeclareResponse, StarknetCommandError> {
+) -> Result<DeclareResponse, StarknetCommandError>
+where
+    S: Signer + Sync + Send,
+{
     let sierra = match &contract_source {
         ContractSource::LocalFile { sierra_path } => {
             let sierra_json = std::fs::read_to_string(sierra_path).with_context(|| {

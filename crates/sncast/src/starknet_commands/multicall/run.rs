@@ -15,7 +15,7 @@ use starknet_rust::core::types::Call;
 use starknet_rust::core::utils::{get_selector_from_name, get_udc_deployed_address};
 use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
-use starknet_rust::signers::LocalWallet;
+use starknet_rust::signers::Signer;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 
@@ -56,12 +56,15 @@ struct InvokeCall {
     inputs: Vec<Input>,
 }
 
-pub async fn run(
+pub async fn run<S>(
     run: Box<Run>,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     wait_config: WaitForTx,
     ui: &UI,
-) -> Result<MulticallRunResponse> {
+) -> Result<MulticallRunResponse>
+where
+    S: Signer + Sync + Send,
+{
     let fee_args = run.fee_args.clone();
 
     let contents = std::fs::read_to_string(&run.path)?;
