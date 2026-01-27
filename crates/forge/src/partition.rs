@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::num::NonZeroUsize;
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -7,8 +8,7 @@ use anyhow::{Result, anyhow};
 use camino::Utf8Path;
 use forge_runner::package_tests::raw::TestTargetRaw;
 use forge_runner::package_tests::with_config_resolved::sanitize_test_case_name;
-use rayon::iter::IntoParallelRefIterator;
-use rayon::iter::ParallelIterator;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use scarb_api::metadata::PackageMetadata;
 use serde::Serialize;
 
@@ -43,19 +43,19 @@ impl PartitionConfig {
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
 pub struct Partition {
     /// The 1-based index of the partition to run.
-    index: usize,
+    index: NonZeroUsize,
     /// The total number of partitions in the run.
-    total: usize,
+    total: NonZeroUsize,
 }
 
 impl Partition {
     #[must_use]
-    pub fn index(&self) -> usize {
+    pub fn index(&self) -> NonZeroUsize {
         self.index
     }
 
     #[must_use]
-    pub fn total(&self) -> usize {
+    pub fn total(&self) -> NonZeroUsize {
         self.total
     }
 }
@@ -64,20 +64,22 @@ impl FromStr for Partition {
     type Err = String;
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let parts: Vec<&str> = s.split('/').collect();
+        let (index_str, total_str) = s
+            .split_once('/')
+            .ok_or_else(|| "Partition must be in the format <INDEX>/<TOTAL>".to_string())?;
 
-        if parts.len() != 2 {
+        if total_str.contains('/') {
             return Err("Partition must be in the format <INDEX>/<TOTAL>".to_string());
         }
 
-        let index = parts[0]
-            .parse::<usize>()
+        let index = index_str
+            .parse::<NonZeroUsize>()
             .map_err(|_| "INDEX must be a positive integer".to_string())?;
-        let total = parts[1]
-            .parse::<usize>()
+        let total = total_str
+            .parse::<NonZeroUsize>()
             .map_err(|_| "TOTAL must be a positive integer".to_string())?;
 
-        if index == 0 || total == 0 || index > total {
+        if index > total {
             return Err("Invalid partition values: ensure 1 <= INDEX <= TOTAL".to_string());
         }
 
@@ -87,7 +89,7 @@ impl FromStr for Partition {
 
 /// Map containing test full paths and their assigned partition numbers.
 #[derive(Serialize, Debug, PartialEq)]
-pub struct PartitionMap(HashMap<String, usize>);
+pub struct PartitionMap(HashMap<String, NonZeroUsize>);
 
 impl PartitionMap {
     /// Builds a partition map from the provided packages and artifacts directory.
@@ -96,10 +98,10 @@ impl PartitionMap {
     pub fn build(
         packages: &[PackageMetadata],
         artifacts_dir: &Utf8Path,
-        total_partitions: usize,
+        total_partitions: NonZeroUsize,
     ) -> Result<Self> {
         let mut test_full_paths: Vec<String> = packages
-            .par_iter()
+            .iter()
             .map(|package| -> Result<Vec<String>> {
                 let raw_test_targets = load_test_artifacts(artifacts_dir, package)?;
 
@@ -124,18 +126,21 @@ impl PartitionMap {
 
         for (i, test_full_path) in test_full_paths.iter().enumerate() {
             let sanitized_full_path = sanitize_test_case_name(test_full_path);
-            if partition_map.contains_key(&sanitized_full_path) {
+            let partition_index_1_based = (i % total_partitions) + 1;
+            let partition_index_1_based = NonZeroUsize::try_from(partition_index_1_based)?;
+            if partition_map
+                .insert(sanitized_full_path, partition_index_1_based)
+                .is_some()
+            {
                 unreachable!("Test case full path should be unique");
             }
-            let partition_index_1_based = (i % total_partitions) + 1;
-            partition_map.insert(sanitized_full_path, partition_index_1_based);
         }
 
         Ok(Self(partition_map))
     }
 
     #[must_use]
-    pub fn get_assigned_index(&self, test_full_path: &str) -> Option<usize> {
+    pub fn get_assigned_index(&self, test_full_path: &str) -> Option<NonZeroUsize> {
         self.0.get(test_full_path).copied()
     }
 }
@@ -172,8 +177,14 @@ mod tests {
     #[test_case("2/5", 2, 5)]
     fn test_happy_case(partition: &str, expected_index: usize, expected_total: usize) {
         let partition = partition.parse::<Partition>().unwrap();
-        assert_eq!(partition.index, expected_index);
-        assert_eq!(partition.total, expected_total);
+        assert_eq!(
+            partition.index,
+            NonZeroUsize::try_from(expected_index).unwrap()
+        );
+        assert_eq!(
+            partition.total,
+            NonZeroUsize::try_from(expected_total).unwrap()
+        );
     }
 
     #[test_case("1-2"; "using hyphen instead of slash")]
@@ -197,7 +208,6 @@ mod tests {
     #[test_case("6/5")]
     #[test_case("2/0")]
     fn test_out_of_bounds(partition: &str) {
-        let err = partition.parse::<Partition>().unwrap_err();
-        assert_eq!(err, "Invalid partition values: ensure 1 <= INDEX <= TOTAL");
+        assert!(partition.parse::<Partition>().is_err());
     }
 }

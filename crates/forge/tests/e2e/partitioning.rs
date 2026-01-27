@@ -296,3 +296,15 @@ fn test_works_with_name_filter() {
     "},
     );
 }
+
+#[cfg(not(feature = "cairo-native"))]
+#[test]
+fn test_works_with_coverage() {
+    let temp = setup_package("partitioning");
+    test_runner(&temp)
+        .args(["--partition", "1/2", "--workspace", "--coverage"])
+        .assert()
+        .success();
+
+    assert!(temp.join("coverage/coverage.lcov").is_file());
+}

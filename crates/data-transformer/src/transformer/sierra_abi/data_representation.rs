@@ -203,8 +203,8 @@ impl CairoSerialize for CalldataEnum {
     // https://docs.starknet.io/architecture-and-concepts/smart-contracts/serialization-of-cairo-types/#serialization_of_enums
     fn serialize(&self, output: &mut BufferWriter) {
         self.position.serialize(output);
-        if self.argument.is_some() {
-            self.argument.as_ref().unwrap().serialize(output);
+        if let Some(arg) = &self.argument {
+            arg.serialize(output);
         }
     }
 }

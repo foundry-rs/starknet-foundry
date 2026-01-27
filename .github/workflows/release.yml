@@ -80,9 +80,12 @@ jobs:
             exit 1
           fi
 
+          # Tag is usually created when publishing release from GitHub UI.
+          # Then it triggers this workflow again and we want to exit without error.
           if gh release view "$TAG_NAME" >/dev/null 2>&1; then
             echo "Release $TAG_NAME already exists - aborting"
-            exit 1
+            echo "versionIsValid=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
           echo "versionIsValid=true" >> "$GITHUB_OUTPUT"
@@ -120,6 +123,7 @@ jobs:
     uses: ./.github/workflows/_publish-plugin.yml
     secrets: inherit
     with:
+      prod_registry: false
       overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
       plugin_name: "snforge-scarb-plugin"
 
@@ -129,6 +133,7 @@ jobs:
     uses: ./.github/workflows/_publish-plugin.yml
     secrets: inherit
     with:
+      prod_registry: false
       overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
       plugin_name: "snforge-scarb-plugin-deprecated"
 
@@ -138,6 +143,7 @@ jobs:
     uses: ./.github/workflows/publish-std.yml
     secrets: inherit
     with:
+      prod_registry: false
       plugin_dep_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
       override_std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
 

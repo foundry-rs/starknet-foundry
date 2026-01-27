@@ -170,12 +170,12 @@ fn sum_test_cases_from_package(
 ) -> usize {
     test_targets
         .iter()
-        .map(|tt| sum_test_cases_from_test_target(tt.test_cases.clone(), partitioning_config))
+        .map(|tt| sum_test_cases_from_test_target(&tt.test_cases, partitioning_config))
         .sum()
 }
 
 fn sum_test_cases_from_test_target(
-    test_cases: Vec<TestCaseWithResolvedConfig>,
+    test_cases: &[TestCaseWithResolvedConfig],
     partitioning_config: &PartitionConfig,
 ) -> usize {
     match partitioning_config {
@@ -184,7 +184,7 @@ fn sum_test_cases_from_test_target(
             partition,
             partition_map,
         } => test_cases
-            .into_iter()
+            .iter()
             .filter(|test_case| {
                 let assigned_index = partition_map
                     .get_assigned_index(&sanitize_test_case_name(&test_case.name))
@@ -237,7 +237,7 @@ pub async fn run_for_package(
         ui.println(&TestsRunMessage::new(
             test_target.tests_location,
             sum_test_cases_from_test_target(
-                test_target.test_cases.clone(),
+                &test_target.test_cases,
                 &tests_filter.partitioning_config,
             ),
         ));
