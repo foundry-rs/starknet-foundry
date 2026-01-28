@@ -59,12 +59,28 @@ fn assert_output_contains(output: &str, lines: &str, assert_prefix: Option<Strin
         }
     }
 
-    if !contains {
-        for line in &actual_lines {
-            writeln!(out, "+ {line}").unwrap();
+    fn assert_output_contains(output: &str, lines: &str, assert_prefix: Option<String>) {
+    let asserted_lines = lines.lines();
+    let mut actual_lines: Vec<&str> = output.lines().collect();
+
+    let mut contains = true;
+    let mut out = String::new();
+
+    for line in asserted_lines {
+        if is_present(line, &mut actual_lines) {
+            writeln!(out, "| {line}").unwrap();
+        } else {
+            contains = false;
+            writeln!(out, "- {line}").unwrap();
         }
     }
+
     if !contains {
+
+         for line in &actual_lines {
+            writeln!(out, "+ {line}").unwrap();
+        }
+
         let full_output = output;
         if let Some(assert_prefix) = assert_prefix {
             panic!(
@@ -84,6 +100,8 @@ fn assert_output_contains(output: &str, lines: &str, assert_prefix: Option<Strin
             );
         }
     }
+}
+
 }
 
 #[expect(clippy::needless_pass_by_value)]
