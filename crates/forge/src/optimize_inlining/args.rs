@@ -23,6 +23,14 @@ pub struct OptimizeInliningArgs {
     #[arg(long, default_value = "81920")]
     pub max_contract_felts: u64,
 
+    /// Weight for gas in the scoring formula (percent, must sum to 100 with felts-weight)
+    #[arg(long, default_value = "75")]
+    pub gas_weight: u8,
+
+    /// Weight for felts in the scoring formula (percent, must sum to 100 with gas-weight)
+    #[arg(long, default_value = "25")]
+    pub felts_weight: u8,
+
     /// Dry run - don't modify Scarb.toml at the end
     #[arg(long, default_value = "false")]
     pub dry_run: bool,
