@@ -36,14 +36,7 @@ jobs:
       - name: Determine test features
         id: test_features
         run: |
-          # Get Scarb version from .tool-versions
-          SCARB_VERSION=$(grep "^scarb " .tool-versions | awk '{print $2}')
-          
-          if [ "$(printf '%s\n' "2.15.1" "$SCARB_VERSION" | sort -V | head -n1)" = "2.15.1" ]; then
-            FEATURES="run_test_for_scarb_since_2_15_1"
-          else
-            FEATURES=""
-          fi
+          FEATURES="run_test_for_scarb_since_2_15_1"
           echo "features=$FEATURES" >> "$GITHUB_OUTPUT"
       - name: Build and archive tests
         run: |
