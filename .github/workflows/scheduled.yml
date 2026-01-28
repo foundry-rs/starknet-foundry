@@ -164,25 +164,8 @@ jobs:
       overridden_plugin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
       plugin_name: 'snforge-scarb-plugin'
 
-  build-deprecated-plugin-binaries:
-    name: Build deprecated plugin binaries
-    needs: get-version
-    uses: ./.github/workflows/_build-plugin-binaries.yml
-    with:
-      overridden_plugin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
-      plugin_name: 'snforge-scarb-plugin-deprecated'
-
-  publish-deprecated-plugin:
-    needs: [ get-version, build-deprecated-plugin-binaries ]
-    uses: ./.github/workflows/_publish-plugin.yml
-    secrets: inherit
-    with:
-      prod_registry: false
-      overridden_plugin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
-      plugin_name: 'snforge-scarb-plugin-deprecated'
-
   publish-std:
-    needs: [ get-version, publish-plugin, publish-deprecated-plugin ]
+    needs: [ get-version, publish-plugin ]
     uses: ./.github/workflows/publish-std.yml
     secrets: inherit
     with:
