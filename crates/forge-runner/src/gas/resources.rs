@@ -83,6 +83,8 @@ impl GasCalculationResources {
             calldata_length: 0,
             signature_length: 0,
             code_size: 0,
+            // TODO: Check if it makes sense to include proof facts in gas calculation
+            proof_facts_length: 0,
         }
     }
 

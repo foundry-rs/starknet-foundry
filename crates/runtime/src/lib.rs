@@ -29,7 +29,7 @@ use starknet_types_core::felt::Felt;
 use std::any::Any;
 use std::collections::HashMap;
 use std::io;
-use std::rc::Rc;
+use std::sync::Arc;
 use thiserror::Error;
 
 pub mod starknet;
@@ -182,13 +182,15 @@ impl HintProcessorLogic for StarknetRuntime<'_> {
         ap_tracking_data: &ApTracking,
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
-        constants: Rc<HashMap<String, Felt>>,
+        accessible_scopes: &[String],
+        constants: Arc<HashMap<String, Felt>>,
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
         self.hint_handler.compile_hint(
             hint_code,
             ap_tracking_data,
             reference_ids,
             references,
+            accessible_scopes,
             constants,
         )
     }
@@ -244,13 +246,15 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
         ap_tracking_data: &ApTracking,
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
-        constants: Rc<HashMap<String, Felt>>,
+        accessible_scopes: &[String],
+        constants: Arc<HashMap<String, Felt>>,
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
         self.extended_runtime.compile_hint(
             hint_code,
             ap_tracking_data,
             reference_ids,
             references,
+            accessible_scopes,
             constants,
         )
     }

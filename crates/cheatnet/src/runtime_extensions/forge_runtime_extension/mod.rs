@@ -44,6 +44,7 @@ use runtime::{
 };
 use scarb_oracle_hint_service::OracleHintService;
 use starknet_api::execution_resources::GasAmount;
+use starknet_api::versioned_constants_logic::VersionedConstantsTrait;
 use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
 use starknet_rust::signers::SigningKey;
 use starknet_types_core::felt::Felt;

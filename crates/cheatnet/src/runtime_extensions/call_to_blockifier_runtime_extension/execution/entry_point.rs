@@ -7,7 +7,7 @@ use crate::runtime_extensions::common::get_relocated_vm_trace;
 #[cfg(feature = "cairo-native")]
 use crate::runtime_extensions::native::execution::execute_entry_point_call_native;
 use crate::state::CheatStatus;
-use blockifier::execution::call_info::{CallExecution, Retdata, StorageAccessTracker};
+use blockifier::execution::call_info::{BuiltinCounterMap, CallExecution, Retdata, StorageAccessTracker};
 use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
 use blockifier::execution::entry_point::EntryPointRevertInfo;
 use blockifier::execution::execution_utils::update_remaining_gas;
@@ -39,7 +39,7 @@ use starknet_api::{
     transaction::{fields::Calldata, TransactionVersion},
 };
 use starknet_types_core::felt::Felt;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 pub(crate) type ContractClassEntryPointExecutionResult =
     Result<CallInfoWithExecutionData, EntryPointExecutionError>;
@@ -398,7 +398,8 @@ fn mocked_call_info(
         tracked_resource,
         inner_calls: vec![],
         storage_access_tracker: StorageAccessTracker::default(),
-        builtin_counters: HashMap::default(),
+        builtin_counters: BuiltinCounterMap::default(),
+        syscalls_usage: SyscallUsageMap::default(),
     }
 }
 

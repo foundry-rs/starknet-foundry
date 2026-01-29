@@ -2,16 +2,15 @@ use super::data_representation::{AllowedCalldataArgument, CalldataArrayMacro};
 use super::parsing::parse_inline_macro;
 use super::{SupportedCalldataKind, build_representation};
 use crate::shared::parsing::parse_expression;
+use crate::transformer::{convert_to_tuple, split_expressions};
 use anyhow::{Context, Result, bail};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::TypedSyntaxNode;
-use cairo_lang_syntax::node::ast::{
-    Expr, ExprInlineMacro, GenericArgValue, PathSegment, PathSegment::Simple,
-};
+use cairo_lang_syntax::node::ast::{Expr, ExprInlineMacro, PathSegment, PathSegment::Simple};
 use itertools::Itertools;
 use starknet_rust::core::types::contract::AbiEntry;
 
-impl SupportedCalldataKind for ExprInlineMacro {
+impl SupportedCalldataKind for ExprInlineMacro<'_> {
     fn transform(
         &self,
         expected_type: &str,
@@ -19,7 +18,8 @@ impl SupportedCalldataKind for ExprInlineMacro {
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArgument> {
         // array![] calls
-        let parsed_exprs = parse_inline_macro(self, db)?;
+        let parsed_string = convert_to_tuple(&parse_inline_macro(self, db)?);
+        let parsed_exprs = split_expressions(&parsed_string, db)?;
 
         // We do not expect any other expression in proper ABI
         let Expr::Path(path) = parse_expression(expected_type, db)? else {
@@ -44,16 +44,11 @@ impl SupportedCalldataKind for ExprInlineMacro {
                                 arg.as_syntax_node().get_text(db)
                             ),
                             cairo_lang_syntax::node::ast::GenericArg::Unnamed(arg) => {
-                                match arg.value(db) {
-                                    GenericArgValue::Expr(expr) => {
-                                        Ok(expr.as_syntax_node().get_text(db))
-                                    }
-                                    // Placeholder parameters are not allowed in ABI too
-                                    value @ GenericArgValue::Underscore(_) => bail!(
-                                        "Unexpected type with underscore generic placeholder found in ABI: {}. Contract ABI may be invalid",
-                                        value.as_syntax_node().get_text(db)
-                                    ),
+                                let text = arg.as_syntax_node().get_text(db);
+                                if text == "_" {
+                                    bail!("Unexpected type with underscore generic placeholder found in ABI: {text}. Contract ABI may be invalid");
                                 }
+                                Ok(text)
                             }
                         })
                         .collect::<Result<Vec<_>>>(),
