@@ -6,7 +6,7 @@ use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[test]
-fn basic() {
+fn snap_basic() {
     let temp = setup_package("simple_package");
     let output = test_runner(&temp)
         .arg("--gas-report")
@@ -18,7 +18,7 @@ fn basic() {
 }
 
 #[test]
-fn recursive_calls() {
+fn snap_recursive_calls() {
     let temp = setup_package("debugging");
     let output = test_runner(&temp)
         .arg("--gas-report")
@@ -30,7 +30,7 @@ fn recursive_calls() {
 }
 
 #[test]
-fn multiple_contracts_and_constructor() {
+fn snap_multiple_contracts_and_constructor() {
     let temp = setup_package("simple_package_with_cheats");
     let output = test_runner(&temp)
         .arg("--gas-report")
@@ -42,7 +42,7 @@ fn multiple_contracts_and_constructor() {
 }
 
 #[test]
-fn fork() {
+fn snap_fork() {
     let temp =
         setup_package_with_file_patterns(Package::Name("forking".to_string()), BASE_FILE_PATTERNS);
 
