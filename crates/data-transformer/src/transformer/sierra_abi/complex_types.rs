@@ -149,10 +149,10 @@ fn find_item_with_path<'item, T: EnumOrStruct>(
     Ok(matching_items_from_abi.pop().unwrap())
 }
 
-fn get_struct_arguments_with_values(
-    arguments: &[StructArg],
-    db: &SimpleParserDatabase,
-) -> Result<Vec<(String, Expr)>> {
+fn get_struct_arguments_with_values<'a>(
+    arguments: &'a [StructArg<'a>],
+    db: &'a SimpleParserDatabase,
+) -> Result<Vec<(String, Expr<'a>)>> {
     arguments
         .iter()
         .map(|elem| {
@@ -166,13 +166,13 @@ fn get_struct_arguments_with_values(
                         OptionStructArgExpr::Empty(_) => {
                             bail!(
                                 "Shorthand arguments are not allowed - used \"{ident}\", expected \"{ident}: value\"",
-                                ident = whole_arg.identifier(db).text(db)
+                                ident = whole_arg.identifier(db).text(db).to_string(db)
                             )
                         }
                         // Holds info about the argument, e.g.: in case of "a: 1" holds info
                         // about ": 1"
                         OptionStructArgExpr::StructArgExpr(arg_value_with_colon) => Ok((
-                            whole_arg.identifier(db).text(db).to_string(),
+                            whole_arg.identifier(db).text(db).to_string(db),
                             arg_value_with_colon.expr(db),
                         )),
                     }
@@ -186,7 +186,7 @@ fn get_struct_arguments_with_values(
 }
 
 // Structs
-impl SupportedCalldataKind for ExprStructCtorCall {
+impl SupportedCalldataKind for ExprStructCtorCall<'_> {
     fn transform(
         &self,
         expected_type: &str,
@@ -258,7 +258,7 @@ impl SupportedCalldataKind for ExprStructCtorCall {
 }
 
 // Unit enum variants
-impl SupportedCalldataKind for ExprPath {
+impl SupportedCalldataKind for ExprPath<'_> {
     fn transform(
         &self,
         expected_type: &str,
@@ -287,7 +287,7 @@ impl SupportedCalldataKind for ExprPath {
 }
 
 // Tuple-like enum variants
-impl SupportedCalldataKind for ExprFunctionCall {
+impl SupportedCalldataKind for ExprFunctionCall<'_> {
     fn transform(
         &self,
         expected_type: &str,
@@ -304,11 +304,10 @@ impl SupportedCalldataKind for ExprFunctionCall {
         let (enum_position, enum_variant) =
             find_enum_variant_position(enum_variant_name, enum_path, abi)?;
 
+        let arguments = self.arguments(db).arguments(db);
         // Enum variant constructor invocation has one argument - an ArgList.
         // We parse it to a vector of expressions and pop + unwrap safely.
-        let expr = parse_argument_list(&self.arguments(db).arguments(db), db)?
-            .pop()
-            .unwrap();
+        let expr = parse_argument_list(&arguments, db)?.pop().unwrap();
 
         let parsed_expr = build_representation(expr, &enum_variant.r#type, abi, db)?;
 
@@ -320,7 +319,7 @@ impl SupportedCalldataKind for ExprFunctionCall {
 }
 
 // Tuples
-impl SupportedCalldataKind for ExprListParenthesized {
+impl SupportedCalldataKind for ExprListParenthesized<'_> {
     fn transform(
         &self,
         expected_type: &str,
@@ -347,7 +346,7 @@ impl SupportedCalldataKind for ExprListParenthesized {
             .expressions(db)
             .elements(db)
             .zip(tuple_types)
-            .map(|(expr, ref single_param)| build_representation(expr, single_param, abi, db))
+            .map(|(expr, single_param)| build_representation(expr, single_param, abi, db))
             .collect::<Result<Vec<_>>>()?;
 
         Ok(AllowedCalldataArgument::Tuple(CalldataTuple::new(

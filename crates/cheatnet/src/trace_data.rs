@@ -14,6 +14,7 @@ use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use starknet_api::core::ClassHash;
 use starknet_api::execution_resources::GasVector;
 use starknet_api::transaction::fields::GasVectorComputationMode;
+use starknet_api::versioned_constants_logic::VersionedConstantsTrait;
 use starknet_types_core::felt::Felt;
 use std::cell::{OnceCell, Ref, RefCell};
 use std::rc::Rc;

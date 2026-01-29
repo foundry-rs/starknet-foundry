@@ -41,7 +41,6 @@ enum PrimitiveError {
 pub struct ReverseTransformer<'a> {
     abi: &'a [AbiEntry],
     buffer_reader: BufferReader<'a>,
-    db: SimpleParserDatabase,
 }
 
 impl<'a> ReverseTransformer<'a> {
@@ -50,20 +49,28 @@ impl<'a> ReverseTransformer<'a> {
         Self {
             abi,
             buffer_reader: BufferReader::new(inputs),
-            db: SimpleParserDatabase::default(),
         }
     }
 
     /// Parses the given `&str` to an [`Expr`] and then transforms it to a [`Type`].
-    pub fn parse_and_transform(&mut self, expr: &str) -> Result<Type, TransformationError> {
-        self.transform_expr(&parse_expression(expr, &self.db)?)
+    pub fn parse_and_transform(
+        &mut self,
+        expr: &str,
+        db: &SimpleParserDatabase,
+    ) -> Result<Type, TransformationError> {
+        let parsed_expr = parse_expression(expr, db)?;
+        self.transform_expr(&parsed_expr, db)
     }
 
     /// Transforms the given [`Expr`] to a [`Type`].
-    fn transform_expr(&mut self, expr: &Expr) -> Result<Type, TransformationError> {
+    fn transform_expr(
+        &mut self,
+        expr: &Expr,
+        db: &SimpleParserDatabase,
+    ) -> Result<Type, TransformationError> {
         match expr {
-            Expr::Tuple(expr) => self.transform_tuple(expr),
-            Expr::Path(expr) => self.transform_path(expr),
+            Expr::Tuple(expr) => self.transform_tuple(expr, db),
+            Expr::Path(expr) => self.transform_path(expr, db),
             _ => Err(TransformationError::UnsupportedType),
         }
     }
@@ -72,27 +79,29 @@ impl<'a> ReverseTransformer<'a> {
     fn transform_tuple(
         &mut self,
         expr: &ExprListParenthesized,
+        db: &SimpleParserDatabase,
     ) -> Result<Type, TransformationError> {
-        let elements = expr
-            .expressions(&self.db)
-            .elements(&self.db)
-            .collect::<Vec<_>>();
+        let elements = expr.expressions(db).elements(db).collect::<Vec<_>>();
         let parsed_exprs = elements
             .iter()
-            .map(|expr| self.transform_expr(expr))
+            .map(|expr| self.transform_expr(expr, db))
             .collect::<Result<Vec<_>, TransformationError>>()?;
 
         Ok(Type::Tuple(Tuple(parsed_exprs)))
     }
 
     /// Transforms a [`ExprPath`] to a [`Type`].
-    fn transform_path(&mut self, expr: &ExprPath) -> Result<Type, TransformationError> {
-        match split(expr, &self.db)? {
-            SplitResult::Simple { splits } => self.transform_simple_path(&splits),
+    fn transform_path(
+        &mut self,
+        expr: &ExprPath,
+        db: &SimpleParserDatabase,
+    ) -> Result<Type, TransformationError> {
+        match split(expr, db)? {
+            SplitResult::Simple { splits } => self.transform_simple_path(&splits, db),
             SplitResult::WithGenericArgs {
                 splits,
                 generic_args,
-            } => self.transform_generic_path(&splits, &generic_args),
+            } => self.transform_generic_path(&splits, &generic_args, db),
         }
     }
 
@@ -105,6 +114,7 @@ impl<'a> ReverseTransformer<'a> {
         &mut self,
         splits: &[String],
         generic_args: &str,
+        db: &SimpleParserDatabase,
     ) -> Result<Type, TransformationError> {
         let sequence_type = match splits.join("::").as_str() {
             "core::array::Array" => SequenceType::Array,
@@ -115,7 +125,7 @@ impl<'a> ReverseTransformer<'a> {
         let length = self.buffer_reader.read::<usize>()?;
 
         let sequence = (0..length)
-            .map(|_| self.parse_and_transform(generic_args))
+            .map(|_| self.parse_and_transform(generic_args, db))
             .collect::<Result<Vec<_>, TransformationError>>()?;
 
         Ok(Type::Sequence(Sequence {
@@ -129,7 +139,11 @@ impl<'a> ReverseTransformer<'a> {
     /// It first tries to transform it to a primitive type.
     /// If that fails, it means it is a complex type.
     /// Then it tries to find the type in the ABI and transform it to the matching representation.
-    fn transform_simple_path(&mut self, parts: &[String]) -> Result<Type, TransformationError> {
+    fn transform_simple_path(
+        &mut self,
+        parts: &[String],
+        db: &SimpleParserDatabase,
+    ) -> Result<Type, TransformationError> {
         let name = parts.last().expect("path should not be empty").to_owned();
 
         match self.transform_primitive_type(&name) {
@@ -142,10 +156,10 @@ impl<'a> ReverseTransformer<'a> {
 
         match find_item(self.abi, parts).ok_or(TransformationError::InvalidAbi)? {
             AbiStructOrEnum::Enum(enum_abi_definition) => {
-                self.transform_enum(enum_abi_definition, name)
+                self.transform_enum(enum_abi_definition, name, db)
             }
             AbiStructOrEnum::Struct(struct_type_definition) => {
-                self.transform_struct(struct_type_definition)
+                self.transform_struct(struct_type_definition, db)
             }
         }
     }
@@ -153,12 +167,16 @@ impl<'a> ReverseTransformer<'a> {
     /// Transforms to a [`Type::Struct`].
     ///
     /// Recursively transforms the fields of the struct and then creates a [`Type::Struct`] instance.
-    fn transform_struct(&mut self, abi_struct: &AbiStruct) -> Result<Type, TransformationError> {
+    fn transform_struct(
+        &mut self,
+        abi_struct: &AbiStruct,
+        db: &SimpleParserDatabase,
+    ) -> Result<Type, TransformationError> {
         let fields = abi_struct
             .members
             .iter()
             .map(|member| {
-                let value = self.parse_and_transform(&member.r#type)?;
+                let value = self.parse_and_transform(&member.r#type, db)?;
                 let name = member.name.clone();
 
                 Ok(StructField { name, value })
@@ -185,6 +203,7 @@ impl<'a> ReverseTransformer<'a> {
         &mut self,
         abi_enum: &AbiEnum,
         name: String,
+        db: &SimpleParserDatabase,
     ) -> Result<Type, TransformationError> {
         let position: usize = self.buffer_reader.read()?;
 
@@ -201,7 +220,7 @@ impl<'a> ReverseTransformer<'a> {
         let argument = if enum_variant_type == "()" {
             None
         } else {
-            Some(Box::new(self.parse_and_transform(enum_variant_type)?))
+            Some(Box::new(self.parse_and_transform(enum_variant_type, db)?))
         };
 
         Ok(Type::Enum(Enum {

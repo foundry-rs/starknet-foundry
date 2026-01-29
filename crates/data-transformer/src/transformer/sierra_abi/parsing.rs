@@ -1,4 +1,3 @@
-use crate::transformer::split_expressions;
 use anyhow::{Result, bail};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::WrappedTokenTree;
@@ -15,7 +14,10 @@ fn modifier_syntax_token(item: &Modifier) -> &'static str {
     }
 }
 
-pub fn parse_argument_list(arguments: &ArgList, db: &SimpleParserDatabase) -> Result<Vec<Expr>> {
+pub fn parse_argument_list<'a>(
+    arguments: &'a ArgList,
+    db: &'a SimpleParserDatabase,
+) -> Result<Vec<Expr<'a>>> {
     let args_lists = arguments;
     let arguments = arguments.elements(db);
 
@@ -54,10 +56,10 @@ pub fn parse_argument_list(arguments: &ArgList, db: &SimpleParserDatabase) -> Re
         .collect::<Result<Vec<Expr>>>()
 }
 
-pub fn parse_inline_macro(
-    invocation: &ExprInlineMacro,
-    db: &SimpleParserDatabase,
-) -> Result<Vec<Expr>> {
+pub fn parse_inline_macro<'a>(
+    invocation: &'a ExprInlineMacro<'a>,
+    db: &'a SimpleParserDatabase,
+) -> Result<String> {
     match invocation
         .path(db)
         .segments(db)
@@ -66,7 +68,7 @@ pub fn parse_inline_macro(
         .expect("Macro must have a name")
     {
         Simple(simple) => {
-            let macro_name = simple.ident(db).text(db);
+            let macro_name = simple.ident(db).text(db).to_string(db);
             if macro_name != "array" {
                 bail!(r#"Invalid macro name, expected "array![]", got "{macro_name}""#,)
             }
@@ -80,14 +82,11 @@ pub fn parse_inline_macro(
     }
 
     match invocation.arguments(db).subtree(db) {
-        WrappedTokenTree::Bracketed(token_tree) => {
-            let node_text = token_tree
-                .tokens(db)
-                .elements(db)
-                .map(|token| token.as_syntax_node().get_text(db).clone())
-                .collect::<String>();
-            split_expressions(&node_text, db)
-        }
+        WrappedTokenTree::Bracketed(token_tree) => Ok(token_tree
+            .tokens(db)
+            .elements(db)
+            .map(|token| token.as_syntax_node().get_text(db))
+            .collect::<String>()),
         WrappedTokenTree::Parenthesized(_) | WrappedTokenTree::Braced(_) => {
             bail!("`array` macro supports only square brackets: array![]")
         }

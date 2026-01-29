@@ -1,5 +1,5 @@
 use cairo_lang_diagnostics::DiagnosticsBuilder;
-use cairo_lang_filesystem::ids::{FileKind, FileLongId, VirtualFile};
+use cairo_lang_filesystem::ids::{FileKind, FileLongId, SmolStrId, VirtualFile};
 use cairo_lang_parser::parser::Parser;
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::Expr;
@@ -11,11 +11,14 @@ pub enum ParseError {
     InvalidExpression { expr: String, diagnostics: String },
 }
 
-pub fn parse_expression(source: &str, db: &SimpleParserDatabase) -> Result<Expr, ParseError> {
+pub fn parse_expression<'a>(
+    source: &'a str,
+    db: &'a SimpleParserDatabase,
+) -> Result<Expr<'a>, ParseError> {
     let file = FileLongId::Virtual(VirtualFile {
         parent: None,
-        name: "parser_input".into(),
-        content: source.to_string().into(),
+        name: SmolStrId::from(db, "parser_input"),
+        content: SmolStrId::from(db, source),
         code_mappings: [].into(),
         kind: FileKind::Expr,
         original_item_removed: false,

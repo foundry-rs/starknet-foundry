@@ -8,7 +8,7 @@ use cairo_lang_syntax::node::ast::{
 use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode};
 use starknet_rust::core::types::contract::AbiEntry;
 
-impl SupportedCalldataKind for ExprBinary {
+impl SupportedCalldataKind for ExprBinary<'_> {
     fn transform(
         &self,
         expected_type: &str,
@@ -20,17 +20,26 @@ impl SupportedCalldataKind for ExprBinary {
         let rhs = self.rhs(db);
 
         if !matches!(op, BinaryOperator::Dot(_)) {
-            let op = op.as_syntax_node().get_text_without_trivia(db);
+            let op = op
+                .as_syntax_node()
+                .get_text_without_trivia(db)
+                .to_string(db);
             bail!(r#"Invalid operator, expected ".", got "{op}""#)
         }
 
         let Expr::InlineMacro(lhs) = lhs else {
-            let lhs = lhs.as_syntax_node().get_text_without_trivia(db);
+            let lhs = lhs
+                .as_syntax_node()
+                .get_text_without_trivia(db)
+                .to_string(db);
             bail!(r#"Only "array![]" is supported as left-hand side of "." operator, got "{lhs}""#);
         };
 
         let Expr::FunctionCall(rhs) = rhs else {
-            let rhs = rhs.as_syntax_node().get_text_without_trivia(db);
+            let rhs = rhs
+                .as_syntax_node()
+                .get_text_without_trivia(db)
+                .to_string(db);
             bail!(r#"Only calling ".span()" on "array![]" is supported, got "{rhs}""#);
         };
 
@@ -49,7 +58,7 @@ fn assert_is_span(expr: &ExprFunctionCall, db: &SimpleParserDatabase) -> Result<
         .expect("Function call must have a name")
     {
         PathSegment::Simple(simple) => {
-            let function_name = simple.ident(db).text(db);
+            let function_name = simple.ident(db).text(db).to_string(db);
             ensure!(
                 function_name == "span",
                 r#"Invalid function name, expected "span", got "{function_name}""#
