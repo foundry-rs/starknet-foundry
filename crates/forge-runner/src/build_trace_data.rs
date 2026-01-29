@@ -29,6 +29,7 @@ use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, EntryPointSelector};
+use starknet_api::versioned_constants_logic::VersionedConstantsTrait;
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
@@ -101,6 +102,7 @@ fn build_cairo_execution_info(
         casm_level_info: CasmLevelInfo {
             run_with_call_header: false,
             vm_trace: vm_trace?,
+            program_offset: None,
         },
         source_sierra_path: source_sierra_path?,
         enable_gas: None,

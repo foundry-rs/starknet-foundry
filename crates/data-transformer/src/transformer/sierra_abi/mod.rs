@@ -24,7 +24,7 @@ trait SupportedCalldataKind {
 /// A main function that transforms expressions supported by the transformer
 /// to their corresponding serializable struct representations
 pub(crate) fn build_representation(
-    expression: Expr,
+    expression: Expr<'_>,
     expected_type: &str,
     abi: &[AbiEntry],
     db: &SimpleParserDatabase,
@@ -55,7 +55,8 @@ pub(crate) fn build_representation(
         | Expr::Indexed(_)
         | Expr::FixedSizeArray(_)
         | Expr::Missing(_)
-        | Expr::Placeholder(_) => {
+        // TODO: Check if this is correct
+        | Expr::Underscore(_) => {
             bail!(r#"Invalid argument type: unsupported expression for type "{expected_type}""#)
         }
     }

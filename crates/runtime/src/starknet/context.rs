@@ -13,12 +13,13 @@ use blockifier::transaction::objects::{
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use conversions::string::TryFromHexStr;
 use serde::{Deserialize, Serialize};
-use starknet_api::block::{BlockInfo, BlockNumber, BlockTimestamp, GasPrice};
+use starknet_api::block::{BlockInfo, BlockNumber, BlockTimestamp, GasPrice, StarknetVersion};
 use starknet_api::block::{GasPriceVector, GasPrices, NonzeroGasPrice};
 use starknet_api::data_availability::DataAvailabilityMode;
 use starknet_api::execution_resources::GasAmount;
-use starknet_api::transaction::fields::{AccountDeploymentData, PaymasterData, Tip};
+use starknet_api::transaction::fields::{AccountDeploymentData, PaymasterData, ProofFacts, Tip};
 use starknet_api::transaction::fields::{AllResourceBounds, ResourceBounds, ValidResourceBounds};
+use starknet_api::versioned_constants_logic::VersionedConstantsTrait;
 use starknet_api::{
     core::{ChainId, ContractAddress, Nonce},
     transaction::TransactionVersion,
@@ -53,7 +54,7 @@ pub fn build_block_context(block_info: &BlockInfo, chain_id: Option<ChainId>) ->
             },
             is_l3: false,
         },
-        VersionedConstants::latest_constants().clone(), // 0.13.1
+        VersionedConstants::latest_constants().clone(),
         BouncerConfig::default(),
     )
 }
@@ -84,6 +85,7 @@ fn build_tx_info() -> TransactionInfo {
         fee_data_availability_mode: DataAvailabilityMode::L1,
         paymaster_data: PaymasterData::default(),
         account_deployment_data: AccountDeploymentData::default(),
+        proof_facts: ProofFacts::default(),
     })
 }
 
@@ -186,6 +188,7 @@ impl From<SerializableBlockInfo> for BlockInfo {
             sequencer_address: forge_block_info.sequencer_address,
             gas_prices: forge_block_info.gas_prices.into(),
             use_kzg_da: forge_block_info.use_kzg_da,
+            starknet_version: StarknetVersion::LATEST,
         }
     }
 }

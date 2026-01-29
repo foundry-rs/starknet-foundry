@@ -14,8 +14,8 @@ use blockifier::execution::syscalls::vm_syscall_utils::{
 };
 use blockifier::utils::u64_from_usize;
 use cairo_native::starknet::{
-    BlockInfo, ExecutionInfo, ExecutionInfoV2, ResourceBounds, Secp256k1Point, Secp256r1Point,
-    StarknetSyscallHandler, SyscallResult, TxV2Info, U256,
+    BlockInfo, ExecutionInfo, ExecutionInfoV2, ExecutionInfoV3, ResourceBounds, Secp256k1Point,
+    Secp256r1Point, StarknetSyscallHandler, SyscallResult, TxV2Info, TxV3Info, U256,
 };
 use num_traits::ToPrimitive;
 use starknet_api::contract_class::EntryPointType;
@@ -329,6 +329,134 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
                 nonce_data_availability_mode,
                 fee_data_availability_mode,
                 account_deployment_data,
+            },
+            caller_address,
+            contract_address,
+            entry_point_selector,
+        })
+    }
+
+    #[expect(clippy::too_many_lines)]
+    fn get_execution_info_v3(&mut self, remaining_gas: &mut u64) -> SyscallResult<ExecutionInfoV3> {
+        // We don't need to call pre_execute_syscall here because the call to `get_execution_info_v3`
+        // on the native syscall handler is does that internally, and we don't want to do it twice.
+
+        let original_data = self
+            .native_syscall_handler
+            .get_execution_info_v3(remaining_gas)?;
+
+        let cheated_data = self
+            .cheatnet_state
+            .get_cheated_data(self.native_syscall_handler.base.call.storage_address);
+
+        let block_number = cheated_data
+            .block_number
+            .unwrap_or(original_data.block_info.block_number);
+        let block_timestamp = cheated_data
+            .block_timestamp
+            .unwrap_or(original_data.block_info.block_timestamp);
+        let sequencer_address = cheated_data.sequencer_address.map_or(
+            original_data.block_info.sequencer_address,
+            std::convert::Into::into,
+        );
+
+        let version = cheated_data
+            .tx_info
+            .version
+            .unwrap_or(original_data.tx_info.version);
+        let account_contract_address = cheated_data
+            .tx_info
+            .account_contract_address
+            .unwrap_or(original_data.tx_info.account_contract_address);
+        let max_fee = cheated_data
+            .tx_info
+            .max_fee
+            .map_or(original_data.tx_info.max_fee, |max_fee| {
+                max_fee.to_u128().unwrap()
+            });
+        let signature = cheated_data
+            .tx_info
+            .signature
+            .unwrap_or(original_data.tx_info.signature);
+        let transaction_hash = cheated_data
+            .tx_info
+            .transaction_hash
+            .unwrap_or(original_data.tx_info.transaction_hash);
+        let chain_id = cheated_data
+            .tx_info
+            .chain_id
+            .unwrap_or(original_data.tx_info.chain_id);
+        let nonce = cheated_data
+            .tx_info
+            .nonce
+            .unwrap_or(original_data.tx_info.nonce);
+        // TODO(#3790) implement conversions
+        let resource_bounds = cheated_data.tx_info.resource_bounds.map_or(
+            original_data.tx_info.resource_bounds,
+            |rb| {
+                rb.iter()
+                    .map(|item| ResourceBounds {
+                        resource: item.resource,
+                        max_amount: item.max_amount,
+                        max_price_per_unit: item.max_price_per_unit,
+                    })
+                    .collect()
+            },
+        );
+        let tip = cheated_data
+            .tx_info
+            .tip
+            .map_or(original_data.tx_info.tip, |tip| tip.to_u128().unwrap());
+        let paymaster_data = cheated_data
+            .tx_info
+            .paymaster_data
+            .unwrap_or(original_data.tx_info.paymaster_data);
+        let nonce_data_availability_mode = cheated_data
+            .tx_info
+            .nonce_data_availability_mode
+            .map_or(original_data.tx_info.nonce_data_availability_mode, |mode| {
+                mode.to_u32().unwrap()
+            });
+        let fee_data_availability_mode = cheated_data
+            .tx_info
+            .fee_data_availability_mode
+            .map_or(original_data.tx_info.fee_data_availability_mode, |mode| {
+                mode.to_u32().unwrap()
+            });
+        let account_deployment_data = cheated_data
+            .tx_info
+            .account_deployment_data
+            .unwrap_or(original_data.tx_info.account_deployment_data);
+
+        let caller_address = cheated_data
+            .caller_address
+            .map_or(original_data.caller_address, std::convert::Into::into);
+        let contract_address = cheated_data
+            .contract_address
+            .map_or(original_data.contract_address, std::convert::Into::into);
+        let entry_point_selector = original_data.entry_point_selector;
+
+        Ok(ExecutionInfoV3 {
+            block_info: BlockInfo {
+                block_number,
+                block_timestamp,
+                sequencer_address,
+            },
+            tx_info: TxV3Info {
+                version,
+                account_contract_address,
+                max_fee,
+                signature,
+                transaction_hash,
+                chain_id,
+                nonce,
+                resource_bounds,
+                tip,
+                paymaster_data,
+                nonce_data_availability_mode,
+                fee_data_availability_mode,
+                account_deployment_data,
+                proof_facts: original_data.tx_info.proof_facts,
             },
             caller_address,
             contract_address,

@@ -15,7 +15,7 @@ use runtime::{SignalPropagator, StarknetRuntime, SyscallPtrAccess};
 use starknet_types_core::felt::Felt;
 use std::any::Any;
 use std::collections::HashMap;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct CastScriptRuntime<'a> {
     pub starknet_runtime: StarknetRuntime<'a>,
@@ -112,13 +112,15 @@ impl HintProcessorLogic for CastScriptRuntime<'_> {
         ap_tracking_data: &ApTracking,
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
-        constants: Rc<HashMap<String, Felt>>,
+        accessible_scopes: &[String],
+        constants: Arc<HashMap<String, Felt>>,
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
         self.starknet_runtime.compile_hint(
             hint_code,
             ap_tracking_data,
             reference_ids,
             references,
+            accessible_scopes,
             constants,
         )
     }
