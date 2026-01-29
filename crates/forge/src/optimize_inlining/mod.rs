@@ -27,6 +27,8 @@ fn copy_project_to_temp_dir(workspace_root: &camino::Utf8Path) -> Result<tempfil
 }
 
 pub fn optimize_inlining(args: OptimizeInliningArgs, ui: Arc<UI>) -> Result<ExitStatus> {
+    args.validate()?;
+
     let profile = args.test_args.scarb_args.profile.specified();
 
     ui.println(&format!(

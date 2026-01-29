@@ -60,6 +60,7 @@ tracing.workspace = true
 tracing-chrome.workspace = true
 tempfile.workspace = true
 fs_extra.workspace = true
+argmin = "0.10"
 
 [[bin]]
 name = "snforge"
