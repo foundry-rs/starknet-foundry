@@ -194,6 +194,11 @@ fn create_callinfo(
             .clone(),
         tracked_resource: TrackedResource::SierraGas,
         builtin_counters,
+        syscalls_usage: syscall_handler
+            .native_syscall_handler
+            .base
+            .syscalls_usage
+            .clone(),
     })
 }
 

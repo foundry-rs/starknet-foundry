@@ -10,7 +10,7 @@ use cairo_lang_syntax::node::ast::{
 use starknet_rust::core::types::contract::AbiEntry;
 use std::ops::Neg;
 
-impl SupportedCalldataKind for TerminalLiteralNumber {
+impl SupportedCalldataKind for TerminalLiteralNumber<'_> {
     fn transform(
         &self,
         expected_type: &str,
@@ -19,11 +19,11 @@ impl SupportedCalldataKind for TerminalLiteralNumber {
     ) -> Result<AllowedCalldataArgument> {
         let (value, suffix) = self
             .numeric_value_and_suffix(db)
-            .with_context(|| format!("Couldn't parse value: {}", self.text(db)))?;
+            .with_context(|| format!("Couldn't parse value: {}", self.text(db).to_string(db)))?;
 
         let proper_param_type = match suffix {
             None => expected_type,
-            Some(ref suffix) => suffix.as_str(),
+            Some(ref suffix) => &suffix.to_string(db),
         };
 
         Ok(AllowedCalldataArgument::Primitive(
@@ -32,7 +32,7 @@ impl SupportedCalldataKind for TerminalLiteralNumber {
     }
 }
 
-impl SupportedCalldataKind for ExprUnary {
+impl SupportedCalldataKind for ExprUnary<'_> {
     fn transform(
         &self,
         expected_type: &str,
@@ -42,13 +42,18 @@ impl SupportedCalldataKind for ExprUnary {
         let (value, suffix) = match self.expr(db) {
             Expr::Literal(literal_number) => literal_number
                 .numeric_value_and_suffix(db)
-                .with_context(|| format!("Couldn't parse value: {}", literal_number.text(db))),
+                .with_context(|| {
+                    format!(
+                        "Couldn't parse value: {}",
+                        literal_number.text(db).to_string(db)
+                    )
+                }),
             _ => bail!("Invalid expression with unary operator, only numbers allowed"),
         }?;
 
         let proper_param_type = match suffix {
             None => expected_type,
-            Some(ref suffix) => suffix.as_str(),
+            Some(ref suffix) => &suffix.to_string(db),
         };
 
         match self.op(db) {
@@ -64,7 +69,8 @@ impl SupportedCalldataKind for ExprUnary {
             UnaryOperator::At(_) => {
                 bail!("Invalid unary operator in expression @{value} , only - allowed, got @",)
             }
-            UnaryOperator::Minus(_) => {}
+            // TODO: Check if this is correct for `UnaryOperator::Reference`
+            UnaryOperator::Minus(_) | UnaryOperator::Reference(_) => {}
         }
 
         Ok(AllowedCalldataArgument::Primitive(
@@ -73,7 +79,7 @@ impl SupportedCalldataKind for ExprUnary {
     }
 }
 
-impl SupportedCalldataKind for TerminalShortString {
+impl SupportedCalldataKind for TerminalShortString<'_> {
     fn transform(
         &self,
         expected_type: &str,
@@ -96,7 +102,7 @@ impl SupportedCalldataKind for TerminalShortString {
     }
 }
 
-impl SupportedCalldataKind for TerminalString {
+impl SupportedCalldataKind for TerminalString<'_> {
     fn transform(
         &self,
         expected_type: &str,
@@ -113,14 +119,14 @@ impl SupportedCalldataKind for TerminalString {
     }
 }
 
-impl SupportedCalldataKind for TerminalTrue {
+impl SupportedCalldataKind for TerminalTrue<'_> {
     fn transform(
         &self,
         expected_type: &str,
         _abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArgument> {
-        let value = self.text(db).to_string();
+        let value = self.text(db).to_string(db);
 
         Ok(AllowedCalldataArgument::Primitive(
             CalldataPrimitive::try_from_str_with_type(&value, expected_type)?,
@@ -128,14 +134,14 @@ impl SupportedCalldataKind for TerminalTrue {
     }
 }
 
-impl SupportedCalldataKind for TerminalFalse {
+impl SupportedCalldataKind for TerminalFalse<'_> {
     fn transform(
         &self,
         expected_type: &str,
         _abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArgument> {
-        let value = self.text(db).to_string();
+        let value = self.text(db).to_string(db);
 
         Ok(AllowedCalldataArgument::Primitive(
             CalldataPrimitive::try_from_str_with_type(&value, expected_type)?,

@@ -21,7 +21,7 @@ use cairo_vm::{
 };
 use runtime::{SyscallHandlingResult, SyscallPtrAccess};
 use starknet_types_core::felt::Felt;
-use std::rc::Rc;
+use std::sync::Arc;
 use std::{any::Any, collections::HashMap};
 
 pub struct DeprecatedStarknetRuntime<'a> {
@@ -68,13 +68,15 @@ impl HintProcessorLogic for DeprecatedStarknetRuntime<'_> {
         ap_tracking_data: &ApTracking,
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
-        constants: Rc<HashMap<String, Felt>>,
+        accessible_scopes: &[String],
+        constants: Arc<HashMap<String, Felt>>,
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
         self.hint_handler.compile_hint(
             hint_code,
             ap_tracking_data,
             reference_ids,
             references,
+            accessible_scopes,
             constants,
         )
     }
@@ -117,13 +119,15 @@ impl<Extension: DeprecatedExtensionLogic> HintProcessorLogic
         ap_tracking_data: &ApTracking,
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
-        constants: Rc<HashMap<String, Felt>>,
+        accessible_scopes: &[String],
+        constants: Arc<HashMap<String, Felt>>,
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
         self.extended_runtime.compile_hint(
             hint_code,
             ap_tracking_data,
             reference_ids,
             references,
+            accessible_scopes,
             constants,
         )
     }
