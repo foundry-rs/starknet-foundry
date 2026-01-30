@@ -44,22 +44,8 @@ fn is_present(line: &str, actual: &mut Vec<&str>) -> bool {
 }
 
 fn assert_output_contains(output: &str, lines: &str, assert_prefix: Option<String>) {
-    let asserted_lines = lines.lines();
-    let mut actual_lines: Vec<&str> = output.lines().collect();
-
-    let mut contains = true;
-    let mut out = String::new();
-
-    for line in asserted_lines {
-        if is_present(line, &mut actual_lines) {
-            writeln!(out, "| {line}").unwrap();
-        } else {
-            contains = false;
-            writeln!(out, "- {line}").unwrap();
-        }
-    }
-
-    fn assert_output_contains(output: &str, lines: &str, assert_prefix: Option<String>) {
+ 
+    
     let asserted_lines = lines.lines();
     let mut actual_lines: Vec<&str> = output.lines().collect();
 
@@ -102,7 +88,7 @@ fn assert_output_contains(output: &str, lines: &str, assert_prefix: Option<Strin
     }
 }
 
-}
+
 
 #[expect(clippy::needless_pass_by_value)]
 pub fn case_assert_stdout_contains(case: String, output: impl AsOutput, lines: impl AsRef<str>) {
