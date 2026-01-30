@@ -70,6 +70,11 @@ pub fn optimize_inlining(args: OptimizeInliningArgs, ui: Arc<UI>) -> Result<Exit
     ui.println(&"Optimization Results:".to_string());
     optimizer.print_results_table(&ui);
 
+    let graph_path = workspace_root.join("optimization_results.png");
+    if let Err(e) = optimizer.save_results_graph(&graph_path, &ui) {
+        ui.eprintln(&format!("Warning: Failed to save graph: {e}"));
+    }
+
     match optimization_result {
         Ok(optimal) => {
             ui.print_blank_line();

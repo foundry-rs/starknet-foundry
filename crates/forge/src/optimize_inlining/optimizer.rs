@@ -8,6 +8,8 @@ use scarb_api::metadata::Metadata;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::Arc;
+use camino::Utf8Path;
+use plotters::prelude::*;
 
 pub struct Optimizer {
     pub min_threshold: u32,
@@ -387,5 +389,134 @@ impl Optimizer {
                 best.max_contract_felts
             ));
         }
+    }
+
+    pub fn save_results_graph(&self, output_path: &Utf8Path, ui: &UI) -> Result<()> {
+        let mut sorted_results: Vec<_> = self
+            .results
+            .iter()
+            .filter(|r| r.tests_passed && r.error.is_none())
+            .collect();
+
+        if sorted_results.len() < 2 {
+            ui.println(&"Not enough data points to draw graph (need at least 2)".to_string());
+            return Ok(());
+        }
+
+        sorted_results.sort_by_key(|r| r.threshold);
+
+        let (max_gas, max_felts) = self.get_max_values();
+
+        let gas_points: Vec<(f64, f64)> = sorted_results
+            .iter()
+            .map(|r| {
+                (
+                    r.threshold as f64,
+                    r.total_gas.total() as f64 / max_gas as f64,
+                )
+            })
+            .collect();
+
+        let felts_points: Vec<(f64, f64)> = sorted_results
+            .iter()
+            .map(|r| {
+                (
+                    r.threshold as f64,
+                    r.max_contract_felts as f64 / max_felts as f64,
+                )
+            })
+            .collect();
+
+        let score_points: Vec<(f64, f64)> = sorted_results
+            .iter()
+            .map(|r| {
+                (
+                    r.threshold as f64,
+                    self.calculate_score(r, max_gas, max_felts),
+                )
+            })
+            .collect();
+
+        let x_min = self.min_threshold as f64;
+        let x_max = self.max_threshold as f64;
+
+        let y_min = gas_points
+            .iter()
+            .chain(felts_points.iter())
+            .chain(score_points.iter())
+            .map(|(_, y)| *y)
+            .fold(f64::MAX, f64::min)
+            * 0.95;
+        let y_max = gas_points
+            .iter()
+            .chain(felts_points.iter())
+            .chain(score_points.iter())
+            .map(|(_, y)| *y)
+            .fold(f64::MIN, f64::max)
+            * 1.05;
+
+        let root = BitMapBackend::new(output_path.as_std_path(), (1920, 1080)).into_drawing_area();
+        root.fill(&WHITE)?;
+
+        let mut chart = ChartBuilder::on(&root)
+            .caption("Inlining Optimization Results", ("sans-serif", 48))
+            .margin(40)
+            .x_label_area_size(80)
+            .y_label_area_size(100)
+            .build_cartesian_2d(x_min..x_max, y_min..y_max)?;
+
+        chart
+            .configure_mesh()
+            .x_desc("Threshold")
+            .y_desc("Normalized Value")
+            .x_label_formatter(&|x| format!("{:.0}", x))
+            .y_label_formatter(&|y| format!("{:.2}", y))
+            .draw()?;
+
+        chart
+            .draw_series(LineSeries::new(gas_points.clone(), RED.stroke_width(3)))?
+            .label("Gas")
+            .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 40, y)], RED.stroke_width(3)));
+
+        chart
+            .draw_series(gas_points.iter().map(|(x, y)| Circle::new((*x, *y), 8, RED.filled())))?;
+
+        chart
+            .draw_series(LineSeries::new(felts_points.clone(), GREEN.stroke_width(3)))?
+            .label("Felts")
+            .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 40, y)], GREEN.stroke_width(3)));
+
+        chart
+            .draw_series(felts_points.iter().map(|(x, y)| Circle::new((*x, *y), 8, GREEN.filled())))?;
+
+        chart
+            .draw_series(LineSeries::new(score_points.clone(), BLUE.stroke_width(3)))?
+            .label("Score")
+            .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 40, y)], BLUE.stroke_width(3)));
+
+        chart
+            .draw_series(score_points.iter().map(|(x, y)| Circle::new((*x, *y), 8, BLUE.filled())))?;
+
+        if let Some(best) = score_points.iter().min_by(|a, b| a.1.partial_cmp(&b.1).unwrap()) {
+            chart.draw_series(std::iter::once(Circle::new(
+                *best,
+                16,
+                BLUE.mix(0.5).filled(),
+            )))?;
+        }
+
+        chart
+            .configure_series_labels()
+            .background_style(WHITE.mix(0.8))
+            .border_style(BLACK)
+            .position(SeriesLabelPosition::UpperRight)
+            .draw()?;
+
+        root.present()?;
+
+        ui.print_blank_line();
+        ui.println(&format!("Graph saved to: {}", output_path));
+
+        Ok(())
     }
 }
