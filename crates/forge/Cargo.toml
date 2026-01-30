@@ -63,6 +63,7 @@ rayon.workspace = true
 tempfile.workspace = true
 fs_extra.workspace = true
 argmin = "0.10"
+plotters = "0.3"
 
 [[bin]]
 name = "snforge"
