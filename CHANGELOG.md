@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Forge
 
+#### Removed
+
+- Support for Scarb versions < 2.12.0. `snforge` now requires Scarb 2.12.0 or newer
+- The deprecated `snforge_scarb_plugin_deprecated`
+- The deprecated `snforge_std_deprecated`
+
 #### Changed
 
 - `--detailed-resources` output now includes all gas-related resources
