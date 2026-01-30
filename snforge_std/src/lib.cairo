@@ -70,6 +70,10 @@ pub use cheatcodes::execution_info::paymaster_data::{
     cheat_paymaster_data, start_cheat_paymaster_data, start_cheat_paymaster_data_global,
     stop_cheat_paymaster_data, stop_cheat_paymaster_data_global,
 };
+pub use cheatcodes::execution_info::proof_facts::{
+    cheat_proof_facts, start_cheat_proof_facts, start_cheat_proof_facts_global,
+    stop_cheat_proof_facts, stop_cheat_proof_facts_global,
+};
 pub use cheatcodes::execution_info::resource_bounds::{
     cheat_resource_bounds, start_cheat_resource_bounds, start_cheat_resource_bounds_global,
     stop_cheat_resource_bounds, stop_cheat_resource_bounds_global,
