@@ -253,6 +253,10 @@ fn start_cheat_execution_info_multiple_times() {
             contract_address,
             vec![Felt::from(777), Felt::from(888), Felt::from(999)],
         ),
+        proof_facts: operation_start(
+            contract_address,
+            vec![Felt::from(13), Felt::from(14), Felt::from(15)],
+        ),
     };
 
     let expected_tx_info = TxInfo::apply_mock_fields(&initial_tx_info_mock, &tx_info_before);
@@ -269,6 +273,7 @@ fn start_cheat_execution_info_multiple_times() {
         tip: Operation::Retain,
         nonce_data_availability_mode: Operation::Retain,
         account_deployment_data: Operation::Retain,
+        proof_facts: Operation::Retain,
         ..initial_tx_info_mock
     };
 

@@ -68,7 +68,7 @@ fn syscalls_count() {
             use starknet::syscalls::{
                 call_contract_syscall, keccak_syscall, deploy_syscall, get_block_hash_syscall, emit_event_syscall,
                 send_message_to_l1_syscall, get_execution_info_syscall, get_execution_info_v2_syscall,
-                SyscallResult
+                get_execution_info_v3_syscall, SyscallResult
             };
             use starknet::SyscallResultTrait;
             use snforge_std::{declare, ContractClass, ContractClassTrait, DeclareResultTrait};
@@ -120,6 +120,11 @@ fn syscalls_count() {
             }
 
             #[test]
+            fn get_execution_info_v3() {
+                get_execution_info_v3_syscall().unwrap_syscall();
+            }
+
+            #[test]
             fn send_message_to_l1() {
                 send_message_to_l1_syscall(1, array![1].span()).unwrap_syscall();
             }
@@ -155,6 +160,12 @@ fn syscalls_count() {
     assert_syscall(
         &result,
         "get_execution_info_v2",
+        SyscallSelector::GetExecutionInfo,
+        1,
+    );
+    assert_syscall(
+        &result,
+        "get_execution_info_v3",
         SyscallSelector::GetExecutionInfo,
         1,
     );
