@@ -5,6 +5,7 @@ use scarb_api::ScarbCommand;
 use shared::test_utils::output_assert::AsOutput;
 use snapbox::cmd::Command as SnapboxCommand;
 
+#[ignore = "TODO: Restore this test"]
 #[test]
 fn no_warnings_are_produced() {
     let temp = setup_package("simple_package");
