@@ -10,7 +10,6 @@ anyhow.workspace = true
 cairo-lang-casm.workspace = true
 cairo-lang-sierra.workspace = true
 cairo-lang-utils.workspace = true
-cairo-lang-sierra-type-size.workspace = true
 cairo-lang-test-plugin.workspace = true
 cairo-lang-starknet-classes.workspace = true
 cairo-annotations.workspace = true

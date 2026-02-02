@@ -92,8 +92,10 @@ fn test_docs_snippets() {
             .current_dir(tempdir.path());
         let output = snapbox.assert().success();
 
-        if snippet.output.is_some() && !snippet.config.ignored_output {
-            assert_stdout_contains(output, snippet.output.as_ref().unwrap());
+        if let Some(expected_stdout) = &snippet.output
+            && !snippet.config.ignored_output
+        {
+            assert_stdout_contains(output, expected_stdout);
         }
     }
 

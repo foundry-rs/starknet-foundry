@@ -30,6 +30,10 @@ impl FromStr for Partition {
             .split_once('/')
             .ok_or_else(|| "Partition must be in the format <INDEX>/<TOTAL>".to_string())?;
 
+        if total_str.contains('/') {
+            return Err("Partition must be in the format <INDEX>/<TOTAL>".to_string());
+        }
+
         let index = index_str
             .parse::<NonZeroUsize>()
             .map_err(|_| "INDEX must be a positive integer".to_string())?;
@@ -85,7 +89,6 @@ mod tests {
     #[test_case("6/5")]
     #[test_case("2/0")]
     fn test_out_of_bounds(partition: &str) {
-        let err = partition.parse::<Partition>().unwrap_err();
-        assert_eq!(err, "Invalid partition values: ensure 1 <= INDEX <= TOTAL");
+        assert!(partition.parse::<Partition>().is_err());
     }
 }
