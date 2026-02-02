@@ -42,37 +42,32 @@ pub async fn run_for_test_target(
         let filter_result = tests_filter.filter(&case);
 
         match filter_result {
-            FilterResult::Excluded(reason) => {
-                match reason {
-                    ExcludeReason::ExcludedFromPartition => {
-                        tasks.push(tokio::task::spawn(async {
-                            Ok(AnyTestCaseSummary::Single(
-                                TestCaseSummary::ExcludedFromPartition {},
-                            ))
-                        }));
-                    }
-                    ExcludeReason::Ignored => {
-                        tasks.push(tokio::task::spawn(async {
-                            Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
-                                name: case_name,
-                            }))
-                        }));
-                    }
+            FilterResult::Excluded(reason) => match reason {
+                ExcludeReason::ExcludedFromPartition => {
+                    tasks.push(tokio::task::spawn(async {
+                        Ok(AnyTestCaseSummary::Single(
+                            TestCaseSummary::ExcludedFromPartition {},
+                        ))
+                    }));
                 }
-                continue;
+                ExcludeReason::Ignored => {
+                    tasks.push(tokio::task::spawn(async {
+                        Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
+                            name: case_name,
+                        }))
+                    }));
+                }
+            },
+            FilterResult::Included => {
+                tasks.push(run_for_test_case(
+                    Arc::new(case),
+                    casm_program.clone(),
+                    forge_config.clone(),
+                    tests.sierra_program_path.clone(),
+                    send.clone(),
+                ));
             }
-            FilterResult::Included => {}
         }
-
-        let case = Arc::new(case);
-
-        tasks.push(run_for_test_case(
-            case,
-            casm_program.clone(),
-            forge_config.clone(),
-            tests.sierra_program_path.clone(),
-            send.clone(),
-        ));
     }
 
     let mut results = vec![];
@@ -82,7 +77,7 @@ pub async fn run_for_test_target(
     while let Some(task) = tasks.next().await {
         let result = task??;
 
-        if !result.is_interrupted() && !result.is_excluded_from_partition() {
+        if should_print_test_result_message(&result) {
             let test_result_message = TestResultMessage::new(
                 &result,
                 forge_config.output_config.detailed_resources,
@@ -122,4 +117,8 @@ pub async fn run_for_test_target(
     } else {
         Ok(TestTargetRunResult::Ok(summary))
     }
+}
+
+fn should_print_test_result_message(result: &AnyTestCaseSummary) -> bool {
+    !result.is_interrupted() && !result.is_excluded_from_partition()
 }
