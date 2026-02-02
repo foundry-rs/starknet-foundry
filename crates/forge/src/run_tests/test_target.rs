@@ -41,7 +41,7 @@ pub async fn run_for_test_target(
         let case_name = case.name.clone();
         let filter_result = tests_filter.filter(&case);
 
-       match filter_result {
+        match filter_result {
             FilterResult::Excluded(reason) => match reason {
                 ExcludeReason::Ignored => {
                     tasks.push(tokio::task::spawn(async {
