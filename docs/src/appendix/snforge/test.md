@@ -135,8 +135,7 @@ Display a table of L2 gas breakdown for each contract and selector.
 
 ## `--partition <INDEX>/<TOTAL>`
 
-If specified, divides tests into partitions and runs specified partition.
-`<INDEX>/<TOTAL>` should include `INDEX` - the 1-based index of the partition to run, and `TOTAL` which is the number of partitions.
+Divides tests into `TOTAL` partitions and runs partition `INDEX` (1-based), e.g. 1/4.
 
 ##  `-P`, `--profile` `<PROFILE>`
 Specify the profile to use by name.
