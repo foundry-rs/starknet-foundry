@@ -139,6 +139,7 @@ struct TxInfo {
     pub nonce_data_availability_mode: Felt,
     pub fee_data_availability_mode: Felt,
     pub account_deployment_data: Vec<Felt>,
+    pub proof_facts: Vec<Felt>,
 }
 
 impl TxInfo {
@@ -172,6 +173,7 @@ impl TxInfo {
             nonce_data_availability_mode: clone_field!(nonce_data_availability_mode),
             fee_data_availability_mode: clone_field!(fee_data_availability_mode),
             account_deployment_data: clone_field!(account_deployment_data),
+            proof_facts: clone_field!(proof_facts),
         }
     }
 
