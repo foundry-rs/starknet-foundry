@@ -31,7 +31,7 @@ pub async fn resolve_config(
 
     for case in test_target.test_cases {
         let filter_result = tests_filter.filter(&case);
-        let should_resolve_fork = matches!(filter_result, FilterResult::Included);
+        let should_be_run = matches!(filter_result, FilterResult::Included);
 
         test_cases.push(TestCaseWithResolvedConfig::new(
             &case.name,
@@ -40,7 +40,7 @@ pub async fn resolve_config(
                 available_gas: case.config.available_gas,
                 ignored: case.config.ignored
                     || (env_ignore_fork_tests && case.config.fork_config.is_some()),
-                fork_config: if should_resolve_fork {
+                fork_config: if should_be_run {
                     resolve_fork_config(case.config.fork_config, block_number_map, fork_targets)
                         .await?
                 } else {

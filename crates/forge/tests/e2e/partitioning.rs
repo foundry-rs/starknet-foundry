@@ -13,7 +13,7 @@ fn test_does_not_work_with_exact_flag() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        error: the argument '--partition <PARTITION>' cannot be used with '--exact'
+        error: the argument '--partition <INDEX/TOTAL>' cannot be used with '--exact'
     "},
     );
 }

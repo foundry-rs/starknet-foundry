@@ -42,37 +42,32 @@ pub async fn run_for_test_target(
         let filter_result = tests_filter.filter(&case);
 
         match filter_result {
-            FilterResult::Excluded(reason) => {
-                match reason {
-                    ExcludeReason::ExcludedFromPartition => {
-                        tasks.push(tokio::task::spawn(async {
-                            Ok(AnyTestCaseSummary::Single(
-                                TestCaseSummary::ExcludedFromPartition {},
-                            ))
-                        }));
-                    }
-                    ExcludeReason::Ignored => {
-                        tasks.push(tokio::task::spawn(async {
-                            Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
-                                name: case_name,
-                            }))
-                        }));
-                    }
+            FilterResult::Excluded(reason) => match reason {
+                ExcludeReason::ExcludedFromPartition => {
+                    tasks.push(tokio::task::spawn(async {
+                        Ok(AnyTestCaseSummary::Single(
+                            TestCaseSummary::ExcludedFromPartition {},
+                        ))
+                    }));
                 }
-                continue;
+                ExcludeReason::Ignored => {
+                    tasks.push(tokio::task::spawn(async {
+                        Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
+                            name: case_name,
+                        }))
+                    }));
+                }
+            },
+            FilterResult::Included => {
+                tasks.push(run_for_test_case(
+                    Arc::new(case),
+                    casm_program.clone(),
+                    forge_config.clone(),
+                    tests.sierra_program_path.clone(),
+                    send.clone(),
+                ));
             }
-            FilterResult::Included => {}
         }
-
-        let case = Arc::new(case);
-
-        tasks.push(run_for_test_case(
-            case,
-            casm_program.clone(),
-            forge_config.clone(),
-            tests.sierra_program_path.clone(),
-            send.clone(),
-        ));
     }
 
     let mut results = vec![];
