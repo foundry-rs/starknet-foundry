@@ -82,7 +82,7 @@ pub async fn run_for_test_target(
     while let Some(task) = tasks.next().await {
         let result = task??;
 
-        if !result.is_interrupted() && !result.is_excluded_from_partition() {
+        if should_print_test_result_message(&result) {
             let test_result_message = TestResultMessage::new(
                 &result,
                 forge_config.output_config.detailed_resources,
@@ -122,4 +122,8 @@ pub async fn run_for_test_target(
     } else {
         Ok(TestTargetRunResult::Ok(summary))
     }
+}
+
+fn should_print_test_result_message(result: &AnyTestCaseSummary) -> bool {
+    !result.is_interrupted() && !result.is_excluded_from_partition()
 }

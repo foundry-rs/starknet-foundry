@@ -154,11 +154,12 @@ fn calculate_total_filtered_count(
     total_filtered_count: Option<usize>,
     filtered: Option<usize>,
 ) -> Option<usize> {
-    // Accumulate filtered test counts across packages. When using `--exact` flag,
+    // Calculate filtered test counts across packages. When using `--exact` flag,
     // `result.filtered_count` is None, so `total_filtered_count` becomes None too.
-    total_filtered_count
-        .zip(filtered)
-        .map(|(total, filtered)| total + filtered)
+    match (total_filtered_count, filtered) {
+        (Some(total), Some(f)) => Some(total + f),
+        _ => None,
+    }
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
