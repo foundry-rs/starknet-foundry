@@ -15,6 +15,7 @@ pub mod max_fee;
 pub mod nonce;
 pub mod nonce_data_availability_mode;
 pub mod paymaster_data;
+pub mod proof_facts;
 pub mod resource_bounds;
 pub mod sequencer_address;
 pub mod signature;
@@ -62,6 +63,7 @@ struct TxInfoMock {
     nonce_data_availability_mode: Operation<u32>,
     fee_data_availability_mode: Operation<u32>,
     account_deployment_data: Operation<Span<felt252>>,
+    proof_facts: Operation<Span<felt252>>,
 }
 
 impl TxInfoMockImpl of Default<TxInfoMock> {
@@ -82,6 +84,7 @@ impl TxInfoMockImpl of Default<TxInfoMock> {
             nonce_data_availability_mode: Operation::Retain,
             fee_data_availability_mode: Operation::Retain,
             account_deployment_data: Operation::Retain,
+            proof_facts: Operation::Retain,
         }
     }
 }

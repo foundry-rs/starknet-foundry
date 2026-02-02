@@ -45,6 +45,7 @@ pub struct TxInfoMock {
     pub nonce_data_availability_mode: CheatStatus<Felt>,
     pub fee_data_availability_mode: CheatStatus<Felt>,
     pub account_deployment_data: CheatStatus<Vec<Felt>>,
+    pub proof_facts: CheatStatus<Vec<Felt>>,
 }
 
 #[derive(Clone, Default, Debug, PartialEq, Eq)]
@@ -77,6 +78,7 @@ pub struct TxInfoMockOperations {
     pub nonce_data_availability_mode: Operation<Felt>,
     pub fee_data_availability_mode: Operation<Felt>,
     pub account_deployment_data: Operation<Vec<Felt>>,
+    pub proof_facts: Operation<Vec<Felt>>,
 }
 
 #[derive(CairoDeserialize, Clone, Default, Debug)]
@@ -116,6 +118,7 @@ macro_rules! for_all_fields {
         $macro!(tx_info.nonce_data_availability_mode);
         $macro!(tx_info.fee_data_availability_mode);
         $macro!(tx_info.account_deployment_data);
+        $macro!(tx_info.proof_facts);
     };
 }
 

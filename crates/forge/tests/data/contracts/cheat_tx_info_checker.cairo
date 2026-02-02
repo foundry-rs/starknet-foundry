@@ -3,7 +3,7 @@ use serde::Serde;
 use option::OptionTrait;
 use array::ArrayTrait;
 use starknet::ContractAddress;
-use starknet::info::v2::ResourceBounds;
+use starknet::info::v3::ResourceBounds;
 
 #[starknet::interface]
 trait ICheatTxInfoChecker<TContractState> {
@@ -20,7 +20,9 @@ trait ICheatTxInfoChecker<TContractState> {
     fn get_nonce_data_availability_mode(self: @TContractState) -> u32;
     fn get_fee_data_availability_mode(self: @TContractState) -> u32;
     fn get_account_deployment_data(self: @TContractState) -> Span<felt252>;
+    fn get_proof_facts(self: @TContractState) -> Span<felt252>;
     fn get_tx_info(self: @TContractState) -> starknet::info::v2::TxInfo;
+    fn get_tx_info_v3(self: @TContractState) -> starknet::info::v3::TxInfo;
 }
 
 #[starknet::contract]
@@ -30,7 +32,7 @@ mod CheatTxInfoChecker {
     use box::BoxTrait;
     use starknet::ContractAddress;
     use starknet::info::v2::ResourceBounds;
-    use starknet::{SyscallResultTrait, SyscallResult, syscalls::get_execution_info_v2_syscall};
+    use starknet::{SyscallResultTrait, SyscallResult, syscalls::get_execution_info_v2_syscall, syscalls::get_execution_info_v3_syscall};
 
     #[storage]
     struct Storage {
@@ -91,8 +93,16 @@ mod CheatTxInfoChecker {
             get_tx_info_v2().unbox().account_deployment_data
         }
 
+        fn get_proof_facts(self: @ContractState) -> Span<felt252> {
+            get_tx_info_v3().unbox().proof_facts
+        }
+
         fn get_tx_info(self: @ContractState) -> starknet::info::v2::TxInfo {
             get_tx_info_v2().unbox()
+        }
+
+        fn get_tx_info_v3(self: @ContractState) -> starknet::info::v3::TxInfo {
+            get_tx_info_v3().unbox()
         }
     }
 
@@ -102,5 +112,13 @@ mod CheatTxInfoChecker {
 
     fn get_tx_info_v2() -> Box<starknet::info::v2::TxInfo> {
         get_execution_info_v2().unbox().tx_info
+    }
+
+    fn get_execution_info_v3() -> Box<starknet::info::v3::ExecutionInfo> {
+        get_execution_info_v3_syscall().unwrap_syscall()
+    }
+
+    fn get_tx_info_v3() -> Box<starknet::info::v3::TxInfo> {
+        get_execution_info_v3().unbox().tx_info
     }
 }
