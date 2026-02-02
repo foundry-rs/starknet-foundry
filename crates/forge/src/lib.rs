@@ -219,11 +219,7 @@ pub struct TestArgs {
     gas_report: bool,
 
     /// Divides tests into `TOTAL` partitions and runs partition `INDEX` (1-based), e.g. 1/4
-    #[arg(
-        long, 
-        value_name = "INDEX/TOTAL",
-        conflicts_with = "exact"
-    )]
+    #[arg(long, value_name = "INDEX/TOTAL", conflicts_with = "exact")]
     partition: Option<Partition>,
 
     /// Additional arguments for cairo-coverage or cairo-profiler
