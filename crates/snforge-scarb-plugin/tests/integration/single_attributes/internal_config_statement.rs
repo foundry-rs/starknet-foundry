@@ -29,7 +29,7 @@ fn appends_config_statement() {
             fn empty_fn() {
                 if snforge_std::_internals::is_config_run() {
                     return;
-                }
+                };
             }
         ",
     );

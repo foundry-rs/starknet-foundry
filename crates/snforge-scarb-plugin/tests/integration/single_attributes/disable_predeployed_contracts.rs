@@ -39,7 +39,7 @@ fn works_without_args() {
                     starknet::testing::cheatcode::<'set_config_disable_contracts'>(data.span());
 
                     return;
-                }
+                };
             }
         ",
     );

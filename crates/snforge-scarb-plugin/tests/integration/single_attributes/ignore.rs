@@ -37,7 +37,7 @@ fn works_without_args() {
                     starknet::testing::cheatcode::<'set_config_ignore'>(data.span());
 
                     return;
-                }
+                };
             }
         ",
     );

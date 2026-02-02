@@ -24,7 +24,7 @@ fn works_with_empty() {
                     .serialize(ref data);
                     starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
                     return;
-                }
+                };
             }
         ",
     );
@@ -76,7 +76,7 @@ fn work_with_number_some_set() {
                     starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
 
                     return;
-                }
+                };
             }
         ",
     );
@@ -107,7 +107,7 @@ fn work_with_number_all_set() {
                     starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
 
                     return;
-                }
+                };
             }",
     );
 }
@@ -220,7 +220,7 @@ fn max_permissible_value() {
                     starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
 
                     return;
-                }
+                };
             }
         ",
     );
