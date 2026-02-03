@@ -170,4 +170,4 @@
 * [`snfoundry.toml` Reference](appendix/snfoundry-toml.md)
 * [`Scarb.toml` Reference](appendix/scarb-toml.md)
 * [Starknet Foundry Github Action](appendix/starknet-foundry-github-action.md)
-* [`snforge` 0.48.0 Migration Guide](appendix/0-48-0-migration-guide.md)
+* [`snforge` 0.56.0 Migration Guide](appendix/0-56-0-migration-guide.md)

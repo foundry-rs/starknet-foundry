@@ -9,11 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Forge
 
+#### Removed
+
+- Support for Scarb versions < 2.12.0. `snforge` now requires Scarb 2.12.0 or newer
+- The deprecated `snforge_scarb_plugin_deprecated`
+- The deprecated `snforge_std_deprecated`
+
 #### Changed
 
 - `--detailed-resources` output now includes all gas-related resources
 - `deploy` and `deploy_at` methods on `ContractClass` instance now allow constructor errors to be caught instead of failing immediately. This change diverges from the behavior of the `deploy_syscall` on the network, where such errors cannot be caught.
-- Template created by `snforge new --template erc20-contract` now uses `openzeppelin_token` version `3.0.0` (updated from `1.0.0`)
+- Template created by `snforge new --template erc20-contract` now uses `openzeppelin_token` version `3.0.0` (updated from `1.0.0`). This template requires Scarb version >= `2.15.1`.
 
 ## [0.55.0] - 2026-01-13
 
@@ -37,6 +43,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `--network` flag can be used with `--add-profile` flag
+
+#### Fixed
+
+- `sncast balance` command now correctly displays token unit instead of token for `eth` and `strk`
 
 ## [0.55.0-rc.0] - 2025-12-18
 

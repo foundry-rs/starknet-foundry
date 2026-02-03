@@ -1,5 +1,5 @@
 use super::common::runner::{runner, snforge_test_bin_path, test_runner};
-use crate::utils::{tempdir_with_tool_versions, use_snforge_std_deprecated};
+use crate::utils::tempdir_with_tool_versions;
 use assert_fs::TempDir;
 use assert_fs::fixture::{FileTouch, PathChild};
 use forge::CAIRO_EDITION;
@@ -25,10 +25,13 @@ static RE_NEWLINES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\n{3,}").unw
 
 #[test_case(&Template::CairoProgram; "cairo-program")]
 #[test_case(&Template::BalanceContract; "balance-contract")]
-#[test_case(&Template::Erc20Contract; "erc20-contract")]
 #[cfg_attr(
     not(feature = "run_test_for_scarb_since_2_15_1"),
-    ignore = "Skipping test because feature run_test_for_scarb_since_2_15_1 is not enabled"
+    test_case(&Template::Erc20Contract => ignore["Skipping test because feature run_test_for_scarb_since_2_15_1 is not enabled"] (); "erc20-contract")
+)]
+#[cfg_attr(
+    feature = "run_test_for_scarb_since_2_15_1",
+    test_case(&Template::Erc20Contract; "erc20-contract")
 )]
 fn create_new_project_dir_not_exist(template: &Template) {
     let temp = tempdir_with_tool_versions().unwrap();
@@ -132,39 +135,18 @@ fn validate_init(project_path: &PathBuf, validate_snforge_std: bool, template: &
         .as_table_mut()
         .unwrap();
 
-    if use_snforge_std_deprecated() {
-        let local_snforge_std_deprecated = Path::new("../../snforge_std_deprecated")
-            .canonicalize()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_string();
+    let local_snforge_std = Path::new("../../snforge_std")
+        .canonicalize()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string();
 
-        let mut snforge_std_deprecated = InlineTable::new();
-        snforge_std_deprecated.insert(
-            "path",
-            Value::String(Formatted::new(local_snforge_std_deprecated)),
-        );
+    let mut snforge_std = InlineTable::new();
+    snforge_std.insert("path", Value::String(Formatted::new(local_snforge_std)));
 
-        dependencies.remove("snforge_std_deprecated");
-        dependencies.insert(
-            "snforge_std_deprecated",
-            Item::Value(Value::InlineTable(snforge_std_deprecated)),
-        );
-    } else {
-        let local_snforge_std = Path::new("../../snforge_std")
-            .canonicalize()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_string();
-
-        let mut snforge_std = InlineTable::new();
-        snforge_std.insert("path", Value::String(Formatted::new(local_snforge_std)));
-
-        dependencies.remove("snforge_std");
-        dependencies.insert("snforge_std", Item::Value(Value::InlineTable(snforge_std)));
-    }
+    dependencies.remove("snforge_std");
+    dependencies.insert("snforge_std", Item::Value(Value::InlineTable(snforge_std)));
 
     fs::write(manifest_path, scarb_toml.to_string()).unwrap();
 
@@ -178,12 +160,10 @@ fn validate_init(project_path: &PathBuf, validate_snforge_std: bool, template: &
 }
 
 fn get_expected_manifest_content(template: &Template, validate_snforge_std: bool) -> String {
-    let snforge_std_assert = if !validate_snforge_std {
-        ""
-    } else if use_snforge_std_deprecated() {
-        "\nsnforge_std_deprecated = \"[..]\""
-    } else {
+    let snforge_std_assert = if validate_snforge_std {
         "\nsnforge_std = \"[..]\""
+    } else {
+        ""
     };
 
     let target_contract_entry = "[[target.starknet-contract]]\nsierra = true";
@@ -210,11 +190,7 @@ fn get_expected_manifest_content(template: &Template, validate_snforge_std: bool
         Template::CairoProgram => ("", ""),
     };
 
-    let allow_prebuild_plugins_assert = if use_snforge_std_deprecated() {
-        r#"allow-prebuilt-plugins = ["snforge_std_deprecated"]"#
-    } else {
-        r#"allow-prebuilt-plugins = ["snforge_std"]"#
-    };
+    let allow_prebuild_plugins_assert = r#"allow-prebuilt-plugins = ["snforge_std"]"#;
 
     let expected_manifest = formatdoc!(
         r#"

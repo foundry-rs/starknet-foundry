@@ -1,6 +1,5 @@
 use crate::utils::{
     get_assert_macros_version, get_std_name, get_std_path, tempdir_with_tool_versions,
-    use_snforge_std_deprecated,
 };
 use anyhow::{Context, Result, anyhow};
 use assert_fs::{
@@ -30,7 +29,6 @@ use std::{
     process::{Command, Stdio},
     str::FromStr,
 };
-use walkdir::WalkDir;
 
 /// Represents a dependency of a Cairo project
 #[derive(Debug, Clone)]
@@ -121,18 +119,6 @@ impl Contract {
     }
 }
 
-pub fn replace_snforge_std_with_snforge_std_deprecated(dir: &Path) {
-    let temp_dir_files = WalkDir::new(dir);
-    for entry in temp_dir_files {
-        let entry = entry.unwrap();
-        if entry.path().is_file() {
-            let content = fs::read_to_string(entry.path()).unwrap();
-            let modified_content = content.replace("snforge_std", "snforge_std_deprecated");
-            fs::write(entry.path(), modified_content).unwrap();
-        }
-    }
-}
-
 #[derive(Debug)]
 pub struct TestCase {
     dir: TempDir,
@@ -149,10 +135,6 @@ impl<'a> TestCase {
         let test_file = dir.child(Self::TEST_PATH);
         test_file.touch()?;
         test_file.write_str(test_code)?;
-
-        if use_snforge_std_deprecated() {
-            replace_snforge_std_with_snforge_std_deprecated(test_file.path());
-        }
 
         dir.child("src/lib.cairo").touch().unwrap();
 

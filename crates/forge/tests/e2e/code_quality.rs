@@ -1,4 +1,3 @@
-use crate::utils::use_snforge_std_deprecated;
 use camino::Utf8PathBuf;
 use packages_validation::check_and_lint;
 
@@ -9,7 +8,5 @@ fn validate_snforge_std() {
         .unwrap()
         .try_into()
         .unwrap();
-    if !use_snforge_std_deprecated() {
-        check_and_lint(&package_path);
-    }
+    check_and_lint(&package_path);
 }
