@@ -59,7 +59,7 @@ starknet-types-core = { version = "0.2.4", features = ["hash", "prime-bigint"] }
 anyhow = "1.0.100"
 assert_fs = "1.1.2"
 camino = { version = "1.2.1", features = ["serde1"] }
-clap = { version = "4.5.54", features = ["derive", "deprecated"] }
+clap = { version = "4.5.57", features = ["derive", "deprecated"] }
 clap_complete = "4.5.65"
 console = "0.16.1"
 include_dir = "0.7.4"
