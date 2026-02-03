@@ -32,7 +32,7 @@ mod Contract {
     #[abi(embed_v0)]
     impl IContractImpl of super::IContract<ContractState> {
         fn write_storage_and_panic(ref self: ContractState, value: felt252) {
-            self.value.write(value);
+            self.write_storage(value);
             panic!("Panicked");
         }
 
