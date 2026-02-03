@@ -21,21 +21,17 @@ pub fn transform(calldata: &str, abi: &[AbiEntry], function_selector: &Felt) -> 
 
     let db = SimpleParserDatabase::default();
 
-    let calldata = split_expressions(calldata, &db)?;
+    let input = convert_to_tuple(calldata);
+    let calldata = split_expressions(&input, &db)?;
 
     process(calldata, &function, abi, &db).context("Error while processing Cairo-like calldata")
 }
 
-fn split_expressions(input: &str, db: &SimpleParserDatabase) -> Result<Vec<Expr>> {
+fn split_expressions<'a>(input: &'a str, db: &'a SimpleParserDatabase) -> Result<Vec<Expr<'a>>> {
     if input.is_empty() {
         return Ok(Vec::new());
     }
-    // We need to convert our comma-separated string of expressions into something that is a valid
-    // Cairo expression, so we can parse it.
-    //
-    // We convert to tuple by wrapping in `()` with a trailing `,` to handle case of a single argument
-    let input = format!("({input},)");
-    let expr = parse_expression(&input, db)?;
+    let expr = parse_expression(input, db)?;
 
     match expr {
         Expr::Tuple(tuple) => Ok(tuple.expressions(db).elements(db).collect()),
@@ -68,4 +64,15 @@ fn process(
         })
         .flatten_ok()
         .collect::<Result<_>>()
+}
+
+fn convert_to_tuple(calldata: &str) -> String {
+    // We need to convert our comma-separated string of expressions into something that is a valid
+    // Cairo expression, so we can parse it.
+    //
+    // We convert to tuple by wrapping in `()` with a trailing `,` to handle case of a single argument
+    if calldata.is_empty() {
+        return String::new();
+    }
+    format!("({calldata},)")
 }
