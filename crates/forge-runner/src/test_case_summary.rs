@@ -543,4 +543,31 @@ mod tests {
         assert!((stats.l1_data_gas.std_deviation - 16.33).abs() < FLOAT_ERROR);
         assert!((stats.l2_gas.std_deviation - 24.49).abs() < FLOAT_ERROR);
     }
+
+    #[test]
+    fn test_is_matching_should_panic_data_entrypoint_failed() {
+        let data = vec![
+            Felt::from(11_u8),
+            Felt::from(22_u8),
+            Felt::from(33_u8),
+            ENTRYPOINT_FAILED_ERROR_FELT,
+            ENTRYPOINT_FAILED_ERROR_FELT,
+        ];
+
+        assert!(is_matching_should_panic_data(&data, &data));
+
+        let non_matching_pattern = vec![
+            Felt::from(11_u8),
+            Felt::from(22_u8),
+            Felt::from(33_u8),
+            ENTRYPOINT_FAILED_ERROR_FELT,
+        ];
+        assert!(!is_matching_should_panic_data(&data, &non_matching_pattern));
+
+        let pattern = vec![Felt::from(11_u8), Felt::from(22_u8), Felt::from(33_u8)];
+        assert!(is_matching_should_panic_data(&data, &pattern));
+
+        let non_matching_pattern = vec![Felt::from(11_u8), Felt::from(22_u8)];
+        assert!(!is_matching_should_panic_data(&data, &non_matching_pattern));
+    }
 }
