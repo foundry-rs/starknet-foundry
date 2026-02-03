@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## Forge
+## [0.56.0] - 2026-02-03
+
+### Forge
 
 #### Removed
 
@@ -23,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.55.0] - 2026-01-13
 
-## Forge
+### Forge
 
 #### Changed
 
