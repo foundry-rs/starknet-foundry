@@ -59,22 +59,22 @@ starknet-types-core = { version = "0.2.4", features = ["hash", "prime-bigint"] }
 anyhow = "1.0.100"
 assert_fs = "1.1.2"
 camino = { version = "1.2.1", features = ["serde1"] }
-clap = { version = "4.5.54", features = ["derive", "deprecated"] }
+clap = { version = "4.5.56", features = ["derive", "deprecated"] }
 clap_complete = "4.5.65"
 console = "0.16.1"
 include_dir = "0.7.4"
 indoc = "2"
 itertools = "0.14.0"
-indexmap = "2.11.4"
+indexmap = "2.13.0"
 num-traits = "0.2.19"
 rayon = "1.10"
-regex = "1.11.3"
+regex = "1.12.3"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.149"
 starknet-rust = "0.18.0"
 starknet-rust-crypto = "0.9.0"
 tempfile = "3.24.0"
-thiserror = "2.0.17"
+thiserror = "2.0.18"
 ctor = "0.6.2"
 url = { "version" = "2.5.4", "features" = ["serde"] }
 tokio = { version = "1.49.0", features = ["full"] }
@@ -90,13 +90,13 @@ docs = { path = "./crates/docs" }
 test-case = "3.3.1"
 scarb-metadata = "1.14.0"
 flatten-serde-json = "0.1.0"
-snapbox = "0.6.23"
+snapbox = "0.6.24"
 scarb-ui = "0.1.7"
 semver = "1.0.27"
 bimap = "0.6.3"
 primitive-types = {  version =  "0.14.0", features = ["serde"] }
 shellexpand = "3.1.0"
-toml = "0.9.8"
+toml = "0.9.11"
 rpassword = "7.3.1"
 promptly = "0.3.1"
 ptree = "0.5.2"
@@ -106,7 +106,7 @@ openssl = { version = "0.10", features = ["vendored"] }
 toml_edit = "0.24.0"
 axum = "0.8.8"
 fs2 = "0.4.3"
-flate2 = "1.1.0"
+flate2 = "1.1.9"
 k256 = { version = "0.13.4", features = ["sha256", "ecdsa", "serde"] }
 p256 = { version = "0.13.2", features = ["sha256", "ecdsa", "serde"] }
 glob = "0.3.2"
@@ -124,10 +124,10 @@ paste = "1.0.15"
 strum = "0.27"
 strum_macros = "0.27"
 scarb-oracle-hint-service = "0.1.1"
-chrono = "0.4.42"
+chrono = "0.4.43"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 tracing = "0.1.43"
 tracing-chrome = "0.7.2"
 tracing-log = "0.2.0"
 comfy-table = "7"
-insta = { version = "1.46.0", features = ["filters"] }
+insta = { version = "1.46.3", features = ["filters"] }
