@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `--detailed-resources` output now includes all gas-related resources
 - `deploy` and `deploy_at` methods on `ContractClass` instance now allow constructor errors to be caught instead of failing immediately. This change diverges from the behavior of the `deploy_syscall` on the network, where such errors cannot be caught.
+- Template created by `snforge new --template erc20-contract` now uses `openzeppelin_token` version `3.0.0` (updated from `1.0.0`). This template requires Scarb version >= `2.15.1`.
+
 ## [0.55.0] - 2026-01-13
 
 ## Forge

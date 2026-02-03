@@ -1,4 +1,5 @@
-use openzeppelin_token::erc20::{ERC20ABIDispatcher, ERC20ABIDispatcherTrait, ERC20Component};
+use openzeppelin_token::erc20::ERC20Component;
+use openzeppelin_interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use snforge_std::{
     CheatSpan, ContractClassTrait, DeclareResultTrait, EventSpyAssertionsTrait,
     cheat_caller_address, declare, spy_events,
@@ -27,7 +28,7 @@ fn setup() -> ContractAddress {
 #[test]
 fn test_get_balance() {
     let contract_address = setup();
-    let erc20 = ERC20ABIDispatcher { contract_address };
+    let erc20 = IERC20Dispatcher { contract_address };
 
     let sender_account = contract_address_const::<1>();
 
@@ -37,7 +38,7 @@ fn test_get_balance() {
 #[test]
 fn test_transfer() {
     let contract_address = setup();
-    let erc20 = ERC20ABIDispatcher { contract_address };
+    let erc20 = IERC20Dispatcher { contract_address };
 
     let sender_account = contract_address_const::<1>();
     let target_account = contract_address_const::<2>();
@@ -60,7 +61,7 @@ fn test_fork_transfer() {
     let target_account = contract_address_const::<2>();
     let strk_contract_address = contract_address_const::<STRK_TOKEN_ADDRESS>();
 
-    let erc20 = ERC20ABIDispatcher { contract_address: strk_contract_address };
+    let erc20 = IERC20Dispatcher { contract_address: strk_contract_address };
 
     let owner_account: ContractAddress =
         0x04337e199aa6a8959aeb2a6afcd2f82609211104191a041e7b9ba2f4039768f0
@@ -82,7 +83,7 @@ fn test_fork_transfer() {
 #[test]
 fn test_transfer_event() {
     let contract_address = setup();
-    let erc20 = ERC20ABIDispatcher { contract_address };
+    let erc20 = IERC20Dispatcher { contract_address };
 
     let sender_account = contract_address_const::<1>();
     let target_account = contract_address_const::<2>();
@@ -113,7 +114,7 @@ fn test_transfer_event() {
 #[should_panic(expected: ('ERC20: insufficient balance',))]
 fn should_panic_transfer() {
     let contract_address = setup();
-    let erc20 = ERC20ABIDispatcher { contract_address };
+    let erc20 = IERC20Dispatcher { contract_address };
 
     let sender_account = contract_address_const::<1>();
     let target_account = contract_address_const::<2>();

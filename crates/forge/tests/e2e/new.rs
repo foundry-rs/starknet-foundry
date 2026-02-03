@@ -25,8 +25,14 @@ static RE_NEWLINES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\n{3,}").unw
 
 #[test_case(&Template::CairoProgram; "cairo-program")]
 #[test_case(&Template::BalanceContract; "balance-contract")]
-// TODO(#3896) restore this test case
-// #[test_case(&Template::Erc20Contract; "erc20-contract")]
+#[cfg_attr(
+    not(feature = "run_test_for_scarb_since_2_15_1"),
+    test_case(&Template::Erc20Contract => ignore["Skipping test because feature run_test_for_scarb_since_2_15_1 is not enabled"] (); "erc20-contract")
+)]
+#[cfg_attr(
+    feature = "run_test_for_scarb_since_2_15_1",
+    test_case(&Template::Erc20Contract; "erc20-contract")
+)]
 fn create_new_project_dir_not_exist(template: &Template) {
     let temp = tempdir_with_tool_versions().unwrap();
     let project_path = temp.join("new").join("project");
@@ -178,7 +184,7 @@ fn get_expected_manifest_content(template: &Template, validate_snforge_std: bool
     let (dependencies, target_contract_entry) = match template {
         Template::BalanceContract => ("starknet = \"[..]\"", target_contract_entry),
         Template::Erc20Contract => (
-            "openzeppelin_token = \"[..]\"\nstarknet = \"[..]\"",
+            "openzeppelin_interfaces = \"[..]\"\nopenzeppelin_token = \"[..]\"\nopenzeppelin_utils = \"[..]\"\nstarknet = \"[..]\"",
             target_contract_entry,
         ),
         Template::CairoProgram => ("", ""),

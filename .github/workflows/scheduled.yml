@@ -93,7 +93,19 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
-      - run: cargo test --profile ci -p forge --features skip_test_for_only_latest_scarb e2e
+      - name: Determine test features
+        id: test_features
+        run: |
+          SCARB_VERSION="${{ matrix.version }}"
+
+          if [ "$(printf '%s\n' "2.15.1" "$SCARB_VERSION" | sort -V | head -n1)" = "2.15.1" ]; then
+            FEATURES="skip_test_for_only_latest_scarb,run_test_for_scarb_since_2_15_1"
+          else
+            FEATURES="skip_test_for_only_latest_scarb"
+          fi
+          echo "features=$FEATURES" >> "$GITHUB_OUTPUT"
+
+      - run: cargo test --profile ci -p forge --features "${{ steps.test_features.outputs.features }}" e2e
 
   test-cast:
     if: github.event.repository.fork == false
