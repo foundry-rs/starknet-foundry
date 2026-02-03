@@ -68,9 +68,17 @@ Asserting that the function panics (any with any panic data):
 ```
 
 > 📝 **Note**
-> `#[should_panic]` dynamically validates the generic `ENTRYPOINT_FAILED` error.
-> If it's included in the `expected` data, the full panic data (including all occurrences of `ENTRYPOINT_FAILED`) will be asserted.
-> Otherwise, these generic errors will be skipped and only the actual, user-defined error will be checked.
+>
+> If generic `ENTRYPOINT_FAILED` errors are included in the expected field, the full panic data (including all such errors) will be checked.
+> If they’re not included, these generic errors will be ignored and only the actual user-defined error will be validated.
+> 
+> ###### Example:
+> ```rust
+> #[should_panic(expected: ('panic', 'message', 'ENTRYPOINT_FAILED')]
+> ```
+> ```rust
+> #[should_panic(expected: ('panic', 'message')]
+> ```
 
 ### `#[available_gas]`
 
