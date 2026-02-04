@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- In case of a test failure, generic `ENTRYPOINT_FAILED` errors are now included in the panic data
+
+#### Fixed
+
+- State modified by failed contract calls executed within the test function is now correctly reverted
+
 ## [0.56.0] - 2026-02-03
 
 ### Forge

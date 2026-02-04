@@ -50,7 +50,7 @@ Running 1 test(s) from tests/
 [FAIL] using_cheatcodes_tests::call_and_invoke
 
 Failure data:
-    0x75736572206973206e6f7420616c6c6f776564 ('user is not allowed')
+    (0x75736572206973206e6f7420616c6c6f776564 ('user is not allowed'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
 
 Tests: 0 passed, 1 failed, 0 ignored, 0 filtered out
 
