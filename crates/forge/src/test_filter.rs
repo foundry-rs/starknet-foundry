@@ -155,12 +155,12 @@ impl TestCaseFilter for TestsFilter {
         match self.ignored_filter {
             IgnoredFilter::IncludeAll => {}
             IgnoredFilter::IgnoredOnly => {
-                if !case_ignored {
+                if !ignored {
                     return FilterResult::Excluded(ExcludeReason::Ignored);
                 }
             }
             IgnoredFilter::ExcludeIgnored => {
-                if case_ignored {
+                if ignored {
                     return FilterResult::Excluded(ExcludeReason::Ignored);
                 }
             }
