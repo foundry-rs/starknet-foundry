@@ -6,7 +6,7 @@ use std::sync::Arc;
 use crate::scarb::load_test_artifacts;
 use anyhow::{Result, anyhow};
 use camino::Utf8Path;
-use forge_runner::package_tests::raw::TestTargetRaw;
+use forge_runner::package_tests::{raw::TestTargetRaw, with_config_resolved::TestTargetWithResolvedConfig};
 use forge_runner::package_tests::with_config_resolved::sanitize_test_case_name;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use scarb_api::metadata::PackageMetadata;
@@ -167,6 +167,35 @@ fn collect_test_full_paths(test_target_raw: &TestTargetRaw) -> Result<Vec<String
 
     Ok(test_full_paths)
 }
+
+pub fn calculate_skipped_tests_count_in_package(
+    test_targets: &[TestTargetWithResolvedConfig],
+    partition_config: &PartitionConfig,
+) -> usize {
+    match partition_config {
+        PartitionConfig::Disabled => 0,
+        PartitionConfig::Enabled {
+            partition,
+            partition_map,
+        } => test_targets
+            .iter()
+            .map(|tt| {
+                tt.test_cases
+                    .iter()
+                    .filter(|test_case| {
+                        let assigned_index = partition_map
+                            .get_assigned_index(&sanitize_test_case_name(&test_case.name));
+                        match assigned_index {
+                            Some(index) => index != partition.index(),
+                            None => false,
+                        }
+                    })
+                    .count()
+            })
+            .sum(),
+    }
+}
+
 
 #[cfg(test)]
 mod tests {

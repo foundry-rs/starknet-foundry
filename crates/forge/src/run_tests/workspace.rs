@@ -88,12 +88,13 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     let mut block_number_map = BlockNumberMap::default();
     let mut all_tests = vec![];
     let mut total_filtered_count = Some(0);
+    let mut total_skipped_count = Some(0);
 
     let workspace_root = &scarb_metadata.workspace.root;
     let cache_dir = workspace_root.join(CACHE_DIR);
     let packages_len = packages.len();
 
-    let partitioning_config = if let Some(partition) = &args.partition {
+    let partition_config = if let Some(partition) = &args.partition {
         ui.print_blank_line();
         ui.println(&PartitionStartedMessage::new(*partition));
         PartitionConfig::new(*partition, &packages, &artifacts_dir_path)?
@@ -110,19 +111,21 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
             &args,
             &cache_dir,
             &artifacts_dir_path,
-            partitioning_config.clone(),
+            partition_config.clone(),
             &ui,
         )?;
 
         let result = run_for_package(args, &mut block_number_map, ui.clone()).await?;
 
         let filtered = result.filtered();
+        let skipped = result.skipped();
         all_tests.extend(result.summaries());
 
         total_filtered_count = calculate_total_filtered_count(total_filtered_count, filtered);
+        total_skipped_count = calculate_total_skipped_count(total_skipped_count, skipped);
     }
 
-    let overall_summary = OverallSummaryMessage::new(&all_tests, total_filtered_count);
+    let overall_summary = OverallSummaryMessage::new(&all_tests, total_filtered_count, total_skipped_count);
     let all_failed_tests: Vec<AnyTestCaseSummary> = extract_failed_tests(all_tests).collect();
 
     FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
@@ -162,12 +165,25 @@ fn calculate_total_filtered_count(
     filtered: Option<usize>,
 ) -> Option<usize> {
     // Calculate filtered test counts across packages. When using `--exact` flag,
-    // `result.filtered_count` is None, so `total_filtered_count` becomes None too.
+    // `result.filtered` is None, so `total_filtered_count` becomes None too.
     match (total_filtered_count, filtered) {
         (Some(total), Some(f)) => Some(total + f),
         _ => None,
     }
 }
+
+fn calculate_total_skipped_count(
+    total_skipped_count: Option<usize>,
+    skipped: Option<usize>,
+) -> Option<usize> {
+    // Calculate skipped test counts across packages. When using `--partition` flag,
+    // `result.skipped` is None, so `total_filtered_count` becomes None too.
+    match (total_skipped_count, skipped) {
+        (Some(total), Some(f)) => Some(total + f),
+        _ => None,
+    }
+}
+
 
 #[tracing::instrument(skip_all, level = "debug")]
 fn extract_failed_tests(

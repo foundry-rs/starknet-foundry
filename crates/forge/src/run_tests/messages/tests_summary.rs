@@ -13,9 +13,9 @@ impl TestsSummaryMessage {
     pub const LABEL: &str = "Tests";
 
     #[must_use]
-    pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
+    pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>, skipped: Option<usize>) -> Self {
         Self {
-            summary: TestsSummary::new(summaries, filtered),
+            summary: TestsSummary::new(summaries, filtered, skipped),
         }
     }
 }
