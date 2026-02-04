@@ -1,5 +1,5 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    AddressOrClassHash, CallResult,
+    AddressOrClassHash, from_error, from_non_error,
 };
 use crate::runtime_extensions::common::sum_syscall_usage;
 use crate::runtime_extensions::forge_runtime_extension::{
@@ -66,7 +66,7 @@ pub(crate) fn update_trace_data(
         call_info.execution.gas_consumed,
         syscall_usage_vm_resources,
         syscall_usage_sierra_gas,
-        CallResult::from_non_error(call_info),
+        from_non_error(call_info),
         &call_info.execution.l2_to_l1_messages,
         signature,
         call_info.execution.events.clone(),
@@ -106,6 +106,6 @@ pub(crate) fn exit_error_call(
     // In case of a revert, clear all events and messages emitted by the current call.
     trace_data.clear_current_call_events_and_messages();
 
-    trace_data.update_current_call_result(CallResult::from_err(error, &identifier));
+    trace_data.update_current_call_result(from_error(error, &identifier));
     trace_data.exit_nested_call();
 }

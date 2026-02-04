@@ -13,7 +13,7 @@ use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::execution::cheated_syscalls;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::non_reverting_execute_call_entry_point;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    AddressOrClassHash, call_entry_point,
+    AddressOrClassHash, CallSuccess, call_entry_point,
 };
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
@@ -66,10 +66,10 @@ fn build_syscall_hint_processor<'a>(
 }
 pub fn recover_data(output: CallResult) -> Vec<Felt> {
     match output {
-        CallResult::Success { ret_data, .. } => ret_data,
-        CallResult::Failure(failure_type) => match failure_type {
-            CallFailure::Panic { panic_data, .. } => panic_data,
-            CallFailure::Error { msg, .. } => panic!("Call failed with message: {msg}"),
+        Ok(CallSuccess { ret_data, .. }) => ret_data,
+        Err(failure_type) => match failure_type {
+            CallFailure::Recoverable { panic_data, .. } => panic_data,
+            CallFailure::Unrecoverable { msg, .. } => panic!("Call failed with message: {msg}"),
         },
     }
 }
