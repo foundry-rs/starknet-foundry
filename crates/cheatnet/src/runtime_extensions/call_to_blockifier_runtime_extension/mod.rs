@@ -185,7 +185,7 @@ impl CallToBlockifierExtension<'_> {
     where
         Request: SyscallRequest + std::fmt::Debug,
         Response: SyscallResponse + std::fmt::Debug,
-        Error: CheatableStarknetRuntimeError + std::fmt::Debug,
+        Error: CheatableStarknetRuntimeError,
         ExecuteCallback: FnOnce(
             Request,
             &mut VirtualMachine,
