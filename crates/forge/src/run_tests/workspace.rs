@@ -146,6 +146,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     }
 
     if let Some(partition) = &args.partition {
+        ui.print_blank_line();
         ui.println(&PartitionFinishedMessage::new(*partition));
     }
 
