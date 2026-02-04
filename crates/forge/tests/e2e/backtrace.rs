@@ -41,7 +41,7 @@ fn test_backtrace_native_execution() {
 }
 
 #[test]
-fn test_backtrace() {
+fn snap_test_backtrace() {
     let temp = setup_package("backtrace_vm_error");
 
     let output = test_runner(&temp)
@@ -53,7 +53,7 @@ fn test_backtrace() {
 }
 
 #[test]
-fn test_backtrace_without_inlines() {
+fn snap_test_backtrace_without_inlines() {
     let temp = setup_package("backtrace_vm_error");
     without_inlines(&temp);
 
@@ -101,7 +101,7 @@ fn test_wrong_scarb_toml_configuration() {
 }
 
 #[test]
-fn test_backtrace_panic() {
+fn snap_test_backtrace_panic() {
     let temp = setup_package("backtrace_panic");
 
     let output = test_runner(&temp)
@@ -113,7 +113,7 @@ fn test_backtrace_panic() {
 }
 
 #[test]
-fn test_backtrace_panic_without_optimizations() {
+fn snap_test_backtrace_panic_without_optimizations() {
     let temp = setup_package("backtrace_panic");
 
     let manifest_path = temp.child("Scarb.toml");
@@ -135,7 +135,7 @@ fn test_backtrace_panic_without_optimizations() {
 }
 
 #[test]
-fn test_backtrace_panic_without_inlines() {
+fn snap_test_backtrace_panic_without_inlines() {
     let temp = setup_package("backtrace_panic");
     without_inlines(&temp);
 
@@ -148,7 +148,7 @@ fn test_backtrace_panic_without_inlines() {
 }
 
 #[test]
-fn test_handled_error_not_display() {
+fn snap_test_handled_error_not_display() {
     let temp = setup_package("dispatchers");
 
     let output = test_runner(&temp)
