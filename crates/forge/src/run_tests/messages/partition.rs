@@ -26,8 +26,8 @@ impl PartitionFinishedMessage {
 
 impl Message for PartitionFinishedMessage {
     fn text(&self) -> String {
-        let value = style(self.summary()).bold().to_string();
-        LabeledMessage::new("Finished partition run", &value).text()
+        let label = style("Finished partition run").bold().to_string();
+        LabeledMessage::new(&label, &self.summary()).text()
     }
 
     fn json(&self) -> Value {
