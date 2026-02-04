@@ -2,6 +2,7 @@ use super::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
     ExecuteCallEntryPointExtraOptions, clear_handled_errors, execute_call_entry_point,
 };
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::execution_utils::clear_events_and_messages_from_reverted_call;
 use crate::runtime_extensions::{
     call_to_blockifier_runtime_extension::panic_parser::try_extract_panic_data,
     common::create_execute_calldata,
@@ -283,19 +284,7 @@ pub fn call_entry_point(
 
         // Delete events and l2_to_l1_messages from the reverted call.
         let reverted_call = syscall_handler.base.inner_calls.last_mut().unwrap();
-        let mut stack: Vec<&mut CallInfo> = vec![reverted_call];
-        while let Some(call_info) = stack.pop() {
-            call_info.execution.events.clear();
-            call_info.execution.l2_to_l1_messages.clear();
-            // Add inner calls that did not fail to the stack.
-            // The events and l2_to_l1_messages of the failed calls were already cleared.
-            stack.extend(
-                call_info
-                    .inner_calls
-                    .iter_mut()
-                    .filter(|call_info| !call_info.execution.failed),
-            );
-        }
+        clear_events_and_messages_from_reverted_call(reverted_call);
 
         raw_retdata.push(Felt::from_hex(ENTRYPOINT_FAILED_ERROR).expect("Conversion should work"));
         return Err(CallFailure::Recoverable {

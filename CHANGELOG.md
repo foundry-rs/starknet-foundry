@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- State modified by failed calls executed within test function is now correctly reverted
+- State modified by failed contract calls executed within the test function is now correctly reverted
 
 ## [0.55.0] - 2026-01-13
 
