@@ -150,17 +150,17 @@ impl TestCaseFilter for TestsFilter {
             PartitionConfig::Disabled => {}
         }
 
-        let ignored = test_case.config.is_ignored();
+        let case_ignored = test_case.config.is_ignored();
 
         match self.ignored_filter {
             IgnoredFilter::IncludeAll => {}
             IgnoredFilter::IgnoredOnly => {
-                if !ignored {
+                if !case_ignored {
                     return FilterResult::Excluded(ExcludeReason::Ignored);
                 }
             }
             IgnoredFilter::ExcludeIgnored => {
-                if ignored {
+                if case_ignored {
                     return FilterResult::Excluded(ExcludeReason::Ignored);
                 }
             }
