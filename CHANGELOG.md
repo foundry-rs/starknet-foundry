@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Minimal recommended `Scarb` version is now `2.14.0` (updated from `2.13.1`)
+- In case of a test failure, generic `ENTRYPOINT_FAILED` errors are now included in the panic data
+
+#### Fixed
+
+- State modified by failed contract calls executed within the test function is now correctly reverted
 
 #### Fixed
 
