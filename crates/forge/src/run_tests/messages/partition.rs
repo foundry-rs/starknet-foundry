@@ -1,8 +1,8 @@
+use crate::partition::Partition;
 use console::style;
 use foundry_ui::{Message, components::labeled::LabeledMessage};
 use serde::Serialize;
 use serde_json::{Value, json};
-use crate::partition::Partition;
 
 fn partition_summary(partition: &Partition) -> String {
     format!("{}/{}", partition.index(), partition.total())
