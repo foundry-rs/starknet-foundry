@@ -13,6 +13,7 @@ use scarb_api::metadata::PackageMetadata;
 use serde::Serialize;
 
 /// Enum representing configuration for partitioning test cases.
+/// Used only when `--partition` flag is provided.
 /// If `Disabled`, partitioning is disabled.
 /// If `Enabled`, contains the partition information and map of test case names and their partition numbers.
 #[derive(Debug, PartialEq, Clone)]
@@ -147,15 +148,14 @@ impl PartitionMap {
 
 /// Collects test full paths from a raw test target.
 fn collect_test_full_paths(test_target_raw: &TestTargetRaw) -> Result<Vec<String>> {
-    let default_executables = vec![];
-    let executables = test_target_raw
+     let executables = test_target_raw
         .sierra_program
         .debug_info
         .as_ref()
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
-        .unwrap_or(&default_executables);
-
-    let test_full_paths: Vec<String> = executables
+        .map(Vec::as_slice)
+        .unwrap_or_default();
+    executables
         .par_iter()
         .map(|case| {
             case.debug_name
@@ -163,9 +163,7 @@ fn collect_test_full_paths(test_target_raw: &TestTargetRaw) -> Result<Vec<String
                 .map(Into::into)
                 .ok_or_else(|| anyhow!("Missing debug name for test executable entry"))
         })
-        .collect::<Result<Vec<String>>>()?;
-
-    Ok(test_full_paths)
+        .collect()
 }
 
 #[cfg(test)]
