@@ -28,6 +28,10 @@ If you are a more experienced Starknet Foundry contributor you can pick any issu
 Please make sure the feature you are implementing is thoroughly tested with automatic tests.
 You can check existing tests in the repository to see the recommended approach to testing.
 
+#### Snapshot tests
+Some tests use `.snap` files to store expected test output, specifically in the context of testing behaviour for older Scarb versions.
+When adding such test, please add a `snap_` so it's tested on CI for all supported Scarb versions.
+
 ### Pull Request Size
 
 Try to make your pull request self-contained, only introducing the necessary changes.
