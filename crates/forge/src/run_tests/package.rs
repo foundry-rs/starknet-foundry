@@ -2,8 +2,10 @@ use super::{
     resolve_config::resolve_config,
     test_target::{TestTargetRunResult, run_for_test_target},
 };
-use crate::scarb::{config::{ForgeConfigFromScarb, ForkTarget}, load_package_config};
-use forge_runner::{partition::PartitionConfig, scarb::load_test_artifacts};
+use crate::scarb::{
+    config::{ForgeConfigFromScarb, ForkTarget},
+    load_package_config,
+};
 use crate::{
     TestArgs,
     block_number_map::BlockNumberMap,
@@ -32,6 +34,7 @@ use forge_runner::{
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
 };
+use forge_runner::{partition::PartitionConfig, scarb::load_test_artifacts};
 use foundry_ui::{UI, components::labeled::LabeledMessage};
 use scarb_api::{CompilationOpts, get_contracts_artifacts_and_source_sierra_paths};
 use scarb_metadata::{Metadata, PackageMetadata};

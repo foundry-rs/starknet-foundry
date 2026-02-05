@@ -2,7 +2,7 @@ use crate::scarb::config::ForgeConfigFromScarb;
 use anyhow::{Context, Result, anyhow};
 use configuration::Config;
 use configuration::core::Profile;
-use scarb_api::{ScarbCommand};
+use scarb_api::ScarbCommand;
 use scarb_metadata::{Metadata, PackageId};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter, ProfileSpec};
 

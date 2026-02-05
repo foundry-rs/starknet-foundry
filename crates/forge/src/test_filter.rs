@@ -1,4 +1,3 @@
-use crate::partition::PartitionConfig;
 use crate::shared_cache::FailedTestsCache;
 use anyhow::Result;
 use forge_runner::filtering::{ExcludeReason, FilterResult, TestCaseFilter, TestCaseIsIgnored};
@@ -6,6 +5,7 @@ use forge_runner::package_tests::TestCase;
 use forge_runner::package_tests::with_config_resolved::{
     TestCaseWithResolvedConfig, sanitize_test_case_name,
 };
+use forge_runner::partition::PartitionConfig;
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -171,7 +171,6 @@ impl TestCaseFilter for TestsFilter {
 
 #[cfg(test)]
 mod tests {
-    use crate::partition::PartitionConfig;
     use crate::shared_cache::FailedTestsCache;
     use crate::test_filter::TestsFilter;
     use cairo_lang_sierra::program::Program;
@@ -181,6 +180,7 @@ mod tests {
         TestCaseResolvedConfig, TestCaseWithResolvedConfig, TestTargetWithResolvedConfig,
     };
     use forge_runner::package_tests::{TestDetails, TestTargetLocation};
+    use forge_runner::partition::PartitionConfig;
     use std::sync::Arc;
     use universal_sierra_compiler_api::compile_raw_sierra;
 
