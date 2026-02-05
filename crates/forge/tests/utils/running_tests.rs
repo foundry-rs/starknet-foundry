@@ -12,7 +12,6 @@ use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, ForgeTrackedResource, OutputConfig, TestRunnerConfig,
 };
-use forge_runner::partition::PartitionConfig;
 use forge_runner::scarb::load_test_artifacts;
 use forge_runner::test_target_summary::TestTargetSummary;
 use foundry_ui::UI;
