@@ -30,11 +30,12 @@ use forge_runner::{
             TestCaseWithResolvedConfig, TestTargetWithResolvedConfig, sanitize_test_case_name,
         },
     },
+    partition::PartitionConfig,
     running::with_config::test_target_with_config,
+    scarb::load_test_artifacts,
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
 };
-use forge_runner::{partition::PartitionConfig, scarb::load_test_artifacts};
 use foundry_ui::{UI, components::labeled::LabeledMessage};
 use scarb_api::{CompilationOpts, get_contracts_artifacts_and_source_sierra_paths};
 use scarb_metadata::{Metadata, PackageMetadata};
