@@ -43,8 +43,9 @@ pub fn test_target_with_config(
     )?);
 
     let default_executables = vec![];
-    let debug_info = test_target_raw.sierra_program.debug_info.clone();
-    let executables = debug_info
+    let executables = test_target_raw
+        .sierra_program
+        .debug_info
         .as_ref()
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
         .unwrap_or(&default_executables);
