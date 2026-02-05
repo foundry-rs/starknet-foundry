@@ -25,21 +25,21 @@ use tokio::sync::mpsc::{Sender, channel};
 use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::representation::RawCasmProgram;
 
+pub mod backtrace;
 pub mod build_trace_data;
 pub mod coverage_api;
+pub mod debugging;
 pub mod expected_result;
 pub mod forge_config;
+mod gas;
+pub mod messages;
 pub mod package_tests;
+pub mod partition;
 pub mod profiler_api;
+pub mod running;
 pub mod test_case_summary;
 pub mod test_target_summary;
 pub mod tests_summary;
-pub mod partition;
-pub mod backtrace;
-pub mod debugging;
-mod gas;
-pub mod messages;
-pub mod running;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
