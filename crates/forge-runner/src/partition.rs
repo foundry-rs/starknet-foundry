@@ -16,19 +16,14 @@ use serde::Serialize;
 /// Used only when `--partition` flag is provided.
 /// If `Disabled`, partitioning is disabled.
 /// If `Enabled`, contains the partition information and map of test case names and their partition numbers.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub enum PartitionConfig {
+    #[default]
     Disabled,
     Enabled {
         partition: Partition,
         partition_map: Arc<PartitionMap>,
     },
-}
-
-impl Default for PartitionConfig {
-    fn default() -> Self {
-        Self::Disabled
-    }
 }
 
 impl PartitionConfig {
