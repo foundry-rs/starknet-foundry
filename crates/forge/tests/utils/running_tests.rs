@@ -1,14 +1,14 @@
 use crate::utils::runner::TestCase;
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use forge::partition::PartitionConfig;
 use forge::shared_cache::FailedTestsCache;
 use forge::{
     block_number_map::BlockNumberMap,
     run_tests::package::{RunForPackageArgs, run_for_package},
-    scarb::load_test_artifacts,
     test_filter::TestsFilter,
 };
+use forge_runner::partition::PartitionConfig;
+use forge_runner::scarb::load_test_artifacts;
 use forge_runner::CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::{
@@ -60,7 +60,7 @@ pub fn run_test_case(
                 false,
                 false,
                 FailedTestsCache::default(),
-                PartitionConfig::Disabled,
+                PartitionConfig::default(),
             ),
             forge_config: Arc::new(ForgeConfig {
                 test_runner_config: Arc::new(TestRunnerConfig {

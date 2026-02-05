@@ -25,6 +25,12 @@ pub enum PartitionConfig {
     },
 }
 
+impl Default for PartitionConfig {
+    fn default() -> Self {
+        Self::Disabled
+    }
+}
+
 impl PartitionConfig {
     pub fn new(
         partition: Partition,

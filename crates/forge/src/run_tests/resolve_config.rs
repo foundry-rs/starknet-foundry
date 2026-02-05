@@ -136,7 +136,7 @@ fn replace_id_with_params(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::partition::PartitionConfig;
+    use forge_runner::partition::PartitionConfig;
     use crate::shared_cache::FailedTestsCache;
     use cairo_lang_sierra::program::ProgramArtifact;
     use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
@@ -221,7 +221,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::Disabled,
+            PartitionConfig::default(),
         );
 
         assert!(
@@ -259,7 +259,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::Disabled,
+            PartitionConfig::default(),
         );
 
         let resolved = resolve_config(
@@ -300,7 +300,7 @@ mod tests {
             true,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::Disabled,
+            PartitionConfig::default(),
         );
 
         let resolved = resolve_config(
@@ -345,7 +345,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::Disabled,
+            PartitionConfig::default(),
         );
 
         let resolved = resolve_config(
@@ -402,7 +402,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::Disabled,
+            PartitionConfig::default(),
         );
 
         let resolved = resolve_config(
@@ -471,7 +471,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::Disabled,
+            PartitionConfig::default(),
         );
 
         let resolved = resolve_config(
@@ -529,7 +529,7 @@ mod tests {
             true,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::Disabled,
+            PartitionConfig::default(),
         );
 
         let resolved = resolve_config(
@@ -579,7 +579,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::Disabled,
+            PartitionConfig::default(),
         );
 
         let resolved = resolve_config(
@@ -628,7 +628,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::Disabled,
+            PartitionConfig::default(),
         );
 
         let resolved = resolve_config(
@@ -673,7 +673,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
-            PartitionConfig::Disabled,
+            PartitionConfig::default(),
         );
 
         let resolved = resolve_config(
