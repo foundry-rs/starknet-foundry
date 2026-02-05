@@ -30,7 +30,7 @@ use forge_runner::{
             TestCaseWithResolvedConfig, TestTargetWithResolvedConfig, sanitize_test_case_name,
         },
     },
-    partition::{PartitionConfig, calculate_skipped_tests_count_in_package},
+    partition::PartitionConfig,
     running::with_config::test_target_with_config,
     scarb::load_test_artifacts,
     test_case_summary::AnyTestCaseSummary,
