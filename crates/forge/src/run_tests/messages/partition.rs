@@ -1,3 +1,4 @@
+use forge_runner::partition::Partition;
 use console::style;
 use forge_runner::partition::Partition;
 use foundry_ui::{Message, components::labeled::LabeledMessage};
