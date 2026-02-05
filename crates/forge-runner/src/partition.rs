@@ -148,7 +148,7 @@ impl PartitionMap {
 
 /// Collects test full paths from a raw test target.
 fn collect_test_full_paths(test_target_raw: &TestTargetRaw) -> Result<Vec<String>> {
-     let executables = test_target_raw
+    let executables = test_target_raw
         .sierra_program
         .debug_info
         .as_ref()

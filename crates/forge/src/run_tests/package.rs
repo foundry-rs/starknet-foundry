@@ -2,8 +2,10 @@ use super::{
     resolve_config::resolve_config,
     test_target::{TestTargetRunResult, run_for_test_target},
 };
-use crate::scarb::{config::{ForgeConfigFromScarb, ForkTarget}, load_package_config};
-use forge_runner::scarb::load_test_artifacts;
+use crate::scarb::{
+    config::{ForgeConfigFromScarb, ForkTarget},
+    load_package_config,
+};
 use crate::{
     TestArgs,
     block_number_map::BlockNumberMap,
@@ -20,6 +22,7 @@ use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use console::Style;
+use forge_runner::scarb::load_test_artifacts;
 use forge_runner::{
     forge_config::ForgeConfig,
     package_tests::{raw::TestTargetRaw, with_config_resolved::TestTargetWithResolvedConfig},
