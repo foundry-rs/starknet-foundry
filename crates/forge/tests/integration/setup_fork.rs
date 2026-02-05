@@ -18,7 +18,7 @@ use crate::utils::running_tests::run_test_case;
 use crate::utils::test_case;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::run_tests::package::RunForPackageArgs;
-use forge::scarb::load_test_artifacts;
+use forge_runner::scarb::load_test_artifacts;
 use forge::shared_cache::FailedTestsCache;
 use forge_runner::CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
