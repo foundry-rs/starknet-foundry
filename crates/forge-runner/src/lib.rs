@@ -29,6 +29,7 @@ pub mod build_trace_data;
 pub mod coverage_api;
 pub mod debugging;
 pub mod expected_result;
+pub mod filtering;
 pub mod forge_config;
 mod gas;
 pub mod messages;
