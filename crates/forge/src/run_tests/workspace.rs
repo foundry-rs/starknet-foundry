@@ -1,5 +1,4 @@
 use super::package::RunForPackageArgs;
-use crate::partition::PartitionConfig;
 use crate::profile_validation::check_profile_compatibility;
 use crate::run_tests::messages::latest_blocks_numbers::LatestBlocksNumbersMessage;
 use crate::run_tests::messages::overall_summary::OverallSummaryMessage;
@@ -17,6 +16,7 @@ use crate::{
     warn::warn_if_snforge_std_does_not_match_package_version,
 };
 use anyhow::{Context, Result};
+use forge_runner::partition::PartitionConfig;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
 use foundry_ui::UI;
@@ -93,13 +93,15 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     let cache_dir = workspace_root.join(CACHE_DIR);
     let packages_len = packages.len();
 
-    let partitioning_config = if let Some(partition) = &args.partition {
-        ui.print_blank_line();
-        ui.println(&PartitionStartedMessage::new(*partition));
-        PartitionConfig::new(*partition, &packages, &artifacts_dir_path)?
-    } else {
-        PartitionConfig::Disabled
-    };
+    let partitioning_config = args
+        .partition
+        .map(|partition| {
+            ui.print_blank_line();
+            ui.println(&PartitionStartedMessage::new(partition));
+            PartitionConfig::new(partition, &packages, &artifacts_dir_path)
+        })
+        .transpose()?
+        .unwrap_or_default();
 
     for package in packages {
         env::set_current_dir(&package.root)?;
