@@ -19,7 +19,6 @@ use crate::utils::running_tests::run_test_case;
 use crate::utils::test_case;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::run_tests::package::RunForPackageArgs;
-use forge_runner::scarb::load_test_artifacts;
 use forge::shared_cache::FailedTestsCache;
 use forge_runner::CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
@@ -27,6 +26,7 @@ use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
+use forge_runner::scarb::load_test_artifacts;
 use scarb_api::ScarbCommand;
 use scarb_api::metadata::metadata_for_dir;
 use shared::test_utils::node_url::node_rpc_url;
