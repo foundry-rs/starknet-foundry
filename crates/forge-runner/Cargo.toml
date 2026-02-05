@@ -45,3 +45,7 @@ strum_macros = "0.27"
 scarb-oracle-hint-service.workspace = true
 tracing.workspace = true
 comfy-table.workspace = true
+scarb-api = { path = "../scarb-api" }
+
+[dev-dependencies]
+test-case.workspace = true

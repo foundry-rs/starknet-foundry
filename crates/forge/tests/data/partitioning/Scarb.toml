@@ -4,11 +4,6 @@ members = [
     "crates/package_b",
 ]
 
-[workspace.scripts]
-test = "snforge"
-
-[workspace.tool.snforge]
-
 [workspace.dependencies]
 starknet = "2.12.0"
 snforge_std = { path = "../../../../../snforge_std" }
@@ -21,12 +16,6 @@ name = "partitioning"
 version.workspace = true
 edition = "2024_07"
 
-[scripts]
-test.workspace = true
-
-[tool]
-snforge.workspace = true
-
 [dependencies]
 starknet.workspace = true
 package_a = { path = "crates/package_a" }
@@ -34,11 +23,3 @@ package_b = { path = "crates/package_b" }
 
 [dev-dependencies]
 snforge_std.workspace = true
-
-[[target.starknet-contract]]
-sierra = true
-
-[profile.dev.cairo]
-unstable-add-statements-functions-debug-info = true
-unstable-add-statements-code-locations-debug-info = true
-inlining-strategy = "avoid"
