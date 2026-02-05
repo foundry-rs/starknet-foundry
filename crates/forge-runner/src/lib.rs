@@ -37,6 +37,7 @@ pub mod package_tests;
 pub mod partition;
 pub mod profiler_api;
 pub mod running;
+pub mod scarb;
 pub mod test_case_summary;
 pub mod test_target_summary;
 pub mod tests_summary;

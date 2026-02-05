@@ -3,11 +3,11 @@ use std::num::NonZeroUsize;
 use std::str::FromStr;
 use std::sync::Arc;
 
+use crate::package_tests::raw::TestTargetRaw;
+use crate::package_tests::with_config_resolved::sanitize_test_case_name;
 use crate::scarb::load_test_artifacts;
 use anyhow::{Result, anyhow};
 use camino::Utf8Path;
-use forge_runner::package_tests::raw::TestTargetRaw;
-use forge_runner::package_tests::with_config_resolved::sanitize_test_case_name;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use scarb_api::metadata::PackageMetadata;
 use serde::Serialize;

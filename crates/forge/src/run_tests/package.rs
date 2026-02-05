@@ -2,7 +2,8 @@ use super::{
     resolve_config::resolve_config,
     test_target::{TestTargetRunResult, run_for_test_target},
 };
-use crate::scarb::load_package_config;
+use crate::scarb::{config::{ForgeConfigFromScarb, ForkTarget}, load_package_config};
+use forge_runner::scarb::load_test_artifacts;
 use crate::{
     TestArgs,
     block_number_map::BlockNumberMap,
@@ -10,10 +11,6 @@ use crate::{
     run_tests::messages::{
         collected_tests_count::CollectedTestsCountMessage, tests_run::TestsRunMessage,
         tests_summary::TestsSummaryMessage,
-    },
-    scarb::{
-        config::{ForgeConfigFromScarb, ForkTarget},
-        load_test_artifacts,
     },
     shared_cache::FailedTestsCache,
     test_filter::{NameFilter, TestsFilter},

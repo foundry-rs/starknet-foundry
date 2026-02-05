@@ -3423,6 +3423,7 @@ dependencies = [
  "rayon",
  "runtime",
  "sanitize-filename",
+ "scarb-api",
  "scarb-oracle-hint-service",
  "serde",
  "serde_json",
