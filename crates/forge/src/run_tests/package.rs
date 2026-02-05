@@ -22,7 +22,6 @@ use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use console::Style;
-use forge_runner::scarb::load_test_artifacts;
 use forge_runner::{
     forge_config::ForgeConfig,
     package_tests::{
