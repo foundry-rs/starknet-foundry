@@ -1,7 +1,7 @@
 use anyhow::Result;
+use forge_runner::filtering::{ExcludeReason, FilterResult, TestCaseFilter};
 use forge_runner::messages::TestResultMessage;
 use forge_runner::{
-    TestCaseFilter,
     forge_config::ForgeConfig,
     maybe_generate_coverage, maybe_save_trace_and_profile,
     package_tests::with_config_resolved::TestTargetWithResolvedConfig,
@@ -39,26 +39,28 @@ pub async fn run_for_test_target(
 
     for case in tests.test_cases {
         let case_name = case.name.clone();
+        let filter_result = tests_filter.filter(&case);
 
-        if !tests_filter.should_be_run(&case) {
-            tasks.push(tokio::task::spawn(async {
-                // TODO TestCaseType should also be encoded in the test case definition
-                Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
-                    name: case_name,
-                }))
-            }));
-            continue;
+        match filter_result {
+            FilterResult::Excluded(reason) => match reason {
+                ExcludeReason::Ignored => {
+                    tasks.push(tokio::task::spawn(async {
+                        Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
+                            name: case_name,
+                        }))
+                    }));
+                }
+            },
+            FilterResult::Included => {
+                tasks.push(run_for_test_case(
+                    Arc::new(case),
+                    casm_program.clone(),
+                    forge_config.clone(),
+                    tests.sierra_program_path.clone(),
+                    send.clone(),
+                ));
+            }
         }
-
-        let case = Arc::new(case);
-
-        tasks.push(run_for_test_case(
-            case,
-            casm_program.clone(),
-            forge_config.clone(),
-            tests.sierra_program_path.clone(),
-            send.clone(),
-        ));
     }
 
     let mut results = vec![];

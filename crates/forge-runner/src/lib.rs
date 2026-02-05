@@ -1,6 +1,5 @@
 use crate::coverage_api::run_coverage;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig};
-use crate::package_tests::TestCase;
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
 use anyhow::Result;
@@ -30,6 +29,7 @@ pub mod build_trace_data;
 pub mod coverage_api;
 pub mod debugging;
 pub mod expected_result;
+pub mod filtering;
 pub mod forge_config;
 mod gas;
 pub mod messages;
@@ -56,16 +56,6 @@ const BUILTINS: [&str; 11] = [
     "AddMod",
     "MulMod",
 ];
-
-pub trait TestCaseFilter {
-    fn should_be_run<T>(&self, test_case: &TestCase<T>) -> bool
-    where
-        T: TestCaseIsIgnored;
-}
-
-pub trait TestCaseIsIgnored {
-    fn is_ignored(&self) -> bool;
-}
 
 pub fn maybe_save_trace_and_profile(
     result: &AnyTestCaseSummary,
