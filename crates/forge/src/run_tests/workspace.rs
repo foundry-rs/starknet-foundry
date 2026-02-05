@@ -92,11 +92,11 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     let cache_dir = workspace_root.join(CACHE_DIR);
     let packages_len = packages.len();
 
-    let partitioning_config = if let Some(partition) = &args.partition {
-        PartitionConfig::new(*partition, &packages, &artifacts_dir_path)?
-    } else {
-        PartitionConfig::Disabled
-    };
+    let partitioning_config = args
+        .partition
+        .map(|partition| PartitionConfig::new(partition, &packages, &artifacts_dir_path))
+        .transpose()?
+        .unwrap_or_default();
 
     for package in packages {
         env::set_current_dir(&package.root)?;

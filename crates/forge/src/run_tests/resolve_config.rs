@@ -136,12 +136,12 @@ fn replace_id_with_params(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use forge_runner::partition::PartitionConfig;
     use crate::shared_cache::FailedTestsCache;
     use cairo_lang_sierra::program::ProgramArtifact;
     use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
     use forge_runner::package_tests::TestTargetLocation;
     use forge_runner::package_tests::with_config::{TestCaseConfig, TestCaseWithConfig};
+    use forge_runner::partition::PartitionConfig;
     use forge_runner::{expected_result::ExpectedTestResult, package_tests::TestDetails};
     use std::sync::Arc;
     use universal_sierra_compiler_api::compile_raw_sierra;
