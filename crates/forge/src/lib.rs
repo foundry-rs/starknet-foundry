@@ -1,5 +1,4 @@
 use crate::compatibility_check::{Requirement, RequirementsChecker, create_version_parser};
-use crate::partition::Partition;
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
@@ -7,6 +6,7 @@ use derive_more::Display;
 use forge_runner::CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::ForgeTrackedResource;
+use forge_runner::partition::Partition;
 use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use run_tests::workspace::run_for_workspace;
@@ -26,7 +26,6 @@ mod clean;
 mod combine_configs;
 mod compatibility_check;
 mod new;
-pub mod partition;
 mod profile_validation;
 pub mod run_tests;
 pub mod scarb;
@@ -219,7 +218,7 @@ pub struct TestArgs {
     gas_report: bool,
 
     /// Divides tests into `TOTAL` partitions and runs partition `INDEX` (1-based), e.g. 1/4
-    #[arg(long, value_name = "INDEX/TOTAL", conflicts_with = "exact")]
+    #[arg(long, value_name = "INDEX/TOTAL")]
     partition: Option<Partition>,
 
     /// Additional arguments for cairo-coverage or cairo-profiler
