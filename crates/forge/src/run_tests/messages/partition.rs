@@ -1,4 +1,4 @@
-use crate::partition::Partition;
+use forge_runner::partition::Partition;
 use console::style;
 use foundry_ui::{Message, components::labeled::LabeledMessage};
 use serde::Serialize;
