@@ -2,16 +2,22 @@ use super::{
     resolve_config::resolve_config,
     test_target::{TestTargetRunResult, run_for_test_target},
 };
+use crate::scarb::{
+    config::{ForgeConfigFromScarb, ForkTarget},
+    load_package_config,
+};
 use crate::{
-    TestArgs, block_number_map::BlockNumberMap, combine_configs::combine_configs, partition::calculate_skipped_tests_count_in_package, run_tests::messages::{
+    TestArgs,
+    block_number_map::BlockNumberMap,
+    combine_configs::combine_configs,
+    run_tests::messages::{
         collected_tests_count::CollectedTestsCountMessage, tests_run::TestsRunMessage,
         tests_summary::TestsSummaryMessage,
-    }, scarb::{
-        config::{ForgeConfigFromScarb, ForkTarget},
-        load_test_artifacts,
-    }, shared_cache::FailedTestsCache, test_filter::{NameFilter, TestsFilter}, warn::warn_if_incompatible_rpc_version
+    },
+    shared_cache::FailedTestsCache,
+    test_filter::{NameFilter, TestsFilter},
+    warn::warn_if_incompatible_rpc_version,
 };
-use crate::{partition::PartitionConfig, scarb::load_package_config};
 use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
@@ -24,7 +30,9 @@ use forge_runner::{
             TestCaseWithResolvedConfig, TestTargetWithResolvedConfig, sanitize_test_case_name,
         },
     },
+    partition::{PartitionConfig, calculate_skipped_tests_count_in_package},
     running::with_config::test_target_with_config,
+    scarb::load_test_artifacts,
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
 };
@@ -41,11 +49,15 @@ pub struct PackageTestResult {
 
 impl PackageTestResult {
     #[must_use]
-    pub fn new(summaries: Vec<TestTargetSummary>, filtered: Option<usize>, skipped: Option<usize>) -> Self {
+    pub fn new(
+        summaries: Vec<TestTargetSummary>,
+        filtered: Option<usize>,
+        skipped: Option<usize>,
+    ) -> Self {
         Self {
             summaries,
             filtered,
-            skipped
+            skipped,
         }
     }
 
@@ -186,10 +198,10 @@ fn sum_test_cases_from_test_target(
         } => test_cases
             .iter()
             .filter(|test_case| {
-                let assigned_index = partition_map
+                let test_assigned_index = partition_map
                     .get_assigned_index(&sanitize_test_case_name(&test_case.name))
-                    .expect("Failed to get assigned partition number from partition map");
-                assigned_index == partition.index()
+                    .expect("Partition map must contain all test cases");
+                test_assigned_index == partition.index()
             })
             .count(),
     }
@@ -233,7 +245,10 @@ pub async fn run_for_package(
     let mut summaries = vec![];
     let skipped_count = match &tests_filter.partitioning_config {
         PartitionConfig::Disabled => None,
-        PartitionConfig::Enabled { .. } => Some(calculate_skipped_tests_count_in_package(&test_targets, &tests_filter.partitioning_config)),
+        PartitionConfig::Enabled { .. } => Some(calculate_skipped_tests_count_in_package(
+            &test_targets,
+            &tests_filter.partitioning_config,
+        )),
     };
 
     for test_target in test_targets {
@@ -270,7 +285,11 @@ pub async fn run_for_package(
         Some(all_tests - not_filtered)
     };
 
-    ui.println(&TestsSummaryMessage::new(&summaries, filtered_count, skipped_count));
+    ui.println(&TestsSummaryMessage::new(
+        &summaries,
+        filtered_count,
+        skipped_count,
+    ));
 
     let any_fuzz_test_was_run = summaries.iter().any(|test_target_summary| {
         test_target_summary
@@ -287,5 +306,9 @@ pub async fn run_for_package(
         ));
     }
 
-    Ok(PackageTestResult::new(summaries, filtered_count, skipped_count))
+    Ok(PackageTestResult::new(
+        summaries,
+        filtered_count,
+        skipped_count,
+    ))
 }

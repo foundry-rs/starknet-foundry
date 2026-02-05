@@ -14,7 +14,11 @@ pub struct TestsSummary {
 
 impl TestsSummary {
     #[must_use]
-    pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>, skipped: Option<usize>) -> Self {
+    pub fn new(
+        summaries: &[TestTargetSummary],
+        filtered: Option<usize>,
+        skipped: Option<usize>,
+    ) -> Self {
         let passed = summaries.iter().map(TestTargetSummary::count_passed).sum();
         let failed = summaries.iter().map(TestTargetSummary::count_failed).sum();
         let interrupted = summaries
@@ -29,7 +33,7 @@ impl TestsSummary {
             interrupted,
             ignored,
             filtered,
-            skipped
+            skipped,
         }
     }
 

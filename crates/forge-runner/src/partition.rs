@@ -3,16 +3,19 @@ use std::num::NonZeroUsize;
 use std::str::FromStr;
 use std::sync::Arc;
 
+use crate::package_tests::with_config_resolved::sanitize_test_case_name;
+use crate::package_tests::{
+    raw::TestTargetRaw, with_config_resolved::TestTargetWithResolvedConfig,
+};
 use crate::scarb::load_test_artifacts;
 use anyhow::{Result, anyhow};
 use camino::Utf8Path;
-use forge_runner::package_tests::{raw::TestTargetRaw, with_config_resolved::TestTargetWithResolvedConfig};
-use forge_runner::package_tests::with_config_resolved::sanitize_test_case_name;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use scarb_api::metadata::PackageMetadata;
 use serde::Serialize;
 
 /// Enum representing configuration for partitioning test cases.
+/// Used only when `--partition` flag is provided.
 /// If `Disabled`, partitioning is disabled.
 /// If `Enabled`, contains the partition information and map of test case names and their partition numbers.
 #[derive(Debug, PartialEq, Clone)]
@@ -22,6 +25,12 @@ pub enum PartitionConfig {
         partition: Partition,
         partition_map: Arc<PartitionMap>,
     },
+}
+
+impl Default for PartitionConfig {
+    fn default() -> Self {
+        Self::Disabled
+    }
 }
 
 impl PartitionConfig {
@@ -147,15 +156,14 @@ impl PartitionMap {
 
 /// Collects test full paths from a raw test target.
 fn collect_test_full_paths(test_target_raw: &TestTargetRaw) -> Result<Vec<String>> {
-    let default_executables = vec![];
     let executables = test_target_raw
         .sierra_program
         .debug_info
         .as_ref()
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
-        .unwrap_or(&default_executables);
-
-    let test_full_paths: Vec<String> = executables
+        .map(Vec::as_slice)
+        .unwrap_or_default();
+    executables
         .par_iter()
         .map(|case| {
             case.debug_name
@@ -163,9 +171,7 @@ fn collect_test_full_paths(test_target_raw: &TestTargetRaw) -> Result<Vec<String
                 .map(Into::into)
                 .ok_or_else(|| anyhow!("Missing debug name for test executable entry"))
         })
-        .collect::<Result<Vec<String>>>()?;
-
-    Ok(test_full_paths)
+        .collect()
 }
 
 pub fn calculate_skipped_tests_count_in_package(
@@ -195,7 +201,6 @@ pub fn calculate_skipped_tests_count_in_package(
             .sum(),
     }
 }
-
 
 #[cfg(test)]
 mod tests {

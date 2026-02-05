@@ -1,5 +1,5 @@
 use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
-use forge::partition::PartitionConfig;
+use forge_runner::partition::PartitionConfig;
 use foundry_ui::UI;
 use indoc::{formatdoc, indoc};
 use std::num::NonZeroU32;
@@ -19,7 +19,6 @@ use crate::utils::running_tests::run_test_case;
 use crate::utils::test_case;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::run_tests::package::RunForPackageArgs;
-use forge::scarb::load_test_artifacts;
 use forge::shared_cache::FailedTestsCache;
 use forge_runner::CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
@@ -27,6 +26,7 @@ use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
+use forge_runner::scarb::load_test_artifacts;
 use scarb_api::ScarbCommand;
 use scarb_api::metadata::metadata_for_dir;
 use shared::test_utils::node_url::node_rpc_url;
@@ -143,7 +143,7 @@ fn fork_aliased_decorator() {
                     false,
                     false,
                     FailedTestsCache::default(),
-                    PartitionConfig::Disabled,
+                    PartitionConfig::default(),
                 ),
                 forge_config: Arc::new(ForgeConfig {
                     test_runner_config: Arc::new(TestRunnerConfig {
@@ -234,7 +234,7 @@ fn fork_aliased_decorator_overrding() {
                     false,
                     false,
                     FailedTestsCache::default(),
-                    PartitionConfig::Disabled,
+                    PartitionConfig::default(),
                 ),
                 forge_config: Arc::new(ForgeConfig {
                     test_runner_config: Arc::new(TestRunnerConfig {
