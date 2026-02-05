@@ -12,6 +12,7 @@ use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, ForgeTrackedResource, OutputConfig, TestRunnerConfig,
 };
+use forge_runner::partition::PartitionConfig;
 use forge_runner::scarb::load_test_artifacts;
 use forge_runner::test_target_summary::TestTargetSummary;
 use foundry_ui::UI;
@@ -59,6 +60,7 @@ pub fn run_test_case(
                 false,
                 false,
                 FailedTestsCache::default(),
+                PartitionConfig::default(),
             ),
             forge_config: Arc::new(ForgeConfig {
                 test_runner_config: Arc::new(TestRunnerConfig {

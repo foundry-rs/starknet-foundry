@@ -130,6 +130,8 @@ pub enum TestCaseSummary<T: TestType> {
     },
     /// Test case skipped due to exit first or execution interrupted, test result is ignored.
     Interrupted {},
+    /// Test case excluded from current partition
+    ExcludedFromPartition {},
 }
 
 #[derive(Debug)]
@@ -147,7 +149,9 @@ impl<T: TestType> TestCaseSummary<T> {
             TestCaseSummary::Failed { name, .. }
             | TestCaseSummary::Passed { name, .. }
             | TestCaseSummary::Ignored { name, .. } => Some(name),
-            TestCaseSummary::Interrupted { .. } => None,
+            TestCaseSummary::Interrupted { .. } | TestCaseSummary::ExcludedFromPartition { .. } => {
+                None
+            }
         }
     }
 
@@ -229,6 +233,7 @@ impl TestCaseSummary<Fuzzing> {
             },
             TestCaseSummary::Ignored { name } => TestCaseSummary::Ignored { name: name.clone() },
             TestCaseSummary::Interrupted {} => TestCaseSummary::Interrupted {},
+            TestCaseSummary::ExcludedFromPartition {} => TestCaseSummary::ExcludedFromPartition {},
         }
     }
 }
@@ -465,6 +470,15 @@ impl AnyTestCaseSummary {
             self,
             AnyTestCaseSummary::Single(TestCaseSummary::Ignored { .. })
                 | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Ignored { .. })
+        )
+    }
+
+    #[must_use]
+    pub fn is_excluded_from_partition(&self) -> bool {
+        matches!(
+            self,
+            AnyTestCaseSummary::Single(TestCaseSummary::ExcludedFromPartition { .. })
+                | AnyTestCaseSummary::Fuzzing(TestCaseSummary::ExcludedFromPartition { .. })
         )
     }
 }
