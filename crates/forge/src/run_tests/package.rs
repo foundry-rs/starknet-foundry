@@ -2,6 +2,8 @@ use super::{
     resolve_config::resolve_config,
     test_target::{TestTargetRunResult, run_for_test_target},
 };
+use crate::scarb::{config::{ForgeConfigFromScarb, ForkTarget}, load_package_config};
+use forge_runner::{partition::PartitionConfig, scarb::load_test_artifacts};
 use crate::{
     TestArgs,
     block_number_map::BlockNumberMap,
@@ -10,15 +12,10 @@ use crate::{
         collected_tests_count::CollectedTestsCountMessage, tests_run::TestsRunMessage,
         tests_summary::TestsSummaryMessage,
     },
-    scarb::{
-        config::{ForgeConfigFromScarb, ForkTarget},
-        load_test_artifacts,
-    },
     shared_cache::FailedTestsCache,
     test_filter::{NameFilter, TestsFilter},
     warn::warn_if_incompatible_rpc_version,
 };
-use crate::{partition::PartitionConfig, scarb::load_package_config};
 use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
