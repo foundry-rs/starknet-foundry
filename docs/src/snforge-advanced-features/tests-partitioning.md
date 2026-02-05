@@ -36,7 +36,7 @@ Running 4 test(s) from tests/
 [PASS] tests_partitioning_integrationtest::example::test_c ([..])
 [PASS] tests_partitioning_integrationtest::example::test_g ([..])
 Running 0 test(s) from src/
-Tests: 4 passed, 0 failed, 0 ignored, 0 filtered out, 4 skipped
+Tests: 4 passed, 0 failed, 0 ignored, 0 filtered out, 3 skipped
 
 Finished partition run: 1/2
 ```
