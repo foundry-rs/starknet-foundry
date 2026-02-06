@@ -55,7 +55,7 @@ impl TestsSummary {
         );
 
         if let Some(skipped) = self.skipped {
-            let skipped_str = format!(", {} skipped", skipped);
+            let skipped_str = format!(", {skipped} skipped");
             format!("{summary}{skipped_str}")
         } else {
             summary

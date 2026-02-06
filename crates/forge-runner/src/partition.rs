@@ -169,6 +169,7 @@ fn collect_test_full_paths(test_target_raw: &TestTargetRaw) -> Result<Vec<String
         .collect()
 }
 
+#[must_use]
 pub fn calculate_skipped_tests_count_in_package(
     test_targets: &[TestTargetWithResolvedConfig],
     partition_config: &PartitionConfig,
