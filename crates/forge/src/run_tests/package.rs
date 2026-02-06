@@ -30,7 +30,7 @@ use forge_runner::{
             TestCaseWithResolvedConfig, TestTargetWithResolvedConfig, sanitize_test_case_name,
         },
     },
-    partition::{PartitionConfig, calculate_skipped_tests_count_in_package},
+    partition::PartitionConfig,
     running::with_config::test_target_with_config,
     scarb::load_test_artifacts,
     test_case_summary::AnyTestCaseSummary,
@@ -44,31 +44,20 @@ use std::sync::Arc;
 pub struct PackageTestResult {
     summaries: Vec<TestTargetSummary>,
     filtered: Option<usize>,
-    skipped: Option<usize>,
 }
 
 impl PackageTestResult {
     #[must_use]
-    pub fn new(
-        summaries: Vec<TestTargetSummary>,
-        filtered: Option<usize>,
-        skipped: Option<usize>,
-    ) -> Self {
+    pub fn new(summaries: Vec<TestTargetSummary>, filtered: Option<usize>) -> Self {
         Self {
             summaries,
             filtered,
-            skipped,
         }
     }
 
     #[must_use]
     pub fn filtered(&self) -> Option<usize> {
         self.filtered
-    }
-
-    #[must_use]
-    pub fn skipped(&self) -> Option<usize> {
-        self.skipped
     }
 
     #[must_use]
@@ -243,13 +232,6 @@ pub async fn run_for_package(
     });
 
     let mut summaries = vec![];
-    let skipped_count = match &tests_filter.partitioning_config {
-        PartitionConfig::Disabled => None,
-        PartitionConfig::Enabled { .. } => Some(calculate_skipped_tests_count_in_package(
-            &test_targets,
-            &tests_filter.partitioning_config,
-        )),
-    };
 
     for test_target in test_targets {
         let ui = ui.clone();
@@ -285,11 +267,7 @@ pub async fn run_for_package(
         Some(all_tests - not_filtered)
     };
 
-    ui.println(&TestsSummaryMessage::new(
-        &summaries,
-        filtered_count,
-        skipped_count,
-    ));
+    ui.println(&TestsSummaryMessage::new(&summaries, filtered_count));
 
     let any_fuzz_test_was_run = summaries.iter().any(|test_target_summary| {
         test_target_summary
@@ -306,9 +284,5 @@ pub async fn run_for_package(
         ));
     }
 
-    Ok(PackageTestResult::new(
-        summaries,
-        filtered_count,
-        skipped_count,
-    ))
+    Ok(PackageTestResult::new(summaries, filtered_count))
 }

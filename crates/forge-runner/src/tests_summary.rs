@@ -9,16 +9,11 @@ pub struct TestsSummary {
     interrupted: usize,
     ignored: usize,
     filtered: Option<usize>,
-    skipped: Option<usize>,
 }
 
 impl TestsSummary {
     #[must_use]
-    pub fn new(
-        summaries: &[TestTargetSummary],
-        filtered: Option<usize>,
-        skipped: Option<usize>,
-    ) -> Self {
+    pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
         let passed = summaries.iter().map(TestTargetSummary::count_passed).sum();
         let failed = summaries.iter().map(TestTargetSummary::count_failed).sum();
         let interrupted = summaries
@@ -33,7 +28,6 @@ impl TestsSummary {
             interrupted,
             ignored,
             filtered,
-            skipped,
         }
     }
 
@@ -49,14 +43,8 @@ impl TestsSummary {
             String::new()
         };
 
-        let skipped = if let Some(skipped) = self.skipped {
-            format!(", {skipped} skipped")
-        } else {
-            String::new()
-        };
-
         format!(
-            "{} passed, {} failed, {} ignored, {filtered} filtered out{skipped}{interrupted}",
+            "{} passed, {} failed, {} ignored, {filtered} filtered out{interrupted}",
             self.passed, self.failed, self.ignored,
         )
     }
