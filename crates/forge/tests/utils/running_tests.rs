@@ -21,6 +21,7 @@ use std::num::NonZeroU32;
 use std::sync::Arc;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
+use universal_sierra_compiler_api::schedule_compile_raw_sierra_at_path;
 
 #[must_use]
 pub fn run_test_case(
@@ -45,6 +46,10 @@ pub fn run_test_case(
     let rt = Runtime::new().expect("Could not instantiate Runtime");
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
+
+    for test_target in &raw_test_targets {
+        schedule_compile_raw_sierra_at_path(test_target.sierra_program_path.as_ref()).unwrap();
+    }
 
     let ui = Arc::new(UI::default());
     rt.block_on(run_for_package(

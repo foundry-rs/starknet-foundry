@@ -94,7 +94,7 @@ snapbox = "0.6.23"
 scarb-ui = "0.1.7"
 semver = "1.0.27"
 bimap = "0.6.3"
-primitive-types = {  version =  "0.14.0", features = ["serde"] }
+primitive-types = { version = "0.14.0", features = ["serde"] }
 shellexpand = "3.1.0"
 toml = "0.9.8"
 rpassword = "7.3.1"
@@ -131,3 +131,4 @@ tracing-chrome = "0.7.2"
 tracing-log = "0.2.0"
 comfy-table = "7"
 insta = { version = "1.46.0", features = ["filters"] }
+uv-once-map = "0"

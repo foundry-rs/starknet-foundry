@@ -15,7 +15,7 @@ use cairo_lang_sierra::{
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use std::{collections::HashMap, sync::Arc};
-use universal_sierra_compiler_api::compile_raw_sierra_at_path;
+use universal_sierra_compiler_api::blocking_get_compiled_raw_sierra_at_path;
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn test_target_with_config(
@@ -38,7 +38,7 @@ pub fn test_target_with_config(
     let funcs = by_id!(funcs);
     let type_declarations = by_id!(type_declarations);
 
-    let casm_program = Arc::new(compile_raw_sierra_at_path(
+    let casm_program = Arc::new(blocking_get_compiled_raw_sierra_at_path(
         test_target_raw.sierra_program_path.as_std_path(),
     )?);
 
