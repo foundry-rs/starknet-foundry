@@ -49,16 +49,15 @@ impl TestsSummary {
             String::new()
         };
 
-        let summary = format!(
-            "{} passed, {} failed, {} ignored, {filtered} filtered out{interrupted}",
-            self.passed, self.failed, self.ignored,
-        );
-
-        if let Some(skipped) = self.skipped {
-            let skipped_str = format!(", {skipped} skipped");
-            format!("{summary}{skipped_str}")
+        let skipped = if let Some(skipped) = self.skipped {
+            format!(", {skipped} skipped")
         } else {
-            summary
-        }
+            String::new()
+        };
+
+        format!(
+            "{} passed, {} failed, {} ignored, {filtered} filtered out{skipped}{interrupted}",
+            self.passed, self.failed, self.ignored,
+        )
     }
 }
