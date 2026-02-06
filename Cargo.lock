@@ -8317,7 +8317,6 @@ dependencies = [
  "cairo-lang-casm",
  "cairo-lang-starknet-classes",
  "num-bigint",
- "rayon",
  "serde",
  "serde_json",
  "shared",

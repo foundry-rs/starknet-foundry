@@ -13,7 +13,7 @@ use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::sync::OnceLock;
+use std::sync::{OnceLock, mpsc};
 use tracing::trace_span;
 use uv_once_map::OnceMap;
 
@@ -45,36 +45,50 @@ static SIERRA_RAW_COMPILATION_DATA_LOADER: OnceLock<
     OnceMap<PathBuf, Result<RawCasmProgram, CompilationErrorString>>,
 > = OnceLock::new();
 
+static COMPILATION_WORKER_SENDER: OnceLock<mpsc::Sender<PathBuf>> = OnceLock::new();
+
 // We need a cloneable error type for the `OnceMap` to work.
 #[derive(Clone)]
 struct CompilationErrorString(String);
 
+fn ensure_worker_thread() -> &'static mpsc::Sender<PathBuf> {
+    COMPILATION_WORKER_SENDER.get_or_init(|| {
+        let (tx, rx) = mpsc::channel::<PathBuf>();
+        std::thread::spawn(move || {
+            let cell = SIERRA_RAW_COMPILATION_DATA_LOADER.get_or_init(OnceMap::default);
+            for path in rx {
+                let span = trace_span!("compile_raw_sierra_at_path");
+                let result = {
+                    let _g = span.enter();
+                    compile_sierra_at_path(&path, SierraType::Raw).and_then(|json| {
+                        serde_json::from_str(&json).map_err(CompilationError::Deserialization)
+                    })
+                };
+                match result {
+                    Ok(program) => {
+                        cell.done(path, Ok(program));
+                    }
+                    Err(e) => {
+                        cell.done(path, Err(CompilationErrorString(e.to_string())));
+                    }
+                }
+            }
+        });
+        tx
+    })
+}
+
 /// Starts a compilation of Sierra JSON file at the given path into [`RawCasmProgram`].
 /// This is a fire and forget operation. It neither blocks the thread, nor waits for compilation
 /// to finish in any way.
-/// The compilation will happen on another thread.
+/// The compilation will happen on a dedicated worker thread, in the order tasks are scheduled.
 pub fn schedule_compile_raw_sierra_at_path(sierra_file_path: &Path) -> anyhow::Result<()> {
     let cell = SIERRA_RAW_COMPILATION_DATA_LOADER.get_or_init(OnceMap::default);
     let path = sierra_file_path.to_path_buf();
 
     if cell.register(path.clone()) {
-        rayon::spawn(move || {
-            let span = trace_span!("compile_raw_sierra_at_path");
-            let result = {
-                let _g = span.enter();
-                compile_sierra_at_path(&path, SierraType::Raw).and_then(|json| {
-                    serde_json::from_str(&json).map_err(CompilationError::Deserialization)
-                })
-            };
-            match result {
-                Ok(program) => {
-                    cell.done(path, Ok(program));
-                }
-                Err(e) => {
-                    cell.done(path, Err(CompilationErrorString(e.to_string())));
-                }
-            }
-        });
+        let tx = ensure_worker_thread();
+        tx.send(path)?;
     }
 
     Ok(())

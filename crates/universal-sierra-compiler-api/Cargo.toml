@@ -16,5 +16,4 @@ tracing.workspace = true
 strum_macros.workspace = true
 thiserror.workspace = true
 uv-once-map.workspace = true
-rayon.workspace = true
 anyhow.workspace = true
