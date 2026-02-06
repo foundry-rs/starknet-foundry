@@ -32,6 +32,7 @@ use std::env;
 use std::sync::Arc;
 
 #[tracing::instrument(skip_all, level = "debug")]
+#[expect(clippy::too_many_lines)]
 pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus> {
     match args.color {
         // SAFETY: This runs in a single-threaded environment.
@@ -144,9 +145,22 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         ui.println(&overall_summary);
     }
 
-    if let Some(partition) = &args.partition {
-        ui.print_blank_line();
-        ui.println(&PartitionFinishedMessage::new(*partition));
+    match partitioning_config {
+        PartitionConfig::Disabled => (),
+        PartitionConfig::Enabled {
+            partition,
+            partition_map,
+        } => {
+            ui.print_blank_line();
+
+            let (included_tests_count, excluded_tests_count) =
+                partition_map.count_partition_tests(partition.index());
+            ui.println(&PartitionFinishedMessage::new(
+                partition,
+                included_tests_count,
+                excluded_tests_count,
+            ));
+        }
     }
 
     if args.exact {

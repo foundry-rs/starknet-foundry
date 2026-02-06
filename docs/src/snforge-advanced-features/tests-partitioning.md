@@ -38,7 +38,7 @@ Running 4 test(s) from tests/
 Running 0 test(s) from src/
 Tests: 4 passed, 0 failed, 0 ignored, 0 filtered out
 
-Finished partition run: 1/2
+Finished partition run: 1/2, included 4 out of total 7 tests
 ```
 
 </details>

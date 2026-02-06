@@ -23,8 +23,3 @@ package_b = { path = "crates/package_b" }
 
 [dev-dependencies]
 snforge_std.workspace = true
-
-[profile.dev.cairo]
-unstable-add-statements-functions-debug-info = true
-unstable-add-statements-code-locations-debug-info = true
-inlining-strategy = "avoid"
