@@ -1,5 +1,5 @@
 use crate::compatibility_check::{Requirement, RequirementsChecker, create_version_parser};
-use anyhow::Result;
+use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use derive_more::Display;
@@ -78,6 +78,7 @@ pub struct Cli {
 }
 
 #[derive(Subcommand, Debug)]
+#[allow(clippy::large_enum_variant)]
 enum ForgeSubcommand {
     /// Run tests for a project in the current directory
     Test {
@@ -214,6 +215,10 @@ pub struct TestArgs {
     #[arg(long)]
     gas_report: bool,
 
+    /// Maximum number of threads to use for running tests
+    #[arg(long)]
+    max_threads: Option<usize>,
+
     /// Additional arguments for cairo-coverage or cairo-profiler
     #[arg(last = true)]
     additional_args: Vec<OsString>,
@@ -312,11 +317,25 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
         ForgeSubcommand::Test { mut args } => {
             args.normalize();
             check_requirements(false, &ui)?;
-            let cores = if let Ok(available_cores) = available_parallelism() {
-                available_cores.get()
+
+            // Determine the number of threads to use
+            let cores = if let Some(max_threads) = args.max_threads {
+                // Validate that max_threads doesn't exceed available parallelism
+                let available_cores = available_parallelism()
+                    .context("Failed to get the number of available cores")?;
+                let available = available_cores.get();
+                if max_threads > available {
+                    anyhow::bail!(
+                        "max-threads ({}) exceeds available parallelism ({})",
+                        max_threads,
+                        available
+                    );
+                }
+                max_threads
             } else {
-                ui.eprintln(&"Failed to get the number of available cores, defaulting to 1");
-                1
+                available_parallelism()
+                    .context("Failed to get the number of available cores")?
+                    .get()
             };
 
             let rt = Builder::new_multi_thread()
