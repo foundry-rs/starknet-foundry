@@ -149,8 +149,7 @@ impl PartitionMap {
     /// Counts the number of included tests for a given partition based on the partition map.
     #[must_use]
     pub fn included_tests_count(&self, run_partition: NonZeroUsize) -> usize {
-     self
-            .0
+        self.0
             .values()
             .filter(|assigned_partition| **assigned_partition == run_partition)
             .count()
