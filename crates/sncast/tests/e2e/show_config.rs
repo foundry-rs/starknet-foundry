@@ -171,4 +171,3 @@ async fn test_stark_scan_as_block_explorer() {
         "Error: Failed to load config: starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice.",
     );
 }
-

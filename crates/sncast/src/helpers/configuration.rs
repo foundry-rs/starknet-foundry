@@ -90,8 +90,10 @@ pub struct CastConfig {
 // TODO(#4027)
 impl CastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
-        if self.block_explorer.unwrap_or_default()  == block_explorer::Service::StarkScan {
-            anyhow::bail!("starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice.")
+        if self.block_explorer.unwrap_or_default() == block_explorer::Service::StarkScan {
+            anyhow::bail!(
+                "starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice."
+            )
         }
 
         match (&self.url, &self.network) {
