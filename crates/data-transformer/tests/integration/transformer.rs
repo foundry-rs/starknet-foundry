@@ -567,7 +567,7 @@ async fn test_happy_case_implicit_contract_constructor() {
 
 #[tokio::test]
 async fn test_external_enum_function_ambiguous_enum_name_cairo_expression_input() {
-    // https://sepolia.starkscan.co/class/0x019ea00ebe2d83fb210fbd6f52c302b83c69e3c8c934f9404c87861e9d3aebbc#code
+    // https://sepolia.voyager.online/class/0x019Ea00Ebe2d83Fb210fbd6F52C302b83c69e3C8c934f9404c87861E9d3AeBbc
     let test_class_hash: Felt = Felt::from_hex_unchecked(
         "0x019ea00ebe2d83fb210fbd6f52c302b83c69e3c8c934f9404c87861e9d3aebbc",
     );

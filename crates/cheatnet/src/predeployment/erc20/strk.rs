@@ -20,7 +20,7 @@ pub fn strk_predeployed_contract() -> PredeployedContract {
     )
     .unwrap();
 
-    // All storage values are taken from https://starkscan.co/contract/0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d#contract-storage
+    // All storage values are taken from https://voyager.online/contract/0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d#readStorage
     // Block 747469
     let total_supply_low: u128 = 60_000_000_000_000_000_000_000_000;
     let permitted_minter = ContractAddress::try_from_hex_str(

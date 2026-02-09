@@ -2,7 +2,6 @@ use crate::{Network, response::explorer_link::ExplorerError};
 use conversions::padded_felt::PaddedFelt;
 use serde::{Deserialize, Serialize};
 
-const STARKSCAN: &str = "starkscan.co";
 const VOYAGER: &str = "voyager.online";
 const VIEWBLOCK: &str = "https://viewblock.io/starknet";
 const OKLINK: &str = "https://www.oklink.com/starknet";
@@ -10,7 +9,6 @@ const OKLINK: &str = "https://www.oklink.com/starknet";
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Service {
     #[default]
-    StarkScan,
     Voyager,
     ViewBlock,
     OkLink,
@@ -19,7 +17,6 @@ pub enum Service {
 impl Service {
     pub fn as_provider(&self, network: Network) -> Result<Box<dyn LinkProvider>, ExplorerError> {
         match (self, network) {
-            (Service::StarkScan, _) => Ok(Box::new(StarkScan { network })),
             (Service::Voyager, _) => Ok(Box::new(Voyager { network })),
             (Service::ViewBlock, Network::Mainnet) => Ok(Box::new(ViewBlock)),
             (Service::OkLink, Network::Mainnet) => Ok(Box::new(OkLink)),
@@ -39,33 +36,6 @@ const fn network_subdomain(network: Network) -> &'static str {
     match network {
         Network::Sepolia => "sepolia.",
         Network::Mainnet | Network::Devnet => "",
-    }
-}
-
-pub struct StarkScan {
-    network: Network,
-}
-
-impl LinkProvider for StarkScan {
-    fn transaction(&self, hash: PaddedFelt) -> String {
-        format!(
-            "https://{}{STARKSCAN}/tx/{hash:#x}",
-            network_subdomain(self.network)
-        )
-    }
-
-    fn class(&self, hash: PaddedFelt) -> String {
-        format!(
-            "https://{}{STARKSCAN}/class/{hash:#x}",
-            network_subdomain(self.network)
-        )
-    }
-
-    fn contract(&self, address: PaddedFelt) -> String {
-        format!(
-            "https://{}{STARKSCAN}/contract/{address:#x}",
-            network_subdomain(self.network)
-        )
     }
 }
 
@@ -172,15 +142,6 @@ mod tests {
 
         assert!(contract_response.is_ok());
         assert!(transaction_response.is_ok());
-    }
-
-    #[test_case(Network::Mainnet, &MAINNET_RESPONSE; "mainnet")]
-    #[test_case(Network::Sepolia, &SEPOLIA_RESPONSE; "sepolia")]
-    #[tokio::test]
-    async fn test_happy_case_starkscan(network: Network, response: &DeployResponse) {
-        let provider = Service::Voyager.as_provider(network).unwrap();
-        let result = response.format_links(provider);
-        assert_valid_links(&result).await;
     }
 
     #[test_case(Network::Mainnet, &MAINNET_RESPONSE; "mainnet")]
