@@ -3,7 +3,7 @@
 /// https://docs.openzeppelin.com/contracts-cairo/1.0.0/guides/erc20-supply
 #[starknet::contract]
 pub mod MockERC20 {
-    use openzeppelin_token::erc20::{ERC20Component, ERC20HooksEmptyImpl};
+    use openzeppelin_token::erc20::{DefaultConfig, ERC20Component, ERC20HooksEmptyImpl};
     use starknet::ContractAddress;
 
     /// Declare the ERC20 component for this contract.

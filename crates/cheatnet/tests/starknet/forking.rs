@@ -46,7 +46,8 @@ fn fork_simple() {
         &contract_address,
         selector,
         &[Felt::from(100)],
-    );
+    )
+    .unwrap();
 
     let selector = selector_from_name("get_balance");
     let output = call_contract(
@@ -188,7 +189,8 @@ fn library_call_on_forked_class_hash() {
         &contract_address,
         selector_from_name("set_balance"),
         &[Felt::from(100)],
-    );
+    )
+    .unwrap();
 
     let output = call_contract(
         &mut cached_fork_state,

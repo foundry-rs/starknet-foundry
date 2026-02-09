@@ -1,18 +1,18 @@
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{CallResult};
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::execution_utils::{resolve_cheated_data_for_call, update_trace_data, exit_error_call};
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::execution_utils::{exit_error_call, resolve_cheated_data_for_call, update_trace_data};
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallSuccess;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
-use crate::runtime_extensions::common::{get_relocated_vm_trace};
-use crate::state::{CheatStatus};
+use crate::runtime_extensions::common::get_relocated_vm_trace;
 #[cfg(feature = "cairo-native")]
 use crate::runtime_extensions::native::execution::execute_entry_point_call_native;
+use crate::state::CheatStatus;
 use blockifier::execution::call_info::{CallExecution, Retdata, StorageAccessTracker};
 use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
 use blockifier::execution::entry_point::EntryPointRevertInfo;
 use blockifier::execution::execution_utils::update_remaining_gas;
 use blockifier::execution::stack_trace::{
-    Cairo1RevertHeader, extract_trailing_cairo1_revert_trace,
+    extract_trailing_cairo1_revert_trace, Cairo1RevertHeader,
 };
 use blockifier::execution::syscalls::hint_processor::{
     ENTRYPOINT_NOT_FOUND_ERROR, OUT_OF_GAS_ERROR,
@@ -22,8 +22,8 @@ use blockifier::{
     execution::{
         call_info::CallInfo,
         entry_point::{
-            CallEntryPoint, CallType, ConstructorContext, EntryPointExecutionContext,
-            EntryPointExecutionResult, FAULTY_CLASS_HASH, handle_empty_constructor,
+            handle_empty_constructor, CallEntryPoint, CallType, ConstructorContext,
+            EntryPointExecutionContext, EntryPointExecutionResult, FAULTY_CLASS_HASH,
         },
         errors::{EntryPointExecutionError, PreExecutionError},
     },
@@ -36,7 +36,7 @@ use starknet_api::execution_resources::GasAmount;
 use starknet_api::{
     contract_class::EntryPointType,
     core::ClassHash,
-    transaction::{TransactionVersion, fields::Calldata},
+    transaction::{fields::Calldata, TransactionVersion},
 };
 use starknet_types_core::felt::Felt;
 use std::collections::{HashMap, HashSet};
@@ -84,9 +84,9 @@ pub fn execute_call_entry_point(
             u64::default(),
             SyscallUsageMap::default(),
             SyscallUsageMap::default(),
-            CallResult::Success {
+            Ok(CallSuccess {
                 ret_data: ret_data_f252,
-            },
+            }),
             &[],
             vec![],
             vec![],

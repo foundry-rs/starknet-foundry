@@ -6,11 +6,13 @@ edition.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-scarb_2_10_0 = []
+# This should match `MINIMAL_SCARB_VERSION`
+scarb_2_12_0 = []
 no_scarb_installed = []
 non_exact_gas_assertions = []
 skip_test_for_only_latest_scarb = []
 run_test_for_scarb_since_2_13_1 = []
+run_test_for_scarb_since_2_15_1 = []
 test_for_multiple_scarb_versions = []
 cairo-native = ["cheatnet/cairo-native", "scarb-api/cairo-native"]
 

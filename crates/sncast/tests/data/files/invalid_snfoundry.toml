@@ -3,3 +3,10 @@ account = "user1"
 url = "http://some.url"
 network = "sepolia"
 accounts-file = "/path/to/account.json"
+
+[sncast.profile_with_stark_scan]
+account = "user1"
+url = "http://some.url"
+network = "sepolia"
+accounts-file = "/path/to/account.json"
+block-explorer = "StarkScan"
