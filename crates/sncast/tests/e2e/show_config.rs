@@ -66,7 +66,7 @@ async fn test_show_config_from_cli_and_snfoundry_toml() {
         Wait Timeout:        300s
         Wait Retry Interval: 5s
         Show Explorer Links: true
-        Block Explorer:      Voyager
+        Block Explorer:      ViewBlock
     ", URL});
 }
 
@@ -155,5 +155,19 @@ async fn test_only_one_from_url_and_network_allowed() {
     assert_stderr_contains(
         output,
         "Error: Failed to load config: Only one of `url` or `network` may be specified",
+    );
+}
+
+#[tokio::test]
+async fn test_stark_scan_as_block_explorer() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/invalid_snfoundry.toml", None);
+    let args = vec!["--profile", "profile_with_stark_scan", "show-config"];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "Error: Failed to load config: starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice.",
     );
 }

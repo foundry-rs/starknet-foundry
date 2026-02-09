@@ -26,7 +26,7 @@ Address: 0x[..]
 Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
    
 To see account creation details, visit:
-account: https://sepolia.starkscan.co/contract/[..]
+account: https://sepolia.voyager.online/contract/[..]
 ```
 </details>
 `````

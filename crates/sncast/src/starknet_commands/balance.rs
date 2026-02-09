@@ -84,12 +84,16 @@ pub async fn balance(
         .await
         .map_err(|err| StarknetCommandError::ProviderError(SNCastProviderError::from(err)))?;
 
-    let token = &balance.token_identifier.token_suffix();
+    let token_unit = balance
+        .token_identifier
+        .token_suffix()
+        .map(|token| token.as_token_unit());
+
     let balance = erc20_balance_to_u256(&res)?;
 
     Ok(BalanceResponse {
         balance,
-        token: *token,
+        token_unit,
     })
 }
 

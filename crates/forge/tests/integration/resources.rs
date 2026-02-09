@@ -1,6 +1,6 @@
 use crate::utils::runner::{Contract, assert_builtin, assert_passed, assert_syscall};
 use crate::utils::running_tests::run_test_case;
-use crate::utils::{test_case, use_snforge_std_deprecated};
+use crate::utils::test_case;
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallSelector;
 use cairo_vm::types::builtin_name::BuiltinName;
 use forge_runner::forge_config::ForgeTrackedResource;
@@ -51,13 +51,8 @@ fn builtins_count() {
     assert_passed(&result);
 
     // No ECDSA and Keccak builtins
-    if use_snforge_std_deprecated() {
-        assert_builtin(&result, "empty", BuiltinName::range_check, 5);
-        assert_builtin(&result, "range_check", BuiltinName::range_check, 5);
-    } else {
-        assert_builtin(&result, "empty", BuiltinName::range_check, 4);
-        assert_builtin(&result, "range_check", BuiltinName::range_check, 4);
-    }
+    assert_builtin(&result, "empty", BuiltinName::range_check, 4);
+    assert_builtin(&result, "range_check", BuiltinName::range_check, 4);
     assert_builtin(&result, "bitwise", BuiltinName::bitwise, 1);
     assert_builtin(&result, "pedersen", BuiltinName::pedersen, 1);
     assert_builtin(&result, "poseidon", BuiltinName::poseidon, 1);
@@ -249,33 +244,18 @@ fn estimation_includes_os_resources() {
     // Cost of storage write in builtins is 1 range check and 89 steps
     // Steps are pretty hard to verify so this test is based on range check diff
 
-    if use_snforge_std_deprecated() {
-        assert_builtin(
-            &result,
-            "syscall_storage_write",
-            BuiltinName::range_check,
-            11,
-        );
-        assert_builtin(
-            &result,
-            "syscall_storage_write_baseline",
-            BuiltinName::range_check,
-            8,
-        );
-    } else {
-        assert_builtin(
-            &result,
-            "syscall_storage_write",
-            BuiltinName::range_check,
-            10,
-        );
-        assert_builtin(
-            &result,
-            "syscall_storage_write_baseline",
-            BuiltinName::range_check,
-            7,
-        );
-    }
+    assert_builtin(
+        &result,
+        "syscall_storage_write",
+        BuiltinName::range_check,
+        10,
+    );
+    assert_builtin(
+        &result,
+        "syscall_storage_write_baseline",
+        BuiltinName::range_check,
+        7,
+    );
 }
 
 #[test]

@@ -46,7 +46,6 @@ fn is_present(line: &str, actual: &mut Vec<&str>) -> bool {
 fn assert_output_contains(output: &str, lines: &str, assert_prefix: Option<String>) {
     let asserted_lines = lines.lines();
     let mut actual_lines: Vec<&str> = output.lines().collect();
-
     let mut contains = true;
     let mut out = String::new();
 
@@ -63,12 +62,25 @@ fn assert_output_contains(output: &str, lines: &str, assert_prefix: Option<Strin
         for line in &actual_lines {
             writeln!(out, "+ {line}").unwrap();
         }
-    }
 
-    if let Some(assert_prefix) = assert_prefix {
-        assert!(contains, "{assert_prefix} Output does not match:\n\n{out}");
-    } else {
-        assert!(contains, "Output does not match:\n\n{out}");
+        let full_output = output;
+        if let Some(assert_prefix) = assert_prefix {
+            panic!(
+                "{assert_prefix} Output does not match.\n\n\
+                 --- FULL OUTPUT ---\n\
+                 {full_output}\n\n\
+                 --- DIFF ---\n\
+                 {out}"
+            );
+        } else {
+            panic!(
+                "Output does not match.\n\n\
+                 --- FULL OUTPUT ---\n\
+                 {full_output}\n\n\
+                 --- DIFF ---\n\
+                 {out}"
+            );
+        }
     }
 }
 

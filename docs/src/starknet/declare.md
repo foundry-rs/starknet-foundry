@@ -36,8 +36,8 @@ Contract Address: 0x0[..]
 Transaction Hash: 0x0[..]
 
 To see declaration details, visit:
-class: https://starkscan.co/search/[..]
-transaction: https://starkscan.co/search/[..]
+class: https://voyager.online/search/[..]
+transaction: https://voyager.online/search/[..]
 
 To deploy a contract of this class, run:
 sncast --account my_account deploy --class-hash 0x[..] --network sepolia
