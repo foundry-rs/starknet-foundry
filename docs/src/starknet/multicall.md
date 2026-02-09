@@ -61,7 +61,7 @@ Success: Multicall completed
 Transaction Hash: 0x[..]
 
 To see invocation details, visit:
-transaction: https://sepolia.starkscan.co/tx/[..]
+transaction: https://sepolia.voyager.online/tx/[..]
 ```
 </details>
 <br>
