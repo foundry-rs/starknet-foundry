@@ -91,14 +91,13 @@ The `block-explorer` field specifies the block explorer service used to display 
 
 | Value     | URL                                    |
 |-----------|----------------------------------------|
-| StarkScan | `https://starkscan.co`          |
 | Voyager   | `https://voyager.online`               |
 | ViewBlock | `https://viewblock.io/starknet`        |
 | OkLink    | `https://www.oklink.com/starknet`      |
 
 ```toml
 [sncast.myprofile]
-block-explorer = "StarkScan"
+block-explorer = "Voyager"
 ```
 
 #### `[sncast.<profile-name>.networks]`
@@ -123,7 +122,7 @@ accounts-file = "../account-file"
 account = "mainuser"
 keystore = "~/keystore"
 wait-params = { timeout = 500, retry-interval = 10 }
-block-explorer = "StarkScan"
+block-explorer = "Voyager"
 show-explorer-links = true
 
 [sncast.myprofile1.networks]

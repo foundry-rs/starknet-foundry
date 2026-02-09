@@ -134,8 +134,8 @@ Contract Address: 0x0[..]
 Transaction Hash: 0x0[..]
 
 To see deployment details, visit:
-contract: https://starkscan.co/search/[..]
-transaction: https://starkscan.co/search/[..]
+contract: https://voyager.online/search/[..]
+transaction: https://voyager.online/search/[..]
 ```
 </details>
 <br>

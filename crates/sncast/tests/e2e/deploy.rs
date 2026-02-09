@@ -435,7 +435,7 @@ async fn test_json_output_format() {
         output,
         indoc! {r#"
             {"command":"deploy","contract_address":"0x[..]","transaction_hash":"0x[..]","type":"response"}
-            {"links":"contract: https://sepolia.starkscan.co/contract/0x[..]\ntransaction: https://sepolia.starkscan.co/tx/0x[..]\n","title":"deployment","type":"notification"}
+            {"links":"contract: https://sepolia.voyager.online/contract/0x[..]\ntransaction: https://sepolia.voyager.online/tx/0x[..]\n","title":"deployment","type":"notification"}
             "#},
     );
 }
