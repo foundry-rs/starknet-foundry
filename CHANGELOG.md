@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Removed
 
-- `StarkScan` as an option for `block-explorer` field in `snfoundry.toml`. For a full list of supported block explorer services, see the [block explorer documentation](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html#block-explorer)
+- Due to termination of starkscan.co, `StarkScan` option for `block-explorer` field in `snfoundry.toml` was removed. For a full list of supported block explorer services, see the [block explorer documentation](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html#block-explorer)
 
 ## [0.56.0] - 2026-02-03
 
