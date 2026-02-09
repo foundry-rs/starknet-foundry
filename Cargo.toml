@@ -20,14 +20,14 @@ members = [
     "crates/native-api",
 ]
 
-exclude = ["crates/snforge-scarb-plugin", "crates/snforge-scarb-plugin-deprecated"]
+exclude = ["crates/snforge-scarb-plugin"]
 
 [profile.ci]
 inherits = "release"
 debug-assertions = true
 
 [workspace.package]
-version = "0.55.0"
+version = "0.56.0"
 edition = "2024"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"

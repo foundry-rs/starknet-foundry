@@ -7,21 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## Forge
+### Cast
+
+#### Removed
+
+- Due to termination of starkscan.co, `StarkScan` option for `block-explorer` field in `snfoundry.toml` was removed. For a full list of supported block explorer services, see the [block explorer documentation](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html#block-explorer)
+
+## [0.56.0] - 2026-02-03
+
+### Forge
+
+#### Removed
+
+- Support for Scarb versions < 2.12.0. `snforge` now requires Scarb 2.12.0 or newer
+- The deprecated `snforge_scarb_plugin_deprecated`
+- The deprecated `snforge_std_deprecated`
 
 #### Changed
 
 - `--detailed-resources` output now includes all gas-related resources
+- `deploy` and `deploy_at` methods on `ContractClass` instance now allow constructor errors to be caught instead of failing immediately. This change diverges from the behavior of the `deploy_syscall` on the network, where such errors cannot be caught.
+- Template created by `snforge new --template erc20-contract` now uses `openzeppelin_token` version `3.0.0` (updated from `1.0.0`). This template requires Scarb version >= `2.15.1`.
 
 ## [0.55.0] - 2026-01-13
 
-## Forge
+### Forge
 
 #### Changed
 
 - Minimal recommended `Scarb` version is now `2.13.1` (updated from `2.12.2`)
 - `snforge_scarb_plugin` now emits an error if unexpected named args are passed to `#[available_gas]`, `#[fork]`, `#[fuzzer]`, `#[should_panic]` and `#[test_case]` attributes
-- `--detailed-resources` output now includes all gas-related resources
 
 #### Fixed
 
@@ -36,6 +51,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `--network` flag can be used with `--add-profile` flag
+
+#### Fixed
+
+- `sncast balance` command now correctly displays token unit instead of token for `eth` and `strk`
 
 ## [0.55.0-rc.0] - 2025-12-18
 
