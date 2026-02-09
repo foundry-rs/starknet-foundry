@@ -68,6 +68,10 @@ impl ContractClassImpl of ContractClassTrait {
     ) -> SyscallResult<(ContractAddress, Span<felt252>)> {
         let salt: felt252 = execute_cheatcode_and_deserialize::<'get_salt'>(array![].span());
 
+        // Internal cheatcode to mark next `deploy_syscall` as coming from cheatcode.
+        // This allows `deploy_syscall` to be handled differently when coming from cheatcode.
+        execute_cheatcode_and_deserialize::<'set_next_syscall_from_cheatcode', ()>(array![].span());
+
         starknet::syscalls::deploy_syscall(
             *self.class_hash, salt, constructor_calldata.span(), false,
         )

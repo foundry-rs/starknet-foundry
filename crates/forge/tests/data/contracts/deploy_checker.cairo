@@ -18,6 +18,7 @@ mod DeployChecker {
 
     #[constructor]
     fn constructor(ref self: ContractState, balance: felt252) -> (ContractAddress, felt252) {
+        assert(balance != 0, 'Initial balance cannot be 0');
         self.balance.write(balance);
         self.caller.write(starknet::get_caller_address());
         (self.caller.read(), balance)
