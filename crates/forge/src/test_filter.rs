@@ -1,8 +1,8 @@
 use crate::shared_cache::FailedTestsCache;
 use anyhow::Result;
+use forge_runner::filtering::{ExcludeReason, FilterResult, TestCaseFilter, TestCaseIsIgnored};
 use forge_runner::package_tests::TestCase;
 use forge_runner::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
-use forge_runner::{TestCaseFilter, TestCaseIsIgnored};
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -28,9 +28,9 @@ pub(crate) enum NameFilter {
 
 #[derive(Debug, PartialEq)]
 pub enum IgnoredFilter {
-    NotIgnored,
-    Ignored,
-    All,
+    IncludeAll,
+    IgnoredOnly,
+    ExcludeIgnored,
 }
 
 impl TestsFilter {
@@ -51,11 +51,11 @@ impl TestsFilter {
         );
 
         let ignored_filter = if include_ignored {
-            IgnoredFilter::All
+            IgnoredFilter::IncludeAll
         } else if only_ignored {
-            IgnoredFilter::Ignored
+            IgnoredFilter::IgnoredOnly
         } else {
-            IgnoredFilter::NotIgnored
+            IgnoredFilter::ExcludeIgnored
         };
 
         let name_filter = if exact_match {
@@ -103,9 +103,9 @@ impl TestsFilter {
         }
 
         match self.ignored_filter {
-            // if NotIgnored (default) we filter ignored tests later and display them as ignored
-            IgnoredFilter::All | IgnoredFilter::NotIgnored => {}
-            IgnoredFilter::Ignored => {
+            // if ExcludeIgnored (default) we filter ignored tests later and display them as ignored
+            IgnoredFilter::IncludeAll | IgnoredFilter::ExcludeIgnored => {}
+            IgnoredFilter::IgnoredOnly => {
                 test_cases.retain(|tc| tc.config.ignored);
             }
         }
@@ -119,17 +119,25 @@ impl TestsFilter {
 }
 
 impl TestCaseFilter for TestsFilter {
-    fn should_be_run<T>(&self, test_case: &TestCase<T>) -> bool
+    fn filter<T>(&self, test_case: &TestCase<T>) -> FilterResult
     where
         T: TestCaseIsIgnored,
     {
-        let ignored = test_case.config.is_ignored();
-
+        let case_ignored = test_case.config.is_ignored();
         match self.ignored_filter {
-            IgnoredFilter::All => true,
-            IgnoredFilter::Ignored => ignored,
-            IgnoredFilter::NotIgnored => !ignored,
+            IgnoredFilter::IncludeAll => {}
+            IgnoredFilter::IgnoredOnly => {
+                if !case_ignored {
+                    return FilterResult::Excluded(ExcludeReason::Ignored);
+                }
+            }
+            IgnoredFilter::ExcludeIgnored => {
+                if case_ignored {
+                    return FilterResult::Excluded(ExcludeReason::Ignored);
+                }
+            }
         }
+        FilterResult::Included
     }
 }
 
