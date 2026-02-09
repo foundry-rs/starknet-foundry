@@ -3431,6 +3431,7 @@ dependencies = [
  "starknet_api",
  "strum 0.27.2",
  "strum_macros 0.27.2",
+ "test-case",
  "tokio",
  "tracing",
  "universal-sierra-compiler-api",

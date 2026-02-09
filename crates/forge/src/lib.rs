@@ -6,6 +6,7 @@ use derive_more::Display;
 use forge_runner::CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::ForgeTrackedResource;
+use forge_runner::partition::Partition;
 use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use run_tests::workspace::run_for_workspace;
@@ -82,7 +83,7 @@ enum ForgeSubcommand {
     /// Run tests for a project in the current directory
     Test {
         #[command(flatten)]
-        args: TestArgs,
+        args: Box<TestArgs>,
     },
     /// Create a new Forge project at <PATH>
     New {
@@ -146,7 +147,7 @@ pub struct TestArgs {
     run_native: bool,
 
     /// Use exact matches for `test_filter`
-    #[arg(short, long)]
+    #[arg(short, long, conflicts_with = "partition")]
     exact: bool,
 
     /// Skips any tests whose name contains the given SKIP string.
@@ -213,6 +214,10 @@ pub struct TestArgs {
     /// Display a table of L2 gas breakdown for each contract and selector
     #[arg(long)]
     gas_report: bool,
+
+    /// Divides tests into `TOTAL` partitions and runs partition `INDEX` (1-based), e.g. 1/4
+    #[arg(long, value_name = "INDEX/TOTAL")]
+    partition: Option<Partition>,
 
     /// Additional arguments for cairo-coverage or cairo-profiler
     #[arg(last = true)]
@@ -324,7 +329,7 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
                 .enable_all()
                 .build()?;
 
-            rt.block_on(run_for_workspace(args, ui))
+            rt.block_on(run_for_workspace(*args, ui))
         }
         ForgeSubcommand::CheckRequirements => {
             check_requirements(true, &ui)?;
