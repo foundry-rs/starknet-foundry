@@ -6,7 +6,6 @@ pub use crate::test_case;
 use anyhow::Result;
 use assert_fs::fixture::PathCopy;
 use camino::Utf8PathBuf;
-use forge::MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT;
 use project_root::get_project_root;
 use scarb_api::version::scarb_version;
 use semver::Version;
@@ -25,11 +24,7 @@ pub fn get_assert_macros_version() -> Result<Version> {
 
 #[must_use]
 pub fn get_std_name() -> String {
-    if use_snforge_std_deprecated() {
-        "snforge_std_deprecated".to_string()
-    } else {
-        "snforge_std".to_string()
-    }
+    "snforge_std".to_string()
 }
 
 pub fn get_std_path() -> Result<String> {
@@ -44,10 +39,4 @@ pub fn get_snforge_std_entry() -> Result<String> {
     let path = get_std_path()?;
 
     Ok(format!("{name} = {{ path = \"{path}\" }}"))
-}
-
-#[must_use]
-pub fn use_snforge_std_deprecated() -> bool {
-    let scarb_version_output = scarb_version().expect("Failed to get scarb version");
-    scarb_version_output.scarb < MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT
 }

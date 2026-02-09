@@ -45,7 +45,7 @@ After prefunding the account, run:
 sncast --accounts-file [..]accounts.json account deploy --url [..] --name new_account
 
 To see account creation details, visit:
-account: https://sepolia.starkscan.co/contract/[..]
+account: https://sepolia.voyager.online/contract/[..]
 ```
 
 </details>
@@ -86,7 +86,7 @@ Success: Account deployed
 Transaction Hash: 0x[..]
 
 To see invocation details, visit:
-transaction: https://sepolia.starkscan.co/tx/[..]
+transaction: https://sepolia.voyager.online/tx/[..]
 ```
 
 </details>
@@ -169,7 +169,7 @@ $ sncast account delete \
 #### Custom Account Contract
 
 By default, `sncast` creates/deploys an account
-using [OpenZeppelin's account contract class hash](https://starkscan.co/class/0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564).
+using [OpenZeppelin's account contract class hash](https://voyager.online/class/0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564).
 It is possible to create an account using custom openzeppelin, ready or braavos contract declared to starknet. This can
 be achieved
 with `--class-hash` flag:

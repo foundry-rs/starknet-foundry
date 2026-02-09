@@ -48,7 +48,7 @@ Specifies the Blockchain Explorer to verify with.
 
 Options as of writing of this document: 
  - voyager
- - starkscan
+ - walnut
 
 #### `--network <NETWORK_NAME>`
 

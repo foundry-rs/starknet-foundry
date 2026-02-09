@@ -12,7 +12,7 @@ $ sncast --account my_account balance --network devnet
 <summary>Output:</summary>
 
 ```shell
-Balance: [..] strk
+Balance: [..] fri
 ```
 </details>
 
