@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 pub struct PartitionFinishedMessage {
     partition: Partition,
     included_tests_count: usize,
-    excluded_tests_count: usize,
+    total_tests_count: usize,
 }
 
 impl PartitionFinishedMessage {
@@ -16,12 +16,12 @@ impl PartitionFinishedMessage {
     pub fn new(
         partition: Partition,
         included_tests_count: usize,
-        excluded_tests_count: usize,
+        total_tests_count: usize,
     ) -> Self {
         Self {
             partition,
             included_tests_count,
-            excluded_tests_count,
+            total_tests_count,
         }
     }
 
@@ -31,7 +31,7 @@ impl PartitionFinishedMessage {
             self.partition.index(),
             self.partition.total(),
             self.included_tests_count,
-            self.excluded_tests_count + self.included_tests_count
+            self.total_tests_count,
         )
     }
 }

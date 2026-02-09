@@ -153,12 +153,12 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         } => {
             ui.print_blank_line();
 
-            let (included_tests_count, excluded_tests_count) =
-                partition_map.count_partition_tests(partition.index());
+            let included = partition_map.included_tests_count(partition.index());
+            let total = partition_map.total_tests_count();
             ui.println(&PartitionFinishedMessage::new(
                 partition,
-                included_tests_count,
-                excluded_tests_count,
+                included,
+                total,
             ));
         }
     }
