@@ -10,6 +10,7 @@ const OKLINK: &str = "https://www.oklink.com/starknet";
 pub enum Service {
     #[default]
     Voyager,
+    StarkScan,
     ViewBlock,
     OkLink,
 }
@@ -17,6 +18,7 @@ pub enum Service {
 impl Service {
     pub fn as_provider(&self, network: Network) -> Result<Box<dyn LinkProvider>, ExplorerError> {
         match (self, network) {
+            (Service::StarkScan, _) => unreachable!("Should be caught by config validation"),
             (Service::Voyager, _) => Ok(Box::new(Voyager { network })),
             (Service::ViewBlock, Network::Mainnet) => Ok(Box::new(ViewBlock)),
             (Service::OkLink, Network::Mainnet) => Ok(Box::new(OkLink)),
