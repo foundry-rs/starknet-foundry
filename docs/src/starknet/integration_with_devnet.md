@@ -39,7 +39,7 @@ Success: Invoke completed
 Transaction Hash: [..]
 
 To see invocation details, visit:
-transaction: https://sepolia.starkscan.co/tx/[..]
+transaction: https://sepolia.voyager.online/tx/[..]
 ```
 </details>
 

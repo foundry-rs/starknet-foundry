@@ -152,7 +152,7 @@ pub async fn test_existent_account_address() {
         "oz",
     ];
 
-    runner(&args).current_dir(tempdir.path()).assert();
+    let _ = runner(&args).current_dir(tempdir.path()).assert();
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
         .expect("Unable to read created file");

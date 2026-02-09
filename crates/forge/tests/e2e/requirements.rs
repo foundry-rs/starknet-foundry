@@ -20,7 +20,7 @@ fn happy_path() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_10_0"), ignore)]
+#[cfg_attr(not(feature = "scarb_2_12_0"), ignore)]
 fn test_warning_on_scarb_version_below_recommended() {
     let temp = setup_package("simple_package");
     let output = runner(&temp).arg("check-requirements").assert();
@@ -30,7 +30,7 @@ fn test_warning_on_scarb_version_below_recommended() {
         indoc! {r"
     Checking requirements
 
-    ⚠️  Scarb Version 2.10.0 doesn't satisfy minimal recommended [..]
+    ⚠️  Scarb Version 2.12.0 doesn't satisfy minimal recommended [..]
     ✅ Universal Sierra Compiler [..]
     "},
     );
