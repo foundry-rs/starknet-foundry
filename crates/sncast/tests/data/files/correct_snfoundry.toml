@@ -11,7 +11,7 @@ account = "user3"
 url = "http://127.0.0.1:5055/rpc"
 accounts-file = "../account-file"
 account = "user100"
-block-explorer = "Voyager"
+block-explorer = "ViewBlock"
 
 [sncast.profile3]
 url = "http://127.0.0.1:5055/rpc"
