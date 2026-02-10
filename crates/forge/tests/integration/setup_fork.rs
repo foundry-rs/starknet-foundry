@@ -1,4 +1,5 @@
 use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
+use forge_runner::partition::PartitionConfig;
 use foundry_ui::UI;
 use indoc::{formatdoc, indoc};
 use std::num::NonZeroU32;
@@ -142,6 +143,7 @@ fn fork_aliased_decorator() {
                     false,
                     false,
                     FailedTestsCache::default(),
+                    PartitionConfig::default(),
                 ),
                 forge_config: Arc::new(ForgeConfig {
                     test_runner_config: Arc::new(TestRunnerConfig {
@@ -232,6 +234,7 @@ fn fork_aliased_decorator_overrding() {
                     false,
                     false,
                     FailedTestsCache::default(),
+                    PartitionConfig::default(),
                 ),
                 forge_config: Arc::new(ForgeConfig {
                     test_runner_config: Arc::new(TestRunnerConfig {

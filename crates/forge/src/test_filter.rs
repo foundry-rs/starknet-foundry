@@ -2,7 +2,10 @@ use crate::shared_cache::FailedTestsCache;
 use anyhow::Result;
 use forge_runner::filtering::{ExcludeReason, FilterResult, TestCaseFilter, TestCaseIsIgnored};
 use forge_runner::package_tests::TestCase;
-use forge_runner::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
+use forge_runner::package_tests::with_config_resolved::{
+    TestCaseWithResolvedConfig, sanitize_test_case_name,
+};
+use forge_runner::partition::PartitionConfig;
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -17,6 +20,7 @@ pub struct TestsFilter {
     skip_filter: Vec<String>,
 
     failed_tests_cache: FailedTestsCache,
+    pub(crate) partitioning_config: PartitionConfig,
 }
 
 #[derive(Debug, PartialEq)]
@@ -36,6 +40,7 @@ pub enum IgnoredFilter {
 impl TestsFilter {
     #[must_use]
     #[expect(clippy::fn_params_excessive_bools)]
+    #[expect(clippy::too_many_arguments)]
     pub fn from_flags(
         test_name_filter: Option<String>,
         exact_match: bool,
@@ -44,6 +49,7 @@ impl TestsFilter {
         include_ignored: bool,
         rerun_failed: bool,
         failed_tests_cache: FailedTestsCache,
+        partitioning_config: PartitionConfig,
     ) -> Self {
         assert!(
             !(only_ignored && include_ignored),
@@ -75,6 +81,7 @@ impl TestsFilter {
             last_failed_filter: rerun_failed,
             skip_filter: skip,
             failed_tests_cache,
+            partitioning_config,
         }
     }
 
@@ -123,7 +130,28 @@ impl TestCaseFilter for TestsFilter {
     where
         T: TestCaseIsIgnored,
     {
+        // Order of filter checks matters, because we do not want to display a test as ignored if
+        // it was excluded due to partitioning.
+        match &self.partitioning_config {
+            PartitionConfig::Enabled {
+                partition,
+                partition_map,
+            } => {
+                let sanitized_test_case_name = sanitize_test_case_name(&test_case.name);
+                let test_assigned_index = partition_map
+                    .get_assigned_index(&sanitized_test_case_name)
+                    .expect("Partition map must contain all test cases");
+                let partition_index = partition.index();
+
+                if test_assigned_index != partition_index {
+                    return FilterResult::Excluded(ExcludeReason::ExcludedFromPartition);
+                }
+            }
+            PartitionConfig::Disabled => {}
+        }
+
         let case_ignored = test_case.config.is_ignored();
+
         match self.ignored_filter {
             IgnoredFilter::IncludeAll => {}
             IgnoredFilter::IgnoredOnly => {
@@ -152,6 +180,7 @@ mod tests {
         TestCaseResolvedConfig, TestCaseWithResolvedConfig, TestTargetWithResolvedConfig,
     };
     use forge_runner::package_tests::{TestDetails, TestTargetLocation};
+    use forge_runner::partition::PartitionConfig;
     use std::sync::Arc;
     use universal_sierra_compiler_api::compile_raw_sierra;
 
@@ -178,6 +207,7 @@ mod tests {
             true,
             false,
             FailedTestsCache::default(),
+            PartitionConfig::default(),
         );
     }
 
@@ -192,6 +222,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            PartitionConfig::default(),
         );
     }
 
@@ -270,6 +301,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            PartitionConfig::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -301,6 +333,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            PartitionConfig::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -331,6 +364,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            PartitionConfig::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -402,6 +436,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            PartitionConfig::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -417,6 +452,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            PartitionConfig::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -502,6 +538,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            PartitionConfig::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -517,6 +554,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            PartitionConfig::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -600,6 +638,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            PartitionConfig::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -615,6 +654,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            PartitionConfig::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -630,6 +670,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            PartitionConfig::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -660,6 +701,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            PartitionConfig::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -690,6 +732,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            PartitionConfig::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -705,6 +748,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            PartitionConfig::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -802,6 +846,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            PartitionConfig::default(),
         );
         let mut filtered = mocked_tests;
         tests_filter.filter_tests(&mut filtered.test_cases).unwrap();
@@ -914,6 +959,7 @@ mod tests {
             true,
             false,
             FailedTestsCache::default(),
+            PartitionConfig::default(),
         );
         let mut filtered = mocked_tests;
         tests_filter.filter_tests(&mut filtered.test_cases).unwrap();
