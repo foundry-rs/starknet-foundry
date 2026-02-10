@@ -1,5 +1,6 @@
 use crate::starknet_commands::balance::Balance;
 use crate::starknet_commands::declare::declare;
+use crate::starknet_commands::declare_file::DeclareFile;
 use crate::starknet_commands::declare_from::DeclareFrom;
 use crate::starknet_commands::deploy::DeployArguments;
 use crate::starknet_commands::multicall;
@@ -125,6 +126,7 @@ impl Cli {
         match self.command {
             Commands::Declare(_) => "declare",
             Commands::DeclareFrom(_) => "declare-from",
+            Commands::DeclareFile(_) => "declare-file",
             Commands::Deploy(_) => "deploy",
             Commands::Call(_) => "call",
             Commands::Invoke(_) => "invoke",
@@ -149,6 +151,9 @@ enum Commands {
 
     /// Declare a contract by fetching it from a different Starknet instance
     DeclareFrom(DeclareFrom),
+
+    /// Declare a contract from a compiled Sierra file
+    DeclareFile(DeclareFile),
 
     /// Deploy a contract
     Deploy(Deploy),
@@ -410,6 +415,43 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
             process_command_result("declare-from", result, ui, block_explorer_link);
+
+            Ok(())
+        }
+
+        Commands::DeclareFile(declare_file) => {
+            let provider = declare_file.rpc.get_provider(&config, ui).await?;
+
+            let account = get_account(
+                &config,
+                &provider,
+                &declare_file.rpc,
+                config.keystore.as_ref(),
+                ui,
+            )
+            .await?;
+
+            let result = starknet_commands::declare_file::declare_file(
+                declare_file,
+                &account,
+                wait_config,
+                false,
+                ui,
+            )
+            .await
+            .map_err(handle_starknet_command_error)
+            .map(|result| match result {
+                DeclareResponse::Success(declare_transaction_response) => {
+                    declare_transaction_response
+                }
+                DeclareResponse::AlreadyDeclared(_) => {
+                    unreachable!("Argument `skip_on_already_declared` is false")
+                }
+            });
+
+            let block_explorer_link =
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
+            process_command_result("declare-file", result, ui, block_explorer_link);
 
             Ok(())
         }
