@@ -28,7 +28,6 @@ use std::env;
 use std::sync::Arc;
 
 #[tracing::instrument(skip_all, level = "debug")]
-#[expect(clippy::too_many_lines)]
 pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus> {
     match args.color {
         // SAFETY: This runs in a single-threaded environment.
