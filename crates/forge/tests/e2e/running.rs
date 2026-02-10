@@ -1,7 +1,7 @@
 use super::common::runner::{
     get_current_branch, get_remote_url, setup_package, test_runner, test_runner_native,
 };
-use crate::utils::{get_snforge_std_entry, use_snforge_std_deprecated};
+use crate::utils::get_snforge_std_entry;
 use assert_fs::fixture::{FileWriteStr, PathChild};
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::{AsOutput, assert_stdout, assert_stdout_contains};
@@ -135,15 +135,9 @@ fn simple_package_with_git_dependency() {
     let branch = get_current_branch();
     let manifest_path = temp.child("Scarb.toml");
 
-    let snforge_std = if use_snforge_std_deprecated() {
-        format!(
-            r#"snforge_std_deprecated = {{ git = "https://github.com/{remote_url}", branch = "{branch}" }}"#
-        )
-    } else {
-        format!(
-            r#"snforge_std = {{ git = "https://github.com/{remote_url}", branch = "{branch}" }}"#
-        )
-    };
+    let snforge_std = format!(
+        r#"snforge_std = {{ git = "https://github.com/{remote_url}", branch = "{branch}" }}"#
+    );
 
     manifest_path
         .write_str(&formatdoc!(
@@ -1035,11 +1029,6 @@ fn incompatible_snforge_std_version_warning() {
 
 #[test]
 fn incompatible_snforge_std_version_error() {
-    if use_snforge_std_deprecated() {
-        // Skip this test if deprecated is used
-        return;
-    }
-
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
 

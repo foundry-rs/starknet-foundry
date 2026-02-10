@@ -33,8 +33,18 @@ jobs:
         uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
+      - name: Determine test features
+        id: test_features
+        run: |
+          FEATURES="run_test_for_scarb_since_2_15_1"
+          echo "features=$FEATURES" >> "$GITHUB_OUTPUT"
       - name: Build and archive tests
-        run: cargo nextest archive --cargo-profile ci -p forge --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
+        run: |
+          if [ -n "${{ steps.test_features.outputs.features }}" ]; then
+            cargo nextest archive --cargo-profile ci -p forge --features "${{ steps.test_features.outputs.features }}" --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
+          else
+            cargo nextest archive --cargo-profile ci -p forge --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
+          fi
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v5
         with:
@@ -54,8 +64,13 @@ jobs:
         uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
+      - name: Determine test features
+        id: test_features
+        run: |
+          FEATURES="cairo-native,run_test_for_scarb_since_2_15_1"
+          echo "features=$FEATURES" >> "$GITHUB_OUTPUT"
       - name: Build and archive tests
-        run: cargo nextest archive --cargo-profile ci -p forge --features cairo-native --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst'
+        run: cargo nextest archive --cargo-profile ci -p forge --features "${{ steps.test_features.outputs.features }}" --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst'
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v5
         with:
@@ -223,9 +238,9 @@ jobs:
 
       - uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: "2.10.0"
+          scarb-version: "2.12.0"
 
-      - run: cargo test --profile ci --package forge --features scarb_2_10_0 --test main e2e::requirements::test_warning_on_scarb_version_below_recommended
+      - run: cargo test --profile ci --package forge --features scarb_2_12_0 --test main e2e::requirements::test_warning_on_scarb_version_below_recommended
 
   test-forge-runner:
     name: Test Forge Runner
@@ -271,16 +286,6 @@ jobs:
       - uses: ./.github/actions/setup-tools
       - name: Run Forge Scarb Plugin tests
         working-directory: crates/snforge-scarb-plugin
-        run: cargo test --profile ci
-
-  test-forge-scarb-plugin-deprecated:
-    name: Test Forge Scarb Plugin Deprecated
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-tools
-      - name: Run Forge Scarb Plugin tests
-        working-directory: crates/snforge-scarb-plugin-deprecated
         run: cargo test --profile ci
 
   test-cast:
@@ -331,7 +336,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
       - name: Check cairo files format
         run: |
-          output=$(find . -type f -name "Scarb.toml" -not -path "*/snforge_std_deprecated/*" -execdir sh -c '
+          output=$(find . -type f -name "Scarb.toml" -execdir sh -c '
               echo "Running \"scarb fmt\" in directory: $PWD"
               scarb fmt --check
           ' \;)
@@ -357,10 +362,6 @@ jobs:
         run: cargo fmt --check
         working-directory: crates/snforge-scarb-plugin
 
-      - name: Check formatting snforge-scarb-plugin-deprecated
-        run: cargo fmt --check
-        working-directory: crates/snforge-scarb-plugin-deprecated
-
   clippy:
     runs-on: ubuntu-latest
     env:
@@ -378,10 +379,6 @@ jobs:
       - name: Lint snforge-scarb-plugin
         run: cargo lint
         working-directory: crates/snforge-scarb-plugin
-
-      - name: Lint snforge-scarb-plugin-deprecated
-        run: cargo lint
-        working-directory: crates/snforge-scarb-plugin-deprecated
 
   build-docs:
     name: Test Building Docs

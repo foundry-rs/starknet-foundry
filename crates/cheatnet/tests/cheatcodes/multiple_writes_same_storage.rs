@@ -38,14 +38,18 @@ fn same_storage_access_call_contract() {
     let contract_address_b = test_env.deploy_wrapper(&hello_class_hash, &[]);
     assert_ne!(contract_address_b, contract_address_a);
 
-    test_env.call_contract(&contract_address_a, "increase_balance", &[Felt::from(420)]);
+    test_env
+        .call_contract(&contract_address_a, "increase_balance", &[Felt::from(420)])
+        .unwrap();
     let balance_value_a = test_env.call_contract(&contract_address_a, "get_balance", &[]);
     assert_success(balance_value_a, &[Felt::from(420)]);
 
     let balance_value_b = test_env.call_contract(&contract_address_b, "get_balance", &[]);
     assert_success(balance_value_b, &[Felt::from(0)]);
 
-    test_env.call_contract(&contract_address_b, "increase_balance", &[Felt::from(42)]);
+    test_env
+        .call_contract(&contract_address_b, "increase_balance", &[Felt::from(42)])
+        .unwrap();
 
     let balance_value_b = test_env.call_contract(&contract_address_b, "get_balance", &[]);
     assert_success(balance_value_b, &[Felt::from(42)]);

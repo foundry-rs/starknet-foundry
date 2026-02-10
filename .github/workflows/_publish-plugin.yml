@@ -87,4 +87,4 @@ jobs:
           update_version_in_file "Scarb.toml" "${{ inputs.overridden_plugin_version }}"
           update_version_in_file "Cargo.toml" "${{ inputs.overridden_plugin_version }}"
 
-          scarb publish --allow-dirty ${{ inputs.prod_registry == true && ' ' || '--index https://scarbs.dev/' }} ${{ inputs.overridden_plugin_version == 'snforge-scarb-plugin-deprecated' && '--ignore-cairo-version' || ' ' }} 
+          scarb publish --allow-dirty ${{ inputs.prod_registry == true && ' ' || '--index https://scarbs.dev/' }} 

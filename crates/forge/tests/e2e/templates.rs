@@ -13,6 +13,7 @@ use toml_edit::DocumentMut;
 #[test_case(&Template::CairoProgram; "cairo-program")]
 #[test_case(&Template::BalanceContract; "balance-contract")]
 #[test_case(&Template::Erc20Contract; "erc20-contract")]
+#[cfg_attr(not(feature = "run_test_for_scarb_since_2_15_1"), ignore)]
 fn validate_templates(template: &Template) {
     let temp_dir = tempdir_with_tool_versions().expect("Unable to create a temporary directory");
     let package_name = format!("{}_test", template.to_string().replace('-', "_"));

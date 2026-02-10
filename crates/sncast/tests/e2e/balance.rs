@@ -25,7 +25,7 @@ pub async fn happy_case() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_eq(indoc! {r"
-        Balance: 109394843313476728397 strk
+        Balance: 109394843313476728397 fri
     "});
 }
 
@@ -48,7 +48,7 @@ pub async fn happy_case_json() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_eq(indoc! {r#"
-        {"balance":"[..]","command":"balance","token":"strk","type":"response"}
+        {"balance":"[..]","command":"balance","token_unit":"fri","type":"response"}
     "#});
 }
 
@@ -59,6 +59,7 @@ pub async fn happy_case_with_token(token: &Token) {
     let tempdir = tempdir().unwrap();
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
+    let token_unit = token.as_token_unit();
     let token = token.to_string();
     let args = vec![
         "--accounts-file",
@@ -75,7 +76,7 @@ pub async fn happy_case_with_token(token: &Token) {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_eq(formatdoc! {r"
-        Balance: [..] {token}
+        Balance: [..] {token_unit}
     "});
 }
 
@@ -99,7 +100,7 @@ pub async fn happy_case_with_block_id() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_eq(indoc! {r"
-        Balance: [..] strk
+        Balance: [..] fri
     "});
 }
 

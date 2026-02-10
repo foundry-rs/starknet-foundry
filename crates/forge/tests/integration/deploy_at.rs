@@ -145,3 +145,33 @@ fn fail_to_deploy_at_0() {
         "Cannot deploy contract at address 0",
     );
 }
+
+#[test]
+fn deploy_at_constructor_panic_catchable_via_should_panic() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
+        use starknet::{SyscallResultTrait, ContractAddress};
+
+        #[test]
+        #[should_panic(expected: 'Initial balance cannot be 0')]
+        fn deploy_at_constructor_panic_should_be_catchable() {
+            let contract = declare("DeployChecker").unwrap().contract_class();
+            let constructor_calldata = array![0];
+            let deploy_at_address = 123;
+            
+            contract.deploy_at(@constructor_calldata, deploy_at_address.try_into().unwrap()).unwrap_syscall();
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "DeployChecker".to_string(),
+            Path::new("tests/data/contracts/deploy_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    assert_passed(&result);
+}
