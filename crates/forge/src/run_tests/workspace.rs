@@ -2,6 +2,7 @@ use super::package::RunForPackageArgs;
 use crate::profile_validation::check_profile_compatibility;
 use crate::run_tests::messages::latest_blocks_numbers::LatestBlocksNumbersMessage;
 use crate::run_tests::messages::overall_summary::OverallSummaryMessage;
+use crate::run_tests::messages::partition::{PartitionFinishedMessage, PartitionStartedMessage};
 use crate::run_tests::messages::tests_failure_summary::TestsFailureSummaryMessage;
 use crate::warn::{
     error_if_snforge_std_not_compatible, warn_if_snforge_std_does_not_match_package_version,
@@ -83,7 +84,11 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
 
     let partitioning_config = args
         .partition
-        .map(|partition| PartitionConfig::new(partition, &packages, &artifacts_dir_path))
+        .map(|partition| {
+            ui.print_blank_line();
+            ui.println(&PartitionStartedMessage::new(partition));
+            PartitionConfig::new(partition, &packages, &artifacts_dir_path)
+        })
         .transpose()?
         .unwrap_or_default();
 
@@ -126,6 +131,11 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         // Add newline to separate summary from previous output
         ui.print_blank_line();
         ui.println(&overall_summary);
+    }
+
+    if let Some(partition) = &args.partition {
+        ui.print_blank_line();
+        ui.println(&PartitionFinishedMessage::new(*partition));
     }
 
     if args.exact {
