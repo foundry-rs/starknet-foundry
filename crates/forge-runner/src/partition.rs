@@ -145,6 +145,21 @@ impl PartitionMap {
     pub fn get_assigned_index(&self, test_full_path: &str) -> Option<NonZeroUsize> {
         self.0.get(test_full_path).copied()
     }
+
+    /// Counts the number of included tests for a given partition based on the partition map.
+    #[must_use]
+    pub fn included_tests_count(&self, run_partition: NonZeroUsize) -> usize {
+        self.0
+            .values()
+            .filter(|assigned_partition| **assigned_partition == run_partition)
+            .count()
+    }
+
+    /// Counts the total number of tests assigned to any partition in the partition map.
+    #[must_use]
+    pub fn total_tests_count(&self) -> usize {
+        self.0.len()
+    }
 }
 
 /// Collects test full paths from a raw test target.

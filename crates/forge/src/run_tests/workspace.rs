@@ -133,9 +133,18 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         ui.println(&overall_summary);
     }
 
-    if let Some(partition) = &args.partition {
-        ui.print_blank_line();
-        ui.println(&PartitionFinishedMessage::new(*partition));
+    match partitioning_config {
+        PartitionConfig::Disabled => (),
+        PartitionConfig::Enabled {
+            partition,
+            partition_map,
+        } => {
+            ui.print_blank_line();
+
+            let included = partition_map.included_tests_count(partition.index());
+            let total = partition_map.total_tests_count();
+            ui.println(&PartitionFinishedMessage::new(partition, included, total));
+        }
     }
 
     if args.exact {
