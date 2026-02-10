@@ -15,3 +15,5 @@ cairo-lang-starknet-classes.workspace = true
 tracing.workspace = true
 strum_macros.workspace = true
 thiserror.workspace = true
+uv-once-map.workspace = true
+anyhow.workspace = true

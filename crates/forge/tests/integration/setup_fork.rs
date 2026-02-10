@@ -29,6 +29,7 @@ use forge_runner::scarb::load_test_artifacts;
 use scarb_api::ScarbCommand;
 use scarb_api::metadata::metadata_for_dir;
 use shared::test_utils::node_url::node_rpc_url;
+use universal_sierra_compiler_api::schedule_compile_raw_sierra_at_path;
 
 #[test]
 fn fork_simple_decorator() {
@@ -128,6 +129,10 @@ fn fork_aliased_decorator() {
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
+    for test_target in &raw_test_targets {
+        schedule_compile_raw_sierra_at_path(test_target.sierra_program_path.as_ref()).unwrap();
+    }
+
     let ui = Arc::new(UI::default());
     let result = rt
         .block_on(run_for_package(
@@ -217,6 +222,10 @@ fn fork_aliased_decorator_overrding() {
 
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
+
+    for test_target in &raw_test_targets {
+        schedule_compile_raw_sierra_at_path(test_target.sierra_program_path.as_ref()).unwrap();
+    }
 
     let ui = Arc::new(UI::default());
     let result = rt

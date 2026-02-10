@@ -15,6 +15,8 @@ use anyhow::{Context, Result};
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
 use foundry_ui::UI;
+use rayon::iter::IntoParallelRefIterator;
+use rayon::iter::ParallelIterator;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use scarb_api::{
     metadata::{Metadata, PackageMetadata},
@@ -24,6 +26,7 @@ use scarb_ui::args::PackagesFilter;
 use shared::consts::SNFORGE_TEST_FILTER;
 use std::env;
 use std::sync::Arc;
+use universal_sierra_compiler_api::schedule_compile_raw_sierra_at_path;
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus> {
@@ -80,17 +83,29 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     let cache_dir = workspace_root.join(CACHE_DIR);
     let packages_len = packages.len();
 
-    for package in packages {
-        env::set_current_dir(&package.root)?;
+    let packages_with_args = packages
+        .par_iter()
+        .map(|package: &PackageMetadata| {
+            let args = RunForPackageArgs::build(
+                package.clone(),
+                &scarb_metadata,
+                &args,
+                &cache_dir,
+                &artifacts_dir_path,
+                &ui,
+            )?;
+            Ok((package, args))
+        })
+        .collect::<Result<Vec<_>>>()?;
 
-        let args = RunForPackageArgs::build(
-            package,
-            &scarb_metadata,
-            &args,
-            &cache_dir,
-            &artifacts_dir_path,
-            &ui,
-        )?;
+    for (_, args) in &packages_with_args {
+        for test_target in &args.test_targets {
+            schedule_compile_raw_sierra_at_path(test_target.sierra_program_path.as_ref())?;
+        }
+    }
+
+    for (package, args) in packages_with_args {
+        env::set_current_dir(&package.root)?;
 
         let result = run_for_package(args, &mut block_number_map, ui.clone()).await?;
 
