@@ -95,6 +95,7 @@ pub async fn declare(
     .await
 }
 
+#[allow(clippy::result_large_err)]
 pub fn compile_casm_from_sierra(
     sierra_class: &SierraClass,
 ) -> Result<CompiledClass, StarknetCommandError> {
