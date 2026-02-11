@@ -1,4 +1,4 @@
-use crate::starknet_commands::declare::{DeclareCommonArgs, declare_with_artifacts};
+use crate::starknet_commands::declare::{DeclareCommonArgs, compile_casm_from_sierra, declare_with_artifacts};
 use anyhow::{Context, Result};
 use clap::Args;
 use shared::verify_and_warn_if_incompatible_rpc_version;
@@ -8,15 +8,12 @@ use sncast::response::errors::{SNCastProviderError, StarknetCommandError};
 use sncast::response::ui::UI;
 use sncast::{Network, WaitForTx, get_block_id, get_provider};
 use starknet_rust::accounts::SingleOwnerAccount;
-use starknet_rust::core::types::contract::{
-    AbiEntry, CompiledClass, SierraClass, SierraClassDebugInfo,
-};
+use starknet_rust::core::types::contract::{AbiEntry, SierraClass, SierraClassDebugInfo};
 use starknet_rust::core::types::{ContractClass, FlattenedSierraClass};
 use starknet_rust::providers::Provider;
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
-use universal_sierra_compiler_api::compile_contract_sierra;
 use url::Url;
 
 #[derive(Args)]
@@ -102,15 +99,8 @@ pub async fn declare_from(
     let sierra: SierraClass = flattened_sierra_to_sierra(flattened_sierra)
         .expect("Failed to parse flattened sierra class");
 
-    let casm_json: String = serde_json::to_string(
-        &compile_contract_sierra(
-            &serde_json::to_value(&sierra).expect("Failed to convert sierra to json value"),
-        )
-        .expect("Failed to compile sierra to casm"),
-    )
-    .expect("serialization should succeed");
-    let casm: CompiledClass = serde_json::from_str(&casm_json)
-        .expect("Failed to deserialize casm JSON into CompiledClass");
+    let casm = compile_casm_from_sierra(&sierra)?;
+
     let sierra_class_hash = sierra.class_hash().map_err(anyhow::Error::from)?;
 
     if declare_from.class_hash != sierra_class_hash {
