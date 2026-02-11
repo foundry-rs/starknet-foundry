@@ -142,6 +142,7 @@
         * [list](appendix/sncast/account/list.md)
     * [balance](appendix/sncast/balance.md)
     * [declare](appendix/sncast/declare.md)
+    * [declare-file](appendix/sncast/declare_file.md)
     * [declare-from](appendix/sncast/declare_from.md)
     * [deploy](appendix/sncast/deploy.md)
     * [invoke](appendix/sncast/invoke.md)
