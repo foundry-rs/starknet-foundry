@@ -4,6 +4,7 @@ mod call;
 mod class_hash;
 mod completions;
 mod declare;
+mod declare_file;
 mod declare_from;
 mod deploy;
 mod devnet_accounts;
