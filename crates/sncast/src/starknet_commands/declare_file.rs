@@ -41,13 +41,13 @@ pub async fn declare_file(
 ) -> Result<DeclareResponse, StarknetCommandError> {
     let sierra_json = std::fs::read_to_string(&declare_file.sierra_file).with_context(|| {
         format!(
-            "Failed to read Sierra file at {}",
+            "Failed to read sierra file at {}",
             declare_file.sierra_file.display()
         )
     })?;
 
     let sierra: SierraClass = serde_json::from_str(&sierra_json)
-        .with_context(|| "Failed to parse Sierra file as contract class".to_string())?;
+        .with_context(|| "Failed to parse sierra file".to_string())?;
 
     let casm = compile_casm_from_sierra(&sierra)?;
 

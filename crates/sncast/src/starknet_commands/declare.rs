@@ -102,7 +102,7 @@ pub fn compile_casm_from_sierra(
     let casm_json: String = serde_json::to_string(
         &compile_contract_sierra(
             &serde_json::to_value(sierra_class)
-                .with_context(|| "Failed to convert sierra to json value".to_string())?,
+                .with_context(|| "Failed to convert sierra to JSON value".to_string())?,
         )
         .with_context(|| "Failed to compile sierra to casm".to_string())?,
     )
