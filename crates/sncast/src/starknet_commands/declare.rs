@@ -27,6 +27,7 @@ use starknet_rust::{
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::sync::Arc;
+use universal_sierra_compiler_api::compile_contract_sierra;
 
 /// Common args shared by declare command variants.
 #[derive(Args)]
@@ -92,6 +93,23 @@ pub async fn declare(
         ui,
     )
     .await
+}
+
+pub fn compile_casm_from_sierra(
+    sierra_class: &SierraClass,
+) -> Result<CompiledClass, StarknetCommandError> {
+    let casm_json: String = serde_json::to_string(
+        &compile_contract_sierra(
+            &serde_json::to_value(sierra_class)
+                .with_context(|| "Failed to convert sierra to json value".to_string())?,
+        )
+        .with_context(|| "Failed to compile sierra to casm".to_string())?,
+    )
+    .expect("serialization should succeed");
+
+    let casm: CompiledClass = serde_json::from_str(&casm_json)
+        .with_context(|| "Failed to deserialize casm JSON into CompiledClass".to_string())?;
+    Ok(casm)
 }
 
 #[allow(clippy::too_many_arguments)]

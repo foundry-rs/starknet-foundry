@@ -1,4 +1,4 @@
-use crate::starknet_commands::declare::declare_with_artifacts;
+use crate::starknet_commands::declare::{compile_casm_from_sierra, declare_with_artifacts};
 use anyhow::Context;
 use clap::Args;
 use sncast::WaitForTx;
@@ -8,12 +8,11 @@ use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::ui::UI;
 use starknet_rust::accounts::SingleOwnerAccount;
-use starknet_rust::core::types::contract::{CompiledClass, SierraClass};
+use starknet_rust::core::types::contract::SierraClass;
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 use std::path::PathBuf;
-use universal_sierra_compiler_api::compile_contract_sierra;
 
 #[derive(Args)]
 #[command(about = "Declare a contract to Starknet from a compiled Sierra file", long_about = None)]
@@ -47,22 +46,13 @@ pub async fn declare_file(
         )
     })?;
 
-    let contract_definition: SierraClass = serde_json::from_str(&sierra_json)
+    let sierra: SierraClass = serde_json::from_str(&sierra_json)
         .with_context(|| "Failed to parse Sierra file as contract class".to_string())?;
 
-    let casm_json: String = serde_json::to_string(
-        &compile_contract_sierra(
-            &serde_json::to_value(&contract_definition)
-                .with_context(|| "Failed to convert sierra to json value".to_string())?,
-        )
-        .with_context(|| "Failed to compile sierra to casm".to_string())?,
-    )
-    .expect("serialization should succeed");
-    let casm: CompiledClass = serde_json::from_str(&casm_json)
-        .with_context(|| "Failed to deserialize compiled CASM".to_string())?;
+    let casm = compile_casm_from_sierra(&sierra)?;
 
     declare_with_artifacts(
-        contract_definition,
+        sierra,
         casm,
         declare_file.fee_args,
         declare_file.nonce,
