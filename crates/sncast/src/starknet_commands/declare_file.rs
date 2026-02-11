@@ -19,7 +19,7 @@ use std::path::PathBuf;
 pub struct DeclareFile {
     /// Path to the compiled Sierra contract class JSON file
     #[arg(long)]
-    pub sierra_path: PathBuf,
+    pub sierra_file: PathBuf,
 
     #[command(flatten)]
     pub fee_args: FeeArgs,
@@ -39,10 +39,10 @@ pub async fn declare_file(
     skip_on_already_declared: bool,
     ui: &UI,
 ) -> Result<DeclareResponse, StarknetCommandError> {
-    let sierra_json = std::fs::read_to_string(&declare_file.sierra_path).with_context(|| {
+    let sierra_json = std::fs::read_to_string(&declare_file.sierra_file).with_context(|| {
         format!(
             "Failed to read Sierra file at {}",
-            declare_file.sierra_path.display()
+            declare_file.sierra_file.display()
         )
     })?;
 
