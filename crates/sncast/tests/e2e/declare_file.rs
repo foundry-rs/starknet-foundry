@@ -48,7 +48,7 @@ async fn test_happy_case() {
         "--account",
         "my_account",
         "declare-file",
-        "--sierra-path",
+        "--sierra-file",
         sierra_path,
         "--url",
         URL,
@@ -86,7 +86,7 @@ async fn test_file_does_not_exist() {
         "--account",
         "user1",
         "declare-file",
-        "--sierra-path",
+        "--sierra-file",
         "/nonexistent/path/contract.contract_class.json",
         "--url",
         URL,
@@ -99,7 +99,7 @@ async fn test_file_does_not_exist() {
         output,
         indoc! {r"
         Command: declare-file
-        Error: Failed to read Sierra file at [..]contract_class.json: No such file or directory [..]
+        Error: Failed to read sierra file at [..]contract_class.json: No such file or directory [..]
         "},
     );
 }
@@ -118,7 +118,7 @@ async fn test_invalid_sierra_json() {
         "--account",
         "user1",
         "declare-file",
-        "--sierra-path",
+        "--sierra-file",
         invalid_sierra_path.as_str(),
         "--url",
         URL,
@@ -131,7 +131,7 @@ async fn test_invalid_sierra_json() {
         output,
         indoc! {r"
         Command: declare-file
-        Error: Failed to parse Sierra file as contract class: missing field `sierra_program` at line 1 column 25
+        Error: Failed to parse sierra file: missing field `sierra_program` at line 1 column 25
         "},
     );
 }
@@ -165,7 +165,7 @@ async fn test_contract_already_declared() {
         "--account",
         "my_account",
         "declare-file",
-        "--sierra-path",
+        "--sierra-file",
         sierra_path,
         "--url",
         URL,
@@ -180,7 +180,7 @@ async fn test_contract_already_declared() {
         "--account",
         "my_account",
         "declare-file",
-        "--sierra-path",
+        "--sierra-file",
         sierra_path,
         "--url",
         URL,
@@ -209,9 +209,9 @@ fn test_no_sierra_path_specified() {
         output,
         indoc! {r"
         error: the following required arguments were not provided:
-          --sierra-path <SIERRA_PATH>
+          --sierra-file <SIERRA_FILE>
 
-        Usage: sncast declare-file --sierra-path <SIERRA_PATH> --url <URL>
+        Usage: sncast declare-file --sierra-file <SIERRA_FILE> --url <URL>
 
         For more information, try '--help'.
         "},
