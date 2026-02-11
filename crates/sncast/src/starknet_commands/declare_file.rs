@@ -18,7 +18,7 @@ use std::path::PathBuf;
 #[command(about = "Declare a contract to Starknet from a compiled Sierra file", long_about = None)]
 pub struct DeclareFile {
     /// Path to the compiled Sierra contract class JSON file
-    #[arg(long)]
+    #[arg(long, short = 's')]
     pub sierra_file: PathBuf,
 
     #[command(flatten)]
