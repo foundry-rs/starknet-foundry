@@ -101,6 +101,21 @@ fn test_wrong_scarb_toml_configuration() {
 }
 
 #[test]
+fn test_wrong_scarb_toml_configuration_with_skip_check() {
+    let temp = setup_package("backtrace_vm_error");
+
+    without_inlines(&temp);
+
+    let output = test_runner(&temp)
+        .env("SNFORGE_BACKTRACE", "1")
+        .env("SNFORGE_SKIP_BACKTRACE_CHECK", "true")
+        .assert()
+        .failure();
+
+    assert_cleaned_output!(output);
+}
+
+#[test]
 fn test_backtrace_panic() {
     let temp = setup_package("backtrace_panic");
 
