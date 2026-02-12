@@ -1,6 +1,7 @@
 use crate::compatibility_check::{Requirement, RequirementsChecker, create_version_parser};
 use anyhow::Result;
 use camino::Utf8PathBuf;
+use clap::builder::BoolishValueParser;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use derive_more::Display;
 use forge_runner::CACHE_DIR;
@@ -157,6 +158,10 @@ pub struct TestArgs {
     /// Stop executing tests after the first failed test
     #[arg(short = 'x', long)]
     exit_first: bool,
+
+    /// Sort test result outputs by test name, for reproducible outputs (e.g. for snapshot tests).
+    #[arg(long, env = "SNFORGE_DETERMINISTIC_OUTPUT", default_value_t = false, hide = true, value_parser = BoolishValueParser::new())]
+    deterministic_output: bool,
 
     /// Number of fuzzer runs
     #[arg(short = 'r', long)]

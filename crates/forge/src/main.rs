@@ -42,10 +42,7 @@ fn init_logging() -> Option<impl Drop> {
                 .from_env_lossy(),
         );
 
-    let tracing_profile = env::var("SNFORGE_TRACING_PROFILE").ok().is_some_and(|var| {
-        let s = var.as_str();
-        s == "true" || s == "1"
-    });
+    let tracing_profile = shared::env::is_truthy_env("SNFORGE_TRACING_PROFILE", false);
 
     let profile_layer = if tracing_profile {
         let mut path = PathBuf::from(format!(

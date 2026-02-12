@@ -18,6 +18,7 @@ pub struct ForgeConfig {
 #[derive(Debug, PartialEq)]
 pub struct TestRunnerConfig {
     pub exit_first: bool,
+    pub deterministic_output: bool,
     pub fuzzer_runs: NonZeroU32,
     pub fuzzer_seed: u64,
     pub max_n_steps: Option<u32>,
