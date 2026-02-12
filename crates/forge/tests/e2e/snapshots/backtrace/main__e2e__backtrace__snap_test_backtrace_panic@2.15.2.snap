@@ -1,0 +1,40 @@
+---
+source: crates/forge/tests/e2e/backtrace.rs
+expression: stdout
+---
+[IGNORE] backtrace_panic::Test::test_contract_panics_with_should_panic
+[FAIL] backtrace_panic::Test::test_contract_panics
+
+Failure data:
+    0x417373657274206661696c6564 ('Assert failed')
+
+error occurred in contract 'InnerContract'
+stack backtrace:
+   0: core::panic_with_const_felt252
+       at [..]lib.cairo:364:5
+   1: core::panic_with_const_felt252
+       at [..]lib.cairo:364:5
+   2: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
+       at [..]lib.cairo:32:5
+
+error occurred in contract 'OuterContract'
+stack backtrace:
+   0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+       at [..]lib.cairo:13:5
+
+[FAIL] backtrace_panic::Test::test_fork_contract_panics
+
+Failure data:
+    0x417373657274206661696c6564 ('Assert failed')
+
+error occurred in forked contract with class hash: 0x554cb276fb5eb0788344f5431b9a166e2f445d8a91c7aef79d8c77e7eede956
+
+error occurred in contract 'OuterContract'
+stack backtrace:
+   0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+       at [..]lib.cairo:13:5
+
+
+Failures:
+    backtrace_panic::Test::test_contract_panics
+    backtrace_panic::Test::test_fork_contract_panics

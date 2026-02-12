@@ -1,0 +1,16 @@
+---
+source: crates/forge/tests/e2e/backtrace.rs
+expression: stdout
+---
+[PASS] dispatchers_integrationtest::test::test_handle_and_panic (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~583520)
+
+error occurred in contract 'ErrorHandler'
+stack backtrace:
+   0: core::panic_with_const_felt252
+       at [..]lib.cairo:364:5
+   1: core::panic_with_const_felt252
+       at [..]lib.cairo:364:5
+   2: dispatchers::error_handler::ErrorHandler::ErrorHandler::catch_panic_and_fail
+       at [..]error_handler.cairo:50:21
+   3: dispatchers::error_handler::ErrorHandler::__wrapper__ErrorHandler__catch_panic_and_fail
+       at [..]error_handler.cairo:27:5
