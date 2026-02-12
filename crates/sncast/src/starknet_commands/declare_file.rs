@@ -1,4 +1,4 @@
-use crate::starknet_commands::declare::{compile_casm_from_sierra, declare_with_artifacts};
+use crate::starknet_commands::declare::{compile_sierra_to_casm, declare_with_artifacts};
 use anyhow::Context;
 use clap::Args;
 use sncast::WaitForTx;
@@ -49,7 +49,7 @@ pub async fn declare_file(
     let sierra: SierraClass = serde_json::from_str(&sierra_json)
         .with_context(|| "Failed to parse sierra file".to_string())?;
 
-    let casm = compile_casm_from_sierra(&sierra)?;
+    let casm = compile_sierra_to_casm(&sierra)?;
 
     declare_with_artifacts(
         sierra,

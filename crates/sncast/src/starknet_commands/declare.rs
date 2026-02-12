@@ -96,7 +96,7 @@ pub async fn declare(
 }
 
 #[allow(clippy::result_large_err)]
-pub fn compile_casm_from_sierra(
+pub fn compile_sierra_to_casm(
     sierra_class: &SierraClass,
 ) -> Result<CompiledClass, StarknetCommandError> {
     let casm_json: String = serde_json::to_string(

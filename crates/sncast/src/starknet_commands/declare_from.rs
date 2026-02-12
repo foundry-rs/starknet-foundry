@@ -1,4 +1,4 @@
-use crate::starknet_commands::declare::{DeclareCommonArgs, compile_casm_from_sierra, declare_with_artifacts};
+use crate::starknet_commands::declare::{compile_sierra_to_casm, DeclareCommonArgs, declare_with_artifacts};
 use anyhow::{Context, Result};
 use clap::Args;
 use shared::verify_and_warn_if_incompatible_rpc_version;
@@ -99,7 +99,7 @@ pub async fn declare_from(
     let sierra: SierraClass = flattened_sierra_to_sierra(flattened_sierra)
         .expect("Failed to parse flattened sierra class");
 
-    let casm = compile_casm_from_sierra(&sierra)?;
+    let casm = compile_sierra_to_casm(&sierra)?;
 
     let sierra_class_hash = sierra.class_hash().map_err(anyhow::Error::from)?;
 
