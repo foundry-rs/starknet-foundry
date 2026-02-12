@@ -2,7 +2,6 @@
 source: crates/forge/tests/e2e/backtrace.rs
 expression: stdout
 ---
-[IGNORE] backtrace_panic::Test::test_contract_panics_with_should_panic
 [FAIL] backtrace_panic::Test::test_contract_panics
 
 Failure data:
@@ -22,6 +21,7 @@ stack backtrace:
    0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
        at [..]lib.cairo:15:9
 
+[IGNORE] backtrace_panic::Test::test_contract_panics_with_should_panic
 [FAIL] backtrace_panic::Test::test_fork_contract_panics
 
 Failure data:
