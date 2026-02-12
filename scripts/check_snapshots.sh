@@ -25,7 +25,7 @@ if [ -z "${NO_COLOR:-}" ] && echo "${TERM:-}" | grep -q "^xterm"; then
   RESET="\033[0m"
 fi
 
-SEP="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+SEPARATOR="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 usage() {
   cat <<EOF
@@ -86,9 +86,9 @@ main() {
   _total=0
   for _ver in $_versions; do
     _total=$((_total + 1))
-    info "$SEP"
+    info "$SEPARATOR"
     info "scarb $_ver"
-    info "$SEP"
+    info "$SEPARATOR"
     install_version "scarb" "$_ver"
     set_tool_version "scarb" "$_ver"
     if run_tests "$UPDATE_SNAPSHOTS"; then
