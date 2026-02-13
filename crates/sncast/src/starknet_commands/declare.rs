@@ -85,7 +85,7 @@ pub async fn declare(
     declare_with_artifacts(
         contract_definition,
         casm_contract_definition,
-        fee_args.clone(),
+        &fee_args,
         nonce,
         account,
         wait_config,
@@ -117,7 +117,7 @@ pub fn compile_sierra_to_casm(
 pub async fn declare_with_artifacts(
     sierra_class: SierraClass,
     compiled_casm: CompiledClass,
-    fee_args: FeeArgs,
+    fee_args: &FeeArgs,
     nonce: Option<Felt>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,

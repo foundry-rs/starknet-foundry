@@ -1,27 +1,43 @@
-use crate::starknet_commands::declare::{compile_sierra_to_casm, DeclareCommonArgs, declare_with_artifacts};
+use crate::starknet_commands::declare::{
+    DeclareCommonArgs, compile_sierra_to_casm, declare_with_artifacts,
+};
 use anyhow::{Context, Result};
-use clap::Args;
+use clap::{ArgGroup, Args};
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::helpers::rpc::FreeProvider;
 use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::{SNCastProviderError, StarknetCommandError};
 use sncast::response::ui::UI;
-use sncast::{Network, WaitForTx, get_block_id, get_provider};
+use sncast::{Network, WaitForTx, get_provider};
 use starknet_rust::accounts::SingleOwnerAccount;
 use starknet_rust::core::types::contract::{AbiEntry, SierraClass, SierraClassDebugInfo};
-use starknet_rust::core::types::{ContractClass, FlattenedSierraClass};
+use starknet_rust::core::types::{BlockId, ContractClass, FlattenedSierraClass};
 use starknet_rust::providers::Provider;
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
+use std::path::PathBuf;
 use url::Url;
 
 #[derive(Args)]
-#[command(about = "Declare a contract by fetching it from a different Starknet instance", long_about = None)]
+#[command(
+    about = "Declare a contract from either: a Sierra file, or by fetching it from a different Starknet instance",
+    long_about = None,
+    group(
+        ArgGroup::new("contract_source")
+            .args(["sierra_file", "class_hash"])
+            .required(true)
+            .multiple(false)
+    )
+)]
 pub struct DeclareFrom {
+    /// Path to the compiled Sierra contract class JSON file
+    #[arg(long, conflicts_with_all = ["block_id", "source_url", "source_network"])]
+    pub sierra_file: Option<PathBuf>,
+
     /// Class hash of contract declared on a different Starknet instance
     #[arg(short = 'g', long)]
-    pub class_hash: Felt,
+    pub class_hash: Option<Felt>,
 
     #[command(flatten)]
     pub source_rpc: SourceRpcArgs,
@@ -73,49 +89,73 @@ impl SourceRpcArgs {
     }
 }
 
+pub enum ContractSource {
+    LocalFile {
+        sierra_path: PathBuf,
+    },
+    Network {
+        source_provider: JsonRpcClient<HttpTransport>,
+        class_hash: Felt,
+        block_id: BlockId,
+    },
+}
+
 pub async fn declare_from(
-    declare_from: DeclareFrom,
+    contract_source: ContractSource,
+    common_args: &DeclareCommonArgs,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
     skip_on_already_declared: bool,
-    source_provider: &JsonRpcClient<HttpTransport>,
     ui: &UI,
 ) -> Result<DeclareResponse, StarknetCommandError> {
-    let block_id = get_block_id(&declare_from.block_id)?;
-    let class = source_provider
-        .get_class(block_id, declare_from.class_hash)
-        .await
-        .map_err(SNCastProviderError::from)
-        .map_err(StarknetCommandError::from)?;
+    let sierra = match &contract_source {
+        ContractSource::LocalFile { sierra_path } => {
+            let sierra_json = std::fs::read_to_string(sierra_path).with_context(|| {
+                format!("Failed to read sierra file at {}", sierra_path.display())
+            })?;
+            serde_json::from_str(&sierra_json)
+                .with_context(|| "Failed to parse sierra file".to_string())?
+        }
+        ContractSource::Network {
+            source_provider,
+            class_hash,
+            block_id,
+        } => {
+            let class = source_provider
+                .get_class(*block_id, *class_hash)
+                .await
+                .map_err(SNCastProviderError::from)
+                .map_err(StarknetCommandError::from)?;
 
-    let flattened_sierra = match class {
-        ContractClass::Sierra(class) => class,
-        ContractClass::Legacy(_) => {
-            return Err(StarknetCommandError::UnknownError(anyhow::anyhow!(
-                "Declaring from Cairo 0 (legacy) contracts is not supported"
-            )));
+            let flattened_sierra = match class {
+                ContractClass::Sierra(c) => c,
+                ContractClass::Legacy(_) => {
+                    return Err(StarknetCommandError::UnknownError(anyhow::anyhow!(
+                        "Declaring from Cairo 0 (legacy) contracts is not supported"
+                    )));
+                }
+            };
+            let sierra: SierraClass = flattened_sierra_to_sierra(flattened_sierra)
+                .expect("Failed to parse flattened sierra class");
+
+            let sierra_class_hash = sierra.class_hash().map_err(anyhow::Error::from)?;
+
+            if *class_hash != sierra_class_hash {
+                return Err(StarknetCommandError::UnknownError(anyhow::anyhow!(
+                    "The provided sierra class hash {class_hash:#x} does not match the computed class hash {sierra_class_hash:#x} from the fetched contract."
+                )));
+            }
+            sierra
         }
     };
-    let sierra: SierraClass = flattened_sierra_to_sierra(flattened_sierra)
-        .expect("Failed to parse flattened sierra class");
 
     let casm = compile_sierra_to_casm(&sierra)?;
-
-    let sierra_class_hash = sierra.class_hash().map_err(anyhow::Error::from)?;
-
-    if declare_from.class_hash != sierra_class_hash {
-        return Err(StarknetCommandError::UnknownError(anyhow::anyhow!(
-            "The provided sierra class hash {:#x} does not match the computed class hash {:#x} from the fetched contract.",
-            declare_from.class_hash,
-            sierra_class_hash
-        )));
-    }
 
     declare_with_artifacts(
         sierra,
         casm,
-        declare_from.common.fee_args,
-        declare_from.common.nonce,
+        &common_args.fee_args,
+        common_args.nonce,
         account,
         wait_config,
         skip_on_already_declared,
