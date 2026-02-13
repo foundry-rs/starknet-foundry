@@ -356,8 +356,12 @@ mod tests {
         {
             let root = BitMapBackend::with_buffer(&mut buffer, (400, 200)).into_drawing_area();
             root.fill(&WHITE).unwrap();
-            root.draw_text("Hello", &(ROBOTO_FAMILY, 48).into_text_style(&root), (40, 100))
-                .unwrap();
+            root.draw_text(
+                "Hello",
+                &(ROBOTO_FAMILY, 48).into_text_style(&root),
+                (40, 100),
+            )
+            .unwrap();
             root.present().unwrap();
         }
 

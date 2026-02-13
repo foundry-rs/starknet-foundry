@@ -33,14 +33,12 @@ mod HelloStarknet {
 
 #[cfg(test)]
 mod tests {
+    use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
     use starknet::ContractAddress;
-
-    use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
-
-    use super::IHelloStarknetSafeDispatcher;
-    use super::IHelloStarknetSafeDispatcherTrait;
-    use super::IHelloStarknetDispatcher;
-    use super::IHelloStarknetDispatcherTrait;
+    use super::{
+        IHelloStarknetDispatcher, IHelloStarknetDispatcherTrait, IHelloStarknetSafeDispatcher,
+        IHelloStarknetSafeDispatcherTrait,
+    };
 
     fn deploy_contract(name: ByteArray) -> ContractAddress {
         let contract = declare(name).unwrap().contract_class();
@@ -77,7 +75,7 @@ mod tests {
             Result::Ok(_) => core::panic_with_felt252('Should have panicked'),
             Result::Err(panic_data) => {
                 assert(*panic_data.at(0) == 'Amount cannot be 0', *panic_data.at(0));
-            }
+            },
         };
     }
 }
