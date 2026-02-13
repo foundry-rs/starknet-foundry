@@ -1,7 +1,7 @@
 use crate::starknet_commands::balance::Balance;
 use crate::starknet_commands::declare::declare;
 use crate::starknet_commands::declare_from::DeclareFrom;
-use crate::starknet_commands::deploy::DeployArguments;
+use crate::starknet_commands::deploy::DeploymentArguments;
 use crate::starknet_commands::multicall;
 use crate::starknet_commands::script::run_script_command;
 use crate::starknet_commands::utils::{self, Utils};
@@ -189,7 +189,7 @@ enum Commands {
 
 #[derive(Debug, Clone, clap::Args)]
 #[group(multiple = false)]
-pub struct Arguments {
+pub struct CommonInvokeArgs {
     /// Arguments of the called function serialized as a series of felts
     #[arg(short, long, value_delimiter = ' ', num_args = 1..)]
     pub calldata: Option<Vec<String>>,
@@ -199,7 +199,7 @@ pub struct Arguments {
     pub arguments: Option<String>,
 }
 
-impl Arguments {
+impl CommonInvokeArgs {
     fn try_into_calldata(
         self,
         contract_class: ContractClass,
@@ -227,9 +227,9 @@ impl Arguments {
     }
 }
 
-impl From<DeployArguments> for Arguments {
-    fn from(value: DeployArguments) -> Self {
-        let DeployArguments {
+impl From<DeploymentArguments> for CommonInvokeArgs {
+    fn from(value: DeploymentArguments) -> Self {
+        let DeploymentArguments {
             constructor_calldata,
             arguments,
         } = value;
@@ -308,7 +308,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             )
             .await?;
             let manifest_path = assert_manifest_path_exists()?;
-            let package_metadata = get_package_metadata(&manifest_path, &declare.package)?;
+            let package_metadata = get_package_metadata(&manifest_path, &declare.args.package)?;
             let artifacts = build_and_load_artifacts(
                 &package_metadata,
                 &BuildConfig {
@@ -323,7 +323,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             .expect("Failed to build contract");
 
             let result = starknet_commands::declare::declare(
-                declare.contract_name.clone(),
+                declare.args.contract_name.clone(),
                 declare.fee_args,
                 declare.nonce,
                 &account,
@@ -349,7 +349,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let deploy_command_message = if let Ok(response) = &result {
                 // TODO(#3785)
                 let contract_artifacts = artifacts
-                    .get(&declare.contract_name)
+                    .get(&declare.args.contract_name)
                     .expect("Failed to get contract artifacts");
                 let contract_definition: SierraClass =
                     serde_json::from_str(&contract_artifacts.sierra)
@@ -416,96 +416,98 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Deploy(deploy) => {
             let Deploy {
-                contract_identifier: identifier,
-                arguments,
+                args,
                 fee_args,
                 rpc,
                 mut nonce,
-                package,
                 ..
             } = deploy;
+
+            let salt = args.salt.clone();
+            let unique = args.unique.clone();
 
             let provider = rpc.get_provider(&config, ui).await?;
 
             let account =
                 get_account(&config, &provider, &rpc, config.keystore.as_ref(), ui).await?;
 
-            let (class_hash, declare_response) = if let Some(class_hash) = identifier.class_hash {
-                (class_hash, None)
-            } else if let Some(contract_name) = identifier.contract_name {
-                let manifest_path = assert_manifest_path_exists()?;
-                let package_metadata = get_package_metadata(&manifest_path, &package)?;
-                let artifacts = build_and_load_artifacts(
-                    &package_metadata,
-                    &BuildConfig {
-                        scarb_toml_path: manifest_path,
-                        json: cli.json,
-                        profile: cli.profile.unwrap_or("release".to_string()),
-                    },
-                    false,
-                    // TODO(#3959) Remove `base_ui`
-                    ui.base_ui(),
-                )
-                .expect("Failed to build contract");
+            let (class_hash, declare_response) =
+                if let Some(class_hash) = args.contract_identifier.class_hash {
+                    (class_hash, None)
+                } else if let Some(contract_name) = args.contract_identifier.contract_name {
+                    let manifest_path = assert_manifest_path_exists()?;
+                    let package_metadata = get_package_metadata(&manifest_path, &args.package)?;
+                    let artifacts = build_and_load_artifacts(
+                        &package_metadata,
+                        &BuildConfig {
+                            scarb_toml_path: manifest_path,
+                            json: cli.json,
+                            profile: cli.profile.unwrap_or("release".to_string()),
+                        },
+                        false,
+                        // TODO(#3959) Remove `base_ui`
+                        ui.base_ui(),
+                    )
+                    .expect("Failed to build contract");
 
-                let declare_result = declare(
-                    contract_name,
-                    fee_args.clone(),
-                    nonce,
-                    &account,
-                    &artifacts,
-                    WaitForTx {
-                        wait: true,
-                        wait_params: wait_config.wait_params,
-                        // Only show outputs if user explicitly provides `--wait` flag
-                        show_ui_outputs: wait_config.wait,
-                    },
-                    true,
-                    ui,
-                )
-                .await
-                .map_err(handle_starknet_command_error);
+                    let declare_result = declare(
+                        contract_name,
+                        fee_args.clone(),
+                        nonce,
+                        &account,
+                        &artifacts,
+                        WaitForTx {
+                            wait: true,
+                            wait_params: wait_config.wait_params,
+                            // Only show outputs if user explicitly provides `--wait` flag
+                            show_ui_outputs: wait_config.wait,
+                        },
+                        true,
+                        ui,
+                    )
+                    .await
+                    .map_err(handle_starknet_command_error);
 
-                // Increment nonce after successful declare if it was explicitly provided
-                nonce = nonce.map(|n| n + Felt::ONE);
+                    // Increment nonce after successful declare if it was explicitly provided
+                    nonce = nonce.map(|n| n + Felt::ONE);
 
-                match declare_result {
-                    Ok(DeclareResponse::AlreadyDeclared(AlreadyDeclaredResponse {
-                        class_hash,
-                    })) => (class_hash.into_(), None),
-                    Ok(DeclareResponse::Success(declare_transaction_response)) => (
-                        declare_transaction_response.class_hash.into_(),
-                        Some(declare_transaction_response),
-                    ),
-                    Err(err) => {
-                        // TODO(#3960) This will return json output saying that `deploy` command was run
-                        //  even though the invoked command was declare.
-                        process_command_result::<DeclareTransactionResponse>(
-                            "deploy",
-                            Err(err),
-                            ui,
-                            None,
-                        );
-                        return Ok(());
+                    match declare_result {
+                        Ok(DeclareResponse::AlreadyDeclared(AlreadyDeclaredResponse {
+                            class_hash,
+                        })) => (class_hash.into_(), None),
+                        Ok(DeclareResponse::Success(declare_transaction_response)) => (
+                            declare_transaction_response.class_hash.into_(),
+                            Some(declare_transaction_response),
+                        ),
+                        Err(err) => {
+                            // TODO(#3960) This will return json output saying that `deploy` command was run
+                            //  even though the invoked command was declare.
+                            process_command_result::<DeclareTransactionResponse>(
+                                "deploy",
+                                Err(err),
+                                ui,
+                                None,
+                            );
+                            return Ok(());
+                        }
                     }
-                }
-            } else {
-                unreachable!("Either `--class_hash` or `--contract_name` must be provided");
-            };
+                } else {
+                    unreachable!("Either `--class_hash` or `--contract_name` must be provided");
+                };
 
             // safe to unwrap because "constructor" is a standardized name
             let selector = get_selector_from_name("constructor").unwrap();
 
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
-            let arguments: Arguments = arguments.into();
+            let arguments: CommonInvokeArgs = args.arguments.into();
             let calldata = arguments.try_into_calldata(contract_class, &selector)?;
 
             let result = starknet_commands::deploy::deploy(
                 class_hash,
                 &calldata,
-                deploy.salt,
-                deploy.unique,
+                salt,
+                unique,
                 fee_args,
                 nonce,
                 &account,
@@ -574,9 +576,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Invoke(invoke) => {
             let Invoke {
-                contract_address,
-                function,
-                arguments,
+                args,
                 fee_args,
                 rpc,
                 nonce,
@@ -588,13 +588,18 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let account =
                 get_account(&config, &provider, &rpc, config.keystore.as_ref(), ui).await?;
 
-            let selector = get_selector_from_name(&function)
+            let selector = get_selector_from_name(&args.function)
                 .context("Failed to convert entry point selector to FieldElement")?;
-
+            let contract_address: Felt = args
+                .contract_address
+                .parse()
+                .context("Failed to parse contract address")?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
-            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
+            let calldata = args
+                .arguments
+                .try_into_calldata(contract_class, &selector)?;
 
             let result = starknet_commands::invoke::invoke(
                 contract_address,

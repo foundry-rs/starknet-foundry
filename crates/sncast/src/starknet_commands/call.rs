@@ -1,4 +1,4 @@
-use crate::Arguments;
+use crate::CommonInvokeArgs;
 use anyhow::Result;
 use clap::Args;
 use sncast::helpers::rpc::RpcArgs;
@@ -21,7 +21,7 @@ pub struct Call {
     pub function: String,
 
     #[command(flatten)]
-    pub arguments: Arguments,
+    pub arguments: CommonInvokeArgs,
 
     /// Block identifier on which call should be performed.
     /// Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string)

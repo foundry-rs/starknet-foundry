@@ -33,18 +33,7 @@ pub struct ContractIdentifier {
 #[command(about = "Deploy a contract on Starknet")]
 pub struct Deploy {
     #[command(flatten)]
-    pub contract_identifier: ContractIdentifier,
-
-    #[command(flatten)]
-    pub arguments: DeployArguments,
-
-    /// Salt for the address
-    #[arg(short, long)]
-    pub salt: Option<Felt>,
-
-    /// If true, salt will be modified with an account address
-    #[arg(long)]
-    pub unique: bool,
+    pub args: CommonDeployArgs,
 
     #[command(flatten)]
     pub fee_args: FeeArgs,
@@ -55,6 +44,24 @@ pub struct Deploy {
 
     #[command(flatten)]
     pub rpc: RpcArgs,
+}
+
+#[derive(Args, Debug, Clone)]
+#[command(about = "Deploy a contract on Starknet")]
+pub struct CommonDeployArgs {
+    #[command(flatten)]
+    pub contract_identifier: ContractIdentifier,
+
+    #[command(flatten)]
+    pub arguments: DeploymentArguments,
+
+    /// Salt for the address
+    #[arg(short, long)]
+    pub salt: Option<Felt>,
+
+    /// If true, salt will be modified with an account address
+    #[arg(long)]
+    pub unique: bool,
 
     /// Specifies scarb package to be used. Only possible to use with `--contract-name`.
     #[arg(long, conflicts_with = "class_hash")]
@@ -63,7 +70,7 @@ pub struct Deploy {
 
 #[derive(Debug, Clone, clap::Args)]
 #[group(multiple = false)]
-pub struct DeployArguments {
+pub struct DeploymentArguments {
     /// Arguments of the called function serialized as a series of felts
     #[arg(short, long, value_delimiter = ' ', num_args = 1..)]
     pub constructor_calldata: Option<Vec<String>>,
