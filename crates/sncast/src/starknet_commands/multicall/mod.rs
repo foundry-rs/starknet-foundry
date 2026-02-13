@@ -76,10 +76,7 @@ where
 }
 
 #[derive(Args)]
-#[command(
-    about = "Execute multiple calls at once",
-    long_about = None,
-)]
+#[command(about = "Execute multiple calls at once", long_about = None)]
 pub struct Multicall {
     #[command(flatten)]
     pub fee_args: FeeArgs,
@@ -106,11 +103,6 @@ pub enum ChainCommands {
 
     #[command(hide = true)]
     Invoke(Box<ReClap<InvokeArgs, ChainCommands>>),
-    //     #[command(hide = true)]
-    //     Run(Box<Run>),
-
-    //     #[command(hide = true)]
-    //     New(New),
 }
 
 enum CmdState {
