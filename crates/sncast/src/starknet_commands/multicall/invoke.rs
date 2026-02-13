@@ -12,9 +12,14 @@ pub async fn invoke(
     ctx: &mut MulticallCtx,
     provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<()> {
-    let maybe_id = invoke.contract_address.trim_start_matches("@");
-    let contract_address = if let Some(address) = ctx.get_address_by_id(maybe_id) {
-        address
+    let contract_address = if invoke.contract_address.starts_with("@") {
+        let id = invoke.contract_address.trim_start_matches("@");
+        ctx.get_address_by_id(id).ok_or_else(|| {
+            anyhow::anyhow!(
+                "No contract address found for id: {}. Ensure the referenced id is defined in a previous step.",
+                id
+            )
+        })?
     } else {
         invoke.contract_address.parse::<Felt>().with_context(|| {
             format!(

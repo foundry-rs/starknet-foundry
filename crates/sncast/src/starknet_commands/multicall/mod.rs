@@ -70,6 +70,7 @@ where
             next: next.map(Box::new),
         })
     }
+
     fn update_from_arg_matches(&mut self, _matches: &clap::ArgMatches) -> Result<(), clap::Error> {
         unimplemented!()
     }
@@ -133,7 +134,6 @@ pub async fn multicall(
 ) -> anyhow::Result<()> {
     let mut ctx = MulticallCtx::default();
 
-    // let mut current_command = Some(multicall.command);
     let mut current = Some(CmdState::Top(multicall.command));
 
     while let Some(state) = current.take() {
@@ -213,6 +213,7 @@ pub async fn multicall(
         }
     }
 
+    // At this point, we should have processed chained commands
     ensure!(!ctx.calls().is_empty(), "No calls to execute");
 
     let provider = multicall.rpc.get_provider(&config, ui).await?;
@@ -238,7 +239,6 @@ pub async fn multicall(
 
     let block_explorer_link =
         block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
-
     process_command_result("multicall", result, ui, block_explorer_link);
 
     Ok(())
