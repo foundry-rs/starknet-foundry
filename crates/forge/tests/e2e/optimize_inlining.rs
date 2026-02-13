@@ -9,6 +9,8 @@ fn optimize_inlining_dry_run() {
 
     let output = runner(&temp)
         .arg("optimize-inlining")
+        .arg("--exact")
+        .arg("optimize_inlining::tests::test_increase_balance")
         .arg("--dry-run")
         .arg("--min-threshold")
         .arg("0")
@@ -43,6 +45,8 @@ fn optimize_inlining_updates_manifest() {
 
     let output = runner(&temp)
         .arg("optimize-inlining")
+        .arg("--exact")
+        .arg("optimize_inlining::tests::test_increase_balance")
         .arg("--min-threshold")
         .arg("0")
         .arg("--max-threshold")
@@ -73,6 +77,8 @@ fn optimize_inlining_fails_without_contracts() {
 
     let output = runner(&temp)
         .arg("optimize-inlining")
+        .arg("--exact")
+        .arg("fuzzing::tests::test_fuzz")
         .arg("--dry-run")
         .assert()
         .failure();
@@ -80,5 +86,22 @@ fn optimize_inlining_fails_without_contracts() {
     assert_stderr_contains(
         output,
         "Optimization failed: No starknet_artifacts.json found. Only projects with contracts can be optimized.",
+    );
+}
+
+#[test]
+#[cfg_attr(feature = "cairo-native", ignore = "Not supported with cairo-native")]
+fn optimize_inlining_requires_single_exact_test_case() {
+    let temp = setup_package("optimize_inlining");
+
+    let output = runner(&temp)
+        .arg("optimize-inlining")
+        .arg("--dry-run")
+        .assert()
+        .failure();
+
+    assert_stderr_contains(
+        output,
+        "error: optimize-inlining requires --exact and one exact test case name",
     );
 }

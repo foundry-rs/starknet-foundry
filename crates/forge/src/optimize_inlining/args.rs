@@ -42,6 +42,33 @@ impl OptimizeInliningArgs {
             self.max_threshold
         );
         ensure!(self.step > 0, "step must be greater than 0");
+        self.test_args.validate_single_exact_test_case()?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::OptimizeInliningArgs;
+    use clap::Parser;
+
+    #[test]
+    fn validation_fails_without_exact() {
+        let args = OptimizeInliningArgs::parse_from(["snforge", "test_name"]);
+        let error = args.validate().unwrap_err().to_string();
+        assert!(error.contains("requires --exact"));
+    }
+
+    #[test]
+    fn validation_fails_without_test_name() {
+        let args = OptimizeInliningArgs::parse_from(["snforge", "--exact"]);
+        let error = args.validate().unwrap_err().to_string();
+        assert!(error.contains("requires exactly one test case name"));
+    }
+
+    #[test]
+    fn validation_passes_with_single_exact_test_name() {
+        let args = OptimizeInliningArgs::parse_from(["snforge", "--exact", "test_name"]);
+        args.validate().unwrap();
     }
 }

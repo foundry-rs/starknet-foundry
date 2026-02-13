@@ -1,5 +1,5 @@
 use crate::compatibility_check::{Requirement, RequirementsChecker, create_version_parser};
-use anyhow::Result;
+use anyhow::{Result, ensure};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use derive_more::Display;
@@ -245,6 +245,26 @@ impl TestArgs {
         if self.run_native {
             self.tracked_resource = ForgeTrackedResource::SierraGas;
         }
+    }
+
+    pub fn validate_single_exact_test_case(&self) -> Result<()> {
+        ensure!(
+            self.exact,
+            "optimize-inlining requires --exact and one exact test case name"
+        );
+
+        let test_filter = self
+            .test_filter
+            .as_deref()
+            .map(str::trim)
+            .filter(|name| !name.is_empty());
+
+        ensure!(
+            test_filter.is_some(),
+            "optimize-inlining requires exactly one test case name"
+        );
+
+        Ok(())
     }
 }
 
