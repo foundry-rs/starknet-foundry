@@ -1,6 +1,4 @@
-use crate::starknet_commands::declare::{
-    declare_with_artifacts, DeclareCommonArgs,
-};
+use crate::starknet_commands::declare::{DeclareCommonArgs, declare_with_artifacts};
 use anyhow::{Context, Result};
 use clap::Args;
 use shared::verify_and_warn_if_incompatible_rpc_version;
@@ -39,7 +37,6 @@ pub struct DeclareFrom {
 
     #[command(flatten)]
     pub common: DeclareCommonArgs,
-
 }
 
 #[derive(Args, Clone, Debug, Default)]

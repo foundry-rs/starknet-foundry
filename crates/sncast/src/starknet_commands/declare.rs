@@ -52,7 +52,7 @@ pub struct Declare {
     /// Specifies scarb package to be used
     #[arg(long)]
     pub package: Option<String>,
-    
+
     #[command(flatten)]
     pub common: DeclareCommonArgs,
 }
