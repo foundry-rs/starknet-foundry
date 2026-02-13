@@ -378,9 +378,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         Commands::DeclareFrom(declare_from) => {
             let provider = declare_from.common.rpc.get_provider(&config, ui).await?;
 
-            let contract_source = if let Some(sierra_file) = declare_from.sierra_file { ContractSource::LocalFile {
-                sierra_path: sierra_file,
-            } } else {
+            let contract_source = if let Some(sierra_file) = declare_from.sierra_file {
+                ContractSource::LocalFile {
+                    sierra_path: sierra_file,
+                }
+            } else {
                 let source_provider = declare_from.source_rpc.get_provider(ui).await?;
                 let block_id = get_block_id(&declare_from.block_id)?;
                 let class_hash = declare_from.class_hash.expect("missing class_hash");
