@@ -8,7 +8,6 @@
     * [delete](./sncast/account/delete.md)
 * [balance](./sncast/balance.md)
 * [declare](./sncast/declare.md)
-* [declare-file](./sncast/declare_file.md)
 * [declare-from](./sncast/declare_from.md)
 * [deploy](./sncast/deploy.md)
 * [invoke](./sncast/invoke.md)

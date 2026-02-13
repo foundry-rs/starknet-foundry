@@ -1,12 +1,25 @@
 # `declare-from`
-Declare a contract by fetching it from a different Starknet instance.
+Declare a contract either: 
+- from a compiled Sierra file
+- by fetching it from another Starknet instance.
+
+The allowed args depend on the chosen contract source:
+- **File:** `--sierra-file` (required)
+- **Network:** `--class-hash` (required), `--block-id` (optional),  `--source-url` (optional), `--source-network` (optional)
+
+Note: **file** and **network** args are mutually exclusive.
 
 ## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
 
 * [`account`](./common.md#--account--a-account_name)
 
-## `--class-hash, -c <CLASS_HASH>`
-Required.
+## `--sierra-file <SIERRA_FILE>`
+Required in file mode.
+
+Path to the compiled Sierra contract class file (e.g. `target/dev/MyContract_MyContract.contract_class.json`).
+
+## `--class-hash, -g <CLASS_HASH>`
+Required in network mode.
 
 Class hash of contract declared on a different network.
 
