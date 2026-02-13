@@ -46,6 +46,8 @@ use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::representation::RawCasmProgram;
 
+use cairo_debugger::{CairoDebugger, CasmDebugInfo};
+
 pub mod config_run;
 mod execution;
 mod hints;
@@ -175,6 +177,23 @@ pub fn run_test_case(
     let (call, entry_point) =
         setup::build_test_call_and_entry_point(&case.test_details, casm_program, program);
 
+    let casm_debug_info = CasmDebugInfo {
+        statement_to_pc: casm_program
+            .debug_info
+            .iter()
+            .map(|(offset, _)| *offset)
+            .collect(),
+    };
+    let debugger = runtime_config
+        .launch_debugger
+        .then(|| {
+            CairoDebugger::connect_and_initialize(
+                versioned_program_path.as_std_path(),
+                casm_debug_info,
+            )
+        })
+        .transpose()?;
+
     let mut state_reader = ExtendedStateReader {
         dict_state_reader: cheatnet_constants::build_testing_state(),
         fork_state_reader: get_fork_state_reader(
@@ -209,6 +228,7 @@ pub fn run_test_case(
         program,
         &mut cached_state,
         &mut context,
+        debugger,
     )?;
 
     let mut cheatnet_state = CheatnetState {
