@@ -13,6 +13,7 @@ use foundry_ui::UI;
 use futures::{StreamExt, stream::FuturesUnordered};
 use std::sync::Arc;
 use tokio::sync::mpsc::channel;
+use tracing::trace_span;
 
 #[non_exhaustive]
 pub enum TestTargetRunResult {
@@ -75,6 +76,8 @@ pub async fn run_for_test_target(
     let mut interrupted = false;
 
     while let Some(task) = tasks.next().await {
+        let span = trace_span!("process_result");
+        let _g = span.enter();
         let result = task??;
 
         if should_print_test_result_message(&result) {

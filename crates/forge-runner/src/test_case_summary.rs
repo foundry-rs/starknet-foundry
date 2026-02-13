@@ -91,7 +91,7 @@ impl TestType for Single {
 
 /// Summary of running a single test case
 #[expect(clippy::large_enum_variant)]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum TestCaseSummary<T: TestType> {
     /// Test case passed
     Passed {
@@ -132,6 +132,25 @@ pub enum TestCaseSummary<T: TestType> {
     Interrupted {},
     /// Test case excluded from current partition
     ExcludedFromPartition {},
+}
+
+impl<T: TestType> fmt::Debug for TestCaseSummary<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TestCaseSummary::Passed {
+                name,
+                msg,
+                gas_info,
+                ..
+            } => f
+                .debug_struct("TestCaseSummaryPassed")
+                .field("name", name)
+                .field("msg", msg)
+                .field("gas_info", gas_info)
+                .finish(),
+            _ => f.write_str("TestCaseSummaryNotPassed{}"),
+        }
+    }
 }
 
 #[derive(Debug)]
