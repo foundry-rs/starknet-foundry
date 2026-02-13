@@ -221,61 +221,6 @@ pub async fn multicall(
         }
     }
 
-    // while let Some(cmd) = current.take() {
-    //     match cmd {
-    //         starknet_commands::multicall::Commands::Deploy(re_clap) => {
-    //             let provider = multicall.rpc.get_provider(&config, ui).await?;
-    //             deploy::deploy(re_clap.inner, &mut ctx, &provider).await?;
-
-    //             current_command = re_clap.next.map(|boxed| *boxed);
-    //         }
-    //         starknet_commands::multicall::Commands::Invoke(re_clap) => {
-    //             let provider = multicall.rpc.get_provider(&config, ui).await?;
-    //             invoke::invoke(re_clap.inner, &mut ctx, &provider).await?;
-
-    //             current_command = re_clap.next.map(|boxed| *boxed);
-    //         }
-    //         starknet_commands::multicall::Commands::New(new) => {
-    //             ensure!(ctx.calls().is_empty());
-
-    //             if let Some(output_path) = &new.output_path {
-    //                 let result = starknet_commands::multicall::new::write_empty_template(
-    //                     output_path,
-    //                     new.overwrite,
-    //                 );
-
-    //                 process_command_result("multicall new", result, ui, None);
-    //             } else {
-    //                 ui.print_message(
-    //                     "multicall new",
-    //                     MulticallMessage {
-    //                         file_contents: DEFAULT_MULTICALL_CONTENTS.to_string(),
-    //                     },
-    //                 );
-    //             }
-    //             return Ok(());
-    //         }
-    //         starknet_commands::multicall::Commands::Run(run) => {
-    //             ensure!(ctx.calls().is_empty());
-
-    //             let provider = run.rpc.get_provider(&config, ui).await?;
-    //             let account =
-    //                 get_account(&config, &provider, &run.rpc, config.keystore.as_ref(), ui).await?;
-
-    //             let result =
-    //                 starknet_commands::multicall::run::run(run.clone(), &account, wait_config, ui)
-    //                     .await;
-
-    //             let block_explorer_link =
-    //                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config)
-    //                     .await;
-    //             process_command_result("multicall run", result, ui, block_explorer_link);
-
-    //             return Ok(());
-    //         }
-    //     }
-    // }
-
     ensure!(!ctx.calls().is_empty(), "No calls to execute");
 
     let provider = multicall.rpc.get_provider(&config, ui).await?;
