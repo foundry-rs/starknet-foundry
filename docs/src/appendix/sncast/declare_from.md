@@ -1,12 +1,25 @@
 # `declare-from`
-Declare a contract by fetching it from a different Starknet instance.
+Declare a contract either: 
+- from a compiled Sierra file
+- by fetching it from another Starknet instance.
+
+The allowed args depend on the chosen contract source:
+- **File:** `--sierra-file` (required)
+- **Network:** `--class-hash` (required), `--block-id` (optional),  `--source-url` (optional), `--source-network` (optional)
+
+Note: **file** and **network** args are mutually exclusive.
 
 ## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
 
 * [`account`](./common.md#--account--a-account_name)
 
-## `--class-hash, -c <CLASS_HASH>`
-Required.
+## `--sierra-file <SIERRA_FILE>`
+Required in file mode.
+
+Path to the compiled Sierra contract class file (e.g. `target/dev/MyContract_MyContract.contract_class.json`).
+
+## `--class-hash, -g <CLASS_HASH>`
+Required in network mode.
 
 Class hash of contract declared on a different network.
 
@@ -26,7 +39,7 @@ Possible values: `mainnet`, `sepolia`, `devnet`.
 
 Overrides network from `snfoundry.toml`.
 
-## `--source-url, -u <RPC_URL>`
+## `--source-url, -s <RPC_URL>`
 Optional.
 
 Starknet RPC node url address of the source network where the contract is already declared.
@@ -77,7 +90,7 @@ Maximum L1 data gas unit price for the `declare` transaction. When not used, def
 Optional.
 Conflicts with: [`--estimate-tip`](#--estimate-tip-estimate_tip)
 
-Tip for the transaction. Tip for the transaction. When not provided, defaults to 0 unless [`--estimate-tip`](#--estimate-tip-estimate_tip) is used.
+Tip for the transaction. When not provided, defaults to 0 unless [`--estimate-tip`](#--estimate-tip-estimate_tip) is used.
 
 ## `--estimate-tip <ESTIMATE_TIP>`
 Optional.
@@ -94,5 +107,5 @@ Nonce for transaction. If not provided, nonce will be set automatically.
 Optional.
 
 Block identifier on which class of declared contract should be fetched.
-Possible values: `pending`, `latest`, block hash (0x prefixed string), and block number (u64).
-`pending` is used as a default value.
+Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string), and block number (u64).
+`latest` is used as a default value.
