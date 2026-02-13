@@ -1,22 +1,16 @@
 use crate::optimize_inlining::args::OptimizeInliningArgs;
 use crate::optimize_inlining::runner::{OptimizationResult, TotalGas, run_optimization_iteration};
 use anyhow::{Result, anyhow};
-use argmin::core::{CostFunction, Error as ArgminError, Executor, State};
-use argmin::solver::brent::BrentOpt;
-use foundry_ui::UI;
-use scarb_api::metadata::Metadata;
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::sync::Arc;
 use camino::Utf8Path;
+use foundry_ui::UI;
 use plotters::prelude::*;
+use scarb_api::metadata::Metadata;
+use std::sync::Arc;
 
 pub struct Optimizer {
     pub min_threshold: u32,
     pub max_threshold: u32,
     pub step: u32,
-    pub gas_weight: u8,
-    pub felts_weight: u8,
     pub results: Vec<OptimizationResult>,
     scarb_metadata: Metadata,
 }
@@ -28,91 +22,12 @@ pub struct OptimalResult {
     pub max_contract_felts: u64,
 }
 
-struct ScoreCostFunction<'a> {
-    args: &'a OptimizeInliningArgs,
-    scarb_metadata: &'a Metadata,
-    ui: &'a Arc<UI>,
-    gas_weight: f64,
-    felts_weight: f64,
-    max_gas: f64,
-    max_felts: f64,
-    min_threshold: f64,
-    max_threshold: f64,
-    step: f64,
-    results: RefCell<Vec<OptimizationResult>>,
-    cache: RefCell<HashMap<u32, f64>>,
-}
-
-impl CostFunction for ScoreCostFunction<'_> {
-    type Param = f64;
-    type Output = f64;
-
-    fn cost(&self, p: &Self::Param) -> Result<Self::Output, ArgminError> {
-        // let threshold = ((p / self.step).round() * self.step)
-        //     .clamp(self.min_threshold, self.max_threshold) as u32;
-
-        let threshold = p.clamp(self.min_threshold, self.max_threshold) as u32;
-
-        if let Some(&cached_score) = self.cache.borrow().get(&threshold) {
-            self.ui.print_blank_line();
-            self.ui
-                .println(&format!("Threshold {} (cached)", threshold));
-            return Ok(cached_score);
-        }
-
-        self.ui.print_blank_line();
-        self.ui
-            .println(&format!("Testing threshold {}...", threshold));
-
-        let result = run_optimization_iteration(threshold, self.args, self.scarb_metadata, self.ui)
-            .map_err(|e| ArgminError::msg(e.to_string()))?;
-
-        if let Some(ref error) = result.error {
-            self.ui.println(&format!("  ✗ {}", error));
-        } else {
-            self.ui.println(&format!(
-                "  ✓ Tests passed, gas: {}, max contract size: {} bytes, max felts: {}",
-                result.total_gas.total(),
-                result.max_contract_size,
-                result.max_contract_felts
-            ));
-        }
-
-        let score = if result.tests_passed && result.error.is_none() {
-            let gas_ratio = result.total_gas.total() as f64 / self.max_gas;
-            let felts_ratio = result.max_contract_felts as f64 / self.max_felts;
-            let gas_component = gas_ratio * self.gas_weight;
-            let felts_component = felts_ratio * self.felts_weight;
-            let total_score = gas_component + felts_component;
-            self.ui.println(&format!(
-                "  Score: {:.6} (gas: {:.6} × {:.2} = {:.6}, felts: {:.6} × {:.2} = {:.6})",
-                total_score,
-                gas_ratio,
-                self.gas_weight,
-                gas_component,
-                felts_ratio,
-                self.felts_weight,
-                felts_component
-            ));
-            total_score
-        } else {
-            f64::MAX
-        };
-
-        self.cache.borrow_mut().insert(threshold, score);
-        self.results.borrow_mut().push(result);
-        Ok(score)
-    }
-}
-
 impl Optimizer {
     pub fn new(args: &OptimizeInliningArgs, scarb_metadata: &Metadata) -> Self {
         Self {
             min_threshold: args.min_threshold,
             max_threshold: args.max_threshold,
             step: args.step,
-            gas_weight: args.gas_weight(),
-            felts_weight: args.felts_weight(),
             results: Vec::new(),
             scarb_metadata: scarb_metadata.clone(),
         }
@@ -182,79 +97,9 @@ impl Optimizer {
         (max_gas, max_felts)
     }
 
-    fn calculate_score(&self, result: &OptimizationResult, max_gas: u64, max_felts: u64) -> f64 {
-        let gas_ratio = result.total_gas.total() as f64 / max_gas as f64;
-        let felts_ratio = result.max_contract_felts as f64 / max_felts as f64;
-        gas_ratio * self.gas_weight as f64 / 100.0 + felts_ratio * self.felts_weight as f64 / 100.0
-    }
-
     pub fn optimize(&mut self, args: &OptimizeInliningArgs, ui: &Arc<UI>) -> Result<OptimalResult> {
         self.run_boundary_tests(args, ui)?;
-
-        if args.bruteforce {
-            self.optimize_bruteforce(args, ui)
-        } else {
-            self.optimize_brent(args, ui)
-        }
-    }
-
-    fn optimize_brent(
-        &mut self,
-        args: &OptimizeInliningArgs,
-        ui: &Arc<UI>,
-    ) -> Result<OptimalResult> {
-        ui.print_blank_line();
-        ui.println(&"Running Brent optimization...".to_string());
-
-        let (max_gas, max_felts) = self.get_max_values();
-
-        let mut cache = HashMap::new();
-        for r in &self.results {
-            if r.tests_passed && r.error.is_none() {
-                let score = self.calculate_score(r, max_gas, max_felts);
-                cache.insert(r.threshold, score);
-            }
-        }
-
-        let cost_function = ScoreCostFunction {
-            args,
-            scarb_metadata: &self.scarb_metadata,
-            ui,
-            gas_weight: self.gas_weight as f64 / 100.0,
-            felts_weight: self.felts_weight as f64 / 100.0,
-            max_gas: max_gas as f64,
-            max_felts: max_felts as f64,
-            min_threshold: self.min_threshold as f64,
-            max_threshold: self.max_threshold as f64,
-            step: self.step as f64,
-            results: RefCell::new(Vec::new()),
-            cache: RefCell::new(cache),
-        };
-
-        let solver = BrentOpt::new(self.min_threshold as f64, self.max_threshold as f64);
-
-        let res = Executor::new(cost_function, solver)
-            .configure(|state| state.max_iters(50))
-            .run()
-            .map_err(|e| anyhow!("Optimization failed: {}", e))?;
-
-        let best_param = res
-            .state()
-            .get_best_param()
-            .copied()
-            .unwrap_or((self.min_threshold + self.max_threshold) as f64 / 2.0);
-        let best_threshold = ((best_param / self.step as f64).round() * self.step as f64) as u32;
-
-        let collected_results = res.problem.problem.unwrap().results.into_inner();
-        self.results.extend(collected_results);
-
-        ui.print_blank_line();
-        ui.println(&format!(
-            "Optimization complete. Best threshold: {}",
-            best_threshold
-        ));
-
-        self.find_best_result()
+        self.optimize_bruteforce(args, ui)
     }
 
     fn optimize_bruteforce(
@@ -297,15 +142,15 @@ impl Optimizer {
     }
 
     fn find_best_result(&self) -> Result<OptimalResult> {
-        let (max_gas, max_felts) = self.get_max_values();
-
         self.results
             .iter()
             .filter(|r| r.tests_passed && r.error.is_none())
             .min_by(|a, b| {
-                self.calculate_score(a, max_gas, max_felts)
-                    .partial_cmp(&self.calculate_score(b, max_gas, max_felts))
-                    .unwrap_or(std::cmp::Ordering::Equal)
+                a.total_gas
+                    .total()
+                    .cmp(&b.total_gas.total())
+                    .then(a.max_contract_felts.cmp(&b.max_contract_felts))
+                    .then(a.threshold.cmp(&b.threshold))
             })
             .map(|r| OptimalResult {
                 threshold: r.threshold,
@@ -320,18 +165,16 @@ impl Optimizer {
         let mut sorted_results: Vec<_> = self.results.iter().collect();
         sorted_results.sort_by_key(|r| r.threshold);
 
-        let (max_gas, max_felts) = self.get_max_values();
-
         ui.println(
-            &"┌──────────────┬─────────────────┬──────────────────┬──────────────┬────────────┬────────┐"
+            &"┌──────────────┬─────────────────┬──────────────────┬──────────────┬────────┐"
                 .to_string(),
         );
         ui.println(
-            &"│  Threshold   │    Total Gas    │  Contract Size   │    Felts     │   Score    │ Status │"
+            &"│  Threshold   │    Total Gas    │  Contract Size   │    Felts     │ Status │"
                 .to_string(),
         );
         ui.println(
-            &"├──────────────┼─────────────────┼──────────────────┼──────────────┼────────────┼────────┤"
+            &"├──────────────┼─────────────────┼──────────────────┼──────────────┼────────┤"
                 .to_string(),
         );
 
@@ -341,50 +184,27 @@ impl Optimizer {
             } else {
                 "✗"
             };
-            let (gas_str, score_str) = if r.tests_passed && r.error.is_none() {
-                let score = self.calculate_score(r, max_gas, max_felts);
-                (
-                    format!("{:>13}", r.total_gas.total()),
-                    format!("{:>8.6}", score),
-                )
+            let gas_str = if r.tests_passed && r.error.is_none() {
+                format!("{:>13}", r.total_gas.total())
             } else {
-                (format!("{:>13}", "-"), format!("{:>8}", "-"))
+                format!("{:>13}", "-")
             };
             ui.println(&format!(
-                "│ {:>10}   │ {}   │ {:>14}   │ {:>10}   │ {}   │   {}    │",
-                r.threshold, gas_str, r.max_contract_size, r.max_contract_felts, score_str, status
+                "│ {:>10}   │ {}   │ {:>14}   │ {:>10}   │   {}    │",
+                r.threshold, gas_str, r.max_contract_size, r.max_contract_felts, status
             ));
         }
 
         ui.println(
-            &"└──────────────┴─────────────────┴──────────────────┴──────────────┴────────────┴────────┘"
+            &"└──────────────┴─────────────────┴──────────────────┴──────────────┴────────┘"
                 .to_string(),
         );
 
-        ui.print_blank_line();
-        ui.println(&format!(
-            "Normalization: max_gas={}, max_felts={}",
-            max_gas, max_felts
-        ));
-        ui.println(&format!(
-            "Weights: gas={}%, felts={}%",
-            self.gas_weight, self.felts_weight
-        ));
-
         if let Ok(best) = self.find_best_result() {
-            let best_score = self.calculate_score(
-                self.results
-                    .iter()
-                    .find(|r| r.threshold == best.threshold)
-                    .unwrap(),
-                max_gas,
-                max_felts,
-            );
             ui.print_blank_line();
             ui.println(&format!(
-                "Best result: threshold={}, score={:.6}, gas={}, felts={}",
+                "Best result: threshold={}, gas={}, felts={}",
                 best.threshold,
-                best_score,
                 best.total_gas.total(),
                 best.max_contract_felts
             ));
@@ -427,30 +247,18 @@ impl Optimizer {
             })
             .collect();
 
-        let score_points: Vec<(f64, f64)> = sorted_results
-            .iter()
-            .map(|r| {
-                (
-                    r.threshold as f64,
-                    self.calculate_score(r, max_gas, max_felts),
-                )
-            })
-            .collect();
-
         let x_min = self.min_threshold as f64;
         let x_max = self.max_threshold as f64;
 
         let y_min = gas_points
             .iter()
             .chain(felts_points.iter())
-            .chain(score_points.iter())
             .map(|(_, y)| *y)
             .fold(f64::MAX, f64::min)
             * 0.95;
         let y_max = gas_points
             .iter()
             .chain(felts_points.iter())
-            .chain(score_points.iter())
             .map(|(_, y)| *y)
             .fold(f64::MIN, f64::max)
             * 1.05;
@@ -478,32 +286,22 @@ impl Optimizer {
             .label("Gas")
             .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 40, y)], RED.stroke_width(3)));
 
-        chart
-            .draw_series(gas_points.iter().map(|(x, y)| Circle::new((*x, *y), 8, RED.filled())))?;
+        chart.draw_series(
+            gas_points
+                .iter()
+                .map(|(x, y)| Circle::new((*x, *y), 8, RED.filled())),
+        )?;
 
         chart
             .draw_series(LineSeries::new(felts_points.clone(), GREEN.stroke_width(3)))?
-            .label("Felts")
+            .label("Weight")
             .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 40, y)], GREEN.stroke_width(3)));
 
-        chart
-            .draw_series(felts_points.iter().map(|(x, y)| Circle::new((*x, *y), 8, GREEN.filled())))?;
-
-        chart
-            .draw_series(LineSeries::new(score_points.clone(), BLUE.stroke_width(3)))?
-            .label("Score")
-            .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 40, y)], BLUE.stroke_width(3)));
-
-        chart
-            .draw_series(score_points.iter().map(|(x, y)| Circle::new((*x, *y), 8, BLUE.filled())))?;
-
-        if let Some(best) = score_points.iter().min_by(|a, b| a.1.partial_cmp(&b.1).unwrap()) {
-            chart.draw_series(std::iter::once(Circle::new(
-                *best,
-                16,
-                BLUE.mix(0.5).filled(),
-            )))?;
-        }
+        chart.draw_series(
+            felts_points
+                .iter()
+                .map(|(x, y)| Circle::new((*x, *y), 8, GREEN.filled())),
+        )?;
 
         chart
             .configure_series_labels()

@@ -248,37 +248,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
 
 [[package]]
-name = "argmin"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "760a49d596b18b881d2fe6e9e6da4608fa64d4a7653ef5cd43bfaa4da018d596"
-dependencies = [
- "anyhow",
- "argmin-math",
- "instant",
- "num-traits",
- "paste",
- "rand 0.8.5",
- "rand_xoshiro",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "argmin-math"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d93a0d0269b60bd1cd674de70314e3f0da97406cf8c1936ce760d2a46e0f13fe"
-dependencies = [
- "anyhow",
- "cfg-if",
- "num-complex",
- "num-integer",
- "num-traits",
- "rand 0.8.5",
- "thiserror 1.0.69",
-]
-
-[[package]]
 name = "ark-ec"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3507,7 +3476,6 @@ name = "forge"
 version = "0.56.0"
 dependencies = [
  "anyhow",
- "argmin",
  "assert_fs",
  "axum",
  "blockifier",
@@ -6165,15 +6133,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "513962919efc330f829edb2535844d1b912b0fbe2ca165d613e4e8788bb05a5a"
 dependencies = [
  "rand_core 0.9.5",
-]
-
-[[package]]
-name = "rand_xoshiro"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f97cdb2a36ed4183de61b2f824cc45c9f1037f28afe0a322e9fff4c108b5aaa"
-dependencies = [
- "rand_core 0.6.4",
 ]
 
 [[package]]
