@@ -1,4 +1,4 @@
-use crate::Arguments;
+use crate::CommonInvokeArgs;
 use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
@@ -19,16 +19,8 @@ use starknet_types_core::felt::Felt;
 #[derive(Args, Clone, Debug)]
 #[command(about = "Invoke a contract on Starknet")]
 pub struct Invoke {
-    /// Address of contract to invoke
-    #[arg(short = 'd', long)]
-    pub contract_address: Felt,
-
-    /// Name of the function to invoke
-    #[arg(short, long)]
-    pub function: String,
-
     #[command(flatten)]
-    pub arguments: Arguments,
+    pub args: InvokeArgs,
 
     #[command(flatten)]
     pub fee_args: FeeArgs,
@@ -39,6 +31,20 @@ pub struct Invoke {
 
     #[command(flatten)]
     pub rpc: RpcArgs,
+}
+
+#[derive(Args, Clone, Debug)]
+pub struct InvokeArgs {
+    /// Address of contract to invoke
+    #[arg(short = 'd', long)]
+    pub contract_address: String,
+
+    /// Name of the function to invoke
+    #[arg(short, long)]
+    pub function: String,
+
+    #[command(flatten)]
+    pub arguments: CommonInvokeArgs,
 }
 
 #[expect(clippy::too_many_arguments)]

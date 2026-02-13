@@ -31,9 +31,8 @@ use std::sync::Arc;
 #[derive(Args)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
 pub struct Declare {
-    /// Contract name
-    #[arg(short = 'c', long)]
-    pub contract_name: String,
+    #[command(flatten)]
+    pub args: CommonDeclareArgs,
 
     #[command(flatten)]
     pub fee_args: FeeArgs,
@@ -42,12 +41,19 @@ pub struct Declare {
     #[arg(short, long)]
     pub nonce: Option<Felt>,
 
+    #[command(flatten)]
+    pub rpc: RpcArgs,
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct CommonDeclareArgs {
+    /// Contract name
+    #[arg(short = 'c', long)]
+    pub contract_name: String,
+
     /// Specifies scarb package to be used
     #[arg(long)]
     pub package: Option<String>,
-
-    #[command(flatten)]
-    pub rpc: RpcArgs,
 }
 
 // TODO(#3785)
