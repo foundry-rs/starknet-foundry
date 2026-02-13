@@ -4,8 +4,12 @@ use anyhow::{Result, anyhow};
 use camino::Utf8Path;
 use foundry_ui::UI;
 use plotters::prelude::*;
+use plotters::style::{FontStyle, register_font};
 use scarb_api::metadata::Metadata;
 use std::sync::Arc;
+
+const ROBOTO_REGULAR: &[u8] = include_bytes!("../../assets/fonts/Roboto-Regular.ttf");
+const ROBOTO_FAMILY: &str = "roboto";
 
 pub struct Optimizer {
     pub min_threshold: u32,
@@ -212,6 +216,18 @@ impl Optimizer {
     }
 
     pub fn save_results_graph(&self, output_path: &Utf8Path, ui: &UI) -> Result<()> {
+        for style in [
+            FontStyle::Normal,
+            FontStyle::Bold,
+            FontStyle::Oblique,
+            FontStyle::Italic,
+        ] {
+            register_font(ROBOTO_FAMILY, style, ROBOTO_REGULAR)
+                .map_err(|_| anyhow!("Failed to register bundled Roboto-Regular.ttf font"))?;
+            register_font("sans-serif", style, ROBOTO_REGULAR)
+                .map_err(|_| anyhow!("Failed to register bundled Roboto-Regular.ttf font"))?;
+        }
+
         let mut sorted_results: Vec<_> = self
             .results
             .iter()
@@ -267,7 +283,7 @@ impl Optimizer {
         root.fill(&WHITE)?;
 
         let mut chart = ChartBuilder::on(&root)
-            .caption("Inlining Optimization Results", ("sans-serif", 48))
+            .caption("Inlining Optimization Results", (ROBOTO_FAMILY, 48))
             .margin(40)
             .x_label_area_size(80)
             .y_label_area_size(100)
@@ -277,6 +293,7 @@ impl Optimizer {
             .configure_mesh()
             .x_desc("Threshold")
             .y_desc("Normalized Value")
+            .label_style((ROBOTO_FAMILY, 24))
             .x_label_formatter(&|x| format!("{:.0}", x))
             .y_label_formatter(&|y| format!("{:.2}", y))
             .draw()?;
@@ -316,5 +333,42 @@ impl Optimizer {
         ui.println(&format!("Graph saved to: {}", output_path));
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bundled_font_renders_text_into_bitmap() {
+        for style in [
+            FontStyle::Normal,
+            FontStyle::Bold,
+            FontStyle::Oblique,
+            FontStyle::Italic,
+        ] {
+            assert!(register_font(ROBOTO_FAMILY, style, ROBOTO_REGULAR).is_ok());
+            assert!(register_font("sans-serif", style, ROBOTO_REGULAR).is_ok());
+        }
+
+        let mut buffer = vec![0u8; 400 * 200 * 3];
+        {
+            let root = BitMapBackend::with_buffer(&mut buffer, (400, 200)).into_drawing_area();
+            root.fill(&WHITE).unwrap();
+            root.draw_text("Hello", &(ROBOTO_FAMILY, 48).into_text_style(&root), (40, 100))
+                .unwrap();
+            root.present().unwrap();
+        }
+
+        let non_white_pixels = buffer
+            .chunks_exact(3)
+            .filter(|px| px[0] != 255 || px[1] != 255 || px[2] != 255)
+            .count();
+
+        assert!(
+            non_white_pixels > 0,
+            "Expected rendered text to produce non-white pixels"
+        );
     }
 }

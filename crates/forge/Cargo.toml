@@ -62,7 +62,7 @@ tracing-chrome.workspace = true
 rayon.workspace = true
 tempfile.workspace = true
 fs_extra.workspace = true
-plotters = "0.3"
+plotters = { version = "0.3", default-features = false, features = ["all_series", "all_elements", "svg_backend", "bitmap_backend", "bitmap_encoder", "full_palette", "colormaps", "ab_glyph"] }
 
 [[bin]]
 name = "snforge"
