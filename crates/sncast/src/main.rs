@@ -295,14 +295,14 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
     match cli.command {
         Commands::Declare(declare) => {
-            let provider = declare.rpc.get_provider(&config, ui).await?;
+            let provider = declare.common.rpc.get_provider(&config, ui).await?;
 
-            let rpc = declare.rpc.clone();
+            let rpc = declare.common.rpc.clone();
 
             let account = get_account(
                 &config,
                 &provider,
-                &declare.rpc,
+                &declare.common.rpc,
                 config.keystore.as_ref(),
                 ui,
             )
@@ -324,8 +324,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let result = starknet_commands::declare::declare(
                 declare.contract_name.clone(),
-                declare.fee_args,
-                declare.nonce,
+                declare.common.fee_args,
+                declare.common.nonce,
                 &account,
                 &artifacts,
                 wait_config,
@@ -376,13 +376,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         }
 
         Commands::DeclareFrom(declare_from) => {
-            let provider = declare_from.rpc.get_provider(&config, ui).await?;
+            let provider = declare_from.common.rpc.get_provider(&config, ui).await?;
             let source_provider = declare_from.source_rpc.get_provider(ui).await?;
 
             let account = get_account(
                 &config,
                 &provider,
-                &declare_from.rpc,
+                &declare_from.common.rpc,
                 config.keystore.as_ref(),
                 ui,
             )
