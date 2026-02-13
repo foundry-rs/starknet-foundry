@@ -39,7 +39,7 @@ Possible values: `mainnet`, `sepolia`, `devnet`.
 
 Overrides network from `snfoundry.toml`.
 
-## `--source-url, -u <RPC_URL>`
+## `--source-url, -s <RPC_URL>`
 Optional.
 
 Starknet RPC node url address of the source network where the contract is already declared.
@@ -107,5 +107,5 @@ Nonce for transaction. If not provided, nonce will be set automatically.
 Optional.
 
 Block identifier on which class of declared contract should be fetched.
-Possible values: `pending`, `latest`, block hash (0x prefixed string), and block number (u64).
-`pending` is used as a default value.
+Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string), and block number (u64).
+`latest` is used as a default value.
