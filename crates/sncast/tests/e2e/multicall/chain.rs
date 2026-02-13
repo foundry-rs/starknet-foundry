@@ -1,7 +1,6 @@
 use crate::helpers::constants::{
-    MAP_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA, MULTICALL_CONFIGS_DIR, URL,
+    MAP_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
 };
-use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::create_and_deploy_account;
 use crate::helpers::runner::runner;
 use indoc::indoc;
@@ -139,6 +138,45 @@ async fn test_non_existent_id() {
         indoc! {
             "
             Error: No contract address found for id: non_existent_id. Ensure the referenced id is defined in a previous step.
+            "
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_duplicated_id() {
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "multicall",
+        "--url",
+        URL,
+        "deploy",
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--id",
+        "dpl",
+        "deploy",
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--id",
+        "dpl",
+    ];
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {
+            "
+            Error: Duplicate id found: dpl
             "
         },
     );
