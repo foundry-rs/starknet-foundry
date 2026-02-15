@@ -1,10 +1,10 @@
 use crate::optimize_inlining::args::OptimizeInliningArgs;
-use crate::optimize_inlining::runner::{OptimizationResult, TotalGas, run_optimization_iteration};
-use anyhow::{Result, anyhow};
+use crate::optimize_inlining::runner::{run_optimization_iteration, OptimizationResult, TotalGas};
+use anyhow::{anyhow, Result};
 use camino::Utf8Path;
 use foundry_ui::UI;
 use plotters::prelude::*;
-use plotters::style::{FontStyle, register_font};
+use plotters::style::{register_font, FontStyle};
 use scarb_api::metadata::Metadata;
 use std::sync::Arc;
 

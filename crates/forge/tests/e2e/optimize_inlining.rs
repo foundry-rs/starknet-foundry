@@ -19,17 +19,23 @@ fn optimize_inlining_dry_run() {
         .arg("--step")
         .arg("10")
         .assert()
-        .success()
-        .stdout_eq("");
+        .success();
 
     assert_stdout_contains(
         output,
         indoc! {r"
         Starting inlining strategy optimization...
-        Search range: 0 to 20, step: 10, max contract size: [..]
-        [..]Testing threshold 0...
-        [..]Testing threshold 10...
-        [..]Testing threshold 20...
+        Search range: 0 to 500, step: 10, max contract size: [..] bytes, max felts: [..]
+        Copying project to temporary directory...
+        Working in: [..]
+        Running boundary tests...
+
+        Testing min threshold 0...
+        [..]
+
+        Testing max threshold 500...
+        [..]
+
         Optimization Results:
         [..]Threshold[..]
         Optimal threshold: [..]
@@ -60,8 +66,17 @@ fn optimize_inlining_updates_manifest() {
         output,
         indoc! {r"
         Starting inlining strategy optimization...
-        [..]Testing threshold 0...
-        [..]Testing threshold 10...
+        Search range: 0 to 10, step: 10, max contract size: [..] bytes, max felts: [..]
+        Copying project to temporary directory...
+        Working in: [..]
+        Running boundary tests...
+
+        Testing min threshold 0...
+        [..]
+
+        Testing max threshold 10...
+        [..]
+
         Optimization Results:
         [..]Threshold[..]
         Optimal threshold: [..]
@@ -83,9 +98,9 @@ fn optimize_inlining_fails_without_contracts() {
         .assert()
         .failure();
 
-    assert_stderr_contains(
+    assert_stdout_contains(
         output,
-        "Optimization failed: No starknet_artifacts.json found. Only projects with contracts can be optimized.",
+        "[ERROR] Optimization failed: No starknet_artifacts.json found. Only projects with contracts can be optimized.",
     );
 }
 
@@ -100,8 +115,8 @@ fn optimize_inlining_requires_single_exact_test_case() {
         .assert()
         .failure();
 
-    assert_stderr_contains(
+    assert_stdout_contains(
         output,
-        "error: optimize-inlining requires --exact and one exact test case name",
+        "[ERROR] optimize-inlining requires --exact and one exact test case name",
     );
 }

@@ -2,7 +2,7 @@ use crate::optimize_inlining::args::OptimizeInliningArgs;
 use crate::optimize_inlining::contract_size::check_contract_sizes;
 use crate::optimize_inlining::manifest::ManifestEditor;
 use crate::run_tests::workspace::execute_workspace;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use foundry_ui::UI;
@@ -49,7 +49,7 @@ pub fn run_optimization_iteration(
     manifest_editor.set_inlining_strategy(threshold, profile)?;
 
     let build_result = ScarbCommand::new_with_stdio()
-        .manifest_path(dbg!(&scarb_metadata.runtime_manifest))
+        .manifest_path(&scarb_metadata.runtime_manifest)
         .arg("--profile")
         .arg(profile)
         .arg("build")
@@ -68,11 +68,10 @@ pub fn run_optimization_iteration(
         });
     }
 
-    let artifacts_dir = dbg!(target_dir_for_workspace(scarb_metadata).join(profile));
-    // dbg!(fs::read_dir(&artifacts_dir).unwrap().collect::<Vec<_>>());
+    let artifacts_dir = target_dir_for_workspace(scarb_metadata).join(profile);
 
     let starknet_artifacts_paths =
-        find_test_target_starknet_artifacts(&artifacts_dir, scarb_metadata);
+        find_test_target_starknet_artifacts(&artifacts_dir, scarb_metadata)?;
     if starknet_artifacts_paths.is_empty() {
         return Err(anyhow::anyhow!(
             "No starknet_artifacts.json found. Only projects with contracts can be optimized."
@@ -160,7 +159,7 @@ fn run_tests_with_execute_workspace(
     env::set_current_dir(root)?;
 
     let result = rt.block_on(execute_workspace(args.test_args.clone(), ui.clone()));
-    dbg!(&result);
+
     match result {
         Ok(summary) => {
             let mut all_passed = true;
@@ -221,7 +220,7 @@ fn extract_gas_from_summary(summary: &AnyTestCaseSummary) -> TotalGas {
 fn find_test_target_starknet_artifacts(
     artifacts_dir: &camino::Utf8Path,
     scarb_metadata: &Metadata,
-) -> Vec<Utf8PathBuf> {
+) -> Result<Vec<Utf8PathBuf>> {
     let mut paths = Vec::new();
 
     for package in &scarb_metadata.packages {
@@ -229,11 +228,60 @@ fn find_test_target_starknet_artifacts(
         for target_name in test_targets.keys() {
             let artifact_path =
                 artifacts_dir.join(format!("{target_name}.test.starknet_artifacts.json"));
-            if artifact_path.exists() {
+            if artifact_path.exists() && has_non_empty_contracts_field(&artifact_path)? {
                 paths.push(artifact_path);
             }
         }
     }
 
-    paths
+    Ok(paths)
+}
+
+fn has_non_empty_contracts_field(artifact_path: &Utf8Path) -> Result<bool> {
+    let content = fs::read_to_string(artifact_path)
+        .with_context(|| format!("Failed to read {artifact_path}"))?;
+    let json: serde_json::Value = serde_json::from_str(&content)
+        .with_context(|| format!("Failed to parse {artifact_path}"))?;
+
+    Ok(json
+        .get("contracts")
+        .and_then(serde_json::Value::as_array)
+        .is_some_and(|contracts| !contracts.is_empty()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::has_non_empty_contracts_field;
+    use anyhow::Result;
+    use camino::Utf8PathBuf;
+    use std::fs;
+
+    #[test]
+    fn detects_non_empty_contracts_field() -> Result<()> {
+        let temp = tempfile::tempdir()?;
+        let artifacts_path =
+            Utf8PathBuf::from_path_buf(temp.path().join("a.starknet_artifacts.json"))
+                .map_err(|_| anyhow::anyhow!("Temporary path is not valid UTF-8"))?;
+
+        fs::write(
+            &artifacts_path,
+            r#"{ "version": 1, "contracts": [{ "id": "x" }] }"#,
+        )?;
+
+        assert!(has_non_empty_contracts_field(&artifacts_path)?);
+        Ok(())
+    }
+
+    #[test]
+    fn detects_empty_contracts_field() -> Result<()> {
+        let temp = tempfile::tempdir()?;
+        let artifacts_path =
+            Utf8PathBuf::from_path_buf(temp.path().join("a.starknet_artifacts.json"))
+                .map_err(|_| anyhow::anyhow!("Temporary path is not valid UTF-8"))?;
+
+        fs::write(&artifacts_path, r#"{ "version": 1, "contracts": [] }"#)?;
+
+        assert!(!has_non_empty_contracts_field(&artifacts_path)?);
+        Ok(())
+    }
 }

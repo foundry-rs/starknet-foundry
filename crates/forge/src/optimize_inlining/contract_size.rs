@@ -73,12 +73,12 @@ pub fn check_contract_sizes(
                 if sierra_felts > max_felts_count {
                     all_valid = false;
                 }
-                sizes.push(dbg!(ContractSizeInfo {
+                sizes.push(ContractSizeInfo {
                     name: contract.contract_name.clone(),
                     path: sierra_path,
                     size,
                     felts_count: sierra_felts,
-                }));
+                });
             };
             if let Some(casm_path) = &contract.artifacts.casm {
                 let casm_path = artifacts_dir.join(casm_path);

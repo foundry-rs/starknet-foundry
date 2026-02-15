@@ -1,5 +1,5 @@
 use crate::TestArgs;
-use anyhow::{Result, ensure};
+use anyhow::{ensure, Result};
 use clap::Parser;
 
 #[derive(Parser, Debug)]

@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use std::fs;
-use toml_edit::{DocumentMut, value};
+use toml_edit::{value, DocumentMut};
 
 pub struct ManifestEditor {
     path: Utf8PathBuf,
