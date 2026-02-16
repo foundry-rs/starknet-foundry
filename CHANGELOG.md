@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Cast
 
 #### Added
+
 - `--sierra-file` flag to `sncast declare-from` to allow declaring contract from a local Sierra file.
 
 #### Removed
