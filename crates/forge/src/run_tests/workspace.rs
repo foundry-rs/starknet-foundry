@@ -93,6 +93,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         .unwrap_or_default();
 
     for package in packages {
+        let cwd = env::current_dir()?;
         env::set_current_dir(&package.root)?;
 
         let args = RunForPackageArgs::build(
@@ -111,6 +112,8 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         all_tests.extend(result.summaries());
 
         total_filtered_count = calculate_total_filtered_count(total_filtered_count, filtered);
+        // Restore the original working directory.
+        env::set_current_dir(&cwd)?;
     }
 
     let overall_summary = OverallSummaryMessage::new(&all_tests, total_filtered_count);
