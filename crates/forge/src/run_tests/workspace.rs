@@ -82,15 +82,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     let cache_dir = workspace_root.join(CACHE_DIR);
     let packages_len = packages.len();
 
-    let partitioning_config = args
-        .partition
-        .map(|partition| {
-            ui.print_blank_line();
-            ui.println(&PartitionStartedMessage::new(partition));
-            PartitionConfig::new(partition, &packages, &artifacts_dir_path)
-        })
-        .transpose()?
-        .unwrap_or_default();
+    let partitioning_config = get_partitioning_config(&args, &ui, &packages, &artifacts_dir_path)?;
 
     for package in packages {
         let cwd = env::current_dir()?;
@@ -171,6 +163,22 @@ fn calculate_total_filtered_count(
         (Some(total), Some(f)) => Some(total + f),
         _ => None,
     }
+}
+
+fn get_partitioning_config(
+    args: &TestArgs,
+    ui: &UI,
+    packages: &[PackageMetadata],
+    artifacts_dir_path: &camino::Utf8Path,
+) -> Result<PartitionConfig> {
+    args.partition
+        .map(|partition| {
+            ui.print_blank_line();
+            ui.println(&PartitionStartedMessage::new(partition));
+            PartitionConfig::new(partition, packages, artifacts_dir_path)
+        })
+        .transpose()?
+        .map_or_else(|| Ok(PartitionConfig::Disabled), Ok)
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
