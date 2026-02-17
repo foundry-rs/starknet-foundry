@@ -28,13 +28,9 @@ use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+/// Common args shared by declare command variants.
 #[derive(Args)]
-#[command(about = "Declare a contract to starknet", long_about = None)]
-pub struct Declare {
-    /// Contract name
-    #[arg(short = 'c', long)]
-    pub contract_name: String,
-
+pub struct DeclareCommonArgs {
     #[command(flatten)]
     pub fee_args: FeeArgs,
 
@@ -42,12 +38,23 @@ pub struct Declare {
     #[arg(short, long)]
     pub nonce: Option<Felt>,
 
+    #[command(flatten)]
+    pub rpc: RpcArgs,
+}
+
+#[derive(Args)]
+#[command(about = "Declare a contract to starknet", long_about = None)]
+pub struct Declare {
+    /// Contract name
+    #[arg(short = 'c', long)]
+    pub contract_name: String,
+
     /// Specifies scarb package to be used
     #[arg(long)]
     pub package: Option<String>,
 
     #[command(flatten)]
-    pub rpc: RpcArgs,
+    pub common: DeclareCommonArgs,
 }
 
 // TODO(#3785)

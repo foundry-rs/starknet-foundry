@@ -1,9 +1,8 @@
-use crate::starknet_commands::declare::declare_with_artifacts;
+use crate::starknet_commands::declare::{DeclareCommonArgs, declare_with_artifacts};
 use anyhow::{Context, Result};
 use clap::Args;
 use shared::verify_and_warn_if_incompatible_rpc_version;
-use sncast::helpers::fee::FeeArgs;
-use sncast::helpers::rpc::{FreeProvider, RpcArgs};
+use sncast::helpers::rpc::FreeProvider;
 use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::{SNCastProviderError, StarknetCommandError};
 use sncast::response::ui::UI;
@@ -28,23 +27,16 @@ pub struct DeclareFrom {
     pub class_hash: Felt,
 
     #[command(flatten)]
-    pub fee_args: FeeArgs,
-
-    /// Nonce of the transaction. If not provided, nonce will be set automatically
-    #[arg(short, long)]
-    pub nonce: Option<Felt>,
-
-    #[command(flatten)]
     pub source_rpc: SourceRpcArgs,
-
-    #[command(flatten)]
-    pub rpc: RpcArgs,
 
     /// Block identifier from which the contract will be fetched.
     /// Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string)
     /// and block number (u64)
     #[arg(short, long, default_value = "latest")]
     pub block_id: String,
+
+    #[command(flatten)]
+    pub common: DeclareCommonArgs,
 }
 
 #[derive(Args, Clone, Debug, Default)]
@@ -132,8 +124,8 @@ pub async fn declare_from(
     declare_with_artifacts(
         sierra,
         casm,
-        declare_from.fee_args,
-        declare_from.nonce,
+        declare_from.common.fee_args,
+        declare_from.common.nonce,
         account,
         wait_config,
         skip_on_already_declared,
