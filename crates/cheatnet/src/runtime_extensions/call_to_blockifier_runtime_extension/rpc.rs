@@ -10,7 +10,7 @@ use crate::runtime_extensions::{
 use blockifier::execution::call_info::{CallExecution, ExecutionSummary, Retdata};
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::syscalls::hint_processor::{
-    ENTRYPOINT_FAILED_ERROR, SyscallExecutionError,
+    ENTRYPOINT_FAILED_ERROR_FELT, SyscallExecutionError,
 };
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallExecutorBaseError;
 use blockifier::execution::{
@@ -229,40 +229,7 @@ pub fn call_entry_point(
     let call_info = match result {
         Ok(call_info) => call_info,
         Err(CallFailure::Recoverable { panic_data }) => {
-            let storage_class_hash = syscall_handler
-                .base
-                .state
-                .get_class_hash_at(entry_point.storage_address)
-                .expect("There should be a class hash at the storage address");
-            let maybe_replacement_class = cheatnet_state
-                .replaced_bytecode_contracts
-                .get(&entry_point.storage_address)
-                .copied();
-            let class_hash = entry_point
-                .class_hash
-                .or(maybe_replacement_class)
-                .unwrap_or(storage_class_hash);
-
-            let current_tracked_resource = syscall_handler
-                .base
-                .state
-                .get_compiled_class(class_hash)
-                .map(|compiled_class| {
-                    compiled_class.get_current_tracked_resource(syscall_handler.base.context)
-                })
-                .unwrap_or(TrackedResource::SierraGas);
-
-            CallInfo {
-                call: entry_point.into_executable(class_hash).into(),
-                execution: CallExecution {
-                    retdata: Retdata(panic_data.clone()),
-                    failed: true,
-                    gas_consumed: 0,
-                    ..CallExecution::default()
-                },
-                tracked_resource: current_tracked_resource,
-                ..CallInfo::default()
-            }
+            build_failed_call_info(syscall_handler, cheatnet_state, entry_point, &panic_data)
         }
         Err(err) => {
             return Err(err);
@@ -286,7 +253,7 @@ pub fn call_entry_point(
         let reverted_call = syscall_handler.base.inner_calls.last_mut().unwrap();
         clear_events_and_messages_from_reverted_call(reverted_call);
 
-        raw_retdata.push(Felt::from_hex(ENTRYPOINT_FAILED_ERROR).expect("Conversion should work"));
+        raw_retdata.push(ENTRYPOINT_FAILED_ERROR_FELT);
         return Err(CallFailure::Recoverable {
             panic_data: raw_retdata,
         });
@@ -295,4 +262,45 @@ pub fn call_entry_point(
     Ok(CallSuccess {
         ret_data: raw_retdata,
     })
+}
+
+fn build_failed_call_info(
+    syscall_handler: &mut SyscallHintProcessor,
+    cheatnet_state: &CheatnetState,
+    entry_point: CallEntryPoint,
+    panic_data: &[Felt],
+) -> CallInfo {
+    let storage_class_hash = syscall_handler
+        .base
+        .state
+        .get_class_hash_at(entry_point.storage_address)
+        .expect("There should be a class hash at the storage address");
+    let maybe_replacement_class = cheatnet_state
+        .replaced_bytecode_contracts
+        .get(&entry_point.storage_address)
+        .copied();
+    let class_hash = entry_point
+        .class_hash
+        .or(maybe_replacement_class)
+        .unwrap_or(storage_class_hash);
+
+    let current_tracked_resource = syscall_handler
+        .base
+        .state
+        .get_compiled_class(class_hash)
+        .map(|compiled_class| {
+            compiled_class.get_current_tracked_resource(syscall_handler.base.context)
+        })
+        .unwrap_or(TrackedResource::SierraGas);
+
+    CallInfo {
+        call: entry_point.into_executable(class_hash).into(),
+        execution: CallExecution {
+            retdata: Retdata(panic_data.to_vec()),
+            failed: true,
+            ..CallExecution::default()
+        },
+        tracked_resource: current_tracked_resource,
+        ..CallInfo::default()
+    }
 }
