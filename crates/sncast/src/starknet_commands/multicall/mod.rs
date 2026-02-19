@@ -3,6 +3,8 @@ use serde::Serialize;
 use serde_json::{Value, json};
 
 pub mod ctx;
+pub mod deploy;
+pub mod invoke;
 pub mod new;
 pub mod run;
 
@@ -76,9 +78,14 @@ pub async fn multicall(
 
             let account =
                 get_account(&config, &provider, &run.rpc, config.keystore.as_ref(), ui).await?;
-            let result =
-                starknet_commands::multicall::run::run(run.clone(), &account, wait_config, &provider,ui)
-                    .await;
+            let result = starknet_commands::multicall::run::run(
+                run.clone(),
+                &account,
+                wait_config,
+                &provider,
+                ui,
+            )
+            .await;
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;

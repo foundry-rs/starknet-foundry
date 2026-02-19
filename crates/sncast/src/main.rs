@@ -1,7 +1,8 @@
 use crate::starknet_commands::balance::Balance;
 use crate::starknet_commands::declare::declare;
 use crate::starknet_commands::declare_from::DeclareFrom;
-use crate::starknet_commands::deploy::DeployArguments;
+use crate::starknet_commands::deploy::DeployCommonArgs;
+use crate::starknet_commands::invoke::InvokeCommonArgs;
 use crate::starknet_commands::multicall;
 use crate::starknet_commands::script::run_script_command;
 use crate::starknet_commands::utils::{self, Utils};
@@ -227,19 +228,6 @@ impl Arguments {
     }
 }
 
-impl From<DeployArguments> for Arguments {
-    fn from(value: DeployArguments) -> Self {
-        let DeployArguments {
-            constructor_calldata,
-            arguments,
-        } = value;
-        Self {
-            calldata: constructor_calldata,
-            arguments,
-        }
-    }
-}
-
 fn init_logging() {
     use std::io;
     use std::io::IsTerminal;
@@ -416,8 +404,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Deploy(deploy) => {
             let Deploy {
-                contract_identifier: identifier,
-                arguments,
+                common:
+                    DeployCommonArgs {
+                        contract_identifier: identifier,
+                        arguments,
+                        ..
+                    },
                 fee_args,
                 rpc,
                 mut nonce,
@@ -504,8 +496,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let result = starknet_commands::deploy::deploy(
                 class_hash,
                 &calldata,
-                deploy.salt,
-                deploy.unique,
+                deploy.common.salt,
+                deploy.common.unique,
                 fee_args,
                 nonce,
                 &account,
@@ -574,9 +566,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Invoke(invoke) => {
             let Invoke {
-                contract_address,
-                function,
-                arguments,
+                common:
+                    InvokeCommonArgs {
+                        contract_address,
+                        function,
+                        arguments,
+                    },
                 fee_args,
                 rpc,
                 nonce,

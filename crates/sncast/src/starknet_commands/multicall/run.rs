@@ -1,21 +1,20 @@
 use crate::Arguments;
 use crate::starknet_commands::deploy::{ContractIdentifier, DeployCommonArgs};
-use crate::starknet_commands::invoke::execute_calls;
+use crate::starknet_commands::invoke::{InvokeCommonArgs, execute_calls};
 use crate::starknet_commands::multicall::ctx::MulticallCtx;
+use crate::starknet_commands::multicall::deploy::{MulticallDeploy};
+use crate::starknet_commands::multicall::invoke::{MulticallInvoke};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use serde::Deserialize;
-use sncast::helpers::constants::UDC_ADDRESS;
+use sncast::WaitForTx;
 use sncast::helpers::fee::FeeArgs;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::multicall::run::MulticallRunResponse;
 use sncast::response::ui::UI;
-use sncast::{WaitForTx, extract_or_generate_salt, get_contract_class, udc_uniqueness};
-use starknet_rust::accounts::{Account, SingleOwnerAccount};
-use starknet_rust::core::types::Call;
-use starknet_rust::core::utils::{get_selector_from_name, get_udc_deployed_address};
+use starknet_rust::accounts::SingleOwnerAccount;
 use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::signers::LocalWallet;
@@ -36,11 +35,21 @@ pub struct Run {
     pub rpc: RpcArgs,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(untagged)]
 enum Input {
     String(String),
     Number(i64),
+}
+
+fn inputs_to_calldata(inputs: Vec<Input>) -> Vec<String> {
+    inputs
+        .into_iter()
+        .map(|input| match input {
+            Input::String(s) => s,
+            Input::Number(n) => n.to_string(),
+        })
+        .collect()
 }
 
 #[derive(Deserialize, Debug)]
@@ -59,67 +68,6 @@ struct InvokeCall {
     inputs: Vec<Input>,
 }
 
-async fn process_deploy(deploy: &DeployCommonArgs, provider: &JsonRpcClient<HttpTransport>, ctx: &mut MulticallCtx, account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>) -> Result<()> {
-    let salt = extract_or_generate_salt(deploy.salt);
-    let class_hash = deploy
-        .contract_identifier
-        .class_hash
-        .expect("Class hash must be provided for deploy calls");
-    let contract_class = get_contract_class(class_hash, &provider).await?;
-    let selector = get_selector_from_name("deployContract")?;
-
-    let replaced_calldata = deploy.arguments.calldata.as_ref().map(|calldata| {
-        calldata
-            .iter()
-            .map(|arg| {
-                if let Some(addr) = ctx.get_address_by_id(arg) {
-                    addr.to_string()
-                } else {
-                    arg.clone()
-                }
-            })
-            .collect()
-    });
-    
-    let constructor_calldata = deploy
-        .arguments
-        .try_into_calldata(contract_class, &selector)
-        .expect("Failed to convert deploy arguments to calldata");
-    let mut calldata = vec![
-        class_hash,
-        salt,
-        Felt::from(u8::from(deploy.unique)),
-        constructor_calldata.len().into(),
-    ];
-
-    calldata.extend(constructor_calldata);
-
-    let contract_address = get_udc_deployed_address(
-        salt,
-        class_hash,
-        &udc_uniqueness(deploy.unique, account.address()),
-        &constructor_calldata,
-    );
-
-    // Store the contract address in the context with the provided id for later use in invoke calls
-    if let Some(id) = &deploy.contract_identifier.contract_name {
-        if ctx.get_address_by_id(id).is_some() {
-            anyhow::bail!("Duplicate id found: {}", id);
-        }
-        ctx.insert_id_to_address(id.clone(), contract_address)?;
-    }
-
-    let call = Call {
-        to: UDC_ADDRESS,
-        selector,
-        calldata,
-    };
-    ctx.add_call(call);
-
-    Ok(())
-    
-}
-
 pub async fn run(
     run: Box<Run>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
@@ -133,10 +81,8 @@ pub async fn run(
     let items_map: HashMap<String, Vec<toml::Value>> =
         toml::from_str(&contents).with_context(|| format!("Failed to parse {}", run.path))?;
 
-    // let mut contracts = HashMap::new();
-    // let mut parsed_calls: Vec<Call> = vec![];
-
-    let mut ctx = MulticallCtx::new();
+    let mut ctx = MulticallCtx::new(provider);
+    let mut calls = vec![];
 
     for call in items_map.get("call").unwrap_or(&vec![]) {
         let call_type = call.get("call_type");
@@ -148,52 +94,62 @@ pub async fn run(
             Some("deploy") => {
                 let deploy_call: DeployCall = toml::from_str(toml::to_string(&call)?.as_str())
                     .context("Failed to parse toml `deploy` call")?;
-
-                    
-                let deploy = DeployCommonArgs {
-                    contract_identifier: ContractIdentifier {
-                        class_hash: Some(deploy_call.class_hash),
-                        contract_name: None,
-                    },
-                    arguments: Arguments {
-                        calldata: Some(
-                            deploy_call
-                                .inputs
-                                .iter()
-                                .map(|input| match input {
-                                    Input::String(s) => s.clone(),
-                                    Input::Number(n) => n.to_string(),
-                                })
-                                .collect(),
-                        ),
-                        arguments: None,
-                    },
-                    salt: deploy_call.salt,
-                    unique: deploy_call.unique,
+                let arguments = Arguments {
+                    calldata: Some(inputs_to_calldata(deploy_call.inputs.clone())),
+                    arguments: None,
+                };
+                let id = if deploy_call.id.is_empty() {
+                    None
+                } else {
+                    Some(deploy_call.id.clone())
                 };
 
-                process_deploy(&deploy, 
-                    &provider,
-                    &mut ctx, 
-                    account).await?;
+                let deploy = MulticallDeploy {
+                    common: DeployCommonArgs {
+                        contract_identifier: ContractIdentifier {
+                            class_hash: Some(deploy_call.class_hash),
+                            contract_name: None,
+                        },
+                        arguments,
+                        salt: deploy_call.salt,
+                        unique: deploy_call.unique,
+                    },
+                    id,
+                };
+
+                let call = deploy.to_call(account, &mut ctx).await?;
+                calls.push(call);
             }
             Some("invoke") => {
-                // let invoke_call: InvokeCall = toml::from_str(toml::to_string(&call)?.as_str())
-                //     .context("Failed to parse toml `invoke` call")?;
-                // let mut contract_address = &invoke_call.contract_address;
-                // if let Some(addr) = contracts.get(&invoke_call.contract_address) {
-                //     contract_address = addr;
-                // }
+                let invoke_call: InvokeCall = toml::from_str(toml::to_string(&call)?.as_str())
+                    .context("Failed to parse toml `invoke` call")?;
 
-                // let calldata = parse_inputs(&invoke_call.inputs, &contracts)?;
+                let contract_address =
+                    if let Some(address) = ctx.get_address_by_id(&invoke_call.contract_address) {
+                        address
+                    } else {
+                        invoke_call
+                            .contract_address
+                            .parse()
+                            .context("Failed to parse contract address in `invoke` call")?
+                    };
 
-                // parsed_calls.push(Call {
-                //     to: contract_address
-                //         .parse()
-                //         .context("Failed to parse contract address to Felt")?,
-                //     selector: get_selector_from_name(&invoke_call.function)?,
-                //     calldata,
-                // });
+                let arguments = Arguments {
+                    calldata: Some(inputs_to_calldata(invoke_call.inputs.clone())),
+                    arguments: None,
+                };
+
+                let invoke = MulticallInvoke {
+                    common: InvokeCommonArgs {
+                        contract_address,
+                        function: invoke_call.function,
+                        arguments,
+                    },
+                    id: None,
+                };
+
+                let call = invoke.to_call(&mut ctx).await.context("Failed to process `invoke` call")?;
+                calls.push(call);
             }
             Some(unsupported) => {
                 anyhow::bail!("Unsupported call type found = {unsupported}");
@@ -202,26 +158,8 @@ pub async fn run(
         }
     }
 
-    execute_calls(account, ctx.calls().to_vec(), fee_args, None, wait_config, ui)
+    execute_calls(account, calls, fee_args, None, wait_config, ui)
         .await
         .map(Into::into)
         .map_err(handle_starknet_command_error)
 }
-
-// fn parse_inputs(inputs: &Vec<Input>, contracts: &HashMap<String, String>) -> Result<Vec<Felt>> {
-//     let mut parsed_inputs = Vec::new();
-//     for input in inputs {
-//         let felt_value = match input {
-//             Input::String(s) => {
-//                 let resolved = contracts.get(s).unwrap_or(s);
-//                 resolved
-//                     .parse()
-//                     .context(format!("Failed to parse input '{resolved}' to Felt"))?
-//             }
-//             Input::Number(n) => (*n).into(),
-//         };
-//         parsed_inputs.push(felt_value);
-//     }
-
-//     Ok(parsed_inputs)
-// }
