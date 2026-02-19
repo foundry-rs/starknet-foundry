@@ -7,6 +7,7 @@ use crate::gas::report::SingleTestGasInfo;
 use crate::gas::stats::GasStats;
 use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use crate::running::{RunCompleted, RunStatus};
+use blockifier::execution::syscalls::hint_processor::ENTRYPOINT_FAILED_ERROR_FELT;
 use cairo_annotations::trace_data::VersionedCallTrace as VersionedProfilerCallTrace;
 use camino::Utf8Path;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
@@ -261,7 +262,9 @@ fn check_if_matching_and_get_message(
     };
 
     match expected_data {
-        Some(expected) if is_matching(actual_panic_value, expected) => (true, None),
+        Some(expected) if is_matching_should_panic_data(actual_panic_value, expected) => {
+            (true, None)
+        }
         Some(expected) => {
             let panic_string = convert_felts_to_byte_array_string(actual_panic_value)
                 .unwrap_or_else(|| join_short_strings(actual_panic_value));
@@ -396,14 +399,26 @@ fn join_short_strings(data: &[Felt]) -> String {
         .join(", ")
 }
 
-fn is_matching(data: &[Felt], pattern: &[Felt]) -> bool {
+fn is_matching_should_panic_data(data: &[Felt], pattern: &[Felt]) -> bool {
     let data_str = convert_felts_to_byte_array_string(data);
     let pattern_str = convert_felts_to_byte_array_string(pattern);
 
     if let (Some(data), Some(pattern)) = (data_str, pattern_str) {
         data.contains(&pattern) // If both data and pattern are byte arrays, pattern should be a substring of data
     } else {
-        data == pattern // Otherwise, data should be equal to pattern
+        // Compare logic depends on the presence of `ENTRYPOINT_FAILED_ERROR` in the expected data.
+        if pattern.contains(&ENTRYPOINT_FAILED_ERROR_FELT) {
+            // If data includes `ENTRYPOINT_FAILED_ERROR` compare as is.
+            data == pattern
+        } else {
+            // Otherwise, remove all generic errors and then compare.
+            let filtered: Vec<Felt> = data
+                .iter()
+                .copied()
+                .filter(|f| f != &ENTRYPOINT_FAILED_ERROR_FELT)
+                .collect();
+            filtered.as_slice() == pattern
+        }
     }
 }
 fn convert_felts_to_byte_array_string(data: &[Felt]) -> Option<String> {
@@ -527,5 +542,32 @@ mod tests {
         assert!((stats.l1_gas.std_deviation - 8.165).abs() < FLOAT_ERROR);
         assert!((stats.l1_data_gas.std_deviation - 16.33).abs() < FLOAT_ERROR);
         assert!((stats.l2_gas.std_deviation - 24.49).abs() < FLOAT_ERROR);
+    }
+
+    #[test]
+    fn test_is_matching_should_panic_data_entrypoint_failed() {
+        let data = vec![
+            Felt::from(11_u8),
+            Felt::from(22_u8),
+            Felt::from(33_u8),
+            ENTRYPOINT_FAILED_ERROR_FELT,
+            ENTRYPOINT_FAILED_ERROR_FELT,
+        ];
+
+        assert!(is_matching_should_panic_data(&data, &data));
+
+        let non_matching_pattern = vec![
+            Felt::from(11_u8),
+            Felt::from(22_u8),
+            Felt::from(33_u8),
+            ENTRYPOINT_FAILED_ERROR_FELT,
+        ];
+        assert!(!is_matching_should_panic_data(&data, &non_matching_pattern));
+
+        let pattern = vec![Felt::from(11_u8), Felt::from(22_u8), Felt::from(33_u8)];
+        assert!(is_matching_should_panic_data(&data, &pattern));
+
+        let non_matching_pattern = vec![Felt::from(11_u8), Felt::from(22_u8)];
+        assert!(!is_matching_should_panic_data(&data, &non_matching_pattern));
     }
 }
