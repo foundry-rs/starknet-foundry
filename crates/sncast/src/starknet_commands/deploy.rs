@@ -17,6 +17,8 @@ use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 
+use crate::Arguments;
+
 #[derive(Args, Debug, Clone)]
 #[group(required = true, multiple = false)]
 pub struct ContractIdentifier {
@@ -30,13 +32,12 @@ pub struct ContractIdentifier {
 }
 
 #[derive(Args)]
-#[command(about = "Deploy a contract on Starknet")]
-pub struct Deploy {
+pub struct DeployCommonArgs {
     #[command(flatten)]
     pub contract_identifier: ContractIdentifier,
 
     #[command(flatten)]
-    pub arguments: DeployArguments,
+    pub arguments: Arguments,
 
     /// Salt for the address
     #[arg(short, long)]
@@ -45,6 +46,13 @@ pub struct Deploy {
     /// If true, salt will be modified with an account address
     #[arg(long)]
     pub unique: bool,
+}
+
+#[derive(Args)]
+#[command(about = "Deploy a contract on Starknet")]
+pub struct Deploy {
+    #[command(flatten)]
+    pub common: DeployCommonArgs,
 
     #[command(flatten)]
     pub fee_args: FeeArgs,
@@ -61,17 +69,17 @@ pub struct Deploy {
     pub package: Option<String>,
 }
 
-#[derive(Debug, Clone, clap::Args)]
-#[group(multiple = false)]
-pub struct DeployArguments {
-    /// Arguments of the called function serialized as a series of felts
-    #[arg(short, long, value_delimiter = ' ', num_args = 1..)]
-    pub constructor_calldata: Option<Vec<String>>,
+// #[derive(Debug, Clone, clap::Args)]
+// #[group(multiple = false)]
+// pub struct DeployArguments {
+//     /// Arguments of the called function serialized as a series of felts
+//     #[arg(short, long, value_delimiter = ' ', num_args = 1..)]
+//     pub constructor_calldata: Option<Vec<String>>,
 
-    // Arguments of the called function as a comma-separated string of Cairo expressions
-    #[arg(long)]
-    pub arguments: Option<String>,
-}
+//     // Arguments of the called function as a comma-separated string of Cairo expressions
+//     #[arg(long)]
+//     pub arguments: Option<String>,
+// }
 
 #[expect(clippy::ptr_arg, clippy::too_many_arguments)]
 pub async fn deploy(
