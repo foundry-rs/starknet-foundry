@@ -27,6 +27,15 @@ Optional.
 Path to [keystore file](https://book.starkli.rs/signers#encrypted-keystores).
 When specified, the --account argument must be a path to [starkli account JSON file](https://book.starkli.rs/accounts#accounts).
 
+## `--ledger-path <HD_PATH>`
+Optional.
+
+[EIP-2645 derivation path](../../starknet/eip-2645-hd-paths.md) to use as signer via a connected Ledger hardware wallet (e.g., `m//starknet'/sncast'/0'/0'/0`).
+
+Cannot be used together with `--keystore`.
+
+See [Ledger Hardware Wallet](../../starknet/ledger.md) for details.
+
 ## `--json, -j`
 Optional.
 
