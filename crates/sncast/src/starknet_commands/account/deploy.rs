@@ -7,24 +7,26 @@ use sncast::helpers::account::load_accounts;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::BRAAVOS_BASE_ACCOUNT_CLASS_HASH;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
+use sncast::helpers::ledger;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::deploy::AccountDeployResponse;
 use sncast::response::invoke::InvokeResponse;
 use sncast::response::ui::UI;
 use sncast::{
-    AccountType, WaitForTx, apply_optional_fields, chain_id_to_network_name,
-    check_account_file_exists, get_account_data_from_accounts_file, get_account_data_from_keystore,
-    handle_rpc_error, handle_wait_for_tx,
+    AccountData, AccountType, SignerType, WaitForTx, apply_optional_fields,
+    chain_id_to_network_name, check_account_file_exists, get_account_data_from_accounts_file,
+    get_account_data_from_keystore, handle_rpc_error, handle_wait_for_tx,
 };
 use starknet_rust::accounts::{AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory};
 use starknet_rust::accounts::{AccountFactoryError, ArgentAccountFactory};
-use starknet_rust::core::types::BlockTag::PreConfirmed;
-use starknet_rust::core::types::{BlockId, StarknetError::ClassHashNotFound};
+use starknet_rust::core::types::{
+    ContractExecutionError, StarknetError::ClassHashNotFound,
+    StarknetError::TransactionExecutionError, TransactionExecutionErrorData,
+};
 use starknet_rust::core::utils::get_contract_address;
-use starknet_rust::providers::ProviderError::StarknetError;
 use starknet_rust::providers::jsonrpc::HttpTransport;
-use starknet_rust::providers::{JsonRpcClient, Provider};
-use starknet_rust::signers::{LocalWallet, SigningKey};
+use starknet_rust::providers::{JsonRpcClient, ProviderError::StarknetError};
+use starknet_rust::signers::{LocalWallet, Signer, SigningKey};
 use starknet_types_core::felt::Felt;
 
 #[derive(Args, Debug)]
@@ -57,14 +59,14 @@ pub async fn deploy(
     fee_args: FeeArgs,
     ui: &UI,
 ) -> Result<AccountDeployResponse> {
-    if let Some(keystore_path_) = keystore_path {
+    if let Some(keystore_path) = keystore_path {
         deploy_from_keystore(
             provider,
             chain_id,
             fee_args,
             wait_config,
             account,
-            keystore_path_,
+            keystore_path,
             ui,
         )
         .await
@@ -107,48 +109,34 @@ async fn deploy_from_keystore(
         bail!("Account already deployed");
     }
 
-    let private_key = SigningKey::from_secret_scalar(account_data.private_key);
+    let private_key_felt = account_data
+        .signer_type
+        .private_key()
+        .context("Private key not found in keystore account")?;
+    let private_key = SigningKey::from_secret_scalar(private_key_felt);
     let public_key = account_data.public_key;
 
     if public_key != private_key.verifying_key().scalar() {
         bail!("Public key and private key from keystore do not match");
     }
 
-    let salt = account_data
-        .salt
-        .context("Failed to get salt from keystore")?;
+    let (account_type, class_hash, salt) = extract_deployment_fields(&account_data)?;
 
-    let account_type = account_data
-        .account_type
-        .context("Failed to get account type from keystore")?;
-    let class_hash = account_data
-        .class_hash
-        .context("Failed to get class hash from keystore")?;
+    let address = compute_account_address(salt, public_key, class_hash, account_type, chain_id);
 
-    let address = compute_account_address(salt, &private_key, class_hash, account_type, chain_id);
-
-    let result = if provider
-        .get_class_hash_at(BlockId::Tag(PreConfirmed), address)
-        .await
-        .is_ok()
-    {
-        InvokeResponse {
-            transaction_hash: Felt::ZERO.into_(),
-        }
-    } else {
-        get_deployment_result(
-            provider,
-            account_type,
-            class_hash,
-            private_key,
-            salt,
-            chain_id,
-            fee_args,
-            wait_config,
-            ui,
-        )
-        .await?
-    };
+    let signer = LocalWallet::from_signing_key(private_key);
+    let result = create_factory_and_deploy(
+        provider,
+        account_type,
+        class_hash,
+        signer,
+        salt,
+        chain_id,
+        fee_args,
+        wait_config,
+        ui,
+    )
+    .await?;
 
     update_keystore_account(account, address)?;
 
@@ -165,27 +153,48 @@ async fn deploy_from_accounts_file(
     ui: &UI,
 ) -> Result<InvokeResponse> {
     let account_data = get_account_data_from_accounts_file(&name, chain_id, accounts_file)?;
+    let (account_type, class_hash, salt) = extract_deployment_fields(&account_data)?;
 
-    let private_key = SigningKey::from_secret_scalar(account_data.private_key);
+    let result = match &account_data.signer_type {
+        SignerType::Ledger { ledger_path } => {
+            let signer = ledger::create_ledger_signer(ledger_path, ui).await?;
 
-    let result = get_deployment_result(
-        provider,
-        account_data
-            .account_type
-            .context("Failed to get account type from accounts file")?,
-        account_data
-            .class_hash
-            .context("Failed to get class hash from accounts file")?,
-        private_key,
-        account_data
-            .salt
-            .context("Failed to get salt from accounts file")?,
-        chain_id,
-        fee_args,
-        wait_config,
-        ui,
-    )
-    .await?;
+            ledger::verify_ledger_public_key(
+                signer.get_public_key().await?.scalar(),
+                account_data.public_key,
+            )?;
+
+            create_factory_and_deploy(
+                provider,
+                account_type,
+                class_hash,
+                signer,
+                salt,
+                chain_id,
+                fee_args,
+                wait_config,
+                ui,
+            )
+            .await?
+        }
+        SignerType::Local { private_key } => {
+            let signer =
+                LocalWallet::from_signing_key(SigningKey::from_secret_scalar(*private_key));
+
+            create_factory_and_deploy(
+                provider,
+                account_type,
+                class_hash,
+                signer,
+                salt,
+                chain_id,
+                fee_args,
+                wait_config,
+                ui,
+            )
+            .await?
+        }
+    };
 
     update_account_in_accounts_file(accounts_file, &name, chain_id)?;
 
@@ -193,28 +202,26 @@ async fn deploy_from_accounts_file(
 }
 
 #[expect(clippy::too_many_arguments)]
-async fn get_deployment_result(
+async fn create_factory_and_deploy<S>(
     provider: &JsonRpcClient<HttpTransport>,
     account_type: AccountType,
     class_hash: Felt,
-    private_key: SigningKey,
+    signer: S,
     salt: Felt,
     chain_id: Felt,
     fee_args: FeeArgs,
     wait_config: WaitForTx,
     ui: &UI,
-) -> Result<InvokeResponse> {
+) -> Result<InvokeResponse>
+where
+    S: Signer + Send + Sync,
+    S::GetPublicKeyError: 'static,
+    S::SignError: 'static,
+{
     match account_type {
         AccountType::Argent | AccountType::Ready => {
-            let factory = ArgentAccountFactory::new(
-                class_hash,
-                chain_id,
-                None,
-                LocalWallet::from_signing_key(private_key),
-                provider,
-            )
-            .await?;
-
+            let factory =
+                ArgentAccountFactory::new(class_hash, chain_id, None, signer, provider).await?;
             deploy_account(
                 factory,
                 provider,
@@ -227,14 +234,8 @@ async fn get_deployment_result(
             .await
         }
         AccountType::OpenZeppelin => {
-            let factory = OpenZeppelinAccountFactory::new(
-                class_hash,
-                chain_id,
-                LocalWallet::from_signing_key(private_key),
-                provider,
-            )
-            .await?;
-
+            let factory =
+                OpenZeppelinAccountFactory::new(class_hash, chain_id, signer, provider).await?;
             deploy_account(
                 factory,
                 provider,
@@ -251,11 +252,10 @@ async fn get_deployment_result(
                 class_hash,
                 BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
                 chain_id,
-                LocalWallet::from_signing_key(private_key),
+                signer,
                 provider,
             )
             .await?;
-
             deploy_account(
                 factory,
                 provider,
@@ -267,6 +267,25 @@ async fn get_deployment_result(
             )
             .await
         }
+    }
+}
+
+fn extract_deployment_fields(account_data: &AccountData) -> Result<(AccountType, Felt, Felt)> {
+    let account_type = account_data
+        .account_type
+        .context("Failed to get account type from file")?;
+    let class_hash = account_data
+        .class_hash
+        .context("Failed to get class hash from file")?;
+    let salt = account_data.salt.context("Failed to get salt from file")?;
+
+    Ok((account_type, class_hash, salt))
+}
+
+fn execution_error_message(error: &ContractExecutionError) -> &str {
+    match error {
+        ContractExecutionError::Message(msg) => msg,
+        ContractExecutionError::Nested(inner) => execution_error_message(&inner.error),
     }
 }
 
@@ -321,6 +340,10 @@ where
             StarknetError(ClassHashNotFound) => Err(anyhow!(
                 "Provided class hash {class_hash:#x} does not exist",
             )),
+            StarknetError(TransactionExecutionError(TransactionExecutionErrorData {
+                ref execution_error,
+                ..
+            })) => Err(anyhow!(execution_error_message(execution_error).to_owned())),
             _ => Err(handle_rpc_error(error)),
         },
         Err(_) => Err(anyhow!("Unknown AccountFactoryError")),
@@ -384,28 +407,22 @@ fn update_keystore_account(account: &str, address: Felt) -> Result<()> {
 
 pub(crate) fn compute_account_address(
     salt: Felt,
-    private_key: &SigningKey,
+    public_key: Felt,
     class_hash: Felt,
     account_type: AccountType,
     chain_id: Felt,
 ) -> Felt {
     match account_type {
-        AccountType::Argent | AccountType::Ready => get_contract_address(
-            salt,
-            class_hash,
-            &[private_key.verifying_key().scalar(), Felt::ZERO],
-            Felt::ZERO,
-        ),
-        AccountType::OpenZeppelin => get_contract_address(
-            salt,
-            class_hash,
-            &[private_key.verifying_key().scalar()],
-            chain_id,
-        ),
+        AccountType::Argent | AccountType::Ready => {
+            get_contract_address(salt, class_hash, &[public_key, Felt::ZERO], Felt::ZERO)
+        }
+        AccountType::OpenZeppelin => {
+            get_contract_address(salt, class_hash, &[public_key], chain_id)
+        }
         AccountType::Braavos => get_contract_address(
             salt,
             BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
-            &[private_key.verifying_key().scalar()],
+            &[public_key],
             chain_id,
         ),
     }
