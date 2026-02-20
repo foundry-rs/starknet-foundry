@@ -130,7 +130,7 @@ pub async fn multicall(
             .await;
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
-            process_command_result("multicall run", result, ui, block_explorer_link);
+            process_command_result("multicall", result, ui, block_explorer_link);
             Ok(())
         }
     }

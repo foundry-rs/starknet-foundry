@@ -27,7 +27,16 @@ impl MulticallInvoke {
             ctx.get_address_by_id(id)
                 .with_context(|| format!("No contract address found for id: {id}. Ensure the referenced id is defined in a previous step."))?
         } else {
-            self.common.contract_address.parse()?
+            self.common
+                .contract_address
+                .parse()
+                .with_context(|| {
+                    format!(
+                        "Failed to parse contract address `{}`. Expected a hexadecimal Starknet address like `0x123...`. \
+If you intended to reference an address from a previous step, use `@<id>` instead (for example, `@deployed_address`).",
+                        self.common.contract_address
+                    )
+                })?
         };
 
         let class_hash = ctx
