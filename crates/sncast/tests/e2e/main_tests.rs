@@ -336,3 +336,26 @@ async fn test_keystore_declare() {
 
     assert!(snapbox.assert().success().get_output().stderr.is_empty());
 }
+
+#[tokio::test]
+async fn test_keystore_and_ledger_conflict() {
+    let args = vec![
+        "--keystore",
+        "some_keystore",
+        "--ledger-path",
+        "some_path",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "some_contract",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "Error: --keystore and --ledger-path cannot be used together",
+    );
+}

@@ -363,6 +363,21 @@ jobs:
       - name: Run tests
         run: cargo test --profile ci -p sncast
 
+  ledger:
+    name: Test Ledger
+    runs-on: ubuntu-latest
+    container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
+      - uses: ./.github/actions/setup-tools
+      - name: Run tests
+        run: |
+          cargo test --profile ci -p sncast --features ledger-emulator \
+            ledger:: \
+            -- --ignored
+
   test-conversions:
     name: Test Conversions
     runs-on: ubuntu-latest
