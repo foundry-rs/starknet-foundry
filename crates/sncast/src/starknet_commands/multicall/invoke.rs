@@ -30,13 +30,6 @@ impl MulticallInvoke {
             self.common.contract_address.parse()?
         };
 
-        // let contract_address = if let Some(address) =
-        //     ctx.get_address_by_id(&self.common.contract_address.replace("@", ""))
-        // {
-        //     address
-        // } else {
-        //     self.common.contract_address.parse()?
-        // };
         let class_hash = ctx
             .cache
             .get_class_hash_by_address(&contract_address)
