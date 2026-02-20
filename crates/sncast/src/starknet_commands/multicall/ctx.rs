@@ -36,7 +36,7 @@ impl ContractsCache {
 
     /// Retrieves the contract class associated with the given class hash, if it exists.
     pub(crate) fn get_class_hash_by_address_local(&self, address: &Felt) -> Option<Felt> {
-        self.address_to_class_hash.get(address).cloned()
+        self.address_to_class_hash.get(address).copied()
     }
 
     /// Inserts a mapping from the given contract address to the specified class hash.
@@ -47,7 +47,7 @@ impl ContractsCache {
         class_hash: Felt,
     ) -> Result<()> {
         if self.address_to_class_hash.contains_key(&address) {
-            anyhow::bail!("Duplicate address found: {}", address);
+            anyhow::bail!("Duplicate address found: {address}");
         }
         self.address_to_class_hash.insert(address, class_hash);
         Ok(())
@@ -86,14 +86,14 @@ impl MulticallCtx {
 
     /// Retrieves the contract address associated with the given id, if it exists.
     pub(crate) fn get_address_by_id(&self, id: &str) -> Option<Felt> {
-        self.id_to_address.get(id).cloned()
+        self.id_to_address.get(id).copied()
     }
 
     /// Inserts a mapping from the given id to the specified contract address.
     /// Returns an error if the id already exists.
     pub(crate) fn try_insert_id_to_address(&mut self, id: String, address: Felt) -> Result<()> {
         if self.id_to_address.contains_key(&id) {
-            anyhow::bail!("Duplicate id found: {}", id);
+            anyhow::bail!("Duplicate id found: {id}");
         }
         self.id_to_address.insert(id, address);
         Ok(())

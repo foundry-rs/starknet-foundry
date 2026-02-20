@@ -73,7 +73,7 @@ impl MulticallDeploy {
 
         // Store the contract address in the context with the provided id for later use in invoke calls
         if let Some(id) = &self.id {
-            ctx.try_insert_id_to_address(id.to_string(), contract_address)?;
+            ctx.try_insert_id_to_address(id.clone(), contract_address)?;
         }
 
         Ok(Call {

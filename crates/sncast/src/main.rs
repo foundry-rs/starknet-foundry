@@ -505,8 +505,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let selector = get_selector_from_name("constructor").unwrap();
 
             let contract_class = get_contract_class(class_hash, &provider).await?;
-
-            let arguments: Arguments = arguments.into();
             let calldata = arguments.try_into_calldata(contract_class, &selector)?;
 
             let result = starknet_commands::deploy::deploy(
