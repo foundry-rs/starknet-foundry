@@ -26,7 +26,7 @@ pub async fn run_with_calls(
     ui: &UI,
 ) -> Result<MulticallRunResponse> {
     let input = tokens.join(" ");
-    let commands = input.split('/').map(|s| s.trim()).filter(|s| !s.is_empty());
+    let commands = input.split('/').map(str::trim).filter(|s| !s.is_empty());
 
     let mut ctx = MulticallCtx::new(provider);
     let mut calls = vec![];
@@ -40,12 +40,12 @@ pub async fn run_with_calls(
 
         match command.as_str() {
             "deploy" => {
-                let deploy = parse_args::<MulticallDeploy>(command.clone(), &args[1..])?;
+                let deploy = parse_args::<MulticallDeploy>(&command, &args[1..])?;
                 let call = deploy.to_call(account, &mut ctx).await?;
                 calls.push(call);
             }
             "invoke" => {
-                let invoke = parse_args::<MulticallInvoke>(command.clone(), &args[1..])?;
+                let invoke = parse_args::<MulticallInvoke>(&command, &args[1..])?;
                 let call = invoke.to_call(&mut ctx).await?;
                 calls.push(call);
             }
@@ -68,11 +68,11 @@ pub async fn run_with_calls(
     .map_err(handle_starknet_command_error)
 }
 
-fn parse_args<T>(command_name: String, tokens: &[String]) -> anyhow::Result<T>
+fn parse_args<T>(command_name: &str, tokens: &[String]) -> anyhow::Result<T>
 where
     T: Args + FromArgMatches,
 {
-    let cmd = T::augment_args(Command::new(command_name.clone()));
+    let cmd = T::augment_args(Command::new(command_name.to_string()));
 
     let argv = std::iter::once(command_name.to_string())
         .chain(tokens.iter().cloned())
