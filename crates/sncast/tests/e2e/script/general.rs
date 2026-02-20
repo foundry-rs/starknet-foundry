@@ -327,7 +327,7 @@ async fn test_missing_field() {
     let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().failure().stdout_eq(indoc! {r"
         ...
-        error: Wrong number of arguments. Expected 3, found: 2
+        error[E2030]: Wrong number of arguments. Expected 3, found: 2
         ...
     "});
 }
