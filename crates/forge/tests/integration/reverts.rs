@@ -165,7 +165,6 @@ fn storage_is_reverted_in_inner_call() {
 
         #[starknet::interface]
         trait ICaller<TContractState> {
-            /// Execute test scenario in tests
             fn call(ref self: TContractState);
         }
 
