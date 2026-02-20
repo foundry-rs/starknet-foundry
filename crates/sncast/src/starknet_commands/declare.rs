@@ -27,6 +27,7 @@ use starknet_rust::{
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::sync::Arc;
+use universal_sierra_compiler_api::compile_contract_sierra;
 
 /// Common args shared by declare command variants.
 #[derive(Args)]
@@ -84,7 +85,7 @@ pub async fn declare(
     declare_with_artifacts(
         contract_definition,
         casm_contract_definition,
-        fee_args.clone(),
+        &fee_args,
         nonce,
         account,
         wait_config,
@@ -94,11 +95,29 @@ pub async fn declare(
     .await
 }
 
+#[allow(clippy::result_large_err)]
+pub fn compile_sierra_to_casm(
+    sierra_class: &SierraClass,
+) -> Result<CompiledClass, StarknetCommandError> {
+    let casm_json: String = serde_json::to_string(
+        &compile_contract_sierra(
+            &serde_json::to_value(sierra_class)
+                .with_context(|| "Failed to convert sierra to JSON value".to_string())?,
+        )
+        .with_context(|| "Failed to compile sierra to casm".to_string())?,
+    )
+    .expect("serialization should succeed");
+
+    let casm: CompiledClass = serde_json::from_str(&casm_json)
+        .with_context(|| "Failed to deserialize casm JSON into CompiledClass".to_string())?;
+    Ok(casm)
+}
+
 #[allow(clippy::too_many_arguments)]
 pub async fn declare_with_artifacts(
     sierra_class: SierraClass,
     compiled_casm: CompiledClass,
-    fee_args: FeeArgs,
+    fee_args: &FeeArgs,
     nonce: Option<Felt>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,

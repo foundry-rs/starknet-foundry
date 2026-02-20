@@ -2,8 +2,8 @@ use crate::Arguments;
 use crate::starknet_commands::deploy::{ContractIdentifier, DeployCommonArgs};
 use crate::starknet_commands::invoke::{InvokeCommonArgs, execute_calls};
 use crate::starknet_commands::multicall::ctx::MulticallCtx;
-use crate::starknet_commands::multicall::deploy::{MulticallDeploy};
-use crate::starknet_commands::multicall::invoke::{MulticallInvoke};
+use crate::starknet_commands::multicall::deploy::MulticallDeploy;
+use crate::starknet_commands::multicall::invoke::MulticallInvoke;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
@@ -148,7 +148,10 @@ pub async fn run(
                     id: None,
                 };
 
-                let call = invoke.to_call(&mut ctx).await.context("Failed to process `invoke` call")?;
+                let call = invoke
+                    .to_call(&mut ctx)
+                    .await
+                    .context("Failed to process `invoke` call")?;
                 calls.push(call);
             }
             Some(unsupported) => {
