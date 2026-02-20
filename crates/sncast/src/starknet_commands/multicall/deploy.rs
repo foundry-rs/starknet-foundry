@@ -41,10 +41,10 @@ impl MulticallDeploy {
             .cache
             .get_contract_class_by_class_hash(&class_hash)
             .await?;
-        let selector = get_selector_from_name("constructor")?;
         let constructor_arguments = replaced_calldata(self.common.arguments.clone(), ctx)?;
+        let constructor_selector = get_selector_from_name("constructor")?;
         let constructor_calldata =
-            constructor_arguments.try_into_calldata(contract_class, &selector)?;
+            constructor_arguments.try_into_calldata(contract_class, &constructor_selector)?;
 
         let mut calldata = vec![
             class_hash,
