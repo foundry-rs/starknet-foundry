@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Added
+
+- `--sierra-file` flag to `sncast declare-from` to allow declaring contract from a local Sierra file.
+
 #### Removed
 
 - Due to termination of starkscan.co, `StarkScan` option for `block-explorer` field in `snfoundry.toml` was removed. For a full list of supported block explorer services, see the [block explorer documentation](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html#block-explorer)

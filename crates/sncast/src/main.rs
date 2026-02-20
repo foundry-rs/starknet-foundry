@@ -1,5 +1,6 @@
 use crate::starknet_commands::balance::Balance;
 use crate::starknet_commands::declare::declare;
+use crate::starknet_commands::declare_from::ContractSource;
 use crate::starknet_commands::declare_from::DeclareFrom;
 use crate::starknet_commands::deploy::DeployCommonArgs;
 use crate::starknet_commands::invoke::InvokeCommonArgs;
@@ -365,7 +366,22 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::DeclareFrom(declare_from) => {
             let provider = declare_from.common.rpc.get_provider(&config, ui).await?;
-            let source_provider = declare_from.source_rpc.get_provider(ui).await?;
+
+            let contract_source = if let Some(sierra_file) = declare_from.sierra_file {
+                ContractSource::LocalFile {
+                    sierra_path: sierra_file,
+                }
+            } else {
+                let source_provider = declare_from.source_rpc.get_provider(ui).await?;
+                let block_id = get_block_id(&declare_from.block_id)?;
+                let class_hash = declare_from.class_hash.expect("missing class_hash");
+
+                ContractSource::Network {
+                    source_provider,
+                    class_hash,
+                    block_id,
+                }
+            };
 
             let account = get_account(
                 &config,
@@ -377,11 +393,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             .await?;
 
             let result = starknet_commands::declare_from::declare_from(
-                declare_from,
+                contract_source,
+                &declare_from.common,
                 &account,
                 wait_config,
                 false,
-                &source_provider,
                 ui,
             )
             .await
