@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Partitioned test execution with `--partition <INDEX>/<TOTAL>` flag. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/tests-partitioning.html)
 
+#### Fixed
+
+- `--exact` flag now requires `--test-filter` to be non-empty
+
 ### Cast
 
 #### Added
