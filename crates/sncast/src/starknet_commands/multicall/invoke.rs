@@ -52,7 +52,7 @@ pub(crate) fn replaced_calldata(
                         if let Some(address) = ctx.get_address_by_id(input) {
                             Ok(address.to_string())
                         } else {
-                            Ok(input.to_string())
+                            Ok(input.clone())
                         }
                     })
                     .collect::<Result<Vec<String>>>()?;
@@ -61,7 +61,7 @@ pub(crate) fn replaced_calldata(
                     arguments: None,
                 }
             }
-            (None, Some(_)) | (None, None) => function_arguments,
+            (None, Some(_) | None) => function_arguments,
             (Some(_), Some(_)) => unreachable!(),
         },
     )
