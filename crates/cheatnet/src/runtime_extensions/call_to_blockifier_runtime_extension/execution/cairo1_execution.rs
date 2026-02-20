@@ -170,7 +170,8 @@ pub fn cheatable_run_entry_point(
     // region: Modified blockifier code
     // Relocate trace to then collect it
     runner
-        .relocate(true)
+        // TODO: Check if this is correct
+        .relocate(true, true)
         .map_err(CairoRunError::from)
         .map_err(Box::new)?;
     // endregion
