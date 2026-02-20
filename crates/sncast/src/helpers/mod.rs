@@ -9,6 +9,7 @@ pub mod constants;
 pub mod devnet;
 pub mod fee;
 pub mod interactive;
+pub mod ledger;
 pub mod output_format;
 pub mod rpc;
 pub mod scarb_utils;
