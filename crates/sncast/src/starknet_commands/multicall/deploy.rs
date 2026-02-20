@@ -14,7 +14,7 @@ use crate::starknet_commands::deploy::DeployCommonArgs;
 use crate::starknet_commands::multicall::ctx::MulticallCtx;
 use crate::starknet_commands::multicall::invoke::replaced_calldata;
 
-#[derive(Args, Debug)]
+#[derive(Args)]
 pub struct MulticallDeploy {
     /// Optional identifier to reference this step in later steps
     #[arg(long)]
