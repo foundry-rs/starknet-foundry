@@ -8,12 +8,12 @@ trait ICheatTxInfoChecker<TContractState> {
 #[starknet::interface]
 trait ICheatTxInfoCheckerLibCall<TContractState> {
     fn get_tx_hash_with_lib_call(self: @TContractState, class_hash: ClassHash) -> felt252;
-    fn get_tx_info(self: @TContractState) -> starknet::TxInfo;
+    fn get_tx_info(self: @TContractState) -> starknet::info::v3::TxInfo;
 }
 
 #[starknet::contract]
 mod CheatTxInfoCheckerLibCall {
-    use starknet::syscalls::get_execution_info_v2_syscall;
+    use starknet::syscalls::get_execution_info_v3_syscall;
     use starknet::{ClassHash, SyscallResultTrait};
     use super::{ICheatTxInfoCheckerDispatcherTrait, ICheatTxInfoCheckerLibraryDispatcher};
 
@@ -27,8 +27,8 @@ mod CheatTxInfoCheckerLibCall {
             tx_info_checker.get_transaction_hash()
         }
 
-        fn get_tx_info(self: @ContractState) -> starknet::TxInfo {
-            let execution_info = get_execution_info_v2_syscall().unwrap_syscall().unbox();
+        fn get_tx_info(self: @ContractState) -> starknet::info::v3::TxInfo {
+            let execution_info = get_execution_info_v3_syscall().unwrap_syscall().unbox();
             execution_info.tx_info.unbox()
         }
     }

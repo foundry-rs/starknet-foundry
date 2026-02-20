@@ -135,6 +135,7 @@ fn start_cheat_execution_info_all_attributes_mocked() {
                 fn get_nonce_data_availability_mode(ref self: TContractState) -> u32;
                 fn get_fee_data_availability_mode(ref self: TContractState) -> u32;
                 fn get_account_deployment_data(ref self: TContractState) -> Span<felt252>;
+                fn get_proof_facts(self: @TContractState) -> Span<felt252>;
             }
 
             #[test]
@@ -210,6 +211,11 @@ fn start_cheat_execution_info_all_attributes_mocked() {
                     target: contract_address,
                     span: CheatSpan::Indefinite
                 });
+                execution_info_mock.tx_info.proof_facts = Operation::Start(CheatArguments {
+                    value: array![19, 38, 57, 76].span(),
+                    target: contract_address,
+                    span: CheatSpan::Indefinite
+                });
 
                 cheat_execution_info(execution_info_mock);
 
@@ -259,6 +265,9 @@ fn start_cheat_execution_info_all_attributes_mocked() {
 
                 let account_deployment_data = dispatcher.get_account_deployment_data();
                 assert(account_deployment_data == array![111, 222].span(), 'Invalid account deployment');
+
+                let proof_facts = dispatcher.get_proof_facts();
+                assert(account_proof_facts == array![19, 38, 57, 76].span(), 'Invalid proof facts');
             }
         "#
         ),
@@ -286,11 +295,11 @@ fn start_cheat_transaction_hash_cancel_mock_by_setting_attribute_to_none() {
             use starknet::ContractAddress;
             use array::SpanTrait;
             use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_transaction_hash, stop_cheat_transaction_hash, CheatSpan };
-            use starknet::info::v2::ResourceBounds;
+            use starknet::info::v3::ResourceBounds;
 
             #[starknet::interface]
             trait ICheatTxInfoChecker<TContractState> {
-                fn get_tx_info(ref self: TContractState) -> starknet::info::v2::TxInfo;
+                fn get_tx_info_v3(ref self: TContractState) -> starknet::info::v3::TxInfo;
             }
 
             #[test]
@@ -299,21 +308,21 @@ fn start_cheat_transaction_hash_cancel_mock_by_setting_attribute_to_none() {
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
-                let tx_info_before_mock = dispatcher.get_tx_info();
+                let tx_info_before_mock = dispatcher.get_tx_info_v3();
 
                 start_cheat_transaction_hash(contract_address, 421);
 
                 let mut expected_tx_info = tx_info_before_mock;
                 expected_tx_info.transaction_hash = 421;
 
-                assert_tx_info(dispatcher.get_tx_info(), expected_tx_info);
+                assert_tx_info(dispatcher.get_tx_info_v3(), expected_tx_info);
 
                 stop_cheat_transaction_hash(contract_address);
 
-                assert_tx_info(dispatcher.get_tx_info(), tx_info_before_mock);
+                assert_tx_info(dispatcher.get_tx_info_v3(), tx_info_before_mock);
             }
 
-            fn assert_tx_info(tx_info: starknet::info::v2::TxInfo, expected_tx_info: starknet::info::v2::TxInfo) {
+            fn assert_tx_info(tx_info: starknet::info::v3::TxInfo, expected_tx_info: starknet::info::v3::TxInfo) {
                 assert(tx_info.version == expected_tx_info.version, 'Invalid version');
                 assert(tx_info.account_contract_address == expected_tx_info.account_contract_address, 'Invalid account_contract_addr');
                 assert(tx_info.max_fee == expected_tx_info.max_fee, 'Invalid max_fee');
@@ -335,6 +344,7 @@ fn start_cheat_transaction_hash_cancel_mock_by_setting_attribute_to_none() {
                 assert(tx_info.nonce_data_availability_mode == expected_tx_info.nonce_data_availability_mode, 'Invalid nonce_data_av_mode');
                 assert(tx_info.fee_data_availability_mode == expected_tx_info.fee_data_availability_mode, 'Invalid fee_data_av_mode');
                 assert(tx_info.account_deployment_data == expected_tx_info.account_deployment_data, 'Invalid account_deployment_data');
+                assert(tx_info.proof_facts == expected_tx_info.proof_facts, 'Invalid proof_facts');
             }
         "#
         ),
@@ -436,6 +446,7 @@ fn start_cheat_execution_info_all() {
                 fn get_nonce_data_availability_mode(ref self: TContractState) -> u32;
                 fn get_fee_data_availability_mode(ref self: TContractState) -> u32;
                 fn get_account_deployment_data(ref self: TContractState) -> Span<felt252>;
+                fn get_proof_facts(ref self: TContractState) -> Span<felt252>;
             }
 
             #[test]
@@ -473,6 +484,7 @@ fn start_cheat_execution_info_all() {
                 execution_info_mock.tx_info.nonce_data_availability_mode = Operation::StartGlobal(99);
                 execution_info_mock.tx_info.fee_data_availability_mode = Operation::StartGlobal(88);
                 execution_info_mock.tx_info.account_deployment_data = Operation::StartGlobal(array![111, 222].span());
+                execution_info_mock.tx_info.proof_facts = Operation::StartGlobal(array![999, 1001].span());
 
                 cheat_execution_info(execution_info_mock);
 
@@ -522,6 +534,9 @@ fn start_cheat_execution_info_all() {
 
                 let account_deployment_data = dispatcher.get_account_deployment_data();
                 assert(account_deployment_data == array![111, 222].span(), 'Invalid account deployment');
+
+                let proof_facts = dispatcher.proof_facts();
+                assert(proof_facts == array![999, 1001].span(), 'Invalid proof facts');
             }
         "#
         ),
