@@ -121,7 +121,7 @@ pub async fn multicall(
 
             let result = starknet_commands::multicall::run_with_calls::run_with_calls(
                 tokens,
-                multicall.fee_args,
+                &multicall,
                 &provider,
                 &account,
                 wait_config,

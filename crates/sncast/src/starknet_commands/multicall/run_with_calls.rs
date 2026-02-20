@@ -2,26 +2,24 @@ use anyhow::{Context, Result, bail};
 use clap::{Args, Command, FromArgMatches};
 use sncast::{
     WaitForTx,
-    helpers::fee::FeeArgs,
     response::{
         errors::handle_starknet_command_error, multicall::run::MulticallRunResponse, ui::UI,
     },
 };
 use starknet_rust::{
     accounts::SingleOwnerAccount,
-    core::types::Call,
     providers::{JsonRpcClient, jsonrpc::HttpTransport},
     signers::LocalWallet,
 };
 
 use crate::starknet_commands::{
     invoke::execute_calls,
-    multicall::{ctx::MulticallCtx, deploy::MulticallDeploy, invoke::MulticallInvoke},
+    multicall::{Multicall, ctx::MulticallCtx, deploy::MulticallDeploy, invoke::MulticallInvoke},
 };
 
 pub async fn run_with_calls(
     tokens: &[String],
-    fee_args: FeeArgs,
+    multicall: &Multicall,
     provider: &JsonRpcClient<HttpTransport>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
@@ -31,7 +29,7 @@ pub async fn run_with_calls(
     let commands = input.split('/').map(|s| s.trim()).filter(|s| !s.is_empty());
 
     let mut ctx = MulticallCtx::new(provider);
-    let mut calls: Vec<Call> = vec![];
+    let mut calls = vec![];
 
     for command in commands {
         let args = shell_words::split(command)?;
@@ -57,10 +55,17 @@ pub async fn run_with_calls(
         }
     }
 
-    execute_calls(account, calls, fee_args, None, wait_config, ui)
-        .await
-        .map(Into::into)
-        .map_err(handle_starknet_command_error)
+    execute_calls(
+        account,
+        calls,
+        multicall.fee_args.clone(),
+        multicall.nonce,
+        wait_config,
+        ui,
+    )
+    .await
+    .map(Into::into)
+    .map_err(handle_starknet_command_error)
 }
 
 fn parse_args<T>(command_name: String, tokens: &[String]) -> anyhow::Result<T>
