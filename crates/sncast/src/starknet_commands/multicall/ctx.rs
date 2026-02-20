@@ -72,20 +72,14 @@ impl ContractsCache {
 
 /// Context for multicall execution, storing intermediate results and mappings between ids and contracts cache.
 pub struct MulticallCtx {
-    // calls: Vec<Call>,
     id_to_address: HashMap<String, Felt>,
-    // address_to_class_hash: HashMap<Felt, Felt>,
-    // class_hash_to_contract_class: HashMap<Felt, ContractClass>,
     pub(crate) cache: ContractsCache,
 }
 
 impl MulticallCtx {
     pub fn new(provider: &JsonRpcClient<HttpTransport>) -> Self {
         MulticallCtx {
-            // calls: Vec::new(),
             id_to_address: HashMap::new(),
-            // address_to_class_hash: HashMap::new(),
-            // class_hash_to_contract_class: HashMap::new(),
             cache: ContractsCache::new(provider),
         }
     }
