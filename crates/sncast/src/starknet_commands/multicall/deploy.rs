@@ -7,7 +7,7 @@ use starknet_rust::core::types::Call;
 use starknet_rust::core::utils::{get_selector_from_name, get_udc_deployed_address};
 use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
-use starknet_rust::signers::LocalWallet;
+use starknet_rust::signers::Signer;
 use starknet_types_core::felt::Felt;
 
 use crate::starknet_commands::deploy::{ContractIdentifier, DeployArguments, DeployCommonArgs};
@@ -54,11 +54,14 @@ impl MulticallDeploy {
         Ok(deploy)
     }
 
-    pub async fn build_call(
+    pub async fn build_call<S>(
         &self,
-        account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+        account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
         contract_registry: &mut ContractRegistry,
-    ) -> Result<Call> {
+    ) -> Result<Call>
+    where
+        S: Signer + Sync + Send,
+    {
         let salt = extract_or_generate_salt(self.common.salt);
         let constructor_arguments = replaced_arguments(
             &Arguments::from(self.common.arguments.clone()),

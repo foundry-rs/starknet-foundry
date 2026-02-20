@@ -12,10 +12,12 @@ use foundry_ui::components::warning::WarningMessage;
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
 use sncast::helpers::configuration::CastConfig;
+use sncast::helpers::ledger;
+use sncast::helpers::ledger::LedgerKeyLocatorAccount;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::import::AccountImportResponse;
 use sncast::response::ui::UI;
-use sncast::{AccountType, check_class_hash_exists, get_chain_id, handle_rpc_error};
+use sncast::{AccountType, SignerType, check_class_hash_exists, get_chain_id, handle_rpc_error};
 use starknet_rust::core::types::{BlockId, BlockTag, StarknetError};
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet_rust::providers::{Provider, ProviderError};
@@ -42,11 +44,19 @@ pub struct Import {
     pub class_hash: Option<Felt>,
 
     /// Account private key
-    #[arg(long, group = "private_key_input")]
+    #[arg(
+        long,
+        group = "private_key_input",
+        conflicts_with = "ledger_key_locator_account"
+    )]
     pub private_key: Option<Felt>,
 
     /// Path to the file holding account private key
-    #[arg(long = "private-key-file", group = "private_key_input")]
+    #[arg(
+        long = "private-key-file",
+        group = "private_key_input",
+        conflicts_with = "ledger_key_locator_account"
+    )]
     pub private_key_file_path: Option<Utf8PathBuf>,
 
     /// Salt for the address
@@ -63,8 +73,12 @@ pub struct Import {
     /// If passed, the command will not trigger an interactive prompt to add an account as a default
     #[arg(long)]
     pub silent: bool,
+
+    #[command(flatten)]
+    pub ledger_key_locator: LedgerKeyLocatorAccount,
 }
 
+#[allow(clippy::too_many_lines)]
 pub async fn import(
     account: Option<String>,
     accounts_file: &Utf8PathBuf,
@@ -81,18 +95,27 @@ pub async fn import(
         ui.print_blank_line();
     }
 
-    let private_key = if let Some(passed_private_key) = &import.private_key {
-        passed_private_key
-    } else if let Some(passed_private_key_file_path) = &import.private_key_file_path {
-        &get_private_key_from_file(passed_private_key_file_path).with_context(|| {
-            format!("Failed to obtain private key from the file {passed_private_key_file_path}")
-        })?
-    } else if import.private_key.is_none() && import.private_key_file_path.is_none() {
-        &get_private_key_from_input()?
+    let (signer_type, public_key) = if let Some(ledger_path) = import.ledger_key_locator.resolve(ui)
+    {
+        let public_key = ledger::get_ledger_public_key(&ledger_path, ui).await?;
+        (SignerType::Ledger { ledger_path }, public_key)
     } else {
-        unreachable!("Checked on clap level")
+        let key_felt = match (&import.private_key, &import.private_key_file_path) {
+            (Some(key), _) => *key,
+            (None, Some(path)) => get_private_key_from_file(path)
+                .with_context(|| format!("Failed to obtain private key from the file {path}"))?,
+            (None, None) => get_private_key_from_input()?,
+        };
+
+        let signing_key = SigningKey::from_secret_scalar(key_felt);
+        let public_key = signing_key.verifying_key().scalar();
+        (
+            SignerType::Local {
+                private_key: key_felt,
+            },
+            public_key,
+        )
     };
-    let private_key = &SigningKey::from_secret_scalar(*private_key);
 
     let account_name = account
         .clone()
@@ -131,10 +154,10 @@ pub async fn import(
     };
 
     let chain_id = get_chain_id(provider).await?;
+
     if let Some(salt) = import.salt {
-        let sncast_account_type = import.account_type;
         let computed_address =
-            compute_account_address(salt, private_key, class_hash, sncast_account_type, chain_id);
+            compute_account_address(salt, public_key, class_hash, import.account_type, chain_id);
         ensure!(
             computed_address == import.address,
             "Computed address {:#x} does not match the provided address {:#x}. Please ensure that the provided salt, class hash, and account type are correct.",
@@ -146,7 +169,8 @@ pub async fn import(
     let legacy = check_if_legacy_contract(Some(class_hash), import.address, provider).await?;
 
     let account_json = prepare_account_json(
-        private_key,
+        &signer_type,
+        public_key,
         import.address,
         deployed,
         legacy,

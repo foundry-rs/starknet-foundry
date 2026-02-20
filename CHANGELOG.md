@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bug with invalid function name mappings for functions with `#[test]` attribute
 
+### Cast
+
+#### Added
+
+- Support for Ledger hardware wallet as a transaction signer.
+
 ## [0.57.0] - 2026-02-24
 
 ### Forge
