@@ -38,6 +38,7 @@ use sncast::{
     ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
     get_contract_class,
 };
+use starknet_commands::ledger::{self, Ledger};
 use starknet_commands::verify::Verify;
 use starknet_rust::accounts::Account;
 use starknet_rust::core::types::ContractClass;
@@ -137,6 +138,7 @@ impl Cli {
             Commands::Completions(_) => "completions",
             Commands::Utils(_) => "utils",
             Commands::Balance(_) => "balance",
+            Commands::Ledger(_) => "ledger",
         }
         .to_string()
     }
@@ -185,6 +187,9 @@ enum Commands {
 
     /// Fetch balance of the account for specified token
     Balance(Balance),
+
+    /// Interact with Ledger hardware wallet
+    Ledger(Ledger),
 }
 
 #[derive(Debug, Clone, clap::Args)]
@@ -725,6 +730,14 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 starknet_commands::balance::balance(account.address(), &provider, &balance).await?;
 
             process_command_result("balance", Ok(result), ui, None);
+
+            Ok(())
+        }
+
+        Commands::Ledger(ledger) => {
+            let result = ledger::ledger(&ledger, ui).await?;
+
+            process_command_result("ledger", Ok(result), ui, None);
 
             Ok(())
         }
