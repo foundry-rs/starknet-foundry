@@ -54,7 +54,51 @@ use crate::response::ui::UI;
 use conversions::byte_array::ByteArray;
 use foundry_ui::components::warning::WarningMessage;
 
+use starknet_rust::signers::LedgerSigner;
+
 pub type NestedMap<T> = HashMap<String, HashMap<String, T>>;
+
+/// Enum to support both local wallet and ledger signer account types
+#[derive(Debug)]
+pub enum AccountVariant<'a> {
+    LocalWallet(SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>),
+    Ledger(
+        SingleOwnerAccount<
+            &'a JsonRpcClient<HttpTransport>,
+            LedgerSigner<ledger::SncastLedgerTransport>,
+        >,
+    ),
+}
+
+impl AccountVariant<'_> {
+    #[must_use]
+    pub fn address(&self) -> Felt {
+        use starknet_rust::accounts::Account;
+        match self {
+            AccountVariant::LocalWallet(account) => account.address(),
+            AccountVariant::Ledger(account) => account.address(),
+        }
+    }
+
+    #[must_use]
+    pub fn chain_id(&self) -> Felt {
+        use starknet_rust::accounts::Account;
+        match self {
+            AccountVariant::LocalWallet(account) => account.chain_id(),
+            AccountVariant::Ledger(account) => account.chain_id(),
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! with_account {
+    ($variant:expr, |$account:ident| $body:expr) => {
+        match $variant {
+            $crate::AccountVariant::LocalWallet($account) => $body,
+            $crate::AccountVariant::Ledger($account) => $body,
+        }
+    };
+}
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
 #[serde(rename_all = "lowercase")]
@@ -83,6 +127,31 @@ impl FromStr for AccountType {
 impl Display for AccountType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{self:?}")
+    }
+}
+
+/// Represents the source of the signer for account operations
+#[derive(Debug, Clone)]
+pub enum SignerSource {
+    /// Use a keystore file at the given path
+    Keystore(Utf8PathBuf),
+    /// Use a Ledger device with the given derivation path
+    Ledger(String),
+    /// Use the accounts file (default)
+    AccountsFile,
+}
+
+impl SignerSource {
+    #[must_use]
+    pub fn from_options(keystore: Option<Utf8PathBuf>, ledger_path: Option<String>) -> Self {
+        match (keystore, ledger_path) {
+            (Some(path), None) => SignerSource::Keystore(path),
+            (None, Some(path)) => SignerSource::Ledger(path),
+            (None, None) => SignerSource::AccountsFile,
+            (Some(_), Some(_)) => {
+                panic!("Keystore and Ledger cannot both be specified")
+            }
+        }
     }
 }
 
@@ -126,7 +195,8 @@ impl TryFrom<Felt> for Network {
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct AccountData {
-    pub private_key: Felt,
+    #[serde(default)]
+    pub private_key: Option<Felt>,
     pub public_key: Felt,
     pub address: Option<Felt>,
     pub salt: Option<Felt>,
@@ -136,6 +206,8 @@ pub struct AccountData {
 
     #[serde(default, rename(serialize = "type", deserialize = "type"))]
     pub account_type: Option<AccountType>,
+    #[serde(default)]
+    pub ledger_path: Option<String>,
 }
 
 #[derive(Clone, Copy)]
@@ -258,10 +330,17 @@ pub async fn get_account<'a>(
     config: &CastConfig,
     provider: &'a JsonRpcClient<HttpTransport>,
     rpc_args: &RpcArgs,
-    keystore: Option<&Utf8PathBuf>,
+    signer_source: &SignerSource,
     ui: &UI,
-) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
+) -> Result<AccountVariant<'a>> {
     let chain_id = get_chain_id(provider).await?;
+
+    if let SignerSource::Ledger(ledger_path) = signer_source {
+        let account_data =
+            get_account_data_from_accounts_file(&config.account, chain_id, &config.accounts_file)?;
+        return build_ledger_account(ledger_path, account_data, chain_id, provider, ui).await;
+    }
+
     let network_name = chain_id_to_network_name(chain_id);
     let account = &config.account;
     let is_devnet_account = is_devnet_account(account);
@@ -278,26 +357,46 @@ pub async fn get_account<'a>(
     let accounts_file = &config.accounts_file;
     let exists_in_accounts_file = check_account_exists(account, &network_name, accounts_file)?;
 
+    let keystore = match signer_source {
+        SignerSource::Keystore(path) => Some(path),
+        _ => None,
+    };
+
     match (is_devnet_account, exists_in_accounts_file) {
-        (true, true) => {
-            ui.print_warning(WarningMessage::new(format!(
-                "Using account {account} from accounts file {accounts_file}. \
-                To use an inbuilt devnet account, please rename your existing account or use an account with a different number."
-            )));
-            ui.print_blank_line();
-            return get_account_from_accounts_file(account, accounts_file, provider, keystore)
-                .await;
+        (_, true) => {
+            let account_data =
+                get_account_data_from_accounts_file(account, chain_id, accounts_file)?;
+
+            // When account exists in accounts file, it may contain ledger path
+            if let Some(ledger_path) = account_data.ledger_path.clone() {
+                return build_ledger_account(&ledger_path, account_data, chain_id, provider, ui)
+                    .await;
+            }
+
+            if is_devnet_account {
+                ui.print_warning(WarningMessage::new(format!(
+                    "Using account {account} from accounts file {accounts_file}. \
+                    To use an inbuilt devnet account, please rename your existing account or use an account with a different number."
+                )));
+                ui.print_blank_line();
+            }
+
+            let local_account =
+                get_account_from_accounts_file(account, accounts_file, provider, keystore).await?;
+            Ok(AccountVariant::LocalWallet(local_account))
         }
         (true, false) => {
             let url = rpc_args
                 .get_url(config)
                 .await
                 .context("Failed to get url")?;
-            return get_account_from_devnet(account, provider, &url).await;
+            let local_account = get_account_from_devnet(account, provider, &url).await?;
+            Ok(AccountVariant::LocalWallet(local_account))
         }
-        _ => {
-            return get_account_from_accounts_file(account, accounts_file, provider, keystore)
-                .await;
+        (false, false) => {
+            let local_account =
+                get_account_from_accounts_file(account, accounts_file, provider, keystore).await?;
+            Ok(AccountVariant::LocalWallet(local_account))
         }
     }
 }
@@ -348,7 +447,10 @@ async fn build_account(
     chain_id: Felt,
     provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>> {
-    let signer = LocalWallet::from(SigningKey::from_secret_scalar(account_data.private_key));
+    let private_key = account_data
+        .private_key
+        .context("Private key not found. This account may require Ledger (use --ledger-path)")?;
+    let signer = LocalWallet::from(SigningKey::from_secret_scalar(private_key));
 
     let address = account_data
         .address
@@ -366,6 +468,30 @@ async fn build_account(
     account.set_block_id(BlockId::Tag(PreConfirmed));
 
     Ok(account)
+}
+
+async fn build_ledger_account<'a>(
+    ledger_path: &str,
+    account_data: AccountData,
+    chain_id: Felt,
+    provider: &'a JsonRpcClient<HttpTransport>,
+    ui: &UI,
+) -> Result<AccountVariant<'a>> {
+    let address = account_data.address.context(
+        "Account address not found. The account must be deployed before using it with Ledger.",
+    )?;
+
+    let encoding = get_account_encoding(
+        account_data.legacy,
+        account_data.class_hash,
+        address,
+        provider,
+    )
+    .await?;
+
+    let account =
+        ledger::ledger_account(ledger_path, address, chain_id, encoding, provider, ui).await?;
+    Ok(AccountVariant::Ledger(account))
 }
 
 async fn verify_account_address(
@@ -438,6 +564,7 @@ pub fn get_account_data_from_keystore(
         .and_then(Value::as_bool);
     let account_type = get_string_value_from_json(&account_info, "/variant/type")
         .and_then(|account_type| account_type.parse().ok());
+    let ledger_path = get_string_value_from_json(&account_info, "/variant/ledger_path");
 
     let public_key = match account_type.context("Failed to get type key")? {
         AccountType::Argent | AccountType::Ready => parse_to_felt("/variant/owner"),
@@ -447,7 +574,7 @@ pub fn get_account_data_from_keystore(
     .context("Failed to get public key from account JSON file")?;
 
     Ok(AccountData {
-        private_key,
+        private_key: Some(private_key),
         public_key,
         address,
         salt,
@@ -455,6 +582,7 @@ pub fn get_account_data_from_keystore(
         class_hash,
         legacy,
         account_type,
+        ledger_path,
     })
 }
 fn get_braavos_account_public_key(account_info: &Value) -> Result<Option<Felt>> {
@@ -923,7 +1051,10 @@ mod tests {
         )
         .unwrap();
         assert_eq!(
-            account.private_key.into_hex_string(),
+            account
+                .private_key
+                .expect("Private key should exist")
+                .into_hex_string(),
             "0xffd33878eed7767e7c546ce3fc026295"
         );
         assert_eq!(
@@ -953,7 +1084,10 @@ mod tests {
         )
         .unwrap();
         assert_eq!(
-            account.private_key.into_hex_string(),
+            account
+                .private_key
+                .expect("Private key should exist")
+                .into_hex_string(),
             "0x55ae34c86281fbd19292c7e3bfdfceb4"
         );
         assert_eq!(
