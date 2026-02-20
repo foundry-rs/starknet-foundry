@@ -1,0 +1,11 @@
+[[call]]
+call_type = "invoke"
+contract_address = "0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008"
+function = "put"
+inputs = ["0x1", "0x2"]
+
+[[call]]
+call_type = "invoke"
+contract_address = "0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008"
+function = "put"
+inputs = ["0x3", "0x4"]
