@@ -2,7 +2,7 @@ use starknet::SyscallResultTrait;
 
 #[starknet::interface]
 trait ICaller<TContractState> {
-    /// Execute test scenario in tests
+    /// Execute test scenario in tests: call entrypoint that modifies storage and panics, then assert that state was reverted
     fn call(ref self: TContractState);
 }
 
