@@ -23,7 +23,7 @@ use crate::Arguments;
 #[group(required = true, multiple = false)]
 pub struct ContractIdentifier {
     /// Class hash of contract to deploy
-    #[arg(short = 'g', long, conflicts_with = "package")]
+    #[arg(short = 'g', long)]
     pub class_hash: Option<Felt>,
 
     /// Contract name
@@ -31,7 +31,7 @@ pub struct ContractIdentifier {
     pub contract_name: Option<String>,
 }
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 pub struct DeployCommonArgs {
     #[command(flatten)]
     pub contract_identifier: ContractIdentifier,
@@ -65,7 +65,7 @@ pub struct Deploy {
     pub rpc: RpcArgs,
 
     /// Specifies scarb package to be used. Only possible to use with `--contract-name`.
-    #[arg(long, conflicts_with = "class_hash")]
+    #[arg(long, conflicts_with_all = ["class_hash", "contract_name"])]
     pub package: Option<String>,
 }
 

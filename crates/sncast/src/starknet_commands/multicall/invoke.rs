@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Args;
 use starknet_rust::core::{types::Call, utils::get_selector_from_name};
 
@@ -19,48 +19,42 @@ pub(crate) struct MulticallInvoke {
 
 impl MulticallInvoke {
     pub(crate) async fn to_call(&self, ctx: &mut MulticallCtx) -> Result<Call> {
-       let selector = get_selector_from_name(&self.common.function)?;
-    let class_hash = ctx
-        .cache
-        .get_class_hash_by_address(&self.common.contract_address)
-        .await?;
-    let contract_class = ctx
-        .cache
-        .get_contract_class_by_class_hash(&class_hash)
-        .await?;
-    let arguments = replaced_calldata(self.common.arguments.clone(), ctx)?;
-    let calldata = arguments.try_into_calldata(contract_class, &selector)?;
+        let selector = get_selector_from_name(&self.common.function)?;
 
-    Ok(Call {
-        to: self.common.contract_address,
-        selector,
-        calldata,
-    })
+        let is_id = self.common.contract_address.starts_with('@');
+        let contract_address = if is_id {
+            let id = self.common.contract_address.trim_start_matches('@');
+            ctx.get_address_by_id(id)
+                .with_context(|| format!("No contract address found for id: {id}. Ensure the referenced id is defined in a previous step."))?
+        } else {
+            self.common.contract_address.parse()?
+        };
+
+        // let contract_address = if let Some(address) =
+        //     ctx.get_address_by_id(&self.common.contract_address.replace("@", ""))
+        // {
+        //     address
+        // } else {
+        //     self.common.contract_address.parse()?
+        // };
+        let class_hash = ctx
+            .cache
+            .get_class_hash_by_address(&contract_address)
+            .await?;
+        let contract_class = ctx
+            .cache
+            .get_contract_class_by_class_hash(&class_hash)
+            .await?;
+        let arguments = replaced_calldata(self.common.arguments.clone(), ctx)?;
+        let calldata = arguments.try_into_calldata(contract_class, &selector)?;
+
+        Ok(Call {
+            to: contract_address,
+            selector,
+            calldata,
+        })
     }
 }
-
-// pub(crate) async fn process_invoke(
-//     invoke: MulticallInvoke,
-//     ctx: &mut MulticallCtx,
-// ) -> Result<Call> {
-    // let selector = get_selector_from_name(&invoke.common.function)?;
-    // let class_hash = ctx
-    //     .cache
-    //     .get_class_hash_by_address(&invoke.common.contract_address)
-    //     .await?;
-    // let contract_class = ctx
-    //     .cache
-    //     .get_contract_class_by_class_hash(&class_hash)
-    //     .await?;
-    // let arguments = replaced_calldata(invoke.common.arguments.clone(), ctx)?;
-    // let calldata = arguments.try_into_calldata(contract_class, &selector)?;
-
-    // Ok(Call {
-    //     to: invoke.common.contract_address,
-    //     selector,
-    //     calldata,
-    // })
-// }
 
 pub(crate) fn replaced_calldata(
     function_arguments: Arguments,

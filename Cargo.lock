@@ -7079,6 +7079,7 @@ dependencies = [
  "serde_path_to_error",
  "sha3",
  "shared",
+ "shell-words",
  "shellexpand",
  "snapbox",
  "starknet-rust",

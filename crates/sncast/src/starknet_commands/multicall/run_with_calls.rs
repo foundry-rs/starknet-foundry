@@ -1,17 +1,40 @@
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::{Args, Command, FromArgMatches};
-use sncast::response::multicall::run::MulticallRunResponse;
+use sncast::{
+    WaitForTx,
+    helpers::fee::FeeArgs,
+    response::{
+        errors::handle_starknet_command_error, multicall::run::MulticallRunResponse, ui::UI,
+    },
+};
+use starknet_rust::{
+    accounts::SingleOwnerAccount,
+    core::types::Call,
+    providers::{JsonRpcClient, jsonrpc::HttpTransport},
+    signers::LocalWallet,
+};
 
-use crate::starknet_commands::multicall::{ctx::MulticallCtx, deploy::MulticallDeploy};
+use crate::starknet_commands::{
+    invoke::execute_calls,
+    multicall::{ctx::MulticallCtx, deploy::MulticallDeploy, invoke::MulticallInvoke},
+};
 
-pub fn run_with_calls(tokens: &[String]) -> Result<MulticallRunResponse> {
+pub async fn run_with_calls(
+    tokens: &[String],
+    fee_args: FeeArgs,
+    provider: &JsonRpcClient<HttpTransport>,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    wait_config: WaitForTx,
+    ui: &UI,
+) -> Result<MulticallRunResponse> {
     let input = tokens.join(" ");
     let commands = input.split('/').map(|s| s.trim()).filter(|s| !s.is_empty());
 
-    let mut ctx = MulticallCtx::default();
+    let mut ctx = MulticallCtx::new(provider);
+    let mut calls: Vec<Call> = vec![];
 
     for command in commands {
-        let mut args = shell_words::split(command)?;
+        let args = shell_words::split(command)?;
         let command = args
             .first()
             .cloned()
@@ -19,16 +42,25 @@ pub fn run_with_calls(tokens: &[String]) -> Result<MulticallRunResponse> {
 
         match command.as_str() {
             "deploy" => {
-                let deploy_args = parse_args::<MulticallDeploy>(command.clone(), &args[1..])?;
-                
-            }   
+                let deploy = parse_args::<MulticallDeploy>(command.clone(), &args[1..])?;
+                let call = deploy.to_call(account, &mut ctx).await?;
+                calls.push(call);
+            }
+            "invoke" => {
+                let invoke = parse_args::<MulticallInvoke>(command.clone(), &args[1..])?;
+                let call = invoke.to_call(&mut ctx).await?;
+                calls.push(call);
+            }
             _ => {
-                println!("Unknown command: {}", command);
+                bail!("Unknown command: {command}");
             }
         }
     }
 
-    Ok(MulticallRunResponse { transaction_hash: Default::default() })
+    execute_calls(account, calls, fee_args, None, wait_config, ui)
+        .await
+        .map(Into::into)
+        .map_err(handle_starknet_command_error)
 }
 
 fn parse_args<T>(command_name: String, tokens: &[String]) -> anyhow::Result<T>
