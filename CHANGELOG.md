@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `sncast ledger` command for simple Ledger operations.
+- Possibility to use Ledger hardware wallet as signer in transactions.
 
 ## [0.57.0] - 2026-02-24
 

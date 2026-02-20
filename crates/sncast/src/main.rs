@@ -36,11 +36,10 @@ use sncast::response::transformed_call::transform_response;
 use sncast::response::ui::UI;
 use sncast::{
     ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
-    get_contract_class,
+    get_contract_class, with_account,
 };
 use starknet_commands::ledger::{self, Ledger};
 use starknet_commands::verify::Verify;
-use starknet_rust::accounts::Account;
 use starknet_rust::core::types::ContractClass;
 use starknet_rust::core::types::contract::{AbiEntry, SierraClass};
 use starknet_rust::core::utils::get_selector_from_name;
@@ -100,6 +99,10 @@ struct Cli {
     /// Path to keystore file; if specified, --account should be a path to starkli JSON account file
     #[arg(short, long)]
     keystore: Option<Utf8PathBuf>,
+
+    /// Ledger derivation path to use as signer (e.g., "m//starknet'/sncast'/0'/0'/0")
+    #[arg(long)]
+    ledger_path: Option<String>,
 
     /// If passed, output will be displayed in json format
     #[arg(short, long)]
@@ -304,14 +307,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let rpc = declare.common.rpc.clone();
 
-            let account = get_account(
-                &config,
-                &provider,
-                &declare.common.rpc,
-                config.keystore.as_ref(),
-                ui,
-            )
-            .await?;
+            let signer_source = sncast::SignerSource::from_options(
+                config.keystore.clone(),
+                cli.ledger_path.clone(),
+            );
+            let account_variant =
+                get_account(&config, &provider, &declare.common.rpc, &signer_source, ui).await?;
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &declare.package)?;
             let artifacts = build_and_load_artifacts(
@@ -327,17 +328,19 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             )
             .expect("Failed to build contract");
 
-            let result = starknet_commands::declare::declare(
-                declare.contract_name.clone(),
-                declare.common.fee_args,
-                declare.common.nonce,
-                &account,
-                &artifacts,
-                wait_config,
-                false,
-                ui,
-            )
-            .await
+            let result = with_account!(&account_variant, |account| {
+                starknet_commands::declare::declare(
+                    declare.contract_name.clone(),
+                    declare.common.fee_args,
+                    declare.common.nonce,
+                    account,
+                    &artifacts,
+                    wait_config,
+                    false,
+                    ui,
+                )
+                .await
+            })
             .map_err(handle_starknet_command_error)
             .map(|result| match result {
                 DeclareResponse::Success(declare_transaction_response) => {
@@ -399,24 +402,30 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 }
             };
 
-            let account = get_account(
+            let signer_source = sncast::SignerSource::from_options(
+                config.keystore.clone(),
+                cli.ledger_path.clone(),
+            );
+            let account_variant = get_account(
                 &config,
                 &provider,
                 &declare_from.common.rpc,
-                config.keystore.as_ref(),
+                &signer_source,
                 ui,
             )
             .await?;
 
-            let result = starknet_commands::declare_from::declare_from(
-                contract_source,
-                &declare_from.common,
-                &account,
-                wait_config,
-                false,
-                ui,
-            )
-            .await
+            let result = with_account!(&account_variant, |account| {
+                starknet_commands::declare_from::declare_from(
+                    contract_source,
+                    &declare_from.common,
+                    account,
+                    wait_config,
+                    false,
+                    ui,
+                )
+                .await
+            })
             .map_err(handle_starknet_command_error)
             .map(|result| match result {
                 DeclareResponse::Success(declare_transaction_response) => {
@@ -447,8 +456,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let provider = rpc.get_provider(&config, ui).await?;
 
-            let account =
-                get_account(&config, &provider, &rpc, config.keystore.as_ref(), ui).await?;
+            let signer_source = sncast::SignerSource::from_options(
+                config.keystore.clone(),
+                cli.ledger_path.clone(),
+            );
+            let account_variant = get_account(&config, &provider, &rpc, &signer_source, ui).await?;
 
             let (class_hash, declare_response) = if let Some(class_hash) = identifier.class_hash {
                 (class_hash, None)
@@ -468,22 +480,23 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 )
                 .expect("Failed to build contract");
 
-                let declare_result = declare(
-                    contract_name,
-                    fee_args.clone(),
-                    nonce,
-                    &account,
-                    &artifacts,
-                    WaitForTx {
-                        wait: true,
-                        wait_params: wait_config.wait_params,
-                        // Only show outputs if user explicitly provides `--wait` flag
-                        show_ui_outputs: wait_config.wait,
-                    },
-                    true,
-                    ui,
-                )
-                .await
+                let declare_result = with_account!(&account_variant, |account| {
+                    declare(
+                        contract_name,
+                        fee_args.clone(),
+                        nonce,
+                        account,
+                        &artifacts,
+                        WaitForTx {
+                            wait: true,
+                            wait_params: wait_config.wait_params,
+                            show_ui_outputs: wait_config.wait,
+                        },
+                        true,
+                        ui,
+                    )
+                    .await
+                })
                 .map_err(handle_starknet_command_error);
 
                 // Increment nonce after successful declare if it was explicitly provided
@@ -521,18 +534,20 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let arguments: Arguments = arguments.into();
             let calldata = arguments.try_into_calldata(contract_class, &selector)?;
 
-            let result = starknet_commands::deploy::deploy(
-                class_hash,
-                &calldata,
-                deploy.salt,
-                deploy.unique,
-                fee_args,
-                nonce,
-                &account,
-                wait_config,
-                ui,
-            )
-            .await
+            let result = with_account!(&account_variant, |account| {
+                starknet_commands::deploy::deploy(
+                    class_hash,
+                    &calldata,
+                    deploy.salt,
+                    deploy.unique,
+                    fee_args,
+                    nonce,
+                    account,
+                    wait_config,
+                    ui,
+                )
+                .await
+            })
             .map_err(handle_starknet_command_error);
 
             let result = if let Some(declare_response) = declare_response {
@@ -605,8 +620,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let provider = rpc.get_provider(&config, ui).await?;
 
-            let account =
-                get_account(&config, &provider, &rpc, config.keystore.as_ref(), ui).await?;
+            let signer_source = sncast::SignerSource::from_options(
+                config.keystore.clone(),
+                cli.ledger_path.clone(),
+            );
+            let account_variant = get_account(&config, &provider, &rpc, &signer_source, ui).await?;
 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
@@ -616,17 +634,19 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let calldata = arguments.try_into_calldata(contract_class, &selector)?;
 
-            let result = starknet_commands::invoke::invoke(
-                contract_address,
-                calldata,
-                nonce,
-                fee_args,
-                selector,
-                &account,
-                wait_config,
-                ui,
-            )
-            .await
+            let result = with_account!(&account_variant, |account| {
+                starknet_commands::invoke::invoke(
+                    contract_address,
+                    calldata,
+                    nonce,
+                    fee_args,
+                    selector,
+                    account,
+                    wait_config,
+                    ui,
+                )
+                .await
+            })
             .map_err(handle_starknet_command_error);
 
             let block_explorer_link =
@@ -652,7 +672,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             multicall::multicall(multicall, config, ui, wait_config).await
         }
 
-        Commands::Account(account) => account::account(account, config, ui, wait_config).await,
+        Commands::Account(account) => {
+            let signer_source = sncast::SignerSource::from_options(
+                config.keystore.clone(),
+                cli.ledger_path.clone(),
+            );
+            account::account(account, config, ui, wait_config, &signer_source).await
+        }
 
         Commands::ShowConfig(show) => {
             let provider = show.rpc.get_provider(&config, ui).await.ok();
@@ -717,17 +743,16 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Balance(balance) => {
             let provider = balance.rpc.get_provider(&config, ui).await?;
-            let account = get_account(
-                &config,
-                &provider,
-                &balance.rpc,
-                config.keystore.as_ref(),
-                ui,
-            )
-            .await?;
+            let signer_source = sncast::SignerSource::from_options(
+                config.keystore.clone(),
+                cli.ledger_path.clone(),
+            );
+            let account_variant =
+                get_account(&config, &provider, &balance.rpc, &signer_source, ui).await?;
 
             let result =
-                starknet_commands::balance::balance(account.address(), &provider, &balance).await?;
+                starknet_commands::balance::balance(account_variant.address(), &provider, &balance)
+                    .await?;
 
             process_command_result("balance", Ok(result), ui, None);
 
@@ -746,7 +771,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
     }
 }
 
-fn config_with_cli(config: &mut CastConfig, cli: &Cli) {
+fn config_with_cli(config: &mut CastConfig, cli: &Cli) -> Result<()> {
     macro_rules! clone_or_else {
         ($field:expr, $config_field:expr) => {
             $field.clone().unwrap_or_else(|| $config_field.clone())
@@ -755,6 +780,10 @@ fn config_with_cli(config: &mut CastConfig, cli: &Cli) {
 
     config.account = clone_or_else!(cli.account, config.account);
     config.keystore = cli.keystore.clone().or(config.keystore.clone());
+
+    if cli.keystore.is_some() && cli.ledger_path.is_some() {
+        bail!("--keystore and --ledger-path cannot be used together");
+    }
 
     if config.accounts_file == Utf8PathBuf::default() {
         config.accounts_file = Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE);
@@ -770,6 +799,8 @@ fn config_with_cli(config: &mut CastConfig, cli: &Cli) {
         ),
         clone_or_else!(cli.wait_timeout, config.wait_params.get_timeout()),
     );
+
+    Ok(())
 }
 
 fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
@@ -789,6 +820,7 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
 
     let mut combined_config = combine_cast_configs(&global_config, &local_config);
 
-    config_with_cli(&mut combined_config, cli);
+    config_with_cli(&mut combined_config, cli)
+        .inspect_err(|err| ui.print_error(&command, err.to_string()))?;
     Ok(combined_config)
 }

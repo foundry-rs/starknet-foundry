@@ -3,7 +3,7 @@ use starknet_rust::{
     accounts::{AccountFactory, PreparedAccountDeploymentV3, RawAccountDeploymentV3},
     core::types::{BlockId, BlockTag},
     providers::Provider,
-    signers::{Signer, SignerInteractivityContext},
+    signers::Signer,
 };
 use starknet_rust_crypto::poseidon_hash_many;
 use starknet_types_core::felt::Felt;
@@ -136,7 +136,12 @@ where
     }
 
     fn is_signer_interactive(&self) -> bool {
-        self.signer
-            .is_interactive(SignerInteractivityContext::Other)
+        // Braavos' __validate_deploy__ requires a fully structured signature (minimum number of
+        // elements) even for fee estimation query transactions. If we report the signer as
+        // interactive, starknet-rust will send an empty signature for estimation, which causes the
+        // Braavos contract to panic with "Index out of bounds". Returning false forces a real
+        // signature to always be produced, at the cost of an extra Ledger confirmation during
+        // fee estimation.
+        false
     }
 }
