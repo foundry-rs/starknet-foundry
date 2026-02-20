@@ -152,3 +152,29 @@ $ sncast \
     --private-key 0x2 \
     --type oz
 ```
+
+#### Ledger Hardware Wallet
+
+To import an account whose signing key lives on a [Ledger device](./ledger.md), pass `--ledger-path` (or `--ledger-account-id` as a shorthand) instead of `--private-key`. The public key is read directly from the device.
+
+<!-- { "requires_ledger": true } -->
+```shell
+$ sncast \
+    account import \
+    --network sepolia \
+    --name account_ledger \
+    --address 0x1 \
+    --ledger-path "m//starknet'/sncast'/0'/1'/0" \
+    --type oz
+```
+
+<!-- { "requires_ledger": true } -->
+```shell
+$ sncast \
+    account import \
+    --network sepolia \
+    --name account_ledger \
+    --address 0x1 \
+    --ledger-account-id 1 \
+    --type oz
+```

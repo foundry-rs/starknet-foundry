@@ -62,6 +62,8 @@
 * [Block Explorers](starknet/block_explorer.md)
 * [Integration With Devnet](starknet/integration_with_devnet.md)
 * [Developer Functionalities](starknet/developer.md)
+* [Ledger Hardware Wallet](starknet/ledger.md)
+    * [EIP-2645 HD Paths](starknet/eip-2645-hd-paths.md)
 
 ---
 
@@ -154,6 +156,10 @@
         * [init](appendix/sncast/script/init.md)
         * [run](appendix/sncast/script/run.md)
     * [verify](appendix/sncast/verify.md)
+    * [ledger](appendix/sncast/ledger/ledger.md)
+        * [app-version](appendix/sncast/ledger/app-version.md)
+        * [get-public-key](appendix/sncast/ledger/get-public-key.md)
+        * [sign-hash](appendix/sncast/ledger/sign-hash.md)
     * [completions](appendix/sncast/completions.md)
     * [get](appendix/sncast/get/get.md)
         * [balance](appendix/sncast/get/balance.md)
