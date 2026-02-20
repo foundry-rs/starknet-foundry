@@ -18,7 +18,7 @@ use sncast::response::ui::UI;
 use sncast::{
     AccountType, chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig,
 };
-use sncast::{WaitForTx, get_chain_id};
+use sncast::{SignerSource, WaitForTx, get_chain_id};
 use starknet_rust::providers::Provider;
 use starknet_rust::signers::SigningKey;
 use starknet_types_core::felt::Felt;
@@ -48,29 +48,40 @@ pub enum Commands {
     List(List),
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn prepare_account_json(
-    private_key: &SigningKey,
+    private_key: Option<&SigningKey>,
+    public_key: Felt,
     address: Felt,
     deployed: bool,
     legacy: bool,
     account_type: AccountType,
     class_hash: Option<Felt>,
     salt: Option<Felt>,
+    ledger_path: Option<String>,
 ) -> serde_json::Value {
     // TODO(#3556): Once `Argent` variant is deleted, use `account_type` directly
     let saved_account_type = match account_type {
         AccountType::Argent => AccountType::Ready,
         _ => account_type,
     };
+
     let mut account_json = json!({
-        "private_key": format!("{:#x}", private_key.secret_scalar()),
-        "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
+        "public_key": format!("{public_key:#x}"),
         "address": format!("{address:#x}"),
         "type": format!("{saved_account_type}").to_lowercase().replace("openzeppelin", "open_zeppelin"),
         "deployed": deployed,
         "legacy": legacy,
     });
 
+    if let Some(path) = ledger_path {
+        account_json["ledger_path"] = serde_json::Value::String(path);
+    }
+
+    if let Some(pk) = private_key {
+        account_json["private_key"] =
+            serde_json::Value::String(format!("{:#x}", pk.secret_scalar()));
+    }
     if let Some(salt) = salt {
         account_json["salt"] = serde_json::Value::String(format!("{salt:#x}"));
     }
@@ -212,9 +223,15 @@ pub async fn account(
     config: CastConfig,
     ui: &UI,
     wait_config: WaitForTx,
+    signer_source: &SignerSource,
 ) -> anyhow::Result<()> {
     match account.command {
-        Commands::Import(import) => {
+        Commands::Import(mut import) => {
+            if import.ledger_path.is_none()
+                && let SignerSource::Ledger(path) = signer_source
+            {
+                import.ledger_path = Some(path.clone());
+            }
             let provider = import.rpc.get_provider(&config, ui).await?;
             let result = starknet_commands::account::import::import(
                 import.name.clone(),
@@ -258,11 +275,11 @@ pub async fn account(
             let result = starknet_commands::account::create::create(
                 &account,
                 &config.accounts_file,
-                config.keystore.as_ref(),
                 &provider,
                 chain_id,
                 &create,
                 &config,
+                signer_source,
                 ui,
             )
             .await;
@@ -280,7 +297,6 @@ pub async fn account(
             let fee_args = deploy.fee_args.clone();
 
             let chain_id = get_chain_id(&provider).await?;
-            let keystore_path = config.keystore.clone();
             let result = starknet_commands::account::deploy::deploy(
                 &provider,
                 &config.accounts_file,
@@ -288,8 +304,8 @@ pub async fn account(
                 chain_id,
                 wait_config,
                 &config.account,
-                keystore_path,
                 fee_args,
+                signer_source,
                 ui,
             )
             .await;
@@ -297,12 +313,13 @@ pub async fn account(
             let run_interactive_prompt =
                 !deploy.silent && result.is_ok() && io::stdout().is_terminal();
 
-            if config.keystore.is_none()
+            if matches!(signer_source, SignerSource::AccountsFile)
                 && run_interactive_prompt
                 && let Err(_) = prompt_to_add_account_as_default(
-                    &deploy
+                    deploy
                         .name
-                        .expect("Must be provided if not using a keystore"),
+                        .as_ref()
+                        .expect("Must be provided when using accounts file"),
                 )
             {
                 // TODO(#3436)

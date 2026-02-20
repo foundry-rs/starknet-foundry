@@ -1,6 +1,6 @@
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{WaitForTx, get_account};
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result, anyhow, bail};
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::ExecutableCallEntryPoint;
 use blockifier::execution::execution_utils::ReadOnlySegments;
@@ -47,6 +47,7 @@ use sncast::state::hashing::{
     generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id,
 };
 use sncast::state::state_file::StateManager;
+use sncast::{AccountVariant, SignerSource};
 use starknet_rust::accounts::{Account, SingleOwnerAccount};
 use starknet_rust::core::types::{BlockId, BlockTag::PreConfirmed};
 use starknet_rust::providers::JsonRpcClient;
@@ -366,13 +367,13 @@ pub fn run(
             url: Some(url.clone()),
             network: None,
         };
-        Some(tokio_runtime.block_on(get_account(
-            config,
-            provider,
-            &rpc_args,
-            config.keystore.as_ref(),
-            ui,
-        ))?)
+        let signer_source = SignerSource::from_options(config.keystore.clone(), None);
+        let account_variant =
+            tokio_runtime.block_on(get_account(config, provider, &rpc_args, &signer_source, ui))?;
+        match account_variant {
+            AccountVariant::LocalWallet(acc) => Some(acc),
+            AccountVariant::Ledger(_) => bail!("Ledger is not supported for scripts"),
+        }
     };
     let state = StateManager::from(state_file_path)?;
 
