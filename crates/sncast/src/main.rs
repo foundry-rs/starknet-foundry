@@ -26,6 +26,7 @@ use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
+use sncast::ledger::Ledger;
 use sncast::response::declare::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse, DeployCommandMessage,
 };
@@ -137,6 +138,7 @@ impl Cli {
             Commands::Completions(_) => "completions",
             Commands::Utils(_) => "utils",
             Commands::Balance(_) => "balance",
+            Commands::Ledger(_) => "ledger",
         }
         .to_string()
     }
@@ -185,6 +187,9 @@ enum Commands {
 
     /// Fetch balance of the account for specified token
     Balance(Balance),
+
+    /// Interact with Ledger hardware wallet
+    Ledger(Ledger),
 }
 
 #[derive(Debug, Clone, clap::Args)]
@@ -726,6 +731,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             process_command_result("balance", Ok(result), ui, None);
 
+            Ok(())
+        }
+
+        Commands::Ledger(ledger_args) => {
+            let result = sncast::ledger::ledger(&ledger_args, ui).await?;
+            process_command_result("ledger", Ok(result), ui, None);
             Ok(())
         }
 
