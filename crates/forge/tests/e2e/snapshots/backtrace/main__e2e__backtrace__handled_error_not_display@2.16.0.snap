@@ -7,9 +7,9 @@ expression: stdout
 error occurred in contract 'ErrorHandler'
 stack backtrace:
    0: core::panic_with_const_felt252
-       at [..]lib.cairo:364:5
+       at [..]lib.cairo:360:5
    1: core::panic_with_const_felt252
-       at [..]lib.cairo:364:5
+       at [..]lib.cairo:360:5
    2: dispatchers::error_handler::ErrorHandler::ErrorHandler::catch_panic_and_fail
        at [..]error_handler.cairo:50:21
    3: dispatchers::error_handler::ErrorHandler::__wrapper__ErrorHandler__catch_panic_and_fail
