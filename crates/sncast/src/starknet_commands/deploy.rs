@@ -21,7 +21,7 @@ use starknet_types_core::felt::Felt;
 #[group(required = true, multiple = false)]
 pub struct ContractIdentifier {
     /// Class hash of contract to deploy
-    #[arg(short = 'g', long)]
+    #[arg(short = 'g', long, conflicts_with = "package")]
     pub class_hash: Option<Felt>,
 
     /// Contract name
