@@ -61,7 +61,7 @@ pub(crate) fn replaced_calldata(
                     arguments: None,
                 }
             }
-            (None, Some(_) | None) => function_arguments,
+            (None, _) => function_arguments,
             (Some(_), Some(_)) => unreachable!(),
         },
     )

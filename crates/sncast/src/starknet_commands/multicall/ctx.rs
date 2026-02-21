@@ -70,7 +70,8 @@ impl ContractsCache {
     }
 }
 
-/// Context for multicall execution, storing intermediate results and mappings between ids and contracts cache.
+/// Context for multicall execution, storing mappings from ids to contract addresses
+/// and caching contract metadata via a shared contracts cache.
 pub struct MulticallCtx {
     id_to_address: HashMap<String, Felt>,
     pub(crate) cache: ContractsCache,
