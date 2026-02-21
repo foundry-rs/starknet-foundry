@@ -1,7 +1,8 @@
 use crate::starknet_commands::balance::Balance;
 use crate::starknet_commands::declare::declare;
 use crate::starknet_commands::declare_from::{ContractSource, DeclareFrom};
-use crate::starknet_commands::deploy::DeployArguments;
+use crate::starknet_commands::deploy::{DeployArguments, DeployCommonArgs};
+use crate::starknet_commands::invoke::InvokeCommonArgs;
 use crate::starknet_commands::multicall;
 use crate::starknet_commands::script::run_script_command;
 use crate::starknet_commands::utils::{self, Utils};
@@ -431,12 +432,17 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Deploy(deploy) => {
             let Deploy {
-                contract_identifier: identifier,
-                arguments,
+                common:
+                    DeployCommonArgs {
+                        contract_identifier: identifier,
+                        arguments,
+                        package,
+                        salt,
+                        unique,
+                    },
                 fee_args,
                 rpc,
                 mut nonce,
-                package,
                 ..
             } = deploy;
 
@@ -519,8 +525,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let result = starknet_commands::deploy::deploy(
                 class_hash,
                 &calldata,
-                deploy.salt,
-                deploy.unique,
+                salt,
+                unique,
                 fee_args,
                 nonce,
                 &account,
@@ -589,9 +595,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Invoke(invoke) => {
             let Invoke {
-                contract_address,
-                function,
-                arguments,
+                common:
+                    InvokeCommonArgs {
+                        contract_address,
+                        function,
+                        arguments,
+                    },
                 fee_args,
                 rpc,
                 nonce,
