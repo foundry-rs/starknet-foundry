@@ -151,7 +151,11 @@ fn parse_inputs(inputs: &Vec<Input>, contracts_registry: &ContractsRegistry) -> 
         let felt_value = match input {
             Input::String(s) => {
                 let resolved_address = contracts_registry.get_address_by_id(s);
-                resolved_address.unwrap_or(s.parse()?)
+                if let Some(address) = resolved_address {
+                    address
+                } else {
+                    s.parse()?
+                }
             }
             Input::Number(n) => (*n).into(),
         };
