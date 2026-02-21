@@ -47,8 +47,8 @@ If you intended to reference an address from a previous step, use `@<id>` instea
             .cache
             .get_contract_class_by_class_hash(&class_hash)
             .await?;
-        let arguments = replaced_calldata(self.common.arguments.clone(), ctx)?;
-        let calldata = arguments.try_into_calldata(contract_class, &selector)?;
+        let arguments = replaced_calldata(&self.common.arguments, ctx)?;
+        let calldata = arguments.try_into_calldata(&contract_class, &selector)?;
 
         Ok(Call {
             to: contract_address,
@@ -59,7 +59,7 @@ If you intended to reference an address from a previous step, use `@<id>` instea
 }
 
 pub(crate) fn replaced_calldata(
-    function_arguments: Arguments,
+    function_arguments: &Arguments,
     ctx: &MulticallCtx,
 ) -> Result<Arguments> {
     Ok(
@@ -80,7 +80,7 @@ pub(crate) fn replaced_calldata(
                     arguments: None,
                 }
             }
-            (None, _) => function_arguments,
+            (None, _) => function_arguments.clone(),
             (Some(_), Some(_)) => unreachable!(),
         },
     )

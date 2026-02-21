@@ -36,17 +36,16 @@ impl MulticallDeploy {
             .common
             .contract_identifier
             .class_hash
-            .expect("Using deploy with multicall required providing `--class-hash`");
-
+            .expect("Using deploy with multicall requires providing `--class-hash`");
         let contract_class = ctx
             .cache
             .get_contract_class_by_class_hash(&class_hash)
             .await?;
         let constructor_arguments = Arguments::from(self.common.arguments.clone());
-        let constructor_arguments = replaced_calldata(constructor_arguments, ctx)?;
+        let constructor_arguments = replaced_calldata(&constructor_arguments, ctx)?;
         let constructor_selector = get_selector_from_name("constructor")?;
         let constructor_calldata =
-            constructor_arguments.try_into_calldata(contract_class, &constructor_selector)?;
+            constructor_arguments.try_into_calldata(&contract_class, &constructor_selector)?;
 
         let mut calldata = vec![
             class_hash,
@@ -54,8 +53,7 @@ impl MulticallDeploy {
             Felt::from(u8::from(self.common.unique)),
             constructor_calldata.len().into(),
         ];
-
-        calldata.extend(constructor_calldata.clone());
+        calldata.extend_from_slice(&constructor_calldata);
 
         let contract_address = get_udc_deployed_address(
             salt,
@@ -69,13 +67,12 @@ impl MulticallDeploy {
             .get_class_hash_by_address_local(&contract_address)
             .is_none()
         {
-            ctx.cache
-                .try_insert_address_to_class_hash(contract_address, class_hash)?;
+            ctx.cache.insert_new_address(contract_address, class_hash)?;
         }
 
         // Store the contract address in the context with the provided id for later use in invoke calls
         if let Some(id) = &self.id {
-            ctx.try_insert_id_to_address(id.clone(), contract_address)?;
+            ctx.insert_new_id_to_address(id.clone(), contract_address)?;
         }
 
         Ok(Call {

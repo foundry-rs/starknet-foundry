@@ -149,10 +149,7 @@ pub async fn run(
                     id: None,
                 };
 
-                let call = invoke
-                    .to_call(&mut ctx)
-                    .await
-                    .context("Failed to process `invoke` call")?;
+                let call = invoke.to_call(&mut ctx).await?;
                 calls.push(call);
             }
             Some(unsupported) => {
