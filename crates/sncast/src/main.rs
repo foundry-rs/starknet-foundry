@@ -2,6 +2,7 @@ use crate::starknet_commands::balance::Balance;
 use crate::starknet_commands::declare::declare;
 use crate::starknet_commands::declare_from::ContractSource;
 use crate::starknet_commands::declare_from::DeclareFrom;
+use crate::starknet_commands::deploy::DeployArguments;
 use crate::starknet_commands::deploy::DeployCommonArgs;
 use crate::starknet_commands::invoke::InvokeCommonArgs;
 use crate::starknet_commands::multicall;
@@ -225,6 +226,19 @@ impl Arguments {
                 .context("Couldn't deserialize ABI received from network")?;
 
             transform(&self.arguments.unwrap_or_default(), &abi, selector)
+        }
+    }
+}
+
+impl From<DeployArguments> for Arguments {
+    fn from(value: DeployArguments) -> Self {
+        let DeployArguments {
+            constructor_calldata,
+            arguments,
+        } = value;
+        Self {
+            calldata: constructor_calldata,
+            arguments,
         }
     }
 }
@@ -505,7 +519,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let selector = get_selector_from_name("constructor").unwrap();
 
             let contract_class = get_contract_class(class_hash, &provider).await?;
-            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
+            let calldata =
+                Arguments::from(arguments).try_into_calldata(contract_class, &selector)?;
 
             let result = starknet_commands::deploy::deploy(
                 class_hash,

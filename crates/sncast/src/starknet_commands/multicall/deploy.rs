@@ -10,6 +10,7 @@ use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 
+use crate::Arguments;
 use crate::starknet_commands::deploy::DeployCommonArgs;
 use crate::starknet_commands::multicall::ctx::MulticallCtx;
 use crate::starknet_commands::multicall::invoke::replaced_calldata;
@@ -41,7 +42,8 @@ impl MulticallDeploy {
             .cache
             .get_contract_class_by_class_hash(&class_hash)
             .await?;
-        let constructor_arguments = replaced_calldata(self.common.arguments.clone(), ctx)?;
+        let constructor_arguments = Arguments::from(self.common.arguments.clone());
+        let constructor_arguments = replaced_calldata(constructor_arguments, ctx)?;
         let constructor_selector = get_selector_from_name("constructor")?;
         let constructor_calldata =
             constructor_arguments.try_into_calldata(contract_class, &constructor_selector)?;

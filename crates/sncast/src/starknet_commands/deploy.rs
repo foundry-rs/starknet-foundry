@@ -17,8 +17,6 @@ use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 
-use crate::Arguments;
-
 #[derive(Args, Debug, Clone)]
 #[group(required = true, multiple = false)]
 pub struct ContractIdentifier {
@@ -37,7 +35,7 @@ pub struct DeployCommonArgs {
     pub contract_identifier: ContractIdentifier,
 
     #[command(flatten)]
-    pub arguments: Arguments,
+    pub arguments: DeployArguments,
 
     /// Salt for the address
     #[arg(short, long)]
@@ -67,6 +65,18 @@ pub struct Deploy {
     /// Specifies scarb package to be used. Only possible to use with `--contract-name`.
     #[arg(long, conflicts_with = "class_hash")]
     pub package: Option<String>,
+}
+
+#[derive(Debug, Clone, clap::Args)]
+#[group(multiple = false)]
+pub struct DeployArguments {
+    /// Arguments of the called function serialized as a series of felts
+    #[arg(short, long, value_delimiter = ' ', num_args = 1..)]
+    pub constructor_calldata: Option<Vec<String>>,
+
+    // Arguments of the called function as a comma-separated string of Cairo expressions
+    #[arg(long)]
+    pub arguments: Option<String>,
 }
 
 #[expect(clippy::ptr_arg, clippy::too_many_arguments)]
