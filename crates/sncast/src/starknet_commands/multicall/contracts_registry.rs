@@ -30,6 +30,7 @@ impl ContractsRegistry {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use super::ContractsRegistry;
     use starknet_types_core::felt::Felt;
