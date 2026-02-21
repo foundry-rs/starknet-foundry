@@ -205,7 +205,7 @@ pub struct Arguments {
 impl Arguments {
     fn try_into_calldata(
         self,
-        contract_class: ContractClass,
+        contract_class: &ContractClass,
         selector: &Felt,
     ) -> Result<Vec<Felt>> {
         if let Some(calldata) = self.calldata {
@@ -520,7 +520,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let contract_class = get_contract_class(class_hash, &provider).await?;
             let calldata =
-                Arguments::from(arguments).try_into_calldata(contract_class, &selector)?;
+                Arguments::from(arguments).try_into_calldata(&contract_class, &selector)?;
 
             let result = starknet_commands::deploy::deploy(
                 class_hash,
@@ -570,7 +570,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let calldata = arguments.try_into_calldata(contract_class.clone(), &selector)?;
+            let calldata = arguments.try_into_calldata(&contract_class, &selector)?;
 
             let result = starknet_commands::call::call(
                 contract_address,
@@ -618,7 +618,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
-            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
+            let calldata = arguments.try_into_calldata(&contract_class, &selector)?;
 
             let result = starknet_commands::invoke::invoke(
                 contract_address,

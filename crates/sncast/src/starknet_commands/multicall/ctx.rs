@@ -1,15 +1,18 @@
-use anyhow::Result;
+use anyhow::{Context, Result, bail};
 use sncast::{get_class_hash_by_address, get_contract_class};
 use starknet_rust::{
     core::types::ContractClass,
     providers::{JsonRpcClient, jsonrpc::HttpTransport},
 };
 use starknet_types_core::felt::Felt;
-use std::collections::HashMap;
+use std::{
+    collections::{HashMap, hash_map::Entry},
+    sync::Arc,
+};
 
 pub(crate) struct ContractsCache {
     address_to_class_hash: HashMap<Felt, Felt>,
-    class_hash_to_contract_class: HashMap<Felt, ContractClass>,
+    class_hash_to_contract_class: HashMap<Felt, Arc<ContractClass>>,
     provider: JsonRpcClient<HttpTransport>,
 }
 
@@ -24,12 +27,14 @@ impl ContractsCache {
 
     /// Retrieves the class hash associated with the given contract address from the local cache, if it exists.
     pub(crate) async fn get_class_hash_by_address(&mut self, address: &Felt) -> Result<Felt> {
-        if let Some(class_hash) = self.address_to_class_hash.get(address) {
-            Ok(*class_hash)
-        } else {
-            let class_hash = get_class_hash_by_address(&self.provider, *address).await?;
-            self.address_to_class_hash.insert(*address, class_hash);
-            Ok(class_hash)
+        match self.address_to_class_hash.entry(*address) {
+            Entry::Occupied(entry) => Ok(*entry.get()),
+            Entry::Vacant(entry) => {
+                let class_hash = get_class_hash_by_address(&self.provider, *address)
+                    .await
+                    .context("Failed to fetch class hash from provider")?;
+                Ok(*entry.insert(class_hash))
+            }
         }
     }
 
@@ -40,16 +45,13 @@ impl ContractsCache {
 
     /// Inserts a mapping from the given contract address to the specified class hash.
     /// Returns an error if the address already exists.
-    pub(crate) fn try_insert_address_to_class_hash(
-        &mut self,
-        address: Felt,
-        class_hash: Felt,
-    ) -> Result<()> {
-        if self.address_to_class_hash.contains_key(&address) {
-            anyhow::bail!("Duplicate address found: {address}");
+    pub(crate) fn insert_new_address(&mut self, address: Felt, class_hash: Felt) -> Result<()> {
+        if let Entry::Vacant(e) = self.address_to_class_hash.entry(address) {
+            e.insert(class_hash);
+            Ok(())
+        } else {
+            bail!("Duplicate address found: {address}")
         }
-        self.address_to_class_hash.insert(address, class_hash);
-        Ok(())
     }
 
     /// Retrieves the contract class associated with the given class hash, if it exists.
@@ -57,14 +59,16 @@ impl ContractsCache {
     pub(crate) async fn get_contract_class_by_class_hash(
         &mut self,
         class_hash: &Felt,
-    ) -> Result<ContractClass> {
-        if let Some(contract_class) = self.class_hash_to_contract_class.get(class_hash) {
-            Ok(contract_class.clone())
-        } else {
-            let contract_class = get_contract_class(*class_hash, &self.provider).await?;
-            self.class_hash_to_contract_class
-                .insert(*class_hash, contract_class.clone());
-            Ok(contract_class)
+    ) -> Result<Arc<ContractClass>> {
+        match self.class_hash_to_contract_class.entry(*class_hash) {
+            Entry::Occupied(entry) => Ok(Arc::clone(entry.get())),
+            Entry::Vacant(entry) => {
+                let contract_class = get_contract_class(*class_hash, &self.provider)
+                    .await
+                    .context("Failed to fetch contract class from provider")?;
+                let shared_class = Arc::new(contract_class);
+                Ok(Arc::clone(entry.insert(shared_class)))
+            }
         }
     }
 }
@@ -91,7 +95,7 @@ impl MulticallCtx {
 
     /// Inserts a mapping from the given id to the specified contract address.
     /// Returns an error if the id already exists.
-    pub(crate) fn try_insert_id_to_address(&mut self, id: String, address: Felt) -> Result<()> {
+    pub(crate) fn insert_new_id_to_address(&mut self, id: String, address: Felt) -> Result<()> {
         if self.id_to_address.contains_key(&id) {
             anyhow::bail!("Duplicate id found: {id}");
         }
