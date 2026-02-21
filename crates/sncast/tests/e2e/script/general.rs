@@ -324,10 +324,11 @@ async fn test_missing_field() {
         URL,
     ];
 
+    // TODO(#4170): Replace [..] with actual error message when scarb 2.16.0 will be minimal test version.
     let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().failure().stdout_eq(indoc! {r"
         ...
-        error[E2030]: Wrong number of arguments. Expected 3, found: 2
+        error[..]: Wrong number of arguments. Expected 3, found: 2
         ...
     "});
 }
