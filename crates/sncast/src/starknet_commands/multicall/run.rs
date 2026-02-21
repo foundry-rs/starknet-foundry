@@ -1,9 +1,7 @@
-use crate::Arguments;
-use crate::starknet_commands::deploy::{ContractIdentifier, DeployArguments, DeployCommonArgs};
-use crate::starknet_commands::invoke::{InvokeCommonArgs, execute_calls};
+use crate::starknet_commands::invoke::execute_calls;
 use crate::starknet_commands::multicall::ctx::MulticallCtx;
-use crate::starknet_commands::multicall::deploy::MulticallDeploy;
-use crate::starknet_commands::multicall::invoke::MulticallInvoke;
+use crate::starknet_commands::multicall::deploy::{DeployEntry, MulticallDeploy};
+use crate::starknet_commands::multicall::invoke::{InvokeEntry, MulticallInvoke};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
@@ -18,7 +16,6 @@ use starknet_rust::accounts::SingleOwnerAccount;
 use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::signers::LocalWallet;
-use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 
 #[derive(Args, Debug, Clone)]
@@ -37,12 +34,12 @@ pub struct Run {
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(untagged)]
-enum Input {
+pub(crate) enum Input {
     String(String),
     Number(i64),
 }
 
-fn inputs_to_calldata(inputs: Vec<Input>) -> Vec<String> {
+pub(crate) fn inputs_to_calldata(inputs: Vec<Input>) -> Vec<String> {
     inputs
         .into_iter()
         .map(|input| match input {
@@ -50,22 +47,6 @@ fn inputs_to_calldata(inputs: Vec<Input>) -> Vec<String> {
             Input::Number(n) => n.to_string(),
         })
         .collect()
-}
-
-#[derive(Deserialize, Debug)]
-struct DeployCall {
-    class_hash: Felt,
-    inputs: Vec<Input>,
-    unique: bool,
-    salt: Option<Felt>,
-    id: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct InvokeCall {
-    contract_address: String,
-    function: String,
-    inputs: Vec<Input>,
 }
 
 pub async fn run(
@@ -92,37 +73,14 @@ pub async fn run(
 
         match call_type.unwrap().as_str() {
             Some("deploy") => {
-                let deploy_call: DeployCall = toml::from_str(toml::to_string(&call)?.as_str())
+                let deploy_call: DeployEntry = toml::from_str(toml::to_string(&call)?.as_str())
                     .context("Failed to parse toml `deploy` call")?;
-                let arguments = DeployArguments {
-                    constructor_calldata: Some(inputs_to_calldata(deploy_call.inputs.clone())),
-                    arguments: None,
-                };
-                let id = if deploy_call.id.is_empty() {
-                    None
-                } else {
-                    Some(deploy_call.id.clone())
-                };
-
-                let deploy = MulticallDeploy {
-                    common: DeployCommonArgs {
-                        contract_identifier: ContractIdentifier {
-                            class_hash: Some(deploy_call.class_hash),
-                            contract_name: None,
-                        },
-                        arguments,
-                        salt: deploy_call.salt,
-                        unique: deploy_call.unique,
-                        package: None,
-                    },
-                    id,
-                };
-
+                let deploy = MulticallDeploy::from(deploy_call);
                 let call = deploy.to_call(account, &mut ctx).await?;
                 calls.push(call);
             }
             Some("invoke") => {
-                let invoke_call: InvokeCall = toml::from_str(toml::to_string(&call)?.as_str())
+                let invoke_call: InvokeEntry = toml::from_str(toml::to_string(&call)?.as_str())
                     .context("Failed to parse toml `invoke` call")?;
 
                 let contract_address =
@@ -134,21 +92,12 @@ pub async fn run(
                             .parse()
                             .context("Failed to parse contract address in `invoke` call")?
                     };
-
-                let arguments = Arguments {
-                    calldata: Some(inputs_to_calldata(invoke_call.inputs.clone())),
-                    arguments: None,
+                let invoke_call = InvokeEntry {
+                    contract_address: contract_address.to_string(),
+                    ..invoke_call
                 };
 
-                let invoke = MulticallInvoke {
-                    common: InvokeCommonArgs {
-                        contract_address,
-                        function: invoke_call.function,
-                        arguments,
-                    },
-                    id: None,
-                };
-
+                let invoke = MulticallInvoke::try_from(invoke_call)?;
                 let call = invoke.to_call(&mut ctx).await?;
                 calls.push(call);
             }

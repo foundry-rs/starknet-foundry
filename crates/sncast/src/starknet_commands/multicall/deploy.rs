@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Args;
+use serde::Deserialize;
 use sncast::helpers::constants::UDC_ADDRESS;
 use sncast::{extract_or_generate_salt, udc_uniqueness};
 use starknet_rust::accounts::{Account, SingleOwnerAccount};
@@ -11,9 +12,48 @@ use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 
 use crate::Arguments;
-use crate::starknet_commands::deploy::DeployCommonArgs;
+use crate::starknet_commands::deploy::{ContractIdentifier, DeployArguments, DeployCommonArgs};
 use crate::starknet_commands::multicall::ctx::MulticallCtx;
 use crate::starknet_commands::multicall::invoke::replaced_calldata;
+use crate::starknet_commands::multicall::run::{Input, inputs_to_calldata};
+
+#[derive(Deserialize, Debug)]
+pub(crate) struct DeployEntry {
+    class_hash: Felt,
+    inputs: Vec<Input>,
+    unique: bool,
+    salt: Option<Felt>,
+    id: String,
+}
+
+impl From<DeployEntry> for MulticallDeploy {
+    fn from(value: DeployEntry) -> Self {
+        let arguments = DeployArguments {
+            constructor_calldata: Some(inputs_to_calldata(value.inputs.clone())),
+            arguments: None,
+        };
+        let id = if value.id.is_empty() {
+            None
+        } else {
+            Some(value.id.clone())
+        };
+        let contract_identifier = ContractIdentifier {
+            class_hash: Some(value.class_hash),
+            contract_name: None,
+        };
+
+        MulticallDeploy {
+            common: DeployCommonArgs {
+                contract_identifier,
+                salt: value.salt,
+                unique: value.unique,
+                package: None,
+                arguments,
+            },
+            id,
+        }
+    }
+}
 
 #[derive(Args)]
 pub struct MulticallDeploy {
@@ -41,8 +81,8 @@ impl MulticallDeploy {
             .cache
             .get_contract_class_by_class_hash(&class_hash)
             .await?;
-        let constructor_arguments = Arguments::from(self.common.arguments.clone());
-        let constructor_arguments = replaced_calldata(&constructor_arguments, ctx)?;
+        let constructor_arguments =
+            replaced_calldata(&Arguments::from(self.common.arguments.clone()), ctx)?;
         let constructor_selector = get_selector_from_name("constructor")?;
         let constructor_calldata =
             constructor_arguments.try_into_calldata(&contract_class, &constructor_selector)?;

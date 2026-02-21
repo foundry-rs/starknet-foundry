@@ -1,11 +1,44 @@
 use anyhow::Result;
 use clap::Args;
+use serde::Deserialize;
 use starknet_rust::core::{types::Call, utils::get_selector_from_name};
 
 use crate::{
     Arguments,
-    starknet_commands::{invoke::InvokeCommonArgs, multicall::ctx::MulticallCtx},
+    starknet_commands::{
+        invoke::InvokeCommonArgs,
+        multicall::{
+            ctx::MulticallCtx,
+            run::{Input, inputs_to_calldata},
+        },
+    },
 };
+
+#[derive(Deserialize, Debug)]
+pub(crate) struct InvokeEntry {
+    pub(crate) contract_address: String,
+    pub(crate) function: String,
+    pub(crate) inputs: Vec<Input>,
+}
+
+impl TryFrom<InvokeEntry> for MulticallInvoke {
+    fn try_from(value: InvokeEntry) -> Result<Self> {
+        let arguments = Arguments {
+            calldata: Some(inputs_to_calldata(value.inputs.clone())),
+            arguments: None,
+        };
+        Ok(MulticallInvoke {
+            common: InvokeCommonArgs {
+                contract_address: value.contract_address.parse()?,
+                function: value.function,
+                arguments,
+            },
+            id: None,
+        })
+    }
+
+    type Error = anyhow::Error;
+}
 
 #[derive(Args)]
 pub(crate) struct MulticallInvoke {
