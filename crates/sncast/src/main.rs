@@ -438,12 +438,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     DeployCommonArgs {
                         contract_identifier: identifier,
                         arguments,
+                        package,
                         ..
                     },
                 fee_args,
                 rpc,
                 mut nonce,
-                package,
                 ..
             } = deploy;
 

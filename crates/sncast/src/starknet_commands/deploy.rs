@@ -44,6 +44,10 @@ pub struct DeployCommonArgs {
     /// If true, salt will be modified with an account address
     #[arg(long)]
     pub unique: bool,
+
+    /// Specifies scarb package to be used. Only possible to use with `--contract-name`.
+    #[arg(long, conflicts_with = "class_hash")]
+    pub package: Option<String>,
 }
 
 #[derive(Args)]
@@ -61,10 +65,6 @@ pub struct Deploy {
 
     #[command(flatten)]
     pub rpc: RpcArgs,
-
-    /// Specifies scarb package to be used. Only possible to use with `--contract-name`.
-    #[arg(long, conflicts_with = "class_hash")]
-    pub package: Option<String>,
 }
 
 #[derive(Debug, Clone, clap::Args)]

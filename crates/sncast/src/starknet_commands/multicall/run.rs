@@ -113,6 +113,7 @@ pub async fn run(
                         arguments,
                         salt: deploy_call.salt,
                         unique: deploy_call.unique,
+                        package: None,
                     },
                     id,
                 };
