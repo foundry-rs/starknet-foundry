@@ -1,7 +1,8 @@
 use crate::starknet_commands::balance::Balance;
 use crate::starknet_commands::declare::declare;
 use crate::starknet_commands::declare_from::{ContractSource, DeclareFrom};
-use crate::starknet_commands::deploy::DeployArguments;
+use crate::starknet_commands::deploy::{DeployArguments, DeployCommonArgs};
+use crate::starknet_commands::invoke::InvokeCommonArgs;
 use crate::starknet_commands::multicall;
 use crate::starknet_commands::script::run_script_command;
 use crate::starknet_commands::utils::{self, Utils};
@@ -431,12 +432,17 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Deploy(deploy) => {
             let Deploy {
-                contract_identifier: identifier,
-                arguments,
+                common:
+                    DeployCommonArgs {
+                        contract_identifier,
+                        arguments,
+                        package,
+                        salt,
+                        unique,
+                    },
                 fee_args,
                 rpc,
                 mut nonce,
-                package,
                 ..
             } = deploy;
 
@@ -445,68 +451,69 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let account =
                 get_account(&config, &provider, &rpc, config.keystore.as_ref(), ui).await?;
 
-            let (class_hash, declare_response) = if let Some(class_hash) = identifier.class_hash {
-                (class_hash, None)
-            } else if let Some(contract_name) = identifier.contract_name {
-                let manifest_path = assert_manifest_path_exists()?;
-                let package_metadata = get_package_metadata(&manifest_path, &package)?;
-                let artifacts = build_and_load_artifacts(
-                    &package_metadata,
-                    &BuildConfig {
-                        scarb_toml_path: manifest_path,
-                        json: cli.json,
-                        profile: cli.profile.unwrap_or("release".to_string()),
-                    },
-                    false,
-                    // TODO(#3959) Remove `base_ui`
-                    ui.base_ui(),
-                )
-                .expect("Failed to build contract");
+            let (class_hash, declare_response) =
+                if let Some(class_hash) = contract_identifier.class_hash {
+                    (class_hash, None)
+                } else if let Some(contract_name) = contract_identifier.contract_name {
+                    let manifest_path = assert_manifest_path_exists()?;
+                    let package_metadata = get_package_metadata(&manifest_path, &package)?;
+                    let artifacts = build_and_load_artifacts(
+                        &package_metadata,
+                        &BuildConfig {
+                            scarb_toml_path: manifest_path,
+                            json: cli.json,
+                            profile: cli.profile.unwrap_or("release".to_string()),
+                        },
+                        false,
+                        // TODO(#3959) Remove `base_ui`
+                        ui.base_ui(),
+                    )
+                    .expect("Failed to build contract");
 
-                let declare_result = declare(
-                    contract_name,
-                    fee_args.clone(),
-                    nonce,
-                    &account,
-                    &artifacts,
-                    WaitForTx {
-                        wait: true,
-                        wait_params: wait_config.wait_params,
-                        // Only show outputs if user explicitly provides `--wait` flag
-                        show_ui_outputs: wait_config.wait,
-                    },
-                    true,
-                    ui,
-                )
-                .await
-                .map_err(handle_starknet_command_error);
+                    let declare_result = declare(
+                        contract_name,
+                        fee_args.clone(),
+                        nonce,
+                        &account,
+                        &artifacts,
+                        WaitForTx {
+                            wait: true,
+                            wait_params: wait_config.wait_params,
+                            // Only show outputs if user explicitly provides `--wait` flag
+                            show_ui_outputs: wait_config.wait,
+                        },
+                        true,
+                        ui,
+                    )
+                    .await
+                    .map_err(handle_starknet_command_error);
 
-                // Increment nonce after successful declare if it was explicitly provided
-                nonce = nonce.map(|n| n + Felt::ONE);
+                    // Increment nonce after successful declare if it was explicitly provided
+                    nonce = nonce.map(|n| n + Felt::ONE);
 
-                match declare_result {
-                    Ok(DeclareResponse::AlreadyDeclared(AlreadyDeclaredResponse {
-                        class_hash,
-                    })) => (class_hash.into_(), None),
-                    Ok(DeclareResponse::Success(declare_transaction_response)) => (
-                        declare_transaction_response.class_hash.into_(),
-                        Some(declare_transaction_response),
-                    ),
-                    Err(err) => {
-                        // TODO(#3960) This will return json output saying that `deploy` command was run
-                        //  even though the invoked command was declare.
-                        process_command_result::<DeclareTransactionResponse>(
-                            "deploy",
-                            Err(err),
-                            ui,
-                            None,
-                        );
-                        return Ok(());
+                    match declare_result {
+                        Ok(DeclareResponse::AlreadyDeclared(AlreadyDeclaredResponse {
+                            class_hash,
+                        })) => (class_hash.into_(), None),
+                        Ok(DeclareResponse::Success(declare_transaction_response)) => (
+                            declare_transaction_response.class_hash.into_(),
+                            Some(declare_transaction_response),
+                        ),
+                        Err(err) => {
+                            // TODO(#3960) This will return json output saying that `deploy` command was run
+                            //  even though the invoked command was declare.
+                            process_command_result::<DeclareTransactionResponse>(
+                                "deploy",
+                                Err(err),
+                                ui,
+                                None,
+                            );
+                            return Ok(());
+                        }
                     }
-                }
-            } else {
-                unreachable!("Either `--class_hash` or `--contract_name` must be provided");
-            };
+                } else {
+                    unreachable!("Either `--class_hash` or `--contract_name` must be provided");
+                };
 
             // safe to unwrap because "constructor" is a standardized name
             let selector = get_selector_from_name("constructor").unwrap();
@@ -519,8 +526,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let result = starknet_commands::deploy::deploy(
                 class_hash,
                 &calldata,
-                deploy.salt,
-                deploy.unique,
+                salt,
+                unique,
                 fee_args,
                 nonce,
                 &account,
@@ -589,9 +596,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Invoke(invoke) => {
             let Invoke {
-                contract_address,
-                function,
-                arguments,
+                common:
+                    InvokeCommonArgs {
+                        contract_address,
+                        function,
+                        arguments,
+                    },
                 fee_args,
                 rpc,
                 nonce,
