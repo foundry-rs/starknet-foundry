@@ -159,10 +159,10 @@ async fn test_deploy_fail() {
 
     assert_stderr_contains(
         output,
-        indoc! {r"
+        indoc! {r#"
         Command: multicall run
-        Error: Transaction execution error [..]
-        "},
+        Error: An error occurred in the called contract = ContractErrorData { revert_error: Message("Class with hash 0x1 is not declared") }
+        "#},
     );
 }
 
@@ -194,10 +194,10 @@ async fn test_invoke_fail() {
 
     assert_stderr_contains(
         output,
-        indoc! {r"
+        indoc! {r#"
         Command: multicall run
-        Error: Transaction execution error [..]
-        "},
+        Error: An error occurred in the called contract = ContractErrorData { revert_error: Message("Requested contract address 0x1 is not deployed") }
+        "#},
     );
 }
 
@@ -229,10 +229,10 @@ async fn test_deploy_success_invoke_fails() {
     let output = snapbox.assert().success();
     assert_stderr_contains(
         output,
-        indoc! {r"
+        indoc! {r#"
         Command: multicall run
-        Error: Transaction execution error [..]
-        "},
+        Error: An error occurred in the called contract = ContractErrorData { revert_error: Message("Requested contract address 0x1 is not deployed") }
+        "#},
     );
 }
 
