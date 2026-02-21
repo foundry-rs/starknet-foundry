@@ -1,5 +1,5 @@
 use crate::Arguments;
-use crate::starknet_commands::deploy::{ContractIdentifier, DeployCommonArgs};
+use crate::starknet_commands::deploy::{ContractIdentifier, DeployArguments, DeployCommonArgs};
 use crate::starknet_commands::invoke::{InvokeCommonArgs, execute_calls};
 use crate::starknet_commands::multicall::ctx::MulticallCtx;
 use crate::starknet_commands::multicall::deploy::MulticallDeploy;
@@ -94,8 +94,8 @@ pub async fn run(
             Some("deploy") => {
                 let deploy_call: DeployCall = toml::from_str(toml::to_string(&call)?.as_str())
                     .context("Failed to parse toml `deploy` call")?;
-                let arguments = Arguments {
-                    calldata: Some(inputs_to_calldata(deploy_call.inputs.clone())),
+                let arguments = DeployArguments {
+                    constructor_calldata: Some(inputs_to_calldata(deploy_call.inputs.clone())),
                     arguments: None,
                 };
                 let id = if deploy_call.id.is_empty() {
