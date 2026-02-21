@@ -102,3 +102,55 @@ impl ContractsRegistry {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::ContractsRegistry;
+    use starknet_rust::providers::{JsonRpcClient, jsonrpc::HttpTransport};
+    use starknet_types_core::felt::Felt;
+    use url::Url;
+
+    #[test]
+    fn test_insert_and_get() {
+        let mock_provider = JsonRpcClient::new(HttpTransport::new(
+            Url::parse("http://localhost:8545").unwrap(),
+        ));
+        let mut registry = ContractsRegistry::new(&mock_provider);
+        let id = "contract1".to_string();
+        let address = Felt::from(12345);
+
+        assert!(
+            registry
+                .insert_new_id_to_address(id.clone(), address)
+                .is_ok()
+        );
+        assert_eq!(registry.get_address_by_id(&id), Some(address));
+    }
+
+    #[test]
+    fn test_duplicate_id() {
+        let mock_provider = JsonRpcClient::new(HttpTransport::new(
+            Url::parse("http://localhost:8545").unwrap(),
+        ));
+        let mut registry = ContractsRegistry::new(&mock_provider);
+        let id = "contract1".to_string();
+        let address1 = Felt::from(12345);
+        let address2 = Felt::from(67890);
+
+        assert!(
+            registry
+                .insert_new_id_to_address(id.clone(), address1)
+                .is_ok()
+        );
+
+        // Attempt to insert a duplicate id
+        assert!(
+            registry
+                .insert_new_id_to_address(id.clone(), address2)
+                .is_err()
+        );
+
+        // Ensure the original address is still retrievable
+        assert_eq!(registry.get_address_by_id(&id), Some(address1));
+    }
+}
