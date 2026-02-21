@@ -63,7 +63,7 @@ pub struct Deploy {
     pub rpc: RpcArgs,
 
     /// Specifies scarb package to be used. Only possible to use with `--contract-name`.
-    #[arg(long, conflicts_with_all = ["class_hash", "contract_name"])]
+    #[arg(long, conflicts_with = "class_hash")]
     pub package: Option<String>,
 }
 

@@ -46,9 +46,9 @@ async fn test_two_invokes() {
         output,
         indoc! {
             "
-            Success: Invoke completed
+            Success: Multicall completed
 
-            Transaction Hash: 0x0[..]
+            Transaction Hash: 0x[..]
 
             To see invocation details, visit:
             transaction: [..]
@@ -93,9 +93,9 @@ async fn test_deploy_and_invoke() {
         output,
         indoc! {
             "
-            Success: Invoke completed
+            Success: Multicall completed
 
-            Transaction Hash: 0x0[..]
+            Transaction Hash: 0x[..]
 
             To see invocation details, visit:
             transaction: [..]
