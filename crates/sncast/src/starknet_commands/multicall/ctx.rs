@@ -22,8 +22,7 @@ impl ContractsCache {
         }
     }
 
-    /// Retrieves the class hash associated with the given contract address, if it exists.
-    /// If not found in the cache, it queries the provider and updates the cache.
+    /// Retrieves the class hash associated with the given contract address from the local cache, if it exists.
     pub(crate) async fn get_class_hash_by_address(&mut self, address: &Felt) -> Result<Felt> {
         if let Some(class_hash) = self.address_to_class_hash.get(address) {
             Ok(*class_hash)

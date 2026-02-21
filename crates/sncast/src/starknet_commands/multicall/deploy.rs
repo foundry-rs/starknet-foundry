@@ -36,7 +36,7 @@ impl MulticallDeploy {
             .common
             .contract_identifier
             .class_hash
-            .expect("Class hash must be provided for deploy calls");
+            .expect("Using deploy with multicall required providing `--class-hash`");
 
         let contract_class = ctx
             .cache
