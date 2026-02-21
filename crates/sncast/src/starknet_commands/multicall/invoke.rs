@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Args;
 use starknet_rust::core::{types::Call, utils::get_selector_from_name};
 
@@ -21,9 +21,26 @@ impl MulticallInvoke {
         contracts_registry: &mut ContractsRegistry,
     ) -> Result<Call> {
         let selector = get_selector_from_name(&self.common.function)?;
+        let is_id = self.common.contract_address.starts_with('@');
+        let contract_address = if is_id {
+            let id = self.common.contract_address.trim_start_matches('@');
+            contracts_registry.get_address_by_id(id)
+                .with_context(|| format!("No contract address found for id: {id}. Ensure the referenced id is defined in a previous step."))?
+        } else {
+            self.common
+                .contract_address
+                .parse()
+                .with_context(|| {
+                    format!(
+                        "Failed to parse contract address `{}`. Expected a hexadecimal Starknet address like `0x123...`. \
+If you intended to reference an address from a previous step, use `@<id>` instead (for example, `@deployed_address`).",
+                        self.common.contract_address
+                    )
+                })?
+        };
         let class_hash = contracts_registry
             .cache
-            .get_class_hash_by_address(&self.common.contract_address)
+            .get_class_hash_by_address(&contract_address)
             .await?;
         let contract_class = contracts_registry
             .cache
@@ -33,7 +50,7 @@ impl MulticallInvoke {
         let calldata = arguments.try_into_calldata(&contract_class, &selector)?;
 
         Ok(Call {
-            to: self.common.contract_address,
+            to: contract_address,
             selector,
             calldata,
         })
