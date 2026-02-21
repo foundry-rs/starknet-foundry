@@ -11,10 +11,6 @@ use crate::{
 
 #[derive(Args)]
 pub(crate) struct MulticallInvoke {
-    /// Optional identifier to reference this step in later steps
-    #[arg(long)]
-    pub id: Option<String>,
-
     #[command(flatten)]
     pub common: InvokeCommonArgs,
 }

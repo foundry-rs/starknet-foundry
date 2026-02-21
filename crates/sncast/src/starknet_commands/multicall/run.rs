@@ -53,7 +53,7 @@ pub(crate) struct DeployItem {
 }
 
 #[derive(Deserialize, Debug)]
-pub(crate) struct InvokeEntry {
+pub(crate) struct InvokeItem {
     contract_address: String,
     function: String,
     inputs: Vec<Input>,
@@ -112,7 +112,7 @@ pub async fn run(
                 parsed_calls.push(call);
             }
             Some("invoke") => {
-                let item: InvokeEntry = toml::from_str(toml::to_string(&call)?.as_str())
+                let item: InvokeItem = toml::from_str(toml::to_string(&call)?.as_str())
                     .context("Failed to parse toml `invoke` call")?;
                 let calldata = parse_inputs(&item.inputs, &contracts_registry)?
                     .iter()
@@ -127,7 +127,6 @@ pub async fn run(
                             arguments: None,
                         },
                     },
-                    id: None,
                 };
 
                 let call = invoke.convert_to_call(&mut contracts_registry).await?;
