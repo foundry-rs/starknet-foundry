@@ -22,8 +22,7 @@ impl ContractsCache {
         }
     }
 
-    /// Retrieves the class hash associated with the given contract address, if it exists.
-    /// If not found in the cache, it queries the provider and updates the cache.
+    /// Retrieves the class hash associated with the given contract address from the local cache, if it exists.
     pub(crate) async fn get_class_hash_by_address(&mut self, address: &Felt) -> Result<Felt> {
         if let Some(class_hash) = self.address_to_class_hash.get(address) {
             Ok(*class_hash)
@@ -70,7 +69,8 @@ impl ContractsCache {
     }
 }
 
-/// Context for multicall execution, storing intermediate results and mappings between ids and contracts cache.
+/// Context for multicall execution, storing mappings from ids to contract addresses
+/// and caching contract metadata via a shared contracts cache.
 pub struct MulticallCtx {
     id_to_address: HashMap<String, Felt>,
     pub(crate) cache: ContractsCache,
