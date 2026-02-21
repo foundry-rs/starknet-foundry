@@ -29,3 +29,46 @@ impl ContractsRegistry {
         Ok(())
     }
 }
+
+mod tests {
+    use super::ContractsRegistry;
+    use starknet_types_core::felt::Felt;
+
+    #[test]
+    fn test_insert_and_get() {
+        let mut registry = ContractsRegistry::new();
+        let id = "contract1".to_string();
+        let address = Felt::from(12345);
+
+        assert!(
+            registry
+                .insert_new_id_to_address(id.clone(), address)
+                .is_ok()
+        );
+        assert_eq!(registry.get_address_by_id(&id), Some(address));
+    }
+
+    #[test]
+    fn test_duplicate_id() {
+        let mut registry = ContractsRegistry::new();
+        let id = "contract1".to_string();
+        let address1 = Felt::from(12345);
+        let address2 = Felt::from(67890);
+
+        assert!(
+            registry
+                .insert_new_id_to_address(id.clone(), address1)
+                .is_ok()
+        );
+
+        // Attempt to insert a duplicate id
+        assert!(
+            registry
+                .insert_new_id_to_address(id.clone(), address2)
+                .is_err()
+        );
+
+        // Ensure the original address is still retrievable
+        assert_eq!(registry.get_address_by_id(&id), Some(address1));
+    }
+}
