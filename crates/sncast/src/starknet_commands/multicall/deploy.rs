@@ -43,7 +43,7 @@ impl MulticallDeploy {
             .await?;
         let constructor_arguments = replaced_calldata(
             &Arguments::from(self.common.arguments.clone()),
-            &contracts_registry,
+            contracts_registry,
         )?;
         let constructor_selector = get_selector_from_name("constructor")?;
         let constructor_calldata =
