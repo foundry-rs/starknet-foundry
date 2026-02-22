@@ -10,10 +10,10 @@ use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 
-use crate::Arguments;
 use crate::starknet_commands::deploy::DeployCommonArgs;
 use crate::starknet_commands::multicall::contracts_registry::ContractsRegistry;
 use crate::starknet_commands::multicall::invoke::replaced_calldata;
+use crate::{Arguments, calldata_to_felts};
 
 #[derive(Args)]
 pub(crate) struct MulticallDeploy {
@@ -32,22 +32,27 @@ impl MulticallDeploy {
         contracts_registry: &mut ContractsRegistry,
     ) -> Result<Call> {
         let salt = extract_or_generate_salt(self.common.salt);
+        let constructor_arguments = replaced_calldata(
+            &Arguments::from(self.common.arguments.clone()),
+            contracts_registry,
+        )?;
+
+        let constructor_selector = get_selector_from_name("constructor")?;
         let class_hash = self
             .common
             .contract_identifier
             .class_hash
             .context("Using deploy with multicall requires providing `--class-hash`")?;
-        let contract_class = contracts_registry
-            .cache
-            .get_contract_class_by_class_hash(&class_hash)
-            .await?;
-        let constructor_arguments = replaced_calldata(
-            &Arguments::from(self.common.arguments.clone()),
-            contracts_registry,
-        )?;
-        let constructor_selector = get_selector_from_name("constructor")?;
         let constructor_calldata =
-            constructor_arguments.try_into_calldata(&contract_class, &constructor_selector)?;
+            if let Some(raw_calldata) = &self.common.arguments.constructor_calldata {
+                calldata_to_felts(raw_calldata.clone())?
+            } else {
+                let contract_class = contracts_registry
+                    .cache
+                    .get_contract_class_by_class_hash(&class_hash)
+                    .await?;
+                constructor_arguments.try_into_calldata(&contract_class, &constructor_selector)?
+            };
 
         let mut calldata = vec![
             class_hash,

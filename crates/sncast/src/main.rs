@@ -207,14 +207,7 @@ impl Arguments {
         selector: &Felt,
     ) -> Result<Vec<Felt>> {
         if let Some(calldata) = self.calldata {
-            calldata
-                .iter()
-                .map(|data| {
-                    Felt::from_dec_str(data)
-                        .or_else(|_| Felt::from_hex(data))
-                        .context("Failed to parse to felt")
-                })
-                .collect()
+            calldata_to_felts(calldata)
         } else {
             let ContractClass::Sierra(sierra_class) = contract_class else {
                 bail!("Transformation of arguments is not available for Cairo Zero contracts")
@@ -226,6 +219,17 @@ impl Arguments {
             transform(&self.arguments.unwrap_or_default(), &abi, selector)
         }
     }
+}
+
+pub fn calldata_to_felts(calldata: Vec<String>) -> Result<Vec<Felt>> {
+    calldata
+        .iter()
+        .map(|data| {
+            Felt::from_dec_str(data)
+                .or_else(|_| Felt::from_hex(data))
+                .context("Failed to parse to felt")
+        })
+        .collect()
 }
 
 impl From<DeployArguments> for Arguments {
