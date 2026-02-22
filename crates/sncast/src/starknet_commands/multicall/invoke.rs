@@ -1,6 +1,7 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Args;
 use starknet_rust::core::{types::Call, utils::get_selector_from_name};
+use starknet_types_core::felt::Felt;
 
 use crate::{
     Arguments,
@@ -21,16 +22,28 @@ impl MulticallInvoke {
         contracts_registry: &mut ContractsRegistry,
     ) -> Result<Call> {
         let selector = get_selector_from_name(&self.common.function)?;
-        let class_hash = contracts_registry
-            .cache
-            .get_class_hash_by_address(&self.common.contract_address)
-            .await?;
-        let contract_class = contracts_registry
-            .cache
-            .get_contract_class_by_class_hash(&class_hash)
-            .await?;
         let arguments = replaced_calldata(&self.common.arguments, contracts_registry)?;
-        let calldata = arguments.try_into_calldata(&contract_class, &selector)?;
+
+        let calldata = if let Some(raw_calldata) = &self.common.arguments.calldata {
+            raw_calldata
+                .iter()
+                .map(|data| {
+                    Felt::from_dec_str(data)
+                        .or_else(|_| Felt::from_hex(data))
+                        .context("Failed to parse to felt")
+                })
+                .collect::<Result<Vec<_>>>()?
+        } else {
+            let class_hash = contracts_registry
+                .cache
+                .get_class_hash_by_address(&self.common.contract_address)
+                .await?;
+            let contract_class = contracts_registry
+                .cache
+                .get_contract_class_by_class_hash(&class_hash)
+                .await?;
+            arguments.try_into_calldata(&contract_class, &selector)?
+        };
 
         Ok(Call {
             to: self.common.contract_address,
