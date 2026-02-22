@@ -570,7 +570,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let calldata = arguments.try_into_calldata(&contract_class.clone(), &selector)?;
+            let calldata = arguments.try_into_calldata(&contract_class, &selector)?;
 
             let result = starknet_commands::call::call(
                 contract_address,

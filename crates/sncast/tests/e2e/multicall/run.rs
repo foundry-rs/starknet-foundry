@@ -161,7 +161,7 @@ async fn test_deploy_fail() {
         output,
         indoc! {r#"
         Command: multicall run
-        Error: An error occurred in the called contract = ContractErrorData { revert_error: Message("Class with hash 0x1 is not declared") }
+        Error: Failed to fetch contract class from provider: An error occurred in the called contract = ContractErrorData { revert_error: Message("Class with hash 0x1 is not declared") }
         "#},
     );
 }
@@ -196,7 +196,7 @@ async fn test_invoke_fail() {
         output,
         indoc! {r#"
         Command: multicall run
-        Error: An error occurred in the called contract = ContractErrorData { revert_error: Message("Requested contract address 0x1 is not deployed") }
+        Error: Failed to fetch class hash from provider: An error occurred in the called contract = ContractErrorData { revert_error: Message("Requested contract address 0x1 is not deployed") }
         "#},
     );
 }
@@ -231,7 +231,7 @@ async fn test_deploy_success_invoke_fails() {
         output,
         indoc! {r#"
         Command: multicall run
-        Error: An error occurred in the called contract = ContractErrorData { revert_error: Message("Requested contract address 0x1 is not deployed") }
+        Error: Failed to fetch class hash from provider: An error occurred in the called contract = ContractErrorData { revert_error: Message("Requested contract address 0x1 is not deployed") }
         "#},
     );
 }

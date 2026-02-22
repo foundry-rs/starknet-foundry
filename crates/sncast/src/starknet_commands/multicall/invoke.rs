@@ -63,7 +63,9 @@ pub(crate) fn replaced_calldata(
                 }
             }
             (None, _) => function_arguments.clone(),
-            (Some(_), Some(_)) => unreachable!(),
+            (Some(_), Some(_)) => unreachable!(
+                "Clap should ensure that only one of calldata or arguments is provided"
+            ),
         },
     )
 }

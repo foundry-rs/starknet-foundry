@@ -118,9 +118,16 @@ pub async fn run(
                     .iter()
                     .map(|felt| felt.to_string())
                     .collect::<Vec<String>>();
+                let contract_address = if let Some(addr) =
+                    contracts_registry.get_address_by_id(&item.contract_address)
+                {
+                    addr
+                } else {
+                    item.contract_address.parse()?
+                };
                 let invoke = MulticallInvoke {
                     common: InvokeCommonArgs {
-                        contract_address: item.contract_address.parse()?,
+                        contract_address,
                         function: item.function,
                         arguments: Arguments {
                             calldata: Some(calldata),
@@ -151,7 +158,11 @@ fn parse_inputs(inputs: &Vec<Input>, contracts_registry: &ContractsRegistry) -> 
         let felt_value = match input {
             Input::String(s) => {
                 let resolved_address = contracts_registry.get_address_by_id(s);
-                resolved_address.unwrap_or(s.parse()?)
+                if let Some(address) = resolved_address {
+                    address
+                } else {
+                    s.parse()?
+                }
             }
             Input::Number(n) => (*n).into(),
         };
