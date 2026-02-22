@@ -25,7 +25,8 @@ impl ContractsCache {
         }
     }
 
-    /// Retrieves the class hash associated with the given contract address from the local cache, if it exists.
+    /// Retrieves the class hash associated with the given contract address.
+    /// Checks the local cache first, and fetches from the provider if not cached.
     pub(crate) async fn get_class_hash_by_address(&mut self, address: &Felt) -> Result<Felt> {
         match self.address_to_class_hash.entry(*address) {
             Entry::Occupied(entry) => Ok(*entry.get()),
@@ -38,7 +39,7 @@ impl ContractsCache {
         }
     }
 
-    /// Retrieves the contract class associated with the given class hash, if it exists.
+    /// Retrieves the class hash associated with the given contract address from the local cache, if it exists.
     pub(crate) fn get_class_hash_by_address_local(&self, address: &Felt) -> Option<Felt> {
         self.address_to_class_hash.get(address).copied()
     }

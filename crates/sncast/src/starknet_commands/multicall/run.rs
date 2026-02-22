@@ -87,7 +87,7 @@ pub async fn run(
                     .context("Failed to parse toml `deploy` call")?;
                 let constructor_calldata = parse_inputs(&item.inputs, &contracts_registry)?
                     .iter()
-                    .map(|felt| felt.to_string())
+                    .map(ToString::to_string)
                     .collect::<Vec<String>>();
                 let deploy = MulticallDeploy {
                     common: DeployCommonArgs {
@@ -116,11 +116,18 @@ pub async fn run(
                     .context("Failed to parse toml `invoke` call")?;
                 let calldata = parse_inputs(&item.inputs, &contracts_registry)?
                     .iter()
-                    .map(|felt| felt.to_string())
+                    .map(ToString::to_string)
                     .collect::<Vec<String>>();
+                let contract_address = if let Some(addr) =
+                    contracts_registry.get_address_by_id(&item.contract_address)
+                {
+                    addr
+                } else {
+                    item.contract_address.parse()?
+                };
                 let invoke = MulticallInvoke {
                     common: InvokeCommonArgs {
-                        contract_address: item.contract_address.parse()?,
+                        contract_address,
                         function: item.function,
                         arguments: Arguments {
                             calldata: Some(calldata),
