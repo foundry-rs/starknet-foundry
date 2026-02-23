@@ -850,12 +850,12 @@ pub fn get_default_state_file_name(script_name: &str, chain_id: &str) -> String 
 mod tests {
     use crate::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
     use crate::{
-        AccountType, chain_id_to_network_name, extract_or_generate_salt,
-        get_account_data_from_accounts_file, get_account_data_from_keystore, get_block_id,
-        PartialWaitParams, ValidatedWaitParams, udc_uniqueness,
+        AccountType, PartialWaitParams, chain_id_to_network_name,
+        extract_or_generate_salt, get_account_data_from_accounts_file,
+        get_account_data_from_keystore, get_block_id, udc_uniqueness,
     };
-    use configuration::{override_optional, Override};
     use camino::Utf8PathBuf;
+    use configuration::{Override, override_optional};
     use conversions::string::IntoHexStr;
     use starknet_rust::core::types::{
         BlockId,
