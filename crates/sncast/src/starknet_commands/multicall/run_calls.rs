@@ -45,9 +45,7 @@ pub async fn run_calls(
         match cmd_name.as_str() {
             "deploy" => {
                 let deploy = parse_args::<MulticallDeploy>(cmd_name, cmd_args)?;
-                let call = deploy
-                    .build_call(account, &mut contracts_registry)
-                    .await?;
+                let call = deploy.build_call(account, &mut contracts_registry).await?;
                 calls.push(call);
             }
             "invoke" => {
