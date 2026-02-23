@@ -4,8 +4,14 @@ Provides utilities for performing multicalls on Starknet.
 Multicall has the following subcommands:
 * [`new`](./new.md)
 * [`run`](./run.md)
+
+When using the CLI-arguments interface, `multicall` supports the following call types:
 * [`deploy`](./deploy.md)
 * [`invoke`](./invoke.md)
+
+Subsequent calls need to be separated with a `/` delimiter. For example: `sncast multicall deploy ... / invoke ... / deploy ...`
+
+When using the file interface, the call types are specified in the `.toml` config file.
 
 ## `--url, -u <RPC_URL>`
 Optional.
