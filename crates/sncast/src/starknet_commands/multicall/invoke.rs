@@ -1,10 +1,9 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::Args;
 use starknet_rust::core::{types::Call, utils::get_selector_from_name};
-use starknet_types_core::felt::Felt;
 
 use crate::{
-    Arguments,
+    Arguments, calldata_to_felts,
     starknet_commands::{
         invoke::InvokeCommonArgs, multicall::contracts_registry::ContractsRegistry,
     },
@@ -42,14 +41,7 @@ If you intended to reference an address from a previous step, use `@<id>` instea
         let arguments = replaced_calldata(&self.common.arguments, contracts_registry)?;
 
         let calldata = if let Some(raw_calldata) = &arguments.calldata {
-            raw_calldata
-                .iter()
-                .map(|data| {
-                    Felt::from_dec_str(data)
-                        .or_else(|_| Felt::from_hex(data))
-                        .context("Failed to parse to felt")
-                })
-                .collect::<Result<Vec<_>>>()?
+            calldata_to_felts(raw_calldata)?
         } else {
             let class_hash = contracts_registry
                 .cache
