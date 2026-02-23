@@ -28,35 +28,33 @@ pub async fn run_with_calls(
     wait_config: WaitForTx,
     ui: &UI,
 ) -> Result<MulticallRunResponse> {
-    let input = tokens.join(" ");
-    let commands = input.split('/').map(str::trim).filter(|s| !s.is_empty());
+    let command_groups = group_tokens_by_separator(tokens);
 
     let mut contracts_registry = ContractsRegistry::new(provider);
     let mut calls = vec![];
 
-    for command in commands {
-        let args = shell_words::split(command)?;
-        let command = args
-            .first()
-            .cloned()
-            .ok_or_else(|| anyhow::anyhow!("Empty command"))?;
+    for group in command_groups {
+        if group.is_empty() {
+            continue;
+        }
 
-        match command.as_str() {
+        let cmd_name = &group[0];
+        let cmd_args = &group[1..];
+
+        match cmd_name.as_str() {
             "deploy" => {
-                let deploy = parse_args::<MulticallDeploy>(&command, &args[1..])?;
+                let deploy = parse_args::<MulticallDeploy>(cmd_name, cmd_args)?;
                 let call = deploy
                     .convert_to_call(account, &mut contracts_registry)
                     .await?;
                 calls.push(call);
             }
             "invoke" => {
-                let invoke = parse_args::<MulticallInvoke>(&command, &args[1..])?;
+                let invoke = parse_args::<MulticallInvoke>(cmd_name, cmd_args)?;
                 let call = invoke.convert_to_call(&mut contracts_registry).await?;
                 calls.push(call);
             }
-            _ => {
-                bail!("Unknown command: {command}");
-            }
+            _ => bail!("Unknown multicall command: '{cmd_name}'. Expected 'deploy' or 'invoke'."),
         }
     }
 
@@ -73,6 +71,35 @@ pub async fn run_with_calls(
     .map_err(handle_starknet_command_error)
 }
 
+fn group_tokens_by_separator(tokens: &[String]) -> Vec<Vec<String>> {
+    let mut all_groups = Vec::new();
+    let mut current_group = Vec::new();
+
+    for (i, token) in tokens.iter().enumerate() {
+        if token == "/" {
+            let next_index = i + 1;
+            let is_at_end = next_index == tokens.len();
+            let next_is_command =
+                !is_at_end && (tokens[next_index] == "deploy" || tokens[next_index] == "invoke");
+
+            if is_at_end || next_is_command {
+                if !current_group.is_empty() {
+                    all_groups.push(current_group);
+                    current_group = Vec::new();
+                }
+                continue;
+            }
+        }
+
+        current_group.push(token.clone());
+    }
+
+    if !current_group.is_empty() {
+        all_groups.push(current_group);
+    }
+
+    all_groups
+}
 fn parse_args<T>(command_name: &str, tokens: &[String]) -> anyhow::Result<T>
 where
     T: Args + FromArgMatches,
