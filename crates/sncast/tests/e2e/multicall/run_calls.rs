@@ -75,7 +75,7 @@ async fn test_deploy_and_invoke() {
         "/",
         "invoke",
         "--contract-address",
-        "0x00cd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "get",
         "--calldata",
