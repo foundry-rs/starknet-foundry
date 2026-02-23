@@ -34,7 +34,7 @@ transaction: https://sepolia.voyager.online/tx/[..]
 </details>
 <br>
 
-Currently, [`invoke`](../appendix/sncast/invoke.md) and [`deploy`](../appendix/sncast/deploy.md) types are supported. Their syntax is the same as for `sncast invoke` and `sncast deploy` commands.
+Currently, `invoke` and `deploy` calls are supported. Their syntax is the same as for `sncast invoke` and `sncast deploy` commands (with additional id argument for deploy calls). For more details on the syntax of these calls, see the [invoke](../appendix/sncast/multicall/invoke.md) and [deploy](../appendix/sncast/multicall/deploy.md) command references.
 
 > 📝 **Note**
 > The example above uses `@id` syntax to reference the address of a contract deployed within the same multicall using its `id`.
@@ -50,7 +50,7 @@ For a detailed CLI description, see the [multicall command reference](../appendi
 
 ### Example
 
-Let's consider a following file:
+Let's consider the following file:
 
 ```toml
 [[call]]

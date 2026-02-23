@@ -75,3 +75,8 @@ Optional.
 Conflicts with: [`--tip`](#--tip-tip)
 
 If passed, an estimated tip will be added to pay for the transaction. The tip is estimated based on the current network conditions and added to the transaction fee.
+
+## `--nonce, -n <NONCE>`
+Optional.
+
+Nonce for transaction. If not provided, nonce will be set automatically.
