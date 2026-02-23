@@ -9,7 +9,7 @@ mod deploy;
 mod invoke;
 mod new;
 mod run;
-mod run_with_calls;
+mod run_calls;
 
 use crate::{process_command_result, starknet_commands};
 use foundry_ui::Message;
@@ -119,7 +119,7 @@ pub async fn multicall(
             )
             .await?;
 
-            let result = starknet_commands::multicall::run_with_calls::run_with_calls(
+            let result = starknet_commands::multicall::run_calls::run_calls(
                 tokens,
                 &multicall,
                 &provider,

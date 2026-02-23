@@ -20,7 +20,7 @@ use crate::starknet_commands::{
     },
 };
 
-pub async fn run_with_calls(
+pub async fn run_calls(
     tokens: &[String],
     multicall: &Multicall,
     provider: &JsonRpcClient<HttpTransport>,
