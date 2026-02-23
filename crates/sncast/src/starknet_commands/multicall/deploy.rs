@@ -43,16 +43,15 @@ impl MulticallDeploy {
             .contract_identifier
             .class_hash
             .context("Using deploy with multicall requires providing `--class-hash`")?;
-        let constructor_calldata =
-            if let Some(raw_calldata) = &self.common.arguments.constructor_calldata {
-                calldata_to_felts(raw_calldata)?
-            } else {
-                let contract_class = contracts_registry
-                    .cache
-                    .get_contract_class_by_class_hash(&class_hash)
-                    .await?;
-                constructor_arguments.try_into_calldata(&contract_class, &constructor_selector)?
-            };
+        let constructor_calldata = if let Some(raw_calldata) = &constructor_arguments.calldata {
+            calldata_to_felts(raw_calldata)?
+        } else {
+            let contract_class = contracts_registry
+                .cache
+                .get_contract_class_by_class_hash(&class_hash)
+                .await?;
+            constructor_arguments.try_into_calldata(&contract_class, &constructor_selector)?
+        };
 
         let mut calldata = vec![
             class_hash,
