@@ -26,7 +26,7 @@ pub(crate) struct MulticallDeploy {
 }
 
 impl MulticallDeploy {
-    pub(crate) async fn convert_to_call(
+    pub(crate) async fn build_call(
         &self,
         account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
         contracts_registry: &mut ContractsRegistry,

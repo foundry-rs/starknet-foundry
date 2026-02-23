@@ -46,13 +46,13 @@ pub async fn run_calls(
             "deploy" => {
                 let deploy = parse_args::<MulticallDeploy>(cmd_name, cmd_args)?;
                 let call = deploy
-                    .convert_to_call(account, &mut contracts_registry)
+                    .build_call(account, &mut contracts_registry)
                     .await?;
                 calls.push(call);
             }
             "invoke" => {
                 let invoke = parse_args::<MulticallInvoke>(cmd_name, cmd_args)?;
-                let call = invoke.convert_to_call(&mut contracts_registry).await?;
+                let call = invoke.build_call(&mut contracts_registry).await?;
                 calls.push(call);
             }
             _ => bail!("Unknown multicall command: '{cmd_name}'. Expected 'deploy' or 'invoke'."),
