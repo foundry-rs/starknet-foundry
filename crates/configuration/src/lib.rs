@@ -25,10 +25,11 @@ pub trait Override {
     fn override_with(&self, other: Self) -> Self;
 }
 
-pub fn merge_optional<T: Override>(base: Option<T>, other: Option<T>) -> Option<T> {
-    match other {
-        Some(p) => base.map(|d| d.override_with(p)),
-        None => base,
+pub fn override_optional<T: Override>(base: Option<T>, other: Option<T>) -> Option<T> {
+    match (base, other) {
+        (Some(base), Some(other)) => Some(base.override_with(other)),
+        (None, Some(other)) => Some(other),
+        (base, None) => base,
     }
 }
 
