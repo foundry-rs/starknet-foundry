@@ -203,14 +203,13 @@ impl PartialCastConfig {
 impl Override for PartialCastConfig {
     fn override_with(&self, other: PartialCastConfig) -> PartialCastConfig {
         PartialCastConfig {
-            url: other.url.clone().or_else(|| self.url.clone()),
+            url: other.url.or_else(|| self.url.clone()),
             network: other.network.or(self.network),
-            account: other.account.clone().or_else(|| self.account.clone()),
+            account: other.account.or_else(|| self.account.clone()),
             accounts_file: other
                 .accounts_file
-                .clone()
                 .or_else(|| self.accounts_file.clone()),
-            keystore: other.keystore.clone().or_else(|| self.keystore.clone()),
+            keystore: other.keystore.or_else(|| self.keystore.clone()),
             wait_params: override_optional(self.wait_params, other.wait_params),
             block_explorer: other.block_explorer.or(self.block_explorer),
             show_explorer_links: other.show_explorer_links.or(self.show_explorer_links),
@@ -255,11 +254,12 @@ pub struct CliConfigOpts {
 impl From<PartialCastConfig> for CastConfig {
     fn from(partial: PartialCastConfig) -> Self {
         let default = CastConfig::default();
+
         let accounts_file = partial.accounts_file.unwrap_or(default.accounts_file);
         let accounts_file = Utf8PathBuf::from(shellexpand::tilde(&accounts_file).to_string());
+
         let networks = partial
             .networks
-            .clone()
             .map(|n| default.networks.override_with(n))
             .unwrap_or(default.networks);
 
