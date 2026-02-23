@@ -13,14 +13,12 @@ use crate::starknet_commands::{
 use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
-use configuration::{load_config, Override};
+use configuration::Override;
 use conversions::IntoConv;
 use data_transformer::transform;
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::command::process_command_result;
-use sncast::helpers::config::get_global_config_path;
 use sncast::helpers::configuration::{CastConfig, CliConfigOpts, PartialCastConfig};
-use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
@@ -34,7 +32,10 @@ use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transformed_call::transform_response;
 use sncast::response::ui::UI;
-use sncast::{ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address, get_contract_class, PartialWaitParams};
+use sncast::{
+    PartialWaitParams, WaitForTx, get_account, get_block_id,
+    get_class_hash_by_address, get_contract_class,
+};
 use starknet_commands::verify::Verify;
 use starknet_rust::accounts::Account;
 use starknet_rust::core::types::ContractClass;
@@ -752,7 +753,9 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
     let global_config = PartialCastConfig::global(&opts, ui)?;
     let cli_config = cli.to_partial_config();
 
-    let partial_config = global_config.override_with(local_config).override_with(cli_config);
+    let partial_config = global_config
+        .override_with(local_config)
+        .override_with(cli_config);
 
     Ok(CastConfig::from(partial_config))
 }
