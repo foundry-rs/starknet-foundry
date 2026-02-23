@@ -852,8 +852,9 @@ mod tests {
     use crate::{
         AccountType, chain_id_to_network_name, extract_or_generate_salt,
         get_account_data_from_accounts_file, get_account_data_from_keystore, get_block_id,
-        udc_uniqueness,
+        PartialWaitParams, ValidatedWaitParams, udc_uniqueness,
     };
+    use configuration::{override_optional, Override};
     use camino::Utf8PathBuf;
     use conversions::string::IntoHexStr;
     use starknet_rust::core::types::{
@@ -940,6 +941,58 @@ mod tests {
             chain_id_to_network_name(Felt::from_bytes_be_slice("SN_SEPOLIA".as_bytes()));
         assert_eq!(network_name_katana, "KATANA");
         assert_eq!(network_name_sepolia, "alpha-sepolia");
+    }
+
+    #[test]
+    fn test_partial_wait_params_override_with() {
+        let base = PartialWaitParams {
+            timeout: Some(200),
+            retry_interval: Some(5),
+        };
+        let other = PartialWaitParams {
+            timeout: Some(300),
+            retry_interval: None,
+        };
+        let overridden = base.override_with(other);
+        assert_eq!(overridden.timeout, Some(300));
+        assert_eq!(overridden.retry_interval, Some(5));
+
+        let base2 = PartialWaitParams {
+            timeout: None,
+            retry_interval: Some(5),
+        };
+        let other2 = PartialWaitParams {
+            timeout: Some(200),
+            retry_interval: None,
+        };
+        let overridden2 = base2.override_with(other2);
+        assert_eq!(overridden2.timeout, Some(200));
+        assert_eq!(overridden2.retry_interval, Some(5));
+    }
+
+    #[test]
+    fn test_wait_params_override_optional() {
+        let base = PartialWaitParams {
+            timeout: Some(200),
+            retry_interval: Some(5),
+        };
+        let other = PartialWaitParams {
+            timeout: None,
+            retry_interval: Some(5),
+        };
+        assert_eq!(
+            override_optional(Some(base), Some(other)),
+            Some(PartialWaitParams {
+                timeout: Some(200),
+                retry_interval: Some(5),
+            })
+        );
+        assert_eq!(
+            override_optional::<PartialWaitParams>(None, Some(other)),
+            Some(other)
+        );
+        assert_eq!(override_optional(Some(base), None), Some(base));
+        assert_eq!(override_optional::<PartialWaitParams>(None, None), None);
     }
 
     #[test]
