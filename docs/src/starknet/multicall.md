@@ -1,6 +1,6 @@
 # Performing Multicall
 
-Multicall allows you to execute multiple calls (invoke or) in a single transaction. `sncast` comes with two interfaces:
+Multicall allows you to execute multiple calls in a single transaction. `sncast` comes with two interfaces:
 - `sncast multicall ...` which requires passing all calls as CLI arguments
 - `sncast multicall run` which uses `.toml` file
 
@@ -15,7 +15,7 @@ You can prepare and execute multiple calls in a single transaction using CLI arg
 
 ```shell
 $ sncast multicall \
-    deploy --class-hash 0x02a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321 --id map_contract \
+    deploy --id map_contract --class-hash 0x02a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321 \
     / invoke --contract-address @map_contract --function put --calldata 0x1 0x2 \
     / invoke --contract-address @map_contract --function put --calldata 0x3 0x4
 ```
