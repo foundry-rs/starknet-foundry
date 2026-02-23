@@ -123,7 +123,7 @@ pub async fn run(
                 };
                 let invoke = MulticallInvoke {
                     common: InvokeCommonArgs {
-                        contract_address,
+                        contract_address: contract_address.to_string(),
                         function: item.function,
                         arguments: Arguments {
                             calldata: Some(calldata),
