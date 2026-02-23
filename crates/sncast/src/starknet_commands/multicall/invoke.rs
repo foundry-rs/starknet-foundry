@@ -16,7 +16,7 @@ pub(crate) struct MulticallInvoke {
 }
 
 impl MulticallInvoke {
-    pub(crate) async fn convert_to_call(
+    pub(crate) async fn build_call(
         &self,
         contracts_registry: &mut ContractsRegistry,
     ) -> Result<Call> {
