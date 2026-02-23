@@ -1,23 +1,56 @@
 # Performing Multicall
 
-## Overview
-
-Starknet Foundry `sncast` supports executing multiple deployments or calls with the `sncast multicall run` command.
+Multicall allows you to execute multiple calls (invoke or) in a single transaction. `sncast` comes with two interfaces:
+- `sncast multicall ...` which requires passing all calls as CLI arguments
+- `sncast multicall run` which uses `.toml` file
 
 > 📝 **Note**
-> `sncast multicall run` executes only one transaction containing all the prepared calls. Which means the fee is paid once.
+> Multicall executes only one transaction containing all the prepared calls. This means the fee is paid once.
 
-You need to provide a **path** to a `.toml` file with declarations of desired operations that you want to execute.
+## Multicall with CLI arguments
+
+You can prepare and execute multiple calls in a single transaction using CLI arguments. To separate different calls, use `/` as a delimiter.
+
+### Example
+
+```shell
+$ sncast multicall \
+    deploy --class-hash 0x02a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321 --id map_contract \
+    / invoke --contract-address @map_contract --function put --calldata 0x1 0x2 \
+    / invoke --contract-address @map_contract --function put --calldata 0x3 0x4
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Success: Multicall completed
+
+Transaction Hash: 0x[..]
+
+To see invocation details, visit:
+transaction: https://sepolia.voyager.online/tx/[..]
+```
+</details>
+<br>
+
+Currently, [`invoke`](../appendix/sncast/invoke.md) and [`deploy`](../appendix/sncast/deploy.md) types are supported. Their syntax is the same as for `sncast invoke` and `sncast deploy` commands.
+
+> 📝 **Note**
+> The example above uses `@id` syntax to reference the address of a contract deployed within the same multicall using its `id`.
+> Additionally, the id can be referenced in the calldata of deploy and invoke calls 🔥.
+
+## Multicall with file
+
+You need to pass `--path` flag with a `.toml` file which contains desired operations that you want to execute.
 
 You can also compose such config `.toml` file with the `sncast multicall new` command.
 
 For a detailed CLI description, see the [multicall command reference](../appendix/sncast/multicall/multicall.md).
 
-## Example
+### Example
 
-### `multicall run` Example
-
-Example file:
+Let's consider a following file:
 
 ```toml
 [[call]]
@@ -35,10 +68,6 @@ inputs = ["0x123", 234]  # Numbers can be used directly without quotes
 ```
 
 After running `sncast multicall run --path file.toml`, a declared contract will be first deployed, and then its function `put` will be invoked.
-
-> 📝 **Note**
-> The example above demonstrates the use of the `id` property in a deploy call, which is then referenced as the `contract address` in an invoke call.
-Additionally, the `id` can be referenced in the inputs of deploy and invoke calls 🔥
 
 > 💡 **Info**
 > Inputs can be either strings (like `"0x123"`) or numbers (like `234`).
@@ -65,11 +94,6 @@ transaction: https://sepolia.voyager.online/tx/[..]
 ```
 </details>
 <br>
-
-> 💡 **Info**
-> Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
-
-### `multicall new` Example
 
 You can also generate multicall template with `multicall new` command, specifying output path.
 ```shell
@@ -102,34 +126,4 @@ inputs = []
 
 > ⚠️ **Warning**
 > Trying to pass any existing file as an output for `multicall new` will result in error, as the command doesn't overwrite by default.
-
-### `multicall new` With `overwrite` Argument
-
-If there is a file with the same name as provided, it can be overwritten.
-
-```shell
-$ sncast multicall new ./template.toml --overwrite
-```
-
-<details>
-<summary>Output:</summary>
-
-```shell
-Success: Multicall template created successfully
-
-Path:    ./template.toml
-Content: [[call]]
-
-call_type = "deploy"
-class_hash = ""
-inputs = []
-id = ""
-unique = false
-
-[[call]]
-call_type = "invoke"
-contract_address = ""
-function = ""
-inputs = []
-```
-</details>
+> You can use `--overwrite` flag to allow overwriting existing files.

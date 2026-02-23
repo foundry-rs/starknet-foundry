@@ -1,11 +1,31 @@
-# `multicall`
-Provides utilities for performing multicalls on Starknet.
+# `invoke`
+Send an invoke transaction to Starknet.
 
-Multicall has the following subcommands:
-* [`new`](./new.md)
-* [`run`](./run.md)
-* [`deploy`](./deploy.md)
-* [`invoke`](./invoke.md)
+## `--contract-address, -d <CONTRACT_ADDRESS>`
+Required.
+
+The address of the contract being called in hex (prefixed with '0x') or decimal representation.
+
+## `--function, -f <FUNCTION_NAME>`
+Required.
+
+The name of the function to call.
+
+## `--calldata, -c <CALLDATA>`
+Optional.
+Conflicts with: [`--arguments`](#--arguments)
+
+Inputs to the function, represented by a list of space-delimited values `0x1 2 0x3`.
+Calldata arguments may be either 0x hex or decimal felts.
+
+## `--arguments`
+Optional.
+Conflicts with: [`--calldata`](#--calldata--c-calldata)
+
+Function arguments provided as a comma-separated string of Cairo expressions.
+For example: `--arguments '1, 2, MyStruct { x: 1, y: 2 }, MyEnum::Variant'`
+
+For more information on supported expressions and syntax, see [Calldata Transformation](../../../starknet/calldata-transformation.md).
 
 ## `--url, -u <RPC_URL>`
 Optional.
@@ -69,3 +89,8 @@ Optional.
 Conflicts with: [`--tip`](#--tip-tip)
 
 If passed, an estimated tip will be added to pay for the transaction. The tip is estimated based on the current network conditions and added to the transaction fee.
+
+## `--nonce, -n <NONCE>`
+Optional.
+
+Nonce for transaction. If not provided, nonce will be set automatically.
