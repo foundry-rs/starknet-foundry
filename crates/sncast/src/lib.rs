@@ -164,11 +164,11 @@ impl Override for PartialWaitParams {
 }
 
 impl From<PartialWaitParams> for ValidatedWaitParams {
-    fn from(value: PartialWaitParams) -> Self {
-        let default = ValidatedWaitParams::default();
+    fn from(p: PartialWaitParams) -> Self {
+        let d = ValidatedWaitParams::default();
         Self::new(
-            value.retry_interval.unwrap_or(default.retry_interval),
-            value.timeout.unwrap_or(default.timeout),
+            p.retry_interval.unwrap_or(d.retry_interval),
+            p.timeout.unwrap_or(d.timeout),
         )
     }
 }
@@ -850,9 +850,9 @@ pub fn get_default_state_file_name(script_name: &str, chain_id: &str) -> String 
 mod tests {
     use crate::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
     use crate::{
-        AccountType, PartialWaitParams, chain_id_to_network_name,
-        extract_or_generate_salt, get_account_data_from_accounts_file,
-        get_account_data_from_keystore, get_block_id, udc_uniqueness,
+        AccountType, PartialWaitParams, chain_id_to_network_name, extract_or_generate_salt,
+        get_account_data_from_accounts_file, get_account_data_from_keystore, get_block_id,
+        udc_uniqueness,
     };
     use camino::Utf8PathBuf;
     use configuration::{Override, override_optional};
