@@ -125,3 +125,49 @@ where
 
     T::from_arg_matches(&matches).map_err(Into::into)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_extract_commands_groups() {
+        let tokens = vec![
+            "deploy".to_string(),
+            "--class-hash".to_string(),
+            "0x123".to_string(),
+            "/".to_string(),
+            "invoke".to_string(),
+            "--contract-address".to_string(),
+            "0xabc".to_string(),
+            "--function".to_string(),
+            "my_function".to_string(),
+            "/".to_string(),
+            "deploy".to_string(),
+            "--class-hash".to_string(),
+            "0x456".to_string(),
+        ];
+        let allowed_commands = vec!["deploy".to_string(), "invoke".to_string()];
+        let groups = extract_commands_groups(&tokens, "/", &allowed_commands);
+        assert_eq!(
+            groups,
+            vec![
+                vec![
+                    "deploy".to_string(),
+                    "--class-hash".to_string(),
+                    "0x123".to_string()
+                ],
+                vec![
+                    "invoke".to_string(),
+                    "--contract-address".to_string(),
+                    "0xabc".to_string()
+                ],
+                vec![
+                    "deploy".to_string(),
+                    "--class-hash".to_string(),
+                    "0x456".to_string()
+                ]
+            ]
+        );
+    }
+}
