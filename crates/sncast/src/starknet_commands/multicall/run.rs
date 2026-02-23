@@ -85,10 +85,7 @@ pub async fn run(
             Some("deploy") => {
                 let item: DeployItem = toml::from_str(toml::to_string(&call)?.as_str())
                     .context("Failed to parse toml `deploy` call")?;
-                let constructor_calldata = parse_inputs(&item.inputs, &contracts_registry)?
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<String>>();
+                let constructor_calldata = parse_inputs(&item.inputs, &contracts_registry)?;
                 let deploy = MulticallDeploy {
                     common: DeployCommonArgs {
                         contract_identifier: ContractIdentifier {
@@ -103,21 +100,20 @@ pub async fn run(
                         unique: item.unique,
                         package: None,
                     },
-                    id: Some(item.id.clone()),
+                    id: if item.id.is_empty() {
+                        None
+                    } else {
+                        Some(item.id)
+                    },
                 };
 
-                let call = deploy
-                    .convert_to_call(account, &mut contracts_registry)
-                    .await?;
+                let call = deploy.build_call(account, &mut contracts_registry).await?;
                 parsed_calls.push(call);
             }
             Some("invoke") => {
                 let item: InvokeItem = toml::from_str(toml::to_string(&call)?.as_str())
                     .context("Failed to parse toml `invoke` call")?;
-                let calldata = parse_inputs(&item.inputs, &contracts_registry)?
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<String>>();
+                let calldata = parse_inputs(&item.inputs, &contracts_registry)?;
                 let contract_address = if let Some(addr) =
                     contracts_registry.get_address_by_id(&item.contract_address)
                 {
@@ -136,7 +132,7 @@ pub async fn run(
                     },
                 };
 
-                let call = invoke.convert_to_call(&mut contracts_registry).await?;
+                let call = invoke.build_call(&mut contracts_registry).await?;
                 parsed_calls.push(call);
             }
             Some(unsupported) => {
@@ -152,19 +148,23 @@ pub async fn run(
         .map_err(handle_starknet_command_error)
 }
 
-fn parse_inputs(inputs: &Vec<Input>, contracts_registry: &ContractsRegistry) -> Result<Vec<Felt>> {
+fn parse_inputs(
+    inputs: &Vec<Input>,
+    contracts_registry: &ContractsRegistry,
+) -> Result<Vec<String>> {
     let mut parsed_inputs = Vec::new();
     for input in inputs {
         let felt_value = match input {
             Input::String(s) => {
                 let resolved_address = contracts_registry.get_address_by_id(s);
                 if let Some(address) = resolved_address {
-                    address
+                    address.to_string()
                 } else {
-                    s.parse()?
+                    let felt: Felt = s.parse()?;
+                    felt.to_string()
                 }
             }
-            Input::Number(n) => (*n).into(),
+            Input::Number(n) => n.to_string(),
         };
         parsed_inputs.push(felt_value);
     }

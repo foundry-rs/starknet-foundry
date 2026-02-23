@@ -72,6 +72,51 @@ async fn test_deploy_and_invoke() {
         "deploy",
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "/",
+        "invoke",
+        "--contract-address",
+        "0x00cd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008",
+        "--function",
+        "get",
+        "--calldata",
+        "0x1",
+    ];
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Multicall completed
+
+            Transaction Hash: 0x[..]
+
+            To see invocation details, visit:
+            transaction: [..]
+            "
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_use_id() {
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "multicall",
+        "--url",
+        URL,
+        "deploy",
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--id",
         "dpl",
         "/",
@@ -81,7 +126,7 @@ async fn test_deploy_and_invoke() {
         "--function",
         "get",
         "--calldata",
-        "0x1",
+        "@dpl",
     ];
 
     let snapbox = runner(&args)

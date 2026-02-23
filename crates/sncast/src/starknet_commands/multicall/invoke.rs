@@ -1,10 +1,9 @@
 use anyhow::{Context, Result};
 use clap::Args;
 use starknet_rust::core::{types::Call, utils::get_selector_from_name};
-use starknet_types_core::felt::Felt;
 
 use crate::{
-    Arguments,
+    Arguments, calldata_to_felts,
     starknet_commands::{
         invoke::InvokeCommonArgs, multicall::contracts_registry::ContractsRegistry,
     },
@@ -17,7 +16,7 @@ pub(crate) struct MulticallInvoke {
 }
 
 impl MulticallInvoke {
-    pub(crate) async fn convert_to_call(
+    pub(crate) async fn build_call(
         &self,
         contracts_registry: &mut ContractsRegistry,
     ) -> Result<Call> {
@@ -41,15 +40,8 @@ If you intended to reference an address from a previous step, use `@<id>` instea
         };
         let arguments = replaced_calldata(&self.common.arguments, contracts_registry)?;
 
-        let calldata = if let Some(raw_calldata) = &self.common.arguments.calldata {
-            raw_calldata
-                .iter()
-                .map(|data| {
-                    Felt::from_dec_str(data)
-                        .or_else(|_| Felt::from_hex(data))
-                        .context("Failed to parse to felt")
-                })
-                .collect::<Result<Vec<_>>>()?
+        let calldata = if let Some(raw_calldata) = &arguments.calldata {
+            calldata_to_felts(raw_calldata)?
         } else {
             let class_hash = contracts_registry
                 .cache
@@ -80,8 +72,14 @@ pub(crate) fn replaced_calldata(
                 let replaced_calldata = calldata
                     .iter()
                     .map(|input| {
-                        if let Some(address) = contracts_registry.get_address_by_id(input) {
-                            Ok(address.to_string())
+                        let is_id = input.starts_with('@');
+                        if is_id {
+                            let id = input.trim_start_matches('@');
+                            if let Some(address) = contracts_registry.get_address_by_id(id) {
+                                Ok(address.to_string())
+                            } else {
+                                anyhow::bail!("No contract address found for id: {id}. Ensure the referenced id is defined in a previous step.")
+                            }
                         } else {
                             Ok(input.clone())
                         }
