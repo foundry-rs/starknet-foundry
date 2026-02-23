@@ -29,7 +29,7 @@ jobs:
       - name: Get versions
         id: get_versions
         run: |
-          scarb_versions=$(./scripts/get_scarb_versions.sh)
+          scarb_versions=$(./scripts/get_scarb_versions.sh --previous)
           echo ${scarb_versions[@]}
           echo "versions=[${scarb_versions[@]}]" >> "$GITHUB_OUTPUT"
 
