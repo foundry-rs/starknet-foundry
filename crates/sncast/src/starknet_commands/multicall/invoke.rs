@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Args;
 use starknet_rust::core::{types::Call, utils::get_selector_from_name};
 
@@ -72,8 +72,14 @@ pub(crate) fn replaced_calldata(
                 let replaced_calldata = calldata
                     .iter()
                     .map(|input| {
-                        if let Some(address) = contracts_registry.get_address_by_id(input) {
-                            Ok(address.to_string())
+                        let is_id = input.starts_with('@');
+                        if is_id {
+                            let id = input.trim_start_matches('@');
+                            if let Some(address) = contracts_registry.get_address_by_id(id) {
+                                Ok(address.to_string())
+                            } else {
+                                anyhow::bail!("No contract address found for id: {id}. Ensure the referenced id is defined in a previous step.")
+                            }
                         } else {
                             Ok(input.clone())
                         }
