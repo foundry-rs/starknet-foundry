@@ -160,7 +160,9 @@ mod tests {
                 vec![
                     "invoke".to_string(),
                     "--contract-address".to_string(),
-                    "0xabc".to_string()
+                    "0xabc".to_string(),
+                    "--function".to_string(),
+                    "my_function".to_string()
                 ],
                 vec![
                     "deploy".to_string(),
