@@ -41,7 +41,7 @@ If you intended to reference an address from a previous step, use `@<id>` instea
         };
         let arguments = replaced_calldata(&self.common.arguments, contracts_registry)?;
 
-        let calldata = if let Some(raw_calldata) = &self.common.arguments.calldata {
+        let calldata = if let Some(raw_calldata) = &arguments.calldata {
             raw_calldata
                 .iter()
                 .map(|data| {
