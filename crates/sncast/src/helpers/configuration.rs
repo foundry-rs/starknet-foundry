@@ -1,13 +1,13 @@
 use super::block_explorer;
 use crate::helpers::config::get_global_config_path;
+use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use crate::response::ui::UI;
 use crate::{Network, PartialWaitParams, ValidatedWaitParams};
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use configuration::{Config, load_config, Override, merge_optional};
+use configuration::{Config, Override, load_config, merge_optional};
 use serde::{Deserialize, Serialize};
 use url::Url;
-use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 
 #[must_use]
 pub const fn show_explorer_links_default() -> bool {
@@ -229,14 +229,19 @@ impl PartialCastConfig {
 
     pub fn global(opts: &CliConfigOpts, ui: &UI) -> Result<Self> {
         let global_config_path = get_global_config_path().unwrap_or_else(|err| {
-            ui.print_error(&opts.command_name, format!("Error getting global config path: {err}"));
+            ui.print_error(
+                &opts.command_name,
+                format!("Error getting global config path: {err}"),
+            );
             Utf8PathBuf::new()
         });
 
-        let global_config =
-            load_config::<PartialCastConfig>(Some(&global_config_path.clone()), opts.profile.as_deref())
-                .or_else(|_| load_config::<PartialCastConfig>(Some(&global_config_path), None))
-                .map_err(|err| anyhow::anyhow!(format!("Failed to load config: {err}")))?;
+        let global_config = load_config::<PartialCastConfig>(
+            Some(&global_config_path.clone()),
+            opts.profile.as_deref(),
+        )
+        .or_else(|_| load_config::<PartialCastConfig>(Some(&global_config_path), None))
+        .map_err(|err| anyhow::anyhow!(format!("Failed to load config: {err}")))?;
 
         Ok(global_config)
     }
@@ -252,7 +257,11 @@ impl From<PartialCastConfig> for CastConfig {
         let default = CastConfig::default();
         let accounts_file = partial.accounts_file.unwrap_or(default.accounts_file);
         let accounts_file = Utf8PathBuf::from(shellexpand::tilde(&accounts_file).to_string());
-        let networks = partial.networks.clone().map(|n| default.networks.override_with(n)).unwrap_or(default.networks);
+        let networks = partial
+            .networks
+            .clone()
+            .map(|n| default.networks.override_with(n))
+            .unwrap_or(default.networks);
 
         CastConfig {
             url: partial.url.or(default.url),
@@ -260,9 +269,13 @@ impl From<PartialCastConfig> for CastConfig {
             account: partial.account.unwrap_or(default.account),
             accounts_file,
             keystore: partial.keystore.or(default.keystore),
-            wait_params: partial.wait_params.map(ValidatedWaitParams::from).unwrap_or(default.wait_params),
+            wait_params: partial
+                .wait_params
+                .map_or(default.wait_params, ValidatedWaitParams::from),
             block_explorer: partial.block_explorer.or(default.block_explorer),
-            show_explorer_links: partial.show_explorer_links.unwrap_or(default.show_explorer_links),
+            show_explorer_links: partial
+                .show_explorer_links
+                .unwrap_or(default.show_explorer_links),
             networks,
         }
     }

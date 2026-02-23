@@ -17,7 +17,7 @@ use crate::starknet_commands::{get, multicall};
 use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
-use configuration::{load_config, Override};
+use configuration::{Override, load_config};
 use conversions::IntoConv;
 use data_transformer::transform;
 use foundry_ui::components::warning::WarningMessage;
@@ -41,8 +41,8 @@ use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transformed_call::transform_response;
 use sncast::response::ui::UI;
 use sncast::{
-    ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
-    get_contract_class, with_account, PartialWaitParams
+    PartialWaitParams, ValidatedWaitParams, WaitForTx, get_account, get_block_id,
+    get_class_hash_by_address, get_contract_class, with_account,
 };
 use starknet_commands::ledger::{self, Ledger};
 use starknet_commands::verify::Verify;
@@ -768,7 +768,9 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
     let global_config = PartialCastConfig::global(&opts, ui)?;
     let cli_config = cli.to_partial_config();
 
-    let partial_config = global_config.override_with(local_config).override_with(cli_config);
+    let partial_config = global_config
+        .override_with(local_config)
+        .override_with(cli_config);
 
     Ok(CastConfig::from(partial_config))
 }

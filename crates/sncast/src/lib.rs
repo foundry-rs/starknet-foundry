@@ -6,6 +6,7 @@ use crate::response::errors::SNCastProviderError;
 use anyhow::{Context, Error, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
+use configuration::Override;
 use conversions::serde::serialize::CairoSerialize;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::RngCore;
@@ -43,7 +44,6 @@ use std::time::Duration;
 use std::{env, fs};
 use thiserror::Error;
 use url::Url;
-use configuration::Override;
 
 pub mod helpers;
 pub mod response;

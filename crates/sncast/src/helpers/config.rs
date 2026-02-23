@@ -1,5 +1,5 @@
 use crate::ValidatedWaitParams;
-use crate::helpers::configuration::{CastConfig, show_explorer_links_default};
+use crate::helpers::configuration::show_explorer_links_default;
 use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use anyhow::Result;
 use camino::Utf8PathBuf;
@@ -71,4 +71,3 @@ fn create_global_config(global_config_path: Utf8PathBuf) -> Result<()> {
 
     Ok(())
 }
-
