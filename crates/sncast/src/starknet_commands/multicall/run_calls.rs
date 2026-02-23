@@ -28,7 +28,8 @@ pub async fn run_calls(
     wait_config: WaitForTx,
     ui: &UI,
 ) -> Result<MulticallRunResponse> {
-    let command_groups = group_tokens_by_separator(tokens);
+    let allowed_commands= ["deploy".to_string(), "invoke".to_string()];
+    let command_groups = extract_commands_groups(tokens, "/", &allowed_commands);
 
     let mut contracts_registry = ContractsRegistry::new(provider);
     let mut calls = vec![];
@@ -75,16 +76,17 @@ pub async fn run_calls(
     .map_err(handle_starknet_command_error)
 }
 
-fn group_tokens_by_separator(tokens: &[String]) -> Vec<Vec<String>> {
+/// Groups tokens into separate command groups based on the provided separator and allowed commands.
+fn extract_commands_groups(tokens: &[String], separator: &str, commands: &[String]) -> Vec<Vec<String>> {
     let mut all_groups = Vec::new();
     let mut current_group = Vec::new();
 
     for (i, token) in tokens.iter().enumerate() {
-        if token == "/" {
+        if token == separator {
             let next_index = i + 1;
             let is_at_end = next_index == tokens.len();
             let next_is_command =
-                !is_at_end && (tokens[next_index] == "deploy" || tokens[next_index] == "invoke");
+                !is_at_end && commands.contains(&tokens[next_index]);
 
             if is_at_end || next_is_command {
                 if !current_group.is_empty() {
