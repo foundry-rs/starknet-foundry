@@ -65,7 +65,7 @@ Run tests for all packages in the workspace.
 
 Number of fuzzer runs.
 
-## `-s`, `--fuzzer-seed` `<FUZZER_SEED>`
+## `-s`, `--fuzzer-seed` `<FUZZER_SEED>`; `SNFORGE_FUZZER_SEED` (environment variable)
 
 Seed for the fuzzer.
 
@@ -149,3 +149,17 @@ Use Scarb dev profile.
 ## `-h`, `--help`
 
 Print help.
+
+## `SNFORGE_BACKTRACE` (environment variable)
+
+True values are `1`.
+
+When enabled, enables backtrace output on test failure. 
+See [Debugging](../../snforge-advanced-features/debugging.md).
+
+## `SNFORGE_DETERMINISTIC_OUTPUT` (environment variable)
+
+True values are `1`, `true`, `t`, `yes`, `y`, and `on`.
+False values are `0`, `false`, `f`, `no`, `n`, and `off`.
+
+When enabled, sorts test result outputs by test name, for reproducible outputs.
