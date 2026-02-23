@@ -43,6 +43,7 @@ use std::time::Duration;
 use std::{env, fs};
 use thiserror::Error;
 use url::Url;
+use configuration::Override;
 
 pub mod helpers;
 pub mod response;
@@ -141,6 +142,35 @@ pub struct WaitForTx {
     pub wait: bool,
     pub wait_params: ValidatedWaitParams,
     pub show_ui_outputs: bool,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, Copy, PartialEq, Default)]
+pub struct PartialWaitParams {
+    pub timeout: Option<u16>,
+    #[serde(
+        default,
+        rename(serialize = "retry-interval", deserialize = "retry-interval")
+    )]
+    pub retry_interval: Option<u8>,
+}
+
+impl Override for PartialWaitParams {
+    fn override_with(&self, other: PartialWaitParams) -> PartialWaitParams {
+        PartialWaitParams {
+            timeout: other.timeout.or(self.timeout),
+            retry_interval: other.retry_interval.or(self.retry_interval),
+        }
+    }
+}
+
+impl From<PartialWaitParams> for ValidatedWaitParams {
+    fn from(value: PartialWaitParams) -> Self {
+        let default = ValidatedWaitParams::default();
+        Self::new(
+            value.retry_interval.unwrap_or(default.retry_interval),
+            value.timeout.unwrap_or(default.timeout),
+        )
+    }
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, Copy, PartialEq)]

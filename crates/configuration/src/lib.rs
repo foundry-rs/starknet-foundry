@@ -20,6 +20,18 @@ pub trait Config {
         Self: Sized;
 }
 
+pub trait Override {
+    #[must_use]
+    fn override_with(&self, other: Self) -> Self;
+}
+
+pub fn merge_optional<T: Override>(base: Option<T>, other: Option<T>) -> Option<T> {
+    match other {
+        Some(p) => base.map(|d| d.override_with(p)),
+        None => base,
+    }
+}
+
 #[must_use]
 pub fn resolve_config_file() -> Utf8PathBuf {
     find_config_file().unwrap_or_else(|_| {

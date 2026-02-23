@@ -13,13 +13,13 @@ use crate::starknet_commands::{
 use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
-use configuration::load_config;
+use configuration::{load_config, Override};
 use conversions::IntoConv;
 use data_transformer::transform;
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::command::process_command_result;
-use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
-use sncast::helpers::configuration::CastConfig;
+use sncast::helpers::config::get_global_config_path;
+use sncast::helpers::configuration::{CastConfig, CliConfigOpts, PartialCastConfig};
 use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::rpc::generate_network_flag;
@@ -34,10 +34,7 @@ use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transformed_call::transform_response;
 use sncast::response::ui::UI;
-use sncast::{
-    ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
-    get_contract_class,
-};
+use sncast::{ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address, get_contract_class, PartialWaitParams};
 use starknet_commands::verify::Verify;
 use starknet_rust::accounts::Account;
 use starknet_rust::core::types::ContractClass;
@@ -139,6 +136,19 @@ impl Cli {
             Commands::Balance(_) => "balance",
         }
         .to_string()
+    }
+
+    pub fn to_partial_config(&self) -> PartialCastConfig {
+        PartialCastConfig {
+            account: self.account.clone(),
+            keystore: self.keystore.clone(),
+            accounts_file: self.accounts_file_path.clone(),
+            wait_params: Some(PartialWaitParams {
+                timeout: self.wait_timeout,
+                retry_interval: self.wait_retry_interval,
+            }),
+            ..Default::default()
+        }
     }
 }
 
@@ -733,49 +743,16 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
     }
 }
 
-fn config_with_cli(config: &mut CastConfig, cli: &Cli) {
-    macro_rules! clone_or_else {
-        ($field:expr, $config_field:expr) => {
-            $field.clone().unwrap_or_else(|| $config_field.clone())
-        };
-    }
-
-    config.account = clone_or_else!(cli.account, config.account);
-    config.keystore = cli.keystore.clone().or(config.keystore.clone());
-
-    if config.accounts_file == Utf8PathBuf::default() {
-        config.accounts_file = Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE);
-    }
-    let new_accounts_file = clone_or_else!(cli.accounts_file_path, config.accounts_file);
-
-    config.accounts_file = Utf8PathBuf::from(shellexpand::tilde(&new_accounts_file).to_string());
-
-    config.wait_params = ValidatedWaitParams::new(
-        clone_or_else!(
-            cli.wait_retry_interval,
-            config.wait_params.get_retry_interval()
-        ),
-        clone_or_else!(cli.wait_timeout, config.wait_params.get_timeout()),
-    );
-}
-
 fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
-    let command = cli.command_name();
-    let global_config_path = get_global_config_path().unwrap_or_else(|err| {
-        ui.print_error(&command, format!("Error getting global config path: {err}"));
-        Utf8PathBuf::new()
-    });
+    let opts = CliConfigOpts {
+        command_name: cli.command_name(),
+        profile: cli.profile.clone(),
+    };
+    let local_config = PartialCastConfig::local(&opts)?;
+    let global_config = PartialCastConfig::global(&opts, ui)?;
+    let cli_config = cli.to_partial_config();
 
-    let global_config =
-        load_config::<CastConfig>(Some(&global_config_path.clone()), cli.profile.as_deref())
-            .or_else(|_| load_config::<CastConfig>(Some(&global_config_path), None))
-            .map_err(|err| anyhow::anyhow!(format!("Failed to load config: {err}")))?;
+    let partial_config = global_config.override_with(local_config).override_with(cli_config);
 
-    let local_config = load_config::<CastConfig>(None, cli.profile.as_deref())
-        .map_err(|err| anyhow::anyhow!(format!("Failed to load config: {err}")))?;
-
-    let mut combined_config = combine_cast_configs(&global_config, &local_config);
-
-    config_with_cli(&mut combined_config, cli);
-    Ok(combined_config)
+    Ok(CastConfig::from(partial_config))
 }
