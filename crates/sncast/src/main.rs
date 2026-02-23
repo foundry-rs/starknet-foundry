@@ -207,7 +207,7 @@ impl Arguments {
         selector: &Felt,
     ) -> Result<Vec<Felt>> {
         if let Some(calldata) = self.calldata {
-            calldata_to_felts(calldata)
+            calldata_to_felts(&calldata)
         } else {
             let ContractClass::Sierra(sierra_class) = contract_class else {
                 bail!("Transformation of arguments is not available for Cairo Zero contracts")
@@ -221,7 +221,7 @@ impl Arguments {
     }
 }
 
-pub fn calldata_to_felts(calldata: Vec<String>) -> Result<Vec<Felt>> {
+pub fn calldata_to_felts(calldata: &[String]) -> Result<Vec<Felt>> {
     calldata
         .iter()
         .map(|data| {
