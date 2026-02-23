@@ -4,9 +4,10 @@ use crate::response::ui::UI;
 use crate::{Network, PartialWaitParams, ValidatedWaitParams};
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use configuration::{Config, load_config};
+use configuration::{Config, load_config, Override, merge_optional};
 use serde::{Deserialize, Serialize};
 use url::Url;
+use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 
 #[must_use]
 pub const fn show_explorer_links_default() -> bool {
@@ -30,16 +31,14 @@ impl NetworksConfig {
             Network::Devnet => self.devnet.as_ref(),
         }
     }
+}
 
-    pub fn override_with(&mut self, other: &NetworksConfig) {
-        if other.mainnet.is_some() {
-            self.mainnet.clone_from(&other.mainnet);
-        }
-        if other.sepolia.is_some() {
-            self.sepolia.clone_from(&other.sepolia);
-        }
-        if other.devnet.is_some() {
-            self.devnet.clone_from(&other.devnet);
+impl Override for NetworksConfig {
+    fn override_with(&self, other: NetworksConfig) -> NetworksConfig {
+        NetworksConfig {
+            mainnet: other.mainnet.clone().or_else(|| self.mainnet.clone()),
+            sepolia: other.sepolia.clone().or_else(|| self.sepolia.clone()),
+            devnet: other.devnet.clone().or_else(|| self.devnet.clone()),
         }
     }
 }
@@ -113,7 +112,7 @@ impl Default for CastConfig {
             url: None,
             network: None,
             account: String::default(),
-            accounts_file: Utf8PathBuf::default(),
+            accounts_file: Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE),
             keystore: None,
             wait_params: ValidatedWaitParams::default(),
             block_explorer: Some(block_explorer::Service::default()),
@@ -135,7 +134,6 @@ impl Config for CastConfig {
     }
 }
 
-    
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Default)]
 pub struct PartialCastConfig {
     pub url: Option<Url>,
@@ -202,8 +200,8 @@ impl PartialCastConfig {
     }
 }
 
-impl PartialCastConfig {
-    pub fn override_with(&self, other: PartialCastConfig) -> PartialCastConfig {
+impl Override for PartialCastConfig {
+    fn override_with(&self, other: PartialCastConfig) -> PartialCastConfig {
         PartialCastConfig {
             url: other.url.clone().or_else(|| self.url.clone()),
             network: other.network.or(self.network),
@@ -213,14 +211,15 @@ impl PartialCastConfig {
                 .clone()
                 .or_else(|| self.accounts_file.clone()),
             keystore: other.keystore.clone().or_else(|| self.keystore.clone()),
-            wait_params: other.wait_params.or(self.wait_params),
+            wait_params: merge_optional(self.wait_params, other.wait_params),
             block_explorer: other.block_explorer.or(self.block_explorer),
             show_explorer_links: other.show_explorer_links.or(self.show_explorer_links),
-            networks: other.networks.clone().or_else(|| self.networks.clone()),
+            networks: merge_optional(self.networks.clone(), other.networks),
         }
     }
+}
 
-
+impl PartialCastConfig {
     pub fn local(opts: &CliConfigOpts) -> Result<Self> {
         let local_config = load_config::<PartialCastConfig>(None, opts.profile.as_deref())
             .map_err(|err| anyhow::anyhow!(format!("Failed to load config: {err}")))?;
@@ -238,7 +237,7 @@ impl PartialCastConfig {
             load_config::<PartialCastConfig>(Some(&global_config_path.clone()), opts.profile.as_deref())
                 .or_else(|_| load_config::<PartialCastConfig>(Some(&global_config_path), None))
                 .map_err(|err| anyhow::anyhow!(format!("Failed to load config: {err}")))?;
-        
+
         Ok(global_config)
     }
 }
@@ -250,23 +249,24 @@ pub struct CliConfigOpts {
 
 impl From<PartialCastConfig> for CastConfig {
     fn from(partial: PartialCastConfig) -> Self {
-        let default = CastConfig::default(); 
-        
+        let default = CastConfig::default();
+        let accounts_file = partial.accounts_file.unwrap_or(default.accounts_file);
+        let accounts_file = Utf8PathBuf::from(shellexpand::tilde(&accounts_file).to_string());
+        let networks = partial.networks.clone().map(|n| default.networks.override_with(n)).unwrap_or(default.networks);
+
         CastConfig {
             url: partial.url.or(default.url),
             network: partial.network.or(default.network),
             account: partial.account.unwrap_or(default.account),
-            accounts_file: partial.accounts_file.unwrap_or(default.accounts_file),
+            accounts_file,
             keystore: partial.keystore.or(default.keystore),
             wait_params: partial.wait_params.map(ValidatedWaitParams::from).unwrap_or(default.wait_params),
             block_explorer: partial.block_explorer.or(default.block_explorer),
             show_explorer_links: partial.show_explorer_links.unwrap_or(default.show_explorer_links),
-            networks: partial.networks.unwrap_or(default.networks),
+            networks,
         }
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {
@@ -297,7 +297,7 @@ mod tests {
 
     #[test]
     fn test_networks_config_override() {
-        let mut global = NetworksConfig {
+        let global = NetworksConfig {
             mainnet: Some(Url::parse("https://global-mainnet.example.com").unwrap()),
             sepolia: Some(Url::parse("https://global-sepolia.example.com").unwrap()),
             devnet: None,
@@ -308,16 +308,16 @@ mod tests {
             devnet: None,
         };
 
-        global.override_with(&local);
+        let overriden = global.override_with(local);
 
         // Local mainnet should override global
         assert_eq!(
-            global.mainnet,
+            overriden.mainnet,
             Some(Url::parse("https://local-mainnet.example.com").unwrap())
         );
         // Global sepolia should remain
         assert_eq!(
-            global.sepolia,
+            overriden.sepolia,
             Some(Url::parse("https://global-sepolia.example.com").unwrap())
         );
     }
