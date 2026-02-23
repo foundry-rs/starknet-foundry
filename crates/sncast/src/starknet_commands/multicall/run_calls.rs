@@ -58,6 +58,10 @@ pub async fn run_calls(
         }
     }
 
+    if calls.is_empty() {
+        bail!("No valid multicall commands found to execute. Please check the provided commands.");
+    }
+
     execute_calls(
         account,
         calls,
