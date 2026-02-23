@@ -5,7 +5,7 @@ use crate::response::ui::UI;
 use crate::{Network, PartialWaitParams, ValidatedWaitParams};
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use configuration::{Config, Override, load_config, merge_optional};
+use configuration::{Config, Override, load_config, override_optional};
 use serde::{Deserialize, Serialize};
 use url::Url;
 
@@ -211,10 +211,10 @@ impl Override for PartialCastConfig {
                 .clone()
                 .or_else(|| self.accounts_file.clone()),
             keystore: other.keystore.clone().or_else(|| self.keystore.clone()),
-            wait_params: merge_optional(self.wait_params, other.wait_params),
+            wait_params: override_optional(self.wait_params, other.wait_params),
             block_explorer: other.block_explorer.or(self.block_explorer),
             show_explorer_links: other.show_explorer_links.or(self.show_explorer_links),
-            networks: merge_optional(self.networks.clone(), other.networks),
+            networks: override_optional(self.networks.clone(), other.networks),
         }
     }
 }
