@@ -107,9 +107,7 @@ pub async fn run(
                     },
                 };
 
-                let call = deploy
-                    .build_call(account, &mut contracts_registry)
-                    .await?;
+                let call = deploy.build_call(account, &mut contracts_registry).await?;
                 parsed_calls.push(call);
             }
             Some("invoke") => {
