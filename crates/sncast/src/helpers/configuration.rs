@@ -206,9 +206,7 @@ impl Override for PartialCastConfig {
             url: other.url.or_else(|| self.url.clone()),
             network: other.network.or(self.network),
             account: other.account.or_else(|| self.account.clone()),
-            accounts_file: other
-                .accounts_file
-                .or_else(|| self.accounts_file.clone()),
+            accounts_file: other.accounts_file.or_else(|| self.accounts_file.clone()),
             keystore: other.keystore.or_else(|| self.keystore.clone()),
             wait_params: override_optional(self.wait_params, other.wait_params),
             block_explorer: other.block_explorer.or(self.block_explorer),
@@ -252,30 +250,28 @@ pub struct CliConfigOpts {
 }
 
 impl From<PartialCastConfig> for CastConfig {
-    fn from(partial: PartialCastConfig) -> Self {
-        let default = CastConfig::default();
+    fn from(p: PartialCastConfig) -> Self {
+        let d = CastConfig::default();
 
-        let accounts_file = partial.accounts_file.unwrap_or(default.accounts_file);
+        let accounts_file = p.accounts_file.unwrap_or(d.accounts_file);
         let accounts_file = Utf8PathBuf::from(shellexpand::tilde(&accounts_file).to_string());
 
-        let networks = partial
+        let networks = p
             .networks
-            .map(|n| default.networks.override_with(n))
-            .unwrap_or(default.networks);
+            .map(|n| d.networks.override_with(n))
+            .unwrap_or(d.networks);
 
         CastConfig {
-            url: partial.url.or(default.url),
-            network: partial.network.or(default.network),
-            account: partial.account.unwrap_or(default.account),
+            url: p.url.or(d.url),
+            network: p.network.or(d.network),
+            account: p.account.unwrap_or(d.account),
             accounts_file,
-            keystore: partial.keystore.or(default.keystore),
-            wait_params: partial
+            keystore: p.keystore.or(d.keystore),
+            wait_params: p
                 .wait_params
-                .map_or(default.wait_params, ValidatedWaitParams::from),
-            block_explorer: partial.block_explorer.or(default.block_explorer),
-            show_explorer_links: partial
-                .show_explorer_links
-                .unwrap_or(default.show_explorer_links),
+                .map_or(d.wait_params, ValidatedWaitParams::from),
+            block_explorer: p.block_explorer.or(d.block_explorer),
+            show_explorer_links: p.show_explorer_links.unwrap_or(d.show_explorer_links),
             networks,
         }
     }
