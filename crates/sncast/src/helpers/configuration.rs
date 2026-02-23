@@ -7,6 +7,7 @@ use anyhow::Result;
 use camino::Utf8PathBuf;
 use configuration::{Config, Override, load_config, override_optional};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use url::Url;
 
 #[must_use]
@@ -136,22 +137,34 @@ impl Config for CastConfig {
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Default)]
 pub struct PartialCastConfig {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<Url>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub network: Option<Network>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub account: Option<String>,
     #[serde(
         default,
+        skip_serializing_if = "Option::is_none",
         rename(serialize = "accounts-file", deserialize = "accounts-file")
     )]
     pub accounts_file: Option<Utf8PathBuf>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub keystore: Option<Utf8PathBuf>,
+
     #[serde(
         default,
+        skip_serializing_if = "Option::is_none",
         rename(serialize = "wait-params", deserialize = "wait-params")
     )]
     pub wait_params: Option<PartialWaitParams>,
+
     #[serde(
         default,
+        skip_serializing_if = "Option::is_none",
         rename(serialize = "block-explorer", deserialize = "block-explorer")
     )]
     /// A block explorer service, used to display links to transaction details
@@ -159,14 +172,19 @@ pub struct PartialCastConfig {
 
     #[serde(
         default,
+        skip_serializing_if = "Option::is_none",
         rename(serialize = "show-explorer-links", deserialize = "show-explorer-links")
     )]
     /// Print links pointing to pages with transaction details in the chosen block explorer
     pub show_explorer_links: Option<bool>,
 
-    #[serde(default)]
-    /// Configurable urls of predefined networks - mainnet, sepolia, and devnet are supported
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub networks: Option<NetworksConfig>,
+}
+
+#[derive(Serialize)]
+pub struct SncastProfileAppend {
+    pub sncast: BTreeMap<String, PartialCastConfig>,
 }
 
 impl Config for PartialCastConfig {
