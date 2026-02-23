@@ -29,7 +29,7 @@ Please make sure the feature you are implementing is thoroughly tested with auto
 You can check existing tests in the repository to see the recommended approach to testing.
 
 #### Snapshot tests
-Some tests use snapshot (`.snap`) files to store expected test output, specifically for testing some of Starknet Foundry features with older Scarb versions.
+Some tests use [`insta`](https://crates.io/crates/insta) snapshots files (`.snap`) to store expected test output, specifically for testing some of Starknet Foundry features with older Scarb versions.
 When adding such test case, please add a `snap_` prefix to its name to ensure it's tested on CI for all supported Scarb versions.
 To make sure snapshot tests pass for all currently supported Scarb versions, run:
 ```sh
