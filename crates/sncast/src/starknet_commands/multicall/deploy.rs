@@ -45,7 +45,7 @@ impl MulticallDeploy {
             .context("Using deploy with multicall requires providing `--class-hash`")?;
         let constructor_calldata =
             if let Some(raw_calldata) = &self.common.arguments.constructor_calldata {
-                calldata_to_felts(&raw_calldata)?
+                calldata_to_felts(raw_calldata)?
             } else {
                 let contract_class = contracts_registry
                     .cache
