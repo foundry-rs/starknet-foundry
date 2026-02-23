@@ -36,9 +36,9 @@ impl NetworksConfig {
 impl Override for NetworksConfig {
     fn override_with(&self, other: NetworksConfig) -> NetworksConfig {
         NetworksConfig {
-            mainnet: other.mainnet.clone().or_else(|| self.mainnet.clone()),
-            sepolia: other.sepolia.clone().or_else(|| self.sepolia.clone()),
-            devnet: other.devnet.clone().or_else(|| self.devnet.clone()),
+            mainnet: other.mainnet.or_else(|| self.mainnet.clone()),
+            sepolia: other.sepolia.or_else(|| self.sepolia.clone()),
+            devnet: other.devnet.or_else(|| self.devnet.clone()),
         }
     }
 }
