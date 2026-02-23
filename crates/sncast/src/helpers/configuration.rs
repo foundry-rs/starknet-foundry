@@ -321,16 +321,16 @@ mod tests {
             devnet: None,
         };
 
-        let overriden = global.override_with(local);
+        let overridden = global.override_with(local);
 
         // Local mainnet should override global
         assert_eq!(
-            overriden.mainnet,
+            overridden.mainnet,
             Some(Url::parse("https://local-mainnet.example.com").unwrap())
         );
         // Global sepolia should remain
         assert_eq!(
-            overriden.sepolia,
+            overridden.sepolia,
             Some(Url::parse("https://global-sepolia.example.com").unwrap())
         );
     }
