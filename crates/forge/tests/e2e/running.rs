@@ -1374,7 +1374,7 @@ fn max_threads_exceeds_available() {
         .arg("--max-threads")
         .arg("999999")
         .assert()
-        .failure();
+        .code(1); // Still fails due to test failures in simple_package, not thread limit
 
     assert_stdout_contains(output, "max-threads (999999) exceeds available parallelism");
 }
