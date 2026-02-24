@@ -62,7 +62,6 @@ pub struct CastConfig {
     pub networks: NetworksConfig,
 }
 
-// TODO(#4027)
 impl CastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
         if self.block_explorer.unwrap_or_default() == block_explorer::Service::StarkScan {
@@ -155,7 +154,6 @@ impl Config for PartialCastConfig {
     }
 }
 
-// TODO(#4027)
 impl PartialCastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
         if self.block_explorer.unwrap_or_default() == block_explorer::Service::StarkScan {
