@@ -45,7 +45,8 @@ fn test_handle_recoverable_in_test() {
         Result::Ok(_) => core::panic_with_felt252('Expected panic'),
         Result::Err(panic_data) => {
             assert(*panic_data.at(0) == 'Different panic', 'Incorrect error');
-            assert(panic_data.len() == 1, 'Incorrect error length');
+            assert(*panic_data.at(1) == 'ENTRYPOINT_FAILED', 'Missing generic error');
+            assert(panic_data.len() == 2, 'Incorrect error length');
         },
     }
 }

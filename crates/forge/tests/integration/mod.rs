@@ -29,6 +29,7 @@ mod precalculate_address;
 mod pure_cairo;
 mod replace_bytecode;
 mod resources;
+mod reverts;
 mod runtime;
 mod set_balance;
 mod setup_fork;
