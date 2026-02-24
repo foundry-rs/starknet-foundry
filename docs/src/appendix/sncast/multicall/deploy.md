@@ -1,5 +1,5 @@
 # `deploy`
-Deploy a contract to Starknet.
+Configure a deploy call as part of a multicall transaction.
 
 ## `--id <ID>`
 Optional.

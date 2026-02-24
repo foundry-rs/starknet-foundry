@@ -1,5 +1,5 @@
 # `invoke`
-Send an invoke transaction to Starknet.
+Configure an invoke call as part of a multicall transaction.
 
 ## `--contract-address, -d <CONTRACT_ADDRESS>`
 Required.

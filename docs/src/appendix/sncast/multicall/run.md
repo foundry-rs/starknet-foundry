@@ -37,7 +37,7 @@ Optional.
 
 Maximum L1 gas for the `invoke` transaction. When not used, defaults to auto-estimation.
 
-## ` --l1-gas-price <l1_gas_price>`
+## `--l1-gas-price <l1_gas_price>`
 Optional.
 
 Maximum L1 gas unit price for the `invoke` transaction. When not used, defaults to auto-estimation.
