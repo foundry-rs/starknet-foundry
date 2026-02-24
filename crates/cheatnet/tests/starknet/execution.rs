@@ -34,7 +34,7 @@ fn test_state_reverted() {
             selector_from_name("change_state_and_panic").into_(),
             mock_class_hash.into_(),
         ],
-        TrackedResource::CairoSteps,
+        TrackedResource::SierraGas,
     )
     .unwrap();
 
