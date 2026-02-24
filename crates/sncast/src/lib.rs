@@ -173,15 +173,11 @@ impl From<PartialWaitParams> for ValidatedWaitParams {
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, Copy, PartialEq)]
+/// Effective wait params used at runtime.
+/// Note: Built from [`PartialWaitParams`], not (de)serialized.
+#[derive(Clone, Debug, Copy, PartialEq)]
 pub struct ValidatedWaitParams {
-    #[serde(default)]
     timeout: u16,
-
-    #[serde(
-        default,
-        rename(serialize = "retry-interval", deserialize = "retry-interval")
-    )]
     retry_interval: u8,
 }
 
