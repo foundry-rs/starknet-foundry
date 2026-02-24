@@ -47,18 +47,14 @@ impl Override for NetworksConfig {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct CastConfig {
-    /// RPC url
     pub url: Option<Url>,
     pub network: Option<Network>,
     pub account: String,
     pub accounts_file: Utf8PathBuf,
     pub keystore: Option<Utf8PathBuf>,
     pub wait_params: ValidatedWaitParams,
-    /// A block explorer service, used to display links to transaction details
     pub block_explorer: Option<block_explorer::Service>,
-    /// Print links pointing to pages with transaction details in the chosen block explorer
     pub show_explorer_links: bool,
-    /// Configurable urls of predefined networks - mainnet, sepolia, and devnet are supported
     pub networks: NetworksConfig,
 }
 
