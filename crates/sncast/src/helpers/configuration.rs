@@ -45,47 +45,19 @@ impl Override for NetworksConfig {
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct CastConfig {
-    #[serde(default)]
     /// RPC url
     pub url: Option<Url>,
-
-    #[serde(default)]
     pub network: Option<Network>,
-
-    #[serde(default)]
     pub account: String,
-
-    #[serde(
-        default,
-        rename(serialize = "accounts-file", deserialize = "accounts-file")
-    )]
     pub accounts_file: Utf8PathBuf,
-
     pub keystore: Option<Utf8PathBuf>,
-
-    #[serde(
-        default,
-        rename(serialize = "wait-params", deserialize = "wait-params")
-    )]
     pub wait_params: ValidatedWaitParams,
-
-    #[serde(
-        default,
-        rename(serialize = "block-explorer", deserialize = "block-explorer")
-    )]
     /// A block explorer service, used to display links to transaction details
     pub block_explorer: Option<block_explorer::Service>,
-
-    #[serde(
-        default = "show_explorer_links_default",
-        rename(serialize = "show-explorer-links", deserialize = "show-explorer-links")
-    )]
     /// Print links pointing to pages with transaction details in the chosen block explorer
     pub show_explorer_links: bool,
-
-    #[serde(default)]
     /// Configurable urls of predefined networks - mainnet, sepolia, and devnet are supported
     pub networks: NetworksConfig,
 }
@@ -121,18 +93,6 @@ impl Default for CastConfig {
             show_explorer_links: show_explorer_links_default(),
             networks: NetworksConfig::default(),
         }
-    }
-}
-
-impl Config for CastConfig {
-    fn tool_name() -> &'static str {
-        "sncast"
-    }
-
-    fn from_raw(config: serde_json::Value) -> Result<Self> {
-        let config = serde_json::from_value::<Self>(config)?;
-        config.validate()?;
-        Ok(config)
     }
 }
 
