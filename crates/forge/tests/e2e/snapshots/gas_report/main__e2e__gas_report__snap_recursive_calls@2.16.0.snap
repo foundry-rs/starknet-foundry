@@ -2,8 +2,6 @@
 source: crates/forge/tests/e2e/gas_report.rs
 expression: stdout
 ---
-
-
 [PASS] debugging_integrationtest::test_trace::test_debugging_trace_success (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~1382600)
 ╭-------------------------+-------+--------+--------+---------+---------╮
 | SimpleContract Contract |       |        |        |         |         |
