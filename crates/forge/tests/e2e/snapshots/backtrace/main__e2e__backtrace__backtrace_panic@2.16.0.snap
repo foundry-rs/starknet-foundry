@@ -11,9 +11,9 @@ Failure data:
 error occurred in contract 'InnerContract'
 stack backtrace:
    0: core::panic_with_const_felt252
-       at [..]lib.cairo:364:5
+       at [..]lib.cairo:360:5
    1: core::panic_with_const_felt252
-       at [..]lib.cairo:364:5
+       at [..]lib.cairo:360:5
    2: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
        at [..]lib.cairo:32:5
 

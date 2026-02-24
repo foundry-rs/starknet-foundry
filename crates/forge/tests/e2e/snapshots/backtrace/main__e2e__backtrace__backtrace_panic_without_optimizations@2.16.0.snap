@@ -11,9 +11,9 @@ Failure data:
 error occurred in contract 'InnerContract'
 stack backtrace:
    0: core::array_inline_macro
-       at [..]lib.cairo:350:11
+       at [..]lib.cairo:346:11
    1: core::assert
-       at [..]lib.cairo:377:9
+       at [..]lib.cairo:373:9
    2: backtrace_panic::InnerContract::inner_call
        at [..]lib.cairo:40:9
    3: backtrace_panic::InnerContract::unsafe_new_contract_state

@@ -26,51 +26,43 @@ fn syntax() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        error: Missing token ';'.
+        error[E1001]: Missing token ';'.
          --> [..]/tests/contract.cairo:14:70
             let (contract_address, _) = contract.deploy(constructor_calldata),unwrap();
                                                                              ^
         
-        error: Skipped tokens. Expected: statement.
+        error[E1000]: Skipped tokens. Expected: statement.
          --> [..]/tests/contract.cairo:14:70
             let (contract_address, _) = contract.deploy(constructor_calldata),unwrap();
                                                                              ^
         
-        error: Missing token ';'.
-         --> [..]/tests/contract.cairo:14:70
-            let (contract_address, _) = contract.deploy(constructor_calldata),unwrap();
-                                                                             ^
-        note: this error originates in the attribute macro: `test`
-        
-        error: Skipped tokens. Expected: statement.
+        error[E1001]: Missing token ';'.
          --> [..]/tests/contract.cairo:14:70
             let (contract_address, _) = contract.deploy(constructor_calldata),unwrap();
                                                                              ^
         note: this error originates in the attribute macro: `test`
         
-        error: Missing token ';'.
+        error[E1000]: Skipped tokens. Expected: statement.
          --> [..]/tests/contract.cairo:14:70
             let (contract_address, _) = contract.deploy(constructor_calldata),unwrap();
                                                                              ^
         note: this error originates in the attribute macro: `test`
-        note: this error originates in the attribute macro: `fuzzer`
         
-        error: Skipped tokens. Expected: statement.
+        error[E1001]: Missing token ';'.
          --> [..]/tests/contract.cairo:14:70
             let (contract_address, _) = contract.deploy(constructor_calldata),unwrap();
                                                                              ^
         note: this error originates in the attribute macro: `test`
         note: this error originates in the attribute macro: `fuzzer`
         
-        error: Missing token ';'.
+        error[E1000]: Skipped tokens. Expected: statement.
          --> [..]/tests/contract.cairo:14:70
             let (contract_address, _) = contract.deploy(constructor_calldata),unwrap();
                                                                              ^
         note: this error originates in the attribute macro: `test`
         note: this error originates in the attribute macro: `fuzzer`
-        note: this error originates in the attribute macro: `fork`
         
-        error: Skipped tokens. Expected: statement.
+        error[E1001]: Missing token ';'.
          --> [..]/tests/contract.cairo:14:70
             let (contract_address, _) = contract.deploy(constructor_calldata),unwrap();
                                                                              ^
@@ -78,25 +70,33 @@ fn syntax() {
         note: this error originates in the attribute macro: `fuzzer`
         note: this error originates in the attribute macro: `fork`
         
-        error: Plugin diagnostic: Failed because of invalid syntax
+        error[E1000]: Skipped tokens. Expected: statement.
+         --> [..]/tests/contract.cairo:14:70
+            let (contract_address, _) = contract.deploy(constructor_calldata),unwrap();
+                                                                             ^
+        note: this error originates in the attribute macro: `test`
+        note: this error originates in the attribute macro: `fuzzer`
+        note: this error originates in the attribute macro: `fork`
+        
+        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
          --> [..]/tests/contract.cairo:7:1
         #[test]
         ^^^^^^^
         
-        error: Plugin diagnostic: Failed because of invalid syntax
+        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
          --> [..]/tests/contract.cairo:8:1
         #[fuzzer]
         ^^^^^^^^^
         note: this error originates in the attribute macro: `test`
         
-        error: Plugin diagnostic: Failed because of invalid syntax
+        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
          --> [..]/tests/contract.cairo:9:1
         #[fork(url: "http://127.0.0.1:3030", block_tag: latest)]
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         note: this error originates in the attribute macro: `test`
         note: this error originates in the attribute macro: `fuzzer`
         
-        error: Plugin diagnostic: Failed because of invalid syntax
+        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
          --> [..]/tests/contract.cairo:10:1
         #[ignore]
         ^^^^^^^^^
@@ -104,7 +104,7 @@ fn syntax() {
         note: this error originates in the attribute macro: `fuzzer`
         note: this error originates in the attribute macro: `fork`
         
-        error: Unexpected type for tuple pattern. "core::result::Result::<(core::starknet::contract_address::ContractAddress, core::array::Span::<core::felt252>), core::array::Array::<core::felt252>>" is not a tuple.
+        error[E2105]: Unexpected type for tuple pattern. "core::result::Result::<(core::starknet::contract_address::ContractAddress, core::array::Span::<core::felt252>), core::array::Array::<core::felt252>>" is not a tuple.
          --> [..]/tests/contract.cairo:14:9
             let (contract_address, _) = contract.deploy(constructor_calldata),unwrap();
                 ^^^^^^^^^^^^^^^^^^^^^
@@ -192,34 +192,34 @@ fn parameters() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        error: Missing token ','.
+        error[E1001]: Missing token ','.
          --> [..]/tests/contract.cairo:9:31
         fn call_and_invoke(_a: felt252; b: u256) {
                                       ^
         
-        error: Skipped tokens. Expected: parameter.
+        error[E1000]: Skipped tokens. Expected: parameter.
          --> [..]/tests/contract.cairo:9:31
         fn call_and_invoke(_a: felt252; b: u256) {
                                       ^
         
-        error: Missing token ','.
+        error[E1001]: Missing token ','.
          --> [..]/tests/contract.cairo:9:31
         fn call_and_invoke(_a: felt252; b: u256) {
                                       ^
         note: this error originates in the attribute macro: `test`
         
-        error: Skipped tokens. Expected: parameter.
+        error[E1000]: Skipped tokens. Expected: parameter.
          --> [..]/tests/contract.cairo:9:31
         fn call_and_invoke(_a: felt252; b: u256) {
                                       ^^
         note: this error originates in the attribute macro: `test`
         
-        error: Plugin diagnostic: Failed because of invalid syntax
+        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
          --> [..]/tests/contract.cairo:7:1
         #[test]
         ^^^^^^^
         
-        error: Plugin diagnostic: Failed because of invalid syntax
+        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
          --> [..]/tests/contract.cairo:8:1
         #[fork("TESTNET")]
         ^^^^^^^^^^^^^^^^^^
@@ -249,25 +249,25 @@ fn multiple() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        error: Missing tokens. Expected an expression.
+        error[E1002]: Missing tokens. Expected an expression.
          --> [..]/tests/contract.cairo:19:22
             assert(balance === 0, 'balance == 0');
                              ^
         
-        error: Missing tokens. Expected an expression.
+        error[E1002]: Missing tokens. Expected an expression.
          --> [..]/tests/contract.cairo:19:22
             assert(balance === 0, 'balance == 0');
                              ^
         note: this error originates in the attribute macro: `test`
         
-        error: Missing tokens. Expected an expression.
+        error[E1002]: Missing tokens. Expected an expression.
          --> [..]/tests/contract.cairo:19:22
             assert(balance === 0, 'balance == 0');
                              ^
         note: this error originates in the attribute macro: `test`
         note: this error originates in the attribute macro: `fuzzer`
         
-        error: Missing tokens. Expected an expression.
+        error[E1002]: Missing tokens. Expected an expression.
          --> [..]/tests/contract.cairo:19:22
             assert(balance === 0, 'balance == 0');
                              ^
@@ -275,25 +275,25 @@ fn multiple() {
         note: this error originates in the attribute macro: `fuzzer`
         note: this error originates in the attribute macro: `fork`
         
-        error: Plugin diagnostic: Failed because of invalid syntax
+        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
          --> [..]/tests/contract.cairo:7:1
         #[test]
         ^^^^^^^
         
-        error: Plugin diagnostic: Failed because of invalid syntax
+        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
          --> [..]/tests/contract.cairo:8:1
         #[fuzzer]
         ^^^^^^^^^
         note: this error originates in the attribute macro: `test`
         
-        error: Plugin diagnostic: Failed because of invalid syntax
+        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
          --> [..]/tests/contract.cairo:9:1
         #[fork(url: "http://127.0.0.1:3030", block_tag: latest)]
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         note: this error originates in the attribute macro: `test`
         note: this error originates in the attribute macro: `fuzzer`
         
-        error: Plugin diagnostic: Failed because of invalid syntax
+        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
          --> [..]/tests/contract.cairo:10:1
         #[ignore]
         ^^^^^^^^^
@@ -301,7 +301,7 @@ fn multiple() {
         note: this error originates in the attribute macro: `fuzzer`
         note: this error originates in the attribute macro: `fork`
         
-        error: Unsupported feature.
+        error[E2000]: Unsupported feature.
          --> [..]/tests/contract.cairo:19:22
             assert(balance === 0, 'balance == 0');
                              ^
@@ -309,7 +309,7 @@ fn multiple() {
         note: this error originates in the attribute macro: `fuzzer`
         note: this error originates in the attribute macro: `fork`
         
-        error: Invalid left-hand side of assignment.
+        error[E2084]: Invalid left-hand side of assignment.
          --> [..]/tests/contract.cairo:19:12
             assert(balance === 0, 'balance == 0');
                    ^^^^^^^^^^
@@ -353,7 +353,7 @@ fn generic() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        error: Trait has no implementation in context: core::traits::PartialOrd::<generic_integrationtest::contract::MyStruct>.
+        error[E2311]: Trait has no implementation in context: core::traits::PartialOrd::<generic_integrationtest::contract::MyStruct>.
          --> [..]/tests/contract.cairo:29:13
             let s = smallest_element(@list);
                     ^^^^^^^^^^^^^^^^
@@ -389,7 +389,7 @@ fn inline_macros() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        error: Plugin diagnostic: Macro cannot be parsed as legacy macro. Expected an argument list wrapped in either parentheses, brackets, or braces.
+        error[E2200]: Plugin diagnostic: Macro cannot be parsed as legacy macro. Expected an argument list wrapped in either parentheses, brackets, or braces.
          --> [..]/tests/contract.cairo:23:5
             print!('balance {}'; balance);
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -442,12 +442,12 @@ fn different_attributes() {
             attribute.clone(),
             output,
             formatdoc! {r"
-            error: Missing token ';'.
+            error[E1001]: Missing token ';'.
              --> [..]/tests/contract.cairo:10:81
                 let (_contract_address1, _) = contract.deploy(constructor_calldata).unwrap()
                                                                                             ^
             
-            error: Plugin diagnostic: Failed because of invalid syntax
+            error[E2200]: Plugin diagnostic: Failed because of invalid syntax
              --> [..]/tests/contract.cairo:6:1
             {attribute}
             {expected_underline}
@@ -477,18 +477,18 @@ fn test_case() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        error: Plugin diagnostic: #[test_case] The function must have at least one parameter to use #[test_case] attribute
+        error[E2200]: Plugin diagnostic: #[test_case] The function must have at least one parameter to use #[test_case] attribute
          --> [..]/tests/basic.cairo:2:1
         #[test_case(3, 4, 7)]
         ^^^^^^^^^^^^^^^^^^^^^
         note: this error originates in the attribute macro: `test`
 
-        error: Plugin diagnostic: #[test_case] Expected 2 arguments, but got 3
+        error[E2200]: Plugin diagnostic: #[test_case] Expected 2 arguments, but got 3
         #[test_case(3, 4, 7)]
         ^^^^^^^^^^^^^^^^^^^^^
         note: this error originates in the attribute macro: `test`
 
-        error: Plugin diagnostic: #[test_case] Only string literals are allowed for 'name' argument.
+        error[E2200]: Plugin diagnostic: #[test_case] Only string literals are allowed for 'name' argument.
         #[test_case(name: array![1, 2, 3], 3, 4, 7)]
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         note: this error originates in the attribute macro: `test`
