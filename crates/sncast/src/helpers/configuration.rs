@@ -45,6 +45,8 @@ impl Override for NetworksConfig {
     }
 }
 
+/// Effective config used at runtime.
+/// Note: Built from [`PartialCastConfig`], not (de)sereliazed.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CastConfig {
     pub url: Option<Url>,
