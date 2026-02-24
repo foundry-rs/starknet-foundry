@@ -2,8 +2,6 @@
 source: crates/forge/tests/e2e/backtrace.rs
 expression: stdout
 ---
-
-
 [FAIL] backtrace_vm_error::Test::test_unwrapped_call_contract_syscall
 
 Failure data:

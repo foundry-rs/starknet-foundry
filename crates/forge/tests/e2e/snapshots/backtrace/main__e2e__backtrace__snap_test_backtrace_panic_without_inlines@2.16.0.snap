@@ -2,8 +2,6 @@
 source: crates/forge/tests/e2e/backtrace.rs
 expression: stdout
 ---
-
-
 [IGNORE] backtrace_panic::Test::test_contract_panics_with_should_panic
 [FAIL] backtrace_panic::Test::test_contract_panics
 
