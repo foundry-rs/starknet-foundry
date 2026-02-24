@@ -113,7 +113,7 @@ pub async fn run_for_test_target(
             .iter()
             .filter(|r| should_print_test_result_message(r))
             .collect();
-        sorted_results.sort_by(|a, b| a.name().unwrap_or("").cmp(b.name().unwrap_or("")));
+        sorted_results.sort_by_key(|r| r.name().unwrap_or(""));
         for result in sorted_results {
             print_test_result(result);
         }
