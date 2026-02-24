@@ -112,7 +112,7 @@ pub fn deploy_contract(
     let mut entry_point_execution_context = build_context(
         &cheatnet_state.block_info,
         None,
-        &TrackedResource::CairoSteps,
+        &TrackedResource::SierraGas,
     );
     let hints = HashMap::new();
 
@@ -143,7 +143,7 @@ pub fn deploy(
     let mut entry_point_execution_context = build_context(
         &cheatnet_state.block_info,
         None,
-        &TrackedResource::CairoSteps,
+        &TrackedResource::SierraGas,
     );
     let hints = HashMap::new();
 
@@ -226,7 +226,7 @@ pub fn call_contract(
     let mut entry_point_execution_context = build_context(
         &cheatnet_state.block_info,
         None,
-        &TrackedResource::CairoSteps,
+        &TrackedResource::SierraGas,
     );
     let hints = HashMap::new();
 
@@ -270,7 +270,7 @@ pub fn library_call_contract(
     let mut entry_point_execution_context = build_context(
         &cheatnet_state.block_info,
         None,
-        &TrackedResource::CairoSteps,
+        &TrackedResource::SierraGas,
     );
     let hints = HashMap::new();
 
