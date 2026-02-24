@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Minimal recommended `Scarb` version is now `2.14.0` (updated from `2.13.1`)
 
+#### Fixed
+
+- `--exact` flag now requires `--test-filter` to be non-empty
+
 ### Cast
 
 #### Added
