@@ -1,4 +1,4 @@
-# Instruction For Creating New Starknet Forge Releases
+# Instruction For Creating New Starknet Foundry Releases
 
 1. Create a new branch.
 2. Run `./scripts/release.sh MAJOR.MINOR.PATCH`.
