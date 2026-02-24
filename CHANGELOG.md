@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `--sierra-file` flag to `sncast declare-from` to allow declaring contract from a local Sierra file.
+- `sncast multicall` allows passing calls directly as CLI arguments. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/multicall.html#multicall-with-cli-arguments)
 
 #### Removed
 
