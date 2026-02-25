@@ -18,8 +18,27 @@ pub const fn show_explorer_links_default() -> bool {
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Default)]
 pub struct NetworkParams {
-    pub url: Option<Url>,
-    pub network: Option<Network>,
+    url: Option<Url>,
+    network: Option<Network>,
+}
+
+impl NetworkParams {
+    pub fn new(url: Option<Url>, network: Option<Network>) -> Result<Self> {
+        match (&url, &network) {
+            (Some(_), Some(_)) => anyhow::bail!("Only one of `url` or `network` may be specified"),
+            _ => Ok(Self { url, network }),
+        }
+    }
+
+    #[must_use]
+    pub fn url(&self) -> Option<&Url> {
+        self.url.as_ref()
+    }
+
+    #[must_use]
+    pub fn network(&self) -> Option<Network> {
+        self.network
+    }
 }
 
 impl Override for NetworkParams {
@@ -82,16 +101,7 @@ impl CastConfig {
                 "starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice."
             )
         }
-
-        match (
-            &self.network_params.url,
-            &self.network_params.network,
-        ) {
-            (Some(_), Some(_)) => {
-                anyhow::bail!("Only one of `url` or `network` may be specified")
-            }
-            _ => Ok(()),
-        }
+        Ok(())
     }
 }
 
@@ -175,16 +185,11 @@ impl PartialCastConfig {
                 "starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice."
             )
         }
-
-        match (
-            &self.network_params.url,
-            &self.network_params.network,
-        ) {
-            (Some(_), Some(_)) => {
-                anyhow::bail!("Only one of `url` or `network` may be specified")
-            }
-            _ => Ok(()),
-        }
+        NetworkParams::new(
+            self.network_params.url().cloned(),
+            self.network_params.network(),
+        )?;
+        Ok(())
     }
 }
 
@@ -318,32 +323,42 @@ mod tests {
     }
 
     #[test]
+    fn test_network_params_validation() {
+        let url = Some(Url::parse("https://example.com").unwrap());
+        let network = Some(Network::Sepolia);
+
+        assert!(NetworkParams::new(url.clone(), network).is_err());
+        assert!(NetworkParams::new(None, None).is_ok());
+        assert!(NetworkParams::new(url, None).is_ok());
+        assert!(NetworkParams::new(None, Some(Network::Mainnet)).is_ok());
+    }
+
+    #[test]
     fn test_network_params_override() {
-        let global = NetworkParams {
-            url: Some(Url::parse("https://global-sepolia.example.com").unwrap()),
-            network: None,
-        };
-        let local = NetworkParams {
-            url: None,
-            network: Some(Network::Sepolia),
-        };
+        let global = NetworkParams::new(
+            Some(Url::parse("https://global-sepolia.example.com").unwrap()),
+            None,
+        )
+        .unwrap();
+        let local = NetworkParams::new(None, Some(Network::Sepolia)).unwrap();
         let overridden = global.override_with(local.clone());
 
-        assert_eq!(overridden.url, None);
-        assert_eq!(overridden.network, Some(Network::Sepolia));
+        assert_eq!(overridden.url(), None);
+        assert_eq!(overridden.network(), Some(Network::Sepolia));
     }
 
     #[test]
     fn test_network_params_override_empty_keeps_base() {
-        let base = NetworkParams {
-            url: Some(Url::parse("https://base.example.com").unwrap()),
-            network: None,
-        };
+        let base = NetworkParams::new(
+            Some(Url::parse("https://base.example.com").unwrap()),
+            None,
+        )
+        .unwrap();
         let other = NetworkParams::default();
         let result = base.override_with(other);
 
-        assert_eq!(result.url, base.url);
-        assert_eq!(result.network, None);
+        assert_eq!(result.url(), base.url());
+        assert_eq!(result.network(), None);
     }
 
     #[test]
