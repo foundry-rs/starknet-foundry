@@ -169,10 +169,7 @@ fn generate_add_profile_message(
 ) -> Result<Option<String>> {
     if let Some(profile_name) = profile_name {
         let network_params = if rpc_args.url.is_some() || rpc_args.network.is_some() {
-            NetworkParams {
-                url: rpc_args.url.clone(),
-                network: rpc_args.network,
-            }
+            NetworkParams::new(rpc_args.url.clone(), rpc_args.network)?
         } else {
             config.network_params.clone()
         };
@@ -348,10 +345,11 @@ mod tests {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let path = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
         let config = CastConfig {
-            network_params: NetworkParams {
-                url: Some(Url::parse("http://some-url.com/").unwrap()),
-                network: None,
-            },
+            network_params: NetworkParams::new(
+                Some(Url::parse("http://some-url.com/").unwrap()),
+                None,
+            )
+            .unwrap(),
             account: String::from("some-name"),
             accounts_file: "accounts".into(),
             ..Default::default()
@@ -376,10 +374,11 @@ mod tests {
     fn test_add_created_profile_to_configuration_profile_already_exists() {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let config = CastConfig {
-            network_params: NetworkParams {
-                url: Some(Url::parse("http://some-url.com/").unwrap()),
-                network: None,
-            },
+            network_params: NetworkParams::new(
+                Some(Url::parse("http://some-url.com/").unwrap()),
+                None,
+            )
+            .unwrap(),
             account: String::from("user1"),
             accounts_file: DEFAULT_ACCOUNTS_FILE.into(),
             ..Default::default()

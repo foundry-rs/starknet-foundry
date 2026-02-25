@@ -140,9 +140,9 @@ pub async fn verify(
     let rpc_url = match url {
         Some(url) => url,
         None => {
-            if let Some(config_url) = &config.network_params.url {
+            if let Some(config_url) = config.network_params.url() {
                 config_url.clone()
-            } else if let Some(network) = &config.network_params.network {
+            } else if let Some(network) = config.network_params.network() {
                 network.url(&FreeProvider::semi_random()).await?
             } else {
                 let network =
