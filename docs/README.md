@@ -4,8 +4,9 @@
 
 Install mdBook
 
+<!-- TODO(#3970): Use latest version after resolving issue -->
 ```shell
-$ cargo install mdbook
+$ cargo install mdbook@0.4.52
 ```
 
 Install necessary mdBook extensions
@@ -14,8 +15,9 @@ Install necessary mdBook extensions
 $ cargo install mdbook-linkcheck
 ```
 
+<!-- TODO(#3970): Use latest version after resolving issue -->
 ```shell
-$ cargo install mdbook-variables
+$ cargo install mdbook-variables@0.3.0
 ```
 
 ## Building
