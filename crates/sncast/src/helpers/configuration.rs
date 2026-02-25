@@ -24,7 +24,11 @@ pub struct NetworkParams {
 
 impl Override for NetworkParams {
     fn override_with(&self, other: NetworkParams) -> NetworkParams {
-        other
+        if other == NetworkParams::default() {
+            self.clone()
+        } else {
+            other
+        }
     }
 }
 
@@ -327,6 +331,19 @@ mod tests {
 
         assert_eq!(overridden.url, None);
         assert_eq!(overridden.network, Some(Network::Sepolia));
+    }
+
+    #[test]
+    fn test_network_params_override_empty_keeps_base() {
+        let base = NetworkParams {
+            url: Some(Url::parse("https://base.example.com").unwrap()),
+            network: None,
+        };
+        let other = NetworkParams::default();
+        let result = base.override_with(other);
+
+        assert_eq!(result.url, base.url);
+        assert_eq!(result.network, None);
     }
 
     #[test]
