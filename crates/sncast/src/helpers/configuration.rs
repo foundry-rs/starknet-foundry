@@ -24,10 +24,9 @@ pub struct NetworkParams {
 
 impl NetworkParams {
     pub fn new(url: Option<Url>, network: Option<Network>) -> Result<Self> {
-        match (&url, &network) {
-            (Some(_), Some(_)) => anyhow::bail!("Only one of `url` or `network` may be specified"),
-            _ => Ok(Self { url, network }),
-        }
+        let res = Self { url, network };
+        res.validate()?;
+        Ok(res)
     }
 
     #[must_use]
@@ -38,6 +37,13 @@ impl NetworkParams {
     #[must_use]
     pub fn network(&self) -> Option<Network> {
         self.network
+    }
+
+    pub fn validate(&self) -> Result<()> {
+         match (&self.url, &self.network) {
+            (Some(_), Some(_)) => anyhow::bail!("Only one of `url` or `network` may be specified"),
+            _ => Ok(()),
+        }
     }
 }
 
@@ -96,7 +102,10 @@ pub struct CastConfig {
 
 impl CastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
-        block_explorer::Service::validate_for_config(self.block_explorer)
+        block_explorer::Service::validate_for_config(self.block_explorer)?;
+        self.wait_params.validate();
+        self.network_params.validate()?;
+        Ok(())
     }
 }
 
@@ -176,6 +185,8 @@ impl Config for PartialCastConfig {
 impl PartialCastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
         block_explorer::Service::validate_for_config(self.block_explorer)?;
+        self.wait_params.map(ValidatedWaitParams::from);
+        self.network_params.validate()?;
         Ok(())
     }
 }

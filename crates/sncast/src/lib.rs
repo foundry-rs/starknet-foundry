@@ -184,15 +184,12 @@ pub struct ValidatedWaitParams {
 impl ValidatedWaitParams {
     #[must_use]
     pub fn new(retry_interval: u8, timeout: u16) -> Self {
-        assert!(
-            !(retry_interval == 0 || timeout == 0 || u16::from(retry_interval) > timeout),
-            "Invalid values for retry_interval and/or timeout!"
-        );
-
-        Self {
+        let res = Self {
             timeout,
             retry_interval,
-        }
+        };
+        res.validate();
+        res
     }
 
     #[must_use]
@@ -213,6 +210,13 @@ impl ValidatedWaitParams {
     #[must_use]
     pub fn get_timeout(&self) -> u16 {
         self.timeout
+    }
+
+    pub fn validate(&self){
+        assert!(
+            !(self.retry_interval == 0 || self.timeout == 0 || u16::from(self.retry_interval) > self.timeout),
+            "Invalid values for retry_interval and/or timeout!"
+        );
     }
 }
 
