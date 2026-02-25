@@ -140,9 +140,9 @@ pub async fn verify(
     let rpc_url = match url {
         Some(url) => url,
         None => {
-            if let Some(config_url) = &config.url {
+            if let Some(config_url) = &config.network_params.url {
                 config_url.clone()
-            } else if let Some(network) = &config.network {
+            } else if let Some(network) = &config.network_params.network {
                 network.url(&FreeProvider::semi_random()).await?
             } else {
                 let network =
@@ -178,7 +178,7 @@ pub async fn verify(
         (Some(network), _) => network,
         (None, true) => Network::Sepolia, // --url provided but no --network
         (None, false) => {
-            Network::Sepolia // fallback when config.url is set
+            Network::Sepolia // fallback when config.network_params.url is set
         }
     };
 
