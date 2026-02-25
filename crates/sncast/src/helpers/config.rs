@@ -58,8 +58,8 @@ fn build_default_manifest() -> String {
         # devnet = "http://127.0.0.1:5050/rpc"
         "#,
         default_accounts_file = DEFAULT_ACCOUNTS_FILE,
-        default_wait_timeout = default_wait_params.timeout,
-        default_wait_retry_interval = default_wait_params.retry_interval,
+        default_wait_timeout = default_wait_params.get_timeout(),
+        default_wait_retry_interval = default_wait_params.get_retry_interval(),
         default_block_explorer = "Voyager",
         default_show_explorer_links = show_explorer_links_default(),
     }
