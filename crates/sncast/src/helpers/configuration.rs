@@ -17,6 +17,18 @@ pub const fn show_explorer_links_default() -> bool {
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Default)]
+pub struct NetworkParams {
+    pub url: Option<Url>,
+    pub network: Option<Network>,
+}
+
+impl Override for NetworkParams {
+    fn override_with(&self, other: NetworkParams) -> NetworkParams {
+        other
+    }
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Default)]
 #[serde(deny_unknown_fields)]
 pub struct NetworksConfig {
     pub mainnet: Option<Url>,
@@ -49,8 +61,7 @@ impl Override for NetworksConfig {
 /// Note: Built from [`PartialCastConfig`], not (de)sereliazed.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CastConfig {
-    pub url: Option<Url>,
-    pub network: Option<Network>,
+    pub network_params: NetworkParams,
     pub account: String,
     pub accounts_file: Utf8PathBuf,
     pub keystore: Option<Utf8PathBuf>,
@@ -68,7 +79,10 @@ impl CastConfig {
             )
         }
 
-        match (&self.url, &self.network) {
+        match (
+            &self.network_params.url,
+            &self.network_params.network,
+        ) {
             (Some(_), Some(_)) => {
                 anyhow::bail!("Only one of `url` or `network` may be specified")
             }
@@ -80,8 +94,7 @@ impl CastConfig {
 impl Default for CastConfig {
     fn default() -> Self {
         Self {
-            url: None,
-            network: None,
+            network_params: NetworkParams::default(),
             account: String::default(),
             accounts_file: Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE),
             keystore: None,
@@ -96,9 +109,8 @@ impl Default for CastConfig {
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Default)]
 pub struct PartialCastConfig {
-    pub url: Option<Url>,
-
-    pub network: Option<Network>,
+    #[serde(flatten)]
+    pub network_params: NetworkParams,
 
     pub account: Option<String>,
 
@@ -160,7 +172,10 @@ impl PartialCastConfig {
             )
         }
 
-        match (&self.url, &self.network) {
+        match (
+            &self.network_params.url,
+            &self.network_params.network,
+        ) {
             (Some(_), Some(_)) => {
                 anyhow::bail!("Only one of `url` or `network` may be specified")
             }
@@ -172,8 +187,7 @@ impl PartialCastConfig {
 impl Override for PartialCastConfig {
     fn override_with(&self, other: PartialCastConfig) -> PartialCastConfig {
         PartialCastConfig {
-            url: other.url.or_else(|| self.url.clone()),
-            network: other.network.or(self.network),
+            network_params: self.network_params.override_with(other.network_params),
             account: other.account.or_else(|| self.account.clone()),
             accounts_file: other.accounts_file.or_else(|| self.accounts_file.clone()),
             keystore: other.keystore.or_else(|| self.keystore.clone()),
@@ -231,8 +245,7 @@ impl From<PartialCastConfig> for CastConfig {
             .unwrap_or(d.networks);
 
         CastConfig {
-            url: p.url.or(d.url),
-            network: p.network.or(d.network),
+            network_params: d.network_params.override_with(p.network_params),
             account: p.account.unwrap_or(d.account),
             accounts_file,
             keystore: p.keystore.or(d.keystore),
@@ -298,6 +311,22 @@ mod tests {
             overridden.sepolia,
             Some(Url::parse("https://global-sepolia.example.com").unwrap())
         );
+    }
+
+    #[test]
+    fn test_network_params_override() {
+        let global = NetworkParams {
+            url: Some(Url::parse("https://global-sepolia.example.com").unwrap()),
+            network: None,
+        };
+        let local = NetworkParams {
+            url: None,
+            network: Some(Network::Sepolia),
+        };
+        let overridden = global.override_with(local.clone());
+
+        assert_eq!(overridden.url, None);
+        assert_eq!(overridden.network, Some(Network::Sepolia));
     }
 
     #[test]

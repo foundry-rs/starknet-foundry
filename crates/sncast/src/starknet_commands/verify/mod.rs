@@ -158,9 +158,9 @@ pub async fn verify(
     let rpc_url = match url {
         Some(url) => url,
         None => {
-            if let Some(config_url) = &config.url {
+            if let Some(config_url) = &config.network_params.url {
                 config_url.clone()
-            } else if let Some(network) = &config.network {
+            } else if let Some(network) = &config.network_params.network {
                 network.url(&FreeProvider::semi_random()).await?
             } else {
                 let network =
@@ -190,7 +190,7 @@ pub async fn verify(
         }
     };
 
-    let network = resolve_verification_network(network, config.network, &provider).await?;
+    let network = resolve_verification_network(network, config.network_params.network, &provider).await?;
 
     // Handle test_files warning for Walnut
     if matches!(verifier, Verifier::Walnut) && test_files {

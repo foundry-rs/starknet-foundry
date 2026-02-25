@@ -38,7 +38,12 @@ impl RpcArgs {
     }
 
     pub async fn get_url(&self, config: &CastConfig) -> Result<Url> {
-        match (&self.network, &self.url, &config.url, &config.network) {
+        match (
+            &self.network,
+            &self.url,
+            &config.network_params.url,
+            &config.network_params.network,
+        ) {
             (Some(network), None, _, _) => self.resolve_network_url(network, config).await,
             (None, Some(url), _, _) => Ok(url.clone()),
             (None, None, Some(config_url), None) => Ok(config_url.clone()),
@@ -119,7 +124,7 @@ pub fn generate_network_flag(rpc_args: &RpcArgs, config: &CastConfig) -> String 
         format!("--network {network}")
     } else if let Some(rpc_url) = &rpc_args.url {
         format!("--url {rpc_url}")
-    } else if config.url.is_some() || config.network.is_some() {
+    } else if config.network_params.url.is_some() || config.network_params.network.is_some() {
         // Since url or network is defined in config, no need to pass any flag
         String::new()
     } else {
