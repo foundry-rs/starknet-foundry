@@ -135,7 +135,7 @@ pub enum TestCaseSummary<T: TestType> {
     ExcludedFromPartition {},
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 // We allow large enum variant because `Single` is the bigger variant and it is used most often
 #[expect(clippy::large_enum_variant)]
 pub enum AnyTestCaseSummary {
