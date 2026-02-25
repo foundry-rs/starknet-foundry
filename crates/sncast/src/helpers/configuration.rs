@@ -96,12 +96,7 @@ pub struct CastConfig {
 
 impl CastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
-        if self.block_explorer.unwrap_or_default() == block_explorer::Service::StarkScan {
-            anyhow::bail!(
-                "starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice."
-            )
-        }
-        Ok(())
+        block_explorer::Service::validate_for_config(self.block_explorer)
     }
 }
 
@@ -180,15 +175,7 @@ impl Config for PartialCastConfig {
 
 impl PartialCastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
-        if self.block_explorer.unwrap_or_default() == block_explorer::Service::StarkScan {
-            anyhow::bail!(
-                "starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice."
-            )
-        }
-        NetworkParams::new(
-            self.network_params.url().cloned(),
-            self.network_params.network(),
-        )?;
+        block_explorer::Service::validate_for_config(self.block_explorer)?;
         Ok(())
     }
 }
