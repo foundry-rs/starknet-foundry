@@ -17,7 +17,9 @@ function get_latest_patch_version() {
 }
 
 function version_less_than() {
-  [[ "$1" != "$current" ]] && [[ "$(printf '%s\n%s' "$1" "$current" | sort -V | head -1)" == "$1" ]]
+  _version1="$1"
+  _version2="$2"
+  printf '%s\n%s' "$_version1" "$_version2" | sort -V | head -n1 | grep -xqvF "$_version2"
 }
 
 PREVIOUS_ONLY=0
@@ -46,15 +48,15 @@ major_minor_versions=($(get_all_patch_versions | cut -d . -f 1,2 | sort -uV | ta
 declare -a scarb_versions
 
 ver=$(get_latest_patch_version "${major_minor_versions[0]}")
-if [[ -z "$PREVIOUS_ONLY" ]] || version_less_than "$ver"; then
+if [[ "$PREVIOUS_ONLY" -eq 0 ]] || version_less_than "$ver" "$current"; then
   scarb_versions+=("$ver")
 fi
 ver=$(get_latest_patch_version "${major_minor_versions[1]}")
-if [[ -z "$PREVIOUS_ONLY" ]] || version_less_than "$ver"; then
+if [[ "$PREVIOUS_ONLY" -eq 0 ]] || version_less_than "$ver" "$current"; then
   scarb_versions+=("$ver")
 fi
 for ver in $(get_all_patch_versions "${major_minor_versions[2]}" | sort -uV); do
-  if [[ -z "$PREVIOUS_ONLY" ]] || version_less_than "$ver"; then
+  if [[ "$PREVIOUS_ONLY" -eq 0 ]] || version_less_than "$ver" "$current"; then
     scarb_versions+=("$ver")
   fi
 done
