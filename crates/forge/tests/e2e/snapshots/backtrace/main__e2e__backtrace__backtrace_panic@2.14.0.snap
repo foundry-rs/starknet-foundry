@@ -6,7 +6,7 @@ expression: stdout
 [FAIL] backtrace_panic::Test::test_contract_panics
 
 Failure data:
-    0x417373657274206661696c6564 ('Assert failed')
+    (0x417373657274206661696c6564 ('Assert failed'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
 
 error occurred in contract 'InnerContract'
 stack backtrace:
@@ -25,7 +25,7 @@ stack backtrace:
 [FAIL] backtrace_panic::Test::test_fork_contract_panics
 
 Failure data:
-    0x417373657274206661696c6564 ('Assert failed')
+    (0x417373657274206661696c6564 ('Assert failed'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
 
 error occurred in forked contract with class hash: 0x554cb276fb5eb0788344f5431b9a166e2f445d8a91c7aef79d8c77e7eede956
 
