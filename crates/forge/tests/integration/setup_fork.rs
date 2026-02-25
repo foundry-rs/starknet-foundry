@@ -148,6 +148,7 @@ fn fork_aliased_decorator() {
                 forge_config: Arc::new(ForgeConfig {
                     test_runner_config: Arc::new(TestRunnerConfig {
                         exit_first: false,
+                        deterministic_output: false,
                         fuzzer_runs: NonZeroU32::new(256).unwrap(),
                         fuzzer_seed: 12345,
                         max_n_steps: None,
@@ -239,6 +240,7 @@ fn fork_aliased_decorator_overrding() {
                 forge_config: Arc::new(ForgeConfig {
                     test_runner_config: Arc::new(TestRunnerConfig {
                         exit_first: false,
+                        deterministic_output: false,
                         fuzzer_runs: NonZeroU32::new(256).unwrap(),
                         fuzzer_seed: 12345,
                         max_n_steps: None,

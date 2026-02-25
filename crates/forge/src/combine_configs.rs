@@ -15,6 +15,7 @@ use std::sync::Arc;
 #[expect(clippy::fn_params_excessive_bools)]
 pub fn combine_configs(
     exit_first: bool,
+    deterministic_output: bool,
     fuzzer_runs: Option<NonZeroU32>,
     fuzzer_seed: Option<u64>,
     detailed_resources: bool,
@@ -40,6 +41,7 @@ pub fn combine_configs(
     ForgeConfig {
         test_runner_config: Arc::new(TestRunnerConfig {
             exit_first: exit_first || forge_config_from_scarb.exit_first,
+            deterministic_output,
             fuzzer_runs: fuzzer_runs
                 .or(forge_config_from_scarb.fuzzer_runs)
                 .unwrap_or(NonZeroU32::new(256).unwrap()),
@@ -70,6 +72,7 @@ mod tests {
     fn fuzzer_default_seed() {
         let config = combine_configs(
             false,
+            false,
             None,
             None,
             false,
@@ -86,6 +89,7 @@ mod tests {
             TraceArgs::default(),
         );
         let config2 = combine_configs(
+            false,
             false,
             None,
             None,
@@ -115,6 +119,7 @@ mod tests {
     fn runner_config_default_arguments() {
         let config = combine_configs(
             false,
+            false,
             None,
             None,
             false,
@@ -135,6 +140,7 @@ mod tests {
             ForgeConfig {
                 test_runner_config: Arc::new(TestRunnerConfig {
                     exit_first: false,
+                    deterministic_output: false,
                     fuzzer_runs: NonZeroU32::new(256).unwrap(),
                     fuzzer_seed: config.test_runner_config.fuzzer_seed,
                     max_n_steps: None,
@@ -172,6 +178,7 @@ mod tests {
 
         let config = combine_configs(
             false,
+            false,
             None,
             None,
             false,
@@ -192,6 +199,7 @@ mod tests {
             ForgeConfig {
                 test_runner_config: Arc::new(TestRunnerConfig {
                     exit_first: true,
+                    deterministic_output: false,
                     fuzzer_runs: NonZeroU32::new(1234).unwrap(),
                     fuzzer_seed: 500,
                     max_n_steps: Some(1_000_000),
@@ -233,6 +241,7 @@ mod tests {
         };
         let config = combine_configs(
             true,
+            false,
             Some(NonZeroU32::new(100).unwrap()),
             Some(32),
             true,
@@ -254,6 +263,7 @@ mod tests {
             ForgeConfig {
                 test_runner_config: Arc::new(TestRunnerConfig {
                     exit_first: true,
+                    deterministic_output: false,
                     fuzzer_runs: NonZeroU32::new(100).unwrap(),
                     fuzzer_seed: 32,
                     max_n_steps: Some(1_000_000),

@@ -11,6 +11,7 @@ fn snap_basic() {
     let output = test_runner(&temp)
         .arg("--gas-report")
         .arg("call_and_invoke")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
         .assert()
         .code(0);
 
@@ -23,6 +24,7 @@ fn snap_recursive_calls() {
     let output = test_runner(&temp)
         .arg("--gas-report")
         .arg("test_debugging_trace_success")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
         .assert()
         .code(0);
 
@@ -35,6 +37,7 @@ fn snap_multiple_contracts_and_constructor() {
     let output = test_runner(&temp)
         .arg("--gas-report")
         .arg("call_and_invoke_proxy")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
         .assert()
         .code(0);
 
@@ -49,6 +52,7 @@ fn snap_fork() {
     let output = test_runner(&temp)
         .arg("--gas-report")
         .arg("test_track_resources")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
         .assert()
         .code(0);
 

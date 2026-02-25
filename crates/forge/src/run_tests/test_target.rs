@@ -73,17 +73,23 @@ pub async fn run_for_test_target(
     let mut results = vec![];
     let mut saved_trace_data_paths = vec![];
     let mut interrupted = false;
+    let deterministic_output = forge_config.test_runner_config.deterministic_output;
+
+    let print_test_result = |result: &AnyTestCaseSummary| {
+        let test_result_message = TestResultMessage::new(
+            result,
+            forge_config.output_config.detailed_resources,
+            forge_config.test_runner_config.tracked_resource,
+        );
+        ui.println(&test_result_message);
+    };
 
     while let Some(task) = tasks.next().await {
         let result = task??;
 
-        if should_print_test_result_message(&result) {
-            let test_result_message = TestResultMessage::new(
-                &result,
-                forge_config.output_config.detailed_resources,
-                forge_config.test_runner_config.tracked_resource,
-            );
-            ui.println(&test_result_message);
+        // Skip printing; Print all results at once in a sorted order once they are available
+        if !deterministic_output && should_print_test_result_message(&result) {
+            print_test_result(&result);
         }
 
         let trace_path = maybe_save_trace_and_profile(
@@ -100,6 +106,17 @@ pub async fn run_for_test_target(
         }
 
         results.push(result);
+    }
+
+    if deterministic_output {
+        let mut sorted_results: Vec<_> = results
+            .iter()
+            .filter(|r| should_print_test_result_message(r))
+            .collect();
+        sorted_results.sort_by_key(|r| r.name().unwrap_or(""));
+        for result in sorted_results {
+            print_test_result(result);
+        }
     }
 
     maybe_generate_coverage(

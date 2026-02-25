@@ -1,4 +1,6 @@
 /// Asserts a cleaned `stdout` snapshot using `insta`, filtered for non-deterministic lines.
+/// Additionally, to ensure deterministic snapshots, tests must be run with:
+/// `SNFORGE_DETERMINISTIC_OUTPUT=1`
 /// Uses the current Scarb version as a snapshot suffix.
 #[macro_export]
 macro_rules! assert_cleaned_output {

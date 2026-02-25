@@ -103,6 +103,7 @@ impl RunForPackageArgs {
             load_package_config::<ForgeConfigFromScarb>(scarb_metadata, &package.id)?;
         let forge_config = Arc::new(combine_configs(
             args.exit_first,
+            args.deterministic_output,
             args.fuzzer_runs,
             args.fuzzer_seed,
             args.detailed_resources,

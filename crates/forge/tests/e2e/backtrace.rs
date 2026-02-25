@@ -46,6 +46,7 @@ fn snap_test_backtrace() {
 
     let output = test_runner(&temp)
         .env("SNFORGE_BACKTRACE", "1")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
         .assert()
         .failure();
 
@@ -59,6 +60,7 @@ fn snap_test_backtrace_without_inlines() {
 
     let output = test_runner(&temp)
         .env("SNFORGE_BACKTRACE", "1")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
         .assert()
         .failure();
 
@@ -106,6 +108,7 @@ fn snap_test_backtrace_panic() {
 
     let output = test_runner(&temp)
         .env("SNFORGE_BACKTRACE", "1")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
         .assert()
         .failure();
 
@@ -128,6 +131,7 @@ fn snap_test_backtrace_panic_without_optimizations() {
 
     let output = test_runner(&temp)
         .env("SNFORGE_BACKTRACE", "1")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
         .assert()
         .failure();
 
@@ -141,6 +145,7 @@ fn snap_test_backtrace_panic_without_inlines() {
 
     let output = test_runner(&temp)
         .env("SNFORGE_BACKTRACE", "1")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
         .assert()
         .failure();
 
@@ -154,6 +159,7 @@ fn snap_test_handled_error_not_display() {
     let output = test_runner(&temp)
         .arg("test_handle_and_panic")
         .env("SNFORGE_BACKTRACE", "1")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
         .assert()
         .success();
 

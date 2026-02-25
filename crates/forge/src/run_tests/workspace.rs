@@ -28,7 +28,9 @@ use std::env;
 use std::sync::Arc;
 
 #[tracing::instrument(skip_all, level = "debug")]
+#[allow(clippy::too_many_lines)]
 pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus> {
+    let deterministic_output = args.deterministic_output;
     match args.color {
         // SAFETY: This runs in a single-threaded environment.
         ColorOption::Always => unsafe { env::set_var("CLICOLOR_FORCE", "1") },
@@ -109,7 +111,10 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     }
 
     let overall_summary = OverallSummaryMessage::new(&all_tests, total_filtered_count);
-    let all_failed_tests: Vec<AnyTestCaseSummary> = extract_failed_tests(all_tests).collect();
+    let mut all_failed_tests: Vec<AnyTestCaseSummary> = extract_failed_tests(all_tests).collect();
+    if deterministic_output {
+        all_failed_tests.sort_by(|a, b| a.name().unwrap_or("").cmp(b.name().unwrap_or("")));
+    }
 
     FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
 
