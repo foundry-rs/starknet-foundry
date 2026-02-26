@@ -12,7 +12,7 @@ pub struct TestsFailureSummaryMessage {
 
 impl TestsFailureSummaryMessage {
     #[must_use]
-    pub fn new(all_failed_tests: &[AnyTestCaseSummary]) -> Self {
+    pub fn new(all_failed_tests: &[&AnyTestCaseSummary]) -> Self {
         let failed_test_names = all_failed_tests
             .iter()
             .map(|any_test_case_summary| any_test_case_summary.name().unwrap().to_string())
