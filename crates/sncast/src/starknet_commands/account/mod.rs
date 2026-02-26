@@ -11,20 +11,19 @@ use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
 use serde_json::json;
 use sncast::helpers::account::{generate_account_name, load_accounts};
+use sncast::helpers::configuration::{CastConfig, NetworkParams, PartialCastConfig, SncastProfileAppend};
 use sncast::helpers::interactive::prompt_to_add_account_as_default;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::ui::UI;
-use sncast::{
-    AccountType, chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig,
-};
+use sncast::{AccountType, chain_id_to_network_name, decode_chain_id};
 use sncast::{WaitForTx, get_chain_id};
 use starknet_rust::providers::Provider;
 use starknet_rust::signers::SigningKey;
 use starknet_types_core::felt::Felt;
+use std::collections::BTreeMap;
 use std::io::{self, IsTerminal};
 use std::{fs::OpenOptions, io::Write};
-use toml::Value;
 
 pub mod create;
 pub mod delete;
@@ -117,9 +116,10 @@ pub fn add_created_profile_to_configuration(
     cast_config: &CastConfig,
     path: &Utf8PathBuf,
 ) -> Result<()> {
-    if !load_config::<CastConfig>(Some(path), profile)
+    if !load_config::<PartialCastConfig>(Some(path), profile)
         .unwrap_or_default()
         .account
+        .unwrap_or_default()
         .is_empty()
     {
         bail!(
@@ -128,37 +128,22 @@ pub fn add_created_profile_to_configuration(
         );
     }
 
-    let toml_string = {
-        let mut new_profile = toml::value::Table::new();
-
-        if let Some(url) = &cast_config.url {
-            new_profile.insert("url".to_string(), Value::String(url.to_string()));
-        } else if let Some(network) = &cast_config.network {
-            new_profile.insert("network".to_string(), Value::String(network.to_string()));
-        }
-        new_profile.insert(
-            "account".to_string(),
-            Value::String(cast_config.account.clone()),
-        );
-        if let Some(keystore) = cast_config.keystore.clone() {
-            new_profile.insert("keystore".to_string(), Value::String(keystore.to_string()));
-        } else {
-            new_profile.insert(
-                "accounts-file".to_string(),
-                Value::String(cast_config.accounts_file.to_string()),
-            );
-        }
-        let mut profile_config = toml::value::Table::new();
-        profile_config.insert(
-            profile.map_or_else(|| cast_config.account.clone(), ToString::to_string),
-            Value::Table(new_profile),
-        );
-
-        let mut sncast_config = toml::value::Table::new();
-        sncast_config.insert(String::from("sncast"), Value::Table(profile_config));
-
-        toml::to_string(&Value::Table(sncast_config)).context("Failed to convert toml to string")?
+    let profile_config = PartialCastConfig {
+        network_params: cast_config.network_params.clone(),
+        account: Some(cast_config.account.clone()),
+        keystore: cast_config.keystore.clone(),
+        accounts_file: cast_config
+            .keystore
+            .is_none()
+            .then(|| cast_config.accounts_file.clone()),
+        ..Default::default()
     };
+
+    let profile_key = profile.map_or_else(|| cast_config.account.clone(), ToString::to_string);
+    let append = SncastProfileAppend {
+        sncast: BTreeMap::from([(profile_key, profile_config)]),
+    };
+    let toml_string = toml::to_string(&append).context("Failed to convert toml to string")?;
 
     let config_path = search_config_upwards_relative_to(path)?;
 
@@ -183,14 +168,13 @@ fn generate_add_profile_message(
     config: &CastConfig,
 ) -> Result<Option<String>> {
     if let Some(profile_name) = profile_name {
-        let (url, network) = if rpc_args.url.is_some() || rpc_args.network.is_some() {
-            (rpc_args.url.clone(), rpc_args.network)
+        let network_params = if rpc_args.url.is_some() || rpc_args.network.is_some() {
+            NetworkParams::new(rpc_args.url.clone(), rpc_args.network)?
         } else {
-            (config.url.clone(), config.network)
+            config.network_params.clone()
         };
         let config = CastConfig {
-            url,
-            network,
+            network_params,
             account: account_name.into(),
             accounts_file: accounts_file.into(),
             keystore,
@@ -347,7 +331,10 @@ pub async fn account(
 mod tests {
     use camino::Utf8PathBuf;
     use configuration::test_utils::copy_config_to_tempdir;
-    use sncast::helpers::{configuration::CastConfig, constants::DEFAULT_ACCOUNTS_FILE};
+    use sncast::helpers::{
+        configuration::{CastConfig, NetworkParams},
+        constants::DEFAULT_ACCOUNTS_FILE,
+    };
     use std::fs;
     use url::Url;
 
@@ -358,8 +345,11 @@ mod tests {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let path = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
         let config = CastConfig {
-            url: Some(Url::parse("http://some-url.com/").unwrap()),
-            network: None,
+            network_params: NetworkParams::new(
+                Some(Url::parse("http://some-url.com/").unwrap()),
+                None,
+            )
+            .unwrap(),
             account: String::from("some-name"),
             accounts_file: "accounts".into(),
             ..Default::default()
@@ -384,8 +374,11 @@ mod tests {
     fn test_add_created_profile_to_configuration_profile_already_exists() {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let config = CastConfig {
-            url: Some(Url::parse("http://some-url.com/").unwrap()),
-            network: None,
+            network_params: NetworkParams::new(
+                Some(Url::parse("http://some-url.com/").unwrap()),
+                None,
+            )
+            .unwrap(),
             account: String::from("user1"),
             accounts_file: DEFAULT_ACCOUNTS_FILE.into(),
             ..Default::default()

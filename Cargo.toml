@@ -114,6 +114,7 @@ sha3 = "0.10.8"
 base16ct = { version = "1.0.0", features = ["alloc"] }
 async-trait = "0.1.87"
 serde_path_to_error = "0.1.20"
+serde_with = "3.16.1"
 wiremock = "0.6.3"
 const-hex = "1.16.0"
 indicatif = "0.18.3"
