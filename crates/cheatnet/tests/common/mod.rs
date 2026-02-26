@@ -331,7 +331,10 @@ fn call_entry_point_extended_result(
     }
 }
 
-pub fn call_contract_raw(
+// Calls an entry point via `execute_call_entry_point` directly, bypassing the `call_entry_point` wrapper.
+// Unlike `call_entry_point`, this layer does **not** revert state mutations on failure.
+// Therefore, events, messages, and storage changes persist even when the call fails.
+pub fn execute_entry_point_without_revert(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
