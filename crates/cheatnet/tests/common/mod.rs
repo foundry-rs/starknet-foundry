@@ -45,6 +45,12 @@ pub mod assertions;
 pub mod cache;
 pub mod state;
 
+// Helper struct to return both: our custom call result wrapper and actual call info (unless unrecoverable error)
+pub struct CallResultExtended {
+    pub call_result: CallResult,
+    pub call_info: Option<CallInfo>,
+}
+
 fn build_syscall_hint_processor<'a>(
     call_entry_point: &CallEntryPoint,
     state: &'a mut dyn State,
@@ -223,27 +229,13 @@ pub fn call_contract(
         initial_gas: i64::MAX as u64,
     };
 
-    let mut entry_point_execution_context = build_context(
-        &cheatnet_state.block_info,
-        None,
-        &TrackedResource::SierraGas,
-    );
-    let hints = HashMap::new();
-
-    let mut syscall_hint_processor = build_syscall_hint_processor(
-        &entry_point,
+    call_entry_point_extended_result(
         state,
-        &mut entry_point_execution_context,
-        &hints,
-    );
-
-    call_entry_point(
-        &mut syscall_hint_processor,
         cheatnet_state,
         entry_point,
         &AddressOrClassHash::ContractAddress(*contract_address),
-        &mut (i64::MAX as u64),
     )
+    .call_result
 }
 
 pub fn library_call_contract(
@@ -254,7 +246,6 @@ pub fn library_call_contract(
     calldata: &[Felt],
 ) -> CallResult {
     let calldata = create_execute_calldata(calldata);
-
     let entry_point = CallEntryPoint {
         class_hash: Some(*class_hash),
         code_address: None,
@@ -267,6 +258,50 @@ pub fn library_call_contract(
         initial_gas: i64::MAX as u64,
     };
 
+    call_entry_point_extended_result(
+        state,
+        cheatnet_state,
+        entry_point,
+        &AddressOrClassHash::ClassHash(*class_hash),
+    )
+    .call_result
+}
+
+pub fn call_contract_extended_result(
+    state: &mut dyn State,
+    cheatnet_state: &mut CheatnetState,
+    contract_address: &ContractAddress,
+    entry_point_selector: EntryPointSelector,
+    calldata: &[Felt],
+) -> CallResultExtended {
+    let calldata = create_execute_calldata(calldata);
+
+    let entry_point = CallEntryPoint {
+        class_hash: None,
+        code_address: Some(*contract_address),
+        entry_point_type: EntryPointType::External,
+        entry_point_selector,
+        calldata,
+        storage_address: *contract_address,
+        caller_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
+        call_type: CallType::Call,
+        initial_gas: i64::MAX as u64,
+    };
+
+    call_entry_point_extended_result(
+        state,
+        cheatnet_state,
+        entry_point,
+        &AddressOrClassHash::ContractAddress(*contract_address),
+    )
+}
+
+fn call_entry_point_extended_result(
+    state: &mut dyn State,
+    cheatnet_state: &mut CheatnetState,
+    entry_point: CallEntryPoint,
+    address_or_class_hash: &AddressOrClassHash,
+) -> CallResultExtended {
     let mut entry_point_execution_context = build_context(
         &cheatnet_state.block_info,
         None,
@@ -281,16 +316,25 @@ pub fn library_call_contract(
         &hints,
     );
 
-    call_entry_point(
+    let call_result = call_entry_point(
         &mut syscall_hint_processor,
         cheatnet_state,
         entry_point,
-        &AddressOrClassHash::ClassHash(*class_hash),
+        address_or_class_hash,
         &mut (i64::MAX as u64),
-    )
+    );
+    let call_info = syscall_hint_processor.base.inner_calls.first().cloned();
+
+    CallResultExtended {
+        call_result,
+        call_info,
+    }
 }
 
-pub fn call_contract_raw(
+// Calls an entry point via `execute_call_entry_point` directly, bypassing the `call_entry_point` wrapper.
+// Unlike `call_entry_point`, this layer does **not** revert state mutations on failure.
+// Therefore, events, messages, and storage changes persist even when the call fails.
+pub fn execute_entry_point_without_revert(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
