@@ -5,6 +5,7 @@ pub mod declare;
 pub mod declare_from;
 pub mod deploy;
 pub mod invoke;
+pub mod ledger;
 pub mod multicall;
 pub mod script;
 pub mod show_config;
