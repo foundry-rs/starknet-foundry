@@ -3919,6 +3919,9 @@ name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "hidapi-rusb"
@@ -7235,6 +7238,7 @@ dependencies = [
  "shared",
  "shellexpand",
  "snapbox",
+ "speculos-client",
  "starknet-rust",
  "starknet-rust-crypto",
  "starknet-types-core",
@@ -7273,6 +7277,17 @@ checksum = "86f4aa3ad99f2088c990dfa82d367e19cb29268ed67c574d10d0a4bfe71f07e0"
 dependencies = [
  "libc",
  "windows-sys 0.60.2",
+]
+
+[[package]]
+name = "speculos-client"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aab48e66d675276b5970b3243e9638053a9ff8d693d4a0f9c2514e83dbbc8cab"
+dependencies = [
+ "hex",
+ "reqwest 0.12.28",
+ "serde",
 ]
 
 [[package]]
