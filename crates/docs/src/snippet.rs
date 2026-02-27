@@ -54,20 +54,24 @@ impl SnippetType {
     }
 }
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Serialize)]
 #[serde(default)]
 pub struct SnippetConfig {
     pub ignored: bool,
+    pub requires_ledger: bool,
     pub package_name: Option<String>,
     pub ignored_output: bool,
     pub replace_network: bool,
     pub scarb_version: Option<VersionReq>,
 }
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Deserialize)]
 #[serde(default)]
 struct SnippetConfigProxy {
     ignored: bool,
+    requires_ledger: bool,
     package_name: Option<String>,
     ignored_output: bool,
     replace_network: bool,
@@ -78,6 +82,7 @@ impl Default for SnippetConfigProxy {
     fn default() -> Self {
         Self {
             ignored: false,
+            requires_ledger: false,
             package_name: None,
             ignored_output: false,
             replace_network: true,
@@ -90,6 +95,7 @@ impl Default for SnippetConfig {
     fn default() -> Self {
         Self {
             ignored: false,
+            requires_ledger: false,
             package_name: None,
             ignored_output: false,
             replace_network: true,
@@ -119,6 +125,7 @@ impl<'de> Deserialize<'de> for SnippetConfig {
 
         let mut config = SnippetConfig {
             ignored: proxy.ignored,
+            requires_ledger: proxy.requires_ledger,
             package_name: proxy.package_name,
             ignored_output: proxy.ignored_output,
             replace_network: proxy.replace_network,
