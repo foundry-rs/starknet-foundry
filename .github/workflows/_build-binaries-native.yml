@@ -113,7 +113,7 @@ jobs:
           ./scripts/package.sh "${{ matrix.target }}" "$PKG_FULL_NAME"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           # TODO(#3790): Perhaps this name needs to be changed to avoid conflicts with `_build-binaries.yml` workflow
           name: build-${{ matrix.target }}
