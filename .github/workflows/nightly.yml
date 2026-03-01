@@ -134,7 +134,7 @@ jobs:
           git archive "--prefix=starknet-foundry-${{ needs.prepare.outputs.nightly_tag }}/" -o "starknet-foundry-${{ needs.prepare.outputs.nightly_tag }}.tar.gz" HEAD
 
       - name: Download artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           path: artifacts-dl
 
