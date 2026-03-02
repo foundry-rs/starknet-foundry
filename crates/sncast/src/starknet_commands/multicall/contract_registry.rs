@@ -3,13 +3,13 @@ use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 
 /// Registry for multicall execution, storing mappings from ids to contract addresses.
-pub struct ContractsRegistry {
+pub struct ContractRegistry {
     id_to_address: HashMap<String, Felt>,
 }
 
-impl ContractsRegistry {
+impl ContractRegistry {
     pub fn new() -> Self {
-        ContractsRegistry {
+        ContractRegistry {
             id_to_address: HashMap::new(),
         }
     }
@@ -32,12 +32,12 @@ impl ContractsRegistry {
 
 #[cfg(test)]
 mod tests {
-    use super::ContractsRegistry;
+    use super::ContractRegistry;
     use starknet_types_core::felt::Felt;
 
     #[test]
     fn test_insert_and_get() {
-        let mut registry = ContractsRegistry::new();
+        let mut registry = ContractRegistry::new();
         let id = "contract1".to_string();
         let address = Felt::from(12345);
 
@@ -51,7 +51,7 @@ mod tests {
 
     #[test]
     fn test_duplicate_id() {
-        let mut registry = ContractsRegistry::new();
+        let mut registry = ContractRegistry::new();
         let id = "contract1".to_string();
         let address1 = Felt::from(12345);
         let address2 = Felt::from(67890);
