@@ -11,7 +11,7 @@ use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 
 use crate::starknet_commands::deploy::DeployCommonArgs;
-use crate::starknet_commands::multicall::contracts_registry::ContractsRegistry;
+use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::invoke::replaced_calldata;
 use crate::{Arguments, calldata_to_felts};
 
@@ -29,12 +29,12 @@ impl MulticallDeploy {
     pub(crate) async fn build_call(
         &self,
         account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-        contracts_registry: &mut ContractsRegistry,
+        contract_registry: &mut ContractRegistry,
     ) -> Result<Call> {
         let salt = extract_or_generate_salt(self.common.salt);
         let constructor_arguments = replaced_calldata(
             &Arguments::from(self.common.arguments.clone()),
-            contracts_registry,
+            contract_registry,
         )?;
 
         let constructor_selector = get_selector_from_name("constructor")?;
@@ -46,7 +46,7 @@ impl MulticallDeploy {
         let constructor_calldata = if let Some(raw_calldata) = &constructor_arguments.calldata {
             calldata_to_felts(raw_calldata)?
         } else {
-            let contract_class = contracts_registry
+            let contract_class = contract_registry
                 .cache
                 .get_contract_class_by_class_hash(&class_hash)
                 .await?;
@@ -68,19 +68,19 @@ impl MulticallDeploy {
             &constructor_calldata,
         );
 
-        if contracts_registry
+        if contract_registry
             .cache
             .get_class_hash_by_address_local(&contract_address)
             .is_none()
         {
-            contracts_registry
+            contract_registry
                 .cache
                 .insert_new_address(contract_address, class_hash)?;
         }
 
         // Store the contract address in the context with the provided id for later use in invoke calls
         if let Some(id) = &self.id {
-            contracts_registry.insert_new_id_to_address(id.clone(), contract_address)?;
+            contract_registry.insert_new_id_to_address(id.clone(), contract_address)?;
         }
 
         Ok(Call {

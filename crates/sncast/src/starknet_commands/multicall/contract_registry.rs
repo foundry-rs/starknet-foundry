@@ -75,14 +75,14 @@ impl ContractsCache {
 }
 
 /// Registry for multicall execution, storing mappings from ids to contract addresses.
-pub struct ContractsRegistry {
+pub struct ContractRegistry {
     id_to_address: HashMap<String, Felt>,
     pub(crate) cache: ContractsCache,
 }
 
-impl ContractsRegistry {
+impl ContractRegistry {
     pub fn new(provider: &JsonRpcClient<HttpTransport>) -> Self {
-        ContractsRegistry {
+        ContractRegistry {
             id_to_address: HashMap::new(),
             cache: ContractsCache::new(provider),
         }
@@ -106,7 +106,7 @@ impl ContractsRegistry {
 
 #[cfg(test)]
 mod tests {
-    use super::ContractsRegistry;
+    use super::ContractRegistry;
     use starknet_rust::providers::{JsonRpcClient, jsonrpc::HttpTransport};
     use starknet_types_core::felt::Felt;
     use url::Url;
@@ -116,7 +116,7 @@ mod tests {
         let mock_provider = JsonRpcClient::new(HttpTransport::new(
             Url::parse("http://localhost:8545").unwrap(),
         ));
-        let mut registry = ContractsRegistry::new(&mock_provider);
+        let mut registry = ContractRegistry::new(&mock_provider);
         let id = "contract1".to_string();
         let address = Felt::from(12345);
 
@@ -133,7 +133,7 @@ mod tests {
         let mock_provider = JsonRpcClient::new(HttpTransport::new(
             Url::parse("http://localhost:8545").unwrap(),
         ));
-        let mut registry = ContractsRegistry::new(&mock_provider);
+        let mut registry = ContractRegistry::new(&mock_provider);
         let id = "contract1".to_string();
         let address1 = Felt::from(12345);
         let address2 = Felt::from(67890);
