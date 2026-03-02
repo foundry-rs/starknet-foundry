@@ -106,7 +106,11 @@ pub async fn run(
                     &udc_uniqueness(deploy_call.unique, account.address()),
                     &parsed_inputs,
                 );
-                contracts_registry.insert_new_id_to_address(deploy_call.id, contract_address)?;
+
+                if !deploy_call.id.is_empty() {
+                    contracts_registry
+                        .insert_new_id_to_address(deploy_call.id.clone(), contract_address)?;
+                }
             }
             Some("invoke") => {
                 let invoke_call: InvokeCall = toml::from_str(toml::to_string(&call)?.as_str())
