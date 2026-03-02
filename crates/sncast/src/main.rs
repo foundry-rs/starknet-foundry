@@ -227,7 +227,7 @@ pub fn calldata_to_felts(calldata: &[String]) -> Result<Vec<Felt>> {
         .map(|data| {
             Felt::from_dec_str(data)
                 .or_else(|_| Felt::from_hex(data))
-                .context("Failed to parse to felt")
+                .context(format!("Failed to parse to felt. Data: {data}"))
         })
         .collect()
 }
