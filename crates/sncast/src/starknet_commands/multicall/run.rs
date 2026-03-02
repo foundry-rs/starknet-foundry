@@ -115,14 +115,11 @@ pub async fn run(
             Some("invoke") => {
                 let invoke_call: InvokeCall = toml::from_str(toml::to_string(&call)?.as_str())
                     .context("Failed to parse toml `invoke` call")?;
-                let contract_address = contracts_registry
-                    .get_address_by_id(&invoke_call.contract_address)
-                    .unwrap_or_else(|| {
-                        invoke_call
-                            .contract_address
-                            .parse()
-                            .expect("Failed to parse contract address to Felt")
-                    });
+                let contract_address =
+                    match contracts_registry.get_address_by_id(&invoke_call.contract_address) {
+                        Some(addr) => addr,
+                        None => invoke_call.contract_address.parse()?,
+                    };
                 let calldata = parse_inputs(&invoke_call.inputs, &contracts_registry)?;
 
                 parsed_calls.push(Call {
