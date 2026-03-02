@@ -2,9 +2,9 @@ use clap::{Args, Subcommand};
 use serde::Serialize;
 use serde_json::{Value, json};
 
-mod contract_registry;
-mod new;
-mod run;
+pub mod contract_registry;
+pub mod new;
+pub mod run;
 
 use crate::{process_command_result, starknet_commands};
 use foundry_ui::Message;

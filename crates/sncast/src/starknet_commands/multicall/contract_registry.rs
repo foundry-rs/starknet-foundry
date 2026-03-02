@@ -15,13 +15,13 @@ impl ContractRegistry {
     }
 
     /// Retrieves the contract address associated with the given id, if it exists.
-    pub(crate) fn get_address_by_id(&self, id: &str) -> Option<Felt> {
+    pub fn get_address_by_id(&self, id: &str) -> Option<Felt> {
         self.id_to_address.get(id).copied()
     }
 
     /// Inserts a mapping from the given id to the specified contract address.
     /// Returns an error if the id already exists.
-    pub(crate) fn insert_new_id_to_address(&mut self, id: String, address: Felt) -> Result<()> {
+    pub fn insert_new_id_to_address(&mut self, id: String, address: Felt) -> Result<()> {
         if self.id_to_address.contains_key(&id) {
             anyhow::bail!("Duplicate id found: {id}");
         }
