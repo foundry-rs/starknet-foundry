@@ -20,7 +20,6 @@ use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
-use std::collections::HashMap;
 
 #[derive(Args, Debug, Clone)]
 #[command(about = "Execute a multicall from a .toml file", long_about = None)]
@@ -41,6 +40,19 @@ pub struct Run {
 enum Input {
     String(String),
     Number(i64),
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(tag = "call_type", rename_all = "lowercase")]
+enum CallItem {
+    Deploy(DeployItem),
+    Invoke(InvokeItem),
+}
+
+#[derive(Deserialize, Debug)]
+struct MulticallFile {
+    #[serde(rename = "call")]
+    calls: Vec<CallItem>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -69,22 +81,15 @@ pub async fn run(
     let fee_args = run.fee_args.clone();
 
     let contents = std::fs::read_to_string(&run.path)?;
-    let items_map: HashMap<String, Vec<toml::Value>> =
+    let multicall: MulticallFile =
         toml::from_str(&contents).with_context(|| format!("Failed to parse {}", run.path))?;
 
     let mut contract_registry = ContractRegistry::new(provider);
     let mut parsed_calls: Vec<Call> = vec![];
 
-    for call in items_map.get("call").unwrap_or(&vec![]) {
-        let call_type = call.get("call_type");
-        if call_type.is_none() {
-            anyhow::bail!("`Field call_type` is missing in a call specification");
-        }
-
-        match call_type.unwrap().as_str() {
-            Some("deploy") => {
-                let item: DeployItem = toml::from_str(toml::to_string(&call)?.as_str())
-                    .context("Failed to parse toml `deploy` call")?;
+    for call in multicall.calls {
+        match call {
+            CallItem::Deploy(item) => {
                 let constructor_calldata = parse_inputs(&item.inputs, &contract_registry)?;
                 let deploy = MulticallDeploy {
                     common: DeployCommonArgs {
@@ -110,9 +115,7 @@ pub async fn run(
                 let call = deploy.build_call(account, &mut contract_registry).await?;
                 parsed_calls.push(call);
             }
-            Some("invoke") => {
-                let item: InvokeItem = toml::from_str(toml::to_string(&call)?.as_str())
-                    .context("Failed to parse toml `invoke` call")?;
+            CallItem::Invoke(item) => {
                 let calldata = parse_inputs(&item.inputs, &contract_registry)?;
                 let contract_address = if let Some(addr) =
                     contract_registry.get_address_by_id(&item.contract_address)
@@ -135,10 +138,6 @@ pub async fn run(
                 let call = invoke.build_call(&mut contract_registry).await?;
                 parsed_calls.push(call);
             }
-            Some(unsupported) => {
-                anyhow::bail!("Unsupported call type found = {unsupported}");
-            }
-            None => anyhow::bail!("Field `call_type` is missing in a call specification"),
         }
     }
 
