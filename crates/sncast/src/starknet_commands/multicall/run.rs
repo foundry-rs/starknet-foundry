@@ -1,5 +1,5 @@
 use crate::starknet_commands::invoke::execute_calls;
-use crate::starknet_commands::multicall::contracts_registry::ContractsRegistry;
+use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
@@ -69,7 +69,7 @@ pub async fn run(
     let items_map: HashMap<String, Vec<toml::Value>> =
         toml::from_str(&contents).with_context(|| format!("Failed to parse {}", run.path))?;
 
-    let mut contracts_registry = ContractsRegistry::new();
+    let mut contracts_registry = ContractRegistry::new();
     let mut parsed_calls: Vec<Call> = vec![];
 
     for call in items_map.get("call").unwrap_or(&vec![]) {
@@ -106,19 +106,20 @@ pub async fn run(
                     &udc_uniqueness(deploy_call.unique, account.address()),
                     &parsed_inputs,
                 );
-                contracts_registry.insert_new_id_to_address(deploy_call.id, contract_address)?;
+
+                if !deploy_call.id.is_empty() {
+                    contracts_registry
+                        .insert_new_id_to_address(deploy_call.id.clone(), contract_address)?;
+                }
             }
             Some("invoke") => {
                 let invoke_call: InvokeCall = toml::from_str(toml::to_string(&call)?.as_str())
                     .context("Failed to parse toml `invoke` call")?;
-                let contract_address = contracts_registry
-                    .get_address_by_id(&invoke_call.contract_address)
-                    .unwrap_or_else(|| {
-                        invoke_call
-                            .contract_address
-                            .parse()
-                            .expect("Failed to parse contract address to Felt")
-                    });
+                let contract_address =
+                    match contracts_registry.get_address_by_id(&invoke_call.contract_address) {
+                        Some(addr) => addr,
+                        None => invoke_call.contract_address.parse()?,
+                    };
                 let calldata = parse_inputs(&invoke_call.inputs, &contracts_registry)?;
 
                 parsed_calls.push(Call {
@@ -140,13 +141,16 @@ pub async fn run(
         .map_err(handle_starknet_command_error)
 }
 
-fn parse_inputs(inputs: &Vec<Input>, contracts_registry: &ContractsRegistry) -> Result<Vec<Felt>> {
+fn parse_inputs(inputs: &Vec<Input>, contracts_registry: &ContractRegistry) -> Result<Vec<Felt>> {
     let mut parsed_inputs = Vec::new();
     for input in inputs {
         let felt_value = match input {
             Input::String(s) => {
                 let resolved_address = contracts_registry.get_address_by_id(s);
-                resolved_address.unwrap_or(s.parse()?)
+                match resolved_address {
+                    Some(address) => address,
+                    None => s.parse()?,
+                }
             }
             Input::Number(n) => (*n).into(),
         };
