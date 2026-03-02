@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+- `--max-threads` flag to control the maximum number of threads used for test execution
+
 ## [0.57.0] - 2026-02-24
 
 ### Forge

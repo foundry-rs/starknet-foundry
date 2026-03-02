@@ -133,6 +133,11 @@ To learn more about fee calculation formula (and the impact of tracking sierra g
 ## `--gas-report`
 Display a table of L2 gas breakdown for each contract and selector.
 
+## `--max-threads <MAX_THREADS>`
+
+Maximum number of threads used for test execution, which corresponds to tests run in parallel. 
+Defaults to the number of available CPU cores.
+
 ## `--partition <INDEX>/<TOTAL>`
 
 Divides tests into `TOTAL` partitions and runs partition `INDEX` (1-based), e.g. 1/4.
