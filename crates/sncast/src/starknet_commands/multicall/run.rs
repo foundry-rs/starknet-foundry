@@ -44,7 +44,7 @@ enum Input {
 }
 
 #[derive(Deserialize, Debug)]
-pub(crate) struct DeployItem {
+pub struct DeployItem {
     class_hash: Felt,
     inputs: Vec<Input>,
     unique: bool,
@@ -53,7 +53,7 @@ pub(crate) struct DeployItem {
 }
 
 #[derive(Deserialize, Debug)]
-pub(crate) struct InvokeItem {
+pub struct InvokeItem {
     contract_address: String,
     function: String,
     inputs: Vec<Input>,

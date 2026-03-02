@@ -16,7 +16,7 @@ use crate::starknet_commands::multicall::invoke::replaced_calldata;
 use crate::{Arguments, calldata_to_felts};
 
 #[derive(Args)]
-pub(crate) struct MulticallDeploy {
+pub struct MulticallDeploy {
     /// Optional identifier to reference this step in later steps
     #[arg(long)]
     pub id: Option<String>,
@@ -26,7 +26,7 @@ pub(crate) struct MulticallDeploy {
 }
 
 impl MulticallDeploy {
-    pub(crate) async fn build_call(
+    pub async fn build_call(
         &self,
         account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
         contract_registry: &mut ContractRegistry,

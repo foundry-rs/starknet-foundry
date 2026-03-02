@@ -8,16 +8,13 @@ use crate::{
 };
 
 #[derive(Args)]
-pub(crate) struct MulticallInvoke {
+pub struct MulticallInvoke {
     #[command(flatten)]
     pub common: InvokeCommonArgs,
 }
 
 impl MulticallInvoke {
-    pub(crate) async fn build_call(
-        &self,
-        contract_registry: &mut ContractRegistry,
-    ) -> Result<Call> {
+    pub async fn build_call(&self, contract_registry: &mut ContractRegistry) -> Result<Call> {
         let selector = get_selector_from_name(&self.common.function)?;
         let arguments = replaced_calldata(&self.common.arguments, contract_registry)?;
 
@@ -43,7 +40,7 @@ impl MulticallInvoke {
     }
 }
 
-pub(crate) fn replaced_calldata(
+pub fn replaced_calldata(
     function_arguments: &Arguments,
     contract_registry: &ContractRegistry,
 ) -> Result<Arguments> {
