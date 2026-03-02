@@ -4,27 +4,22 @@ use starknet_rust::core::{types::Call, utils::get_selector_from_name};
 
 use crate::{
     Arguments, calldata_to_felts,
-    starknet_commands::{
-        invoke::InvokeCommonArgs, multicall::contracts_registry::ContractsRegistry,
-    },
+    starknet_commands::{invoke::InvokeCommonArgs, multicall::contract_registry::ContractRegistry},
 };
 
 #[derive(Args)]
-pub(crate) struct MulticallInvoke {
+pub struct MulticallInvoke {
     #[command(flatten)]
     pub common: InvokeCommonArgs,
 }
 
 impl MulticallInvoke {
-    pub(crate) async fn build_call(
-        &self,
-        contracts_registry: &mut ContractsRegistry,
-    ) -> Result<Call> {
+    pub async fn build_call(&self, contract_registry: &mut ContractRegistry) -> Result<Call> {
         let selector = get_selector_from_name(&self.common.function)?;
         let is_id = self.common.contract_address.starts_with('@');
         let contract_address = if is_id {
             let id = self.common.contract_address.trim_start_matches('@');
-            contracts_registry.get_address_by_id(id)
+            contract_registry.get_address_by_id(id)
                 .with_context(|| format!("No contract address found for id: {id}. Ensure the referenced id is defined in a previous step."))?
         } else {
             self.common
@@ -38,16 +33,16 @@ If you intended to reference an address from a previous step, use `@<id>` instea
                     )
                 })?
         };
-        let arguments = replaced_calldata(&self.common.arguments, contracts_registry)?;
+        let arguments = replaced_calldata(&self.common.arguments, contract_registry)?;
 
         let calldata = if let Some(raw_calldata) = &arguments.calldata {
             calldata_to_felts(raw_calldata)?
         } else {
-            let class_hash = contracts_registry
+            let class_hash = contract_registry
                 .cache
                 .get_class_hash_by_address(&contract_address)
                 .await?;
-            let contract_class = contracts_registry
+            let contract_class = contract_registry
                 .cache
                 .get_contract_class_by_class_hash(&class_hash)
                 .await?;
@@ -62,9 +57,9 @@ If you intended to reference an address from a previous step, use `@<id>` instea
     }
 }
 
-pub(crate) fn replaced_calldata(
+pub fn replaced_calldata(
     function_arguments: &Arguments,
-    contracts_registry: &ContractsRegistry,
+    contract_registry: &ContractRegistry,
 ) -> Result<Arguments> {
     Ok(
         match (&function_arguments.calldata, &function_arguments.arguments) {
@@ -75,7 +70,7 @@ pub(crate) fn replaced_calldata(
                         let is_id = input.starts_with('@');
                         if is_id {
                             let id = input.trim_start_matches('@');
-                            if let Some(address) = contracts_registry.get_address_by_id(id) {
+                            if let Some(address) = contract_registry.get_address_by_id(id) {
                                 Ok(address.to_string())
                             } else {
                                 anyhow::bail!("No contract address found for id: {id}. Ensure the referenced id is defined in a previous step.")

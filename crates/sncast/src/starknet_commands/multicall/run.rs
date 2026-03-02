@@ -1,7 +1,7 @@
 use crate::Arguments;
 use crate::starknet_commands::deploy::{ContractIdentifier, DeployArguments, DeployCommonArgs};
 use crate::starknet_commands::invoke::{InvokeCommonArgs, execute_calls};
-use crate::starknet_commands::multicall::contracts_registry::ContractsRegistry;
+use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::deploy::MulticallDeploy;
 use crate::starknet_commands::multicall::invoke::MulticallInvoke;
 use anyhow::{Context, Result};
@@ -20,7 +20,6 @@ use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
-use std::collections::HashMap;
 
 #[derive(Args, Debug, Clone)]
 #[command(about = "Execute a multicall from a .toml file", long_about = None)]
@@ -44,7 +43,20 @@ enum Input {
 }
 
 #[derive(Deserialize, Debug)]
-pub(crate) struct DeployItem {
+#[serde(tag = "call_type", rename_all = "lowercase")]
+enum CallItem {
+    Deploy(DeployItem),
+    Invoke(InvokeItem),
+}
+
+#[derive(Deserialize, Debug)]
+struct MulticallFile {
+    #[serde(rename = "call")]
+    calls: Vec<CallItem>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct DeployItem {
     class_hash: Felt,
     inputs: Vec<Input>,
     unique: bool,
@@ -53,7 +65,7 @@ pub(crate) struct DeployItem {
 }
 
 #[derive(Deserialize, Debug)]
-pub(crate) struct InvokeItem {
+pub struct InvokeItem {
     contract_address: String,
     function: String,
     inputs: Vec<Input>,
@@ -69,23 +81,16 @@ pub async fn run(
     let fee_args = run.fee_args.clone();
 
     let contents = std::fs::read_to_string(&run.path)?;
-    let items_map: HashMap<String, Vec<toml::Value>> =
+    let multicall: MulticallFile =
         toml::from_str(&contents).with_context(|| format!("Failed to parse {}", run.path))?;
 
-    let mut contracts_registry = ContractsRegistry::new(provider);
+    let mut contract_registry = ContractRegistry::new(provider);
     let mut parsed_calls: Vec<Call> = vec![];
 
-    for call in items_map.get("call").unwrap_or(&vec![]) {
-        let call_type = call.get("call_type");
-        if call_type.is_none() {
-            anyhow::bail!("`Field call_type` is missing in a call specification");
-        }
-
-        match call_type.unwrap().as_str() {
-            Some("deploy") => {
-                let item: DeployItem = toml::from_str(toml::to_string(&call)?.as_str())
-                    .context("Failed to parse toml `deploy` call")?;
-                let constructor_calldata = parse_inputs(&item.inputs, &contracts_registry)?;
+    for call in multicall.calls {
+        match call {
+            CallItem::Deploy(item) => {
+                let constructor_calldata = parse_inputs(&item.inputs, &contract_registry)?;
                 let deploy = MulticallDeploy {
                     common: DeployCommonArgs {
                         contract_identifier: ContractIdentifier {
@@ -107,15 +112,13 @@ pub async fn run(
                     },
                 };
 
-                let call = deploy.build_call(account, &mut contracts_registry).await?;
+                let call = deploy.build_call(account, &mut contract_registry).await?;
                 parsed_calls.push(call);
             }
-            Some("invoke") => {
-                let item: InvokeItem = toml::from_str(toml::to_string(&call)?.as_str())
-                    .context("Failed to parse toml `invoke` call")?;
-                let calldata = parse_inputs(&item.inputs, &contracts_registry)?;
+            CallItem::Invoke(item) => {
+                let calldata = parse_inputs(&item.inputs, &contract_registry)?;
                 let contract_address = if let Some(addr) =
-                    contracts_registry.get_address_by_id(&item.contract_address)
+                    contract_registry.get_address_by_id(&item.contract_address)
                 {
                     addr
                 } else {
@@ -132,13 +135,9 @@ pub async fn run(
                     },
                 };
 
-                let call = invoke.build_call(&mut contracts_registry).await?;
+                let call = invoke.build_call(&mut contract_registry).await?;
                 parsed_calls.push(call);
             }
-            Some(unsupported) => {
-                anyhow::bail!("Unsupported call type found = {unsupported}");
-            }
-            None => anyhow::bail!("Field `call_type` is missing in a call specification"),
         }
     }
 
@@ -148,20 +147,15 @@ pub async fn run(
         .map_err(handle_starknet_command_error)
 }
 
-fn parse_inputs(
-    inputs: &Vec<Input>,
-    contracts_registry: &ContractsRegistry,
-) -> Result<Vec<String>> {
+fn parse_inputs(inputs: &Vec<Input>, contract_registry: &ContractRegistry) -> Result<Vec<String>> {
     let mut parsed_inputs = Vec::new();
     for input in inputs {
         let felt_value = match input {
             Input::String(s) => {
-                let resolved_address = contracts_registry.get_address_by_id(s);
-                if let Some(address) = resolved_address {
-                    address.to_string()
-                } else {
-                    let felt: Felt = s.parse()?;
-                    felt.to_string()
+                let resolved_address = contract_registry.get_address_by_id(s);
+                match resolved_address {
+                    Some(address) => address.to_string(),
+                    None => s.clone(),
                 }
             }
             Input::Number(n) => n.to_string(),

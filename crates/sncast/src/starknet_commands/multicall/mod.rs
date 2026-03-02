@@ -4,12 +4,12 @@ use serde_json::{Value, json};
 use sncast::helpers::fee::FeeArgs;
 use sncast::helpers::rpc::RpcArgs;
 
-mod contracts_registry;
-mod deploy;
-mod invoke;
-mod new;
-mod run;
-mod run_calls;
+pub mod contract_registry;
+pub mod deploy;
+pub mod invoke;
+pub mod new;
+pub mod run;
+pub mod run_calls;
 
 use crate::{process_command_result, starknet_commands};
 use foundry_ui::Message;

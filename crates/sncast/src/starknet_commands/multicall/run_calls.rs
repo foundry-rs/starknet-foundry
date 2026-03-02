@@ -15,7 +15,7 @@ use starknet_rust::{
 use crate::starknet_commands::{
     invoke::execute_calls,
     multicall::{
-        Multicall, contracts_registry::ContractsRegistry, deploy::MulticallDeploy,
+        Multicall, contract_registry::ContractRegistry, deploy::MulticallDeploy,
         invoke::MulticallInvoke,
     },
 };
@@ -31,7 +31,7 @@ pub async fn run_calls(
     let allowed_commands = ["deploy".to_string(), "invoke".to_string()];
     let command_groups = extract_commands_groups(tokens, "/", &allowed_commands);
 
-    let mut contracts_registry = ContractsRegistry::new(provider);
+    let mut contract_registry = ContractRegistry::new(provider);
     let mut calls = vec![];
 
     for group in command_groups {
@@ -45,12 +45,12 @@ pub async fn run_calls(
         match cmd_name.as_str() {
             "deploy" => {
                 let deploy = parse_args::<MulticallDeploy>(cmd_name, cmd_args)?;
-                let call = deploy.build_call(account, &mut contracts_registry).await?;
+                let call = deploy.build_call(account, &mut contract_registry).await?;
                 calls.push(call);
             }
             "invoke" => {
                 let invoke = parse_args::<MulticallInvoke>(cmd_name, cmd_args)?;
-                let call = invoke.build_call(&mut contracts_registry).await?;
+                let call = invoke.build_call(&mut contract_registry).await?;
                 calls.push(call);
             }
             _ => bail!("Unknown multicall command: '{cmd_name}'. Expected 'deploy' or 'invoke'."),
