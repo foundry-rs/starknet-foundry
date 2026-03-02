@@ -3,10 +3,10 @@ use serde::Serialize;
 use serde_json::{Value, json};
 
 pub mod contract_registry;
-mod deploy;
-mod invoke;
-mod new;
-mod run;
+pub mod deploy;
+pub mod invoke;
+pub mod new;
+pub mod run;
 
 use crate::{process_command_result, starknet_commands};
 use foundry_ui::Message;
