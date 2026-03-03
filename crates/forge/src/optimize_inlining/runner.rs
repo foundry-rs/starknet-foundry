@@ -11,10 +11,11 @@ use camino::{Utf8Path, Utf8PathBuf};
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use foundry_ui::UI;
 use scarb_api::ScarbCommand;
+use scarb_api::artifacts::deserialized::artifacts_for_package;
 use scarb_api::metadata::Metadata;
 use scarb_api::{target_dir_for_workspace, test_targets_by_name};
 use starknet_api::transaction::fields::GasVectorComputationMode;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use std::{env, fs};
 use tokio::runtime::Builder;
@@ -40,6 +41,37 @@ pub struct OptimizationIterationResult {
     pub contract_code_l2_gas: u64,
     pub tests_passed: bool,
     pub error: Option<String>,
+}
+
+pub fn compile_default(scarb_metadata: &Metadata, ui: &Arc<UI>) -> Result<()> {
+    ui.println(&"Compiling project with default threshold...".to_string());
+
+    let profile = &scarb_metadata.current_profile;
+
+    ScarbCommand::new_with_stdio()
+        .manifest_path(&scarb_metadata.runtime_manifest)
+        .arg("--profile")
+        .arg(profile)
+        .arg("build")
+        .arg("-w")
+        .arg("--test")
+        .run()
+        .map_err(|e| anyhow::anyhow!("Build failed: {e}"))?;
+
+    let artifacts_dir = target_dir_for_workspace(scarb_metadata).join(profile);
+    let saved_dir = target_dir_for_workspace(scarb_metadata).join("inlining_optimizer_artifacts");
+    fs::create_dir_all(&saved_dir)?;
+    for entry in fs::read_dir(&artifacts_dir).context("Failed to read artifacts directory")? {
+        let entry = entry?;
+        if entry.file_type()?.is_file() {
+            let src_path = Utf8PathBuf::try_from(entry.path())
+                .context("Non-UTF-8 path in artifacts directory")?;
+            let dst_path = saved_dir.join(src_path.file_name().context("Missing file name")?);
+            fs::copy(&src_path, &dst_path)?;
+        }
+    }
+
+    Ok(())
 }
 
 pub fn run_optimization_iteration(
@@ -83,10 +115,18 @@ pub fn run_optimization_iteration(
             "No starknet_artifacts.json found. Only projects with contracts can be optimized."
         ));
     }
+
+    let saved_dir = target_dir_for_workspace(scarb_metadata).join("inlining_optimizer_artifacts");
+    let keep_filenames =
+        matching_contract_artifact_filenames(&starknet_artifacts_paths, &args.contracts)?;
+    restore_non_contract_artifacts(&artifacts_dir, &saved_dir, &keep_filenames)
+        .context("Failed to restore non-contract artifacts from default build")?;
+
     let (sizes_valid, sizes) = check_and_validate_contract_sizes(
         &starknet_artifacts_paths,
         args.max_contract_size,
         args.max_contract_felts,
+        &args.contracts,
     )?;
     let max_contract_size = sizes.iter().map(|s| s.size).max().unwrap_or(0);
     let contract_code_l2_gas = contract_code_l2_gas(&sizes)?;
@@ -113,6 +153,7 @@ pub fn run_optimization_iteration(
         args,
         cores,
         ui,
+        true,
     )?;
 
     let tests_passed = test_result.success;
@@ -193,6 +234,7 @@ fn run_tests_with_execute_workspace(
     args: &OptimizeInliningArgs,
     cores: usize,
     ui: &Arc<UI>,
+    skip_build: bool,
 ) -> Result<TestRunResult> {
     let rt = Builder::new_multi_thread()
         .max_blocking_threads(cores)
@@ -202,7 +244,11 @@ fn run_tests_with_execute_workspace(
     let original_cwd = env::current_dir()?;
     env::set_current_dir(root)?;
 
-    let result = rt.block_on(execute_workspace(args.test_args.clone(), ui.clone()));
+    let result = rt.block_on(execute_workspace(
+        args.test_args.clone(),
+        ui.clone(),
+        skip_build,
+    ));
 
     env::set_current_dir(&original_cwd)?;
 
@@ -262,6 +308,57 @@ fn extract_gas_from_summary(summary: &AnyTestCaseSummary) -> TotalGas {
         },
         _ => TotalGas::default(),
     }
+}
+
+fn matching_contract_artifact_filenames(
+    starknet_artifacts_paths: &[Utf8PathBuf],
+    contracts_filter: &[String],
+) -> Result<HashSet<String>> {
+    let mut filenames = HashSet::new();
+    for starknet_artifacts_path in starknet_artifacts_paths {
+        let artifacts = artifacts_for_package(starknet_artifacts_path.as_path())?;
+        for contract in &artifacts.contracts {
+            let matches = contracts_filter.iter().any(|f| {
+                contract.contract_name == *f
+                    || (f.contains("::") && contract.module_path.ends_with(f.as_str()))
+            });
+            if !matches {
+                continue;
+            }
+            if let Some(name) = contract.artifacts.sierra.file_name() {
+                filenames.insert(name.to_owned());
+            }
+            if let Some(casm) = &contract.artifacts.casm
+                && let Some(name) = casm.file_name()
+            {
+                filenames.insert(name.to_owned());
+            }
+        }
+    }
+    Ok(filenames)
+}
+
+fn restore_non_contract_artifacts(
+    artifacts_dir: &Utf8Path,
+    saved_dir: &Utf8Path,
+    keep_filenames: &HashSet<String>,
+) -> Result<()> {
+    for entry in fs::read_dir(saved_dir).context("Failed to read saved artifacts directory")? {
+        let entry = entry?;
+        if !entry.file_type()?.is_file() {
+            continue;
+        }
+        let filename = entry.file_name();
+        let filename_str = filename.to_string_lossy();
+        if keep_filenames.contains(filename_str.as_ref()) {
+            continue;
+        }
+        let src =
+            Utf8PathBuf::try_from(entry.path()).context("Non-UTF-8 path in saved artifacts")?;
+        let dst = artifacts_dir.join(filename_str.as_ref());
+        fs::copy(&src, &dst)?;
+    }
+    Ok(())
 }
 
 fn find_test_target_starknet_artifacts(

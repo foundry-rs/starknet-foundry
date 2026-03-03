@@ -30,7 +30,7 @@ use std::sync::Arc;
 #[tracing::instrument(skip_all, level = "debug")]
 #[allow(clippy::too_many_lines)]
 pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus> {
-    let WorkspaceExecutionSummary { all_tests } = execute_workspace(args, ui).await?;
+    let WorkspaceExecutionSummary { all_tests } = execute_workspace(args, ui, false).await?;
     let has_failures = extract_failed_tests(&all_tests).next().is_some();
     Ok(if has_failures {
         ExitStatus::Failure
@@ -44,7 +44,11 @@ pub struct WorkspaceExecutionSummary {
     pub all_tests: Vec<TestTargetSummary>,
 }
 
-pub async fn execute_workspace(args: TestArgs, ui: Arc<UI>) -> Result<WorkspaceExecutionSummary> {
+pub async fn execute_workspace(
+    args: TestArgs,
+    ui: Arc<UI>,
+    skip_build: bool,
+) -> Result<WorkspaceExecutionSummary> {
     let deterministic_output = args.deterministic_output;
     match args.color {
         // SAFETY: This runs in a single-threaded environment.
@@ -84,12 +88,14 @@ pub async fn execute_workspace(args: TestArgs, ui: Arc<UI>) -> Result<WorkspaceE
         }
     }
 
-    build_artifacts_with_scarb(
-        filter.clone(),
-        args.scarb_args.features.clone(),
-        args.scarb_args.profile.clone(),
-        args.no_optimization,
-    )?;
+    if !skip_build {
+        build_artifacts_with_scarb(
+            filter.clone(),
+            args.scarb_args.features.clone(),
+            args.scarb_args.profile.clone(),
+            args.no_optimization,
+        )?;
+    }
 
     let mut block_number_map = BlockNumberMap::default();
     let mut all_tests = vec![];

@@ -1,6 +1,6 @@
 use crate::optimize_inlining::args::OptimizeInliningArgs;
 use crate::optimize_inlining::runner::{
-    OptimizationIterationResult, TotalGas, run_optimization_iteration,
+    OptimizationIterationResult, TotalGas, compile_default, run_optimization_iteration,
 };
 use anyhow::{Result, anyhow};
 use camino::Utf8Path;
@@ -38,37 +38,6 @@ impl Optimizer {
         }
     }
 
-    fn run_boundary_tests(
-        &mut self,
-        args: &OptimizeInliningArgs,
-        cores: usize,
-        ui: &Arc<UI>,
-    ) -> Result<()> {
-        ui.println(&"Running boundary tests...".to_string());
-
-        for (label, threshold) in [("min", self.min_threshold), ("max", self.max_threshold)] {
-            ui.print_blank_line();
-            ui.println(&format!("Testing {label} threshold {threshold}..."));
-            let result =
-                run_optimization_iteration(threshold, args, &self.scarb_metadata, cores, ui)?;
-            if result.tests_passed && result.error.is_none() {
-                ui.println(&format!(
-                    "  ✓ gas: {:.0}, contract bytecode L2 gas: {}",
-                    result.total_gas.l2(),
-                    result.contract_code_l2_gas
-                ));
-            } else {
-                ui.println(&format!(
-                    "  ✗ {}",
-                    result.error.as_deref().unwrap_or("failed")
-                ));
-            }
-            self.results.push(result);
-        }
-
-        Ok(())
-    }
-
     fn valid_results(&self) -> Result<Vec<&OptimizationIterationResult>> {
         let results: Vec<_> = self
             .results
@@ -104,7 +73,7 @@ impl Optimizer {
         cores: usize,
         ui: &Arc<UI>,
     ) -> Result<OptimalResult> {
-        self.run_boundary_tests(args, cores, ui)?;
+        compile_default(&self.scarb_metadata, ui)?;
         self.optimize_bruteforce(args, cores, ui)
     }
 

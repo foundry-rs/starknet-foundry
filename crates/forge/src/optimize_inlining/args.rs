@@ -32,6 +32,11 @@ pub struct OptimizeInliningArgs {
     #[arg(long, conflicts_with = "gas")]
     pub size: bool,
 
+    /// Comma-delimited list of contract names or Cairo paths (e.g. `MyContract,pkg::MyOther`)
+    /// to include in contract size checks.
+    #[arg(long, value_delimiter = ',', required = true)]
+    pub contracts: Vec<String>,
+
     /// Test arguments (same as `snforge test`)
     #[command(flatten)]
     pub test_args: TestArgs,
@@ -58,14 +63,20 @@ mod tests {
 
     #[test]
     fn validation_fails_without_exact() {
-        let args = OptimizeInliningArgs::parse_from(["snforge", "test_name"]);
+        let args =
+            OptimizeInliningArgs::parse_from(["snforge", "--contracts", "MyContract", "test_name"]);
         let error = args.validate().unwrap_err().to_string();
         assert!(error.contains("requires --exact"));
     }
 
     #[test]
     fn validation_fails_without_test_name() {
-        let args = OptimizeInliningArgs::try_parse_from(["snforge", "--exact"]);
+        let args = OptimizeInliningArgs::try_parse_from([
+            "snforge",
+            "--exact",
+            "--contracts",
+            "MyContract",
+        ]);
         let error = args.unwrap_err().to_string();
         assert!(error.contains(
             "error: the following required arguments were not provided:\n  <TEST_FILTER>"
@@ -74,7 +85,13 @@ mod tests {
 
     #[test]
     fn validation_passes_with_single_exact_test_name() {
-        let args = OptimizeInliningArgs::parse_from(["snforge", "--exact", "test_name"]);
+        let args = OptimizeInliningArgs::parse_from([
+            "snforge",
+            "--exact",
+            "--contracts",
+            "MyContract",
+            "test_name",
+        ]);
         args.validate().unwrap();
     }
 }

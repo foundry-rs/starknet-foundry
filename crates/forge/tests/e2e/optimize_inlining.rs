@@ -18,6 +18,8 @@ fn optimize_inlining_dry_run() {
         .arg("optimize-inlining")
         .arg("--exact")
         .arg("optimize_inlining::tests::test_increase_balance")
+        .arg("--contracts")
+        .arg("HelloStarknet")
         .arg("--min-threshold")
         .arg("0")
         .arg("--max-threshold")
@@ -61,6 +63,8 @@ fn optimize_inlining_updates_manifest() {
         .arg("optimize-inlining")
         .arg("--exact")
         .arg("optimize_inlining::tests::test_increase_balance")
+        .arg("--contracts")
+        .arg("HelloStarknet")
         .arg("--gas")
         .arg("--min-threshold")
         .arg("0")
@@ -105,6 +109,8 @@ fn optimize_inlining_fails_without_contracts() {
         .arg("optimize-inlining")
         .arg("--exact")
         .arg("fuzzing::tests::test_fuzz")
+        .arg("--contracts")
+        .arg("SomeContract")
         .assert()
         .failure();
 
@@ -115,10 +121,42 @@ fn optimize_inlining_fails_without_contracts() {
 }
 
 #[test]
+fn optimize_inlining_fails_with_nonexistent_contract() {
+    let temp = setup_package("optimize_inlining");
+
+    let output = runner(&temp)
+        .arg("optimize-inlining")
+        .arg("--exact")
+        .arg("optimize_inlining::tests::test_increase_balance")
+        .arg("--contracts")
+        .arg("NonExistentContract")
+        .arg("--min-threshold")
+        .arg("0")
+        .arg("--max-threshold")
+        .arg("0")
+        .arg("--step")
+        .arg("1")
+        .assert()
+        .failure();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [ERROR] Optimization failed: The following contracts were not found in starknet artifacts: NonExistentContract. Available contracts: [..]
+        "},
+    );
+}
+
+#[test]
 fn optimize_inlining_requires_single_exact_test_case() {
     let temp = setup_package("optimize_inlining");
 
-    let output = runner(&temp).arg("optimize-inlining").assert().failure();
+    let output = runner(&temp)
+        .arg("optimize-inlining")
+        .arg("--contracts")
+        .arg("HelloStarknet")
+        .assert()
+        .failure();
 
     assert_stdout_contains(
         output,

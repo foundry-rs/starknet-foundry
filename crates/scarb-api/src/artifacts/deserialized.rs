@@ -14,6 +14,7 @@ pub struct StarknetContract {
     pub id: String,
     pub package_name: String,
     pub contract_name: String,
+    pub module_path: String,
     pub artifacts: StarknetContractArtifactPaths,
 }
 
