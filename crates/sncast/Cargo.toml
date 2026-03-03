@@ -79,6 +79,7 @@ wiremock.workspace = true
 docs = { workspace = true, features = ["testing"] }
 shared = { path = "../shared", features = ["testing"] }
 packages_validation = { path = "../testing/packages_validation" }
+speculos-client = "0.1.2"
 
 [features]
 default = []
