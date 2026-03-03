@@ -12,6 +12,7 @@ use foundry_ui::components::warning::WarningMessage;
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
 use sncast::helpers::configuration::CastConfig;
+use sncast::helpers::ledger;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::import::AccountImportResponse;
 use sncast::response::ui::UI;
@@ -63,8 +64,13 @@ pub struct Import {
     /// If passed, the command will not trigger an interactive prompt to add an account as a default
     #[arg(long)]
     pub silent: bool,
+
+    /// Ledger derivation path (e.g., "m//starknet'/sncast'/0'/0'/0")
+    #[arg(long, group = "private_key_input")]
+    pub ledger_path: Option<String>,
 }
 
+#[allow(clippy::too_many_lines)]
 pub async fn import(
     account: Option<String>,
     accounts_file: &Utf8PathBuf,
@@ -81,18 +87,21 @@ pub async fn import(
         ui.print_blank_line();
     }
 
-    let private_key = if let Some(passed_private_key) = &import.private_key {
-        passed_private_key
-    } else if let Some(passed_private_key_file_path) = &import.private_key_file_path {
-        &get_private_key_from_file(passed_private_key_file_path).with_context(|| {
-            format!("Failed to obtain private key from the file {passed_private_key_file_path}")
-        })?
-    } else if import.private_key.is_none() && import.private_key_file_path.is_none() {
-        &get_private_key_from_input()?
+    let (private_key, public_key) = if let Some(ledger_path) = &import.ledger_path {
+        let public_key = ledger::get_ledger_public_key(ledger_path, true, ui).await?;
+        (None, public_key)
     } else {
-        unreachable!("Checked on clap level")
+        let key_felt = match (&import.private_key, &import.private_key_file_path) {
+            (Some(key), _) => *key,
+            (None, Some(path)) => get_private_key_from_file(path)
+                .with_context(|| format!("Failed to obtain private key from the file {path}"))?,
+            (None, None) => get_private_key_from_input()?,
+        };
+
+        let signing_key = SigningKey::from_secret_scalar(key_felt);
+        let public_key = signing_key.verifying_key().scalar();
+        (Some(signing_key), public_key)
     };
-    let private_key = &SigningKey::from_secret_scalar(*private_key);
 
     let account_name = account
         .clone()
@@ -131,10 +140,10 @@ pub async fn import(
     };
 
     let chain_id = get_chain_id(provider).await?;
+
     if let Some(salt) = import.salt {
-        let sncast_account_type = import.account_type;
         let computed_address =
-            compute_account_address(salt, private_key, class_hash, sncast_account_type, chain_id);
+            compute_account_address(salt, public_key, class_hash, import.account_type, chain_id);
         ensure!(
             computed_address == import.address,
             "Computed address {:#x} does not match the provided address {:#x}. Please ensure that the provided salt, class hash, and account type are correct.",
@@ -146,13 +155,15 @@ pub async fn import(
     let legacy = check_if_legacy_contract(Some(class_hash), import.address, provider).await?;
 
     let account_json = prepare_account_json(
-        private_key,
+        private_key.as_ref(),
+        public_key,
         import.address,
         deployed,
         legacy,
         import.account_type,
         Some(class_hash),
         import.salt,
+        import.ledger_path.clone(),
     );
 
     write_account_to_accounts_file(&account_name, accounts_file, chain_id, account_json.clone())?;

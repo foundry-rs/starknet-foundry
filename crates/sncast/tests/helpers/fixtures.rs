@@ -9,6 +9,7 @@ use fs_extra::dir::{CopyOptions, copy};
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value, json};
+use sncast::SignerSource;
 use sncast::helpers::account::load_accounts;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::CastConfig;
@@ -210,9 +211,15 @@ pub async fn invoke_contract(
         url: Some(Url::parse(URL).expect("Failed to parse URL")),
         network: None,
     };
-    let account = get_account(&config, &provider, &rpc_args, None, &UI::default())
-        .await
-        .expect("Could not get the account");
+    let account = get_account(
+        &config,
+        &provider,
+        &rpc_args,
+        &SignerSource::AccountsFile,
+        &UI::default(),
+    )
+    .await
+    .expect("Could not get the account");
 
     let mut calldata: Vec<Felt> = vec![];
 
@@ -228,6 +235,11 @@ pub async fn invoke_contract(
         selector: get_selector_from_name(entry_point_name)
             .unwrap_or_else(|_| panic!("Could not get selector from {entry_point_name}")),
         calldata,
+    };
+
+    let account = match account {
+        sncast::AccountVariant::LocalWallet(acc) => acc,
+        sncast::AccountVariant::Ledger(_) => panic!("Ledger account not supported in test"),
     };
 
     let execution = account.execute_v3(vec![call]);

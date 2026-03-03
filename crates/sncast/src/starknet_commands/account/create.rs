@@ -15,12 +15,13 @@ use sncast::helpers::constants::{
     BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, CREATE_KEYSTORE_PASSWORD_ENV_VAR,
     OZ_CLASS_HASH, READY_CLASS_HASH,
 };
+use sncast::helpers::ledger;
 use sncast::helpers::rpc::{RpcArgs, generate_network_flag};
 use sncast::response::account::create::AccountCreateResponse;
 use sncast::response::ui::UI;
 use sncast::{
-    AccountType, check_class_hash_exists, check_if_legacy_contract, extract_or_generate_salt,
-    get_chain_id, get_keystore_password, handle_account_factory_error,
+    AccountType, SignerSource, check_class_hash_exists, check_if_legacy_contract,
+    extract_or_generate_salt, get_keystore_password, handle_account_factory_error,
 };
 use starknet_rust::accounts::{
     AccountDeploymentV3, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
@@ -28,7 +29,7 @@ use starknet_rust::accounts::{
 use starknet_rust::core::types::FeeEstimate;
 use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
-use starknet_rust::signers::{LocalWallet, SigningKey};
+use starknet_rust::signers::{LocalWallet, Signer, SigningKey};
 use starknet_types_core::felt::Felt;
 use std::str::FromStr;
 
@@ -59,15 +60,15 @@ pub struct Create {
     pub rpc: RpcArgs,
 }
 
-#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments, clippy::too_many_lines)]
 pub async fn create(
     account: &str,
     accounts_file: &Utf8PathBuf,
-    keystore: Option<&Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: Felt,
     create: &Create,
     config: &CastConfig,
+    signer_source: &SignerSource,
     ui: &UI,
 ) -> Result<AccountCreateResponse> {
     // TODO(#3556): Remove this warning once we drop Argent account type
@@ -86,8 +87,16 @@ pub async fn create(
     });
     check_class_hash_exists(provider, class_hash).await?;
 
-    let (account_json, estimated_fee) =
-        generate_account(provider, salt, class_hash, create.account_type).await?;
+    let (account_json, estimated_fee) = generate_account(
+        provider,
+        salt,
+        class_hash,
+        create.account_type,
+        signer_source,
+        chain_id,
+        ui,
+    )
+    .await?;
 
     let address: Felt = account_json["address"]
         .as_str()
@@ -100,38 +109,52 @@ pub async fn create(
         style(estimated_fee_strk).magenta()
     );
 
-    if let Some(keystore) = keystore {
-        let account_path = Utf8PathBuf::from(&account);
-        if account_path == Utf8PathBuf::default() {
-            bail!("Argument `--account` must be passed and be a path when using `--keystore`");
+    match signer_source {
+        SignerSource::Keystore(keystore) => {
+            let account_path = Utf8PathBuf::from(&account);
+            if account_path == Utf8PathBuf::default() {
+                bail!("Argument `--account` must be passed and be a path when using `--keystore`");
+            }
+
+            let private_key = account_json["private_key"]
+                .as_str()
+                .context("Invalid private_key")?
+                .parse()?;
+            let legacy = account_json["legacy"]
+                .as_bool()
+                .expect("Invalid legacy entry");
+
+            create_to_keystore(
+                private_key,
+                salt,
+                class_hash,
+                create.account_type,
+                keystore,
+                &account_path,
+                legacy,
+            )?;
+
+            let deploy_command =
+                generate_deploy_command_with_keystore(account, keystore, &create.rpc, config);
+            message.push_str(&deploy_command);
         }
-
-        let private_key = account_json["private_key"]
-            .as_str()
-            .context("Invalid private_key")?
-            .parse()?;
-        let legacy = account_json["legacy"]
-            .as_bool()
-            .expect("Invalid legacy entry");
-
-        create_to_keystore(
-            private_key,
-            salt,
-            class_hash,
-            create.account_type,
-            keystore,
-            &account_path,
-            legacy,
-        )?;
-
-        let deploy_command =
-            generate_deploy_command_with_keystore(account, keystore, &create.rpc, config);
-        message.push_str(&deploy_command);
-    } else {
-        write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
-
-        let deploy_command = generate_deploy_command(accounts_file, &create.rpc, config, account);
-        message.push_str(&deploy_command);
+        SignerSource::Ledger(ledger_path) => {
+            write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
+            let deploy_command = generate_deploy_command_with_ledger(
+                accounts_file,
+                &create.rpc,
+                config,
+                account,
+                ledger_path,
+            );
+            message.push_str(&deploy_command);
+        }
+        SignerSource::AccountsFile => {
+            write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
+            let deploy_command =
+                generate_deploy_command(accounts_file, &create.rpc, config, account);
+            message.push_str(&deploy_command);
+        }
     }
 
     let add_profile_message = generate_add_profile_message(
@@ -139,7 +162,10 @@ pub async fn create(
         &create.rpc,
         account,
         accounts_file,
-        keystore.cloned(),
+        match signer_source {
+            SignerSource::Keystore(path) => Some(path.clone()),
+            _ => None,
+        },
         config,
     )?;
 
@@ -160,22 +186,72 @@ async fn generate_account(
     salt: Felt,
     class_hash: Felt,
     account_type: AccountType,
+    signer_source: &SignerSource,
+    chain_id: Felt,
+    ui: &UI,
 ) -> Result<(serde_json::Value, u128)> {
-    let chain_id = get_chain_id(provider).await?;
-    let private_key = SigningKey::from_random();
-    let signer = LocalWallet::from_signing_key(private_key.clone());
+    if let SignerSource::Ledger(ledger_path) = signer_source {
+        let public_key = ledger::get_ledger_public_key(ledger_path, true, ui).await?;
+        let signer = ledger::create_ledger_signer(ledger_path, false, ui).await?;
 
-    let (address, fee_estimate) = match account_type {
+        finalize_account_generation(
+            provider,
+            signer,
+            public_key,
+            None,
+            Some(ledger_path.clone()),
+            salt,
+            class_hash,
+            account_type,
+            chain_id,
+        )
+        .await
+    } else {
+        let private_key = SigningKey::from_random();
+        let public_key = private_key.verifying_key().scalar();
+        let signer = LocalWallet::from_signing_key(private_key.clone());
+
+        finalize_account_generation(
+            provider,
+            signer,
+            public_key,
+            Some(&private_key),
+            None,
+            salt,
+            class_hash,
+            account_type,
+            chain_id,
+        )
+        .await
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+async fn finalize_account_generation<S>(
+    provider: &JsonRpcClient<HttpTransport>,
+    signer: S,
+    public_key: Felt,
+    private_key: Option<&SigningKey>,
+    ledger_path: Option<String>,
+    salt: Felt,
+    class_hash: Felt,
+    account_type: AccountType,
+    chain_id: Felt,
+) -> Result<(serde_json::Value, u128)>
+where
+    S: Signer + Send + Sync,
+    <S as Signer>::GetPublicKeyError: 'static,
+{
+    let (address, estimated_fee) = match account_type {
         AccountType::OpenZeppelin => {
             let factory =
                 OpenZeppelinAccountFactory::new(class_hash, chain_id, signer, provider).await?;
-            get_address_and_deployment_fee(factory, salt).await?
+            get_address_and_deployment_fee(factory, salt).await
         }
         AccountType::Argent | AccountType::Ready => {
             let factory =
                 ArgentAccountFactory::new(class_hash, chain_id, None, signer, provider).await?;
-
-            get_address_and_deployment_fee(factory, salt).await?
+            get_address_and_deployment_fee(factory, salt).await
         }
         AccountType::Braavos => {
             let factory = BraavosAccountFactory::new(
@@ -186,23 +262,25 @@ async fn generate_account(
                 provider,
             )
             .await?;
-            get_address_and_deployment_fee(factory, salt).await?
+            get_address_and_deployment_fee(factory, salt).await
         }
-    };
+    }?;
 
     let legacy = check_if_legacy_contract(Some(class_hash), address, provider).await?;
 
     let account_json = prepare_account_json(
-        &private_key,
+        private_key,
+        public_key,
         address,
         false,
         legacy,
         account_type,
         Some(class_hash),
         Some(salt),
+        ledger_path,
     );
 
-    Ok((account_json, fee_estimate.overall_fee))
+    Ok((account_json, estimated_fee.overall_fee))
 }
 
 async fn get_address_and_deployment_fee<T>(
@@ -331,21 +409,24 @@ fn write_account_to_file(
     Ok(())
 }
 
-fn generate_deploy_command(
-    accounts_file: &Utf8PathBuf,
-    rpc_args: &RpcArgs,
-    config: &CastConfig,
-    account: &str,
-) -> String {
-    let accounts_flag = if accounts_file
+fn generate_accounts_file_flag(accounts_file: &Utf8PathBuf) -> String {
+    if accounts_file
         .to_string()
         .contains("starknet_accounts/starknet_open_zeppelin_accounts.json")
     {
         String::new()
     } else {
         format!(" --accounts-file {accounts_file}")
-    };
+    }
+}
 
+fn generate_deploy_command(
+    accounts_file: &Utf8PathBuf,
+    rpc_args: &RpcArgs,
+    config: &CastConfig,
+    account: &str,
+) -> String {
+    let accounts_flag = generate_accounts_file_flag(accounts_file);
     let network_flag = generate_network_flag(rpc_args, config);
 
     format!(
@@ -365,5 +446,21 @@ fn generate_deploy_command_with_keystore(
     format!(
         "\n\nAfter prefunding the account, run:\n\
         sncast --account {account} --keystore {keystore} account deploy {network_flag}"
+    )
+}
+
+fn generate_deploy_command_with_ledger(
+    accounts_file: &Utf8PathBuf,
+    rpc_args: &RpcArgs,
+    config: &CastConfig,
+    account: &str,
+    ledger_path: &String,
+) -> String {
+    let accounts_flag = generate_accounts_file_flag(accounts_file);
+    let network_flag = generate_network_flag(rpc_args, config);
+
+    format!(
+        "\n\nAfter prefunding the account, run:\n\
+        sncast{accounts_flag} --ledger-path \"{ledger_path}\" account deploy {network_flag} --name {account}"
     )
 }

@@ -121,13 +121,14 @@ impl From<&PredeployedAccount> for AccountData {
     fn from(predeployed_account: &PredeployedAccount) -> Self {
         Self {
             address: Some(predeployed_account.address),
-            private_key: predeployed_account.private_key,
+            private_key: Some(predeployed_account.private_key),
             public_key: predeployed_account.public_key,
             class_hash: None,
             salt: None,
             deployed: None,
             legacy: None,
             account_type: None,
+            ledger_path: None,
         }
     }
 }
