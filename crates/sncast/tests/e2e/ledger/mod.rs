@@ -26,6 +26,7 @@ use tempfile::TempDir;
 use url::Url;
 
 mod account;
+mod docs_snippets;
 mod network;
 mod simple;
 
