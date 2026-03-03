@@ -13,7 +13,7 @@ clap_complete.workspace = true
 console.workspace = true
 serde_json.workspace = true
 serde.workspace = true
-starknet-rust.workspace = true
+starknet-rust = { workspace = true, features = ["ledger"] }
 tokio.workspace = true
 url.workspace = true
 rand.workspace = true
@@ -45,6 +45,7 @@ cairo-vm.workspace = true
 blockifier.workspace = true
 semver.workspace = true
 sha3.workspace = true
+sha2.workspace = true
 base16ct.workspace = true
 starknet-rust-crypto.workspace = true
 async-trait.workspace = true
@@ -64,6 +65,7 @@ tracing-log.workspace = true
 strum.workspace = true
 strum_macros.workspace = true
 primitive-types.workspace = true
+coins-ledger = "0.12.0"
 
 [dev-dependencies]
 ctor.workspace = true
@@ -80,6 +82,7 @@ packages_validation = { path = "../testing/packages_validation" }
 
 [features]
 default = []
+ledger-emulator = []
 
 [[bin]]
 name = "sncast"
