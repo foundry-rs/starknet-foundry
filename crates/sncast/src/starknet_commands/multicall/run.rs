@@ -150,13 +150,14 @@ fn parse_inputs(inputs: &Vec<Input>, contract_registry: &ContractRegistry) -> Ve
     let mut parsed_inputs = Vec::new();
     for input in inputs {
         let felt_value = match input {
-            Input::String(s) => contracts_registry
+            Input::String(s) => contract_registry
                 .get_address_by_id(s)
                 .map(Ok)
-                .unwrap_or_else(|| s.parse())?,
-            Input::Number(n) => (*n).into(),
+                .unwrap_or_else(|| s.parse())
+                .map(|felt| felt.to_string()),
+            Input::Number(n) => Ok(n.to_string()),
         };
-        parsed_inputs.push(felt_value);
+        parsed_inputs.push(felt_value.unwrap_or_default());
     }
 
     parsed_inputs
