@@ -5,13 +5,10 @@ use starknet_rust::{
     providers::{JsonRpcClient, jsonrpc::HttpTransport},
 };
 use starknet_types_core::felt::Felt;
-use std::{
-    collections::{HashMap, hash_map::Entry},
-    sync::Arc,
-};
+use std::collections::{HashMap, hash_map::Entry};
 pub struct ContractsCache {
     address_to_class_hash: HashMap<Felt, Felt>,
-    class_hash_to_contract_class: HashMap<Felt, Arc<ContractClass>>,
+    class_hash_to_contract_class: HashMap<Felt, ContractClass>,
     provider: JsonRpcClient<HttpTransport>,
 }
 
@@ -59,17 +56,20 @@ impl ContractsCache {
     pub async fn get_contract_class_by_class_hash(
         &mut self,
         class_hash: &Felt,
-    ) -> Result<Arc<ContractClass>> {
-        match self.class_hash_to_contract_class.entry(*class_hash) {
-            Entry::Occupied(entry) => Ok(Arc::clone(entry.get())),
-            Entry::Vacant(entry) => {
-                let contract_class = get_contract_class(*class_hash, &self.provider)
-                    .await
-                    .context("Failed to fetch contract class from provider")?;
-                let shared_class = Arc::new(contract_class);
-                Ok(Arc::clone(entry.insert(shared_class)))
-            }
+    ) -> Result<&ContractClass> {
+        if !self.class_hash_to_contract_class.contains_key(class_hash) {
+            let contract_class = get_contract_class(*class_hash, &self.provider)
+                .await
+                .context("Failed to fetch contract class from provider")?;
+
+            self.class_hash_to_contract_class
+                .insert(*class_hash, contract_class);
         }
+
+        Ok(self
+            .class_hash_to_contract_class
+            .get(class_hash)
+            .expect("Value was just inserted or already existed"))
     }
 }
 
