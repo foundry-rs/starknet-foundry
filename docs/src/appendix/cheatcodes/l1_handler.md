@@ -12,7 +12,7 @@ pub struct L1Handler {
 }
 ```
 
-> `fn execute(self: L1Handler) -> SyscallResult<()>`
+> `fn execute(self: L1Handler, from_address: felt252, payload: Span<felt252>) -> SyscallResult<()>`
 
 Mocks an L1 -> L2 message from Ethereum handled by the given L1 handler function.
 
