@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- Bug with invalid function name mappings in LS for functions with `#[test]` attribute
+- Bug with invalid function name mappings for functions with `#[test]` attribute
 
 ## [0.57.0] - 2026-02-24
 
