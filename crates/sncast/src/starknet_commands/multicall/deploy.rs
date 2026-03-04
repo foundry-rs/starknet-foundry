@@ -50,7 +50,7 @@ impl MulticallDeploy {
                 .cache
                 .get_contract_class_by_class_hash(&class_hash)
                 .await?;
-            constructor_arguments.try_into_calldata(&contract_class, &constructor_selector)?
+            constructor_arguments.try_into_calldata(contract_class, &constructor_selector)?
         };
 
         let mut calldata = vec![

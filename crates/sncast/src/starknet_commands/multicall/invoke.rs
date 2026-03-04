@@ -29,7 +29,7 @@ impl MulticallInvoke {
                 .cache
                 .get_contract_class_by_class_hash(&class_hash)
                 .await?;
-            arguments.try_into_calldata(&contract_class, &selector)?
+            arguments.try_into_calldata(contract_class, &selector)?
         };
 
         Ok(Call {
