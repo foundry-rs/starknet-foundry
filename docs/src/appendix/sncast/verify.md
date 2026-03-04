@@ -19,10 +19,11 @@ Required.
 The name of the contract. The contract name is the part after the `mod` keyword in your contract file.
 
 ## `--verifier, -v <VERIFIER>`
-Optional.
+Required.
 
 The verification provider to use for the verification. Possible values are:
 * `walnut`
+* `voyager`
 
 ## `--network, -n <NETWORK>`
 Required.
@@ -30,6 +31,11 @@ Required.
 The network on which block explorer will perform the verification. Possible values are:
 * `mainnet`
 * `sepolia`
+
+## `--url <RPC_URL>`
+Optional.
+
+Starknet RPC node url address. Will use public provider if not set.
 
 ## `--package <NAME>`
 Optional.
@@ -42,3 +48,8 @@ If supplied, a contract from this package will be used. Required if more than on
 Optional.
 
 If passed, assume "yes" as answer to confirmation prompt and run non-interactively.
+
+## `--test-files`
+Optional.
+
+Include test files under `src/` for verification. Only applies to `voyager`.

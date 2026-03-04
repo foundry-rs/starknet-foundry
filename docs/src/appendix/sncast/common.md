@@ -42,7 +42,7 @@ Optional.
 
 If `--wait` is passed, this will set the time after which `sncast` times out. Defaults to 60s.
 
-## `--wait-retry-timeout <TIME_IN_SECONDS>`
+## `--wait-retry-interval <TIME_IN_SECONDS>`
 Optional.
 
 If `--wait` is passed, this will set the retry interval - how often `sncast` should fetch tx info from the node. Defaults to 5s.
