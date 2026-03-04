@@ -1,6 +1,7 @@
 use crate::compatibility_check::{Requirement, RequirementsChecker, create_version_parser};
 use anyhow::Result;
 use camino::Utf8PathBuf;
+use clap::builder::BoolishValueParser;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use derive_more::Display;
 use forge_runner::CACHE_DIR;
@@ -18,7 +19,11 @@ use shared::auto_completions::{Completions, generate_completions};
 use std::cell::RefCell;
 use std::ffi::OsString;
 use std::sync::Arc;
-use std::{fs, num::NonZeroU32, thread::available_parallelism};
+use std::{
+    fs,
+    num::{NonZeroU32, NonZeroUsize},
+    thread::available_parallelism,
+};
 use tokio::runtime::Builder;
 
 pub mod block_number_map;
@@ -147,7 +152,7 @@ pub struct TestArgs {
     run_native: bool,
 
     /// Use exact matches for `test_filter`
-    #[arg(short, long, conflicts_with = "partition")]
+    #[arg(short, long, conflicts_with = "partition", requires = "test_filter")]
     exact: bool,
 
     /// Skips any tests whose name contains the given SKIP string.
@@ -157,6 +162,10 @@ pub struct TestArgs {
     /// Stop executing tests after the first failed test
     #[arg(short = 'x', long)]
     exit_first: bool,
+
+    /// Sort test result outputs by test name, for reproducible outputs (e.g. for snapshot tests).
+    #[arg(long, env = "SNFORGE_DETERMINISTIC_OUTPUT", default_value_t = false, hide = true, value_parser = BoolishValueParser::new())]
+    deterministic_output: bool,
 
     /// Number of fuzzer runs
     #[arg(short = 'r', long)]
@@ -218,6 +227,10 @@ pub struct TestArgs {
     /// Divides tests into `TOTAL` partitions and runs partition `INDEX` (1-based), e.g. 1/4
     #[arg(long, value_name = "INDEX/TOTAL")]
     partition: Option<Partition>,
+
+    /// Maximum number of threads used for test execution
+    #[arg(long)]
+    max_threads: Option<NonZeroUsize>,
 
     /// Additional arguments for cairo-coverage or cairo-profiler
     #[arg(last = true)]
@@ -317,13 +330,8 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
         ForgeSubcommand::Test { mut args } => {
             args.normalize();
             check_requirements(false, &ui)?;
-            let cores = if let Ok(available_cores) = available_parallelism() {
-                available_cores.get()
-            } else {
-                ui.eprintln(&"Failed to get the number of available cores, defaulting to 1");
-                1
-            };
 
+            let cores = resolve_thread_count(args.max_threads, &ui);
             let rt = Builder::new_multi_thread()
                 .max_blocking_threads(cores)
                 .enable_all()
@@ -371,4 +379,32 @@ fn check_requirements(output_on_success: bool, ui: &UI) -> Result<()> {
     requirements_checker.check(ui)?;
 
     Ok(())
+}
+
+fn resolve_thread_count(max_threads: Option<NonZeroUsize>, ui: &UI) -> usize {
+    match (available_parallelism(), max_threads) {
+        (Ok(available_cores), Some(max_threads)) => {
+            let available = available_cores.get();
+            let max = max_threads.get();
+            if max > available {
+                ui.println(&WarningMessage::new(format!(
+                    "`--max-threads` value ({max}) is greater than the number of available cores ({available})"
+                )));
+            }
+            max
+        }
+        (Ok(available_cores), None) => available_cores.get(),
+        (Err(_), Some(max_threads)) => {
+            ui.println(&WarningMessage::new(
+                "Failed to get the number of available cores, using `--max-threads` value",
+            ));
+            max_threads.get()
+        }
+        (Err(_), None) => {
+            ui.println(&WarningMessage::new(
+                "Failed to get the number of available cores, defaulting to 1",
+            ));
+            1
+        }
+    }
 }
