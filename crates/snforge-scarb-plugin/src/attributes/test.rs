@@ -88,7 +88,8 @@ fn test_internal(
         "{}__snforge_internal_test_generated",
         name
     )]);
-    let func_ident = format_ident!("{}", name);
+    let func_name_node = func.declaration(db).name(db).as_syntax_node();
+    let func_name_ident = SyntaxNodeWithDb::new(&func_name_node, db);
 
     if should_run_test {
         let call_args = TokenStream::empty();
@@ -101,7 +102,7 @@ fn test_internal(
             #test_func_with_attrs
 
             #attributes
-            fn #func_ident #signature
+            fn #func_name_ident #signature
             {
                if snforge_std::_internals::is_config_run() {
                    #if_content
