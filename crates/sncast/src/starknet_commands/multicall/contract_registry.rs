@@ -6,15 +6,15 @@ use starknet_rust::{
 };
 use starknet_types_core::felt::Felt;
 use std::collections::{HashMap, hash_map::Entry};
-pub struct ContractsCache {
+pub struct ContractCache {
     address_to_class_hash: HashMap<Felt, Felt>,
     class_hash_to_contract_class: HashMap<Felt, ContractClass>,
     provider: JsonRpcClient<HttpTransport>,
 }
 
-impl ContractsCache {
+impl ContractCache {
     fn new(provider: &JsonRpcClient<HttpTransport>) -> Self {
-        ContractsCache {
+        ContractCache {
             address_to_class_hash: HashMap::new(),
             class_hash_to_contract_class: HashMap::new(),
             provider: provider.clone(),
@@ -76,14 +76,14 @@ impl ContractsCache {
 /// Registry for multicall execution, storing mappings from ids to contract addresses.
 pub struct ContractRegistry {
     id_to_address: HashMap<String, Felt>,
-    pub cache: ContractsCache,
+    pub cache: ContractCache,
 }
 
 impl ContractRegistry {
     pub fn new(provider: &JsonRpcClient<HttpTransport>) -> Self {
         ContractRegistry {
             id_to_address: HashMap::new(),
-            cache: ContractsCache::new(provider),
+            cache: ContractCache::new(provider),
         }
     }
 
