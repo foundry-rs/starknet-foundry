@@ -146,8 +146,7 @@ fn parse_inputs(inputs: &Vec<Input>, contracts_registry: &ContractRegistry) -> R
         let felt_value = match input {
             Input::String(s) => contracts_registry
                 .get_address_by_id(s)
-                .map(Ok)
-                .unwrap_or_else(|| s.parse())?,
+                .map_or_else(|| s.parse(), Ok)?,
             Input::Number(n) => (*n).into(),
         };
         parsed_inputs.push(felt_value);
