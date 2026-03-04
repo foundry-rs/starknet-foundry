@@ -152,12 +152,11 @@ fn parse_inputs(inputs: &Vec<Input>, contract_registry: &ContractRegistry) -> Ve
         let felt_value = match input {
             Input::String(s) => contract_registry
                 .get_address_by_id(s)
-                .map(Ok)
-                .unwrap_or_else(|| s.parse())
-                .map(|felt| felt.to_string()),
-            Input::Number(n) => Ok(n.to_string()),
+                .map_or_else(|| s.parse(), Ok)
+                .expect(""),
+            Input::Number(n) => Felt::from(*n),
         };
-        parsed_inputs.push(felt_value.unwrap_or_default());
+        parsed_inputs.push(felt_value.to_string());
     }
 
     parsed_inputs
