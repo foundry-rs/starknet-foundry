@@ -54,8 +54,11 @@ sncast --account my_account deploy --class-hash 0x[..] --network sepolia
 > configuration [here](../projects/configuration.md#sncast).
 
 > 💡 **Info**
-> Transaction fee limit can be set either by `--max-fee` flag or more granularly by fee-related flags such as `--l2-gas`, `--l2-gas-price` etc.
-> If not set, the fee will be calculated automatically.
+> Transaction fee limit can be set either as a single upper bound by `--max-fee` or broken down
+> into individual resource components using `--l1-gas`, `--l1-gas-price`, `--l2-gas`,
+> `--l2-gas-price`, `--l1-data-gas`, and `--l1-data-gas-price`.
+> `--max-fee` and the individual resource flags are mutually exclusive.
+> Any individual resource flag that is not provided will be estimated automatically
 
 # Declaring a Contract by Fetching It From a Different Starknet Instance
 
