@@ -69,7 +69,7 @@ pub async fn run(
     let items_map: HashMap<String, Vec<toml::Value>> =
         toml::from_str(&contents).with_context(|| format!("Failed to parse {}", run.path))?;
 
-    let mut contracts_registry = ContractRegistry::new();
+    let mut contracts = ContractRegistry::new();
     let mut parsed_calls: Vec<Call> = vec![];
 
     for call in items_map.get("call").unwrap_or(&vec![]) {
@@ -91,7 +91,7 @@ pub async fn run(
                     deploy_call.inputs.len().into(),
                 ];
 
-                let parsed_inputs = parse_inputs(&deploy_call.inputs, &contracts_registry)?;
+                let parsed_inputs = parse_inputs(&deploy_call.inputs, &contracts)?;
                 calldata.extend(&parsed_inputs);
 
                 parsed_calls.push(Call {
@@ -108,19 +108,18 @@ pub async fn run(
                 );
 
                 if !deploy_call.id.is_empty() {
-                    contracts_registry
-                        .insert_new_id_to_address(deploy_call.id.clone(), contract_address)?;
+                    contracts.insert_new_id_to_address(deploy_call.id.clone(), contract_address)?;
                 }
             }
             Some("invoke") => {
                 let invoke_call: InvokeCall = toml::from_str(toml::to_string(&call)?.as_str())
                     .context("Failed to parse toml `invoke` call")?;
                 let contract_address =
-                    match contracts_registry.get_address_by_id(&invoke_call.contract_address) {
+                    match contracts.get_address_by_id(&invoke_call.contract_address) {
                         Some(addr) => addr,
                         None => invoke_call.contract_address.parse()?,
                     };
-                let calldata = parse_inputs(&invoke_call.inputs, &contracts_registry)?;
+                let calldata = parse_inputs(&invoke_call.inputs, &contracts)?;
 
                 parsed_calls.push(Call {
                     to: contract_address,
