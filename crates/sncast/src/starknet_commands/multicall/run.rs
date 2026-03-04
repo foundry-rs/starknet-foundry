@@ -84,13 +84,13 @@ pub async fn run(
     let multicall: MulticallFile =
         toml::from_str(&contents).with_context(|| format!("Failed to parse {}", run.path))?;
 
-    let mut contract_registry = ContractRegistry::new(provider);
+    let mut contracts = ContractRegistry::new(provider);
     let mut parsed_calls: Vec<Call> = vec![];
 
     for call in multicall.calls {
         match call {
             CallItem::Deploy(item) => {
-                let constructor_calldata = parse_inputs(&item.inputs, &contract_registry);
+                let constructor_calldata = parse_inputs(&item.inputs, &contracts);
                 let deploy = MulticallDeploy {
                     common: DeployCommonArgs {
                         contract_identifier: ContractIdentifier {
@@ -112,13 +112,13 @@ pub async fn run(
                     },
                 };
 
-                let call = deploy.build_call(account, &mut contract_registry).await?;
+                let call = deploy.build_call(account, &mut contracts).await?;
                 parsed_calls.push(call);
             }
             CallItem::Invoke(item) => {
-                let calldata = parse_inputs(&item.inputs, &contract_registry);
+                let calldata = parse_inputs(&item.inputs, &contracts);
                 let contract_address = if let Some(addr) =
-                    contract_registry.get_address_by_id(&item.contract_address)
+                    contracts.get_address_by_id(&item.contract_address)
                 {
                     addr
                 } else {
@@ -135,7 +135,7 @@ pub async fn run(
                     },
                 };
 
-                let call = invoke.build_call(&mut contract_registry).await?;
+                let call = invoke.build_call(&mut contracts).await?;
                 parsed_calls.push(call);
             }
         }
