@@ -35,6 +35,7 @@ $ sncast --account user1 balance \
 
 <details>
 <summary>Output:</summary>
+
 ```shell
 Balance: [..]
 ```

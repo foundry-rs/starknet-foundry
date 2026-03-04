@@ -67,7 +67,8 @@ transaction: https://sepolia.voyager.online/tx/[..]
 <br>
 
 > 💡 **Info**
-> Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
+> Transaction fee limit can be set either by `--max-fee` flag or more granularly by fee-related flags such as `--l2-gas`, `--l2-gas-price` etc.
+> If not set, the fee will be calculated automatically.
 
 ### `multicall new` Example
 

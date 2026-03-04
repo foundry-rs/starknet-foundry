@@ -61,7 +61,7 @@ Tuple of shortstrings:
 #[should_panic(expected: ('panic message', 'second message', )]
 ```
 
-Asserting that the function panics (any with any panic data):
+Asserting that the function panics (with any panic data):
 
 ```rust
 #[should_panic]

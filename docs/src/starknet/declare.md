@@ -54,7 +54,8 @@ sncast --account my_account deploy --class-hash 0x[..] --network sepolia
 > configuration [here](../projects/configuration.md#sncast).
 
 > 💡 **Info**
-> Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
+> Transaction fee limit can be set either by `--max-fee` flag or more granularly by fee-related flags such as `--l2-gas`, `--l2-gas-price` etc.
+> If not set, the fee will be calculated automatically.
 
 # Declaring a Contract by Fetching It From a Different Starknet Instance
 
@@ -63,7 +64,7 @@ This is especially important for some contracts, e.g. Universal Deployer Contrac
 
 Compiling a contract locally with a different Cairo compiler version may result in a different class hash.
 
-To avoid this, you can use the `declare-from` which allows you to declare a contract by providing its class hash and the source network where it is already declared.
+To avoid this, you can use the [`declare-from`](../appendix/sncast/declare_from.md) which allows you to declare a contract by providing its class hash and the source network where it is already declared.
 
 ## Example
 
