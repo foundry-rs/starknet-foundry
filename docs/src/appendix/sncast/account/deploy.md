@@ -67,6 +67,14 @@ Tip for the transaction. When not provided, defaults to 0 unless [`--estimate-ti
 Optional.
 Conflicts with: [`--tip`](#--tip-tip)
 
+## `--dry-run`
+Optional.
+If passed, the transaction will not be sent to the network and the fee will be estimated instead.
+
+## `--detailed`
+Optional.
+If passed, the output will include detailed fee estimation results instead of just overall fee. Requires [`--dry-run`](#--dry-run) flag to be used.
+
 If passed, an estimated tip will be added to pay for the transaction. The tip is estimated based on the current network conditions and added to the transaction fee.
 
 ## `--dry-run`
