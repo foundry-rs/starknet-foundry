@@ -2,6 +2,7 @@ use clap::{Args, Subcommand};
 use serde::Serialize;
 use serde_json::{Value, json};
 
+pub mod contract_registry;
 pub mod new;
 pub mod run;
 
