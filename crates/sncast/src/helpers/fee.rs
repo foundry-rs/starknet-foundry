@@ -47,7 +47,7 @@ pub struct FeeArgs {
     pub dry_run: bool,
 
     // If passed, the output will include detailed fee estimation results instead of just overall fee. Only works with `--dry-run` flag.
-    #[arg(long, short, requires = "dry_run")]
+    #[arg(long, requires = "dry_run")]
     pub detailed: bool,
 }
 
