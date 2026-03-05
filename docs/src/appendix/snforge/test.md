@@ -31,6 +31,7 @@ Available components:
 - `caller-address`
 - `call-type`
 - `call-result`
+- `gas`
 
 ## `--run-native`
 

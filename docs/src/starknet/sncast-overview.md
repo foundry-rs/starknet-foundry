@@ -2,9 +2,6 @@
 
 Starknet Foundry `sncast` is a command line tool for performing Starknet RPC calls. With it, you can easily interact with Starknet contracts!
 
-> 💡 **Info**
-> At the moment, `sncast` only supports contracts written in [Cairo](https://github.com/starkware-libs/cairo) v1 and v2.
-
 > ⚠️ **Warning**
 > Currently, support is only provided for accounts that use the default signature based on the [Stark curve](https://docs.starknet.io/learn/protocol/cryptography#the-stark-curve).
 

@@ -12,21 +12,20 @@ struct MessageToL1Spy {
 Message spy structure allowing to get messages emitted only after its creation.
 
 ```rust
-struct MessagesToL1 {
-    messages: Array<(ContractAddress, MessageToL1)>
+pub struct MessagesToL1 {
+    pub messages: Array<(ContractAddress, MessageToL1)>,
 }
 ```
 A wrapper structure on an array of messages to handle filtering smoothly.
 `messages` is an array of `(l2_sender_address, message)` tuples. 
 
 ```rust
-struct MessageToL1 {
+pub struct MessageToL1 {
     /// An ethereum address where the message is destined to go
-    to_address: EthAddress,
+    pub to_address: EthAddress,
     /// Actual payload which will be delivered to L1 contract
-    payload: Array<felt252>
+    pub payload: Array<felt252>,
 }
-
 ```
 Raw message to L1 format (as seen via the RPC-API), can be used for asserting the sent messages.
 
