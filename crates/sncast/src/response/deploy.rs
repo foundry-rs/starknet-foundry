@@ -1,6 +1,7 @@
 use crate::helpers::block_explorer::LinkProvider;
 use crate::response::cast_message::SncastCommandMessage;
 use crate::response::declare::DeclareTransactionResponse;
+use crate::response::dry_run::DryRunResponse;
 use crate::response::explorer_link::OutputLink;
 use conversions::string::IntoPaddedHexStr;
 use conversions::{padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
@@ -13,6 +14,7 @@ use serde::{Deserialize, Serialize};
 pub enum DeployResponse {
     Standard(StandardDeployResponse),
     WithDeclare(DeployResponseWithDeclare),
+    DryRun(DryRunResponse),
 }
 
 impl SncastCommandMessage for DeployResponse {
@@ -20,6 +22,7 @@ impl SncastCommandMessage for DeployResponse {
         match &self {
             DeployResponse::Standard(response) => response.text(),
             DeployResponse::WithDeclare(response) => response.text(),
+            DeployResponse::DryRun(response) => response.text(),
         }
     }
 }
@@ -29,16 +32,19 @@ impl OutputLink for DeployResponse {
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
         match self {
-            DeployResponse::Standard(deploy) => {
-                formatdoc!(
+            DeployResponse::Standard(deploy) => match deploy {
+                StandardDeployResponse::Transaction(response) => formatdoc!(
                     "
-                    contract: {}
-                    transaction: {}
-                    ",
-                    provider.contract(deploy.contract_address),
-                    provider.transaction(deploy.transaction_hash)
-                )
-            }
+                        contract: {}
+                        transaction: {}
+                        ",
+                    provider.contract(response.contract_address),
+                    provider.transaction(response.transaction_hash)
+                ),
+                StandardDeployResponse::DryRun(_) => {
+                    "No links available for fee estimation".to_string()
+                }
+            },
             DeployResponse::WithDeclare(deploy_with_declare) => {
                 formatdoc!(
                     "
@@ -53,30 +59,52 @@ impl OutputLink for DeployResponse {
                     provider.transaction(deploy_with_declare.declare_transaction_hash),
                 )
             }
+            DeployResponse::DryRun(_) => "No links available for fee estimation".to_string(),
         }
     }
 }
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
-pub struct StandardDeployResponse {
+pub enum StandardDeployResponse {
+    Transaction(StandardDeployTransactionResponse),
+    DryRun(DryRunResponse),
+}
+
+#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
+pub struct StandardDeployTransactionResponse {
     pub contract_address: PaddedFelt,
     pub transaction_hash: PaddedFelt,
 }
 
 impl StandardDeployResponse {
     fn text(&self) -> String {
-        styling::OutputBuilder::new()
-            .success_message("Deployment completed")
-            .blank_line()
-            .field(
-                "Contract Address",
-                &self.contract_address.into_padded_hex_str(),
-            )
-            .field(
-                "Transaction Hash",
-                &self.transaction_hash.into_padded_hex_str(),
-            )
-            .build()
+        // styling::OutputBuilder::new()
+        //     .success_message("Deployment completed")
+        //     .blank_line()
+        //     .field(
+        //         "Contract Address",
+        //         &self.contract_address.into_padded_hex_str(),
+        //     )
+        //     .field(
+        //         "Transaction Hash",
+        //         &self.transaction_hash.into_padded_hex_str(),
+        //     )
+        //     .build()
+        match self {
+            StandardDeployResponse::Transaction(response) => styling::OutputBuilder::new()
+                .success_message("Deployment completed")
+                .blank_line()
+                .field(
+                    "Contract Address",
+                    &response.contract_address.into_padded_hex_str(),
+                )
+                .field(
+                    "Transaction Hash",
+                    &response.transaction_hash.into_padded_hex_str(),
+                )
+                .build(),
+            StandardDeployResponse::DryRun(response) => response.text(),
+        }
     }
 }
 
@@ -94,11 +122,16 @@ impl DeployResponseWithDeclare {
         deploy: &StandardDeployResponse,
         declare: &DeclareTransactionResponse,
     ) -> Self {
-        Self {
-            contract_address: deploy.contract_address,
-            class_hash: declare.class_hash,
-            deploy_transaction_hash: deploy.transaction_hash,
-            declare_transaction_hash: declare.transaction_hash,
+        match deploy {
+            StandardDeployResponse::Transaction(deploy_response) => Self {
+                contract_address: deploy_response.contract_address,
+                class_hash: declare.class_hash,
+                deploy_transaction_hash: deploy_response.transaction_hash,
+                declare_transaction_hash: declare.transaction_hash,
+            },
+            StandardDeployResponse::DryRun(_) => {
+                unreachable!("Cannot create DeployResponseWithDeclare from a dry run response")
+            }
         }
     }
 }

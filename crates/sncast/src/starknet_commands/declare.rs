@@ -9,6 +9,7 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::response::declare::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
 };
+use sncast::response::dry_run::DryRunResponse;
 use sncast::response::errors::{SNCastProviderError, SNCastStarknetError, StarknetCommandError};
 use sncast::response::ui::UI;
 use sncast::{ErrorData, WaitForTx, apply_optional_fields, handle_wait_for_tx};
@@ -169,6 +170,17 @@ pub async fn declare_with_artifacts(
         tip => DeclarationV3::tip,
         nonce => DeclarationV3::nonce
     );
+
+    if fee_args.dry_run {
+        let fee_estimate = declaration
+            .estimate_fee()
+            .await
+            .with_context(|| "Failed to estimate fee for dry run".to_string())?;
+        return Ok(DeclareResponse::DryRun(DryRunResponse::new(
+            fee_estimate,
+            fee_args.detailed,
+        )));
+    }
 
     let declared = declaration.send().await;
 

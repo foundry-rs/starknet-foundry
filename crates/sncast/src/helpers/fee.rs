@@ -41,6 +41,15 @@ pub struct FeeArgs {
     /// If passed, an estimated tip will be added to pay for the transaction.
     #[arg(long)]
     pub estimate_tip: bool,
+
+    /// If passed, the transaction will not be sent to the network and the fee will be estimated based on provided fee args or max fee.
+    #[arg(long)]
+    pub dry_run: bool,
+
+    // If passed, the output will include detailed fee estimation results instead of just overall fee. Only works with `--dry-run` flag.
+    // #[arg(long, requires = "dry_run")]
+    #[arg(long, short, requires = "dry_run")]
+    pub detailed: bool,
 }
 
 impl From<ScriptFeeSettings> for FeeArgs {
@@ -64,6 +73,8 @@ impl From<ScriptFeeSettings> for FeeArgs {
             l1_data_gas_price,
             tip: Some(0),
             estimate_tip: false,
+            dry_run: false,
+            detailed: false,
         }
     }
 }

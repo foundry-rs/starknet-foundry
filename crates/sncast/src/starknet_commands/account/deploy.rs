@@ -9,7 +9,7 @@ use sncast::helpers::constants::BRAAVOS_BASE_ACCOUNT_CLASS_HASH;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::deploy::AccountDeployResponse;
-use sncast::response::invoke::InvokeResponse;
+use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
 use sncast::response::ui::UI;
 use sncast::{
     AccountType, WaitForTx, apply_optional_fields, chain_id_to_network_name,
@@ -132,9 +132,12 @@ async fn deploy_from_keystore(
         .await
         .is_ok()
     {
-        InvokeResponse {
+        // InvokeResponse {
+        //     transaction_hash: Felt::ZERO.into_(),
+        // }
+        InvokeResponse::Transaction(InvokeTransactionResponse {
             transaction_hash: Felt::ZERO.into_(),
-        }
+        })
     } else {
         get_deployment_result(
             provider,
@@ -325,9 +328,9 @@ where
         },
         Err(_) => Err(anyhow!("Unknown AccountFactoryError")),
         Ok(result) => {
-            let return_value = InvokeResponse {
+            let return_value = InvokeResponse::Transaction(InvokeTransactionResponse {
                 transaction_hash: result.transaction_hash.into_(),
-            };
+            });
             if let Err(message) = handle_wait_for_tx(
                 provider,
                 result.transaction_hash,
