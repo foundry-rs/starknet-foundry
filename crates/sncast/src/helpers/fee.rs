@@ -42,7 +42,7 @@ pub struct FeeArgs {
     #[arg(long)]
     pub estimate_tip: bool,
 
-    /// If passed, the transaction will not be sent to the network and the fee will be estimated based on provided fee args or max fee.
+    /// If passed, the transaction will not be sent to the network and the fee will be estimated instead.
     #[arg(long)]
     pub dry_run: bool,
 
