@@ -132,9 +132,6 @@ async fn deploy_from_keystore(
         .await
         .is_ok()
     {
-        // InvokeResponse {
-        //     transaction_hash: Felt::ZERO.into_(),
-        // }
         InvokeResponse::Transaction(InvokeTransactionResponse {
             transaction_hash: Felt::ZERO.into_(),
         })

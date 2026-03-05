@@ -78,18 +78,6 @@ pub struct StandardDeployTransactionResponse {
 
 impl StandardDeployResponse {
     fn text(&self) -> String {
-        // styling::OutputBuilder::new()
-        //     .success_message("Deployment completed")
-        //     .blank_line()
-        //     .field(
-        //         "Contract Address",
-        //         &self.contract_address.into_padded_hex_str(),
-        //     )
-        //     .field(
-        //         "Transaction Hash",
-        //         &self.transaction_hash.into_padded_hex_str(),
-        //     )
-        //     .build()
         match self {
             StandardDeployResponse::Transaction(response) => styling::OutputBuilder::new()
                 .success_message("Deployment completed")

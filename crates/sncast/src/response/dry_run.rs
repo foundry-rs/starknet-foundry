@@ -39,7 +39,6 @@ impl SncastCommandMessage for DryRunResponse {
         let builder = styling::OutputBuilder::new()
             .success_message("Dry run completed.")
             .blank_line()
-            // .field("Overall Fee", &self.overall_fee.to_string());
             .field(
                 "Overall Fee",
                 &format!(
