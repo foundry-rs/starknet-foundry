@@ -1,4 +1,4 @@
-use crate::starknet_commands::invoke::execute_calls;
+use crate::starknet_commands::invoke::{create_execution, execute_calls};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
@@ -7,6 +7,7 @@ use serde::Deserialize;
 use sncast::helpers::constants::UDC_ADDRESS;
 use sncast::helpers::fee::FeeArgs;
 use sncast::helpers::rpc::RpcArgs;
+use sncast::response::dry_run::DryRunResponse;
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
 use sncast::response::multicall::run::MulticallRunResponse;
@@ -132,6 +133,18 @@ pub async fn run(
             }
             None => anyhow::bail!("Field `call_type` is missing in a call specification"),
         }
+    }
+
+    if fee_args.dry_run {
+        let execution = create_execution(account, parsed_calls, fee_args.clone(), None).await;
+        let fee_estimate = execution
+            .estimate_fee()
+            .await
+            .map_err(anyhow::Error::from)?;
+        return Ok(MulticallRunResponse::DryRun(DryRunResponse::new(
+            &fee_estimate,
+            fee_args.detailed,
+        )));
     }
 
     execute_calls(account, parsed_calls, fee_args, None, wait_config, ui)
