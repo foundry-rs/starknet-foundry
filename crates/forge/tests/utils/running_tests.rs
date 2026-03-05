@@ -5,6 +5,7 @@ use forge::shared_cache::FailedTestsCache;
 use forge::{
     block_number_map::BlockNumberMap,
     run_tests::package::{RunForPackageArgs, run_for_package},
+    run_tests::test_target::ExitFirstChannel,
     test_filter::TestsFilter,
 };
 use forge_runner::CACHE_DIR;
@@ -88,6 +89,7 @@ pub fn run_test_case(
         },
         &mut BlockNumberMap::default(),
         ui,
+        &mut ExitFirstChannel::default(),
     ))
     .expect("Runner fail")
     .summaries()

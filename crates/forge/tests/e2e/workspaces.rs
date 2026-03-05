@@ -893,3 +893,44 @@ fn root_workspace_for_entire_workspace_with_exact() {
         "},
     );
 }
+
+#[test]
+fn exit_first_stops_execution_after_one_failure_in_workspace() {
+    let temp = setup_hello_workspace();
+
+    let output = test_runner(&temp)
+        .args(["--workspace", "--exit-first"])
+        .assert()
+        .code(1);
+
+    // Note that the output is not deterministic, so we only assert specific parts of it.
+    // The most important is that there is exactly 1 failed test in the summary.
+    // This test also relies on the execution order of packages, so that
+    // the fibonacci package is executed before the hello_workspaces package.
+    // In general, we don't control it, as the order of execution depends on the order returned by the `scarb metadata` command.
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+            Collected 5 test(s) from addition package
+            Running 1 test(s) from src/
+            Running 4 test(s) from tests/
+
+            Collected 6 test(s) from fibonacci package
+            Running 4 test(s) from tests/
+            [FAIL] fibonacci_tests::abc::efg::failing_test
+            Tests: [..] passed, 1 failed, 0 ignored, 0 filtered out
+
+            Collected 3 test(s) from hello_workspaces package
+            Running 2 test(s) from tests/
+            Running 1 test(s) from src/
+            Tests: 0 passed, 0 failed, 0 ignored, 0 filtered out
+            Interrupted execution of [..] test(s).
+
+            Failures:
+                fibonacci_tests::abc::efg::failing_test
+
+            Tests summary: [..] passed, 1 failed, 0 ignored, 0 filtered out
+            Interrupted execution of [..] test(s).
+        "},
+    );
+}
