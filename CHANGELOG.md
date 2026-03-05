@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 - `--max-threads` flag to control the maximum number of threads used for test execution
 
+### Cast
+
+#### Added
+
+- `--dry-run` and `--detailed` flags to estimate the fee of a transaction without sending it to the network.
+
 ## [0.57.0] - 2026-02-24
 
 ### Forge
