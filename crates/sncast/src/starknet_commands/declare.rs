@@ -177,7 +177,7 @@ pub async fn declare_with_artifacts(
             .await
             .with_context(|| "Failed to estimate fee for dry run".to_string())?;
         return Ok(DeclareResponse::DryRun(DryRunResponse::new(
-            fee_estimate,
+            &fee_estimate,
             fee_args.detailed,
         )));
     }

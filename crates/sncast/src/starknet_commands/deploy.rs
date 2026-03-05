@@ -131,7 +131,7 @@ pub async fn deploy(
             .await
             .map_err(anyhow::Error::from)?;
         return Ok(StandardDeployResponse::DryRun(DryRunResponse::new(
-            fee_estimate,
+            &fee_estimate,
             fee_args.detailed,
         )));
     }

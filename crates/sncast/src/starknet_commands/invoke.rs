@@ -67,7 +67,7 @@ pub async fn invoke(
             .await
             .map_err(anyhow::Error::from)?;
         return Ok(InvokeResponse::DryRun(DryRunResponse::new(
-            fee_estimate,
+            &fee_estimate,
             fee_args.detailed,
         )));
     } else {

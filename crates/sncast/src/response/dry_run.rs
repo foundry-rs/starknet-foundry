@@ -19,7 +19,8 @@ pub struct DryRunResponse {
 }
 
 impl DryRunResponse {
-    pub fn new(fee_estimate: FeeEstimate, detailed: bool) -> Self {
+    #[must_use]
+    pub fn new(fee_estimate: &FeeEstimate, detailed: bool) -> Self {
         Self {
             l1_gas_consumed: fee_estimate.l1_gas_consumed,
             l1_gas_price: fee_estimate.l1_gas_price,
@@ -44,7 +45,7 @@ impl SncastCommandMessage for DryRunResponse {
                 &format!(
                     "{} Fri (~{} STRK)",
                     &overall_fee_strk.to_string(),
-                    overall_fee_strk.round(4).to_string()
+                    overall_fee_strk.round(4)
                 ),
             );
 
