@@ -32,6 +32,7 @@ use sncast::response::declare::{
 use sncast::response::deploy::{DeployResponse, DeployResponseWithDeclare};
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
+use sncast::response::invoke::InvokeResponse;
 use sncast::response::transformed_call::transform_response;
 use sncast::response::ui::UI;
 use sncast::{
@@ -324,7 +325,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let result = starknet_commands::declare::declare(
                 declare.contract_name.clone(),
-                declare.common.fee_args,
+                declare.common.fee_args.clone(),
                 declare.common.nonce,
                 &account,
                 &artifacts,
@@ -333,18 +334,30 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 ui,
             )
             .await
-            .map_err(handle_starknet_command_error)
-            .map(|result| match result {
+            .map_err(handle_starknet_command_error);
+
+            if let Ok(DeclareResponse::DryRun(response)) = result {
+                process_command_result("declare", Ok(response), ui, None);
+                return Ok(());
+            }
+
+            let result = result.map(|result| match result {
                 DeclareResponse::Success(declare_transaction_response) => {
                     declare_transaction_response
                 }
                 DeclareResponse::AlreadyDeclared(_) => {
                     unreachable!("Argument `skip_on_already_declared` is false")
                 }
+                DeclareResponse::DryRun(_) => {
+                    unreachable!(
+                        "Dry run response should have been handled separately, as it does not contain a class hash"
+                    )
+                }
             });
 
             let block_explorer_link =
-                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config, None)
+                    .await;
 
             let deploy_command_message = if let Ok(response) = &result {
                 // TODO(#3785)
@@ -412,18 +425,34 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 ui,
             )
             .await
-            .map_err(handle_starknet_command_error)
-            .map(|result| match result {
+            .map_err(handle_starknet_command_error);
+
+            if let Ok(DeclareResponse::DryRun(response)) = result {
+                process_command_result("declare", Ok(response), ui, None);
+                return Ok(());
+            }
+
+            let result = result.map(|result| match result {
                 DeclareResponse::Success(declare_transaction_response) => {
                     declare_transaction_response
                 }
                 DeclareResponse::AlreadyDeclared(_) => {
                     unreachable!("Argument `skip_on_already_declared` is false")
                 }
+                DeclareResponse::DryRun(_) => {
+                    unreachable!(
+                        "Dry run response should have been handled separately, as it does not contain a class hash"
+                    )
+                }
             });
 
-            let block_explorer_link =
-                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
+            let block_explorer_link = block_explorer_link_if_allowed(
+                &result,
+                provider.chain_id().await?,
+                &config,
+                Some(declare_from.common.fee_args),
+            )
+            .await;
             process_command_result("declare-from", result, ui, block_explorer_link);
 
             Ok(())
@@ -492,6 +521,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         declare_transaction_response.class_hash.into_(),
                         Some(declare_transaction_response),
                     ),
+                    Ok(DeclareResponse::DryRun(_)) => {
+                        unreachable!(
+                            "Declaration run by deploy command should not return dry run response"
+                        )
+                    }
                     Err(err) => {
                         // TODO(#3960) This will return json output saying that `deploy` command was run
                         //  even though the invoked command was declare.
@@ -521,7 +555,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 &calldata,
                 deploy.salt,
                 deploy.unique,
-                fee_args,
+                fee_args.clone(),
                 nonce,
                 &account,
                 wait_config,
@@ -541,8 +575,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 result.map(DeployResponse::Standard)
             };
 
-            let block_explorer_link =
-                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
+            let block_explorer_link = block_explorer_link_if_allowed(
+                &result,
+                provider.chain_id().await?,
+                &config,
+                Some(fee_args),
+            )
+            .await;
             process_command_result("deploy", result, ui, block_explorer_link);
 
             Ok(())
@@ -615,7 +654,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 contract_address,
                 calldata,
                 nonce,
-                fee_args,
+                fee_args.clone(),
                 selector,
                 &account,
                 wait_config,
@@ -625,7 +664,17 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             .map_err(handle_starknet_command_error);
 
             let block_explorer_link =
-                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
+                if let Ok(InvokeResponse::Transaction(invoke_response)) = &result {
+                    block_explorer_link_if_allowed(
+                        &Ok(invoke_response.clone()),
+                        provider.chain_id().await?,
+                        &config,
+                        Some(fee_args),
+                    )
+                    .await
+                } else {
+                    None
+                };
 
             process_command_result("invoke", result, ui, block_explorer_link);
 

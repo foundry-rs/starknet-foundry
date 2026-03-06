@@ -1,4 +1,5 @@
 use crate::Network;
+use crate::helpers::fee::FeeArgs;
 use crate::helpers::{block_explorer::LinkProvider, configuration::CastConfig, devnet::detection};
 use foundry_ui::Message;
 use serde::Serialize;
@@ -58,6 +59,7 @@ pub async fn block_explorer_link_if_allowed<T>(
     result: &anyhow::Result<T>,
     chain_id: Felt,
     config: &CastConfig,
+    fee_args: Option<FeeArgs>,
 ) -> Option<ExplorerLinksMessage>
 where
     T: OutputLink + Clone,
@@ -65,6 +67,12 @@ where
     let Ok(response) = result else {
         return None;
     };
+
+    if let Some(fee_args) = fee_args
+        && fee_args.dry_run
+    {
+        return None;
+    }
 
     let network = chain_id.try_into().ok()?;
 

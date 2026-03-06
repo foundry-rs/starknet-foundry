@@ -1,4 +1,5 @@
 use crate::response::cast_message::SncastCommandMessage;
+use crate::response::dry_run::DryRunResponse;
 use crate::{
     helpers::block_explorer::LinkProvider,
     response::{explorer_link::OutputLink, invoke::InvokeResponse},
@@ -9,24 +10,50 @@ use foundry_ui::styling;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
-pub struct MulticallRunResponse {
+pub enum MulticallRunResponse {
+    Transaction(MulticallRunTransactionResponse),
+    DryRun(DryRunResponse),
+}
+
+#[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
+pub struct MulticallRunTransactionResponse {
     pub transaction_hash: PaddedFelt,
 }
 
 impl SncastCommandMessage for MulticallRunResponse {
     fn text(&self) -> String {
-        styling::OutputBuilder::new()
-            .success_message("Multicall completed")
-            .blank_line()
-            .field("Transaction Hash", &self.transaction_hash.into_hex_string())
-            .build()
+        match self {
+            MulticallRunResponse::Transaction(response) => styling::OutputBuilder::new()
+                .success_message("Multicall completed")
+                .blank_line()
+                .field(
+                    "Transaction Hash",
+                    &response.transaction_hash.into_hex_string(),
+                )
+                .build(),
+            MulticallRunResponse::DryRun(response) => response.text(),
+        }
     }
 }
 
 impl From<InvokeResponse> for MulticallRunResponse {
     fn from(value: InvokeResponse) -> Self {
-        Self {
-            transaction_hash: value.transaction_hash,
+        match value {
+            InvokeResponse::Transaction(invoke_response) => {
+                MulticallRunResponse::Transaction(MulticallRunTransactionResponse {
+                    transaction_hash: invoke_response.transaction_hash,
+                })
+            }
+            InvokeResponse::DryRun(response) => MulticallRunResponse::DryRun(DryRunResponse {
+                l1_gas_consumed: response.l1_gas_consumed,
+                l1_gas_price: response.l1_gas_price,
+                l2_gas_consumed: response.l2_gas_consumed,
+                l2_gas_price: response.l2_gas_price,
+                l1_data_gas_consumed: response.l1_data_gas_consumed,
+                l1_data_gas_price: response.l1_data_gas_price,
+                overall_fee: response.overall_fee,
+                detailed: response.detailed,
+            }),
         }
     }
 }
@@ -35,9 +62,12 @@ impl OutputLink for MulticallRunResponse {
     const TITLE: &'static str = "invocation";
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
-        format!(
-            "transaction: {}",
-            provider.transaction(self.transaction_hash)
-        )
+        match self {
+            MulticallRunResponse::Transaction(response) => format!(
+                "transaction: {}",
+                provider.transaction(response.transaction_hash)
+            ),
+            MulticallRunResponse::DryRun(_) => "No links available for fee estimation".to_string(),
+        }
     }
 }
