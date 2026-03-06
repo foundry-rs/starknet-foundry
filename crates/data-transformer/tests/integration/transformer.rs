@@ -565,6 +565,432 @@ async fn test_happy_case_implicit_contract_constructor() {
     assert_eq!(result, expected_output);
 }
 
+fn option_complex_abi() -> Vec<AbiEntry> {
+    serde_json::from_str(
+        r#"[
+            {
+                "type": "enum",
+                "name": "data_transformer_contract::EnumWithOption",
+                "variants": [
+                    {"name": "None", "type": "()"},
+                    {"name": "Some", "type": "core::option::Option::<core::felt252>"}
+                ]
+            },
+            {
+                "type": "struct",
+                "name": "data_transformer_contract::StructWithOption",
+                "members": [
+                    {"name": "a", "type": "core::felt252"},
+                    {"name": "b", "type": "core::option::Option::<core::integer::u32>"}
+                ]
+            },
+            {
+                "type": "function",
+                "name": "struct_with_option_fn",
+                "inputs": [{"name": "a", "type": "data_transformer_contract::StructWithOption"}],
+                "outputs": [],
+                "state_mutability": "view"
+            },
+            {
+                "type": "function",
+                "name": "enum_with_option_fn",
+                "inputs": [{"name": "a", "type": "data_transformer_contract::EnumWithOption"}],
+                "outputs": [],
+                "state_mutability": "view"
+            },
+            {
+                "type": "function",
+                "name": "option_of_enum_fn",
+                "inputs": [{"name": "a", "type": "core::option::Option::<data_transformer_contract::EnumWithOption>"}],
+                "outputs": [],
+                "state_mutability": "view"
+            }
+        ]"#,
+    )
+    .unwrap()
+}
+
+#[test]
+fn test_happy_case_struct_with_option_some() {
+    let abi = option_complex_abi();
+    let result = transform(
+        "StructWithOption { a: 1, b: Option::Some(99) }",
+        &abi,
+        &get_selector_from_name("struct_with_option_fn").unwrap(),
+    )
+    .unwrap();
+
+    // a=1, b=Some(99) -> [0, 99]
+    assert_eq!(result, vec![Felt::ONE, Felt::ZERO, Felt::from(99u32)]);
+}
+
+#[test]
+fn test_happy_case_struct_with_option_none() {
+    let abi = option_complex_abi();
+    let result = transform(
+        "StructWithOption { a: 7, b: Option::None }",
+        &abi,
+        &get_selector_from_name("struct_with_option_fn").unwrap(),
+    )
+    .unwrap();
+
+    // a=7, b=None -> [1]
+    assert_eq!(result, vec![Felt::from(7u32), Felt::ONE]);
+}
+
+#[test]
+fn test_happy_case_enum_with_option_variant_some() {
+    let abi = option_complex_abi();
+    let result = transform(
+        "EnumWithOption::Some(Option::Some(42))",
+        &abi,
+        &get_selector_from_name("enum_with_option_fn").unwrap(),
+    )
+    .unwrap();
+
+    // EnumWithOption::Some is variant 1, inner Option::Some(42) -> [0, 42]
+    assert_eq!(result, vec![Felt::ONE, Felt::ZERO, Felt::from(42u32)]);
+}
+
+#[test]
+fn test_happy_case_enum_with_option_variant_some_none() {
+    let abi = option_complex_abi();
+    let result = transform(
+        "EnumWithOption::Some(Option::None)",
+        &abi,
+        &get_selector_from_name("enum_with_option_fn").unwrap(),
+    )
+    .unwrap();
+
+    // EnumWithOption::Some is variant 1, inner Option::None -> [1]
+    assert_eq!(result, vec![Felt::ONE, Felt::ONE]);
+}
+
+#[test]
+fn test_happy_case_option_of_enum_some() {
+    let abi = option_complex_abi();
+    let result = transform(
+        "Option::Some(EnumWithOption::Some(Option::Some(10)))",
+        &abi,
+        &get_selector_from_name("option_of_enum_fn").unwrap(),
+    )
+    .unwrap();
+
+    // Option::Some -> [0], EnumWithOption::Some -> [1], Option::Some(10) -> [0, 10]
+    assert_eq!(
+        result,
+        vec![Felt::ZERO, Felt::ONE, Felt::ZERO, Felt::from(10u32)]
+    );
+}
+
+fn result_abi() -> Vec<AbiEntry> {
+    serde_json::from_str(
+        r#"[
+            {
+                "type": "function",
+                "name": "result_fn",
+                "inputs": [{"name": "a", "type": "core::result::Result::<core::integer::u32, core::felt252>"}],
+                "outputs": [],
+                "state_mutability": "view"
+            }
+        ]"#,
+    )
+    .unwrap()
+}
+
+#[test]
+fn test_happy_case_result_err() {
+    let abi = result_abi();
+    let result = transform(
+        "Result::Err(999)",
+        &abi,
+        &get_selector_from_name("result_fn").unwrap(),
+    )
+    .unwrap();
+
+    // Err is variant 1, value is felt252
+    assert_eq!(result, vec![Felt::ONE, Felt::from(999u32)]);
+}
+
+fn custom_generic_abi() -> Vec<AbiEntry> {
+    serde_json::from_str(
+        r#"[
+            {
+                "type": "struct",
+                "name": "data_transformer_contract::Wrapper::<core::integer::u32>",
+                "members": [
+                    {"name": "value", "type": "core::integer::u32"}
+                ]
+            },
+            {
+                "type": "enum",
+                "name": "data_transformer_contract::MaybeValue::<core::felt252>",
+                "variants": [
+                    {"name": "Nothing", "type": "()"},
+                    {"name": "Just", "type": "core::felt252"}
+                ]
+            },
+            {
+                "type": "function",
+                "name": "wrapper_fn",
+                "inputs": [{"name": "a", "type": "data_transformer_contract::Wrapper::<core::integer::u32>"}],
+                "outputs": [],
+                "state_mutability": "view"
+            },
+            {
+                "type": "function",
+                "name": "maybe_value_fn",
+                "inputs": [{"name": "a", "type": "data_transformer_contract::MaybeValue::<core::felt252>"}],
+                "outputs": [],
+                "state_mutability": "view"
+            }
+        ]"#,
+    )
+    .unwrap()
+}
+
+#[test]
+fn test_happy_case_custom_generic_struct_full_path() {
+    let abi = custom_generic_abi();
+    let result = transform(
+        "data_transformer_contract::Wrapper { value: 7 }",
+        &abi,
+        &get_selector_from_name("wrapper_fn").unwrap(),
+    )
+    .unwrap();
+
+    assert_eq!(result, vec![Felt::from(7u32)]);
+}
+
+#[test]
+fn test_happy_case_custom_generic_enum_unit_variant() {
+    let abi = custom_generic_abi();
+    let result = transform(
+        "MaybeValue::Nothing",
+        &abi,
+        &get_selector_from_name("maybe_value_fn").unwrap(),
+    )
+    .unwrap();
+
+    // Nothing is variant 0
+    assert_eq!(result, vec![Felt::ZERO]);
+}
+
+#[test]
+fn test_happy_case_custom_generic_enum_value_variant() {
+    let abi = custom_generic_abi();
+    let result = transform(
+        "MaybeValue::Just(123)",
+        &abi,
+        &get_selector_from_name("maybe_value_fn").unwrap(),
+    )
+    .unwrap();
+
+    // Just is variant 1
+    assert_eq!(result, vec![Felt::ONE, Felt::from(123u32)]);
+}
+
+fn option_u32_abi() -> Vec<AbiEntry> {
+    serde_json::from_str(
+        r#"[
+            {
+                "type": "function",
+                "name": "option_fn",
+                "inputs": [{"name": "a", "type": "core::option::Option::<core::integer::u32>"}],
+                "outputs": [{"type": "core::option::Option::<core::integer::u32>"}],
+                "state_mutability": "view"
+            }
+        ]"#,
+    )
+    .unwrap()
+}
+
+#[test]
+fn test_happy_case_option_none() {
+    let abi = option_u32_abi();
+    let result = transform(
+        "Option::None",
+        &abi,
+        &get_selector_from_name("option_fn").unwrap(),
+    )
+    .unwrap();
+
+    // In Cairo corelib Option: Some=0, None=1
+    assert_eq!(result, vec![Felt::ONE]);
+}
+
+#[test]
+fn test_happy_case_option_some() {
+    let abi = option_u32_abi();
+    let result = transform(
+        "Option::Some(42)",
+        &abi,
+        &get_selector_from_name("option_fn").unwrap(),
+    )
+    .unwrap();
+
+    // In Cairo corelib Option: Some=0, None=1; Some(42) serializes as [0, 42]
+    assert_eq!(result, vec![Felt::ZERO, Felt::from(42u32)]);
+}
+
+// Option::None(x) — unit variant called with a value
+#[test]
+fn test_option_unit_variant_called_with_value() {
+    let abi = option_u32_abi();
+    let result = transform(
+        "Option::None(99)",
+        &abi,
+        &get_selector_from_name("option_fn").unwrap(),
+    );
+
+    result.unwrap_err().assert_contains(
+        r#"Variant "None" of "core::option::Option::<core::integer::u32>" takes no value"#,
+    );
+}
+
+// Option::Some without parens — value-carrying variant used as unit
+#[test]
+fn test_option_value_variant_missing_value() {
+    let abi = option_u32_abi();
+    let result = transform(
+        "Option::Some",
+        &abi,
+        &get_selector_from_name("option_fn").unwrap(),
+    );
+
+    result.unwrap_err().assert_contains(
+        r#"Variant "Some" of "core::option::Option::<core::integer::u32>" takes no value"#,
+    );
+}
+
+// MaybeValue::Nothing(x) — non-corelib unit variant called with a value
+#[test]
+fn test_custom_generic_enum_unit_variant_called_with_value() {
+    let abi = custom_generic_abi();
+    let result = transform(
+        "MaybeValue::Nothing(1)",
+        &abi,
+        &get_selector_from_name("maybe_value_fn").unwrap(),
+    );
+
+    result
+        .unwrap_err()
+        .assert_contains(r#"Variant "Nothing" of "data_transformer_contract::MaybeValue::<core::felt252>" takes no value"#);
+}
+
+#[test]
+fn test_option_wrong_variant() {
+    let abi = option_u32_abi();
+    let result = transform(
+        "Option::Other",
+        &abi,
+        &get_selector_from_name("option_fn").unwrap(),
+    );
+
+    result
+        .unwrap_err()
+        .assert_contains(r#"Invalid variant "Other" for type"#);
+}
+
+// Option::Some(1, 2) — value-carrying variant called with wrong number of arguments
+#[test]
+fn test_option_some_too_many_args() {
+    let abi = option_u32_abi();
+    let result = transform(
+        "Option::Some(1, 2)",
+        &abi,
+        &get_selector_from_name("option_fn").unwrap(),
+    );
+
+    result
+        .unwrap_err()
+        .assert_contains(r#"Variant "Some" of "core::option::Option::<core::integer::u32>" expects exactly 1 argument, got 2"#);
+}
+
+fn result_nested_abi() -> Vec<AbiEntry> {
+    serde_json::from_str(
+        r#"[
+            {
+                "type": "function",
+                "name": "result_nested_fn",
+                "inputs": [{"name": "a", "type": "core::result::Result::<core::option::Option::<core::integer::u32>, core::felt252>"}],
+                "outputs": [],
+                "state_mutability": "view"
+            }
+        ]"#,
+    )
+    .unwrap()
+}
+
+#[test]
+fn test_happy_case_result_ok_with_option_some() {
+    let abi = result_nested_abi();
+    let result = transform(
+        "Result::Ok(Option::Some(7))",
+        &abi,
+        &get_selector_from_name("result_nested_fn").unwrap(),
+    )
+    .unwrap();
+
+    // Ok=0, Some=0, value=7
+    assert_eq!(result, vec![Felt::ZERO, Felt::ZERO, Felt::from(7u32)]);
+}
+
+#[test]
+fn test_happy_case_result_ok_with_option_none() {
+    let abi = result_nested_abi();
+    let result = transform(
+        "Result::Ok(Option::None)",
+        &abi,
+        &get_selector_from_name("result_nested_fn").unwrap(),
+    )
+    .unwrap();
+
+    // Ok=0, None=1
+    assert_eq!(result, vec![Felt::ZERO, Felt::ONE]);
+}
+
+#[test]
+fn test_happy_case_option_some_full_path() {
+    let abi = option_u32_abi();
+    let result = transform(
+        "core::option::Option::Some(5)",
+        &abi,
+        &get_selector_from_name("option_fn").unwrap(),
+    )
+    .unwrap();
+
+    // Some=0, value=5
+    assert_eq!(result, vec![Felt::ZERO, Felt::from(5u32)]);
+}
+
+#[test]
+fn test_happy_case_option_none_full_path() {
+    let abi = option_u32_abi();
+    let result = transform(
+        "core::option::Option::None",
+        &abi,
+        &get_selector_from_name("option_fn").unwrap(),
+    )
+    .unwrap();
+
+    assert_eq!(result, vec![Felt::ONE]);
+}
+
+#[test]
+fn test_option_invalid_non_corelib_path() {
+    let abi = option_u32_abi();
+    let result = transform(
+        "foo::Option::Some(5)",
+        &abi,
+        &get_selector_from_name("option_fn").unwrap(),
+    );
+
+    result
+        .unwrap_err()
+        .assert_contains(r#"Invalid argument type, expected "core::option::Option::<core::integer::u32>", got "foo::Option""#);
+}
+
 #[tokio::test]
 async fn test_external_enum_function_ambiguous_enum_name_cairo_expression_input() {
     // https://sepolia.voyager.online/class/0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d#code
