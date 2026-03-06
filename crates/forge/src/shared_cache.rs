@@ -32,7 +32,7 @@ impl FailedTestsCache {
         Ok(tests)
     }
 
-    pub fn save_failed_tests(&self, all_failed_tests: &[AnyTestCaseSummary]) -> Result<()> {
+    pub fn save_failed_tests(&self, all_failed_tests: &[&AnyTestCaseSummary]) -> Result<()> {
         std::fs::create_dir_all(self.cache_file.parent().unwrap())?;
 
         let file = File::create(&self.cache_file)?;

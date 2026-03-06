@@ -1,0 +1,13 @@
+[package]
+name = "optimize_inlining"
+version = "0.1.0"
+edition = "2024_07"
+
+[dependencies]
+starknet = "2.15.0"
+
+[dev-dependencies]
+snforge_std = { path = "../../../../../snforge_std" }
+
+[[target.starknet-contract]]
+sierra = true

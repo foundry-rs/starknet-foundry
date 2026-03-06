@@ -9,7 +9,7 @@ use semver::{BuildMetadata, Prerelease, Version, VersionReq};
 use std::collections::HashMap;
 use std::str::FromStr;
 
-mod artifacts;
+pub mod artifacts;
 mod command;
 pub mod metadata;
 pub mod version;

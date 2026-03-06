@@ -1,5 +1,5 @@
 use crate::compatibility_check::{Requirement, RequirementsChecker, create_version_parser};
-use anyhow::Result;
+use anyhow::{Result, ensure};
 use camino::Utf8PathBuf;
 use clap::builder::BoolishValueParser;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
@@ -31,6 +31,7 @@ mod clean;
 mod combine_configs;
 mod compatibility_check;
 mod new;
+mod optimize_inlining;
 mod profile_validation;
 pub mod run_tests;
 pub mod scarb;
@@ -106,6 +107,11 @@ enum ForgeSubcommand {
     CheckRequirements,
     /// Generate completions script
     Completions(Completions),
+    /// Find optimal inlining-strategy value to minimize gas cost
+    OptimizeInlining {
+        #[command(flatten)]
+        args: Box<optimize_inlining::OptimizeInliningArgs>,
+    },
 }
 
 #[derive(Parser, Debug)]
@@ -135,7 +141,7 @@ enum ColorOption {
     Never,
 }
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[expect(clippy::struct_excessive_bools)]
 pub struct TestArgs {
     /// Name used to filter tests
@@ -253,9 +259,29 @@ impl TestArgs {
             self.tracked_resource = ForgeTrackedResource::SierraGas;
         }
     }
+
+    pub fn validate_single_exact_test_case(&self) -> Result<()> {
+        ensure!(
+            self.exact,
+            "optimize-inlining requires --exact and one exact test case name"
+        );
+
+        let test_filter = self
+            .test_filter
+            .as_deref()
+            .map(str::trim)
+            .filter(|name| !name.is_empty());
+
+        ensure!(
+            test_filter.is_some(),
+            "optimize-inlining requires exactly one test case name"
+        );
+
+        Ok(())
+    }
 }
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 pub struct ScarbArgs {
     #[command(flatten)]
     packages_filter: PackagesFilter,
@@ -306,6 +332,12 @@ pub enum ExitStatus {
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
     let cli = Cli::parse();
+    let cores = if let Ok(available_cores) = available_parallelism() {
+        available_cores.get()
+    } else {
+        ui.eprintln(&"Failed to get the number of available cores, defaulting to 1");
+        1
+    };
 
     match cli.subcommand {
         ForgeSubcommand::New { args } => {
@@ -346,6 +378,10 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
         ForgeSubcommand::Completions(completions) => {
             generate_completions(completions.shell, &mut Cli::command())?;
             Ok(ExitStatus::Success)
+        }
+        ForgeSubcommand::OptimizeInlining { args } => {
+            check_requirements(false, &ui)?;
+            optimize_inlining::optimize_inlining(&args, cores, &ui)
         }
     }
 }

@@ -130,4 +130,5 @@ tracing = "0.1.43"
 tracing-chrome = "0.7.2"
 tracing-log = "0.2.0"
 comfy-table = "7"
+create-output-dir = "1.0.0"
 insta = { version = "1.46.0", features = ["filters"] }
