@@ -326,7 +326,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let result = starknet_commands::declare::declare(
                 declare.contract_name.clone(),
                 declare.common.fee_args.clone(),
-                declare.common.nonce.clone(),
+                declare.common.nonce,
                 &account,
                 &artifacts,
                 wait_config,

@@ -70,15 +70,15 @@ pub async fn invoke(
             &fee_estimate,
             fee_args.detailed,
         )));
-    } else {
-        execute_calls(account, vec![call], fee_args, nonce, wait_config, ui)
-            .await
-            .map(|result| {
-                InvokeResponse::Transaction(InvokeTransactionResponse {
-                    transaction_hash: result.transaction_hash.into_(),
-                })
-            })
     }
+
+    execute_calls(account, vec![call], fee_args, nonce, wait_config, ui)
+        .await
+        .map(|result| {
+            InvokeResponse::Transaction(InvokeTransactionResponse {
+                transaction_hash: result.transaction_hash.into_(),
+            })
+        })
 }
 
 pub async fn execute_calls(
