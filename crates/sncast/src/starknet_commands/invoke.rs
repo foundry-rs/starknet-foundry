@@ -108,7 +108,7 @@ pub async fn execute_calls(
     }
 }
 
-async fn create_execution<'a>(
+pub async fn create_execution<'a>(
     account: &'a SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>,
     calls: Vec<Call>,
     fee_args: FeeArgs,
