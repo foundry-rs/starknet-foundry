@@ -17,14 +17,15 @@ use crate::starknet_commands::{get, multicall};
 use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
-use configuration::Override;
+use configuration::{Override, find_config_file};
 use conversions::IntoConv;
 use data_transformer::transform;
 use foundry_ui::components::warning::WarningMessage;
 use mimalloc::MiMalloc;
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::command::process_command_result;
-use sncast::helpers::configuration::{CastConfig, CliConfigOpts, PartialCastConfig};
+use sncast::helpers::config::get_or_create_global_config_path;
+use sncast::helpers::configuration::{CastConfig, CliConfigOpts, MaybeConfig, PartialCastConfig};
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
@@ -789,15 +790,63 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
         command_name: cli.command_name(),
         profile: cli.profile.clone(),
     };
-    let local_config = PartialCastConfig::local(&opts)?;
-    let global_config = PartialCastConfig::global(&opts, ui)?;
-    let cli_config = cli.to_partial_config()?;
 
-    let partial_config = global_config
-        .override_with(local_config)
+    let local_path = find_config_file().ok();
+    let global_path = match get_or_create_global_config_path() {
+        Ok(p) if !p.as_str().is_empty() => Some(p),
+        Ok(_) => None,
+        Err(err) => {
+            ui.print_error(
+                &cli.command_name(),
+                format!("Error getting global config path: {err:?}"),
+            );
+            None
+        }
+    };
+    let profile = opts.profile.as_deref();
+
+    let global_default = PartialCastConfig::load_maybe_alt(global_path.as_ref(), None, "global")?;
+    let global_profile =
+        PartialCastConfig::load_maybe_alt(global_path.as_ref(), profile, "global")?;
+    let local_default = PartialCastConfig::load_maybe_alt(local_path.as_ref(), None, "local")?;
+    let local_profile = PartialCastConfig::load_maybe_alt(local_path.as_ref(), profile, "local")?;
+
+    if let Some(profile) = profile {
+        match (&local_profile, &global_profile) {
+            // If local config file exists, profile must be in it.
+            (MaybeConfig::NoProfile, _) => {
+                bail!(
+                    "Profile [{profile}] not found in local config at [{}]",
+                    local_path.unwrap()
+                );
+            }
+            // Allow no local profile only if profile defined in global config
+            (MaybeConfig::NoFile, MaybeConfig::NoProfile) => {
+                bail!(
+                    "Profile [{profile}] not found in global config at [{}]",
+                    global_path.unwrap()
+                );
+            }
+            (MaybeConfig::NoFile, MaybeConfig::NoFile) => {
+                // FIXME: possibly dead code? or panic - unexpected outcome
+                // I think we should probably emit warning on missing global config file
+                bail!(
+                    "Profile [{profile}] not found in local or global config (no config files found)"
+                );
+            }
+            _ => {}
+        }
+    }
+
+    let cli_config = cli.to_partial_config()?;
+    let partial_config = PartialCastConfig::default()
+        .override_with(global_default.unwrap_or_default())
+        .override_with(global_profile.unwrap_or_default())
+        .override_with(local_default.unwrap_or_default())
+        .override_with(local_profile.unwrap_or_default())
         .override_with(cli_config);
 
-    Ok(CastConfig::from(partial_config))
+    CastConfig::try_from(partial_config)
 }
 
 fn print_cmd_move_warning(command_name: &str, new_command_name: &str, ui: &UI) {
