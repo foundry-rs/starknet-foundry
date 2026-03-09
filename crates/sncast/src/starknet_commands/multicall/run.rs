@@ -100,7 +100,12 @@ pub async fn run(
                             contract_name: None,
                         },
                         arguments: DeployArguments {
-                            constructor_calldata: Some(constructor_calldata),
+                            constructor_calldata: Some(
+                                constructor_calldata
+                                    .iter()
+                                    .map(|felt| felt.to_string())
+                                    .collect(),
+                            ),
                             arguments: None,
                         },
                         salt: item.salt,
@@ -130,7 +135,7 @@ pub async fn run(
                         contract_address,
                         function: item.function,
                         arguments: Arguments {
-                            calldata: Some(calldata),
+                            calldata: Some(calldata.iter().map(|felt| felt.to_string()).collect()),
                             arguments: None,
                         },
                     },
@@ -148,7 +153,7 @@ pub async fn run(
         .map_err(handle_starknet_command_error)
 }
 
-fn parse_inputs(inputs: &Vec<Input>, contract_registry: &ContractRegistry) -> Result<Vec<String>> {
+fn parse_inputs(inputs: &[Input], contract_registry: &ContractRegistry) -> Result<Vec<Felt>> {
     let mut parsed_inputs = Vec::new();
     for input in inputs {
         let felt_value = match input {
@@ -165,7 +170,7 @@ fn parse_inputs(inputs: &Vec<Input>, contract_registry: &ContractRegistry) -> Re
                 }
             }
         };
-        parsed_inputs.push(felt_value.to_string());
+        parsed_inputs.push(felt_value);
     }
 
     Ok(parsed_inputs)
