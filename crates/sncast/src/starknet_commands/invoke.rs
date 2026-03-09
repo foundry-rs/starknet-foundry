@@ -4,8 +4,9 @@ use clap::Args;
 use conversions::IntoConv;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
+use sncast::response::dry_run::DryRunResponse;
 use sncast::response::errors::StarknetCommandError;
-use sncast::response::invoke::InvokeResponse;
+use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
 use sncast::response::ui::UI;
 use sncast::{WaitForTx, apply_optional_fields, handle_wait_for_tx};
 use starknet_rust::accounts::AccountError::Provider;
@@ -58,7 +59,26 @@ pub async fn invoke(
         calldata,
     };
 
-    execute_calls(account, vec![call], fee_args, nonce, wait_config, ui).await
+    let execution = create_execution(account, vec![call.clone()], fee_args.clone(), nonce).await;
+
+    if fee_args.dry_run {
+        let fee_estimate = execution
+            .estimate_fee()
+            .await
+            .map_err(anyhow::Error::from)?;
+        return Ok(InvokeResponse::DryRun(DryRunResponse::new(
+            &fee_estimate,
+            fee_args.detailed,
+        )));
+    }
+
+    execute_calls(account, vec![call], fee_args, nonce, wait_config, ui)
+        .await
+        .map(|result| {
+            InvokeResponse::Transaction(InvokeTransactionResponse {
+                transaction_hash: result.transaction_hash.into_(),
+            })
+        })
 }
 
 pub async fn execute_calls(
@@ -68,7 +88,32 @@ pub async fn execute_calls(
     nonce: Option<Felt>,
     wait_config: WaitForTx,
     ui: &UI,
-) -> Result<InvokeResponse, StarknetCommandError> {
+) -> Result<InvokeTransactionResult, StarknetCommandError> {
+    let execution = create_execution(account, calls, fee_args, nonce).await;
+
+    let result = execution.send().await;
+
+    match result {
+        Ok(invoke_response) => handle_wait_for_tx(
+            account.provider(),
+            invoke_response.transaction_hash,
+            invoke_response,
+            wait_config,
+            ui,
+        )
+        .await
+        .map_err(StarknetCommandError::from),
+        Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
+        Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
+    }
+}
+
+pub async fn create_execution<'a>(
+    account: &'a SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>,
+    calls: Vec<Call>,
+    fee_args: FeeArgs,
+    nonce: Option<Felt>,
+) -> ExecutionV3<'a, SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
     let execution_calls = account.execute_v3(calls);
 
     let fee_settings = if fee_args.max_fee.is_some() {
@@ -91,7 +136,7 @@ pub async fn execute_calls(
         tip,
     } = fee_settings.expect("Failed to convert to fee settings");
 
-    let execution = apply_optional_fields!(
+    apply_optional_fields!(
         execution_calls,
         l1_gas => ExecutionV3::l1_gas,
         l1_gas_price => ExecutionV3::l1_gas_price,
@@ -101,22 +146,5 @@ pub async fn execute_calls(
         l1_data_gas_price => ExecutionV3::l1_data_gas_price,
         tip => ExecutionV3::tip,
         nonce => ExecutionV3::nonce
-    );
-    let result = execution.send().await;
-
-    match result {
-        Ok(InvokeTransactionResult { transaction_hash }) => handle_wait_for_tx(
-            account.provider(),
-            transaction_hash,
-            InvokeResponse {
-                transaction_hash: transaction_hash.into_(),
-            },
-            wait_config,
-            ui,
-        )
-        .await
-        .map_err(StarknetCommandError::from),
-        Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
-        Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
-    }
+    )
 }

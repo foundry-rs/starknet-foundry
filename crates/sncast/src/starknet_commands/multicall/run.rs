@@ -1,12 +1,15 @@
-use crate::starknet_commands::invoke::execute_calls;
+use crate::starknet_commands::invoke::{create_execution, execute_calls};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
+use conversions::IntoConv;
 use serde::Deserialize;
 use sncast::helpers::constants::UDC_ADDRESS;
 use sncast::helpers::fee::FeeArgs;
 use sncast::helpers::rpc::RpcArgs;
+use sncast::response::dry_run::DryRunResponse;
 use sncast::response::errors::handle_starknet_command_error;
+use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
 use sncast::response::multicall::run::MulticallRunResponse;
 use sncast::response::ui::UI;
 use sncast::{WaitForTx, extract_or_generate_salt, udc_uniqueness};
@@ -132,9 +135,26 @@ pub async fn run(
         }
     }
 
+    if fee_args.dry_run {
+        let execution = create_execution(account, parsed_calls, fee_args.clone(), None).await;
+        let fee_estimate = execution
+            .estimate_fee()
+            .await
+            .map_err(anyhow::Error::from)?;
+        return Ok(MulticallRunResponse::DryRun(DryRunResponse::new(
+            &fee_estimate,
+            fee_args.detailed,
+        )));
+    }
+
     execute_calls(account, parsed_calls, fee_args, None, wait_config, ui)
         .await
-        .map(Into::into)
+        .map(|result| {
+            InvokeResponse::Transaction(InvokeTransactionResponse {
+                transaction_hash: result.transaction_hash.into_(),
+            })
+            .into()
+        })
         .map_err(handle_starknet_command_error)
 }
 

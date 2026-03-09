@@ -3,7 +3,8 @@ use clap::Args;
 use conversions::IntoConv;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::deploy::StandardDeployResponse;
+use sncast::response::deploy::{StandardDeployResponse, StandardDeployTransactionResponse};
+use sncast::response::dry_run::DryRunResponse;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::ui::UI;
 use sncast::{WaitForTx, apply_optional_fields, handle_wait_for_tx};
@@ -123,13 +124,25 @@ pub async fn deploy(
         tip => DeploymentV3::tip,
         nonce => DeploymentV3::nonce
     );
+
+    if fee_args.dry_run {
+        let fee_estimate = deployment
+            .estimate_fee()
+            .await
+            .map_err(anyhow::Error::from)?;
+        return Ok(StandardDeployResponse::DryRun(DryRunResponse::new(
+            &fee_estimate,
+            fee_args.detailed,
+        )));
+    }
+
     let result = deployment.send().await;
 
     match result {
         Ok(result) => handle_wait_for_tx(
             account.provider(),
             result.transaction_hash,
-            StandardDeployResponse {
+            StandardDeployResponse::Transaction(StandardDeployTransactionResponse {
                 contract_address: get_udc_deployed_address(
                     salt,
                     class_hash,
@@ -138,7 +151,7 @@ pub async fn deploy(
                 )
                 .into_(),
                 transaction_hash: result.transaction_hash.into_(),
-            },
+            }),
             wait_config,
             ui,
         )

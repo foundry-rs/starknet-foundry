@@ -311,6 +311,8 @@ fn verify_version(version: u8) -> Result<()> {
 mod tests {
     use super::*;
     use crate::response::declare::DeclareTransactionResponse;
+    use crate::response::deploy::StandardDeployTransactionResponse;
+    use crate::response::invoke::InvokeTransactionResponse;
     use crate::state::state_file::ScriptTransactionOutput::ErrorResponse;
     use camino::Utf8PathBuf;
     use conversions::IntoConv;
@@ -474,9 +476,11 @@ mod tests {
         let inputs = vec![101u8, 22u8];
         let transaction2 = ScriptTransactionEntry {
             name: "invoke".to_string(),
-            output: ScriptTransactionOutput::InvokeResponse(InvokeResponse {
-                transaction_hash: Felt::try_from_hex_str("0x3").unwrap().into_(),
-            }),
+            output: ScriptTransactionOutput::InvokeResponse(InvokeResponse::Transaction(
+                InvokeTransactionResponse {
+                    transaction_hash: Felt::try_from_hex_str("0x3").unwrap().into_(),
+                },
+            )),
             status: ScriptTransactionStatus::Success,
             timestamp: 1,
             misc: None,
@@ -546,9 +550,11 @@ mod tests {
         let inputs = vec![13u8, 15u8];
         let transaction2 = ScriptTransactionEntry {
             name: "invoke".to_string(),
-            output: ScriptTransactionOutput::InvokeResponse(InvokeResponse {
-                transaction_hash: Felt::try_from_hex_str("0x3").unwrap().into_(),
-            }),
+            output: ScriptTransactionOutput::InvokeResponse(InvokeResponse::Transaction(
+                InvokeTransactionResponse {
+                    transaction_hash: Felt::try_from_hex_str("0x3").unwrap().into_(),
+                },
+            )),
             status: ScriptTransactionStatus::Success,
             timestamp: 3,
             misc: None,
@@ -608,10 +614,12 @@ mod tests {
 
         let new_transaction = ScriptTransactionEntry {
             name: "deploy".to_string(),
-            output: ScriptTransactionOutput::DeployResponse(StandardDeployResponse {
-                transaction_hash: Felt::try_from_hex_str("0x3").unwrap().into_(),
-                contract_address: Felt::try_from_hex_str("0x333").unwrap().into_(),
-            }),
+            output: ScriptTransactionOutput::DeployResponse(StandardDeployResponse::Transaction(
+                StandardDeployTransactionResponse {
+                    transaction_hash: Felt::try_from_hex_str("0x3").unwrap().into_(),
+                    contract_address: Felt::try_from_hex_str("0x333").unwrap().into_(),
+                },
+            )),
             status: ScriptTransactionStatus::Success,
             timestamp: 1,
             misc: None,

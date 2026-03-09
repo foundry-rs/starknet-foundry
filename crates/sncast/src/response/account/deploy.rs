@@ -1,4 +1,6 @@
 use crate::response::cast_message::SncastCommandMessage;
+use crate::response::dry_run::DryRunResponse;
+use crate::response::invoke::InvokeTransactionResponse;
 use crate::{
     helpers::block_explorer::LinkProvider,
     response::{explorer_link::OutputLink, invoke::InvokeResponse},
@@ -9,25 +11,51 @@ use foundry_ui::styling;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
-pub struct AccountDeployResponse {
+pub enum AccountDeployResponse {
+    Transaction(InvokeTransactionResponse),
+    DryRun(DryRunResponse),
+}
+
+#[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
+pub struct AccountDeployTransactionResponse {
     pub transaction_hash: PaddedFelt,
 }
 
 impl From<InvokeResponse> for AccountDeployResponse {
     fn from(value: InvokeResponse) -> Self {
-        Self {
-            transaction_hash: value.transaction_hash,
+        match value {
+            InvokeResponse::Transaction(invoke_response) => {
+                AccountDeployResponse::Transaction(InvokeTransactionResponse {
+                    transaction_hash: invoke_response.transaction_hash,
+                })
+            }
+            InvokeResponse::DryRun(response) => AccountDeployResponse::DryRun(DryRunResponse {
+                l1_gas_consumed: response.l1_gas_consumed,
+                l1_gas_price: response.l1_gas_price,
+                l2_gas_consumed: response.l2_gas_consumed,
+                l2_gas_price: response.l2_gas_price,
+                l1_data_gas_consumed: response.l1_data_gas_consumed,
+                l1_data_gas_price: response.l1_data_gas_price,
+                overall_fee: response.overall_fee,
+                detailed: response.detailed,
+            }),
         }
     }
 }
 
 impl SncastCommandMessage for AccountDeployResponse {
     fn text(&self) -> String {
-        styling::OutputBuilder::new()
-            .success_message("Account deployed")
-            .blank_line()
-            .field("Transaction Hash", &self.transaction_hash.into_hex_string())
-            .build()
+        match self {
+            AccountDeployResponse::Transaction(response) => styling::OutputBuilder::new()
+                .success_message("Account deployed")
+                .blank_line()
+                .field(
+                    "Transaction Hash",
+                    &response.transaction_hash.into_hex_string(),
+                )
+                .build(),
+            AccountDeployResponse::DryRun(response) => response.text(),
+        }
     }
 }
 
@@ -35,9 +63,14 @@ impl OutputLink for AccountDeployResponse {
     const TITLE: &'static str = "account deployment";
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
-        format!(
-            "transaction: {}",
-            provider.transaction(self.transaction_hash)
-        )
+        match self {
+            AccountDeployResponse::Transaction(response) => format!(
+                "transaction: {}",
+                provider.transaction(response.transaction_hash)
+            ),
+            AccountDeployResponse::DryRun(_) => {
+                unreachable!("Dry run response should not generate explorer links")
+            }
+        }
     }
 }

@@ -9,7 +9,8 @@ use sncast::helpers::constants::BRAAVOS_BASE_ACCOUNT_CLASS_HASH;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::deploy::AccountDeployResponse;
-use sncast::response::invoke::InvokeResponse;
+use sncast::response::dry_run::DryRunResponse;
+use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
 use sncast::response::ui::UI;
 use sncast::{
     AccountType, WaitForTx, apply_optional_fields, chain_id_to_network_name,
@@ -132,9 +133,9 @@ async fn deploy_from_keystore(
         .await
         .is_ok()
     {
-        InvokeResponse {
+        InvokeResponse::Transaction(InvokeTransactionResponse {
             transaction_hash: Felt::ZERO.into_(),
-        }
+        })
     } else {
         get_deployment_result(
             provider,
@@ -150,7 +151,9 @@ async fn deploy_from_keystore(
         .await?
     };
 
-    update_keystore_account(account, address)?;
+    if let InvokeResponse::Transaction(_) = &result {
+        update_keystore_account(account, address)?;
+    }
 
     Ok(result)
 }
@@ -187,7 +190,9 @@ async fn deploy_from_accounts_file(
     )
     .await?;
 
-    update_account_in_accounts_file(accounts_file, &name, chain_id)?;
+    if !matches!(&result, InvokeResponse::DryRun(_)) {
+        update_account_in_accounts_file(accounts_file, &name, chain_id)?;
+    }
 
     Ok(result)
 }
@@ -314,6 +319,18 @@ where
         l1_data_gas_price => AccountDeploymentV3::l1_data_gas_price,
         tip => AccountDeploymentV3::tip
     );
+
+    if fee_args.dry_run {
+        let fee_estimate = deployment
+            .estimate_fee()
+            .await
+            .map_err(|error| anyhow!("Failed to estimate fee: {error}"))?;
+        return Ok(InvokeResponse::DryRun(DryRunResponse::new(
+            &fee_estimate,
+            fee_args.detailed,
+        )));
+    }
+
     let result = deployment.send().await;
 
     match result {
@@ -325,9 +342,9 @@ where
         },
         Err(_) => Err(anyhow!("Unknown AccountFactoryError")),
         Ok(result) => {
-            let return_value = InvokeResponse {
+            let return_value = InvokeResponse::Transaction(InvokeTransactionResponse {
                 transaction_hash: result.transaction_hash.into_(),
-            };
+            });
             if let Err(message) = handle_wait_for_tx(
                 provider,
                 result.transaction_hash,
