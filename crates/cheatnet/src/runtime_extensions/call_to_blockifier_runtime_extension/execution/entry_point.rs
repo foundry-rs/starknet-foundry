@@ -420,7 +420,7 @@ pub(crate) fn extract_trace_and_register_errors(
 /// It clears the errors for all contracts that failed with a different panic data than the root call
 /// Note: This may not be accurate if a panic was initially handled and then the function panicked
 /// again with the identical panic data
-fn clear_handled_errors(root_call: &CallInfo, cheatnet_state: &mut CheatnetState) {
+pub(crate) fn clear_handled_errors(root_call: &CallInfo, cheatnet_state: &mut CheatnetState) {
     let contracts_matching_root_error = get_contracts_with_matching_error(root_call);
 
     cheatnet_state

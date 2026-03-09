@@ -145,7 +145,7 @@ fn test_output(trace_message_fn: fn(&str, &str) -> String, package_name: &str) -
         Running 2 test(s) from tests/
         [FAIL] {package_name}_integrationtest::test_trace::test_debugging_trace_failure
         Failure data:
-            (0x1, 0x2, 0x3, 0x4, 0x5)
+            (0x1, 0x2, 0x3, 0x4, 0x5, 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
 
         note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace
         {debugging_trace_fail}
