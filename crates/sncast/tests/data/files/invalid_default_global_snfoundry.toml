@@ -1,5 +1,0 @@
-[sncast.default]
-url = "http://127.0.0.1:5055/rpc"
-account = "global_user"
-# Note: Any validation failure can be used instead
-block-explorer = "StarkScan"
