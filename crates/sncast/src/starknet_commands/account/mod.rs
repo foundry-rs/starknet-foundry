@@ -362,7 +362,7 @@ mod tests {
 
     #[test]
     fn test_add_created_profile_to_configuration_happy_case() {
-        let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+        let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
         let path = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
         let config = CastConfig {
             network_params: NetworkParams::new(
@@ -392,7 +392,7 @@ mod tests {
 
     #[test]
     fn test_add_created_profile_to_configuration_profile_already_exists() {
-        let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+        let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
         let config = CastConfig {
             network_params: NetworkParams::new(
                 Some(Url::parse("http://some-url.com/").unwrap()),
