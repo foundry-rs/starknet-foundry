@@ -17,7 +17,7 @@ use crate::{Arguments, calldata_to_felts};
 
 #[derive(Args)]
 pub struct MulticallDeploy {
-    /// Optional identifier to reference this step in later steps
+    /// Optional identifier to reference this contract in later steps
     #[arg(long)]
     pub id: Option<String>,
 

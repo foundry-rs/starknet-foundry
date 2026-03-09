@@ -24,15 +24,14 @@ impl ContractCache {
     /// Retrieves the class hash associated with the given contract address.
     /// Checks the local cache first, and fetches from the provider if not cached.
     pub async fn get_class_hash_by_address(&mut self, address: &Felt) -> Result<Felt> {
-        match self.address_to_class_hash.entry(*address) {
-            Entry::Occupied(entry) => Ok(*entry.get()),
-            Entry::Vacant(entry) => {
-                let class_hash = get_class_hash_by_address(&self.provider, *address)
-                    .await
-                    .context("Failed to fetch class hash from provider")?;
-                Ok(*entry.insert(class_hash))
-            }
+        if let Some(hash) = self.address_to_class_hash.get(address) {
+            return Ok(*hash);
         }
+        let class_hash = get_class_hash_by_address(&self.provider, *address)
+            .await
+            .context("Failed to fetch class hash from provider")?;
+        self.address_to_class_hash.insert(*address, class_hash);
+        Ok(class_hash)
     }
 
     /// Retrieves the class hash associated with the given contract address from the local cache, if it exists.

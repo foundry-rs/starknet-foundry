@@ -90,7 +90,7 @@ pub async fn run(
     for call in multicall.calls {
         match call {
             CallItem::Deploy(item) => {
-                let constructor_calldata = parse_inputs(&item.inputs, &contracts);
+                let constructor_calldata = parse_inputs(&item.inputs, &contracts)?;
                 let deploy = MulticallDeploy {
                     common: DeployCommonArgs {
                         contract_identifier: ContractIdentifier {
@@ -116,7 +116,7 @@ pub async fn run(
                 parsed_calls.push(call);
             }
             CallItem::Invoke(item) => {
-                let calldata = parse_inputs(&item.inputs, &contracts);
+                let calldata = parse_inputs(&item.inputs, &contracts)?;
                 let contract_address =
                     if let Some(addr) = contracts.get_address_by_id(&item.contract_address) {
                         addr
@@ -146,18 +146,17 @@ pub async fn run(
         .map_err(handle_starknet_command_error)
 }
 
-fn parse_inputs(inputs: &Vec<Input>, contract_registry: &ContractRegistry) -> Vec<String> {
+fn parse_inputs(inputs: &Vec<Input>, contract_registry: &ContractRegistry) -> Result<Vec<String>> {
     let mut parsed_inputs = Vec::new();
     for input in inputs {
         let felt_value = match input {
             Input::String(s) => contract_registry
                 .get_address_by_id(s)
-                .map_or_else(|| s.parse(), Ok)
-                .expect(""),
+                .map_or_else(|| s.parse(), Ok)?,
             Input::Number(n) => Felt::from(*n),
         };
         parsed_inputs.push(felt_value.to_string());
     }
 
-    parsed_inputs
+    Ok(parsed_inputs)
 }
