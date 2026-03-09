@@ -370,10 +370,8 @@ async fn test_show_config_global_and_local_profile() {
 
 #[tokio::test]
 async fn test_default_global_profile_with_invalid_values() {
-    let global_dir = copy_config_to_tempdir(
-        "tests/data/files/snfoundry_invalid_default.toml",
-        None,
-    );
+    let global_dir =
+        copy_config_to_tempdir("tests/data/files/snfoundry_invalid_default.toml", None);
     let t = tempdir().unwrap();
     let args = vec!["show-config"];
 
