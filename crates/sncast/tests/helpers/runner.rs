@@ -41,7 +41,7 @@ impl Cast {
             Command::new(self.sncast_bin).env("SNFOUNDRY_CONFIG", self.state.config_dir.path());
         CastCommand {
             inner,
-            _state: self.state,
+            state: self.state,
         }
     }
 }
@@ -54,37 +54,43 @@ impl Default for Cast {
 
 pub struct CastCommand {
     inner: Command,
-    _state: CastState,
+    state: CastState,
 }
 
 impl CastCommand {
+    #[must_use]
     pub fn arg(mut self, arg: impl AsRef<OsStr>) -> Self {
         self.inner = self.inner.arg(arg);
         self
     }
 
+    #[must_use]
     pub fn args(mut self, args: impl IntoIterator<Item = impl AsRef<OsStr>>) -> Self {
         self.inner = self.inner.args(args);
         self
     }
 
+    #[must_use]
     pub fn env(mut self, key: impl AsRef<OsStr>, value: impl AsRef<OsStr>) -> Self {
         self.inner = self.inner.env(key, value);
         self
     }
 
+    #[must_use]
     pub fn env_remove(mut self, key: impl AsRef<OsStr>) -> Self {
         self.inner = self.inner.env_remove(key);
         self
     }
 
+    #[must_use]
     pub fn current_dir(self, dir: impl AsRef<Path>) -> Self {
         Self {
             inner: self.inner.current_dir(dir),
-            _state: self._state,
+            state: self.state,
         }
     }
 
+    #[must_use]
     pub fn stdin(mut self, input: impl snapbox::IntoData) -> Self {
         self.inner = self.inner.stdin(input);
         self
@@ -92,12 +98,12 @@ impl CastCommand {
 
     #[must_use]
     pub fn assert(self) -> OutputAssert {
-        let CastCommand { inner, _state: _ } = self;
+        let CastCommand { inner, state: _ } = self;
         inner.assert()
     }
 
     pub fn output(self) -> Result<std::process::Output, std::io::Error> {
-        let CastCommand { inner, _state: _ } = self;
+        let CastCommand { inner, state: _ } = self;
         inner.output()
     }
 }

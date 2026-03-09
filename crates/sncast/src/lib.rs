@@ -184,7 +184,6 @@ pub struct ValidatedWaitParams {
 }
 
 impl ValidatedWaitParams {
-    #[must_use]
     pub fn new(retry_interval: u8, timeout: u16) -> Result<Self> {
         let res = Self {
             timeout,

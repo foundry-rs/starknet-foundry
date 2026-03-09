@@ -211,7 +211,7 @@ impl Override for PartialCastConfig {
             block_explorer: other.block_explorer.or(self.block_explorer),
             show_explorer_links: other.show_explorer_links.or(self.show_explorer_links),
             networks: override_optional(self.networks.clone(), other.networks),
-            unknown_fields: Default::default(),
+            unknown_fields: HashMap::default(),
         }
     }
 }
