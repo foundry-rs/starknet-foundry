@@ -217,63 +217,40 @@ impl Override for PartialCastConfig {
     }
 }
 
-/// Result of loading config when path and/or profile may be missing.
 #[derive(Debug)]
 pub enum MaybeConfig {
-    /// Config loaded successfully.
-    Loaded(PartialCastConfig),
-    /// No config file at this path (path was `None`). Not an error when e.g. local file is optional.
     NoFile,
-    /// Config file existed but requested profile was not found. Error when profile was specified.
     NoProfile,
+    Loaded(Box<PartialCastConfig>),
 }
 
 impl MaybeConfig {
-    // Produce a config for merging: `NoFile` and `NoProfile` become default, `Loaded` returns inner.
     #[must_use]
     pub fn unwrap_or_default(self) -> PartialCastConfig {
         match self {
             Self::NoFile | Self::NoProfile => PartialCastConfig::default(),
-            Self::Loaded(config) => config,
+            Self::Loaded(config) => *config,
         }
     }
 }
 
 impl PartialCastConfig {
-    /// Load config from a resolved path. Returns `Ok(None)` if the requested profile does not exist.
-    /// `scope` is used in the error message, e.g. `"local"` or `"global"`.
-    pub fn load(path: &Utf8PathBuf, profile: Option<String>, scope: &str) -> Result<Option<Self>> {
-        load_config::<Self>(path, profile.as_deref())
-            .with_context(|| anyhow::anyhow!(format!("Failed to load {scope} config at {path}")))
+    fn load(path: &Utf8PathBuf, profile: Option<&str>, scope: &str) -> Result<Option<Self>> {
+        load_config::<Self>(path, profile)
+            .with_context(|| format!("Failed to load {scope} config at {path}"))
     }
 
-    /// Load config when path may be missing. If `path` is `None`, returns `Ok(None)`. Otherwise delegates to [`Self::load`].
     pub fn load_maybe(
-        path: Option<&Utf8PathBuf>,
-        profile: Option<&str>,
-        scope: &str,
-    ) -> Result<Option<Self>> {
-        match path {
-            Some(p) => Self::load(p, profile.map(ToString::to_string), scope),
-            None => Ok(None),
-        }
-    }
-
-    /// Like [`Self::load_maybe`] but returns [`MaybeConfig`] so callers can distinguish no file vs profile missing.
-    pub fn load_maybe_alt(
         path: Option<&Utf8PathBuf>,
         profile: Option<&str>,
         scope: &str,
     ) -> Result<MaybeConfig> {
         match path {
             None => Ok(MaybeConfig::NoFile),
-            Some(p) => {
-                let opt = Self::load(p, profile.map(ToString::to_string), scope)?;
-                Ok(match opt {
-                    Some(config) => MaybeConfig::Loaded(config),
-                    None => MaybeConfig::NoProfile,
-                })
-            }
+            Some(p) => match Self::load(p, profile, scope)? {
+                None => Ok(MaybeConfig::NoProfile),
+                Some(config) => Ok(MaybeConfig::Loaded(Box::from(config))),
+            },
         }
     }
 }
