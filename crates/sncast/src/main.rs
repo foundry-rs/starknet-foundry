@@ -17,6 +17,7 @@ use crate::starknet_commands::{get, multicall};
 use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
+use indoc::formatdoc;
 use configuration::{Override, find_config_file};
 use conversions::IntoConv;
 use data_transformer::transform;
@@ -689,7 +690,16 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         Commands::Account(account) => account::account(account, config, ui, wait_config).await,
 
         Commands::ShowConfig(show) => {
-            let provider = show.rpc.get_provider(&config, ui).await.ok();
+            let provider = match show.rpc.get_provider(&config, ui).await {
+                Ok(p) => Some(p),
+                Err(err) => {
+                    ui.print_warning(formatdoc! {"
+                        Could not reach RPC provider: {err:#}
+                        Suggestion: Consider setting a different RPC URL or check your network connection"}
+                    );
+                    None
+                }
+            };
 
             let result = starknet_commands::show_config::show_config(
                 &show,
