@@ -7,7 +7,9 @@ use crate::starknet_commands::multicall::invoke::MulticallInvoke;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
+use conversions::string::TryFromDecStr;
 use serde::Deserialize;
+use serde_json::Number;
 use sncast::WaitForTx;
 use sncast::helpers::fee::FeeArgs;
 use sncast::helpers::rpc::RpcArgs;
@@ -39,7 +41,7 @@ pub struct Run {
 #[serde(untagged)]
 enum Input {
     String(String),
-    Number(Felt),
+    Number(Number),
 }
 
 #[derive(Deserialize, Debug)]
@@ -153,7 +155,15 @@ fn parse_inputs(inputs: &Vec<Input>, contract_registry: &ContractRegistry) -> Re
             Input::String(s) => contract_registry
                 .get_address_by_id(s)
                 .map_or_else(|| s.parse(), Ok)?,
-            Input::Number(n) => *n,
+            Input::Number(n) => {
+                if let Ok(n) = Felt::try_from_dec_str(&n.to_string()) {
+                    n
+                } else if let Ok(n) = Felt::from_hex(&n.to_string()) {
+                    n
+                } else {
+                    anyhow::bail!("Failed to parse {n} to felt")
+                }
+            }
         };
         parsed_inputs.push(felt_value.to_string());
     }
