@@ -82,6 +82,7 @@ fn test_state_not_reverted_in_top_call_when_raw_execution() {
 
     assert!(res.execution.failed);
     assert!(res.inner_calls.is_empty());
+
     assert!(!res.execution.events.is_empty());
     assert!(!res.execution.l2_to_l1_messages.is_empty());
 }
@@ -115,6 +116,7 @@ fn test_state_reverted_in_top_call_when_call_entry_point() {
 
     assert!(res.execution.failed);
     assert!(res.inner_calls.is_empty());
+
     assert!(res.execution.events.is_empty());
     assert!(res.execution.l2_to_l1_messages.is_empty());
     assert_eq!(

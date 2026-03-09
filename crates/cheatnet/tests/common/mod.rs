@@ -45,7 +45,7 @@ pub mod assertions;
 pub mod cache;
 pub mod state;
 
-// Helper struct to return both: our custom call result wrapper and actual call info (unless unrecoverable error)
+// Helper struct to return both: our custom call result wrapper and actual call info (unless unrecoverable error), allowing tests to check both
 pub struct CallResultExtended {
     pub call_result: CallResult,
     pub call_info: Option<CallInfo>,
