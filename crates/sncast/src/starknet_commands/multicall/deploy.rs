@@ -47,7 +47,6 @@ impl MulticallDeploy {
             calldata_to_felts(raw_calldata)?
         } else {
             let contract_class = contract_registry
-                .cache
                 .get_contract_class_by_class_hash(&class_hash)
                 .await?;
             constructor_arguments.try_into_calldata(contract_class, &constructor_selector)?
@@ -69,13 +68,10 @@ impl MulticallDeploy {
         );
 
         if contract_registry
-            .cache
             .get_class_hash_by_address_local(&contract_address)
             .is_none()
         {
-            contract_registry
-                .cache
-                .insert_new_address(contract_address, class_hash)?;
+            contract_registry.insert_new_address(contract_address, class_hash)?;
         }
 
         // Store the contract address in the context with the provided id for later use in invoke calls

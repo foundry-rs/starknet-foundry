@@ -22,11 +22,9 @@ impl MulticallInvoke {
             calldata_to_felts(raw_calldata)?
         } else {
             let class_hash = contract_registry
-                .cache
                 .get_class_hash_by_address(&self.common.contract_address)
                 .await?;
             let contract_class = contract_registry
-                .cache
                 .get_contract_class_by_class_hash(&class_hash)
                 .await?;
             arguments.try_into_calldata(contract_class, &selector)?

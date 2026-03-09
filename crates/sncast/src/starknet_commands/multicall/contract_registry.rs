@@ -6,19 +6,40 @@ use starknet_rust::{
 };
 use starknet_types_core::felt::Felt;
 use std::collections::{HashMap, hash_map::Entry};
-pub struct ContractCache {
+
+/// Registry for managing contract information during multicall execution.
+/// It maintains mappings between user-defined ids, contract addresses, class hashes, and contract classes
+/// to facilitate reference and reuse of deployed contracts across multiple calls in a multicall sequence.
+pub struct ContractRegistry {
+    id_to_address: HashMap<String, Felt>,
     address_to_class_hash: HashMap<Felt, Felt>,
     class_hash_to_contract_class: HashMap<Felt, ContractClass>,
     provider: JsonRpcClient<HttpTransport>,
 }
 
-impl ContractCache {
-    fn new(provider: &JsonRpcClient<HttpTransport>) -> Self {
-        ContractCache {
+impl ContractRegistry {
+    pub fn new(provider: &JsonRpcClient<HttpTransport>) -> Self {
+        ContractRegistry {
+            id_to_address: HashMap::new(),
             address_to_class_hash: HashMap::new(),
             class_hash_to_contract_class: HashMap::new(),
             provider: provider.clone(),
         }
+    }
+
+    /// Retrieves the contract address associated with the given id, if it exists.
+    pub fn get_address_by_id(&self, id: &str) -> Option<Felt> {
+        self.id_to_address.get(id).copied()
+    }
+
+    /// Inserts a mapping from the given id to the specified contract address.
+    /// Returns an error if the id already exists.
+    pub fn insert_new_id_to_address(&mut self, id: String, address: Felt) -> Result<()> {
+        if self.id_to_address.contains_key(&id) {
+            anyhow::bail!("Duplicate id found: {id}");
+        }
+        self.id_to_address.insert(id, address);
+        Ok(())
     }
 
     /// Retrieves the class hash associated with the given contract address.
@@ -69,36 +90,6 @@ impl ContractCache {
             .class_hash_to_contract_class
             .get(class_hash)
             .expect("Value was just inserted or already existed"))
-    }
-}
-
-/// Registry for multicall execution, storing mappings from ids to contract addresses.
-pub struct ContractRegistry {
-    id_to_address: HashMap<String, Felt>,
-    pub cache: ContractCache,
-}
-
-impl ContractRegistry {
-    pub fn new(provider: &JsonRpcClient<HttpTransport>) -> Self {
-        ContractRegistry {
-            id_to_address: HashMap::new(),
-            cache: ContractCache::new(provider),
-        }
-    }
-
-    /// Retrieves the contract address associated with the given id, if it exists.
-    pub fn get_address_by_id(&self, id: &str) -> Option<Felt> {
-        self.id_to_address.get(id).copied()
-    }
-
-    /// Inserts a mapping from the given id to the specified contract address.
-    /// Returns an error if the id already exists.
-    pub fn insert_new_id_to_address(&mut self, id: String, address: Felt) -> Result<()> {
-        if self.id_to_address.contains_key(&id) {
-            anyhow::bail!("Duplicate id found: {id}");
-        }
-        self.id_to_address.insert(id, address);
-        Ok(())
     }
 }
 
