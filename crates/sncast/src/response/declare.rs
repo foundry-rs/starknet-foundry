@@ -40,9 +40,8 @@ pub struct AlreadyDeclaredResponse {
 #[serde(tag = "status")]
 pub enum DeclareResponse {
     AlreadyDeclared(AlreadyDeclaredResponse),
-    DryRun(DryRunResponse),
-    #[serde(untagged)]
     Success(DeclareTransactionResponse),
+    DryRun(DryRunResponse),
 }
 
 impl DeclareResponse {
