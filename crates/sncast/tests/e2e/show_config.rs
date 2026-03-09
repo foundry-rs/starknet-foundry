@@ -220,6 +220,26 @@ async fn test_stark_scan_as_block_explorer() {
 }
 
 #[tokio::test]
+async fn test_show_config_malformed() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_malformed.toml", None);
+    let args = vec!["show-config"];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! { r"
+            Error: Failed to load local config at [..]snfoundry.toml
+
+            Caused by:
+                0: Failed to parse snfoundry.toml config file
+                1: TOML parse error at line 2, column 10
+        " },
+    );
+}
+
+#[tokio::test]
 async fn test_show_config_provider_error() {
     let t = tempdir().unwrap();
     fs::write(
