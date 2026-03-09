@@ -48,6 +48,17 @@ pub async fn test_happy_case(class_hash: &str, account_type: &str) {
         .current_dir(tempdir.path());
     let bdg = snapbox.assert();
 
+    let stdout = bdg.as_stdout();
+    println!("-------");
+    println!("{stdout}");
+    println!("-------");
+
+    let stderr = bdg.as_stderr();
+
+    println!("-------");
+    println!("{stderr}");
+    println!("-------");
+
     let hash = get_transaction_hash(&bdg.get_output().stdout);
     let receipt = get_transaction_receipt(hash).await;
 
