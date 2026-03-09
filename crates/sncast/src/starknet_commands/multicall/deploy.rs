@@ -10,9 +10,10 @@ use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 
-use crate::starknet_commands::deploy::DeployCommonArgs;
+use crate::starknet_commands::deploy::{ContractIdentifier, DeployArguments, DeployCommonArgs};
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::invoke::replaced_calldata;
+use crate::starknet_commands::multicall::run::{DeployItem, parse_inputs};
 use crate::{Arguments, calldata_to_felts};
 
 #[derive(Args)]
@@ -26,6 +27,37 @@ pub struct MulticallDeploy {
 }
 
 impl MulticallDeploy {
+    pub fn new_from_item(item: DeployItem, contracts: &ContractRegistry) -> Result<Self> {
+        let constructor_calldata = parse_inputs(&item.inputs(), &contracts)?;
+        let deploy = MulticallDeploy {
+            common: DeployCommonArgs {
+                contract_identifier: ContractIdentifier {
+                    class_hash: Some(*item.class_hash()),
+                    contract_name: None,
+                },
+                arguments: DeployArguments {
+                    constructor_calldata: Some(
+                        constructor_calldata
+                            .iter()
+                            .map(|felt| felt.to_string())
+                            .collect(),
+                    ),
+                    arguments: None,
+                },
+                salt: *item.salt(),
+                unique: *item.unique(),
+                package: None,
+            },
+            id: if item.id().is_empty() {
+                None
+            } else {
+                Some(item.id().clone())
+            },
+        };
+
+        Ok(deploy)
+    }
+
     pub async fn build_call(
         &self,
         account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
