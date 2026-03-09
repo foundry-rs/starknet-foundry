@@ -40,7 +40,9 @@ pub struct AlreadyDeclaredResponse {
 #[serde(tag = "status")]
 pub enum DeclareResponse {
     AlreadyDeclared(AlreadyDeclaredResponse),
+    #[serde(untagged)]
     Success(DeclareTransactionResponse),
+    #[serde(untagged)]
     DryRun(DryRunResponse),
 }
 
