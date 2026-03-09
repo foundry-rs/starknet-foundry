@@ -47,7 +47,7 @@ struct DeployCall {
     inputs: Vec<Input>,
     unique: bool,
     salt: Option<Felt>,
-    id: String,
+    id: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -107,8 +107,8 @@ pub async fn run(
                     &parsed_inputs,
                 );
 
-                if !deploy_call.id.is_empty() {
-                    contracts.insert_new_id_to_address(deploy_call.id.clone(), contract_address)?;
+                if let Some(id) = deploy_call.id {
+                    contracts.insert_new_id_to_address(id, contract_address)?;
                 }
             }
             Some("invoke") => {
@@ -140,11 +140,11 @@ pub async fn run(
         .map_err(handle_starknet_command_error)
 }
 
-fn parse_inputs(inputs: &Vec<Input>, contracts_registry: &ContractRegistry) -> Result<Vec<Felt>> {
+fn parse_inputs(inputs: &Vec<Input>, contracts: &ContractRegistry) -> Result<Vec<Felt>> {
     let mut parsed_inputs = Vec::new();
     for input in inputs {
         let felt_value = match input {
-            Input::String(s) => contracts_registry
+            Input::String(s) => contracts
                 .get_address_by_id(s)
                 .map_or_else(|| s.parse(), Ok)?,
             Input::Number(n) => (*n).into(),
