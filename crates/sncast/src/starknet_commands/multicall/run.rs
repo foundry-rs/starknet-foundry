@@ -39,7 +39,7 @@ pub struct Run {
 #[serde(untagged)]
 enum Input {
     String(String),
-    Number(i64),
+    Number(Felt),
 }
 
 #[derive(Deserialize, Debug)]
@@ -153,7 +153,7 @@ fn parse_inputs(inputs: &Vec<Input>, contract_registry: &ContractRegistry) -> Re
             Input::String(s) => contract_registry
                 .get_address_by_id(s)
                 .map_or_else(|| s.parse(), Ok)?,
-            Input::Number(n) => Felt::from(*n),
+            Input::Number(n) => *n,
         };
         parsed_inputs.push(felt_value.to_string());
     }

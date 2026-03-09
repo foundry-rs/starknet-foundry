@@ -311,8 +311,7 @@ async fn test_numeric_overflow() {
         output,
         indoc! {r"
         Command: multicall run
-        Error: Failed to parse [..]
-        u64 value was too large
+        Error: Failed to parse number 9223372036854775808 as i64
         "},
     );
 }
