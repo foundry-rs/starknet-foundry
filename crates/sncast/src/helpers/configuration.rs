@@ -1,9 +1,7 @@
 use super::block_explorer;
-use crate::helpers::config::get_global_config_path;
 use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
-use crate::response::ui::UI;
 use crate::{Network, PartialWaitParams, ValidatedWaitParams};
-use anyhow::Result;
+use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use configuration::{Config, Override, load_config, override_optional};
 use serde::{Deserialize, Serialize};
@@ -103,7 +101,7 @@ pub struct CastConfig {
 impl CastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
         block_explorer::Service::validate_for_config(self.block_explorer)?;
-        self.wait_params.validate();
+        self.wait_params.validate()?;
         self.network_params.validate()?;
         Ok(())
     }
@@ -185,7 +183,9 @@ impl Config for PartialCastConfig {
 impl PartialCastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
         block_explorer::Service::validate_for_config(self.block_explorer)?;
-        self.wait_params.map(ValidatedWaitParams::from);
+        if let Some(ref wp) = self.wait_params {
+            ValidatedWaitParams::try_from(*wp)?;
+        }
         self.network_params.validate()?;
         Ok(())
     }
@@ -206,31 +206,64 @@ impl Override for PartialCastConfig {
     }
 }
 
-impl PartialCastConfig {
-    pub fn local(opts: &CliConfigOpts) -> Result<Self> {
-        let local_config = load_config::<PartialCastConfig>(None, opts.profile.as_deref())
-            .map_err(|err| anyhow::anyhow!(format!("Failed to load config: {err}")))?;
+/// Result of loading config when path and/or profile may be missing.
+#[derive(Debug)]
+pub enum MaybeConfig {
+    /// Config loaded successfully.
+    Loaded(PartialCastConfig),
+    /// No config file at this path (path was `None`). Not an error when e.g. local file is optional.
+    NoFile,
+    /// Config file existed but requested profile was not found. Error when profile was specified.
+    NoProfile,
+}
 
-        Ok(local_config)
+impl MaybeConfig {
+    // Produce a config for merging: `NoFile` and `NoProfile` become default, `Loaded` returns inner.
+    #[must_use]
+    pub fn unwrap_or_default(self) -> PartialCastConfig {
+        match self {
+            Self::NoFile | Self::NoProfile => PartialCastConfig::default(),
+            Self::Loaded(config) => config,
+        }
+    }
+}
+
+impl PartialCastConfig {
+    /// Load config from a resolved path. Returns `Ok(None)` if the requested profile does not exist.
+    /// `scope` is used in the error message, e.g. `"local"` or `"global"`.
+    pub fn load(path: &Utf8PathBuf, profile: Option<String>, scope: &str) -> Result<Option<Self>> {
+        load_config::<Self>(path, profile.as_deref())
+            .with_context(|| anyhow::anyhow!(format!("Failed to load {scope} config at {path}")))
     }
 
-    pub fn global(opts: &CliConfigOpts, ui: &UI) -> Result<Self> {
-        let global_config_path = get_global_config_path().unwrap_or_else(|err| {
-            ui.print_error(
-                &opts.command_name,
-                format!("Error getting global config path: {err}"),
-            );
-            Utf8PathBuf::new()
-        });
+    /// Load config when path may be missing. If `path` is `None`, returns `Ok(None)`. Otherwise delegates to [`Self::load`].
+    pub fn load_maybe(
+        path: Option<&Utf8PathBuf>,
+        profile: Option<&str>,
+        scope: &str,
+    ) -> Result<Option<Self>> {
+        match path {
+            Some(p) => Self::load(p, profile.map(ToString::to_string), scope),
+            None => Ok(None),
+        }
+    }
 
-        let global_config = load_config::<PartialCastConfig>(
-            Some(&global_config_path.clone()),
-            opts.profile.as_deref(),
-        )
-        .or_else(|_| load_config::<PartialCastConfig>(Some(&global_config_path), None))
-        .map_err(|err| anyhow::anyhow!(format!("Failed to load config: {err}")))?;
-
-        Ok(global_config)
+    /// Like [`Self::load_maybe`] but returns [`MaybeConfig`] so callers can distinguish no file vs profile missing.
+    pub fn load_maybe_alt(
+        path: Option<&Utf8PathBuf>,
+        profile: Option<&str>,
+        scope: &str,
+    ) -> Result<MaybeConfig> {
+        match path {
+            None => Ok(MaybeConfig::NoFile),
+            Some(p) => {
+                let opt = Self::load(p, profile.map(ToString::to_string), scope)?;
+                Ok(match opt {
+                    Some(config) => MaybeConfig::Loaded(config),
+                    None => MaybeConfig::NoProfile,
+                })
+            }
+        }
     }
 }
 
@@ -239,8 +272,9 @@ pub struct CliConfigOpts {
     pub profile: Option<String>,
 }
 
-impl From<PartialCastConfig> for CastConfig {
-    fn from(p: PartialCastConfig) -> Self {
+impl TryFrom<PartialCastConfig> for CastConfig {
+    type Error = anyhow::Error;
+    fn try_from(p: PartialCastConfig) -> Result<Self> {
         let d = CastConfig::default();
 
         let accounts_file = p.accounts_file.unwrap_or(d.accounts_file);
@@ -251,18 +285,18 @@ impl From<PartialCastConfig> for CastConfig {
             .map(|n| d.networks.override_with(n))
             .unwrap_or(d.networks);
 
-        CastConfig {
+        Ok(CastConfig {
             network_params: d.network_params.override_with(p.network_params),
             account: p.account.unwrap_or(d.account),
             accounts_file,
             keystore: p.keystore.or(d.keystore),
             wait_params: p
                 .wait_params
-                .map_or(d.wait_params, ValidatedWaitParams::from),
+                .map_or_else(|| Ok(d.wait_params), ValidatedWaitParams::try_from)?,
             block_explorer: p.block_explorer.or(d.block_explorer),
             show_explorer_links: p.show_explorer_links.unwrap_or(d.show_explorer_links),
             networks,
-        }
+        })
     }
 }
 
