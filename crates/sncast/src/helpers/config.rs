@@ -4,20 +4,23 @@ use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use indoc::formatdoc;
-use std::fs;
 use std::fs::File;
 use std::io::Write;
+use std::{env, fs};
 
-pub fn get_global_config_path() -> Result<Utf8PathBuf> {
-    let global_config_dir = {
-        if cfg!(target_os = "windows") {
-            dirs::config_dir()
-                .ok_or_else(|| anyhow::anyhow!("Could not determine config directory"))?
-                .join("starknet-foundry")
-        } else {
-            dirs::home_dir()
-                .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?
-                .join(".config/starknet-foundry")
+pub fn get_or_create_global_config_path() -> Result<Utf8PathBuf> {
+    let global_config_dir = match env::var("SNFOUNDRY_CONFIG").ok() {
+        Some(dir) => Utf8PathBuf::from(shellexpand::tilde(&dir).to_string()).into_std_path_buf(),
+        None => {
+            if cfg!(target_os = "windows") {
+                dirs::config_dir()
+                    .ok_or_else(|| anyhow::anyhow!("Could not determine config directory"))?
+                    .join("starknet-foundry")
+            } else {
+                dirs::home_dir()
+                    .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?
+                    .join(".config/starknet-foundry")
+            }
         }
     };
 
