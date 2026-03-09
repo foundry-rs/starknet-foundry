@@ -63,8 +63,8 @@ pub fn replaced_calldata(
                 }
             }
             (None, _) => function_arguments.clone(),
-            (Some(_), Some(_)) => unreachable!(
-                "Clap should ensure that only one of calldata or arguments is provided"
+            (Some(_), Some(_)) => anyhow::bail!(
+                "Invalid arguments: both `calldata` and `arguments` are set. Please provide only one."
             ),
         },
     )
