@@ -218,5 +218,156 @@ async fn test_stark_scan_as_block_explorer() {
     );
 }
 
+#[tokio::test]
+async fn test_show_config_global_no_local() {
+    let global_dir = copy_config_to_tempdir("tests/data/files/snfoundry_global_correct.toml", None);
+    let t = tempdir().unwrap();
+    let args = vec!["show-config"];
+
+    let snapbox = Cast::new()
+        .config_dir(global_dir.path())
+        .command()
+        .args(&args)
+        .current_dir(t.path());
+
+    snapbox.assert().success().stdout_eq(formatdoc! {r"
+        Chain ID:            alpha-sepolia
+        RPC URL:             {}
+        Account:             global_default_user
+        Accounts File Path:  ../global-account-file
+        Wait Timeout:        120s
+        Wait Retry Interval: 3s
+        Show Explorer Links: true
+        Block Explorer:      Voyager
+    ", URL});
+}
+
+#[tokio::test]
+async fn test_show_config_global_only_profile() {
+    let global_dir = copy_config_to_tempdir("tests/data/files/snfoundry_global_correct.toml", None);
+    let t = tempdir().unwrap();
+    let args = vec!["--profile", "global_only_profile", "show-config"];
+
+    let snapbox = Cast::new()
+        .config_dir(global_dir.path())
+        .command()
+        .args(&args)
+        .current_dir(t.path());
+
+    snapbox.assert().success().stdout_eq(formatdoc! {r"
+        Profile:             global_only_profile
+        Chain ID:            alpha-sepolia
+        RPC URL:             {}
+        Account:             global_profile_user
+        Accounts File Path:  ../global-account-file
+        Wait Timeout:        123s
+        Wait Retry Interval: 5s
+        Show Explorer Links: false
+        Block Explorer:      Voyager
+    ", URL});
+}
+
+#[tokio::test]
+async fn test_show_config_global_and_local_default() {
+    let global_dir = copy_config_to_tempdir("tests/data/files/snfoundry_global_correct.toml", None);
+    let local_dir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
+    let args = vec!["show-config"];
+
+    let snapbox = Cast::new()
+        .config_dir(global_dir.path())
+        .command()
+        .args(&args)
+        .current_dir(local_dir.path());
+
+    snapbox.assert().success().stdout_eq(formatdoc! {r"
+        Chain ID:            alpha-sepolia
+        RPC URL:             {}
+        Account:             user1
+        Accounts File Path:  ../account-file
+        Wait Timeout:        120s
+        Wait Retry Interval: 3s
+        Show Explorer Links: true
+        Block Explorer:      Voyager
+    ", URL});
+}
+
+#[tokio::test]
+async fn test_show_config_global_and_local_profile() {
+    let global_dir = copy_config_to_tempdir("tests/data/files/snfoundry_global_correct.toml", None);
+    let local_dir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
+    let args = vec!["--profile", "profile2", "show-config"];
+
+    let snapbox = Cast::new()
+        .config_dir(global_dir.path())
+        .command()
+        .args(&args)
+        .current_dir(local_dir.path());
+
+    snapbox.assert().success().stdout_eq(formatdoc! {r"
+        Profile:             profile2
+        Chain ID:            alpha-sepolia
+        RPC URL:             {}
+        Account:             user100
+        Accounts File Path:  ../account-file
+        Wait Timeout:        120s
+        Wait Retry Interval: 3s
+        Show Explorer Links: true
+        Block Explorer:      ViewBlock
+    ", URL});
+}
+
+#[tokio::test]
+async fn test_default_global_profile_with_invalid_values() {
+    let global_dir = copy_config_to_tempdir(
+        "tests/data/files/snfoundry_invalid_default.toml",
+        None,
+    );
+    let t = tempdir().unwrap();
+    let args = vec!["show-config"];
+
+    let snapbox = Cast::new()
+        .config_dir(global_dir.path())
+        .command()
+        .args(&args)
+        .current_dir(t.path());
+
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! { r"
+            Error: Failed to load global config at [..]snfoundry.toml
+
+            Caused by:
+                starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice.
+        " },
+    );
+}
+
+#[tokio::test]
+async fn test_default_global_profile_with_unsupported_field() {
+    let global_dir = copy_config_to_tempdir(
+        "tests/data/files/snfoundry_invalid_unknown_field.toml",
+        None,
+    );
+    let t = tempdir().unwrap();
+    let args = vec!["show-config"];
+
+    let snapbox = Cast::new()
+        .config_dir(global_dir.path())
+        .command()
+        .args(&args)
+        .current_dir(t.path());
+
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! { r#"
+            Error: Failed to load global config at [..]snfoundry.toml
+
+            Caused by:
+                unknown field(s) ["bar", "baz", "foo"]
+        "# },
     );
 }
