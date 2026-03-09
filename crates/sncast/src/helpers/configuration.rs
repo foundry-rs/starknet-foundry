@@ -6,7 +6,7 @@ use camino::Utf8PathBuf;
 use configuration::{Config, Override, load_config, override_optional};
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use url::Url;
 
 #[must_use]
@@ -160,6 +160,11 @@ pub struct PartialCastConfig {
 
     #[serde(default)]
     pub networks: Option<NetworksConfig>,
+
+    /// Additional data not captured by deserializer.
+    #[doc(hidden)]
+    #[serde(flatten, default, skip_serializing)]
+    pub unknown_fields: HashMap<String, serde_json::Value>,
 }
 
 #[derive(Serialize)]
@@ -182,6 +187,11 @@ impl Config for PartialCastConfig {
 
 impl PartialCastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
+        if !self.unknown_fields.is_empty() {
+            let mut keys: Vec<&String> = self.unknown_fields.keys().collect();
+            keys.sort();
+            anyhow::bail!("unknown field(s) {keys:?}");
+        }
         block_explorer::Service::validate_for_config(self.block_explorer)?;
         if let Some(ref wp) = self.wait_params {
             ValidatedWaitParams::try_from(*wp)?;
@@ -202,6 +212,7 @@ impl Override for PartialCastConfig {
             block_explorer: other.block_explorer.or(self.block_explorer),
             show_explorer_links: other.show_explorer_links.or(self.show_explorer_links),
             networks: override_optional(self.networks.clone(), other.networks),
+            unknown_fields: Default::default(),
         }
     }
 }
