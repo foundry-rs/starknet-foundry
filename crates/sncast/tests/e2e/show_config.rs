@@ -4,7 +4,8 @@ use crate::helpers::{
 };
 use configuration::test_utils::copy_config_to_tempdir;
 use indoc::{formatdoc, indoc};
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use std::fs;
 use tempfile::tempdir;
 
 #[tokio::test]
@@ -191,6 +192,37 @@ async fn test_stark_scan_as_block_explorer() {
             Caused by:
                 starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice.
         " },
+    );
+}
+
+#[tokio::test]
+async fn test_show_config_provider_error() {
+    let t = tempdir().unwrap();
+    fs::write(
+        t.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            url = "http://127.0.0.1:1/rpc"
+            account = "user1"
+        "#},
+    )
+    .unwrap();
+    let args = vec!["show-config"];
+
+    let snapbox = runner(&args).current_dir(t.path());
+
+    assert_stdout_contains(
+        snapbox.assert().success(),
+        indoc! {r"
+            Could not reach RPC provider: Error while calling RPC method spec_version: error sending request for url (http://127.0.0.1:1/rpc)
+            RPC URL:             http://127.0.0.1:1/rpc
+            Account:             user1
+            Accounts File Path:  [..]/.starknet_accounts/starknet_open_zeppelin_accounts.json
+            Wait Timeout:        300s
+            Wait Retry Interval: 5s
+            Show Explorer Links: true
+            Block Explorer:      Voyager
+        "},
     );
 }
 
