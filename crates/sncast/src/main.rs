@@ -775,8 +775,7 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
 
     let local_path = find_config_file().ok();
     let global_path = match get_or_create_global_config_path() {
-        Ok(p) if !p.as_str().is_empty() => Some(p),
-        Ok(_) => None,
+        Ok(p) => Some(p),
         Err(err) => {
             ui.print_error(
                 &cli.command_name(),
@@ -787,37 +786,31 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
     };
     let profile = opts.profile.as_deref();
 
-    let global_default = PartialCastConfig::load_maybe_alt(global_path.as_ref(), None, "global")?;
-    let global_profile =
-        PartialCastConfig::load_maybe_alt(global_path.as_ref(), profile, "global")?;
-    let local_default = PartialCastConfig::load_maybe_alt(local_path.as_ref(), None, "local")?;
-    let local_profile = PartialCastConfig::load_maybe_alt(local_path.as_ref(), profile, "local")?;
+    let global_default = PartialCastConfig::load_maybe(global_path.as_ref(), None, "global")?;
+    let global_profile = PartialCastConfig::load_maybe(global_path.as_ref(), profile, "global")?;
+    let local_default = PartialCastConfig::load_maybe(local_path.as_ref(), None, "local")?;
+    let local_profile = PartialCastConfig::load_maybe(local_path.as_ref(), profile, "local")?;
 
-    if let Some(profile) = profile {
-        match (&local_profile, &global_profile) {
-            // If local config file exists, profile must be in it.
-            (MaybeConfig::NoProfile, _) => {
-                bail!(
-                    "Profile [{profile}] not found in local config at [{}]",
-                    local_path.unwrap()
-                );
-            }
-            // Allow no local profile only if profile defined in global config
-            (MaybeConfig::NoFile, MaybeConfig::NoProfile) => {
-                bail!(
-                    "Profile [{profile}] not found in global config at [{}]",
-                    global_path.unwrap()
-                );
-            }
-            (MaybeConfig::NoFile, MaybeConfig::NoFile) => {
-                // FIXME: possibly dead code? or panic - unexpected outcome
-                // I think we should probably emit warning on missing global config file
-                bail!(
-                    "Profile [{profile}] not found in local or global config (no config files found)"
-                );
-            }
-            _ => {}
+    match (profile, &local_profile, &global_profile) {
+        // If local config file exists, profile must be in it.
+        (Some(profile), MaybeConfig::NoProfile, _) => {
+            bail!(
+                "Profile [{profile}] not found in local config at {}",
+                local_path.unwrap_or_default()
+            );
         }
+        // Allow no local profile only if profile defined in global config.
+        (Some(profile), MaybeConfig::NoFile, MaybeConfig::NoProfile) => {
+            bail!(
+                "Profile [{profile}] not found in global config at {}",
+                global_path.unwrap_or_default()
+            );
+        }
+        // TODO: (#3436) remove this if missing global config becomes an error
+        (Some(profile), MaybeConfig::NoFile, MaybeConfig::NoFile) => {
+            bail!("Profile [{profile}] not found: no config files present");
+        }
+        _ => {}
     }
 
     let cli_config = cli.to_partial_config()?;

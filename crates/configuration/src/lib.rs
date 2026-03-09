@@ -44,9 +44,9 @@ pub fn resolve_config_file() -> Utf8PathBuf {
     })
 }
 
-/// Load config from a resolved path to the config file (e.g. `snfoundry.toml`).
-/// If config `path` is missing or invalid, returns an error.
-/// If `profile` is `None`, the default profile is requested.
+/// Load config from the config file for the given `profile`.
+/// On invalid config `path`, returns an error.
+/// If `profile` is `None`, the default profile is assumed.
 /// If the requested profile does not exist, returns `Ok(None)`.
 pub fn load_config<T: Config>(path: &Utf8PathBuf, profile: Option<&str>) -> Result<Option<T>> {
     let raw_config_toml = fs::read_to_string(path)
