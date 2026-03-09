@@ -103,6 +103,95 @@ async fn test_happy_case_with_block_id() {
 }
 
 #[tokio::test]
+async fn test_dry_run() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let example_contract_class_hash_sepolia =
+        "0x66802613e2cd02ea21430a56181d9ee83c54d4ccdc45efa497d41fe1dc55a0e";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user1",
+        "declare-from",
+        "--class-hash",
+        example_contract_class_hash_sepolia,
+        "--source-url",
+        SEPOLIA_RPC_URL,
+        "--url",
+        URL,
+        "--dry-run",
+    ];
+    let args = apply_test_resource_bounds_flags(args);
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Dry run completed
+
+            Overall Fee: [..] Fri (~[..] STRK)
+            "
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_dry_run_detailed() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let example_contract_class_hash_sepolia =
+        "0x66802613e2cd02ea21430a56181d9ee83c54d4ccdc45efa497d41fe1dc55a0e";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user1",
+        "declare-from",
+        "--class-hash",
+        example_contract_class_hash_sepolia,
+        "--source-url",
+        SEPOLIA_RPC_URL,
+        "--url",
+        URL,
+        "--dry-run",
+        "--detailed",
+    ];
+    let args = apply_test_resource_bounds_flags(args);
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Dry run completed
+
+            Overall Fee: [..] Fri (~[..] STRK)
+            L1 Gas Consumed:      [..]
+            L1 Gas Price:         [..]
+            L2 Gas Consumed:      [..]
+            L2 Gas Price:         [..]
+            L1 Data Gas Consumed: [..]
+            L1 Data Gas Price:    [..]
+            "
+        },
+    );
+}
+
+#[tokio::test]
 async fn test_contract_already_declared() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
