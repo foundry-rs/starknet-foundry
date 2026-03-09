@@ -74,3 +74,42 @@ fn create_global_config(global_config_path: Utf8PathBuf) -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::helpers::configuration::PartialCastConfig;
+    use configuration::load_config;
+    use tempfile::tempdir;
+
+    #[test]
+    fn build_default_manifest_produces_valid_config_when_uncommented() {
+        let manifest = build_default_manifest();
+        let lines: Vec<&str> = manifest.lines().collect();
+        assert_eq!(
+            lines[0],
+            "# Visit https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html"
+        );
+        assert_eq!(
+            lines[1],
+            "# and https://foundry-rs.github.io/starknet-foundry/projects/configuration.html for more information"
+        );
+
+        let toml: String = lines
+            .into_iter()
+            .filter_map(|l| l.strip_prefix("# "))
+            // skip comments that are not part of the config
+            .filter(|l| l.starts_with('[') || l.contains('='))
+            // drop `url = ""`
+            .filter(|l| *l != "url = \"\"")
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        let t = tempdir().unwrap();
+        let path = Utf8PathBuf::try_from(t.path().join("snfoundry.toml")).unwrap();
+        fs::write(&path, toml).unwrap();
+
+        let config: PartialCastConfig = load_config(&path, None).unwrap().unwrap();
+        config.validate().unwrap();
+    }
+}
