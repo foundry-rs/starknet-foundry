@@ -1,5 +1,4 @@
 use crate::Config;
-use anyhow::anyhow;
 use serde_json::Number;
 use std::env;
 
@@ -68,16 +67,17 @@ pub enum Profile {
     Some(String),
 }
 
-pub fn load_config<T: Config + Default>(
+pub fn load_config<T: Config>(
     raw_config: serde_json::Value,
     profile: Profile,
-) -> anyhow::Result<T> {
+) -> anyhow::Result<Option<T>> {
     let raw_config_json = match profile {
-        Profile::None => raw_config,
-        Profile::Default => get_profile(raw_config, T::tool_name(), "default")
-            .unwrap_or_else(|| serde_json::Value::Object(serde_json::Map::new())),
-        Profile::Some(profile) => get_profile(raw_config, T::tool_name(), &profile)
-            .ok_or_else(|| anyhow!("Profile [{profile}] not found in config"))?,
+        Profile::None => Some(raw_config),
+        Profile::Default => get_profile(raw_config, T::tool_name(), "default"),
+        Profile::Some(profile) => get_profile(raw_config, T::tool_name(), &profile),
     };
-    T::from_raw(resolve_env_variables(raw_config_json)?)
+    match raw_config_json {
+        Some(raw_config_json) => T::from_raw(resolve_env_variables(raw_config_json)?).map(Some),
+        None => Ok(None),
+    }
 }
