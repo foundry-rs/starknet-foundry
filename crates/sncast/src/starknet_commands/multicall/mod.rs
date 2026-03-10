@@ -97,6 +97,7 @@ pub async fn multicall(
     }
 }
 
+/// Replaces arguments that reference user-defined ids with their corresponding values from the contract registry.
 pub fn replaced_arguments(
     arguments: &Arguments,
     contract_registry: &ContractRegistry,
