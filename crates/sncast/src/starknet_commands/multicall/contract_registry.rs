@@ -80,19 +80,21 @@ impl ContractRegistry {
         &mut self,
         class_hash: &Felt,
     ) -> Result<&ContractClass> {
-        if !self.class_hash_to_contract_class.contains_key(class_hash) {
-            let contract_class = get_contract_class(*class_hash, &self.provider)
-                .await
-                .context("Failed to fetch contract class from provider")?;
-
-            self.class_hash_to_contract_class
-                .insert(*class_hash, contract_class);
+        if self.class_hash_to_contract_class.contains_key(class_hash) {
+            return Ok(self
+                .class_hash_to_contract_class
+                .get(class_hash)
+                .expect("Contract class should exist"));
         }
+
+        let contract_class = get_contract_class(*class_hash, &self.provider)
+            .await
+            .context("Failed to fetch contract class from provider")?;
 
         Ok(self
             .class_hash_to_contract_class
-            .get(class_hash)
-            .expect("Value was just inserted or already existed"))
+            .entry(*class_hash)
+            .or_insert(contract_class))
     }
 }
 
