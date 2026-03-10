@@ -30,8 +30,7 @@ pub struct ContractIdentifier {
 }
 
 #[derive(Args)]
-#[command(about = "Deploy a contract on Starknet")]
-pub struct Deploy {
+pub struct DeployCommonArgs {
     #[command(flatten)]
     pub contract_identifier: ContractIdentifier,
 
@@ -46,6 +45,17 @@ pub struct Deploy {
     #[arg(long)]
     pub unique: bool,
 
+    /// Specifies scarb package to be used. Only possible to use with `--contract-name`.
+    #[arg(long, conflicts_with = "class_hash")]
+    pub package: Option<String>,
+}
+
+#[derive(Args)]
+#[command(about = "Deploy a contract on Starknet")]
+pub struct Deploy {
+    #[command(flatten)]
+    pub common: DeployCommonArgs,
+
     #[command(flatten)]
     pub fee_args: FeeArgs,
 
@@ -55,10 +65,6 @@ pub struct Deploy {
 
     #[command(flatten)]
     pub rpc: RpcArgs,
-
-    /// Specifies scarb package to be used. Only possible to use with `--contract-name`.
-    #[arg(long, conflicts_with = "class_hash")]
-    pub package: Option<String>,
 }
 
 #[derive(Debug, Clone, clap::Args)]
