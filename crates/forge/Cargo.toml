@@ -63,7 +63,7 @@ rayon.workspace = true
 tempfile.workspace = true
 fs_extra.workspace = true
 comfy-table.workspace = true
-plotters = { version = "0.3", default-features = false, features = ["all_series", "all_elements", "svg_backend", "bitmap_backend", "bitmap_encoder", "full_palette", "colormaps", "ab_glyph"] }
+plotters = { version = "0.3", default-features = false, features = ["all_series", "all_elements", "svg_backend", "bitmap_backend", "bitmap_encoder", "full_palette", "colormaps", "ttf"] }
 create-output-dir.workspace = true
 
 [[bin]]
