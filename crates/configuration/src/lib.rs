@@ -44,32 +44,23 @@ pub fn resolve_config_file() -> Utf8PathBuf {
     })
 }
 
-pub fn load_config<T: Config + Default>(
-    path: Option<&Utf8PathBuf>,
-    profile: Option<&str>,
-) -> Result<T> {
-    let config_path = path
-        .as_ref()
-        .and_then(|p| search_config_upwards_relative_to(p).ok())
-        .or_else(|| find_config_file().ok());
+/// Load config from the config file for the given `profile`.
+/// On invalid config `path`, returns an error.
+/// If `profile` is `None`, the default profile is assumed.
+/// If the requested profile does not exist, returns `Ok(None)`.
+pub fn load_config<T: Config>(path: &Utf8PathBuf, profile: Option<&str>) -> Result<Option<T>> {
+    let raw_config_toml = fs::read_to_string(path)
+        .context("Failed to read snfoundry.toml config file")?
+        .parse::<Table>()
+        .context("Failed to parse snfoundry.toml config file")?;
 
-    match config_path {
-        Some(path) => {
-            let raw_config_toml = fs::read_to_string(path)
-                .context("Failed to read snfoundry.toml config file")?
-                .parse::<Table>()
-                .context("Failed to parse snfoundry.toml config file")?;
+    let raw_config_json = serde_json::to_value(raw_config_toml)
+        .context("Conversion from TOML value to JSON value should not fail.")?;
 
-            let raw_config_json = serde_json::to_value(raw_config_toml)
-                .context("Conversion from TOML value to JSON value should not fail.")?;
-
-            core::load_config(
-                raw_config_json,
-                profile.map_or_else(|| Profile::Default, |p| Profile::Some(p.to_string())),
-            )
-        }
-        None => Ok(T::default()),
-    }
+    core::load_config(
+        raw_config_json,
+        profile.map_or_else(|| Profile::Default, |p| Profile::Some(p.to_string())),
+    )
 }
 
 pub fn search_config_upwards_relative_to(current_dir: &Utf8PathBuf) -> Result<Utf8PathBuf> {
@@ -180,11 +171,10 @@ mod tests {
     #[test]
     fn load_config_happy_case_with_profile() {
         let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None);
-        let config = load_config::<StubConfig>(
-            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
-            Some(&String::from("profile1")),
-        )
-        .unwrap();
+        let path = Utf8PathBuf::try_from(tempdir.path().join(CONFIG_FILENAME)).unwrap();
+        let config = load_config::<StubConfig>(&path, Some("profile1"))
+            .unwrap()
+            .expect("profile exists");
         assert_eq!(config.account, String::from("user3"));
         assert_eq!(
             config.url,
@@ -195,11 +185,10 @@ mod tests {
     #[test]
     fn load_config_happy_case_default_profile() {
         let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None);
-        let config = load_config::<StubConfig>(
-            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
-            None,
-        )
-        .unwrap();
+        let path = Utf8PathBuf::try_from(tempdir.path().join(CONFIG_FILENAME)).unwrap();
+        let config = load_config::<StubConfig>(&path, None)
+            .unwrap()
+            .expect("default profile exists");
         assert_eq!(config.account, String::from("user1"));
         assert_eq!(
             config.url,
@@ -209,11 +198,8 @@ mod tests {
     #[test]
     fn load_config_invalid_url() {
         let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None);
-        let err = load_config::<StubConfig>(
-            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
-            Some(&String::from("profile6")),
-        )
-        .unwrap_err();
+        let path = Utf8PathBuf::try_from(tempdir.path().join(CONFIG_FILENAME)).unwrap();
+        let err = load_config::<StubConfig>(&path, Some("profile6")).unwrap_err();
 
         assert!(
             err.to_string()
@@ -222,16 +208,22 @@ mod tests {
     }
 
     #[test]
-    fn load_config_not_found() {
+    fn load_config_file_missing_returns_error() {
         let tempdir = tempdir().expect("Failed to create a temporary directory");
-        let config = load_config::<StubConfig>(
-            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
-            None,
-        )
-        .unwrap();
+        let path = Utf8PathBuf::try_from(tempdir.path().join(CONFIG_FILENAME)).unwrap();
+        let err = load_config::<StubConfig>(&path, None).unwrap_err();
+        assert!(
+            err.to_string().contains("Failed to read") || err.to_string().contains("No such file")
+        );
+    }
 
-        assert_eq!(config.account, String::new());
-        assert_eq!(config.url, None);
+    #[test]
+    fn load_config_profile_missing_returns_none() {
+        let tempdir = tempdir().expect("Failed to create a temporary directory");
+        File::create(tempdir.path().join(CONFIG_FILENAME)).unwrap();
+        let path = Utf8PathBuf::try_from(tempdir.path().join(CONFIG_FILENAME)).unwrap();
+        let config = load_config::<StubConfig>(&path, None).unwrap();
+        assert!(config.is_none());
     }
 
     #[derive(Debug, Default, Serialize, Deserialize)]
@@ -271,12 +263,9 @@ mod tests {
     fn empty_config_works() {
         let temp_dir = tempdir().expect("Failed to create a temporary directory");
         File::create(temp_dir.path().join(CONFIG_FILENAME)).unwrap();
-
-        load_config::<StubConfig>(
-            Some(&Utf8PathBuf::try_from(temp_dir.path().to_path_buf()).unwrap()),
-            None,
-        )
-        .unwrap();
+        let path = Utf8PathBuf::try_from(temp_dir.path().join(CONFIG_FILENAME)).unwrap();
+        let result = load_config::<StubConfig>(&path, None).unwrap();
+        assert!(result.is_none());
     }
 
     #[test]
@@ -289,15 +278,10 @@ mod tests {
             tempdir.path().join("childdir1").join(CONFIG_FILENAME),
         )
         .expect("Failed to copy config file to temp dir");
+        let path =
+            Utf8PathBuf::try_from(tempdir.path().join("childdir1").join(CONFIG_FILENAME)).unwrap();
         // missing env variables
-        if load_config::<StubConfig>(
-            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
-            Some(&String::from("with-envs")),
-        )
-        .is_ok()
-        {
-            panic!("Expected failure");
-        }
+        assert!(load_config::<StubConfig>(&path, Some("with-envs")).is_err());
 
         // Present env variables
 
@@ -310,11 +294,9 @@ mod tests {
             env::set_var("VALUE_BOOL1231321", "true");
             env::set_var("VALUE_BOOL1231322", "false");
         };
-        let config = load_config::<StubComplexConfig>(
-            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
-            Some(&String::from("with-envs")),
-        )
-        .unwrap();
+        let config = load_config::<StubComplexConfig>(&path, Some("with-envs"))
+            .unwrap()
+            .expect("profile exists");
         assert_eq!(config.url, String::from("nfsaufbnsailfbsbksdabfnkl"));
         assert_eq!(config.account, 321_312);
         assert_eq!(config.nested.list_example, vec![true, false]);

@@ -1,14 +1,12 @@
 use super::block_explorer;
-use crate::helpers::config::get_global_config_path;
 use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
-use crate::response::ui::UI;
 use crate::{Network, PartialWaitParams, ValidatedWaitParams};
-use anyhow::Result;
+use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use configuration::{Config, Override, load_config, override_optional};
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use url::Url;
 
 #[must_use]
@@ -40,7 +38,7 @@ impl NetworkParams {
     }
 
     pub fn validate(&self) -> Result<()> {
-         match (&self.url, &self.network) {
+        match (&self.url, &self.network) {
             (Some(_), Some(_)) => anyhow::bail!("Only one of `url` or `network` may be specified"),
             _ => Ok(()),
         }
@@ -103,7 +101,7 @@ pub struct CastConfig {
 impl CastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
         block_explorer::Service::validate_for_config(self.block_explorer)?;
-        self.wait_params.validate();
+        self.wait_params.validate()?;
         self.network_params.validate()?;
         Ok(())
     }
@@ -162,6 +160,11 @@ pub struct PartialCastConfig {
 
     #[serde(default)]
     pub networks: Option<NetworksConfig>,
+
+    /// Additional data not captured by deserializer.
+    #[doc(hidden)]
+    #[serde(flatten, default, skip_serializing)]
+    pub unknown_fields: HashMap<String, serde_json::Value>,
 }
 
 #[derive(Serialize)]
@@ -176,7 +179,6 @@ impl Config for PartialCastConfig {
 
     fn from_raw(config: serde_json::Value) -> Result<Self> {
         let config = serde_json::from_value::<Self>(config)?;
-        // TODO: figure out whether that should be there at all
         config.validate()?;
         Ok(config)
     }
@@ -184,8 +186,15 @@ impl Config for PartialCastConfig {
 
 impl PartialCastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
+        if !self.unknown_fields.is_empty() {
+            let mut keys: Vec<&String> = self.unknown_fields.keys().collect();
+            keys.sort();
+            anyhow::bail!("unknown field(s) {keys:?}");
+        }
         block_explorer::Service::validate_for_config(self.block_explorer)?;
-        self.wait_params.map(ValidatedWaitParams::from);
+        if let Some(ref wp) = self.wait_params {
+            ValidatedWaitParams::try_from(*wp)?;
+        }
         self.network_params.validate()?;
         Ok(())
     }
@@ -202,35 +211,46 @@ impl Override for PartialCastConfig {
             block_explorer: other.block_explorer.or(self.block_explorer),
             show_explorer_links: other.show_explorer_links.or(self.show_explorer_links),
             networks: override_optional(self.networks.clone(), other.networks),
+            unknown_fields: HashMap::default(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum MaybeConfig {
+    NoFile,
+    NoProfile,
+    Loaded(Box<PartialCastConfig>),
+}
+
+impl MaybeConfig {
+    #[must_use]
+    pub fn unwrap_or_default(self) -> PartialCastConfig {
+        match self {
+            Self::NoFile | Self::NoProfile => PartialCastConfig::default(),
+            Self::Loaded(config) => *config,
         }
     }
 }
 
 impl PartialCastConfig {
-    pub fn local(opts: &CliConfigOpts) -> Result<Self> {
-        let local_config = load_config::<PartialCastConfig>(None, opts.profile.as_deref())
-            .map_err(|err| anyhow::anyhow!(format!("Failed to load config: {err}")))?;
-
-        Ok(local_config)
+    fn load(path: &Utf8PathBuf, profile: Option<&str>, scope: &str) -> Result<Option<Self>> {
+        load_config::<Self>(path, profile)
+            .with_context(|| format!("Failed to load {scope} config at {path}"))
     }
 
-    pub fn global(opts: &CliConfigOpts, ui: &UI) -> Result<Self> {
-        let global_config_path = get_global_config_path().unwrap_or_else(|err| {
-            ui.print_error(
-                &opts.command_name,
-                format!("Error getting global config path: {err}"),
-            );
-            Utf8PathBuf::new()
-        });
-
-        let global_config = load_config::<PartialCastConfig>(
-            Some(&global_config_path.clone()),
-            opts.profile.as_deref(),
-        )
-        .or_else(|_| load_config::<PartialCastConfig>(Some(&global_config_path), None))
-        .map_err(|err| anyhow::anyhow!(format!("Failed to load config: {err}")))?;
-
-        Ok(global_config)
+    pub fn load_maybe(
+        path: Option<&Utf8PathBuf>,
+        profile: Option<&str>,
+        scope: &str,
+    ) -> Result<MaybeConfig> {
+        match path {
+            None => Ok(MaybeConfig::NoFile),
+            Some(p) => match Self::load(p, profile, scope)? {
+                None => Ok(MaybeConfig::NoProfile),
+                Some(config) => Ok(MaybeConfig::Loaded(Box::from(config))),
+            },
+        }
     }
 }
 
@@ -239,8 +259,9 @@ pub struct CliConfigOpts {
     pub profile: Option<String>,
 }
 
-impl From<PartialCastConfig> for CastConfig {
-    fn from(p: PartialCastConfig) -> Self {
+impl TryFrom<PartialCastConfig> for CastConfig {
+    type Error = anyhow::Error;
+    fn try_from(p: PartialCastConfig) -> Result<Self> {
         let d = CastConfig::default();
 
         let accounts_file = p.accounts_file.unwrap_or(d.accounts_file);
@@ -251,18 +272,18 @@ impl From<PartialCastConfig> for CastConfig {
             .map(|n| d.networks.override_with(n))
             .unwrap_or(d.networks);
 
-        CastConfig {
+        Ok(CastConfig {
             network_params: d.network_params.override_with(p.network_params),
             account: p.account.unwrap_or(d.account),
             accounts_file,
             keystore: p.keystore.or(d.keystore),
             wait_params: p
                 .wait_params
-                .map_or(d.wait_params, ValidatedWaitParams::from),
+                .map_or_else(|| Ok(d.wait_params), ValidatedWaitParams::try_from)?,
             block_explorer: p.block_explorer.or(d.block_explorer),
             show_explorer_links: p.show_explorer_links.unwrap_or(d.show_explorer_links),
             networks,
-        }
+        })
     }
 }
 
@@ -347,11 +368,8 @@ mod tests {
 
     #[test]
     fn test_network_params_override_empty_keeps_base() {
-        let base = NetworkParams::new(
-            Some(Url::parse("https://base.example.com").unwrap()),
-            None,
-        )
-        .unwrap();
+        let base = NetworkParams::new(Some(Url::parse("https://base.example.com").unwrap()), None)
+            .unwrap();
         let other = NetworkParams::default();
         let result = base.override_with(other);
 
