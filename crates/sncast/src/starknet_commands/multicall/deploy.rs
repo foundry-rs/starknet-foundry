@@ -28,7 +28,7 @@ pub struct MulticallDeploy {
 
 impl MulticallDeploy {
     pub fn new_from_item(item: &DeployItem, contracts: &ContractRegistry) -> Result<Self> {
-        let constructor_calldata = parse_inputs(&item.inputs(), contracts)?;
+        let constructor_calldata = parse_inputs(item.inputs(), contracts)?;
         let deploy = MulticallDeploy {
             common: DeployCommonArgs {
                 contract_identifier: ContractIdentifier {

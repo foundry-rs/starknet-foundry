@@ -20,8 +20,8 @@ pub struct MulticallInvoke {
 }
 
 impl MulticallInvoke {
-    pub fn new_from_item(item: InvokeItem, contracts: &ContractRegistry) -> Result<Self> {
-        let calldata = parse_inputs(&item.inputs(), contracts)?;
+    pub fn new_from_item(item: &InvokeItem, contracts: &ContractRegistry) -> Result<Self> {
+        let calldata = parse_inputs(item.inputs(), contracts)?;
         let contract_address =
             if let Some(addr) = contracts.get_address_by_id(item.contract_address()) {
                 addr
@@ -31,7 +31,7 @@ impl MulticallInvoke {
         let invoke = MulticallInvoke {
             common: InvokeCommonArgs {
                 contract_address,
-                function: item.function().to_string().clone(),
+                function: item.function().clone(),
                 arguments: Arguments {
                     calldata: Some(
                         calldata
