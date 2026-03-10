@@ -1,13 +1,14 @@
-use crate::Arguments;
-use crate::starknet_commands::deploy::{ContractIdentifier, DeployArguments, DeployCommonArgs};
-use crate::starknet_commands::invoke::{InvokeCommonArgs, execute_calls};
+use crate::starknet_commands::invoke::execute_calls;
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::deploy::MulticallDeploy;
 use crate::starknet_commands::multicall::invoke::MulticallInvoke;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
+use conversions::string::TryFromDecStr;
+use getset::Getters;
 use serde::Deserialize;
+use serde_json::Number;
 use sncast::WaitForTx;
 use sncast::helpers::fee::FeeArgs;
 use sncast::helpers::rpc::RpcArgs;
@@ -37,9 +38,9 @@ pub struct Run {
 
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
-enum Input {
+pub enum Input {
     String(String),
-    Number(i64),
+    Number(Number),
 }
 
 #[derive(Deserialize, Debug)]
@@ -55,16 +56,18 @@ struct MulticallFile {
     calls: Vec<CallItem>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Getters)]
+#[getset(get = "pub")]
 pub struct DeployItem {
     class_hash: Felt,
     inputs: Vec<Input>,
     unique: bool,
     salt: Option<Felt>,
-    id: String,
+    id: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Getters)]
+#[getset(get = "pub")]
 pub struct InvokeItem {
     contract_address: String,
     function: String,
@@ -84,58 +87,19 @@ pub async fn run(
     let multicall: MulticallFile =
         toml::from_str(&contents).with_context(|| format!("Failed to parse {}", run.path))?;
 
-    let mut contract_registry = ContractRegistry::new(provider);
+    let mut contracts = ContractRegistry::new(provider);
     let mut parsed_calls: Vec<Call> = vec![];
 
     for call in multicall.calls {
         match call {
             CallItem::Deploy(item) => {
-                let constructor_calldata = parse_inputs(&item.inputs, &contract_registry);
-                let deploy = MulticallDeploy {
-                    common: DeployCommonArgs {
-                        contract_identifier: ContractIdentifier {
-                            class_hash: Some(item.class_hash),
-                            contract_name: None,
-                        },
-                        arguments: DeployArguments {
-                            constructor_calldata: Some(constructor_calldata),
-                            arguments: None,
-                        },
-                        salt: item.salt,
-                        unique: item.unique,
-                        package: None,
-                    },
-                    id: if item.id.is_empty() {
-                        None
-                    } else {
-                        Some(item.id)
-                    },
-                };
-
-                let call = deploy.build_call(account, &mut contract_registry).await?;
+                let deploy = MulticallDeploy::new_from_item(&item, &contracts)?;
+                let call = deploy.build_call(account, &mut contracts).await?;
                 parsed_calls.push(call);
             }
             CallItem::Invoke(item) => {
-                let calldata = parse_inputs(&item.inputs, &contract_registry);
-                let contract_address = if let Some(addr) =
-                    contract_registry.get_address_by_id(&item.contract_address)
-                {
-                    addr
-                } else {
-                    item.contract_address.parse()?
-                };
-                let invoke = MulticallInvoke {
-                    common: InvokeCommonArgs {
-                        contract_address: contract_address.to_string(),
-                        function: item.function,
-                        arguments: Arguments {
-                            calldata: Some(calldata),
-                            arguments: None,
-                        },
-                    },
-                };
-
-                let call = invoke.build_call(&mut contract_registry).await?;
+                let invoke = MulticallInvoke::new_from_item(&item, &contracts)?;
+                let call = invoke.build_call(&mut contracts).await?;
                 parsed_calls.push(call);
             }
         }
@@ -147,21 +111,25 @@ pub async fn run(
         .map_err(handle_starknet_command_error)
 }
 
-fn parse_inputs(inputs: &Vec<Input>, contract_registry: &ContractRegistry) -> Vec<String> {
+pub fn parse_inputs(inputs: &[Input], contract_registry: &ContractRegistry) -> Result<Vec<Felt>> {
     let mut parsed_inputs = Vec::new();
     for input in inputs {
         let felt_value = match input {
-            Input::String(s) => {
-                let resolved_address = contract_registry.get_address_by_id(s);
-                match resolved_address {
-                    Some(address) => address.to_string(),
-                    None => s.clone(),
+            Input::String(s) => contract_registry
+                .get_address_by_id(s)
+                .map_or_else(|| s.parse(), Ok)?,
+            Input::Number(n) => {
+                if let Ok(n) = Felt::try_from_dec_str(&n.to_string()) {
+                    n
+                } else if let Ok(n) = Felt::from_hex(&n.to_string()) {
+                    n
+                } else {
+                    anyhow::bail!("Failed to parse {n} to felt")
                 }
             }
-            Input::Number(n) => n.to_string(),
         };
         parsed_inputs.push(felt_value);
     }
 
-    parsed_inputs
+    Ok(parsed_inputs)
 }

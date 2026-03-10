@@ -4,7 +4,13 @@ use starknet_rust::core::{types::Call, utils::get_selector_from_name};
 
 use crate::{
     Arguments, calldata_to_felts,
-    starknet_commands::{invoke::InvokeCommonArgs, multicall::contract_registry::ContractRegistry},
+    starknet_commands::{
+        invoke::InvokeCommonArgs,
+        multicall::{
+            contract_registry::ContractRegistry,
+            run::{InvokeItem, parse_inputs},
+        },
+    },
 };
 
 #[derive(Args)]
@@ -14,6 +20,32 @@ pub struct MulticallInvoke {
 }
 
 impl MulticallInvoke {
+    pub fn new_from_item(item: &InvokeItem, contracts: &ContractRegistry) -> Result<Self> {
+        let calldata = parse_inputs(item.inputs(), contracts)?;
+        let contract_address =
+            if let Some(addr) = contracts.get_address_by_id(item.contract_address()) {
+                addr
+            } else {
+                item.contract_address().parse()?
+            };
+        let invoke = MulticallInvoke {
+            common: InvokeCommonArgs {
+                contract_address: contract_address.to_string(),
+                function: item.function().clone(),
+                arguments: Arguments {
+                    calldata: Some(
+                        calldata
+                            .iter()
+                            .map(std::string::ToString::to_string)
+                            .collect(),
+                    ),
+                    arguments: None,
+                },
+            },
+        };
+
+        Ok(invoke)
+    }
     pub async fn build_call(&self, contract_registry: &mut ContractRegistry) -> Result<Call> {
         let selector = get_selector_from_name(&self.common.function)?;
         let is_id = self.common.contract_address.starts_with('@');
@@ -39,14 +71,12 @@ If you intended to reference an address from a previous step, use `@<id>` instea
             calldata_to_felts(raw_calldata)?
         } else {
             let class_hash = contract_registry
-                .cache
-                .get_class_hash_by_address(&contract_address)
+                .get_class_hash_by_address(&self.common.contract_address.try_into()?)
                 .await?;
             let contract_class = contract_registry
-                .cache
                 .get_contract_class_by_class_hash(&class_hash)
                 .await?;
-            arguments.try_into_calldata(&contract_class, &selector)?
+            arguments.try_into_calldata(contract_class, &selector)?
         };
 
         Ok(Call {
@@ -86,8 +116,8 @@ pub fn replaced_calldata(
                 }
             }
             (None, _) => function_arguments.clone(),
-            (Some(_), Some(_)) => unreachable!(
-                "Clap should ensure that only one of calldata or arguments is provided"
+            (Some(_), Some(_)) => anyhow::bail!(
+                "Invalid arguments: both `calldata` and `arguments` are set. Please provide only one."
             ),
         },
     )
