@@ -7,7 +7,6 @@ use crate::starknet_commands::multicall::invoke::MulticallInvoke;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
-use getset::Getters;
 use serde::Deserialize;
 use serde_json::Number;
 use sncast::WaitForTx;
@@ -57,22 +56,20 @@ struct MulticallFile {
     calls: Vec<CallItem>,
 }
 
-#[derive(Deserialize, Debug, Getters)]
-#[getset(get = "pub")]
+#[derive(Deserialize, Debug)]
 pub struct DeployItem {
-    class_hash: Felt,
-    inputs: Vec<Input>,
-    unique: bool,
-    salt: Option<Felt>,
-    id: Option<String>,
+    pub class_hash: Felt,
+    pub inputs: Vec<Input>,
+    pub unique: bool,
+    pub salt: Option<Felt>,
+    pub id: Option<String>,
 }
 
-#[derive(Deserialize, Debug, Getters)]
-#[getset(get = "pub")]
+#[derive(Deserialize, Debug)]
 pub struct InvokeItem {
-    contract_address: String,
-    function: String,
-    inputs: Vec<Input>,
+    pub contract_address: String,
+    pub function: String,
+    pub inputs: Vec<Input>,
 }
 
 pub async fn run(

@@ -28,11 +28,11 @@ pub struct MulticallDeploy {
 
 impl MulticallDeploy {
     pub fn new_from_item(item: &DeployItem, contracts: &ContractRegistry) -> Result<Self> {
-        let constructor_calldata = parse_inputs(item.inputs(), contracts)?;
+        let constructor_calldata = parse_inputs(&item.inputs, contracts)?;
         let deploy = MulticallDeploy {
             common: DeployCommonArgs {
                 contract_identifier: ContractIdentifier {
-                    class_hash: Some(*item.class_hash()),
+                    class_hash: Some(item.class_hash),
                     contract_name: None,
                 },
                 arguments: DeployArguments {
@@ -44,11 +44,11 @@ impl MulticallDeploy {
                     ),
                     arguments: None,
                 },
-                salt: *item.salt(),
-                unique: *item.unique(),
+                salt: item.salt,
+                unique: item.unique,
                 package: None,
             },
-            id: item.id().clone(),
+            id: item.id.clone(),
         };
 
         Ok(deploy)
