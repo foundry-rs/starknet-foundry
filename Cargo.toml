@@ -81,7 +81,7 @@ tokio = { version = "1.50.0", features = ["full"] }
 futures = "0.3.31"
 num-bigint = { version = "0.4.6", features = ["rand"] }
 walkdir = "2.5.0"
-rand = "0.9.2"
+rand = "0.8.5"
 project-root = "0.2.2"
 which = "8.0.2"
 conversions = { path = "./crates/conversions" }
