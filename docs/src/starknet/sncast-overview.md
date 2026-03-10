@@ -119,12 +119,12 @@ Waiting for transaction to be received. Retries left: 10
 Waiting for transaction to be received. Retries left: 9
 Waiting for transaction to be received. Retries left: 8
 Waiting for transaction to be received. Retries left: 7
-Received transaction. Status: Pending
-Received transaction. Status: Pending
-Received transaction. Status: Pending
-Received transaction. Status: Pending
-Received transaction. Status: Pending
-Received transaction. Status: Pending
+Received transaction. Status: Pre confirmed
+Received transaction. Status: Pre confirmed
+Received transaction. Status: Pre confirmed
+Received transaction. Status: Pre confirmed
+Received transaction. Status: Pre confirmed
+Received transaction. Status: Pre confirmed
 Success: Deployment completed
 
 Contract Address: 0x0[..]

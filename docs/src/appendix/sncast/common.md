@@ -5,7 +5,7 @@ These flags must be specified directly after the `sncast` command and before the
 Optional.
 
 Used for both `snfoundry.toml` and `Scarb.toml` if specified.
-Defaults to `default` (`snfoundry.toml`) and `dev` (`Scarb.toml`).
+Defaults to `default` (`snfoundry.toml`) and `release` (`Scarb.toml`) in most contexts.
 
 ## `--account, -a <ACCOUNT_NAME>`
 Optional.

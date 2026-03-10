@@ -26,7 +26,7 @@ The verification provider to use for the verification. Possible values are:
 * `voyager`
 
 ## `--network, -n <NETWORK>`
-Required.
+Optional.
 
 The network on which block explorer will perform the verification. Possible values are:
 * `mainnet`
