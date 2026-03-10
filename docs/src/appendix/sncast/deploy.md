@@ -15,6 +15,13 @@ Required if `--class-hash` is not provided.
 
 Name of the contract to deploy. Can be used instead of `--class-hash`. Requires `--package` if more than one package exists in a workspace.
 
+## `--package <NAME>`
+Optional.
+
+Name of the package that should be used.
+
+If supplied, a contract from this package will be used. Required if more than one package exists in a workspace.
+
 ## `--url, -u <RPC_URL>`
 Optional.
 
