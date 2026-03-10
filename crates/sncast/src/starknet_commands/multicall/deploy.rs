@@ -70,7 +70,7 @@ impl MulticallDeploy {
             .common
             .contract_identifier
             .class_hash
-            .context("Using deploy with multicall requires providing `--class-hash`")?;
+            .context("Using deploy with multicall requires providing class hash")?;
         let constructor_calldata = if let Some(raw_calldata) = &constructor_arguments.calldata {
             calldata_to_felts(raw_calldata)?
         } else {
