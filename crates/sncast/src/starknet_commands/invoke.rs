@@ -17,8 +17,7 @@ use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 
 #[derive(Args, Clone, Debug)]
-#[command(about = "Invoke a contract on Starknet")]
-pub struct Invoke {
+pub struct InvokeCommonArgs {
     /// Address of contract to invoke
     #[arg(short = 'd', long)]
     pub contract_address: Felt,
@@ -29,6 +28,13 @@ pub struct Invoke {
 
     #[command(flatten)]
     pub arguments: Arguments,
+}
+
+#[derive(Args, Clone, Debug)]
+#[command(about = "Invoke a contract on Starknet")]
+pub struct Invoke {
+    #[command(flatten)]
+    pub common: InvokeCommonArgs,
 
     #[command(flatten)]
     pub fee_args: FeeArgs,
