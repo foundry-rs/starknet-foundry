@@ -12,7 +12,7 @@ use starknet_types_core::felt::Felt;
 
 use crate::starknet_commands::deploy::{ContractIdentifier, DeployArguments, DeployCommonArgs};
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
-use crate::starknet_commands::multicall::invoke::replaced_calldata;
+use crate::starknet_commands::multicall::replaced_calldata;
 use crate::starknet_commands::multicall::run::{DeployItem, parse_inputs};
 use crate::{Arguments, calldata_to_felts};
 
@@ -39,7 +39,7 @@ impl MulticallDeploy {
                     constructor_calldata: Some(
                         constructor_calldata
                             .iter()
-                            .map(std::string::ToString::to_string)
+                            .map(ToString::to_string)
                             .collect(),
                     ),
                     arguments: None,

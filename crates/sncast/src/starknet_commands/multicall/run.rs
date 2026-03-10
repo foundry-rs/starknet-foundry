@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::starknet_commands::invoke::execute_calls;
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::deploy::MulticallDeploy;
@@ -5,7 +7,6 @@ use crate::starknet_commands::multicall::invoke::MulticallInvoke;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
-use conversions::string::TryFromDecStr;
 use getset::Getters;
 use serde::Deserialize;
 use serde_json::Number;
@@ -98,7 +99,7 @@ pub async fn run(
                 parsed_calls.push(call);
             }
             CallItem::Invoke(item) => {
-                let invoke = MulticallInvoke::new_from_item(item, &contracts)?;
+                let invoke = MulticallInvoke::new_from_item(&item, &contracts)?;
                 let call = invoke.build_call(&mut contracts).await?;
                 parsed_calls.push(call);
             }
@@ -118,15 +119,8 @@ pub fn parse_inputs(inputs: &[Input], contract_registry: &ContractRegistry) -> R
             Input::String(s) => contract_registry
                 .get_address_by_id(s)
                 .map_or_else(|| s.parse(), Ok)?,
-            Input::Number(n) => {
-                if let Ok(n) = Felt::try_from_dec_str(&n.to_string()) {
-                    n
-                } else if let Ok(n) = Felt::from_hex(&n.to_string()) {
-                    n
-                } else {
-                    anyhow::bail!("Failed to parse {n} to felt")
-                }
-            }
+            Input::Number(n) => Felt::from_str(&n.to_string())
+                .with_context(|| format!("Failed to parse {} to felt", n))?,
         };
         parsed_inputs.push(felt_value);
     }

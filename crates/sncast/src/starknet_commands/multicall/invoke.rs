@@ -8,6 +8,7 @@ use crate::{
         invoke::InvokeCommonArgs,
         multicall::{
             contract_registry::ContractRegistry,
+            replaced_calldata,
             run::{InvokeItem, parse_inputs},
         },
     },
@@ -33,12 +34,7 @@ impl MulticallInvoke {
                 contract_address,
                 function: item.function().clone(),
                 arguments: Arguments {
-                    calldata: Some(
-                        calldata
-                            .iter()
-                            .map(std::string::ToString::to_string)
-                            .collect(),
-                    ),
+                    calldata: Some(calldata.iter().map(ToString::to_string).collect()),
                     arguments: None,
                 },
             },
@@ -68,34 +64,4 @@ impl MulticallInvoke {
             calldata,
         })
     }
-}
-
-pub fn replaced_calldata(
-    function_arguments: &Arguments,
-    contract_registry: &ContractRegistry,
-) -> Result<Arguments> {
-    Ok(
-        match (&function_arguments.calldata, &function_arguments.arguments) {
-            (Some(calldata), None) => {
-                let replaced_calldata = calldata
-                    .iter()
-                    .map(|input| {
-                        if let Some(address) = contract_registry.get_address_by_id(input) {
-                            Ok(address.to_string())
-                        } else {
-                            Ok(input.clone())
-                        }
-                    })
-                    .collect::<Result<Vec<String>>>()?;
-                Arguments {
-                    calldata: Some(replaced_calldata),
-                    arguments: None,
-                }
-            }
-            (None, _) => function_arguments.clone(),
-            (Some(_), Some(_)) => anyhow::bail!(
-                "Invalid arguments: both `calldata` and `arguments` are set. Please provide only one."
-            ),
-        },
-    )
 }
