@@ -97,32 +97,30 @@ pub async fn multicall(
     }
 }
 
-pub fn replaced_calldata(
-    function_arguments: &Arguments,
+pub fn replaced_arguments(
+    arguments: &Arguments,
     contract_registry: &ContractRegistry,
 ) -> Result<Arguments> {
-    Ok(
-        match (&function_arguments.calldata, &function_arguments.arguments) {
-            (Some(calldata), None) => {
-                let replaced_calldata = calldata
-                    .iter()
-                    .map(|input| {
-                        if let Some(address) = contract_registry.get_address_by_id(input) {
-                            Ok(address.to_string())
-                        } else {
-                            Ok(input.clone())
-                        }
-                    })
-                    .collect::<Result<Vec<String>>>()?;
-                Arguments {
-                    calldata: Some(replaced_calldata),
-                    arguments: None,
-                }
+    Ok(match (&arguments.calldata, &arguments.arguments) {
+        (Some(calldata), None) => {
+            let replaced_calldata = calldata
+                .iter()
+                .map(|input| {
+                    if let Some(address) = contract_registry.get_address_by_id(input) {
+                        Ok(address.to_string())
+                    } else {
+                        Ok(input.clone())
+                    }
+                })
+                .collect::<Result<Vec<String>>>()?;
+            Arguments {
+                calldata: Some(replaced_calldata),
+                arguments: None,
             }
-            (None, _) => function_arguments.clone(),
-            (Some(_), Some(_)) => anyhow::bail!(
-                "Invalid arguments: both `calldata` and `arguments` are set. Please provide only one."
-            ),
-        },
-    )
+        }
+        (None, _) => arguments.clone(),
+        (Some(_), Some(_)) => anyhow::bail!(
+            "Invalid arguments: both `calldata` and `arguments` are set. Please provide only one."
+        ),
+    })
 }
