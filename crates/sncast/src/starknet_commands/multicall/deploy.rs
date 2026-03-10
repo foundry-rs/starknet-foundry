@@ -48,11 +48,7 @@ impl MulticallDeploy {
                 unique: *item.unique(),
                 package: None,
             },
-            id: if item.id().is_empty() {
-                None
-            } else {
-                Some(item.id().clone())
-            },
+            id: item.id().clone(),
         };
 
         Ok(deploy)
