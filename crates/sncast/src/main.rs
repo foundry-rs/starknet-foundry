@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::starknet_commands::balance::Balance;
 use crate::starknet_commands::declare::declare;
 use crate::starknet_commands::declare_from::{ContractSource, DeclareFrom};
@@ -224,11 +226,7 @@ impl Arguments {
 pub fn calldata_to_felts(calldata: &[String]) -> Result<Vec<Felt>> {
     calldata
         .iter()
-        .map(|data| {
-            Felt::from_dec_str(data)
-                .or_else(|_| Felt::from_hex(data))
-                .with_context(|| format!("Failed to parse {data} to felt"))
-        })
+        .map(|data| Felt::from_str(data).with_context(|| format!("Failed to parse {data} to felt")))
         .collect()
 }
 

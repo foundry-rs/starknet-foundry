@@ -91,13 +91,15 @@ pub async fn run(
     for call in multicall.calls {
         match call {
             CallItem::Deploy(item) => {
-                let deploy = MulticallDeploy::new_from_item(&item, &contracts)?;
-                let call = deploy.build_call(account, &mut contracts).await?;
+                let call = MulticallDeploy::new_from_item(&item, &contracts)?
+                    .build_call(account, &mut contracts)
+                    .await?;
                 parsed_calls.push(call);
             }
             CallItem::Invoke(item) => {
-                let invoke = MulticallInvoke::new_from_item(&item, &contracts)?;
-                let call = invoke.build_call(&mut contracts).await?;
+                let call = MulticallInvoke::new_from_item(&item, &contracts)?
+                    .build_call(&mut contracts)
+                    .await?;
                 parsed_calls.push(call);
             }
         }
