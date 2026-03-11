@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bug with invalid function name mappings for functions with `#[test]` attribute
 
+### Cast
+
+#### Fixed
+
+- `sncast verify --verifier voyager` now sends the expected contract file metadata and correctly handles standard and virtual Scarb workspaces
+- `sncast verify --verifier voyager` now strips `dev-dependencies` from uploaded `Scarb.toml` manifests before remote compilation
+
 ## [0.57.0] - 2026-02-24
 
 ### Forge
