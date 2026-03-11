@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::starknet_commands::invoke::execute_calls;
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::deploy::MulticallDeploy;
@@ -5,8 +7,6 @@ use crate::starknet_commands::multicall::invoke::MulticallInvoke;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
-use conversions::string::TryFromDecStr;
-use getset::Getters;
 use serde::Deserialize;
 use serde_json::Number;
 use sncast::WaitForTx;
@@ -56,22 +56,20 @@ struct MulticallFile {
     calls: Vec<CallItem>,
 }
 
-#[derive(Deserialize, Debug, Getters)]
-#[getset(get = "pub")]
+#[derive(Deserialize, Debug)]
 pub struct DeployItem {
-    class_hash: Felt,
-    inputs: Vec<Input>,
-    unique: bool,
-    salt: Option<Felt>,
-    id: Option<String>,
+    pub class_hash: Felt,
+    pub inputs: Vec<Input>,
+    pub unique: bool,
+    pub salt: Option<Felt>,
+    pub id: Option<String>,
 }
 
-#[derive(Deserialize, Debug, Getters)]
-#[getset(get = "pub")]
+#[derive(Deserialize, Debug)]
 pub struct InvokeItem {
-    contract_address: String,
-    function: String,
-    inputs: Vec<Input>,
+    pub contract_address: String,
+    pub function: String,
+    pub inputs: Vec<Input>,
 }
 
 pub async fn run(
@@ -118,15 +116,8 @@ pub fn parse_inputs(inputs: &[Input], contract_registry: &ContractRegistry) -> R
             Input::String(s) => contract_registry
                 .get_address_by_id(s)
                 .map_or_else(|| s.parse(), Ok)?,
-            Input::Number(n) => {
-                if let Ok(n) = Felt::try_from_dec_str(&n.to_string()) {
-                    n
-                } else if let Ok(n) = Felt::from_hex(&n.to_string()) {
-                    n
-                } else {
-                    anyhow::bail!("Failed to parse {n} to felt")
-                }
-            }
+            Input::Number(n) => Felt::from_str(&n.to_string())
+                .with_context(|| format!("Failed to parse {n} to felt"))?,
         };
         parsed_inputs.push(felt_value);
     }

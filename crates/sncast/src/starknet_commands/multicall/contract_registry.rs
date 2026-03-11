@@ -8,8 +8,11 @@ use starknet_types_core::felt::Felt;
 use std::collections::{HashMap, hash_map::Entry};
 
 /// Registry for managing contract information during multicall execution.
-/// It maintains mappings between user-defined ids, contract addresses, class hashes, and contract classes
-/// to facilitate reference and reuse of deployed contracts across multiple calls in a multicall sequence.
+/// It stores the following mappings:
+/// - user-defined ids to contract addresses
+/// - contract addresses to class hashes
+/// - class hashes to contract classes
+///   to allow referencing and re-using deployed contracts across multiple calls in a multicall sequence.
 pub struct ContractRegistry {
     id_to_address: HashMap<String, Felt>,
     address_to_class_hash: HashMap<Felt, Felt>,
@@ -45,8 +48,8 @@ impl ContractRegistry {
     /// Retrieves the class hash associated with the given contract address.
     /// Checks the local cache first, and fetches from the provider if not cached.
     pub async fn get_class_hash_by_address(&mut self, address: &Felt) -> Result<Felt> {
-        if let Some(hash) = self.address_to_class_hash.get(address) {
-            return Ok(*hash);
+        if let Some(hash) = self.get_class_hash_by_address_local(address) {
+            return Ok(hash);
         }
         let class_hash = get_class_hash_by_address(&self.provider, *address)
             .await
@@ -77,19 +80,21 @@ impl ContractRegistry {
         &mut self,
         class_hash: &Felt,
     ) -> Result<&ContractClass> {
-        if !self.class_hash_to_contract_class.contains_key(class_hash) {
-            let contract_class = get_contract_class(*class_hash, &self.provider)
-                .await
-                .context("Failed to fetch contract class from provider")?;
-
-            self.class_hash_to_contract_class
-                .insert(*class_hash, contract_class);
+        if self.class_hash_to_contract_class.contains_key(class_hash) {
+            return Ok(self
+                .class_hash_to_contract_class
+                .get(class_hash)
+                .expect("Contract class should exist"));
         }
+
+        let contract_class = get_contract_class(*class_hash, &self.provider)
+            .await
+            .context("Failed to fetch contract class from provider")?;
 
         Ok(self
             .class_hash_to_contract_class
-            .get(class_hash)
-            .expect("Value was just inserted or already existed"))
+            .entry(*class_hash)
+            .or_insert(contract_class))
     }
 }
 

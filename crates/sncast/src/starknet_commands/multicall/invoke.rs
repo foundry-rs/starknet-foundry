@@ -8,6 +8,7 @@ use crate::{
         invoke::InvokeCommonArgs,
         multicall::{
             contract_registry::ContractRegistry,
+            replaced_arguments,
             run::{InvokeItem, parse_inputs},
         },
     },
@@ -21,24 +22,19 @@ pub struct MulticallInvoke {
 
 impl MulticallInvoke {
     pub fn new_from_item(item: &InvokeItem, contracts: &ContractRegistry) -> Result<Self> {
-        let calldata = parse_inputs(item.inputs(), contracts)?;
+        let calldata = parse_inputs(&item.inputs, contracts)?;
         let contract_address =
-            if let Some(addr) = contracts.get_address_by_id(item.contract_address()) {
+            if let Some(addr) = contracts.get_address_by_id(&item.contract_address) {
                 addr
             } else {
-                item.contract_address().parse()?
+                item.contract_address.parse()?
             };
         let invoke = MulticallInvoke {
             common: InvokeCommonArgs {
                 contract_address: contract_address.to_string(),
-                function: item.function().clone(),
+                function: item.function.clone(),
                 arguments: Arguments {
-                    calldata: Some(
-                        calldata
-                            .iter()
-                            .map(std::string::ToString::to_string)
-                            .collect(),
-                    ),
+                    calldata: Some(calldata.iter().map(ToString::to_string).collect()),
                     arguments: None,
                 },
             },
@@ -65,13 +61,13 @@ If you intended to reference an address from a previous step, use `@<id>` instea
                     )
                 })?
         };
-        let arguments = replaced_calldata(&self.common.arguments, contract_registry)?;
+        let arguments = replaced_arguments(&self.common.arguments, contract_registry)?;
 
         let calldata = if let Some(raw_calldata) = &arguments.calldata {
             calldata_to_felts(raw_calldata)?
         } else {
             let class_hash = contract_registry
-                .get_class_hash_by_address(&self.common.contract_address.try_into()?)
+                .get_class_hash_by_address(&contract_address)
                 .await?;
             let contract_class = contract_registry
                 .get_contract_class_by_class_hash(&class_hash)
@@ -85,40 +81,4 @@ If you intended to reference an address from a previous step, use `@<id>` instea
             calldata,
         })
     }
-}
-
-pub fn replaced_calldata(
-    function_arguments: &Arguments,
-    contract_registry: &ContractRegistry,
-) -> Result<Arguments> {
-    Ok(
-        match (&function_arguments.calldata, &function_arguments.arguments) {
-            (Some(calldata), None) => {
-                let replaced_calldata = calldata
-                    .iter()
-                    .map(|input| {
-                        let is_id = input.starts_with('@');
-                        if is_id {
-                            let id = input.trim_start_matches('@');
-                            if let Some(address) = contract_registry.get_address_by_id(id) {
-                                Ok(address.to_string())
-                            } else {
-                                anyhow::bail!("No contract address found for id: {id}. Ensure the referenced id is defined in a previous step.")
-                            }
-                        } else {
-                            Ok(input.clone())
-                        }
-                    })
-                    .collect::<Result<Vec<String>>>()?;
-                Arguments {
-                    calldata: Some(replaced_calldata),
-                    arguments: None,
-                }
-            }
-            (None, _) => function_arguments.clone(),
-            (Some(_), Some(_)) => anyhow::bail!(
-                "Invalid arguments: both `calldata` and `arguments` are set. Please provide only one."
-            ),
-        },
-    )
 }

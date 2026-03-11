@@ -1,3 +1,4 @@
+use anyhow::Result;
 use clap::{Args, Subcommand};
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -11,7 +12,8 @@ pub mod new;
 pub mod run;
 pub mod run_calls;
 
-use crate::{process_command_result, starknet_commands};
+use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
+use crate::{Arguments, process_command_result, starknet_commands};
 use foundry_ui::Message;
 use new::New;
 use run::Run;
@@ -54,7 +56,7 @@ pub async fn multicall(
     config: CastConfig,
     ui: &UI,
     wait_config: WaitForTx,
-) -> anyhow::Result<()> {
+) -> Result<()> {
     #[derive(Serialize)]
     struct MulticallMessage {
         file_contents: String,
@@ -134,4 +136,33 @@ pub async fn multicall(
             Ok(())
         }
     }
+}
+
+/// Replaces arguments that reference user-defined ids with their corresponding values from the contract registry.
+pub fn replaced_arguments(
+    arguments: &Arguments,
+    contract_registry: &ContractRegistry,
+) -> Result<Arguments> {
+    Ok(match (&arguments.calldata, &arguments.arguments) {
+        (Some(calldata), None) => {
+            let replaced_calldata = calldata
+                .iter()
+                .map(|input| {
+                    if let Some(address) = contract_registry.get_address_by_id(input) {
+                        Ok(address.to_string())
+                    } else {
+                        Ok(input.clone())
+                    }
+                })
+                .collect::<Result<Vec<String>>>()?;
+            Arguments {
+                calldata: Some(replaced_calldata),
+                arguments: None,
+            }
+        }
+        (None, _) => arguments.clone(),
+        (Some(_), Some(_)) => anyhow::bail!(
+            "Invalid arguments: both `calldata` and `arguments` are set. Please provide only one."
+        ),
+    })
 }
