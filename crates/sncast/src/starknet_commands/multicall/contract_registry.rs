@@ -12,7 +12,7 @@ use std::collections::{HashMap, hash_map::Entry};
 /// - user-defined ids to contract addresses
 /// - contract addresses to class hashes
 /// - class hashes to contract classes
-/// to allow referencing and re-using deployed contracts across multiple calls in a multicall sequence.
+///   to allow referencing and re-using deployed contracts across multiple calls in a multicall sequence.
 pub struct ContractRegistry {
     id_to_address: HashMap<String, Felt>,
     address_to_class_hash: HashMap<Felt, Felt>,
