@@ -20,6 +20,8 @@ use crate::starknet_commands::{
     },
 };
 
+const ALLOWED_MULTICALL_COMMANDS: [&str; 2] = ["deploy", "invoke"];
+
 pub async fn run_calls(
     tokens: &[String],
     multicall: &Multicall,
@@ -28,8 +30,7 @@ pub async fn run_calls(
     wait_config: WaitForTx,
     ui: &UI,
 ) -> Result<MulticallRunResponse> {
-    let allowed_commands = ["deploy".to_string(), "invoke".to_string()];
-    let command_groups = extract_commands_groups(tokens, "/", &allowed_commands);
+    let command_groups = extract_commands_groups(tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
 
     let mut contract_registry = ContractRegistry::new(provider);
     let mut calls = vec![];
@@ -78,7 +79,7 @@ pub async fn run_calls(
 fn extract_commands_groups(
     tokens: &[String],
     separator: &str,
-    commands: &[String],
+    commands: &[&str],
 ) -> Vec<Vec<String>> {
     let mut all_groups = Vec::new();
     let mut current_group = Vec::new();
@@ -87,7 +88,7 @@ fn extract_commands_groups(
         if token == separator {
             let next_index = i + 1;
             let is_at_end = next_index == tokens.len();
-            let next_is_command = !is_at_end && commands.contains(&tokens[next_index]);
+            let next_is_command = !is_at_end && commands.contains(&tokens[next_index].as_str());
 
             if is_at_end || next_is_command {
                 if !current_group.is_empty() {
@@ -145,8 +146,7 @@ mod tests {
             "--class-hash".to_string(),
             "0x456".to_string(),
         ];
-        let allowed_commands = vec!["deploy".to_string(), "invoke".to_string()];
-        let groups = extract_commands_groups(&tokens, "/", &allowed_commands);
+        let groups = extract_commands_groups(&tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
         assert_eq!(
             groups,
             vec![
