@@ -117,7 +117,7 @@ pub fn parse_inputs(inputs: &[Input], contract_registry: &ContractRegistry) -> R
                 .get_address_by_id(s)
                 .map_or_else(|| s.parse(), Ok)?,
             Input::Number(n) => Felt::from_str(&n.to_string())
-                .with_context(|| format!("Failed to parse {} to felt", n))?,
+                .with_context(|| format!("Failed to parse {n} to felt"))?,
         };
         parsed_inputs.push(felt_value);
     }
