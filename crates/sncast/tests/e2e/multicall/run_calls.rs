@@ -9,6 +9,47 @@ use sncast::AccountType;
 use sncast::helpers::constants::OZ_CLASS_HASH;
 
 #[tokio::test]
+async fn test_one_invoke() {
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "multicall",
+        "--url",
+        URL,
+        "invoke",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--calldata",
+        "0x1 0x2",
+        "--function",
+        "put",
+    ];
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Multicall completed
+
+            Transaction Hash: 0x[..]
+
+            To see invocation details, visit:
+            transaction: [..]
+            "
+        },
+    );
+}
+
+#[tokio::test]
 async fn test_two_invokes() {
     let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
 
