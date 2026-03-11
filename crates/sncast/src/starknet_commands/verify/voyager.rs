@@ -364,8 +364,7 @@ fn find_contract_file_path(
         .find(|path| path.extension() == Some(CAIRO_EXT))
         .cloned()
         .ok_or(anyhow!(
-            "No Cairo source files found for package {}",
-            package_root
+            "No Cairo source files found for package {package_root}"
         ))
 }
 
@@ -609,7 +608,7 @@ mod tests {
 
     #[test]
     fn test_contract_file_detection_matches_contract_module() {
-        let contents = r#"
+        let contents = r"
 #[starknet::contract]
 pub mod MatchingContract {
 }
@@ -617,7 +616,7 @@ pub mod MatchingContract {
 #[starknet::contract]
 mod OtherContract {
 }
-"#;
+";
 
         assert!(contains_contract_definition(contents, "MatchingContract"));
         assert!(contains_contract_definition(contents, "OtherContract"));
