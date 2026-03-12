@@ -9,8 +9,7 @@ in
 tests.
 
 Only contracts from `src/` directory are loaded. Contracts from `/tests` and modules marked with `#[cfg(test)]` are not
-build or collected. To create contracts to be specifically used in tests
-see [conditional compilation](../../snforge-advanced-features/conditional-compilation.md).
+build or collected. To create contracts to be specifically used in tests, [Scarb conditional compilation](https://docs.swmansion.com/scarb/docs/reference/conditional-compilation.html#features) can be used.
 
 > ⚠️ **Warning**
 >

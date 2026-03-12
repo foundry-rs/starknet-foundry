@@ -24,7 +24,7 @@ pub struct DeployResult {
 - `salt` - salt for the contract address.
 - `unique` - determines if salt should be further modified with the account address.
 - `fee_settings` - fee settings for the transaction, see [`FeeSettingsTrait](./fee_settings_trait.md).
-- `nonce` - nonce for declare transaction. If not provided, nonce will be set automatically.
+- `nonce` - nonce for deploy transaction. If not provided, nonce will be set automatically.
 
 ```rust
 {{#include ../../../listings/deploy/src/lib.cairo}}
