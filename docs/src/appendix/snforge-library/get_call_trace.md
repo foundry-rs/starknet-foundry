@@ -5,7 +5,7 @@ fn get_call_trace() -> CallTrace;
 ```
 
 (For whole structure definition, please refer
-to [`snforge-std` source](https://github.com/foundry-rs/starknet-foundry/tree/v0.16.0/snforge_std))
+to [`snforge-std` source](https://github.com/foundry-rs/starknet-foundry/tree/master/snforge_std))
 
 Gets current call trace of the test, up to the last call made to a contract.
 

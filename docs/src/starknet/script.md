@@ -13,10 +13,10 @@ have a `main` function in the module you want to run. `sncast_std` docs can be f
 Please note that **`sncast script` is in development**. While it is already possible to declare, deploy, invoke and call
 contracts from within Cairo, its interface, internals and feature set can change rapidly each version.
 
-> ⚠️⚠️ By default, the nonce for each transaction is being taken from the pending block ⚠️⚠️
+> ⚠️⚠️ By default, the nonce for each transaction is being taken from the pre_confirmed block ⚠️⚠️
 >
 > Some RPC nodes can be configured with higher poll intervals, which means they may return "older" nonces
-> in pending blocks, or even not be able to obtain pending blocks at all. This might be the case if you get
+> in pre_confirmed blocks, or even not be able to obtain pre_confirmed blocks at all. This might be the case if you get
 > an error like "Invalid transaction nonce" when running a script, and you may need to manually set both nonce
 > and max_fee for transactions.
 >

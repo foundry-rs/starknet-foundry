@@ -31,6 +31,7 @@ Available components:
 - `caller-address`
 - `call-type`
 - `call-result`
+- `gas`
 
 ## `--run-native`
 
@@ -47,7 +48,9 @@ Test filter must be a whole qualified test name e.g. `package_name::my_test` ins
 
 ## `--skip <SKIP>`
 
-Skips any tests whose name contains the given `SKIP` string
+Skips any tests whose name contains the given `SKIP` string.
+
+This flag may be used multiple times with different `SKIP` strings.
 
 ## `-x`, `--exit-first`
 
