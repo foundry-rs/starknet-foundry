@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- `sncast nonce` command to get the nonce of a contract.
+
 ### Forge
 
 #### Added
