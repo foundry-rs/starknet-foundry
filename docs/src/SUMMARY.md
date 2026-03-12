@@ -157,6 +157,7 @@
     * [get](appendix/sncast/get/get.md)
         * [balance](appendix/sncast/get/balance.md)
         * [tx-status](appendix/sncast/get/tx-status.md)
+    * [nonce](appendix/sncast/nonce.md)
     * [utils](appendix/sncast/utils/utils.md)
         * [serialize](appendix/sncast/utils/serialize.md)
         * [class-hash](appendix/sncast/utils/class_hash.md)
