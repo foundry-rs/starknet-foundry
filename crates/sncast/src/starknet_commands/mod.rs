@@ -6,6 +6,7 @@ pub mod deploy;
 pub mod get;
 pub mod invoke;
 pub mod multicall;
+pub mod nonce;
 pub mod script;
 pub mod show_config;
 pub mod utils;
