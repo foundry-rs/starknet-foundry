@@ -29,7 +29,7 @@ pub async fn nonce(
     contract_address: Felt,
     block_id: &str,
 ) -> Result<NonceResponse> {
-    let block_id = get_block_id(block_id).context("Failed to obtain block id")?;
+    let block_id = get_block_id(block_id)?;
     let nonce = provider
         .get_nonce(block_id, contract_address)
         .await
