@@ -3,7 +3,7 @@ use clap::Args;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::{SNCastProviderError, StarknetCommandError};
 use sncast::response::nonce::NonceResponse;
-use sncast::{get_block_id, get_nonce};
+use sncast::get_block_id;
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, Provider};
 use starknet_types_core::felt::Felt;
