@@ -1,16 +1,32 @@
-use anyhow::Result;
+use anyhow::{Context, Result, bail};
+use sncast::{get_class_hash_by_address, get_contract_class};
+use starknet_rust::{
+    core::types::ContractClass,
+    providers::{JsonRpcClient, jsonrpc::HttpTransport},
+};
 use starknet_types_core::felt::Felt;
-use std::collections::HashMap;
+use std::collections::{HashMap, hash_map::Entry};
 
-/// Registry for multicall execution, storing mappings from ids to contract addresses.
+/// Registry for managing contract information during multicall execution.
+/// It stores the following mappings:
+/// - user-defined ids to contract addresses
+/// - contract addresses to class hashes
+/// - class hashes to contract classes
+///   to allow referencing and re-using deployed contracts across multiple calls in a multicall sequence.
 pub struct ContractRegistry {
     id_to_address: HashMap<String, Felt>,
+    address_to_class_hash: HashMap<Felt, Felt>,
+    class_hash_to_contract_class: HashMap<Felt, ContractClass>,
+    provider: JsonRpcClient<HttpTransport>,
 }
 
 impl ContractRegistry {
-    pub fn new() -> Self {
+    pub fn new(provider: &JsonRpcClient<HttpTransport>) -> Self {
         ContractRegistry {
             id_to_address: HashMap::new(),
+            address_to_class_hash: HashMap::new(),
+            class_hash_to_contract_class: HashMap::new(),
+            provider: provider.clone(),
         }
     }
 
@@ -28,16 +44,73 @@ impl ContractRegistry {
         self.id_to_address.insert(id, address);
         Ok(())
     }
+
+    /// Retrieves the class hash associated with the given contract address.
+    /// Checks the local cache first, and fetches from the provider if not cached.
+    pub async fn get_class_hash_by_address(&mut self, address: &Felt) -> Result<Felt> {
+        if let Some(hash) = self.get_class_hash_by_address_local(address) {
+            return Ok(hash);
+        }
+        let class_hash = get_class_hash_by_address(&self.provider, *address)
+            .await
+            .context("Failed to fetch class hash from provider")?;
+        self.address_to_class_hash.insert(*address, class_hash);
+        Ok(class_hash)
+    }
+
+    /// Retrieves the class hash associated with the given contract address from the local cache, if it exists.
+    pub fn get_class_hash_by_address_local(&self, address: &Felt) -> Option<Felt> {
+        self.address_to_class_hash.get(address).copied()
+    }
+
+    /// Inserts a mapping from the given contract address to the specified class hash.
+    /// Returns an error if the address already exists.
+    pub fn insert_new_address(&mut self, address: Felt, class_hash: Felt) -> Result<()> {
+        if let Entry::Vacant(e) = self.address_to_class_hash.entry(address) {
+            e.insert(class_hash);
+            Ok(())
+        } else {
+            bail!("Duplicate address found: {address}")
+        }
+    }
+
+    /// Retrieves the contract class associated with the given class hash, if it exists.
+    /// If not found in the cache, it queries the provider and updates the cache.
+    pub async fn get_contract_class_by_class_hash(
+        &mut self,
+        class_hash: &Felt,
+    ) -> Result<&ContractClass> {
+        if self.class_hash_to_contract_class.contains_key(class_hash) {
+            return Ok(self
+                .class_hash_to_contract_class
+                .get(class_hash)
+                .expect("Contract class should exist"));
+        }
+
+        let contract_class = get_contract_class(*class_hash, &self.provider)
+            .await
+            .context("Failed to fetch contract class from provider")?;
+
+        Ok(self
+            .class_hash_to_contract_class
+            .entry(*class_hash)
+            .or_insert(contract_class))
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::ContractRegistry;
+    use starknet_rust::providers::{JsonRpcClient, jsonrpc::HttpTransport};
     use starknet_types_core::felt::Felt;
+    use url::Url;
 
     #[test]
     fn test_insert_and_get() {
-        let mut registry = ContractRegistry::new();
+        let mock_provider = JsonRpcClient::new(HttpTransport::new(
+            Url::parse("http://localhost:8545").unwrap(),
+        ));
+        let mut registry = ContractRegistry::new(&mock_provider);
         let id = "contract1".to_string();
         let address = Felt::from(12345);
 
@@ -51,7 +124,10 @@ mod tests {
 
     #[test]
     fn test_duplicate_id() {
-        let mut registry = ContractRegistry::new();
+        let mock_provider = JsonRpcClient::new(HttpTransport::new(
+            Url::parse("http://localhost:8545").unwrap(),
+        ));
+        let mut registry = ContractRegistry::new(&mock_provider);
         let id = "contract1".to_string();
         let address1 = Felt::from(12345);
         let address2 = Felt::from(67890);
