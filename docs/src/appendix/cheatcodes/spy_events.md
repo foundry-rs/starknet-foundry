@@ -5,23 +5,23 @@
 Creates `EventSpy` instance which spies on events emitted after its creation.
 
 ```rust
-struct EventSpy {
+pub struct EventSpy {
     ...
 }
 ```
 An event spy structure.
 
 ```rust
-struct Events {
-    events: Array<(ContractAddress, Event)>
+pub struct Events {
+    pub events: Array<(ContractAddress, Event)>,
 }
 ```
-A wrapper structure on an array of events to handle event filtering. 
+A wrapper structure on an array of events to handle event filtering.
 
 ```rust
-struct Event {
-    keys: Array<felt252>,
-    data: Array<felt252>
+pub struct Event {
+    pub keys: Array<felt252>,
+    pub data: Array<felt252>,
 }
 ```
 Raw event format (as seen via the RPC-API), can be used for asserting the emitted events.
@@ -31,7 +31,7 @@ Raw event format (as seen via the RPC-API), can be used for asserting the emitte
 ### EventSpyTrait
 
 ```rust
-trait EventSpyTrait {
+pub trait EventSpyTrait {
     fn get_events(ref self: EventSpy) -> Events;
 }
 ```
@@ -40,7 +40,7 @@ Gets all events since the creation of the given `EventSpy`.
 ### EventSpyAssertionsTrait
 
 ```rust
-trait EventSpyAssertionsTrait<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> {
+pub trait EventSpyAssertionsTrait<T, +starknet::Event<T>, +Drop<T>> {
     fn assert_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
     fn assert_not_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
 }
@@ -50,7 +50,7 @@ Allows to assert the expected events emission (or lack thereof), in the scope of
 ### EventsFilterTrait
 
 ```rust
-trait EventsFilterTrait {
+pub trait EventsFilterTrait {
     fn emitted_by(self: @Events, contract_address: ContractAddress) -> Events;
 }
 ```

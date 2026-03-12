@@ -87,7 +87,7 @@ $ snforge --version
 <summary>Output:</summary>
 
 ```shell
-snforge 0.33.0
+snforge {{snforge_std_version}}
 ```
 </details>
 <br>
@@ -97,7 +97,7 @@ using [`scarb add`](https://docs.swmansion.com/scarb/docs/guides/dependencies.ht
 command.
 
 ```shell
-$ scarb add snforge_std@0.33.0 --dev
+$ scarb add snforge_std@{{snforge_std_version}} --dev
 ```
 
 Additionally, ensure that starknet-contract target is enabled in the `Scarb.toml` file.
@@ -114,5 +114,3 @@ Additionally, ensure that starknet-contract target is enabled in the `Scarb.toml
 > [tool.scarb]  
 > allow-prebuilt-plugins = ["snforge_std"]
 > ```
-> This configuration requires Scarb version >= 2.10.0 .
->

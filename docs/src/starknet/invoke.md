@@ -46,8 +46,11 @@ transaction: https://sepolia.voyager.online/tx/[..]
 <br>
 
 > 💡 **Info**
-> Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
-
+> Transaction fee limit can be set either as a single upper bound by `--max-fee` or broken down
+> into individual resource components using `--l1-gas`, `--l1-gas-price`, `--l2-gas`,
+> `--l2-gas-price`, `--l1-data-gas`, and `--l1-data-gas-price`.
+> `--max-fee` and the individual resource flags are mutually exclusive.
+> Any individual resource flag that is not provided will be estimated automatically
 
 ### Invoking Function Without Arguments
 

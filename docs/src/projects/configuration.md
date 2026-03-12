@@ -149,7 +149,7 @@ root/
 
 **Glossary:**
 
-- **A:** Global configuration file containing the profiles [`default`](#default-profile) and [`testnet`](#defining-profiles-in-snfoundrytoml).
+- **A:** Global configuration file containing the profiles `default` and `testnet`.
 - **B:** Local configuration file containing the profiles `default` and `mainnet`.
 
 In any directory in the file system, a user can run the `sncast` command using the `default` and `testnet` profiles, 

@@ -17,5 +17,5 @@
 > using the appropriate version.
 >```toml
 > [dependencies]
-> sncast_std = "0.33.0"
+> sncast_std = "{{snforge_std_version}}"
 > ```

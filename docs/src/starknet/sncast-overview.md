@@ -2,9 +2,6 @@
 
 Starknet Foundry `sncast` is a command line tool for performing Starknet RPC calls. With it, you can easily interact with Starknet contracts!
 
-> 💡 **Info**
-> At the moment, `sncast` only supports contracts written in [Cairo](https://github.com/starkware-libs/cairo) v1 and v2.
-
 > ⚠️ **Warning**
 > Currently, support is only provided for accounts that use the default signature based on the [Stark curve](https://docs.starknet.io/learn/protocol/cryptography#the-stark-curve).
 
@@ -122,12 +119,12 @@ Waiting for transaction to be received. Retries left: 10
 Waiting for transaction to be received. Retries left: 9
 Waiting for transaction to be received. Retries left: 8
 Waiting for transaction to be received. Retries left: 7
-Received transaction. Status: Pending
-Received transaction. Status: Pending
-Received transaction. Status: Pending
-Received transaction. Status: Pending
-Received transaction. Status: Pending
-Received transaction. Status: Pending
+Received transaction. Status: Pre confirmed
+Received transaction. Status: Pre confirmed
+Received transaction. Status: Pre confirmed
+Received transaction. Status: Pre confirmed
+Received transaction. Status: Pre confirmed
+Received transaction. Status: Pre confirmed
 Success: Deployment completed
 
 Contract Address: 0x0[..]

@@ -18,9 +18,9 @@ Token contract address to check the balance for. Token needs to be compatible wi
 ## `--block-id, -b <BLOCK_ID>`
 Optional.
 
-Block identifier on which balance should be fetched
-Possible values: `pending`, `latest`, block hash (0x prefixed string), and block number (u64).
-`pending` is used as a default value.
+Block identifier on which balance should be fetched.
+Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string), and block number (u64).
+`pre_confirmed` is used as a default value.
 
 ## `--url, -u <RPC_URL>`
 Optional.
