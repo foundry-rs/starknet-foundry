@@ -1,6 +1,6 @@
 # `nonce`
 
-Get the nonce of a contract.
+Get the nonce of the specified contract.
 
 ## `<CONTRACT_ADDRESS>`
 
