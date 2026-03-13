@@ -28,8 +28,8 @@ pub async fn show_config(
         None
     };
 
-    let rpc_url = show.rpc.url.clone().or(cast_config.url);
-    let network = show.rpc.network.or(cast_config.network);
+    let rpc_url = show.rpc.url.clone().or(cast_config.network_params.url().cloned());
+    let network = show.rpc.network.or(cast_config.network_params.network());
 
     let account = Some(cast_config.account).filter(|p| !p.is_empty());
     let mut accounts_file_path =

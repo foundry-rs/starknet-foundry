@@ -18,6 +18,7 @@ async fn test_show_config_from_snfoundry_toml() {
         Wait Timeout:        300s
         Wait Retry Interval: 5s
         Show Explorer Links: true
+        Block Explorer:      Voyager
     ", URL});
 }
 
@@ -47,6 +48,7 @@ async fn test_show_config_from_cli() {
         Wait Timeout:        2s
         Wait Retry Interval: 1s
         Show Explorer Links: true
+        Block Explorer:      Voyager
     ", URL});
 }
 
@@ -86,6 +88,7 @@ async fn test_show_config_when_no_keystore() {
         Wait Timeout:        300s
         Wait Retry Interval: 5s
         Show Explorer Links: true
+        Block Explorer:      Voyager
     ", URL});
 }
 
@@ -105,6 +108,7 @@ async fn test_show_config_when_keystore() {
         Wait Timeout:        300s
         Wait Retry Interval: 5s
         Show Explorer Links: true
+        Block Explorer:      Voyager
     ", URL});
 }
 
@@ -122,6 +126,7 @@ async fn test_show_config_no_url() {
         Wait Timeout:        500s
         Wait Retry Interval: 10s
         Show Explorer Links: false
+        Block Explorer:      Voyager
     "});
 }
 
@@ -141,6 +146,7 @@ async fn test_show_config_with_network() {
         Wait Timeout:        300s
         Wait Retry Interval: 5s
         Show Explorer Links: true
+        Block Explorer:      Voyager
     "});
 }
 

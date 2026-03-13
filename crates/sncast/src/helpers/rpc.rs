@@ -1,9 +1,10 @@
-use crate::helpers::configuration::CastConfig;
+use crate::helpers::configuration::{CastConfig, NetworkParams};
 use crate::helpers::devnet::detection;
 use crate::response::ui::UI;
 use crate::{Network, get_provider};
 use anyhow::{Result, bail};
 use clap::Args;
+use configuration::Override;
 use shared::consts::RPC_URL_VERSION;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet_rust::providers::{JsonRpcClient, jsonrpc::HttpTransport};
@@ -38,13 +39,12 @@ impl RpcArgs {
     }
 
     pub async fn get_url(&self, config: &CastConfig) -> Result<Url> {
-        match (&self.network, &self.url, &config.url, &config.network) {
-            (Some(network), None, _, _) => self.resolve_network_url(network, config).await,
-            (None, Some(url), _, _) => Ok(url.clone()),
-            (None, None, Some(config_url), None) => Ok(config_url.clone()),
-            (None, None, None, Some(config_network)) => {
-                self.resolve_network_url(config_network, config).await
-            }
+        let cli_params = NetworkParams::new(self.url.clone(), self.network)?;
+        let effective = config.network_params.clone().override_with(cli_params);
+
+        match (effective.url(), effective.network()) {
+            (Some(url), None) => Ok(url.clone()),
+            (None, Some(network)) => self.resolve_network_url(&network, config).await,
             _ => bail!("Either `--network` or `--url` must be provided."),
         }
     }
@@ -119,7 +119,7 @@ pub fn generate_network_flag(rpc_args: &RpcArgs, config: &CastConfig) -> String 
         format!("--network {network}")
     } else if let Some(rpc_url) = &rpc_args.url {
         format!("--url {rpc_url}")
-    } else if config.url.is_some() || config.network.is_some() {
+    } else if config.network_params.url().is_some() || config.network_params.network().is_some() {
         // Since url or network is defined in config, no need to pass any flag
         String::new()
     } else {

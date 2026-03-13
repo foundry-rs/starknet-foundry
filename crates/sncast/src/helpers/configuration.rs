@@ -1,14 +1,60 @@
 use super::block_explorer;
-use crate::{Network, ValidatedWaitParams};
+use crate::helpers::config::get_global_config_path;
+use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
+use crate::response::ui::UI;
+use crate::{Network, PartialWaitParams, ValidatedWaitParams};
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use configuration::Config;
+use configuration::{Config, Override, load_config, override_optional};
 use serde::{Deserialize, Serialize};
+use serde_with::skip_serializing_none;
+use std::collections::BTreeMap;
 use url::Url;
 
 #[must_use]
 pub const fn show_explorer_links_default() -> bool {
     true
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Default)]
+pub struct NetworkParams {
+    url: Option<Url>,
+    network: Option<Network>,
+}
+
+impl NetworkParams {
+    pub fn new(url: Option<Url>, network: Option<Network>) -> Result<Self> {
+        let res = Self { url, network };
+        res.validate()?;
+        Ok(res)
+    }
+
+    #[must_use]
+    pub fn url(&self) -> Option<&Url> {
+        self.url.as_ref()
+    }
+
+    #[must_use]
+    pub fn network(&self) -> Option<Network> {
+        self.network
+    }
+
+    pub fn validate(&self) -> Result<()> {
+         match (&self.url, &self.network) {
+            (Some(_), Some(_)) => anyhow::bail!("Only one of `url` or `network` may be specified"),
+            _ => Ok(()),
+        }
+    }
+}
+
+impl Override for NetworkParams {
+    fn override_with(&self, other: NetworkParams) -> NetworkParams {
+        if other == NetworkParams::default() {
+            self.clone()
+        } else {
+            other
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Default)]
@@ -28,90 +74,47 @@ impl NetworksConfig {
             Network::Devnet => self.devnet.as_ref(),
         }
     }
+}
 
-    pub fn override_with(&mut self, other: &NetworksConfig) {
-        if other.mainnet.is_some() {
-            self.mainnet.clone_from(&other.mainnet);
-        }
-        if other.sepolia.is_some() {
-            self.sepolia.clone_from(&other.sepolia);
-        }
-        if other.devnet.is_some() {
-            self.devnet.clone_from(&other.devnet);
+impl Override for NetworksConfig {
+    fn override_with(&self, other: NetworksConfig) -> NetworksConfig {
+        NetworksConfig {
+            mainnet: other.mainnet.or_else(|| self.mainnet.clone()),
+            sepolia: other.sepolia.or_else(|| self.sepolia.clone()),
+            devnet: other.devnet.or_else(|| self.devnet.clone()),
         }
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
+/// Effective config used at runtime.
+/// Note: Built from [`PartialCastConfig`], not (de)sereliazed.
+#[derive(Clone, Debug, PartialEq)]
 pub struct CastConfig {
-    #[serde(default)]
-    /// RPC url
-    pub url: Option<Url>,
-
-    #[serde(default)]
-    pub network: Option<Network>,
-
-    #[serde(default)]
+    pub network_params: NetworkParams,
     pub account: String,
-
-    #[serde(
-        default,
-        rename(serialize = "accounts-file", deserialize = "accounts-file")
-    )]
     pub accounts_file: Utf8PathBuf,
-
     pub keystore: Option<Utf8PathBuf>,
-
-    #[serde(
-        default,
-        rename(serialize = "wait-params", deserialize = "wait-params")
-    )]
     pub wait_params: ValidatedWaitParams,
-
-    #[serde(
-        default,
-        rename(serialize = "block-explorer", deserialize = "block-explorer")
-    )]
-    /// A block explorer service, used to display links to transaction details
     pub block_explorer: Option<block_explorer::Service>,
-
-    #[serde(
-        default = "show_explorer_links_default",
-        rename(serialize = "show-explorer-links", deserialize = "show-explorer-links")
-    )]
-    /// Print links pointing to pages with transaction details in the chosen block explorer
     pub show_explorer_links: bool,
-
-    #[serde(default)]
-    /// Configurable urls of predefined networks - mainnet, sepolia, and devnet are supported
     pub networks: NetworksConfig,
 }
 
-// TODO(#4027)
 impl CastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
-        if self.block_explorer.unwrap_or_default() == block_explorer::Service::StarkScan {
-            anyhow::bail!(
-                "starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice."
-            )
-        }
-
-        match (&self.url, &self.network) {
-            (Some(_), Some(_)) => {
-                anyhow::bail!("Only one of `url` or `network` may be specified")
-            }
-            _ => Ok(()),
-        }
+        block_explorer::Service::validate_for_config(self.block_explorer)?;
+        self.wait_params.validate();
+        self.network_params.validate()?;
+        Ok(())
     }
 }
 
 impl Default for CastConfig {
     fn default() -> Self {
         Self {
-            url: None,
-            network: None,
+            network_params: NetworkParams::default(),
             account: String::default(),
-            accounts_file: Utf8PathBuf::default(),
+            accounts_file: Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE),
             keystore: None,
             wait_params: ValidatedWaitParams::default(),
             block_explorer: Some(block_explorer::Service::default()),
@@ -121,15 +124,145 @@ impl Default for CastConfig {
     }
 }
 
-impl Config for CastConfig {
+#[skip_serializing_none]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Default)]
+pub struct PartialCastConfig {
+    #[serde(flatten)]
+    pub network_params: NetworkParams,
+
+    pub account: Option<String>,
+
+    #[serde(
+        default,
+        rename(serialize = "accounts-file", deserialize = "accounts-file")
+    )]
+    pub accounts_file: Option<Utf8PathBuf>,
+
+    pub keystore: Option<Utf8PathBuf>,
+
+    #[serde(
+        default,
+        rename(serialize = "wait-params", deserialize = "wait-params")
+    )]
+    pub wait_params: Option<PartialWaitParams>,
+
+    #[serde(
+        default,
+        rename(serialize = "block-explorer", deserialize = "block-explorer")
+    )]
+    /// A block explorer service, used to display links to transaction details
+    pub block_explorer: Option<block_explorer::Service>,
+
+    #[serde(
+        default,
+        rename(serialize = "show-explorer-links", deserialize = "show-explorer-links")
+    )]
+    /// Print links pointing to pages with transaction details in the chosen block explorer
+    pub show_explorer_links: Option<bool>,
+
+    #[serde(default)]
+    pub networks: Option<NetworksConfig>,
+}
+
+#[derive(Serialize)]
+pub struct SncastProfileAppend {
+    pub sncast: BTreeMap<String, PartialCastConfig>,
+}
+
+impl Config for PartialCastConfig {
     fn tool_name() -> &'static str {
         "sncast"
     }
 
     fn from_raw(config: serde_json::Value) -> Result<Self> {
         let config = serde_json::from_value::<Self>(config)?;
+        // TODO: figure out whether that should be there at all
         config.validate()?;
         Ok(config)
+    }
+}
+
+impl PartialCastConfig {
+    pub fn validate(&self) -> anyhow::Result<()> {
+        block_explorer::Service::validate_for_config(self.block_explorer)?;
+        self.wait_params.map(ValidatedWaitParams::from);
+        self.network_params.validate()?;
+        Ok(())
+    }
+}
+
+impl Override for PartialCastConfig {
+    fn override_with(&self, other: PartialCastConfig) -> PartialCastConfig {
+        PartialCastConfig {
+            network_params: self.network_params.override_with(other.network_params),
+            account: other.account.or_else(|| self.account.clone()),
+            accounts_file: other.accounts_file.or_else(|| self.accounts_file.clone()),
+            keystore: other.keystore.or_else(|| self.keystore.clone()),
+            wait_params: override_optional(self.wait_params, other.wait_params),
+            block_explorer: other.block_explorer.or(self.block_explorer),
+            show_explorer_links: other.show_explorer_links.or(self.show_explorer_links),
+            networks: override_optional(self.networks.clone(), other.networks),
+        }
+    }
+}
+
+impl PartialCastConfig {
+    pub fn local(opts: &CliConfigOpts) -> Result<Self> {
+        let local_config = load_config::<PartialCastConfig>(None, opts.profile.as_deref())
+            .map_err(|err| anyhow::anyhow!(format!("Failed to load config: {err}")))?;
+
+        Ok(local_config)
+    }
+
+    pub fn global(opts: &CliConfigOpts, ui: &UI) -> Result<Self> {
+        let global_config_path = get_global_config_path().unwrap_or_else(|err| {
+            ui.print_error(
+                &opts.command_name,
+                format!("Error getting global config path: {err}"),
+            );
+            Utf8PathBuf::new()
+        });
+
+        let global_config = load_config::<PartialCastConfig>(
+            Some(&global_config_path.clone()),
+            opts.profile.as_deref(),
+        )
+        .or_else(|_| load_config::<PartialCastConfig>(Some(&global_config_path), None))
+        .map_err(|err| anyhow::anyhow!(format!("Failed to load config: {err}")))?;
+
+        Ok(global_config)
+    }
+}
+
+pub struct CliConfigOpts {
+    pub command_name: String,
+    pub profile: Option<String>,
+}
+
+impl From<PartialCastConfig> for CastConfig {
+    fn from(p: PartialCastConfig) -> Self {
+        let d = CastConfig::default();
+
+        let accounts_file = p.accounts_file.unwrap_or(d.accounts_file);
+        let accounts_file = Utf8PathBuf::from(shellexpand::tilde(&accounts_file).to_string());
+
+        let networks = p
+            .networks
+            .map(|n| d.networks.override_with(n))
+            .unwrap_or(d.networks);
+
+        CastConfig {
+            network_params: d.network_params.override_with(p.network_params),
+            account: p.account.unwrap_or(d.account),
+            accounts_file,
+            keystore: p.keystore.or(d.keystore),
+            wait_params: p
+                .wait_params
+                .map_or(d.wait_params, ValidatedWaitParams::from),
+            block_explorer: p.block_explorer.or(d.block_explorer),
+            show_explorer_links: p.show_explorer_links.unwrap_or(d.show_explorer_links),
+            networks,
+        }
     }
 }
 
@@ -162,7 +295,7 @@ mod tests {
 
     #[test]
     fn test_networks_config_override() {
-        let mut global = NetworksConfig {
+        let global = NetworksConfig {
             mainnet: Some(Url::parse("https://global-mainnet.example.com").unwrap()),
             sepolia: Some(Url::parse("https://global-sepolia.example.com").unwrap()),
             devnet: None,
@@ -173,18 +306,57 @@ mod tests {
             devnet: None,
         };
 
-        global.override_with(&local);
+        let overridden = global.override_with(local);
 
         // Local mainnet should override global
         assert_eq!(
-            global.mainnet,
+            overridden.mainnet,
             Some(Url::parse("https://local-mainnet.example.com").unwrap())
         );
         // Global sepolia should remain
         assert_eq!(
-            global.sepolia,
+            overridden.sepolia,
             Some(Url::parse("https://global-sepolia.example.com").unwrap())
         );
+    }
+
+    #[test]
+    fn test_network_params_validation() {
+        let url = Some(Url::parse("https://example.com").unwrap());
+        let network = Some(Network::Sepolia);
+
+        assert!(NetworkParams::new(url.clone(), network).is_err());
+        assert!(NetworkParams::new(None, None).is_ok());
+        assert!(NetworkParams::new(url, None).is_ok());
+        assert!(NetworkParams::new(None, Some(Network::Mainnet)).is_ok());
+    }
+
+    #[test]
+    fn test_network_params_override() {
+        let global = NetworkParams::new(
+            Some(Url::parse("https://global-sepolia.example.com").unwrap()),
+            None,
+        )
+        .unwrap();
+        let local = NetworkParams::new(None, Some(Network::Sepolia)).unwrap();
+        let overridden = global.override_with(local.clone());
+
+        assert_eq!(overridden.url(), None);
+        assert_eq!(overridden.network(), Some(Network::Sepolia));
+    }
+
+    #[test]
+    fn test_network_params_override_empty_keeps_base() {
+        let base = NetworkParams::new(
+            Some(Url::parse("https://base.example.com").unwrap()),
+            None,
+        )
+        .unwrap();
+        let other = NetworkParams::default();
+        let result = base.override_with(other);
+
+        assert_eq!(result.url(), base.url());
+        assert_eq!(result.network(), None);
     }
 
     #[test]
