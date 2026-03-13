@@ -7,8 +7,8 @@ use crate::{
     starknet_commands::{
         invoke::InvokeCommonArgs,
         multicall::{
-            MulticallSource,
             contract_registry::ContractRegistry,
+            mode::MulticallMode,
             replaced_arguments,
             run::{InvokeItem, parse_inputs},
         },
@@ -46,7 +46,7 @@ impl MulticallInvoke {
     pub async fn build_call(
         &self,
         contract_registry: &mut ContractRegistry,
-        source: MulticallSource,
+        source: MulticallMode,
     ) -> Result<Call> {
         let selector = get_selector_from_name(&self.common.function)?;
         let contract_address = if let Some(id_key) = source.id_key(&self.common.contract_address) {

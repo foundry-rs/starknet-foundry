@@ -8,11 +8,13 @@ use sncast::helpers::rpc::RpcArgs;
 pub mod contract_registry;
 pub mod deploy;
 pub mod invoke;
+pub mod mode;
 pub mod new;
 pub mod run;
 pub mod run_calls;
 
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
+use crate::starknet_commands::multicall::mode::MulticallMode;
 use crate::{Arguments, process_command_result, starknet_commands};
 use foundry_ui::Message;
 use new::New;
@@ -49,31 +51,6 @@ pub enum Commands {
     New(New),
     #[command(external_subcommand)]
     Calls(Vec<String>),
-}
-
-/// Determines how multicall arguments reference ids (from a file or directly from CLI).
-#[derive(Copy, Clone, Debug)]
-pub enum MulticallSource {
-    /// Multicall defined in a `.toml` file.
-    File,
-    /// Multicall defined via CLI.
-    Cli,
-}
-
-impl MulticallSource {
-    /// Returns the registry lookup key for a given raw value, if it should be treated as an id.
-    ///
-    /// - For [`MulticallSource::File`], every value is considered a potential id, so the input
-    ///   string is always returned.
-    /// - For [`MulticallSource::Cli`], only values starting with `@` are considered ids, and the
-    ///   returned key has the `@` prefix stripped.
-    #[must_use]
-    pub fn id_key<'a>(&self, value: &'a str) -> Option<&'a str> {
-        match self {
-            MulticallSource::File => Some(value),
-            MulticallSource::Cli => value.strip_prefix('@'),
-        }
-    }
 }
 
 pub async fn multicall(
@@ -179,7 +156,7 @@ pub async fn multicall(
 pub fn replaced_arguments(
     arguments: &Arguments,
     contract_registry: &ContractRegistry,
-    source: MulticallSource,
+    source: MulticallMode,
 ) -> Result<Arguments> {
     Ok(match (&arguments.calldata, &arguments.arguments) {
         (Some(calldata), None) => {
