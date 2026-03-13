@@ -150,9 +150,6 @@ pub async fn multicall(
 }
 
 /// Replaces arguments that reference user-defined ids with their corresponding values from the contract registry.
-///
-/// - For [`MulticallSource::File`], ids are referenced without a prefix (e.g. `deployed_contract`).
-/// - For [`MulticallSource::Cli`], ids are referenced with an `@` prefix (e.g. `@deployed_contract`).
 pub fn replaced_arguments(
     arguments: &Arguments,
     contract_registry: &ContractRegistry,
