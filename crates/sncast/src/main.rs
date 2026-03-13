@@ -10,7 +10,7 @@ use crate::starknet_commands::script::run_script_command;
 use crate::starknet_commands::utils::{self, Utils};
 use crate::starknet_commands::{
     account, account::Account as AccountCommand, call::Call, declare::Declare, deploy::Deploy,
-    get::tx_status::TxStatus, invoke::Invoke, multicall::Multicall, nonce::Nonce, script::Script,
+    get::tx_status::TxStatus, invoke::Invoke, multicall::Multicall, script::Script,
     show_config::ShowConfig,
 };
 use crate::starknet_commands::{get, multicall};
@@ -142,7 +142,6 @@ impl Cli {
             Commands::Completions(_) => "completions",
             Commands::Utils(_) => "utils",
             Commands::Balance(_) => "balance",
-            Commands::Nonce(_) => "nonce",
         }
         .to_string()
     }
@@ -194,9 +193,6 @@ enum Commands {
 
     /// Fetch balance of the account for specified token
     Balance(Balance),
-
-    /// Get nonce of a contract
-    Nonce(Nonce),
 }
 
 #[derive(Debug, Clone, clap::Args)]
@@ -730,17 +726,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         Commands::Balance(balance) => {
             print_cmd_move_warning("balance", "get balance", ui);
             get::balance::balance(balance, config, ui).await
-        }
-
-        Commands::Nonce(nonce) => {
-            let provider = nonce.rpc.get_provider(&config, ui).await?;
-
-            let result =
-                starknet_commands::nonce::nonce(&provider, nonce.contract_address, &nonce.block_id)
-                    .await;
-
-            process_command_result("nonce", result, ui, None);
-            Ok(())
         }
 
         Commands::Script(_) => unreachable!(),
