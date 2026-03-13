@@ -166,8 +166,7 @@ pub fn replaced_arguments(
                     if let Some(id_key) = mode.id_key(input) {
                         Ok(contract_registry
                             .get_address_by_id(id_key)
-                            .map(|a| a.to_string())
-                            .unwrap_or_else(|| input.clone()))
+                            .map_or_else(|| input.clone(), |a| a.to_string()))
                     } else {
                         // For CLI, values without `@` are treated as literals.
                         Ok(input.clone())
