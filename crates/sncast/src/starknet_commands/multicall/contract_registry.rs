@@ -5,37 +5,57 @@ use starknet_rust::{
     providers::{JsonRpcClient, jsonrpc::HttpTransport},
 };
 use starknet_types_core::felt::Felt;
-use std::{
-    collections::{HashMap, hash_map::Entry},
-    sync::Arc,
-};
-pub struct ContractsCache {
+use std::collections::{HashMap, hash_map::Entry};
+
+/// Registry for managing contract information during multicall execution.
+/// It stores the following mappings:
+/// - user-defined ids to contract addresses
+/// - contract addresses to class hashes
+/// - class hashes to contract classes
+///   to allow referencing and re-using deployed contracts across multiple calls in a multicall sequence.
+pub struct ContractRegistry {
+    id_to_address: HashMap<String, Felt>,
     address_to_class_hash: HashMap<Felt, Felt>,
-    class_hash_to_contract_class: HashMap<Felt, Arc<ContractClass>>,
+    class_hash_to_contract_class: HashMap<Felt, ContractClass>,
     provider: JsonRpcClient<HttpTransport>,
 }
 
-impl ContractsCache {
-    fn new(provider: &JsonRpcClient<HttpTransport>) -> Self {
-        ContractsCache {
+impl ContractRegistry {
+    pub fn new(provider: &JsonRpcClient<HttpTransport>) -> Self {
+        ContractRegistry {
+            id_to_address: HashMap::new(),
             address_to_class_hash: HashMap::new(),
             class_hash_to_contract_class: HashMap::new(),
             provider: provider.clone(),
         }
     }
 
+    /// Retrieves the contract address associated with the given id, if it exists.
+    pub fn get_address_by_id(&self, id: &str) -> Option<Felt> {
+        self.id_to_address.get(id).copied()
+    }
+
+    /// Inserts a mapping from the given id to the specified contract address.
+    /// Returns an error if the id already exists.
+    pub fn insert_new_id_to_address(&mut self, id: String, address: Felt) -> Result<()> {
+        if self.id_to_address.contains_key(&id) {
+            anyhow::bail!("Duplicate id found: {id}");
+        }
+        self.id_to_address.insert(id, address);
+        Ok(())
+    }
+
     /// Retrieves the class hash associated with the given contract address.
     /// Checks the local cache first, and fetches from the provider if not cached.
     pub async fn get_class_hash_by_address(&mut self, address: &Felt) -> Result<Felt> {
-        match self.address_to_class_hash.entry(*address) {
-            Entry::Occupied(entry) => Ok(*entry.get()),
-            Entry::Vacant(entry) => {
-                let class_hash = get_class_hash_by_address(&self.provider, *address)
-                    .await
-                    .context("Failed to fetch class hash from provider")?;
-                Ok(*entry.insert(class_hash))
-            }
+        if let Some(hash) = self.get_class_hash_by_address_local(address) {
+            return Ok(hash);
         }
+        let class_hash = get_class_hash_by_address(&self.provider, *address)
+            .await
+            .context("Failed to fetch class hash from provider")?;
+        self.address_to_class_hash.insert(*address, class_hash);
+        Ok(class_hash)
     }
 
     /// Retrieves the class hash associated with the given contract address from the local cache, if it exists.
@@ -59,47 +79,22 @@ impl ContractsCache {
     pub async fn get_contract_class_by_class_hash(
         &mut self,
         class_hash: &Felt,
-    ) -> Result<Arc<ContractClass>> {
-        match self.class_hash_to_contract_class.entry(*class_hash) {
-            Entry::Occupied(entry) => Ok(Arc::clone(entry.get())),
-            Entry::Vacant(entry) => {
-                let contract_class = get_contract_class(*class_hash, &self.provider)
-                    .await
-                    .context("Failed to fetch contract class from provider")?;
-                let shared_class = Arc::new(contract_class);
-                Ok(Arc::clone(entry.insert(shared_class)))
-            }
+    ) -> Result<&ContractClass> {
+        if self.class_hash_to_contract_class.contains_key(class_hash) {
+            return Ok(self
+                .class_hash_to_contract_class
+                .get(class_hash)
+                .expect("Contract class should exist"));
         }
-    }
-}
 
-/// Registry for multicall execution, storing mappings from ids to contract addresses.
-pub struct ContractRegistry {
-    id_to_address: HashMap<String, Felt>,
-    pub cache: ContractsCache,
-}
+        let contract_class = get_contract_class(*class_hash, &self.provider)
+            .await
+            .context("Failed to fetch contract class from provider")?;
 
-impl ContractRegistry {
-    pub fn new(provider: &JsonRpcClient<HttpTransport>) -> Self {
-        ContractRegistry {
-            id_to_address: HashMap::new(),
-            cache: ContractsCache::new(provider),
-        }
-    }
-
-    /// Retrieves the contract address associated with the given id, if it exists.
-    pub fn get_address_by_id(&self, id: &str) -> Option<Felt> {
-        self.id_to_address.get(id).copied()
-    }
-
-    /// Inserts a mapping from the given id to the specified contract address.
-    /// Returns an error if the id already exists.
-    pub fn insert_new_id_to_address(&mut self, id: String, address: Felt) -> Result<()> {
-        if self.id_to_address.contains_key(&id) {
-            anyhow::bail!("Duplicate id found: {id}");
-        }
-        self.id_to_address.insert(id, address);
-        Ok(())
+        Ok(self
+            .class_hash_to_contract_class
+            .entry(*class_hash)
+            .or_insert(contract_class))
     }
 }
 

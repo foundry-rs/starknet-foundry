@@ -31,6 +31,7 @@ Available components:
 - `caller-address`
 - `call-type`
 - `call-result`
+- `gas`
 
 ## `--run-native`
 
@@ -47,7 +48,9 @@ Test filter must be a whole qualified test name e.g. `package_name::my_test` ins
 
 ## `--skip <SKIP>`
 
-Skips any tests whose name contains the given `SKIP` string
+Skips any tests whose name contains the given `SKIP` string.
+
+This flag may be used multiple times with different `SKIP` strings.
 
 ## `-x`, `--exit-first`
 
@@ -65,7 +68,7 @@ Run tests for all packages in the workspace.
 
 Number of fuzzer runs.
 
-## `-s`, `--fuzzer-seed` `<FUZZER_SEED>`
+## `-s`, `--fuzzer-seed` `<FUZZER_SEED>`; `SNFORGE_FUZZER_SEED` (environment variable)
 
 Seed for the fuzzer.
 
@@ -133,6 +136,11 @@ To learn more about fee calculation formula (and the impact of tracking sierra g
 ## `--gas-report`
 Display a table of L2 gas breakdown for each contract and selector.
 
+## `--max-threads <MAX_THREADS>`
+
+Maximum number of threads used for test execution, which corresponds to tests run in parallel. 
+Defaults to the number of available CPU cores.
+
 ## `--partition <INDEX>/<TOTAL>`
 
 Divides tests into `TOTAL` partitions and runs partition `INDEX` (1-based), e.g. 1/4.
@@ -149,3 +157,17 @@ Use Scarb dev profile.
 ## `-h`, `--help`
 
 Print help.
+
+## `SNFORGE_BACKTRACE` (environment variable)
+
+True values are `1`.
+
+When enabled, enables backtrace output on test failure. 
+See [Debugging](../../snforge-advanced-features/debugging.md).
+
+## `SNFORGE_DETERMINISTIC_OUTPUT` (environment variable)
+
+True values are `1`, `true`, `t`, `yes`, `y`, and `on`.
+False values are `0`, `false`, `f`, `no`, `n`, and `off`.
+
+When enabled, sorts test result outputs by test name, for reproducible outputs.

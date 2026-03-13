@@ -15,7 +15,7 @@ Hides user's private keys by default.
 
 ## Optional Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
 
-* [`json`]()
+* [`json`](../common.md#--json--j)
 
 ## `--display-private-keys`, `-p`
 Optional.

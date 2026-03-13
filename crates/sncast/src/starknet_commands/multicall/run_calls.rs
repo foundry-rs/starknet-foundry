@@ -2,6 +2,7 @@ use anyhow::{Context, Result, bail};
 use clap::{Args, Command, FromArgMatches};
 use sncast::{
     WaitForTx,
+    helpers::fee::FeeArgs,
     response::{
         errors::handle_starknet_command_error, multicall::run::MulticallRunResponse, ui::UI,
     },
@@ -11,25 +12,28 @@ use starknet_rust::{
     providers::{JsonRpcClient, jsonrpc::HttpTransport},
     signers::LocalWallet,
 };
+use starknet_types_core::felt::Felt;
 
 use crate::starknet_commands::{
     invoke::execute_calls,
     multicall::{
-        Multicall, contract_registry::ContractRegistry, deploy::MulticallDeploy,
+        MulticallMode, contract_registry::ContractRegistry, deploy::MulticallDeploy,
         invoke::MulticallInvoke,
     },
 };
 
+const ALLOWED_MULTICALL_COMMANDS: [&str; 2] = ["deploy", "invoke"];
+
 pub async fn run_calls(
     tokens: &[String],
-    multicall: &Multicall,
     provider: &JsonRpcClient<HttpTransport>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
+    fee_args: FeeArgs,
+    nonce: Option<Felt>,
     ui: &UI,
 ) -> Result<MulticallRunResponse> {
-    let allowed_commands = ["deploy".to_string(), "invoke".to_string()];
-    let command_groups = extract_commands_groups(tokens, "/", &allowed_commands);
+    let command_groups = extract_commands_groups(tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
 
     let mut contract_registry = ContractRegistry::new(provider);
     let mut calls = vec![];
@@ -44,13 +48,15 @@ pub async fn run_calls(
 
         match cmd_name.as_str() {
             "deploy" => {
-                let deploy = parse_args::<MulticallDeploy>(cmd_name, cmd_args)?;
-                let call = deploy.build_call(account, &mut contract_registry).await?;
+                let call = parse_args::<MulticallDeploy>(cmd_name, cmd_args)?
+                    .build_call(account, &mut contract_registry, MulticallMode::Cli)
+                    .await?;
                 calls.push(call);
             }
             "invoke" => {
-                let invoke = parse_args::<MulticallInvoke>(cmd_name, cmd_args)?;
-                let call = invoke.build_call(&mut contract_registry).await?;
+                let call = parse_args::<MulticallInvoke>(cmd_name, cmd_args)?
+                    .build_call(&mut contract_registry, MulticallMode::Cli)
+                    .await?;
                 calls.push(call);
             }
             _ => bail!("Unknown multicall command: '{cmd_name}'. Expected 'deploy' or 'invoke'."),
@@ -61,24 +67,17 @@ pub async fn run_calls(
         bail!("No valid multicall commands found to execute. Please check the provided commands.");
     }
 
-    execute_calls(
-        account,
-        calls,
-        multicall.fee_args.clone(),
-        multicall.nonce,
-        wait_config,
-        ui,
-    )
-    .await
-    .map(Into::into)
-    .map_err(handle_starknet_command_error)
+    execute_calls(account, calls, fee_args.clone(), nonce, wait_config, ui)
+        .await
+        .map(Into::into)
+        .map_err(handle_starknet_command_error)
 }
 
 /// Groups tokens into separate command groups based on the provided separator and allowed commands.
 fn extract_commands_groups(
     tokens: &[String],
     separator: &str,
-    commands: &[String],
+    commands: &[&str],
 ) -> Vec<Vec<String>> {
     let mut all_groups = Vec::new();
     let mut current_group = Vec::new();
@@ -87,7 +86,7 @@ fn extract_commands_groups(
         if token == separator {
             let next_index = i + 1;
             let is_at_end = next_index == tokens.len();
-            let next_is_command = !is_at_end && commands.contains(&tokens[next_index]);
+            let next_is_command = !is_at_end && commands.contains(&tokens[next_index].as_str());
 
             if is_at_end || next_is_command {
                 if !current_group.is_empty() {
@@ -145,8 +144,7 @@ mod tests {
             "--class-hash".to_string(),
             "0x456".to_string(),
         ];
-        let allowed_commands = vec!["deploy".to_string(), "invoke".to_string()];
-        let groups = extract_commands_groups(&tokens, "/", &allowed_commands);
+        let groups = extract_commands_groups(&tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
         assert_eq!(
             groups,
             vec![

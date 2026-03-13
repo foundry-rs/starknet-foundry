@@ -6,9 +6,21 @@ Deploy a contract to Starknet.
 * [`account`](./common.md#--account--a-account_name)
 
 ## `--class-hash, -g <CLASS_HASH>`
-Required.
+Required if `--contract-name` is not provided.
 
 Class hash of contract to deploy.
+
+## `--contract-name <CONTRACT_NAME>`
+Required if `--class-hash` is not provided.
+
+Name of the contract to deploy. Can be used instead of `--class-hash`. Requires `--package` if more than one package exists in a workspace.
+
+## `--package <NAME>`
+Optional.
+
+Name of the package that should be used.
+
+If supplied, a contract from this package will be used. Required if more than one package exists in a workspace.
 
 ## `--url, -u <RPC_URL>`
 Optional.
@@ -54,7 +66,7 @@ If passed, the salt will be additionally modified with an account address.
 ## `--max-fee, -m <MAX_FEE>`
 Optional.
 
-Maximum fee for the `deploy` denoted in FRI. Must be greater than zero. If provided, it is not possible to use any of the following fee related flags: `--l1-gas`, `--l1-data-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price`.
+Maximum fee for the `deploy` denoted in FRI. Must be greater than zero. If provided, it is not possible to use any of the following fee related flags: `--l1-gas`, `--l1-gas-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price`.
 
 ## `--l1-gas <L1_GAS>`
 Optional.
@@ -92,7 +104,7 @@ Conflicts with: [`--estimate-tip`](#--estimate-tip-estimate_tip)
 
 Tip for the transaction. When not provided, defaults to 0 unless [`--estimate-tip`](#--estimate-tip-estimate_tip) is used.
 
-## `--estimate-tip <ESTIMATE_TIP>`
+## `--estimate-tip`
 Optional.
 Conflicts with: [`--tip`](#--tip-tip)
 

@@ -13,6 +13,8 @@ Subsequent calls need to be separated with a `/` delimiter. For example: `sncast
 
 When using the file interface, the call types are specified in the `.toml` config file.
 
+Common arguments:
+
 ## `--url, -u <RPC_URL>`
 Optional.
 
@@ -32,7 +34,7 @@ Overrides network from `snfoundry.toml`.
 ## `--max-fee, -m <MAX_FEE>`
 Optional.
 
-Maximum fee for the `invoke` denoted in FRI. Must be greater than zero. If provided, it is not possible to use any of the following fee related flags: `--l1-gas`, `--l1-data-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price`.
+Maximum fee for the `invoke` denoted in FRI. Must be greater than zero. If provided, it is not possible to use any of the following fee related flags: `--l1-gas`, `--l1-data-gas`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas-price`, `--l1-data-gas-price`.
 
 ## `--l1-gas <L1_GAS>`
 Optional.

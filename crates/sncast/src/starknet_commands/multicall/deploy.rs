@@ -10,14 +10,16 @@ use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 
-use crate::starknet_commands::deploy::DeployCommonArgs;
+use crate::starknet_commands::deploy::{ContractIdentifier, DeployArguments, DeployCommonArgs};
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
-use crate::starknet_commands::multicall::invoke::replaced_calldata;
+use crate::starknet_commands::multicall::mode::MulticallMode;
+use crate::starknet_commands::multicall::replaced_arguments;
+use crate::starknet_commands::multicall::run::{DeployItem, parse_inputs};
 use crate::{Arguments, calldata_to_felts};
 
 #[derive(Args)]
 pub struct MulticallDeploy {
-    /// Optional identifier to reference this step in later steps
+    /// Optional identifier to reference this contract in later steps
     #[arg(long)]
     pub id: Option<String>,
 
@@ -26,15 +28,44 @@ pub struct MulticallDeploy {
 }
 
 impl MulticallDeploy {
+    pub fn new_from_item(item: &DeployItem, contracts: &ContractRegistry) -> Result<Self> {
+        let constructor_calldata = parse_inputs(&item.inputs, contracts)?;
+        let deploy = MulticallDeploy {
+            common: DeployCommonArgs {
+                contract_identifier: ContractIdentifier {
+                    class_hash: Some(item.class_hash),
+                    contract_name: None,
+                },
+                arguments: DeployArguments {
+                    constructor_calldata: Some(
+                        constructor_calldata
+                            .iter()
+                            .map(ToString::to_string)
+                            .collect(),
+                    ),
+                    arguments: None,
+                },
+                salt: item.salt,
+                unique: item.unique,
+                package: None,
+            },
+            id: item.id.clone(),
+        };
+
+        Ok(deploy)
+    }
+
     pub async fn build_call(
         &self,
         account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
         contract_registry: &mut ContractRegistry,
+        mode: MulticallMode,
     ) -> Result<Call> {
         let salt = extract_or_generate_salt(self.common.salt);
-        let constructor_arguments = replaced_calldata(
+        let constructor_arguments = replaced_arguments(
             &Arguments::from(self.common.arguments.clone()),
             contract_registry,
+            mode,
         )?;
 
         let constructor_selector = get_selector_from_name("constructor")?;
@@ -42,15 +73,14 @@ impl MulticallDeploy {
             .common
             .contract_identifier
             .class_hash
-            .context("Using deploy with multicall requires providing `--class-hash`")?;
+            .context("Using deploy with multicall requires providing class hash")?;
         let constructor_calldata = if let Some(raw_calldata) = &constructor_arguments.calldata {
             calldata_to_felts(raw_calldata)?
         } else {
             let contract_class = contract_registry
-                .cache
                 .get_contract_class_by_class_hash(&class_hash)
                 .await?;
-            constructor_arguments.try_into_calldata(&contract_class, &constructor_selector)?
+            constructor_arguments.try_into_calldata(contract_class, &constructor_selector)?
         };
 
         let mut calldata = vec![
@@ -69,13 +99,10 @@ impl MulticallDeploy {
         );
 
         if contract_registry
-            .cache
             .get_class_hash_by_address_local(&contract_address)
             .is_none()
         {
-            contract_registry
-                .cache
-                .insert_new_address(contract_address, class_hash)?;
+            contract_registry.insert_new_address(contract_address, class_hash)?;
         }
 
         // Store the contract address in the context with the provided id for later use in invoke calls

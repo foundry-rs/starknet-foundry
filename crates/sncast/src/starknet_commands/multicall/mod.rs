@@ -1,3 +1,4 @@
+use anyhow::Result;
 use clap::{Args, Subcommand};
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -7,11 +8,14 @@ use sncast::helpers::rpc::RpcArgs;
 pub mod contract_registry;
 pub mod deploy;
 pub mod invoke;
+pub mod mode;
 pub mod new;
 pub mod run;
 pub mod run_calls;
 
-use crate::{process_command_result, starknet_commands};
+use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
+use crate::starknet_commands::multicall::mode::MulticallMode;
+use crate::{Arguments, process_command_result, starknet_commands};
 use foundry_ui::Message;
 use new::New;
 use run::Run;
@@ -54,7 +58,7 @@ pub async fn multicall(
     config: CastConfig,
     ui: &UI,
     wait_config: WaitForTx,
-) -> anyhow::Result<()> {
+) -> Result<()> {
     #[derive(Serialize)]
     struct MulticallMessage {
         file_contents: String,
@@ -90,15 +94,23 @@ pub async fn multicall(
             Ok(())
         }
         starknet_commands::multicall::Commands::Run(run) => {
-            let provider = run.rpc.get_provider(&config, ui).await?;
+            let provider = multicall.rpc.get_provider(&config, ui).await?;
 
-            let account =
-                get_account(&config, &provider, &run.rpc, config.keystore.as_ref(), ui).await?;
+            let account = get_account(
+                &config,
+                &provider,
+                &multicall.rpc,
+                config.keystore.as_ref(),
+                ui,
+            )
+            .await?;
             let result = starknet_commands::multicall::run::run(
                 run.clone(),
                 &account,
                 &provider,
                 wait_config,
+                multicall.fee_args.clone(),
+                multicall.nonce,
                 ui,
             )
             .await;
@@ -121,10 +133,11 @@ pub async fn multicall(
 
             let result = starknet_commands::multicall::run_calls::run_calls(
                 tokens,
-                &multicall,
                 &provider,
                 &account,
                 wait_config,
+                multicall.fee_args.clone(),
+                multicall.nonce,
                 ui,
             )
             .await;
@@ -134,4 +147,40 @@ pub async fn multicall(
             Ok(())
         }
     }
+}
+
+/// Replaces arguments that reference user-defined ids with their corresponding values from the contract registry.
+///
+/// - For [`MulticallSource::File`], ids are referenced without a prefix (e.g. `deployed_contract`).
+/// - For [`MulticallSource::Cli`], ids are referenced with an `@` prefix (e.g. `@deployed_contract`).
+pub fn replaced_arguments(
+    arguments: &Arguments,
+    contract_registry: &ContractRegistry,
+    mode: MulticallMode,
+) -> Result<Arguments> {
+    Ok(match (&arguments.calldata, &arguments.arguments) {
+        (Some(calldata), None) => {
+            let replaced_calldata = calldata
+                .iter()
+                .map(|input| {
+                    if let Some(id_key) = mode.id_key(input) {
+                        Ok(contract_registry
+                            .get_address_by_id(id_key)
+                            .map_or_else(|| input.clone(), |a| a.to_string()))
+                    } else {
+                        // For CLI, values without `@` are treated as literals.
+                        Ok(input.clone())
+                    }
+                })
+                .collect::<Result<Vec<String>>>()?;
+            Arguments {
+                calldata: Some(replaced_calldata),
+                arguments: None,
+            }
+        }
+        (None, _) => arguments.clone(),
+        (Some(_), Some(_)) => anyhow::bail!(
+            "Invalid arguments: both `calldata` and `arguments` are set. Please provide only one."
+        ),
+    })
 }
