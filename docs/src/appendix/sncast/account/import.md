@@ -51,6 +51,15 @@ Optional.
 
 Account private key.
 
+## `--ledger-path <HD_PATH>`
+Optional.
+
+[EIP-2645 derivation path](../../../starknet/eip-2645-hd-paths.md) of the Ledger key that controls this account (e.g., `m//starknet'/sncast'/0'/0'/0`).
+
+When provided, the public key is read from the Ledger device instead of from `--private-key`.
+
+Cannot be used together with `--private-key` or `--private-key-file`.
+
 ## `--private-key-file <PRIVATE_KEY_FILE_PATH>`
 Optional. If neither `--private-key` nor `--private-key-file` is passed, the user will be prompted to enter the account private key.
 
