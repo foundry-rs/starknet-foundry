@@ -254,19 +254,8 @@ pub async fn run_for_package(
         )
         .await?;
 
-        match summary {
-            TestTargetRunResult::Ok(summary) => {
-                summaries.push(summary);
-            }
-            TestTargetRunResult::Interrupted(summary) => {
-                summaries.push(summary);
-                // Handle scenario for `--exit-first` flag.
-                // Because snforge runs tests for each crate one by one synchronously.
-                // In case of any test failure with the `--exit-first` flag enabled,
-                // it stops processing next tests in all packages.
-                break;
-            }
-        }
+        let (TestTargetRunResult::Ok(s) | TestTargetRunResult::Interrupted(s)) = summary;
+        summaries.push(s);
     }
 
     // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag

@@ -917,6 +917,7 @@ fn exit_first_stops_execution_after_one_failure_in_workspace() {
 
             Collected 6 test(s) from fibonacci package
             Running 4 test(s) from tests/
+            Running 2 test(s) from src/
             [FAIL] fibonacci_tests::abc::efg::failing_test
             Tests: [..] passed, 1 failed, 0 ignored, 0 filtered out
 
