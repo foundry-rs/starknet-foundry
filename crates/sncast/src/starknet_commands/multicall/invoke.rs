@@ -46,10 +46,10 @@ impl MulticallInvoke {
     pub async fn build_call(
         &self,
         contract_registry: &mut ContractRegistry,
-        source: MulticallMode,
+        mode: MulticallMode,
     ) -> Result<Call> {
         let selector = get_selector_from_name(&self.common.function)?;
-        let contract_address = if let Some(id_key) = source.id_key(&self.common.contract_address) {
+        let contract_address = if let Some(id_key) = mode.id_key(&self.common.contract_address) {
             contract_registry
                 .get_address_by_id(id_key)
                 .with_context(|| {
@@ -69,7 +69,7 @@ If you intended to reference an address from a previous step, use `@<id>` instea
                     )
                 })?
         };
-        let arguments = replaced_arguments(&self.common.arguments, contract_registry, source)?;
+        let arguments = replaced_arguments(&self.common.arguments, contract_registry, mode)?;
 
         let calldata = if let Some(raw_calldata) = &arguments.calldata {
             calldata_to_felts(raw_calldata)?

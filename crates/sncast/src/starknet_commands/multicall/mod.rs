@@ -156,14 +156,14 @@ pub async fn multicall(
 pub fn replaced_arguments(
     arguments: &Arguments,
     contract_registry: &ContractRegistry,
-    source: MulticallMode,
+    mode: MulticallMode,
 ) -> Result<Arguments> {
     Ok(match (&arguments.calldata, &arguments.arguments) {
         (Some(calldata), None) => {
             let replaced_calldata = calldata
                 .iter()
                 .map(|input| {
-                    if let Some(id_key) = source.id_key(input) {
+                    if let Some(id_key) = mode.id_key(input) {
                         Ok(contract_registry
                             .get_address_by_id(id_key)
                             .map(|a| a.to_string())

@@ -59,13 +59,13 @@ impl MulticallDeploy {
         &self,
         account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
         contract_registry: &mut ContractRegistry,
-        source: MulticallMode,
+        mode: MulticallMode,
     ) -> Result<Call> {
         let salt = extract_or_generate_salt(self.common.salt);
         let constructor_arguments = replaced_arguments(
             &Arguments::from(self.common.arguments.clone()),
             contract_registry,
-            source,
+            mode,
         )?;
 
         let constructor_selector = get_selector_from_name("constructor")?;
