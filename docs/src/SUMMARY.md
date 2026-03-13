@@ -149,6 +149,8 @@
     * [multicall](appendix/sncast/multicall/multicall.md)
         * [new](appendix/sncast/multicall/new.md)
         * [run](appendix/sncast/multicall/run.md)
+        * [deploy](appendix/sncast/multicall/deploy.md)
+        * [invoke](appendix/sncast/multicall/invoke.md)
     * [show-config](appendix/sncast/show_config.md)
     * [script](appendix/sncast/script/script.md)
         * [init](appendix/sncast/script/init.md)

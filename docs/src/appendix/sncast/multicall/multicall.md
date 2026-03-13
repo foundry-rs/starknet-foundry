@@ -5,6 +5,14 @@ Multicall has the following subcommands:
 * [`new`](./new.md)
 * [`run`](./run.md)
 
+When using the CLI-arguments interface, `multicall` supports the following call types:
+* [`deploy`](./deploy.md)
+* [`invoke`](./invoke.md)
+
+Subsequent calls need to be separated with a `/` delimiter. For example: `sncast multicall deploy ... / invoke ... / deploy ...`
+
+When using the file interface, the call types are specified in the `.toml` config file.
+
 Common arguments:
 
 ## `--url, -u <RPC_URL>`
@@ -26,14 +34,14 @@ Overrides network from `snfoundry.toml`.
 ## `--max-fee, -m <MAX_FEE>`
 Optional.
 
-Maximum fee for the `invoke` denoted in FRI. Must be greater than zero. If provided, it is not possible to use any of the following fee related flags: `--l1-gas`, `--l1-gas-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price`.
+Maximum fee for the `invoke` denoted in FRI. Must be greater than zero. If provided, it is not possible to use any of the following fee related flags: `--l1-gas`, `--l1--gas`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas-price`, `--l1-data-gas-price`.
 
 ## `--l1-gas <L1_GAS>`
 Optional.
 
 Maximum L1 gas for the `invoke` transaction. When not used, defaults to auto-estimation.
 
-## ` --l1-gas-price <l1_gas_price>`
+## `--l1-gas-price <l1_gas_price>`
 Optional.
 
 Maximum L1 gas unit price for the `invoke` transaction. When not used, defaults to auto-estimation.
@@ -69,3 +77,8 @@ Optional.
 Conflicts with: [`--tip`](#--tip-tip)
 
 If passed, an estimated tip will be added to pay for the transaction. The tip is estimated based on the current network conditions and added to the transaction fee.
+
+## `--nonce, -n <NONCE>`
+Optional.
+
+Nonce for transaction. If not provided, nonce will be set automatically.
