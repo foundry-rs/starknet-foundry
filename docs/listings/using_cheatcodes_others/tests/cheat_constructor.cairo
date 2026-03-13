@@ -9,7 +9,6 @@ fn call_and_invoke() {
     let contract = declare("CheatcodeChecker").unwrap().contract_class();
 
     // Precalculate the address to obtain the contract address before the constructor call (deploy)
-    // itself
     let contract_address = contract.precalculate_address(@array![]);
 
     // Change the block number and timestamp before the call to contract.deploy
