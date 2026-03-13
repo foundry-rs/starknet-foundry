@@ -1,5 +1,4 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, MULTICALL_CONFIGS_DIR, URL};
-use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::create_and_deploy_oz_account;
 use crate::helpers::runner::runner;
 use indoc::{formatdoc, indoc};
@@ -32,7 +31,6 @@ async fn test_happy_case(account: &str) {
         "--path",
         path,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
     let output = snapbox.assert();
@@ -75,7 +73,6 @@ async fn test_calldata_ids() {
         "--path",
         path,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -258,7 +255,6 @@ async fn test_numeric_inputs() {
         "--path",
         path,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
