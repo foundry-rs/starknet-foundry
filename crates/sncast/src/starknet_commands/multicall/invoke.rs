@@ -49,11 +49,14 @@ impl MulticallInvoke {
         source: MulticallSource,
     ) -> Result<Call> {
         let selector = get_selector_from_name(&self.common.function)?;
-        let is_id = self.common.contract_address.starts_with('@');
-        let contract_address = if is_id {
-            let id = self.common.contract_address.trim_start_matches('@');
-            contract_registry.get_address_by_id(id)
-                .with_context(|| format!("No contract address found for id: {id}. Ensure the referenced id is defined in a previous step."))?
+        let contract_address = if let Some(id_key) = source.id_key(&self.common.contract_address) {
+            contract_registry
+                .get_address_by_id(id_key)
+                .with_context(|| {
+                    format!(
+                        "No contract address found for id: {id_key}. Ensure the referenced id is defined in a previous step."
+                    )
+                })?
         } else {
             self.common
                 .contract_address

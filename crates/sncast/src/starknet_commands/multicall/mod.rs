@@ -54,10 +54,26 @@ pub enum Commands {
 /// Determines how multicall arguments reference ids (from a file or directly from CLI).
 #[derive(Copy, Clone, Debug)]
 pub enum MulticallSource {
-    /// Multicall defined in a `.toml` file .
+    /// Multicall defined in a `.toml` file.
     File,
     /// Multicall defined via CLI.
     Cli,
+}
+
+impl MulticallSource {
+    /// Returns the registry lookup key for a given raw value, if it should be treated as an id.
+    ///
+    /// - For [`MulticallSource::File`], every value is considered a potential id, so the input
+    ///   string is always returned.
+    /// - For [`MulticallSource::Cli`], only values starting with `@` are considered ids, and the
+    ///   returned key has the `@` prefix stripped.
+    #[must_use]
+    pub fn id_key<'a>(&self, value: &'a str) -> Option<&'a str> {
+        match self {
+            MulticallSource::File => Some(value),
+            MulticallSource::Cli => value.strip_prefix('@'),
+        }
+    }
 }
 
 pub async fn multicall(
@@ -169,20 +185,16 @@ pub fn replaced_arguments(
         (Some(calldata), None) => {
             let replaced_calldata = calldata
                 .iter()
-                .map(|input| match source {
-                    MulticallSource::File => Ok(contract_registry
-                        .get_address_by_id(input)
-                        .map(|a| a.to_string())
-                        .unwrap_or_else(|| input.clone())),
-                    MulticallSource::Cli => match input.strip_prefix('@') {
-                        Some(id) => contract_registry
-                            .get_address_by_id(id)
+                .map(|input| {
+                    if let Some(id_key) = source.id_key(input) {
+                        Ok(contract_registry
+                            .get_address_by_id(id_key)
                             .map(|a| a.to_string())
-                            .ok_or_else(|| anyhow::anyhow!(
-                                "No value found for id: {id}. Ensure the referenced id is defined in a previous call."
-                            )),
-                        None => Ok(input.clone()),
-                    },
+                            .unwrap_or_else(|| input.clone()))
+                    } else {
+                        // For CLI, values without `@` are treated as literals.
+                        Ok(input.clone())
+                    }
                 })
                 .collect::<Result<Vec<String>>>()?;
             Arguments {
