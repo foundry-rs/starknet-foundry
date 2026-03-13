@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -163,14 +163,9 @@ pub fn replaced_arguments(
             let replaced_calldata = calldata
                 .iter()
                 .map(|input| {
-                    if let Some(id_key) = mode.id_key(input) {
-                        Ok(contract_registry
-                            .get_address_by_id(id_key)
-                            .map_or_else(|| input.clone(), |a| a.to_string()))
-                    } else {
-                        // For CLI, values without `@` are treated as literals.
-                        Ok(input.clone())
-                    }
+                    Ok(resolve_contract_address(input, contract_registry, mode)
+                        .context("Failed to resolve contract address")?
+                        .to_string())
                 })
                 .collect::<Result<Vec<String>>>()?;
             Arguments {
@@ -183,4 +178,30 @@ pub fn replaced_arguments(
             "Invalid arguments: both `calldata` and `arguments` are set. Please provide only one."
         ),
     })
+}
+
+/// Resolves a contract address from a string that can either be a direct address
+/// or an id referencing a previously defined contract in the registry, depending on the mode.
+pub fn resolve_contract_address(
+    contract_address: &str,
+    contracts: &ContractRegistry,
+    mode: MulticallMode,
+) -> Result<Felt> {
+    let parse_fallback = || contract_address.parse::<Felt>().map_err(Into::into);
+
+    match mode {
+        MulticallMode::File => {
+            contracts
+            .get_address_by_id(contract_address)
+            .map_or_else(parse_fallback, Ok)
+        },
+        MulticallMode::Cli => match mode.id_key(contract_address) {
+            Some(id) => contracts.get_address_by_id(id).ok_or_else(|| {
+                anyhow::anyhow!(
+                    "No contract address found for id: {id}. Ensure the referenced id is defined in a previous step."
+                )
+            }),
+            None => parse_fallback(),
+        },
+    }
 }
