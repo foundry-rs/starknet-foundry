@@ -683,6 +683,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             Ok(())
         }
 
+        // TODO(#4214): Remove moved sncast commands
         Commands::TxStatus(tx_status) => {
             print_cmd_move_warning("tx-status", "get tx-status", ui);
             get::tx_status::tx_status(tx_status, config, ui).await
@@ -721,6 +722,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             Ok(())
         }
 
+        // TODO(#4214): Remove moved sncast commands
         Commands::Balance(balance) => {
             print_cmd_move_warning("balance", "get balance", ui);
             get::balance::balance(balance, config, ui).await
