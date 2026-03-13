@@ -2,9 +2,9 @@
 
 ## Overview
 
-Starknet Foundry `sncast` supports the inspection of transaction statuses on a given network with the `sncast tx-status` command.
+Starknet Foundry `sncast` supports the inspection of transaction statuses on a given network with the `sncast get tx-status` command.
 
-For a detailed CLI description, refer to the [tx-status command reference](../appendix/sncast/tx-status.md).
+For a detailed CLI description, refer to the [get tx-status command reference](../appendix/sncast/get/tx-status.md).
 
 ## Usage Examples
 
@@ -14,7 +14,7 @@ You can track the details about the execution and finality status of a transacti
 
 ```shell
 $ sncast \
- tx-status \
+ get tx-status \
  0x07d2067cd7675f88493a9d773b456c8d941457ecc2f6201d2fe6b0607daadfd1 \
  --network sepolia
 ```
