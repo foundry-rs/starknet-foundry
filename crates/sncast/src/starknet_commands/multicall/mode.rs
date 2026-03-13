@@ -15,7 +15,7 @@ impl MulticallMode {
     /// - For [`MulticallSource::Cli`], only values starting with `@` are considered ids, and the
     ///   returned key has the `@` prefix stripped.
     #[must_use]
-    pub fn id_key<'a>(self, value: &'a str) -> Option<&'a str> {
+    pub fn id_key(self, value: &str) -> Option<&str> {
         match self {
             MulticallMode::File => Some(value),
             MulticallMode::Cli => value.strip_prefix('@'),
