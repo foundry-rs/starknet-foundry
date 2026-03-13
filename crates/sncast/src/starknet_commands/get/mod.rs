@@ -2,6 +2,7 @@ use clap::{Args, Subcommand};
 use sncast::helpers::configuration::CastConfig;
 use sncast::response::ui::UI;
 
+pub mod balance;
 pub mod tx_status;
 
 #[derive(Args)]
@@ -15,11 +16,16 @@ pub struct Get {
 pub enum GetCommands {
     /// Get the status of a transaction
     TxStatus(tx_status::TxStatus),
+
+    /// Fetch balance of the account for specified token
+    Balance(balance::Balance),
 }
 
 pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<()> {
     match get.command {
         GetCommands::TxStatus(status) => tx_status::tx_status(status, config, ui).await?,
+
+        GetCommands::Balance(balance) => balance::balance(balance, config, ui).await?,
     }
 
     Ok(())

@@ -1,10 +1,10 @@
 use std::str::FromStr;
 
-use crate::starknet_commands::balance::Balance;
 use crate::starknet_commands::declare::declare;
 use crate::starknet_commands::declare_from::{ContractSource, DeclareFrom};
 use crate::starknet_commands::deploy::{DeployArguments, DeployCommonArgs};
 use crate::starknet_commands::get::Get;
+use crate::starknet_commands::get::balance::Balance;
 use crate::starknet_commands::invoke::InvokeCommonArgs;
 use crate::starknet_commands::script::run_script_command;
 use crate::starknet_commands::utils::{self, Utils};
@@ -44,7 +44,6 @@ use sncast::{
     get_contract_class,
 };
 use starknet_commands::verify::Verify;
-use starknet_rust::accounts::Account;
 use starknet_rust::core::types::ContractClass;
 use starknet_rust::core::types::contract::{AbiEntry, SierraClass};
 use starknet_rust::core::utils::get_selector_from_name;
@@ -723,22 +722,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         }
 
         Commands::Balance(balance) => {
-            let provider = balance.rpc.get_provider(&config, ui).await?;
-            let account = get_account(
-                &config,
-                &provider,
-                &balance.rpc,
-                config.keystore.as_ref(),
-                ui,
-            )
-            .await?;
-
-            let result =
-                starknet_commands::balance::balance(account.address(), &provider, &balance).await?;
-
-            process_command_result("balance", Ok(result), ui, None);
-
-            Ok(())
+            print_cmd_move_warning("balance", "get balance", ui);
+            get::balance::balance(balance, config, ui).await
         }
 
         Commands::Script(_) => unreachable!(),

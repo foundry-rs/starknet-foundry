@@ -17,6 +17,7 @@ pub async fn happy_case() {
         accounts_json_path.as_str(),
         "--account",
         "balance-test",
+        "get",
         "balance",
         "--url",
         URL,
@@ -25,6 +26,30 @@ pub async fn happy_case() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_eq(indoc! {r"
+        Balance: 109394843313476728397 fri
+    "});
+}
+
+#[tokio::test]
+pub async fn happy_case_old_command() {
+    let tempdir = tempdir().unwrap();
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "balance-test",
+        "balance",
+        "--url",
+        URL,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().stdout_eq(indoc! {r"
+        [WARNING] `sncast balance` has moved to `sncast get balance`. `sncast balance` will be removed in the future.
+
         Balance: 109394843313476728397 fri
     "});
 }
@@ -40,6 +65,7 @@ pub async fn happy_case_json() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
+        "get",
         "balance",
         "--url",
         URL,
@@ -48,7 +74,7 @@ pub async fn happy_case_json() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_eq(indoc! {r#"
-        {"balance":"[..]","command":"balance","token_unit":"fri","type":"response"}
+        {"balance":"[..]","command":"get balance","token_unit":"fri","type":"response"}
     "#});
 }
 
@@ -66,6 +92,7 @@ pub async fn happy_case_with_token(token: &Token) {
         accounts_json_path.as_str(),
         "--account",
         "user1",
+        "get",
         "balance",
         "--token",
         &token,
@@ -80,6 +107,7 @@ pub async fn happy_case_with_token(token: &Token) {
     "});
 }
 
+
 #[tokio::test]
 pub async fn happy_case_with_block_id() {
     let tempdir = tempdir().unwrap();
@@ -90,6 +118,7 @@ pub async fn happy_case_with_block_id() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
+        "get",
         "balance",
         "--block-id",
         "latest",
@@ -114,6 +143,7 @@ pub async fn invalid_token() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
+        "get",
         "balance",
         "--token",
         "xyz",
@@ -142,6 +172,7 @@ pub async fn happy_case_with_token_address() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
+        "get",
         "balance",
         "--token-address",
         strk_address,
@@ -167,6 +198,7 @@ pub async fn happy_case_json_with_token_address() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
+        "get",
         "balance",
         "--url",
         URL,
@@ -193,6 +225,7 @@ pub async fn nonexistent_token_address() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
+        "get",
         "balance",
         "--token-address",
         "0x123",

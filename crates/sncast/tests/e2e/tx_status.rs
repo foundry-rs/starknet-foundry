@@ -50,7 +50,6 @@ async fn test_succeeded() {
     "});
 }
 
-
 #[tokio::test]
 async fn test_reverted() {
     let args = vec!["get", "tx-status", REVERTED_TX_HASH, "--url", URL];
