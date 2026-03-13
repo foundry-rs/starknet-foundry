@@ -685,10 +685,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         }
 
         Commands::TxStatus(tx_status) => {
-            ui.print_warning(WarningMessage::new(
-            "`sncast tx-status` has moved to `sncast get tx-status`. `sncast tx-status` will be removed in the future.".to_string()));
-            ui.print_blank_line();
-
+            print_cmd_move_warning("tx-status", "get tx-status", ui);
             get::tx_status::tx_status(tx_status, config, ui).await
         }
 
@@ -793,4 +790,11 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
 
     config_with_cli(&mut combined_config, cli);
     Ok(combined_config)
+}
+
+fn print_cmd_move_warning(command_name: &str, new_command_name: &str, ui: &UI) {
+    ui.print_warning(WarningMessage::new(format!(
+        "`sncast {command_name}` has moved to `sncast {new_command_name}`. `sncast {command_name}` will be removed in the future."
+    )));
+    ui.print_blank_line();
 }
