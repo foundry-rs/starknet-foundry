@@ -12,6 +12,7 @@ use starknet_types_core::felt::Felt;
 
 use crate::starknet_commands::deploy::{ContractIdentifier, DeployArguments, DeployCommonArgs};
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
+use crate::starknet_commands::multicall::mode::MulticallMode;
 use crate::starknet_commands::multicall::replaced_arguments;
 use crate::starknet_commands::multicall::run::{DeployItem, parse_inputs};
 use crate::{Arguments, calldata_to_felts};
@@ -58,11 +59,13 @@ impl MulticallDeploy {
         &self,
         account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
         contract_registry: &mut ContractRegistry,
+        mode: MulticallMode,
     ) -> Result<Call> {
         let salt = extract_or_generate_salt(self.common.salt);
         let constructor_arguments = replaced_arguments(
             &Arguments::from(self.common.arguments.clone()),
             contract_registry,
+            mode,
         )?;
 
         let constructor_selector = get_selector_from_name("constructor")?;
