@@ -107,7 +107,6 @@ pub async fn happy_case_with_token(token: &Token) {
     "});
 }
 
-
 #[tokio::test]
 pub async fn happy_case_with_block_id() {
     let tempdir = tempdir().unwrap();
