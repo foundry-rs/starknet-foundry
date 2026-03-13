@@ -92,15 +92,23 @@ pub async fn multicall(
             Ok(())
         }
         starknet_commands::multicall::Commands::Run(run) => {
-            let provider = run.rpc.get_provider(&config, ui).await?;
+            let provider = multicall.rpc.get_provider(&config, ui).await?;
 
-            let account =
-                get_account(&config, &provider, &run.rpc, config.keystore.as_ref(), ui).await?;
+            let account = get_account(
+                &config,
+                &provider,
+                &multicall.rpc,
+                config.keystore.as_ref(),
+                ui,
+            )
+            .await?;
             let result = starknet_commands::multicall::run::run(
                 run.clone(),
                 &account,
                 &provider,
                 wait_config,
+                multicall.fee_args.clone(),
+                multicall.nonce,
                 ui,
             )
             .await;
@@ -123,10 +131,11 @@ pub async fn multicall(
 
             let result = starknet_commands::multicall::run_calls::run_calls(
                 tokens,
-                &multicall,
                 &provider,
                 &account,
                 wait_config,
+                multicall.fee_args.clone(),
+                multicall.nonce,
                 ui,
             )
             .await;

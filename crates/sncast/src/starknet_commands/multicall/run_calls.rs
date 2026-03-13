@@ -2,6 +2,7 @@ use anyhow::{Context, Result, bail};
 use clap::{Args, Command, FromArgMatches};
 use sncast::{
     WaitForTx,
+    helpers::fee::FeeArgs,
     response::{
         errors::handle_starknet_command_error, multicall::run::MulticallRunResponse, ui::UI,
     },
@@ -11,12 +12,12 @@ use starknet_rust::{
     providers::{JsonRpcClient, jsonrpc::HttpTransport},
     signers::LocalWallet,
 };
+use starknet_types_core::felt::Felt;
 
 use crate::starknet_commands::{
     invoke::execute_calls,
     multicall::{
-        Multicall, contract_registry::ContractRegistry, deploy::MulticallDeploy,
-        invoke::MulticallInvoke,
+        contract_registry::ContractRegistry, deploy::MulticallDeploy, invoke::MulticallInvoke,
     },
 };
 
@@ -24,10 +25,11 @@ const ALLOWED_MULTICALL_COMMANDS: [&str; 2] = ["deploy", "invoke"];
 
 pub async fn run_calls(
     tokens: &[String],
-    multicall: &Multicall,
     provider: &JsonRpcClient<HttpTransport>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
+    fee_args: FeeArgs,
+    nonce: Option<Felt>,
     ui: &UI,
 ) -> Result<MulticallRunResponse> {
     let command_groups = extract_commands_groups(tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
@@ -64,17 +66,10 @@ pub async fn run_calls(
         bail!("No valid multicall commands found to execute. Please check the provided commands.");
     }
 
-    execute_calls(
-        account,
-        calls,
-        multicall.fee_args.clone(),
-        multicall.nonce,
-        wait_config,
-        ui,
-    )
-    .await
-    .map(Into::into)
-    .map_err(handle_starknet_command_error)
+    execute_calls(account, calls, fee_args.clone(), nonce, wait_config, ui)
+        .await
+        .map(Into::into)
+        .map_err(handle_starknet_command_error)
 }
 
 /// Groups tokens into separate command groups based on the provided separator and allowed commands.
