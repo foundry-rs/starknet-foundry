@@ -5,7 +5,7 @@ Multicall has the following subcommands:
 * [`new`](./new.md)
 * [`run`](./run.md)
 
-Common arguments for `run` subcommand:
+Common arguments:
 
 ## `--url, -u <RPC_URL>`
 Optional.
