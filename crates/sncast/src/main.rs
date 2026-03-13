@@ -4,21 +4,23 @@ use crate::starknet_commands::balance::Balance;
 use crate::starknet_commands::declare::declare;
 use crate::starknet_commands::declare_from::{ContractSource, DeclareFrom};
 use crate::starknet_commands::deploy::{DeployArguments, DeployCommonArgs};
+use crate::starknet_commands::get::Get;
 use crate::starknet_commands::invoke::InvokeCommonArgs;
-use crate::starknet_commands::multicall;
 use crate::starknet_commands::script::run_script_command;
 use crate::starknet_commands::utils::{self, Utils};
 use crate::starknet_commands::{
     account, account::Account as AccountCommand, call::Call, declare::Declare, deploy::Deploy,
-    invoke::Invoke, multicall::Multicall, script::Script, show_config::ShowConfig,
-    tx_status::TxStatus,
+    get::tx_status::TxStatus, invoke::Invoke, multicall::Multicall, script::Script,
+    show_config::ShowConfig,
 };
+use crate::starknet_commands::{get, multicall};
 use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
 use configuration::load_config;
 use conversions::IntoConv;
 use data_transformer::transform;
+use foundry_ui::components::warning::WarningMessage;
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
@@ -126,6 +128,7 @@ struct Cli {
 impl Cli {
     fn command_name(&self) -> String {
         match self.command {
+            Commands::Get(_) => "get",
             Commands::Declare(_) => "declare",
             Commands::DeclareFrom(_) => "declare-from",
             Commands::Deploy(_) => "deploy",
@@ -147,6 +150,9 @@ impl Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Get various data from the network
+    Get(Get),
+
     /// Declare a contract
     Declare(Declare),
 
@@ -643,6 +649,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             Ok(())
         }
 
+        Commands::Get(get) => get::get(get, config, ui).await,
+
         Commands::Utils(utils) => {
             utils::utils(
                 utils,
@@ -677,15 +685,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         }
 
         Commands::TxStatus(tx_status) => {
-            let provider = tx_status.rpc.get_provider(&config, ui).await?;
+            ui.print_warning(WarningMessage::new(
+            "`sncast tx-status` has moved to `sncast get tx-status`. `sncast tx-status` will be removed in the future.".to_string()));
+            ui.print_blank_line();
 
-            let result =
-                starknet_commands::tx_status::tx_status(&provider, tx_status.transaction_hash)
-                    .await
-                    .context("Failed to get transaction status");
-
-            process_command_result("tx-status", result, ui, None);
-            Ok(())
+            get::tx_status::tx_status(tx_status, config, ui).await
         }
 
         Commands::Verify(verify) => {
