@@ -51,6 +51,15 @@ pub enum Commands {
     Calls(Vec<String>),
 }
 
+/// Determines how multicall arguments reference ids (from a file or directly from CLI).
+#[derive(Copy, Clone, Debug)]
+pub enum MulticallSource {
+    /// Multicall defined in a `.toml` file .
+    File,
+    /// Multicall defined via CLI.
+    Cli,
+}
+
 pub async fn multicall(
     multicall: Multicall,
     config: CastConfig,
@@ -148,20 +157,32 @@ pub async fn multicall(
 }
 
 /// Replaces arguments that reference user-defined ids with their corresponding values from the contract registry.
+///
+/// - For [`MulticallSource::File`], ids are referenced without a prefix (e.g. `deployed_contract`).
+/// - For [`MulticallSource::Cli`], ids are referenced with an `@` prefix (e.g. `@deployed_contract`).
 pub fn replaced_arguments(
     arguments: &Arguments,
     contract_registry: &ContractRegistry,
+    source: MulticallSource,
 ) -> Result<Arguments> {
     Ok(match (&arguments.calldata, &arguments.arguments) {
         (Some(calldata), None) => {
             let replaced_calldata = calldata
                 .iter()
-                .map(|input| {
-                    if let Some(address) = contract_registry.get_address_by_id(input) {
-                        Ok(address.to_string())
-                    } else {
-                        Ok(input.clone())
-                    }
+                .map(|input| match source {
+                    MulticallSource::File => Ok(contract_registry
+                        .get_address_by_id(input)
+                        .map(|a| a.to_string())
+                        .unwrap_or_else(|| input.clone())),
+                    MulticallSource::Cli => match input.strip_prefix('@') {
+                        Some(id) => contract_registry
+                            .get_address_by_id(id)
+                            .map(|a| a.to_string())
+                            .ok_or_else(|| anyhow::anyhow!(
+                                "No value found for id: {id}. Ensure the referenced id is defined in a previous call."
+                            )),
+                        None => Ok(input.clone()),
+                    },
                 })
                 .collect::<Result<Vec<String>>>()?;
             Arguments {

@@ -7,6 +7,7 @@ use crate::{
     starknet_commands::{
         invoke::InvokeCommonArgs,
         multicall::{
+            MulticallSource,
             contract_registry::ContractRegistry,
             replaced_arguments,
             run::{InvokeItem, parse_inputs},
@@ -42,7 +43,11 @@ impl MulticallInvoke {
 
         Ok(invoke)
     }
-    pub async fn build_call(&self, contract_registry: &mut ContractRegistry) -> Result<Call> {
+    pub async fn build_call(
+        &self,
+        contract_registry: &mut ContractRegistry,
+        source: MulticallSource,
+    ) -> Result<Call> {
         let selector = get_selector_from_name(&self.common.function)?;
         let is_id = self.common.contract_address.starts_with('@');
         let contract_address = if is_id {
@@ -61,7 +66,7 @@ If you intended to reference an address from a previous step, use `@<id>` instea
                     )
                 })?
         };
-        let arguments = replaced_arguments(&self.common.arguments, contract_registry)?;
+        let arguments = replaced_arguments(&self.common.arguments, contract_registry, source)?;
 
         let calldata = if let Some(raw_calldata) = &arguments.calldata {
             calldata_to_felts(raw_calldata)?

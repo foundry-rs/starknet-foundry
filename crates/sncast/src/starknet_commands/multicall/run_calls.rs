@@ -17,7 +17,8 @@ use starknet_types_core::felt::Felt;
 use crate::starknet_commands::{
     invoke::execute_calls,
     multicall::{
-        contract_registry::ContractRegistry, deploy::MulticallDeploy, invoke::MulticallInvoke,
+        MulticallSource, contract_registry::ContractRegistry, deploy::MulticallDeploy,
+        invoke::MulticallInvoke,
     },
 };
 
@@ -48,13 +49,13 @@ pub async fn run_calls(
         match cmd_name.as_str() {
             "deploy" => {
                 let call = parse_args::<MulticallDeploy>(cmd_name, cmd_args)?
-                    .build_call(account, &mut contract_registry)
+                    .build_call(account, &mut contract_registry, MulticallSource::Cli)
                     .await?;
                 calls.push(call);
             }
             "invoke" => {
                 let call = parse_args::<MulticallInvoke>(cmd_name, cmd_args)?
-                    .build_call(&mut contract_registry)
+                    .build_call(&mut contract_registry, MulticallSource::Cli)
                     .await?;
                 calls.push(call);
             }
