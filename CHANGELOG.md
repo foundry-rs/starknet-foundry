@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bug with invalid function name mappings for functions with `#[test]` attribute
 
+### Cast
+
+#### Changed
+
+- Moved RPC and fee arguments (e.g., `--url`) from the `run` subcommand to the parent `multicall` command
+
 ## [0.57.0] - 2026-02-24
 
 ### Forge
