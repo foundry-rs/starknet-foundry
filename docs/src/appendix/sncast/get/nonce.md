@@ -1,4 +1,4 @@
-# `nonce`
+# `get nonce`
 
 Get the nonce of the specified contract.
 
