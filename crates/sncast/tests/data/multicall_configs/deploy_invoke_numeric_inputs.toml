@@ -13,6 +13,6 @@ inputs = [0x123, 234]
 
 [[call]]
 call_type = "invoke"
-contract_address = "map_contract"
+contract_address = "@map_contract"
 function = "put"
 inputs = [0x123, 9223372036854775807]
