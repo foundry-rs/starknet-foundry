@@ -527,12 +527,6 @@ async fn test_happy_case_with_already_declared() {
         .current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
-    let stderr = output.as_stderr();
-    println!("====\n{stderr}\n====");
-
-    let stdout = output.as_stdout();
-    println!("====\n{stdout}\n====");
-
     assert_stdout_contains(
         output,
         indoc! {
