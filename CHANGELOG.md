@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `sncast balance` and `sncast tx-status` commands have been moved under `sncast get` subcommand (`sncast get balance`, `sncast get tx-status`). The old commands still work, but will be removed in the future.
+- Referencing an id in multicall configuration files now requires the `@` prefix.
 
 ## [0.57.0] - 2026-02-24
 
