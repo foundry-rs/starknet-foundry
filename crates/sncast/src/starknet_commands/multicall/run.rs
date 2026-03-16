@@ -78,10 +78,9 @@ pub async fn run(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     provider: &JsonRpcClient<HttpTransport>,
     wait_config: WaitForTx,
-    fee_args: FeeArgs,
     ui: &UI,
 ) -> Result<MulticallRunResponse> {
-    let fee_args = fee_args.clone();
+    let fee_args = run.fee_args.clone();
 
     let contents = std::fs::read_to_string(&run.path)?;
     let multicall: MulticallFile =
