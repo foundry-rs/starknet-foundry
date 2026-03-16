@@ -38,7 +38,7 @@ pub struct Multicall {
 pub enum Commands {
     Run(Box<Run>),
     New(New),
-    Execute(Execute),
+    Execute(Box<Execute>),
 }
 
 pub async fn multicall(
@@ -113,7 +113,7 @@ pub async fn multicall(
             .await?;
 
             let result = starknet_commands::multicall::execute::execute(
-                execute.clone(),
+                *execute.clone(),
                 &account,
                 &provider,
                 wait_config,
