@@ -48,7 +48,7 @@ pub async fn happy_case_old_command() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_eq(indoc! {r"
-        [WARNING] `sncast balance` has moved to `sncast get balance`. `sncast balance` will be removed in the future.
+        [WARNING] `sncast balance` has moved to `sncast get balance`. `sncast balance` will be removed in the next version.
 
         Balance: 109394843313476728397 fri
     "});

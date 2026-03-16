@@ -28,7 +28,7 @@ async fn test_succeeded_old_command() {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r"
-        [WARNING] `sncast tx-status` has moved to `sncast get tx-status`. `sncast tx-status` will be removed in the future.
+        [WARNING] `sncast tx-status` has moved to `sncast get tx-status`. `sncast tx-status` will be removed in the next version.
 
         Success: Transaction status retrieved
         
