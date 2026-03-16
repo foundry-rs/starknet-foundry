@@ -617,8 +617,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let contract_address = contract_address
-                .parse()
+            let contract_address = Felt::from_str(&contract_address)
                 .context("Failed to parse contract address: expected a hex or decimal string")?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
