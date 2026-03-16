@@ -100,10 +100,20 @@ async fn test_deploy_account_transaction() {
             Success: Transaction found
 
             Type:[..]DEPLOY ACCOUNT
-            Version:[..]
-            Transaction Hash:[..]
-            Nonce:[..]
-            Class Hash:[..]
+            Version:[..]3
+            Transaction Hash:[..]0x[..]
+            Nonce:[..]0x[..]
+            Class Hash:[..]0x[..]
+            Contract Address Salt:[..]0x[..]
+            Constructor Calldata:[..][0x[..]]
+            Resource Bounds L1 Gas:[..]max_amount=0x[..], max_price_per_unit=0x[..]
+            Resource Bounds L1 Data Gas:[..]max_amount=0x[..], max_price_per_unit=0x[..]
+            Resource Bounds L2 Gas:[..]max_amount=0x[..], max_price_per_unit=0x[..]
+            Tip:[..]
+            Paymaster Data:[..][]
+            Nonce DA Mode:[..]L1
+            Fee DA Mode:[..]L1
+            Signature:[..][0x[..]]
         "},
     );
 }
