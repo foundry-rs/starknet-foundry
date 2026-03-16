@@ -20,7 +20,7 @@ impl ContractAddressIdentifier {
         match self.0.strip_prefix(ID_PREFIX) {
             Some(id) => contracts
                 .get_address_by_id(id)
-                .context(format!("Failed to find contract address for id: {}", id)),
+                .context(format!("Failed to find contract address for id: {id}")),
             None => self.as_felt(),
         }
     }
