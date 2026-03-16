@@ -3,6 +3,7 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::response::ui::UI;
 
 pub mod balance;
+pub mod class_hash_at;
 pub mod nonce;
 pub mod transaction;
 pub mod tx_status;
@@ -27,6 +28,9 @@ pub enum GetCommands {
 
     /// Get nonce of a contract
     Nonce(nonce::Nonce),
+
+    /// Get class hash of a contract at a given address
+    ClassHashAt(class_hash_at::ClassHashAt),
 }
 
 pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<()> {
@@ -38,6 +42,10 @@ pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<()> {
         GetCommands::Balance(balance) => balance::balance(balance, config, ui).await?,
 
         GetCommands::Nonce(nonce) => nonce::nonce(nonce, config, ui).await?,
+
+        GetCommands::ClassHashAt(args) => {
+            class_hash_at::class_hash_at(args, config, ui).await?;
+        }
     }
 
     Ok(())
