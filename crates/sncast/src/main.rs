@@ -781,7 +781,7 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
 
 fn print_cmd_move_warning(command_name: &str, new_command_name: &str, ui: &UI) {
     ui.print_warning(WarningMessage::new(format!(
-        "`sncast {command_name}` has moved to `sncast {new_command_name}`. `sncast {command_name}` will be removed in the future."
+        "`sncast {command_name}` has moved to `sncast {new_command_name}`. `sncast {command_name}` will be removed in the next version."
     )));
     ui.print_blank_line();
 }
