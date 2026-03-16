@@ -8,15 +8,15 @@ use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 const ID_PREFIX: char = '@';
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct ContractAddressIdentifier(String);
+pub struct FeltOrId(String);
 
-impl ContractAddressIdentifier {
+impl FeltOrId {
     pub fn new(s: String) -> Self {
-        ContractAddressIdentifier(s)
+        FeltOrId(s)
     }
 }
 
-impl ContractAddressIdentifier {
+impl FeltOrId {
     pub fn as_felt(&self) -> Result<Felt> {
         Felt::from_str(&self.0)
             .context("Failed to parse contract address: expected a hex or decimal string")
@@ -32,10 +32,10 @@ impl ContractAddressIdentifier {
     }
 }
 
-impl std::str::FromStr for ContractAddressIdentifier {
+impl std::str::FromStr for FeltOrId {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(ContractAddressIdentifier(s.to_owned()))
+        Ok(FeltOrId(s.to_owned()))
     }
 }
