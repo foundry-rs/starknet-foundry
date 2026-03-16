@@ -17,8 +17,7 @@ use starknet_types_core::felt::Felt;
 use crate::starknet_commands::{
     invoke::execute_calls,
     multicall::{
-        MulticallMode, contract_registry::ContractRegistry, deploy::MulticallDeploy,
-        invoke::MulticallInvoke,
+        contract_registry::ContractRegistry, deploy::MulticallDeploy, invoke::MulticallInvoke,
     },
 };
 
@@ -65,7 +64,7 @@ pub async fn execute(
         match cmd_name.as_str() {
             "deploy" => {
                 let call = parse_args::<MulticallDeploy>(cmd_name, cmd_args)?
-                    .build_call(account, &mut contract_registry, MulticallMode::Cli)
+                    .build_call(account, &mut contract_registry)
                     .await?;
                 calls.push(call);
             }
@@ -75,7 +74,11 @@ pub async fn execute(
                     .await?;
                 calls.push(call);
             }
-            _ => bail!("Unknown multicall command: '{cmd_name}'. Expected 'deploy' or 'invoke'."),
+            _ => bail!(
+                "Unknown multicall command: '{}'. Possible command: {}",
+                cmd_name,
+                ALLOWED_MULTICALL_COMMANDS.join(", ")
+            ),
         }
     }
 

@@ -1,7 +1,6 @@
 use std::str::FromStr;
 
 use crate::starknet_commands::invoke::execute_calls;
-use crate::starknet_commands::multicall::MulticallMode;
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::deploy::MulticallDeploy;
 use crate::starknet_commands::multicall::invoke::MulticallInvoke;
@@ -95,7 +94,7 @@ pub async fn run(
         match call {
             CallItem::Deploy(item) => {
                 let call = MulticallDeploy::new_from_item(&item, &contracts)?
-                    .build_call(account, &mut contracts, MulticallMode::File)
+                    .build_call(account, &mut contracts)
                     .await?;
                 parsed_calls.push(call);
             }

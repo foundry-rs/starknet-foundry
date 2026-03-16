@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::{Args, Subcommand};
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -7,13 +7,12 @@ pub mod contract_registry;
 pub mod deploy;
 pub mod execute;
 pub mod invoke;
-pub mod mode;
 pub mod new;
 pub mod run;
 
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::execute::Execute;
-use crate::starknet_commands::multicall::mode::MulticallMode;
+use crate::starknet_commands::utils::contract_address_identifier::ContractAddressIdentifier;
 use crate::{Arguments, process_command_result, starknet_commands};
 use foundry_ui::Message;
 use new::New;
@@ -129,23 +128,15 @@ pub async fn multicall(
 }
 
 /// Replaces arguments that reference user-defined ids with their corresponding values from the contract registry.
-pub fn replaced_arguments(
-    arguments: &Arguments,
-    contract_registry: &ContractRegistry,
-    mode: MulticallMode,
-) -> Result<Arguments> {
+pub fn replaced_arguments(arguments: &Arguments, conracts: &ContractRegistry) -> Result<Arguments> {
     Ok(match (&arguments.calldata, &arguments.arguments) {
         (Some(calldata), None) => {
             let replaced_calldata = calldata
                 .iter()
-                .map(|input| {
-                    Ok(resolve_contract_address(input, contract_registry, mode)
-                        .context("Failed to resolve contract address")?
-                        .to_string())
-                })
-                .collect::<Result<Vec<String>>>()?;
+                .map(|input| ContractAddressIdentifier::new(input.clone()).as_id(conracts))
+                .collect::<Result<Vec<Felt>>>()?;
             Arguments {
-                calldata: Some(replaced_calldata),
+                calldata: Some(replaced_calldata.iter().map(ToString::to_string).collect()),
                 arguments: None,
             }
         }
@@ -154,30 +145,4 @@ pub fn replaced_arguments(
             "Invalid arguments: both `calldata` and `arguments` are set. Please provide only one."
         ),
     })
-}
-
-/// Resolves a contract address from a string that can either be a direct address
-/// or an id referencing a previously defined contract in the registry, depending on the mode.
-pub fn resolve_contract_address(
-    contract_address: &str,
-    contracts: &ContractRegistry,
-    mode: MulticallMode,
-) -> Result<Felt> {
-    let parse_fallback = || contract_address.parse::<Felt>().map_err(Into::into);
-
-    match mode {
-        MulticallMode::File => {
-            contracts
-            .get_address_by_id(contract_address)
-            .map_or_else(parse_fallback, Ok)
-        },
-        MulticallMode::Cli => match mode.id_key(contract_address) {
-            Some(id) => contracts.get_address_by_id(id).ok_or_else(|| {
-                anyhow::anyhow!(
-                    "No contract address found for id: {id}. Ensure the referenced id is defined in a previous step."
-                )
-            }),
-            None => parse_fallback(),
-        },
-    }
 }

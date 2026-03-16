@@ -8,7 +8,6 @@ use crate::{
         invoke::InvokeCommonArgs,
         multicall::{
             contract_registry::ContractRegistry,
-            mode::MulticallMode,
             replaced_arguments,
             run::{InvokeItem, parse_inputs},
         },
@@ -39,11 +38,7 @@ impl MulticallInvoke {
 
     pub async fn build_call(&self, contract_registry: &mut ContractRegistry) -> Result<Call> {
         let selector = get_selector_from_name(&self.common.function)?;
-        let arguments = replaced_arguments(
-            &self.common.arguments,
-            contract_registry,
-            MulticallMode::Cli,
-        )?;
+        let arguments = replaced_arguments(&self.common.arguments, contract_registry)?;
         let contracy_address = self.common.contract_address.as_id(contract_registry)?;
 
         let calldata = if let Some(raw_calldata) = &arguments.calldata {
