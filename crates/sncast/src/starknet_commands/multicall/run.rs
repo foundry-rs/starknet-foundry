@@ -4,7 +4,7 @@ use crate::starknet_commands::invoke::execute_calls;
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::deploy::MulticallDeploy;
 use crate::starknet_commands::multicall::invoke::MulticallInvoke;
-use crate::starknet_commands::utils::contract_address_identifier::FeltOrId;
+use crate::starknet_commands::utils::felt_or_id::FeltOrId;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
