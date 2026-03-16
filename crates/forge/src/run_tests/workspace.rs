@@ -9,8 +9,8 @@ use crate::warn::{
 };
 use crate::{
     ColorOption, ExitStatus, TestArgs, block_number_map::BlockNumberMap,
-    run_tests::package::run_for_package, scarb::build_artifacts_with_scarb,
-    shared_cache::FailedTestsCache,
+    run_tests::package::run_for_package, run_tests::test_target::ExitFirstChannel,
+    scarb::build_artifacts_with_scarb, shared_cache::FailedTestsCache,
 };
 use anyhow::{Context, Result};
 use forge_runner::partition::PartitionConfig;
@@ -79,6 +79,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     let mut block_number_map = BlockNumberMap::default();
     let mut all_tests = vec![];
     let mut total_filtered_count = Some(0);
+    let mut exit_first_channel = ExitFirstChannel::new();
 
     let workspace_root = &scarb_metadata.workspace.root;
     let cache_dir = workspace_root.join(CACHE_DIR);
@@ -100,7 +101,13 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
             &ui,
         )?;
 
-        let result = run_for_package(args, &mut block_number_map, ui.clone()).await?;
+        let result = run_for_package(
+            args,
+            &mut block_number_map,
+            ui.clone(),
+            &mut exit_first_channel,
+        )
+        .await?;
 
         let filtered = result.filtered();
         all_tests.extend(result.summaries());

@@ -9,6 +9,7 @@ use std::sync::Arc;
 use camino::Utf8PathBuf;
 use forge::block_number_map::BlockNumberMap;
 use forge::run_tests::package::run_for_package;
+use forge::run_tests::test_target::ExitFirstChannel;
 use forge::scarb::config::ForkTarget;
 use forge::test_filter::TestsFilter;
 use tempfile::tempdir;
@@ -176,6 +177,7 @@ fn fork_aliased_decorator() {
             },
             &mut BlockNumberMap::default(),
             ui,
+            &mut ExitFirstChannel::default(),
         ))
         .expect("Runner fail")
         .summaries();
@@ -268,6 +270,7 @@ fn fork_aliased_decorator_overrding() {
             },
             &mut BlockNumberMap::default(),
             ui,
+            &mut ExitFirstChannel::default(),
         ))
         .expect("Runner fail")
         .summaries();

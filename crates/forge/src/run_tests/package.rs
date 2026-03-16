@@ -1,6 +1,6 @@
 use super::{
     resolve_config::resolve_config,
-    test_target::{TestTargetRunResult, run_for_test_target},
+    test_target::{ExitFirstChannel, TestTargetRunResult, run_for_test_target},
 };
 use crate::scarb::{
     config::{ForgeConfigFromScarb, ForkTarget},
@@ -208,6 +208,7 @@ pub async fn run_for_package(
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
     ui: Arc<UI>,
+    exit_first_channel: &mut ExitFirstChannel,
 ) -> Result<PackageTestResult> {
     let mut test_targets = test_package_with_config_resolved(
         test_targets,
@@ -244,21 +245,17 @@ pub async fn run_for_package(
             ),
         ));
 
-        let summary =
-            run_for_test_target(test_target, forge_config.clone(), &tests_filter, ui).await?;
+        let summary = run_for_test_target(
+            test_target,
+            forge_config.clone(),
+            &tests_filter,
+            ui,
+            exit_first_channel,
+        )
+        .await?;
 
-        match summary {
-            TestTargetRunResult::Ok(summary) => {
-                summaries.push(summary);
-            }
-            TestTargetRunResult::Interrupted(summary) => {
-                summaries.push(summary);
-                // Handle scenario for --exit-first flag.
-                // Because snforge runs test crates one by one synchronously.
-                // In case of test FAIL with --exit-first flag stops processing the next crates
-                break;
-            }
-        }
+        let (TestTargetRunResult::Ok(s) | TestTargetRunResult::Interrupted(s)) = summary;
+        summaries.push(s);
     }
 
     // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
