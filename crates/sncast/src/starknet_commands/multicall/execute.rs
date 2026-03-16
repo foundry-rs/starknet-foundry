@@ -2,7 +2,7 @@ use anyhow::{Context, Result, bail};
 use clap::{Args, Command, FromArgMatches};
 use sncast::{
     WaitForTx,
-    helpers::fee::FeeArgs,
+    helpers::{fee::FeeArgs, rpc::RpcArgs},
     response::{
         errors::handle_starknet_command_error, multicall::run::MulticallRunResponse, ui::UI,
     },
@@ -23,6 +23,45 @@ use crate::starknet_commands::{
 };
 
 const ALLOWED_MULTICALL_COMMANDS: [&str; 2] = ["deploy", "invoke"];
+
+#[derive(Args, Debug, Clone)]
+#[command(about = "Execute a multicall with CLI arguments")]
+pub struct Execute {
+    #[command(flatten)]
+    pub fee_args: FeeArgs,
+
+    #[command(flatten)]
+    pub rpc: RpcArgs,
+
+    /// Nonce of the transaction. If not provided, nonce will be set automatically
+    #[arg(short, long)]
+    pub nonce: Option<Felt>,
+
+    /// The multicall arguments. Subsequent calls should be separated by a '/' token.
+    #[arg(allow_hyphen_values = true, num_args = 1..)]
+    pub tokens: Vec<String>,
+}
+
+pub async fn execute(
+    execute: Execute,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    provider: &JsonRpcClient<HttpTransport>,
+    wait_config: WaitForTx,
+    ui: &UI,
+) -> Result<MulticallRunResponse> {
+    let result = run_calls(
+        &execute.tokens,
+        &provider,
+        &account,
+        wait_config,
+        execute.fee_args.clone(),
+        execute.nonce,
+        ui,
+    )
+    .await;
+
+    result
+}
 
 pub async fn run_calls(
     tokens: &[String],

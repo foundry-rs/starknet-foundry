@@ -12,6 +12,7 @@ use serde::Deserialize;
 use serde_json::Number;
 use sncast::WaitForTx;
 use sncast::helpers::fee::FeeArgs;
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::multicall::run::MulticallRunResponse;
 use sncast::response::ui::UI;
@@ -28,6 +29,12 @@ pub struct Run {
     /// Path to the toml file with declared operations
     #[arg(short = 'p', long = "path")]
     pub path: Utf8PathBuf,
+
+    #[command(flatten)]
+    pub fee_args: FeeArgs,
+
+    #[command(flatten)]
+    pub rpc: RpcArgs,
 }
 
 #[derive(Deserialize, Debug)]
@@ -72,7 +79,6 @@ pub async fn run(
     provider: &JsonRpcClient<HttpTransport>,
     wait_config: WaitForTx,
     fee_args: FeeArgs,
-    nonce: Option<Felt>,
     ui: &UI,
 ) -> Result<MulticallRunResponse> {
     let fee_args = fee_args.clone();
@@ -101,7 +107,7 @@ pub async fn run(
         }
     }
 
-    execute_calls(account, parsed_calls, fee_args, nonce, wait_config, ui)
+    execute_calls(account, parsed_calls, fee_args, None, wait_config, ui)
         .await
         .map(Into::into)
         .map_err(handle_starknet_command_error)
