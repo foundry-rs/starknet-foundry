@@ -657,7 +657,7 @@ async fn test_deploy_with_declare_invalid_nonce() {
     assert_stderr_contains(
         output,
         indoc! {r#"
-        Command: declare
+        Command: deploy
         Error: Transaction execution error = TransactionExecutionErrorData { transaction_index: 0, execution_error: Message("Account transaction nonce is invalid.") }
         "#},
     );
