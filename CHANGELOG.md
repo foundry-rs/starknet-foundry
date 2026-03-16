@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 - `--max-threads` flag to control the maximum number of threads used for test execution
+- `sncast multicall execute`, which allows to passing calls directly as CLI arguments. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/multicall.html#multicall-with-cli-arguments)
 
 #### Fixed
 
