@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bug with invalid function name mappings for functions with `#[test]` attribute
 - `--exit-first` flag now correctly stops execution for all packages when tests are run in a workspace
 
+### Cast
+
+#### Changed
+
+- `sncast balance` and `sncast tx-status` commands have been moved under `sncast get` subcommand (`sncast get balance`, `sncast get tx-status`). The old commands still work, but will be removed in the future.
+
 ## [0.57.0] - 2026-02-24
 
 ### Forge

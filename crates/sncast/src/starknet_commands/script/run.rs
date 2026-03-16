@@ -1,4 +1,4 @@
-use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
+use crate::starknet_commands::{call, declare, deploy, get::tx_status, invoke};
 use crate::{WaitForTx, get_account};
 use anyhow::{Context, Result, anyhow};
 use blockifier::execution::contract_class::TrackedResource;
@@ -254,7 +254,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
 
                 let tx_status_result = self
                     .tokio_runtime
-                    .block_on(tx_status::tx_status(self.provider, transaction_hash));
+                    .block_on(tx_status::get_tx_status(self.provider, transaction_hash));
 
                 Ok(CheatcodeHandlingResult::from_serializable(tx_status_result))
             }

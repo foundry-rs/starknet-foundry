@@ -5,6 +5,7 @@ use crate::starknet_commands::multicall::MulticallMode;
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::deploy::MulticallDeploy;
 use crate::starknet_commands::multicall::invoke::MulticallInvoke;
+use crate::starknet_commands::utils::contract_address_identifier::ContractAddressIdentifier;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
@@ -68,7 +69,7 @@ pub struct DeployItem {
 
 #[derive(Deserialize, Debug)]
 pub struct InvokeItem {
-    pub contract_address: String,
+    pub contract_address: ContractAddressIdentifier,
     pub function: String,
     pub inputs: Vec<Input>,
 }
@@ -100,7 +101,7 @@ pub async fn run(
             }
             CallItem::Invoke(item) => {
                 let call = MulticallInvoke::new_from_item(&item, &contracts)?
-                    .build_call(&mut contracts, MulticallMode::File)
+                    .build_call(&mut contracts)
                     .await?;
                 parsed_calls.push(call);
             }

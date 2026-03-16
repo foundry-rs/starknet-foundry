@@ -71,7 +71,7 @@ pub async fn execute(
             }
             "invoke" => {
                 let call = parse_args::<MulticallInvoke>(cmd_name, cmd_args)?
-                    .build_call(&mut contract_registry, MulticallMode::Cli)
+                    .build_call(&mut contract_registry)
                     .await?;
                 calls.push(call);
             }
