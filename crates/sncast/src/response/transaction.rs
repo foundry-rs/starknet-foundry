@@ -15,25 +15,24 @@ pub struct TransactionResponse(pub Transaction);
 
 impl SncastCommandMessage for TransactionResponse {
     fn text(&self) -> String {
-        let (tx_type, tx_version) = tx_type_and_version(&self.0);
         match &self.0 {
             Transaction::Invoke(tx) => match tx {
-                InvokeTransaction::V0(tx) => fmt_invoke_v0(tx, tx_type, tx_version),
-                InvokeTransaction::V1(tx) => fmt_invoke_v1(tx, tx_type, tx_version),
-                InvokeTransaction::V3(tx) => fmt_invoke_v3(tx, tx_type, tx_version),
+                InvokeTransaction::V0(tx) => build_invoke_v0_response(tx),
+                InvokeTransaction::V1(tx) => build_invoke_v1_response(tx),
+                InvokeTransaction::V3(tx) => build_invoke_v3_response(tx),
             },
             Transaction::Declare(tx) => match tx {
-                DeclareTransaction::V0(tx) => fmt_declare_v0(tx, tx_type, tx_version),
-                DeclareTransaction::V1(tx) => fmt_declare_v1(tx, tx_type, tx_version),
-                DeclareTransaction::V2(tx) => fmt_declare_v2(tx, tx_type, tx_version),
-                DeclareTransaction::V3(tx) => fmt_declare_v3(tx, tx_type, tx_version),
+                DeclareTransaction::V0(tx) => build_declare_v0_response(tx),
+                DeclareTransaction::V1(tx) => build_declare_v1_response(tx),
+                DeclareTransaction::V2(tx) => build_declare_v2_response(tx),
+                DeclareTransaction::V3(tx) => build_declare_v3_response(tx),
             },
-            Transaction::Deploy(tx) => fmt_deploy(tx, tx_type, tx_version),
+            Transaction::Deploy(tx) => build_deploy_response(tx),
             Transaction::DeployAccount(tx) => match tx {
-                DeployAccountTransaction::V1(tx) => fmt_deploy_account_v1(tx, tx_type, tx_version),
-                DeployAccountTransaction::V3(tx) => fmt_deploy_account_v3(tx, tx_type, tx_version),
+                DeployAccountTransaction::V1(tx) => build_deploy_account_v1_response(tx),
+                DeployAccountTransaction::V3(tx) => build_deploy_account_v3_response(tx),
             },
-            Transaction::L1Handler(tx) => fmt_l1_handler(tx, tx_type, tx_version),
+            Transaction::L1Handler(tx) => build_l1_handler_response(tx),
         }
     }
 }
@@ -47,26 +46,6 @@ impl OutputLink for TransactionResponse {
     }
 }
 
-fn tx_type_and_version(tx: &Transaction) -> (&'static str, Option<&'static str>) {
-    match tx {
-        Transaction::Invoke(InvokeTransaction::V0(_)) => ("Invoke", Some("V0")),
-        Transaction::Invoke(InvokeTransaction::V1(_)) => ("Invoke", Some("V1")),
-        Transaction::Invoke(InvokeTransaction::V3(_)) => ("Invoke", Some("V3")),
-        Transaction::Declare(DeclareTransaction::V0(_)) => ("Declare", Some("V0")),
-        Transaction::Declare(DeclareTransaction::V1(_)) => ("Declare", Some("V1")),
-        Transaction::Declare(DeclareTransaction::V2(_)) => ("Declare", Some("V2")),
-        Transaction::Declare(DeclareTransaction::V3(_)) => ("Declare", Some("V3")),
-        Transaction::Deploy(_) => ("Deploy", None),
-        Transaction::DeployAccount(DeployAccountTransaction::V1(_)) => {
-            ("Deploy Account", Some("V1"))
-        }
-        Transaction::DeployAccount(DeployAccountTransaction::V3(_)) => {
-            ("Deploy Account", Some("V3"))
-        }
-        Transaction::L1Handler(_) => ("L1 Handler", None),
-    }
-}
-
 impl Serialize for TransactionResponse {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -74,34 +53,46 @@ impl Serialize for TransactionResponse {
     {
         #[derive(Serialize)]
         struct Wrapper<'a> {
-            transaction_type: &'a str,
+            transaction_type: &'static str,
             transaction: &'a Transaction,
         }
 
-        let (name, version) = tx_type_and_version(&self.0);
-        let tag = match version {
-            Some(v) => format!("{name}_{v}"),
-            None => name.to_string(),
-        };
-
         Wrapper {
-            transaction_type: &tag,
+            transaction_type: json_transaction_type(&self.0),
             transaction: &self.0,
         }
         .serialize(serializer)
     }
 }
 
+fn json_transaction_type(tx: &Transaction) -> &'static str {
+    match tx {
+        Transaction::Invoke(InvokeTransaction::V0(_)) => "INVOKE_V0",
+        Transaction::Invoke(InvokeTransaction::V1(_)) => "INVOKE_V1",
+        Transaction::Invoke(InvokeTransaction::V3(_)) => "INVOKE_V3",
+        Transaction::Declare(DeclareTransaction::V0(_)) => "DECLARE_V0",
+        Transaction::Declare(DeclareTransaction::V1(_)) => "DECLARE_V1",
+        Transaction::Declare(DeclareTransaction::V2(_)) => "DECLARE_V2",
+        Transaction::Declare(DeclareTransaction::V3(_)) => "DECLARE_V3",
+        Transaction::Deploy(_) => "DEPLOY",
+        Transaction::DeployAccount(DeployAccountTransaction::V1(_)) => "DEPLOY_ACCOUNT_V1",
+        Transaction::DeployAccount(DeployAccountTransaction::V3(_)) => "DEPLOY_ACCOUNT_V3",
+        Transaction::L1Handler(_) => "L1_HANDLER",
+    }
+}
+
 trait TransactionOutputBuilder {
-    fn transaction_hash(self, hash: &Felt) -> Self;
+    fn tx_header(self) -> Self;
+    fn tx_type(self, tx_type: &str) -> Self;
+    fn tx_version(self, version: &str) -> Self;
+    fn tx_hash(self, hash: &Felt) -> Self;
     fn sender_address(self, addr: &Felt) -> Self;
     fn contract_address(self, addr: &Felt) -> Self;
     fn entry_point_selector(self, sel: &Felt) -> Self;
     fn class_hash(self, hash: &Felt) -> Self;
     fn compiled_class_hash(self, hash: &Felt) -> Self;
     fn contract_address_salt(self, salt: &Felt) -> Self;
-    fn transaction_nonce(self, nonce: &Felt) -> Self;
-    fn transaction_version(self, version: &Felt) -> Self;
+    fn nonce(self, nonce: &Felt) -> Self;
     fn calldata(self, calldata: &[Felt]) -> Self;
     fn signature(self, sig: &[Felt]) -> Self;
     fn paymaster_data(self, data: &[Felt]) -> Self;
@@ -110,48 +101,50 @@ trait TransactionOutputBuilder {
     fn resource_bounds(self, rb: &ResourceBoundsMapping) -> Self;
     fn max_fee(self, fee: &Felt) -> Self;
     fn tip(self, tip: u64) -> Self;
-    fn nonce_da_mode(self, mode: &DataAvailabilityMode) -> Self;
-    fn fee_da_mode(self, mode: &DataAvailabilityMode) -> Self;
-    fn felt_field(self, label: &str, felt: &Felt) -> Self;
-    fn short_felt_field(self, label: &str, felt: &Felt) -> Self;
-    fn felt_list_field(self, label: &str, felts: &[Felt]) -> Self;
+    fn nonce_da_mode(self, mode: DataAvailabilityMode) -> Self;
+    fn fee_da_mode(self, mode: DataAvailabilityMode) -> Self;
 }
 
 impl TransactionOutputBuilder for OutputBuilder {
-    fn transaction_hash(self, hash: &Felt) -> Self {
-        self.felt_field("Transaction Hash", hash)
+    fn tx_header(self) -> Self {
+        self.success_message("Transaction found").blank_line()
+    }
+    fn tx_type(self, tx_type: &str) -> Self {
+        self.field("Type", tx_type)
+    }
+    fn tx_version(self, version: &str) -> Self {
+        self.field("Version", version)
+    }
+    fn tx_hash(self, hash: &Felt) -> Self {
+        self.padded_felt_field("Transaction Hash", hash)
     }
 
     fn sender_address(self, addr: &Felt) -> Self {
-        self.felt_field("Sender Address", addr)
+        self.padded_felt_field("Sender Address", addr)
     }
 
     fn contract_address(self, addr: &Felt) -> Self {
-        self.felt_field("Contract Address", addr)
+        self.padded_felt_field("Contract Address", addr)
     }
 
     fn entry_point_selector(self, sel: &Felt) -> Self {
-        self.felt_field("Entry Point Selector", sel)
+        self.padded_felt_field("Entry Point Selector", sel)
     }
 
     fn class_hash(self, hash: &Felt) -> Self {
-        self.felt_field("Class Hash", hash)
+        self.padded_felt_field("Class Hash", hash)
     }
 
     fn compiled_class_hash(self, hash: &Felt) -> Self {
-        self.felt_field("Compiled Class Hash", hash)
+        self.padded_felt_field("Compiled Class Hash", hash)
     }
 
     fn contract_address_salt(self, salt: &Felt) -> Self {
-        self.felt_field("Contract Address Salt", salt)
+        self.padded_felt_field("Contract Address Salt", salt)
     }
 
-    fn transaction_nonce(self, nonce: &Felt) -> Self {
-        self.short_felt_field("Nonce", nonce)
-    }
-
-    fn transaction_version(self, version: &Felt) -> Self {
-        self.short_felt_field("Version", version)
+    fn nonce(self, nonce: &Felt) -> Self {
+        self.felt_field("Nonce", nonce)
     }
 
     fn calldata(self, calldata: &[Felt]) -> Self {
@@ -178,66 +171,44 @@ impl TransactionOutputBuilder for OutputBuilder {
         self.field(
             "Resource Bounds L1 Gas",
             &format!(
-                "max_amount={:#x}, max_price={:#x}",
+                "max_amount={:#x}, max_price_per_unit={:#x}",
                 rb.l1_gas.max_amount, rb.l1_gas.max_price_per_unit
             ),
         )
         .field(
             "Resource Bounds L1 Data Gas",
             &format!(
-                "max_amount={:#x}, max_price={:#x}",
+                "max_amount={:#x}, max_price_per_unit={:#x}",
                 rb.l1_data_gas.max_amount, rb.l1_data_gas.max_price_per_unit
             ),
         )
         .field(
             "Resource Bounds L2 Gas",
             &format!(
-                "max_amount={:#x}, max_price={:#x}",
+                "max_amount={:#x}, max_price_per_unit={:#x}",
                 rb.l2_gas.max_amount, rb.l2_gas.max_price_per_unit
             ),
         )
     }
 
     fn max_fee(self, fee: &Felt) -> Self {
-        self.short_felt_field("Max Fee", fee)
+        self.felt_field("Max Fee", fee)
     }
 
     fn tip(self, tip: u64) -> Self {
         self.field("Tip", &tip.to_string())
     }
 
-    fn nonce_da_mode(self, mode: &DataAvailabilityMode) -> Self {
+    fn nonce_da_mode(self, mode: DataAvailabilityMode) -> Self {
         self.field("Nonce DA Mode", fmt_da(mode))
     }
 
-    fn fee_da_mode(self, mode: &DataAvailabilityMode) -> Self {
+    fn fee_da_mode(self, mode: DataAvailabilityMode) -> Self {
         self.field("Fee DA Mode", fmt_da(mode))
-    }
-
-    fn felt_field(self, label: &str, felt: &Felt) -> Self {
-        self.field(label, &format!("{felt:#066x}"))
-    }
-
-    fn short_felt_field(self, label: &str, felt: &Felt) -> Self {
-        self.field(label, &format!("{felt:#x}"))
-    }
-
-    fn felt_list_field(self, label: &str, felts: &[Felt]) -> Self {
-        let formatted = if felts.is_empty() {
-            "[]".to_string()
-        } else {
-            let inner: Vec<String> = felts.iter().map(|f| format!("{f:#x}")).collect();
-            format!("[{}]", inner.join(", "))
-        };
-        self.field(label, &formatted)
     }
 }
 
-fn fmt_invoke_v0(
-    tx: &starknet_rust::core::types::InvokeTransactionV0,
-    tx_type: &str,
-    tx_version: Option<&str>,
-) -> String {
+fn build_invoke_v0_response(tx: &starknet_rust::core::types::InvokeTransactionV0) -> String {
     let starknet_rust::core::types::InvokeTransactionV0 {
         transaction_hash,
         max_fee,
@@ -246,7 +217,11 @@ fn fmt_invoke_v0(
         entry_point_selector,
         calldata,
     } = tx;
-    make_tx_output(tx_type, tx_version, transaction_hash)
+    OutputBuilder::new()
+        .tx_header()
+        .tx_type("INVOKE")
+        .tx_version("0")
+        .tx_hash(transaction_hash)
         .contract_address(contract_address)
         .entry_point_selector(entry_point_selector)
         .calldata(calldata)
@@ -255,11 +230,7 @@ fn fmt_invoke_v0(
         .build()
 }
 
-fn fmt_invoke_v1(
-    tx: &starknet_rust::core::types::InvokeTransactionV1,
-    tx_type: &str,
-    tx_version: Option<&str>,
-) -> String {
+fn build_invoke_v1_response(tx: &starknet_rust::core::types::InvokeTransactionV1) -> String {
     let starknet_rust::core::types::InvokeTransactionV1 {
         transaction_hash,
         sender_address,
@@ -268,20 +239,20 @@ fn fmt_invoke_v1(
         signature,
         nonce,
     } = tx;
-    make_tx_output(tx_type, tx_version, transaction_hash)
+    OutputBuilder::new()
+        .tx_header()
+        .tx_type("INVOKE")
+        .tx_version("1")
+        .tx_hash(transaction_hash)
         .sender_address(sender_address)
-        .transaction_nonce(nonce)
-        .max_fee(max_fee)
+        .nonce(nonce)
         .calldata(calldata)
+        .max_fee(max_fee)
         .signature(signature)
         .build()
 }
 
-fn fmt_invoke_v3(
-    tx: &starknet_rust::core::types::InvokeTransactionV3,
-    tx_type: &str,
-    tx_version: Option<&str>,
-) -> String {
+fn build_invoke_v3_response(tx: &starknet_rust::core::types::InvokeTransactionV3) -> String {
     let starknet_rust::core::types::InvokeTransactionV3 {
         transaction_hash,
         sender_address,
@@ -295,26 +266,25 @@ fn fmt_invoke_v3(
         nonce_data_availability_mode,
         fee_data_availability_mode,
     } = tx;
-
-    make_tx_output(tx_type, tx_version, transaction_hash)
+    OutputBuilder::new()
+        .tx_header()
+        .tx_type("INVOKE")
+        .tx_version("3")
+        .tx_hash(transaction_hash)
         .sender_address(sender_address)
-        .transaction_nonce(nonce)
         .calldata(calldata)
         .signature(signature)
+        .nonce(nonce)
         .resource_bounds(resource_bounds)
         .tip(*tip)
         .paymaster_data(paymaster_data)
-        .nonce_da_mode(nonce_data_availability_mode)
-        .fee_da_mode(fee_data_availability_mode)
+        .nonce_da_mode(*nonce_data_availability_mode)
+        .fee_da_mode(*fee_data_availability_mode)
         .account_deployment_data(account_deployment_data)
         .build()
 }
 
-fn fmt_declare_v0(
-    tx: &starknet_rust::core::types::DeclareTransactionV0,
-    tx_type: &str,
-    tx_version: Option<&str>,
-) -> String {
+fn build_declare_v0_response(tx: &starknet_rust::core::types::DeclareTransactionV0) -> String {
     let starknet_rust::core::types::DeclareTransactionV0 {
         transaction_hash,
         sender_address,
@@ -322,7 +292,11 @@ fn fmt_declare_v0(
         signature,
         class_hash,
     } = tx;
-    make_tx_output(tx_type, tx_version, transaction_hash)
+    OutputBuilder::new()
+        .tx_header()
+        .tx_type("DECLARE")
+        .tx_version("0")
+        .tx_hash(transaction_hash)
         .sender_address(sender_address)
         .class_hash(class_hash)
         .max_fee(max_fee)
@@ -330,11 +304,7 @@ fn fmt_declare_v0(
         .build()
 }
 
-fn fmt_declare_v1(
-    tx: &starknet_rust::core::types::DeclareTransactionV1,
-    tx_type: &str,
-    tx_version: Option<&str>,
-) -> String {
+fn build_declare_v1_response(tx: &starknet_rust::core::types::DeclareTransactionV1) -> String {
     let starknet_rust::core::types::DeclareTransactionV1 {
         transaction_hash,
         sender_address,
@@ -343,20 +313,20 @@ fn fmt_declare_v1(
         nonce,
         class_hash,
     } = tx;
-    make_tx_output(tx_type, tx_version, transaction_hash)
+    OutputBuilder::new()
+        .tx_header()
+        .tx_type("DECLARE")
+        .tx_version("1")
+        .tx_hash(transaction_hash)
         .sender_address(sender_address)
-        .transaction_nonce(nonce)
+        .nonce(nonce)
         .class_hash(class_hash)
         .max_fee(max_fee)
         .signature(signature)
         .build()
 }
 
-fn fmt_declare_v2(
-    tx: &starknet_rust::core::types::DeclareTransactionV2,
-    tx_type: &str,
-    tx_version: Option<&str>,
-) -> String {
+fn build_declare_v2_response(tx: &starknet_rust::core::types::DeclareTransactionV2) -> String {
     let starknet_rust::core::types::DeclareTransactionV2 {
         transaction_hash,
         sender_address,
@@ -366,9 +336,13 @@ fn fmt_declare_v2(
         nonce,
         class_hash,
     } = tx;
-    make_tx_output(tx_type, tx_version, transaction_hash)
+    OutputBuilder::new()
+        .tx_header()
+        .tx_type("DECLARE")
+        .tx_version("2")
+        .tx_hash(transaction_hash)
         .sender_address(sender_address)
-        .transaction_nonce(nonce)
+        .nonce(nonce)
         .class_hash(class_hash)
         .compiled_class_hash(compiled_class_hash)
         .max_fee(max_fee)
@@ -376,11 +350,7 @@ fn fmt_declare_v2(
         .build()
 }
 
-fn fmt_declare_v3(
-    tx: &starknet_rust::core::types::DeclareTransactionV3,
-    tx_type: &str,
-    tx_version: Option<&str>,
-) -> String {
+fn build_declare_v3_response(tx: &starknet_rust::core::types::DeclareTransactionV3) -> String {
     let starknet_rust::core::types::DeclareTransactionV3 {
         transaction_hash,
         sender_address,
@@ -395,27 +365,26 @@ fn fmt_declare_v3(
         nonce_data_availability_mode,
         fee_data_availability_mode,
     } = tx;
-
-    make_tx_output(tx_type, tx_version, transaction_hash)
+    OutputBuilder::new()
+        .tx_header()
+        .tx_type("DECLARE")
+        .tx_version("3")
+        .tx_hash(transaction_hash)
         .sender_address(sender_address)
-        .transaction_nonce(nonce)
+        .nonce(nonce)
         .class_hash(class_hash)
         .compiled_class_hash(compiled_class_hash)
         .signature(signature)
         .resource_bounds(resource_bounds)
         .tip(*tip)
         .paymaster_data(paymaster_data)
-        .nonce_da_mode(nonce_data_availability_mode)
-        .fee_da_mode(fee_data_availability_mode)
+        .nonce_da_mode(*nonce_data_availability_mode)
+        .fee_da_mode(*fee_data_availability_mode)
         .account_deployment_data(account_deployment_data)
         .build()
 }
 
-fn fmt_deploy(
-    tx: &starknet_rust::core::types::DeployTransaction,
-    tx_type: &str,
-    tx_version: Option<&str>,
-) -> String {
+fn build_deploy_response(tx: &starknet_rust::core::types::DeployTransaction) -> String {
     let starknet_rust::core::types::DeployTransaction {
         transaction_hash,
         version,
@@ -423,18 +392,19 @@ fn fmt_deploy(
         constructor_calldata,
         class_hash,
     } = tx;
-    make_tx_output(tx_type, tx_version, transaction_hash)
-        .transaction_version(version)
+    OutputBuilder::new()
+        .tx_header()
+        .tx_type("DEPLOY")
+        .tx_version(&format!("{version:#x}"))
+        .tx_hash(transaction_hash)
         .class_hash(class_hash)
         .contract_address_salt(contract_address_salt)
         .constructor_calldata(constructor_calldata)
         .build()
 }
 
-fn fmt_deploy_account_v1(
+fn build_deploy_account_v1_response(
     tx: &starknet_rust::core::types::DeployAccountTransactionV1,
-    tx_type: &str,
-    tx_version: Option<&str>,
 ) -> String {
     let starknet_rust::core::types::DeployAccountTransactionV1 {
         transaction_hash,
@@ -445,8 +415,12 @@ fn fmt_deploy_account_v1(
         constructor_calldata,
         class_hash,
     } = tx;
-    make_tx_output(tx_type, tx_version, transaction_hash)
-        .transaction_nonce(nonce)
+    OutputBuilder::new()
+        .tx_header()
+        .tx_type("DEPLOY ACCOUNT")
+        .tx_version("1")
+        .tx_hash(transaction_hash)
+        .nonce(nonce)
         .class_hash(class_hash)
         .contract_address_salt(contract_address_salt)
         .constructor_calldata(constructor_calldata)
@@ -455,10 +429,8 @@ fn fmt_deploy_account_v1(
         .build()
 }
 
-fn fmt_deploy_account_v3(
+fn build_deploy_account_v3_response(
     tx: &starknet_rust::core::types::DeployAccountTransactionV3,
-    tx_type: &str,
-    tx_version: Option<&str>,
 ) -> String {
     let starknet_rust::core::types::DeployAccountTransactionV3 {
         transaction_hash,
@@ -473,9 +445,12 @@ fn fmt_deploy_account_v3(
         nonce_data_availability_mode,
         fee_data_availability_mode,
     } = tx;
-
-    make_tx_output(tx_type, tx_version, transaction_hash)
-        .transaction_nonce(nonce)
+    OutputBuilder::new()
+        .tx_header()
+        .tx_type("DEPLOY ACCOUNT")
+        .tx_version("3")
+        .tx_hash(transaction_hash)
+        .nonce(nonce)
         .class_hash(class_hash)
         .contract_address_salt(contract_address_salt)
         .constructor_calldata(constructor_calldata)
@@ -483,16 +458,12 @@ fn fmt_deploy_account_v3(
         .resource_bounds(resource_bounds)
         .tip(*tip)
         .paymaster_data(paymaster_data)
-        .nonce_da_mode(nonce_data_availability_mode)
-        .fee_da_mode(fee_data_availability_mode)
+        .nonce_da_mode(*nonce_data_availability_mode)
+        .fee_da_mode(*fee_data_availability_mode)
         .build()
 }
 
-fn fmt_l1_handler(
-    tx: &starknet_rust::core::types::L1HandlerTransaction,
-    tx_type: &str,
-    tx_version: Option<&str>,
-) -> String {
+fn build_l1_handler_response(tx: &starknet_rust::core::types::L1HandlerTransaction) -> String {
     let starknet_rust::core::types::L1HandlerTransaction {
         transaction_hash,
         version,
@@ -501,28 +472,19 @@ fn fmt_l1_handler(
         entry_point_selector,
         calldata,
     } = tx;
-    make_tx_output(tx_type, tx_version, transaction_hash)
-        .transaction_version(version)
+    OutputBuilder::new()
+        .tx_header()
+        .tx_type("L1 HANDLER")
+        .tx_version(&version.to_string())
+        .tx_hash(transaction_hash)
         .contract_address(contract_address)
         .entry_point_selector(entry_point_selector)
-        .field("Nonce", &nonce.to_string())
+        .nonce(&Felt::from(*nonce))
         .calldata(calldata)
         .build()
 }
 
-fn make_tx_output(tx_type: &str, tx_version: Option<&str>, hash: &Felt) -> OutputBuilder {
-    let b = OutputBuilder::new()
-        .success_message("Transaction found")
-        .blank_line()
-        .field("Type", tx_type)
-        .transaction_hash(hash);
-    match tx_version {
-        Some(v) => b.field("Version", v),
-        None => b,
-    }
-}
-
-fn fmt_da(mode: &DataAvailabilityMode) -> &'static str {
+fn fmt_da(mode: DataAvailabilityMode) -> &'static str {
     match mode {
         DataAvailabilityMode::L1 => "L1",
         DataAvailabilityMode::L2 => "L2",
