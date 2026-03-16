@@ -452,10 +452,6 @@ async fn test_happy_case_with_declare() {
         "deploy",
         "--url",
         URL,
-        "--constructor-calldata",
-        "0x1",
-        "0x1",
-        "0x0",
         "--contract-name",
         "Map",
     ];
@@ -522,10 +518,6 @@ async fn test_happy_case_with_already_declared() {
         "deploy",
         "--url",
         URL,
-        "--constructor-calldata",
-        "0x1",
-        "0x1",
-        "0x0",
         "--contract-name",
         "Map",
     ];
@@ -534,6 +526,12 @@ async fn test_happy_case_with_already_declared() {
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
     let output = snapbox.assert().success();
+
+    let stderr = output.as_stderr();
+    println!("====\n{stderr}\n====");
+
+    let stdout = output.as_stdout();
+    println!("====\n{stdout}\n====");
 
     assert_stdout_contains(
         output,
@@ -597,10 +595,6 @@ async fn test_happy_case_with_declare_nonce() {
         "deploy",
         "--url",
         URL,
-        "--constructor-calldata",
-        "0x1",
-        "0x1",
-        "0x0",
         "--contract-name",
         "Map",
         "--nonce",
@@ -668,11 +662,9 @@ async fn test_deploy_with_declare_invalid_nonce() {
 
     assert_stderr_contains(
         output,
-        indoc! {
-            "
-            Command: deploy
-            Error: Invalid transaction nonce
-            "
-        },
+        indoc! {r#"
+        Command: declare
+        Error: Transaction execution error = TransactionExecutionErrorData { transaction_index: 0, execution_error: Message("Account transaction nonce is invalid.") }
+        "#},
     );
 }

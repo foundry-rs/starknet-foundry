@@ -412,10 +412,10 @@ async fn test_invalid_nonce() {
 
     assert_stderr_contains(
         output,
-        indoc! {r"
+        indoc! {r#"
         Command: declare
-        Error: Invalid transaction nonce
-        "},
+        Error: Transaction execution error = TransactionExecutionErrorData { transaction_index: 0, execution_error: Message("Account transaction nonce is invalid.") }
+        "#},
     );
 }
 
