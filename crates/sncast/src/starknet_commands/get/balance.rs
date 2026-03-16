@@ -1,17 +1,22 @@
 use anyhow::{Error, Result};
 use clap::Args;
 use primitive_types::U256;
-use sncast::get_block_id;
+use sncast::helpers::command::process_command_result;
+use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::helpers::token::Token;
 use sncast::response::balance::BalanceResponse;
 use sncast::response::errors::SNCastProviderError;
 use sncast::response::errors::StarknetCommandError;
+use sncast::response::ui::UI;
+use sncast::{get_account, get_block_id};
+use starknet_rust::accounts::Account;
 use starknet_rust::{
     core::{types::FunctionCall, utils::get_selector_from_name},
     providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport},
 };
 use starknet_types_core::felt::Felt;
+
 #[derive(Args, Debug, Clone)]
 #[group(multiple = false)]
 pub struct TokenIdentifier {
@@ -67,7 +72,25 @@ pub struct Balance {
     pub rpc: RpcArgs,
 }
 
-pub async fn balance(
+pub async fn balance(balance: Balance, config: CastConfig, ui: &UI) -> anyhow::Result<()> {
+    let provider = balance.rpc.get_provider(&config, ui).await?;
+    let account = get_account(
+        &config,
+        &provider,
+        &balance.rpc,
+        config.keystore.as_ref(),
+        ui,
+    )
+    .await?;
+
+    let result = get_balance(account.address(), &provider, &balance).await?;
+
+    process_command_result("get balance", Ok(result), ui, None);
+
+    Ok(())
+}
+
+pub async fn get_balance(
     account_address: Felt,
     provider: &JsonRpcClient<HttpTransport>,
     balance: &Balance,
