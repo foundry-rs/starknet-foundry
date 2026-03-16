@@ -272,15 +272,15 @@ fn build_invoke_v3_response(tx: &starknet_rust::core::types::InvokeTransactionV3
         .tx_version("3")
         .tx_hash(transaction_hash)
         .sender_address(sender_address)
-        .calldata(calldata)
-        .signature(signature)
         .nonce(nonce)
+        .calldata(calldata)
+        .account_deployment_data(account_deployment_data)
         .resource_bounds(resource_bounds)
         .tip(*tip)
         .paymaster_data(paymaster_data)
         .nonce_da_mode(*nonce_data_availability_mode)
         .fee_da_mode(*fee_data_availability_mode)
-        .account_deployment_data(account_deployment_data)
+        .signature(signature)
         .build()
 }
 
@@ -374,13 +374,13 @@ fn build_declare_v3_response(tx: &starknet_rust::core::types::DeclareTransaction
         .nonce(nonce)
         .class_hash(class_hash)
         .compiled_class_hash(compiled_class_hash)
-        .signature(signature)
+        .account_deployment_data(account_deployment_data)
         .resource_bounds(resource_bounds)
         .tip(*tip)
         .paymaster_data(paymaster_data)
         .nonce_da_mode(*nonce_data_availability_mode)
         .fee_da_mode(*fee_data_availability_mode)
-        .account_deployment_data(account_deployment_data)
+        .signature(signature)
         .build()
 }
 
@@ -454,12 +454,12 @@ fn build_deploy_account_v3_response(
         .class_hash(class_hash)
         .contract_address_salt(contract_address_salt)
         .constructor_calldata(constructor_calldata)
-        .signature(signature)
         .resource_bounds(resource_bounds)
         .tip(*tip)
         .paymaster_data(paymaster_data)
         .nonce_da_mode(*nonce_data_availability_mode)
         .fee_da_mode(*fee_data_availability_mode)
+        .signature(signature)
         .build()
 }
 
@@ -478,8 +478,8 @@ fn build_l1_handler_response(tx: &starknet_rust::core::types::L1HandlerTransacti
         .tx_version(&version.to_string())
         .tx_hash(transaction_hash)
         .contract_address(contract_address)
-        .entry_point_selector(entry_point_selector)
         .nonce(&Felt::from(*nonce))
+        .entry_point_selector(entry_point_selector)
         .calldata(calldata)
         .build()
 }
