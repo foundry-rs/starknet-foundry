@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - Bug with invalid function name mappings for functions with `#[test]` attribute
+- `--exit-first` flag now correctly stops execution for all packages when tests are run in a workspace
 
 ### Cast
 
