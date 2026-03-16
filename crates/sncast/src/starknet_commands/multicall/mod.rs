@@ -12,7 +12,7 @@ pub mod run;
 
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::execute::Execute;
-use crate::starknet_commands::utils::contract_address_identifier::ContractAddressIdentifier;
+use crate::starknet_commands::utils::contract_address_identifier::FeltOrId;
 use crate::{Arguments, process_command_result, starknet_commands};
 use foundry_ui::Message;
 use new::New;
@@ -133,7 +133,7 @@ pub fn replaced_arguments(arguments: &Arguments, conracts: &ContractRegistry) ->
         (Some(calldata), None) => {
             let replaced_calldata = calldata
                 .iter()
-                .map(|input| ContractAddressIdentifier::new(input.clone()).as_id(conracts))
+                .map(|input| FeltOrId::new(input.clone()).as_id(conracts))
                 .collect::<Result<Vec<Felt>>>()?;
             Arguments {
                 calldata: Some(replaced_calldata.iter().map(ToString::to_string).collect()),
