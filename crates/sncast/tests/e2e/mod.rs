@@ -15,5 +15,6 @@ mod nonce;
 mod script;
 mod serialize;
 mod show_config;
+mod transaction;
 mod tx_status;
 mod verify;
