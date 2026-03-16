@@ -20,6 +20,7 @@ use crate::{
 };
 
 pub mod class_hash;
+pub mod contract_address_identifier;
 pub mod serialize;
 
 #[derive(Args)]
