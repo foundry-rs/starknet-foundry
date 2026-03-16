@@ -75,7 +75,7 @@ pub async fn execute(
                 calls.push(call);
             }
             _ => bail!(
-                "Unknown multicall command: '{}'. Possible command: {}",
+                "Unknown multicall command: '{}'. Allowed commands: {}",
                 cmd_name,
                 ALLOWED_MULTICALL_COMMANDS.join(", ")
             ),
