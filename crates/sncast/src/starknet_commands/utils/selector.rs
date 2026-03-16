@@ -7,6 +7,7 @@ use starknet_rust::core::utils::get_selector_from_name;
 #[derive(Args, Debug)]
 #[command(about = "Calculate selector from name", long_about = None)]
 pub struct Selector {
+    /// Selector name
     pub name: String,
 }
 
