@@ -277,3 +277,34 @@ async fn test_duplicated_id() {
         },
     );
 }
+
+#[tokio::test]
+async fn test_empty_calls() {
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "multicall",
+        "execute",
+        "--url",
+        URL,
+    ];
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {
+            "
+            Command: multicall
+            Error: No valid multicall commands found to execute. Please check the provided commands.
+            "
+        },
+    );
+}
