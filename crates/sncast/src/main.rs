@@ -43,6 +43,7 @@ use sncast::{
     ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
     get_contract_class,
 };
+use starknet_commands::ledger::{self, Ledger};
 use starknet_commands::verify::Verify;
 use starknet_rust::core::types::ContractClass;
 use starknet_rust::core::types::contract::{AbiEntry, SierraClass};
@@ -142,6 +143,7 @@ impl Cli {
             Commands::Completions(_) => "completions",
             Commands::Utils(_) => "utils",
             Commands::Balance(_) => "balance",
+            Commands::Ledger(_) => "ledger",
         }
         .to_string()
     }
@@ -193,6 +195,9 @@ enum Commands {
 
     /// Fetch balance of the account for specified token
     Balance(Balance),
+
+    /// Interact with Ledger hardware wallet
+    Ledger(Ledger),
 }
 
 #[derive(Debug, Clone, clap::Args)]
@@ -622,6 +627,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
+            let contract_address = contract_address.try_into_felt()?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
@@ -726,6 +732,14 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         Commands::Balance(balance) => {
             print_cmd_move_warning("balance", "get balance", ui);
             get::balance::balance(balance, config, ui).await
+        }
+
+        Commands::Ledger(ledger) => {
+            let result = ledger::ledger(&ledger, ui).await?;
+
+            process_command_result("ledger", Ok(result), ui, None);
+
+            Ok(())
         }
 
         Commands::Script(_) => unreachable!(),
