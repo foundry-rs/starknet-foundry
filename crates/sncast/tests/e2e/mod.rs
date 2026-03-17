@@ -11,6 +11,7 @@ mod fee;
 mod invoke;
 mod main_tests;
 mod multicall;
+mod nonce;
 mod script;
 mod serialize;
 mod show_config;

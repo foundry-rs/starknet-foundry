@@ -158,6 +158,7 @@
     * [completions](appendix/sncast/completions.md)
     * [get](appendix/sncast/get/get.md)
         * [balance](appendix/sncast/get/balance.md)
+        * [nonce](appendix/sncast/get/nonce.md)
         * [tx-status](appendix/sncast/get/tx-status.md)
     * [utils](appendix/sncast/utils/utils.md)
         * [serialize](appendix/sncast/utils/serialize.md)
