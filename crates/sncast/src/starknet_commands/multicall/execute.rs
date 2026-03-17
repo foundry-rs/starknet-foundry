@@ -54,10 +54,6 @@ pub async fn execute(
     let mut calls = vec![];
 
     for group in command_groups {
-        if group.is_empty() {
-            continue;
-        }
-
         let cmd_name = &group[0];
         let cmd_args = &group[1..];
 
@@ -89,7 +85,7 @@ pub async fn execute(
     execute_calls(
         account,
         calls,
-        execute.fee_args.clone(),
+        execute.fee_args,
         execute.nonce,
         wait_config,
         ui,
@@ -152,8 +148,8 @@ where
 {
     let cmd = T::augment_args(Command::new(command_name.to_string()));
 
-    let argv = std::iter::once(command_name.to_string())
-        .chain(tokens.iter().cloned())
+    let argv = std::iter::once(command_name)
+        .chain(tokens.iter().map(String::as_str))
         .collect::<Vec<_>>();
 
     let matches = cmd
@@ -167,9 +163,13 @@ where
 mod tests {
     use super::*;
 
+    fn create_tokens(commands: Vec<&str>) -> Vec<String> {
+        commands.into_iter().map(String::from).collect()
+    }
+
     #[test]
     fn test_extract_commands_groups() {
-        let tokens = vec![
+        let tokens = create_tokens(vec![
             "deploy",
             "--class-hash",
             "0x123",
@@ -183,10 +183,7 @@ mod tests {
             "deploy",
             "--class-hash",
             "0x456",
-        ]
-        .into_iter()
-        .map(String::from)
-        .collect::<Vec<_>>();
+        ]);
 
         let groups = extract_commands_groups(&tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
         assert_eq!(
@@ -223,11 +220,7 @@ mod tests {
         let groups = extract_commands_groups(&tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
         assert_eq!(
             groups,
-            vec![vec![
-                "deploy".to_string(),
-                "--class-hash".to_string(),
-                "0x123".to_string()
-            ]]
+            vec![create_tokens(vec!["deploy", "--class-hash", "0x123"])]
         );
     }
 
@@ -241,17 +234,13 @@ mod tests {
         let groups = extract_commands_groups(&tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
         assert_eq!(
             groups,
-            vec![vec![
-                "deploy".to_string(),
-                "--class-hash".to_string(),
-                "0x123".to_string()
-            ]]
+            vec![create_tokens(vec!["deploy", "--class-hash", "0x123"])]
         );
     }
 
     #[test]
     fn test_extract_commands_groups_consecutive_slashes() {
-        let tokens = vec![
+        let tokens = create_tokens(vec![
             "deploy",
             "--class-hash",
             "0x123",
@@ -260,35 +249,21 @@ mod tests {
             "invoke",
             "--contract-address",
             "0xabc",
-        ]
-        .into_iter()
-        .map(String::from)
-        .collect::<Vec<_>>();
+        ]);
 
         let groups = extract_commands_groups(&tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
         assert_eq!(
             groups,
             vec![
-                vec![
-                    "deploy".to_string(),
-                    "--class-hash".to_string(),
-                    "0x123".to_string()
-                ],
-                vec![
-                    "invoke".to_string(),
-                    "--contract-address".to_string(),
-                    "0xabc".to_string()
-                ]
+                create_tokens(vec!["deploy", "--class-hash", "0x123"]),
+                create_tokens(vec!["invoke", "--contract-address", "0xabc"])
             ]
         );
     }
 
     #[test]
     fn test_extract_commands_groups_only_slashes() {
-        let tokens = vec!["/", "/", "/"]
-            .into_iter()
-            .map(String::from)
-            .collect::<Vec<_>>();
+        let tokens = create_tokens(vec!["/", "/", "/"]);
 
         let groups = extract_commands_groups(&tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
         let expected: Vec<Vec<String>> = vec![];
