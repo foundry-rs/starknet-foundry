@@ -1,9 +1,7 @@
-use crate::helpers::constants::{
-    DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
-};
+use crate::helpers::constants::{DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, MAP_CONTRACT_ADDRESS_SEPOLIA, URL};
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use shared::test_utils::output_assert::assert_stderr_contains;
 
 #[tokio::test]
 async fn test_happy_case() {
@@ -14,12 +12,15 @@ async fn test_happy_case() {
         "--url",
         URL,
     ];
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
 
     snapbox.assert().success().stdout_eq(indoc! {r"
         Success: Class hash retrieved
 
         Class Hash: 0x02a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321
+
+        To see class details, visit:
+        class: https://sepolia.voyager.online/class/0x02a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321
     "});
 }
 
@@ -63,31 +64,6 @@ async fn test_json_output() {
     assert_eq!(
         json["class_hash"],
         "0x02a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321"
-    );
-}
-
-#[tokio::test]
-async fn test_explorer_link() {
-    let args = vec![
-        "get",
-        "class-hash-at",
-        DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
-        "--url",
-        URL,
-    ];
-    let snapbox = runner(&args).env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
-    let output = snapbox.assert().success();
-
-    assert_stdout_contains(
-        output,
-        indoc! {r"
-            Success: Class hash retrieved
-
-            Class Hash: 0x0[..]
-
-            To see class details, visit:
-            class: [..]
-        "},
     );
 }
 
