@@ -3,6 +3,7 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::response::ui::UI;
 
 pub mod balance;
+pub mod nonce;
 pub mod tx_status;
 
 #[derive(Args)]
@@ -19,6 +20,9 @@ pub enum GetCommands {
 
     /// Fetch balance of the account for specified token
     Balance(balance::Balance),
+
+    /// Get nonce of a contract
+    Nonce(nonce::Nonce),
 }
 
 pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<()> {
@@ -26,6 +30,8 @@ pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<()> {
         GetCommands::TxStatus(status) => tx_status::tx_status(status, config, ui).await?,
 
         GetCommands::Balance(balance) => balance::balance(balance, config, ui).await?,
+
+        GetCommands::Nonce(nonce) => nonce::nonce(nonce, config, ui).await?,
     }
 
     Ok(())
