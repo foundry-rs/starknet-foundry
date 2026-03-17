@@ -198,4 +198,86 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn test_extract_commands_groups_leading_slash() {
+        let tokens = vec!["/", "deploy", "--class-hash", "0x123"]
+            .into_iter()
+            .map(String::from)
+            .collect::<Vec<_>>();
+
+        let groups = extract_commands_groups(&tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
+        assert_eq!(
+            groups,
+            vec![vec![
+                "deploy".to_string(),
+                "--class-hash".to_string(),
+                "0x123".to_string()
+            ]]
+        );
+    }
+
+    #[test]
+    fn test_extract_commands_groups_trailing_slash() {
+        let tokens = vec!["deploy", "--class-hash", "0x123", "/"]
+            .into_iter()
+            .map(String::from)
+            .collect::<Vec<_>>();
+
+        let groups = extract_commands_groups(&tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
+        assert_eq!(
+            groups,
+            vec![vec![
+                "deploy".to_string(),
+                "--class-hash".to_string(),
+                "0x123".to_string()
+            ]]
+        );
+    }
+
+    #[test]
+    fn test_extract_commands_groups_consecutive_slashes() {
+        let tokens = vec![
+            "deploy",
+            "--class-hash",
+            "0x123",
+            "/",
+            "/",
+            "invoke",
+            "--contract-address",
+            "0xabc",
+        ]
+        .into_iter()
+        .map(String::from)
+        .collect::<Vec<_>>();
+
+        let groups = extract_commands_groups(&tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
+        assert_eq!(
+            groups,
+            vec![
+                vec![
+                    "deploy".to_string(),
+                    "--class-hash".to_string(),
+                    "0x123".to_string()
+                ],
+                vec![
+                    "invoke".to_string(),
+                    "--contract-address".to_string(),
+                    "0xabc".to_string()
+                ]
+            ]
+        );
+    }
+
+    #[test]
+    fn test_extract_commands_groups_only_slashes() {
+        let tokens = vec!["/", "/", "/"]
+            .into_iter()
+            .map(String::from)
+            .collect::<Vec<_>>();
+
+        let groups = extract_commands_groups(&tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
+        let expected: Vec<Vec<String>> = vec![];
+        assert_eq!(groups, expected);
+    }
 }
