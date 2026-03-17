@@ -33,7 +33,7 @@ impl SncastCommandMessage for LedgerResponse {
                 .field("Public Key", &resp.public_key)
                 .build(),
             LedgerResponse::Signature(resp) => styling::OutputBuilder::new()
-                .text_field("Signature:")
+                .text_field("Hash signature:")
                 .field("r", &resp.r)
                 .field("s", &resp.s)
                 .build(),
