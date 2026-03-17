@@ -101,16 +101,8 @@ impl OutputBuilder {
 
     #[must_use]
     pub fn felt_list_field(self, label: &str, felts: &[Felt]) -> Self {
-        let formatted = if felts.is_empty() {
-            "[]".to_string()
-        } else {
-            let inner: Vec<String> = felts
-                .iter()
-                .map(starknet_types_core::felt::Felt::to_hex_string)
-                .collect();
-            format!("[{}]", inner.join(", "))
-        };
-        self.field(label, &formatted)
+        let felts = felts.iter().map(Felt::to_hex_string).collect::<Vec<_>>();
+        self.field(label, &format!("[{}]", felts.join(", ")))
     }
 
     #[must_use]
