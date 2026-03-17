@@ -25,6 +25,6 @@ impl OutputLink for ClassHashAtResponse {
     const TITLE: &'static str = "class";
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
-        format!("class: {}\n", provider.class(self.class_hash))
+        format!("class: {}", provider.class(self.class_hash))
     }
 }
