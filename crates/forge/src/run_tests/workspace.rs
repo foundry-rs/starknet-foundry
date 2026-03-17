@@ -126,6 +126,7 @@ pub async fn execute_workspace(
             &mut block_number_map,
             ui.clone(),
             &mut exit_first_channel,
+            deterministic_output,
         )
         .await?;
 

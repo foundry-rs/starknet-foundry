@@ -64,7 +64,7 @@ fn snap_optimize_inlining_updates_manifest() {
     );
 
     let output = runner(&temp)
-    .env("SCARB_UI_VERBOSITY", "quiet")
+        .env("SCARB_UI_VERBOSITY", "quiet")
         .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
         .arg("optimize-inlining")
         .arg("--exact")
