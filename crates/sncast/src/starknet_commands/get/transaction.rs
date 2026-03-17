@@ -12,7 +12,7 @@ use starknet_rust::providers::{JsonRpcClient, Provider};
 use starknet_types_core::felt::Felt;
 
 #[derive(Debug, Args)]
-#[command(about = "Get details of a transaction")]
+#[command(about = "Get the details of a transaction")]
 pub struct Transaction {
     /// Hash of the transaction
     pub transaction_hash: Felt,
