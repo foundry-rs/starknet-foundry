@@ -231,7 +231,7 @@ async fn test_non_existent_id() {
         output,
         indoc! {
             "
-            Error: No contract address found for id: non_existent_id. Ensure the referenced id is defined in a previous call.
+            Error: Failed to find contract address for id: non_existent_id
             "
         },
     );
