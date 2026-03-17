@@ -1,5 +1,5 @@
 use crate::Arguments;
-use crate::starknet_commands::utils::contract_address_identifier::FeltOrId;
+use crate::starknet_commands::utils::felt_or_id::FeltOrId;
 use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
