@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `sncast get nonce` command to get the nonce of a contract.
 - `sncast get tx` command to get transaction details by hash.
+- `sncast utils selector` command to calculate entrypoint selector (sn_keccak) from function name.
 
 ### Forge
 
