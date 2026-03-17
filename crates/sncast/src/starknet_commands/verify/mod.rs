@@ -1,15 +1,16 @@
-use anyhow::{Result, anyhow, bail};
-use camino::Utf8PathBuf;
+use anyhow::{Context, Result, anyhow, bail};
 use clap::{ArgGroup, Args, ValueEnum};
 use promptly::prompt;
+use scarb_metadata::PackageMetadata;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::FreeProvider;
+use sncast::helpers::scarb_utils::{BuildConfig, build_and_load_artifacts};
 use sncast::response::ui::UI;
 use sncast::{Network, response::verify::VerifyResponse};
 use sncast::{get_chain_id, get_provider};
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet_types_core::felt::Felt;
-use std::{collections::HashMap, fmt};
+use std::fmt;
 use url::Url;
 
 pub mod explorer;
@@ -19,7 +20,6 @@ pub mod walnut;
 use explorer::ContractIdentifier;
 use explorer::VerificationInterface;
 use foundry_ui::components::warning::WarningMessage;
-use sncast::helpers::artifacts::CastStarknetContractArtifacts;
 use voyager::Voyager;
 use walnut::WalnutVerificationInterface;
 
@@ -106,8 +106,6 @@ fn display_files_and_confirm(
     files_to_display: Vec<String>,
     confirm_verification: bool,
     ui: &UI,
-    artifacts: &HashMap<String, CastStarknetContractArtifacts>,
-    contract_name: &str,
 ) -> Result<()> {
     // Display files that will be uploaded
     // TODO(#3960) JSON output support
@@ -128,18 +126,13 @@ fn display_files_and_confirm(
         }
     }
 
-    // Check contract exists after confirmation
-    if !artifacts.contains_key(contract_name) {
-        return Err(anyhow!("Contract named '{contract_name}' was not found"));
-    }
-
     Ok(())
 }
 
 pub async fn verify(
     args: Verify,
-    manifest_path: &Utf8PathBuf,
-    artifacts: &HashMap<String, CastStarknetContractArtifacts>,
+    package: &PackageMetadata,
+    json: bool,
     config: &CastConfig,
     ui: &UI,
 ) -> Result<VerifyResponse> {
@@ -150,7 +143,7 @@ pub async fn verify(
         verifier,
         network,
         confirm_verification,
-        package,
+        package: scarb_package,
         url,
         test_files,
     } = args;
@@ -173,7 +166,8 @@ pub async fn verify(
 
     // Build JSON Payload for the verification request
     // get the parent dir of the manifest path
-    let workspace_dir = manifest_path
+    let workspace_dir = package
+        .manifest_path
         .parent()
         .ok_or(anyhow!("Failed to obtain workspace dir"))?;
 
@@ -192,6 +186,24 @@ pub async fn verify(
 
     let network =
         resolve_verification_network(network, config.network_params.network(), &provider).await?;
+
+    // Compilation is done as part of the validation and to check that the contract exists.
+    let artifacts = build_and_load_artifacts(
+        package,
+        &BuildConfig {
+            scarb_toml_path: package.manifest_path.clone(),
+            json,
+            profile: "release".to_string(),
+        },
+        false,
+        // TODO(#3959) Remove `base_ui`
+        ui.base_ui(),
+    )
+    .context("Failed to build contract")?;
+
+    if !artifacts.contains_key(&contract_name) {
+        bail!("Contract named '{contract_name}' was not found");
+    }
 
     // Handle test_files warning for Walnut
     if matches!(verifier, Verifier::Walnut) && test_files {
@@ -216,18 +228,11 @@ pub async fn verify(
                 files.iter().map(|(path, _)| format!("  {path}")).collect();
 
             // Display files and confirm
-            display_files_and_confirm(
-                &verifier,
-                files_to_display,
-                confirm_verification,
-                ui,
-                artifacts,
-                &contract_name,
-            )?;
+            display_files_and_confirm(&verifier, files_to_display, confirm_verification, ui)?;
 
             // Perform verification
             walnut
-                .verify(contract_identifier, contract_name, package, false, ui)
+                .verify(contract_identifier, contract_name, scarb_package, false, ui)
                 .await
         }
         Verifier::Voyager => {
@@ -239,18 +244,17 @@ pub async fn verify(
                 files.keys().map(|name| format!("  {name}")).collect();
 
             // Display files and confirm
-            display_files_and_confirm(
-                &verifier,
-                files_to_display,
-                confirm_verification,
-                ui,
-                artifacts,
-                &contract_name,
-            )?;
+            display_files_and_confirm(&verifier, files_to_display, confirm_verification, ui)?;
 
             // Perform verification
             voyager
-                .verify(contract_identifier, contract_name, package, test_files, ui)
+                .verify(
+                    contract_identifier,
+                    contract_name,
+                    scarb_package,
+                    test_files,
+                    ui,
+                )
                 .await
         }
     }
