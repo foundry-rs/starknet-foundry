@@ -1,7 +1,7 @@
 # Performing Multicall
 
 Multicall allows you to execute multiple calls in a single transaction. `sncast` comes with two interfaces:
-- `sncast multicall ...` which requires passing all calls as CLI arguments
+- `sncast multicall execute ...` which requires passing all calls as CLI arguments
 - `sncast multicall run` which uses `.toml` file
 
 > 📝 **Note**
@@ -14,7 +14,7 @@ You can prepare and execute multiple calls in a single transaction using CLI arg
 ### Example
 
 ```shell
-$ sncast multicall \
+$ sncast multicall execute \
     deploy --id map_contract --class-hash 0x02a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321 \
     / invoke --contract-address @map_contract --function put --calldata 0x1 0x2 \
     / invoke --contract-address @map_contract --function put --calldata 0x3 0x4
@@ -34,7 +34,7 @@ transaction: https://sepolia.voyager.online/tx/[..]
 </details>
 <br>
 
-Currently, `invoke` and `deploy` calls are supported. Their syntax is the same as for `sncast invoke` and `sncast deploy` commands (with additional id argument for deploy calls). For more details on the syntax of these calls, see the [invoke](../appendix/sncast/multicall/invoke.md) and [deploy](../appendix/sncast/multicall/deploy.md) command references.
+Currently, `invoke` and `deploy` calls are supported. Their syntax is the same as for `sncast invoke` and `sncast deploy` commands (with additional id argument for deploy calls). For more details on the syntax of these calls, see the [invoke](../appendix/sncast/multicall/execute/invoke.md) and [deploy](../appendix/sncast/multicall/execute/deploy.md) command references.
 
 > 📝 **Note**
 > The example above uses `@id` syntax to reference the address of a contract deployed within the same multicall using its `id`.
