@@ -1,4 +1,6 @@
-use crate::helpers::constants::{DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, MAP_CONTRACT_ADDRESS_SEPOLIA, URL};
+use crate::helpers::constants::{
+    DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
+};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
