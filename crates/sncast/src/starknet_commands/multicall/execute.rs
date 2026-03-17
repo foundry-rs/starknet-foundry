@@ -189,23 +189,15 @@ mod tests {
         assert_eq!(
             groups,
             vec![
-                vec![
-                    "deploy".to_string(),
-                    "--class-hash".to_string(),
-                    "0x123".to_string()
-                ],
-                vec![
-                    "invoke".to_string(),
-                    "--contract-address".to_string(),
-                    "0xabc".to_string(),
-                    "--function".to_string(),
-                    "my_function".to_string()
-                ],
-                vec![
-                    "deploy".to_string(),
-                    "--class-hash".to_string(),
-                    "0x456".to_string()
-                ]
+                create_tokens(vec!["deploy", "--class-hash", "0x123"]),
+                create_tokens(vec![
+                    "invoke",
+                    "--contract-address",
+                    "0xabc",
+                    "--function",
+                    "my_function"
+                ]),
+                create_tokens(vec!["deploy", "--class-hash", "0x456"])
             ]
         );
     }
@@ -226,10 +218,7 @@ mod tests {
 
     #[test]
     fn test_extract_commands_groups_trailing_slash() {
-        let tokens = vec!["deploy", "--class-hash", "0x123", "/"]
-            .into_iter()
-            .map(String::from)
-            .collect::<Vec<_>>();
+        let tokens = create_tokens(vec!["deploy", "--class-hash", "0x123", "/"]);
 
         let groups = extract_commands_groups(&tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
         assert_eq!(
