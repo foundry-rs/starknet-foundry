@@ -5,9 +5,9 @@ use sncast::response::{errors::StarknetCommandError, utils::selector::SelectorRe
 use starknet_rust::core::utils::get_selector_from_name;
 
 #[derive(Args, Debug)]
-#[command(about = "Calculate selector from name", long_about = None)]
+#[command(about = "Calculate entrypoint selector from function name", long_about = None)]
 pub struct Selector {
-    /// Selector name
+    /// Function name
     pub name: String,
 }
 
