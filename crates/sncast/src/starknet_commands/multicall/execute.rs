@@ -108,22 +108,35 @@ fn extract_commands_groups(
     let mut all_groups = Vec::new();
     let mut current_group = Vec::new();
 
-    for (i, token) in tokens.iter().enumerate() {
-        if token == separator {
-            let next_index = i + 1;
-            let is_at_end = next_index == tokens.len();
-            let next_is_command = !is_at_end && commands.contains(&tokens[next_index].as_str());
+    let mut i = 0;
+    while i < tokens.len() {
+        let token = &tokens[i];
 
+        if token == separator {
+            // Look ahead to find the next non-separator token
+            let mut j = i + 1;
+            while j < tokens.len() && tokens[j] == separator {
+                j += 1;
+            }
+
+            let is_at_end = j == tokens.len();
+            let next_is_command = !is_at_end && commands.contains(&tokens[j].as_str());
+
+            // If the sequence of separators leads to a command or the end of the input,
+            // it acts as a valid boundary.
             if is_at_end || next_is_command {
                 if !current_group.is_empty() {
                     all_groups.push(current_group);
                     current_group = Vec::new();
                 }
+                // Fast-forward the index to skip all consecutive separators
+                i = j;
                 continue;
             }
         }
 
         current_group.push(token.clone());
+        i += 1;
     }
 
     if !current_group.is_empty() {
@@ -132,6 +145,7 @@ fn extract_commands_groups(
 
     all_groups
 }
+
 fn parse_args<T>(command_name: &str, tokens: &[String]) -> anyhow::Result<T>
 where
     T: Args + FromArgMatches,
