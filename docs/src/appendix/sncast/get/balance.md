@@ -3,7 +3,7 @@ Fetch balance of the account for specified token.
 
 ## `--token, -t <TOKEN>`
 Optional.
-Conflicts with: [`--token-address`](#--token-address)
+Conflicts with: [`--token-address`](#--token-address--d-token_address)
 
 Name of the token to check the balance for. Possible values
 - `strk` (default)
@@ -11,7 +11,7 @@ Name of the token to check the balance for. Possible values
 
 ## `--token-address, -d <TOKEN_ADDRESS>`
 Optional.
-Conflicts with: [`--token`](#--token)
+Conflicts with: [`--token`](#--token--t-token)
 
 Token contract address to check the balance for. Token needs to be compatible with ERC-20 standard.
 
