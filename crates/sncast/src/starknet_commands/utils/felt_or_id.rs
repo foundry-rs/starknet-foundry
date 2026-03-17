@@ -15,11 +15,7 @@ impl FeltOrId {
     }
 
     pub fn as_id(&self) -> Option<&str> {
-        if let Some(id) = self.0.strip_prefix(ID_PREFIX) {
-            Some(id)
-        } else {
-            None
-        }
+        self.0.strip_prefix(ID_PREFIX)
     }
 }
 

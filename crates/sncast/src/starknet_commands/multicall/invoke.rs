@@ -40,8 +40,7 @@ impl MulticallInvoke {
     pub async fn build_call(&self, contract_registry: &mut ContractRegistry) -> Result<Call> {
         let selector = get_selector_from_name(&self.common.function)?;
         let arguments = replaced_arguments(&self.common.arguments, contract_registry)?;
-        let id = self.common.contract_address.as_id();
-        let contract_address = if let Some(id) = id {
+        let contract_address = if let Some(id) = self.common.contract_address.as_id() {
             contract_registry
                 .get_address_by_id(id)
                 .with_context(|| format!("Failed to find contract address for id: {id}"))
