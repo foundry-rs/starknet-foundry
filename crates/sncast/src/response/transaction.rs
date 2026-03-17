@@ -395,7 +395,7 @@ fn build_deploy_response(tx: &starknet_rust::core::types::DeployTransaction) -> 
     OutputBuilder::new()
         .tx_header()
         .tx_type("DEPLOY")
-        .tx_version(&format!("{version:#x}"))
+        .tx_version(&version.to_string())
         .tx_hash(transaction_hash)
         .class_hash(class_hash)
         .contract_address_salt(contract_address_salt)
