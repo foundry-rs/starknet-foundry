@@ -1,4 +1,5 @@
 use super::common::runner::{runner, setup_package};
+use crate::assert_cleaned_output;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use std::fs;
@@ -12,10 +13,12 @@ fn read_optimization_graph(dir: &std::path::Path, min: u32, max: u32, step: u32)
 }
 
 #[test]
-fn optimize_inlining_dry_run() {
+fn snap_optimize_inlining_dry_run() {
     let temp = setup_package("simple_package");
 
     let output = runner(&temp)
+        .env("SCARB_UI_VERBOSITY", "quiet")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
         .arg("optimize-inlining")
         .arg("--exact")
         .arg("simple_package_integrationtest::contract::call_and_invoke")
@@ -30,39 +33,14 @@ fn optimize_inlining_dry_run() {
         .assert()
         .success();
 
-    assert_stdout_contains(
-        output,
-        indoc! {r"
-        Starting inlining strategy optimization...
-        Search range: 0 to 100, step: 50, max contract size: [..] bytes, max felts: [..]
-        [1/3] Testing threshold 0...
-        [..]
-        [2/3] Testing threshold 50...
-        [..]
-        [3/3] Testing threshold 100...
-        [..]
-
-        Optimization Results:
-        ╭───────────┬───────────┬───────────────┬──────────────────────────┬────────╮
-        │ Threshold ┆ Total Gas ┆ Contract Size ┆ Contract Bytecode L2 Gas ┆ Status │
-        ╞═══════════╪═══════════╪═══════════════╪══════════════════════════╪════════╡
-        │ 0         ┆ 547950    ┆ 52391         ┆ 49725440                 ┆ ✓      │
-        ├╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-        │ 50        ┆ 514510    ┆ 21761         ┆ 27033600                 ┆ ✓      │
-        ├╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-        │ 100       ┆ 513510    ┆ 19733         ┆ 25559040                 ┆ ✓      │
-        ╰───────────┴───────────┴───────────────┴──────────────────────────┴────────╯
-        Lowest runtime gas cost: [..]
-        Scarb.toml not modified. Use --gas or --size to apply a threshold.
-        "},
-    );
+    assert_cleaned_output!(output);
 
     let graph_bytes = read_optimization_graph(temp.path(), 0, 100, 50);
     insta::assert_binary_snapshot!("optimize_inlining_dry_run.png", graph_bytes);
 }
 
 #[test]
-fn optimize_inlining_updates_manifest() {
+fn snap_optimize_inlining_updates_manifest() {
     let temp = setup_package("simple_package");
 
     let initial_scarb_toml = fs::read_to_string(temp.path().join("Scarb.toml"))
@@ -86,6 +64,8 @@ fn optimize_inlining_updates_manifest() {
     );
 
     let output = runner(&temp)
+    .env("SCARB_UI_VERBOSITY", "quiet")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
         .arg("optimize-inlining")
         .arg("--exact")
         .arg("simple_package_integrationtest::contract::call_and_invoke")
@@ -101,28 +81,7 @@ fn optimize_inlining_updates_manifest() {
         .assert()
         .success();
 
-    assert_stdout_contains(
-        output,
-        indoc! {r"
-        Starting inlining strategy optimization...
-        Search range: 0 to 10, step: 10, max contract size: [..] bytes, max felts: [..]
-        [1/2] Testing threshold 0...
-        [..]
-        [2/2] Testing threshold 10...
-        [..]
-
-        Optimization Results:
-        ╭───────────┬───────────┬───────────────┬──────────────────────────┬────────╮
-        │ Threshold ┆ Total Gas ┆ Contract Size ┆ Contract Bytecode L2 Gas ┆ Status │
-        ╞═══════════╪═══════════╪═══════════════╪══════════════════════════╪════════╡
-        │ 0         ┆ 547950    ┆ 52391         ┆ 49725440                 ┆ ✓      │
-        ├╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-        │ 10        ┆ 523810    ┆ 29546         ┆ 34897920                 ┆ ✓      │
-        ╰───────────┴───────────┴───────────────┴──────────────────────────┴────────╯
-        Lowest runtime gas cost: [..]
-        Updated Scarb.toml with inlining-strategy = 10
-        "},
-    );
+    assert_cleaned_output!(output);
 
     let graph_bytes = read_optimization_graph(temp.path(), 0, 10, 10);
     insta::assert_binary_snapshot!("optimize_inlining_updates_manifest.png", graph_bytes);
