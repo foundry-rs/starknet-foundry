@@ -12,7 +12,7 @@ pub mod run;
 
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::execute::Execute;
-use crate::starknet_commands::utils::contract_address_identifier::FeltOrId;
+use crate::starknet_commands::utils::felt_or_id::FeltOrId;
 use crate::{Arguments, process_command_result, starknet_commands};
 use foundry_ui::Message;
 use new::New;
@@ -90,7 +90,6 @@ pub async fn multicall(
                 &account,
                 &provider,
                 wait_config,
-                run.fee_args.clone(),
                 ui,
             )
             .await;
