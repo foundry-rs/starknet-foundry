@@ -297,7 +297,7 @@ async fn test_unrecognized_command() {
         output,
         indoc! {
             "
-            Command: multicall
+            Command: multicall execute
             Error: Unknown multicall command: 'declare'. Allowed commands: deploy, invoke
             "
         },
@@ -326,7 +326,7 @@ async fn test_empty_calls() {
         output,
         indoc! {
             "
-            Command: multicall
+            Command: multicall execute
             Error: No valid multicall commands found to execute. Please check the provided commands.
             "
         },
