@@ -10,7 +10,7 @@ use crate::starknet_commands::script::run_script_command;
 use crate::starknet_commands::utils::{self, Utils};
 use crate::starknet_commands::{
     account, account::Account as AccountCommand, call::Call, declare::Declare, deploy::Deploy,
-    get::tx_status::Transaction, invoke::Invoke, multicall::Multicall, script::Script,
+    get::tx_status::TxStatus, invoke::Invoke, multicall::Multicall, script::Script,
     show_config::ShowConfig,
 };
 use crate::starknet_commands::{get, multicall};
@@ -186,7 +186,7 @@ enum Commands {
     Script(Script),
 
     /// Get the status of a transaction
-    TxStatus(Transaction),
+    TxStatus(TxStatus),
 
     /// Verify a contract
     Verify(Verify),

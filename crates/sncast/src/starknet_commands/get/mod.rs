@@ -17,7 +17,7 @@ pub struct Get {
 #[derive(Debug, Subcommand)]
 pub enum GetCommands {
     /// Get the status of a transaction
-    TxStatus(tx_status::Transaction),
+    TxStatus(tx_status::TxStatus),
 
     /// Get the transaction by hash
     Tx(transaction::Transaction),
