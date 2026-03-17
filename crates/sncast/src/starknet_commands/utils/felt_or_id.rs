@@ -13,7 +13,7 @@ impl FeltOrId {
         FeltOrId(s)
     }
 
-    pub fn as_felt(&self) -> Result<Felt> {
+    pub fn try_into_felt(&self) -> Result<Felt> {
         Felt::from_str(&self.0)
             .context("Failed to parse contract address: expected a hex or decimal string")
     }

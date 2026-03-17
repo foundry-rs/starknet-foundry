@@ -156,20 +156,24 @@ mod tests {
     #[test]
     fn test_extract_commands_groups() {
         let tokens = vec![
-            "deploy".to_string(),
-            "--class-hash".to_string(),
-            "0x123".to_string(),
-            "/".to_string(),
-            "invoke".to_string(),
-            "--contract-address".to_string(),
-            "0xabc".to_string(),
-            "--function".to_string(),
-            "my_function".to_string(),
-            "/".to_string(),
-            "deploy".to_string(),
-            "--class-hash".to_string(),
-            "0x456".to_string(),
-        ];
+            "deploy",
+            "--class-hash",
+            "0x123",
+            "/",
+            "invoke",
+            "--contract-address",
+            "0xabc",
+            "--function",
+            "my_function",
+            "/",
+            "deploy",
+            "--class-hash",
+            "0x456",
+        ]
+        .into_iter()
+        .map(String::from)
+        .collect::<Vec<_>>();
+
         let groups = extract_commands_groups(&tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
         assert_eq!(
             groups,

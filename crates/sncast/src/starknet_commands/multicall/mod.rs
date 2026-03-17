@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -24,7 +24,6 @@ use sncast::{
     response::explorer_link::block_explorer_link_if_allowed,
 };
 use starknet_rust::providers::Provider;
-use starknet_types_core::felt::Felt;
 
 #[derive(Args)]
 #[command(about = "Execute multiple calls at once", long_about = None)]
@@ -127,21 +126,37 @@ pub async fn multicall(
 }
 
 /// Replaces arguments that reference user-defined ids with their corresponding values from the contract registry.
-pub fn replaced_arguments(arguments: &Arguments, conracts: &ContractRegistry) -> Result<Arguments> {
+pub fn replaced_arguments(
+    arguments: &Arguments,
+    contracts: &ContractRegistry,
+) -> Result<Arguments> {
     Ok(match (&arguments.calldata, &arguments.arguments) {
         (Some(calldata), None) => {
             let replaced_calldata = calldata
                 .iter()
-                .map(|input| FeltOrId::new(input.clone()).as_id(conracts))
-                .collect::<Result<Vec<Felt>>>()?;
+                .map(|raw_input| {
+                    let input = FeltOrId::new(raw_input.clone());
+                    if let Some(id) = input.as_id() {
+                        contracts
+                            .get_address_by_id(id)
+                            .with_context(|| {
+                                format!("Failed to find contract address for id: {id}")
+                            })
+                            .map(|f| f.to_string())
+                    } else {
+                        Ok(raw_input.clone())
+                    }
+                })
+                .collect::<Result<Vec<String>>>()?;
+
             Arguments {
-                calldata: Some(replaced_calldata.iter().map(ToString::to_string).collect()),
+                calldata: Some(replaced_calldata),
                 arguments: None,
             }
         }
         (None, _) => arguments.clone(),
-        (Some(_), Some(_)) => anyhow::bail!(
-            "Invalid arguments: both `calldata` and `arguments` are set. Please provide only one."
-        ),
+        (Some(_), Some(_)) => {
+            unreachable!("Only one of `calldata` or `arguments` can be provided, but both are set.")
+        }
     })
 }
