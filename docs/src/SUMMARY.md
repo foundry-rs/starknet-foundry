@@ -172,6 +172,7 @@
     * [utils](appendix/sncast/utils/utils.md)
         * [serialize](appendix/sncast/utils/serialize.md)
         * [class-hash](appendix/sncast/utils/class_hash.md)
+        * [selector](appendix/sncast/utils/selector.md)
 * [`sncast` Library Reference](appendix/sncast-library.md)
     * [declare](appendix/sncast-library/declare.md)
     * [deploy](appendix/sncast-library/deploy.md)
