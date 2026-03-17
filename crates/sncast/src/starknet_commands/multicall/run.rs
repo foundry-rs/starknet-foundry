@@ -1,10 +1,10 @@
 use std::str::FromStr;
 
 use crate::starknet_commands::invoke::execute_calls;
-use crate::starknet_commands::multicall::MulticallMode;
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::deploy::MulticallDeploy;
 use crate::starknet_commands::multicall::invoke::MulticallInvoke;
+use crate::starknet_commands::utils::felt_or_id::FeltOrId;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
@@ -12,6 +12,7 @@ use serde::Deserialize;
 use serde_json::Number;
 use sncast::WaitForTx;
 use sncast::helpers::fee::FeeArgs;
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::multicall::run::MulticallRunResponse;
 use sncast::response::ui::UI;
@@ -28,6 +29,12 @@ pub struct Run {
     /// Path to the toml file with declared operations
     #[arg(short = 'p', long = "path")]
     pub path: Utf8PathBuf,
+
+    #[command(flatten)]
+    pub fee_args: FeeArgs,
+
+    #[command(flatten)]
+    pub rpc: RpcArgs,
 }
 
 #[derive(Deserialize, Debug)]
@@ -61,7 +68,7 @@ pub struct DeployItem {
 
 #[derive(Deserialize, Debug)]
 pub struct InvokeItem {
-    pub contract_address: String,
+    pub contract_address: FeltOrId,
     pub function: String,
     pub inputs: Vec<Input>,
 }
@@ -71,11 +78,9 @@ pub async fn run(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     provider: &JsonRpcClient<HttpTransport>,
     wait_config: WaitForTx,
-    fee_args: FeeArgs,
-    nonce: Option<Felt>,
     ui: &UI,
 ) -> Result<MulticallRunResponse> {
-    let fee_args = fee_args.clone();
+    let fee_args = run.fee_args.clone();
 
     let contents = std::fs::read_to_string(&run.path)?;
     let multicall: MulticallFile =
@@ -88,20 +93,20 @@ pub async fn run(
         match call {
             CallItem::Deploy(item) => {
                 let call = MulticallDeploy::new_from_item(&item, &contracts)?
-                    .build_call(account, &mut contracts, MulticallMode::File)
+                    .build_call(account, &mut contracts)
                     .await?;
                 parsed_calls.push(call);
             }
             CallItem::Invoke(item) => {
                 let call = MulticallInvoke::new_from_item(&item, &contracts)?
-                    .build_call(&mut contracts, MulticallMode::File)
+                    .build_call(&mut contracts)
                     .await?;
                 parsed_calls.push(call);
             }
         }
     }
 
-    execute_calls(account, parsed_calls, fee_args, nonce, wait_config, ui)
+    execute_calls(account, parsed_calls, fee_args, None, wait_config, ui)
         .await
         .map(Into::into)
         .map_err(handle_starknet_command_error)

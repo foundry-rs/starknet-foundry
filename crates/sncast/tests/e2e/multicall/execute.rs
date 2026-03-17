@@ -18,6 +18,7 @@ async fn test_one_invoke() {
         "--account",
         "my_account",
         "multicall",
+        "execute",
         "--url",
         URL,
         "invoke",
@@ -59,6 +60,7 @@ async fn test_two_invokes() {
         "--account",
         "my_account",
         "multicall",
+        "execute",
         "--url",
         URL,
         "invoke",
@@ -108,6 +110,7 @@ async fn test_deploy_and_invoke() {
         "--account",
         "my_account",
         "multicall",
+        "execute",
         "--url",
         URL,
         "deploy",
@@ -153,6 +156,7 @@ async fn test_use_id() {
         "--account",
         "my_account",
         "multicall",
+        "execute",
         "--url",
         URL,
         "deploy",
@@ -200,6 +204,7 @@ async fn test_non_existent_id() {
         "--account",
         "my_account",
         "multicall",
+        "execute",
         "--url",
         URL,
         "deploy",
@@ -242,6 +247,7 @@ async fn test_duplicated_id() {
         "--account",
         "my_account",
         "multicall",
+        "execute",
         "--url",
         URL,
         "deploy",
@@ -267,6 +273,69 @@ async fn test_duplicated_id() {
         indoc! {
             "
             Error: Duplicate id found: dpl
+            "
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_unrecognized_command() {
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "multicall",
+        "execute",
+        "--url",
+        URL,
+        "declare",
+    ];
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {
+            "
+            Command: multicall
+            Error: Unknown multicall command: 'declare'. Allowed commands: deploy, invoke
+            "
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_empty_calls() {
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "multicall",
+        "execute",
+        "--url",
+        URL,
+    ];
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {
+            "
+            Command: multicall
+            Error: No valid multicall commands found to execute. Please check the provided commands.
             "
         },
     );

@@ -1,20 +1,18 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::{Args, Subcommand};
 use serde::Serialize;
 use serde_json::{Value, json};
-use sncast::helpers::fee::FeeArgs;
-use sncast::helpers::rpc::RpcArgs;
 
 pub mod contract_registry;
 pub mod deploy;
+pub mod execute;
 pub mod invoke;
-pub mod mode;
 pub mod new;
 pub mod run;
-pub mod run_calls;
 
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
-use crate::starknet_commands::multicall::mode::MulticallMode;
+use crate::starknet_commands::multicall::execute::Execute;
+use crate::starknet_commands::utils::contract_address_identifier::FeltOrId;
 use crate::{Arguments, process_command_result, starknet_commands};
 use foundry_ui::Message;
 use new::New;
@@ -31,16 +29,6 @@ use starknet_types_core::felt::Felt;
 #[derive(Args)]
 #[command(about = "Execute multiple calls at once", long_about = None)]
 pub struct Multicall {
-    #[command(flatten)]
-    pub fee_args: FeeArgs,
-
-    #[command(flatten)]
-    pub rpc: RpcArgs,
-
-    /// Nonce of the transaction. If not provided, nonce will be set automatically
-    #[arg(short, long)]
-    pub nonce: Option<Felt>,
-
     #[command(subcommand)]
     pub command: Commands,
 }
@@ -49,8 +37,7 @@ pub struct Multicall {
 pub enum Commands {
     Run(Box<Run>),
     New(New),
-    #[command(external_subcommand)]
-    Calls(Vec<String>),
+    Execute(Box<Execute>),
 }
 
 pub async fn multicall(
@@ -94,23 +81,16 @@ pub async fn multicall(
             Ok(())
         }
         starknet_commands::multicall::Commands::Run(run) => {
-            let provider = multicall.rpc.get_provider(&config, ui).await?;
+            let provider = run.rpc.get_provider(&config, ui).await?;
 
-            let account = get_account(
-                &config,
-                &provider,
-                &multicall.rpc,
-                config.keystore.as_ref(),
-                ui,
-            )
-            .await?;
+            let account =
+                get_account(&config, &provider, &run.rpc, config.keystore.as_ref(), ui).await?;
             let result = starknet_commands::multicall::run::run(
                 run.clone(),
                 &account,
                 &provider,
                 wait_config,
-                multicall.fee_args.clone(),
-                multicall.nonce,
+                run.fee_args.clone(),
                 ui,
             )
             .await;
@@ -120,24 +100,22 @@ pub async fn multicall(
             process_command_result("multicall run", result, ui, block_explorer_link);
             Ok(())
         }
-        starknet_commands::multicall::Commands::Calls(tokens) => {
-            let provider = multicall.rpc.get_provider(&config, ui).await?;
+        starknet_commands::multicall::Commands::Execute(execute) => {
+            let provider = execute.rpc.get_provider(&config, ui).await?;
             let account = get_account(
                 &config,
                 &provider,
-                &multicall.rpc,
+                &execute.rpc,
                 config.keystore.as_ref(),
                 ui,
             )
             .await?;
 
-            let result = starknet_commands::multicall::run_calls::run_calls(
-                tokens,
-                &provider,
+            let result = starknet_commands::multicall::execute::execute(
+                *execute.clone(),
                 &account,
+                &provider,
                 wait_config,
-                multicall.fee_args.clone(),
-                multicall.nonce,
                 ui,
             )
             .await;
@@ -150,26 +128,15 @@ pub async fn multicall(
 }
 
 /// Replaces arguments that reference user-defined ids with their corresponding values from the contract registry.
-///
-/// - For [`MulticallSource::File`], ids are referenced without a prefix (e.g. `deployed_contract`).
-/// - For [`MulticallSource::Cli`], ids are referenced with an `@` prefix (e.g. `@deployed_contract`).
-pub fn replaced_arguments(
-    arguments: &Arguments,
-    contract_registry: &ContractRegistry,
-    mode: MulticallMode,
-) -> Result<Arguments> {
+pub fn replaced_arguments(arguments: &Arguments, conracts: &ContractRegistry) -> Result<Arguments> {
     Ok(match (&arguments.calldata, &arguments.arguments) {
         (Some(calldata), None) => {
             let replaced_calldata = calldata
                 .iter()
-                .map(|input| {
-                    Ok(resolve_contract_address(input, contract_registry, mode)
-                        .context("Failed to resolve contract address")?
-                        .to_string())
-                })
-                .collect::<Result<Vec<String>>>()?;
+                .map(|input| FeltOrId::new(input.clone()).as_id(conracts))
+                .collect::<Result<Vec<Felt>>>()?;
             Arguments {
-                calldata: Some(replaced_calldata),
+                calldata: Some(replaced_calldata.iter().map(ToString::to_string).collect()),
                 arguments: None,
             }
         }
@@ -178,30 +145,4 @@ pub fn replaced_arguments(
             "Invalid arguments: both `calldata` and `arguments` are set. Please provide only one."
         ),
     })
-}
-
-/// Resolves a contract address from a string that can either be a direct address
-/// or an id referencing a previously defined contract in the registry, depending on the mode.
-pub fn resolve_contract_address(
-    contract_address: &str,
-    contracts: &ContractRegistry,
-    mode: MulticallMode,
-) -> Result<Felt> {
-    let parse_fallback = || contract_address.parse::<Felt>().map_err(Into::into);
-
-    match mode {
-        MulticallMode::File => {
-            contracts
-            .get_address_by_id(contract_address)
-            .map_or_else(parse_fallback, Ok)
-        },
-        MulticallMode::Cli => match mode.id_key(contract_address) {
-            Some(id) => contracts.get_address_by_id(id).ok_or_else(|| {
-                anyhow::anyhow!(
-                    "No contract address found for id: {id}. Ensure the referenced id is defined in a previous step."
-                )
-            }),
-            None => parse_fallback(),
-        },
-    }
 }

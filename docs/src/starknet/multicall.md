@@ -62,12 +62,16 @@ unique = false
 
 [[call]]
 call_type = "invoke"
-contract_address = "map_contract"
+contract_address = "@map_contract"
 function = "put"
 inputs = ["0x123", 234]  # Numbers can be used directly without quotes
 ```
 
 After running `sncast multicall run --path file.toml`, a declared contract will be first deployed, and then its function `put` will be invoked.
+
+> 📝 **Note**
+> The example above demonstrates the use of the `id` property in a deploy call, which is then referenced as the `contract address` in an invoke call by using the `@` prefix (e.g., `@map_contract`).
+Additionally, the `id` can be referenced in the inputs of deploy and invoke calls 🔥
 
 > 💡 **Info**
 > Inputs can be either strings (like `"0x123"`) or numbers (like `234`).

@@ -1,24 +1,26 @@
 use std::str::FromStr;
 
-use crate::starknet_commands::balance::Balance;
 use crate::starknet_commands::declare::declare;
 use crate::starknet_commands::declare_from::{ContractSource, DeclareFrom};
 use crate::starknet_commands::deploy::{DeployArguments, DeployCommonArgs};
+use crate::starknet_commands::get::Get;
+use crate::starknet_commands::get::balance::Balance;
 use crate::starknet_commands::invoke::InvokeCommonArgs;
-use crate::starknet_commands::multicall;
 use crate::starknet_commands::script::run_script_command;
 use crate::starknet_commands::utils::{self, Utils};
 use crate::starknet_commands::{
     account, account::Account as AccountCommand, call::Call, declare::Declare, deploy::Deploy,
-    invoke::Invoke, multicall::Multicall, script::Script, show_config::ShowConfig,
-    tx_status::TxStatus,
+    get::tx_status::TxStatus, invoke::Invoke, multicall::Multicall, script::Script,
+    show_config::ShowConfig,
 };
+use crate::starknet_commands::{get, multicall};
 use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
 use configuration::load_config;
 use conversions::IntoConv;
 use data_transformer::transform;
+use foundry_ui::components::warning::WarningMessage;
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
@@ -42,7 +44,6 @@ use sncast::{
     get_contract_class,
 };
 use starknet_commands::verify::Verify;
-use starknet_rust::accounts::Account;
 use starknet_rust::core::types::ContractClass;
 use starknet_rust::core::types::contract::{AbiEntry, SierraClass};
 use starknet_rust::core::utils::get_selector_from_name;
@@ -126,6 +127,7 @@ struct Cli {
 impl Cli {
     fn command_name(&self) -> String {
         match self.command {
+            Commands::Get(_) => "get",
             Commands::Declare(_) => "declare",
             Commands::DeclareFrom(_) => "declare-from",
             Commands::Deploy(_) => "deploy",
@@ -147,6 +149,9 @@ impl Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Get various data from the network
+    Get(Get),
+
     /// Declare a contract
     Declare(Declare),
 
@@ -617,9 +622,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let contract_address = contract_address
-                .parse()
-                .context("Failed to parse contract address: expected a hex or decimal string")?;
+            let contract_address = contract_address.as_felt()?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
@@ -645,6 +648,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             Ok(())
         }
+
+        Commands::Get(get) => get::get(get, config, ui).await,
 
         Commands::Utils(utils) => {
             utils::utils(
@@ -679,16 +684,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             Ok(())
         }
 
+        // TODO(#4214): Remove moved sncast commands
         Commands::TxStatus(tx_status) => {
-            let provider = tx_status.rpc.get_provider(&config, ui).await?;
-
-            let result =
-                starknet_commands::tx_status::tx_status(&provider, tx_status.transaction_hash)
-                    .await
-                    .context("Failed to get transaction status");
-
-            process_command_result("tx-status", result, ui, None);
-            Ok(())
+            print_cmd_move_warning("tx-status", "get tx-status", ui);
+            get::tx_status::tx_status(tx_status, config, ui).await
         }
 
         Commands::Verify(verify) => {
@@ -724,23 +723,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             Ok(())
         }
 
+        // TODO(#4214): Remove moved sncast commands
         Commands::Balance(balance) => {
-            let provider = balance.rpc.get_provider(&config, ui).await?;
-            let account = get_account(
-                &config,
-                &provider,
-                &balance.rpc,
-                config.keystore.as_ref(),
-                ui,
-            )
-            .await?;
-
-            let result =
-                starknet_commands::balance::balance(account.address(), &provider, &balance).await?;
-
-            process_command_result("balance", Ok(result), ui, None);
-
-            Ok(())
+            print_cmd_move_warning("balance", "get balance", ui);
+            get::balance::balance(balance, config, ui).await
         }
 
         Commands::Script(_) => unreachable!(),
@@ -792,4 +778,11 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
 
     config_with_cli(&mut combined_config, cli);
     Ok(combined_config)
+}
+
+fn print_cmd_move_warning(command_name: &str, new_command_name: &str, ui: &UI) {
+    ui.print_warning(WarningMessage::new(format!(
+        "`sncast {command_name}` has moved to `sncast {new_command_name}`. `sncast {command_name}` will be removed in the next version."
+    )));
+    ui.print_blank_line();
 }

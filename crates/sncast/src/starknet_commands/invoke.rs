@@ -1,4 +1,5 @@
 use crate::Arguments;
+use crate::starknet_commands::utils::contract_address_identifier::FeltOrId;
 use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
@@ -20,7 +21,7 @@ use starknet_types_core::felt::Felt;
 pub struct InvokeCommonArgs {
     /// Address of contract to invoke
     #[arg(short = 'd', long)]
-    pub contract_address: String,
+    pub contract_address: FeltOrId,
 
     /// Name of the function to invoke
     #[arg(short, long)]
