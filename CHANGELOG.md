@@ -9,17 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.58.0] - 2026-03-18
 
-### Cast
-
-#### Added
-
-- `sncast get nonce` command to get the nonce of a contract.
-
 ### Forge
 
 #### Added
 - `--max-threads` flag to control the maximum number of threads used for test execution
-- `optimize-inlining` subcommand, which performs a brute-force search of the optimal `inlining-strategy` threshold  for the project over user defined benchmark.
+- `optimize-inlining` subcommand, which performs a brute-force search of the optimal `inlining-strategy` threshold for the project over user defined benchmark
 
 #### Fixed
 
@@ -30,7 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Support for Ledger hardware wallet as a transaction signer.
+- Support for Ledger hardware wallet as a transaction signer
+- `sncast get nonce` command to get the nonce of a contract
 
 #### Changed
 
