@@ -20,6 +20,7 @@
 * [show-config](./sncast/show_config.md)
 * [get](./sncast/get/get.md)
     * [balance](./sncast/get/balance.md)
+    * [class-hash-at](./sncast/get/class_hash_at.md)
     * [nonce](./sncast/get/nonce.md)
     * [tx](./sncast/get/tx.md)
     * [tx-status](./sncast/get/tx-status.md)

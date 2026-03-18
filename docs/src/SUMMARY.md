@@ -156,6 +156,7 @@
     * [completions](appendix/sncast/completions.md)
     * [get](appendix/sncast/get/get.md)
         * [balance](appendix/sncast/get/balance.md)
+        * [class-hash-at](appendix/sncast/get/class_hash_at.md)
         * [nonce](appendix/sncast/get/nonce.md)
         * [tx](appendix/sncast/get/tx.md)
         * [tx-status](appendix/sncast/get/tx-status.md)
