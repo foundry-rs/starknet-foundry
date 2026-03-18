@@ -11,6 +11,10 @@ Multicall allows you to execute multiple calls in a single transaction. `sncast`
 
 You can prepare and execute multiple calls in a single transaction using CLI arguments. To separate different calls, use `/` as a delimiter.
 
+> 📝 **Note**
+>
+> Currently, `invoke` and `deploy` calls are supported. Their syntax is the same as for `sncast invoke` and `sncast deploy` commands (with additional id argument for deploy calls). For more details on the syntax of these calls, see the [invoke](../appendix/sncast/multicall/execute/invoke.md) and [deploy](../appendix/sncast/multicall/execute/deploy.md) command references.
+
 ### Example
 
 ```shell
@@ -33,10 +37,6 @@ transaction: https://sepolia.voyager.online/tx/[..]
 ```
 </details>
 <br>
-
-> 📝 **Note**
->
-> Currently, `invoke` and `deploy` calls are supported. Their syntax is the same as for `sncast invoke` and `sncast deploy` commands (with additional id argument for deploy calls). For more details on the syntax of these calls, see the [invoke](../appendix/sncast/multicall/execute/invoke.md) and [deploy](../appendix/sncast/multicall/execute/deploy.md) command references.
 
 ## Using `id` references
 
