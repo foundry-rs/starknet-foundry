@@ -41,6 +41,15 @@ async fn test_get_invoke_transaction() {
 }
 
 #[tokio::test]
+async fn test_get_invoke_transaction_alias_transaction() {
+    let args = vec!["get", "transaction", INVOKE_TX_HASH, "--url", URL];
+    let snapbox = runner(&args).env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(output, "Success: Transaction found");
+}
+
+#[tokio::test]
 async fn test_json_output() {
     let args = vec!["--json", "get", "tx", INVOKE_TX_HASH, "--url", URL];
     let snapbox = runner(&args);
