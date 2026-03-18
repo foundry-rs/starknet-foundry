@@ -11,10 +11,6 @@ Multicall allows you to execute multiple calls in a single transaction. `sncast`
 
 You can prepare and execute multiple calls in a single transaction using CLI arguments. To separate different calls, use `/` as a delimiter.
 
-You can identify calls within the same multicall with `--id` argument (only for deploy calls) and then refer to output by using `@id` syntax. It can be specified in:
-- `--contract-address` of invoke calls to reference deployed contract addresses
-- `--constructor-calldata` of deploy and `--calldata` of invoke calls to reference any output of previous calls
-
 ### Example
 
 ```shell
@@ -38,7 +34,18 @@ transaction: https://sepolia.voyager.online/tx/[..]
 </details>
 <br>
 
-Currently, `invoke` and `deploy` calls are supported. Their syntax is the same as for `sncast invoke` and `sncast deploy` commands (with additional id argument for deploy calls). For more details on the syntax of these calls, see the [invoke](../appendix/sncast/multicall/execute/invoke.md) and [deploy](../appendix/sncast/multicall/execute/deploy.md) command references.
+> 📝 **Note**
+>
+> Currently, `invoke` and `deploy` calls are supported. Their syntax is the same as for `sncast invoke` and `sncast deploy` commands (with additional id argument for deploy calls). For more details on the syntax of these calls, see the [invoke](../appendix/sncast/multicall/execute/invoke.md) and [deploy](../appendix/sncast/multicall/execute/deploy.md) command references.
+
+## Using `id` references
+
+Similarly in both `sncast multicall execute` and `sncast multicall run`, you can assign an identifier to a `deploy` call and then reference its output in later calls.
+
+- In `deploy` calls, set the id (`--id <id>` for CLI / `id = "<id>"` in TOML).
+- In later calls, reference it using `@<id>`:
+  - As the `contract address` in `invoke` calls
+  - Inside `deploy`/`invoke` inputs (constructor calldata / calldata), to reference outputs of previous calls
 
 ## Multicall with file
 
@@ -68,10 +75,6 @@ inputs = ["0x123", 234]  # Numbers can be used directly without quotes
 ```
 
 After running `sncast multicall run --path file.toml`, a declared contract will be first deployed, and then its function `put` will be invoked.
-
-> 📝 **Note**
-> The example above demonstrates the use of the `id` property in a deploy call, which is then referenced as the `contract address` in an invoke call by using the `@` prefix (e.g., `@map_contract`).
-Additionally, the `id` can be referenced in the inputs of deploy and invoke calls 🔥
 
 > 💡 **Info**
 > Inputs can be either strings (like `"0x123"`) or numbers (like `234`).
