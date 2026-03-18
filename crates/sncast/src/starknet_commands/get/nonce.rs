@@ -4,7 +4,7 @@ use sncast::get_block_id;
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::errors::{SNCastProviderError, StarknetCommandError};
+use sncast::response::errors::StarknetCommandError;
 use sncast::response::nonce::NonceResponse;
 use sncast::response::ui::UI;
 use starknet_rust::providers::jsonrpc::HttpTransport;
@@ -45,6 +45,6 @@ pub async fn get_nonce(
     let nonce = provider
         .get_nonce(block_id, contract_address)
         .await
-        .map_err(|err| StarknetCommandError::ProviderError(SNCastProviderError::from(err)))?;
+        .map_err(|err| StarknetCommandError::ProviderError(err.into()))?;
     Ok(NonceResponse { nonce })
 }
