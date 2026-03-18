@@ -13,4 +13,5 @@ pub mod ledger;
 pub mod output_format;
 pub mod rpc;
 pub mod scarb_utils;
+pub mod signer;
 pub mod token;

@@ -309,7 +309,7 @@ async fn test_keystore_undeployed_account() {
     let snapbox = runner(&args).current_dir(contract_path.path());
     let output = snapbox.assert().failure();
 
-    assert_stderr_contains(output, "Error: [..] make sure the account is deployed");
+    assert_stderr_contains(output, "Error: Failed to get account address");
 }
 
 #[tokio::test]
