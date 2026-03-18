@@ -209,6 +209,40 @@ When the `--add-profile` flag is used, the [profile](../projects/configuration.m
 is automatically created for the account.
 Simply use the `--profile` argument followed by the account name in subsequent requests.
 
+#### Using Ledger Hardware Wallet
+
+Accounts can be created and deployed using a [Ledger hardware wallet](./ledger.md) as the signer. Pass `--ledger-path` (or `--ledger-account-id` as a shorthand) to the `account create` subcommand with an [EIP-2645 derivation path](./eip-2645-hd-paths.md).
+
+<!-- { "requires_ledger": true } -->
+```shell
+$ sncast \
+    account create \
+    --ledger-path "m//starknet'/sncast'/0'/1'/0" \
+    --network sepolia \
+    --name my_ledger_account
+```
+
+<!-- { "requires_ledger": true } -->
+```shell
+$ sncast \
+    account create \
+    --ledger-account-id 1 \
+    --network sepolia \
+    --name my_ledger_account
+```
+
+The public key is read from the device at the specified path and the account address is calculated from it. The path is saved in the accounts file, so subsequent commands only need `--account`:
+
+<!-- { "ignored": true } -->
+```shell
+$ sncast \
+    --account my_ledger_account \
+    account deploy \
+    --network sepolia
+```
+
+A signing confirmation will appear on the Ledger device. See [Ledger Hardware Wallet](./ledger.md) for full details.
+
 #### Using Keystore and Starkli Account
 
 Accounts created and deployed with [starkli](https://book.starkli.rs/accounts#accounts) can be used by specifying the [

@@ -62,3 +62,23 @@ If passed, a profile with corresponding name will be added to the local snfoundr
 Optional.
 
 Class hash of a custom openzeppelin account contract declared to the network.
+
+## `--ledger-path <HD_PATH>`
+Optional.
+
+[EIP-2645 derivation path](../../../starknet/eip-2645-hd-paths.md) of the Ledger key that will control this account (e.g., `m//starknet'/sncast'/0'/1'/0`).
+
+When provided, the public key is read from the Ledger device.
+
+Conflicts with: [`--ledger-account-id`](#--ledger-account-id-account_id)
+
+See [Ledger Hardware Wallet](../../../starknet/ledger.md) for details.
+
+## `--ledger-account-id <ACCOUNT_ID>`
+Optional.
+
+Shorthand for `--ledger-path`. The account ID is used to derive the path `m//starknet'/sncast'/0'/<account-id>'/0`.
+
+Conflicts with: [`--ledger-path`](#--ledger-path-hd_path)
+
+See [Ledger Hardware Wallet](../../../starknet/ledger.md) for details.

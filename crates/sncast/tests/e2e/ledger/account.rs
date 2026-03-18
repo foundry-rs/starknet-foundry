@@ -5,19 +5,18 @@ use crate::e2e::ledger::{
     TEST_LEDGER_PATH, TEST_LEDGER_PATH_STORED, automation, setup_speculos,
 };
 use crate::helpers::constants::URL;
-use crate::helpers::fixtures::{get_transaction_hash, get_transaction_receipt, mint_token};
+use crate::helpers::fixtures::mint_token;
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use configuration::test_utils::copy_config_to_tempdir;
 use conversions::string::IntoHexStr;
 use indoc::indoc;
 use serde_json::{json, to_string_pretty};
-use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use snapbox::assert_data_eq;
 use sncast::helpers::account::load_accounts;
 use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
 use speculos_client::AutomationRule;
-use starknet_rust::core::types::TransactionReceipt::DeployAccount;
 use tempfile::tempdir;
 use test_case::test_case;
 
@@ -73,8 +72,6 @@ async fn test_create_ledger_account(
     assert_stdout_contains(
         output,
         indoc::formatdoc! {"
-            Ledger device will display a confirmation screen — approve it to continue...
-
             Success: Account created
 
             Address: 0x0[..]
@@ -243,7 +240,6 @@ async fn test_deploy_ledger_account(
     let args = vec![
         "--accounts-file",
         accounts_file_str,
-        "--json",
         "account",
         "deploy",
         "--name",
@@ -258,14 +254,15 @@ async fn test_deploy_ledger_account(
         .assert()
         .success();
 
-    let hash = get_transaction_hash(&output.get_output().stdout);
-    let receipt = get_transaction_receipt(hash).await;
+    assert_stdout_contains(
+        output,
+        indoc! {"
+            Ledger device will display a confirmation screen. Please approve it to continue...
 
-    assert!(matches!(receipt, DeployAccount(_)));
-
-    let stdout_str = output.as_stdout();
-    assert!(stdout_str.contains("account deploy"));
-    assert!(stdout_str.contains("transaction_hash"));
+            Success: Account deployed
+            Transaction Hash: 0x[..]
+        "},
+    );
 
     let path = Utf8PathBuf::from_path_buf(accounts_file.clone()).expect("Path is not valid UTF-8");
     let items = load_accounts(&path).expect("Failed to load accounts");

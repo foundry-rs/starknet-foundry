@@ -9,7 +9,7 @@ mod deploy;
 mod devnet_accounts;
 mod fee;
 mod invoke;
-mod ledger;
+pub(crate) mod ledger;
 mod main_tests;
 mod multicall;
 mod nonce;
