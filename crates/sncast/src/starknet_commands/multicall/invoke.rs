@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Args;
 use starknet_rust::core::{types::Call, utils::get_selector_from_name};
 
@@ -39,13 +39,19 @@ impl MulticallInvoke {
     pub async fn build_call(&self, contract_registry: &mut ContractRegistry) -> Result<Call> {
         let selector = get_selector_from_name(&self.common.function)?;
         let arguments = replaced_arguments(&self.common.arguments, contract_registry)?;
-        let contracy_address = self.common.contract_address.as_id(contract_registry)?;
+        let contract_address = if let Some(id) = self.common.contract_address.as_id() {
+            contract_registry
+                .get_address_by_id(id)
+                .with_context(|| format!("Failed to find contract address for id: {id}"))
+        } else {
+            self.common.contract_address.try_into_felt()
+        }?;
 
         let calldata = if let Some(raw_calldata) = &arguments.calldata {
             calldata_to_felts(raw_calldata)?
         } else {
             let class_hash = contract_registry
-                .get_class_hash_by_address(&contracy_address)
+                .get_class_hash_by_address(&contract_address)
                 .await?;
             let contract_class = contract_registry
                 .get_contract_class_by_class_hash(&class_hash)
@@ -54,7 +60,7 @@ impl MulticallInvoke {
         };
 
         Ok(Call {
-            to: contracy_address,
+            to: contract_address,
             selector,
             calldata,
         })

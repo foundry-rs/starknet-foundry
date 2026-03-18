@@ -31,8 +31,8 @@ async fn test_one_invoke() {
     ];
 
     let snapbox = runner(&args)
-        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(tempdir.path());
+        .current_dir(tempdir.path())
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
     let output = snapbox.assert().success();
 
     assert_stdout_contains(
@@ -81,8 +81,8 @@ async fn test_two_invokes() {
     ];
 
     let snapbox = runner(&args)
-        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(tempdir.path());
+        .current_dir(tempdir.path())
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
     let output = snapbox.assert().success();
 
     assert_stdout_contains(
@@ -127,8 +127,8 @@ async fn test_deploy_and_invoke() {
     ];
 
     let snapbox = runner(&args)
-        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(tempdir.path());
+        .current_dir(tempdir.path())
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
     let output = snapbox.assert().success();
 
     assert_stdout_contains(
@@ -175,8 +175,8 @@ async fn test_use_id() {
     ];
 
     let snapbox = runner(&args)
-        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(tempdir.path());
+        .current_dir(tempdir.path())
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
     let output = snapbox.assert().success();
 
     assert_stdout_contains(
@@ -222,9 +222,7 @@ async fn test_non_existent_id() {
         "0x1",
     ];
 
-    let snapbox = runner(&args)
-        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(tempdir.path());
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
     assert_stderr_contains(
@@ -263,9 +261,7 @@ async fn test_duplicated_id() {
         "dpl",
     ];
 
-    let snapbox = runner(&args)
-        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(tempdir.path());
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
     assert_stderr_contains(
@@ -294,16 +290,14 @@ async fn test_unrecognized_command() {
         "declare",
     ];
 
-    let snapbox = runner(&args)
-        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(tempdir.path());
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
     assert_stderr_contains(
         output,
         indoc! {
             "
-            Command: multicall
+            Command: multicall execute
             Error: Unknown multicall command: 'declare'. Allowed commands: deploy, invoke
             "
         },
@@ -325,16 +319,14 @@ async fn test_empty_calls() {
         URL,
     ];
 
-    let snapbox = runner(&args)
-        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(tempdir.path());
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
     assert_stderr_contains(
         output,
         indoc! {
             "
-            Command: multicall
+            Command: multicall execute
             Error: No valid multicall commands found to execute. Please check the provided commands.
             "
         },
