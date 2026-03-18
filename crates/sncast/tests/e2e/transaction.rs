@@ -162,7 +162,7 @@ async fn test_nonexistent_transaction() {
         output,
         indoc! {r"
         Command: get tx
-        Error: Failed to get transaction: Transaction with provided hash was not found (does not exist)
+        Error: Transaction with provided hash was not found (does not exist)
         "},
     );
 }
