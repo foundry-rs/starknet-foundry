@@ -1,7 +1,7 @@
 use crate::helpers::constants::URL;
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 
 const SUCCEEDED_TX_HASH: &str =
     "0x07d2067cd7675f88493a9d773b456c8d941457ecc2f6201d2fe6b0607daadfd1";
@@ -48,6 +48,15 @@ async fn test_succeeded() {
         Finality Status:  Accepted on L1
         Execution Status: Succeeded
     "});
+}
+
+#[tokio::test]
+async fn test_succeeded_alias() {
+    let args = vec!["get", "transaction-status", SUCCEEDED_TX_HASH, "--url", URL];
+    let snapbox = runner(&args);
+
+    let output = snapbox.assert().success();
+    assert_stdout_contains(output, "Success: Transaction status retrieved");
 }
 
 #[tokio::test]
