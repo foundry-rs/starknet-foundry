@@ -26,5 +26,6 @@
 * [utils](./sncast/utils/utils.md)
     * [serialize](./sncast/utils/serialize.md)
     * [class-hash](./sncast/utils/class_hash.md)
+    * [selector](./sncast/utils/selector.md)
 * [verify](./sncast/verify.md)
 * [completions](./sncast/completions.md)
