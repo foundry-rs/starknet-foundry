@@ -107,7 +107,7 @@ pub async fn multicall(
             let result = with_account!(&account, |account| {
                 starknet_commands::multicall::execute::execute(
                     *execute.clone(),
-                    &account,
+                    account,
                     &provider,
                     wait_config,
                     ui,
