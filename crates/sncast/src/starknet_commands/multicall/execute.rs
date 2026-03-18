@@ -37,6 +37,8 @@ pub struct Execute {
     pub nonce: Option<Felt>,
 
     /// The multicall arguments. Subsequent calls should be separated by a '/' token.
+    /// Currently, `invoke` and `deploy` calls are supported. Their syntax is the same
+    /// as for `sncast invoke` and `sncast deploy` commands (with additional id argument for deploy calls).
     #[arg(allow_hyphen_values = true, num_args = 1..)]
     pub tokens: Vec<String>,
 }
