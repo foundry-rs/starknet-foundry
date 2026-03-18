@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `sncast get nonce` command to get the nonce of a contract.
+- `sncast multicall execute`, which allows to pass calls directly as CLI arguments. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/multicall.html#multicall-with-cli-arguments)
 
 ### Forge
 
