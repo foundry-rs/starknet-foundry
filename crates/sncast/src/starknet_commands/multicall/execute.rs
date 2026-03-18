@@ -45,7 +45,7 @@ pub struct Execute {
     /// Additionally, `deploy` supports `--id <ID>` argument to name the deployed contract in this multicall.
     /// In subsequent calls, `@<ID>` can be referenced in `--contract-address` and `--calldata` flags to reference the deployed contract address.
     ///
-    /// For more, read the documentation: https://foundry-rs.github.io/starknet-foundry/starknet/multicall.html#multicall-with-cli-arguments
+    /// For more, read the documentation: `<https://foundry-rs.github.io/starknet-foundry/starknet/multicall.html#multicall-with-cli-arguments>`
     #[arg(allow_hyphen_values = true, num_args = 1..)]
     pub tokens: Vec<String>,
 }
