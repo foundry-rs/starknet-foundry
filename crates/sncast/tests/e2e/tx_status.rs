@@ -17,7 +17,7 @@ async fn test_incorrect_transaction_hash() {
         output,
         indoc! {r"
         Command: get tx-status
-        Error: Failed to get transaction status: Transaction with provided hash was not found (does not exist)
+        Error: Transaction with provided hash was not found (does not exist)
         "},
     );
 }

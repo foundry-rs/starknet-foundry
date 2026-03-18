@@ -2,7 +2,7 @@ use crate::helpers::constants::URL;
 use crate::helpers::fixtures::get_accounts_path;
 use crate::helpers::runner::runner;
 use indoc::{formatdoc, indoc};
-use shared::test_utils::output_assert::AsOutput;
+use shared::test_utils::output_assert::assert_stderr_contains;
 use sncast::helpers::token::Token;
 use tempfile::tempdir;
 use test_case::test_case;
@@ -234,7 +234,13 @@ pub async fn nonexistent_token_address() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    let snapbox = snapbox.assert().failure();
-    let err = snapbox.as_stderr();
-    assert!(err.contains("Error: There is no contract at the specified address"));
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Command: get balance
+        Error: There is no contract at the specified address
+        "},
+    );
 }
