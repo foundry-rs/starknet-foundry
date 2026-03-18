@@ -6,7 +6,7 @@ Supported call types:
 * [`deploy`](./execute/deploy.md)
 * [`invoke`](./execute/invoke.md)
 
-Subsequent calls need to be separated with a `/` delimiter. For example: `sncast multicall deploy ... / invoke ... / deploy ...`
+Subsequent calls need to be separated with a `/` delimiter. For example: `sncast multicall execute deploy ... / invoke ... / deploy ...`
 
 ## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
 

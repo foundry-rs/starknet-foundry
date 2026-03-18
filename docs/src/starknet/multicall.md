@@ -1,8 +1,8 @@
 # Performing Multicall
 
 Multicall allows you to execute multiple calls in a single transaction. `sncast` comes with two interfaces:
-- `sncast multicall execute` which requires passing all calls as CLI arguments
-- `sncast multicall run` which uses `.toml` file
+- `sncast multicall execute` which allows executing multicall inline using a single command, by passing all calls as CLI arguments (see [`execute`](../appendix/sncast/multicall/execute.md) docs)
+- `sncast multicall run` which uses `.toml` file (see [`run`](../appendix/sncast/multicall/run.md) docs)
 
 > 📝 **Note**
 > Multicall executes only one transaction containing all the prepared calls. This means the fee is paid once.
