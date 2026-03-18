@@ -21,6 +21,7 @@
 * [get](./sncast/get/get.md)
     * [balance](./sncast/get/balance.md)
     * [nonce](./sncast/get/nonce.md)
+    * [tx](./sncast/get/tx.md)
     * [tx-status](./sncast/get/tx-status.md)
 * [utils](./sncast/utils/utils.md)
     * [serialize](./sncast/utils/serialize.md)

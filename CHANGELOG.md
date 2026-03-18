@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `sncast get nonce` command to get the nonce of a contract.
+- `sncast get tx` command to get transaction details by hash.
 
 ### Forge
 
