@@ -4,10 +4,11 @@ Configure a deploy call as part of a multicall transaction.
 ## `--id <ID>`
 Optional.
 
-An optional identifier to reference this step in later steps. This is useful for referencing deployed contracts in later calls within the same multicall. Value can be later reference with `@id` syntax.
+An optional identifier to reference this step in later steps. This is useful for referencing deployed contracts in later calls within the same multicall. Value can be later reference with `@id` syntax. It can be used with the `--contract-address` and `--calldata` flags in subsequent calls.
 
-This syntax can be used with the `--contract-address` and `--calldata` flags in subsequent calls. 
-**Note:** The `@id` reference cannot be used with the `--arguments` flag.
+> 📝 **Note**
+>
+> The `@id` reference cannot be used with the `--arguments` flag.
 
 ## `--class-hash, -g <CLASS_HASH>`
 Required.
