@@ -10,7 +10,7 @@ use sncast::{
 use starknet_rust::{
     accounts::SingleOwnerAccount,
     providers::{JsonRpcClient, jsonrpc::HttpTransport},
-    signers::LocalWallet,
+    signers::Signer,
 };
 use starknet_types_core::felt::Felt;
 
@@ -43,13 +43,16 @@ pub struct Execute {
     pub tokens: Vec<String>,
 }
 
-pub async fn execute(
+pub async fn execute<S>(
     execute: Execute,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     provider: &JsonRpcClient<HttpTransport>,
     wait_config: WaitForTx,
     ui: &UI,
-) -> Result<MulticallRunResponse> {
+) -> Result<MulticallRunResponse>
+where
+    S: Signer + Sync + Send,
+{
     let command_groups = extract_commands_groups(&execute.tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
 
     let mut contract_registry = ContractRegistry::new(provider);
