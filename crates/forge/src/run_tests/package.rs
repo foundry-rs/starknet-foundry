@@ -209,6 +209,7 @@ pub async fn run_for_package(
     block_number_map: &mut BlockNumberMap,
     ui: Arc<UI>,
     exit_first_channel: &mut ExitFirstChannel,
+    deterministic_output: bool,
 ) -> Result<PackageTestResult> {
     let mut test_targets = test_package_with_config_resolved(
         test_targets,
@@ -234,6 +235,10 @@ pub async fn run_for_package(
     });
 
     let mut summaries = vec![];
+
+    if deterministic_output {
+        test_targets.sort_by_key(|t| t.tests_location);
+    }
 
     for test_target in test_targets {
         let ui = ui.clone();
