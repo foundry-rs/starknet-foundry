@@ -12,11 +12,6 @@ Subsequent calls need to be separated with a `/` delimiter. For example: `sncast
 
 * [`account`](../common.md#--account--a-account_name)
 
-## `--path, -p <PATH>`
-Required.
-
-Path to a TOML file with call declarations.
-
 ## `--url, -u <RPC_URL>`
 Optional.
 

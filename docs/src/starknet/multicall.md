@@ -1,7 +1,7 @@
 # Performing Multicall
 
 Multicall allows you to execute multiple calls in a single transaction. `sncast` comes with two interfaces:
-- `sncast multicall execute ...` which requires passing all calls as CLI arguments
+- `sncast multicall execute` which requires passing all calls as CLI arguments
 - `sncast multicall run` which uses `.toml` file
 
 > 📝 **Note**
@@ -10,6 +10,10 @@ Multicall allows you to execute multiple calls in a single transaction. `sncast`
 ## Multicall with CLI arguments
 
 You can prepare and execute multiple calls in a single transaction using CLI arguments. To separate different calls, use `/` as a delimiter.
+
+You can identify calls within the same multicall with `--id` argument (only for deploy calls) and then refer to output by using `@id` syntax. It can be specified in:
+- `--contract-address` of invoke calls to reference deployed contract addresses
+- `--constructor-calldata` of deploy and `--calldata` of invoke calls to reference any output of previous calls
 
 ### Example
 
@@ -35,10 +39,6 @@ transaction: https://sepolia.voyager.online/tx/[..]
 <br>
 
 Currently, `invoke` and `deploy` calls are supported. Their syntax is the same as for `sncast invoke` and `sncast deploy` commands (with additional id argument for deploy calls). For more details on the syntax of these calls, see the [invoke](../appendix/sncast/multicall/execute/invoke.md) and [deploy](../appendix/sncast/multicall/execute/deploy.md) command references.
-
-> 📝 **Note**
-> The example above uses `@id` syntax to reference the address of a contract deployed within the same multicall using its `id`.
-> Additionally, the id can be referenced in the calldata of deploy and invoke calls 🔥.
 
 ## Multicall with file
 

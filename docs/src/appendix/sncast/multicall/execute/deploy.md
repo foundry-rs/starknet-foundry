@@ -6,6 +6,9 @@ Optional.
 
 An optional identifier to reference this step in later steps. This is useful for referencing deployed contracts in later calls within the same multicall. Value can be later reference with `@id` syntax.
 
+This syntax can be used with the `--contract-address` and `--calldata` flags in subsequent calls. 
+**Note:** The `@id` reference cannot be used with the `--arguments` flag.
+
 ## `--class-hash, -g <CLASS_HASH>`
 Required.
 
@@ -24,7 +27,7 @@ Conflicts with: [`--constructor-calldata`](#--constructor-calldata--c-constructo
 Constructor arguments provided as a comma-separated string of Cairo expressions.
 For example: `--arguments '1, 2, MyStruct { x: 1, y: 2 }, MyEnum::Variant'`
 
-For more information on supported expressions and syntax, see [Calldata Transformation](../../../starknet/calldata-transformation.md).
+For more information on supported expressions and syntax, see [Calldata Transformation](../../../../starknet/calldata-transformation.md).
 
 ## `--salt, -s <SALT>`
 Optional.

@@ -25,4 +25,4 @@ Conflicts with: [`--calldata`](#--calldata--c-calldata)
 Function arguments provided as a comma-separated string of Cairo expressions.
 For example: `--arguments '1, 2, MyStruct { x: 1, y: 2 }, MyEnum::Variant'`
 
-For more information on supported expressions and syntax, see [Calldata Transformation](../../../starknet/calldata-transformation.md).
+For more information on supported expressions and syntax, see [Calldata Transformation](../../../../starknet/calldata-transformation.md).
