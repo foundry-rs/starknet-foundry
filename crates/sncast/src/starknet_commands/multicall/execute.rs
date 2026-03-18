@@ -37,8 +37,15 @@ pub struct Execute {
     pub nonce: Option<Felt>,
 
     /// The multicall arguments. Subsequent calls should be separated by a '/' token.
-    /// Currently, `invoke` and `deploy` calls are supported. Their syntax is the same
-    /// as for `sncast invoke` and `sncast deploy` commands (with additional id argument for deploy calls).
+    ///
+    /// Supported commands: `invoke`, `deploy`.
+    /// Their syntax is the same as `sncast invoke` and `sncast deploy`.
+    /// Use `sncast  invoke --help` and `sncast deploy --help` for reference.
+    ///
+    /// Additionally, `deploy` supports `--id <ID>` argument to name the deployed contract in this multicall.
+    /// In subsequent calls, `@<ID>` can be referenced in `--contract-address` and `--calldata` flags to reference the deployed contract address.
+    ///
+    /// For more, read the documentation: `<https://foundry-rs.github.io/starknet-foundry/starknet/multicall.html#multicall-with-cli-arguments>`
     #[arg(allow_hyphen_values = true, num_args = 1..)]
     pub tokens: Vec<String>,
 }

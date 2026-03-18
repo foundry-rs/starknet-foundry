@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 - `--max-threads` flag to control the maximum number of threads used for test execution
+- `optimize-inlining` subcommand, which performs a brute-force search of the optimal `inlining-strategy` threshold  for the project over user defined benchmark.
 
 #### Fixed
 
