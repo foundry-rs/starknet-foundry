@@ -33,7 +33,6 @@ impl MulticallInvoke {
                 },
             },
         };
-
         Ok(invoke)
     }
 

@@ -157,7 +157,7 @@ async fn deploy_from_accounts_file(
 
     let result = match &account_data.signer_type {
         SignerType::Ledger { ledger_path } => {
-            let signer = ledger::create_ledger_signer(ledger_path, ui).await?;
+            let signer = ledger::create_ledger_signer(ledger_path, ui, true).await?;
 
             ledger::verify_ledger_public_key(
                 signer.get_public_key().await?.scalar(),

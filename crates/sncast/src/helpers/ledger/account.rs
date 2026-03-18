@@ -14,12 +14,15 @@ const LEDGER_SIGNER_ERROR: &str = "Failed to create Ledger signer. Ensure the de
 pub async fn create_ledger_signer(
     ledger_path: &DerivationPath,
     ui: &UI,
+    print_message: bool,
 ) -> Result<LedgerSigner<SncastLedgerTransport>> {
     let ledger_app = create_ledger_app().await?;
 
-    ui.print_notification(
-        "Ledger device will display a confirmation screen — approve it to continue...\n",
-    );
+    if print_message {
+        ui.print_notification(
+            "Ledger device will display a confirmation screen. Please approve it to continue...\n",
+        );
+    }
 
     LedgerSigner::new_with_app(ledger_path.clone(), ledger_app).context(LEDGER_SIGNER_ERROR)
 }
@@ -47,7 +50,7 @@ pub async fn ledger_account<'a>(
     ui: &UI,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LedgerSigner<SncastLedgerTransport>>>
 {
-    let signer = create_ledger_signer(ledger_path, ui).await?;
+    let signer = create_ledger_signer(ledger_path, ui, true).await?;
 
     let mut account = SingleOwnerAccount::new(provider, signer, address, chain_id, encoding);
     account.set_block_id(BlockId::Tag(BlockTag::PreConfirmed));
