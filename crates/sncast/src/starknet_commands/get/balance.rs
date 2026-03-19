@@ -9,12 +9,12 @@ use sncast::response::balance::BalanceResponse;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::ui::UI;
 use sncast::{get_account, get_block_id};
-use std::process::ExitCode;
 use starknet_rust::{
     core::{types::FunctionCall, utils::get_selector_from_name},
     providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport},
 };
 use starknet_types_core::felt::Felt;
+use std::process::ExitCode;
 
 #[derive(Args, Debug, Clone)]
 #[group(multiple = false)]
