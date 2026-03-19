@@ -8,6 +8,7 @@ use sncast::response::class_hash_at::ClassHashAtResponse;
 use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::ui::UI;
+use std::process::ExitCode;
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, Provider};
 use starknet_types_core::felt::Felt;
@@ -28,7 +29,11 @@ pub struct ClassHashAt {
     pub rpc: RpcArgs,
 }
 
-pub async fn class_hash_at(args: ClassHashAt, config: CastConfig, ui: &UI) -> anyhow::Result<()> {
+pub async fn class_hash_at(
+    args: ClassHashAt,
+    config: CastConfig,
+    ui: &UI,
+) -> anyhow::Result<ExitCode> {
     let provider = args.rpc.get_provider(&config, ui).await?;
 
     let result = get_class_hash_at(&provider, args.contract_address, &args.block_id)
@@ -38,8 +43,7 @@ pub async fn class_hash_at(args: ClassHashAt, config: CastConfig, ui: &UI) -> an
     let chain_id = provider.chain_id().await?;
     let block_explorer_link = block_explorer_link_if_allowed(&result, chain_id, &config).await;
 
-    process_command_result("get class-hash-at", result, ui, block_explorer_link);
-    Ok(())
+    Ok(process_command_result("get class-hash-at", result, ui, block_explorer_link))
 }
 
 async fn get_class_hash_at(
