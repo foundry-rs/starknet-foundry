@@ -7,6 +7,7 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::nonce::NonceResponse;
 use sncast::response::ui::UI;
+use std::process::ExitCode;
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, Provider};
 use starknet_types_core::felt::Felt;
@@ -27,13 +28,12 @@ pub struct Nonce {
     pub rpc: RpcArgs,
 }
 
-pub async fn nonce(nonce: Nonce, config: CastConfig, ui: &UI) -> Result<()> {
+pub async fn nonce(nonce: Nonce, config: CastConfig, ui: &UI) -> Result<ExitCode> {
     let provider = nonce.rpc.get_provider(&config, ui).await?;
 
     let result = get_nonce(&provider, nonce.contract_address, &nonce.block_id).await;
 
-    process_command_result("get nonce", result, ui, None);
-    Ok(())
+    Ok(process_command_result("get nonce", result, ui, None))
 }
 
 pub async fn get_nonce(

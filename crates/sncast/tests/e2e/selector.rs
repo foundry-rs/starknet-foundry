@@ -24,7 +24,7 @@ fn test_selector_json_output() {
     let stdout = output.get_output().stdout.clone();
 
     let json: serde_json::Value = serde_json::from_slice(&stdout).unwrap();
-    assert_eq!(json["command"], "selector");
+    assert_eq!(json["command"], "utils selector");
     assert_eq!(json["type"], "response");
     assert_eq!(
         json["selector"],

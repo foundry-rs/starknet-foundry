@@ -123,7 +123,7 @@ async fn test_contract_already_declared() {
     let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -155,7 +155,7 @@ async fn test_class_hash_does_not_exist_on_source_network() {
     let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -307,7 +307,7 @@ async fn test_declare_from_sierra_does_not_exist() {
     ];
     let args = apply_test_resource_bounds_flags(args);
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -339,7 +339,7 @@ async fn test_declare_from_sierra_invalid_json() {
     ];
     let args = apply_test_resource_bounds_flags(args);
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -401,7 +401,7 @@ async fn test_declare_from_sierra_already_declared() {
     ];
     let args = apply_test_resource_bounds_flags(args);
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,

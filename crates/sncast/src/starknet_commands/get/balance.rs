@@ -9,6 +9,7 @@ use sncast::response::balance::BalanceResponse;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::ui::UI;
 use sncast::{get_account, get_block_id};
+use std::process::ExitCode;
 use starknet_rust::{
     core::{types::FunctionCall, utils::get_selector_from_name},
     providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport},
@@ -70,15 +71,13 @@ pub struct Balance {
     pub rpc: RpcArgs,
 }
 
-pub async fn balance(balance: Balance, config: CastConfig, ui: &UI) -> anyhow::Result<()> {
+pub async fn balance(balance: Balance, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCode> {
     let provider = balance.rpc.get_provider(&config, ui).await?;
     let account = get_account(&config, &provider, &balance.rpc, ui).await?;
 
     let result = get_balance(account.address(), &provider, &balance).await;
 
-    process_command_result("get balance", result, ui, None);
-
-    Ok(())
+    Ok(process_command_result("get balance", result, ui, None))
 }
 
 pub async fn get_balance(

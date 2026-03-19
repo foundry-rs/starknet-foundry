@@ -1,5 +1,6 @@
 use clap::{Args, Subcommand};
 use sncast::response::ui::UI;
+use std::process::ExitCode;
 use sncast::{
     helpers::{
         configuration::CastConfig,
@@ -48,14 +49,14 @@ pub async fn utils(
     ui: &UI,
     json: bool,
     profile: String,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<ExitCode> {
     match utils.command {
         Commands::Serialize(serialize) => {
             let result = starknet_commands::utils::serialize::serialize(serialize, config, ui)
                 .await
                 .map_err(handle_starknet_command_error);
 
-            process_command_result("serialize", result, ui, None);
+            Ok(process_command_result("utils serialize", result, ui, None))
         }
 
         Commands::ClassHash(class_hash) => {
@@ -78,14 +79,12 @@ pub async fn utils(
             let result = class_hash::get_class_hash(&class_hash, &artifacts)
                 .map_err(handle_starknet_command_error);
 
-            process_command_result("class-hash", result, ui, None);
+            Ok(process_command_result("utils class-hash", result, ui, None))
         }
 
         Commands::Selector(sel) => {
             let result = selector::get_selector(&sel).map_err(handle_starknet_command_error);
-            process_command_result("selector", result, ui, None);
+            Ok(process_command_result("utils selector", result, ui, None))
         }
     }
-
-    Ok(())
 }
