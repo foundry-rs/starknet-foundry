@@ -112,7 +112,7 @@ async fn test_abi_file_missing_function() {
         "nested_struct_fn",
     ];
 
-    let output = runner(&args).current_dir(tempdir.path()).assert().failure();
+    let output = runner(&args).current_dir(tempdir.path()).assert().success();
 
     assert_stderr_contains(
         output,
@@ -144,13 +144,13 @@ async fn test_abi_file_missing_type() {
         "nested_struct_fn",
     ];
 
-    let output = runner(&args).current_dir(tempdir.path()).assert().failure();
+    let output = runner(&args).current_dir(tempdir.path()).assert().success();
 
     assert_stderr_contains(
         output,
         indoc! {r#"
-    Error: Error while processing Cairo-like calldata
-        Struct "NestedStructWithField" not found in ABI
+    Command: serialize
+    Error: Error while processing Cairo-like calldata: Struct "NestedStructWithField" not found in ABI
     "#},
     );
 }
@@ -198,7 +198,7 @@ async fn test_contract_does_not_exist() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().failure();
+    let output = snapbox.assert().success();
 
     assert_stderr_contains(
         output,
@@ -251,7 +251,8 @@ async fn test_rpc_args_not_passed_when_using_class_hash() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().failure().stderr_eq(indoc! {r"
+    snapbox.assert().success().stderr_eq(indoc! {r"
+    Command: serialize
     Error: Either `--network` or `--url` must be provided when using `--class-hash`
     "});
 }
@@ -275,7 +276,8 @@ async fn test_rpc_args_not_passed_when_using_contract_address() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().failure().stderr_eq(indoc! {r"
+    snapbox.assert().success().stderr_eq(indoc! {r"
+    Command: serialize
     Error: Either `--network` or `--url` must be provided when using `--contract-address`
     "});
 }

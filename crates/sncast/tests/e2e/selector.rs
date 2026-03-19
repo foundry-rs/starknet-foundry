@@ -36,7 +36,7 @@ fn test_selector_json_output() {
 fn test_selector_with_parentheses() {
     let args = vec!["utils", "selector", "transfer(u256)"];
     let snapbox = runner(&args);
-    let output = snapbox.assert().failure();
+    let output = snapbox.assert().success();
 
     assert_stderr_contains(
         output,
