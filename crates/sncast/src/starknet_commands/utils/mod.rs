@@ -1,6 +1,5 @@
 use clap::{Args, Subcommand};
 use sncast::response::ui::UI;
-use std::process::ExitCode;
 use sncast::{
     helpers::{
         configuration::CastConfig,
@@ -11,6 +10,7 @@ use sncast::{
     },
     response::errors::handle_starknet_command_error,
 };
+use std::process::ExitCode;
 
 use crate::{
     process_command_result,
