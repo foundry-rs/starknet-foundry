@@ -6,7 +6,7 @@ use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::class_hash_at::ClassHashAtResponse;
-use sncast::response::errors::{SNCastProviderError, StarknetCommandError};
+use sncast::response::errors::StarknetCommandError;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::ui::UI;
 use starknet_rust::providers::jsonrpc::HttpTransport;
@@ -51,7 +51,7 @@ async fn get_class_hash_at(
     let class_hash = provider
         .get_class_hash_at(block_id, contract_address)
         .await
-        .map_err(|err| StarknetCommandError::ProviderError(SNCastProviderError::from(err)))?;
+        .map_err(|err| StarknetCommandError::ProviderError(err.into()))?;
 
     Ok(ClassHashAtResponse {
         class_hash: class_hash.into_(),

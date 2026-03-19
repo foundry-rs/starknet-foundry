@@ -1,4 +1,4 @@
-use anyhow::Context;
+use anyhow::Result;
 use clap::Args;
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
@@ -21,12 +21,10 @@ pub struct Transaction {
     pub rpc: RpcArgs,
 }
 
-pub async fn transaction(tx: Transaction, config: CastConfig, ui: &UI) -> anyhow::Result<()> {
+pub async fn transaction(tx: Transaction, config: CastConfig, ui: &UI) -> Result<()> {
     let provider = tx.rpc.get_provider(&config, ui).await?;
 
-    let result = get_transaction(&provider, tx.transaction_hash)
-        .await
-        .context("Failed to get transaction");
+    let result = get_transaction(&provider, tx.transaction_hash).await;
 
     let chain_id = provider.chain_id().await?;
     let block_explorer_link = block_explorer_link_if_allowed(&result, chain_id, &config).await;
@@ -38,10 +36,12 @@ pub async fn transaction(tx: Transaction, config: CastConfig, ui: &UI) -> anyhow
 async fn get_transaction(
     provider: &JsonRpcClient<HttpTransport>,
     transaction_hash: Felt,
-) -> Result<TransactionResponse, StarknetCommandError> {
-    provider
+) -> Result<TransactionResponse> {
+    let response = provider
         .get_transaction_by_hash(transaction_hash)
         .await
         .map(TransactionResponse)
-        .map_err(|err| StarknetCommandError::ProviderError(err.into()))
+        .map_err(|err| StarknetCommandError::ProviderError(err.into()))?;
+
+    Ok(response)
 }
