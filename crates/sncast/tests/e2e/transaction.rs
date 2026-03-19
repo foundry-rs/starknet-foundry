@@ -156,7 +156,7 @@ async fn test_declare_transaction() {
 async fn test_nonexistent_transaction() {
     let args = vec!["get", "tx", "0x1", "--url", URL];
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,

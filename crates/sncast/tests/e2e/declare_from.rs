@@ -119,7 +119,7 @@ async fn test_contract_already_declared() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -150,7 +150,7 @@ async fn test_class_hash_does_not_exist_on_source_network() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -298,7 +298,7 @@ async fn test_declare_from_sierra_does_not_exist() {
         URL,
     ];
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -329,7 +329,7 @@ async fn test_declare_from_sierra_invalid_json() {
         URL,
     ];
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -389,7 +389,7 @@ async fn test_declare_from_sierra_already_declared() {
         URL,
     ];
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,

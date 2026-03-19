@@ -179,7 +179,7 @@ pub async fn test_invalid_class_hash() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -378,7 +378,7 @@ pub async fn test_account_already_exists() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -561,7 +561,7 @@ pub async fn test_keystore_without_account() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -597,7 +597,7 @@ pub async fn test_keystore_file_already_exists() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -634,7 +634,7 @@ pub async fn test_keystore_account_file_already_exists() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -1026,6 +1026,7 @@ pub async fn test_no_explorer_links_on_localhost() {
     );
 }
 
+// TODO(#4027): Fix either test or underlying bug
 #[tokio::test]
 pub async fn test_use_url_from_config() {
     let accounts_file = "accounts.json";

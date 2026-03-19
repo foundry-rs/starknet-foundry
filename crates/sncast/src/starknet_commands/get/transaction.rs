@@ -8,6 +8,7 @@ use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transaction::TransactionResponse;
 use sncast::response::ui::UI;
 use starknet_rust::core::types::TransactionResponseFlag;
+use std::process::ExitCode;
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, Provider};
 use starknet_types_core::felt::Felt;
@@ -27,7 +28,7 @@ pub struct Transaction {
     pub rpc: RpcArgs,
 }
 
-pub async fn transaction(tx: Transaction, config: CastConfig, ui: &UI) -> Result<()> {
+pub async fn transaction(tx: Transaction, config: CastConfig, ui: &UI) -> Result<ExitCode> {
     let provider = tx.rpc.get_provider(&config, ui).await?;
 
     let result = get_transaction(&provider, tx.transaction_hash, tx.with_proof_facts)
@@ -37,8 +38,7 @@ pub async fn transaction(tx: Transaction, config: CastConfig, ui: &UI) -> Result
     let chain_id = provider.chain_id().await?;
     let block_explorer_link = block_explorer_link_if_allowed(&result, chain_id, &config).await;
 
-    process_command_result("get tx", result, ui, block_explorer_link);
-    Ok(())
+    Ok(process_command_result("get tx", result, ui, block_explorer_link))
 }
 
 async fn get_transaction(
