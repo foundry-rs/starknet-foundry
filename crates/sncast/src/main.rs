@@ -429,7 +429,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
-            Ok(process_command_result("declare-from", result, ui, block_explorer_link))
+            Ok(process_command_result(
+                "declare-from",
+                result,
+                ui,
+                block_explorer_link,
+            ))
         }
 
         Commands::Deploy(deploy) => {
@@ -553,7 +558,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
-            Ok(process_command_result("deploy", result, ui, block_explorer_link))
+            Ok(process_command_result(
+                "deploy",
+                result,
+                ui,
+                block_explorer_link,
+            ))
         }
 
         Commands::Call(Call {
@@ -584,9 +594,15 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             .await
             .map_err(handle_starknet_command_error);
 
-            if let Some(transformed_result) = transform_response(&result, &contract_class, &selector)
+            if let Some(transformed_result) =
+                transform_response(&result, &contract_class, &selector)
             {
-                Ok(process_command_result("call", Ok(transformed_result), ui, None))
+                Ok(process_command_result(
+                    "call",
+                    Ok(transformed_result),
+                    ui,
+                    None,
+                ))
             } else {
                 Ok(process_command_result("call", result, ui, None))
             }
@@ -637,7 +653,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
 
-            Ok(process_command_result("invoke", result, ui, block_explorer_link))
+            Ok(process_command_result(
+                "invoke",
+                result,
+                ui,
+                block_explorer_link,
+            ))
         }
 
         Commands::Get(get) => get::get(get, config, ui).await,
