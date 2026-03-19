@@ -11,7 +11,7 @@ const REVERTED_TX_HASH: &str = "0x00ae35dacba17cde62b8ceb12e3b18f4ab6e103fa2d5e3
 async fn test_incorrect_transaction_hash() {
     let args = vec!["get", "tx-status", "0x1", "--url", URL];
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,

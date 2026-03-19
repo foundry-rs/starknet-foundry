@@ -9,6 +9,7 @@ use sncast::helpers::scarb_utils::{
 };
 use sncast::response::ui::UI;
 use sncast::{chain_id_to_network_name, get_chain_id, get_default_state_file_name};
+use std::process::ExitCode;
 use tokio::runtime::Runtime;
 
 pub mod init;
@@ -31,11 +32,11 @@ pub fn run_script_command(
     runtime: Runtime,
     script: &Script,
     ui: &UI,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<ExitCode> {
     match &script.command {
         starknet_commands::script::Commands::Init(init) => {
             let result = starknet_commands::script::init::init(init, ui);
-            process_command_result("script init", result, ui, None);
+            Ok(process_command_result("script init", result, ui, None))
         }
         starknet_commands::script::Commands::Run(run) => {
             let manifest_path = assert_manifest_path_exists()?;
@@ -95,9 +96,7 @@ pub fn run_script_command(
                 ui,
             );
 
-            process_command_result("script run", result, ui, None);
+            Ok(process_command_result("script run", result, ui, None))
         }
     }
-
-    Ok(())
 }
