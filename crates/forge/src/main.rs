@@ -1,9 +1,13 @@
 use forge::{ExitStatus, main_execution};
 use foundry_ui::{UI, components::error::ErrorMessage};
+use mimalloc::MiMalloc;
 use std::io::IsTerminal;
 use std::process::ExitCode;
 use std::sync::Arc;
 use std::{env, io};
+
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
 
 fn main() -> ExitCode {
     let _guard = init_logging();

@@ -65,6 +65,7 @@ fs_extra.workspace = true
 comfy-table.workspace = true
 plotters.workspace = true
 create-output-dir.workspace = true
+mimalloc.workspace = true
 
 [[bin]]
 name = "snforge"
