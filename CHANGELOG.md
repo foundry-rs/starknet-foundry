@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast get tx` command to get transaction details by hash.
 - `sncast utils selector` command to calculate entrypoint selector (sn_keccak) from function name.
 - `sncast get class-hash-at` command to get the class hash of a contract at a given address.
+- Aliases `sncast get transaction` and `sncast get transaction-status` for `get tx` and `get tx-status`.
+
+#### Fixed
+
+- `sncast` now returns non-zero exit code when a command fails.
+
 
 ### Forge
 

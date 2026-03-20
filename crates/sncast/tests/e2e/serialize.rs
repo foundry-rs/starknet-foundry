@@ -112,7 +112,7 @@ async fn test_abi_file_missing_function() {
         "nested_struct_fn",
     ];
 
-    let output = runner(&args).current_dir(tempdir.path()).assert().success();
+    let output = runner(&args).current_dir(tempdir.path()).assert().failure();
 
     assert_stderr_contains(
         output,
@@ -144,13 +144,13 @@ async fn test_abi_file_missing_type() {
         "nested_struct_fn",
     ];
 
-    let output = runner(&args).current_dir(tempdir.path()).assert().success();
+    let output = runner(&args).current_dir(tempdir.path()).assert().failure();
 
     assert_stderr_contains(
         output,
         indoc! {r#"
-    Command: serialize
-    Error: Error while processing Cairo-like calldata: Struct "NestedStructWithField" not found in ABI
+        Command: utils serialize
+        Error: Error while processing Cairo-like calldata: Struct "NestedStructWithField" not found in ABI
     "#},
     );
 }
@@ -178,7 +178,7 @@ async fn test_happy_case_json() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
-        {"calldata":["0x24","0x60"],"command":"serialize","type":"response"}
+        {"calldata":["0x24","0x60"],"command":"utils serialize","type":"response"}
     "#});
 }
 
@@ -198,7 +198,7 @@ async fn test_contract_does_not_exist() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -224,7 +224,7 @@ async fn test_wrong_function_name() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -251,8 +251,8 @@ async fn test_rpc_args_not_passed_when_using_class_hash() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().success().stderr_eq(indoc! {r"
-    Command: serialize
+    snapbox.assert().failure().stderr_eq(indoc! {r"
+    Command: utils serialize
     Error: Either `--network` or `--url` must be provided when using `--class-hash`
     "});
 }
@@ -276,8 +276,8 @@ async fn test_rpc_args_not_passed_when_using_contract_address() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().success().stderr_eq(indoc! {r"
-    Command: serialize
+    snapbox.assert().failure().stderr_eq(indoc! {r"
+    Command: utils serialize
     Error: Either `--network` or `--url` must be provided when using `--contract-address`
     "});
 }

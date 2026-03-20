@@ -14,6 +14,7 @@ use starknet_rust::{
     providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport},
 };
 use starknet_types_core::felt::Felt;
+use std::process::ExitCode;
 
 #[derive(Args, Debug, Clone)]
 #[group(multiple = false)]
@@ -70,15 +71,13 @@ pub struct Balance {
     pub rpc: RpcArgs,
 }
 
-pub async fn balance(balance: Balance, config: CastConfig, ui: &UI) -> anyhow::Result<()> {
+pub async fn balance(balance: Balance, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCode> {
     let provider = balance.rpc.get_provider(&config, ui).await?;
     let account = get_account(&config, &provider, &balance.rpc, ui).await?;
 
     let result = get_balance(account.address(), &provider, &balance).await;
 
-    process_command_result("get balance", result, ui, None);
-
-    Ok(())
+    Ok(process_command_result("get balance", result, ui, None))
 }
 
 pub async fn get_balance(

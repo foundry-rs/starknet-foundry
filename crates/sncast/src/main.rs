@@ -50,6 +50,7 @@ use starknet_rust::core::types::contract::{AbiEntry, SierraClass};
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_rust::providers::Provider;
 use starknet_types_core::felt::Felt;
+use std::process::ExitCode;
 use tokio::runtime::Runtime;
 
 mod starknet_commands;
@@ -280,7 +281,7 @@ fn init_logging() {
         .expect("could not set up global logger");
 }
 
-fn main() -> Result<()> {
+fn main() -> Result<ExitCode> {
     init_logging();
 
     let cli = Cli::parse();
@@ -300,7 +301,7 @@ fn main() -> Result<()> {
 }
 
 #[expect(clippy::too_many_lines)]
-async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> {
+async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<ExitCode> {
     let wait_config = WaitForTx {
         wait: cli.wait,
         wait_params: config.wait_params,
@@ -375,13 +376,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 None
             };
 
-            process_command_result("declare", result, ui, block_explorer_link);
+            let exit_code = process_command_result("declare", result, ui, block_explorer_link);
 
             if let Some(deploy_command_message) = deploy_command_message {
                 ui.print_notification(deploy_command_message?);
             }
 
-            Ok(())
+            Ok(exit_code)
         }
 
         Commands::DeclareFrom(declare_from) => {
@@ -428,9 +429,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
-            process_command_result("declare-from", result, ui, block_explorer_link);
-
-            Ok(())
+            Ok(process_command_result(
+                "declare-from",
+                result,
+                ui,
+                block_explorer_link,
+            ))
         }
 
         Commands::Deploy(deploy) => {
@@ -504,13 +508,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     Err(err) => {
                         // TODO(#3960) This will return json output saying that `deploy` command was run
                         //  even though the invoked command was declare.
-                        process_command_result::<DeclareTransactionResponse>(
+                        let exit_code = process_command_result::<DeclareTransactionResponse>(
                             "deploy",
                             Err(err),
                             ui,
                             None,
                         );
-                        return Ok(());
+                        return Ok(exit_code);
                     }
                 }
             } else {
@@ -554,9 +558,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
-            process_command_result("deploy", result, ui, block_explorer_link);
-
-            Ok(())
+            Ok(process_command_result(
+                "deploy",
+                result,
+                ui,
+                block_explorer_link,
+            ))
         }
 
         Commands::Call(Call {
@@ -590,12 +597,15 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             if let Some(transformed_result) =
                 transform_response(&result, &contract_class, &selector)
             {
-                process_command_result("call", Ok(transformed_result), ui, None);
+                Ok(process_command_result(
+                    "call",
+                    Ok(transformed_result),
+                    ui,
+                    None,
+                ))
             } else {
-                process_command_result("call", result, ui, None);
+                Ok(process_command_result("call", result, ui, None))
             }
-
-            Ok(())
         }
 
         Commands::Invoke(invoke) => {
@@ -643,9 +653,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
 
-            process_command_result("invoke", result, ui, block_explorer_link);
-
-            Ok(())
+            Ok(process_command_result(
+                "invoke",
+                result,
+                ui,
+                block_explorer_link,
+            ))
         }
 
         Commands::Get(get) => get::get(get, config, ui).await,
@@ -678,9 +691,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             )
             .await;
 
-            process_command_result("show-config", result, ui, None);
-
-            Ok(())
+            Ok(process_command_result("show-config", result, ui, None))
         }
 
         // TODO(#4214): Remove moved sncast commands
@@ -713,13 +724,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             )
             .await;
 
-            process_command_result("verify", result, ui, None);
-            Ok(())
+            Ok(process_command_result("verify", result, ui, None))
         }
 
         Commands::Completions(completions) => {
             generate_completions(completions.shell, &mut Cli::command())?;
-            Ok(())
+            Ok(ExitCode::SUCCESS)
         }
 
         // TODO(#4214): Remove moved sncast commands
@@ -730,10 +740,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Ledger(ledger) => {
             let result = ledger::ledger(&ledger, ui).await;
-
-            process_command_result("ledger", result, ui, None);
-
-            Ok(())
+            Ok(process_command_result("ledger", result, ui, None))
         }
 
         Commands::Script(_) => unreachable!(),

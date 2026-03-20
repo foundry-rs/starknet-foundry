@@ -224,7 +224,7 @@ async fn test_failed_verification_contract_address() {
         .current_dir(contract_path.path())
         .stdin("Y");
 
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -279,7 +279,7 @@ async fn test_failed_verification_class_hash() {
         .current_dir(contract_path.path())
         .stdin("Y");
 
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -350,7 +350,7 @@ async fn test_failed_class_hash_lookup() {
         .current_dir(contract_path.path())
         .stdin("Y");
 
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -473,7 +473,7 @@ async fn test_contract_name_not_found() {
         .current_dir(contract_path.path())
         .stdin("Y");
 
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -504,7 +504,7 @@ async fn test_error_when_neither_network_nor_url_provided() {
 
     let snapbox = runner(&args).current_dir(contract_path.path());
 
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
