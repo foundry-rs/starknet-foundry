@@ -22,9 +22,13 @@ members = [
 
 exclude = ["crates/snforge-scarb-plugin"]
 
+[profile.release]
+codegen-units = 1
+lto = "thin"
+
 [profile.ci]
-inherits = "release"
-debug-assertions = true
+inherits = "dev"
+opt-level = 3
 
 [workspace.package]
 version = "0.58.0"
