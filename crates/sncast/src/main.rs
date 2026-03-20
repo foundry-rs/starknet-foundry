@@ -529,13 +529,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                     Err(err) => {
                         // TODO(#3960) This will return json output saying that `deploy` command was run
                         //  even though the invoked command was declare.
-                        let exit_code = process_command_result::<DeclareTransactionResponse>(
+                        return Ok(process_command_result::<DeclareTransactionResponse>(
                             "deploy",
                             Err(err),
                             ui,
                             None,
-                        );
-                        return Ok(exit_code);
+                        ));
                     }
                 }
             } else {
