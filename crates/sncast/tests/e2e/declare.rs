@@ -723,7 +723,7 @@ async fn test_no_scarb_profile() {
     let contract_path =
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "694215");
     fs::copy(
-        "tests/data/files/correct_snfoundry.toml",
+        "tests/data/files/snfoundry_correct.toml",
         contract_path.path().join(CONFIG_FILENAME),
     )
     .expect("Failed to copy config file to temp dir");

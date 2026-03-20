@@ -4,20 +4,23 @@ use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use indoc::formatdoc;
-use std::fs;
 use std::fs::File;
 use std::io::Write;
+use std::{env, fs};
 
-pub fn get_global_config_path() -> Result<Utf8PathBuf> {
-    let global_config_dir = {
-        if cfg!(target_os = "windows") {
-            dirs::config_dir()
-                .ok_or_else(|| anyhow::anyhow!("Could not determine config directory"))?
-                .join("starknet-foundry")
-        } else {
-            dirs::home_dir()
-                .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?
-                .join(".config/starknet-foundry")
+pub fn get_or_create_global_config_path() -> Result<Utf8PathBuf> {
+    let global_config_dir = match env::var("SNFOUNDRY_CONFIG").ok() {
+        Some(dir) => Utf8PathBuf::from(shellexpand::tilde(&dir).to_string()).into_std_path_buf(),
+        None => {
+            if cfg!(target_os = "windows") {
+                dirs::config_dir()
+                    .ok_or_else(|| anyhow::anyhow!("Could not determine config directory"))?
+                    .join("starknet-foundry")
+            } else {
+                dirs::home_dir()
+                    .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?
+                    .join(".config/starknet-foundry")
+            }
         }
     };
 
@@ -70,4 +73,43 @@ fn create_global_config(global_config_path: Utf8PathBuf) -> Result<()> {
     file.write_all(build_default_manifest().as_bytes())?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::helpers::configuration::PartialCastConfig;
+    use configuration::load_config;
+    use tempfile::tempdir;
+
+    #[test]
+    fn build_default_manifest_produces_valid_config_when_uncommented() {
+        let manifest = build_default_manifest();
+        let lines: Vec<&str> = manifest.lines().collect();
+        assert_eq!(
+            lines[0],
+            "# Visit https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html"
+        );
+        assert_eq!(
+            lines[1],
+            "# and https://foundry-rs.github.io/starknet-foundry/projects/configuration.html for more information"
+        );
+
+        let toml: String = lines
+            .into_iter()
+            .filter_map(|l| l.strip_prefix("# "))
+            // skip comments that are not part of the config
+            .filter(|l| l.starts_with('[') || l.contains('='))
+            // drop `url = ""`
+            .filter(|l| *l != "url = \"\"")
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        let t = tempdir().unwrap();
+        let path = Utf8PathBuf::try_from(t.path().join("snfoundry.toml")).unwrap();
+        fs::write(&path, toml).unwrap();
+
+        let config: PartialCastConfig = load_config(&path, None).unwrap().unwrap();
+        config.validate().unwrap();
+    }
 }
