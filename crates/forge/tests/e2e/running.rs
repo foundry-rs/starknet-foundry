@@ -1312,3 +1312,25 @@ fn test_interact_with_state() {
     "},
     );
 }
+
+#[test]
+fn max_threads_exceeds_available_prints_warning() {
+    let temp = setup_package("simple_package");
+    let output = test_runner(&temp).args(["--max-threads", "256"]).assert();
+
+    assert_stdout_contains(
+        output,
+        "[WARNING] `--max-threads` value (256) is greater than the number of available cores ([..])",
+    );
+}
+
+#[test]
+fn max_threads_within_available_no_warning() {
+    let temp = setup_package("simple_package");
+    let output = test_runner(&temp)
+        .args(["--max-threads", "1"])
+        .assert()
+        .code(1);
+
+    assert!(!output.as_stdout().contains("[WARNING]"));
+}

@@ -31,6 +31,7 @@ Available components:
 - `caller-address`
 - `call-type`
 - `call-result`
+- `gas`
 
 ## `--run-native`
 
@@ -47,7 +48,9 @@ Test filter must be a whole qualified test name e.g. `package_name::my_test` ins
 
 ## `--skip <SKIP>`
 
-Skips any tests whose name contains the given `SKIP` string
+Skips any tests whose name contains the given `SKIP` string.
+
+This flag may be used multiple times with different `SKIP` strings.
 
 ## `-x`, `--exit-first`
 
@@ -132,6 +135,11 @@ To learn more about fee calculation formula (and the impact of tracking sierra g
 
 ## `--gas-report`
 Display a table of L2 gas breakdown for each contract and selector.
+
+## `--max-threads <MAX_THREADS>`
+
+Maximum number of threads used for test execution, which corresponds to tests run in parallel. 
+Defaults to the number of available CPU cores.
 
 ## `--partition <INDEX>/<TOTAL>`
 

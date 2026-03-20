@@ -280,39 +280,3 @@ async fn test_numeric_inputs() {
         transaction: [..]
     "});
 }
-
-#[tokio::test]
-async fn test_numeric_overflow() {
-    let tempdir = create_and_deploy_oz_account().await;
-
-    let path = project_root::get_project_root().expect("failed to get project root path");
-    let path = Path::new(&path)
-        .join(MULTICALL_CONFIGS_DIR)
-        .join("deploy_invoke_numeric_overflow.toml");
-    let path = path.to_str().expect("failed converting path to str");
-
-    let args = vec![
-        "--accounts-file",
-        "accounts.json",
-        "--account",
-        "my_account",
-        "multicall",
-        "run",
-        "--url",
-        URL,
-        "--path",
-        path,
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert();
-
-    assert_stderr_contains(
-        output,
-        indoc! {r"
-        Command: multicall run
-        Error: Failed to parse [..]
-        u64 value was too large
-        "},
-    );
-}

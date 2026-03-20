@@ -102,6 +102,13 @@ This stops files in `tests` from being treated as separate modules.
 Instead, Scarb will only create a single test target for that `lib.cairo` file.
 Only tests that are reachable from this file will be collected and compiled.
 
+```rust
+// tests/lib.cairo
+
+mod module1;
+mod module2;
+```
+
 ```shell
 $ tree
 ```
@@ -118,10 +125,3 @@ tests/
 ```
 
 </details>
-
-```rust
-// tests/lib.cairo
-
-mod module1;
-mod module2;
-```

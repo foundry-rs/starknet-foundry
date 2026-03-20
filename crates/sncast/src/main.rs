@@ -1,21 +1,26 @@
-use crate::starknet_commands::balance::Balance;
+use std::str::FromStr;
+
 use crate::starknet_commands::declare::declare;
 use crate::starknet_commands::declare_from::{ContractSource, DeclareFrom};
-use crate::starknet_commands::deploy::DeployArguments;
-use crate::starknet_commands::multicall;
+use crate::starknet_commands::deploy::{DeployArguments, DeployCommonArgs};
+use crate::starknet_commands::get::Get;
+use crate::starknet_commands::get::balance::Balance;
+use crate::starknet_commands::invoke::InvokeCommonArgs;
 use crate::starknet_commands::script::run_script_command;
 use crate::starknet_commands::utils::{self, Utils};
 use crate::starknet_commands::{
     account, account::Account as AccountCommand, call::Call, declare::Declare, deploy::Deploy,
-    invoke::Invoke, multicall::Multicall, script::Script, show_config::ShowConfig,
-    tx_status::TxStatus,
+    get::tx_status::TxStatus, invoke::Invoke, multicall::Multicall, script::Script,
+    show_config::ShowConfig,
 };
+use crate::starknet_commands::{get, multicall};
 use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
 use configuration::Override;
 use conversions::IntoConv;
 use data_transformer::transform;
+use foundry_ui::components::warning::WarningMessage;
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::{CastConfig, CliConfigOpts, PartialCastConfig};
@@ -34,10 +39,10 @@ use sncast::response::transformed_call::transform_response;
 use sncast::response::ui::UI;
 use sncast::{
     PartialWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
-    get_contract_class,
+    get_contract_class, with_account,
 };
+use starknet_commands::ledger::{self, Ledger};
 use starknet_commands::verify::Verify;
-use starknet_rust::accounts::Account;
 use starknet_rust::core::types::ContractClass;
 use starknet_rust::core::types::contract::{AbiEntry, SierraClass};
 use starknet_rust::core::utils::get_selector_from_name;
@@ -121,6 +126,7 @@ struct Cli {
 impl Cli {
     fn command_name(&self) -> String {
         match self.command {
+            Commands::Get(_) => "get",
             Commands::Declare(_) => "declare",
             Commands::DeclareFrom(_) => "declare-from",
             Commands::Deploy(_) => "deploy",
@@ -135,6 +141,7 @@ impl Cli {
             Commands::Completions(_) => "completions",
             Commands::Utils(_) => "utils",
             Commands::Balance(_) => "balance",
+            Commands::Ledger(_) => "ledger",
         }
         .to_string()
     }
@@ -155,6 +162,9 @@ impl Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Get various data from the network
+    Get(Get),
+
     /// Declare a contract
     Declare(Declare),
 
@@ -196,6 +206,9 @@ enum Commands {
 
     /// Fetch balance of the account for specified token
     Balance(Balance),
+
+    /// Interact with Ledger hardware wallet
+    Ledger(Ledger),
 }
 
 #[derive(Debug, Clone, clap::Args)]
@@ -213,18 +226,11 @@ pub struct Arguments {
 impl Arguments {
     fn try_into_calldata(
         self,
-        contract_class: ContractClass,
+        contract_class: &ContractClass,
         selector: &Felt,
     ) -> Result<Vec<Felt>> {
         if let Some(calldata) = self.calldata {
-            calldata
-                .iter()
-                .map(|data| {
-                    Felt::from_dec_str(data)
-                        .or_else(|_| Felt::from_hex(data))
-                        .context("Failed to parse to felt")
-                })
-                .collect()
+            calldata_to_felts(&calldata)
         } else {
             let ContractClass::Sierra(sierra_class) = contract_class else {
                 bail!("Transformation of arguments is not available for Cairo Zero contracts")
@@ -236,6 +242,13 @@ impl Arguments {
             transform(&self.arguments.unwrap_or_default(), &abi, selector)
         }
     }
+}
+
+pub fn calldata_to_felts(calldata: &[String]) -> Result<Vec<Felt>> {
+    calldata
+        .iter()
+        .map(|data| Felt::from_str(data).with_context(|| format!("Failed to parse {data} to felt")))
+        .collect()
 }
 
 impl From<DeployArguments> for Arguments {
@@ -267,6 +280,7 @@ fn init_logging() {
         .with_filter(
             EnvFilter::builder()
                 .with_default_directive(LevelFilter::WARN.into())
+                .with_default_directive("coins_ledger=off".parse().expect("valid directive"))
                 .with_env_var("SNCAST_LOG")
                 .from_env_lossy(),
         );
@@ -310,14 +324,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let rpc = declare.common.rpc.clone();
 
-            let account = get_account(
-                &config,
-                &provider,
-                &declare.common.rpc,
-                config.keystore.as_ref(),
-                ui,
-            )
-            .await?;
+            let account = get_account(&config, &provider, &declare.common.rpc, ui).await?;
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &declare.package)?;
             let artifacts = build_and_load_artifacts(
@@ -333,17 +340,19 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             )
             .expect("Failed to build contract");
 
-            let result = starknet_commands::declare::declare(
-                declare.contract_name.clone(),
-                declare.common.fee_args,
-                declare.common.nonce,
-                &account,
-                &artifacts,
-                wait_config,
-                false,
-                ui,
-            )
-            .await
+            let result = with_account!(&account, |account| {
+                starknet_commands::declare::declare(
+                    declare.contract_name.clone(),
+                    declare.common.fee_args,
+                    declare.common.nonce,
+                    account,
+                    &artifacts,
+                    wait_config,
+                    false,
+                    ui,
+                )
+                .await
+            })
             .map_err(handle_starknet_command_error)
             .map(|result| match result {
                 DeclareResponse::Success(declare_transaction_response) => {
@@ -405,24 +414,19 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 }
             };
 
-            let account = get_account(
-                &config,
-                &provider,
-                &declare_from.common.rpc,
-                config.keystore.as_ref(),
-                ui,
-            )
-            .await?;
+            let account = get_account(&config, &provider, &declare_from.common.rpc, ui).await?;
 
-            let result = starknet_commands::declare_from::declare_from(
-                contract_source,
-                &declare_from.common,
-                &account,
-                wait_config,
-                false,
-                ui,
-            )
-            .await
+            let result = with_account!(&account, |account| {
+                starknet_commands::declare_from::declare_from(
+                    contract_source,
+                    &declare_from.common,
+                    account,
+                    wait_config,
+                    false,
+                    ui,
+                )
+                .await
+            })
             .map_err(handle_starknet_command_error)
             .map(|result| match result {
                 DeclareResponse::Success(declare_transaction_response) => {
@@ -442,19 +446,23 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Deploy(deploy) => {
             let Deploy {
-                contract_identifier: identifier,
-                arguments,
+                common:
+                    DeployCommonArgs {
+                        contract_identifier: identifier,
+                        arguments,
+                        package,
+                        salt,
+                        unique,
+                    },
                 fee_args,
                 rpc,
                 mut nonce,
-                package,
                 ..
             } = deploy;
 
             let provider = rpc.get_provider(&config, ui).await?;
 
-            let account =
-                get_account(&config, &provider, &rpc, config.keystore.as_ref(), ui).await?;
+            let account = get_account(&config, &provider, &rpc, ui).await?;
 
             let (class_hash, declare_response) = if let Some(class_hash) = identifier.class_hash {
                 (class_hash, None)
@@ -474,22 +482,23 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 )
                 .expect("Failed to build contract");
 
-                let declare_result = declare(
-                    contract_name,
-                    fee_args.clone(),
-                    nonce,
-                    &account,
-                    &artifacts,
-                    WaitForTx {
-                        wait: true,
-                        wait_params: wait_config.wait_params,
-                        // Only show outputs if user explicitly provides `--wait` flag
-                        show_ui_outputs: wait_config.wait,
-                    },
-                    true,
-                    ui,
-                )
-                .await
+                let declare_result = with_account!(&account, |account| {
+                    declare(
+                        contract_name,
+                        fee_args.clone(),
+                        nonce,
+                        account,
+                        &artifacts,
+                        WaitForTx {
+                            wait: true,
+                            wait_params: wait_config.wait_params,
+                            show_ui_outputs: wait_config.wait,
+                        },
+                        true,
+                        ui,
+                    )
+                    .await
+                })
                 .map_err(handle_starknet_command_error);
 
                 // Increment nonce after successful declare if it was explicitly provided
@@ -525,20 +534,22 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
             let arguments: Arguments = arguments.into();
-            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
+            let calldata = arguments.try_into_calldata(&contract_class, &selector)?;
 
-            let result = starknet_commands::deploy::deploy(
-                class_hash,
-                &calldata,
-                deploy.salt,
-                deploy.unique,
-                fee_args,
-                nonce,
-                &account,
-                wait_config,
-                ui,
-            )
-            .await
+            let result = with_account!(&account, |account| {
+                starknet_commands::deploy::deploy(
+                    class_hash,
+                    &calldata,
+                    salt,
+                    unique,
+                    fee_args,
+                    nonce,
+                    account,
+                    wait_config,
+                    ui,
+                )
+                .await
+            })
             .map_err(handle_starknet_command_error);
 
             let result = if let Some(declare_response) = declare_response {
@@ -575,7 +586,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let calldata = arguments.try_into_calldata(contract_class.clone(), &selector)?;
+            let calldata = arguments.try_into_calldata(&contract_class, &selector)?;
 
             let result = starknet_commands::call::call(
                 contract_address,
@@ -600,9 +611,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Invoke(invoke) => {
             let Invoke {
-                contract_address,
-                function,
-                arguments,
+                common:
+                    InvokeCommonArgs {
+                        contract_address,
+                        function,
+                        arguments,
+                    },
                 fee_args,
                 rpc,
                 nonce,
@@ -611,28 +625,30 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let provider = rpc.get_provider(&config, ui).await?;
 
-            let account =
-                get_account(&config, &provider, &rpc, config.keystore.as_ref(), ui).await?;
+            let account = get_account(&config, &provider, &rpc, ui).await?;
 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
+            let contract_address = contract_address.try_into_felt()?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
-            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
+            let calldata = arguments.try_into_calldata(&contract_class, &selector)?;
 
-            let result = starknet_commands::invoke::invoke(
-                contract_address,
-                calldata,
-                nonce,
-                fee_args,
-                selector,
-                &account,
-                wait_config,
-                ui,
-            )
-            .await
+            let result = with_account!(&account, |account| {
+                starknet_commands::invoke::invoke(
+                    contract_address,
+                    calldata,
+                    nonce,
+                    fee_args,
+                    selector,
+                    account,
+                    wait_config,
+                    ui,
+                )
+                .await
+            })
             .map_err(handle_starknet_command_error);
 
             let block_explorer_link =
@@ -642,6 +658,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             Ok(())
         }
+
+        Commands::Get(get) => get::get(get, config, ui).await,
 
         Commands::Utils(utils) => {
             utils::utils(
@@ -676,16 +694,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             Ok(())
         }
 
+        // TODO(#4214): Remove moved sncast commands
         Commands::TxStatus(tx_status) => {
-            let provider = tx_status.rpc.get_provider(&config, ui).await?;
-
-            let result =
-                starknet_commands::tx_status::tx_status(&provider, tx_status.transaction_hash)
-                    .await
-                    .context("Failed to get transaction status");
-
-            process_command_result("tx-status", result, ui, None);
-            Ok(())
+            print_cmd_move_warning("tx-status", "get tx-status", ui);
+            get::tx_status::tx_status(tx_status, config, ui).await
         }
 
         Commands::Verify(verify) => {
@@ -721,21 +733,16 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             Ok(())
         }
 
+        // TODO(#4214): Remove moved sncast commands
         Commands::Balance(balance) => {
-            let provider = balance.rpc.get_provider(&config, ui).await?;
-            let account = get_account(
-                &config,
-                &provider,
-                &balance.rpc,
-                config.keystore.as_ref(),
-                ui,
-            )
-            .await?;
+            print_cmd_move_warning("balance", "get balance", ui);
+            get::balance::balance(balance, config, ui).await
+        }
 
-            let result =
-                starknet_commands::balance::balance(account.address(), &provider, &balance).await?;
+        Commands::Ledger(ledger) => {
+            let result = ledger::ledger(&ledger, ui).await?;
 
-            process_command_result("balance", Ok(result), ui, None);
+            process_command_result("ledger", Ok(result), ui, None);
 
             Ok(())
         }
@@ -758,4 +765,11 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
         .override_with(cli_config);
 
     Ok(CastConfig::from(partial_config))
+}
+
+fn print_cmd_move_warning(command_name: &str, new_command_name: &str, ui: &UI) {
+    ui.print_warning(WarningMessage::new(format!(
+        "`sncast {command_name}` has moved to `sncast {new_command_name}`. `sncast {command_name}` will be removed in the next version."
+    )));
+    ui.print_blank_line();
 }

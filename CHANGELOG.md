@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.58.0] - 2026-03-18
+
+### Forge
+
+#### Added
+- `--max-threads` flag to control the maximum number of threads used for test execution
+- `optimize-inlining` subcommand, which performs a brute-force search of the optimal `inlining-strategy` threshold for the project over user defined benchmark
+
+#### Fixed
+
+- Bug with invalid function name mappings for functions with `#[test]` attribute
+- `--exit-first` flag now correctly stops execution for all packages when tests are run in a workspace
+
+### Cast
+
+#### Added
+
+- Support for Ledger hardware wallet as a transaction signer
+- `sncast get nonce` command to get the nonce of a contract
+- `sncast multicall execute`, which allows to pass calls directly as CLI arguments. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/multicall.html#multicall-with-cli-arguments)
+
+#### Changed
+
+- `sncast balance` and `sncast tx-status` commands have been moved under `sncast get` subcommand (`sncast get balance`, `sncast get tx-status`). The old commands still work, but will be removed in the future.
+- Referencing an id in multicall configuration files now requires the `@` prefix.
+
 ## [0.57.0] - 2026-02-24
 
 ### Forge

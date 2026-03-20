@@ -12,7 +12,39 @@ use forge_runner::{
 use foundry_ui::UI;
 use futures::{StreamExt, stream::FuturesUnordered};
 use std::sync::Arc;
-use tokio::sync::mpsc::channel;
+use tokio::sync::mpsc::{Receiver, Sender, channel};
+
+/// Shared cancellation channel for `--exit-first`.
+///
+/// The channel is created at the workspace level and shared across all packages,
+/// so failure in one package immediately interrupts test cases in all subsequent packages.
+pub struct ExitFirstChannel {
+    sender: Sender<()>,
+    receiver: Receiver<()>,
+}
+
+impl Default for ExitFirstChannel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl ExitFirstChannel {
+    #[must_use]
+    pub fn new() -> Self {
+        let (sender, receiver) = channel(1);
+        Self { sender, receiver }
+    }
+
+    #[must_use]
+    pub fn sender(&self) -> Sender<()> {
+        self.sender.clone()
+    }
+
+    pub fn close(&mut self) {
+        self.receiver.close();
+    }
+}
 
 #[non_exhaustive]
 pub enum TestTargetRunResult {
@@ -26,16 +58,11 @@ pub async fn run_for_test_target(
     forge_config: Arc<ForgeConfig>,
     tests_filter: &impl TestCaseFilter,
     ui: Arc<UI>,
+    exit_first_channel: &mut ExitFirstChannel,
 ) -> Result<TestTargetRunResult> {
     let casm_program = tests.casm_program.clone();
 
     let mut tasks = FuturesUnordered::new();
-    // Initiate two channels to manage the `--exit-first` flag.
-    // Owing to `cheatnet` fork's utilization of its own Tokio runtime for RPC requests,
-    // test execution must occur within a `tokio::spawn_blocking`.
-    // As `spawn_blocking` can't be prematurely cancelled (refer: https://dtantsur.github.io/rust-openstack/tokio/task/fn.spawn_blocking.html),
-    // a channel is used to signal the task that test processing is no longer necessary.
-    let (send, mut rec) = channel(1);
 
     for case in tests.test_cases {
         let case_name = case.name.clone();
@@ -64,7 +91,7 @@ pub async fn run_for_test_target(
                     casm_program.clone(),
                     forge_config.clone(),
                     tests.sierra_program_path.clone(),
-                    send.clone(),
+                    exit_first_channel.sender(),
                 ));
             }
         }
@@ -102,7 +129,7 @@ pub async fn run_for_test_target(
 
         if result.is_failed() && forge_config.test_runner_config.exit_first {
             interrupted = true;
-            rec.close();
+            exit_first_channel.close();
         }
 
         results.push(result);

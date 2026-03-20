@@ -1,4 +1,5 @@
 use crate::Arguments;
+use crate::starknet_commands::utils::felt_or_id::FeltOrId;
 use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
@@ -13,15 +14,14 @@ use starknet_rust::accounts::{Account, ConnectedAccount, ExecutionV3, SingleOwne
 use starknet_rust::core::types::{Call, InvokeTransactionResult};
 use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
-use starknet_rust::signers::LocalWallet;
+use starknet_rust::signers::Signer;
 use starknet_types_core::felt::Felt;
 
 #[derive(Args, Clone, Debug)]
-#[command(about = "Invoke a contract on Starknet")]
-pub struct Invoke {
+pub struct InvokeCommonArgs {
     /// Address of contract to invoke
     #[arg(short = 'd', long)]
-    pub contract_address: Felt,
+    pub contract_address: FeltOrId,
 
     /// Name of the function to invoke
     #[arg(short, long)]
@@ -29,6 +29,13 @@ pub struct Invoke {
 
     #[command(flatten)]
     pub arguments: Arguments,
+}
+
+#[derive(Args, Clone, Debug)]
+#[command(about = "Invoke a contract on Starknet")]
+pub struct Invoke {
+    #[command(flatten)]
+    pub common: InvokeCommonArgs,
 
     #[command(flatten)]
     pub fee_args: FeeArgs,
@@ -42,16 +49,19 @@ pub struct Invoke {
 }
 
 #[expect(clippy::too_many_arguments)]
-pub async fn invoke(
+pub async fn invoke<S>(
     contract_address: Felt,
     calldata: Vec<Felt>,
     nonce: Option<Felt>,
     fee_args: FeeArgs,
     function_selector: Felt,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     wait_config: WaitForTx,
     ui: &UI,
-) -> Result<InvokeResponse, StarknetCommandError> {
+) -> Result<InvokeResponse, StarknetCommandError>
+where
+    S: Signer + Sync + Send,
+{
     let call = Call {
         to: contract_address,
         selector: function_selector,
@@ -61,14 +71,17 @@ pub async fn invoke(
     execute_calls(account, vec![call], fee_args, nonce, wait_config, ui).await
 }
 
-pub async fn execute_calls(
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+pub async fn execute_calls<S>(
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     calls: Vec<Call>,
     fee_args: FeeArgs,
     nonce: Option<Felt>,
     wait_config: WaitForTx,
     ui: &UI,
-) -> Result<InvokeResponse, StarknetCommandError> {
+) -> Result<InvokeResponse, StarknetCommandError>
+where
+    S: Signer + Sync + Send,
+{
     let execution_calls = account.execute_v3(calls);
 
     let fee_settings = if fee_args.max_fee.is_some() {

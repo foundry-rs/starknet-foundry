@@ -309,7 +309,7 @@ async fn test_keystore_undeployed_account() {
     let snapbox = runner(&args).current_dir(contract_path.path());
     let output = snapbox.assert().failure();
 
-    assert_stderr_contains(output, "Error: [..] make sure the account is deployed");
+    assert_stderr_contains(output, "Error: Failed to get account address");
 }
 
 #[tokio::test]
@@ -335,4 +335,23 @@ async fn test_keystore_declare() {
     let snapbox = runner(&args).current_dir(contract_path.path());
 
     assert!(snapbox.assert().success().get_output().stderr.is_empty());
+}
+
+#[tokio::test]
+async fn test_keystore_and_ledger_conflict() {
+    let args = vec![
+        "--keystore",
+        "some_keystore",
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--ledger-path",
+        "m//starknet'/sncast'/0'/0'/0",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(output, "Error: keystore and ledger cannot be used together");
 }
