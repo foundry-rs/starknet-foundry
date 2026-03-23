@@ -79,3 +79,11 @@ If passed, an estimated tip will be added to pay for the transaction. The tip is
 Optional.
 
 Nonce for transaction. If not provided, nonce will be set automatically.
+
+## `--dry-run`
+Optional.
+If passed, the transaction will not be sent to the network and the fee will be estimated instead.
+
+## `--detailed`
+Optional.
+If passed, the output will include detailed fee estimation results instead of just overall fee. Requires [`--dry-run`](#--dry-run) flag to be used.
