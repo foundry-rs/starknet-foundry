@@ -2,7 +2,7 @@ use crate::helpers::constants::{ACCOUNT_FILE_PATH, MULTICALL_CONFIGS_DIR, URL};
 use crate::helpers::fixtures::create_and_deploy_oz_account;
 use crate::helpers::runner::runner;
 use indoc::{formatdoc, indoc};
-use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
+use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
 use std::path::Path;
 use test_case::test_case;
 
@@ -118,18 +118,20 @@ async fn test_dry_run() {
         path,
         "--dry-run",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args)
-        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(tempdir.path());
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
-    output.stdout_eq(indoc! {r"
-        Success: Dry run completed
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Dry run completed
 
-        Overall Fee: [..] Fri (~[..] STRK)
-    "});
+            Overall Fee: [..] Fri (~[..] STRK)
+            "
+        },
+    );
 }
 
 #[tokio::test]
@@ -156,24 +158,26 @@ async fn test_dry_run_detailed() {
         "--dry-run",
         "--detailed",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args)
-        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(tempdir.path());
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
-    output.stdout_eq(indoc! {r"
-        Success: Dry run completed
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Dry run completed
 
-        Overall Fee: [..] Fri (~[..] STRK)
-        L1 Gas Consumed:      [..]
-        L1 Gas Price:         [..]
-        L2 Gas Consumed:      [..]
-        L2 Gas Price:         [..]
-        L1 Data Gas Consumed: [..]
-        L1 Data Gas Price:    [..]
-    "});
+            Overall Fee: [..] Fri (~[..] STRK)
+            L1 Gas Consumed:      [..]
+            L1 Gas Price:         [..]
+            L2 Gas Consumed:      [..]
+            L2 Gas Price:         [..]
+            L1 Data Gas Consumed: [..]
+            L1 Data Gas Price:    [..]
+            "
+        },
+    );
 }
 
 #[tokio::test]

@@ -374,9 +374,7 @@ async fn test_dry_run() {
         "--dry-run",
     ];
 
-    let snapbox = runner(&args)
-        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(tempdir.path());
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
     assert_stdout_contains(
@@ -413,9 +411,7 @@ async fn test_dry_run_detailed() {
         "--detailed",
     ];
 
-    let snapbox = runner(&args)
-        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(tempdir.path());
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
     assert_stdout_contains(
@@ -434,4 +430,41 @@ async fn test_dry_run_detailed() {
             "
         },
     );
+}
+
+#[tokio::test]
+async fn test_dry_run_json_output() {
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+
+    let args = vec![
+        "--json",
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 0x2",
+        "--dry-run",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+
+    // Fee fields must be present in JSON output
+    assert!(json.get("overall_fee").is_some());
+    assert!(json.get("l1_gas_consumed").is_some());
+    assert!(json.get("l1_gas_price").is_some());
+    assert!(json.get("l2_gas_consumed").is_some());
+    assert!(json.get("l1_data_gas_consumed").is_some());
+    // The `detailed` rendering flag must NOT appear in JSON (#[serde(skip)])
+    assert!(json.get("detailed").is_none());
 }
