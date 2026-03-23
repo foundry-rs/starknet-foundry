@@ -18,9 +18,8 @@ use sncast::response::ui::UI;
 use sncast::{
     AccountType, chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig,
 };
-use sncast::{WaitForTx, get_chain_id};
+use sncast::{SignerSource, SignerType, WaitForTx, get_chain_id};
 use starknet_rust::providers::Provider;
-use starknet_rust::signers::SigningKey;
 use starknet_types_core::felt::Felt;
 use std::io::{self, IsTerminal};
 use std::{fs::OpenOptions, io::Write};
@@ -48,8 +47,10 @@ pub enum Commands {
     List(List),
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn prepare_account_json(
-    private_key: &SigningKey,
+    signer_type: &SignerType,
+    public_key: Felt,
     address: Felt,
     deployed: bool,
     legacy: bool,
@@ -62,14 +63,24 @@ pub fn prepare_account_json(
         AccountType::Argent => AccountType::Ready,
         _ => account_type,
     };
+
     let mut account_json = json!({
-        "private_key": format!("{:#x}", private_key.secret_scalar()),
-        "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
+        "public_key": format!("{public_key:#x}"),
         "address": format!("{address:#x}"),
         "type": format!("{saved_account_type}").to_lowercase().replace("openzeppelin", "open_zeppelin"),
         "deployed": deployed,
         "legacy": legacy,
     });
+
+    match signer_type {
+        SignerType::Local { private_key } => {
+            account_json["private_key"] = serde_json::Value::String(format!("{private_key:#x}"));
+        }
+        SignerType::Ledger { ledger_path } => {
+            account_json["ledger_path"] =
+                serde_json::Value::String(ledger_path.derivation_string());
+        }
+    }
 
     if let Some(salt) = salt {
         account_json["salt"] = serde_json::Value::String(format!("{salt:#x}"));
@@ -247,6 +258,14 @@ pub async fn account(
             let provider = create.rpc.get_provider(&config, ui).await?;
 
             let chain_id = get_chain_id(&provider).await?;
+
+            let signer_type = create
+                .ledger_key_locator
+                .resolve(ui)
+                .map(|ledger_path| SignerType::Ledger { ledger_path });
+
+            let signer_source = SignerSource::new(config.keystore.clone(), signer_type.as_ref())?;
+
             let account = if config.keystore.is_none() {
                 create
                     .name
@@ -258,11 +277,11 @@ pub async fn account(
             let result = starknet_commands::account::create::create(
                 &account,
                 &config.accounts_file,
-                config.keystore.as_ref(),
                 &provider,
                 chain_id,
                 &create,
                 &config,
+                &signer_source,
                 ui,
             )
             .await;
@@ -281,7 +300,6 @@ pub async fn account(
             let fee_args = deploy.fee_args.clone();
 
             let chain_id = get_chain_id(&provider).await?;
-            let keystore_path = config.keystore.clone();
             let result = starknet_commands::account::deploy::deploy(
                 &provider,
                 &config.accounts_file,
@@ -300,16 +318,17 @@ pub async fn account(
 
             if config.keystore.is_none()
                 && run_interactive_prompt
-                && let Err(_) = prompt_to_add_account_as_default(
-                    &deploy
+                && let Err(err) = prompt_to_add_account_as_default(
+                    deploy
                         .name
-                        .expect("Must be provided if not using a keystore"),
+                        .as_ref()
+                        .expect("Must be provided when using accounts file"),
                 )
             {
                 // TODO(#3436)
                 ui.print_error(
                     "account deploy",
-                    "Error: Failed to launch interactive prompt: {err}".to_string(),
+                    format!("Error: Failed to launch interactive prompt: {err}"),
                 );
             }
 

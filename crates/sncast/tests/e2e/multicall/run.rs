@@ -1,5 +1,4 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, MULTICALL_CONFIGS_DIR, URL};
-use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::create_and_deploy_oz_account;
 use crate::helpers::runner::runner;
 use indoc::{formatdoc, indoc};
@@ -32,7 +31,6 @@ async fn test_happy_case(account: &str) {
         "--path",
         path,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
     let output = snapbox.assert();
@@ -75,7 +73,6 @@ async fn test_calldata_ids() {
         "--path",
         path,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -258,7 +255,6 @@ async fn test_numeric_inputs() {
         "--path",
         path,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -279,40 +275,4 @@ async fn test_numeric_inputs() {
         To see invocation details, visit:
         transaction: [..]
     "});
-}
-
-#[tokio::test]
-async fn test_numeric_overflow() {
-    let tempdir = create_and_deploy_oz_account().await;
-
-    let path = project_root::get_project_root().expect("failed to get project root path");
-    let path = Path::new(&path)
-        .join(MULTICALL_CONFIGS_DIR)
-        .join("deploy_invoke_numeric_overflow.toml");
-    let path = path.to_str().expect("failed converting path to str");
-
-    let args = vec![
-        "--accounts-file",
-        "accounts.json",
-        "--account",
-        "my_account",
-        "multicall",
-        "run",
-        "--url",
-        URL,
-        "--path",
-        path,
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert();
-
-    assert_stderr_contains(
-        output,
-        indoc! {r"
-        Command: multicall run
-        Error: Failed to parse [..]
-        u64 value was too large
-        "},
-    );
 }

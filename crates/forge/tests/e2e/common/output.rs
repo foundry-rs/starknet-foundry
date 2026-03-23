@@ -28,6 +28,7 @@ macro_rules! assert_cleaned_output {
                 (r"(?m)^\s*(Updating crates\.io index|warning:.*|This may prevent.*|database is locked.*|Caused by:.*|  Error code.*).*\n", ""), // cargo warnings and errors
                 (r"(?m)^\s*(Downloading crates|Downloaded).*\n", ""), // cargo download output
                 (r"at /[^\s:]+/src/", "at [..]"), // absolute paths in backtrace
+                (r"Graph saved to: \/tmp\/.*", "Graph saved to: [..]") // Inlining optimizer graph saved line
             ]},
             {
                 insta::assert_snapshot!(stdout);

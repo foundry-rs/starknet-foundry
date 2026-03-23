@@ -1,5 +1,5 @@
 # `generate_random_felt`
 
-> `fn generate_random_felt() -> Felt252`
+> `fn generate_random_felt() -> felt252`
 
-Generates a (pseudo) random `Felt252` value.
+Generates a (pseudo) random `felt252` value.

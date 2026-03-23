@@ -54,14 +54,14 @@ Possible values: `mainnet`, `sepolia`, `devnet`.
 ## `--max-fee, -m <MAX_FEE>`
 Optional.
 
-Maximum fee for the `declare` denoted in FRI. Must be greater than zero. If provided, it is not possible to use any of the following fee related flags: `--l1-gas`, `--l1-data-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price`.
+Maximum fee for the `declare` denoted in FRI. Must be greater than zero. If provided, it is not possible to use any of the following fee related flags: `--l1-gas`, `--l1-gas-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price`.
 
 ## `--l1-gas <L1_GAS>`
 Optional.
 
 Maximum L1 gas for the `declare` transaction. When not used, defaults to auto-estimation.
 
-## ` --l1-gas-price <l1_gas_price>`
+## `--l1-gas-price <l1_gas_price>`
 Optional.
 
 Maximum L1 gas unit price for the `declare` transaction. When not used, defaults to auto-estimation.
@@ -92,7 +92,7 @@ Conflicts with: [`--estimate-tip`](#--estimate-tip-estimate_tip)
 
 Tip for the transaction. When not provided, defaults to 0 unless [`--estimate-tip`](#--estimate-tip-estimate_tip) is used.
 
-## `--estimate-tip <ESTIMATE_TIP>`
+## `--estimate-tip`
 Optional.
 Conflicts with: [`--tip`](#--tip-tip)
 

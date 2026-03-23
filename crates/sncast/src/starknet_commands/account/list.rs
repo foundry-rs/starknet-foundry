@@ -9,7 +9,9 @@ use serde::Serialize;
 use serde_json::Value;
 use serde_json::json;
 use sncast::AccountType;
-use sncast::{AccountData, NestedMap, check_account_file_exists, read_and_parse_json_file};
+use sncast::{
+    AccountData, NestedMap, SignerType, check_account_file_exists, read_and_parse_json_file,
+};
 use std::collections::HashMap;
 use std::fmt::Write;
 
@@ -28,8 +30,8 @@ pub struct List {
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct AccountDataRepresentationMessage {
     pub public_key: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub private_key: Option<String>,
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub signer_type: Option<SignerType>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub network: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -50,7 +52,10 @@ pub struct AccountDataRepresentationMessage {
 impl AccountDataRepresentationMessage {
     fn new(account: &AccountData, display_private_key: bool) -> Self {
         Self {
-            private_key: display_private_key.then(|| account.private_key.into_hex_string()),
+            signer_type: match &account.signer_type {
+                SignerType::Local { .. } if !display_private_key => None,
+                other => Some(other.clone()),
+            },
             public_key: account.public_key.into_hex_string(),
             network: None,
             address: account.address.map(IntoHexStr::into_hex_string),
@@ -96,8 +101,14 @@ impl Message for AccountDataRepresentationMessage {
 
         let _ = writeln!(result, "  public key: {}", self.public_key);
 
-        if let Some(ref private_key) = self.private_key {
-            let _ = writeln!(result, "  private key: {private_key}");
+        match &self.signer_type {
+            Some(SignerType::Local { private_key }) => {
+                let _ = writeln!(result, "  private key: {}", private_key.into_hex_string());
+            }
+            Some(SignerType::Ledger { ledger_path }) => {
+                let _ = writeln!(result, "  ledger path: {}", ledger_path.derivation_string());
+            }
+            None => {}
         }
         if let Some(ref address) = self.address {
             let _ = writeln!(result, "  address: {address}");

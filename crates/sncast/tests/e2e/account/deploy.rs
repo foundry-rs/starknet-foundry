@@ -1,6 +1,5 @@
 use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use crate::helpers::env::set_keystore_password_env;
-use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::copy_file;
 use crate::helpers::fixtures::{
     get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
@@ -41,7 +40,6 @@ pub async fn test_happy_case(class_hash: &str, account_type: &str) {
         "--name",
         "my_account",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -79,7 +77,6 @@ pub async fn test_happy_case_max_fee() {
         "--name",
         "my_account",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -117,7 +114,6 @@ pub async fn test_happy_case_add_profile() {
         "--name",
         "my_account",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -135,7 +131,7 @@ pub async fn test_happy_case_add_profile() {
 }
 
 #[test_case("{\"alpha-sepolia\": {}}", "Error: Account = my_account not found under network = alpha-sepolia" ; "when account name not present")]
-#[test_case("{\"alpha-sepolia\": {\"my_account\" : {}}}", "Error: Failed to parse field `alpha-sepolia.my_account` in file 'accounts.json': missing field `private_key`[..]" ; "when private key not present")]
+#[test_case("{\"alpha-sepolia\": {\"my_account\" : {}}}", "Error: Failed to parse field `alpha-sepolia.my_account` in file 'accounts.json': missing field `public_key`[..]" ; "when public key not present")]
 fn test_account_deploy_error(accounts_content: &str, error: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
@@ -152,7 +148,6 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
         "--name",
         "my_account",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert();
@@ -175,7 +170,6 @@ pub async fn test_valid_class_hash() {
         "--name",
         "my_account",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -305,7 +299,6 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         "--url",
         URL,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -356,7 +349,6 @@ pub async fn test_keystore_already_deployed() {
         "--url",
         URL,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -398,7 +390,6 @@ pub async fn test_keystore_key_mismatch() {
         "--url",
         URL,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -435,7 +426,6 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
         "--url",
         URL,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -472,7 +462,6 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
         "--url",
         URL,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -513,7 +502,6 @@ pub async fn test_deploy_keystore_no_status() {
         "--url",
         URL,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -571,7 +559,6 @@ pub async fn test_deploy_keystore_other_args() {
         "--name",
         "some-name",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -602,7 +589,6 @@ pub async fn test_json_output_format() {
         "--name",
         "my_account",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
