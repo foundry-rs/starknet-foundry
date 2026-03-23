@@ -162,46 +162,23 @@ async fn test_happy_path_handle_wait_for_tx() {
 }
 
 #[tokio::test]
-#[should_panic(expected = "Invalid values for retry_interval and/or timeout!")]
 async fn test_wait_for_wrong_retry_values() {
-    let provider = create_test_provider();
-    let ui = UI::default();
-    wait_for_tx(
-        &provider,
-        MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
-        ValidatedWaitParams::new(2, 1).unwrap(),
-        Some(&ui),
-    )
-    .await
-    .unwrap();
+    let err = ValidatedWaitParams::new(2, 1).unwrap_err();
+    assert!(err.to_string().contains("retry_interval cannot be greater than timeout"));
 }
 
 #[tokio::test]
-#[should_panic(expected = "Invalid values for retry_interval and/or timeout!")]
 async fn test_wait_for_wrong_retry_values_timeout_zero() {
-    let provider = create_test_provider();
-    let ui = UI::default();
-    wait_for_tx(
-        &provider,
-        MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
-        ValidatedWaitParams::new(2, 0).unwrap(),
-        Some(&ui),
-    )
-    .await
-    .unwrap();
+    let err = ValidatedWaitParams::new(2, 0).unwrap_err();
+    assert!(err
+        .to_string()
+        .contains("retry_interval and timeout must be greater than 0"));
 }
 
 #[tokio::test]
-#[should_panic(expected = "Invalid values for retry_interval and/or timeout!")]
 async fn test_wait_for_wrong_retry_values_interval_zero() {
-    let provider = create_test_provider();
-    let ui = UI::default();
-    wait_for_tx(
-        &provider,
-        MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
-        ValidatedWaitParams::new(0, 1).unwrap(),
-        Some(&ui),
-    )
-    .await
-    .unwrap();
+    let err = ValidatedWaitParams::new(0, 1).unwrap_err();
+    assert!(err
+        .to_string()
+        .contains("retry_interval and timeout must be greater than 0"));
 }
