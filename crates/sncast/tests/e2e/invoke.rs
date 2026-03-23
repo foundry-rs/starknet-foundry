@@ -459,12 +459,11 @@ async fn test_dry_run_json_output() {
     let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
     let json: serde_json::Value = serde_json::from_str(&stdout).unwrap();
 
-    // Fee fields must be present in JSON output
     assert!(json.get("overall_fee").is_some());
     assert!(json.get("l1_gas_consumed").is_some());
     assert!(json.get("l1_gas_price").is_some());
     assert!(json.get("l2_gas_consumed").is_some());
     assert!(json.get("l1_data_gas_consumed").is_some());
-    // The `detailed` rendering flag must NOT appear in JSON (#[serde(skip)])
+    // The `detailed` rendering flag must not appear in JSON.
     assert!(json.get("detailed").is_none());
 }
