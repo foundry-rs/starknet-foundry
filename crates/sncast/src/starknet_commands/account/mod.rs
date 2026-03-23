@@ -11,7 +11,9 @@ use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
 use serde_json::json;
 use sncast::helpers::account::{generate_account_name, load_accounts};
-use sncast::helpers::configuration::{CastConfig, NetworkParams, PartialCastConfig, SncastProfileAppend};
+use sncast::helpers::configuration::{
+    CastConfig, NetworkParams, PartialCastConfig, SncastProfileAppend,
+};
 use sncast::helpers::interactive::prompt_to_add_account_as_default;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;

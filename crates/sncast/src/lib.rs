@@ -216,9 +216,11 @@ impl ValidatedWaitParams {
         self.timeout
     }
 
-    pub fn validate(&self){
+    pub fn validate(&self) {
         assert!(
-            !(self.retry_interval == 0 || self.timeout == 0 || u16::from(self.retry_interval) > self.timeout),
+            !(self.retry_interval == 0
+                || self.timeout == 0
+                || u16::from(self.retry_interval) > self.timeout),
             "Invalid values for retry_interval and/or timeout!"
         );
     }
