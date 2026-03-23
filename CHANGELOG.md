@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Added
+
+- `--dry-run` and `--detailed` flags to estimate the fee of a transaction without sending it to the network
+
 #### Fixed
 
 - `sncast verify` now uses the configured network or infers it from the RPC chain ID when `--network` is omitted.
@@ -84,12 +88,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `sncast balance` and `sncast tx-status` commands have been moved under `sncast get` subcommand (`sncast get balance`, `sncast get tx-status`). The old commands still work, but will be removed in the future.
 - Referencing an id in multicall configuration files now requires the `@` prefix.
-
-### Cast
-
-#### Added
-
-- `--dry-run` and `--detailed` flags to estimate the fee of a transaction without sending it to the network.
 
 ## [0.57.0] - 2026-02-24
 
