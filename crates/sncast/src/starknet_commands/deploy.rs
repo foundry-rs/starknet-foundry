@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
@@ -106,7 +106,7 @@ where
         let fee_estimate = deployment
             .estimate_fee()
             .await
-            .with_context(|| "Failed to estimate fee for dry run")?;
+            .context("Failed to estimate fee for dry run")?;
         return Ok(StandardDeployResponse::DryRun(DryRunResponse::new(
             &fee_estimate,
             fee_args.detailed,

@@ -1,6 +1,6 @@
 use crate::Arguments;
 use crate::starknet_commands::utils::felt_or_id::FeltOrId;
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
@@ -75,7 +75,7 @@ where
             .execute_v3(vec![call])
             .estimate_fee()
             .await
-            .with_context(|| "Failed to estimate fee for dry run")?;
+            .context("Failed to estimate fee for dry run")?;
         return Ok(InvokeResponse::DryRun(DryRunResponse::new(
             &fee_estimate,
             fee_args.detailed,

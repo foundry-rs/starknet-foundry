@@ -37,7 +37,6 @@ use sncast::response::declare::{
 use sncast::response::deploy::{DeployResponse, DeployResponseWithDeclare};
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
-use sncast::response::invoke::InvokeResponse;
 use sncast::response::transformed_call::transform_response;
 use sncast::response::ui::UI;
 use sncast::{
@@ -434,13 +433,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 Err(e) => Err(handle_starknet_command_error(e)),
             };
 
-            let block_explorer_link = block_explorer_link_if_allowed(
-                &result,
-                provider.chain_id().await?,
-                &config,
-                false,
-            )
-            .await;
+            let block_explorer_link =
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config, false)
+                    .await;
             process_command_result("declare-from", result, ui, block_explorer_link);
 
             Ok(())
