@@ -14,7 +14,7 @@ Invokes a contract and returns `InvokeResult`.
 - `entry_point_selector` - the selector of the function to invoke.
 - `calldata` - inputs to the function to be invoked.
 - `fee_settings` - fee settings for the transaction, see [`FeeSettingsTrait](./fee_settings_trait.md).
-- `nonce` - nonce for declare transaction. If not provided, nonce will be set automatically.
+- `nonce` - nonce for invoke transaction. If not provided, nonce will be set automatically.
 
 ```rust
 {{#include ../../../listings/invoke/src/lib.cairo}}

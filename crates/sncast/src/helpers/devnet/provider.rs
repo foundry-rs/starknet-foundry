@@ -1,4 +1,4 @@
-use crate::AccountData;
+use crate::{AccountData, SignerType};
 use ::serde::{Deserialize, Serialize, de::DeserializeOwned};
 use anyhow::{Context, Error, ensure};
 use reqwest::Client;
@@ -121,13 +121,15 @@ impl From<&PredeployedAccount> for AccountData {
     fn from(predeployed_account: &PredeployedAccount) -> Self {
         Self {
             address: Some(predeployed_account.address),
-            private_key: predeployed_account.private_key,
             public_key: predeployed_account.public_key,
             class_hash: None,
             salt: None,
             deployed: None,
             legacy: None,
             account_type: None,
+            signer_type: SignerType::Local {
+                private_key: predeployed_account.private_key,
+            },
         }
     }
 }

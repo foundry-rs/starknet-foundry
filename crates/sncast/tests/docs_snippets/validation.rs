@@ -65,7 +65,7 @@ fn test_docs_snippets() {
     update_scarb_toml_dependencies(&tempdir).unwrap();
 
     for snippet in &snippets {
-        if snippet.config.ignored {
+        if snippet.config.ignored || snippet.config.requires_ledger {
             print_ignored_snippet_message(snippet);
             continue;
         }

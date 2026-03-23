@@ -2,7 +2,6 @@ use crate::helpers::constants::{
     ACCOUNT, ACCOUNT_FILE_PATH, CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA, CONTRACTS_DIR,
     DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
 };
-use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
     create_and_deploy_account, create_and_deploy_oz_account, create_test_provider,
     duplicate_contract_directory_with_salt, get_transaction_by_hash, get_transaction_hash,
@@ -44,7 +43,6 @@ async fn test_happy_case_human_readable() {
         "0x2",
         "--unique",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -90,7 +88,6 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         "0x2",
         "--unique",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
@@ -211,7 +208,6 @@ async fn test_happy_case_with_constructor() {
         "--class-hash",
         CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success().get_output().stdout.clone();
@@ -240,7 +236,6 @@ async fn test_happy_case_with_constructor_cairo_expression_calldata() {
         "--class-hash",
         CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success().get_output().stdout.clone();
@@ -428,7 +423,6 @@ async fn test_json_output_format() {
         "0x2",
         "--unique",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -462,14 +456,9 @@ async fn test_happy_case_with_declare() {
         "deploy",
         "--url",
         URL,
-        "--constructor-calldata",
-        "0x1",
-        "0x1",
-        "0x0",
         "--contract-name",
         "Map",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -520,7 +509,6 @@ async fn test_happy_case_with_already_declared() {
             "--contract-name",
             "Map",
         ];
-        let args = apply_test_resource_bounds_flags(args);
 
         runner(&args).current_dir(tempdir.path()).assert().success();
     }
@@ -534,14 +522,9 @@ async fn test_happy_case_with_already_declared() {
         "deploy",
         "--url",
         URL,
-        "--constructor-calldata",
-        "0x1",
-        "0x1",
-        "0x0",
         "--contract-name",
         "Map",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -610,16 +593,11 @@ async fn test_happy_case_with_declare_nonce() {
         "deploy",
         "--url",
         URL,
-        "--constructor-calldata",
-        "0x1",
-        "0x1",
-        "0x0",
         "--contract-name",
         "Map",
         "--nonce",
         nonce.as_str(),
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -674,7 +652,6 @@ async fn test_deploy_with_declare_invalid_nonce() {
         "--nonce",
         "0x123456",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -683,11 +660,9 @@ async fn test_deploy_with_declare_invalid_nonce() {
 
     assert_stderr_contains(
         output,
-        indoc! {
-            "
-            Command: deploy
-            Error: Invalid transaction nonce
-            "
-        },
+        indoc! {r#"
+        Command: deploy
+        Error: Transaction execution error = TransactionExecutionErrorData { transaction_index: 0, execution_error: Message("Account transaction nonce is invalid.") }
+        "#},
     );
 }

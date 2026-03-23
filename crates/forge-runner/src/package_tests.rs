@@ -39,7 +39,7 @@ const BUILTIN_ORDER: [(BuiltinName, GenericTypeId); 9] = [
     (BuiltinName::mul_mod, MulModType::ID),
 ];
 
-#[derive(Debug, PartialEq, Clone, Copy, Hash, Eq, Serialize)]
+#[derive(Debug, PartialEq, Clone, Copy, Hash, Eq, Serialize, PartialOrd, Ord)]
 pub enum TestTargetLocation {
     /// Main crate in a package
     Lib,

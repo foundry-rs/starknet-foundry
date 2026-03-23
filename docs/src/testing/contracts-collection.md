@@ -1,16 +1,9 @@
 # How Contracts Are Collected
 
 `snforge` supports two mechanisms for collecting contracts used in tests.
-The default one depends on Scarb version used and can be controlled with `--no-optimization` flag.
 
-- If using Scarb version >= 2.8.3, [optimized collection mechanism](contract-collection/new-mechanism.md) is used by
-  default.
-- If using Scarb version < 2.8.3 or running `snforge test` with `--no-optimization` flag,
-  the [old collection mechanism](contract-collection/old-mechanism.md) is used.
-
-> 📝 **Note**
->
-> Enabling new mechanism **requires** Scarb version >= 2.8.3.
+- By default, [optimized collection mechanism](contract-collection/new-mechanism.md) is used.
+- If running `snforge test` with `--no-optimization` flag, the [old collection mechanism](contract-collection/old-mechanism.md) is used.
 
 ## Differences Between Collection Mechanisms
 

@@ -1,7 +1,6 @@
 use crate::helpers::constants::{
     CONTRACTS_DIR, MAP_CONTRACT_CLASS_HASH_SEPOLIA, SEPOLIA_RPC_URL, URL,
 };
-use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
     create_and_deploy_oz_account, duplicate_contract_directory_with_salt, get_accounts_path,
     join_tempdirs,
@@ -35,7 +34,6 @@ async fn test_happy_case() {
         "--url",
         URL,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -80,7 +78,6 @@ async fn test_happy_case_with_block_id() {
         "--block-id",
         "latest",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -209,7 +206,6 @@ async fn test_contract_already_declared() {
         "--url",
         URL,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().success();
@@ -241,7 +237,6 @@ async fn test_class_hash_does_not_exist_on_source_network() {
         "--url",
         URL,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().success();
@@ -271,7 +266,6 @@ async fn test_source_rpc_args_not_passed() {
         "--url",
         URL,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().failure();
@@ -302,7 +296,6 @@ async fn test_invalid_block_id() {
         "--block-id",
         "0x10101",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().failure();
@@ -356,7 +349,6 @@ async fn test_declare_from_sierra_happy_case() {
         "--url",
         URL,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -394,7 +386,6 @@ async fn test_declare_from_sierra_does_not_exist() {
         "--url",
         URL,
     ];
-    let args = apply_test_resource_bounds_flags(args);
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().success();
 
@@ -426,7 +417,6 @@ async fn test_declare_from_sierra_invalid_json() {
         "--url",
         URL,
     ];
-    let args = apply_test_resource_bounds_flags(args);
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().success();
 
@@ -473,7 +463,6 @@ async fn test_declare_from_sierra_already_declared() {
         "--url",
         URL,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     runner(&args).current_dir(tempdir.path()).assert().success();
 
@@ -488,7 +477,6 @@ async fn test_declare_from_sierra_already_declared() {
         "--url",
         URL,
     ];
-    let args = apply_test_resource_bounds_flags(args);
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 

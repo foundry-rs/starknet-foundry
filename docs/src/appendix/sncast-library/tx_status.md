@@ -16,9 +16,10 @@ Structures used by the command:
 #[derive(Drop, Clone, Debug, Serde, PartialEq)]
 pub enum FinalityStatus {
     Received,
-    Rejected,
+    Candidate,
+    PreConfirmed,
     AcceptedOnL2,
-    AcceptedOnL1
+    AcceptedOnL1,
 }
 
 

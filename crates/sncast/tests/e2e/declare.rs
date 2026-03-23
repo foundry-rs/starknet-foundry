@@ -1,5 +1,4 @@
 use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
-use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
     copy_directory_to_tempdir, create_and_deploy_account, create_and_deploy_oz_account,
     duplicate_contract_directory_with_salt, get_accounts_path, get_transaction_by_hash,
@@ -39,7 +38,6 @@ async fn test_happy_case_human_readable() {
         "--contract-name",
         "Map",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -86,7 +84,6 @@ async fn test_happy_case_json_output() {
         "--contract-name",
         "Map",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -131,7 +128,6 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         "--contract-name",
         "Map",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success().get_output().stdout.clone();
@@ -163,7 +159,6 @@ async fn test_contract_with_constructor_params() {
         "--contract-name",
         "ContractWithConstructorParams",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -312,7 +307,6 @@ async fn test_happy_case_specify_package() {
         "--package",
         "main_workspace",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
@@ -344,7 +338,6 @@ async fn test_contract_already_declared() {
         "--contract-name",
         "Map",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     runner(&args).current_dir(tempdir.path()).assert().success();
 
@@ -417,17 +410,16 @@ async fn test_invalid_nonce() {
         "--nonce",
         "12345",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(contract_path.path());
     let output = snapbox.assert().success();
 
     assert_stderr_contains(
         output,
-        indoc! {r"
+        indoc! {r#"
         Command: declare
-        Error: Invalid transaction nonce
-        "},
+        Error: Transaction execution error = TransactionExecutionErrorData { transaction_index: 0, execution_error: Message("Account transaction nonce is invalid.") }
+        "#},
     );
 }
 
@@ -614,7 +606,6 @@ fn test_scarb_no_casm_artifact() {
         "--contract-name",
         "minimal_contract",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -649,7 +640,6 @@ async fn test_many_packages_default() {
         "--contract-name",
         "supercomplexcode2",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().failure();
@@ -678,7 +668,6 @@ async fn test_workspaces_package_specified_virtual_fibonacci() {
         "--contract-name",
         "FibonacciContract",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -708,7 +697,6 @@ async fn test_workspaces_package_no_contract() {
         "--contract-name",
         "whatever",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -743,7 +731,6 @@ async fn test_no_scarb_profile() {
         "--contract-name",
         "Map",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -791,7 +778,6 @@ async fn test_no_explorer_links_on_localhost() {
         "--contract-name",
         "Map",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();

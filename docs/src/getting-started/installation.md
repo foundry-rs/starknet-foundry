@@ -14,8 +14,8 @@ In this section, we will walk through the process of installing Starknet Foundry
       * [Requirements](#requirements)
       * [Linux and macOS](#linux-and-macos)
           * [Install asdf](#install-asdf)
-          * [Install Scarb version >= 2.8.5](#install-scarb-version--285)
-          * [(Optional for Scarb >= 2.10.0) Rust Installation](#optional-for-scarb--21001-rust-installation)
+          * [Install Scarb version >= 2.12.0](#install-scarb-version--2120)
+          * [(Optional) Rust Installation](#optional-rust-installation)
           * [Install Starknet Foundry](#install-starknet-foundry)
       * [Windows](#windows)
     * [Common Errors](#common-errors)
@@ -63,7 +63,7 @@ snforge --version
 
 To use Starknet Foundry, you need:
 
-- [Scarb](https://docs.swmansion.com/scarb/download.html) version >= 2.8.5
+- [Scarb](https://docs.swmansion.com/scarb/download.html) version >= 2.12.0
 - [Universal-Sierra-Compiler](https://github.com/software-mansion/universal-sierra-compiler)
 - _(Optional for Scarb >= 2.10.0)_[^note] [Rust](https://www.rust-lang.org/tools/install) version >= 1.80.1
 
@@ -97,7 +97,7 @@ To verify that asdf was installed, run
 asdf --version
 ```
 
-#### Install Scarb version >= 2.8.5
+#### Install Scarb version >= 2.12.0
 
 First, add Scarb plugin to asdf
 
@@ -123,16 +123,13 @@ To verify that Scarb was installed, run
 scarb --version
 ```
 
-and verify that version is >= 2.8.5
+and verify that version is >= 2.12.0
 
-#### (Optional for Scarb >= 2.10.0)[^note] Rust Installation
+#### (Optional) Rust Installation
 
 > ℹ️️ **Info**
 >
-> Rust installation is only required if **ANY** of the following is true:
->
-> * You are using Scarb version <= 2.10.0
-> * Your platform is not one of the following supported platforms:
+> Rust installation is only required if your platform is not one of the following supported platforms:
 >   * `aarch64-apple-darwin`
 >   * `aarch64-unknown-linux-gnu`
 >   * `x86_64-apple-darwin`
@@ -201,7 +198,7 @@ Users may encounter this error when trying to use `snforge` or `sncast` without 
 ```shell
 No version is set for command snforge
 Consider adding one of the following versions in your config file at $HOME/.tool_versions
-starknet-foundry 0.37.0
+starknet-foundry {{snforge_std_version}}
 ```
 
 This error indicates that `Starknet Foundry` version is unset. To resolve it, set the version globally using asdf:
@@ -218,8 +215,8 @@ the [asdf](https://asdf-vm.com/guide/getting-started.html#_6-set-a-version)
 When running any `snforge` command, error similar to this is displayed
 
 ```shell
-Compiling snforge_scarb_plugin v0.34.0
-error: package snforge_scarb_plugin v0.34.0 cannot be built because it requires rustc 1.80.1 or newer, while the currently active rustc version is 1.76.0
+Compiling snforge_scarb_plugin v{{snforge_std_version}}
+error: package snforge_scarb_plugin {{snforge_std_version}} cannot be built because it requires rustc 1.80.1 or newer, while the currently active rustc version is 1.76.0
 ```
 
 This indicates incorrect Rust version is installed or set.

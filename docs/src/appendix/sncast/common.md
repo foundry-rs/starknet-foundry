@@ -5,7 +5,7 @@ These flags must be specified directly after the `sncast` command and before the
 Optional.
 
 Used for both `snfoundry.toml` and `Scarb.toml` if specified.
-Defaults to `default` (`snfoundry.toml`) and `dev` (`Scarb.toml`).
+Defaults to `default` (`snfoundry.toml`) and `release` (`Scarb.toml`) in most contexts.
 
 ## `--account, -a <ACCOUNT_NAME>`
 Optional.
@@ -42,7 +42,7 @@ Optional.
 
 If `--wait` is passed, this will set the time after which `sncast` times out. Defaults to 60s.
 
-## `--wait-retry-timeout <TIME_IN_SECONDS>`
+## `--wait-retry-interval <TIME_IN_SECONDS>`
 Optional.
 
 If `--wait` is passed, this will set the retry interval - how often `sncast` should fetch tx info from the node. Defaults to 5s.
