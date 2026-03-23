@@ -40,7 +40,7 @@ impl NetworkParams {
     }
 
     pub fn validate(&self) -> Result<()> {
-         match (&self.url, &self.network) {
+        match (&self.url, &self.network) {
             (Some(_), Some(_)) => anyhow::bail!("Only one of `url` or `network` may be specified"),
             _ => Ok(()),
         }
@@ -347,11 +347,8 @@ mod tests {
 
     #[test]
     fn test_network_params_override_empty_keeps_base() {
-        let base = NetworkParams::new(
-            Some(Url::parse("https://base.example.com").unwrap()),
-            None,
-        )
-        .unwrap();
+        let base = NetworkParams::new(Some(Url::parse("https://base.example.com").unwrap()), None)
+            .unwrap();
         let other = NetworkParams::default();
         let result = base.override_with(other);
 
