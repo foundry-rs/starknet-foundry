@@ -121,11 +121,8 @@ async fn test_dry_run() {
         URL,
         "--dry-run",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args)
-        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(temp_dir.path());
+    let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().success();
 
     assert_stdout_contains(
@@ -163,11 +160,7 @@ async fn test_dry_run_detailed() {
         "--dry-run",
         "--detailed",
     ];
-    let args = apply_test_resource_bounds_flags(args);
-
-    let snapbox = runner(&args)
-        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(temp_dir.path());
+    let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().success();
 
     assert_stdout_contains(

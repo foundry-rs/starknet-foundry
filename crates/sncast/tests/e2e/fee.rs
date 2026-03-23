@@ -1,7 +1,7 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, MAP_CONTRACT_ADDRESS_SEPOLIA, URL};
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 
 #[test]
 fn test_max_fee_used_with_other_args() {
@@ -50,6 +50,38 @@ fn test_max_fee_used_with_other_args() {
           --l2-gas-price <L2_GAS_PRICE>
           --l1-data-gas <L1_DATA_GAS>
           --l1-data-gas-price <L1_DATA_GAS_PRICE>
+        "},
+    );
+}
+
+#[test]
+fn test_detailed_without_dry_run() {
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        "user11",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1",
+        "0x2",
+        "--detailed",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        error: the following required arguments were not provided:
+          --dry-run
         "},
     );
 }
