@@ -798,6 +798,7 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
                 global_path.unwrap_or_default()
             );
         }
+        // Note: this is potentially unreachable: `get_or_create_global_config_path` should always return dir with existing config file.
         // TODO: (#3436) remove this if missing global config becomes an error
         (Some(profile), MaybeConfig::NoFile, MaybeConfig::NoFile) => {
             bail!("Profile [{profile}] not found: no config files present");
