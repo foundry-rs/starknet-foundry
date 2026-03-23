@@ -42,6 +42,8 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::helpers::fee::{FeeArgs, ScriptFeeSettings};
 use sncast::helpers::rpc::RpcArgs;
+use sncast::response::deploy::StandardDeployResponse;
+use sncast::response::invoke::InvokeResponse;
 use sncast::response::script::run::ScriptRunResponse;
 use sncast::response::ui::UI;
 use sncast::state::hashing::{
@@ -175,21 +177,29 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     return Ok(CheatcodeHandlingResult::from_serializable(success_output));
                 }
 
-                let deploy_result = self.tokio_runtime.block_on(deploy::deploy(
-                    class_hash,
-                    &constructor_calldata,
-                    salt,
-                    unique,
-                    fee_args,
-                    nonce,
-                    self.account()?,
-                    WaitForTx {
-                        wait: true,
-                        wait_params: self.config.wait_params,
-                        show_ui_outputs: true,
-                    },
-                    self.ui,
-                ));
+                let deploy_result = self
+                    .tokio_runtime
+                    .block_on(deploy::deploy(
+                        class_hash,
+                        &constructor_calldata,
+                        salt,
+                        unique,
+                        fee_args,
+                        nonce,
+                        self.account()?,
+                        WaitForTx {
+                            wait: true,
+                            wait_params: self.config.wait_params,
+                            show_ui_outputs: true,
+                        },
+                        self.ui,
+                    ))
+                    .map(|response| match response {
+                        StandardDeployResponse::Transaction(tx) => tx,
+                        StandardDeployResponse::DryRun(_) => {
+                            unreachable!("Dry run is not supported in script context")
+                        }
+                    });
 
                 self.state.maybe_insert_tx_entry(
                     deploy_tx_id.as_str(),
@@ -215,20 +225,28 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     return Ok(CheatcodeHandlingResult::from_serializable(success_output));
                 }
 
-                let invoke_result = self.tokio_runtime.block_on(invoke::invoke_in_script(
-                    contract_address,
-                    calldata,
-                    nonce,
-                    fee_args,
-                    function_selector,
-                    self.account()?,
-                    WaitForTx {
-                        wait: true,
-                        wait_params: self.config.wait_params,
-                        show_ui_outputs: true,
-                    },
-                    self.ui,
-                ));
+                let invoke_result = self
+                    .tokio_runtime
+                    .block_on(invoke::invoke(
+                        contract_address,
+                        calldata,
+                        nonce,
+                        fee_args,
+                        function_selector,
+                        self.account()?,
+                        WaitForTx {
+                            wait: true,
+                            wait_params: self.config.wait_params,
+                            show_ui_outputs: true,
+                        },
+                        self.ui,
+                    ))
+                    .map(|response| match response {
+                        InvokeResponse::Transaction(tx) => tx,
+                        InvokeResponse::DryRun(_) => {
+                            unreachable!("Dry run is not supported in script context")
+                        }
+                    });
 
                 self.state.maybe_insert_tx_entry(
                     invoke_tx_id.as_str(),

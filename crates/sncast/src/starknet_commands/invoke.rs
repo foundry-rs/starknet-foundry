@@ -92,34 +92,6 @@ where
         })
 }
 
-#[expect(clippy::too_many_arguments)]
-pub async fn invoke_in_script<S>(
-    contract_address: Felt,
-    calldata: Vec<Felt>,
-    nonce: Option<Felt>,
-    fee_args: FeeArgs,
-    function_selector: Felt,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
-    wait_config: WaitForTx,
-    ui: &UI,
-) -> Result<InvokeTransactionResponse, StarknetCommandError>
-where
-    S: Signer + Sync + Send,
-    S::SignError: 'static,
-{
-    let call = Call {
-        to: contract_address,
-        selector: function_selector,
-        calldata,
-    };
-
-    execute_calls(account, vec![call], fee_args, nonce, wait_config, ui)
-        .await
-        .map(|result| InvokeTransactionResponse {
-            transaction_hash: result.transaction_hash.into_(),
-        })
-}
-
 pub async fn execute_calls<S>(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     calls: Vec<Call>,
