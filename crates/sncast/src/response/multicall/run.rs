@@ -1,8 +1,7 @@
 use crate::response::cast_message::SncastCommandMessage;
-use crate::response::dry_run::DryRunResponse;
 use crate::{
     helpers::block_explorer::LinkProvider,
-    response::{explorer_link::OutputLink, invoke::InvokeResponse},
+    response::{dry_run::DryRunResponse, explorer_link::OutputLink, invoke::InvokeResponse},
 };
 use conversions::string::IntoHexStr;
 use conversions::{padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
@@ -23,16 +22,26 @@ pub struct MulticallRunTransactionResponse {
 impl SncastCommandMessage for MulticallRunResponse {
     fn text(&self) -> String {
         match self {
-            MulticallRunResponse::Transaction(response) => styling::OutputBuilder::new()
-                .success_message("Multicall completed")
-                .blank_line()
-                .field(
-                    "Transaction Hash",
-                    &response.transaction_hash.into_hex_string(),
-                )
-                .build(),
+            MulticallRunResponse::Transaction(response) => response.text(),
             MulticallRunResponse::DryRun(response) => response.text(),
         }
+    }
+
+    fn json(&self) -> serde_json::Value {
+        match self {
+            MulticallRunResponse::Transaction(response) => response.json(),
+            MulticallRunResponse::DryRun(response) => response.json(),
+        }
+    }
+}
+
+impl SncastCommandMessage for MulticallRunTransactionResponse {
+    fn text(&self) -> String {
+        styling::OutputBuilder::new()
+            .success_message("Multicall completed")
+            .blank_line()
+            .field("Transaction Hash", &self.transaction_hash.into_hex_string())
+            .build()
     }
 }
 
@@ -44,16 +53,7 @@ impl From<InvokeResponse> for MulticallRunResponse {
                     transaction_hash: invoke_response.transaction_hash,
                 })
             }
-            InvokeResponse::DryRun(response) => MulticallRunResponse::DryRun(DryRunResponse {
-                l1_gas_consumed: response.l1_gas_consumed,
-                l1_gas_price: response.l1_gas_price,
-                l2_gas_consumed: response.l2_gas_consumed,
-                l2_gas_price: response.l2_gas_price,
-                l1_data_gas_consumed: response.l1_data_gas_consumed,
-                l1_data_gas_price: response.l1_data_gas_price,
-                overall_fee: response.overall_fee,
-                detailed: response.detailed,
-            }),
+            InvokeResponse::DryRun(response) => MulticallRunResponse::DryRun(response),
         }
     }
 }

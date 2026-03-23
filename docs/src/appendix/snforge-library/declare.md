@@ -1,12 +1,12 @@
 # `declare`
 ```rust
 #[derive(Drop, Serde, Clone)]
-enum DeclareResult {
+pub enum DeclareResult {
     Success: ContractClass,
     AlreadyDeclared: ContractClass,
 }
 
-trait DeclareResultTrait {
+pub trait DeclareResultTrait {
     /// Gets inner `ContractClass`
     /// `self` - an instance of the struct `DeclareResult` which is obtained by calling `declare`
     // Returns the `@ContractClass`

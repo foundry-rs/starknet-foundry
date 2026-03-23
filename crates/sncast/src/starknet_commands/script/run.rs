@@ -1,6 +1,6 @@
-use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
+use crate::starknet_commands::{call, declare, deploy, get::tx_status, invoke};
 use crate::{WaitForTx, get_account};
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result, anyhow, bail};
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::ExecutableCallEntryPoint;
 use blockifier::execution::execution_utils::ReadOnlySegments;
@@ -35,12 +35,15 @@ use scarb_metadata::{Metadata, PackageMetadata};
 use script_runtime::CastScriptRuntime;
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::utils::build_readable_text;
+use sncast::AccountVariant;
 use sncast::get_nonce;
 use sncast::helpers::artifacts::CastStarknetContractArtifacts;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::helpers::fee::{FeeArgs, ScriptFeeSettings};
 use sncast::helpers::rpc::RpcArgs;
+use sncast::response::deploy::StandardDeployResponse;
+use sncast::response::invoke::InvokeResponse;
 use sncast::response::script::run::ScriptRunResponse;
 use sncast::response::ui::UI;
 use sncast::state::hashing::{
@@ -174,21 +177,29 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     return Ok(CheatcodeHandlingResult::from_serializable(success_output));
                 }
 
-                let deploy_result = self.tokio_runtime.block_on(deploy::deploy(
-                    class_hash,
-                    &constructor_calldata,
-                    salt,
-                    unique,
-                    fee_args,
-                    nonce,
-                    self.account()?,
-                    WaitForTx {
-                        wait: true,
-                        wait_params: self.config.wait_params,
-                        show_ui_outputs: true,
-                    },
-                    self.ui,
-                ));
+                let deploy_result = self
+                    .tokio_runtime
+                    .block_on(deploy::deploy(
+                        class_hash,
+                        &constructor_calldata,
+                        salt,
+                        unique,
+                        fee_args,
+                        nonce,
+                        self.account()?,
+                        WaitForTx {
+                            wait: true,
+                            wait_params: self.config.wait_params,
+                            show_ui_outputs: true,
+                        },
+                        self.ui,
+                    ))
+                    .map(|response| match response {
+                        StandardDeployResponse::Transaction(tx) => tx,
+                        StandardDeployResponse::DryRun(_) => {
+                            unreachable!("Dry run is not supported in script context")
+                        }
+                    });
 
                 self.state.maybe_insert_tx_entry(
                     deploy_tx_id.as_str(),
@@ -214,20 +225,28 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     return Ok(CheatcodeHandlingResult::from_serializable(success_output));
                 }
 
-                let invoke_result = self.tokio_runtime.block_on(invoke::invoke(
-                    contract_address,
-                    calldata,
-                    nonce,
-                    fee_args,
-                    function_selector,
-                    self.account()?,
-                    WaitForTx {
-                        wait: true,
-                        wait_params: self.config.wait_params,
-                        show_ui_outputs: true,
-                    },
-                    self.ui,
-                ));
+                let invoke_result = self
+                    .tokio_runtime
+                    .block_on(invoke::invoke(
+                        contract_address,
+                        calldata,
+                        nonce,
+                        fee_args,
+                        function_selector,
+                        self.account()?,
+                        WaitForTx {
+                            wait: true,
+                            wait_params: self.config.wait_params,
+                            show_ui_outputs: true,
+                        },
+                        self.ui,
+                    ))
+                    .map(|response| match response {
+                        InvokeResponse::Transaction(tx) => tx,
+                        InvokeResponse::DryRun(_) => {
+                            unreachable!("Dry run is not supported in script context")
+                        }
+                    });
 
                 self.state.maybe_insert_tx_entry(
                     invoke_tx_id.as_str(),
@@ -254,7 +273,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
 
                 let tx_status_result = self
                     .tokio_runtime
-                    .block_on(tx_status::tx_status(self.provider, transaction_hash));
+                    .block_on(tx_status::get_tx_status(self.provider, transaction_hash));
 
                 Ok(CheatcodeHandlingResult::from_serializable(tx_status_result))
             }
@@ -366,13 +385,11 @@ pub fn run(
             url: Some(url.clone()),
             network: None,
         };
-        Some(tokio_runtime.block_on(get_account(
-            config,
-            provider,
-            &rpc_args,
-            config.keystore.as_ref(),
-            ui,
-        ))?)
+        let account = tokio_runtime.block_on(get_account(config, provider, &rpc_args, ui))?;
+        match account {
+            AccountVariant::LocalWallet(acc) => Some(acc),
+            AccountVariant::Ledger(_) => bail!("Ledger is not supported for scripts"),
+        }
     };
     let state = StateManager::from(state_file_path)?;
 

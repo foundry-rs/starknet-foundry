@@ -20,6 +20,7 @@ use crate::{
 };
 
 pub mod class_hash;
+pub mod felt_or_id;
 pub mod serialize;
 
 #[derive(Args)]

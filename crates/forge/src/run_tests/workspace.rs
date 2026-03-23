@@ -9,10 +9,10 @@ use crate::warn::{
 };
 use crate::{
     ColorOption, ExitStatus, TestArgs, block_number_map::BlockNumberMap,
-    run_tests::package::run_for_package, scarb::build_artifacts_with_scarb,
-    shared_cache::FailedTestsCache,
+    run_tests::package::run_for_package, run_tests::test_target::ExitFirstChannel,
+    scarb::build_artifacts_with_scarb, shared_cache::FailedTestsCache,
 };
-use anyhow::{Context, Result};
+use anyhow::Result;
 use forge_runner::partition::PartitionConfig;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
@@ -20,16 +20,53 @@ use foundry_ui::UI;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use scarb_api::{
     metadata::{Metadata, PackageMetadata},
-    target_dir_for_workspace,
+    packages_from_filter, target_dir_for_workspace,
 };
 use scarb_ui::args::PackagesFilter;
 use shared::consts::SNFORGE_TEST_FILTER;
 use std::env;
 use std::sync::Arc;
 
+#[derive(Debug)]
+pub struct WorkspaceExecutionSummary {
+    pub all_tests: Vec<TestTargetSummary>,
+}
+
 #[tracing::instrument(skip_all, level = "debug")]
 #[allow(clippy::too_many_lines)]
 pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus> {
+    let scarb_metadata = metadata_with_opts(MetadataOpts {
+        profile: args.scarb_args.profile.specified(),
+        ..MetadataOpts::default()
+    })?;
+
+    let packages: Vec<PackageMetadata> =
+        packages_from_filter(&scarb_metadata, &args.scarb_args.packages_filter)?;
+
+    let filter = PackagesFilter::generate_for::<Metadata>(packages.iter());
+
+    build_artifacts_with_scarb(
+        filter.clone(),
+        args.scarb_args.features.clone(),
+        args.scarb_args.profile.clone(),
+        args.no_optimization,
+    )?;
+
+    let WorkspaceExecutionSummary { all_tests } =
+        execute_workspace(&args, ui, &scarb_metadata).await?;
+    let has_failures = extract_failed_tests(&all_tests).next().is_some();
+    Ok(if has_failures {
+        ExitStatus::Failure
+    } else {
+        ExitStatus::Success
+    })
+}
+
+pub async fn execute_workspace(
+    args: &TestArgs,
+    ui: Arc<UI>,
+    scarb_metadata: &Metadata,
+) -> Result<WorkspaceExecutionSummary> {
     let deterministic_output = args.deterministic_output;
     match args.color {
         // SAFETY: This runs in a single-threaded environment.
@@ -39,26 +76,16 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         ColorOption::Auto => (),
     }
 
-    let scarb_metadata = metadata_with_opts(MetadataOpts {
-        profile: args.scarb_args.profile.specified(),
-        ..MetadataOpts::default()
-    })?;
+    check_profile_compatibility(args, scarb_metadata)?;
 
-    check_profile_compatibility(&args, &scarb_metadata)?;
+    error_if_snforge_std_not_compatible(scarb_metadata)?;
+    warn_if_snforge_std_does_not_match_package_version(scarb_metadata, &ui)?;
 
-    error_if_snforge_std_not_compatible(&scarb_metadata)?;
-    warn_if_snforge_std_does_not_match_package_version(&scarb_metadata, &ui)?;
+    let packages: Vec<PackageMetadata> =
+        packages_from_filter(scarb_metadata, &args.scarb_args.packages_filter)?;
 
     let artifacts_dir_path =
-        target_dir_for_workspace(&scarb_metadata).join(&scarb_metadata.current_profile);
-
-    let packages: Vec<PackageMetadata> = args
-        .scarb_args
-        .packages_filter
-        .match_many(&scarb_metadata)
-        .context("Failed to find any packages matching the specified filter")?;
-
-    let filter = PackagesFilter::generate_for::<Metadata>(packages.iter());
+        target_dir_for_workspace(scarb_metadata).join(&scarb_metadata.current_profile);
 
     if args.exact {
         let test_filter = args.test_filter.clone();
@@ -69,22 +96,16 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         }
     }
 
-    build_artifacts_with_scarb(
-        filter.clone(),
-        args.scarb_args.features.clone(),
-        args.scarb_args.profile.clone(),
-        args.no_optimization,
-    )?;
-
     let mut block_number_map = BlockNumberMap::default();
     let mut all_tests = vec![];
     let mut total_filtered_count = Some(0);
+    let mut exit_first_channel = ExitFirstChannel::new();
 
     let workspace_root = &scarb_metadata.workspace.root;
     let cache_dir = workspace_root.join(CACHE_DIR);
     let packages_len = packages.len();
 
-    let partitioning_config = get_partitioning_config(&args, &ui, &packages, &artifacts_dir_path)?;
+    let partitioning_config = get_partitioning_config(args, &ui, &packages, &artifacts_dir_path)?;
 
     for package in packages {
         let cwd = env::current_dir()?;
@@ -92,15 +113,22 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
 
         let args = RunForPackageArgs::build(
             package,
-            &scarb_metadata,
-            &args,
+            scarb_metadata,
+            args,
             &cache_dir,
             &artifacts_dir_path,
             partitioning_config.clone(),
             &ui,
         )?;
 
-        let result = run_for_package(args, &mut block_number_map, ui.clone()).await?;
+        let result = run_for_package(
+            args,
+            &mut block_number_map,
+            ui.clone(),
+            &mut exit_first_channel,
+            deterministic_output,
+        )
+        .await?;
 
         let filtered = result.filtered();
         all_tests.extend(result.summaries());
@@ -111,7 +139,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     }
 
     let overall_summary = OverallSummaryMessage::new(&all_tests, total_filtered_count);
-    let mut all_failed_tests: Vec<AnyTestCaseSummary> = extract_failed_tests(all_tests).collect();
+    let mut all_failed_tests: Vec<&AnyTestCaseSummary> = extract_failed_tests(&all_tests).collect();
     if deterministic_output {
         all_failed_tests.sort_by(|a, b| a.name().unwrap_or("").cmp(b.name().unwrap_or("")));
     }
@@ -151,11 +179,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         unset_forge_test_filter();
     }
 
-    Ok(if all_failed_tests.is_empty() {
-        ExitStatus::Success
-    } else {
-        ExitStatus::Failure
-    })
+    Ok(WorkspaceExecutionSummary { all_tests })
 }
 
 fn calculate_total_filtered_count(
@@ -188,12 +212,12 @@ fn get_partitioning_config(
 
 #[tracing::instrument(skip_all, level = "debug")]
 fn extract_failed_tests(
-    tests_summaries: Vec<TestTargetSummary>,
-) -> impl Iterator<Item = AnyTestCaseSummary> {
+    tests_summaries: &[TestTargetSummary],
+) -> impl Iterator<Item = &AnyTestCaseSummary> {
     tests_summaries
-        .into_iter()
-        .flat_map(|summary| summary.test_case_summaries)
-        .filter(AnyTestCaseSummary::is_failed)
+        .iter()
+        .flat_map(|summary| &summary.test_case_summaries)
+        .filter(|s| s.is_failed())
 }
 
 fn set_forge_test_filter(test_filter: String) {

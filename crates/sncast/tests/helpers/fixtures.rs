@@ -1,4 +1,3 @@
-use super::fee::apply_test_resource_bounds_flags;
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use crate::helpers::runner::runner;
 use anyhow::Context;
@@ -210,7 +209,7 @@ pub async fn invoke_contract(
         url: Some(Url::parse(URL).expect("Failed to parse URL")),
         network: None,
     };
-    let account = get_account(&config, &provider, &rpc_args, None, &UI::default())
+    let account = get_account(&config, &provider, &rpc_args, &UI::default())
         .await
         .expect("Could not get the account");
 
@@ -228,6 +227,11 @@ pub async fn invoke_contract(
         selector: get_selector_from_name(entry_point_name)
             .unwrap_or_else(|_| panic!("Could not get selector from {entry_point_name}")),
         calldata,
+    };
+
+    let account = match account {
+        sncast::AccountVariant::LocalWallet(acc) => acc,
+        sncast::AccountVariant::Ledger(_) => panic!("Ledger account not supported in test"),
     };
 
     let execution = account.execute_v3(vec![call]);
@@ -681,7 +685,6 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
         "--name",
         "my_account",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     runner(&args).current_dir(tempdir.path()).assert().success();
 

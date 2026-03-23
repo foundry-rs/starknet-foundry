@@ -23,7 +23,7 @@ use starknet_rust::{
     accounts::{Account, SingleOwnerAccount},
     core::types::contract::{CompiledClass, SierraClass},
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
-    signers::LocalWallet,
+    signers::Signer,
 };
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
@@ -61,16 +61,20 @@ pub struct Declare {
 
 // TODO(#3785)
 #[expect(clippy::too_many_arguments)]
-pub async fn declare(
+pub async fn declare<S>(
     contract_name: String,
     fee_args: FeeArgs,
     nonce: Option<Felt>,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     artifacts: &HashMap<String, CastStarknetContractArtifacts>,
     wait_config: WaitForTx,
     skip_on_already_declared: bool,
     ui: &UI,
-) -> Result<DeclareResponse, StarknetCommandError> {
+) -> Result<DeclareResponse, StarknetCommandError>
+where
+    S: Signer + Sync + Send + 'static,
+    S::SignError: 'static,
+{
     let contract_artifacts =
         artifacts
             .get(&contract_name)
@@ -114,17 +118,22 @@ pub fn compile_sierra_to_casm(
     Ok(casm)
 }
 
+#[allow(clippy::too_many_lines)]
 #[allow(clippy::too_many_arguments)]
-pub async fn declare_with_artifacts(
+pub async fn declare_with_artifacts<S>(
     sierra_class: SierraClass,
     compiled_casm: CompiledClass,
     fee_args: &FeeArgs,
     nonce: Option<Felt>,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     wait_config: WaitForTx,
     skip_on_already_declared: bool,
     ui: &UI,
-) -> Result<DeclareResponse, StarknetCommandError> {
+) -> Result<DeclareResponse, StarknetCommandError>
+where
+    S: Signer + Sync + Send + 'static,
+    S::SignError: 'static,
+{
     let starknet_version = get_starknet_version(account.provider()).await?;
     let hash_function = CompiledClass::hash_function_from_starknet_version(&starknet_version)
         .ok_or(anyhow!("Unsupported Starknet version: {starknet_version}"))?;
@@ -138,6 +147,17 @@ pub async fn declare_with_artifacts(
         Arc::new(sierra_class.flatten().map_err(anyhow::Error::from)?),
         casm_class_hash,
     );
+
+    if fee_args.dry_run {
+        let fee_estimate = declaration
+            .estimate_fee()
+            .await
+            .with_context(|| "Failed to estimate fee for dry run")?;
+        return Ok(DeclareResponse::DryRun(DryRunResponse::new(
+            &fee_estimate,
+            fee_args.detailed,
+        )));
+    }
 
     let fee_settings = if fee_args.max_fee.is_some() {
         let fee_estimate = declaration
@@ -170,17 +190,6 @@ pub async fn declare_with_artifacts(
         tip => DeclarationV3::tip,
         nonce => DeclarationV3::nonce
     );
-
-    if fee_args.dry_run {
-        let fee_estimate = declaration
-            .estimate_fee()
-            .await
-            .with_context(|| "Failed to estimate fee for dry run".to_string())?;
-        return Ok(DeclareResponse::DryRun(DryRunResponse::new(
-            &fee_estimate,
-            fee_args.detailed,
-        )));
-    }
 
     let declared = declaration.send().await;
 

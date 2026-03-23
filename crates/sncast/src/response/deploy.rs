@@ -14,7 +14,6 @@ use serde::{Deserialize, Serialize};
 pub enum DeployResponse {
     Standard(StandardDeployResponse),
     WithDeclare(DeployResponseWithDeclare),
-    DryRun(DryRunResponse),
 }
 
 impl SncastCommandMessage for DeployResponse {
@@ -22,7 +21,21 @@ impl SncastCommandMessage for DeployResponse {
         match &self {
             DeployResponse::Standard(response) => response.text(),
             DeployResponse::WithDeclare(response) => response.text(),
-            DeployResponse::DryRun(response) => response.text(),
+        }
+    }
+
+    fn json(&self) -> serde_json::Value {
+        match &self {
+            DeployResponse::Standard(response) => match response {
+                StandardDeployResponse::Transaction(transaction_response) => {
+                    serde_json::to_value(transaction_response)
+                        .expect("Should be serializable to JSON")
+                }
+                StandardDeployResponse::DryRun(dry_run_response) => dry_run_response.json(),
+            },
+            DeployResponse::WithDeclare(response) => {
+                serde_json::to_value(response).expect("Should be serializable to JSON")
+            }
         }
     }
 }
@@ -59,7 +72,6 @@ impl OutputLink for DeployResponse {
                     provider.transaction(deploy_with_declare.declare_transaction_hash),
                 )
             }
-            DeployResponse::DryRun(_) => "No links available for fee estimation".to_string(),
         }
     }
 }

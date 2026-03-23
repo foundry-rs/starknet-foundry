@@ -1,16 +1,18 @@
 use crate::artifacts::StarknetArtifactsFiles;
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use camino::{Utf8Path, Utf8PathBuf};
 pub use command::*;
 use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use scarb_metadata::{Metadata, PackageId, PackageMetadata, TargetMetadata};
+use scarb_ui::args::PackagesFilter;
 use semver::{BuildMetadata, Prerelease, Version, VersionReq};
 use std::collections::HashMap;
 use std::str::FromStr;
 
-mod artifacts;
+pub mod artifacts;
 mod command;
+pub mod manifest;
 pub mod metadata;
 pub mod version;
 
@@ -152,6 +154,15 @@ pub fn name_for_package(metadata: &Metadata, package: &PackageId) -> Result<Stri
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?;
 
     Ok(package.name.clone())
+}
+
+pub fn packages_from_filter(
+    metadata: &Metadata,
+    packages_filter: &PackagesFilter,
+) -> Result<Vec<PackageMetadata>> {
+    packages_filter
+        .match_many(metadata)
+        .context("Failed to find any packages matching the specified filter")
 }
 
 fn matches_version_with_special_rules(

@@ -15,6 +15,7 @@ pub struct DryRunResponse {
     pub l1_data_gas_consumed: u64,
     pub l1_data_gas_price: u128,
     pub overall_fee: u128,
+    #[serde(skip)]
     pub detailed: bool,
 }
 

@@ -16,7 +16,7 @@
 Blazingly fast toolkit for developing Starknet contracts designed & developed by
 ex [Protostar](https://github.com/software-mansion/protostar) team from [Software Mansion](https://swmansion.com) based
 on native [Cairo](https://github.com/starkware-libs/cairo) test runner
-and [Blockifier](https://github.com/starkware-libs/blockifier), written in Rust 🦀.
+and [Blockifier](https://github.com/starkware-libs/sequencer/tree/main/crates/blockifier), written in Rust 🦀.
 
 Need help getting started with Starknet Foundry? Read the
 📖 [Starknet Foundry Book](https://foundry-rs.github.io/starknet-foundry/)!

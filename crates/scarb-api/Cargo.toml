@@ -26,6 +26,7 @@ cairo-native = { workspace = true, optional = true }
 cairo-lang-starknet-classes.workspace = true
 native-api = { path = "../native-api", optional = true }
 tracing.workspace = true
+toml_edit.workspace = true
 
 [dev-dependencies]
 assert_fs.workspace = true

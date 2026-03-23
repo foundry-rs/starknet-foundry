@@ -1,7 +1,7 @@
 # `call`
 Call a smart contract on Starknet with the given parameters.
 
-## `--contract-address, -a <CONTRACT_ADDRESS>`
+## `--contract-address, -d <CONTRACT_ADDRESS>`
 Required.
 
 The address of the contract being called in hex (prefixed with '0x') or decimal representation.
@@ -47,5 +47,5 @@ For more information on supported expressions and syntax, see [Calldata Transfor
 Optional.
 
 Block identifier on which call should be performed.
-Possible values: `pending`, `latest`, block hash (0x prefixed string), and block number (u64).
-`pending` is used as a default value.
+Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string), and block number (u64).
+`pre_confirmed` is used as a default value.
