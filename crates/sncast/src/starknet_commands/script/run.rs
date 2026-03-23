@@ -215,7 +215,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     return Ok(CheatcodeHandlingResult::from_serializable(success_output));
                 }
 
-                let invoke_result = self.tokio_runtime.block_on(invoke::invoke(
+                let invoke_result = self.tokio_runtime.block_on(invoke::invoke_in_script(
                     contract_address,
                     calldata,
                     nonce,
