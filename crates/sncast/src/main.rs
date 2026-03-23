@@ -344,29 +344,20 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 .await
             });
 
-            if let Ok(DeclareResponse::DryRun(response)) = result {
-                process_command_result("declare", Ok(response), ui, None);
-                return Ok(());
-            }
-
-            let result = result.map_err(handle_starknet_command_error)
-            .map(|result| {
-                match result {
-                DeclareResponse::Success(declare_transaction_response) => {
-                    declare_transaction_response
+            let result = match result {
+                Ok(DeclareResponse::DryRun(response)) => {
+                    process_command_result("declare", Ok(response), ui, None);
+                    return Ok(());
                 }
-                DeclareResponse::AlreadyDeclared(_) => {
+                Ok(DeclareResponse::Success(tx)) => Ok(tx),
+                Ok(DeclareResponse::AlreadyDeclared(_)) => {
                     unreachable!("Argument `skip_on_already_declared` is false")
                 }
-                DeclareResponse::DryRun(_) => {
-                    unreachable!(
-                        "Dry run response should have been handled separately, as it does not contain a class hash"
-                    )
-                }
-            }});
+                Err(e) => Err(handle_starknet_command_error(e)),
+            };
 
             let block_explorer_link =
-                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config, None)
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config, false)
                     .await;
 
             let deploy_command_message = if let Ok(response) = &result {
@@ -431,32 +422,23 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 .await
             });
 
-            if let Ok(DeclareResponse::DryRun(response)) = result {
-                process_command_result("declare", Ok(response), ui, None);
-                return Ok(());
-            }
-
-            let result = result.map_err(handle_starknet_command_error)
-            .map(|result| {
-                match result {
-                DeclareResponse::Success(declare_transaction_response) => {
-                    declare_transaction_response
+            let result = match result {
+                Ok(DeclareResponse::DryRun(response)) => {
+                    process_command_result("declare", Ok(response), ui, None);
+                    return Ok(());
                 }
-                DeclareResponse::AlreadyDeclared(_) => {
+                Ok(DeclareResponse::Success(tx)) => Ok(tx),
+                Ok(DeclareResponse::AlreadyDeclared(_)) => {
                     unreachable!("Argument `skip_on_already_declared` is false")
                 }
-                DeclareResponse::DryRun(_) => {
-                    unreachable!(
-                        "Dry run response should have been handled separately, as it does not contain a class hash"
-                    )
-                }
-            }});
+                Err(e) => Err(handle_starknet_command_error(e)),
+            };
 
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
                 provider.chain_id().await?,
                 &config,
-                Some(declare_from.common.fee_args),
+                false,
             )
             .await;
             process_command_result("declare-from", result, ui, block_explorer_link);
@@ -592,7 +574,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 &result,
                 provider.chain_id().await?,
                 &config,
-                Some(fee_args),
+                fee_args.dry_run,
             )
             .await;
             process_command_result("deploy", result, ui, block_explorer_link);
@@ -687,7 +669,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         &Ok(invoke_response.clone()),
                         provider.chain_id().await?,
                         &config,
-                        Some(fee_args),
+                        false,
                     )
                     .await
                 } else {

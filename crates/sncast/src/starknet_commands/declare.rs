@@ -148,6 +148,17 @@ where
         casm_class_hash,
     );
 
+    if fee_args.dry_run {
+        let fee_estimate = declaration
+            .estimate_fee()
+            .await
+            .with_context(|| "Failed to estimate fee for dry run")?;
+        return Ok(DeclareResponse::DryRun(DryRunResponse::new(
+            &fee_estimate,
+            fee_args.detailed,
+        )));
+    }
+
     let fee_settings = if fee_args.max_fee.is_some() {
         let fee_estimate = declaration
             .estimate_fee()
@@ -179,17 +190,6 @@ where
         tip => DeclarationV3::tip,
         nonce => DeclarationV3::nonce
     );
-
-    if fee_args.dry_run {
-        let fee_estimate = declaration
-            .estimate_fee()
-            .await
-            .with_context(|| "Failed to estimate fee for dry run".to_string())?;
-        return Ok(DeclareResponse::DryRun(DryRunResponse::new(
-            &fee_estimate,
-            fee_args.detailed,
-        )));
-    }
 
     let declared = declaration.send().await;
 

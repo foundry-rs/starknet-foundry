@@ -102,6 +102,17 @@ where
 
     let deployment = factory.deploy_v3(calldata.clone(), salt, unique);
 
+    if fee_args.dry_run {
+        let fee_estimate = deployment
+            .estimate_fee()
+            .await
+            .with_context(|| "Failed to estimate fee for dry run")?;
+        return Ok(StandardDeployResponse::DryRun(DryRunResponse::new(
+            &fee_estimate,
+            fee_args.detailed,
+        )));
+    }
+
     let fee_settings = if fee_args.max_fee.is_some() {
         let fee_estimate = deployment
             .estimate_fee()
@@ -133,17 +144,6 @@ where
         tip => DeploymentV3::tip,
         nonce => DeploymentV3::nonce
     );
-
-    if fee_args.dry_run {
-        let fee_estimate = deployment
-            .estimate_fee()
-            .await
-            .map_err(anyhow::Error::from)?;
-        return Ok(StandardDeployResponse::DryRun(DryRunResponse::new(
-            &fee_estimate,
-            fee_args.detailed,
-        )));
-    }
 
     let result = deployment.send().await;
 

@@ -99,7 +99,7 @@ pub async fn multicall(
                 &result,
                 provider.chain_id().await?,
                 &config,
-                Some(run.fee_args.clone()),
+                run.fee_args.dry_run,
             )
             .await;
             process_command_result("multicall run", result, ui, block_explorer_link);
@@ -123,7 +123,7 @@ pub async fn multicall(
                 &result,
                 provider.chain_id().await?,
                 &config,
-                Some(execute.fee_args.clone()),
+                execute.fee_args.dry_run,
             )
             .await;
             process_command_result("multicall execute", result, ui, block_explorer_link);

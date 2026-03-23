@@ -70,13 +70,12 @@ where
         calldata,
     };
 
-    let execution = create_execution(account, vec![call.clone()], fee_args.clone(), nonce).await;
-
     if fee_args.dry_run {
-        let fee_estimate = execution
+        let fee_estimate = account
+            .execute_v3(vec![call])
             .estimate_fee()
             .await
-            .map_err(anyhow::Error::from)?;
+            .with_context(|| "Failed to estimate fee for dry run")?;
         return Ok(InvokeResponse::DryRun(DryRunResponse::new(
             &fee_estimate,
             fee_args.detailed,

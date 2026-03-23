@@ -1,4 +1,4 @@
-use crate::starknet_commands::invoke::{create_execution, execute_calls};
+use crate::starknet_commands::invoke::execute_calls;
 use std::str::FromStr;
 
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
@@ -19,7 +19,7 @@ use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
 use sncast::response::multicall::run::MulticallRunResponse;
 use sncast::response::ui::UI;
-use starknet_rust::accounts::SingleOwnerAccount;
+use starknet_rust::accounts::{Account, SingleOwnerAccount};
 use starknet_rust::core::types::Call;
 use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
@@ -113,11 +113,11 @@ where
     }
 
     if fee_args.dry_run {
-        let execution = create_execution(account, parsed_calls, fee_args.clone(), None).await;
-        let fee_estimate = execution
+        let fee_estimate = account
+            .execute_v3(parsed_calls)
             .estimate_fee()
             .await
-            .map_err(anyhow::Error::from)?;
+            .with_context(|| "Failed to estimate fee for dry run")?;
         return Ok(MulticallRunResponse::DryRun(DryRunResponse::new(
             &fee_estimate,
             fee_args.detailed,

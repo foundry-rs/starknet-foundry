@@ -5,13 +5,14 @@ use sncast::{
     WaitForTx,
     helpers::{fee::FeeArgs, rpc::RpcArgs},
     response::{
+        dry_run::DryRunResponse,
         errors::handle_starknet_command_error,
         multicall::run::{MulticallRunResponse, MulticallRunTransactionResponse},
         ui::UI,
     },
 };
 use starknet_rust::{
-    accounts::SingleOwnerAccount,
+    accounts::{Account, SingleOwnerAccount},
     providers::{JsonRpcClient, jsonrpc::HttpTransport},
     signers::Signer,
 };
@@ -95,6 +96,18 @@ where
 
     if calls.is_empty() {
         bail!("No valid multicall commands found to execute. Please check the provided commands.");
+    }
+
+    if execute.fee_args.dry_run {
+        let fee_estimate = account
+            .execute_v3(calls)
+            .estimate_fee()
+            .await
+            .with_context(|| "Failed to estimate fee for dry run")?;
+        return Ok(MulticallRunResponse::DryRun(DryRunResponse::new(
+            &fee_estimate,
+            execute.fee_args.detailed,
+        )));
     }
 
     execute_calls(

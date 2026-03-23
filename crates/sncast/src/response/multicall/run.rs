@@ -1,8 +1,7 @@
 use crate::response::cast_message::SncastCommandMessage;
-use crate::response::dry_run::DryRunResponse;
 use crate::{
     helpers::block_explorer::LinkProvider,
-    response::{explorer_link::OutputLink, invoke::InvokeResponse},
+    response::{dry_run::DryRunResponse, explorer_link::OutputLink, invoke::InvokeResponse},
 };
 use conversions::string::IntoHexStr;
 use conversions::{padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
@@ -54,16 +53,7 @@ impl From<InvokeResponse> for MulticallRunResponse {
                     transaction_hash: invoke_response.transaction_hash,
                 })
             }
-            InvokeResponse::DryRun(response) => MulticallRunResponse::DryRun(DryRunResponse {
-                l1_gas_consumed: response.l1_gas_consumed,
-                l1_gas_price: response.l1_gas_price,
-                l2_gas_consumed: response.l2_gas_consumed,
-                l2_gas_price: response.l2_gas_price,
-                l1_data_gas_consumed: response.l1_data_gas_consumed,
-                l1_data_gas_price: response.l1_data_gas_price,
-                overall_fee: response.overall_fee,
-                detailed: response.detailed,
-            }),
+            InvokeResponse::DryRun(response) => MulticallRunResponse::DryRun(response),
         }
     }
 }
