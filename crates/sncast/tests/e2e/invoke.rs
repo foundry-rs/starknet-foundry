@@ -2,7 +2,6 @@ use crate::helpers::constants::{
     ACCOUNT, ACCOUNT_FILE_PATH, DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA,
     DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
 };
-use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
     create_and_deploy_account, create_and_deploy_oz_account, get_transaction_by_hash,
     get_transaction_hash, get_transaction_receipt,
@@ -40,7 +39,6 @@ async fn test_happy_case_human_readable() {
         "--calldata",
         "0x1 0x2",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -85,7 +83,6 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         "--calldata",
         "0x1 0x2",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -332,7 +329,6 @@ async fn test_happy_case_cairo_expression_calldata() {
         "--arguments",
         calldata,
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success().get_output().stdout.clone();
