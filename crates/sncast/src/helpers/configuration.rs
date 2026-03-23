@@ -176,7 +176,6 @@ impl Config for PartialCastConfig {
 
     fn from_raw(config: serde_json::Value) -> Result<Self> {
         let config = serde_json::from_value::<Self>(config)?;
-        // TODO: figure out whether that should be there at all
         config.validate()?;
         Ok(config)
     }
