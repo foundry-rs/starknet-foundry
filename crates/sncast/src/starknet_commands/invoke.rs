@@ -15,7 +15,7 @@ use starknet_rust::accounts::{Account, ConnectedAccount, ExecutionV3, SingleOwne
 use starknet_rust::core::types::{Call, InvokeTransactionResult};
 use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
-use starknet_rust::signers::{LocalWallet, Signer};
+use starknet_rust::signers::Signer;
 use starknet_types_core::felt::Felt;
 
 #[derive(Args, Clone, Debug)]
@@ -62,6 +62,7 @@ pub async fn invoke<S>(
 ) -> Result<InvokeResponse, StarknetCommandError>
 where
     S: Signer + Sync + Send,
+    S::SignError: 'static,
 {
     let call = Call {
         to: contract_address,
@@ -101,6 +102,7 @@ pub async fn execute_calls<S>(
 ) -> Result<InvokeTransactionResult, StarknetCommandError>
 where
     S: Signer + Sync + Send,
+    S::SignError: 'static,
 {
     let execution = create_execution(account, calls, fee_args, nonce).await;
 
@@ -131,6 +133,7 @@ pub async fn create_execution<'a, S>(
 ) -> ExecutionV3<'a, SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, S>>
 where
     S: Signer + Sync + Send,
+    S::SignError: 'static,
 {
     let execution_calls = account.execute_v3(calls);
 

@@ -119,8 +119,13 @@ pub async fn multicall(
                 )
                 .await
             });
-            let block_explorer_link =
-                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
+            let block_explorer_link = block_explorer_link_if_allowed(
+                &result,
+                provider.chain_id().await?,
+                &config,
+                Some(execute.fee_args.clone()),
+            )
+            .await;
             process_command_result("multicall execute", result, ui, block_explorer_link);
             Ok(())
         }

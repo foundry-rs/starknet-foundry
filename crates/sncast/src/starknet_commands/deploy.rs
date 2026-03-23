@@ -93,7 +93,7 @@ pub async fn deploy<S>(
     ui: &UI,
 ) -> Result<StandardDeployResponse, StarknetCommandError>
 where
-    S: Signer + Sync + Send,
+    S: Signer + Sync + Send + 'static,
 {
     let salt = extract_or_generate_salt(salt);
 

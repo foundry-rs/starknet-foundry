@@ -307,8 +307,8 @@ pub async fn account(
                 chain_id,
                 wait_config,
                 &config.account,
-                keystore_path,
-                fee_args.clone(),
+                config.keystore.clone(),
+                fee_args,
                 ui,
             )
             .await;
@@ -336,7 +336,7 @@ pub async fn account(
                 &result,
                 provider.chain_id().await?,
                 &config,
-                Some(fee_args),
+                Some(deploy.fee_args.clone()),
             )
             .await;
             process_command_result("account deploy", result, ui, block_explorer_link);

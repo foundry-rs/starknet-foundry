@@ -1,7 +1,6 @@
 use crate::starknet_commands::invoke::{create_execution, execute_calls};
 use std::str::FromStr;
 
-use crate::starknet_commands::invoke::execute_calls;
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::deploy::MulticallDeploy;
 use crate::starknet_commands::multicall::invoke::MulticallInvoke;
@@ -85,7 +84,7 @@ pub async fn run<S>(
     ui: &UI,
 ) -> Result<MulticallRunResponse>
 where
-    S: Signer + Sync + Send,
+    S: Signer + Sync + Send + 'static,
 {
     let fee_args = run.fee_args.clone();
 

@@ -342,14 +342,15 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     ui,
                 )
                 .await
-            })
-            .map_err(handle_starknet_command_error)
-            .map(|result| {
-                            if let Ok(DeclareResponse::DryRun(response)) = result {
+            });
+
+            if let Ok(DeclareResponse::DryRun(response)) = result {
                 process_command_result("declare", Ok(response), ui, None);
                 return Ok(());
             }
-                
+
+            let result = result.map_err(handle_starknet_command_error)
+            .map(|result| {
                 match result {
                 DeclareResponse::Success(declare_transaction_response) => {
                     declare_transaction_response
@@ -428,13 +429,15 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     ui,
                 )
                 .await
-            })
-            .map_err(handle_starknet_command_error)
-            .map(|result| {
-                if let Ok(DeclareResponse::DryRun(response)) = result {
+            });
+
+            if let Ok(DeclareResponse::DryRun(response)) = result {
                 process_command_result("declare", Ok(response), ui, None);
                 return Ok(());
             }
+
+            let result = result.map_err(handle_starknet_command_error)
+            .map(|result| {
                 match result {
                 DeclareResponse::Success(declare_transaction_response) => {
                     declare_transaction_response
@@ -564,7 +567,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     &calldata,
                     salt,
                     unique,
-                    fee_args,
+                    fee_args.clone(),
                     nonce,
                     account,
                     wait_config,
@@ -668,7 +671,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     contract_address,
                     calldata,
                     nonce,
-                    fee_args,
+                    fee_args.clone(),
                     selector,
                     account,
                     wait_config,

@@ -72,7 +72,8 @@ pub async fn declare<S>(
     ui: &UI,
 ) -> Result<DeclareResponse, StarknetCommandError>
 where
-    S: Signer + Sync + Send,
+    S: Signer + Sync + Send + 'static,
+    S::SignError: 'static,
 {
     let contract_artifacts =
         artifacts
@@ -130,7 +131,8 @@ pub async fn declare_with_artifacts<S>(
     ui: &UI,
 ) -> Result<DeclareResponse, StarknetCommandError>
 where
-    S: Signer + Sync + Send,
+    S: Signer + Sync + Send + 'static,
+    S::SignError: 'static,
 {
     let starknet_version = get_starknet_version(account.provider()).await?;
     let hash_function = CompiledClass::hash_function_from_starknet_version(&starknet_version)

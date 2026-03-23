@@ -1,10 +1,13 @@
 use anyhow::{Context, Result, bail};
 use clap::{Args, Command, FromArgMatches};
+use conversions::padded_felt::PaddedFelt;
 use sncast::{
     WaitForTx,
     helpers::{fee::FeeArgs, rpc::RpcArgs},
     response::{
-        errors::handle_starknet_command_error, multicall::run::MulticallRunResponse, ui::UI,
+        errors::handle_starknet_command_error,
+        multicall::run::{MulticallRunResponse, MulticallRunTransactionResponse},
+        ui::UI,
     },
 };
 use starknet_rust::{
@@ -58,7 +61,7 @@ pub async fn execute<S>(
     ui: &UI,
 ) -> Result<MulticallRunResponse>
 where
-    S: Signer + Sync + Send,
+    S: Signer + Sync + Send + 'static,
 {
     let command_groups = extract_commands_groups(&execute.tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
 
@@ -103,7 +106,11 @@ where
         ui,
     )
     .await
-    .map(Into::into)
+    .map(|result| {
+        MulticallRunResponse::Transaction(MulticallRunTransactionResponse {
+            transaction_hash: PaddedFelt(result.transaction_hash),
+        })
+    })
     .map_err(handle_starknet_command_error)
 }
 
