@@ -90,6 +90,7 @@ jobs:
 
   publish-plugin:
     needs: [ prepare, build-plugin-binaries ]
+    if: ${{ !(inputs.dry_run) }}
     uses: ./.github/workflows/_publish-plugin.yml
     secrets: inherit
     with:
@@ -100,6 +101,7 @@ jobs:
 
   publish-std:
     needs: [ prepare, publish-plugin ]
+    if: ${{ !(inputs.dry_run) }}
     uses: ./.github/workflows/publish-std.yml
     secrets: inherit
     with:
