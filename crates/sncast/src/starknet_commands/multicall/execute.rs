@@ -1,6 +1,6 @@
 use anyhow::{Context, Result, bail};
 use clap::{Args, Command, FromArgMatches};
-use conversions::padded_felt::PaddedFelt;
+use conversions::IntoConv;
 use sncast::{
     WaitForTx,
     helpers::{fee::FeeArgs, rpc::RpcArgs},
@@ -121,7 +121,7 @@ where
     .await
     .map(|result| {
         MulticallRunResponse::Transaction(MulticallRunTransactionResponse {
-            transaction_hash: PaddedFelt(result.transaction_hash),
+            transaction_hash: result.transaction_hash.into_(),
         })
     })
     .map_err(handle_starknet_command_error)

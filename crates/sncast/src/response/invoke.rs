@@ -57,3 +57,14 @@ impl OutputLink for InvokeTransactionResponse {
         )
     }
 }
+
+impl OutputLink for InvokeResponse {
+    const TITLE: &'static str = "invocation";
+
+    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
+        match self {
+            InvokeResponse::Transaction(response) => response.format_links(provider),
+            InvokeResponse::DryRun(_) => "No links available for fee estimation".to_string(),
+        }
+    }
+}

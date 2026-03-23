@@ -484,10 +484,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 )
                 .expect("Failed to build contract");
 
+                let mut declare_fee_args = fee_args.clone();
+                declare_fee_args.dry_run = false;
+
                 let declare_result = with_account!(&account, |account| {
                     declare(
                         contract_name,
-                        fee_args.clone(),
+                        declare_fee_args,
                         nonce,
                         account,
                         &artifacts,
@@ -663,18 +666,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             })
             .map_err(handle_starknet_command_error);
 
-            let block_explorer_link =
-                if let Ok(InvokeResponse::Transaction(invoke_response)) = &result {
-                    block_explorer_link_if_allowed(
-                        &Ok(invoke_response.clone()),
-                        provider.chain_id().await?,
-                        &config,
-                        false,
-                    )
-                    .await
-                } else {
-                    None
-                };
+            let block_explorer_link = block_explorer_link_if_allowed(
+                &result,
+                provider.chain_id().await?,
+                &config,
+                fee_args.dry_run,
+            )
+            .await;
 
             process_command_result("invoke", result, ui, block_explorer_link);
 
