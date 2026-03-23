@@ -1,7 +1,7 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, MAP_CONTRACT_ADDRESS_SEPOLIA, URL};
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use shared::test_utils::output_assert::assert_stderr_contains;
 
 #[test]
 fn test_max_fee_used_with_other_args() {
