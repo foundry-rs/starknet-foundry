@@ -124,12 +124,10 @@ where
 }
 
 pub async fn create_execution<'a, S>(
-    // account: &'a SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>,
     account: &'a SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, S>,
     calls: Vec<Call>,
     fee_args: FeeArgs,
     nonce: Option<Felt>,
-    // ) -> ExecutionV3<'a, SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>>
 ) -> ExecutionV3<'a, SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, S>>
 where
     S: Signer + Sync + Send,
