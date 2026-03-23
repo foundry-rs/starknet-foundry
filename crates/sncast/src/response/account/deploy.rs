@@ -57,6 +57,13 @@ impl SncastCommandMessage for AccountDeployResponse {
             AccountDeployResponse::DryRun(response) => response.text(),
         }
     }
+
+    fn json(&self) -> serde_json::Value {
+        match self {
+            AccountDeployResponse::Transaction(response) => response.json(),
+            AccountDeployResponse::DryRun(response) => response.json(),
+        }
+    }
 }
 
 impl OutputLink for AccountDeployResponse {

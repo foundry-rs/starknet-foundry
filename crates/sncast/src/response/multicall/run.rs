@@ -23,16 +23,26 @@ pub struct MulticallRunTransactionResponse {
 impl SncastCommandMessage for MulticallRunResponse {
     fn text(&self) -> String {
         match self {
-            MulticallRunResponse::Transaction(response) => styling::OutputBuilder::new()
-                .success_message("Multicall completed")
-                .blank_line()
-                .field(
-                    "Transaction Hash",
-                    &response.transaction_hash.into_hex_string(),
-                )
-                .build(),
+            MulticallRunResponse::Transaction(response) => response.text(),
             MulticallRunResponse::DryRun(response) => response.text(),
         }
+    }
+
+    fn json(&self) -> serde_json::Value {
+        match self {
+            MulticallRunResponse::Transaction(response) => response.json(),
+            MulticallRunResponse::DryRun(response) => response.json(),
+        }
+    }
+}
+
+impl SncastCommandMessage for MulticallRunTransactionResponse {
+    fn text(&self) -> String {
+        styling::OutputBuilder::new()
+            .success_message("Multicall completed")
+            .blank_line()
+            .field("Transaction Hash", &self.transaction_hash.into_hex_string())
+            .build()
     }
 }
 

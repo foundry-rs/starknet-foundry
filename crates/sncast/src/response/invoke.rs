@@ -21,16 +21,29 @@ pub struct InvokeTransactionResponse {
 impl SncastCommandMessage for InvokeResponse {
     fn text(&self) -> String {
         match self {
-            InvokeResponse::Transaction(response) => styling::OutputBuilder::new()
-                .success_message("Invoke completed")
-                .blank_line()
-                .field(
-                    "Transaction Hash",
-                    &response.transaction_hash.into_padded_hex_str(),
-                )
-                .build(),
+            InvokeResponse::Transaction(response) => response.text(),
             InvokeResponse::DryRun(response) => response.text(),
         }
+    }
+
+    fn json(&self) -> serde_json::Value {
+        match self {
+            InvokeResponse::Transaction(response) => response.json(),
+            InvokeResponse::DryRun(response) => response.json(),
+        }
+    }
+}
+
+impl SncastCommandMessage for InvokeTransactionResponse {
+    fn text(&self) -> String {
+        styling::OutputBuilder::new()
+            .success_message("Invoke completed")
+            .blank_line()
+            .field(
+                "Transaction Hash",
+                &self.transaction_hash.into_padded_hex_str(),
+            )
+            .build()
     }
 }
 

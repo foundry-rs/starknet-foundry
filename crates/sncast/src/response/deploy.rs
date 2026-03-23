@@ -25,6 +25,22 @@ impl SncastCommandMessage for DeployResponse {
             DeployResponse::DryRun(response) => response.text(),
         }
     }
+
+    fn json(&self) -> serde_json::Value {
+        match &self {
+            DeployResponse::Standard(response) => match response {
+                StandardDeployResponse::Transaction(transaction_response) => {
+                    serde_json::to_value(transaction_response)
+                        .expect("Should be serializable to JSON")
+                }
+                StandardDeployResponse::DryRun(dry_run_response) => dry_run_response.json(),
+            },
+            DeployResponse::WithDeclare(response) => {
+                serde_json::to_value(response).expect("Should be serializable to JSON")
+            }
+            DeployResponse::DryRun(response) => response.json(),
+        }
+    }
 }
 
 impl OutputLink for DeployResponse {
