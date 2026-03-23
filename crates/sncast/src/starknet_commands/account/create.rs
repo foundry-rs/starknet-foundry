@@ -184,7 +184,7 @@ async fn generate_account(
     ui: &UI,
 ) -> Result<(serde_json::Value, u128)> {
     if let SignerSource::Ledger(ledger_path) = signer_source {
-        let signer = ledger::create_ledger_signer(ledger_path, ui).await?;
+        let signer = ledger::create_ledger_signer(ledger_path, ui, false).await?;
         let signer_type = SignerType::Ledger {
             ledger_path: ledger_path.clone(),
         };

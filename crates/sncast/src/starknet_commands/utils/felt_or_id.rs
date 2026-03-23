@@ -9,6 +9,10 @@ const ID_PREFIX: char = '@';
 pub struct FeltOrId(String);
 
 impl FeltOrId {
+    pub fn new(s: String) -> Self {
+        FeltOrId(s)
+    }
+
     pub fn try_into_felt(&self) -> Result<Felt> {
         Felt::from_str(&self.0)
             .context("Failed to parse contract address: expected a hex or decimal string")

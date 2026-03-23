@@ -90,6 +90,7 @@ pub fn run_test_case(
         &mut BlockNumberMap::default(),
         ui,
         &mut ExitFirstChannel::default(),
+        false,
     ))
     .expect("Runner fail")
     .summaries()

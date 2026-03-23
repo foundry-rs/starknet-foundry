@@ -7,16 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Cast
-
-#### Added
-
-- `sncast get nonce` command to get the nonce of a contract.
+## [0.58.0] - 2026-03-18
 
 ### Forge
 
 #### Added
 - `--max-threads` flag to control the maximum number of threads used for test execution
+- `optimize-inlining` subcommand, which performs a brute-force search of the optimal `inlining-strategy` threshold for the project over user defined benchmark
 
 #### Fixed
 
@@ -27,7 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Support for Ledger hardware wallet as a transaction signer.
+- Support for Ledger hardware wallet as a transaction signer
+- `sncast get nonce` command to get the nonce of a contract
+- `sncast multicall execute`, which allows to pass calls directly as CLI arguments. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/multicall.html#multicall-with-cli-arguments)
 
 #### Changed
 
