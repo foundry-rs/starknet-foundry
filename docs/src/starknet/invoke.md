@@ -52,6 +52,44 @@ transaction: https://sepolia.voyager.online/tx/[..]
 > `--max-fee` and the individual resource flags are mutually exclusive.
 > Any individual resource flag that is not provided will be estimated automatically
 
+### Estimating Fee Without Submitting Transaction (Dry Run)
+
+Use `--dry-run` to estimate the transaction fee without submitting it to the network. Add `--detailed` to see a breakdown by resource type.
+
+<!-- TODO(#2736) -->
+<!-- { "ignored_output": true } -->
+```shell
+$ sncast \
+  --account my_account \
+    invoke \
+  --network sepolia \
+  --contract-address 0x522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716 \
+  --function "add" \
+  --arguments 'pokemons::model::PokemonData {'\
+'name: "Magmar",'\
+'element: pokemons::model::Element::Fire'\
+'}' \
+  --dry-run \
+  --detailed
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Success: Dry run completed
+
+Overall Fee: [..] Fri (~[..] STRK)
+L1 Gas Consumed:      [..]
+L1 Gas Price:         [..]
+L2 Gas Consumed:      [..]
+L2 Gas Price:         [..]
+L1 Data Gas Consumed: [..]
+L1 Data Gas Price:    [..]
+```
+</details>
+<br>
+
 ### Invoking Function Without Arguments
 
 Not every function accepts parameters. Here is how to call it.
