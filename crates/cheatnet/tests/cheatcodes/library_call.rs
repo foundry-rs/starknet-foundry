@@ -34,7 +34,7 @@ fn global_cheat_works_with_library_call_from_test() {
 
     assert_success(
         test_env.library_call_contract(&class_hash, "get_caller_address", &[]),
-        &[Felt::try_from_hex_str(TEST_ADDRESS).unwrap()],
+        &[ContractAddress::default().into()],
     );
 }
 
@@ -70,7 +70,7 @@ fn cheat_with_finite_span_works_with_library_call_from_test() {
 
     assert_success(
         test_env.library_call_contract(&class_hash, "get_caller_address", &[]),
-        &[Felt::try_from_hex_str(TEST_ADDRESS).unwrap()],
+        &[ContractAddress::default().into()],
     );
 }
 
@@ -104,7 +104,7 @@ fn cheat_with_indefinite_span_works_with_library_call_from_test() {
 
     assert_success(
         test_env.library_call_contract(&class_hash, "get_caller_address", &[]),
-        &[Felt::try_from_hex_str(TEST_ADDRESS).unwrap()],
+        &[ContractAddress::default().into()],
     );
 }
 

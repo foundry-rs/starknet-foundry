@@ -253,7 +253,7 @@ pub fn library_call_contract(
         entry_point_selector,
         calldata,
         storage_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
-        caller_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
+        caller_address: ContractAddress::default(),
         call_type: CallType::Delegate,
         initial_gas: i64::MAX as u64,
     };
