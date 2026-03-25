@@ -225,3 +225,266 @@ fn cheat_caller_address_with_span() {
 
     assert_passed(&result);
 }
+
+/// Verify that a cheat applied to `test_address()` is visible inside a library call made
+/// directly from test code.
+#[test]
+fn cheat_caller_address_direct_library_call_from_test() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use starknet::ContractAddress;
+            use snforge_std::{
+                declare, ContractClassTrait, DeclareResultTrait,
+                start_cheat_caller_address, stop_cheat_caller_address, test_address,
+            };
+
+            #[starknet::interface]
+            trait ICheatCallerAddressChecker<TContractState> {
+                fn get_caller_address(ref self: TContractState) -> felt252;
+            }
+
+            #[test]
+            fn test_cheat_applied_to_test_address_is_visible_in_library_call() {
+                let class_hash = *declare("CheatCallerAddressChecker").unwrap().contract_class().class_hash;
+                let lib_dispatcher = ICheatCallerAddressCheckerLibraryDispatcher { class_hash };
+
+                let original_caller = lib_dispatcher.get_caller_address();
+                assert(original_caller == 0.try_into().unwrap(), 'Caller should be 0');
+
+                let target_caller: ContractAddress = 123.try_into().unwrap();
+                start_cheat_caller_address(test_address(), target_caller);
+
+                let caller = lib_dispatcher.get_caller_address();
+                assert(caller == 123, 'Wrong caller address');
+
+                stop_cheat_caller_address(test_address());
+
+                let caller = lib_dispatcher.get_caller_address();
+                assert(caller == original_caller, 'Caller did not reset');
+            }
+            "#
+        ),
+        Contract::from_code_path(
+            "CheatCallerAddressChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+}
+
+/// Verify that a global cheat is visible inside a library call made directly from test code.
+#[test]
+fn cheat_caller_address_global_direct_library_call_from_test() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use starknet::ContractAddress;
+            use snforge_std::{
+                declare, ContractClassTrait, DeclareResultTrait,
+                start_cheat_caller_address_global, stop_cheat_caller_address_global,
+            };
+
+            #[starknet::interface]
+            trait ICheatCallerAddressChecker<TContractState> {
+                fn get_caller_address(ref self: TContractState) -> felt252;
+            }
+
+            #[test]
+            fn test_global_cheat_is_visible_in_library_call() {
+                let class_hash = *declare("CheatCallerAddressChecker").unwrap().contract_class().class_hash;
+                let lib_dispatcher = ICheatCallerAddressCheckerLibraryDispatcher { class_hash };
+
+                let original_caller = lib_dispatcher.get_caller_address();
+                assert(original_caller == 0.try_into().unwrap(), 'Caller should be 0');
+
+                let target_caller: ContractAddress = 456.try_into().unwrap();
+                start_cheat_caller_address_global(target_caller);
+
+                let caller = lib_dispatcher.get_caller_address();
+                assert(caller == 456, 'Wrong caller address');
+
+                stop_cheat_caller_address_global();
+
+                let caller = lib_dispatcher.get_caller_address();
+                assert(caller == original_caller, 'Caller did not reset');
+            }
+            "#
+        ),
+        Contract::from_code_path(
+            "CheatCallerAddressChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+}
+
+/// Verify that a cheat applied to `test_address()` is visible when the library call is made
+/// via the raw `library_call_syscall` directly from test code.
+#[test]
+fn cheat_caller_address_via_syscall_from_test() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use starknet::ContractAddress;
+            use starknet::{library_call_syscall, SyscallResultTrait};
+            use snforge_std::{
+                declare, ContractClassTrait, DeclareResultTrait,
+                start_cheat_caller_address, stop_cheat_caller_address, test_address,
+            };
+
+            #[test]
+            fn test_cheat_via_syscall_is_visible_in_library_call() {
+                let class_hash = *declare("CheatCallerAddressChecker").unwrap().contract_class().class_hash;
+
+                let original_caller = *library_call_syscall(
+                    class_hash, selector!("get_caller_address"), array![].span(),
+                ).unwrap_syscall()[0];
+
+                let target_caller: ContractAddress = 123.try_into().unwrap();
+                start_cheat_caller_address(test_address(), target_caller);
+
+                let caller = *library_call_syscall(
+                    class_hash, selector!("get_caller_address"), array![].span(),
+                ).unwrap_syscall()[0];
+                assert(caller == 123, 'Wrong caller address');
+
+                stop_cheat_caller_address(test_address());
+
+                let caller = *library_call_syscall(
+                    class_hash, selector!("get_caller_address"), array![].span(),
+                ).unwrap_syscall()[0];
+                assert(caller == original_caller, 'Caller did not reset');
+            }
+            "#
+        ),
+        Contract::from_code_path(
+            "CheatCallerAddressChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+}
+
+/// Verify that a cheat applied to `test_address()` is visible when the library call is made
+/// via the safe library dispatcher directly from test code.
+#[test]
+fn cheat_caller_address_via_safe_dispatcher_from_test() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use starknet::ContractAddress;
+            use snforge_std::{
+                declare, ContractClassTrait, DeclareResultTrait,
+                start_cheat_caller_address, stop_cheat_caller_address, test_address,
+            };
+
+            #[starknet::interface]
+            trait ICheatCallerAddressChecker<TContractState> {
+                fn get_caller_address(ref self: TContractState) -> felt252;
+            }
+
+            #[test]
+            #[feature("safe_dispatcher")]
+            fn test_cheat_via_safe_dispatcher_is_visible_in_library_call() {
+                let class_hash = *declare("CheatCallerAddressChecker").unwrap().contract_class().class_hash;
+                let safe_lib_dispatcher = ICheatCallerAddressCheckerSafeLibraryDispatcher { class_hash };
+
+                let original_caller = safe_lib_dispatcher.get_caller_address().unwrap();
+
+                let target_caller: ContractAddress = 123.try_into().unwrap();
+                start_cheat_caller_address(test_address(), target_caller);
+
+                let caller = safe_lib_dispatcher.get_caller_address().unwrap();
+                assert(caller == 123, 'Wrong caller address');
+
+                stop_cheat_caller_address(test_address());
+
+                let caller = safe_lib_dispatcher.get_caller_address().unwrap();
+                assert(caller == original_caller, 'Caller did not reset');
+            }
+            "#
+        ),
+        Contract::from_code_path(
+            "CheatCallerAddressChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+}
+
+/// Verify that a cheat applied to a contract address is visible when that contract internally
+/// makes a library call.
+#[test]
+fn cheat_caller_address_library_call_from_contract() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use starknet::ContractAddress;
+            use snforge_std::{
+                declare, ContractClassTrait, DeclareResultTrait,
+                start_cheat_caller_address, stop_cheat_caller_address, test_address,
+            };
+
+            #[starknet::interface]
+            trait ICheatCallerAddressLibraryCallChecker<TContractState> {
+                fn get_caller_address_via_library_call(
+                    self: @TContractState, class_hash: starknet::ClassHash,
+                ) -> felt252;
+            }
+
+            #[test]
+            fn test_cheat_applied_to_contract_is_visible_in_its_library_call() {
+                let checker_class_hash = *declare("CheatCallerAddressChecker").unwrap().contract_class().class_hash;
+
+                let proxy = declare("CheatCallerAddressLibraryCallChecker").unwrap().contract_class();
+                let (proxy_address, _) = proxy.deploy(@array![]).unwrap();
+                let proxy_dispatcher = ICheatCallerAddressLibraryCallCheckerDispatcher {
+                    contract_address: proxy_address,
+                };
+
+                let target_caller: ContractAddress = 789.try_into().unwrap();
+                start_cheat_caller_address(proxy_address, target_caller);
+
+                let caller = proxy_dispatcher.get_caller_address_via_library_call(checker_class_hash);
+                assert(caller == 789, 'Wrong caller address');
+
+                stop_cheat_caller_address(proxy_address);
+
+                let caller = proxy_dispatcher.get_caller_address_via_library_call(checker_class_hash);
+                assert(caller == test_address().into(), 'Caller did not reset');
+            }
+            "#
+        ),
+        Contract::from_code_path(
+            "CheatCallerAddressChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "CheatCallerAddressLibraryCallChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+}

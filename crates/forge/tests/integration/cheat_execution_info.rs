@@ -711,3 +711,286 @@ fn cheat_transaction_hash_with_span() {
 
     assert_passed(&result);
 }
+
+/// Verify that `block_number`, `block_timestamp`, `sequencer_address` and `transaction_hash` cheats
+/// applied to `test_address()` are visible inside library calls made directly from test code.
+#[test]
+#[allow(clippy::too_many_lines)]
+fn cheat_execution_info_direct_library_call_from_test() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use starknet::ContractAddress;
+            use snforge_std::{
+                declare, ContractClassTrait, DeclareResultTrait, test_address,
+                start_cheat_block_number, stop_cheat_block_number,
+                start_cheat_block_timestamp, stop_cheat_block_timestamp,
+                start_cheat_sequencer_address, stop_cheat_sequencer_address,
+                start_cheat_transaction_hash, stop_cheat_transaction_hash,
+            };
+
+            #[starknet::interface]
+            trait ICheatBlockNumberChecker<TContractState> {
+                fn get_block_number(ref self: TContractState) -> u64;
+            }
+
+            #[starknet::interface]
+            trait ICheatBlockTimestampChecker<TContractState> {
+                fn get_block_timestamp(ref self: TContractState) -> u64;
+            }
+
+            #[starknet::interface]
+            trait ICheatSequencerAddressChecker<TContractState> {
+                fn get_sequencer_address(ref self: TContractState) -> ContractAddress;
+            }
+
+            #[starknet::interface]
+            trait ICheatTxInfoChecker<TContractState> {
+                fn get_tx_hash(self: @TContractState) -> felt252;
+            }
+
+            #[test]
+            fn test_cheat_block_number_direct_library_call_from_test() {
+                let class_hash = *declare("CheatBlockNumberChecker").unwrap().contract_class().class_hash;
+                let lib_dispatcher = ICheatBlockNumberCheckerLibraryDispatcher { class_hash };
+
+                let original = lib_dispatcher.get_block_number();
+
+                start_cheat_block_number(test_address(), 1234_u64);
+
+                let cheated = lib_dispatcher.get_block_number();
+                assert(cheated == 1234, 'Wrong block number');
+
+                stop_cheat_block_number(test_address());
+
+                let restored = lib_dispatcher.get_block_number();
+                assert(restored == original, 'Block number not restored');
+            }
+
+            #[test]
+            fn test_cheat_block_timestamp_direct_library_call_from_test() {
+                let class_hash = *declare("CheatBlockTimestampChecker").unwrap().contract_class().class_hash;
+                let lib_dispatcher = ICheatBlockTimestampCheckerLibraryDispatcher { class_hash };
+
+                let original = lib_dispatcher.get_block_timestamp();
+
+                start_cheat_block_timestamp(test_address(), 9999_u64);
+
+                let cheated = lib_dispatcher.get_block_timestamp();
+                assert(cheated == 9999, 'Wrong block timestamp');
+
+                stop_cheat_block_timestamp(test_address());
+
+                let restored = lib_dispatcher.get_block_timestamp();
+                assert(restored == original, 'Block timestamp not restored');
+            }
+
+            #[test]
+            fn test_cheat_sequencer_address_direct_library_call_from_test() {
+                let class_hash = *declare("CheatSequencerAddressChecker").unwrap().contract_class().class_hash;
+                let lib_dispatcher = ICheatSequencerAddressCheckerLibraryDispatcher { class_hash };
+
+                let original = lib_dispatcher.get_sequencer_address();
+
+                let target_sequencer: ContractAddress = 42.try_into().unwrap();
+                start_cheat_sequencer_address(test_address(), target_sequencer);
+
+                let cheated = lib_dispatcher.get_sequencer_address();
+                assert(cheated == target_sequencer, 'Wrong sequencer address');
+
+                stop_cheat_sequencer_address(test_address());
+
+                let restored = lib_dispatcher.get_sequencer_address();
+                assert(restored == original, 'Sequencer address not restored');
+            }
+
+            #[test]
+            fn test_cheat_transaction_hash_direct_library_call_from_test() {
+                let class_hash = *declare("CheatTxInfoChecker").unwrap().contract_class().class_hash;
+                let lib_dispatcher = ICheatTxInfoCheckerLibraryDispatcher { class_hash };
+
+                let original = lib_dispatcher.get_tx_hash();
+
+                start_cheat_transaction_hash(test_address(), 0xdeadbeef);
+
+                let cheated = lib_dispatcher.get_tx_hash();
+                assert(cheated == 0xdeadbeef, 'Wrong tx hash');
+
+                stop_cheat_transaction_hash(test_address());
+
+                let restored = lib_dispatcher.get_tx_hash();
+                assert(restored == original, 'Tx hash not restored');
+            }
+            "#
+        ),
+        Contract::from_code_path(
+            "CheatBlockNumberChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_block_number_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "CheatBlockTimestampChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_block_timestamp_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "CheatSequencerAddressChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_sequencer_address_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "CheatTxInfoChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_tx_info_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+}
+
+/// Verify that cheats applied to a contract address are visible when that contract internally
+/// makes library calls. Tests `block_number`, `block_timestamp`, `sequencer_address` and `tx_hash`.
+#[test]
+#[allow(clippy::too_many_lines)]
+fn cheat_execution_info_library_call_from_contract() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use starknet::ContractAddress;
+            use snforge_std::{
+                declare, ContractClassTrait, DeclareResultTrait, test_address,
+                start_cheat_block_number, stop_cheat_block_number,
+                start_cheat_block_timestamp, stop_cheat_block_timestamp,
+                start_cheat_sequencer_address, stop_cheat_sequencer_address,
+                start_cheat_transaction_hash, stop_cheat_transaction_hash,
+            };
+
+            #[starknet::interface]
+            trait ICheatExecutionInfoLibraryCallChecker<TContractState> {
+                fn get_block_number_via_library_call(
+                    ref self: TContractState, class_hash: starknet::ClassHash,
+                ) -> u64;
+                fn get_block_timestamp_via_library_call(
+                    ref self: TContractState, class_hash: starknet::ClassHash,
+                ) -> u64;
+                fn get_sequencer_address_via_library_call(
+                    ref self: TContractState, class_hash: starknet::ClassHash,
+                ) -> ContractAddress;
+                fn get_tx_hash_via_library_call(
+                    self: @TContractState, class_hash: starknet::ClassHash,
+                ) -> felt252;
+            }
+
+            fn deploy_proxy() -> (ICheatExecutionInfoLibraryCallCheckerDispatcher, ContractAddress) {
+                let proxy = declare("CheatExecutionInfoLibraryCallChecker").unwrap().contract_class();
+                let (proxy_address, _) = proxy.deploy(@array![]).unwrap();
+                (ICheatExecutionInfoLibraryCallCheckerDispatcher { contract_address: proxy_address }, proxy_address)
+            }
+
+            #[test]
+            fn test_cheat_block_number_library_call_from_contract() {
+                let block_number_class_hash = *declare("CheatBlockNumberChecker").unwrap().contract_class().class_hash;
+                let (proxy, proxy_address) = deploy_proxy();
+
+                let original = proxy.get_block_number_via_library_call(block_number_class_hash);
+
+                start_cheat_block_number(proxy_address, 5678_u64);
+
+                let cheated = proxy.get_block_number_via_library_call(block_number_class_hash);
+                assert(cheated == 5678, 'Wrong block number');
+
+                stop_cheat_block_number(proxy_address);
+
+                let restored = proxy.get_block_number_via_library_call(block_number_class_hash);
+                assert(restored == original, 'Block number not restored');
+            }
+
+            #[test]
+            fn test_cheat_block_timestamp_library_call_from_contract() {
+                let class_hash = *declare("CheatBlockTimestampChecker").unwrap().contract_class().class_hash;
+                let (proxy, proxy_address) = deploy_proxy();
+
+                let original = proxy.get_block_timestamp_via_library_call(class_hash);
+
+                start_cheat_block_timestamp(proxy_address, 7777_u64);
+
+                let cheated = proxy.get_block_timestamp_via_library_call(class_hash);
+                assert(cheated == 7777, 'Wrong block timestamp');
+
+                stop_cheat_block_timestamp(proxy_address);
+
+                let restored = proxy.get_block_timestamp_via_library_call(class_hash);
+                assert(restored == original, 'Block timestamp not restored');
+            }
+
+            #[test]
+            fn test_cheat_sequencer_address_library_call_from_contract() {
+                let class_hash = *declare("CheatSequencerAddressChecker").unwrap().contract_class().class_hash;
+                let (proxy, proxy_address) = deploy_proxy();
+
+                let original = proxy.get_sequencer_address_via_library_call(class_hash);
+
+                let target_sequencer: ContractAddress = 99.try_into().unwrap();
+                start_cheat_sequencer_address(proxy_address, target_sequencer);
+
+                let cheated = proxy.get_sequencer_address_via_library_call(class_hash);
+                assert(cheated == target_sequencer, 'Wrong sequencer address');
+
+                stop_cheat_sequencer_address(proxy_address);
+
+                let restored = proxy.get_sequencer_address_via_library_call(class_hash);
+                assert(restored == original, 'Sequencer address not restored');
+            }
+
+            #[test]
+            fn test_cheat_transaction_hash_library_call_from_contract() {
+                let class_hash = *declare("CheatTxInfoChecker").unwrap().contract_class().class_hash;
+                let (proxy, proxy_address) = deploy_proxy();
+
+                let original = proxy.get_tx_hash_via_library_call(class_hash);
+
+                start_cheat_transaction_hash(proxy_address, 0xcafebabe);
+
+                let cheated = proxy.get_tx_hash_via_library_call(class_hash);
+                assert(cheated == 0xcafebabe, 'Wrong tx hash');
+
+                stop_cheat_transaction_hash(proxy_address);
+
+                let restored = proxy.get_tx_hash_via_library_call(class_hash);
+                assert(restored == original, 'Tx hash not restored');
+            }
+            "#
+        ),
+        Contract::from_code_path(
+            "CheatBlockNumberChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_block_number_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "CheatBlockTimestampChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_block_timestamp_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "CheatSequencerAddressChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_sequencer_address_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "CheatTxInfoChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_tx_info_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "CheatExecutionInfoLibraryCallChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_tx_info_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+}
