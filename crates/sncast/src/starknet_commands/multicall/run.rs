@@ -35,6 +35,10 @@ pub struct Run {
 
     #[command(flatten)]
     pub rpc: RpcArgs,
+
+    /// Nonce of the transaction. If not provided, nonce will be set automatically
+    #[arg(short, long)]
+    pub nonce: Option<Felt>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -84,6 +88,7 @@ where
     S: Signer + Sync + Send,
 {
     let fee_args = run.fee_args.clone();
+    let nonce = run.nonce;
 
     let contents = std::fs::read_to_string(&run.path)?;
     let multicall: MulticallFile =
@@ -109,7 +114,7 @@ where
         }
     }
 
-    execute_calls(account, parsed_calls, fee_args, None, wait_config, ui)
+    execute_calls(account, parsed_calls, fee_args, nonce, wait_config, ui)
         .await
         .map(Into::into)
         .map_err(handle_starknet_command_error)
