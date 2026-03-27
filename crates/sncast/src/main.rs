@@ -793,6 +793,7 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
         }
         // No local config file; profile must be in global config.
         (Some(profile), MaybeConfig::NoFile, MaybeConfig::NoProfile) => {
+            // TODO: (#pending) Streamline approach wrt. `--profile` being re-used for foundry and `scarb`.
             ui.print_warning(WarningMessage::new(format!(
                 "Profile [{profile}] not found in global config at {}, and no local config found.",
                 global_path.clone().unwrap_or_default()
