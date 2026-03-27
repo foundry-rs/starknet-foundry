@@ -458,3 +458,90 @@ async fn test_default_global_profile_with_unsupported_field() {
         "# },
     );
 }
+
+#[tokio::test]
+async fn test_invalid_effective_config() {
+    let global_dir = tempdir().unwrap();
+    fs::write(
+        global_dir.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            url = "http://127.0.0.1:5055/rpc"
+            account = "global_user"
+            wait-params = { timeout = 10, retry-interval = 5 }
+        "#},
+    )
+    .unwrap();
+    let local_dir = tempdir().unwrap();
+    fs::write(
+        local_dir.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            account = "local_user"
+            wait-params = { retry-interval = 11 }
+        "#},
+    )
+    .unwrap();
+
+    let args = vec!["show-config"];
+    let snapbox = Cast::new()
+        .config_dir(global_dir.path())
+        .command()
+        .args(&args)
+        .current_dir(local_dir.path());
+
+    let output = snapbox.assert().failure();
+    assert_stderr_contains(
+        output,
+        indoc! { r"
+            Error: Unable to combine configs. Fix conflicts between config sources and try again.
+            Sources:
+            - CLI flags
+            - Local config: [..]snfoundry.toml
+            - Global config: [..]snfoundry.toml
+
+            Caused by:
+                retry_interval cannot be greater than timeout
+        " },
+    );
+}
+
+#[tokio::test]
+async fn test_invalid_effective_config_from_cli() {
+    let global_dir = tempdir().unwrap();
+    fs::write(
+        global_dir.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            url = "http://127.0.0.1:5055/rpc"
+            account = "global_user"
+            wait-params = { timeout = 10, retry-interval = 5 }
+        "#},
+    )
+    .unwrap();
+
+    // No local config
+    let local_dir = tempdir().unwrap();
+
+    let args = vec!["--wait-retry-interval", "11", "show-config"];
+    let snapbox = Cast::new()
+        .config_dir(global_dir.path())
+        .command()
+        .args(&args)
+        .current_dir(local_dir.path());
+
+    let output = snapbox.assert().failure();
+    assert_stderr_contains(
+        output,
+        indoc! { r"
+            Error: Unable to combine configs. Fix conflicts between config sources and try again.
+            Sources:
+            - CLI flags
+            - Local config: missing
+            - Global config: [..]snfoundry.toml
+
+            Caused by:
+                retry_interval cannot be greater than timeout
+        " },
+    );
+}
