@@ -49,6 +49,7 @@ fn get_with_ownership(config: serde_json::Value, key: &str) -> Option<serde_json
     }
 }
 
+/// Returns `[{tool}.{profile}]` config, or `None` if `[{tool}.{profile}]` is missing.
 fn get_profile(
     raw_config: serde_json::Value,
     tool: &str,

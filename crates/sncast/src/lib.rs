@@ -219,8 +219,7 @@ impl ValidatedWaitParams {
 
     pub fn validate(&self) -> anyhow::Result<()> {
         ensure!(
-            self.retry_interval != 0
-                && self.timeout != 0,
+            self.retry_interval != 0 && self.timeout != 0,
             "retry_interval and timeout must be greater than 0"
         );
         ensure!(

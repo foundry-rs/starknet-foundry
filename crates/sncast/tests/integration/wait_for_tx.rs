@@ -164,21 +164,26 @@ async fn test_happy_path_handle_wait_for_tx() {
 #[tokio::test]
 async fn test_wait_for_wrong_retry_values() {
     let err = ValidatedWaitParams::new(2, 1).unwrap_err();
-    assert!(err.to_string().contains("retry_interval cannot be greater than timeout"));
+    assert_eq!(
+        err.to_string(),
+        "retry_interval cannot be greater than timeout"
+    );
 }
 
 #[tokio::test]
 async fn test_wait_for_wrong_retry_values_timeout_zero() {
     let err = ValidatedWaitParams::new(2, 0).unwrap_err();
-    assert!(err
-        .to_string()
-        .contains("retry_interval and timeout must be greater than 0"));
+    assert_eq!(
+        err.to_string(),
+        "retry_interval and timeout must be greater than 0"
+    );
 }
 
 #[tokio::test]
 async fn test_wait_for_wrong_retry_values_interval_zero() {
     let err = ValidatedWaitParams::new(0, 1).unwrap_err();
-    assert!(err
-        .to_string()
-        .contains("retry_interval and timeout must be greater than 0"));
+    assert_eq!(
+        err.to_string(),
+        "retry_interval and timeout must be greater than 0"
+    );
 }
