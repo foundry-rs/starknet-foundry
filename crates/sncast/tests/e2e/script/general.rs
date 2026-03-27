@@ -560,6 +560,7 @@ async fn test_using_release_profile() {
     let snapbox = runner(&args).current_dir(script_dir.path());
 
     snapbox.assert().success().stdout_eq(indoc! {r"
+        [WARNING] Profile [release] not found in global config at [..]snfoundry.toml, and no local config found.
         ...
         Success: Script execution completed
         
