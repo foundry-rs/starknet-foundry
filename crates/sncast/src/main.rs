@@ -814,7 +814,18 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
         .override_with(local_profile.unwrap_or_default())
         .override_with(cli_config);
 
-    CastConfig::try_from(partial_config)
+    CastConfig::try_from(partial_config).with_context(|| {
+        indoc::formatdoc! {"
+            Unable to combine configs. Fix conflicts between config sources and try again.
+            Sources:
+            - CLI flags
+            - Local config: {local}
+            - Global config: {global}
+        ",
+            global = global_path.as_ref().map_or("missing", |p| p.as_str()),
+            local = local_path.as_ref().map_or("missing", |p| p.as_str()),
+        }
+    })
 }
 
 fn print_cmd_move_warning(command_name: &str, new_command_name: &str, ui: &UI) {
