@@ -793,10 +793,10 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
         }
         // No local config file; profile must be in global config.
         (Some(profile), MaybeConfig::NoFile, MaybeConfig::NoProfile) => {
-            bail!(
+            ui.print_warning(WarningMessage::new(format!(
                 "Profile [{profile}] not found in global config at {}, and no local config found.",
-                global_path.unwrap_or_default()
-            );
+                global_path.clone().unwrap_or_default()
+            )));
         }
         // Note: this is potentially unreachable: `get_or_create_global_config_path` should always return dir with existing config file.
         // TODO: (#3436) remove this if missing global config becomes an error

@@ -373,10 +373,10 @@ async fn test_profile_missing_in_global_config() {
         .args(&args)
         .current_dir(t.path());
 
-    assert_stderr_contains(
-        snapbox.assert().failure(),
+    assert_stdout_contains(
+        snapbox.assert().success(),
         indoc! { r"
-            Error: Profile [nonexistent] not found in global config at [..]snfoundry.toml, and no local config found.
+            [WARNING] Profile [nonexistent] not found in global config at [..]snfoundry.toml, and no local config found.
         " },
     );
 }
