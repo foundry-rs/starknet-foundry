@@ -690,7 +690,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let result = starknet_commands::show_config::show_config(
                 &show,
-                // Some(&provider),
                 provider.as_ref(),
                 config,
                 cli.profile,
