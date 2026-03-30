@@ -15,7 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
+- Layering logic for configs. Now, `[sncast.default]` always acts as base layer for other profiles in that file. Read more [here](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#interaction-between-local-and-global-profiles)
+- Improved config error reporting by showing config source (local, global, effective) and path.
 - `--profile` now only determines `snfoundry.toml` profile. For Scarb profile, use `--scarb-profile` flag or `scarb-profile` from `snfoundry.toml` instead. Defaults to `release` if unspecified.
+
+#### Fixed
+
+- Invalid config files are no longer silently ignored, commands fail on errors
+- Unknown fields are no longer allowed in configs
+- Panics in config validation
+- `sncast show-config` quietly ignores provider errors
 
 ## [0.58.0] - 2026-03-18
 
