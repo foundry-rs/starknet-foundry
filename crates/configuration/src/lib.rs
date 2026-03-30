@@ -188,7 +188,7 @@ mod tests {
         let path = Utf8PathBuf::try_from(tempdir.path().join(CONFIG_FILENAME)).unwrap();
         let config = load_config::<StubConfig>(&path, None)
             .unwrap()
-            .expect("default profile should existst");
+            .expect("default profile should exist");
         assert_eq!(config.account, String::from("user1"));
         assert_eq!(
             config.url,
