@@ -232,7 +232,6 @@ impl ValidatedWaitParams {
 
 impl Default for ValidatedWaitParams {
     fn default() -> Self {
-        // FIXME: fix it
         Self::new(WAIT_RETRY_INTERVAL, WAIT_TIMEOUT).unwrap()
     }
 }
