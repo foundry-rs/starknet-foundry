@@ -2,7 +2,7 @@ use starknet::info::TxInfo;
 use serde::Serde;
 use option::OptionTrait;
 use array::ArrayTrait;
-use starknet::ContractAddress;
+use starknet::{ClassHash, ContractAddress};
 use starknet::info::v2::ResourceBounds;
 
 #[starknet::interface]
@@ -21,6 +21,33 @@ trait ICheatTxInfoChecker<TContractState> {
     fn get_fee_data_availability_mode(self: @TContractState) -> u32;
     fn get_account_deployment_data(self: @TContractState) -> Span<felt252>;
     fn get_tx_info(self: @TContractState) -> starknet::info::v2::TxInfo;
+}
+
+#[starknet::interface]
+trait ICheatBlockNumberChecker<TContractState> {
+    fn get_block_number(ref self: TContractState) -> u64;
+}
+
+#[starknet::interface]
+trait ICheatBlockTimestampChecker<TContractState> {
+    fn get_block_timestamp(ref self: TContractState) -> u64;
+}
+
+#[starknet::interface]
+trait ICheatSequencerAddressChecker<TContractState> {
+    fn get_sequencer_address(ref self: TContractState) -> ContractAddress;
+}
+
+#[starknet::interface]
+trait ICheatExecutionInfoLibraryCallChecker<TContractState> {
+    fn get_block_number_via_library_call(ref self: TContractState, class_hash: ClassHash) -> u64;
+    fn get_block_timestamp_via_library_call(
+        ref self: TContractState, class_hash: ClassHash,
+    ) -> u64;
+    fn get_sequencer_address_via_library_call(
+        ref self: TContractState, class_hash: ClassHash,
+    ) -> ContractAddress;
+    fn get_tx_hash_via_library_call(self: @TContractState, class_hash: ClassHash) -> felt252;
 }
 
 #[starknet::contract]
@@ -102,5 +129,45 @@ mod CheatTxInfoChecker {
 
     fn get_tx_info_v2() -> Box<starknet::info::v2::TxInfo> {
         get_execution_info_v2().unbox().tx_info
+    }
+}
+
+#[starknet::contract]
+mod CheatExecutionInfoLibraryCallChecker {
+    use starknet::{ClassHash, ContractAddress};
+    use super::{
+        ICheatBlockNumberCheckerDispatcherTrait,
+        ICheatBlockTimestampCheckerDispatcherTrait,
+        ICheatSequencerAddressCheckerDispatcherTrait,
+        ICheatTxInfoCheckerDispatcherTrait,
+    };
+
+    #[storage]
+    struct Storage {}
+
+    #[abi(embed_v0)]
+    impl CheatExecutionInfoLibraryCallCheckerImpl of super::ICheatExecutionInfoLibraryCallChecker<ContractState> {
+        fn get_block_number_via_library_call(
+            ref self: ContractState, class_hash: ClassHash,
+        ) -> u64 {
+            super::ICheatBlockNumberCheckerLibraryDispatcher { class_hash }.get_block_number()
+        }
+
+        fn get_block_timestamp_via_library_call(
+            ref self: ContractState, class_hash: ClassHash,
+        ) -> u64 {
+            super::ICheatBlockTimestampCheckerLibraryDispatcher { class_hash }.get_block_timestamp()
+        }
+
+        fn get_sequencer_address_via_library_call(
+            ref self: ContractState, class_hash: ClassHash,
+        ) -> ContractAddress {
+            super::ICheatSequencerAddressCheckerLibraryDispatcher { class_hash }
+                .get_sequencer_address()
+        }
+
+        fn get_tx_hash_via_library_call(self: @ContractState, class_hash: ClassHash) -> felt252 {
+            super::ICheatTxInfoCheckerLibraryDispatcher { class_hash }.get_tx_hash()
+        }
     }
 }
