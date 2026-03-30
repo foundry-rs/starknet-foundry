@@ -1,5 +1,6 @@
 use crate::running::hints_to_params;
 use anyhow::Result;
+use cairo_lang_casm::hints::Hint;
 use cairo_lang_sierra::extensions::NamedType;
 use cairo_lang_sierra::extensions::bitwise::BitwiseType;
 use cairo_lang_sierra::extensions::circuit::{AddModType, MulModType};
@@ -99,6 +100,7 @@ pub struct TestTarget<C> {
     pub sierra_program: ProgramArtifact,
     pub sierra_program_path: Arc<Utf8PathBuf>,
     pub casm_program: Arc<RawCasmProgram>,
+    pub hints: Arc<HashMap<String, Hint>>,
     pub test_cases: Vec<TestCase<C>>,
 }
 

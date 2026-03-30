@@ -1,4 +1,5 @@
-use super::hints::hints_by_representation;
+use cairo_lang_casm::hints::Hint;
+use std::collections::HashMap;
 use crate::running::execution::finalize_execution;
 use crate::running::setup::{
     VmExecutionContext, build_test_call_and_entry_point, entry_point_initial_budget,
@@ -62,6 +63,7 @@ impl StateReader for PhantomStateReader {
 pub fn run_config_pass(
     test_details: &TestDetails,
     casm_program: &RawCasmProgram,
+    hints: &HashMap<String, Hint>,
     tracked_resource: &ForgeTrackedResource,
 ) -> Result<RawForgeConfig> {
     let program = test_details.try_into_program(casm_program)?;
@@ -85,8 +87,6 @@ pub fn run_config_pass(
         use_kzg_da: true,
     };
     let mut context = build_context(&block_info, None, &TrackedResource::from(tracked_resource));
-
-    let hints = hints_by_representation(&casm_program.assembled_cairo_program);
     let VmExecutionContext {
         mut runner,
         syscall_handler,

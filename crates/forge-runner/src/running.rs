@@ -31,7 +31,8 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 use cheatnet::state::{BlockInfoReader, CheatnetState, EncounteredErrors, ExtendedStateReader};
 use cheatnet::trace_data::CallTrace;
 use execution::finalize_execution;
-use hints::hints_by_representation;
+use cairo_lang_casm::hints::Hint;
+use std::collections::HashMap;
 use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
@@ -64,6 +65,7 @@ pub use syscall_handler::syscall_handler_offset;
 pub fn run_test(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<RawCasmProgram>,
+    hints: Arc<HashMap<String, Hint>>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -81,6 +83,7 @@ pub fn run_test(
                 &case,
                 &program,
                 &casm_program,
+                &hints,
                 &RuntimeConfig::from(&forge_config.test_runner_config),
                 None,
                 &versioned_program_path,
@@ -101,6 +104,7 @@ pub(crate) fn run_fuzz_test(
     case: Arc<TestCaseWithResolvedConfig>,
     program: Program,
     casm_program: Arc<RawCasmProgram>,
+    hints: Arc<HashMap<String, Hint>>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -118,6 +122,7 @@ pub(crate) fn run_fuzz_test(
             &case,
             &program,
             &casm_program,
+            &hints,
             &RuntimeConfig::from(&forge_config.test_runner_config),
             Some(rng),
             &versioned_program_path,
@@ -168,6 +173,7 @@ pub fn run_test_case(
     case: &TestCaseWithResolvedConfig,
     program: &Program,
     casm_program: &RawCasmProgram,
+    hints: &HashMap<String, Hint>,
     runtime_config: &RuntimeConfig,
     fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
     versioned_program_path: &Utf8Path,
@@ -197,7 +203,6 @@ pub fn run_test_case(
     }
     let mut cached_state = CachedState::new(state_reader);
 
-    let hints = hints_by_representation(&casm_program.assembled_cairo_program);
     let VmExecutionContext {
         mut runner,
         syscall_handler,
