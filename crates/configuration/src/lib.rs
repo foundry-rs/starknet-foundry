@@ -174,7 +174,7 @@ mod tests {
         let path = Utf8PathBuf::try_from(tempdir.path().join(CONFIG_FILENAME)).unwrap();
         let config = load_config::<StubConfig>(&path, Some("profile1"))
             .unwrap()
-            .expect("profile exists");
+            .expect("profile should exist");
         assert_eq!(config.account, String::from("user3"));
         assert_eq!(
             config.url,
@@ -188,7 +188,7 @@ mod tests {
         let path = Utf8PathBuf::try_from(tempdir.path().join(CONFIG_FILENAME)).unwrap();
         let config = load_config::<StubConfig>(&path, None)
             .unwrap()
-            .expect("default profile exists");
+            .expect("default profile should existst");
         assert_eq!(config.account, String::from("user1"));
         assert_eq!(
             config.url,
@@ -296,7 +296,7 @@ mod tests {
         };
         let config = load_config::<StubComplexConfig>(&path, Some("with-envs"))
             .unwrap()
-            .expect("profile exists");
+            .expect("profile should exist");
         assert_eq!(config.url, String::from("nfsaufbnsailfbsbksdabfnkl"));
         assert_eq!(config.account, 321_312);
         assert_eq!(config.nested.list_example, vec![true, false]);
