@@ -2,6 +2,7 @@ use anyhow::Result;
 use clap::{Args, Subcommand};
 use serde::Serialize;
 use serde_json::{Value, json};
+use std::process::ExitCode;
 
 pub mod contract_registry;
 pub mod deploy;
@@ -41,7 +42,7 @@ pub async fn multicall(
     config: CastConfig,
     ui: &UI,
     wait_config: WaitForTx,
-) -> Result<()> {
+) -> Result<ExitCode> {
     #[derive(Serialize)]
     struct MulticallMessage {
         file_contents: String,
@@ -64,8 +65,7 @@ pub async fn multicall(
                     output_path,
                     new.overwrite,
                 );
-
-                process_command_result("multicall new", result, ui, None);
+                Ok(process_command_result("multicall new", result, ui, None))
             } else {
                 ui.print_message(
                     "multicall_new",
@@ -73,8 +73,8 @@ pub async fn multicall(
                         file_contents: DEFAULT_MULTICALL_CONTENTS.to_string(),
                     },
                 );
+                Ok(ExitCode::SUCCESS)
             }
-            Ok(())
         }
         starknet_commands::multicall::Commands::Run(run) => {
             let provider = run.rpc.get_provider(&config, ui).await?;
@@ -93,8 +93,12 @@ pub async fn multicall(
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
-            process_command_result("multicall run", result, ui, block_explorer_link);
-            Ok(())
+            Ok(process_command_result(
+                "multicall run",
+                result,
+                ui,
+                block_explorer_link,
+            ))
         }
     }
 }

@@ -10,6 +10,7 @@ use starknet_rust::core::types::{TransactionExecutionStatus, TransactionStatus};
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, Provider};
 use starknet_types_core::felt::Felt;
+use std::process::ExitCode;
 
 #[derive(Debug, Args)]
 #[command(about = "Get the status of a transaction")]
@@ -21,15 +22,14 @@ pub struct TxStatus {
     pub rpc: RpcArgs,
 }
 
-pub async fn tx_status(tx_status: TxStatus, config: CastConfig, ui: &UI) -> Result<()> {
+pub async fn tx_status(tx_status: TxStatus, config: CastConfig, ui: &UI) -> Result<ExitCode> {
     let provider = tx_status.rpc.get_provider(&config, ui).await?;
 
     let result = get_tx_status(&provider, tx_status.transaction_hash)
         .await
         .map_err(handle_starknet_command_error);
 
-    process_command_result("get tx-status", result, ui, None);
-    Ok(())
+    Ok(process_command_result("get tx-status", result, ui, None))
 }
 
 pub async fn get_tx_status(
