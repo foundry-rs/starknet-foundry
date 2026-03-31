@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast get class-hash-at` command to get the class hash of a contract at a given address.
 - Aliases `sncast get transaction` and `sncast get transaction-status` for `get tx` and `get tx-status`.
 
+#### Changed
+
+- In JSON output for `sncast utils` commands, the `"command"` field now includes the `utils` prefix (e.g. `"serialize"` -> `"utils serialize"`).
+
 #### Fixed
 
 - `sncast` now returns non-zero exit code when a command fails.
