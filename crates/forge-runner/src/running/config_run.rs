@@ -9,6 +9,7 @@ use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point_execution::{prepare_call_arguments, run_entry_point};
 use blockifier::state::{cached_state::CachedState, state_api::StateReader};
 use cairo_lang_casm::hints::Hint;
+use cairo_vm::types::program::Program;
 use cheatnet::runtime_extensions::forge_config_extension::{
     ForgeConfigExtension, config::RawForgeConfig,
 };
@@ -62,12 +63,12 @@ impl StateReader for PhantomStateReader {
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn run_config_pass(
     test_details: &TestDetails,
+    program: &Program,
     casm_program: &RawCasmProgram,
     hints: &HashMap<String, Hint>,
     tracked_resource: &ForgeTrackedResource,
 ) -> Result<RawForgeConfig> {
-    let program = test_details.try_into_program(casm_program)?;
-    let (call, entry_point) = build_test_call_and_entry_point(test_details, casm_program, &program);
+    let (call, entry_point) = build_test_call_and_entry_point(test_details, casm_program, program);
 
     let mut cached_state = CachedState::new(PhantomStateReader);
     let gas_price_vector = GasPriceVector {

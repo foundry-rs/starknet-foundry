@@ -2,13 +2,11 @@ use super::{TestCase, TestTarget};
 use crate::{
     expected_result::ExpectedTestResult, filtering::TestCaseIsIgnored, package_tests::TestDetails,
 };
-use anyhow::Result;
 use cairo_vm::types::program::Program;
 use cheatnet::runtime_extensions::forge_config_extension::config::{
     RawAvailableResourceBoundsConfig, RawFuzzerConfig,
 };
 use starknet_api::block::BlockNumber;
-use universal_sierra_compiler_api::representation::RawCasmProgram;
 use url::Url;
 
 pub type TestTargetWithResolvedConfig = TestTarget<TestCaseResolvedConfig>;
@@ -24,16 +22,18 @@ pub fn sanitize_test_case_name(name: &str) -> String {
 
 impl TestCaseWithResolvedConfig {
     #[must_use]
-    pub fn new(name: &str, test_details: TestDetails, config: TestCaseResolvedConfig) -> Self {
+    pub fn new(
+        name: &str,
+        test_details: TestDetails,
+        program: Program,
+        config: TestCaseResolvedConfig,
+    ) -> Self {
         Self {
             name: sanitize_test_case_name(name),
             test_details,
+            program,
             config,
         }
-    }
-
-    pub fn try_into_program(&self, casm_program: &RawCasmProgram) -> Result<Program> {
-        self.test_details.try_into_program(casm_program)
     }
 }
 
