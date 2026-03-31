@@ -13,10 +13,10 @@ use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_co
 fn extract_contract_address(output: &[u8]) -> String {
     let stdout = std::str::from_utf8(output).expect("stdout is not utf8");
     for line in stdout.lines() {
-        if let Ok(v) = serde_json::from_str::<Value>(line) {
-            if let Some(addr) = v.get("contract_address").and_then(|a| a.as_str()) {
-                return addr.to_string();
-            }
+        if let Ok(v) = serde_json::from_str::<Value>(line)
+            && let Some(addr) = v.get("contract_address").and_then(|a| a.as_str())
+        {
+            return addr.to_string();
         }
     }
     panic!("Could not find contract_address in output:\n{stdout}");
@@ -338,7 +338,7 @@ fn test_unique_without_account_address() {
     let output = runner(&args).assert().failure();
     assert_stderr_contains(
         output,
-        indoc! {"--account-address is required when --unique is set"},
+        indoc! {"Error: --account-address is required when --unique is set"},
     );
 }
 
