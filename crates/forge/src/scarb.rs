@@ -1,5 +1,6 @@
 use crate::scarb::config::ForgeConfigFromScarb;
 use anyhow::{Context, Result, anyhow};
+use camino::Utf8Path;
 use configuration::Config;
 use configuration::core::Profile;
 use scarb_api::ScarbCommand;
@@ -41,26 +42,14 @@ pub fn load_package_config<T: Config + Default>(
     }
 }
 
-#[tracing::instrument(skip_all, level = "debug")]
-pub fn build_artifacts_with_scarb(
+pub fn build_contracts_with_scarb(
     filter: PackagesFilter,
     features: FeaturesSpec,
     profile: ProfileSpec,
-    no_optimization: bool,
-) -> Result<()> {
-    if no_optimization {
-        build_contracts_with_scarb(filter.clone(), features.clone(), profile.clone())?;
-    }
-    build_test_artifacts_with_scarb(filter, features, profile)?;
-    Ok(())
-}
-
-fn build_contracts_with_scarb(
-    filter: PackagesFilter,
-    features: FeaturesSpec,
-    profile: ProfileSpec,
+    manifest_path: &Utf8Path,
 ) -> Result<()> {
     ScarbCommand::new_with_stdio()
+        .manifest_path(manifest_path)
         .arg("build")
         .packages_filter(filter)
         .features(features)
@@ -70,12 +59,14 @@ fn build_contracts_with_scarb(
     Ok(())
 }
 
-fn build_test_artifacts_with_scarb(
+pub fn build_test_artifacts_with_scarb(
     filter: PackagesFilter,
     features: FeaturesSpec,
     profile: ProfileSpec,
+    manifest_path: &Utf8Path,
 ) -> Result<()> {
     ScarbCommand::new_with_stdio()
+        .manifest_path(manifest_path)
         .arg("build")
         .arg("--test")
         .packages_filter(filter)

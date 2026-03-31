@@ -10,7 +10,8 @@ use crate::warn::{
 use crate::{
     ColorOption, ExitStatus, TestArgs, block_number_map::BlockNumberMap,
     run_tests::package::run_for_package, run_tests::test_target::ExitFirstChannel,
-    scarb::build_artifacts_with_scarb, shared_cache::FailedTestsCache,
+    scarb::{build_contracts_with_scarb, build_test_artifacts_with_scarb},
+    shared_cache::FailedTestsCache,
 };
 use anyhow::Result;
 use forge_runner::partition::PartitionConfig;
@@ -43,17 +44,164 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     let packages: Vec<PackageMetadata> =
         packages_from_filter(&scarb_metadata, &args.scarb_args.packages_filter)?;
 
-    let filter = PackagesFilter::generate_for::<Metadata>(packages.iter());
+    let manifest_path = scarb_metadata.runtime_manifest.clone();
 
-    build_artifacts_with_scarb(
-        filter.clone(),
-        args.scarb_args.features.clone(),
-        args.scarb_args.profile.clone(),
-        args.no_optimization,
-    )?;
+    let deterministic_output = args.deterministic_output;
+    match args.color {
+        // SAFETY: This runs in a single-threaded environment.
+        ColorOption::Always => unsafe { env::set_var("CLICOLOR_FORCE", "1") },
+        // SAFETY: This runs in a single-threaded environment.
+        ColorOption::Never => unsafe { env::set_var("CLICOLOR", "0") },
+        ColorOption::Auto => (),
+    }
 
-    let WorkspaceExecutionSummary { all_tests } =
-        execute_workspace(&args, ui, &scarb_metadata).await?;
+    check_profile_compatibility(&args, &scarb_metadata)?;
+    error_if_snforge_std_not_compatible(&scarb_metadata)?;
+    warn_if_snforge_std_does_not_match_package_version(&scarb_metadata, &ui)?;
+
+    let artifacts_dir_path =
+        target_dir_for_workspace(&scarb_metadata).join(&scarb_metadata.current_profile);
+
+    if args.exact {
+        let test_filter = args.test_filter.clone();
+        if let Some(last_filter) =
+            test_filter.and_then(|filter| filter.split("::").last().map(String::from))
+        {
+            set_forge_test_filter(last_filter);
+        }
+    }
+
+    let workspace_root = &scarb_metadata.workspace.root;
+    let cache_dir = workspace_root.join(CACHE_DIR);
+    let packages_len = packages.len();
+    let partitioning_config = get_partitioning_config(&args, &ui, &packages, &artifacts_dir_path)?;
+
+    // When no_optimization is set, contracts are built separately with a different Scarb target.
+    // Build them all upfront (they are not per-test-target so there's no benefit to pipelining).
+    if args.no_optimization {
+        let filter = PackagesFilter::generate_for::<Metadata>(packages.iter());
+        let features = args.scarb_args.features.clone();
+        let profile = args.scarb_args.profile.clone();
+        let mp = manifest_path.clone();
+        tokio::task::spawn_blocking(move || {
+            build_contracts_with_scarb(filter, features, profile, &mp)
+        })
+        .await??;
+    }
+
+    let mut block_number_map = BlockNumberMap::default();
+    let mut all_tests = vec![];
+    let mut total_filtered_count = Some(0);
+    let mut exit_first_channel = ExitFirstChannel::new();
+
+    // Pipeline: build test artifacts for package[i+1] while executing package[i].
+    let mut packages_iter = packages.into_iter().peekable();
+
+    // Kick off the build for the first package before entering the loop so its compilation
+    // overlaps with any remaining setup and the first package starts executing as soon as
+    // its artifacts are ready.
+    let mut build_handle: Option<tokio::task::JoinHandle<Result<()>>> =
+        if let Some(first_pkg) = packages_iter.peek() {
+            let filter = PackagesFilter::generate_for::<Metadata>(std::iter::once(first_pkg));
+            let features = args.scarb_args.features.clone();
+            let profile = args.scarb_args.profile.clone();
+            let mp = manifest_path.clone();
+            Some(tokio::task::spawn_blocking(move || {
+                build_test_artifacts_with_scarb(filter, features, profile, &mp)
+            }))
+        } else {
+            None
+        };
+
+    while let Some(package) = packages_iter.next() {
+        // Wait for this package's test artifacts to finish building.
+        if let Some(handle) = build_handle.take() {
+            handle.await??;
+        }
+
+        // Immediately start building the next package's test artifacts so that compilation
+        // overlaps with the current package's execution.
+        build_handle = if let Some(next_pkg) = packages_iter.peek() {
+            let filter = PackagesFilter::generate_for::<Metadata>(std::iter::once(next_pkg));
+            let features = args.scarb_args.features.clone();
+            let profile = args.scarb_args.profile.clone();
+            let mp = manifest_path.clone();
+            Some(tokio::task::spawn_blocking(move || {
+                build_test_artifacts_with_scarb(filter, features, profile, &mp)
+            }))
+        } else {
+            None
+        };
+
+        let cwd = env::current_dir()?;
+        env::set_current_dir(&package.root)?;
+
+        let pkg_args = RunForPackageArgs::build(
+            package,
+            &scarb_metadata,
+            &args,
+            &cache_dir,
+            &artifacts_dir_path,
+            partitioning_config.clone(),
+            &ui,
+        )?;
+
+        let result = run_for_package(
+            pkg_args,
+            &mut block_number_map,
+            ui.clone(),
+            &mut exit_first_channel,
+            deterministic_output,
+        )
+        .await?;
+
+        let filtered = result.filtered();
+        all_tests.extend(result.summaries());
+        total_filtered_count = calculate_total_filtered_count(total_filtered_count, filtered);
+
+        env::set_current_dir(&cwd)?;
+    }
+
+    let overall_summary = OverallSummaryMessage::new(&all_tests, total_filtered_count);
+    let mut all_failed_tests: Vec<&AnyTestCaseSummary> =
+        extract_failed_tests(&all_tests).collect();
+    if deterministic_output {
+        all_failed_tests.sort_by(|a, b| a.name().unwrap_or("").cmp(b.name().unwrap_or("")));
+    }
+
+    FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
+
+    if !block_number_map.get_url_to_latest_block_number().is_empty() {
+        ui.println(&LatestBlocksNumbersMessage::new(
+            block_number_map.get_url_to_latest_block_number().clone(),
+        ));
+    }
+
+    ui.println(&TestsFailureSummaryMessage::new(&all_failed_tests));
+
+    // Print the overall summary only when testing multiple packages.
+    if packages_len > 1 {
+        ui.print_blank_line();
+        ui.println(&overall_summary);
+    }
+
+    match partitioning_config {
+        PartitionConfig::Disabled => (),
+        PartitionConfig::Enabled {
+            partition,
+            partition_map,
+        } => {
+            ui.print_blank_line();
+            let included = partition_map.included_tests_count(partition.index());
+            let total = partition_map.total_tests_count();
+            ui.println(&PartitionFinishedMessage::new(partition, included, total));
+        }
+    }
+
+    if args.exact {
+        unset_forge_test_filter();
+    }
+
     let has_failures = extract_failed_tests(&all_tests).next().is_some();
     Ok(if has_failures {
         ExitStatus::Failure

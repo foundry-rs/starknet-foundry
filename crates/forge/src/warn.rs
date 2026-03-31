@@ -13,32 +13,26 @@ use std::env;
 use std::sync::Arc;
 use url::Url;
 
-pub(crate) async fn warn_if_incompatible_rpc_version(
-    test_targets: &[TestTargetWithResolvedConfig],
+pub(crate) async fn warn_if_incompatible_rpc_version_for_target(
+    test_target: &TestTargetWithResolvedConfig,
+    warned_urls: &mut HashSet<Url>,
     ui: Arc<UI>,
 ) -> Result<()> {
-    let mut urls = HashSet::<Url>::new();
+    let mut handles = Vec::new();
 
-    // collect urls
-    for test_target in test_targets {
-        for fork_config in test_target
-            .test_cases
-            .iter()
-            .filter_map(|tc| tc.config.fork_config.as_ref())
-        {
-            urls.insert(fork_config.url.clone());
+    for fork_config in test_target
+        .test_cases
+        .iter()
+        .filter_map(|tc| tc.config.fork_config.as_ref())
+    {
+        if warned_urls.insert(fork_config.url.clone()) {
+            let url = fork_config.url.clone();
+            let ui = ui.clone();
+            handles.push(tokio::spawn(async move {
+                let client = create_rpc_client(&url)?;
+                verify_and_warn_if_incompatible_rpc_version(&client, &url, &ui).await
+            }));
         }
-    }
-
-    let mut handles = Vec::with_capacity(urls.len());
-
-    for url in urls {
-        let ui = ui.clone();
-        handles.push(tokio::spawn(async move {
-            let client = create_rpc_client(&url)?;
-
-            verify_and_warn_if_incompatible_rpc_version(&client, &url, &ui).await
-        }));
     }
 
     for handle in handles {

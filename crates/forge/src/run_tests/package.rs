@@ -16,7 +16,7 @@ use crate::{
     },
     shared_cache::FailedTestsCache,
     test_filter::{NameFilter, TestsFilter},
-    warn::warn_if_incompatible_rpc_version,
+    warn::warn_if_incompatible_rpc_version_for_target,
 };
 use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};
@@ -39,7 +39,9 @@ use forge_runner::{
 use foundry_ui::{UI, components::labeled::LabeledMessage};
 use scarb_api::{CompilationOpts, get_contracts_artifacts_and_source_sierra_paths};
 use scarb_metadata::{Metadata, PackageMetadata};
+use std::collections::HashSet;
 use std::sync::Arc;
+use url::Url;
 
 pub struct PackageTestResult {
     summaries: Vec<TestTargetSummary>,
@@ -141,41 +143,6 @@ impl RunForPackageArgs {
     }
 }
 
-#[tracing::instrument(skip_all, level = "debug")]
-async fn test_package_with_config_resolved(
-    test_targets: Vec<TestTargetRaw>,
-    fork_targets: &[ForkTarget],
-    block_number_map: &mut BlockNumberMap,
-    forge_config: &ForgeConfig,
-    tests_filter: &TestsFilter,
-) -> Result<Vec<TestTargetWithResolvedConfig>> {
-    let mut test_targets_with_resolved_config = Vec::with_capacity(test_targets.len());
-
-    for test_target in test_targets {
-        let test_target = test_target_with_config(
-            test_target,
-            &forge_config.test_runner_config.tracked_resource,
-        )?;
-
-        let test_target =
-            resolve_config(test_target, fork_targets, block_number_map, tests_filter).await?;
-
-        test_targets_with_resolved_config.push(test_target);
-    }
-
-    Ok(test_targets_with_resolved_config)
-}
-
-fn sum_test_cases_from_package(
-    test_targets: &[TestTargetWithResolvedConfig],
-    partitioning_config: &PartitionConfig,
-) -> usize {
-    test_targets
-        .iter()
-        .map(|tt| sum_test_cases_from_test_target(&tt.test_cases, partitioning_config))
-        .sum()
-}
-
 fn sum_test_cases_from_test_target(
     test_cases: &[TestCaseWithResolvedConfig],
     partitioning_config: &PartitionConfig,
@@ -198,6 +165,37 @@ fn sum_test_cases_from_test_target(
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
+async fn prepare_test_target(
+    raw: TestTargetRaw,
+    fork_targets: &[ForkTarget],
+    block_number_map: &mut BlockNumberMap,
+    forge_config: &ForgeConfig,
+    tests_filter: &TestsFilter,
+    warned_urls: &mut HashSet<Url>,
+    ui: Arc<UI>,
+) -> Result<(TestTargetWithResolvedConfig, usize, usize)> {
+    let test_target = test_target_with_config(
+        raw,
+        &forge_config.test_runner_config.tracked_resource,
+    )?;
+
+    let mut test_target =
+        resolve_config(test_target, fork_targets, block_number_map, tests_filter).await?;
+
+    let before_filter =
+        sum_test_cases_from_test_target(&test_target.test_cases, &tests_filter.partitioning_config);
+
+    tests_filter.filter_tests(&mut test_target.test_cases)?;
+
+    let after_filter =
+        sum_test_cases_from_test_target(&test_target.test_cases, &tests_filter.partitioning_config);
+
+    warn_if_incompatible_rpc_version_for_target(&test_target, warned_urls, ui).await?;
+
+    Ok((test_target, before_filter, after_filter))
+}
+
+#[tracing::instrument(skip_all, level = "debug")]
 pub async fn run_for_package(
     RunForPackageArgs {
         test_targets,
@@ -211,37 +209,81 @@ pub async fn run_for_package(
     exit_first_channel: &mut ExitFirstChannel,
     deterministic_output: bool,
 ) -> Result<PackageTestResult> {
-    let mut test_targets = test_package_with_config_resolved(
-        test_targets,
-        &fork_targets,
-        block_number_map,
-        &forge_config,
-        &tests_filter,
-    )
-    .await?;
-    let all_tests = sum_test_cases_from_package(&test_targets, &tests_filter.partitioning_config);
-
-    for test_target in &mut test_targets {
-        tests_filter.filter_tests(&mut test_target.test_cases)?;
-    }
-
-    warn_if_incompatible_rpc_version(&test_targets, ui.clone()).await?;
-
-    let not_filtered =
-        sum_test_cases_from_package(&test_targets, &tests_filter.partitioning_config);
-    ui.println(&CollectedTestsCountMessage {
-        tests_num: not_filtered,
-        package_name: package_name.clone(),
-    });
-
+    let mut warned_urls = HashSet::<Url>::new();
+    let mut all_tests: usize = 0;
+    let mut not_filtered: usize = 0;
     let mut summaries = vec![];
 
+    let mut test_targets = test_targets;
     if deterministic_output {
-        test_targets.sort_by_key(|t| t.tests_location);
+        test_targets.sort_by(|a, b| a.tests_location.cmp(&b.tests_location));
     }
 
-    for test_target in test_targets {
-        let ui = ui.clone();
+    // Prepare the first target eagerly so we can start executing it
+    // while preparing subsequent targets.
+    let mut prepared: Option<TestTargetWithResolvedConfig> = None;
+    let mut remaining = test_targets.into_iter();
+
+    if let Some(first_raw) = remaining.next() {
+        let (target, before, after) = prepare_test_target(
+            first_raw,
+            &fork_targets,
+            block_number_map,
+            &forge_config,
+            &tests_filter,
+            &mut warned_urls,
+            ui.clone(),
+        )
+        .await?;
+        all_tests += before;
+        not_filtered += after;
+        prepared = Some(target);
+    }
+
+    for next_raw in remaining {
+        // Execute the already-prepared target while preparing the next one.
+        if let Some(test_target) = prepared.take() {
+            ui.println(&TestsRunMessage::new(
+                test_target.tests_location,
+                sum_test_cases_from_test_target(
+                    &test_target.test_cases,
+                    &tests_filter.partitioning_config,
+                ),
+            ));
+
+            let (summary, prep_result) = tokio::join!(
+                run_for_test_target(
+                    test_target,
+                    forge_config.clone(),
+                    &tests_filter,
+                    ui.clone(),
+                    exit_first_channel,
+                ),
+                prepare_test_target(
+                    next_raw,
+                    &fork_targets,
+                    block_number_map,
+                    &forge_config,
+                    &tests_filter,
+                    &mut warned_urls,
+                    ui.clone(),
+                )
+            );
+
+            let summary = summary?;
+            let (next_target, before, after) = prep_result?;
+
+            all_tests += before;
+            not_filtered += after;
+
+            let (TestTargetRunResult::Ok(s) | TestTargetRunResult::Interrupted(s)) = summary;
+            summaries.push(s);
+            prepared = Some(next_target);
+        }
+    }
+
+    // Execute the last prepared target.
+    if let Some(test_target) = prepared.take() {
         ui.println(&TestsRunMessage::new(
             test_target.tests_location,
             sum_test_cases_from_test_target(
@@ -254,7 +296,7 @@ pub async fn run_for_package(
             test_target,
             forge_config.clone(),
             &tests_filter,
-            ui,
+            ui.clone(),
             exit_first_channel,
         )
         .await?;
@@ -262,6 +304,11 @@ pub async fn run_for_package(
         let (TestTargetRunResult::Ok(s) | TestTargetRunResult::Interrupted(s)) = summary;
         summaries.push(s);
     }
+
+    ui.println(&CollectedTestsCountMessage {
+        tests_num: not_filtered,
+        package_name: package_name.clone(),
+    });
 
     // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
     let filtered_count = if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
