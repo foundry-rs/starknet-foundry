@@ -4,7 +4,6 @@ use crate::{
         TestDetails,
         raw::TestTargetRaw,
         with_config::{TestCaseWithConfig, TestTargetWithConfig},
-        with_config_resolved::sanitize_test_case_name,
     },
     running::{config_run::run_config_pass, hints::hints_by_representation},
 };
@@ -22,7 +21,6 @@ use universal_sierra_compiler_api::compile_raw_sierra_at_path;
 pub fn test_target_with_config(
     test_target_raw: TestTargetRaw,
     tracked_resource: &ForgeTrackedResource,
-    name_pre_filter: impl Fn(&str) -> bool + Sync,
 ) -> Result<TestTargetWithConfig> {
     macro_rules! by_id {
         ($field:ident) => {{
@@ -55,16 +53,8 @@ pub fn test_target_with_config(
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
         .unwrap_or(&default_executables);
 
-    let total_executables = executables.len();
-
     let test_cases = executables
         .par_iter()
-        .filter(|case| {
-            case.debug_name
-                .as_deref()
-                .map(|name| name_pre_filter(&sanitize_test_case_name(name)))
-                .unwrap_or(true)
-        })
         .map(|case| -> Result<TestCaseWithConfig> {
             let func = funcs[&case.id];
 
@@ -81,14 +71,7 @@ pub fn test_target_with_config(
                 test_details,
             })
         })
-        .collect::<Result<Vec<TestCaseWithConfig>>>()?;
-
-    tracing::debug!(
-        total_executables,
-        config_pass_ran = test_cases.len(),
-        config_pass_skipped = total_executables - test_cases.len(),
-        "config pass pre-filtering complete"
-    );
+        .collect::<Result<_>>()?;
 
     Ok(TestTargetWithConfig {
         tests_location: test_target_raw.tests_location,

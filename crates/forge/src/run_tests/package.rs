@@ -155,7 +155,6 @@ async fn test_package_with_config_resolved(
         let test_target = test_target_with_config(
             test_target,
             &forge_config.test_runner_config.tracked_resource,
-            |name| tests_filter.passes_name_pre_filter(name),
         )?;
 
         let test_target =
