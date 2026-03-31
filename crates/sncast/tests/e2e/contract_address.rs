@@ -104,7 +104,10 @@ fn test_different_salts_produce_different_addresses() {
 
     let addr1 = run("0x1");
     let addr2 = run("0x2");
-    assert_ne!(addr1, addr2, "Different salts must produce different addresses");
+    assert_ne!(
+        addr1, addr2,
+        "Different salts must produce different addresses"
+    );
 }
 
 #[test]
@@ -172,7 +175,10 @@ fn test_calldata_affects_address() {
 
     let addr1 = run("0x1");
     let addr2 = run("0x2");
-    assert_ne!(addr1, addr2, "Different calldata must produce different addresses");
+    assert_ne!(
+        addr1, addr2,
+        "Different calldata must produce different addresses"
+    );
 }
 
 // ── Group 3: --contract-name (local artifact) ─────────────────────────────────
@@ -262,8 +268,7 @@ async fn test_precalculated_address_matches_deployed_address() {
     let tempdir = create_and_deploy_oz_account().await;
 
     // Read deployer address from accounts.json
-    let accounts_content =
-        std::fs::read_to_string(tempdir.path().join("accounts.json")).unwrap();
+    let accounts_content = std::fs::read_to_string(tempdir.path().join("accounts.json")).unwrap();
     let accounts: Value = serde_json::from_str(&accounts_content).unwrap();
     let account_address = accounts["alpha-sepolia"]["my_account"]["address"]
         .as_str()

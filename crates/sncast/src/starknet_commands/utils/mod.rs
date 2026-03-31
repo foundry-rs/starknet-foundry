@@ -15,9 +15,7 @@ use crate::{
     process_command_result,
     starknet_commands::{
         self,
-        utils::{
-            class_hash::ClassHash, contract_address::ContractAddress, serialize::Serialize,
-        },
+        utils::{class_hash::ClassHash, contract_address::ContractAddress, serialize::Serialize},
     },
 };
 
@@ -84,29 +82,33 @@ pub async fn utils(
         }
 
         Commands::ContractAddress(contract_address) => {
-            let artifacts =
-                if contract_address.common.contract_identifier.contract_name.is_some() {
-                    let manifest_path = assert_manifest_path_exists()?;
-                    let package_metadata =
-                        get_package_metadata(&manifest_path, &contract_address.common.package)?;
+            let artifacts = if contract_address
+                .common
+                .contract_identifier
+                .contract_name
+                .is_some()
+            {
+                let manifest_path = assert_manifest_path_exists()?;
+                let package_metadata =
+                    get_package_metadata(&manifest_path, &contract_address.common.package)?;
 
-                    Some(
-                        build_and_load_artifacts(
-                            &package_metadata,
-                            &BuildConfig {
-                                scarb_toml_path: manifest_path,
-                                json,
-                                profile,
-                            },
-                            false,
-                            // TODO(#3959) Remove `base_ui`
-                            ui.base_ui(),
-                        )
-                        .expect("Failed to build contract"),
+                Some(
+                    build_and_load_artifacts(
+                        &package_metadata,
+                        &BuildConfig {
+                            scarb_toml_path: manifest_path,
+                            json,
+                            profile,
+                        },
+                        false,
+                        // TODO(#3959) Remove `base_ui`
+                        ui.base_ui(),
                     )
-                } else {
-                    None
-                };
+                    .expect("Failed to build contract"),
+                )
+            } else {
+                None
+            };
 
             let result =
                 contract_address::get_contract_address(contract_address, artifacts, config, ui)
