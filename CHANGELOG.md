@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `--nonce` flag to `sncast multicall run`
+- `contract-address` command to `sncast utils`, which gets the contract address without deploying it
 
 ## [0.58.0] - 2026-03-18
 

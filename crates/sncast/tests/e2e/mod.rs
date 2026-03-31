@@ -2,6 +2,7 @@ mod account;
 pub mod balance;
 mod call;
 mod class_hash;
+mod contract_address;
 mod completions;
 mod declare;
 mod declare_from;

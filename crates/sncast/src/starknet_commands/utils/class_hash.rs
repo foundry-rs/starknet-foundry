@@ -21,23 +21,30 @@ pub struct ClassHash {
     pub package: Option<String>,
 }
 
+pub fn sierra_class_from_artifacts(
+    contract_name: &str,
+    artifacts: &HashMap<String, CastStarknetContractArtifacts>,
+) -> Result<SierraClass, StarknetCommandError> {
+    let contract_artifacts =
+        artifacts
+            .get(contract_name)
+            .ok_or(StarknetCommandError::ContractArtifactsNotFound(ErrorData {
+                data: ByteArray::from(contract_name),
+            }))?;
+
+    let sierra: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
+        .context("Failed to parse sierra artifact")?;
+
+    Ok(sierra)
+}
+
 #[allow(clippy::result_large_err)]
 pub fn get_class_hash(
     class_hash: &ClassHash,
     artifacts: &HashMap<String, CastStarknetContractArtifacts>,
 ) -> Result<ClassHashResponse, StarknetCommandError> {
-    let contract_artifacts = artifacts.get(&class_hash.contract).ok_or(
-        StarknetCommandError::ContractArtifactsNotFound(ErrorData {
-            data: ByteArray::from(class_hash.contract.as_str()),
-        }),
-    )?;
-
-    let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
-        .context("Failed to parse sierra artifact")?;
-
-    let class_hash = contract_definition
-        .class_hash()
-        .map_err(anyhow::Error::from)?;
+    let sierra = sierra_class_from_artifacts(&class_hash.contract, artifacts)?;
+    let class_hash = sierra.class_hash().map_err(anyhow::Error::from)?;
 
     Ok(ClassHashResponse {
         class_hash: class_hash.into_(),
