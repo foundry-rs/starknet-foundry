@@ -18,9 +18,11 @@ pub struct Get {
 #[derive(Debug, Subcommand)]
 pub enum GetCommands {
     /// Get the status of a transaction
+    #[command(alias = "transaction-status")]
     TxStatus(tx_status::TxStatus),
 
     /// Get the transaction by hash
+    #[command(alias = "transaction")]
     Tx(transaction::Transaction),
 
     /// Fetch balance of the account for specified token
