@@ -6,7 +6,7 @@ use crate::{
         with_config::{TestCaseWithConfig, TestTargetWithConfig},
         with_config_resolved::sanitize_test_case_name,
     },
-    running::config_run::run_config_pass,
+    running::{config_run::run_config_pass, hints::hints_by_representation},
 };
 use anyhow::Result;
 use cairo_lang_sierra::{
@@ -43,6 +43,9 @@ pub fn test_target_with_config(
     let casm_program = Arc::new(compile_raw_sierra_at_path(
         test_target_raw.sierra_program_path.as_std_path(),
     )?);
+    let hints = Arc::new(hints_by_representation(
+        &casm_program.assembled_cairo_program,
+    ));
 
     let default_executables = vec![];
     let executables = test_target_raw
@@ -67,7 +70,8 @@ pub fn test_target_with_config(
 
             let test_details = build_test_details(func, &type_declarations);
 
-            let raw_config = run_config_pass(&test_details, &casm_program, tracked_resource)?;
+            let raw_config =
+                run_config_pass(&test_details, &casm_program, &hints, tracked_resource)?;
 
             Ok(TestCaseWithConfig {
                 config: raw_config.into(),
@@ -90,6 +94,7 @@ pub fn test_target_with_config(
         sierra_program: test_target_raw.sierra_program,
         sierra_program_path: test_target_raw.sierra_program_path.into(),
         casm_program,
+        hints,
     })
 }
 

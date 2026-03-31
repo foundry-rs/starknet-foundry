@@ -258,6 +258,7 @@ mod tests {
                 compile_raw_sierra(&serde_json::to_value(&program_for_testing().program).unwrap())
                     .unwrap(),
             ),
+            hints: Arc::new(std::collections::HashMap::new()),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
@@ -548,6 +549,7 @@ mod tests {
                 compile_raw_sierra(&serde_json::to_value(&program_for_testing().program).unwrap())
                     .unwrap(),
             ),
+            hints: Arc::new(std::collections::HashMap::new()),
             test_cases: vec![],
             tests_location: TestTargetLocation::Lib,
         };
@@ -595,6 +597,7 @@ mod tests {
                 compile_raw_sierra(&serde_json::to_value(&program_for_testing().program).unwrap())
                     .unwrap(),
             ),
+            hints: Arc::new(std::collections::HashMap::new()),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
@@ -803,6 +806,7 @@ mod tests {
                 compile_raw_sierra(&serde_json::to_value(&program_for_testing().program).unwrap())
                     .unwrap(),
             ),
+            hints: Arc::new(std::collections::HashMap::new()),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
@@ -916,6 +920,7 @@ mod tests {
                 compile_raw_sierra(&serde_json::to_value(&program_for_testing().program).unwrap())
                     .unwrap(),
             ),
+            hints: Arc::new(std::collections::HashMap::new()),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
