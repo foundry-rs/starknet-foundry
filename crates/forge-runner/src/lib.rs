@@ -1,10 +1,10 @@
 use crate::coverage_api::run_coverage;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig};
 use crate::running::{run_fuzz_test, run_test};
-use cairo_lang_casm::hints::Hint;
 use crate::test_case_summary::TestCaseSummary;
 use anyhow::Result;
 use build_trace_data::save_trace_data;
+use cairo_lang_casm::hints::Hint;
 use cairo_lang_sierra::program::{ConcreteTypeLongId, Function, TypeDeclaration};
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_config_extension::config::RawFuzzerConfig;

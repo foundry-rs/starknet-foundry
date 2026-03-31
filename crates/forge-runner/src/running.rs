@@ -12,6 +12,7 @@ use blockifier::execution::entry_point_execution::{
 };
 use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::state::cached_state::CachedState;
+use cairo_lang_casm::hints::Hint;
 use cairo_vm::Felt252;
 use cairo_vm::types::program::Program;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
@@ -31,14 +32,13 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 use cheatnet::state::{BlockInfoReader, CheatnetState, EncounteredErrors, ExtendedStateReader};
 use cheatnet::trace_data::CallTrace;
 use execution::finalize_execution;
-use cairo_lang_casm::hints::Hint;
-use std::collections::HashMap;
 use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use scarb_oracle_hint_service::OracleHintService;
 use starknet_api::execution_resources::GasVector;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::default::Default;
 use std::marker::PhantomData;
 use std::rc::Rc;
