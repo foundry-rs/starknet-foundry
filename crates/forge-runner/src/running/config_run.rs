@@ -95,8 +95,8 @@ pub fn run_config_pass(
         program_extra_data_length,
     } = initialize_execution_context(
         call.clone(),
-        &hints,
-        &program,
+        hints,
+        program,
         &mut cached_state,
         &mut context,
     )?;

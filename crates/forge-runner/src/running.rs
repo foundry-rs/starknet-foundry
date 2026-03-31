@@ -208,7 +208,7 @@ pub fn run_test_case(
         program_extra_data_length,
     } = setup::initialize_execution_context(
         call.clone(),
-        &hints,
+        hints,
         program,
         &mut cached_state,
         &mut context,
