@@ -1,0 +1,17 @@
+---
+source: tests/integration/fuzzable.rs
+expression: format_output(&result)
+---
+impl FuzzableNestedImpl<> of snforge_std::fuzzable::Fuzzable<Nested<>> {
+    fn blank() -> Nested<> {
+        Nested::Empty
+    }
+    fn generate() -> Nested<> {
+        let variant_idx = snforge_std::fuzzable::generate_arg(0, 1);
+        match variant_idx {
+            0 => { Nested::Empty },
+            1 => { Nested::Inner(snforge_std::fuzzable::Fuzzable::<Option<u64>>::generate()) },
+            _ => panic!("unexpected value of generate_arg cheatcode"),
+        }
+    }
+}

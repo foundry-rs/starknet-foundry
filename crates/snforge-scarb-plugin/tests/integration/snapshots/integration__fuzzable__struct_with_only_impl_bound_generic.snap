@@ -1,0 +1,12 @@
+---
+source: tests/integration/fuzzable.rs
+expression: format_output(&result)
+---
+impl FuzzableFrozenImpl<+core::fmt::Debug<u64>> of snforge_std::fuzzable::Fuzzable<Frozen<_>> {
+    fn blank() -> Frozen<_> {
+        Frozen { value: snforge_std::fuzzable::Fuzzable::<u64>::blank() }
+    }
+    fn generate() -> Frozen<_> {
+        Frozen { value: snforge_std::fuzzable::Fuzzable::<u64>::generate() }
+    }
+}
