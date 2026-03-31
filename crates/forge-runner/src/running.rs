@@ -76,16 +76,14 @@ pub fn run_test(
             return TestCaseSummary::Interrupted {};
         }
 
-        let run_result = case.try_into_program(&casm_program).and_then(|program| {
-            run_test_case(
-                &case,
-                &program,
-                &casm_program,
-                &RuntimeConfig::from(&forge_config.test_runner_config),
-                None,
-                &versioned_program_path,
-            )
-        });
+        let run_result = run_test_case(
+            &case,
+            &case.program,
+            &casm_program,
+            &RuntimeConfig::from(&forge_config.test_runner_config),
+            None,
+            &versioned_program_path,
+        );
 
         if send.is_closed() {
             return TestCaseSummary::Interrupted {};

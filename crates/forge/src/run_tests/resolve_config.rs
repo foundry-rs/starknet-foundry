@@ -36,6 +36,7 @@ pub async fn resolve_config(
         test_cases.push(TestCaseWithResolvedConfig::new(
             &case.name,
             case.test_details.clone(),
+            case.program.clone(),
             TestCaseResolvedConfig {
                 available_gas: case.config.available_gas,
                 ignored: case.config.ignored
@@ -139,6 +140,7 @@ mod tests {
     use crate::shared_cache::FailedTestsCache;
     use cairo_lang_sierra::program::ProgramArtifact;
     use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
+    use cairo_vm::types::program::Program as CairoVmProgram;
     use forge_runner::package_tests::TestTargetLocation;
     use forge_runner::package_tests::with_config::{TestCaseConfig, TestCaseWithConfig};
     use forge_runner::partition::PartitionConfig;
@@ -166,6 +168,7 @@ mod tests {
     ) -> TestCaseWithConfig {
         TestCaseWithConfig {
             name: name.to_string(),
+            program: CairoVmProgram::default(),
             config: TestCaseConfig {
                 available_gas: None,
                 ignored,
