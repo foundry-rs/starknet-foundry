@@ -3,7 +3,7 @@ use crate::helpers::configuration::CastConfig;
 use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::helpers::rpc::RpcArgs;
 use crate::response::errors::SNCastProviderError;
-use anyhow::{Context, Error, Result, anyhow, bail};
+use anyhow::{Context, Error, Result, anyhow, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use configuration::Override;
@@ -167,8 +167,10 @@ impl Override for PartialWaitParams {
     }
 }
 
-impl From<PartialWaitParams> for ValidatedWaitParams {
-    fn from(p: PartialWaitParams) -> Self {
+impl TryFrom<PartialWaitParams> for ValidatedWaitParams {
+    type Error = anyhow::Error;
+
+    fn try_from(p: PartialWaitParams) -> anyhow::Result<Self> {
         let d = ValidatedWaitParams::default();
         Self::new(
             p.retry_interval.unwrap_or(d.retry_interval),
@@ -186,14 +188,13 @@ pub struct ValidatedWaitParams {
 }
 
 impl ValidatedWaitParams {
-    #[must_use]
-    pub fn new(retry_interval: u8, timeout: u16) -> Self {
+    pub fn new(retry_interval: u8, timeout: u16) -> Result<Self> {
         let res = Self {
             timeout,
             retry_interval,
         };
-        res.validate();
-        res
+        res.validate()?;
+        Ok(res)
     }
 
     #[must_use]
@@ -216,19 +217,22 @@ impl ValidatedWaitParams {
         self.timeout
     }
 
-    pub fn validate(&self) {
-        assert!(
-            !(self.retry_interval == 0
-                || self.timeout == 0
-                || u16::from(self.retry_interval) > self.timeout),
-            "Invalid values for retry_interval and/or timeout!"
+    pub fn validate(&self) -> anyhow::Result<()> {
+        ensure!(
+            self.retry_interval != 0 && self.timeout != 0,
+            "retry_interval and timeout must be greater than 0"
         );
+        ensure!(
+            u16::from(self.retry_interval) <= self.timeout,
+            "retry_interval cannot be greater than timeout"
+        );
+        Ok(())
     }
 }
 
 impl Default for ValidatedWaitParams {
     fn default() -> Self {
-        Self::new(WAIT_RETRY_INTERVAL, WAIT_TIMEOUT)
+        Self::new(WAIT_RETRY_INTERVAL, WAIT_TIMEOUT).unwrap()
     }
 }
 
