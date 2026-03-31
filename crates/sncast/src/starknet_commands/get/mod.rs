@@ -43,9 +43,7 @@ pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<()> {
 
         GetCommands::Nonce(nonce) => nonce::nonce(nonce, config, ui).await?,
 
-        GetCommands::ClassHashAt(args) => {
-            class_hash_at::class_hash_at(args, config, ui).await?;
-        }
+        GetCommands::ClassHashAt(args) => class_hash_at::class_hash_at(args, config, ui).await?
     }
 
     Ok(())
