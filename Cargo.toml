@@ -31,7 +31,7 @@ inherits = "dev"
 opt-level = 3
 
 [workspace.package]
-version = "0.58.0"
+version = "0.58.1"
 edition = "2024"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
