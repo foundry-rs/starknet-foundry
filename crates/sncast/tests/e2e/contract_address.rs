@@ -223,8 +223,12 @@ fn test_contract_name_matches_class_hash() {
         .success();
 
     let stdout = std::str::from_utf8(&class_hash_out.get_output().stdout).unwrap();
-    let v: Value = serde_json::from_str(stdout.trim()).expect("Failed to parse class-hash JSON");
-    let class_hash = v["class_hash"].as_str().expect("No class_hash field");
+    let class_hash = stdout
+        .lines()
+        .filter_map(|line| serde_json::from_str::<Value>(line).ok())
+        .find_map(|v| v["class_hash"].as_str().map(str::to_string))
+        .expect("No class_hash field in output");
+    let class_hash = class_hash.as_str();
 
     // Address via --contract-name
     let name_args = vec![
@@ -257,7 +261,7 @@ fn test_contract_name_matches_class_hash() {
     let addr_by_hash = extract_contract_address(&hash_out.get_output().stdout);
     assert_eq!(
         addr_by_name, addr_by_hash,
-        "--contract-name and --class-hash must produce the same address for the same contract"
+        "Error: --contract-name and --class-hash must produce the same address for the same contract"
     );
 }
 
