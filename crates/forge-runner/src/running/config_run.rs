@@ -59,6 +59,7 @@ impl StateReader for PhantomStateReader {
     }
 }
 
+#[expect(clippy::implicit_hasher)]
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn run_config_pass(
     test_details: &TestDetails,
@@ -94,7 +95,7 @@ pub fn run_config_pass(
         program_extra_data_length,
     } = initialize_execution_context(
         call.clone(),
-        &hints,
+        hints,
         &program,
         &mut cached_state,
         &mut context,

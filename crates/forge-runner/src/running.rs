@@ -61,6 +61,7 @@ pub use syscall_handler::has_segment_arena;
 pub use syscall_handler::syscall_handler_offset;
 
 #[must_use]
+#[expect(clippy::implicit_hasher)]
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn run_test(
     case: Arc<TestCaseWithResolvedConfig>,
@@ -168,6 +169,7 @@ pub enum RunResult {
 }
 
 #[expect(clippy::too_many_lines)]
+#[expect(clippy::implicit_hasher)]
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn run_test_case(
     case: &TestCaseWithResolvedConfig,
@@ -210,7 +212,7 @@ pub fn run_test_case(
         program_extra_data_length,
     } = setup::initialize_execution_context(
         call.clone(),
-        &hints,
+        hints,
         program,
         &mut cached_state,
         &mut context,

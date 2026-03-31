@@ -103,6 +103,7 @@ pub fn maybe_generate_coverage(
 }
 
 #[must_use]
+#[expect(clippy::implicit_hasher)]
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn run_for_test_case(
     case: Arc<TestCaseWithResolvedConfig>,
