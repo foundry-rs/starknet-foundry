@@ -115,14 +115,23 @@ This file is stored in a predefined location and is used to store profiles that 
 
 #### Interaction Between Local and Global Profiles
 
-Global config can be overridden by a local config.
+Each setting in the effective config comes from the highest-precedence layer that defines it.
 
-If both local and global profiles with the same name are present, local profile will be combined with global profile. For any setting defined in both profiles, the local setting will take precedence. For settings not defined in the local profile, values from the corresponding global profile will be used, or if not defined, values from the global default profile will be used instead.
+Layer precedence (highest to lowest):
 
-This same behavior applies for [default profiles](#default-profile) as well. A local default profile will override a global default profile.
+1. CLI flags
+2. `[local.<profile>]`
+3. `[local.default]`
+4. `[global.<profile>]`
+5. `[global.default]`
+6. implicit defaults
 
-> 📝 **Note**
-> Remember that arguments passed in the CLI have the highest priority and will always override the configuration file settings.
+Settings not defined in a given layer fall through to the next one.
+
+When `--profile <name>` is provided:
+
+- if local config file exists, `local.<name>` **must exist**
+- if local config file does not exist, `global.<name>` **must exist**
 
 
 #### Global Configuration File Location
@@ -155,11 +164,11 @@ root/
 In any directory in the file system, a user can run the `sncast` command using the `default` and `testnet` profiles, 
 because they are defined in global config (file A). 
 
-If no profiles are explicitly specified, the `default` profile from the global configuration file will be used.
+If no profile is explicitly specified, the effective config is built by merging `global.default` with `local.default` (if a local config exists). Local values take precedence.
 
 When running `sncast` from the `opus-magnum` directory, there is a configuration file in the parent directory (file B). 
 This setup allows for the use of the following profiles: `default`, `testnet`, and `mainnet`. If the `mainnet` profile is specified, 
-the configuration from the local file will be used to override the global `default` profile, as the `mainnet` profile does not exist in the global configuration.
+the effective config is built by layering `global.default` → `local.default` → `local.mainnet`. The `mainnet` profile does not need to exist in the global configuration as long as it is present in the local one.
 
 ## Environmental Variables
 
