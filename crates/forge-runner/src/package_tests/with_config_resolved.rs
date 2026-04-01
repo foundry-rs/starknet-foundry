@@ -7,6 +7,7 @@ use cheatnet::runtime_extensions::forge_config_extension::config::{
     RawAvailableResourceBoundsConfig, RawFuzzerConfig,
 };
 use starknet_api::block::BlockNumber;
+use std::sync::Arc;
 use url::Url;
 
 pub type TestTargetWithResolvedConfig = TestTarget<TestCaseResolvedConfig>;
@@ -25,7 +26,7 @@ impl TestCaseWithResolvedConfig {
     pub fn new(
         name: &str,
         test_details: TestDetails,
-        program: Program,
+        program: Arc<Program>,
         config: TestCaseResolvedConfig,
     ) -> Self {
         Self {

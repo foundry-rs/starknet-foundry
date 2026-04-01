@@ -169,7 +169,7 @@ mod tests {
     ) -> TestCaseWithConfig {
         TestCaseWithConfig {
             name: name.to_string(),
-            program: CairoVmProgram::default(),
+            program: Arc::new(CairoVmProgram::default()),
             config: TestCaseConfig {
                 available_gas: None,
                 ignored,

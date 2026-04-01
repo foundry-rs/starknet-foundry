@@ -100,7 +100,7 @@ pub fn run_test(
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn run_fuzz_test(
     case: Arc<TestCaseWithResolvedConfig>,
-    program: Program,
+    program: Arc<Program>,
     casm_program: Arc<RawCasmProgram>,
     hints: Arc<HashMap<String, Hint>>,
     forge_config: Arc<ForgeConfig>,

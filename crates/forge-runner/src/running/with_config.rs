@@ -60,7 +60,7 @@ pub fn test_target_with_config(
 
             let test_details = build_test_details(func, &type_declarations);
 
-            let program = test_details.try_into_program(&casm_program)?;
+            let program = Arc::new(test_details.try_into_program(&casm_program)?);
             let raw_config = run_config_pass(
                 &test_details,
                 &program,

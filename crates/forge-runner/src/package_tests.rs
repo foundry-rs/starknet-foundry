@@ -108,6 +108,6 @@ pub struct TestTarget<C> {
 pub struct TestCase<C> {
     pub test_details: TestDetails,
     pub name: String,
-    pub program: Program,
+    pub program: Arc<Program>,
     pub config: C,
 }
