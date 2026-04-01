@@ -262,14 +262,9 @@ mod tests {
             PartitionConfig::default(),
         );
 
-        let resolved = resolve_config(
-            test_target,
-            &[],
-            &BlockNumberMap::default(),
-            &tests_filter,
-        )
-        .await
-        .unwrap();
+        let resolved = resolve_config(test_target, &[], &BlockNumberMap::default(), &tests_filter)
+            .await
+            .unwrap();
 
         assert_eq!(resolved.test_cases.len(), 1);
         assert!(resolved.test_cases[0].config.ignored);
@@ -582,14 +577,9 @@ mod tests {
             PartitionConfig::default(),
         );
 
-        let resolved = resolve_config(
-            test_target,
-            &[],
-            &BlockNumberMap::default(),
-            &tests_filter,
-        )
-        .await
-        .unwrap();
+        let resolved = resolve_config(test_target, &[], &BlockNumberMap::default(), &tests_filter)
+            .await
+            .unwrap();
 
         assert_eq!(resolved.test_cases.len(), 1);
 
