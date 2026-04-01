@@ -171,21 +171,21 @@ impl TransactionOutputBuilder for OutputBuilder {
         self.field(
             "Resource Bounds L1 Gas",
             &format!(
-                "max_amount={:#x}, max_price_per_unit={:#x}",
+                "max_amount={}, max_price_per_unit={}",
                 rb.l1_gas.max_amount, rb.l1_gas.max_price_per_unit
             ),
         )
         .field(
             "Resource Bounds L1 Data Gas",
             &format!(
-                "max_amount={:#x}, max_price_per_unit={:#x}",
+                "max_amount={}, max_price_per_unit={}",
                 rb.l1_data_gas.max_amount, rb.l1_data_gas.max_price_per_unit
             ),
         )
         .field(
             "Resource Bounds L2 Gas",
             &format!(
-                "max_amount={:#x}, max_price_per_unit={:#x}",
+                "max_amount={}, max_price_per_unit={}",
                 rb.l2_gas.max_amount, rb.l2_gas.max_price_per_unit
             ),
         )
