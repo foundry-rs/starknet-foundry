@@ -67,7 +67,7 @@ impl PackageTestResult {
 }
 
 pub struct RunForPackageArgs {
-    config_handles: Vec<JoinHandle<Result<TestTargetWithConfig>>>,
+    pub config_handles: Vec<JoinHandle<Result<TestTargetWithConfig>>>,
     pub tests_filter: TestsFilter,
     pub forge_config: Arc<ForgeConfig>,
     pub fork_targets: Vec<ForkTarget>,
