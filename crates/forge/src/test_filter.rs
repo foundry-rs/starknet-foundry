@@ -241,7 +241,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -254,7 +254,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "crate2::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -267,7 +267,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -280,7 +280,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -314,7 +314,7 @@ mod tests {
             vec![TestCaseWithResolvedConfig {
                 name: "crate1::do_thing".to_string(),
                 test_details: TestDetails::default(),
-                program: CairoVmProgram::default(),
+                program: Arc::new(CairoVmProgram::default()),
                 config: TestCaseResolvedConfig {
                     available_gas: None,
                     ignored: false,
@@ -345,7 +345,7 @@ mod tests {
             vec![TestCaseWithResolvedConfig {
                 name: "crate2::run_other_thing".to_string(),
                 test_details: TestDetails::default(),
-                program: CairoVmProgram::default(),
+                program: Arc::new(CairoVmProgram::default()),
                 config: TestCaseResolvedConfig {
                     available_gas: None,
                     ignored: true,
@@ -377,7 +377,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -390,7 +390,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "crate2::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -403,7 +403,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -416,7 +416,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -465,7 +465,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -478,7 +478,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "crate2::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -491,7 +491,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -504,7 +504,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -580,7 +580,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -593,7 +593,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "crate2::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -606,7 +606,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "outer::crate3::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -619,7 +619,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "do_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -684,7 +684,7 @@ mod tests {
             vec![TestCaseWithResolvedConfig {
                 name: "do_thing".to_string(),
                 test_details: TestDetails::default(),
-                program: CairoVmProgram::default(),
+                program: Arc::new(CairoVmProgram::default()),
                 config: TestCaseResolvedConfig {
                     available_gas: None,
                     ignored: false,
@@ -715,7 +715,7 @@ mod tests {
             vec![TestCaseWithResolvedConfig {
                 name: "crate1::do_thing".to_string(),
                 test_details: TestDetails::default(),
-                program: CairoVmProgram::default(),
+                program: Arc::new(CairoVmProgram::default()),
                 config: TestCaseResolvedConfig {
                     available_gas: None,
                     ignored: false,
@@ -762,7 +762,7 @@ mod tests {
             vec![TestCaseWithResolvedConfig {
                 name: "outer::crate3::run_other_thing".to_string(),
                 test_details: TestDetails::default(),
-                program: CairoVmProgram::default(),
+                program: Arc::new(CairoVmProgram::default()),
                 config: TestCaseResolvedConfig {
                     available_gas: None,
                     ignored: true,
@@ -789,7 +789,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -802,7 +802,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "crate2::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -815,7 +815,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "outer::crate3::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -828,7 +828,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "do_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -861,7 +861,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "crate2::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -874,7 +874,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "outer::crate3::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -903,7 +903,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -916,7 +916,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "crate2::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -929,7 +929,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "outer::crate3::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -942,7 +942,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "do_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -975,7 +975,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -988,7 +988,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "crate2::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -1001,7 +1001,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "outer::crate3::run_other_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -1014,7 +1014,7 @@ mod tests {
                 TestCaseWithResolvedConfig {
                     name: "do_thing".to_string(),
                     test_details: TestDetails::default(),
-                    program: CairoVmProgram::default(),
+                    program: Arc::new(CairoVmProgram::default()),
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
