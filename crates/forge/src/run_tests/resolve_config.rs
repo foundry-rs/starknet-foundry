@@ -23,7 +23,7 @@ use starknet_api::block::BlockNumber;
 pub async fn resolve_config(
     test_target: TestTargetWithConfig,
     fork_targets: &[ForkTarget],
-    block_number_map: &mut BlockNumberMap,
+    block_number_map: &BlockNumberMap,
     tests_filter: &TestsFilter,
 ) -> Result<TestTargetWithResolvedConfig> {
     let mut test_cases = Vec::with_capacity(test_target.test_cases.len());
@@ -64,7 +64,7 @@ pub async fn resolve_config(
 
 async fn resolve_fork_config(
     fork_config: Option<RawForkConfig>,
-    block_number_map: &mut BlockNumberMap,
+    block_number_map: &BlockNumberMap,
     fork_targets: &[ForkTarget],
 ) -> Result<Option<ResolvedForkConfig>> {
     let Some(fc) = fork_config else {
