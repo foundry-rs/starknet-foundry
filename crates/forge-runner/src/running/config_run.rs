@@ -1,4 +1,3 @@
-use super::hints::hints_by_representation;
 use crate::running::execution::finalize_execution;
 use crate::running::setup::{
     VmExecutionContext, build_test_call_and_entry_point, entry_point_initial_budget,
@@ -9,6 +8,8 @@ use anyhow::Result;
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point_execution::{prepare_call_arguments, run_entry_point};
 use blockifier::state::{cached_state::CachedState, state_api::StateReader};
+use cairo_lang_casm::hints::Hint;
+use cairo_vm::types::program::Program;
 use cheatnet::runtime_extensions::forge_config_extension::{
     ForgeConfigExtension, config::RawForgeConfig,
 };
@@ -17,6 +18,7 @@ use starknet_api::block::{
     BlockInfo, BlockNumber, BlockTimestamp, GasPrice, GasPriceVector, GasPrices, NonzeroGasPrice,
 };
 use starknet_types_core::felt::Felt;
+use std::collections::HashMap;
 use std::default::Default;
 use universal_sierra_compiler_api::representation::RawCasmProgram;
 
@@ -61,11 +63,12 @@ impl StateReader for PhantomStateReader {
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn run_config_pass(
     test_details: &TestDetails,
+    program: &Program,
     casm_program: &RawCasmProgram,
+    hints: &HashMap<String, Hint>,
     tracked_resource: &ForgeTrackedResource,
 ) -> Result<RawForgeConfig> {
-    let program = test_details.try_into_program(casm_program)?;
-    let (call, entry_point) = build_test_call_and_entry_point(test_details, casm_program, &program);
+    let (call, entry_point) = build_test_call_and_entry_point(test_details, casm_program, program);
 
     let mut cached_state = CachedState::new(PhantomStateReader);
     let gas_price_vector = GasPriceVector {
@@ -85,8 +88,6 @@ pub fn run_config_pass(
         use_kzg_da: true,
     };
     let mut context = build_context(&block_info, None, &TrackedResource::from(tracked_resource));
-
-    let hints = hints_by_representation(&casm_program.assembled_cairo_program);
     let VmExecutionContext {
         mut runner,
         syscall_handler,
@@ -94,8 +95,8 @@ pub fn run_config_pass(
         program_extra_data_length,
     } = initialize_execution_context(
         call.clone(),
-        &hints,
-        &program,
+        hints,
+        program,
         &mut cached_state,
         &mut context,
     )?;

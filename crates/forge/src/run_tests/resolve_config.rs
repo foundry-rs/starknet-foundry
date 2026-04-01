@@ -36,6 +36,7 @@ pub async fn resolve_config(
         test_cases.push(TestCaseWithResolvedConfig::new(
             &case.name,
             case.test_details.clone(),
+            case.program.clone(),
             TestCaseResolvedConfig {
                 available_gas: case.config.available_gas,
                 ignored: case.config.ignored
@@ -58,6 +59,7 @@ pub async fn resolve_config(
         sierra_program: test_target.sierra_program,
         sierra_program_path: test_target.sierra_program_path,
         casm_program: test_target.casm_program,
+        hints: test_target.hints,
         test_cases,
     })
 }
@@ -139,6 +141,7 @@ mod tests {
     use crate::shared_cache::FailedTestsCache;
     use cairo_lang_sierra::program::ProgramArtifact;
     use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
+    use cairo_vm::types::program::Program as CairoVmProgram;
     use forge_runner::package_tests::TestTargetLocation;
     use forge_runner::package_tests::with_config::{TestCaseConfig, TestCaseWithConfig};
     use forge_runner::partition::PartitionConfig;
@@ -166,6 +169,7 @@ mod tests {
     ) -> TestCaseWithConfig {
         TestCaseWithConfig {
             name: name.to_string(),
+            program: Arc::new(CairoVmProgram::default()),
             config: TestCaseConfig {
                 available_gas: None,
                 ignored,
@@ -192,6 +196,7 @@ mod tests {
                 compile_raw_sierra(&serde_json::to_value(&program_for_testing().program).unwrap())
                     .unwrap(),
             ),
+            hints: Arc::new(std::collections::HashMap::new()),
             test_cases,
             tests_location: TestTargetLocation::Lib,
         }

@@ -4,6 +4,7 @@ use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
 use anyhow::Result;
 use build_trace_data::save_trace_data;
+use cairo_lang_casm::hints::Hint;
 use cairo_lang_sierra::program::{ConcreteTypeLongId, Function, TypeDeclaration};
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_config_extension::config::RawFuzzerConfig;
@@ -106,6 +107,7 @@ pub fn maybe_generate_coverage(
 pub fn run_for_test_case(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<RawCasmProgram>,
+    hints: Arc<HashMap<String, Hint>>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -115,6 +117,7 @@ pub fn run_for_test_case(
             let res = run_test(
                 case,
                 casm_program,
+                hints,
                 forge_config,
                 versioned_program_path,
                 send,
@@ -127,6 +130,7 @@ pub fn run_for_test_case(
             let res = run_with_fuzzing(
                 case,
                 casm_program,
+                hints,
                 forge_config.clone(),
                 versioned_program_path,
                 send,
@@ -141,6 +145,7 @@ pub fn run_for_test_case(
 fn run_with_fuzzing(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<RawCasmProgram>,
+    hints: Arc<HashMap<String, Hint>>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -168,13 +173,14 @@ fn run_with_fuzzing(
 
         let mut tasks = FuturesUnordered::new();
 
-        let program = case.try_into_program(&casm_program)?;
+        let program = case.program.clone();
 
         for _ in 1..=fuzzer_runs.get() {
             tasks.push(run_fuzz_test(
                 case.clone(),
                 program.clone(),
                 casm_program.clone(),
+                hints.clone(),
                 forge_config.clone(),
                 versioned_program_path.clone(),
                 send.clone(),
