@@ -26,9 +26,9 @@ async fn test_get_invoke_transaction() {
         Nonce:                       0x17f9e
         Calldata:                    [0x1, 0x424ce41bea300e095e763d9fb4316af76c9da9c0fa926009f25b42b6f4ad04a, 0xc844fd57777b0cd7e75c8ea68deec0adf964a6308da7a58de32364b7131cc8, 0x13, 0x441b0ab7fcd3923bd830e146e99ed90c4aebd19951eb6ed7b3713241aa8af, 0x29e701, 0xf29c0193adc354752489f1a7af2f507d72a5e5b76cce705094d05d72e21ab5, 0x6655cb7c, 0x304020100000000000000000000000000000000000000000000000000000000, 0x4, 0x27693e402, 0x276a2b3d2, 0x276a3f070, 0x276aeecf0, 0xb9eab07caffbd5538, 0x1, 0x2, 0x6771e459d1e5563ec13af0ca40f04406ff4b70e6cc9a534dce12957f46c0f24, 0x36383aebe2151145a66dd7a87d9c885a862339e35d2ee0bd9df4075d17a8979, 0x2cb74dff29a13dd5d855159349ec92f943bacf0547ff3734e7d84a15d08cbc5, 0xb1a29e2cfed2f0a9d5f137845280bb6ce746f2f4b6a2dd05ec794171f4012, 0x1f85c957582717816bd2c910ac678caf007f6f84d71bc5a95f38de0b6435163, 0x4225d1c8ee8e451a25e30c10689ef898e11ccf5c0f68d0fc7876c47b318e946]
         Account Deployment Data:     []
-        Resource Bounds L1 Gas:      max_amount=0x9bb9, max_price_per_unit=0xce10e398b639
-        Resource Bounds L1 Data Gas: max_amount=0x0, max_price_per_unit=0x0
-        Resource Bounds L2 Gas:      max_amount=0x0, max_price_per_unit=0x0
+        Resource Bounds L1 Gas:      max_amount=39865, max_price_per_unit=226571933234745
+        Resource Bounds L1 Data Gas: max_amount=0, max_price_per_unit=0
+        Resource Bounds L2 Gas:      max_amount=0, max_price_per_unit=0
         Tip:                         0
         Paymaster Data:              []
         Nonce DA Mode:               L1
@@ -106,9 +106,9 @@ async fn test_deploy_account_transaction() {
             Class Hash:                  0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564
             Contract Address Salt:       0x[..]
             Constructor Calldata:        [0x[..]]
-            Resource Bounds L1 Gas:      max_amount=0x186a0, max_price_per_unit=0x9184e72a000
-            Resource Bounds L1 Data Gas: max_amount=0x186a0, max_price_per_unit=0x9184e72a000
-            Resource Bounds L2 Gas:      max_amount=0x3b9aca00, max_price_per_unit=0x56bc75e2d63100000
+            Resource Bounds L1 Gas:      max_amount=100000, max_price_per_unit=10000000000000
+            Resource Bounds L1 Data Gas: max_amount=100000, max_price_per_unit=10000000000000
+            Resource Bounds L2 Gas:      max_amount=1000000000, max_price_per_unit=100000000000000000000
             Tip:                         0
             Paymaster Data:              []
             Nonce DA Mode:               L1
