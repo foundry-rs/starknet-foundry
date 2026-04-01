@@ -75,6 +75,7 @@ fn fork_simple_decorator() {
     assert_passed(&result);
 }
 
+#[allow(clippy::too_many_lines)]
 #[test]
 fn fork_aliased_decorator() {
     let test = test_case!(indoc!(
