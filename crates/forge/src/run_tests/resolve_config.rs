@@ -232,7 +232,7 @@ mod tests {
                     "https://not_taken.com",
                     BlockId::BlockNumber(120)
                 )],
-                &mut BlockNumberMap::default(),
+                &BlockNumberMap::default(),
                 &tests_filter,
             )
             .await
@@ -265,7 +265,7 @@ mod tests {
         let resolved = resolve_config(
             test_target,
             &[],
-            &mut BlockNumberMap::default(),
+            &BlockNumberMap::default(),
             &tests_filter,
         )
         .await
@@ -306,7 +306,7 @@ mod tests {
         let resolved = resolve_config(
             test_target,
             &fork_targets,
-            &mut BlockNumberMap::default(),
+            &BlockNumberMap::default(),
             &tests_filter,
         )
         .await
@@ -351,7 +351,7 @@ mod tests {
         let resolved = resolve_config(
             test_target,
             &fork_targets,
-            &mut BlockNumberMap::default(),
+            &BlockNumberMap::default(),
             &tests_filter,
         )
         .await
@@ -408,7 +408,7 @@ mod tests {
         let resolved = resolve_config(
             test_target,
             &fork_targets,
-            &mut BlockNumberMap::default(),
+            &BlockNumberMap::default(),
             &tests_filter,
         )
         .await
@@ -477,7 +477,7 @@ mod tests {
         let resolved = resolve_config(
             test_target,
             &fork_targets,
-            &mut BlockNumberMap::default(),
+            &BlockNumberMap::default(),
             &tests_filter,
         )
         .await
@@ -535,7 +535,7 @@ mod tests {
         let resolved = resolve_config(
             test_target,
             &fork_targets,
-            &mut BlockNumberMap::default(),
+            &BlockNumberMap::default(),
             &tests_filter,
         )
         .await
@@ -585,7 +585,7 @@ mod tests {
         let resolved = resolve_config(
             test_target,
             &[],
-            &mut BlockNumberMap::default(),
+            &BlockNumberMap::default(),
             &tests_filter,
         )
         .await
@@ -634,7 +634,7 @@ mod tests {
         let resolved = resolve_config(
             test_target,
             &fork_targets,
-            &mut BlockNumberMap::default(),
+            &BlockNumberMap::default(),
             &tests_filter,
         )
         .await
@@ -679,7 +679,7 @@ mod tests {
         let resolved = resolve_config(
             test_target,
             &fork_targets,
-            &mut BlockNumberMap::default(),
+            &BlockNumberMap::default(),
             &tests_filter,
         )
         .await
