@@ -55,8 +55,9 @@ impl ContractsDataStore {
                         .expect("this should be valid `ContractClass`");
 
                 let program = contract_class
-                    .extract_sierra_program()
-                    .expect("extraction should succeed");
+                    .extract_sierra_program(false)
+                    .expect("extraction should succeed")
+                    .program;
 
                 let debug_info = contract_class.sierra_program_debug_info;
 

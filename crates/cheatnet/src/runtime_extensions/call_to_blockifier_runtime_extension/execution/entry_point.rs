@@ -7,7 +7,7 @@ use crate::runtime_extensions::common::get_relocated_vm_trace;
 #[cfg(feature = "cairo-native")]
 use crate::runtime_extensions::native::execution::execute_entry_point_call_native;
 use crate::state::CheatStatus;
-use blockifier::execution::call_info::{BuiltinCounterMap, CallExecution, Retdata, StorageAccessTracker};
+use blockifier::execution::call_info::{CairoPrimitiveCounterMap, CallExecution, ExtendedExecutionResources, Retdata, StorageAccessTracker};
 use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
 use blockifier::execution::entry_point::EntryPointRevertInfo;
 use blockifier::execution::execution_utils::update_remaining_gas;
@@ -29,7 +29,7 @@ use blockifier::{
     },
     state::state_api::State,
 };
-use cairo_vm::vm::runners::cairo_runner::{CairoRunner, ExecutionResources};
+use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use conversions::FromConv;
 use shared::vm::VirtualMachineExt;
 use starknet_api::execution_resources::GasAmount;
@@ -80,7 +80,7 @@ pub fn execute_call_entry_point(
         cheat_status.decrement_cheat_span();
         let ret_data_f252: Vec<Felt> = ret_data.iter().map(|datum| Felt::from_(*datum)).collect();
         cheatnet_state.trace_data.update_current_call(
-            ExecutionResources::default(),
+            ExtendedExecutionResources::default(),
             u64::default(),
             SyscallUsageMap::default(),
             SyscallUsageMap::default(),
@@ -394,11 +394,11 @@ fn mocked_call_info(
             failed: false,
             gas_consumed: 0,
         },
-        resources: ExecutionResources::default(),
+        resources: ExtendedExecutionResources::default(),
         tracked_resource,
         inner_calls: vec![],
         storage_access_tracker: StorageAccessTracker::default(),
-        builtin_counters: BuiltinCounterMap::default(),
+        builtin_counters: CairoPrimitiveCounterMap::default(),
         syscalls_usage: SyscallUsageMap::default(),
     }
 }

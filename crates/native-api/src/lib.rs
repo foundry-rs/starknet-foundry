@@ -12,12 +12,12 @@ use starknet_api::contract_class::SierraVersion;
 pub fn compile_contract_class(contract_class: &ContractClass) -> AotContractExecutor {
     let sierra_version = extract_sierra_version(contract_class);
 
-    let sierra_program = contract_class
-        .extract_sierra_program()
+    let extracted = contract_class
+        .extract_sierra_program(false)
         .expect("extraction should succeed");
 
     AotContractExecutor::new(
-        &sierra_program,
+        &extracted.program,
         &contract_class.entry_points_by_type,
         sierra_version.clone().into(),
         cairo_native::OptLevel::Default,

@@ -6,7 +6,7 @@ use blockifier::execution::syscalls::vm_syscall_utils::{
 };
 
 use blockifier::blockifier_versioned_constants::VersionedConstants;
-use blockifier::execution::call_info::OrderedEvent;
+use blockifier::execution::call_info::{ExtendedExecutionResources, OrderedEvent};
 use cairo_annotations::trace_data::{
     CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint,
     CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
@@ -17,7 +17,6 @@ use cairo_annotations::trace_data::{
     SyscallUsage as ProfilerSyscallUsage, TraceEntry as ProfilerTraceEntry,
     VersionedCallTrace as VersionedProfilerCallTrace, VmExecutionResources,
 };
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::forking::data::ForkData;
@@ -139,7 +138,7 @@ fn build_profiler_call_trace_node(
 
 #[must_use]
 pub fn build_profiler_execution_resources(
-    execution_resources: &ExecutionResources,
+    execution_resources: &ExtendedExecutionResources,
     syscall_usage_vm_resources: &SyscallUsageMap,
     syscall_usage_sierra_gas: &SyscallUsageMap,
     gas_consumed: u64,
@@ -147,7 +146,7 @@ pub fn build_profiler_execution_resources(
     // Subtract syscall related resources to get the values expected by the profiler.
     // The profiler operates on resources excluding syscall overhead.
     let versioned_constants = VersionedConstants::latest_constants();
-    let execution_resources = execution_resources
+    let execution_resources = &execution_resources.vm_resources.clone()
         - &versioned_constants.get_additional_os_syscall_resources(syscall_usage_vm_resources);
     let gas_consumed =
         gas_consumed - get_syscalls_gas_consumed(syscall_usage_sierra_gas, versioned_constants);
