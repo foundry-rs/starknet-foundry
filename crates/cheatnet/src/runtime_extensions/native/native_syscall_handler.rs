@@ -18,6 +18,7 @@ use cairo_native::starknet::{
     Secp256r1Point, StarknetSyscallHandler, SyscallResult, TxV2Info, TxV3Info, U256,
 };
 use num_traits::ToPrimitive;
+use starknet_api::block::BlockNumber;
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::execution_resources::GasAmount;
@@ -196,7 +197,7 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
             match self
                 .native_syscall_handler
                 .base
-                .get_block_hash(block_number)
+                .get_block_hash(BlockNumber(block_number))
             {
                 Ok(value) => Ok(value),
                 Err(e) => Err(self.handle_error(remaining_gas, e)),
