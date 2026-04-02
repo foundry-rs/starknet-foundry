@@ -1,6 +1,5 @@
 use crate::e2e::account::create_account;
 use crate::helpers::constants::{MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA, URL};
-use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::get_transaction_hash;
 use crate::helpers::runner::runner;
 use conversions::string::IntoHexStr;
@@ -81,7 +80,6 @@ async fn test_deploy_account_transaction() {
         "--name",
         "my_account",
     ];
-    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
