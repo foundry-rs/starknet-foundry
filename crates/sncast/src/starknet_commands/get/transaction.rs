@@ -7,6 +7,7 @@ use sncast::response::errors::StarknetCommandError;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transaction::TransactionResponse;
 use sncast::response::ui::UI;
+use starknet_rust::core::types::TransactionResponseFlag;
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, Provider};
 use starknet_types_core::felt::Felt;
@@ -17,6 +18,10 @@ pub struct Transaction {
     /// Hash of the transaction
     pub transaction_hash: Felt,
 
+    /// Include proof facts in transaction response
+    #[arg(long)]
+    pub with_proof_facts: bool,
+
     #[command(flatten)]
     pub rpc: RpcArgs,
 }
@@ -24,7 +29,7 @@ pub struct Transaction {
 pub async fn transaction(tx: Transaction, config: CastConfig, ui: &UI) -> anyhow::Result<()> {
     let provider = tx.rpc.get_provider(&config, ui).await?;
 
-    let result = get_transaction(&provider, tx.transaction_hash)
+    let result = get_transaction(&provider, tx.transaction_hash, tx.with_proof_facts)
         .await
         .context("Failed to get transaction");
 
@@ -38,9 +43,15 @@ pub async fn transaction(tx: Transaction, config: CastConfig, ui: &UI) -> anyhow
 async fn get_transaction(
     provider: &JsonRpcClient<HttpTransport>,
     transaction_hash: Felt,
+    with_proof_facts: bool,
 ) -> Result<TransactionResponse, StarknetCommandError> {
+    let response_flags = if with_proof_facts {
+        Some(&[TransactionResponseFlag::IncludeProofFacts][..])
+    } else {
+        None
+    };
     provider
-        .get_transaction_by_hash(transaction_hash)
+        .get_transaction_by_hash(transaction_hash, response_flags)
         .await
         .map(TransactionResponse)
         .map_err(|err| StarknetCommandError::ProviderError(err.into()))
