@@ -58,6 +58,7 @@ pub async fn resolve_config(
         sierra_program: test_target.sierra_program,
         sierra_program_path: test_target.sierra_program_path,
         casm_program: test_target.casm_program,
+        hints: test_target.hints,
         test_cases,
     })
 }
@@ -192,6 +193,7 @@ mod tests {
                 compile_raw_sierra(&serde_json::to_value(&program_for_testing().program).unwrap())
                     .unwrap(),
             ),
+            hints: Arc::new(std::collections::HashMap::new()),
             test_cases,
             tests_location: TestTargetLocation::Lib,
         }
