@@ -16,6 +16,7 @@ use scarb_api::manifest::ManifestEditor;
 use scarb_api::metadata::{Metadata, MetadataOpts, metadata_with_opts};
 use scarb_api::{target_dir_for_workspace, test_targets_by_name};
 use starknet_api::transaction::fields::GasVectorComputationMode;
+use starknet_api::versioned_constants_logic::VersionedConstantsTrait;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use std::{env, fs};

@@ -17,20 +17,18 @@ use crate::runtime_extensions::{
 use crate::trace_data::{CallTrace, CallTraceNode, GasReportData};
 use anyhow::{Context, Result, anyhow};
 use blockifier::blockifier_versioned_constants::VersionedConstants;
-use blockifier::bouncer::vm_resources_to_gas;
+use blockifier::bouncer::extended_execution_resources_to_gas;
 use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::{
-    CallInfo, CallSummary, ChargedResources, EventSummary, ExecutionSummary, OrderedEvent,
+    CallInfo, CallSummary, ChargedResources, EventSummary, ExecutionSummary,
+    ExtendedExecutionResources, OrderedEvent,
 };
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, SyscallUsageMap};
 use blockifier::state::errors::StateError;
 use blockifier::utils::u64_from_usize;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
-use cairo_vm::vm::{
-    errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
-    vm_core::VirtualMachine,
-};
+use cairo_vm::vm::{errors::hint_errors::HintError, vm_core::VirtualMachine};
 use conversions::byte_array::ByteArray;
 use conversions::felt::{ToShortString, TryInferFormat};
 use conversions::serde::SerializedValue;
@@ -44,6 +42,7 @@ use runtime::{
 };
 use scarb_oracle_hint_service::OracleHintService;
 use starknet_api::execution_resources::GasAmount;
+use starknet_api::versioned_constants_logic::VersionedConstantsTrait;
 use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
 use starknet_rust::signers::SigningKey;
 use starknet_types_core::felt::Felt;
@@ -623,7 +622,7 @@ fn handle_declare_result<T: CairoSerialize>(
 
 pub fn add_resources_to_top_call(
     runtime: &mut ForgeRuntime,
-    resources: &ExecutionResources,
+    resources: &ExtendedExecutionResources,
     tracked_resource: &TrackedResource,
 ) {
     let versioned_constants = runtime
@@ -647,11 +646,15 @@ pub fn add_resources_to_top_call(
     let mut top_call = top_call.borrow_mut();
 
     match tracked_resource {
-        TrackedResource::CairoSteps => top_call.used_execution_resources += resources,
+        TrackedResource::CairoSteps => top_call.used_execution_resources += &resources.vm_resources,
         TrackedResource::SierraGas => {
             let builtin_gas_costs = versioned_constants.os_constants.gas_costs.builtins;
-            top_call.gas_consumed +=
-                vm_resources_to_gas(&resources.clone(), &builtin_gas_costs, versioned_constants).0;
+            top_call.gas_consumed += extended_execution_resources_to_gas(
+                &resources.clone(),
+                &builtin_gas_costs,
+                versioned_constants,
+            )
+            .0;
         }
     }
 }
@@ -809,7 +812,7 @@ pub fn compute_and_store_execution_summary(trace: &Rc<RefCell<CallTrace>>) {
             + nested_calls_summaries.into_iter().sum();
 
         // vm_resources and gas_consumed of a call already contain the resources of its inner calls.
-        current_call_summary.charged_resources.vm_resources =
+        current_call_summary.charged_resources.extended_vm_resources =
             trace.borrow().used_execution_resources.clone();
         current_call_summary.charged_resources.gas_consumed =
             GasAmount(trace.borrow().gas_consumed);
@@ -824,7 +827,7 @@ fn get_execution_summary_without_nested_calls(trace: &Rc<RefCell<CallTrace>>) ->
     let current_call = trace.borrow();
     ExecutionSummary {
         charged_resources: ChargedResources {
-            vm_resources: current_call.used_execution_resources.clone(),
+            extended_vm_resources: current_call.used_execution_resources.clone(),
             gas_consumed: GasAmount(current_call.gas_consumed),
         },
         l2_to_l1_payload_lengths: current_call.used_l1_resources.l2_l1_message_sizes.clone(),
@@ -857,7 +860,7 @@ fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
 }
 
 #[expect(clippy::needless_pass_by_value)]
-fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResources {
+fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExtendedExecutionResources {
     let mut execution_resources = top_call.borrow().used_execution_resources.clone();
     for nested_call in &top_call.borrow().nested_calls {
         match nested_call {
@@ -899,7 +902,11 @@ fn calculate_vm_steps_from_calls(top_call: &Rc<RefCell<CallTrace>>) -> usize {
         .iter()
         .fold(0, |acc, node| match node {
             CallTraceNode::EntryPointCall(call_trace) => {
-                acc + call_trace.borrow().used_execution_resources.n_steps
+                acc + call_trace
+                    .borrow()
+                    .used_execution_resources
+                    .vm_resources
+                    .n_steps
             }
             CallTraceNode::DeployWithoutConstructor => acc,
         })

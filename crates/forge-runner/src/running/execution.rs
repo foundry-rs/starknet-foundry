@@ -1,12 +1,11 @@
-use blockifier::execution::call_info::{CallExecution, CallInfo};
+use blockifier::execution::call_info::{CallExecution, CallInfo, ExtendedExecutionResources};
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point_execution::{
-    extract_vm_resources, finalize_runner, get_call_result, total_vm_resources,
+    extract_extended_vm_resources, finalize_runner, get_call_result, total_vm_resources,
 };
 use blockifier::execution::errors::PostExecutionError;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::transaction::objects::ExecutionResourcesTraits;
-use cairo_vm::vm::runners::cairo_runner::{CairoRunner, ExecutionResources};
+use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 
 // Based on the code from blockifer
 #[tracing::instrument(skip_all, level = "debug")]
@@ -26,11 +25,14 @@ pub fn finalize_execution(
 
     let call_result = get_call_result(runner, syscall_handler, &tracked_resource)?;
 
-    let vm_resources_without_inner_calls = extract_vm_resources(runner, syscall_handler)?;
+    // Take into account the resources of the current call, without inner calls.
+    // Has to happen after marking holes in segments as accessed.
+    let extended_resources_without_inner_calls =
+        extract_extended_vm_resources(runner, syscall_handler)?;
 
     let tracked_vm_resources_without_inner_calls = match tracked_resource {
-        TrackedResource::CairoSteps => &vm_resources_without_inner_calls,
-        TrackedResource::SierraGas => &ExecutionResources::default(),
+        TrackedResource::CairoSteps => &extended_resources_without_inner_calls,
+        TrackedResource::SierraGas => &ExtendedExecutionResources::default(),
     };
 
     syscall_handler.finalize();
@@ -56,7 +58,9 @@ pub fn finalize_execution(
         tracked_resource,
         resources: vm_resources,
         storage_access_tracker: syscall_handler_base.storage_access_tracker.clone(),
-        builtin_counters: vm_resources_without_inner_calls.prover_builtins(),
+        builtin_counters: extended_resources_without_inner_calls.prover_cairo_primitives(),
+        // TODO: Investigate if we can reduce our logic given that syscall usage is now present in `CallInfo`
+        syscalls_usage: syscall_handler_base.syscalls_usage.clone(),
     })
     // endregion
 }

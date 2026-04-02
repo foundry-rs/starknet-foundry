@@ -381,6 +381,7 @@ pub fn assert_builtin(
                     used_resources
                         .execution_summary
                         .charged_resources
+                        .extended_vm_resources
                         .vm_resources
                         .builtin_instance_counter
                         .get(&builtin)
