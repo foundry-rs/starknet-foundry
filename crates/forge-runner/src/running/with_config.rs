@@ -57,11 +57,14 @@ pub fn test_target_with_config(
 
             let test_details = build_test_details(func, &type_declarations);
 
-            let raw_config = run_config_pass(&test_details, &casm_program, tracked_resource)?;
+            let program = test_details.try_into_program(&casm_program)?;
+            let raw_config =
+                run_config_pass(&test_details, &program, &casm_program, tracked_resource)?;
 
             Ok(TestCaseWithConfig {
                 config: raw_config.into(),
                 name: case.debug_name.clone().unwrap().into(),
+                program,
                 test_details,
             })
         })
