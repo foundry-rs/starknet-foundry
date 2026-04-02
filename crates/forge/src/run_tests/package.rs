@@ -23,12 +23,11 @@ use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use console::Style;
 use forge_runner::{
-    forge_config::ForgeConfig,
+    forge_config::{ForgeConfig, ForgeTrackedResource},
     package_tests::{
         raw::TestTargetRaw,
-        with_config_resolved::{
-            TestCaseWithResolvedConfig, TestTargetWithResolvedConfig, sanitize_test_case_name,
-        },
+        with_config::TestTargetWithConfig,
+        with_config_resolved::{TestCaseWithResolvedConfig, sanitize_test_case_name},
     },
     partition::PartitionConfig,
     running::with_config::test_target_with_config,
@@ -40,6 +39,7 @@ use foundry_ui::{UI, components::labeled::LabeledMessage};
 use scarb_api::{CompilationOpts, get_contracts_artifacts_and_source_sierra_paths};
 use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
+use tokio::task::JoinHandle;
 
 pub struct PackageTestResult {
     summaries: Vec<TestTargetSummary>,
@@ -67,11 +67,12 @@ impl PackageTestResult {
 }
 
 pub struct RunForPackageArgs {
-    pub test_targets: Vec<TestTargetRaw>,
+    pub config_handles: Vec<JoinHandle<Result<TestTargetWithConfig>>>,
     pub tests_filter: TestsFilter,
     pub forge_config: Arc<ForgeConfig>,
     pub fork_targets: Vec<ForkTarget>,
     pub package_name: String,
+    pub package_root: Utf8PathBuf,
 }
 
 impl RunForPackageArgs {
@@ -85,7 +86,7 @@ impl RunForPackageArgs {
         partitioning_config: PartitionConfig,
         ui: &UI,
     ) -> Result<RunForPackageArgs> {
-        let raw_test_targets = load_test_artifacts(artifacts_dir, &package)?;
+        let mut raw_test_targets = load_test_artifacts(artifacts_dir, &package)?;
 
         let contracts = get_contracts_artifacts_and_source_sierra_paths(
             artifacts_dir,
@@ -120,7 +121,7 @@ impl RunForPackageArgs {
             args.trace_args.clone(),
         ));
 
-        let test_filter = TestsFilter::from_flags(
+        let tests_filter = TestsFilter::from_flags(
             args.test_filter.clone(),
             args.exact,
             args.skip.clone(),
@@ -131,49 +132,33 @@ impl RunForPackageArgs {
             partitioning_config,
         );
 
+        if args.deterministic_output {
+            raw_test_targets.sort_by_key(|t| t.tests_location);
+        }
+
+        let tracked_resource = forge_config.test_runner_config.tracked_resource;
+
+        let config_handles = raw_test_targets
+            .into_iter()
+            .map(|t| spawn_config_pass(t, tracked_resource))
+            .collect();
+
         Ok(RunForPackageArgs {
-            test_targets: raw_test_targets,
+            config_handles,
             forge_config,
-            tests_filter: test_filter,
+            tests_filter,
             fork_targets: forge_config_from_scarb.fork,
-            package_name: package.name,
+            package_name: package.name.clone(),
+            package_root: package.root,
         })
     }
 }
 
-#[tracing::instrument(skip_all, level = "debug")]
-async fn test_package_with_config_resolved(
-    test_targets: Vec<TestTargetRaw>,
-    fork_targets: &[ForkTarget],
-    block_number_map: &mut BlockNumberMap,
-    forge_config: &ForgeConfig,
-    tests_filter: &TestsFilter,
-) -> Result<Vec<TestTargetWithResolvedConfig>> {
-    let mut test_targets_with_resolved_config = Vec::with_capacity(test_targets.len());
-
-    for test_target in test_targets {
-        let test_target = test_target_with_config(
-            test_target,
-            &forge_config.test_runner_config.tracked_resource,
-        )?;
-
-        let test_target =
-            resolve_config(test_target, fork_targets, block_number_map, tests_filter).await?;
-
-        test_targets_with_resolved_config.push(test_target);
-    }
-
-    Ok(test_targets_with_resolved_config)
-}
-
-fn sum_test_cases_from_package(
-    test_targets: &[TestTargetWithResolvedConfig],
-    partitioning_config: &PartitionConfig,
-) -> usize {
-    test_targets
-        .iter()
-        .map(|tt| sum_test_cases_from_test_target(&tt.test_cases, partitioning_config))
-        .sum()
+fn spawn_config_pass(
+    target: TestTargetRaw,
+    tracked_resource: ForgeTrackedResource,
+) -> JoinHandle<Result<TestTargetWithConfig>> {
+    tokio::task::spawn_blocking(move || test_target_with_config(target, &tracked_resource))
 }
 
 fn sum_test_cases_from_test_target(
@@ -200,61 +185,66 @@ fn sum_test_cases_from_test_target(
 #[tracing::instrument(skip_all, level = "debug")]
 pub async fn run_for_package(
     RunForPackageArgs {
-        test_targets,
+        config_handles,
         forge_config,
         tests_filter,
         fork_targets,
         package_name,
+        package_root: _,
     }: RunForPackageArgs,
-    block_number_map: &mut BlockNumberMap,
+    block_number_map: &BlockNumberMap,
     ui: Arc<UI>,
     exit_first_channel: &mut ExitFirstChannel,
-    deterministic_output: bool,
 ) -> Result<PackageTestResult> {
-    let mut test_targets = test_package_with_config_resolved(
-        test_targets,
-        &fork_targets,
-        block_number_map,
-        &forge_config,
-        &tests_filter,
-    )
-    .await?;
-    let all_tests = sum_test_cases_from_package(&test_targets, &tests_filter.partitioning_config);
+    // Resolve all targets first so the collected count includes #[ignore] filtering.
+    let mut resolved_targets = vec![];
+    let mut all_tests = 0;
+    let mut not_filtered_total = 0;
 
-    for test_target in &mut test_targets {
-        tests_filter.filter_tests(&mut test_target.test_cases)?;
+    for handle in config_handles {
+        let with_config = handle.await??;
+
+        let mut resolved =
+            resolve_config(with_config, &fork_targets, block_number_map, &tests_filter).await?;
+
+        let all = sum_test_cases_from_test_target(
+            &resolved.test_cases,
+            &tests_filter.partitioning_config,
+        );
+        tests_filter.filter_tests(&mut resolved.test_cases)?;
+        let not_filtered = sum_test_cases_from_test_target(
+            &resolved.test_cases,
+            &tests_filter.partitioning_config,
+        );
+        all_tests += all;
+        not_filtered_total += not_filtered;
+
+        resolved_targets.push(resolved);
     }
 
-    warn_if_incompatible_rpc_version(&test_targets, ui.clone()).await?;
-
-    let not_filtered =
-        sum_test_cases_from_package(&test_targets, &tests_filter.partitioning_config);
     ui.println(&CollectedTestsCountMessage {
-        tests_num: not_filtered,
+        tests_num: not_filtered_total,
         package_name: package_name.clone(),
     });
 
+    warn_if_incompatible_rpc_version(&resolved_targets, ui.clone()).await?;
+
     let mut summaries = vec![];
 
-    if deterministic_output {
-        test_targets.sort_by_key(|t| t.tests_location);
-    }
-
-    for test_target in test_targets {
-        let ui = ui.clone();
+    for resolved in resolved_targets {
         ui.println(&TestsRunMessage::new(
-            test_target.tests_location,
+            resolved.tests_location,
             sum_test_cases_from_test_target(
-                &test_target.test_cases,
+                &resolved.test_cases,
                 &tests_filter.partitioning_config,
             ),
         ));
 
         let summary = run_for_test_target(
-            test_target,
+            resolved,
             forge_config.clone(),
             &tests_filter,
-            ui,
+            ui.clone(),
             exit_first_channel,
         )
         .await?;
@@ -267,7 +257,7 @@ pub async fn run_for_package(
     let filtered_count = if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
         None
     } else {
-        Some(all_tests - not_filtered)
+        Some(all_tests - not_filtered_total)
     };
 
     ui.println(&TestsSummaryMessage::new(&summaries, filtered_count));
