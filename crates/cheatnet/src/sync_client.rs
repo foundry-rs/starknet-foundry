@@ -1,5 +1,7 @@
 use starknet_api::block::BlockNumber;
-use starknet_rust::core::types::{BlockId, ContractClass, MaybePreConfirmedBlockWithTxHashes};
+use starknet_rust::core::types::{
+    BlockId, ContractClass, GetStorageAtResult, MaybePreConfirmedBlockWithTxHashes,
+};
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, Provider, ProviderError};
 use starknet_types_core::felt::Felt;
@@ -36,8 +38,14 @@ impl SyncClient {
     pub fn get_storage_at(&self, contract_address: Felt, key: Felt) -> Result<Felt, ProviderError> {
         self.sync(
             self.client
-                .get_storage_at(contract_address, key, self.block_id),
+                .get_storage_at(contract_address, key, self.block_id, None),
         )
+        .map(|storage_response| match storage_response {
+            GetStorageAtResult::Value(value) => value,
+            GetStorageAtResult::ValueWithMetadata(result_with_metadata) => {
+                result_with_metadata.value
+            }
+        })
     }
 
     pub fn get_nonce(&self, contract_address: Felt) -> Result<Felt, ProviderError> {
