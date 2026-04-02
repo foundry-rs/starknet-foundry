@@ -104,9 +104,9 @@ async fn test_deploy_account_transaction() {
             Class Hash:                  0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564
             Contract Address Salt:       0x[..]
             Constructor Calldata:        [0x[..]]
-            Resource Bounds L1 Gas:      max_amount=100000, max_price_per_unit=10000000000000
-            Resource Bounds L1 Data Gas: max_amount=100000, max_price_per_unit=10000000000000
-            Resource Bounds L2 Gas:      max_amount=1000000000, max_price_per_unit=100000000000000000000
+            Resource Bounds L1 Gas:      max_amount=0, max_price_per_unit=1500000000
+            Resource Bounds L1 Data Gas: max_amount=672, max_price_per_unit=1500000000
+            Resource Bounds L2 Gas:      max_amount=1313760, max_price_per_unit=1500000000
             Tip:                         0
             Paymaster Data:              []
             Nonce DA Mode:               L1
