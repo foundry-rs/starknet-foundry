@@ -76,8 +76,7 @@ pub async fn declare<S>(
     ui: &UI,
 ) -> Result<DeclareResponse, StarknetCommandError>
 where
-    S: Signer + Sync + Send + 'static,
-    S::SignError: 'static,
+    S: Signer + Sync + Send,
 {
     let contract_artifacts =
         artifacts
@@ -137,8 +136,7 @@ pub async fn declare_with_artifacts<S>(
     ui: &UI,
 ) -> Result<DeclareResponse, StarknetCommandError>
 where
-    S: Signer + Sync + Send + 'static,
-    S::SignError: 'static,
+    S: Signer + Sync + Send,
 {
     let starknet_version = get_starknet_version(account.provider()).await?;
     let hash_function = CompiledClass::hash_function_from_starknet_version(&starknet_version)
@@ -162,7 +160,7 @@ where
         .await
     {
         return result
-            .context("Failed to estimate fee for dry run")
+            .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"))
             .map_err(StarknetCommandError::from);
     }
 

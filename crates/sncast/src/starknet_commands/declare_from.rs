@@ -109,8 +109,7 @@ pub async fn declare_from<S>(
     ui: &UI,
 ) -> Result<DeclareResponse, StarknetCommandError>
 where
-    S: Signer + Sync + Send + 'static,
-    S::SignError: 'static,
+    S: Signer + Sync + Send,
 {
     let sierra = match &contract_source {
         ContractSource::LocalFile { sierra_path } => {

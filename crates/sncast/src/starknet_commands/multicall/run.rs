@@ -5,7 +5,7 @@ use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::deploy::MulticallDeploy;
 use crate::starknet_commands::multicall::invoke::MulticallInvoke;
 use crate::starknet_commands::utils::felt_or_id::FeltOrId;
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
@@ -91,7 +91,7 @@ pub async fn run<S>(
     ui: &UI,
 ) -> Result<MulticallRunResponse>
 where
-    S: Signer + Sync + Send + 'static,
+    S: Signer + Sync + Send,
 {
     let fee_args = run.fee_args.clone();
     let dry_run_args = run.dry_run_args.clone();
@@ -133,7 +133,7 @@ where
         )
         .await
     {
-        return result.context("Failed to estimate fee for dry run");
+        return result.map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"));
     }
 
     execute_calls(account, parsed_calls, fee_args, nonce, wait_config, ui)

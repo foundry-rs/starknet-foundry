@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result, anyhow, bail};
 use clap::{Args, Command, FromArgMatches};
 use conversions::IntoConv;
 use sncast::{
@@ -64,7 +64,7 @@ pub async fn execute<S>(
     ui: &UI,
 ) -> Result<MulticallRunResponse>
 where
-    S: Signer + Sync + Send + 'static,
+    S: Signer + Sync + Send,
 {
     let command_groups = extract_commands_groups(&execute.tokens, "/", &ALLOWED_MULTICALL_COMMANDS);
 
@@ -108,7 +108,7 @@ where
         )
         .await
     {
-        return result.context("Failed to estimate fee for dry run");
+        return result.map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"));
     }
 
     execute_calls(

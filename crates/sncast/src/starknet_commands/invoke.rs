@@ -1,6 +1,6 @@
 use crate::Arguments;
 use crate::starknet_commands::utils::felt_or_id::FeltOrId;
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use sncast::helpers::dry_run::DryRunArgs;
@@ -66,7 +66,6 @@ pub async fn invoke<S>(
 ) -> Result<InvokeResponse, StarknetCommandError>
 where
     S: Signer + Sync + Send,
-    S::SignError: 'static,
 {
     let call = Call {
         to: contract_address,
@@ -82,7 +81,7 @@ where
         .await
     {
         return result
-            .context("Failed to estimate fee for dry run")
+            .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"))
             .map_err(StarknetCommandError::from);
     }
 
@@ -105,7 +104,6 @@ pub async fn execute_calls<S>(
 ) -> Result<InvokeTransactionResult, StarknetCommandError>
 where
     S: Signer + Sync + Send,
-    S::SignError: 'static,
 {
     let execution = create_execution(account, calls, fee_args, nonce).await;
 
@@ -134,7 +132,6 @@ pub async fn create_execution<'a, S>(
 ) -> ExecutionV3<'a, SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, S>>
 where
     S: Signer + Sync + Send,
-    S::SignError: 'static,
 {
     let execution_calls = account.execute_v3(calls);
 

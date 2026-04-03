@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use sncast::helpers::dry_run::DryRunArgs;
@@ -97,7 +97,7 @@ pub async fn deploy<S>(
     ui: &UI,
 ) -> Result<StandardDeployResponse, StarknetCommandError>
 where
-    S: Signer + Sync + Send + 'static,
+    S: Signer + Sync + Send,
 {
     let salt = extract_or_generate_salt(salt);
 
@@ -111,7 +111,7 @@ where
         .await
     {
         return result
-            .context("Failed to estimate fee for dry run")
+            .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"))
             .map_err(StarknetCommandError::from);
     }
 
