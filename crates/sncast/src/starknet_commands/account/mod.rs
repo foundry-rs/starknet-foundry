@@ -297,6 +297,7 @@ pub async fn account(
             let provider = deploy.rpc.get_provider(&config, ui).await?;
 
             let fee_args = deploy.fee_args.clone();
+            let dry_run_args = deploy.dry_run_args.clone();
 
             let chain_id = get_chain_id(&provider).await?;
             let result = starknet_commands::account::deploy::deploy(
@@ -308,6 +309,7 @@ pub async fn account(
                 &config.account,
                 config.keystore.clone(),
                 fee_args,
+                dry_run_args,
                 ui,
             )
             .await;

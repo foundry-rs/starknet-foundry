@@ -3,10 +3,11 @@ use crate::starknet_commands::utils::felt_or_id::FeltOrId;
 use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
+use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
-use sncast::response::invoke::InvokeResponse;
+use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
 use sncast::response::ui::UI;
 use sncast::{WaitForTx, apply_optional_fields, handle_wait_for_tx};
 use starknet_rust::accounts::AccountError::Provider;
@@ -40,6 +41,9 @@ pub struct Invoke {
     #[command(flatten)]
     pub fee_args: FeeArgs,
 
+    #[command(flatten)]
+    pub dry_run_args: DryRunArgs,
+
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[arg(short, long)]
     pub nonce: Option<Felt>,
@@ -54,6 +58,7 @@ pub async fn invoke<S>(
     calldata: Vec<Felt>,
     nonce: Option<Felt>,
     fee_args: FeeArgs,
+    dry_run_args: DryRunArgs,
     function_selector: Felt,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     wait_config: WaitForTx,
@@ -68,7 +73,25 @@ where
         calldata,
     };
 
-    execute_calls(account, vec![call], fee_args, nonce, wait_config, ui).await
+    if let Some(result) = dry_run_args
+        .estimate_if_dry_run(
+            || async { account.execute_v3(vec![call.clone()]).estimate_fee().await },
+            InvokeResponse::DryRun,
+        )
+        .await
+    {
+        return result
+            .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"))
+            .map_err(StarknetCommandError::from);
+    }
+
+    execute_calls(account, vec![call], fee_args, nonce, wait_config, ui)
+        .await
+        .map(|result| {
+            InvokeResponse::Transaction(InvokeTransactionResponse {
+                transaction_hash: result.transaction_hash.into_(),
+            })
+        })
 }
 
 pub async fn execute_calls<S>(
@@ -78,7 +101,35 @@ pub async fn execute_calls<S>(
     nonce: Option<Felt>,
     wait_config: WaitForTx,
     ui: &UI,
-) -> Result<InvokeResponse, StarknetCommandError>
+) -> Result<InvokeTransactionResult, StarknetCommandError>
+where
+    S: Signer + Sync + Send,
+{
+    let execution = create_execution(account, calls, fee_args, nonce).await;
+
+    let result = execution.send().await;
+
+    match result {
+        Ok(invoke_response) => handle_wait_for_tx(
+            account.provider(),
+            invoke_response.transaction_hash,
+            invoke_response,
+            wait_config,
+            ui,
+        )
+        .await
+        .map_err(StarknetCommandError::from),
+        Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
+        Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
+    }
+}
+
+pub async fn create_execution<'a, S>(
+    account: &'a SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, S>,
+    calls: Vec<Call>,
+    fee_args: FeeArgs,
+    nonce: Option<Felt>,
+) -> ExecutionV3<'a, SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, S>>
 where
     S: Signer + Sync + Send,
 {
@@ -104,7 +155,7 @@ where
         tip,
     } = fee_settings.expect("Failed to convert to fee settings");
 
-    let execution = apply_optional_fields!(
+    apply_optional_fields!(
         execution_calls,
         l1_gas => ExecutionV3::l1_gas,
         l1_gas_price => ExecutionV3::l1_gas_price,
@@ -114,22 +165,5 @@ where
         l1_data_gas_price => ExecutionV3::l1_data_gas_price,
         tip => ExecutionV3::tip,
         nonce => ExecutionV3::nonce
-    );
-    let result = execution.send().await;
-
-    match result {
-        Ok(InvokeTransactionResult { transaction_hash }) => handle_wait_for_tx(
-            account.provider(),
-            transaction_hash,
-            InvokeResponse {
-                transaction_hash: transaction_hash.into_(),
-            },
-            wait_config,
-            ui,
-        )
-        .await
-        .map_err(StarknetCommandError::from),
-        Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
-        Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
-    }
+    )
 }

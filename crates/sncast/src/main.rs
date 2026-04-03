@@ -27,6 +27,7 @@ use sncast::helpers::command::process_command_result;
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
+use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
@@ -337,6 +338,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 starknet_commands::declare::declare(
                     declare.contract_name.clone(),
                     declare.common.fee_args,
+                    declare.common.dry_run_args,
                     declare.common.nonce,
                     account,
                     &artifacts,
@@ -345,16 +347,19 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     ui,
                 )
                 .await
-            })
-            .map_err(handle_starknet_command_error)
-            .map(|result| match result {
-                DeclareResponse::Success(declare_transaction_response) => {
-                    declare_transaction_response
+            });
+
+            let result = match result {
+                Ok(DeclareResponse::DryRun(response)) => {
+                    process_command_result("declare", Ok(response), ui, None);
+                    return Ok(());
                 }
-                DeclareResponse::AlreadyDeclared(_) => {
+                Ok(DeclareResponse::Success(tx)) => Ok(tx),
+                Ok(DeclareResponse::AlreadyDeclared(_)) => {
                     unreachable!("Argument `skip_on_already_declared` is false")
                 }
-            });
+                Err(e) => Err(handle_starknet_command_error(e)),
+            };
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
@@ -419,16 +424,19 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     ui,
                 )
                 .await
-            })
-            .map_err(handle_starknet_command_error)
-            .map(|result| match result {
-                DeclareResponse::Success(declare_transaction_response) => {
-                    declare_transaction_response
+            });
+
+            let result = match result {
+                Ok(DeclareResponse::DryRun(response)) => {
+                    process_command_result("declare", Ok(response), ui, None);
+                    return Ok(());
                 }
-                DeclareResponse::AlreadyDeclared(_) => {
+                Ok(DeclareResponse::Success(tx)) => Ok(tx),
+                Ok(DeclareResponse::AlreadyDeclared(_)) => {
                     unreachable!("Argument `skip_on_already_declared` is false")
                 }
-            });
+                Err(e) => Err(handle_starknet_command_error(e)),
+            };
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
@@ -448,9 +456,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         unique,
                     },
                 fee_args,
+                dry_run_args,
                 rpc,
                 mut nonce,
-                ..
             } = deploy;
 
             let provider = rpc.get_provider(&config, ui).await?;
@@ -475,10 +483,16 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 )
                 .expect("Failed to build contract");
 
+                let declare_fee_args = fee_args.clone();
+
                 let declare_result = with_account!(&account, |account| {
                     declare(
                         contract_name,
-                        fee_args.clone(),
+                        declare_fee_args,
+                        DryRunArgs {
+                            dry_run: false,
+                            detailed: false,
+                        },
                         nonce,
                         account,
                         &artifacts,
@@ -505,6 +519,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         declare_transaction_response.class_hash.into_(),
                         Some(declare_transaction_response),
                     ),
+                    Ok(DeclareResponse::DryRun(_)) => {
+                        unreachable!(
+                            "Declaration run by deploy command should not return dry run response"
+                        )
+                    }
                     Err(err) => {
                         // TODO(#3960) This will return json output saying that `deploy` command was run
                         //  even though the invoked command was declare.
@@ -535,7 +554,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     &calldata,
                     salt,
                     unique,
-                    fee_args,
+                    fee_args.clone(),
+                    dry_run_args.clone(),
                     nonce,
                     account,
                     wait_config,
@@ -611,9 +631,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         arguments,
                     },
                 fee_args,
+                dry_run_args,
                 rpc,
                 nonce,
-                ..
             } = invoke;
 
             let provider = rpc.get_provider(&config, ui).await?;
@@ -634,7 +654,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     contract_address,
                     calldata,
                     nonce,
-                    fee_args,
+                    fee_args.clone(),
+                    dry_run_args.clone(),
                     selector,
                     account,
                     wait_config,
