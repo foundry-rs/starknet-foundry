@@ -37,7 +37,7 @@ impl DryRunResponse {
 
 impl SncastCommandMessage for DryRunResponse {
     fn text(&self) -> String {
-        let overall_fee_strk = BigDecimal::new(self.overall_fee.into(), 18.into());
+        let overall_fee_strk = BigDecimal::new(self.overall_fee.into(), 18);
         let mut builder = styling::OutputBuilder::new()
             .success_message("Dry run completed")
             .blank_line()

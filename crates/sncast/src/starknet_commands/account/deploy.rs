@@ -98,6 +98,7 @@ pub async fn deploy(
     }
 }
 
+#[expect(clippy::too_many_arguments)]
 async fn deploy_from_keystore(
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: Felt,
@@ -154,6 +155,7 @@ async fn deploy_from_keystore(
     Ok(result)
 }
 
+#[expect(clippy::too_many_arguments)]
 async fn deploy_from_accounts_file(
     provider: &JsonRpcClient<HttpTransport>,
     accounts_file: &Utf8PathBuf,
@@ -309,6 +311,7 @@ fn execution_error_message(error: &ContractExecutionError) -> &str {
     }
 }
 
+#[expect(clippy::too_many_arguments)]
 async fn deploy_account<T>(
     account_factory: T,
     provider: &JsonRpcClient<HttpTransport>,
@@ -323,6 +326,16 @@ where
     T: AccountFactory + Sync,
 {
     let deployment = account_factory.deploy_v3(salt);
+
+    if let Some(result) = dry_run_args
+        .estimate_if_dry_run(
+            || async { deployment.estimate_fee().await },
+            InvokeResponse::DryRun,
+        )
+        .await
+    {
+        return result.map_err(|error| anyhow!("Failed to estimate fee: {error}"));
+    }
 
     let fee_settings = if fee_args.max_fee.is_some() {
         let fee_estimate = deployment
@@ -354,16 +367,6 @@ where
         l1_data_gas_price => AccountDeploymentV3::l1_data_gas_price,
         tip => AccountDeploymentV3::tip
     );
-
-    if let Some(result) = dry_run_args
-        .estimate_if_dry_run(
-            || async { deployment.estimate_fee().await },
-            InvokeResponse::DryRun,
-        )
-        .await
-    {
-        return result.map_err(|error| anyhow!("Failed to estimate fee: {error}"));
-    }
 
     let result = deployment.send().await;
 
