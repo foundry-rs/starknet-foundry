@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- `--dry-run` and `--detailed` flags to estimate the fee of a transaction without sending it to the network.
+
 ## [0.58.1] - 2026-03-31
 
 ### Forge
