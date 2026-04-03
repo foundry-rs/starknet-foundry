@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.58.1] - 2026-03-31
+
+### Forge
+
+#### Fixed
+
+- Bug with using cheats in library calls
+
+### Cast
+
+#### Added
+
+- `--nonce` flag to `sncast multicall run`
+
 ## [0.58.0] - 2026-03-18
 
 ### Forge

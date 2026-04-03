@@ -62,6 +62,11 @@ Optional.
 
 Maximum L1 data gas unit price for the `invoke` transaction. When not used, defaults to auto-estimation.
 
+## `--nonce, -n <NONCE>`
+Optional.
+
+Nonce of the transaction. If not provided, nonce will be set automatically.
+
 ## `--tip <TIP>`
 Optional.
 Conflicts with: [`--estimate-tip`](#--estimate-tip-estimate_tip)

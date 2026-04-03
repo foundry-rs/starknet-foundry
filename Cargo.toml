@@ -22,12 +22,16 @@ members = [
 
 exclude = ["crates/snforge-scarb-plugin"]
 
+[profile.release]
+codegen-units = 1
+lto = "thin"
+
 [profile.ci]
-inherits = "release"
-debug-assertions = true
+inherits = "dev"
+opt-level = 3
 
 [workspace.package]
-version = "0.58.0"
+version = "0.58.1"
 edition = "2024"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
@@ -136,3 +140,4 @@ comfy-table = "7"
 create-output-dir = "1.0.0"
 insta = { version = "1.46.0", features = ["filters"] }
 plotters = { version = "0.3", default-features = false, features = ["all_series", "all_elements", "svg_backend", "bitmap_backend", "bitmap_encoder", "full_palette", "colormaps", "ab_glyph"] }
+mimalloc = "0.1"

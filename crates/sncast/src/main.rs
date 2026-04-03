@@ -21,6 +21,7 @@ use configuration::load_config;
 use conversions::IntoConv;
 use data_transformer::transform;
 use foundry_ui::components::warning::WarningMessage;
+use mimalloc::MiMalloc;
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
@@ -54,6 +55,9 @@ use starknet_types_core::felt::Felt;
 use tokio::runtime::Runtime;
 
 mod starknet_commands;
+
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
 
 #[derive(Parser)]
 #[command(
