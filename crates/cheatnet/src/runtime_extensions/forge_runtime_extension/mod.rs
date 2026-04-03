@@ -646,11 +646,11 @@ pub fn add_resources_to_top_call(
     let mut top_call = top_call.borrow_mut();
 
     match tracked_resource {
-        TrackedResource::CairoSteps => top_call.used_execution_resources += &resources.vm_resources,
+        TrackedResource::CairoSteps => top_call.used_execution_resources += resources,
         TrackedResource::SierraGas => {
             let builtin_gas_costs = versioned_constants.os_constants.gas_costs.builtins;
             top_call.gas_consumed += extended_execution_resources_to_gas(
-                &resources.clone(),
+                resources,
                 &builtin_gas_costs,
                 versioned_constants,
             )
