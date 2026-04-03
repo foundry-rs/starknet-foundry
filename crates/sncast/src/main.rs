@@ -26,6 +26,7 @@ use sncast::helpers::command::process_command_result;
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
+use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
@@ -333,6 +334,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 starknet_commands::declare::declare(
                     declare.contract_name.clone(),
                     declare.common.fee_args,
+                    declare.common.dry_run_args,
                     declare.common.nonce,
                     account,
                     &artifacts,
@@ -356,8 +358,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             };
 
             let block_explorer_link =
-                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config, false)
-                    .await;
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
 
             let deploy_command_message = if let Ok(response) = &result {
                 // TODO(#3785)
@@ -434,8 +435,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             };
 
             let block_explorer_link =
-                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config, false)
-                    .await;
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
             process_command_result("declare-from", result, ui, block_explorer_link);
 
             Ok(())
@@ -452,9 +452,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         unique,
                     },
                 fee_args,
+                dry_run_args,
                 rpc,
                 mut nonce,
-                ..
             } = deploy;
 
             let provider = rpc.get_provider(&config, ui).await?;
@@ -479,13 +479,16 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 )
                 .expect("Failed to build contract");
 
-                let mut declare_fee_args = fee_args.clone();
-                declare_fee_args.dry_run = false;
+                let declare_fee_args = fee_args.clone();
 
                 let declare_result = with_account!(&account, |account| {
                     declare(
                         contract_name,
                         declare_fee_args,
+                        DryRunArgs {
+                            dry_run: false,
+                            detailed: false,
+                        },
                         nonce,
                         account,
                         &artifacts,
@@ -548,6 +551,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     salt,
                     unique,
                     fee_args.clone(),
+                    dry_run_args.clone(),
                     nonce,
                     account,
                     wait_config,
@@ -568,13 +572,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 result.map(DeployResponse::Standard)
             };
 
-            let block_explorer_link = block_explorer_link_if_allowed(
-                &result,
-                provider.chain_id().await?,
-                &config,
-                fee_args.dry_run,
-            )
-            .await;
+            let block_explorer_link =
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
             process_command_result("deploy", result, ui, block_explorer_link);
 
             Ok(())
@@ -628,9 +627,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         arguments,
                     },
                 fee_args,
+                dry_run_args,
                 rpc,
                 nonce,
-                ..
             } = invoke;
 
             let provider = rpc.get_provider(&config, ui).await?;
@@ -652,6 +651,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     calldata,
                     nonce,
                     fee_args.clone(),
+                    dry_run_args.clone(),
                     selector,
                     account,
                     wait_config,
@@ -661,13 +661,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             })
             .map_err(handle_starknet_command_error);
 
-            let block_explorer_link = block_explorer_link_if_allowed(
-                &result,
-                provider.chain_id().await?,
-                &config,
-                fee_args.dry_run,
-            )
-            .await;
+            let block_explorer_link =
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
 
             process_command_result("invoke", result, ui, block_explorer_link);
 

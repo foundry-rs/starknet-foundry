@@ -64,7 +64,13 @@ impl OutputLink for InvokeResponse {
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
         match self {
             InvokeResponse::Transaction(response) => response.format_links(provider),
-            InvokeResponse::DryRun(_) => "No links available for fee estimation".to_string(),
+            InvokeResponse::DryRun(_) => {
+                unreachable!("Dry run response should not generate explorer links")
+            }
         }
+    }
+
+    fn is_dry_run(&self) -> bool {
+        matches!(self, InvokeResponse::DryRun(_))
     }
 }

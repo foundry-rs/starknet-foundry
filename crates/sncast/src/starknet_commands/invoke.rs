@@ -3,9 +3,9 @@ use crate::starknet_commands::utils::felt_or_id::FeltOrId;
 use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
+use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::dry_run::DryRunResponse;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
 use sncast::response::ui::UI;
@@ -41,6 +41,9 @@ pub struct Invoke {
     #[command(flatten)]
     pub fee_args: FeeArgs,
 
+    #[command(flatten)]
+    pub dry_run_args: DryRunArgs,
+
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[arg(short, long)]
     pub nonce: Option<Felt>,
@@ -55,6 +58,7 @@ pub async fn invoke<S>(
     calldata: Vec<Felt>,
     nonce: Option<Felt>,
     fee_args: FeeArgs,
+    dry_run_args: DryRunArgs,
     function_selector: Felt,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     wait_config: WaitForTx,
@@ -70,16 +74,16 @@ where
         calldata,
     };
 
-    if fee_args.dry_run {
-        let fee_estimate = account
-            .execute_v3(vec![call])
-            .estimate_fee()
-            .await
-            .context("Failed to estimate fee for dry run")?;
-        return Ok(InvokeResponse::DryRun(DryRunResponse::new(
-            &fee_estimate,
-            fee_args.detailed,
-        )));
+    if let Some(result) = dry_run_args
+        .estimate_if_dry_run(
+            || async { account.execute_v3(vec![call.clone()]).estimate_fee().await },
+            InvokeResponse::DryRun,
+        )
+        .await
+    {
+        return result
+            .context("Failed to estimate fee for dry run")
+            .map_err(StarknetCommandError::from);
     }
 
     execute_calls(account, vec![call], fee_args, nonce, wait_config, ui)

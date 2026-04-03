@@ -7,6 +7,7 @@ pub mod config;
 pub mod configuration;
 pub mod constants;
 pub mod devnet;
+pub mod dry_run;
 pub mod fee;
 pub mod interactive;
 pub mod ledger;

@@ -4,12 +4,12 @@ use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
 use shared::rpc::get_starknet_version;
 use sncast::helpers::artifacts::CastStarknetContractArtifacts;
+use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::declare::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
 };
-use sncast::response::dry_run::DryRunResponse;
 use sncast::response::errors::{SNCastProviderError, SNCastStarknetError, StarknetCommandError};
 use sncast::response::ui::UI;
 use sncast::{ErrorData, WaitForTx, apply_optional_fields, handle_wait_for_tx};
@@ -35,6 +35,9 @@ use universal_sierra_compiler_api::compile_contract_sierra;
 pub struct DeclareCommonArgs {
     #[command(flatten)]
     pub fee_args: FeeArgs,
+
+    #[command(flatten)]
+    pub dry_run_args: DryRunArgs,
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[arg(short, long)]
@@ -64,6 +67,7 @@ pub struct Declare {
 pub async fn declare<S>(
     contract_name: String,
     fee_args: FeeArgs,
+    dry_run_args: DryRunArgs,
     nonce: Option<Felt>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     artifacts: &HashMap<String, CastStarknetContractArtifacts>,
@@ -91,6 +95,7 @@ where
         contract_definition,
         casm_contract_definition,
         &fee_args,
+        &dry_run_args,
         nonce,
         account,
         wait_config,
@@ -124,6 +129,7 @@ pub async fn declare_with_artifacts<S>(
     sierra_class: SierraClass,
     compiled_casm: CompiledClass,
     fee_args: &FeeArgs,
+    dry_run_args: &DryRunArgs,
     nonce: Option<Felt>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     wait_config: WaitForTx,
@@ -148,15 +154,16 @@ where
         casm_class_hash,
     );
 
-    if fee_args.dry_run {
-        let fee_estimate = declaration
-            .estimate_fee()
-            .await
-            .with_context(|| "Failed to estimate fee for dry run")?;
-        return Ok(DeclareResponse::DryRun(DryRunResponse::new(
-            &fee_estimate,
-            fee_args.detailed,
-        )));
+    if let Some(result) = dry_run_args
+        .estimate_if_dry_run(
+            || async { declaration.estimate_fee().await },
+            DeclareResponse::DryRun,
+        )
+        .await
+    {
+        return result
+            .context("Failed to estimate fee for dry run")
+            .map_err(StarknetCommandError::from);
     }
 
     let fee_settings = if fee_args.max_fee.is_some() {

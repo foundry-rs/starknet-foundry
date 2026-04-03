@@ -193,8 +193,6 @@ async fn test_contract_with_constructor_params() {
     l2_gas_price:  None,
     tip: Some(100_000),
     estimate_tip: false,
-    dry_run: false,
-    detailed: false,
 }; "max_fee")]
 #[test_case(FeeArgs{
     max_fee: None,
@@ -206,8 +204,6 @@ async fn test_contract_with_constructor_params() {
     l2_gas_price: Some(100_000_000_000_000_000_000),
     tip: None,
     estimate_tip: false,
-    dry_run: false,
-    detailed: false,
 }; "resource_bounds")]
 #[tokio::test]
 async fn test_happy_case_different_fees(fee_args: FeeArgs) {

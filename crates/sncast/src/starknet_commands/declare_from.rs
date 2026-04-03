@@ -159,6 +159,7 @@ where
         sierra,
         casm,
         &common_args.fee_args,
+        &common_args.dry_run_args,
         common_args.nonce,
         account,
         wait_config,

@@ -12,9 +12,9 @@ use conversions::IntoConv;
 use serde::Deserialize;
 use serde_json::Number;
 use sncast::WaitForTx;
+use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::FeeArgs;
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::dry_run::DryRunResponse;
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
 use sncast::response::multicall::run::MulticallRunResponse;
@@ -35,6 +35,9 @@ pub struct Run {
 
     #[command(flatten)]
     pub fee_args: FeeArgs,
+
+    #[command(flatten)]
+    pub dry_run_args: DryRunArgs,
 
     #[command(flatten)]
     pub rpc: RpcArgs,
@@ -87,6 +90,7 @@ where
     S: Signer + Sync + Send + 'static,
 {
     let fee_args = run.fee_args.clone();
+    let dry_run_args = run.dry_run_args.clone();
 
     let contents = std::fs::read_to_string(&run.path)?;
     let multicall: MulticallFile =
@@ -112,16 +116,19 @@ where
         }
     }
 
-    if fee_args.dry_run {
-        let fee_estimate = account
-            .execute_v3(parsed_calls)
-            .estimate_fee()
-            .await
-            .with_context(|| "Failed to estimate fee for dry run")?;
-        return Ok(MulticallRunResponse::DryRun(DryRunResponse::new(
-            &fee_estimate,
-            fee_args.detailed,
-        )));
+    if let Some(result) = dry_run_args
+        .estimate_if_dry_run(
+            || async {
+                account
+                    .execute_v3(parsed_calls.clone())
+                    .estimate_fee()
+                    .await
+            },
+            MulticallRunResponse::DryRun,
+        )
+        .await
+    {
+        return result.context("Failed to estimate fee for dry run");
     }
 
     execute_calls(account, parsed_calls, fee_args, None, wait_config, ui)

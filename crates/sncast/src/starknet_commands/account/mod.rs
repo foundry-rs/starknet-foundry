@@ -287,8 +287,7 @@ pub async fn account(
             .await;
 
             let block_explorer_link =
-                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config, false)
-                    .await;
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
 
             process_command_result("account create", result, ui, block_explorer_link);
             Ok(())
@@ -298,6 +297,7 @@ pub async fn account(
             let provider = deploy.rpc.get_provider(&config, ui).await?;
 
             let fee_args = deploy.fee_args.clone();
+            let dry_run_args = deploy.dry_run_args.clone();
 
             let chain_id = get_chain_id(&provider).await?;
             let result = starknet_commands::account::deploy::deploy(
@@ -309,6 +309,7 @@ pub async fn account(
                 &config.account,
                 config.keystore.clone(),
                 fee_args,
+                dry_run_args,
                 ui,
             )
             .await;
@@ -332,13 +333,8 @@ pub async fn account(
                 );
             }
 
-            let block_explorer_link = block_explorer_link_if_allowed(
-                &result,
-                provider.chain_id().await?,
-                &config,
-                deploy.fee_args.dry_run,
-            )
-            .await;
+            let block_explorer_link =
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
             process_command_result("account deploy", result, ui, block_explorer_link);
             Ok(())
         }

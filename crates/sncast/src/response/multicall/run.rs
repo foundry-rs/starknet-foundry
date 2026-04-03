@@ -67,7 +67,13 @@ impl OutputLink for MulticallRunResponse {
                 "transaction: {}",
                 provider.transaction(response.transaction_hash)
             ),
-            MulticallRunResponse::DryRun(_) => "No links available for fee estimation".to_string(),
+            MulticallRunResponse::DryRun(_) => {
+                unreachable!("Dry run response should not generate explorer links")
+            }
         }
+    }
+
+    fn is_dry_run(&self) -> bool {
+        matches!(self, MulticallRunResponse::DryRun(_))
     }
 }

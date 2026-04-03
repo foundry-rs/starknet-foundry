@@ -6,11 +6,11 @@ use serde_json::Map;
 use sncast::helpers::account::load_accounts;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::BRAAVOS_BASE_ACCOUNT_CLASS_HASH;
+use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::ledger;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::deploy::AccountDeployResponse;
-use sncast::response::dry_run::DryRunResponse;
 use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
 use sncast::response::ui::UI;
 use sncast::{
@@ -41,6 +41,9 @@ pub struct Deploy {
     pub fee_args: FeeArgs,
 
     #[command(flatten)]
+    pub dry_run_args: DryRunArgs,
+
+    #[command(flatten)]
     pub rpc: RpcArgs,
 
     /// If passed, the command will not trigger an interactive prompt to add an account as a default
@@ -58,6 +61,7 @@ pub async fn deploy(
     account: &str,
     keystore_path: Option<Utf8PathBuf>,
     fee_args: FeeArgs,
+    dry_run_args: DryRunArgs,
     ui: &UI,
 ) -> Result<AccountDeployResponse> {
     if let Some(keystore_path) = keystore_path {
@@ -65,6 +69,7 @@ pub async fn deploy(
             provider,
             chain_id,
             fee_args,
+            dry_run_args,
             wait_config,
             account,
             keystore_path,
@@ -84,6 +89,7 @@ pub async fn deploy(
             account_name,
             chain_id,
             fee_args,
+            dry_run_args,
             wait_config,
             ui,
         )
@@ -96,6 +102,7 @@ async fn deploy_from_keystore(
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: Felt,
     fee_args: FeeArgs,
+    dry_run_args: DryRunArgs,
     wait_config: WaitForTx,
     account: &str,
     keystore_path: Utf8PathBuf,
@@ -134,6 +141,7 @@ async fn deploy_from_keystore(
         salt,
         chain_id,
         fee_args,
+        dry_run_args,
         wait_config,
         ui,
     )
@@ -152,6 +160,7 @@ async fn deploy_from_accounts_file(
     name: String,
     chain_id: Felt,
     fee_args: FeeArgs,
+    dry_run_args: DryRunArgs,
     wait_config: WaitForTx,
     ui: &UI,
 ) -> Result<InvokeResponse> {
@@ -175,6 +184,7 @@ async fn deploy_from_accounts_file(
                 salt,
                 chain_id,
                 fee_args,
+                dry_run_args,
                 wait_config,
                 ui,
             )
@@ -192,6 +202,7 @@ async fn deploy_from_accounts_file(
                 salt,
                 chain_id,
                 fee_args,
+                dry_run_args,
                 wait_config,
                 ui,
             )
@@ -199,7 +210,7 @@ async fn deploy_from_accounts_file(
         }
     };
 
-    if !matches!(&result, InvokeResponse::DryRun(_)) {
+    if let InvokeResponse::Transaction(_) = &result {
         update_account_in_accounts_file(accounts_file, &name, chain_id)?;
     }
 
@@ -215,6 +226,7 @@ async fn create_factory_and_deploy<S>(
     salt: Felt,
     chain_id: Felt,
     fee_args: FeeArgs,
+    dry_run_args: DryRunArgs,
     wait_config: WaitForTx,
     ui: &UI,
 ) -> Result<InvokeResponse>
@@ -232,6 +244,7 @@ where
                 provider,
                 salt,
                 fee_args,
+                dry_run_args,
                 wait_config,
                 class_hash,
                 ui,
@@ -246,6 +259,7 @@ where
                 provider,
                 salt,
                 fee_args,
+                dry_run_args,
                 wait_config,
                 class_hash,
                 ui,
@@ -266,6 +280,7 @@ where
                 provider,
                 salt,
                 fee_args,
+                dry_run_args,
                 wait_config,
                 class_hash,
                 ui,
@@ -299,6 +314,7 @@ async fn deploy_account<T>(
     provider: &JsonRpcClient<HttpTransport>,
     salt: Felt,
     fee_args: FeeArgs,
+    dry_run_args: DryRunArgs,
     wait_config: WaitForTx,
     class_hash: Felt,
     ui: &UI,
@@ -339,15 +355,14 @@ where
         tip => AccountDeploymentV3::tip
     );
 
-    if fee_args.dry_run {
-        let fee_estimate = deployment
-            .estimate_fee()
-            .await
-            .map_err(|error| anyhow!("Failed to estimate fee: {error}"))?;
-        return Ok(InvokeResponse::DryRun(DryRunResponse::new(
-            &fee_estimate,
-            fee_args.detailed,
-        )));
+    if let Some(result) = dry_run_args
+        .estimate_if_dry_run(
+            || async { deployment.estimate_fee().await },
+            InvokeResponse::DryRun,
+        )
+        .await
+    {
+        return result.map_err(|error| anyhow!("Failed to estimate fee: {error}"));
     }
 
     let result = deployment.send().await;

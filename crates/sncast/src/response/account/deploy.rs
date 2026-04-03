@@ -4,8 +4,8 @@ use crate::{
     helpers::block_explorer::LinkProvider,
     response::{dry_run::DryRunResponse, explorer_link::OutputLink, invoke::InvokeResponse},
 };
+use conversions::serde::serialize::CairoSerialize;
 use conversions::string::IntoHexStr;
-use conversions::{padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
 use foundry_ui::styling;
 use serde::{Deserialize, Serialize};
 
@@ -13,11 +13,6 @@ use serde::{Deserialize, Serialize};
 pub enum AccountDeployResponse {
     Transaction(InvokeTransactionResponse),
     DryRun(DryRunResponse),
-}
-
-#[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
-pub struct AccountDeployTransactionResponse {
-    pub transaction_hash: PaddedFelt,
 }
 
 impl From<InvokeResponse> for AccountDeployResponse {
@@ -69,5 +64,9 @@ impl OutputLink for AccountDeployResponse {
                 unreachable!("Dry run response should not generate explorer links")
             }
         }
+    }
+
+    fn is_dry_run(&self) -> bool {
+        matches!(self, AccountDeployResponse::DryRun(_))
     }
 }

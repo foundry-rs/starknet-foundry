@@ -55,7 +55,7 @@ impl OutputLink for DeployResponse {
                     provider.transaction(response.transaction_hash)
                 ),
                 StandardDeployResponse::DryRun(_) => {
-                    "No links available for fee estimation".to_string()
+                    unreachable!("Dry run response should not generate explorer links")
                 }
             },
             DeployResponse::WithDeclare(deploy_with_declare) => {
@@ -73,6 +73,13 @@ impl OutputLink for DeployResponse {
                 )
             }
         }
+    }
+
+    fn is_dry_run(&self) -> bool {
+        matches!(
+            self,
+            DeployResponse::Standard(StandardDeployResponse::DryRun(_))
+        )
     }
 }
 

@@ -3,9 +3,8 @@ use clap::{Args, Command, FromArgMatches};
 use conversions::IntoConv;
 use sncast::{
     WaitForTx,
-    helpers::{fee::FeeArgs, rpc::RpcArgs},
+    helpers::{dry_run::DryRunArgs, fee::FeeArgs, rpc::RpcArgs},
     response::{
-        dry_run::DryRunResponse,
         errors::handle_starknet_command_error,
         multicall::run::{MulticallRunResponse, MulticallRunTransactionResponse},
         ui::UI,
@@ -32,6 +31,9 @@ const ALLOWED_MULTICALL_COMMANDS: [&str; 2] = ["deploy", "invoke"];
 pub struct Execute {
     #[command(flatten)]
     pub fee_args: FeeArgs,
+
+    #[command(flatten)]
+    pub dry_run_args: DryRunArgs,
 
     #[command(flatten)]
     pub rpc: RpcArgs,
@@ -98,16 +100,15 @@ where
         bail!("No valid multicall commands found to execute. Please check the provided commands.");
     }
 
-    if execute.fee_args.dry_run {
-        let fee_estimate = account
-            .execute_v3(calls)
-            .estimate_fee()
-            .await
-            .with_context(|| "Failed to estimate fee for dry run")?;
-        return Ok(MulticallRunResponse::DryRun(DryRunResponse::new(
-            &fee_estimate,
-            execute.fee_args.detailed,
-        )));
+    if let Some(result) = execute
+        .dry_run_args
+        .estimate_if_dry_run(
+            || async { account.execute_v3(calls.clone()).estimate_fee().await },
+            MulticallRunResponse::DryRun,
+        )
+        .await
+    {
+        return result.context("Failed to estimate fee for dry run");
     }
 
     execute_calls(

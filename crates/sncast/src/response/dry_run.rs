@@ -38,7 +38,7 @@ impl DryRunResponse {
 impl SncastCommandMessage for DryRunResponse {
     fn text(&self) -> String {
         let overall_fee_strk = BigDecimal::new(self.overall_fee.into(), 18.into());
-        let builder = styling::OutputBuilder::new()
+        let mut builder = styling::OutputBuilder::new()
             .success_message("Dry run completed")
             .blank_line()
             .field(
@@ -51,7 +51,7 @@ impl SncastCommandMessage for DryRunResponse {
             );
 
         if self.detailed {
-            builder
+            builder = builder
                 .field("L1 Gas Consumed", &self.l1_gas_consumed.to_string())
                 .field("L1 Gas Price", &self.l1_gas_price.to_string())
                 .field("L2 Gas Consumed", &self.l2_gas_consumed.to_string())
@@ -60,10 +60,9 @@ impl SncastCommandMessage for DryRunResponse {
                     "L1 Data Gas Consumed",
                     &self.l1_data_gas_consumed.to_string(),
                 )
-                .field("L1 Data Gas Price", &self.l1_data_gas_price.to_string())
-                .build()
-        } else {
-            builder.build()
+                .field("L1 Data Gas Price", &self.l1_data_gas_price.to_string());
         }
+
+        builder.build()
     }
 }

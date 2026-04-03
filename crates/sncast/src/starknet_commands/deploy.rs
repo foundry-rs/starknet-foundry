@@ -1,10 +1,10 @@
 use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
+use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::deploy::{StandardDeployResponse, StandardDeployTransactionResponse};
-use sncast::response::dry_run::DryRunResponse;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::ui::UI;
 use sncast::{WaitForTx, apply_optional_fields, handle_wait_for_tx};
@@ -60,6 +60,9 @@ pub struct Deploy {
     #[command(flatten)]
     pub fee_args: FeeArgs,
 
+    #[command(flatten)]
+    pub dry_run_args: DryRunArgs,
+
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[arg(short, long)]
     pub nonce: Option<Felt>,
@@ -87,6 +90,7 @@ pub async fn deploy<S>(
     salt: Option<Felt>,
     unique: bool,
     fee_args: FeeArgs,
+    dry_run_args: DryRunArgs,
     nonce: Option<Felt>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     wait_config: WaitForTx,
@@ -102,15 +106,13 @@ where
 
     let deployment = factory.deploy_v3(calldata.clone(), salt, unique);
 
-    if fee_args.dry_run {
-        let fee_estimate = deployment
-            .estimate_fee()
-            .await
-            .context("Failed to estimate fee for dry run")?;
-        return Ok(StandardDeployResponse::DryRun(DryRunResponse::new(
-            &fee_estimate,
-            fee_args.detailed,
-        )));
+    if let Some(result) = dry_run_args
+        .estimate_if_dry_run(|| deployment.estimate_fee(), StandardDeployResponse::DryRun)
+        .await
+    {
+        return result
+            .context("Failed to estimate fee for dry run")
+            .map_err(StarknetCommandError::from);
     }
 
     let fee_settings = if fee_args.max_fee.is_some() {

@@ -13,6 +13,10 @@ pub trait OutputLink {
     const TITLE: &'static str;
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String;
+
+    fn is_dry_run(&self) -> bool {
+        false
+    }
 }
 
 #[derive(Serialize)]
@@ -58,7 +62,6 @@ pub async fn block_explorer_link_if_allowed<T>(
     result: &anyhow::Result<T>,
     chain_id: Felt,
     config: &CastConfig,
-    dry_run: bool,
 ) -> Option<ExplorerLinksMessage>
 where
     T: OutputLink + Clone,
@@ -67,7 +70,7 @@ where
         return None;
     };
 
-    if dry_run {
+    if response.is_dry_run() {
         return None;
     }
 
