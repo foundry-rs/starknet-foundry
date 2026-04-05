@@ -112,6 +112,10 @@ struct Cli {
     #[arg(short, long)]
     keystore: Option<Utf8PathBuf>,
 
+    /// Scarb profile for building contracts (e.g. release, dev)
+    #[arg(long)]
+    scarb_profile: Option<String>,
+
     /// If passed, output will be displayed in json format
     #[arg(short, long)]
     json: bool,
@@ -165,6 +169,7 @@ impl Cli {
                 timeout: self.wait_timeout,
                 retry_interval: self.wait_retry_interval,
             }),
+            scarb_profile: self.scarb_profile.clone(),
             ..Default::default()
         };
         config.validate()?;
@@ -344,7 +349,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 &BuildConfig {
                     scarb_toml_path: manifest_path,
                     json: cli.json,
-                    profile: cli.profile.unwrap_or("release".to_string()),
+                    profile: config.scarb_profile.clone(),
                 },
                 false,
                 // TODO(#3959) Remove `base_ui`
@@ -498,7 +503,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                     &BuildConfig {
                         scarb_toml_path: manifest_path,
                         json: cli.json,
-                        profile: cli.profile.unwrap_or("release".to_string()),
+                        profile: config.scarb_profile.clone(),
                     },
                     false,
                     // TODO(#3959) Remove `base_ui`
@@ -704,16 +709,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
 
         Commands::Get(get) => get::get(get, config, ui).await,
 
-        Commands::Utils(utils) => {
-            utils::utils(
-                utils,
-                config,
-                ui,
-                cli.json,
-                cli.profile.clone().unwrap_or("release".to_string()),
-            )
-            .await
-        }
+        Commands::Utils(utils) => utils::utils(utils, config, ui, cli.json).await,
 
         Commands::Multicall(multicall) => {
             multicall::multicall(multicall, config, ui, wait_config).await
@@ -755,7 +751,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 &BuildConfig {
                     scarb_toml_path: manifest_path.clone(),
                     json: cli.json,
-                    profile: cli.profile.unwrap_or("release".to_string()),
+                    profile: config.scarb_profile.clone(),
                 },
                 false,
                 // TODO(#3959) Remove `base_ui`
@@ -838,11 +834,10 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
         }
         // No local config file; profile must be in global config.
         (Some(profile), MaybeConfig::NoFile, MaybeConfig::NoProfile) => {
-            // Note: changed to error in the next PR
-            ui.print_warning(WarningMessage::new(format!(
+            bail!(
                 "Profile [{profile}] not found in global config at {}, and no local config found.",
-                global_path.clone().unwrap_or_default()
-            )));
+                global_path.unwrap_or_default()
+            );
         }
         // Note: this is potentially unreachable: `get_or_create_global_config_path` should always return dir with existing config file.
         // TODO: (#3436) remove this if missing global config becomes an error

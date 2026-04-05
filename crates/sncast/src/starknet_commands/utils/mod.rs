@@ -51,13 +51,7 @@ pub enum Commands {
     Selector(Selector),
 }
 
-pub async fn utils(
-    utils: Utils,
-    config: CastConfig,
-    ui: &UI,
-    json: bool,
-    profile: String,
-) -> anyhow::Result<ExitCode> {
+pub async fn utils(utils: Utils, config: CastConfig, ui: &UI, json: bool) -> anyhow::Result<ExitCode> {
     match utils.command {
         Commands::Serialize(serialize) => {
             let result = starknet_commands::utils::serialize::serialize(serialize, config, ui)
@@ -76,7 +70,7 @@ pub async fn utils(
                 &BuildConfig {
                     scarb_toml_path: manifest_path,
                     json,
-                    profile,
+                    profile: config.scarb_profile.clone(),
                 },
                 false,
                 // TODO(#3959) Remove `base_ui`
