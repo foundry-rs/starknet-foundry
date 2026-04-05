@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- Config setting for Scarb profile, as `scarb-profile` field in `snfoundry.toml`, and `--scarb-profile` cli flag
+
+#### Changed
+
+- `--profile` now only determines `snfoundry.toml` profile. For Scarb profile, use `--scarb-profile` flag or `scarb-profile` from `snfoundry.toml` instead. Defaults to `release` if unspecified.
+
 ## [0.58.0] - 2026-03-18
 
 ### Forge

@@ -100,6 +100,17 @@ The `block-explorer` field specifies the block explorer service used to display 
 block-explorer = "Voyager"
 ```
 
+#### `scarb-profile`
+
+The `scarb-profile` field sets which [Scarb profile](https://docs.swmansion.com/scarb/docs/reference/manifest.html#profiles) `sncast` uses when it runs `scarb` commands (e.g. `scarb build` when declaring contracts or running scripts).
+
+If omitted, the effective default is `release`.
+
+```toml
+[sncast.myprofile]
+scarb-profile = "release"
+```
+
 #### `[sncast.<profile-name>.networks]`
 
 The URLs of the predefined networks can be configured.
@@ -124,6 +135,7 @@ keystore = "~/keystore"
 wait-params = { timeout = 500, retry-interval = 10 }
 block-explorer = "Voyager"
 show-explorer-links = true
+scarb-profile = "release"
 
 [sncast.myprofile1.networks]
 mainnet = "https://mainnet.your-node.com"
