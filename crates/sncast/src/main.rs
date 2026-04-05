@@ -789,7 +789,7 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
         // No local config file; profile must be in global config.
         (Some(profile), MaybeConfig::NoFile, MaybeConfig::NoProfile) => {
             bail!(
-                "Profile [{profile}] not found in global config at {} (no local config found)",
+                "Profile [{profile}] not found in global config at {}, and no local config found.",
                 global_path.unwrap_or_default()
             );
         }

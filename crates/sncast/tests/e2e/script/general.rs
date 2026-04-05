@@ -529,7 +529,7 @@ async fn test_state_file_rerun_failed_tx() {
 }
 
 #[tokio::test]
-async fn test_using_release_profile() {
+async fn test_using_release_scarb_profile() {
     let contract_dir = duplicate_contract_directory_with_salt(
         SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
         "dummy",
@@ -548,7 +548,7 @@ async fn test_using_release_profile() {
         accounts_json_path.as_str(),
         "--account",
         "user5",
-        "--profile",
+        "--scarb-profile",
         "release",
         "script",
         "run",
@@ -560,7 +560,6 @@ async fn test_using_release_profile() {
     let snapbox = runner(&args).current_dir(script_dir.path());
 
     snapbox.assert().success().stdout_eq(indoc! {r"
-        [WARNING] Profile [release] not found in global config at [..]snfoundry.toml, and no local config found.
         ...
         Success: Script execution completed
         
