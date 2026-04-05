@@ -801,10 +801,9 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
     let global_path = match get_or_create_global_config_path() {
         Ok(p) => Some(p),
         Err(err) => {
-            ui.print_error(
-                &cli.command_name(),
-                format!("Error getting global config path: {err:?}"),
-            );
+            ui.print_warning(WarningMessage::new(format!(
+                "Could not get or create global config file: {err:?}. Proceeding without global config."
+            )));
             None
         }
     };
