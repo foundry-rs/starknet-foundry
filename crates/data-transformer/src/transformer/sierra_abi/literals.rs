@@ -69,8 +69,10 @@ impl SupportedCalldataKind for ExprUnary<'_> {
             UnaryOperator::At(_) => {
                 bail!("Invalid unary operator in expression @{value} , only - allowed, got @",)
             }
-            // TODO: Check if this is correct for `UnaryOperator::Reference`
-            UnaryOperator::Minus(_) | UnaryOperator::Reference(_) => {}
+            UnaryOperator::Reference(_) => {
+                bail!("Invalid unary operator in expression &{value} , only - allowed, got &",)
+            }
+            UnaryOperator::Minus(_) => {}
         }
 
         Ok(AllowedCalldataArgument::Primitive(

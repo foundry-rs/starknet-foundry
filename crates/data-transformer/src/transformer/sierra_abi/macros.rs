@@ -44,11 +44,13 @@ impl SupportedCalldataKind for ExprInlineMacro<'_> {
                                 arg.as_syntax_node().get_text(db)
                             ),
                             cairo_lang_syntax::node::ast::GenericArg::Unnamed(arg) => {
-                                let text = arg.as_syntax_node().get_text(db);
-                                if text == "_" {
-                                    bail!("Unexpected type with underscore generic placeholder found in ABI: {text}. Contract ABI may be invalid");
+                                match arg.value(db) {
+                                    Expr::Underscore(expr) => bail!(
+                                        "Unexpected type with underscore generic placeholder found in ABI: {}. Contract ABI may be invalid",
+                                        expr.as_syntax_node().get_text(db)
+                                    ),
+                                    expr => Ok(expr.as_syntax_node().get_text(db)),
                                 }
-                                Ok(text)
                             }
                         })
                         .collect::<Result<Vec<_>>>(),

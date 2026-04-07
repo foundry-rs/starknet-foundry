@@ -55,7 +55,6 @@ pub(crate) fn build_representation(
         | Expr::Indexed(_)
         | Expr::FixedSizeArray(_)
         | Expr::Missing(_)
-        // TODO: Check if this is correct
         | Expr::Underscore(_) => {
             bail!(r#"Invalid argument type: unsupported expression for type "{expected_type}""#)
         }

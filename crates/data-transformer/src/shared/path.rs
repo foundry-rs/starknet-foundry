@@ -1,5 +1,7 @@
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::ast::{ExprPath, GenericArg, PathSegment, PathSegmentWithGenericArgs};
+use cairo_lang_syntax::node::ast::{
+    Expr, ExprPath, GenericArg, PathSegment, PathSegmentWithGenericArgs,
+};
 use cairo_lang_syntax::node::{Token, TypedSyntaxNode};
 
 #[derive(Debug, thiserror::Error)]
@@ -73,14 +75,10 @@ fn extract_generic_args(
         .elements(db)
         .map(|arg| match arg {
             GenericArg::Named(_) => Err(PathSplitError::InvalidGenericArgs),
-            GenericArg::Unnamed(arg) => {
-                let text = arg.as_syntax_node().get_text(db);
-                if text == "_" {
-                    Err(PathSplitError::InvalidGenericArgs)
-                } else {
-                    Ok(text)
-                }
-            }
+            GenericArg::Unnamed(arg) => match arg.value(db) {
+                Expr::Underscore(_) => Err(PathSplitError::InvalidGenericArgs),
+                expr => Ok(expr.as_syntax_node().get_text(db)),
+            },
         })
         .collect::<Result<Vec<_>, PathSplitError>>()?;
 
