@@ -30,8 +30,9 @@ fn test_get_available_gas() {
                 let gas_diff = gas_before - gas_after;
 
                 // call_contract syscall: 91_560 gas
-                // storage_write and storage_read syscalls: 10_000 gas each
-                let min_expected_gas = 91_560 + 10_000 * 2;
+                // storage_write syscall: 44_970 gas
+                // storage_read syscall: 18_070 gas
+                let min_expected_gas = 91_560 + 44_970 + 18_070;
 
                 // Check that gas used is above the expected minimum
                 assert(gas_diff > min_expected_gas, 'Incorrect gas');

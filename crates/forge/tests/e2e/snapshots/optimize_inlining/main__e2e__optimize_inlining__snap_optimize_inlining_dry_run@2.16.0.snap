@@ -47,5 +47,5 @@ Optimization Results:
 Lowest runtime gas cost: threshold=100, gas=974690, contract bytecode L2 gas=25559040
 Lowest contract size cost: threshold=100, gas=974690, contract bytecode L2 gas=25559040
 
-Graph saved to: /private/var/folders/ws/4q3yrhx10ml3347dldtgl3x40000gn/T/.tmpUyTF5n/target/.tmpUyTF5n_optimization_results_l_0_h_100_s_50.png
+Graph saved to: [..]
 Scarb.toml not modified. Use --gas or --size to apply a threshold.
