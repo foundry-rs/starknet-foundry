@@ -463,7 +463,9 @@ async fn test_dry_run_json_output() {
     assert!(json.get("l1_gas_consumed").is_some());
     assert!(json.get("l1_gas_price").is_some());
     assert!(json.get("l2_gas_consumed").is_some());
+    assert!(json.get("l2_gas_price").is_some());
     assert!(json.get("l1_data_gas_consumed").is_some());
+    assert!(json.get("l1_data_gas_price").is_some());
     // The `detailed` rendering flag must not appear in JSON.
     assert!(json.get("detailed").is_none());
 }
