@@ -42,7 +42,6 @@ impl CheatableNativeSyscallHandler<'_> {
     // Copied from https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/syscall_handler.rs#L80
     /// Handles all gas-related logics, syscall usage counting and perform additional checks. In
     /// native, we need to explicitly call this method at the beginning of each syscall.
-    #[allow(clippy::result_large_err)]
     fn pre_execute_syscall(
         &mut self,
         remaining_gas: &mut u64,
@@ -101,7 +100,6 @@ impl CheatableNativeSyscallHandler<'_> {
     }
 
     // Based on https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/syscall_handler.rs#L153
-    #[allow(clippy::result_large_err)]
     fn execute_inner_call(
         &mut self,
         entry_point: &mut CallEntryPoint,

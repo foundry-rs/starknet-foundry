@@ -51,7 +51,6 @@ pub(crate) fn execute_entry_point_call_native(
 }
 
 // Based on https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/entry_point_execution.rs#L20
-#[allow(clippy::result_large_err)]
 fn execute_entry_point_call(
     call: &ExecutableCallEntryPoint,
     compiled_class: &NativeCompiledClassV1,
@@ -124,7 +123,6 @@ fn execute_entry_point_call(
 }
 
 // Copied from https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/entry_point_execution.rs#L73
-#[allow(clippy::result_large_err)]
 fn create_callinfo(
     call_result: ContractExecutionResult,
     syscall_handler: &mut CheatableNativeSyscallHandler<'_>,
