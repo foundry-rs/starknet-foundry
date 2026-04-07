@@ -119,7 +119,6 @@ impl TxInfoTrait for TestEnvironment {
 
     fn get_tx_info(&mut self, contract_address: &ContractAddress) -> TxInfo {
         let call_result = self.call_contract(contract_address, "get_tx_info", &[]);
-        dbg!(&call_result);
         let data = recover_data(call_result);
         TxInfo::deserialize(&data)
     }
@@ -179,7 +178,6 @@ impl TxInfo {
     }
 
     fn deserialize(data: &[Felt]) -> Self {
-        dbg!(&data);
         BufferReader::new(data).read().unwrap()
     }
 }
