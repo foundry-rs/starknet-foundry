@@ -719,7 +719,7 @@ async fn test_dry_run_with_contract_name_fails() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
