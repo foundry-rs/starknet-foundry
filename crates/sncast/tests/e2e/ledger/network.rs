@@ -418,7 +418,7 @@ async fn test_ledger_invoke_dry_run() {
     let tempdir = create_temp_accounts_json(account_address);
     let accounts_file = tempdir.path().join("accounts.json");
 
-    let output = runner(&[
+    let args = vec![
         "--accounts-file",
         accounts_file.to_str().unwrap(),
         "--account",
@@ -433,9 +433,15 @@ async fn test_ledger_invoke_dry_run() {
         "--calldata",
         "0x1 0x2",
         "--dry-run",
-    ])
-    .assert()
-    .success();
+    ];
 
-    assert_stdout_contains(output, "Dry run completed");
+    let output = runner(&args)
+        .env("LEDGER_EMULATOR_URL", &url)
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    assert_stdout_contains(String::from_utf8(output).unwrap(), "Dry run completed");
 }
