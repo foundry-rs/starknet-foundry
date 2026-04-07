@@ -309,13 +309,15 @@ pub async fn account(
                 &config.account,
                 config.keystore.clone(),
                 fee_args,
-                dry_run_args,
+                dry_run_args.clone(),
                 ui,
             )
             .await;
 
-            let run_interactive_prompt =
-                !deploy.silent && result.is_ok() && io::stdout().is_terminal();
+            let run_interactive_prompt = !deploy.silent
+                && result.is_ok()
+                && io::stdout().is_terminal()
+                && !dry_run_args.dry_run;
 
             if config.keystore.is_none()
                 && run_interactive_prompt
