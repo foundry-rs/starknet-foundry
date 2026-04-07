@@ -61,7 +61,7 @@ Use `--dry-run` to estimate the transaction fee without submitting it to the net
 ```shell
 $ sncast \
   --account my_account \
-    invoke \
+  invoke \
   --network sepolia \
   --contract-address 0x522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716 \
   --function "add" \
