@@ -468,6 +468,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let (class_hash, declare_response) = if let Some(class_hash) = identifier.class_hash {
                 (class_hash, None)
             } else if let Some(contract_name) = identifier.contract_name {
+                if dry_run_args.dry_run {
+                    bail!(
+                        "Cannot use `--dry-run` with `--contract-name`. Use `--class-hash` to dry-run a deploy of an already-declared class."
+                    );
+                }
+
                 let manifest_path = assert_manifest_path_exists()?;
                 let package_metadata = get_package_metadata(&manifest_path, &package)?;
                 let artifacts = build_and_load_artifacts(
