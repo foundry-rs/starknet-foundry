@@ -106,11 +106,11 @@ where
 
     let deployment = factory.deploy_v3(calldata.clone(), salt, unique);
 
-    if let Some(result) = dry_run_args
-        .estimate_if_dry_run(|| deployment.estimate_fee(), StandardDeployResponse::DryRun)
-        .await
-    {
-        return result
+    if dry_run_args.dry_run {
+        return dry_run_args
+            .estimate(|| deployment.estimate_fee())
+            .await
+            .map(StandardDeployResponse::DryRun)
             .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"))
             .map_err(StarknetCommandError::from);
     }

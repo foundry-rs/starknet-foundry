@@ -100,15 +100,13 @@ where
         bail!("No valid multicall commands found to execute. Please check the provided commands.");
     }
 
-    if let Some(result) = execute
-        .dry_run_args
-        .estimate_if_dry_run(
-            || async { account.execute_v3(calls.clone()).estimate_fee().await },
-            MulticallRunResponse::DryRun,
-        )
-        .await
-    {
-        return result.map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"));
+    if execute.dry_run_args.dry_run {
+        return execute
+            .dry_run_args
+            .estimate(|| async { account.execute_v3(calls.clone()).estimate_fee().await })
+            .await
+            .map(MulticallRunResponse::DryRun)
+            .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"));
     }
 
     execute_calls(

@@ -152,14 +152,11 @@ where
         casm_class_hash,
     );
 
-    if let Some(result) = dry_run_args
-        .estimate_if_dry_run(
-            || async { declaration.estimate_fee().await },
-            DeclareResponse::DryRun,
-        )
-        .await
-    {
-        return result
+    if dry_run_args.dry_run {
+        return dry_run_args
+            .estimate(|| async { declaration.estimate_fee().await })
+            .await
+            .map(DeclareResponse::DryRun)
             .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"))
             .map_err(StarknetCommandError::from);
     }

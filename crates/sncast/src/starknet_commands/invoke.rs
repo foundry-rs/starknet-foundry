@@ -73,14 +73,11 @@ where
         calldata,
     };
 
-    if let Some(result) = dry_run_args
-        .estimate_if_dry_run(
-            || async { account.execute_v3(vec![call.clone()]).estimate_fee().await },
-            InvokeResponse::DryRun,
-        )
-        .await
-    {
-        return result
+    if dry_run_args.dry_run {
+        return dry_run_args
+            .estimate(|| async { account.execute_v3(vec![call.clone()]).estimate_fee().await })
+            .await
+            .map(InvokeResponse::DryRun)
             .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"))
             .map_err(StarknetCommandError::from);
     }

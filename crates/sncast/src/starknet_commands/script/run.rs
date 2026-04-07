@@ -142,10 +142,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let declare_result = self.tokio_runtime.block_on(declare::declare(
                     contract.clone(),
                     fee_args,
-                    DryRunArgs {
-                        dry_run: false,
-                        detailed: false,
-                    },
+                    DryRunArgs::default(),
                     nonce,
                     self.account()?,
                     self.artifacts,
@@ -190,10 +187,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         salt,
                         unique,
                         fee_args,
-                        DryRunArgs {
-                            dry_run: false,
-                            detailed: false,
-                        },
+                        DryRunArgs::default(),
                         nonce,
                         self.account()?,
                         WaitForTx {
@@ -241,10 +235,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         calldata,
                         nonce,
                         fee_args,
-                        DryRunArgs {
-                            dry_run: false,
-                            detailed: false,
-                        },
+                        DryRunArgs::default(),
                         function_selector,
                         self.account()?,
                         WaitForTx {

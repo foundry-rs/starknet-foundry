@@ -6,7 +6,7 @@ use starknet_rust::core::types::FeeEstimate;
 
 use crate::response::cast_message::SncastCommandMessage;
 
-#[derive(Serialize, Deserialize, Debug, Clone, CairoSerialize, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, CairoSerialize, PartialEq)]
 pub struct DryRunResponse {
     pub l1_gas_consumed: u64,
     pub l1_gas_price: u128,

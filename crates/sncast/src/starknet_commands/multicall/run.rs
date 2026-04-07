@@ -121,19 +121,17 @@ where
         }
     }
 
-    if let Some(result) = dry_run_args
-        .estimate_if_dry_run(
-            || async {
+    if dry_run_args.dry_run {
+        return dry_run_args
+            .estimate(|| async {
                 account
                     .execute_v3(parsed_calls.clone())
                     .estimate_fee()
                     .await
-            },
-            MulticallRunResponse::DryRun,
-        )
-        .await
-    {
-        return result.map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"));
+            })
+            .await
+            .map(MulticallRunResponse::DryRun)
+            .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"));
     }
 
     execute_calls(account, parsed_calls, fee_args, nonce, wait_config, ui)

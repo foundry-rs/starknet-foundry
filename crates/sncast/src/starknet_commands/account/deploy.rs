@@ -327,14 +327,12 @@ where
 {
     let deployment = account_factory.deploy_v3(salt);
 
-    if let Some(result) = dry_run_args
-        .estimate_if_dry_run(
-            || async { deployment.estimate_fee().await },
-            InvokeResponse::DryRun,
-        )
-        .await
-    {
-        return result.map_err(|error| anyhow!("Failed to estimate fee: {error}"));
+    if dry_run_args.dry_run {
+        return dry_run_args
+            .estimate(|| async { deployment.estimate_fee().await })
+            .await
+            .map(InvokeResponse::DryRun)
+            .map_err(|error| anyhow!("Failed to estimate fee: {error}"));
     }
 
     let fee_settings = if fee_args.max_fee.is_some() {

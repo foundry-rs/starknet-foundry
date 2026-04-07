@@ -495,10 +495,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     declare(
                         contract_name,
                         declare_fee_args,
-                        DryRunArgs {
-                            dry_run: false,
-                            detailed: false,
-                        },
+                        DryRunArgs::default(),
                         nonce,
                         account,
                         &artifacts,
