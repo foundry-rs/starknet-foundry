@@ -5,6 +5,7 @@ use starknet_rust::core::types::FeeEstimate;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 
 #[derive(Args, Debug, Clone)]
+#[group(id = "fee_args", multiple = true)]
 pub struct FeeArgs {
     /// Max fee for the transaction. If not provided, will be automatically estimated.
     #[arg(value_parser = parse_non_zero_felt, short, long, conflicts_with_all = ["l1_gas", "l1_gas_price", "l2_gas", "l2_gas_price", "l1_data_gas", "l1_data_gas_price"])]
