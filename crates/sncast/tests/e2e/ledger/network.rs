@@ -410,6 +410,7 @@ async fn test_ledger_multicall() {
 }
 
 #[tokio::test]
+#[ignore = "requires Speculos installation"]
 async fn test_ledger_invoke_dry_run() {
     let (_, url) = setup_speculos(5007);
 
