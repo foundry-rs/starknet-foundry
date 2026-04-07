@@ -77,6 +77,7 @@ If passed, an estimated tip will be added to pay for the transaction. The tip is
 
 ## `--dry-run`
 Optional.
+Conflicts with all fee related flags: [`--max-fee`](#--max-fee--m-max_fee), [`--l1-gas`](#--l1-gas-l1_gas), [`--l1-gas-price`](#--l1-gas-price-l1_gas_price), [`--l2-gas`](#--l2-gas-l2_gas), [`--l2-gas-price`](#--l2-gas-price-l2_gas_price), [`--l1-data-gas`](#--l1-data-gas-l1_data_gas), [`--l1-data-gas-price`](#--l1-data-gas-price-l1_data_gas_price), [`--tip`](#--tip-tip), [`--estimate-tip`](#--estimate-tip-estimate_tip)
 
 If passed, the transaction will not be sent to the network and the fee will be estimated instead. See also: [`--detailed`](#--detailed).
 
