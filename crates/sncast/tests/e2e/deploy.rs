@@ -696,6 +696,42 @@ async fn test_dry_run() {
 }
 
 #[tokio::test]
+async fn test_dry_run_with_contract_name_fails() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "with_redeclare",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "deploy",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+        "--dry-run",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {
+            "
+            Error: Cannot use `--dry-run` with `--contract-name`. Use `--class-hash` to dry-run a deploy of an already-declared class.
+            "
+        },
+    );
+}
+
+#[tokio::test]
 async fn test_dry_run_detailed() {
     let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
 
