@@ -61,7 +61,6 @@ pub fn get_relocated_vm_trace(cairo_runner: &mut CairoRunner) -> Vec<RelocatedTr
     // if vm execution failed, the trace is not relocated so we need to relocate it
     if cairo_runner.relocated_trace.is_none() {
         cairo_runner
-            // TODO: Check if this is correct
             .relocate(true, true)
             .expect("relocation should not fail");
     }

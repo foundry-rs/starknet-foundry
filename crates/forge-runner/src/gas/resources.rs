@@ -79,15 +79,14 @@ impl GasCalculationResources {
     }
 
     pub fn to_archival_resources(&self) -> ArchivalDataResources {
-        // calldata length, signature length and code size are set to 0, because
-        // we don't include them in estimations
+        // extended calldata length, signature length, code size and client side proof
+        // are not included in the estimation
         // ref: https://github.com/foundry-rs/starknet-foundry/blob/5ce15b029135545452588c00aae580c05eb11ca8/docs/src/testing/gas-and-resource-estimation.md?plain=1#L73
         ArchivalDataResources {
             event_summary: self.events.clone(),
             extended_calldata_length: 0,
             signature_length: 0,
             code_size: 0,
-            // TODO: Check if it makes sense to include proof facts in gas calculation
             has_client_side_proof: false,
         }
     }

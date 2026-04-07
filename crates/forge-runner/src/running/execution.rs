@@ -59,7 +59,6 @@ pub fn finalize_execution(
         resources: vm_resources,
         storage_access_tracker: syscall_handler_base.storage_access_tracker.clone(),
         builtin_counters: extended_resources_without_inner_calls.prover_cairo_primitives(),
-        // TODO: Investigate if we can reduce our logic given that syscall usage is now present in `CallInfo`
         syscalls_usage: syscall_handler_base.syscalls_usage.clone(),
     })
     // endregion
