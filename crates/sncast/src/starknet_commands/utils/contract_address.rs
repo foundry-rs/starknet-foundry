@@ -11,6 +11,7 @@ use sncast::{
     },
     udc_uniqueness,
 };
+use starknet_rust::core::types::contract::AbiEntry;
 use starknet_rust::core::utils::{get_selector_from_name, get_udc_deployed_address};
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
@@ -26,9 +27,9 @@ pub struct ContractAddress {
     #[command(flatten)]
     pub common: DeployCommonArgs,
 
-    /// Deployer account address, required when --unique is set
-    #[arg(long)]
-    pub account_address: Option<Felt>,
+    /// Deployer account address, used to modify the salt when --unique is set. Defaults to zero.
+    #[arg(long, default_value_t = Felt::ZERO)]
+    pub account_address: Felt,
 
     #[command(flatten)]
     pub rpc: Option<RpcArgs>,
@@ -40,14 +41,7 @@ pub async fn get_contract_address(
     config: CastConfig,
     ui: &UI,
 ) -> Result<ContractAddressResponse, StarknetCommandError> {
-    if args.common.unique && args.account_address.is_none() {
-        return Err(anyhow::anyhow!("--account-address is required when --unique is set").into());
-    }
-
     let salt = extract_or_generate_salt(args.common.salt);
-    let selector =
-        get_selector_from_name("constructor").context("Failed to get constructor selector")?;
-
     let (class_hash, abi) = if let Some(class_hash) = args.common.contract_identifier.class_hash {
         let abi = if args.common.arguments.arguments.is_some() {
             resolve_abi(Location::ClassHash(class_hash), args.rpc, &config, ui).await?
@@ -56,7 +50,11 @@ pub async fn get_contract_address(
         };
         (class_hash, abi)
     } else {
-        let contract_name = args.common.contract_identifier.contract_name.unwrap();
+        let contract_name = args
+            .common
+            .contract_identifier
+            .contract_name
+            .expect("contract_name must be set when class_hash is None");
         let sierra = sierra_class_from_artifacts(
             &contract_name,
             artifacts
@@ -73,16 +71,26 @@ pub async fn get_contract_address(
     let calldata = if let Some(raw) = deploy_args.constructor_calldata {
         calldata_to_felts(&raw)?
     } else if let Some(ref arguments_str) = deploy_args.arguments {
+        let selector = get_selector_from_name("constructor")
+            .context("Failed to get constructor selector")?;
         transform(arguments_str, &abi, &selector)?
     } else {
         vec![]
     };
 
-    let account_address = args.account_address.unwrap_or(Felt::ZERO);
+    if !calldata.is_empty() && !abi.is_empty() {
+        let has_constructor = abi.iter().any(|e| matches!(e, AbiEntry::Constructor(_)));
+        if !has_constructor {
+            return Err(
+                anyhow::anyhow!("Calldata provided but the contract has no constructor").into(),
+            );
+        }
+    }
+
     let contract_address = get_udc_deployed_address(
         salt,
         class_hash,
-        &udc_uniqueness(args.common.unique, account_address),
+        &udc_uniqueness(args.common.unique, args.account_address),
         &calldata,
     );
 

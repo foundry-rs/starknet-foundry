@@ -46,6 +46,7 @@ Requires [`--account-address`](#--account-address).
 Optional. Required when `--unique` is set.
 
 The deployer account address used to modify the salt when `--unique` is set.
+Defaults to zero.
 
 ## `--package <PACKAGE>`
 Optional.

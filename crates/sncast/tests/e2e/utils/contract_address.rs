@@ -22,8 +22,6 @@ fn extract_contract_address(output: &[u8]) -> String {
     panic!("Could not find contract_address in output:\n{stdout}");
 }
 
-// ── Group 1: --class-hash happy paths (no RPC needed) ────────────────────────
-
 #[test]
 fn test_happy_case_class_hash() {
     let args = vec![
@@ -136,8 +134,6 @@ fn test_unique_vs_not_unique_produce_different_addresses() {
     );
 }
 
-// ── Group 2: --constructor-calldata (no RPC) ──────────────────────────────────
-
 #[test]
 fn test_happy_case_constructor_calldata() {
     let args = vec![
@@ -180,8 +176,6 @@ fn test_calldata_affects_address() {
         "Different calldata must produce different addresses"
     );
 }
-
-// ── Group 3: --contract-name (local artifact) ─────────────────────────────────
 
 #[test]
 fn test_happy_case_contract_name() {
@@ -265,8 +259,6 @@ fn test_contract_name_matches_class_hash() {
     );
 }
 
-// ── Group 4: Key correctness — precalculated address matches actual deploy ────
-
 #[tokio::test]
 async fn test_precalculated_address_matches_deployed_address() {
     let tempdir = create_and_deploy_oz_account().await;
@@ -322,10 +314,9 @@ async fn test_precalculated_address_matches_deployed_address() {
     );
 }
 
-// ── Group 5: Error cases ──────────────────────────────────────────────────────
-
 #[test]
 fn test_unique_without_account_address() {
+    // --unique without --account-address uses zero as the default deployer address
     let args = vec![
         "utils",
         "contract-address",
@@ -335,11 +326,8 @@ fn test_unique_without_account_address() {
         "0x1",
         "--unique",
     ];
-    let output = runner(&args).assert().failure();
-    assert_stderr_contains(
-        output,
-        indoc! {"Error: --account-address is required when --unique is set"},
-    );
+    let output = runner(&args).assert().success();
+    assert_stdout_contains(output, indoc! {r"Contract Address: 0x0[..]"});
 }
 
 #[test]

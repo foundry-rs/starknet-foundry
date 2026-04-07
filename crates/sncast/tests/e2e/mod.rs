@@ -1,9 +1,7 @@
 mod account;
 pub mod balance;
 mod call;
-mod class_hash;
 mod completions;
-mod contract_address;
 mod declare;
 mod declare_from;
 mod deploy;
@@ -18,4 +16,5 @@ mod script;
 mod serialize;
 mod show_config;
 mod tx_status;
+mod utils;
 mod verify;
