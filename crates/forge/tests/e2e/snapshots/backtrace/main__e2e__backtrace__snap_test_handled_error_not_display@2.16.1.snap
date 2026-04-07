@@ -5,7 +5,7 @@ expression: stdout
 
 
 
-[PASS] dispatchers_integrationtest::test::test_handle_and_panic (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~583520)
+[PASS] dispatchers_integrationtest::test::test_handle_and_panic (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~1028560)
 
 error occurred in contract 'ErrorHandler'
 stack backtrace:
