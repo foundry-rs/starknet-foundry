@@ -12,6 +12,7 @@ use crate::helpers::fixtures::{
     join_tempdirs,
 };
 use crate::helpers::runner::runner;
+use shared::test_utils::output_assert::assert_stdout_contains;
 use sncast::AccountType;
 use starknet_rust::core::types::TransactionReceipt::{Declare, Invoke};
 use starknet_types_core::felt::Felt;
@@ -406,4 +407,34 @@ async fn test_ledger_multicall() {
     let tx_hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(tx_hash).await;
     assert!(matches!(receipt, Invoke(_)));
+}
+
+#[tokio::test]
+async fn test_ledger_invoke_dry_run() {
+    let (_, url) = setup_speculos(5007);
+
+    let account_address = deploy_ledger_account(&url, TEST_LEDGER_PATH, Felt::from(5007_u32)).await;
+    let tempdir = create_temp_accounts_json(account_address);
+    let accounts_file = tempdir.path().join("accounts.json");
+
+    let output = runner(&[
+        "--accounts-file",
+        accounts_file.to_str().unwrap(),
+        "--account",
+        LEDGER_ACCOUNT_NAME,
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 0x2",
+        "--dry-run",
+    ])
+    .assert()
+    .success();
+
+    assert_stdout_contains(output, "Dry run completed");
 }
