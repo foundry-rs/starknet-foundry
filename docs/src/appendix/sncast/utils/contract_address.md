@@ -20,6 +20,8 @@ Conflicts with: [`--arguments`](#--arguments)
 
 Constructor calldata as a series of felts.
 
+Requires `--url` or `--network` to fetch the contract ABI when used together with `--class-hash`.
+
 ## `--arguments <ARGUMENTS>`
 Optional.
 Conflicts with: [`--constructor-calldata`](#--constructor-calldata)
@@ -40,10 +42,9 @@ Salt for the address. If not provided, a random salt is generated.
 Optional.
 
 If set, the salt is modified with the deployer account address, making the address unique per deployer.
-Requires [`--account-address`](#--account-address).
 
-## `--account-address <ACCOUNT_ADDRESS>`
-Optional. Required when `--unique` is set.
+## `--deployer-address <DEPLOYER_ADDRESS>`
+Optional.
 
 The deployer account address used to modify the salt when `--unique` is set.
 Defaults to zero.

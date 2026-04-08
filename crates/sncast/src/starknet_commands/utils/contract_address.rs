@@ -27,9 +27,9 @@ pub struct ContractAddress {
     #[command(flatten)]
     pub common: DeployCommonArgs,
 
-    /// Deployer account address, used to modify the salt when --unique is set. Defaults to zero.
+    /// Deployer account address, used to modify the salt when `--unique` is set. Defaults to zero.
     #[arg(long, default_value_t = Felt::ZERO)]
-    pub account_address: Felt,
+    pub deployer_address: Felt,
 
     #[command(flatten)]
     pub rpc: Option<RpcArgs>,
@@ -43,7 +43,9 @@ pub async fn get_contract_address(
 ) -> Result<ContractAddressResponse, StarknetCommandError> {
     let salt = extract_or_generate_salt(args.common.salt);
     let (class_hash, abi) = if let Some(class_hash) = args.common.contract_identifier.class_hash {
-        let abi = if args.common.arguments.arguments.is_some() {
+        let abi = if args.common.arguments.arguments.is_some()
+            || args.common.arguments.constructor_calldata.is_some()
+        {
             resolve_abi(Location::ClassHash(class_hash), args.rpc, &config, ui).await?
         } else {
             vec![]
@@ -71,8 +73,8 @@ pub async fn get_contract_address(
     let calldata = if let Some(raw) = deploy_args.constructor_calldata {
         calldata_to_felts(&raw)?
     } else if let Some(ref arguments_str) = deploy_args.arguments {
-        let selector = get_selector_from_name("constructor")
-            .context("Failed to get constructor selector")?;
+        let selector =
+            get_selector_from_name("constructor").context("Failed to get constructor selector")?;
         transform(arguments_str, &abi, &selector)?
     } else {
         vec![]
@@ -90,7 +92,7 @@ pub async fn get_contract_address(
     let contract_address = get_udc_deployed_address(
         salt,
         class_hash,
-        &udc_uniqueness(args.common.unique, args.account_address),
+        &udc_uniqueness(args.common.unique, args.deployer_address),
         &calldata,
     );
 

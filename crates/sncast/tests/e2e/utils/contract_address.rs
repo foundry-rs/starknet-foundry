@@ -77,7 +77,7 @@ fn test_happy_case_unique() {
         "--salt",
         "0x1",
         "--unique",
-        "--account-address",
+        "--deployer-address",
         "0x123",
     ];
     let output = runner(&args).assert().success();
@@ -124,7 +124,7 @@ fn test_unique_vs_not_unique_produce_different_addresses() {
     let addr_plain = extract_contract_address(&out_plain.get_output().stdout);
 
     let mut unique_args = base.clone();
-    unique_args.extend(["--unique", "--account-address", "0x1"]);
+    unique_args.extend(["--unique", "--deployer-address", "0x1"]);
     let out_unique = runner(&unique_args).assert().success();
     let addr_unique = extract_contract_address(&out_unique.get_output().stdout);
 
@@ -280,7 +280,7 @@ async fn test_precalculated_address_matches_deployed_address() {
         "--salt",
         "0x42",
         "--unique",
-        "--account-address",
+        "--deployer-address",
         account_address,
     ];
     let precalc_out = runner(&precalc_args).assert().success();
@@ -316,7 +316,7 @@ async fn test_precalculated_address_matches_deployed_address() {
 
 #[test]
 fn test_unique_without_account_address() {
-    // --unique without --account-address uses zero as the default deployer address
+    // --unique without --deployer-address uses zero as the default
     let args = vec![
         "utils",
         "contract-address",
