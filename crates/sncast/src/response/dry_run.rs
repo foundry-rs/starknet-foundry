@@ -45,7 +45,7 @@ impl SncastCommandMessage for DryRunResponse {
                 "Overall Fee",
                 &format!(
                     "{} Fri (~{} STRK)",
-                    &overall_fee.to_string(),
+                    &self.overall_fee.to_string(),
                     overall_fee_strk.round(4)
                 ),
             );
