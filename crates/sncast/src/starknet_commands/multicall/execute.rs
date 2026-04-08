@@ -14,6 +14,7 @@ use starknet_rust::{
 };
 use starknet_types_core::felt::Felt;
 
+use sncast::helpers::proof::ProofArgs;
 use crate::starknet_commands::{
     invoke::execute_calls,
     multicall::{
@@ -98,6 +99,7 @@ where
         account,
         calls,
         execute.fee_args,
+        ProofArgs::none(),
         execute.nonce,
         wait_config,
         ui,

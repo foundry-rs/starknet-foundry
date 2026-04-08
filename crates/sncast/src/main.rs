@@ -611,6 +611,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         arguments,
                     },
                 fee_args,
+                proof_args,
                 rpc,
                 nonce,
                 ..
@@ -635,6 +636,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     calldata,
                     nonce,
                     fee_args,
+                    proof_args,
                     selector,
                     account,
                     wait_config,

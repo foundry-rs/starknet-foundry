@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use crate::starknet_commands::invoke::execute_calls;
+use sncast::helpers::proof::ProofArgs;
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::deploy::MulticallDeploy;
 use crate::starknet_commands::multicall::invoke::MulticallInvoke;
@@ -114,7 +115,7 @@ where
         }
     }
 
-    execute_calls(account, parsed_calls, fee_args, nonce, wait_config, ui)
+    execute_calls(account, parsed_calls, fee_args, ProofArgs::none(), nonce, wait_config, ui)
         .await
         .map(Into::into)
         .map_err(handle_starknet_command_error)
