@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `sncast get tx` command to get transaction details by hash.
-- `sncast utils selector` command to calculate entrypoint selector (sn_keccak) from function name.
+- `sncast utils selector` command to calculate entrypoint selector (`sn_keccak`) from function name.
 
 ## [0.58.1] - 2026-03-31
 
