@@ -2,6 +2,7 @@ use crate::helpers::block_explorer::LinkProvider;
 use crate::response::cast_message::SncastCommandMessage;
 use crate::response::explorer_link::OutputLink;
 use conversions::padded_felt::PaddedFelt;
+use conversions::string::IntoDecStr;
 use foundry_ui::styling::OutputBuilder;
 use serde::{Serialize, Serializer};
 use starknet_rust::core::types::{
@@ -144,7 +145,7 @@ impl TransactionOutputBuilder for OutputBuilder {
     }
 
     fn nonce(self, nonce: &Felt) -> Self {
-        self.felt_field("Nonce", nonce)
+        self.field("Nonce", &nonce.clone().into_dec_string())
     }
 
     fn calldata(self, calldata: &[Felt]) -> Self {
@@ -478,7 +479,7 @@ fn build_l1_handler_response(tx: &starknet_rust::core::types::L1HandlerTransacti
         .tx_version(&version.to_string())
         .tx_hash(transaction_hash)
         .contract_address(contract_address)
-        .field("Nonce", &nonce.to_string())
+        .nonce(&Felt::from(*nonce))
         .entry_point_selector(entry_point_selector)
         .calldata(calldata)
         .build()
