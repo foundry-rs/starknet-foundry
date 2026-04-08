@@ -478,7 +478,7 @@ fn build_l1_handler_response(tx: &starknet_rust::core::types::L1HandlerTransacti
         .tx_version(&version.to_string())
         .tx_hash(transaction_hash)
         .contract_address(contract_address)
-        .nonce(&Felt::from(*nonce))
+        .field("Nonce", &nonce.to_string())
         .entry_point_selector(entry_point_selector)
         .calldata(calldata)
         .build()
