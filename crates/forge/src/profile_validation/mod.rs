@@ -1,9 +1,11 @@
 mod backtrace;
 mod coverage;
+mod debugger;
 
 use crate::TestArgs;
 use crate::profile_validation::backtrace::check_backtrace_compatibility;
 use crate::profile_validation::coverage::check_coverage_compatibility;
+use crate::profile_validation::debugger::check_debugger_compatibility;
 use forge_runner::backtrace::is_backtrace_enabled;
 use scarb_metadata::Metadata;
 use std::fs;
@@ -17,9 +19,15 @@ pub fn check_profile_compatibility(
     if test_args.coverage {
         check_coverage_compatibility(scarb_metadata)?;
     }
+
+    if test_args.launch_debugger {
+        check_debugger_compatibility(scarb_metadata)?;
+    }
+
     if is_backtrace_enabled() {
         check_backtrace_compatibility(test_args, scarb_metadata)?;
     }
+
     Ok(())
 }
 
