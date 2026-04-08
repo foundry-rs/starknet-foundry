@@ -12,7 +12,6 @@ use crate::helpers::fixtures::{
     join_tempdirs,
 };
 use crate::helpers::runner::runner;
-use shared::test_utils::output_assert::assert_stdout_contains;
 use sncast::AccountType;
 use starknet_rust::core::types::TransactionReceipt::{Declare, Invoke};
 use starknet_types_core::felt::Felt;
