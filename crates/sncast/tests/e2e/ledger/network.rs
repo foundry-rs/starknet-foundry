@@ -412,9 +412,9 @@ async fn test_ledger_multicall() {
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_ledger_invoke_dry_run() {
-    let (_, url) = setup_speculos(5007);
+    let (_, url) = setup_speculos(5011);
 
-    let account_address = deploy_ledger_account(&url, TEST_LEDGER_PATH, Felt::from(5007_u32)).await;
+    let account_address = deploy_ledger_account(&url, TEST_LEDGER_PATH, Felt::from(5011_u32)).await;
     let tempdir = create_temp_accounts_json(account_address);
     let accounts_file = tempdir.path().join("accounts.json");
 
