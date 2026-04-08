@@ -2,6 +2,7 @@ pub mod account;
 pub mod balance;
 pub mod call;
 pub mod cast_message;
+pub mod class_hash_at;
 pub mod completions;
 pub mod declare;
 pub mod deploy;
