@@ -145,7 +145,7 @@ impl TransactionOutputBuilder for OutputBuilder {
     }
 
     fn nonce(self, nonce: &Felt) -> Self {
-        self.field("Nonce", &nonce.clone().into_dec_string())
+        self.field("Nonce", &nonce.into_dec_string())
     }
 
     fn calldata(self, calldata: &[Felt]) -> Self {
