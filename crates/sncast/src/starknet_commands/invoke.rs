@@ -75,7 +75,7 @@ where
 
     if dry_run_args.dry_run {
         return dry_run_args
-            .estimate(|| async { account.execute_v3(vec![call.clone()]).estimate_fee().await })
+            .estimate(|| async { account.execute_v3(vec![call]).estimate_fee().await })
             .await
             .map(InvokeResponse::DryRun)
             .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"))
