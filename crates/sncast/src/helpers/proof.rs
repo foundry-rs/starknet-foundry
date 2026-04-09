@@ -3,7 +3,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use starknet_types_core::felt::Felt;
 
-#[derive(Args, Debug, Clone)]
+#[derive(Args, Debug, Clone, Default)]
 pub struct ProofArgs {
     /// Path to a file containing the proof (base64-encoded string) for the transaction.
     #[arg(long, requires = "proof_facts_file")]
@@ -67,11 +67,6 @@ fn strip_quotes(value: &str) -> &str {
     value
 }
 
-impl Default for ProofArgs {
-    fn default() -> Self {
-        Self::none()
-    }
-}
 
 #[cfg(test)]
 mod tests {
