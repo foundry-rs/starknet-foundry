@@ -42,9 +42,10 @@ impl ProofArgs {
                 let felts = contents
                     .split(',')
                     .map(|s| {
-                        strip_quotes(s.trim())
+                        let stripped = strip_quotes(s.trim());
+                        stripped
                             .parse::<Felt>()
-                            .with_context(|| format!("Failed to parse felt from '{}'", s.trim()))
+                            .with_context(|| format!("Failed to parse felt from '{stripped}'"))
                     })
                     .collect::<Result<Vec<_>>>()?;
                 Ok(Some(felts))
