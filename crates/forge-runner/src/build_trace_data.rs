@@ -146,7 +146,7 @@ pub fn build_profiler_execution_resources(
     // Subtract syscall related resources to get the values expected by the profiler.
     // The profiler operates on resources excluding syscall overhead.
     let versioned_constants = VersionedConstants::latest_constants();
-    let execution_resources = &execution_resources.vm_resources.clone()
+    let execution_resources = &execution_resources.vm_resources
         - &versioned_constants.get_additional_os_syscall_resources(syscall_usage_vm_resources);
     let gas_consumed =
         gas_consumed - get_syscalls_gas_consumed(syscall_usage_sierra_gas, versioned_constants);
