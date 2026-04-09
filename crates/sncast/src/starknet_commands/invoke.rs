@@ -1,6 +1,6 @@
 use crate::Arguments;
 use crate::starknet_commands::utils::felt_or_id::FeltOrId;
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, Context};
 use clap::Args;
 use conversions::IntoConv;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
@@ -121,10 +121,10 @@ where
 
     let proof = proof_args
         .resolve_proof()
-        .map_err(|e| anyhow!("Failed to resolve proof: {e}"))?;
+        .context("Failed to resolve proof")?;
     let proof_facts = proof_args
         .resolve_proof_facts()
-        .map_err(|e| anyhow!("Failed to resolve proof facts: {e}"))?;
+        .context("Failed to resolve proof facts")?;
 
     let execution = apply_optional_fields!(
         execution_calls,
