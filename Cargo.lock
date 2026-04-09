@@ -927,8 +927,9 @@ checksum = "ade8366b8bd5ba243f0a58f036cc0ca8a2f069cff1a2351ef1cac6b083e16fc0"
 
 [[package]]
 name = "cairo-annotations"
-version = "0.7.0"
-source = "git+https://github.com/software-mansion/cairo-annotations.git?rev=57d99b8#57d99b83ebc10c21a4fb844bca88eaa21a1d55ca"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e954fe93c0783b0f314977abbc9a94799cc4f217c2873616db8cdb368e036de"
 dependencies = [
  "cairo-lang-sierra",
  "cairo-lang-sierra-to-casm",
