@@ -281,7 +281,7 @@ fn test_tracked_resources() {
         TrackedResource::CairoSteps
     );
     assert_eq!(first_inner_call.execution.gas_consumed, 0);
-    assert_ne!(first_inner_call.resources.n_steps, 0);
+    assert_ne!(first_inner_call.resources.vm_resources.n_steps, 0);
     assert_eq!(first_inner_call.inner_calls.len(), 1);
 
     // `call_internal` from the `TrackedResources` contract
@@ -291,7 +291,7 @@ fn test_tracked_resources() {
         TrackedResource::CairoSteps
     );
     assert_eq!(inner_inner_call.execution.gas_consumed, 0);
-    assert_ne!(inner_inner_call.resources.n_steps, 0);
+    assert_ne!(inner_inner_call.resources.vm_resources.n_steps, 0);
 
     // `call_internal` from the `TrackedResources` contract
     let second_inner_call = main_call_info.inner_calls.last().unwrap();
@@ -300,5 +300,5 @@ fn test_tracked_resources() {
         TrackedResource::SierraGas
     );
     assert_ne!(second_inner_call.execution.gas_consumed, 0);
-    assert_eq!(second_inner_call.resources.n_steps, 0);
+    assert_eq!(second_inner_call.resources.vm_resources.n_steps, 0);
 }

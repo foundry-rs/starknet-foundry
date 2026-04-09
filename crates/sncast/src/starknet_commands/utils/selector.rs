@@ -11,7 +11,7 @@ pub struct Selector {
     pub name: String,
 }
 
-#[allow(clippy::result_large_err)]
+#[expect(clippy::result_large_err)]
 pub fn get_selector(selector: &Selector) -> Result<SelectorResponse, StarknetCommandError> {
     let trimmed = selector.name.trim();
 

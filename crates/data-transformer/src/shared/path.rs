@@ -1,6 +1,6 @@
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::{
-    ExprPath, GenericArg, GenericArgValue, PathSegment, PathSegmentWithGenericArgs,
+    Expr, ExprPath, GenericArg, PathSegment, PathSegmentWithGenericArgs,
 };
 use cairo_lang_syntax::node::{Token, TypedSyntaxNode};
 
@@ -42,10 +42,10 @@ pub fn split(path: &ExprPath, db: &SimpleParserDatabase) -> Result<SplitResult, 
     for (i, p) in elements.enumerate() {
         match p {
             PathSegment::Simple(segment) => {
-                splits.push(segment.ident(db).token(db).text(db).to_string());
+                splits.push(segment.ident(db).token(db).text(db).to_string(db));
             }
             PathSegment::WithGenericArgs(segment) => {
-                splits.push(segment.ident(db).token(db).text(db).to_string());
+                splits.push(segment.ident(db).token(db).text(db).to_string(db));
                 let generic_args = extract_generic_args(&segment, db)?;
 
                 let is_last = i == elements_len - 1;
@@ -76,8 +76,8 @@ fn extract_generic_args(
         .map(|arg| match arg {
             GenericArg::Named(_) => Err(PathSplitError::InvalidGenericArgs),
             GenericArg::Unnamed(arg) => match arg.value(db) {
-                GenericArgValue::Expr(expr) => Ok(expr.as_syntax_node().get_text(db)),
-                GenericArgValue::Underscore(_) => Err(PathSplitError::InvalidGenericArgs),
+                Expr::Underscore(_) => Err(PathSplitError::InvalidGenericArgs),
+                expr => Ok(expr.as_syntax_node().get_text(db)),
             },
         })
         .collect::<Result<Vec<_>, PathSplitError>>()?;
@@ -86,5 +86,5 @@ fn extract_generic_args(
         return Err(PathSplitError::MoreThanOneGenericArg);
     };
 
-    Ok(generic_arg.clone())
+    Ok(generic_arg.to_string())
 }

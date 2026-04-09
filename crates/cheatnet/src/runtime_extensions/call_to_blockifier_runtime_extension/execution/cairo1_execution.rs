@@ -130,6 +130,7 @@ pub(crate) fn execute_entry_point_call_cairo1(
         .trace_data
         .set_vm_trace_for_current_call(trace);
 
+    // TODO(#4250): Investigate if we can simplify our logic given that syscall usage is now present in `CallInfo`
     let (syscall_usage_vm_resources, syscall_usage_sierra_gas) = match tracked_resource {
         TrackedResource::CairoSteps => (syscall_usage, SyscallUsageMap::default()),
         TrackedResource::SierraGas => (SyscallUsageMap::default(), syscall_usage),
@@ -170,7 +171,7 @@ pub fn cheatable_run_entry_point(
     // region: Modified blockifier code
     // Relocate trace to then collect it
     runner
-        .relocate(true)
+        .relocate(true, true)
         .map_err(CairoRunError::from)
         .map_err(Box::new)?;
     // endregion

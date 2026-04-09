@@ -4,16 +4,18 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
 use crate::runtime_extensions::common::sum_syscall_usage;
 use crate::state::CheatedData;
 use blockifier::blockifier_versioned_constants::VersionedConstants;
-use blockifier::execution::call_info::{ExecutionSummary, OrderedEvent, OrderedL2ToL1Message};
+use blockifier::execution::call_info::{
+    ExecutionSummary, ExtendedExecutionResources, OrderedEvent, OrderedL2ToL1Message,
+};
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
 use cairo_annotations::trace_data::L1Resources;
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use starknet_api::core::ClassHash;
 use starknet_api::execution_resources::GasVector;
 use starknet_api::transaction::fields::GasVectorComputationMode;
+use starknet_api::versioned_constants_logic::VersionedConstantsTrait;
 use starknet_types_core::felt::Felt;
 use std::cell::{OnceCell, Ref, RefCell};
 use std::rc::Rc;
@@ -43,7 +45,7 @@ pub struct CallTrace {
     // serialize end
 
     // These also include resources used by internal calls
-    pub used_execution_resources: ExecutionResources,
+    pub used_execution_resources: ExtendedExecutionResources,
     pub used_l1_resources: L1Resources,
     pub used_syscalls_vm_resources: SyscallUsageMap,
     pub used_syscalls_sierra_gas: SyscallUsageMap,
@@ -113,7 +115,7 @@ impl TraceData {
     #[expect(clippy::too_many_arguments)]
     pub fn update_current_call(
         &mut self,
-        execution_resources: ExecutionResources,
+        execution_resources: ExtendedExecutionResources,
         gas_consumed: u64,
         used_syscalls_vm_resources: SyscallUsageMap,
         used_syscalls_sierra_gas: SyscallUsageMap,
@@ -199,7 +201,7 @@ impl CallTrace {
     pub(crate) fn default_successful_call() -> Self {
         Self {
             entry_point: CallEntryPoint::default(),
-            used_execution_resources: ExecutionResources::default(),
+            used_execution_resources: ExtendedExecutionResources::default(),
             used_l1_resources: L1Resources::default(),
             used_syscalls_vm_resources: SyscallUsageMap::default(),
             used_syscalls_sierra_gas: SyscallUsageMap::default(),

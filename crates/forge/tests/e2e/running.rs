@@ -1140,7 +1140,7 @@ fn detailed_resources_mixed_resources() {
                 messages: ([..])
                 steps: [..]
                 memory holes: [..]
-                builtins: (range_check: [..])
+                builtins: (Builtin(range_check): [..])
 
         Tests: 1 passed, 0 failed, 0 ignored, [..] filtered out
         "},
