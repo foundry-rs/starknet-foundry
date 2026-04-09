@@ -56,17 +56,16 @@ impl ProofArgs {
 }
 
 fn strip_quotes(value: &str) -> &str {
-    if value.len() >= 2 {
-        let bytes = value.as_bytes();
-        let first = bytes[0];
-        let last = bytes[value.len() - 1];
-        if (first == b'"' && last == b'"') || (first == b'\'' && last == b'\'') {
-            return &value[1..value.len() - 1];
+    for quote in ['"', '\''] {
+        if let Some(stripped) = value
+            .strip_prefix(quote)
+            .and_then(|s| s.strip_suffix(quote))
+        {
+            return stripped;
         }
     }
     value
 }
-
 
 #[cfg(test)]
 mod tests {
