@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast get tx` command to get transaction details by hash.
 - `sncast utils selector` command to calculate entrypoint selector (`sn_keccak`) from function name.
 - `sncast get class-hash-at` command to get the class hash of a contract at a given address.
+- `--with-proof-facts` flag for `sncast get tx` to include proof facts in the transaction response.
+- `--proof-file` and `--proof-facts-file` flags for `sncast invoke` to attach proof data from files.
 
 ## [0.58.1] - 2026-03-31
 

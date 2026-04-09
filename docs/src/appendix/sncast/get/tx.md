@@ -23,3 +23,8 @@ Use predefined network with public provider
 Possible values: `mainnet`, `sepolia`, `devnet`.
 
 Overrides network from `snfoundry.toml`.
+
+## `--with-proof-facts`
+Optional.
+
+If passed, includes proof facts in the transaction response (when supported by the connected RPC node).
