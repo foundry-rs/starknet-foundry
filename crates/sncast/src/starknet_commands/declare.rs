@@ -98,7 +98,7 @@ where
     .await
 }
 
-#[allow(clippy::result_large_err)]
+#[expect(clippy::result_large_err)]
 pub fn compile_sierra_to_casm(
     sierra_class: &SierraClass,
 ) -> Result<CompiledClass, StarknetCommandError> {
