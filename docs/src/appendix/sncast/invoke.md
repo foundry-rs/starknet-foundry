@@ -101,12 +101,12 @@ Nonce for transaction. If not provided, nonce will be set automatically.
 
 ## `--proof-file <PROOF_FILE>`
 Optional.
-Requires: [`--proof-facts-file`](#--proof-facts-file-proof_facts_file)
+Must be passed together with [`--proof-facts-file`](#--proof-facts-file-proof_facts_file)
 
-Path to a file containing a base64-encoded proof string attached to the invoke transaction.
+Path to a plain text file containing a proof (base64-encoded string).
 
 ## `--proof-facts-file <PROOF_FACTS_FILE>`
 Optional.
-Requires: [`--proof-file`](#--proof-file-proof_file)
+Must be passed together with [`--proof-file`](#--proof-file-proof_file)
 
-Path to a file containing comma-separated felt values attached as proof facts to the invoke transaction.
+Path to a plain text file containing proof facts (comma-separated felt values).
