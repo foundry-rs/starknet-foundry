@@ -15,6 +15,7 @@ use starknet_types_core::felt::Felt;
 #[derive(Debug, Args)]
 #[command(about = "Get the details of a transaction")]
 pub struct Transaction {
+    #[allow(clippy::struct_field_names)]
     /// Hash of the transaction
     pub transaction_hash: Felt,
 
