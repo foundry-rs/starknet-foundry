@@ -3,7 +3,7 @@ use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
 
-// TODO: Add full tests once proof generation flow is possible.
+// TODO (#4258): Add proper tests for sending invoke with proof.
 
 #[test]
 fn test_proof_file_requires_proof_facts_file() {
