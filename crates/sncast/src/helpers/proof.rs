@@ -93,7 +93,6 @@ mod tests {
         assert_eq!(result, Some("SGVsbG8gd29ybGQhCg==".to_string()));
     }
 
-
     #[test]
     fn missing_proof_file() {
         let missing_path = "/nonexistent/proof.txt";
