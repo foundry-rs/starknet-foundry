@@ -101,24 +101,29 @@ fn start_and_stop_cheat_transaction_hash_single_attribute() {
     assert_passed(&result);
 }
 
+// TODO(#2765): Test below was intended to test private `ExecutionInfoMock` and `cheat_execution_info`
 #[test]
-#[ignore = "TODO(#2765)"]
 #[expect(clippy::too_many_lines)]
-fn start_cheat_execution_info_all_attributes_mocked() {
+fn start_cheat_execution_info_all_per_contract() {
     let test = test_case!(
         indoc!(
             r#"
-            use result::ResultTrait;
-            use option::OptionTrait;
-            use starknet::info::TxInfo;
-            use serde::Serde;
-            use traits::Into;
-            use starknet::ContractAddress;
-            use starknet::ContractAddressIntoFelt252;
-            use starknet::Felt252TryIntoContractAddress;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, cheat_execution_info, ExecutionInfoMock, Operation, CheatArguments, CheatSpan};
-            use starknet::info::v2::ResourceBounds;
+            use option::OptionTrait;
+            use result::ResultTrait;
+            use serde::Serde;
+            use snforge_std::{
+                ContractClassTrait, DeclareResultTrait, declare, start_cheat_account_contract_address,
+                start_cheat_account_deployment_data, start_cheat_chain_id,
+                start_cheat_fee_data_availability_mode, start_cheat_max_fee, start_cheat_nonce,
+                start_cheat_nonce_data_availability_mode, start_cheat_paymaster_data, start_cheat_proof_facts,
+                start_cheat_resource_bounds, start_cheat_signature, start_cheat_tip,
+                start_cheat_transaction_hash, start_cheat_transaction_version,
+            };
+            use starknet::info::TxInfo;
+            use starknet::info::v3::ResourceBounds;
+            use starknet::{ContractAddress, ContractAddressIntoFelt252, Felt252TryIntoContractAddress};
+            use traits::Into;
 
             #[starknet::interface]
             trait ICheatTxInfoChecker<TContractState> {
@@ -144,80 +149,27 @@ fn start_cheat_execution_info_all_attributes_mocked() {
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
-                let mut execution_info_mock: ExecutionInfoMock = Default::default();
-
-                execution_info_mock.tx_info.nonce = Operation::Start(CheatArguments {
-                    value: 411,
-                    target: contract_address,
-                    span: CheatSpan::Indefinite
-                });
-                execution_info_mock.tx_info.account_contract_address = Operation::Start(CheatArguments {
-                    value: 422.try_into().unwrap(),
-                    target: contract_address,
-                    span: CheatSpan::Indefinite
-                });
-                execution_info_mock.tx_info.version = Operation::Start(CheatArguments {
-                    value: 433,
-                    target: contract_address,
-                    span: CheatSpan::Indefinite
-                });
-                execution_info_mock.tx_info.transaction_hash = Operation::Start(CheatArguments {
-                    value: 444,
-                    target: contract_address,
-                    span: CheatSpan::Indefinite
-                });
-                execution_info_mock.tx_info.chain_id = Operation::Start(CheatArguments {
-                    value: 455,
-                    target: contract_address,
-                    span: CheatSpan::Indefinite
-                });
-                execution_info_mock.tx_info.max_fee = Operation::Start(CheatArguments {
-                    value: 466,
-                    target: contract_address,
-                    span: CheatSpan::Indefinite
-                });
-                execution_info_mock.tx_info.signature = Operation::Start(CheatArguments {
-                    value: array![477, 478].span(),
-                    target: contract_address,
-                    span: CheatSpan::Indefinite
-                });
-                execution_info_mock.tx_info.resource_bounds = Operation::Start(CheatArguments {
-                    value: array![ResourceBounds { resource: 55, max_amount: 66, max_price_per_unit: 77 }, ResourceBounds { resource: 111, max_amount: 222, max_price_per_unit: 333 }].span(),
-                    target: contract_address,
-                    span: CheatSpan::Indefinite
-                });
-                execution_info_mock.tx_info.tip = Operation::Start(CheatArguments {
-                    value: 123,
-                    target: contract_address,
-                    span: CheatSpan::Indefinite
-                });
-                execution_info_mock.tx_info.paymaster_data = Operation::Start(CheatArguments {
-                    value: array![22, 33, 44].span(),
-                    target: contract_address,
-                    span: CheatSpan::Indefinite
-                });
-                execution_info_mock.tx_info.nonce_data_availability_mode = Operation::Start(CheatArguments {
-                    value: 99,
-                    target: contract_address,
-                    span: CheatSpan::Indefinite
-                });
-                execution_info_mock.tx_info.fee_data_availability_mode = Operation::Start(CheatArguments {
-                    value: 88,
-                    target: contract_address,
-                    span: CheatSpan::Indefinite
-                });
-                execution_info_mock.tx_info.account_deployment_data = Operation::Start(CheatArguments {
-                    value: array![111, 222].span(),
-                    target: contract_address,
-                    span: CheatSpan::Indefinite
-                });
-                execution_info_mock.tx_info.proof_facts = Operation::Start(CheatArguments {
-                    value: array![19, 38, 57, 76].span(),
-                    target: contract_address,
-                    span: CheatSpan::Indefinite
-                });
-
-                cheat_execution_info(execution_info_mock);
+                start_cheat_nonce(contract_address, 411);
+                start_cheat_account_contract_address(contract_address, 422.try_into().unwrap());
+                start_cheat_transaction_version(contract_address, 433);
+                start_cheat_transaction_hash(contract_address, 444);
+                start_cheat_chain_id(contract_address, 455);
+                start_cheat_max_fee(contract_address, 466);
+                start_cheat_signature(contract_address, array![477, 478].span());
+                start_cheat_resource_bounds(
+                    contract_address,
+                    array![
+                        ResourceBounds { resource: 55, max_amount: 66, max_price_per_unit: 77 },
+                        ResourceBounds { resource: 111, max_amount: 222, max_price_per_unit: 333 },
+                    ]
+                        .span(),
+                );
+                start_cheat_tip(contract_address, 123);
+                start_cheat_paymaster_data(contract_address, array![22, 33, 44].span());
+                start_cheat_nonce_data_availability_mode(contract_address, 99);
+                start_cheat_fee_data_availability_mode(contract_address, 88);
+                start_cheat_account_deployment_data(contract_address, array![111, 222].span());
+                start_cheat_proof_facts(contract_address, array![19, 38, 57, 76].span());
 
                 let nonce = dispatcher.get_nonce();
                 assert(nonce == 411, 'Invalid nonce');
@@ -267,7 +219,7 @@ fn start_cheat_execution_info_all_attributes_mocked() {
                 assert(account_deployment_data == array![111, 222].span(), 'Invalid account deployment');
 
                 let proof_facts = dispatcher.get_proof_facts();
-                assert(account_proof_facts == array![19, 38, 57, 76].span(), 'Invalid proof facts');
+                assert(proof_facts == array![19, 38, 57, 76].span(), 'Invalid proof facts');
             }
         "#
         ),
@@ -413,40 +365,49 @@ fn start_cheat_transaction_hash_multiple() {
     assert_passed(&result);
 }
 
+// TODO(#2765): Test below was intended to test private `ExecutionInfoMock` and `cheat_execution_info`
 #[test]
-#[ignore = "TODO(#2765)"]
 #[expect(clippy::too_many_lines)]
-fn start_cheat_execution_info_all() {
+fn start_cheat_execution_info_all_global() {
     let test = test_case!(
         indoc!(
             r#"
-            use result::ResultTrait;
-            use option::OptionTrait;
-            use starknet::info::TxInfo;
-            use serde::Serde;
-            use traits::Into;
-            use starknet::ContractAddress;
-            use starknet::ContractAddressIntoFelt252;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, cheat_execution_info, ExecutionInfoMock, Operation, CheatArguments, CheatSpan };
+            use option::OptionTrait;
+            use result::ResultTrait;
+            use serde::Serde;
+            use snforge_std::{
+                ContractClassTrait, DeclareResultTrait, declare, start_cheat_account_contract_address_global,
+                start_cheat_account_deployment_data_global, start_cheat_chain_id_global,
+                start_cheat_fee_data_availability_mode_global, start_cheat_max_fee_global,
+                start_cheat_nonce_data_availability_mode_global, start_cheat_nonce_global,
+                start_cheat_paymaster_data_global, start_cheat_proof_facts_global,
+                start_cheat_resource_bounds_global, start_cheat_signature_global, start_cheat_tip_global,
+                start_cheat_transaction_hash_global, start_cheat_transaction_version_global,
+            };
+            use starknet::info::TxInfo;
             use starknet::info::v2::ResourceBounds;
+            use starknet::{ContractAddress, ContractAddressIntoFelt252};
+            use traits::Into;
 
             #[starknet::interface]
             trait ICheatTxInfoChecker<TContractState> {
-                fn get_tx_hash(ref self: TContractState) -> felt252;
-                fn get_nonce(ref self: TContractState) -> felt252;
-                fn get_account_contract_address(ref self: TContractState) -> ContractAddress;
-                fn get_signature(ref self: TContractState) -> Span<felt252>;
-                fn get_version(ref self: TContractState) -> felt252;
-                fn get_max_fee(ref self: TContractState) -> u128;
-                fn get_chain_id(ref self: TContractState) -> felt252;
-                fn get_resource_bounds(ref self: TContractState) -> Span<ResourceBounds>;
-                fn get_tip(ref self: TContractState) -> u128;
-                fn get_paymaster_data(ref self: TContractState) -> Span<felt252>;
-                fn get_nonce_data_availability_mode(ref self: TContractState) -> u32;
-                fn get_fee_data_availability_mode(ref self: TContractState) -> u32;
-                fn get_account_deployment_data(ref self: TContractState) -> Span<felt252>;
-                fn get_proof_facts(ref self: TContractState) -> Span<felt252>;
+                fn get_tx_hash(self: @TContractState) -> felt252;
+                fn get_nonce(self: @TContractState) -> felt252;
+                fn get_account_contract_address(self: @TContractState) -> ContractAddress;
+                fn get_signature(self: @TContractState) -> Span<felt252>;
+                fn get_version(self: @TContractState) -> felt252;
+                fn get_max_fee(self: @TContractState) -> u128;
+                fn get_chain_id(self: @TContractState) -> felt252;
+                fn get_resource_bounds(self: @TContractState) -> Span<ResourceBounds>;
+                fn get_tip(self: @TContractState) -> u128;
+                fn get_paymaster_data(self: @TContractState) -> Span<felt252>;
+                fn get_nonce_data_availability_mode(self: @TContractState) -> u32;
+                fn get_fee_data_availability_mode(self: @TContractState) -> u32;
+                fn get_account_deployment_data(self: @TContractState) -> Span<felt252>;
+                fn get_proof_facts(self: @TContractState) -> Span<felt252>;
+                fn get_tx_info(self: @TContractState) -> starknet::info::v2::TxInfo;
+                fn get_tx_info_v3(self: @TContractState) -> starknet::info::v3::TxInfo;
             }
 
             #[test]
@@ -455,9 +416,7 @@ fn start_cheat_execution_info_all() {
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
-                let mut execution_info_mock: ExecutionInfoMock = Default::default();
-                execution_info_mock.tx_info.transaction_hash = Operation::StartGlobal(421);
-                cheat_execution_info(execution_info_mock);
+                start_cheat_transaction_hash_global(421);
 
                 let transaction_hash = dispatcher.get_tx_hash();
                 assert(transaction_hash == 421, 'Invalid tx hash');
@@ -469,24 +428,26 @@ fn start_cheat_execution_info_all() {
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
-                let mut execution_info_mock: ExecutionInfoMock = Default::default();
-
-                execution_info_mock.tx_info.nonce = Operation::StartGlobal(411);
-                execution_info_mock.tx_info.account_contract_address = Operation::StartGlobal(422.try_into().unwrap());
-                execution_info_mock.tx_info.version = Operation::StartGlobal(433);
-                execution_info_mock.tx_info.transaction_hash = Operation::StartGlobal(444);
-                execution_info_mock.tx_info.chain_id = Operation::StartGlobal(455);
-                execution_info_mock.tx_info.max_fee = Operation::StartGlobal(466_u128);
-                execution_info_mock.tx_info.signature = Operation::StartGlobal(array![477, 478].span());
-                execution_info_mock.tx_info.resource_bounds = Operation::StartGlobal(array![ResourceBounds { resource: 55, max_amount: 66, max_price_per_unit: 77 }, ResourceBounds { resource: 111, max_amount: 222, max_price_per_unit: 333 }].span());
-                execution_info_mock.tx_info.tip = Operation::StartGlobal(123);
-                execution_info_mock.tx_info.paymaster_data = Operation::StartGlobal(array![22, 33, 44].span());
-                execution_info_mock.tx_info.nonce_data_availability_mode = Operation::StartGlobal(99);
-                execution_info_mock.tx_info.fee_data_availability_mode = Operation::StartGlobal(88);
-                execution_info_mock.tx_info.account_deployment_data = Operation::StartGlobal(array![111, 222].span());
-                execution_info_mock.tx_info.proof_facts = Operation::StartGlobal(array![999, 1001].span());
-
-                cheat_execution_info(execution_info_mock);
+                start_cheat_nonce_global(411);
+                start_cheat_account_contract_address_global(422.try_into().unwrap());
+                start_cheat_transaction_version_global(433);
+                start_cheat_transaction_hash_global(444);
+                start_cheat_chain_id_global(455);
+                start_cheat_max_fee_global(466_u128);
+                start_cheat_signature_global(array![477, 478].span());
+                start_cheat_resource_bounds_global(
+                    array![
+                        ResourceBounds { resource: 55, max_amount: 66, max_price_per_unit: 77 },
+                        ResourceBounds { resource: 111, max_amount: 222, max_price_per_unit: 333 },
+                    ]
+                        .span(),
+                );
+                start_cheat_tip_global(123);
+                start_cheat_paymaster_data_global(array![22, 33, 44].span());
+                start_cheat_nonce_data_availability_mode_global(99);
+                start_cheat_fee_data_availability_mode_global(88);
+                start_cheat_account_deployment_data_global(array![111, 222].span());
+                start_cheat_proof_facts_global(array![999, 1001].span());
 
                 let nonce = dispatcher.get_nonce();
                 assert(nonce == 411, 'Invalid nonce');
@@ -535,7 +496,7 @@ fn start_cheat_execution_info_all() {
                 let account_deployment_data = dispatcher.get_account_deployment_data();
                 assert(account_deployment_data == array![111, 222].span(), 'Invalid account deployment');
 
-                let proof_facts = dispatcher.proof_facts();
+                let proof_facts = dispatcher.get_proof_facts();
                 assert(proof_facts == array![999, 1001].span(), 'Invalid proof facts');
             }
         "#
