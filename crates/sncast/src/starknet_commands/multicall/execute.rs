@@ -14,13 +14,13 @@ use starknet_rust::{
 };
 use starknet_types_core::felt::Felt;
 
-use sncast::helpers::proof::ProofArgs;
 use crate::starknet_commands::{
     invoke::execute_calls,
     multicall::{
         contract_registry::ContractRegistry, deploy::MulticallDeploy, invoke::MulticallInvoke,
     },
 };
+use sncast::helpers::proof::ProofArgs;
 
 const ALLOWED_MULTICALL_COMMANDS: [&str; 2] = ["deploy", "invoke"];
 

@@ -7,6 +7,7 @@ pub mod get;
 pub mod invoke;
 pub mod ledger;
 pub mod multicall;
+pub mod prove;
 pub mod script;
 pub mod show_config;
 pub mod utils;

@@ -73,7 +73,16 @@ where
         calldata,
     };
 
-    execute_calls(account, vec![call], fee_args, proof_args, nonce, wait_config, ui).await
+    execute_calls(
+        account,
+        vec![call],
+        fee_args,
+        proof_args,
+        nonce,
+        wait_config,
+        ui,
+    )
+    .await
 }
 
 pub async fn execute_calls<S>(
@@ -110,10 +119,12 @@ where
         tip,
     } = fee_settings.expect("Failed to convert to fee settings");
 
-    let ProofArgs {
-        proof,
-        proof_facts,
-    } = proof_args;
+    let proof = proof_args
+        .resolve_proof()
+        .map_err(|e| anyhow!("Failed to resolve proof: {e}"))?;
+    let proof_facts = proof_args
+        .resolve_proof_facts()
+        .map_err(|e| anyhow!("Failed to resolve proof facts: {e}"))?;
 
     let execution = apply_optional_fields!(
         execution_calls,
