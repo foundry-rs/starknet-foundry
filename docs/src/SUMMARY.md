@@ -106,6 +106,7 @@
     * [nonce_data_availability_mode](appendix/cheatcodes/nonce_data_availability_mode.md)
     * [fee_data_availability_mode](appendix/cheatcodes/fee_data_availability_mode.md)
     * [account_deployment_data](appendix/cheatcodes/account_deployment_data.md)
+    * [proof_facts](appendix/cheatcodes/proof_facts.md)
     * [mock_call](appendix/cheatcodes/mock_call.md)
     * [get_class_hash](appendix/cheatcodes/get_class_hash.md)
     * [replace_bytecode](appendix/cheatcodes/replace_bytecode.md)
