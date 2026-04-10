@@ -40,6 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast verify` now uses the configured network or infers it from the RPC chain ID when `--network` is omitted.
 - `sncast` now returns non-zero exit code when a command fails.
 
+#### Removed
+
+- `argent` option for `--type` flag in `account create` and `account import` commands. Use `ready` instead. Old account files with `"type": "argent"` are still loaded correctly as `ready`.
+
 ## [0.59.0] - 2026-04-10
 
 ### Forge

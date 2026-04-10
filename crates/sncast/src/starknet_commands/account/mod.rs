@@ -59,16 +59,10 @@ pub fn prepare_account_json(
     class_hash: Option<Felt>,
     salt: Option<Felt>,
 ) -> serde_json::Value {
-    // TODO(#3556): Once `Argent` variant is deleted, use `account_type` directly
-    let saved_account_type = match account_type {
-        AccountType::Argent => AccountType::Ready,
-        _ => account_type,
-    };
-
     let mut account_json = json!({
         "public_key": format!("{public_key:#x}"),
         "address": format!("{address:#x}"),
-        "type": format!("{saved_account_type}").to_lowercase().replace("openzeppelin", "open_zeppelin"),
+        "type": format!("{account_type}").to_lowercase().replace("openzeppelin", "open_zeppelin"),
         "deployed": deployed,
         "legacy": legacy,
     });
