@@ -14,6 +14,7 @@ pub(crate) mod ledger;
 mod main_tests;
 mod multicall;
 mod nonce;
+mod proof;
 mod script;
 mod selector;
 mod serialize;

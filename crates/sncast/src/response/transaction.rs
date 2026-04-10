@@ -104,6 +104,7 @@ trait TransactionOutputBuilder {
     fn tip(self, tip: u64) -> Self;
     fn nonce_da_mode(self, mode: DataAvailabilityMode) -> Self;
     fn fee_da_mode(self, mode: DataAvailabilityMode) -> Self;
+    fn proof_facts(self, proof_facts: Option<&[Felt]>) -> Self;
 }
 
 impl TransactionOutputBuilder for OutputBuilder {
@@ -207,6 +208,14 @@ impl TransactionOutputBuilder for OutputBuilder {
     fn fee_da_mode(self, mode: DataAvailabilityMode) -> Self {
         self.field("Fee DA Mode", fmt_da(mode))
     }
+
+    fn proof_facts(self, proof_facts: Option<&[Felt]>) -> Self {
+        if let Some(proof_facts) = proof_facts {
+            self.felt_list_field("Proof Facts", proof_facts)
+        } else {
+            self
+        }
+    }
 }
 
 fn build_invoke_v0_response(tx: &starknet_rust::core::types::InvokeTransactionV0) -> String {
@@ -266,6 +275,7 @@ fn build_invoke_v3_response(tx: &starknet_rust::core::types::InvokeTransactionV3
         account_deployment_data,
         nonce_data_availability_mode,
         fee_data_availability_mode,
+        proof_facts,
     } = tx;
     OutputBuilder::new()
         .tx_header()
@@ -282,6 +292,7 @@ fn build_invoke_v3_response(tx: &starknet_rust::core::types::InvokeTransactionV3
         .nonce_da_mode(*nonce_data_availability_mode)
         .fee_da_mode(*fee_data_availability_mode)
         .signature(signature)
+        .proof_facts(proof_facts.as_deref())
         .build()
 }
 

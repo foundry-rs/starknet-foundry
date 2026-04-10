@@ -20,6 +20,7 @@ use crate::starknet_commands::{
         contract_registry::ContractRegistry, deploy::MulticallDeploy, invoke::MulticallInvoke,
     },
 };
+use sncast::helpers::proof::ProofArgs;
 
 const ALLOWED_MULTICALL_COMMANDS: [&str; 2] = ["deploy", "invoke"];
 
@@ -98,6 +99,7 @@ where
         account,
         calls,
         execute.fee_args,
+        ProofArgs::none(),
         execute.nonce,
         wait_config,
         ui,

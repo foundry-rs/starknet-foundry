@@ -41,6 +41,7 @@ use sncast::helpers::artifacts::CastStarknetContractArtifacts;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::helpers::fee::{FeeArgs, ScriptFeeSettings};
+use sncast::helpers::proof::ProofArgs;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::script::run::ScriptRunResponse;
 use sncast::response::ui::UI;
@@ -220,6 +221,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     calldata,
                     nonce,
                     fee_args,
+                    ProofArgs::none(),
                     function_selector,
                     self.account()?,
                     WaitForTx {
