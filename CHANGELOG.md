@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Cheats for transaction info `proof_facts`
 
+#### Changed
+
+- Updated execution to reflect Starknet `v0.14.2`, specifically the storage gas price changes (see [SNIP-37](https://community.starknet.io/t/snip-37-revisit-storage-access-cost/116143) for more details)
+
 ### Cast
 
 #### Added
