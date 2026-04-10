@@ -1,3 +1,4 @@
+use crate::e2e::declare::get_declared_class_hash_from_json_output;
 use crate::helpers::constants::{
     ACCOUNT, ACCOUNT_FILE_PATH, CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA, CONTRACTS_DIR,
     DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
@@ -17,11 +18,13 @@ use sncast::AccountType;
 use sncast::helpers::constants::OZ_CLASS_HASH;
 use sncast::helpers::fee::FeeArgs;
 use starknet_rust::core::types::TransactionReceipt::Invoke;
+use starknet_rust::core::types::contract::SierraClass;
 use starknet_rust::core::types::{
     BlockId, BlockTag, InvokeTransaction, Transaction, TransactionExecutionStatus,
 };
 use starknet_rust::providers::Provider;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
+use std::fs;
 use test_case::test_case;
 use toml::Value;
 
@@ -483,6 +486,59 @@ async fn test_happy_case_with_declare() {
 }
 
 #[tokio::test]
+async fn test_happy_case_with_declare_no_abi() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "with_declare_no_abi",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "--json",
+        "deploy",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+        "--no-abi",
+    ];
+
+    let output = runner(&args)
+        .current_dir(tempdir.path())
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let declared_class_hash = get_declared_class_hash_from_json_output(&output);
+    let sierra_path = tempdir
+        .path()
+        .join("target/release/map_Map.contract_class.json");
+    let mut sierra_class: SierraClass = serde_json::from_str(
+        &fs::read_to_string(&sierra_path).expect("Failed to read sierra artifact"),
+    )
+    .expect("Failed to parse sierra artifact");
+
+    let original_class_hash = sierra_class
+        .class_hash()
+        .expect("Failed to compute class hash");
+    sierra_class.abi.clear();
+    let stripped_class_hash = sierra_class
+        .class_hash()
+        .expect("Failed to compute class hash without ABI");
+
+    assert_ne!(declared_class_hash, original_class_hash);
+    assert_eq!(declared_class_hash, stripped_class_hash);
+}
+
+#[tokio::test]
 async fn test_happy_case_with_already_declared() {
     let contract_path = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
@@ -660,5 +716,24 @@ async fn test_deploy_with_declare_invalid_nonce() {
         Command: deploy
         Error: Transaction execution error = TransactionExecutionErrorData { transaction_index: 0, execution_error: Message("Account transaction nonce is invalid.") }
         "#},
+    );
+}
+
+#[test]
+fn test_deploy_no_abi_with_class_hash_disallowed() {
+    let args = vec![
+        "deploy",
+        "--url",
+        URL,
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--no-abi",
+    ];
+
+    let output = runner(&args).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "Error: `--no-abi` can only be used with `--contract-name`",
     );
 }

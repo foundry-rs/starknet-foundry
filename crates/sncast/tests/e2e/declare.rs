@@ -7,15 +7,30 @@ use crate::helpers::fixtures::{
 use crate::helpers::runner::runner;
 use configuration::CONFIG_FILENAME;
 use indoc::indoc;
+use serde::Deserialize;
 use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
 use sncast::AccountType;
 use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
 use sncast::helpers::fee::FeeArgs;
 use starknet_rust::core::types::TransactionReceipt::Declare;
+use starknet_rust::core::types::contract::SierraClass;
 use starknet_rust::core::types::{DeclareTransaction, Transaction, TransactionExecutionStatus};
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 use std::fs;
 use test_case::test_case;
+
+pub fn get_declared_class_hash_from_json_output(output: &[u8]) -> Felt {
+    #[derive(Deserialize)]
+    struct DeclareClassHashJsonOutput {
+        class_hash: Felt,
+    }
+
+    output
+        .split(|byte| *byte == b'\n')
+        .find_map(|line| serde_json::from_slice::<DeclareClassHashJsonOutput>(line).ok())
+        .map(|output| output.class_hash)
+        .expect("Failed to deserialize declared class hash from stdout JSON")
+}
 
 #[tokio::test]
 async fn test_happy_case_human_readable() {
@@ -51,7 +66,7 @@ async fn test_happy_case_human_readable() {
 
         Class Hash:       0x[..]
         Transaction Hash: 0x[..]
-        
+
         To see declaration details, visit:
         class: https://[..]
         transaction: https://[..]
@@ -181,6 +196,59 @@ async fn test_contract_with_constructor_params() {
         sncast --accounts-file accounts.json --account my_account deploy --class-hash 0x[..] --arguments '<foo: felt252>, <bar: felt252>' --url http://127.0.0.1:5055/rpc
     " },
     );
+}
+
+#[tokio::test]
+async fn test_happy_case_no_abi() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "test_happy_case_no_abi",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "--json",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+        "--no-abi",
+    ];
+
+    let output = runner(&args)
+        .current_dir(tempdir.path())
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let declared_class_hash = get_declared_class_hash_from_json_output(&output);
+    let sierra_path = tempdir
+        .path()
+        .join("target/release/map_Map.contract_class.json");
+    let mut sierra_class: SierraClass = serde_json::from_str(
+        &fs::read_to_string(&sierra_path).expect("Failed to read sierra artifact"),
+    )
+    .expect("Failed to parse sierra artifact");
+
+    let original_class_hash = sierra_class
+        .class_hash()
+        .expect("Failed to compute class hash");
+    sierra_class.abi.clear();
+    let stripped_class_hash = sierra_class
+        .class_hash()
+        .expect("Failed to compute class hash without ABI");
+
+    assert_ne!(declared_class_hash, original_class_hash);
+    assert_eq!(declared_class_hash, stripped_class_hash);
 }
 
 #[test_case(FeeArgs{

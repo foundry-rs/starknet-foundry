@@ -78,6 +78,11 @@ Optional.
 
 Nonce for transaction. If not provided, nonce will be set automatically.
 
+## `--no-abi`
+Optional.
+
+If passed, omits ABI from the declared class. This changes the resulting class hash.
+
 ## `--package <NAME>`
 Optional.
 

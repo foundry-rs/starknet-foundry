@@ -1,3 +1,4 @@
+use crate::e2e::declare::get_declared_class_hash_from_json_output;
 use crate::helpers::constants::{
     CONTRACTS_DIR, MAP_CONTRACT_CLASS_HASH_SEPOLIA, SEPOLIA_RPC_URL, URL,
 };
@@ -9,6 +10,7 @@ use crate::helpers::runner::runner;
 use indoc::indoc;
 use scarb_api::ScarbCommand;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use starknet_rust::core::types::contract::SierraClass;
 use std::fs;
 use std::process::Stdio;
 use tempfile::tempdir;
@@ -282,6 +284,74 @@ async fn test_declare_from_sierra_happy_case() {
 }
 
 #[tokio::test]
+async fn test_declare_from_sierra_happy_case_no_abi() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "declare_from_file_happy_no_abi",
+    );
+
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let build_output = ScarbCommand::new()
+        .arg("build")
+        .current_dir(tempdir.path())
+        .command()
+        .stderr(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .output()
+        .expect("Failed to run `scarb build`");
+
+    assert!(build_output.status.success(), "`scarb build` failed");
+    let sierra_path = tempdir
+        .path()
+        .join("target/dev/map_Map.contract_class.json");
+    assert!(
+        sierra_path.exists(),
+        "sierra artifact not found at {sierra_path:?}"
+    );
+    let mut sierra_class: SierraClass = serde_json::from_str(
+        &fs::read_to_string(&sierra_path).expect("Failed to read sierra artifact"),
+    )
+    .expect("Failed to parse sierra artifact");
+    let original_class_hash = sierra_class
+        .class_hash()
+        .expect("Failed to compute class hash");
+    sierra_class.abi.clear();
+    let stripped_class_hash = sierra_class
+        .class_hash()
+        .expect("Failed to compute class hash without ABI");
+    let sierra_path = sierra_path.to_str().unwrap();
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "--json",
+        "declare-from",
+        "--sierra-file",
+        sierra_path,
+        "--url",
+        URL,
+        "--no-abi",
+    ];
+
+    let output = runner(&args)
+        .current_dir(tempdir.path())
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let declared_class_hash = get_declared_class_hash_from_json_output(&output);
+    assert_ne!(declared_class_hash, original_class_hash);
+    assert_eq!(declared_class_hash, stripped_class_hash);
+}
+
+#[tokio::test]
 async fn test_declare_from_sierra_does_not_exist() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
@@ -439,10 +509,30 @@ fn test_declare_from_conflicting_contract_source() {
         output,
         indoc! {r"
         error: the argument '--class-hash <CLASS_HASH>' cannot be used with '--sierra-file <SIERRA_FILE>'
-        
+
         Usage: sncast declare-from --url <URL> <--sierra-file <SIERRA_FILE>|--class-hash <CLASS_HASH>>
 
         For more information, try '--help'.
         "},
+    );
+}
+
+#[test]
+fn test_declare_from_no_abi_with_class_hash_disallowed() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let args = vec![
+        "declare-from",
+        "--class-hash",
+        "0x1",
+        "--no-abi",
+        "--url",
+        URL,
+    ];
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "Error: `--no-abi` can only be used with `--sierra-file`",
     );
 }

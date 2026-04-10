@@ -159,6 +159,7 @@ where
         casm,
         &common_args.fee_args,
         common_args.nonce,
+        common_args.no_abi,
         account,
         wait_config,
         skip_on_already_declared,

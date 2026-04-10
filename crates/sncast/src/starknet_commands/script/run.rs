@@ -141,6 +141,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     contract.clone(),
                     fee_args,
                     nonce,
+                    false,
                     self.account()?,
                     self.artifacts,
                     WaitForTx {

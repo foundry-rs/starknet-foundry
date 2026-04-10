@@ -63,6 +63,10 @@ pub struct Deploy {
     #[arg(short, long)]
     pub nonce: Option<Felt>,
 
+    /// If passed, omits ABI from the class when `deploy` needs to declare it first
+    #[arg(long)]
+    pub no_abi: bool,
+
     #[command(flatten)]
     pub rpc: RpcArgs,
 }
