@@ -50,7 +50,6 @@ impl ProofArgs {
                 let felts: Vec<Felt> = trimmed
                     .split(',')
                     .map(str::trim)
-                    .filter(|s| !s.is_empty())
                     .map(|s| {
                         let stripped = strip_quotes(s);
                         stripped
@@ -58,9 +57,6 @@ impl ProofArgs {
                             .with_context(|| format!("Failed to parse felt from '{stripped}'"))
                     })
                     .collect::<Result<Vec<_>>>()?;
-                if felts.is_empty() {
-                    bail!("Proof facts file is empty. Expected comma separated felts.");
-                }
                 Ok(Some(felts))
             }
             None => Ok(None),
@@ -198,24 +194,6 @@ mod tests {
     fn empty_proof_facts_file() {
         let mut file = NamedTempFile::new().unwrap();
         write!(file, " ").unwrap();
-        let path = Utf8PathBuf::try_from(file.path().to_path_buf()).unwrap();
-
-        let args = ProofArgs {
-            proof_facts_file: Some(path),
-            ..Default::default()
-        };
-        let err = args.resolve_proof_facts().unwrap_err().to_string();
-
-        assert_eq!(
-            err,
-            "Proof facts file is empty. Expected comma separated felts."
-        );
-    }
-
-    #[test]
-    fn proof_facts_file_commas() {
-        let mut file = NamedTempFile::new().unwrap();
-        write!(file, ",, ,").unwrap();
         let path = Utf8PathBuf::try_from(file.path().to_path_buf()).unwrap();
 
         let args = ProofArgs {
