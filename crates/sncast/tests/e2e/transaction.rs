@@ -157,3 +157,5 @@ async fn test_nonexistent_transaction() {
         "},
     );
 }
+
+// TODO (#4258): Add test for invoke tx with `proof_facts`

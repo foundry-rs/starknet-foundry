@@ -1,9 +1,10 @@
 use crate::Arguments;
 use crate::starknet_commands::utils::felt_or_id::FeltOrId;
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
+use sncast::helpers::proof::ProofArgs;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::invoke::InvokeResponse;
@@ -40,6 +41,9 @@ pub struct Invoke {
     #[command(flatten)]
     pub fee_args: FeeArgs,
 
+    #[command(flatten)]
+    pub proof_args: ProofArgs,
+
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[arg(short, long)]
     pub nonce: Option<Felt>,
@@ -54,6 +58,7 @@ pub async fn invoke<S>(
     calldata: Vec<Felt>,
     nonce: Option<Felt>,
     fee_args: FeeArgs,
+    proof_args: ProofArgs,
     function_selector: Felt,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     wait_config: WaitForTx,
@@ -68,13 +73,23 @@ where
         calldata,
     };
 
-    execute_calls(account, vec![call], fee_args, nonce, wait_config, ui).await
+    execute_calls(
+        account,
+        vec![call],
+        fee_args,
+        proof_args,
+        nonce,
+        wait_config,
+        ui,
+    )
+    .await
 }
 
 pub async fn execute_calls<S>(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     calls: Vec<Call>,
     fee_args: FeeArgs,
+    proof_args: ProofArgs,
     nonce: Option<Felt>,
     wait_config: WaitForTx,
     ui: &UI,
@@ -104,6 +119,13 @@ where
         tip,
     } = fee_settings.expect("Failed to convert to fee settings");
 
+    let proof = proof_args
+        .resolve_proof()
+        .context("Failed to resolve proof")?;
+    let proof_facts = proof_args
+        .resolve_proof_facts()
+        .context("Failed to resolve proof facts")?;
+
     let execution = apply_optional_fields!(
         execution_calls,
         l1_gas => ExecutionV3::l1_gas,
@@ -113,7 +135,9 @@ where
         l1_data_gas => ExecutionV3::l1_data_gas,
         l1_data_gas_price => ExecutionV3::l1_data_gas_price,
         tip => ExecutionV3::tip,
-        nonce => ExecutionV3::nonce
+        nonce => ExecutionV3::nonce,
+        proof => ExecutionV3::proof,
+        proof_facts => ExecutionV3::proof_facts
     );
     let result = execution.send().await;
 
