@@ -94,6 +94,45 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     assert!(matches!(receipt, Invoke(_)));
 }
 
+#[tokio::test]
+async fn test_happy_case_with_legacy_argent_account_type() {
+    // Verifies backward compatibility: an account file with "type": "argent" (created before the
+    // --argent option was removed) can still be used to sign and send transactions.
+    let tempdir = create_and_deploy_account(READY_CLASS_HASH, AccountType::Ready).await;
+    let accounts_file = "accounts.json";
+
+    // Simulate an old account file by replacing "ready" with "argent"
+    let path = tempdir.path().join(accounts_file);
+    let contents = std::fs::read_to_string(&path).unwrap();
+    std::fs::write(&path, contents.replace("\"ready\"", "\"argent\"")).unwrap();
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "--account",
+        "my_account",
+        "--json",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 0x2",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+    let stdout = output.get_output().stdout.clone();
+
+    let hash = get_transaction_hash(&stdout);
+    let receipt = get_transaction_receipt(hash).await;
+
+    assert!(matches!(receipt, Invoke(_)));
+}
+
 #[test_case(FeeArgs{
     max_fee: Some(NonZeroFelt::try_from(Felt::from(1_000_000_000_000_000_000_000_000_u128)).unwrap()),
     l1_data_gas: None,
