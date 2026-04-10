@@ -3,6 +3,7 @@ mod types;
 
 use crate::reverse_transformer::transform::{ReverseTransformer, TransformationError};
 use crate::shared::extraction::extract_function_from_selector;
+use cairo_lang_parser::utils::SimpleParserDatabase;
 use starknet_rust::core::types::contract::AbiEntry;
 use starknet_types_core::felt::Felt;
 
@@ -51,13 +52,14 @@ fn reverse_transform(
     abi: &[AbiEntry],
     types: &[String],
 ) -> Result<String, ReverseTransformError> {
+    let db = SimpleParserDatabase::default();
     let mut reverse_transformer = ReverseTransformer::new(felts, abi);
 
     Ok(types
         .iter()
         .map(|parameter_type| {
             Ok(reverse_transformer
-                .parse_and_transform(parameter_type)?
+                .parse_and_transform(parameter_type, &db)?
                 .to_string())
         })
         .collect::<Result<Vec<String>, TransformationError>>()?

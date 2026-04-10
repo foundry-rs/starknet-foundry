@@ -210,6 +210,7 @@ pub struct CheatedTxInfo {
     pub nonce_data_availability_mode: Option<Felt>,
     pub fee_data_availability_mode: Option<Felt>,
     pub account_deployment_data: Option<Vec<Felt>>,
+    pub proof_facts: Option<Vec<Felt>>,
 }
 
 impl CheatedTxInfo {
@@ -317,6 +318,7 @@ impl CheatnetState {
                     .fee_data_availability_mode
                     .as_value(),
                 account_deployment_data: execution_info.tx_info.account_deployment_data.as_value(),
+                proof_facts: execution_info.tx_info.proof_facts.as_value(),
             },
         }
     }

@@ -101,9 +101,13 @@ impl ContractBacktraceData {
         let VersionedProfilerAnnotations::V1(profiler_annotations) =
             VersionedProfilerAnnotations::try_from_debug_info(sierra_debug_info).expect("this should not fail, as we are doing validation in the `can_backtrace_be_generated` function");
 
+        let extracted_sierra = contract_class
+            .extract_sierra_program(false)
+            .expect("extraction should succeed");
         // FIXME(https://github.com/software-mansion/universal-sierra-compiler/issues/98): Use CASM debug info from USC once it provides it.
         let (_, debug_info) = CasmContractClass::from_contract_class_with_debug_info(
             contract_class,
+            extracted_sierra,
             true,
             usize::MAX,
         )?;

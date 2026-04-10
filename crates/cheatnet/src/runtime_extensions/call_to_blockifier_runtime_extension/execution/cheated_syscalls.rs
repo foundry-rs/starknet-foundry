@@ -287,7 +287,6 @@ pub fn call_contract_syscall(
 }
 
 // blockifier/src/execution/syscalls/hint_processor.rs:637 (meta_tx_v0)
-#[allow(clippy::result_large_err)]
 pub fn meta_tx_v0_syscall(
     request: MetaTxV0Request,
     vm: &mut VirtualMachine,

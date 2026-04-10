@@ -12,6 +12,7 @@ use serde::Deserialize;
 use serde_json::Number;
 use sncast::WaitForTx;
 use sncast::helpers::fee::FeeArgs;
+use sncast::helpers::proof::ProofArgs;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::multicall::run::MulticallRunResponse;
@@ -114,10 +115,18 @@ where
         }
     }
 
-    execute_calls(account, parsed_calls, fee_args, nonce, wait_config, ui)
-        .await
-        .map(Into::into)
-        .map_err(handle_starknet_command_error)
+    execute_calls(
+        account,
+        parsed_calls,
+        fee_args,
+        ProofArgs::none(),
+        nonce,
+        wait_config,
+        ui,
+    )
+    .await
+    .map(Into::into)
+    .map_err(handle_starknet_command_error)
 }
 
 pub fn parse_inputs(inputs: &[Input], contract_registry: &ContractRegistry) -> Result<Vec<Felt>> {

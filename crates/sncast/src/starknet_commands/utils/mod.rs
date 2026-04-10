@@ -15,13 +15,19 @@ use crate::{
     process_command_result,
     starknet_commands::{
         self,
-        utils::{class_hash::ClassHash, contract_address::ContractAddress, serialize::Serialize},
+        utils::{
+            class_hash::ClassHash,
+            contract_address::ContractAddress,
+            selector::Selector,
+            serialize::Serialize,
+        },
     },
 };
 
 pub mod class_hash;
 pub mod contract_address;
 pub mod felt_or_id;
+pub mod selector;
 pub mod serialize;
 
 #[derive(Args)]
@@ -40,6 +46,9 @@ pub enum Commands {
 
     /// Calculate the address of a not yet deployed contract
     ContractAddress(ContractAddress),
+
+    /// Calculate selector from name
+    Selector(Selector),
 }
 
 pub async fn utils(
@@ -116,6 +125,11 @@ pub async fn utils(
                     .map_err(handle_starknet_command_error)?;
 
             process_command_result("contract-address", Ok(result), ui, None);
+        }
+
+        Commands::Selector(sel) => {
+            let result = selector::get_selector(&sel).map_err(handle_starknet_command_error)?;
+            process_command_result("selector", Ok(result), ui, None);
         }
     }
 

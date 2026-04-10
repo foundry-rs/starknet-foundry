@@ -98,3 +98,15 @@ If passed, an estimated tip will be added to pay for the transaction. The tip is
 Optional.
 
 Nonce for transaction. If not provided, nonce will be set automatically.
+
+## `--proof-file <PROOF_FILE>`
+Optional.
+Must be passed together with [`--proof-facts-file`](#--proof-facts-file-proof_facts_file)
+
+Path to a plain text file containing a proof (base64-encoded string).
+
+## `--proof-facts-file <PROOF_FACTS_FILE>`
+Optional.
+Must be passed together with [`--proof-file`](#--proof-file-proof_file)
+
+Path to a plain text file containing proof facts (comma-separated felt values).

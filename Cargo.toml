@@ -31,32 +31,30 @@ inherits = "dev"
 opt-level = 3
 
 [workspace.package]
-version = "0.58.0"
+version = "0.58.1"
 edition = "2024"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
 license-file = "LICENSE"
 
 [workspace.dependencies]
-# TODO(#3770) Use blockifier directly
-blockifier = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "v0.16.0-rc.1", features = ["testing", "tracing", "node_api"] }
+blockifier = { version = "0.18.0-rc.1", features = ["testing", "tracing", "node_api"] }
+starknet_api = "0.18.0-rc.1"
 bigdecimal = "0.4.10"
-# TODO(#3770) Use starknet_api directly
-starknet_api = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "v0.16.0-rc.1" }
-cairo-native = "0.6.2"
-cairo-lang-casm = { version = "=2.12.3", features = ["serde"] }
-cairo-lang-sierra = "=2.12.3"
-cairo-lang-utils = "=2.12.3"
-cairo-lang-starknet = "=2.12.3"
-cairo-lang-filesystem = "=2.12.3"
-cairo-lang-diagnostics = "=2.12.3"
-cairo-lang-syntax = "=2.12.3"
-cairo-lang-test-plugin = "=2.12.3"
-cairo-lang-starknet-classes = "=2.12.3"
-cairo-lang-parser = "=2.12.3"
-cairo-lang-sierra-to-casm = "=2.12.3"
-cairo-vm = "2.5.0"
-cairo-annotations = { version = "0.6.1", features = ["cairo-lang"] }
+cairo-native = "0.9.0-rc.0"
+cairo-lang-casm = { version = "=2.17.0", features = ["serde"] }
+cairo-lang-sierra = "=2.17.0"
+cairo-lang-utils = "=2.17.0"
+cairo-lang-starknet = "=2.17.0"
+cairo-lang-filesystem = "=2.17.0"
+cairo-lang-diagnostics = "=2.17.0"
+cairo-lang-syntax = "=2.17.0"
+cairo-lang-test-plugin = "=2.17.0"
+cairo-lang-starknet-classes = "=2.17.0"
+cairo-lang-parser = "=2.17.0"
+cairo-lang-sierra-to-casm = "=2.17.0"
+cairo-vm = "=3.2.0"
+cairo-annotations = { version = "0.8.0", features = ["cairo-lang"] }
 dirs = "6.0.0"
 dialoguer = "0.12.0"
 starknet-types-core = { version = "0.2.4", features = ["hash", "prime-bigint"] }
@@ -75,7 +73,7 @@ rayon = "1.10"
 regex = "1.11.3"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.149"
-starknet-rust = "0.18.0"
+starknet-rust = "0.19.0-rc.2"
 starknet-rust-crypto = "0.9.0"
 tempfile = "3.24.0"
 thiserror = "2.0.17"
@@ -120,7 +118,7 @@ base16ct = { version = "1.0.0", features = ["alloc"] }
 async-trait = "0.1.87"
 serde_path_to_error = "0.1.20"
 wiremock = "0.6.3"
-coins-ledger = "0.12.0"
+coins-ledger = "0.13.0"
 speculos-client = "0.1.2"
 const-hex = "1.18.1"
 indicatif = "0.18.3"

@@ -3,7 +3,10 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 };
 use crate::runtime_extensions::native::native_syscall_handler::CheatableNativeSyscallHandler;
 use crate::state::CheatnetState;
-use blockifier::execution::call_info::{BuiltinCounterMap, CallExecution, CallInfo, Retdata};
+use blockifier::execution::call_info::{
+    CairoPrimitiveCounterMap, CallExecution, CallInfo, OpcodeName, Retdata,
+    cairo_primitive_counter_map,
+};
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::{
     EntryPointExecutionContext, EntryPointExecutionResult, ExecutableCallEntryPoint,
@@ -48,7 +51,6 @@ pub(crate) fn execute_entry_point_call_native(
 }
 
 // Based on https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/entry_point_execution.rs#L20
-#[allow(clippy::result_large_err)]
 fn execute_entry_point_call(
     call: &ExecutableCallEntryPoint,
     compiled_class: &NativeCompiledClassV1,
@@ -71,6 +73,7 @@ fn execute_entry_point_call(
         poseidon: gas_costs.builtins.poseidon,
         add_mod: gas_costs.builtins.add_mod,
         mul_mod: gas_costs.builtins.mul_mod,
+        blake: gas_costs.builtins.blake,
     };
 
     // Pre-charge entry point's initial budget to ensure sufficient gas for executing a minimal
@@ -120,7 +123,6 @@ fn execute_entry_point_call(
 }
 
 // Copied from https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/entry_point_execution.rs#L73
-#[allow(clippy::result_large_err)]
 fn create_callinfo(
     call_result: ContractExecutionResult,
     syscall_handler: &mut CheatableNativeSyscallHandler<'_>,
@@ -152,15 +154,18 @@ fn create_callinfo(
         .base
         .context
         .versioned_constants();
-    let syscall_builtin_counts = version_constants
+    let syscall_builtins = version_constants
         .get_additional_os_syscall_resources(
             &syscall_handler.native_syscall_handler.base.syscalls_usage,
         )
         .filter_unused_builtins()
         .prover_builtins();
-    let entry_point_builtins = builtin_stats_to_builtin_counter_map(call_result.builtin_stats);
-    let mut builtin_counters = syscall_builtin_counts;
-    add_maps(&mut builtin_counters, &entry_point_builtins);
+    let mut entry_point_primitive_counters =
+        builtin_stats_to_primitive_counters(call_result.builtin_stats);
+    add_maps(
+        &mut entry_point_primitive_counters,
+        &cairo_primitive_counter_map(syscall_builtins),
+    );
 
     Ok(CallInfo {
         call: syscall_handler
@@ -193,23 +198,37 @@ fn create_callinfo(
             .storage_access_tracker
             .clone(),
         tracked_resource: TrackedResource::SierraGas,
-        builtin_counters,
+        builtin_counters: entry_point_primitive_counters,
+        syscalls_usage: syscall_handler
+            .native_syscall_handler
+            .base
+            .syscalls_usage
+            .clone(),
     })
 }
 
-fn builtin_stats_to_builtin_counter_map(builtin_stats: BuiltinStats) -> BuiltinCounterMap {
+// Copied from https://github.com/starkware-libs/sequencer/blob/blockifier-v0.18.0-rc.1/crates/blockifier/src/execution/native/entry_point_execution.rs#L130
+fn builtin_stats_to_primitive_counters(stats: BuiltinStats) -> CairoPrimitiveCounterMap {
     let builtins = [
-        (BuiltinName::range_check, builtin_stats.range_check),
-        (BuiltinName::pedersen, builtin_stats.pedersen),
-        (BuiltinName::bitwise, builtin_stats.bitwise),
-        (BuiltinName::ec_op, builtin_stats.ec_op),
-        (BuiltinName::poseidon, builtin_stats.poseidon),
-        (BuiltinName::range_check96, builtin_stats.range_check96),
-        (BuiltinName::add_mod, builtin_stats.add_mod),
-        (BuiltinName::mul_mod, builtin_stats.mul_mod),
+        (BuiltinName::range_check, stats.range_check),
+        (BuiltinName::pedersen, stats.pedersen),
+        (BuiltinName::bitwise, stats.bitwise),
+        (BuiltinName::ec_op, stats.ec_op),
+        (BuiltinName::poseidon, stats.poseidon),
+        (BuiltinName::range_check96, stats.range_check96),
+        (BuiltinName::add_mod, stats.add_mod),
+        (BuiltinName::mul_mod, stats.mul_mod),
     ];
+    let opcodes = [(OpcodeName::blake, stats.blake)];
+
     builtins
         .into_iter()
+        .map(|(builtin_name, count)| (builtin_name.into(), count))
+        .chain(
+            opcodes
+                .into_iter()
+                .map(|(opcode_name, count): (OpcodeName, _)| (opcode_name.into(), count)),
+        )
         .filter(|(_, count)| *count > 0)
         .collect()
 }

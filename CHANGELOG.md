@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- Cheats for transaction info `proof_facts`
+
+### Cast
+
+#### Added
+
+- `sncast get tx` command to get transaction details by hash.
+- `sncast utils selector` command to calculate entrypoint selector (`sn_keccak`) from function name.
+- `sncast get class-hash-at` command to get the class hash of a contract at a given address.
+- `--with-proof-facts` flag for `sncast get tx` to include proof facts in tx response. Read more [here](https://community.starknet.io/t/snip-36-in-protocol-proof-verification/116123l).
+- `--proof-file` and `--proof-facts-file` flags for `sncast invoke` to attach proof data from files.
+
+## [0.58.1] - 2026-03-31
+
+### Forge
+
 #### Fixed
 
 - Bug with using cheats in library calls

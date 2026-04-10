@@ -10,31 +10,31 @@ Search range: 0 to 10, step: 10, max contract size: 4089446 bytes, max felts: 81
 
 
 
-[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~547950)
+[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~1009130)
 
 
-  ✓ Tests passed, gas: 547950, max contract size: 52391 bytes, contract bytecode L2 gas: 49725440
+  ✓ Tests passed, gas: 1009130, max contract size: 52391 bytes, contract bytecode L2 gas: 49725440
 
 [2/2] Testing threshold 10...
 
 
 
-[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~523810)
+[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~984990)
 
 
-  ✓ Tests passed, gas: 523810, max contract size: 29546 bytes, contract bytecode L2 gas: 34897920
+  ✓ Tests passed, gas: 984990, max contract size: 29546 bytes, contract bytecode L2 gas: 34897920
 
 Optimization Results:
 ╭───────────┬───────────┬───────────────┬──────────────────────────┬────────╮
 │ Threshold ┆ Total Gas ┆ Contract Size ┆ Contract Bytecode L2 Gas ┆ Status │
 ╞═══════════╪═══════════╪═══════════════╪══════════════════════════╪════════╡
-│ 0         ┆ 547950    ┆ 52391         ┆ 49725440                 ┆ ✓      │
+│ 0         ┆ 1009130   ┆ 52391         ┆ 49725440                 ┆ ✓      │
 ├╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ 10        ┆ 523810    ┆ 29546         ┆ 34897920                 ┆ ✓      │
+│ 10        ┆ 984990    ┆ 29546         ┆ 34897920                 ┆ ✓      │
 ╰───────────┴───────────┴───────────────┴──────────────────────────┴────────╯
 
-Lowest runtime gas cost: threshold=10, gas=523810, contract bytecode L2 gas=34897920
-Lowest contract size cost: threshold=10, gas=523810, contract bytecode L2 gas=34897920
+Lowest runtime gas cost: threshold=10, gas=984990, contract bytecode L2 gas=34897920
+Lowest contract size cost: threshold=10, gas=984990, contract bytecode L2 gas=34897920
 
 Graph saved to: [..]
 Updated Scarb.toml with inlining-strategy = 10

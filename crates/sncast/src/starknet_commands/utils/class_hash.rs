@@ -39,7 +39,7 @@ pub fn sierra_class_from_artifacts(
     Ok(sierra)
 }
 
-#[allow(clippy::result_large_err)]
+#[expect(clippy::result_large_err)]
 pub fn get_class_hash(
     class_hash: &ClassHash,
     artifacts: &HashMap<String, CastStarknetContractArtifacts>,
