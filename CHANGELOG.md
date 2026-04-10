@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- `--no-abi` flag for `declare`, `declare-from`, and `deploy`, erasing the ABI before class declaration.
+
 ## [0.59.0] - 2026-04-10
 
 ### Forge
