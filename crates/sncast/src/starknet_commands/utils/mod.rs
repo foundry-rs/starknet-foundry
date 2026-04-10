@@ -16,9 +16,7 @@ use crate::{
     starknet_commands::{
         self,
         utils::{
-            class_hash::ClassHash,
-            contract_address::ContractAddress,
-            selector::Selector,
+            class_hash::ClassHash, contract_address::ContractAddress, selector::Selector,
             serialize::Serialize,
         },
     },
