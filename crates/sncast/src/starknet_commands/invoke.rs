@@ -1,6 +1,6 @@
 use crate::Arguments;
 use crate::starknet_commands::utils::felt_or_id::FeltOrId;
-use anyhow::{Result, anyhow, Context};
+use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};

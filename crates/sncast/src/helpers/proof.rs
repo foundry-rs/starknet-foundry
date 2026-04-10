@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
 use starknet_types_core::felt::Felt;
@@ -28,7 +28,11 @@ impl ProofArgs {
             Some(path) => {
                 let contents = std::fs::read_to_string(path)
                     .with_context(|| format!("Failed to read proof file at {path}"))?;
-                Ok(Some(strip_quotes(contents.trim()).to_string()))
+                let stripped = strip_quotes(contents.trim()).trim();
+                if stripped.is_empty() {
+                    bail!("Proof file is empty. Expected base64 string.");
+                }
+                Ok(Some(stripped.to_string()))
             }
             None => Ok(None),
         }
@@ -39,15 +43,24 @@ impl ProofArgs {
             Some(path) => {
                 let contents = std::fs::read_to_string(path)
                     .with_context(|| format!("Failed to read proof facts file at {path}"))?;
-                let felts = contents
+                let trimmed = contents.trim();
+                if trimmed.is_empty() {
+                    bail!("Proof facts file is empty. Expected comma separated felts.");
+                }
+                let felts: Vec<Felt> = trimmed
                     .split(',')
+                    .map(str::trim)
+                    .filter(|s| !s.is_empty())
                     .map(|s| {
-                        let stripped = strip_quotes(s.trim());
+                        let stripped = strip_quotes(s);
                         stripped
                             .parse::<Felt>()
                             .with_context(|| format!("Failed to parse felt from '{stripped}'"))
                     })
                     .collect::<Result<Vec<_>>>()?;
+                if felts.is_empty() {
+                    bail!("Proof facts file is empty. Expected comma separated felts.");
+                }
                 Ok(Some(felts))
             }
             None => Ok(None),
@@ -101,6 +114,21 @@ mod tests {
     }
 
     #[test]
+    fn empty_proof_file() {
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(file, " ").unwrap();
+        let path = Utf8PathBuf::try_from(file.path().to_path_buf()).unwrap();
+
+        let args = ProofArgs {
+            proof_file: Some(path),
+            ..Default::default()
+        };
+        let err = args.resolve_proof().unwrap_err().to_string();
+
+        assert_eq!(err, "Proof file is empty. Expected base64 string.");
+    }
+
+    #[test]
     fn proof_facts_file() {
         let mut file = NamedTempFile::new().unwrap();
         write!(file, "0x1, 0x2, 0x3").unwrap();
@@ -111,6 +139,7 @@ mod tests {
             ..Default::default()
         };
         let result = args.resolve_proof_facts().unwrap();
+
         assert_eq!(
             result,
             Some(vec![Felt::from(1), Felt::from(2), Felt::from(3)])
@@ -147,11 +176,11 @@ mod tests {
         };
         let err = args.resolve_proof_facts().unwrap_err().to_string();
 
-        assert!(err.contains("Failed to parse felt from 'invalid'"));
+        assert_eq!(err, "Failed to parse felt from 'invalid'");
     }
 
     #[test]
-    fn missing_proof_facts() {
+    fn missing_proof_facts_file() {
         let missing_path = "/nonexistent/path/proof_facts.txt";
         let args = ProofArgs {
             proof_facts_file: Some(Utf8PathBuf::from(missing_path)),
@@ -159,8 +188,45 @@ mod tests {
         };
         let err = args.resolve_proof_facts().unwrap_err().to_string();
 
-        assert!(err.contains(&format!(
-            "Failed to read proof facts file at {missing_path}"
-        )));
+        assert_eq!(
+            err,
+            "Failed to read proof facts file at /nonexistent/path/proof_facts.txt"
+        );
+    }
+
+    #[test]
+    fn empty_proof_facts_file() {
+        let mut file = NamedTempFile::new().unwrap();
+        write!(file, " ").unwrap();
+        let path = Utf8PathBuf::try_from(file.path().to_path_buf()).unwrap();
+
+        let args = ProofArgs {
+            proof_facts_file: Some(path),
+            ..Default::default()
+        };
+        let err = args.resolve_proof_facts().unwrap_err().to_string();
+
+        assert_eq!(
+            err,
+            "Proof facts file is empty. Expected comma separated felts."
+        );
+    }
+
+    #[test]
+    fn proof_facts_file_commas() {
+        let mut file = NamedTempFile::new().unwrap();
+        write!(file, ",, ,").unwrap();
+        let path = Utf8PathBuf::try_from(file.path().to_path_buf()).unwrap();
+
+        let args = ProofArgs {
+            proof_facts_file: Some(path),
+            ..Default::default()
+        };
+        let err = args.resolve_proof_facts().unwrap_err().to_string();
+
+        assert_eq!(
+            err,
+            "Proof facts file is empty. Expected comma separated felts."
+        );
     }
 }
