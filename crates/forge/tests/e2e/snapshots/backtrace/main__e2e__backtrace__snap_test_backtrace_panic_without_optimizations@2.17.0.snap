@@ -2,6 +2,8 @@
 source: crates/forge/tests/e2e/backtrace.rs
 expression: stdout
 ---
+
+
 [FAIL] backtrace_panic::Test::test_contract_panics
 
 Failure data:
@@ -10,15 +12,15 @@ Failure data:
 error occurred in contract 'InnerContract'
 stack backtrace:
    0: core::array_inline_macro
-       at [..]lib.cairo:350:11
+       at [..]lib.cairo:346:11
    1: core::assert
-       at [..]lib.cairo:377:9
+       at [..]lib.cairo:373:9
    2: backtrace_panic::InnerContract::inner_call
        at [..]lib.cairo:40:9
    3: backtrace_panic::InnerContract::unsafe_new_contract_state
        at [..]lib.cairo:29:5
    4: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
-       at [..]lib.cairo:34:9
+       at [..]lib.cairo:32:5
 
 error occurred in contract 'OuterContract'
 stack backtrace:
@@ -29,7 +31,7 @@ stack backtrace:
    2: backtrace_panic::OuterContract::OuterContract::outer
        at [..]lib.cairo:17:13
    3: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
-       at [..]lib.cairo:15:9
+       at [..]lib.cairo:13:5
 
 [IGNORE] backtrace_panic::Test::test_contract_panics_with_should_panic
 [FAIL] backtrace_panic::Test::test_fork_contract_panics
@@ -48,7 +50,7 @@ stack backtrace:
    2: backtrace_panic::OuterContract::OuterContract::outer
        at [..]lib.cairo:17:13
    3: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
-       at [..]lib.cairo:15:9
+       at [..]lib.cairo:13:5
 
 
 Failures:

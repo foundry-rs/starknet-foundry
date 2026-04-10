@@ -5,7 +5,7 @@ expression: stdout
 
 
 
-[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~975430)
+[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~974690)
 ╭------------------------+-------+-------+-------+---------+---------╮
 | HelloStarknet Contract |       |       |       |         |         |
 +====================================================================+
