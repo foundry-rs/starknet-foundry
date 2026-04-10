@@ -13,7 +13,6 @@ mod main_tests;
 mod multicall;
 mod nonce;
 mod script;
-mod serialize;
 mod show_config;
 mod tx_status;
 mod utils;

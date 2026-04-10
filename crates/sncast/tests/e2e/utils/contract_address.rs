@@ -146,6 +146,8 @@ fn test_happy_case_constructor_calldata() {
         "0x2",
         "--salt",
         "0x1",
+        "--url",
+        URL,
     ];
     let output = runner(&args).assert().success();
     assert_stdout_contains(output, indoc! {r"Contract Address: 0x0[..]"});
@@ -164,6 +166,8 @@ fn test_calldata_affects_address() {
             calldata,
             "--salt",
             "0x1",
+            "--url",
+            URL,
         ];
         let out = runner(&args).assert().success();
         extract_contract_address(&out.get_output().stdout)
