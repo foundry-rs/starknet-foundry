@@ -2,11 +2,11 @@ use anyhow::{Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args, ValueEnum};
 use promptly::prompt;
-use sncast::get_provider;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::FreeProvider;
 use sncast::response::ui::UI;
 use sncast::{Network, response::verify::VerifyResponse};
+use sncast::{get_chain_id, get_provider};
 use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, fmt};
 use url::Url;
@@ -82,6 +82,21 @@ impl fmt::Display for Verifier {
     }
 }
 
+fn resolve_verification_network(
+    cli_network: Option<Network>,
+    config_network: Option<Network>,
+    inferred_network: Option<Network>,
+) -> Result<Network> {
+    cli_network
+        .or(config_network)
+        .or(inferred_network)
+        .ok_or_else(|| {
+            anyhow!(
+                "Failed to infer verification network from the RPC chain ID; pass `--network mainnet` or `--network sepolia` explicitly"
+            )
+        })
+}
+
 fn display_files_and_confirm(
     verifier: &Verifier,
     files_to_display: Vec<String>,
@@ -136,7 +151,6 @@ pub async fn verify(
         test_files,
     } = args;
 
-    let url_provided = url.is_some();
     let rpc_url = match url {
         Some(url) => url,
         None => {
@@ -152,6 +166,11 @@ pub async fn verify(
         }
     };
     let provider = get_provider(&rpc_url)?;
+    let inferred_network = if network.is_none() && config.network.is_none() {
+        Some(Network::try_from(get_chain_id(&provider).await?)?)
+    } else {
+        None
+    };
 
     // Build JSON Payload for the verification request
     // get the parent dir of the manifest path
@@ -172,15 +191,7 @@ pub async fn verify(
         }
     };
 
-    // If --url is provided but --network is not, default to sepolia
-    // If neither is provided, the error is already handled above in rpc_url logic
-    let network = match (network, url_provided) {
-        (Some(network), _) => network,
-        (None, true) => Network::Sepolia, // --url provided but no --network
-        (None, false) => {
-            Network::Sepolia // fallback when config.url is set
-        }
-    };
+    let network = resolve_verification_network(network, config.network, inferred_network)?;
 
     // Handle test_files warning for Walnut
     if matches!(verifier, Verifier::Walnut) && test_files {
@@ -242,5 +253,61 @@ pub async fn verify(
                 .verify(contract_identifier, contract_name, package, test_files, ui)
                 .await
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::resolve_verification_network;
+    use sncast::{MAINNET, Network, SEPOLIA};
+
+    #[test]
+    fn uses_cli_network_when_provided() {
+        let network = resolve_verification_network(
+            Some(Network::Mainnet),
+            Some(Network::Sepolia),
+            Some(Network::Sepolia),
+        )
+        .unwrap();
+
+        assert_eq!(network, Network::Mainnet);
+    }
+
+    #[test]
+    fn uses_config_network_when_cli_network_is_missing() {
+        let network =
+            resolve_verification_network(None, Some(Network::Mainnet), Some(Network::Sepolia))
+                .unwrap();
+
+        assert_eq!(network, Network::Mainnet);
+    }
+
+    #[test]
+    fn infers_mainnet_from_chain_id_when_no_network_is_configured() {
+        let network =
+            resolve_verification_network(None, None, Some(Network::try_from(MAINNET).unwrap()))
+                .unwrap();
+
+        assert_eq!(network, Network::Mainnet);
+    }
+
+    #[test]
+    fn infers_sepolia_from_chain_id_when_no_network_is_configured() {
+        let network =
+            resolve_verification_network(None, None, Some(Network::try_from(SEPOLIA).unwrap()))
+                .unwrap();
+
+        assert_eq!(network, Network::Sepolia);
+    }
+
+    #[test]
+    fn errors_when_network_cannot_be_resolved() {
+        let error = resolve_verification_network(None, None, None).unwrap_err();
+
+        assert!(
+            error
+                .to_string()
+                .contains("Failed to infer verification network from the RPC chain ID")
+        );
     }
 }
