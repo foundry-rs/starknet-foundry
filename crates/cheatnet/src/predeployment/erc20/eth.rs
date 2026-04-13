@@ -12,7 +12,7 @@ pub const ETH_CLASS_HASH: &str =
 #[must_use]
 pub fn eth_predeployed_contract() -> PredeployedContract {
     // starkgate-contracts v3.0.0
-    // https://github.com/starknet-io/starkgate-contracts/commit/07e11c39119a10d5742735be5b1d51894ebf5311
+    // Link to Cairo contract: https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/sg_token/src/erc20_mintable.cairo
     let raw_casm = include_str!("../../data/sg_token_ERC20Mintable.compiled_contract_class.json");
 
     let contract_address = TryFromHexStr::try_from_hex_str(ETH_CONTRACT_ADDRESS).unwrap();
