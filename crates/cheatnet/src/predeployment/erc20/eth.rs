@@ -1,5 +1,4 @@
 use conversions::string::TryFromHexStr;
-use starknet_api::core::ContractAddress;
 
 use crate::predeployment::predeployed_contract::PredeployedContract;
 
@@ -7,23 +6,22 @@ use super::constructor_data::ERC20ConstructorData;
 
 pub const ETH_CONTRACT_ADDRESS: &str =
     "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
+pub const ETH_CLASS_HASH: &str =
+    "0x076791ef97c042f81fbf352ad95f39a22554ee8d7927b2ce3c681f3418b5206a";
 
 #[must_use]
 pub fn eth_predeployed_contract() -> PredeployedContract {
-    // Compiled with starknet-compile, compiler version: 2.10.0
-    // Fetched with `starknet_getCompiledCasm`
-    let raw_casm = include_str!("../../data/eth_erc20_casm.json");
+    // starkgate-contracts v3.0.0
+    // https://github.com/starknet-io/starkgate-contracts/commit/07e11c39119a10d5742735be5b1d51894ebf5311
+    let raw_casm = include_str!("../../data/sg_token_ERC20Mintable.compiled_contract_class.json");
 
-    let contract_address = ContractAddress::try_from_hex_str(ETH_CONTRACT_ADDRESS).unwrap();
-    let class_hash = TryFromHexStr::try_from_hex_str(
-        "0x076791ef97c042f81fbf352ad95f39a22554ee8d7927b2ce3c681f3418b5206a",
-    )
-    .unwrap();
+    let contract_address = TryFromHexStr::try_from_hex_str(ETH_CONTRACT_ADDRESS).unwrap();
+    let class_hash = TryFromHexStr::try_from_hex_str(ETH_CLASS_HASH).unwrap();
 
-    // All storage values are taken from https://voyager.online/contract/0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d#readStorage
+    // All storage values are taken from https://voyager.online/contract/0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7#readStorage
     // Block 747469
     let total_supply_low: u128 = 15_000_000_000_000_000_000_000;
-    let permitted_minter = ContractAddress::try_from_hex_str(
+    let permitted_minter = TryFromHexStr::try_from_hex_str(
         "0x4c5772d1914fe6ce891b64eb35bf3522aeae1315647314aac58b01137607f3f",
     )
     .unwrap();
