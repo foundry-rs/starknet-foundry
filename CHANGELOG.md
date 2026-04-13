@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- Updated Cheatnet predeployed ETH and STRK token contracts, matching Starknet `v0.14.2` token event changes from SNIP-13
+- Updated predeployed ETH and STRK token contracts, matching Starknet `v0.14.2` token event changes from SNIP-13
 
 ## [0.59.0] - 2026-04-10
 
