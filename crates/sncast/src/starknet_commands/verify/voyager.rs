@@ -149,7 +149,7 @@ fn package_source_files(
                     }
                     // Otherwise, skip files with "test" in their path under src/
                     let path_str = f.path().to_string_lossy().to_lowercase();
-                    if path_str.contains("/test") || path_str.contains("\\test") {
+                    if path_str.contains("/test") {
                         return false;
                     }
                     // Also skip files ending with "_test.cairo" or "_tests.cairo"

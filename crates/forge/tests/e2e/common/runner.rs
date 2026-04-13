@@ -91,8 +91,7 @@ pub(crate) fn setup_package_with_file_patterns(
     let package_path = package_path
         .canonicalize_utf8()
         .unwrap()
-        .to_string()
-        .replace('\\', "/");
+        .to_string();
 
     temp.copy_from(package_path, file_patterns).unwrap();
 
@@ -109,8 +108,7 @@ pub(crate) fn setup_package_with_file_patterns(
         .unwrap()
         .canonicalize_utf8()
         .unwrap()
-        .to_string()
-        .replace('\\', "/");
+        .to_string();
 
     if is_workspace {
         scarb_toml["workspace"]["dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
