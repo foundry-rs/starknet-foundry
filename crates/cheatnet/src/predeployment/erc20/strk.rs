@@ -6,8 +6,8 @@ use super::constructor_data::ERC20ConstructorData;
 
 pub const STRK_CONTRACT_ADDRESS: &str =
     "0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
-pub const STRK_CLASS_HASH: &str =
-    "0x06c0cbbdcaa1e7a9b8d0b2e5f1a3cbbacfa4c9d9e089bdeee7e5fbdcd1b8a6e";
+pub const STRK_CONTRACT_CLASS_HASH: &str =
+    "0x04ad3c1dc8413453db314497945b6903e1c766495a1e60492d44da9c2a986e4b";
 
 #[must_use]
 pub fn strk_predeployed_contract() -> PredeployedContract {
@@ -16,7 +16,7 @@ pub fn strk_predeployed_contract() -> PredeployedContract {
     let raw_casm = include_str!("../../data/sg_token_ERC20Mintable.compiled_contract_class.json");
 
     let contract_address = TryFromHexStr::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
-    let class_hash = TryFromHexStr::try_from_hex_str(STRK_CLASS_HASH).unwrap();
+    let class_hash = TryFromHexStr::try_from_hex_str(STRK_CONTRACT_CLASS_HASH).unwrap();
 
     // All storage values are taken from https://voyager.online/contract/0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d#readStorage
     // Block 747469
