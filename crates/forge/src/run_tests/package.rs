@@ -84,6 +84,7 @@ impl RunForPackageArgs {
         cache_dir: &Utf8PathBuf,
         artifacts_dir: &Utf8Path,
         partitioning_config: PartitionConfig,
+        predeployed_contracts: ContractsData,
         ui: &UI,
     ) -> Result<RunForPackageArgs> {
         let mut raw_test_targets = load_test_artifacts(artifacts_dir, &package)?;
@@ -98,7 +99,8 @@ impl RunForPackageArgs {
                 run_native: args.run_native,
             },
         )?;
-        let contracts_data = ContractsData::try_from(contracts)?;
+        let mut contracts_data = ContractsData::try_from(contracts)?;
+        contracts_data.extend(predeployed_contracts)?;
 
         let forge_config_from_scarb =
             load_package_config::<ForgeConfigFromScarb>(scarb_metadata, &package.id)?;

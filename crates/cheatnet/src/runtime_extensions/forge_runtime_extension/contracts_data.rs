@@ -1,5 +1,5 @@
 use super::cheatcodes::declare::get_class_hash;
-use anyhow::Result;
+use anyhow::{Result, bail};
 use bimap::BiMap;
 use camino::Utf8PathBuf;
 use conversions::IntoConv;
@@ -72,6 +72,21 @@ impl ContractsData {
             class_hashes,
             selectors,
         })
+    }
+
+    pub fn extend(&mut self, other: Self) -> Result<()> {
+        for (name, contract_data) in other.contracts {
+            if self.contracts.contains_key(&name) {
+                bail!("duplicate contract name: {name}");
+            }
+            self.class_hashes
+                .insert(name.clone(), contract_data.class_hash);
+            self.contracts.insert(name, contract_data);
+        }
+
+        self.selectors.extend(other.selectors);
+
+        Ok(())
     }
 
     #[must_use]

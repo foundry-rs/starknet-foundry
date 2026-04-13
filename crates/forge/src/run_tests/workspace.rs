@@ -13,6 +13,7 @@ use crate::{
     scarb::build_artifacts_with_scarb, shared_cache::FailedTestsCache,
 };
 use anyhow::Result;
+use cheatnet::predeployment::contracts_data::load_predeployed_contracts;
 use forge_runner::partition::PartitionConfig;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
@@ -106,6 +107,7 @@ pub async fn execute_workspace(
     let packages_len = packages.len();
 
     let partitioning_config = get_partitioning_config(args, &ui, &packages, &artifacts_dir_path)?;
+    let predeployed_contracts = load_predeployed_contracts()?;
 
     // Spawn config passes for all packages before running any tests so that
     // compilation overlaps with test execution across packages.
@@ -120,6 +122,7 @@ pub async fn execute_workspace(
             &cache_dir,
             &artifacts_dir_path,
             partitioning_config.clone(),
+            predeployed_contracts.clone(),
             &ui,
         )?;
         env::set_current_dir(&cwd)?;
