@@ -11,17 +11,9 @@ use std::{env, fs};
 pub fn get_or_create_global_config_path() -> Result<Utf8PathBuf> {
     let global_config_dir = match env::var("SNFOUNDRY_CONFIG").ok() {
         Some(dir) => Utf8PathBuf::from(shellexpand::tilde(&dir).to_string()).into_std_path_buf(),
-        None => {
-            if cfg!(target_os = "windows") {
-                dirs::config_dir()
-                    .ok_or_else(|| anyhow::anyhow!("Could not determine config directory"))?
-                    .join("starknet-foundry")
-            } else {
-                dirs::home_dir()
-                    .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?
-                    .join(".config/starknet-foundry")
-            }
-        }
+        None => dirs::home_dir()
+            .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?
+            .join(".config/starknet-foundry"),
     };
 
     if !global_config_dir.exists() {
