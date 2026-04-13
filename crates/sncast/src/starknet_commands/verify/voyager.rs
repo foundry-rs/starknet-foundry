@@ -31,6 +31,186 @@ pub struct Voyager<'a> {
     provider: &'a JsonRpcClient<HttpTransport>,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct Body {
+    pub compiler_version: semver::Version,
+    pub scarb_version: semver::Version,
+    pub project_dir_path: Utf8PathBuf,
+    #[serde(rename = "name")]
+    pub contract_name: String,
+    pub package_name: String,
+    pub build_tool: String,
+    pub license: Option<String>,
+    pub files: HashMap<String, String>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct ApiError {
+    error: String,
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct VerificationJobDispatch {
+    job_id: String,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum VoyagerApiError {
+    #[error("Failed to parse {name} path: {path}")]
+    DependencyPathError { name: String, path: String },
+
+    #[error("Scarb metadata failed for {name}: {path}")]
+    MetadataError { name: String, path: String },
+}
+
+fn gather_packages(metadata: &Metadata, packages: &mut Vec<PackageMetadata>) -> Result<()> {
+    let mut workspace_packages: Vec<PackageMetadata> = metadata
+        .packages
+        .clone()
+        .into_iter()
+        .filter(|package_meta| metadata.workspace.members.contains(&package_meta.id))
+        .filter(|package_meta| !packages.contains(package_meta))
+        .collect();
+
+    let workspace_packages_names = workspace_packages
+        .iter()
+        .map(|package| package.name.clone())
+        .collect_vec();
+
+    // find all dependencies listed by path
+    let mut dependencies: HashMap<String, PathBuf> = HashMap::new();
+    for package in &workspace_packages {
+        for dependency in &package.dependencies {
+            let name = &dependency.name;
+            let url = Url::parse(&dependency.source.repr).map_err(|_| {
+                VoyagerApiError::DependencyPathError {
+                    name: name.clone(),
+                    path: dependency.source.repr.clone(),
+                }
+            })?;
+
+            if url.scheme().starts_with("path") {
+                let path =
+                    url.to_file_path()
+                        .map_err(|()| VoyagerApiError::DependencyPathError {
+                            name: name.clone(),
+                            path: dependency.source.repr.clone(),
+                        })?;
+                dependencies.insert(name.clone(), path);
+            }
+        }
+    }
+
+    packages.append(&mut workspace_packages);
+
+    // filter out dependencies already covered by workspace
+    let out_of_workspace_dependencies: HashMap<&String, &PathBuf> = dependencies
+        .iter()
+        .filter(|&(k, _)| !workspace_packages_names.contains(k))
+        .collect();
+
+    for (name, manifest) in out_of_workspace_dependencies {
+        let new_meta = metadata_for_dir(manifest.parent().expect("manifest should have a parent"))
+            .map_err(|_| VoyagerApiError::MetadataError {
+                name: name.clone(),
+                path: manifest.to_string_lossy().to_string(),
+            })?;
+        gather_packages(&new_meta, packages)?;
+    }
+
+    Ok(())
+}
+
+fn package_source_files(
+    package_metadata: &PackageMetadata,
+    include_test_files: bool,
+) -> Result<Vec<Utf8PathBuf>> {
+    let mut sources: Vec<Utf8PathBuf> = WalkDir::new(package_metadata.root.clone())
+        .into_iter()
+        .filter_map(std::result::Result::ok)
+        .filter(|f| f.file_type().is_file())
+        .filter(|f| {
+            if let Some(ext) = f.path().extension() {
+                if ext != OsStr::new(CAIRO_EXT) {
+                    return false;
+                }
+                let parts: Vec<_> = f
+                    .path()
+                    .components()
+                    .map(|c| c.as_os_str().to_string_lossy().to_lowercase())
+                    .collect();
+
+                if parts.contains(&"src".to_string()) {
+                    // If include_test_files is true, include all files under src/
+                    if include_test_files {
+                        return true;
+                    }
+                    // Otherwise, skip files with "test" in their path under src/
+                    let path_str = f.path().to_string_lossy().to_lowercase();
+                    if path_str.contains("/test") {
+                        return false;
+                    }
+                    // Also skip files ending with "_test.cairo" or "_tests.cairo"
+                    if path_str.ends_with("_test.cairo") || path_str.ends_with("_tests.cairo") {
+                        return false;
+                    }
+                    return true;
+                }
+
+                if parts.contains(&"test".to_string()) || parts.contains(&"tests".to_string()) {
+                    return false;
+                }
+                // We'll include files with #[test] attributes since they might be source files
+                // that happen to include unit tests
+                return true;
+            }
+            false
+        })
+        .map(walkdir::DirEntry::into_path)
+        .map(Utf8PathBuf::try_from)
+        .try_collect()?;
+
+    sources.push(package_metadata.manifest_path.clone());
+    let package_root = &package_metadata.root;
+
+    if let Some(lic) = package_metadata
+        .manifest_metadata
+        .license_file
+        .as_ref()
+        .map(Utf8Path::new)
+        .map(Utf8Path::to_path_buf)
+    {
+        sources.push(package_root.join(lic));
+    }
+
+    if let Some(readme) = package_metadata
+        .manifest_metadata
+        .readme
+        .as_deref()
+        .map(Utf8Path::new)
+        .map(Utf8Path::to_path_buf)
+    {
+        sources.push(package_root.join(readme));
+    }
+
+    Ok(sources)
+}
+
+fn longest_common_prefix<P: AsRef<Utf8Path> + Clone>(
+    paths: &[Utf8PathBuf],
+    first_guess: P,
+) -> Utf8PathBuf {
+    let ancestors = Utf8Path::ancestors(first_guess.as_ref());
+    let mut longest_prefix = first_guess.as_ref();
+    for prefix in ancestors {
+        if paths.iter().all(|src| src.starts_with(prefix)) {
+            longest_prefix = prefix;
+            break;
+        }
+    }
+    longest_prefix.to_path_buf()
+}
+
 impl Voyager<'_> {
     pub fn gather_files(
         &self,
