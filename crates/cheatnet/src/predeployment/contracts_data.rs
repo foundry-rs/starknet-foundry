@@ -4,7 +4,7 @@ use crate::{
     predeployment::erc20::strk::{STRK_CONTRACT_CLASS_HASH, STRK_CONTRACT_NAME},
     runtime_extensions::forge_runtime_extension::contracts_data::ContractsData,
 };
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use conversions::string::TryFromHexStr;
 
 pub fn load_predeployed_contracts() -> Result<ContractsData> {
@@ -27,12 +27,11 @@ pub fn load_predeployed_contracts() -> Result<ContractsData> {
             .class_hashes
             .insert(contract_name.clone(), class_hash);
 
-        // update contract data class hash
-        contracts_data
+        let contract_data = contracts_data
             .contracts
             .get_mut(&contract_name)
-            .expect("contract data for {contract_name} should exist")
-            .class_hash = class_hash;
+            .ok_or_else(|| anyhow!("contract data for {contract_name} should exist"))?;
+        contract_data.class_hash = class_hash;
     }
 
     Ok(contracts_data)

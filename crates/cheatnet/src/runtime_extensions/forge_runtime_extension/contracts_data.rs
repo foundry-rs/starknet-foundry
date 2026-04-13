@@ -75,10 +75,22 @@ impl ContractsData {
     }
 
     pub fn extend(&mut self, other: Self) -> Result<()> {
-        for (name, contract_data) in other.contracts {
-            if self.contracts.contains_key(&name) {
+        for (name, contract_data) in &other.contracts {
+            if self.contracts.contains_key(name) {
                 bail!("duplicate contract name: {name}");
             }
+
+            if let Some(existing_name) = self.class_hashes.get_by_right(&contract_data.class_hash) {
+                bail!(
+                    "duplicate contract class hash for `{}` and `{}`: {:?}",
+                    existing_name,
+                    name,
+                    contract_data.class_hash
+                );
+            }
+        }
+
+        for (name, contract_data) in other.contracts {
             self.class_hashes
                 .insert(name.clone(), contract_data.class_hash);
             self.contracts.insert(name, contract_data);

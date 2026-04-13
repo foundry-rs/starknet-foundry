@@ -28,6 +28,11 @@ impl TraceArgs {
             }
         }
     }
+
+    /// Returns `true` if no trace-related arguments were provided.
+    pub fn is_empty(&self) -> bool {
+        self.trace_verbosity.is_none() && self.trace_components.is_none()
+    }
 }
 
 fn build_components<'a>(iter: impl IntoIterator<Item = &'a Component>) -> Components {
