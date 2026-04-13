@@ -1,7 +1,10 @@
 ---
 source: crates/forge/tests/e2e/backtrace.rs
+assertion_line: 152
 expression: stdout
 ---
+
+
 [FAIL] backtrace_panic::Test::test_contract_panics
 
 Failure data:
@@ -9,16 +12,26 @@ Failure data:
 
 error occurred in contract 'InnerContract'
 stack backtrace:
-   0: core::panic_with_const_felt252
-       at [..]lib.cairo:360:5
-   1: core::panic_with_const_felt252
-       at [..]lib.cairo:360:5
-   2: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
+   0: core::array_inline_macro
+       at [..]lib.cairo:346:11
+   1: core::assert
+       at [..]lib.cairo:373:9
+   2: backtrace_panic::InnerContract::inner_call
+       at [..]lib.cairo:40:9
+   3: backtrace_panic::InnerContract::unsafe_new_contract_state
+       at [..]lib.cairo:29:5
+   4: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
        at [..]lib.cairo:32:5
 
 error occurred in contract 'OuterContract'
 stack backtrace:
-   0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+   0: core::starknet::SyscallResultTraitImpl::unwrap_syscall
+       at [..]starknet.cairo:135:52
+   1: backtrace_panic::IInnerContractDispatcherImpl::inner
+       at [..]lib.cairo:22:1
+   2: backtrace_panic::OuterContract::OuterContract::outer
+       at [..]lib.cairo:17:13
+   3: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
        at [..]lib.cairo:13:5
 
 [IGNORE] backtrace_panic::Test::test_contract_panics_with_should_panic
@@ -31,9 +44,14 @@ error occurred in forked contract with class hash: 0x554cb276fb5eb0788344f5431b9
 
 error occurred in contract 'OuterContract'
 stack backtrace:
-   0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+   0: core::starknet::SyscallResultTraitImpl::unwrap_syscall
+       at [..]starknet.cairo:135:52
+   1: backtrace_panic::IInnerContractDispatcherImpl::inner
+       at [..]lib.cairo:22:1
+   2: backtrace_panic::OuterContract::OuterContract::outer
+       at [..]lib.cairo:17:13
+   3: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
        at [..]lib.cairo:13:5
-
 
 [FAIL] backtrace_panic::Test::test_predeployed_contract_panics
 

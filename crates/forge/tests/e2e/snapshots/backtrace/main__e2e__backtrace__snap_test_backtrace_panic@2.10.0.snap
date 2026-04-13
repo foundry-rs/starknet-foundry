@@ -1,7 +1,10 @@
 ---
 source: crates/forge/tests/e2e/backtrace.rs
+assertion_line: 115
 expression: stdout
 ---
+
+
 [FAIL] backtrace_panic::Test::test_contract_panics
 
 Failure data:
@@ -33,7 +36,6 @@ error occurred in contract 'OuterContract'
 stack backtrace:
    0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
        at [..]lib.cairo:13:5
-
 
 [FAIL] backtrace_panic::Test::test_predeployed_contract_panics
 

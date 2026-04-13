@@ -136,6 +136,40 @@ fn debugging_double_flags() {
         "});
 }
 
+#[test]
+fn debugging_predeployed_contract() {
+    let temp = setup_package("debugging_predeployed_contract");
+
+    let output = test_runner(&temp)
+        .arg("--trace-verbosity")
+        .arg("minimal")
+        .assert()
+        .code(0);
+
+    assert_stdout_contains(
+        output,
+        predeployed_contract_test_output("debugging_predeployed_contract"),
+    );
+}
+
+fn predeployed_contract_test_output(package_name: &str) -> String {
+    formatdoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+        Collected 1 test(s) from {package_name} package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] {package_name}_integrationtest::test_trace::test_decimals (l1_gas: ~[..], l1_data_gas: ~[..], l2_gas: ~[..])
+        [test name] {package_name}_integrationtest::test_trace::test_decimals
+        └─ [selector] decimals
+           └─ [contract name] STRK (predeployed contract)
+
+        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
+        ",
+    }
+}
+
 fn test_output(trace_message_fn: fn(&str, &str) -> String, package_name: &str) -> String {
     formatdoc! {r"
         [..]Compiling[..]
