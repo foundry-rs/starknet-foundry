@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+### Added 
+
+- Support serializing corelib `Option` and `Result` values passed via `--arguments`
+
 #### Fixed
 
 - `sncast verify` now uses the configured network or infers it from the RPC chain ID when `--network` is omitted.
@@ -44,7 +48,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast get class-hash-at` command to get the class hash of a contract at a given address.
 - `--with-proof-facts` flag for `sncast get tx` to include proof facts in tx response. Read more [here](https://community.starknet.io/t/snip-36-in-protocol-proof-verification/116123l).
 - `--proof-file` and `--proof-facts-file` flags for `sncast invoke` to attach proof data from files.
-- Support serializing corelib `Option` and `Result` values passed via `--arguments`
 
 ## [0.58.1] - 2026-03-31
 
