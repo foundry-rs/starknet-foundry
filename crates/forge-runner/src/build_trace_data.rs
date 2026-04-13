@@ -146,6 +146,7 @@ pub fn build_profiler_execution_resources(
     // Subtract syscall related resources to get the values expected by the profiler.
     // The profiler operates on resources excluding syscall overhead.
     let versioned_constants = VersionedConstants::latest_constants();
+    let opcodes = execution_resources.opcode_instance_counter.clone();
     let execution_resources = &execution_resources.vm_resources
         - &versioned_constants.get_additional_os_syscall_resources(syscall_usage_vm_resources);
     let gas_consumed =
@@ -171,6 +172,12 @@ pub fn build_profiler_execution_resources(
                 .builtin_instance_counter
                 .into_iter()
                 .map(|(key, value)| (key.to_str_with_suffix().to_owned(), value))
+                .chain(
+                    // Treat opcodes as builtin instances.
+                    opcodes
+                        .into_iter()
+                        .map(|(key, value)| (key.to_str_with_suffix().to_owned(), value)),
+                )
                 .collect(),
         },
         gas_consumed: Some(gas_consumed),
