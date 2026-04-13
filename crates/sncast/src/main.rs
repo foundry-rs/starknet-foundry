@@ -296,12 +296,19 @@ fn main() -> Result<ExitCode> {
 
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
-    if let Commands::Script(script) = &cli.command {
+    if let Commands::Completions(completions) = &cli.command {
+        run_completions_command(completions)
+    } else if let Commands::Script(script) = &cli.command {
         run_script_command(&cli, runtime, script, &ui)
     } else {
         let config = get_cast_config(&cli, &ui)?;
         runtime.block_on(run_async_command(cli, config, &ui))
     }
+}
+
+fn run_completions_command(completions: &Completions) -> Result<ExitCode> {
+    generate_completions(completions.shell, &mut Cli::command())?;
+    Ok(ExitCode::SUCCESS)
 }
 
 #[expect(clippy::too_many_lines)]
@@ -732,11 +739,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             Ok(process_command_result("verify", result, ui, None))
         }
 
-        Commands::Completions(completions) => {
-            generate_completions(completions.shell, &mut Cli::command())?;
-            Ok(ExitCode::SUCCESS)
-        }
-
         // TODO(#4214): Remove moved sncast commands
         Commands::Balance(balance) => {
             print_cmd_move_warning("balance", "get balance", ui);
@@ -747,6 +749,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let result = ledger::ledger(&ledger, ui).await;
             Ok(process_command_result("ledger", result, ui, None))
         }
+
+        Commands::Completions(_) => unreachable!(),
 
         Commands::Script(_) => unreachable!(),
     }
