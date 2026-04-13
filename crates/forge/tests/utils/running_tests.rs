@@ -14,7 +14,7 @@ use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, ForgeTrackedResource, OutputConfig, TestRunnerConfig,
 };
 use forge_runner::partition::PartitionConfig;
-use forge_runner::running::with_config::test_target_with_config;
+use forge_runner::running::target::prepare_test_target;
 use forge_runner::scarb::load_test_artifacts;
 use forge_runner::test_target_summary::TestTargetSummary;
 use foundry_ui::UI;
@@ -51,15 +51,13 @@ pub fn run_test_case(
 
     let ui = Arc::new(UI::default());
     rt.block_on(async {
-        let config_handles = raw_test_targets
+        let target_handles = raw_test_targets
             .into_iter()
-            .map(|t| {
-                tokio::task::spawn_blocking(move || test_target_with_config(t, &tracked_resource))
-            })
+            .map(|t| tokio::task::spawn_blocking(move || prepare_test_target(t, &tracked_resource)))
             .collect();
         run_for_package(
             RunForPackageArgs {
-                config_handles,
+                target_handles,
                 package_name: "test_package".to_string(),
                 package_root: Utf8PathBuf::default(),
                 tests_filter: TestsFilter::from_flags(

@@ -30,7 +30,7 @@ use forge_runner::{
         with_config_resolved::{TestCaseWithResolvedConfig, sanitize_test_case_name},
     },
     partition::PartitionConfig,
-    running::with_config::test_target_with_config,
+    running::target::prepare_test_target,
     scarb::load_test_artifacts,
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
@@ -67,7 +67,7 @@ impl PackageTestResult {
 }
 
 pub struct RunForPackageArgs {
-    pub config_handles: Vec<JoinHandle<Result<TestTargetWithConfig>>>,
+    pub target_handles: Vec<JoinHandle<Result<TestTargetWithConfig>>>,
     pub tests_filter: TestsFilter,
     pub forge_config: Arc<ForgeConfig>,
     pub fork_targets: Vec<ForkTarget>,
@@ -138,13 +138,13 @@ impl RunForPackageArgs {
 
         let tracked_resource = forge_config.test_runner_config.tracked_resource;
 
-        let config_handles = raw_test_targets
+        let target_handles = raw_test_targets
             .into_iter()
-            .map(|t| spawn_config_pass(t, tracked_resource))
+            .map(|t| spawn_prepare_test_target(t, tracked_resource))
             .collect();
 
         Ok(RunForPackageArgs {
-            config_handles,
+            target_handles,
             forge_config,
             tests_filter,
             fork_targets: forge_config_from_scarb.fork,
@@ -154,11 +154,11 @@ impl RunForPackageArgs {
     }
 }
 
-fn spawn_config_pass(
+fn spawn_prepare_test_target(
     target: TestTargetRaw,
     tracked_resource: ForgeTrackedResource,
 ) -> JoinHandle<Result<TestTargetWithConfig>> {
-    tokio::task::spawn_blocking(move || test_target_with_config(target, &tracked_resource))
+    tokio::task::spawn_blocking(move || prepare_test_target(target, &tracked_resource))
 }
 
 fn sum_test_cases_from_test_target(
@@ -185,7 +185,7 @@ fn sum_test_cases_from_test_target(
 #[tracing::instrument(skip_all, level = "debug")]
 pub async fn run_for_package(
     RunForPackageArgs {
-        config_handles,
+        target_handles,
         forge_config,
         tests_filter,
         fork_targets,
@@ -201,11 +201,16 @@ pub async fn run_for_package(
     let mut all_tests = 0;
     let mut not_filtered_total = 0;
 
-    for handle in config_handles {
-        let with_config = handle.await??;
+    for handle in target_handles {
+        let target_with_config = handle.await??;
 
-        let mut resolved =
-            resolve_config(with_config, &fork_targets, block_number_map, &tests_filter).await?;
+        let mut resolved = resolve_config(
+            target_with_config,
+            &fork_targets,
+            block_number_map,
+            &tests_filter,
+        )
+        .await?;
 
         let all = sum_test_cases_from_test_target(
             &resolved.test_cases,

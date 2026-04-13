@@ -27,7 +27,7 @@ use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
-use forge_runner::running::with_config::test_target_with_config;
+use forge_runner::running::target::prepare_test_target;
 use forge_runner::scarb::load_test_artifacts;
 use scarb_api::ScarbCommand;
 use scarb_api::metadata::metadata_for_dir;
@@ -75,7 +75,7 @@ fn fork_simple_decorator() {
     assert_passed(&result);
 }
 
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 #[test]
 fn fork_aliased_decorator() {
     let test = test_case!(indoc!(
@@ -135,17 +135,17 @@ fn fork_aliased_decorator() {
     let ui = Arc::new(UI::default());
     let result = rt
         .block_on(async {
-            let config_handles = raw_test_targets
+            let target_handles = raw_test_targets
                 .into_iter()
                 .map(|t| {
                     tokio::task::spawn_blocking(move || {
-                        test_target_with_config(t, &ForgeTrackedResource::CairoSteps)
+                        prepare_test_target(t, &ForgeTrackedResource::CairoSteps)
                     })
                 })
                 .collect();
             run_for_package(
                 RunForPackageArgs {
-                    config_handles,
+                    target_handles,
                     package_name: "test_package".to_string(),
                     package_root: Utf8PathBuf::default(),
                     tests_filter: TestsFilter::from_flags(
@@ -240,17 +240,17 @@ fn fork_aliased_decorator_overrding() {
     let ui = Arc::new(UI::default());
     let result = rt
         .block_on(async {
-            let config_handles = raw_test_targets
+            let target_handles = raw_test_targets
                 .into_iter()
                 .map(|t| {
                     tokio::task::spawn_blocking(move || {
-                        test_target_with_config(t, &ForgeTrackedResource::CairoSteps)
+                        prepare_test_target(t, &ForgeTrackedResource::CairoSteps)
                     })
                 })
                 .collect();
             run_for_package(
                 RunForPackageArgs {
-                    config_handles,
+                    target_handles,
                     package_name: "test_package".to_string(),
                     package_root: Utf8PathBuf::default(),
                     tests_filter: TestsFilter::from_flags(
