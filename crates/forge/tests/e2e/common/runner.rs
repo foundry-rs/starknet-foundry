@@ -88,10 +88,7 @@ pub(crate) fn setup_package_with_file_patterns(
         Package::Path(path) => Utf8PathBuf::from("tests/data").join(path),
     };
 
-    let package_path = package_path
-        .canonicalize_utf8()
-        .unwrap()
-        .to_string();
+    let package_path = package_path.canonicalize_utf8().unwrap().to_string();
 
     temp.copy_from(package_path, file_patterns).unwrap();
 
