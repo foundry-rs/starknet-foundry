@@ -31,7 +31,7 @@ pub fn load_predeployed_contracts() -> Result<ContractsData> {
         contracts_data
             .contracts
             .get_mut(&contract_name)
-            .expect("contract data should be present")
+            .expect("contract data for {contract_name} should exist")
             .class_hash = class_hash;
     }
 
