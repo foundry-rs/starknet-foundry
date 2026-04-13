@@ -23,6 +23,14 @@ pub trait EnumOrStruct {
     fn name(&self) -> String;
 }
 
+/// A resolved enum variant with its serialization position and optional inner type.
+struct ResolvedEnumVariant<'a> {
+    /// 0-based position used for serialization
+    position: usize,
+    /// Inner type, or `None` for unit variants
+    inner_type: Option<&'a str>,
+}
+
 impl EnumOrStruct for AbiStruct {
     const VARIANT: &'static str = "struct";
     const VARIANT_CAPITALIZED: &'static str = "Struct";
@@ -70,14 +78,6 @@ fn validate_path_argument(
         bail!(r#"Invalid argument type, expected "{param_type}", got "{path_argument_joined}""#)
     }
     Ok(())
-}
-
-/// A resolved enum variant with its serialization position and optional inner type.
-struct ResolvedEnumVariant<'a> {
-    /// 0-based position used for serialization
-    position: usize,
-    /// Inner type, or `None` for unit variants
-    inner_type: Option<&'a str>,
 }
 
 fn is_valid_corelib_enum_path(type_name: &str, enum_path: &[String]) -> bool {
@@ -155,26 +155,26 @@ fn resolve_corelib_enum_variant<'a>(
 }
 
 fn top_level_comma_pos(s: &str) -> Option<usize> {
-    let mut depth = 0;
-    s.char_indices().find_map(|(i, c)| match c {
-        '<' => {
-            depth += 1;
-            None
+    let mut angle_depth = 0;
+    let mut paren_depth = 0;
+    s.char_indices().find_map(|(i, c)| {
+        match c {
+            '<' => angle_depth += 1,
+            '>' => angle_depth -= 1,
+            '(' => paren_depth += 1,
+            ')' => paren_depth -= 1,
+            ',' if angle_depth == 0 && paren_depth == 0 => return Some(i),
+            _ => {}
         }
-        '>' if depth > 0 => {
-            depth -= 1;
-            None
-        }
-        ',' if depth == 0 => Some(i),
-        _ => None,
+        None
     })
 }
 
-fn split_variant_from_path(path: &[String]) -> Result<(String, Vec<String>)> {
+fn split_variant_from_path(path: &[String]) -> Result<(&str, &[String])> {
     let (variant, rest) = path
         .split_last()
         .ok_or_else(|| anyhow::anyhow!("Expected an enum variant path, got an empty path"))?;
-    Ok((variant.clone(), rest.to_vec()))
+    Ok((variant, rest))
 }
 
 fn split(path: &ExprPath, db: &SimpleParserDatabase) -> Result<Vec<String>> {
@@ -410,13 +410,14 @@ impl SupportedCalldataKind for ExprPath<'_> {
         abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArgument> {
-        let (enum_variant_name, enum_path) = split_variant_from_path(&split(self, db)?)?;
+        let path = split(self, db)?;
+        let (enum_variant_name, enum_path) = split_variant_from_path(&path)?;
 
-        let resolved = resolve_enum_variant(&enum_variant_name, &enum_path, expected_type, abi)?;
+        let resolved = resolve_enum_variant(enum_variant_name, enum_path, expected_type, abi)?;
 
         ensure!(
             resolved.inner_type.is_none(),
-            r#"Variant "{enum_variant_name}" of "{expected_type}" takes no value"#
+            r#"Variant "{enum_variant_name}" of "{expected_type}" requires a value, use "{enum_variant_name}(<value>)""#
         );
 
         if enum_variant.r#type != "()" {
@@ -438,9 +439,10 @@ impl SupportedCalldataKind for ExprFunctionCall<'_> {
         abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArgument> {
-        let (enum_variant_name, enum_path) = split_variant_from_path(&split(&self.path(db), db)?)?;
+        let path = split(&self.path(db), db)?;
+        let (enum_variant_name, enum_path) = split_variant_from_path(&path)?;
 
-        let resolved = resolve_enum_variant(&enum_variant_name, &enum_path, expected_type, abi)?;
+        let resolved = resolve_enum_variant(enum_variant_name, enum_path, expected_type, abi)?;
 
         let inner_type = resolved.inner_type.with_context(|| {
             format!(r#"Variant "{enum_variant_name}" of "{expected_type}" takes no value"#)

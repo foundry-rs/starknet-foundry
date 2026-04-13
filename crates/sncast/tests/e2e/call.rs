@@ -343,10 +343,10 @@ async fn deploy_data_transformer_contract() -> (tempfile::TempDir, String) {
 }
 
 #[tokio::test]
-async fn test_happy_case_call_with_option() {
+async fn test_happy_case_call_with_option_and_result() {
     let (tempdir, contract_address) = deploy_data_transformer_contract().await;
 
-    let args = vec![
+    runner(&[
         "--accounts-file",
         "accounts.json",
         "call",
@@ -358,24 +358,17 @@ async fn test_happy_case_call_with_option() {
         "option_fn",
         "--arguments",
         "Option::Some(42_u32)",
-    ];
+    ])
+    .current_dir(tempdir.path())
+    .assert()
+    .success()
+    .stdout_eq(indoc! {r"
+        Success: Call completed
 
-    runner(&args)
-        .current_dir(tempdir.path())
-        .assert()
-        .success()
-        .stdout_eq(indoc! {r"
-            Success: Call completed
+        Response: [0x0, 0x2a]
+    "});
 
-            Response: [0x0, 0x2a]
-        "});
-}
-
-#[tokio::test]
-async fn test_happy_case_call_with_result() {
-    let (tempdir, contract_address) = deploy_data_transformer_contract().await;
-
-    let args = vec![
+    runner(&[
         "--accounts-file",
         "accounts.json",
         "call",
@@ -387,15 +380,13 @@ async fn test_happy_case_call_with_result() {
         "result_fn",
         "--arguments",
         "Result::Ok(99_u32)",
-    ];
+    ])
+    .current_dir(tempdir.path())
+    .assert()
+    .success()
+    .stdout_eq(indoc! {r"
+        Success: Call completed
 
-    runner(&args)
-        .current_dir(tempdir.path())
-        .assert()
-        .success()
-        .stdout_eq(indoc! {r"
-            Success: Call completed
-
-            Response: [0x0, 0x63]
-        "});
+        Response: [0x0, 0x63]
+    "});
 }

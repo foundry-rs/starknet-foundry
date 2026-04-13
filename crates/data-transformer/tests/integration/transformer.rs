@@ -712,6 +712,61 @@ fn test_happy_case_result_err() {
     assert_eq!(result, vec![Felt::ONE, Felt::from(999u32)]);
 }
 
+fn result_tuple_with_array_abi() -> Vec<AbiEntry> {
+    serde_json::from_str(
+        r#"[
+            {
+                "type": "function",
+                "name": "result_tuple_array_fn",
+                "inputs": [{"name": "a", "type": "core::result::Result::<(core::array::Array::<core::integer::u32>, core::integer::u64), core::option::Option::<(core::integer::u32, core::integer::u64)>>"}],
+                "outputs": [],
+                "state_mutability": "view"
+            }
+        ]"#,
+    )
+    .unwrap()
+}
+
+#[test]
+fn test_result_ok_with_tuple_containing_array() {
+    let abi = result_tuple_with_array_abi();
+    let result = transform(
+        "Result::Ok((array![1_u32, 2_u32], 3_u64))",
+        &abi,
+        &get_selector_from_name("result_tuple_array_fn").unwrap(),
+    )
+    .unwrap();
+
+    // Ok=0, array length=2, elements 1 and 2, then u64=3
+    assert_eq!(
+        result,
+        vec![
+            Felt::ZERO,
+            Felt::TWO,
+            Felt::ONE,
+            Felt::TWO,
+            Felt::from(3u32)
+        ]
+    );
+}
+
+#[test]
+fn test_result_err_with_option_of_tuple_e() {
+    let abi = result_tuple_with_array_abi();
+    let result = transform(
+        "Result::Err(Option::Some((3_u32, 4_u64)))",
+        &abi,
+        &get_selector_from_name("result_tuple_array_fn").unwrap(),
+    )
+    .unwrap();
+
+    // Err=1, Option::Some=0, tuple fields 1 and 2
+    assert_eq!(
+        result,
+        vec![Felt::ONE, Felt::ZERO, Felt::from(3u32), Felt::from(4u64)]
+    );
+}
+
 fn custom_generic_abi() -> Vec<AbiEntry> {
     serde_json::from_str(
         r#"[
@@ -859,7 +914,7 @@ fn test_option_value_variant_missing_value() {
     );
 
     result.unwrap_err().assert_contains(
-        r#"Variant "Some" of "core::option::Option::<core::integer::u32>" takes no value"#,
+        r#"Variant "Some" of "core::option::Option::<core::integer::u32>" requires a value, use "Some(<value>)""#,
     );
 }
 
