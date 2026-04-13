@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `--launch-debugger` flag that allows launching a test in debug mode using `cairo-debugger` crate. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#live-debugging)
+- Predeployed contracts are now supported in debugging traces and backtrace
 
 #### Changed
 
