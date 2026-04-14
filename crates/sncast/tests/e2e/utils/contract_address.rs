@@ -161,7 +161,7 @@ fn test_calldata_affects_address() {
             "utils",
             "contract-address",
             "--class-hash",
-            MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+            CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
             "--constructor-calldata",
             calldata,
             "--salt",
@@ -332,6 +332,27 @@ fn test_unique_without_account_address() {
     ];
     let output = runner(&args).assert().success();
     assert_stdout_contains(output, indoc! {r"Contract Address: 0x0[..]"});
+}
+
+#[test]
+fn test_calldata_with_no_constructor_contract() {
+    let args = vec![
+        "utils",
+        "contract-address",
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--constructor-calldata",
+        "0x1",
+        "--salt",
+        "0x1",
+        "--url",
+        URL,
+    ];
+    let output = runner(&args).assert().failure();
+    assert_stderr_contains(
+        output,
+        indoc! {"[..]Calldata provided but the contract has no constructor[..]"},
+    );
 }
 
 #[test]
