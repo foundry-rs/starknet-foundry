@@ -69,8 +69,7 @@ $ sncast \
 'name: "Magmar",'\
 'element: pokemons::model::Element::Fire'\
 '}' \
-  --dry-run \
-  --detailed
+  --dry-run
 ```
 
 <details>
@@ -80,12 +79,6 @@ $ sncast \
 Success: Dry run completed
 
 Overall Fee: [..] Fri (~[..] STRK)
-L1 Gas Consumed:      [..]
-L1 Gas Price:         [..]
-L2 Gas Consumed:      [..]
-L2 Gas Price:         [..]
-L1 Data Gas Consumed: [..]
-L1 Data Gas Price:    [..]
 ```
 </details>
 <br>
