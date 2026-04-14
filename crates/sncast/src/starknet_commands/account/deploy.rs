@@ -329,10 +329,10 @@ where
 
     if dry_run_args.dry_run {
         return dry_run_args
-            .estimate(|| async { deployment.estimate_fee().await })
+            .estimate(|| deployment.estimate_fee())
             .await
             .map(InvokeResponse::DryRun)
-            .map_err(|error| anyhow!("Failed to estimate fee: {error}"));
+            .map_err(|error| anyhow!("Failed to estimate fee for dry run: {error}"));
     }
 
     let fee_settings = if fee_args.max_fee.is_some() {
