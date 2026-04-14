@@ -6,7 +6,7 @@ use blockifier::execution::syscalls::vm_syscall_utils::{
 };
 
 use blockifier::blockifier_versioned_constants::VersionedConstants;
-use blockifier::execution::call_info::OrderedEvent;
+use blockifier::execution::call_info::{ExtendedExecutionResources, OrderedEvent};
 use cairo_annotations::trace_data::{
     CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint,
     CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
@@ -17,7 +17,6 @@ use cairo_annotations::trace_data::{
     SyscallUsage as ProfilerSyscallUsage, TraceEntry as ProfilerTraceEntry,
     VersionedCallTrace as VersionedProfilerCallTrace, VmExecutionResources,
 };
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::forking::data::ForkData;
@@ -29,6 +28,7 @@ use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, EntryPointSelector};
+use starknet_api::versioned_constants_logic::VersionedConstantsTrait;
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
@@ -101,6 +101,7 @@ fn build_cairo_execution_info(
         casm_level_info: CasmLevelInfo {
             run_with_call_header: false,
             vm_trace: vm_trace?,
+            program_offset: None,
         },
         source_sierra_path: source_sierra_path?,
         enable_gas: None,
@@ -137,7 +138,7 @@ fn build_profiler_call_trace_node(
 
 #[must_use]
 pub fn build_profiler_execution_resources(
-    execution_resources: &ExecutionResources,
+    execution_resources: &ExtendedExecutionResources,
     syscall_usage_vm_resources: &SyscallUsageMap,
     syscall_usage_sierra_gas: &SyscallUsageMap,
     gas_consumed: u64,
@@ -145,7 +146,8 @@ pub fn build_profiler_execution_resources(
     // Subtract syscall related resources to get the values expected by the profiler.
     // The profiler operates on resources excluding syscall overhead.
     let versioned_constants = VersionedConstants::latest_constants();
-    let execution_resources = execution_resources
+    let opcodes = execution_resources.opcode_instance_counter.clone();
+    let execution_resources = &execution_resources.vm_resources
         - &versioned_constants.get_additional_os_syscall_resources(syscall_usage_vm_resources);
     let gas_consumed =
         gas_consumed - get_syscalls_gas_consumed(syscall_usage_sierra_gas, versioned_constants);
@@ -170,6 +172,12 @@ pub fn build_profiler_execution_resources(
                 .builtin_instance_counter
                 .into_iter()
                 .map(|(key, value)| (key.to_str_with_suffix().to_owned(), value))
+                .chain(
+                    // Treat opcodes as builtin instances.
+                    opcodes
+                        .into_iter()
+                        .map(|(key, value)| (key.to_str_with_suffix().to_owned(), value)),
+                )
                 .collect(),
         },
         gas_consumed: Some(gas_consumed),

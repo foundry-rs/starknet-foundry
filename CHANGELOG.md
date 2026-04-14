@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.59.0] - 2026-04-10
+
+### Forge
+
+#### Added
+
+- Cheats for transaction info `proof_facts`
+
+#### Changed
+
+- Updated execution to reflect Starknet `v0.14.2`, specifically the storage gas price changes (see [SNIP-37](https://community.starknet.io/t/snip-37-revisit-storage-access-cost/116143) for more details)
+
+### Cast
+
+#### Added
+
+- `sncast get tx` command to get transaction details by hash.
+- `sncast utils selector` command to calculate entrypoint selector (`sn_keccak`) from function name.
+- `sncast get class-hash-at` command to get the class hash of a contract at a given address.
+- `--with-proof-facts` flag for `sncast get tx` to include proof facts in tx response. Read more [here](https://community.starknet.io/t/snip-36-in-protocol-proof-verification/116123l).
+- `--proof-file` and `--proof-facts-file` flags for `sncast invoke` to attach proof data from files.
+
 ## [0.58.1] - 2026-03-31
 
 ### Forge

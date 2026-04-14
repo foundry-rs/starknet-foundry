@@ -2,6 +2,8 @@
 source: crates/forge/tests/e2e/backtrace.rs
 expression: stdout
 ---
+
+
 [FAIL] backtrace_panic::Test::test_contract_panics
 
 Failure data:
@@ -10,16 +12,16 @@ Failure data:
 error occurred in contract 'InnerContract'
 stack backtrace:
    0: core::panic_with_const_felt252
-       at [..]lib.cairo:364:5
+       at [..]lib.cairo:360:5
    1: core::panic_with_const_felt252
-       at [..]lib.cairo:364:5
+       at [..]lib.cairo:360:5
    2: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
-       at [..]lib.cairo:34:9
+       at [..]lib.cairo:32:5
 
 error occurred in contract 'OuterContract'
 stack backtrace:
    0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
-       at [..]lib.cairo:15:9
+       at [..]lib.cairo:13:5
 
 [IGNORE] backtrace_panic::Test::test_contract_panics_with_should_panic
 [FAIL] backtrace_panic::Test::test_fork_contract_panics
@@ -32,7 +34,7 @@ error occurred in forked contract with class hash: 0x554cb276fb5eb0788344f5431b9
 error occurred in contract 'OuterContract'
 stack backtrace:
    0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
-       at [..]lib.cairo:15:9
+       at [..]lib.cairo:13:5
 
 
 Failures:

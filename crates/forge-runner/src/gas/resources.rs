@@ -1,6 +1,6 @@
 use crate::forge_config::ForgeTrackedResource;
 use blockifier::abi::constants;
-use blockifier::execution::call_info::EventSummary;
+use blockifier::execution::call_info::{EventSummary, ExtendedExecutionResources};
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
 use blockifier::fee::resources::{ArchivalDataResources, ComputationResources, MessageResources};
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
@@ -9,7 +9,7 @@ use starknet_api::execution_resources::GasAmount;
 
 pub struct GasCalculationResources {
     pub sierra_gas: GasAmount,
-    pub vm_resources: ExecutionResources,
+    pub vm_resources: ExtendedExecutionResources,
     pub syscalls: SyscallUsageMap,
     pub events: EventSummary,
     pub l2_to_l1_payload_lengths: Vec<usize>,
@@ -20,7 +20,11 @@ impl GasCalculationResources {
     pub fn from_used_resources(r: &UsedResources) -> Self {
         Self {
             sierra_gas: r.execution_summary.charged_resources.gas_consumed,
-            vm_resources: r.execution_summary.charged_resources.vm_resources.clone(),
+            vm_resources: r
+                .execution_summary
+                .charged_resources
+                .extended_vm_resources
+                .clone(),
             syscalls: r.syscall_usage.clone(),
             events: r.execution_summary.event_summary.clone(),
             l2_to_l1_payload_lengths: r.execution_summary.l2_to_l1_payload_lengths.clone(),
@@ -30,7 +34,7 @@ impl GasCalculationResources {
 
     pub fn to_computation_resources(&self) -> ComputationResources {
         ComputationResources {
-            tx_vm_resources: self.vm_resources.clone(),
+            tx_extended_vm_resources: self.vm_resources.clone(),
             // OS resources (transaction type related costs) and fee transfer resources are not included
             // as they are not relevant for test execution (see documentation for details):
             // https://github.com/foundry-rs/starknet-foundry/blob/979caf23c5d1085349e253d75682dd0e2527e321/docs/src/testing/gas-and-resource-estimation.md?plain=1#L75
@@ -75,14 +79,15 @@ impl GasCalculationResources {
     }
 
     pub fn to_archival_resources(&self) -> ArchivalDataResources {
-        // calldata length, signature length and code size are set to 0, because
-        // we don't include them in estimations
+        // extended calldata length, signature length, code size and client side proof
+        // are not included in the estimation
         // ref: https://github.com/foundry-rs/starknet-foundry/blob/5ce15b029135545452588c00aae580c05eb11ca8/docs/src/testing/gas-and-resource-estimation.md?plain=1#L73
         ArchivalDataResources {
             event_summary: self.events.clone(),
-            calldata_length: 0,
+            extended_calldata_length: 0,
             signature_length: 0,
             code_size: 0,
+            has_client_side_proof: false,
         }
     }
 
@@ -106,7 +111,7 @@ impl GasCalculationResources {
                 format!("{vm_resources_output}{syscalls}{events}{messages}\n")
             }
             ForgeTrackedResource::SierraGas => {
-                let vm_output = if *vm_resources == ExecutionResources::default() {
+                let vm_output = if *vm_resources == ExtendedExecutionResources::default() {
                     String::new()
                 } else {
                     vm_resources_output.clone()
@@ -130,8 +135,9 @@ fn format_syscalls(syscalls: &SyscallUsageMap) -> String {
     format!("\n        syscalls: ({content})")
 }
 
-fn format_vm_resources(vm_resources: &ExecutionResources) -> String {
-    let sorted_builtins = sort_by_value(&vm_resources.builtin_instance_counter);
+fn format_vm_resources(execution_resources: &ExtendedExecutionResources) -> String {
+    let cairo_primitives = execution_resources.prover_cairo_primitives();
+    let sorted_builtins = sort_by_value(&cairo_primitives);
     let builtins = format_items(&sorted_builtins);
 
     format!(
@@ -139,7 +145,9 @@ fn format_vm_resources(vm_resources: &ExecutionResources) -> String {
         steps: {}
         memory holes: {}
         builtins: ({})",
-        vm_resources.n_steps, vm_resources.n_memory_holes, builtins
+        execution_resources.vm_resources.n_steps,
+        execution_resources.vm_resources.n_memory_holes,
+        builtins
     )
 }
 

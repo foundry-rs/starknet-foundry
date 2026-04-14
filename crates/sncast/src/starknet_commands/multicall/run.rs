@@ -14,6 +14,7 @@ use serde_json::Number;
 use sncast::WaitForTx;
 use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::FeeArgs;
+use sncast::helpers::proof::ProofArgs;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
@@ -134,15 +135,23 @@ where
             .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"));
     }
 
-    execute_calls(account, parsed_calls, fee_args, nonce, wait_config, ui)
-        .await
-        .map(|result| {
-            InvokeResponse::Transaction(InvokeTransactionResponse {
-                transaction_hash: result.transaction_hash.into_(),
-            })
-            .into()
+    execute_calls(
+        account,
+        parsed_calls,
+        fee_args,
+        ProofArgs::none(),
+        nonce,
+        wait_config,
+        ui,
+    )
+    .await
+    .map(|result| {
+        InvokeResponse::Transaction(InvokeTransactionResponse {
+            transaction_hash: result.transaction_hash.into_(),
         })
-        .map_err(handle_starknet_command_error)
+        .into()
+    })
+    .map_err(handle_starknet_command_error)
 }
 
 pub fn parse_inputs(inputs: &[Input], contract_registry: &ContractRegistry) -> Result<Vec<Felt>> {

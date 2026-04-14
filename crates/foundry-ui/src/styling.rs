@@ -1,4 +1,5 @@
 use console::style;
+use starknet_types_core::felt::Felt;
 use std::fmt::Write;
 
 #[derive(Debug, Clone)]
@@ -86,6 +87,22 @@ impl OutputBuilder {
             self = f(self, value);
         }
         self
+    }
+
+    #[must_use]
+    pub fn padded_felt_field(self, label: &str, felt: &Felt) -> Self {
+        self.field(label, &felt.to_fixed_hex_string())
+    }
+
+    #[must_use]
+    pub fn felt_field(self, label: &str, felt: &Felt) -> Self {
+        self.field(label, &felt.to_hex_string())
+    }
+
+    #[must_use]
+    pub fn felt_list_field(self, label: &str, felts: &[Felt]) -> Self {
+        let felts = felts.iter().map(Felt::to_hex_string).collect::<Vec<_>>();
+        self.field(label, &format!("[{}]", felts.join(", ")))
     }
 
     #[must_use]

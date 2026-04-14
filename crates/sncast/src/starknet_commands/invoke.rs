@@ -1,10 +1,11 @@
 use crate::Arguments;
 use crate::starknet_commands::utils::felt_or_id::FeltOrId;
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
+use sncast::helpers::proof::ProofArgs;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
@@ -44,6 +45,9 @@ pub struct Invoke {
     #[command(flatten)]
     pub dry_run_args: DryRunArgs,
 
+    #[command(flatten)]
+    pub proof_args: ProofArgs,
+
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[arg(short, long)]
     pub nonce: Option<Felt>,
@@ -59,6 +63,7 @@ pub async fn invoke<S>(
     nonce: Option<Felt>,
     fee_args: FeeArgs,
     dry_run_args: DryRunArgs,
+    proof_args: ProofArgs,
     function_selector: Felt,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     wait_config: WaitForTx,
@@ -82,19 +87,28 @@ where
             .map_err(StarknetCommandError::from);
     }
 
-    execute_calls(account, vec![call], fee_args, nonce, wait_config, ui)
-        .await
-        .map(|result| {
-            InvokeResponse::Transaction(InvokeTransactionResponse {
-                transaction_hash: result.transaction_hash.into_(),
-            })
+    execute_calls(
+        account,
+        vec![call],
+        fee_args,
+        proof_args,
+        nonce,
+        wait_config,
+        ui,
+    )
+    .await
+    .map(|result| {
+        InvokeResponse::Transaction(InvokeTransactionResponse {
+            transaction_hash: result.transaction_hash.into_(),
         })
+    })
 }
 
 pub async fn execute_calls<S>(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     calls: Vec<Call>,
     fee_args: FeeArgs,
+    proof_args: ProofArgs,
     nonce: Option<Felt>,
     wait_config: WaitForTx,
     ui: &UI,
@@ -161,6 +175,25 @@ where
         l1_data_gas => ExecutionV3::l1_data_gas,
         l1_data_gas_price => ExecutionV3::l1_data_gas_price,
         tip => ExecutionV3::tip,
-        nonce => ExecutionV3::nonce
-    )
+        nonce => ExecutionV3::nonce,
+        proof => ExecutionV3::proof,
+        proof_facts => ExecutionV3::proof_facts
+    );
+    let result = execution.send().await;
+
+    match result {
+        Ok(InvokeTransactionResult { transaction_hash }) => handle_wait_for_tx(
+            account.provider(),
+            transaction_hash,
+            InvokeResponse {
+                transaction_hash: transaction_hash.into_(),
+            },
+            wait_config,
+            ui,
+        )
+        .await
+        .map_err(StarknetCommandError::from),
+        Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
+        Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
+    }
 }

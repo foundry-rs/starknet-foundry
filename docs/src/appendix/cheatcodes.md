@@ -151,6 +151,14 @@
 - [`stop_cheat_account_deployment_data`](cheatcodes/account_deployment_data.md#stop_cheat_account_deployment_data) - cancels the `cheat_account_deployment_data` / `start_cheat_account_deployment_data` for contracts
 - [`stop_cheat_account_deployment_data_global`](cheatcodes/account_deployment_data.md#stop_cheat_account_deployment_data_global) - cancels the `start_cheat_account_deployment_data_global`
 
+### Transaction Proof Facts
+
+- [`cheat_proof_facts`](cheatcodes/proof_facts.md#cheat_proof_facts) - changes the transaction proof facts for contracts, for a number of calls
+- [`start_cheat_proof_facts_global`](cheatcodes/proof_facts.md#start_cheat_proof_facts_global) - changes the transaction proof facts for all contracts
+- [`start_cheat_proof_facts`](cheatcodes/proof_facts.md#start_cheat_proof_facts) - changes the transaction proof facts for contracts
+- [`stop_cheat_proof_facts`](cheatcodes/proof_facts.md#stop_cheat_proof_facts) - cancels the `cheat_proof_facts` / `start_cheat_proof_facts` for contracts
+- [`stop_cheat_proof_facts_global`](cheatcodes/proof_facts.md#stop_cheat_proof_facts_global) - cancels the `start_cheat_proof_facts_global`
+
 ## Account Contract Address
 
 - [`cheat_account_contract_address`](cheatcodes/account_contract_address.md#cheat_account_contract_address) - changes the address of an account which the transaction originates from, for the given target and span

@@ -60,6 +60,7 @@ fn get_cheated_tx_info_ptr(
         nonce_data_availability_mode,
         fee_data_availability_mode,
         account_deployment_data,
+        proof_facts,
     } = tx_info_mock;
 
     if let Some(version) = version {
@@ -116,6 +117,11 @@ fn get_cheated_tx_info_ptr(
         new_tx_info[15] = account_deployment_data_start_ptr.into();
         new_tx_info[16] = account_deployment_data_end_ptr.into();
     }
+    if let Some(proof_facts) = proof_facts {
+        let (proof_facts_start_ptr, proof_facts_end_ptr) = add_vec_memory_segment(&proof_facts, vm);
+        new_tx_info[17] = proof_facts_start_ptr.into();
+        new_tx_info[18] = proof_facts_end_ptr.into();
+    }
 
     vm.load_data(ptr_cheated_tx_info, &new_tx_info).unwrap();
     ptr_cheated_tx_info
@@ -147,7 +153,7 @@ pub fn get_cheated_exec_info_ptr(
     if cheated_data.tx_info.is_mocked() {
         let data = vm.get_range(execution_info_ptr, 2)[1].clone();
         if let MaybeRelocatable::RelocatableValue(tx_info_ptr) = data.unwrap().into_owned() {
-            let original_tx_info = vm.get_continuous_range(tx_info_ptr, 17).unwrap();
+            let original_tx_info = vm.get_continuous_range(tx_info_ptr, 19).unwrap();
 
             let ptr_cheated_tx_info = get_cheated_tx_info_ptr(vm, &original_tx_info, cheated_data);
 

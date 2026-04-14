@@ -4,6 +4,7 @@ use crate::utils::test_case;
 use blockifier::blockifier_versioned_constants::{EventLimits, VersionedConstants};
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::formatdoc;
+use starknet_api::versioned_constants_logic::VersionedConstantsTrait;
 use std::path::Path;
 
 #[test]

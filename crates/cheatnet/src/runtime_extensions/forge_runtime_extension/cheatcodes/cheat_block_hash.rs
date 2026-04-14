@@ -5,7 +5,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execut
 use crate::state::CheatSpan;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::syscall_base::SyscallResult;
-use starknet_api::block::BlockHash;
+use starknet_api::block::{BlockHash, BlockNumber};
 use starknet_api::core::ContractAddress;
 use starknet_api::hash::StarkHash;
 use starknet_types_core::felt::Felt;
@@ -132,7 +132,9 @@ impl CheatnetState {
             Ok(cheated_block_hash)
         } else {
             Ok(BlockHash(
-                syscall_handler.base.get_block_hash(block_number)?,
+                syscall_handler
+                    .base
+                    .get_block_hash(BlockNumber(block_number))?,
             ))
         }
     }

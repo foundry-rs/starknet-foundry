@@ -42,6 +42,7 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::{FeeArgs, ScriptFeeSettings};
+use sncast::helpers::proof::ProofArgs;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::deploy::StandardDeployResponse;
 use sncast::response::invoke::InvokeResponse;
@@ -236,6 +237,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         nonce,
                         fee_args,
                         DryRunArgs::default(),
+                        ProofArgs::none(),
                         function_selector,
                         self.account()?,
                         WaitForTx {

@@ -634,18 +634,19 @@ fn storage_write_cost_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
-    // 2576 * 0.0025 = 6.44 ~ 7 = gas cost of steps
+    // 2853 * 0.0025 = 7.13 ~ 8 = gas cost of steps
     // 96 = gas cost of deployment
     // storage_updates(1) * 2 * 32 = 64
     // storage updates from zero value(1) * 32 = 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
-    // 0 l1_gas + (96 + 64 + 32) l1_data_gas + 7 * (100 / 0.0025) l2 gas
+    // allocation cost: 402_000 l2 gas
+    // 0 l1_gas + (96 + 64 + 32) l1_data_gas + 8 * (100 / 0.0025) + 402_000 l2 gas
     assert_gas(
         &result,
         "storage_write_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(280_000),
+            l2_gas: GasAmount(722_000),
         },
     );
 }
@@ -674,21 +675,22 @@ fn storage_write_from_test_cost_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
-    // 173 * 0.0025 = 0.4325 ~ 1 = gas cost of steps
+    // 521 * 0.0025 = 1.3025 ~ 2 = gas cost of steps
     // n = unique contracts updated
     // m = values updated
     // So, as per formula:
     // n(1) * 2 * 32 = 64
     // m(1) * 2 * 32 = 64
     // storage updates from zero value(1) * 32 = 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
-    // 0 l1_gas + (64 + 64 + 32) l1_data_gas + 1 * (100 / 0.0025) l2 gas
+    // allocation cost: 402_000 l2 gas
+    // 0 l1_gas + (64 + 64 + 32) l1_data_gas + 2 * (100 / 0.0025) + 402_000 l2 gas
     assert_gas(
         &result,
         "storage_write_from_test_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(160),
-            l2_gas: GasAmount(40000),
+            l2_gas: GasAmount(482_000),
         },
     );
 }
@@ -726,7 +728,7 @@ fn multiple_storage_writes_cost_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
-    // (3763 + 8 memory holes) * 0.0025 = 9,4275 ~ 10 = gas cost of steps
+    // 4264 * 0.0025 = 10.66 ~ 11 = gas cost of steps
     // l = number of class hash updates
     // n = unique contracts updated
     // m = unique(!) values updated
@@ -735,14 +737,15 @@ fn multiple_storage_writes_cost_cairo_steps() {
     // m(1) * 2 * 32 = 64
     // l(1) * 32 = 32
     // storage updates from zero value(1) * 32 = 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
-    // 0 l1_gas + (64 + 64 + 32 + 32) l1_data_gas + 10 * (100 / 0.0025) l2 gas
+    // allocation cost: 402_000 l2 gas
+    // 0 l1_gas + (64 + 64 + 32 + 32) l1_data_gas + 11 * (100 / 0.0025) + 402_000 l2 gas
     assert_gas(
         &result,
         "multiple_storage_writes_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(360_000),
+            l2_gas: GasAmount(842_000),
         },
     );
 }
@@ -1429,22 +1432,22 @@ fn storage_write_cost_sierra_gas() {
     // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
     // 64 = storage_updates(1) * 2 * 32
     // 32 = storage updates from zero value(1) * 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
+    // allocation cost: 402_000 l2 gas
     // 147_120 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
     // 91_560 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
-    // 10_000 = cost of 1 storage write syscall (because 1 * 96 * 100 + 1 * 70 = 9670)
-    //      -> 1 storage write syscall costs 96 cairo steps and 1 range check builtin
+    // 44_970 = cost of 1 storage write syscall (because 1 * 449 * 100 + 1 * 70 = 9670)
+    //      -> 1 storage write syscall costs 449 cairo steps and 1 range check builtin
     //      -> 1 range check costs 70
-    //      -> the minimum total cost is `syscall_base_gas_cost`, which is pre-charged by the compiler (atm it is 100 * 100)
     //
     // (96 + 64 + 32 =) 192 l1_data_gas
-    // l2 gas > 248_680 = (147_120 + 91_560 + 10_000)
+    // l2 gas > 685_650 = (147_120 + 91_560 + 44_970 + 402_000)
     assert_gas(
         &result,
         "storage_write_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(289_350),
+            l2_gas: GasAmount(726_320),
         },
     );
 }
@@ -1488,17 +1491,17 @@ fn multiple_storage_writes_cost_sierra_gas() {
     // 32 = storage updates from zero value(1) * 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
     // 147_120 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
     // 183_120 = 2 * 91_560 = cost of 2 call contract syscalls (see `contract_keccak_cost_sierra_gas` test)
-    // 20_000 = cost of 2 storage write syscall (see `storage_write_cost_sierra_gas` test)
-    //
+    // 89_940 = cost of 2 storage write syscall (see `storage_write_cost_sierra_gas` test)
+    // allocation cost: 402_000 l2 gas
     // 192 = (64 + 64 + 32 + 32) l1_data_gas
-    // l2 gas > 350_240 (= 147_120 + 183_120 + 20_000)
+    // l2 gas > 822_180 (= 147_120 + 183_120 + 89_940 + 402_000)
     assert_gas(
         &result,
         "multiple_storage_writes_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(396_790),
+            l2_gas: GasAmount(868_730),
         },
     );
 }
