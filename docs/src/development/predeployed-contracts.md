@@ -15,28 +15,28 @@ Links to Cairo contracts:
 
 1. Clone `starkgate-contracts` repository and checkout `v3.0.0` tag.
 
-```shell
-git clone https://github.com/starknet-io/starkgate-contracts
-cd starkgate-contracts
-git checkout v3.0.0
-```
+    ```shell
+    git clone https://github.com/starknet-io/starkgate-contracts
+    cd starkgate-contracts
+    git checkout v3.0.0
+    ```
 
 2. Enable CASM generation by adding the following lines to `Scarb.toml`.
 This should be done in `sg_token` and `strk` packages.
 
-```toml
-...
+    ```toml
+    ...
 
-[[target.starknet-contract]]
-casm = true
+    [[target.starknet-contract]]
+    casm = true
 
-...
-```
+    ...
+    ```
 
 3. Compile contracts with `scarb`
 
-```shell
-scarb --release build
-```
+    ```shell
+    scarb --release build
+    ```
 
 4. Visit `target/release` directory and copy relevant artifacts.
