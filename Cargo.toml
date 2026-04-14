@@ -41,7 +41,7 @@ license-file = "LICENSE"
 blockifier = { version = "0.18.0-rc.1", features = ["testing", "tracing", "node_api"] }
 starknet_api = "0.18.0-rc.1"
 bigdecimal = "0.4.10"
-cairo-native = "0.9.0-rc.0"
+cairo-native = "0.9.0-rc.5"
 cairo-lang-casm = { version = "=2.17.0", features = ["serde"] }
 cairo-lang-sierra = "=2.17.0"
 cairo-lang-utils = "=2.17.0"
