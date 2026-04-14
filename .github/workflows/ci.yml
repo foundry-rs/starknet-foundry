@@ -34,12 +34,16 @@ jobs:
           echo ${scarb_versions[@]}
           echo "versions=[${scarb_versions[@]}]" >> "$GITHUB_OUTPUT"
 
-  test-forge-unit:
-    name: Test Forge / Unit Tests
+  test-workspace:
+    # Runs tests from all crates across the workspace, except:
+    # - `sncast` tests
+    # - `forge` integration and e2e tests
+    name: Workspace Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
+      - run: cargo test --profile ci --workspace --exclude sncast --exclude forge --exclude native-api
       - run: cargo test --profile ci --lib -p forge
 
   build-test-forge-nextest-archive:
@@ -308,32 +312,6 @@ jobs:
 
       - run: cargo test --profile ci --package forge --features scarb_2_12_0 --test main e2e::requirements::test_warning_on_scarb_version_below_recommended
 
-  test-forge-runner:
-    name: Test Forge Runner
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-tools
-      - run: cargo test --profile ci -p forge_runner
-
-  test-cheatnet:
-    name: Test Cheatnet
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-tools
-      - name: Run Cheatnet tests
-        run: cargo test --profile ci -p cheatnet
-
-  test-data-transformer:
-    name: Test Data Transformer
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-tools
-      - name: Run Data Transformer tests
-        run: cargo test --profile ci -p data-transformer
-
   test-forge-oracles:
     name: Test Oracles in Forge
     runs-on: ubuntu-latest
@@ -375,37 +353,6 @@ jobs:
       - uses: ./.github/actions/setup-tools
       - name: Run tests
         run: cargo test --profile ci -p sncast --features ledger-emulator ledger -- --ignored
-
-  test-conversions:
-    name: Test Conversions
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-tools
-        with:
-          setup-scarb: 'false'
-          setup-usc: 'false'
-      - name: Run tests
-        run: cargo test --profile ci -p conversions
-
-  test-shared:
-    name: Test Shared
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-tools
-        with:
-          setup-scarb: 'false'
-          setup-usc: 'false'
-      - run: cargo test --profile ci -p shared
-
-  test-scarb-api:
-    name: Test Scarb Api
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-tools
-      - run: cargo test --profile ci -p scarb-api
 
   scarbfmt:
     runs-on: ubuntu-latest
