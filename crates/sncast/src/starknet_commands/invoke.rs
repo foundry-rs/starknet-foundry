@@ -116,34 +116,8 @@ pub async fn execute_calls<S>(
 where
     S: Signer + Sync + Send,
 {
-    let execution = create_execution(account, calls, fee_args, nonce).await;
+    // let execution = create_execution(account, calls, fee_args, proof_args, nonce).await;
 
-    let result = execution.send().await;
-
-    match result {
-        Ok(invoke_response) => handle_wait_for_tx(
-            account.provider(),
-            invoke_response.transaction_hash,
-            invoke_response,
-            wait_config,
-            ui,
-        )
-        .await
-        .map_err(StarknetCommandError::from),
-        Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
-        Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
-    }
-}
-
-pub async fn create_execution<'a, S>(
-    account: &'a SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, S>,
-    calls: Vec<Call>,
-    fee_args: FeeArgs,
-    nonce: Option<Felt>,
-) -> ExecutionV3<'a, SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, S>>
-where
-    S: Signer + Sync + Send,
-{
     let execution_calls = account.execute_v3(calls);
 
     let fee_settings = if fee_args.max_fee.is_some() {
@@ -166,7 +140,14 @@ where
         tip,
     } = fee_settings.expect("Failed to convert to fee settings");
 
-    apply_optional_fields!(
+    let proof = proof_args
+        .resolve_proof()
+        .context("Failed to resolve proof")?;
+    let proof_facts = proof_args
+        .resolve_proof_facts()
+        .context("Failed to resolve proof facts")?;
+
+    let execution = apply_optional_fields!(
         execution_calls,
         l1_gas => ExecutionV3::l1_gas,
         l1_gas_price => ExecutionV3::l1_gas_price,
@@ -182,12 +163,10 @@ where
     let result = execution.send().await;
 
     match result {
-        Ok(InvokeTransactionResult { transaction_hash }) => handle_wait_for_tx(
+        Ok(invoke_response) => handle_wait_for_tx(
             account.provider(),
-            transaction_hash,
-            InvokeResponse {
-                transaction_hash: transaction_hash.into_(),
-            },
+            invoke_response.transaction_hash,
+            invoke_response,
             wait_config,
             ui,
         )
