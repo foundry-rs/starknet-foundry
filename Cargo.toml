@@ -28,7 +28,7 @@ lto = "thin"
 
 [profile.ci]
 inherits = "dev"
-opt-level = 3
+incremental = false
 
 [workspace.package]
 version = "0.59.0"
