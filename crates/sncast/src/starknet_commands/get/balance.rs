@@ -71,7 +71,7 @@ pub struct Balance {
     pub rpc: RpcArgs,
 }
 
-pub async fn balance(balance: Balance, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCode> {
+pub async fn balance(balance: Balance, config: CastConfig, ui: &UI) -> Result<ExitCode> {
     let provider = balance.rpc.get_provider(&config, ui).await?;
     let account = get_account(&config, &provider, &balance.rpc, ui).await?;
 
