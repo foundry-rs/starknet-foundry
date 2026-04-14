@@ -469,3 +469,48 @@ async fn test_dry_run_json_output() {
     // The `detailed` rendering flag must not appear in JSON.
     assert!(json.get("detailed").is_none());
 }
+
+#[tokio::test]
+async fn test_dry_run_args_conflict_with_fee_args() {
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 0x2",
+        "--dry-run",
+        "--max-fee",
+        "1000000000000000000",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {
+            "
+            error: the argument '--dry-run' cannot be used with:
+              --max-fee <MAX_FEE>
+              --l1-gas <L1_GAS>
+              --l1-gas-price <L1_GAS_PRICE>
+              --l2-gas <L2_GAS>
+              --l2-gas-price <L2_GAS_PRICE>
+              --l1-data-gas <L1_DATA_GAS>
+              --l1-data-gas-price <L1_DATA_GAS_PRICE>
+              --tip <TIP>
+              --estimate-tip
+            "
+        },
+    );
+}
