@@ -86,5 +86,5 @@ fn extract_generic_args(
         return Err(PathSplitError::MoreThanOneGenericArg);
     };
 
-    Ok((*generic_arg).to_string())
+    Ok(generic_arg.to_string())
 }
