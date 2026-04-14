@@ -122,7 +122,6 @@ pub fn compile_sierra_to_casm(
     Ok(casm)
 }
 
-#[expect(clippy::too_many_lines)]
 #[expect(clippy::too_many_arguments)]
 pub async fn declare_with_artifacts<S>(
     sierra_class: SierraClass,

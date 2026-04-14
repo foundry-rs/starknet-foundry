@@ -426,7 +426,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 starknet_commands::declare_from::declare_from(
                     contract_source,
                     &declare_from.common,
-                    &account,
+                    account,
                     wait_config,
                     false,
                     ui,
@@ -468,8 +468,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         contract_identifier: identifier,
                         arguments,
                         package,
-                        salt,
-                        unique,
+                        ..
                     },
                 fee_args,
                 dry_run_args,
@@ -569,7 +568,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     fee_args.clone(),
                     dry_run_args,
                     nonce,
-                    &account,
+                    account,
                     wait_config,
                     ui,
                 )
@@ -672,7 +671,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     dry_run_args,
                     proof_args,
                     selector,
-                    &account,
+                    account,
                     wait_config,
                     ui,
                 )
