@@ -167,7 +167,7 @@ pub async fn verify(
     };
     let provider = get_provider(&rpc_url)?;
     let inferred_network = if network.is_none() && config.network.is_none() {
-        Some(Network::try_from(get_chain_id(&provider).await?)?)
+        Network::try_from(get_chain_id(&provider).await?).ok()
     } else {
         None
     };
@@ -259,7 +259,7 @@ pub async fn verify(
 #[cfg(test)]
 mod tests {
     use super::resolve_verification_network;
-    use sncast::{MAINNET, Network, SEPOLIA};
+    use sncast::Network;
 
     #[test]
     fn uses_cli_network_when_provided() {
@@ -284,18 +284,14 @@ mod tests {
 
     #[test]
     fn infers_mainnet_from_chain_id_when_no_network_is_configured() {
-        let network =
-            resolve_verification_network(None, None, Some(Network::try_from(MAINNET).unwrap()))
-                .unwrap();
+        let network = resolve_verification_network(None, None, Some(Network::Mainnet)).unwrap();
 
         assert_eq!(network, Network::Mainnet);
     }
 
     #[test]
     fn infers_sepolia_from_chain_id_when_no_network_is_configured() {
-        let network =
-            resolve_verification_network(None, None, Some(Network::try_from(SEPOLIA).unwrap()))
-                .unwrap();
+        let network = resolve_verification_network(None, None, Some(Network::Sepolia)).unwrap();
 
         assert_eq!(network, Network::Sepolia);
     }

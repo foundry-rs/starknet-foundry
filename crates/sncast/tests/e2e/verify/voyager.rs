@@ -12,17 +12,21 @@ use std::fs;
 use wiremock::matchers::{body_partial_json, method, path};
 use wiremock::{Mock, MockServer, Request, ResponseTemplate};
 
-async fn mock_sepolia_chain_id(mock_rpc: &MockServer) {
+async fn mock_chain_id(mock_rpc: &MockServer, chain_id: Felt) {
     Mock::given(method("POST"))
         .and(body_partial_json(json!({"method": "starknet_chainId"})))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({
             "id": 1,
             "jsonrpc": "2.0",
-            "result": format!("{SEPOLIA:#x}")
+            "result": format!("{chain_id:#x}")
         })))
         .expect(1)
         .mount(mock_rpc)
         .await;
+}
+
+async fn mock_sepolia_chain_id(mock_rpc: &MockServer) {
+    mock_chain_id(mock_rpc, SEPOLIA).await;
 }
 
 #[tokio::test]
@@ -594,6 +598,56 @@ async fn test_error_when_neither_network_nor_url_provided() {
         formatdoc! {"
         Command: verify
         Error: Either --network or --url must be provided
+        ",
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_error_when_chain_id_is_unrecognized_and_network_is_missing() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+
+    let mock_server = MockServer::start().await;
+    let mock_rpc = MockServer::start().await;
+    let mock_rpc_uri = mock_rpc.uri().clone();
+
+    mock_chain_id(&mock_rpc, Felt::from_hex_unchecked("0x1234")).await;
+
+    let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
+
+    Mock::given(method("POST"))
+        .and(path(format!("class-verify/{class_hash:#066x}")))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&mock_server)
+        .await;
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--contract-name",
+        "Map",
+        "--verifier",
+        "voyager",
+        "--confirm-verification",
+        "--url",
+        &mock_rpc_uri,
+    ];
+
+    let snapbox = runner(&args)
+        .env("VERIFIER_API_URL", mock_server.uri())
+        .current_dir(contract_path.path());
+
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        formatdoc! {"
+        Command: verify
+        Error: Failed to infer verification network from the RPC chain ID; pass `--network mainnet` or `--network sepolia` explicitly
         ",
         },
     );
