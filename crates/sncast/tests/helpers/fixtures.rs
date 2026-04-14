@@ -154,7 +154,7 @@ async fn deploy_account_to_devnet<T: AccountFactory + Sync>(factory: T, address:
         .deploy_v3(salt.parse().expect("Failed to parse salt"))
         .l1_gas(100_000)
         .l1_gas_price(10_000_000_000_000)
-        .l2_gas(1_000_000)
+        .l2_gas(1_000_000_000)
         .l2_gas_price(10_000_000_000_000)
         .l1_data_gas(100_000)
         .l1_data_gas_price(10_000_000_000_000)
