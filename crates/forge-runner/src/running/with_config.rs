@@ -21,6 +21,7 @@ use universal_sierra_compiler_api::compile_raw_sierra_at_path;
 pub fn test_target_with_config(
     test_target_raw: TestTargetRaw,
     tracked_resource: &ForgeTrackedResource,
+    should_run_config_pass: impl Fn(&str) -> bool + Sync,
 ) -> Result<TestTargetWithConfig> {
     macro_rules! by_id {
         ($field:ident) => {{
@@ -50,8 +51,14 @@ pub fn test_target_with_config(
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
         .unwrap_or(&default_executables);
 
-    let test_cases = executables
+    let test_cases: Vec<TestCaseWithConfig> = executables
         .par_iter()
+        .filter(|case| {
+            case.debug_name
+                .as_deref()
+                .map(&should_run_config_pass)
+                .unwrap_or(true)
+        })
         .map(|case| -> Result<TestCaseWithConfig> {
             let func = funcs[&case.id];
 

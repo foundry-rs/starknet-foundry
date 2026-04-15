@@ -26,9 +26,7 @@ use forge_runner::{
     forge_config::ForgeConfig,
     package_tests::{
         raw::TestTargetRaw,
-        with_config_resolved::{
-            TestCaseWithResolvedConfig, TestTargetWithResolvedConfig, sanitize_test_case_name,
-        },
+        with_config_resolved::{TestCaseWithResolvedConfig, TestTargetWithResolvedConfig},
     },
     partition::PartitionConfig,
     running::with_config::test_target_with_config,
@@ -150,11 +148,13 @@ async fn test_package_with_config_resolved(
     tests_filter: &TestsFilter,
 ) -> Result<Vec<TestTargetWithResolvedConfig>> {
     let mut test_targets_with_resolved_config = Vec::with_capacity(test_targets.len());
+    let pre_config_filter = tests_filter.pre_config_filter()?;
 
     for test_target in test_targets {
         let test_target = test_target_with_config(
             test_target,
             &forge_config.test_runner_config.tracked_resource,
+            |name| pre_config_filter.includes(name),
         )?;
 
         let test_target =
@@ -176,25 +176,48 @@ fn sum_test_cases_from_package(
         .sum()
 }
 
+fn sum_raw_test_cases_from_package(
+    test_targets: &[TestTargetRaw],
+    partitioning_config: &PartitionConfig,
+) -> usize {
+    test_targets
+        .iter()
+        .map(|tt| sum_raw_test_cases_from_test_target(tt, partitioning_config))
+        .sum()
+}
+
+fn sum_raw_test_cases_from_test_target(
+    test_target: &TestTargetRaw,
+    partitioning_config: &PartitionConfig,
+) -> usize {
+    let default_executables = vec![];
+    let executables = test_target
+        .sierra_program
+        .debug_info
+        .as_ref()
+        .and_then(|info| info.executables.get("snforge_internal_test_executable"))
+        .unwrap_or(&default_executables);
+
+    executables
+        .iter()
+        .filter(|test_case| {
+            test_case
+                .debug_name
+                .as_deref()
+                .map(|name| partitioning_config.includes_test(name))
+                .unwrap_or(true)
+        })
+        .count()
+}
+
 fn sum_test_cases_from_test_target(
     test_cases: &[TestCaseWithResolvedConfig],
     partitioning_config: &PartitionConfig,
 ) -> usize {
-    match partitioning_config {
-        PartitionConfig::Disabled => test_cases.len(),
-        PartitionConfig::Enabled {
-            partition,
-            partition_map,
-        } => test_cases
-            .iter()
-            .filter(|test_case| {
-                let test_assigned_index = partition_map
-                    .get_assigned_index(&sanitize_test_case_name(&test_case.name))
-                    .expect("Partition map must contain all test cases");
-                test_assigned_index == partition.index()
-            })
-            .count(),
-    }
+    test_cases
+        .iter()
+        .filter(|test_case| partitioning_config.includes_test(&test_case.name))
+        .count()
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
@@ -211,6 +234,8 @@ pub async fn run_for_package(
     exit_first_channel: &mut ExitFirstChannel,
     deterministic_output: bool,
 ) -> Result<PackageTestResult> {
+    let all_tests =
+        sum_raw_test_cases_from_package(&test_targets, &tests_filter.partitioning_config);
     let mut test_targets = test_package_with_config_resolved(
         test_targets,
         &fork_targets,
@@ -219,7 +244,6 @@ pub async fn run_for_package(
         &tests_filter,
     )
     .await?;
-    let all_tests = sum_test_cases_from_package(&test_targets, &tests_filter.partitioning_config);
 
     for test_target in &mut test_targets {
         tests_filter.filter_tests(&mut test_target.test_cases)?;

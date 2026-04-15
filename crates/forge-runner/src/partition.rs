@@ -39,6 +39,24 @@ impl PartitionConfig {
             partition_map: Arc::new(partition_map),
         })
     }
+
+    #[must_use]
+    pub fn includes_test(&self, test_name: &str) -> bool {
+        match self {
+            Self::Disabled => true,
+            Self::Enabled {
+                partition,
+                partition_map,
+            } => {
+                let sanitized_test_name = sanitize_test_case_name(test_name);
+                let test_assigned_index = partition_map
+                    .get_assigned_index(&sanitized_test_name)
+                    .expect("Partition map must contain all test cases");
+
+                test_assigned_index == partition.index()
+            }
+        }
+    }
 }
 
 /// Represents a specific partition in a partitioned test run.
