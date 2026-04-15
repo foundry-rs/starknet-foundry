@@ -647,7 +647,7 @@ async fn test_error_when_chain_id_is_unrecognized_and_network_is_missing() {
         output,
         formatdoc! {"
         Command: verify
-        Error: Failed to infer verification network from the RPC chain ID; pass `--network mainnet` or `--network sepolia` explicitly
+        Error: Failed to infer verification network from the RPC chain ID 0x1234; pass `--network mainnet` or `--network sepolia` explicitly
         ",
         },
     );
