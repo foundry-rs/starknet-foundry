@@ -355,6 +355,7 @@ jobs:
         run: cargo test --profile ci -p sncast --features ledger-emulator ledger -- --ignored
 
   fmt-lint-typos:
+    name: Lint and Format
     runs-on: ubuntu-latest
     env:
       # Make sure CI fails on all warnings - including Clippy lints.
