@@ -354,11 +354,33 @@ jobs:
       - name: Run tests
         run: cargo test --profile ci -p sncast --features ledger-emulator ledger -- --ignored
 
-  scarbfmt:
+  fmt-lint-typos:
     runs-on: ubuntu-latest
+    env:
+      # Make sure CI fails on all warnings - including Clippy lints.
+      RUSTFLAGS: "-Dwarnings"
     steps:
       - uses: actions/checkout@v6
-      - uses: software-mansion/setup-scarb@v1
+      - uses: ./.github/actions/setup-tools
+        with:
+          install-llvm: 'true'
+          setup-usc: 'false'
+      - run: rustup component add rustfmt
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Check formatting snforge-scarb-plugin
+        run: cargo fmt --check
+        working-directory: crates/snforge-scarb-plugin
+
+      - name: Lint
+        run: cargo lint
+
+      - name: Lint snforge-scarb-plugin
+        run: cargo lint
+        working-directory: crates/snforge-scarb-plugin
+
       - name: Check cairo files format
         run: |
           output=$(find . -type f -name "Scarb.toml" -execdir sh -c '
@@ -371,39 +393,8 @@ jobs:
           fi
           exit 0
 
-  rustfmt:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@0b1efabc08b657293548b77fb76cc02d26091c7e
-        with:
-          toolchain: stable
-          components: rustfmt
-      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
-      - name: Check formatting
-        run: cargo fmt --check
-
-      - name: Check formatting snforge-scarb-plugin
-        run: cargo fmt --check
-        working-directory: crates/snforge-scarb-plugin
-
-  clippy:
-    runs-on: ubuntu-latest
-    env:
-      # Make sure CI fails on all warnings - including Clippy lints.
-      RUSTFLAGS: "-Dwarnings"
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-tools
-        with:
-          install-llvm: 'true'
-          setup-scarb: 'false'
-          setup-usc: 'false'
-      - run: cargo lint
-
-      - name: Lint snforge-scarb-plugin
-        run: cargo lint
-        working-directory: crates/snforge-scarb-plugin
+      - name: Check typos
+        uses: crate-ci/typos@v1.40.0
 
   build-docs:
     name: Test Building Docs
@@ -434,11 +425,3 @@ jobs:
       - name: Verify Cairo listings
         run: |
           ./scripts/verify_cairo_listings.sh
-
-  typos:
-    name: Check typos
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: typos-action
-        uses: crate-ci/typos@v1.40.0
