@@ -21,7 +21,7 @@ pub struct ClassHash {
     pub package: Option<String>,
 }
 
-#[allow(clippy::result_large_err)]
+#[expect(clippy::result_large_err)]
 pub fn sierra_class_from_artifacts(
     contract_name: &str,
     artifacts: &HashMap<String, CastStarknetContractArtifacts>,

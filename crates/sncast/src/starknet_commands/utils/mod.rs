@@ -1,3 +1,4 @@
+use anyhow::Context;
 use clap::{Args, Subcommand};
 use sncast::response::ui::UI;
 use sncast::{
@@ -111,7 +112,7 @@ pub async fn utils(
                         // TODO(#3959) Remove `base_ui`
                         ui.base_ui(),
                     )
-                    .expect("Failed to build contract"),
+                    .context("Failed to build contract")?,
                 )
             } else {
                 None
