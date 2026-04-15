@@ -204,8 +204,7 @@ fn sum_raw_test_cases_from_test_target(
             test_case
                 .debug_name
                 .as_deref()
-                .map(|name| partitioning_config.includes_test(name))
-                .unwrap_or(true)
+                .map_or(true, |name| partitioning_config.includes_test(name))
         })
         .count()
 }
