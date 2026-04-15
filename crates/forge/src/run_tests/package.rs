@@ -227,12 +227,12 @@ pub async fn run_for_package(
         resolved_targets.push(resolved);
     }
 
+    warn_if_incompatible_rpc_version(&resolved_targets, ui.clone()).await?;
+
     ui.println(&CollectedTestsCountMessage {
         tests_num: not_filtered_total,
         package_name: package_name.clone(),
     });
-
-    warn_if_incompatible_rpc_version(&resolved_targets, ui.clone()).await?;
 
     let mut summaries = vec![];
 
