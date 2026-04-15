@@ -6,7 +6,7 @@ use super::{SupportedCalldataKind, build_representation};
 use crate::shared;
 use crate::shared::parsing::parse_expression;
 use crate::shared::path::SplitResult;
-use anyhow::{Context, Result, bail, ensure};
+use anyhow::{Context, Result, anyhow, bail, ensure};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::{
     Expr, ExprFunctionCall, ExprListParenthesized, ExprPath, ExprStructCtorCall,
@@ -50,6 +50,8 @@ impl EnumOrStruct for AbiEnum {
 }
 
 const UNIT_TYPE: &str = "()";
+const OPTION_TYPE: &str = "core::option::Option";
+const RESULT_TYPE: &str = "core::result::Result";
 
 fn strip_generic_suffix(type_str: &str) -> &str {
     if let Some(idx) = type_str.find("::<") {
@@ -66,92 +68,66 @@ fn base_type_name(type_str: &str) -> &str {
         .unwrap_or(type_str)
 }
 
-fn validate_path_argument(
-    param_type: &str,
-    path_argument: &[String],
-    path_argument_joined: &str,
-) -> Result<()> {
-        .last()
-        .expect("path_argument must be non-empty: caller ensures split_last() succeeded");
-    if *last != base_type_name(param_type) && path_argument_joined != param_type {
-    let last = path_argument
+fn validate_path_argument(param_type: &str, path_argument_joined: &str) -> Result<()> {
+    let canonical = strip_generic_suffix(param_type);
+
+    if canonical != path_argument_joined
+        && !canonical.ends_with(&format!("::{path_argument_joined}"))
+    {
         bail!(r#"Invalid argument type, expected "{param_type}", got "{path_argument_joined}""#)
     }
     Ok(())
 }
 
-fn is_valid_corelib_enum_path(type_name: &str, enum_path: &[String]) -> bool {
-    let module = type_name.to_lowercase();
-    matches!(enum_path, [only] if only == type_name)
-        || matches!(enum_path, [core, m, last] if core == "core" && m == &module && last == type_name)
-}
-
-/// Validates the user-supplied enum path against the expected corelib type, then
-/// looks up `variant_name` in `variants` (a slice of `(name, position, inner_type)`).
-fn resolve_corelib_enum_variant_with<'a>(
-    expected_type: &'a str,
-    type_name: &str,
-    enum_path: &[String],
-    variant_name: &str,
-    variants: &[(&str, usize, Option<&'a str>)],
-) -> Result<ResolvedEnumVariant<'a>> {
-    if !is_valid_corelib_enum_path(type_name, enum_path) {
-        return Err(anyhow::anyhow!(
-            r#"Invalid argument type, expected "{expected_type}", got "{}""#,
-            enum_path.join("::")
-        ));
-    }
-    variants
-        .iter()
-        .find(|(name, _, _)| *name == variant_name)
-        .map(|&(_, position, inner_type)| ResolvedEnumVariant {
-            position,
-            inner_type,
-        })
-        .ok_or_else(|| {
-            anyhow::anyhow!(r#"Invalid variant "{variant_name}" for type "{expected_type}""#)
-        })
+/// Extracts the generic argument string from `type_str` if it starts with `type_prefix`.
+/// e.g. `"core::option::Option::<u32>"` with prefix `"core::option::Option"` → `"u32"`.
+fn extract_generic_args<'a>(type_str: &'a str, type_prefix: &str) -> Option<&'a str> {
+    type_str
+        .strip_prefix(type_prefix)
+        .and_then(|s| s.strip_prefix("::<"))
+        .and_then(|s| s.strip_suffix('>'))
 }
 
 fn resolve_corelib_enum_variant<'a>(
     expected_type: &'a str,
     variant_name: &str,
-    enum_path: &[String],
-) -> Option<Result<ResolvedEnumVariant<'a>>> {
-    // core::option::Option::<T>  ->  Some(T) at 0, None at 1
-    if let Some(inner) = expected_type
-        .strip_prefix("core::option::Option::<")
-        .and_then(|s| s.strip_suffix('>'))
-    {
-        return Some(resolve_corelib_enum_variant_with(
-            expected_type,
-            "Option",
-            enum_path,
-            variant_name,
-            &[("Some", 0, Some(inner)), ("None", 1, None)],
-        ));
+) -> Result<Option<ResolvedEnumVariant<'a>>> {
+    let invalid_variant =
+        || anyhow!(r#"Invalid variant "{variant_name}" for type "{expected_type}""#);
+
+    if let Some(inner) = extract_generic_args(expected_type, OPTION_TYPE) {
+        let (position, inner_type) = match variant_name {
+            "Some" => (0, Some(inner)),
+            "None" => (1, None),
+            _ => return Err(invalid_variant()),
+        };
+
+        return Ok(Some(ResolvedEnumVariant {
+            position,
+            inner_type,
+        }));
     }
 
-    // core::result::Result::<T, E>  ->  Ok(T) at 0, Err(E) at 1
-    if let Some(inner) = expected_type
-        .strip_prefix("core::result::Result::<")
-        .and_then(|s| s.strip_suffix('>'))
-    {
-        // A well-formed Result type always contains a top-level comma separating T and E.
-        // If absent the ABI entry is malformed; fall through to ABI lookup.
-        let split_pos = top_level_comma_pos(inner)?;
-        let ok_type = inner[..split_pos].trim();
-        let err_type = inner[split_pos + 1..].trim();
-        return Some(resolve_corelib_enum_variant_with(
-            expected_type,
-            "Result",
-            enum_path,
-            variant_name,
-            &[("Ok", 0, Some(ok_type)), ("Err", 1, Some(err_type))],
-        ));
+    if let Some(inner) = extract_generic_args(expected_type, RESULT_TYPE) {
+        let Some(split_pos) = top_level_comma_pos(inner) else {
+            bail!(
+                r#"Malformed ABI type "{expected_type}": missing comma between Ok and Err types"#
+            );
+        };
+
+        let (position, inner_type) = match variant_name {
+            "Ok" => (0, Some(inner[..split_pos].trim())),
+            "Err" => (1, Some(inner[split_pos + 1..].trim())),
+            _ => return Err(invalid_variant()),
+        };
+
+        return Ok(Some(ResolvedEnumVariant {
+            position,
+            inner_type,
+        }));
     }
 
-    None
+    Ok(None)
 }
 
 fn top_level_comma_pos(s: &str) -> Option<usize> {
@@ -173,7 +149,7 @@ fn top_level_comma_pos(s: &str) -> Option<usize> {
 fn split_variant_from_path(path: &[String]) -> Result<(&str, &[String])> {
     let (variant, rest) = path
         .split_last()
-        .ok_or_else(|| anyhow::anyhow!("Expected an enum variant path, got an empty path"))?;
+        .ok_or_else(|| anyhow!("Expected an enum variant path, got an empty path"))?;
     Ok((variant, rest))
 }
 
@@ -243,7 +219,7 @@ fn find_item_with_path<'item, T: EnumOrStruct>(
         });
 
         return full_path_item.ok_or_else(|| {
-            anyhow::anyhow!(
+            anyhow!(
                 r#"{} "{}" not found in ABI"#,
                 T::VARIANT_CAPITALIZED,
                 path.join("::")
@@ -321,7 +297,7 @@ impl SupportedCalldataKind for ExprStructCtorCall<'_> {
         let struct_path: Vec<String> = split(&self.path(db), db)?;
         let struct_path_joined = struct_path.clone().join("::");
 
-        validate_path_argument(expected_type, &struct_path, &struct_path_joined)?;
+        validate_path_argument(expected_type, &struct_path_joined)?;
 
         let structs_from_abi = find_all_structs(abi);
         let struct_abi_definition = find_item_with_path(structs_from_abi, &struct_path)?;
@@ -389,10 +365,10 @@ fn resolve_enum_variant<'a>(
     abi: &'a [AbiEntry],
 ) -> Result<ResolvedEnumVariant<'a>> {
     let enum_path_joined = enum_path.join("::");
-    validate_path_argument(expected_type, enum_path, &enum_path_joined)?;
+    validate_path_argument(expected_type, &enum_path_joined)?;
 
-    if let Some(result) = resolve_corelib_enum_variant(expected_type, variant_name, enum_path) {
-        result
+    if let Some(resolved) = resolve_corelib_enum_variant(expected_type, variant_name)? {
+        Ok(resolved)
     } else {
         let (position, variant) = find_enum_variant_position(variant_name, enum_path, abi)?;
         Ok(ResolvedEnumVariant {
@@ -419,10 +395,6 @@ impl SupportedCalldataKind for ExprPath<'_> {
             resolved.inner_type.is_none(),
             r#"Variant "{enum_variant_name}" of "{expected_type}" requires a value, use "{enum_variant_name}(<value>)""#
         );
-
-        if enum_variant.r#type != "()" {
-            bail!(r#"Couldn't find variant "{enum_variant_name}" in enum "{enum_path_joined}""#)
-        }
 
         Ok(AllowedCalldataArgument::Enum(CalldataEnum::new(
             resolved.position,
