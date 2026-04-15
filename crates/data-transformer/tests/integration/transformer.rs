@@ -528,7 +528,51 @@ async fn test_external_struct_function_invalid_path_to_external_struct() {
 
     result
         .unwrap_err()
-        .assert_contains(r#"Struct "something::BitArray" not found in ABI"#);
+        .assert_contains(r#"Invalid argument type, expected "data_transformer_contract::BitArray", got "something::BitArray""#);
+}
+
+#[tokio::test]
+async fn test_external_struct_function_partial_path_not_found_in_abi() {
+    // "bit_array::BitArray" passes the path suffix check against
+    // "alexandria_data_structures::bit_array::BitArray", but find_item_with_path
+    // requires an exact full-path match for multi-segment inputs → not found.
+    let input = indoc!(
+        "
+        data_transformer_contract::BitArray { bit: 23 }, \
+        bit_array::BitArray { data: array![0], current: 1, read_pos: 2, write_pos: 3 }
+        "
+    );
+
+    let result = run_transformer(input, "external_struct_fn").await;
+
+    result
+        .unwrap_err()
+        .assert_contains(r#"Struct "bit_array::BitArray" not found in ABI"#);
+}
+
+#[tokio::test]
+async fn test_external_struct_function_disambiguates_same_name_with_full_path() {
+    // Both "data_transformer_contract::BitArray" and
+    // "alexandria_data_structures::bit_array::BitArray" share the name "BitArray".
+    // Providing the full path for each resolves the correct struct unambiguously.
+    let input = indoc!(
+        "
+        data_transformer_contract::BitArray { bit: 23 }, \
+        alexandria_data_structures::bit_array::BitArray { data: array![0], current: 1, read_pos: 2, write_pos: 3 }
+        "
+    );
+
+    let result = run_transformer(input, "external_struct_fn").await.unwrap();
+
+    let expected_output = [
+        Felt::from_hex_unchecked("0x17"),
+        Felt::from_hex_unchecked("0x1"),
+        Felt::from_hex_unchecked("0x0"),
+        Felt::from_hex_unchecked("0x1"),
+        Felt::from_hex_unchecked("0x2"),
+        Felt::from_hex_unchecked("0x3"),
+    ];
+    assert_eq!(result, expected_output);
 }
 
 #[tokio::test]
@@ -878,7 +922,7 @@ fn test_happy_case_option_none() {
 fn test_happy_case_option_some() {
     let abi = option_u32_abi();
     let result = transform(
-        "Option::Some(42)",
+        "option::Option::Some(42)",
         &abi,
         &get_selector_from_name("option_fn").unwrap(),
     )
@@ -1006,7 +1050,7 @@ fn test_happy_case_result_ok_with_option_none() {
 }
 
 #[test]
-fn test_happy_case_option_some_full_path() {
+fn test_happy_case_option_some_module_path() {
     let abi = option_u32_abi();
     let result = transform(
         "core::option::Option::Some(5)",
@@ -1030,6 +1074,20 @@ fn test_happy_case_option_none_full_path() {
     .unwrap();
 
     assert_eq!(result, vec![Felt::ONE]);
+}
+
+#[test]
+fn test_result_invalid_module_path() {
+    let abi = result_nested_abi();
+    let result = transform(
+        "option::Result::Ok(7)",
+        &abi,
+        &get_selector_from_name("result_nested_fn").unwrap(),
+    );
+
+    result.unwrap_err().assert_contains(
+        r#"Invalid argument type, expected "core::result::Result::<core::option::Option::<core::integer::u32>, core::felt252>", got "option::Result""#,
+    );
 }
 
 #[test]
