@@ -38,6 +38,7 @@ jobs:
     # Runs tests from all crates across the workspace, except:
     # - `sncast` tests
     # - `forge` integration and e2e tests
+    # `native-api` is also excluded as there are no tests and it requires extra setup to compile.
     name: Workspace Tests
     runs-on: ubuntu-latest
     steps:
