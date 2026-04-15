@@ -29,7 +29,7 @@ pub struct ContractIdentifier {
     pub contract_name: Option<String>,
 }
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 pub struct DeployCommonArgs {
     #[command(flatten)]
     pub contract_identifier: ContractIdentifier,
