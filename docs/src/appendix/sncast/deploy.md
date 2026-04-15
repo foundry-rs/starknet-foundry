@@ -114,3 +114,11 @@ If passed, an estimated tip will be added to pay for the transaction. The tip is
 Optional.
 
 Nonce for transaction. If not provided, nonce will be set automatically.
+
+## `--no-abi`
+
+Optional.
+
+If passed, omits ABI from the declared class. This changes the resulting class hash.
+
+Can only be used with `--contract-name`.

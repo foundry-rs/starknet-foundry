@@ -1,11 +1,11 @@
 # `declare-from`
-Declare a contract either: 
+Declare a contract either:
 - from a compiled Sierra file
 - by fetching it from another Starknet instance.
 
 The allowed args depend on the chosen contract source:
-- **File:** `--sierra-file` (required)
-- **Network:** `--class-hash` (required), `--block-id` (optional),  `--source-url` (optional), `--source-network` (optional)
+- **File:** `--sierra-file` (required), `--no-abi` (optional)
+- **Network:** `--class-hash` (required), `--block-id` (optional), `--source-url` (optional), `--source-network` (optional)
 
 Note: **file** and **network** args are mutually exclusive.
 
@@ -102,6 +102,12 @@ If passed, an estimated tip will be added to pay for the transaction. The tip is
 Optional.
 
 Nonce for transaction. If not provided, nonce will be set automatically.
+
+## `--no-abi`
+
+Optional.
+
+If passed, omits ABI from the declared class. This changes the resulting class hash.
 
 ## `--block-id, -b <BLOCK_ID>`
 Optional.

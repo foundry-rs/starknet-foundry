@@ -39,6 +39,10 @@ pub struct DeclareCommonArgs {
     #[arg(short, long)]
     pub nonce: Option<Felt>,
 
+    /// If passed, omits ABI from the declared Sierra class. This changes the resulting class hash
+    #[arg(long)]
+    pub no_abi: bool,
+
     #[command(flatten)]
     pub rpc: RpcArgs,
 }
@@ -64,6 +68,7 @@ pub async fn declare<S>(
     contract_name: String,
     fee_args: FeeArgs,
     nonce: Option<Felt>,
+    no_abi: bool,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     artifacts: &HashMap<String, CastStarknetContractArtifacts>,
     wait_config: WaitForTx,
@@ -90,6 +95,7 @@ where
         casm_contract_definition,
         &fee_args,
         nonce,
+        no_abi,
         account,
         wait_config,
         skip_on_already_declared,
@@ -118,10 +124,11 @@ pub fn compile_sierra_to_casm(
 
 #[allow(clippy::too_many_arguments)]
 pub async fn declare_with_artifacts<S>(
-    sierra_class: SierraClass,
+    mut sierra_class: SierraClass,
     compiled_casm: CompiledClass,
     fee_args: &FeeArgs,
     nonce: Option<Felt>,
+    no_abi: bool,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     wait_config: WaitForTx,
     skip_on_already_declared: bool,
@@ -136,6 +143,10 @@ where
     let casm_class_hash = compiled_casm
         .class_hash_with_hash_function(hash_function)
         .map_err(anyhow::Error::from)?;
+
+    if no_abi {
+        sierra_class.abi.clear();
+    }
 
     let class_hash = sierra_class.class_hash().map_err(anyhow::Error::from)?;
 

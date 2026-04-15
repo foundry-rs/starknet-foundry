@@ -338,6 +338,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     declare.contract_name.clone(),
                     declare.common.fee_args,
                     declare.common.nonce,
+                    declare.common.no_abi,
                     account,
                     &artifacts,
                     wait_config,
@@ -389,6 +390,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         }
 
         Commands::DeclareFrom(declare_from) => {
+            if declare_from.sierra_file.is_none() && declare_from.common.no_abi {
+                bail!("`--no-abi` can only be used with `--sierra-file`");
+            }
+
             let provider = declare_from.common.rpc.get_provider(&config, ui).await?;
 
             let contract_source = if let Some(sierra_file) = declare_from.sierra_file {
@@ -438,6 +443,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         }
 
         Commands::Deploy(deploy) => {
+            if deploy.common.contract_identifier.contract_name.is_none() && deploy.no_abi {
+                bail!("`--no-abi` can only be used with `--contract-name`");
+            }
+
             let Deploy {
                 common:
                     DeployCommonArgs {
@@ -450,6 +459,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 fee_args,
                 rpc,
                 mut nonce,
+                no_abi,
                 ..
             } = deploy;
 
@@ -480,6 +490,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         contract_name,
                         fee_args.clone(),
                         nonce,
+                        no_abi,
                         account,
                         &artifacts,
                         WaitForTx {
