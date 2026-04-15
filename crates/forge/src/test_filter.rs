@@ -85,6 +85,28 @@ impl TestsFilter {
         }
     }
 
+    pub fn passes_name_pre_filter(&self, name: &str) -> bool {
+        match &self.name_filter {
+            NameFilter::All => {}
+            NameFilter::Match(filter) => {
+                if !name.contains(filter.as_str()) {
+                    return false;
+                }
+            }
+            NameFilter::ExactMatch(exact) => {
+                if name != exact.as_str() {
+                    return false;
+                }
+            }
+        }
+        if !self.skip_filter.is_empty()
+            && self.skip_filter.iter().any(|s| name.contains(s.as_str()))
+        {
+            return false;
+        }
+        true
+    }
+
     pub(crate) fn filter_tests(
         &self,
         test_cases: &mut Vec<TestCaseWithResolvedConfig>,
