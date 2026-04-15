@@ -56,8 +56,7 @@ pub fn test_target_with_config(
         .filter(|case| {
             case.debug_name
                 .as_deref()
-                .map(&should_run_config_pass)
-                .unwrap_or(true)
+                .map_or(true, &should_run_config_pass)
         })
         .map(|case| -> Result<TestCaseWithConfig> {
             let func = funcs[&case.id];
