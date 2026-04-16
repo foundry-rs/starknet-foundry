@@ -288,10 +288,9 @@ fn build_failed_call_info(
         .base
         .state
         .get_compiled_class(class_hash)
-        .map(|compiled_class| {
+        .map_or(TrackedResource::SierraGas, |compiled_class| {
             compiled_class.get_current_tracked_resource(syscall_handler.base.context)
-        })
-        .unwrap_or(TrackedResource::SierraGas);
+        });
 
     CallInfo {
         call: entry_point.into_executable(class_hash).into(),
