@@ -6,7 +6,7 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::helpers::token::Token;
 use sncast::response::balance::BalanceResponse;
-use sncast::response::errors::StarknetCommandError;
+use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
 use sncast::response::ui::UI;
 use sncast::{get_account, get_block_id};
 use starknet_rust::{
@@ -76,7 +76,7 @@ pub async fn balance(balance: Balance, config: CastConfig, ui: &UI) -> anyhow::R
 
     let result = get_balance(account.address(), &provider, &balance)
         .await
-        .map_err(anyhow::Error::from);
+        .map_err(handle_starknet_command_error);
 
     process_command_result("get balance", result, ui, None);
 

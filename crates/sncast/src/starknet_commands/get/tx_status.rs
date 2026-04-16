@@ -3,7 +3,7 @@ use clap::Args;
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::errors::StarknetCommandError;
+use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
 use sncast::response::tx_status::{ExecutionStatus, FinalityStatus, TransactionStatusResponse};
 use sncast::response::ui::UI;
 use starknet_rust::core::types::{TransactionExecutionStatus, TransactionStatus};
@@ -26,7 +26,7 @@ pub async fn tx_status(tx_status: TxStatus, config: CastConfig, ui: &UI) -> anyh
 
     let result = get_tx_status(&provider, tx_status.transaction_hash)
         .await
-        .map_err(anyhow::Error::from);
+        .map_err(handle_starknet_command_error);
 
     process_command_result("get tx-status", result, ui, None);
     Ok(())
