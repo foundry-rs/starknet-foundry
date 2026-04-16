@@ -8825,6 +8825,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 [[package]]
 name = "voyager-verifier"
 version = "2.3.0"
+source = "git+https://github.com/NethermindEth/voyager-verifier.git#1303d7dd377744b671319ab076a075d678f47a47"
 dependencies = [
  "anyhow",
  "backon",
