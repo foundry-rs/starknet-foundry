@@ -7,7 +7,7 @@ use forge_runner::package_tests::with_config_resolved::{
 };
 use forge_runner::partition::PartitionConfig;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 // Specifies what tests should be included
 pub struct TestsFilter {
     // based on name
@@ -23,7 +23,7 @@ pub struct TestsFilter {
     pub(crate) partitioning_config: PartitionConfig,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub(crate) enum NameFilter {
     All,
     Match(String),
@@ -105,6 +105,21 @@ impl TestsFilter {
             failed_tests,
             partition_config: &self.partitioning_config,
         })
+    }
+
+    fn is_in_partition(&self, sanitized_name: &str) -> bool {
+        match &self.partitioning_config {
+            PartitionConfig::Disabled => true,
+            PartitionConfig::Enabled {
+                partition,
+                partition_map,
+            } => {
+                let idx = partition_map
+                    .get_assigned_index(sanitized_name)
+                    .expect("Partition map must contain all test cases");
+                idx == partition.index()
+            }
+        }
     }
 
     pub(crate) fn filter_tests(

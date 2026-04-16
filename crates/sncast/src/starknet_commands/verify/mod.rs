@@ -2,11 +2,12 @@ use anyhow::{Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args, ValueEnum};
 use promptly::prompt;
-use sncast::get_provider;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::FreeProvider;
 use sncast::response::ui::UI;
 use sncast::{Network, response::verify::VerifyResponse};
+use sncast::{get_chain_id, get_provider};
+use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, fmt};
 use url::Url;
@@ -82,6 +83,24 @@ impl fmt::Display for Verifier {
     }
 }
 
+async fn resolve_verification_network(
+    cli_network: Option<Network>,
+    config_network: Option<Network>,
+    provider: &JsonRpcClient<HttpTransport>,
+) -> Result<Network> {
+    if let Some(network) = cli_network.or(config_network) {
+        return Ok(network);
+    }
+
+    let chain_id = get_chain_id(provider).await?;
+
+    Network::try_from(chain_id).map_err(|_| {
+            anyhow!(
+                "Failed to infer verification network from the RPC chain ID {chain_id:#x}; pass `--network mainnet` or `--network sepolia` explicitly"
+            )
+        })
+}
+
 fn display_files_and_confirm(
     verifier: &Verifier,
     files_to_display: Vec<String>,
@@ -136,7 +155,6 @@ pub async fn verify(
         test_files,
     } = args;
 
-    let url_provided = url.is_some();
     let rpc_url = match url {
         Some(url) => url,
         None => {
@@ -172,15 +190,7 @@ pub async fn verify(
         }
     };
 
-    // If --url is provided but --network is not, default to sepolia
-    // If neither is provided, the error is already handled above in rpc_url logic
-    let network = match (network, url_provided) {
-        (Some(network), _) => network,
-        (None, true) => Network::Sepolia, // --url provided but no --network
-        (None, false) => {
-            Network::Sepolia // fallback when config.url is set
-        }
-    };
+    let network = resolve_verification_network(network, config.network, &provider).await?;
 
     // Handle test_files warning for Walnut
     if matches!(verifier, Verifier::Walnut) && test_files {
@@ -242,5 +252,105 @@ pub async fn verify(
                 .verify(contract_identifier, contract_name, package, test_files, ui)
                 .await
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::resolve_verification_network;
+    use serde_json::json;
+    use sncast::Network;
+    use sncast::get_provider;
+    use starknet_types_core::felt::Felt;
+    use url::Url;
+    use wiremock::matchers::{body_partial_json, method};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    fn unused_provider() -> starknet_rust::providers::jsonrpc::JsonRpcClient<
+        starknet_rust::providers::jsonrpc::HttpTransport,
+    > {
+        get_provider(&Url::parse("http://127.0.0.1:1").unwrap()).unwrap()
+    }
+
+    async fn mock_provider_for_chain_id(
+        chain_id: Felt,
+    ) -> (
+        starknet_rust::providers::jsonrpc::JsonRpcClient<
+            starknet_rust::providers::jsonrpc::HttpTransport,
+        >,
+        MockServer,
+    ) {
+        let mock_rpc = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(body_partial_json(json!({"method": "starknet_chainId"})))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "id": 1,
+                "jsonrpc": "2.0",
+                "result": format!("{chain_id:#x}")
+            })))
+            .expect(1)
+            .mount(&mock_rpc)
+            .await;
+
+        (
+            get_provider(&Url::parse(&mock_rpc.uri()).unwrap()).unwrap(),
+            mock_rpc,
+        )
+    }
+
+    #[tokio::test]
+    async fn uses_cli_network_when_provided() {
+        let provider = unused_provider();
+        let network =
+            resolve_verification_network(Some(Network::Mainnet), Some(Network::Sepolia), &provider)
+                .await
+                .unwrap();
+
+        assert_eq!(network, Network::Mainnet);
+    }
+
+    #[tokio::test]
+    async fn uses_config_network_when_cli_network_is_missing() {
+        let provider = unused_provider();
+        let network = resolve_verification_network(None, Some(Network::Mainnet), &provider)
+            .await
+            .unwrap();
+
+        assert_eq!(network, Network::Mainnet);
+    }
+
+    #[tokio::test]
+    async fn infers_mainnet_from_chain_id_when_no_network_is_configured() {
+        let (provider, _mock_rpc) = mock_provider_for_chain_id(sncast::MAINNET).await;
+        let network = resolve_verification_network(None, None, &provider)
+            .await
+            .unwrap();
+
+        assert_eq!(network, Network::Mainnet);
+    }
+
+    #[tokio::test]
+    async fn infers_sepolia_from_chain_id_when_no_network_is_configured() {
+        let (provider, _mock_rpc) = mock_provider_for_chain_id(sncast::SEPOLIA).await;
+        let network = resolve_verification_network(None, None, &provider)
+            .await
+            .unwrap();
+
+        assert_eq!(network, Network::Sepolia);
+    }
+
+    #[tokio::test]
+    async fn errors_when_network_cannot_be_resolved() {
+        let (provider, _mock_rpc) =
+            mock_provider_for_chain_id(Felt::from_hex_unchecked("0x1234")).await;
+        let error = resolve_verification_network(None, None, &provider)
+            .await
+            .unwrap_err();
+
+        assert!(
+            error
+                .to_string()
+                .contains("Failed to infer verification network from the RPC chain ID 0x1234")
+        );
     }
 }
