@@ -30,7 +30,9 @@ pub struct Nonce {
 pub async fn nonce(nonce: Nonce, config: CastConfig, ui: &UI) -> Result<()> {
     let provider = nonce.rpc.get_provider(&config, ui).await?;
 
-    let result = get_nonce(&provider, nonce.contract_address, &nonce.block_id).await;
+    let result = get_nonce(&provider, nonce.contract_address, &nonce.block_id)
+        .await
+        .map_err(anyhow::Error::from);
 
     process_command_result("get nonce", result, ui, None);
     Ok(())
@@ -40,7 +42,7 @@ pub async fn get_nonce(
     provider: &JsonRpcClient<HttpTransport>,
     contract_address: Felt,
     block_id: &str,
-) -> Result<NonceResponse> {
+) -> Result<NonceResponse, StarknetCommandError> {
     let block_id = get_block_id(block_id)?;
     let nonce = provider
         .get_nonce(block_id, contract_address)
