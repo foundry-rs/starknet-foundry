@@ -12,16 +12,18 @@ use camino::Utf8PathBuf;
 use conversions::string::TryFromHexStr;
 use scarb_api::StarknetContractArtifacts;
 
+pub const CACHE_DIR: &str = ".snfoundry_cache";
+
 macro_rules! load_contract {
-    ($name:expr, $path_part:expr) => {{
+    ($name:expr, $contract_dir:expr) => {{
         let sierra = include_str!(concat!(
             "../data/predeployed_contracts/",
-            $path_part,
+            $contract_dir,
             "/sierra.json"
         ));
         let casm = include_str!(concat!(
             "../data/predeployed_contracts/",
-            $path_part,
+            $contract_dir,
             "/casm.json"
         ));
 
@@ -34,10 +36,7 @@ macro_rules! load_contract {
 
         (
             format!("{} (predeployed contract)", $name),
-            (
-                artifacts,
-                persist_embedded_sierra($path_part.to_uppercase().as_str(), sierra)?,
-            ),
+            (artifacts, cache_sierra_file($contract_dir, sierra)?),
         )
     }};
 }
@@ -81,32 +80,23 @@ pub fn load_predeployed_contracts() -> Result<ContractsData> {
     Ok(contracts_data)
 }
 
-fn persist_embedded_sierra(contract_name: &str, sierra: &str) -> Result<Utf8PathBuf> {
-    let path = std::env::temp_dir()
-        .join("snfoundry-predeployed-contracts")
+fn cache_sierra_file(contract_name: &str, sierra: &str) -> Result<Utf8PathBuf> {
+    let path = Utf8PathBuf::from(CACHE_DIR)
+        .join("predeployed-contracts")
         .join(env!("CARGO_PKG_VERSION"))
         .join(format!("{contract_name}.sierra.json"));
 
     let parent = path
         .parent()
-        .with_context(|| format!("Failed to get parent directory for {}", path.display()))?;
+        .with_context(|| format!("Failed to get parent directory for {}", path))?;
     fs::create_dir_all(parent).with_context(|| {
         format!(
-            "Failed to create directory for predeployed Sierra at {}",
-            parent.display()
+            "Failed to create directory for sierra of {contract_name} at {}",
+            parent
         )
     })?;
-    fs::write(&path, sierra).with_context(|| {
-        format!(
-            "Failed to materialize embedded Sierra for {contract_name} at {}",
-            path.display()
-        )
-    })?;
+    fs::write(&path, sierra)
+        .with_context(|| format!("Failed to write Sierra for {contract_name} to {}", path))?;
 
-    Utf8PathBuf::from_path_buf(path).map_err(|path| {
-        anyhow!(
-            "Materialized Sierra path is not valid UTF-8: {}",
-            path.display()
-        )
-    })
+    Ok(path)
 }
