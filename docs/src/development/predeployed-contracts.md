@@ -33,10 +33,23 @@ This should be done in `sg_token` and `strk` packages.
     ...
     ```
 
-3. Compile contracts with `scarb`
+3. Adjust compiler configuration in workspace `Scarb.toml`:
+
+    ```toml
+    ...
+
+    [profile.release.cairo]
+    unstable-add-statements-code-locations-debug-info = true
+    unstable-add-statements-functions-debug-info = true
+    panic-backtrace = true
+
+    ...
+    ```
+
+4. Compile contracts with `scarb`
 
     ```shell
     scarb --release build
     ```
 
-4. Visit `target/release` directory and copy relevant artifacts.
+5. Visit `target/release` directory and copy relevant artifacts.
