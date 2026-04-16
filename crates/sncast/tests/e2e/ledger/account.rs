@@ -20,15 +20,13 @@ use speculos_client::AutomationRule;
 use tempfile::tempdir;
 use test_case::test_case;
 
-#[test_case("oz", "open_zeppelin", OZ_CLASS_HASH.into_hex_string(), 6001, &[automation::APPROVE_PUBLIC_KEY]; "oz_account_type")]
-#[test_case("ready", "ready", READY_CLASS_HASH.into_hex_string(), 6002, &[automation::APPROVE_PUBLIC_KEY]; "ready_account_type")]
+#[test_case("oz", "open_zeppelin", OZ_CLASS_HASH.into_hex_string(), 6001, &[]; "oz_account_type")]
+#[test_case("ready", "ready", READY_CLASS_HASH.into_hex_string(), 6002, &[]; "ready_account_type")]
 // Braavos calls sign_hash twice during fee estimation (tx_hash + aux_hash) because
 // is_signer_interactive() always returns false — see BraavosAccountFactory::is_signer_interactive.
-// That means we need two APPROVE_BLIND_SIGN_HASH after the public key approval.
 #[test_case(
     "braavos", "braavos", BRAAVOS_CLASS_HASH.into_hex_string(), 6003,
     &[
-        automation::APPROVE_PUBLIC_KEY,
         automation::APPROVE_BLIND_SIGN_HASH, // tx_hash
         automation::APPROVE_BLIND_SIGN_HASH, // aux_hash
     ];
@@ -114,13 +112,8 @@ async fn test_create_ledger_account(
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_create_ledger_account_add_profile() {
-    let (client, url) = setup_speculos(6004).await;
+    let (_client, url) = setup_speculos(6004).await;
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
-
-    client
-        .automation(&[automation::APPROVE_PUBLIC_KEY])
-        .await
-        .unwrap();
 
     let output = runner(&[
         "--accounts-file",
@@ -158,30 +151,25 @@ async fn test_create_ledger_account_add_profile() {
 
 #[test_case(
     "oz", OZ_LEDGER_PATH, 6005,
-    // create: public key only (OZ skips signing during fee estimation)
     // deploy: 1 sign_hash
     &[
-        automation::APPROVE_PUBLIC_KEY,
         automation::APPROVE_BLIND_SIGN_HASH,
     ];
     "oz_account_type"
 )]
 #[test_case(
     "ready", READY_LEDGER_PATH, 6006,
-    // create: public key only (Ready skips signing during fee estimation)
     // deploy: 1 sign_hash
     &[
-        automation::APPROVE_PUBLIC_KEY,
         automation::APPROVE_BLIND_SIGN_HASH,
     ];
     "ready_account_type"
 )]
 #[test_case(
     "braavos", BRAAVOS_LEDGER_PATH, 6007,
-    // create: public key + 2x sign_hash (tx_hash + aux_hash)
+    // create: 2x sign_hash (tx_hash + aux_hash)
     // deploy: 2x sign_hash (tx_hash + aux_hash)
     &[
-        automation::APPROVE_PUBLIC_KEY,
         automation::APPROVE_BLIND_SIGN_HASH, // create: tx_hash
         automation::APPROVE_BLIND_SIGN_HASH, // create: aux_hash
         automation::APPROVE_BLIND_SIGN_HASH, // deploy: tx_hash
@@ -364,13 +352,8 @@ async fn test_import_ledger_account(
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_import_ledger_account_add_profile() {
-    let (client, url) = setup_speculos(6012).await;
+    let (_client, url) = setup_speculos(6012).await;
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
-
-    client
-        .automation(&[automation::APPROVE_PUBLIC_KEY])
-        .await
-        .unwrap();
 
     let oz_class_hash = OZ_CLASS_HASH.into_hex_string();
 
