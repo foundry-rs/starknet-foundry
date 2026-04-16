@@ -14,6 +14,7 @@ use scarb_api::StarknetContractArtifacts;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
+/// Load data of predeployed contract from its artifacts
 macro_rules! load_contract {
     ($name:expr, $contract_dir:expr) => {{
         let sierra = include_str!(concat!(
@@ -35,12 +36,13 @@ macro_rules! load_contract {
         };
 
         (
-            format!("{} (predeployed contract)", $name),
-            (artifacts, cache_sierra_file($contract_dir, sierra)?),
+            $name.to_string(),
+            (artifacts, save_sierra_file_to_cache($contract_dir, sierra)?),
         )
     }};
 }
 
+/// Loads data of predeployed contracts from their artifacts, and prepares it for usage in cheatnet.
 pub fn load_predeployed_contracts() -> Result<ContractsData> {
     let contracts = HashMap::from([
         load_contract!(STRK_CONTRACT_NAME, "ERC20Lockable"),
@@ -80,7 +82,8 @@ pub fn load_predeployed_contracts() -> Result<ContractsData> {
     Ok(contracts_data)
 }
 
-fn cache_sierra_file(contract_name: &str, sierra: &str) -> Result<Utf8PathBuf> {
+/// Saves sierra file of predeployed contract to cache, and returns path to it.
+fn save_sierra_file_to_cache(contract_name: &str, sierra: &str) -> Result<Utf8PathBuf> {
     let path = Utf8PathBuf::from(CACHE_DIR)
         .join("predeployed-contracts")
         .join(env!("CARGO_PKG_VERSION"))
