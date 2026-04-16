@@ -6,9 +6,28 @@ use crate::helpers::runner::runner;
 use indoc::formatdoc;
 use serde_json::json;
 use shared::test_utils::output_assert::assert_stderr_contains;
+use sncast::SEPOLIA;
 use starknet_types_core::felt::Felt;
+use std::fs;
 use wiremock::matchers::{body_partial_json, method, path};
 use wiremock::{Mock, MockServer, Request, ResponseTemplate};
+
+async fn mock_chain_id(mock_rpc: &MockServer, chain_id: Felt) {
+    Mock::given(method("POST"))
+        .and(body_partial_json(json!({"method": "starknet_chainId"})))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "id": 1,
+            "jsonrpc": "2.0",
+            "result": format!("{chain_id:#x}")
+        })))
+        .expect(1)
+        .mount(mock_rpc)
+        .await;
+}
+
+async fn mock_sepolia_chain_id(mock_rpc: &MockServer) {
+    mock_chain_id(mock_rpc, SEPOLIA).await;
+}
 
 #[tokio::test]
 async fn test_happy_case_contract_address() {
@@ -136,8 +155,76 @@ async fn test_happy_case_with_confirm_verification_flag() {
         .expect(1)
         .mount(&mock_rpc)
         .await;
+    mock_sepolia_chain_id(&mock_rpc).await;
 
     let job_id = "2b206064-ffee-4955-8a86-1ff3b854416a";
+    let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
+
+    Mock::given(method("POST"))
+        .and(path(format!("class-verify/{class_hash:#066x}")))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--contract-name",
+        "Map",
+        "--verifier",
+        "voyager",
+        "--confirm-verification",
+        "--url",
+        &mock_rpc_uri,
+    ];
+
+    let snapbox = runner(&args)
+        .env("VERIFIER_API_URL", mock_server.uri())
+        .current_dir(contract_path.path());
+
+    snapbox.assert().success();
+}
+
+#[tokio::test]
+async fn test_happy_case_uses_network_from_config() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+    fs::write(
+        contract_path.path().join("snfoundry.toml"),
+        "[sncast.default]\nnetwork = \"sepolia\"\n",
+    )
+    .unwrap();
+
+    let mock_server = MockServer::start().await;
+    let rpc_response = json!({
+        "id": 1,
+        "jsonrpc": "2.0",
+        "result": MAP_CONTRACT_CLASS_HASH_SEPOLIA
+    });
+
+    let mock_rpc = MockServer::start().await;
+    let mock_rpc_uri = mock_rpc.uri().clone();
+
+    Mock::given(method("POST"))
+        .and(body_partial_json(
+            json!({"method": "starknet_getClassHashAt"}),
+        ))
+        .respond_with(ResponseTemplate::new(200).set_body_json(rpc_response))
+        .expect(1)
+        .mount(&mock_rpc)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(body_partial_json(json!({"method": "starknet_chainId"})))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&mock_rpc)
+        .await;
+
+    let job_id = "config-network-job-id";
     let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
     Mock::given(method("POST"))
@@ -511,6 +598,56 @@ async fn test_error_when_neither_network_nor_url_provided() {
         formatdoc! {"
         Command: verify
         Error: Either --network or --url must be provided
+        ",
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_error_when_chain_id_is_unrecognized_and_network_is_missing() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+
+    let mock_server = MockServer::start().await;
+    let mock_rpc = MockServer::start().await;
+    let mock_rpc_uri = mock_rpc.uri().clone();
+
+    mock_chain_id(&mock_rpc, Felt::from_hex_unchecked("0x1234")).await;
+
+    let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
+
+    Mock::given(method("POST"))
+        .and(path(format!("class-verify/{class_hash:#066x}")))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&mock_server)
+        .await;
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--contract-name",
+        "Map",
+        "--verifier",
+        "voyager",
+        "--confirm-verification",
+        "--url",
+        &mock_rpc_uri,
+    ];
+
+    let snapbox = runner(&args)
+        .env("VERIFIER_API_URL", mock_server.uri())
+        .current_dir(contract_path.path());
+
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        formatdoc! {"
+        Command: verify
+        Error: Failed to infer verification network from the RPC chain ID 0x1234; pass `--network mainnet` or `--network sepolia` explicitly
         ",
         },
     );
