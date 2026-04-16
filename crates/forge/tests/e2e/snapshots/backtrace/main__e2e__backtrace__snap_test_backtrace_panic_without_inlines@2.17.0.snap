@@ -53,18 +53,6 @@ stack backtrace:
        at [..]lib.cairo:13:5
 
 
-[FAIL] backtrace_panic::Test::test_predeployed_contract_panics
-
-Failure data:
-    (0x45524332303a20696e73756666696369656e742062616c616e6365 ('ERC20: insufficient balance'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
-
-error occurred in contract 'STRK (predeployed contract)'
-stack backtrace:
-   0: openzeppelin_token::erc20::erc20::ERC20Component::__wrapper__ERC20Impl__transfer
-       at [..]erc20/erc20.cairo:118:5
-
-
 Failures:
     backtrace_panic::Test::test_contract_panics
     backtrace_panic::Test::test_fork_contract_panics
-    backtrace_panic::Test::test_predeployed_contract_panics
