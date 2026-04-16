@@ -25,9 +25,8 @@ use console::Style;
 use forge_runner::{
     forge_config::{ForgeConfig, ForgeTrackedResource},
     package_tests::{
-        raw::TestTargetRaw,
-        with_config::TestTargetWithConfig,
-        with_config_resolved::{TestCaseWithResolvedConfig, TestTargetWithResolvedConfig},
+        raw::TestTargetRaw, with_config::TestTargetWithConfig,
+        with_config_resolved::TestCaseWithResolvedConfig,
     },
     partition::PartitionConfig,
     running::target::prepare_test_target,
@@ -138,12 +137,13 @@ impl RunForPackageArgs {
 
         let tracked_resource = forge_config.test_runner_config.tracked_resource;
 
-        let pre_config_filter = tests_filter.clone().pre_config_filter()?;
+        let pre_config_filter = Arc::new(tests_filter.pre_config_filter()?);
 
         let target_handles = raw_test_targets
             .into_iter()
             .map(|t| {
-                spawn_prepare_test_target(t, tracked_resource, |name| {
+                let pre_config_filter = pre_config_filter.clone();
+                spawn_prepare_test_target(t, tracked_resource, move |name| {
                     pre_config_filter.includes(name)
                 })
             })
@@ -170,76 +170,6 @@ fn spawn_prepare_test_target(
     })
 }
 
-// #[tracing::instrument(skip_all, level = "debug")]
-// async fn test_package_with_config_resolved(
-//     test_targets: Vec<TestTargetRaw>,
-//     fork_targets: &[ForkTarget],
-//     block_number_map: &mut BlockNumberMap,
-//     forge_config: &ForgeConfig,
-//     tests_filter: &TestsFilter,
-// ) -> Result<Vec<TestTargetWithResolvedConfig>> {
-//     let mut test_targets_with_resolved_config = Vec::with_capacity(test_targets.len());
-//     let pre_config_filter = tests_filter.pre_config_filter()?;
-
-//     for test_target in test_targets {
-//         let test_target = test_target_with_config(
-//             test_target,
-//             &forge_config.test_runner_config.tracked_resource,
-//             |name| pre_config_filter.includes(name),
-//         )?;
-
-//         let test_target =
-//             resolve_config(test_target, fork_targets, block_number_map, tests_filter).await?;
-
-//         test_targets_with_resolved_config.push(test_target);
-//     }
-
-//     Ok(test_targets_with_resolved_config)
-// }
-
-fn sum_test_cases_from_package(
-    test_targets: &[TestTargetWithResolvedConfig],
-    partitioning_config: &PartitionConfig,
-) -> usize {
-    test_targets
-        .iter()
-        .map(|tt| sum_test_cases_from_test_target(&tt.test_cases, partitioning_config))
-        .sum()
-}
-
-fn sum_raw_test_cases_from_package(
-    test_targets: &[TestTargetRaw],
-    partitioning_config: &PartitionConfig,
-) -> usize {
-    test_targets
-        .iter()
-        .map(|tt| sum_raw_test_cases_from_test_target(tt, partitioning_config))
-        .sum()
-}
-
-fn sum_raw_test_cases_from_test_target(
-    test_target: &TestTargetRaw,
-    partitioning_config: &PartitionConfig,
-) -> usize {
-    let default_executables = vec![];
-    let executables = test_target
-        .sierra_program
-        .debug_info
-        .as_ref()
-        .and_then(|info| info.executables.get("snforge_internal_test_executable"))
-        .unwrap_or(&default_executables);
-
-    executables
-        .iter()
-        .filter(|test_case| {
-            test_case
-                .debug_name
-                .as_deref()
-                .is_none_or(|name| partitioning_config.includes_test(name))
-        })
-        .count()
-}
-
 fn sum_test_cases_from_test_target(
     test_cases: &[TestCaseWithResolvedConfig],
     partitioning_config: &PartitionConfig,
@@ -264,17 +194,6 @@ pub async fn run_for_package(
     ui: Arc<UI>,
     exit_first_channel: &mut ExitFirstChannel,
 ) -> Result<PackageTestResult> {
-    // let all_tests =
-    //     sum_raw_test_cases_from_package(&test_targets, &tests_filter.partitioning_config);
-    // let mut test_targets = test_package_with_config_resolved(
-    //     test_targets,
-    //     &fork_targets,
-    //     block_number_map,
-    //     &forge_config,
-    //     &tests_filter,
-    // )
-    // .await?;
-
     let mut resolved_targets = vec![];
     let mut all_tests = 0;
     let mut not_filtered_total = 0;

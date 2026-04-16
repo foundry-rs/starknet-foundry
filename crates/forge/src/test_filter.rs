@@ -30,18 +30,18 @@ pub(crate) enum NameFilter {
     ExactMatch(String),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum IgnoredFilter {
     IncludeAll,
     IgnoredOnly,
     ExcludeIgnored,
 }
 
-pub(crate) struct PreConfigTestFilter<'a> {
-    name_filter: &'a NameFilter,
-    skip_filter: &'a [String],
+pub(crate) struct PreConfigTestFilter {
+    name_filter: NameFilter,
+    skip_filter: Vec<String>,
     failed_tests: Option<Vec<String>>,
-    partition_config: &'a PartitionConfig,
+    partition_config: PartitionConfig,
 }
 
 impl TestsFilter {
@@ -92,7 +92,7 @@ impl TestsFilter {
         }
     }
 
-    pub(crate) fn pre_config_filter(&self) -> Result<PreConfigTestFilter<'_>> {
+    pub(crate) fn pre_config_filter(&self) -> Result<PreConfigTestFilter> {
         let failed_tests = if self.last_failed_filter {
             Some(self.failed_tests_cache.load()?)
         } else {
@@ -100,26 +100,15 @@ impl TestsFilter {
         };
 
         Ok(PreConfigTestFilter {
-            name_filter: &self.name_filter,
-            skip_filter: &self.skip_filter,
+            name_filter: self.name_filter.clone(),
+            skip_filter: self.skip_filter.clone(),
             failed_tests,
-            partition_config: &self.partitioning_config,
+            partition_config: self.partitioning_config.clone(),
         })
     }
 
-    fn is_in_partition(&self, sanitized_name: &str) -> bool {
-        match &self.partitioning_config {
-            PartitionConfig::Disabled => true,
-            PartitionConfig::Enabled {
-                partition,
-                partition_map,
-            } => {
-                let idx = partition_map
-                    .get_assigned_index(sanitized_name)
-                    .expect("Partition map must contain all test cases");
-                idx == partition.index()
-            }
-        }
+    pub(crate) fn has_name_filter(&self) -> bool {
+        !matches!(&self.name_filter, NameFilter::All)
     }
 
     pub(crate) fn filter_tests(
@@ -162,7 +151,7 @@ impl TestsFilter {
     }
 }
 
-impl PreConfigTestFilter<'_> {
+impl PreConfigTestFilter {
     pub(crate) fn includes(&self, raw_name: &str) -> bool {
         let name = sanitize_test_case_name(raw_name);
 
@@ -182,7 +171,7 @@ impl PreConfigTestFilter<'_> {
     }
 
     fn matches_name_filter(&self, name: &str) -> bool {
-        match self.name_filter {
+        match &self.name_filter {
             NameFilter::All => true,
             NameFilter::Match(filter) => name.contains(filter),
             NameFilter::ExactMatch(exact) => name == exact,
