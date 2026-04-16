@@ -2,6 +2,8 @@
 source: crates/forge/tests/e2e/backtrace.rs
 expression: stdout
 ---
+
+
 [FAIL] backtrace_panic::Test::test_contract_panics
 
 Failure data:
@@ -50,7 +52,34 @@ stack backtrace:
    3: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
        at [..]lib.cairo:13:5
 
+[FAIL] backtrace_panic::Test::test_predeployed_contract_panics
+
+Failure data:
+    (0x45524332303a20696e73756666696369656e742062616c616e6365 ('ERC20: insufficient balance'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
+
+error occurred in contract 'STRK (predeployed contract)'
+stack backtrace:
+   0: core::panic_with_const_felt252
+       at [..]lib.cairo:364:5
+   1: core::panic_with_const_felt252
+       at [..]lib.cairo:364:5
+   2: (inlined) core::integer::U128PartialOrd::lt
+       at [..]integer.cairo:266:9
+   3: (inlined) core::integer::U256PartialOrd::lt
+       at [..]integer.cairo:1085:12
+   4: openzeppelin_token::erc20::erc20::ERC20Component::InternalImpl::update
+       at [..]traits.cairo:663:10
+   5: (inlined) openzeppelin_token::erc20::erc20::ERC20Component::InternalImpl::_transfer
+       at [..]erc20/erc20.cairo:522:13
+   6: (inlined) openzeppelin_token::erc20::erc20::ERC20Component::ERC20::transfer
+       at [..]erc20/erc20.cairo:154:13
+   7: (inlined) openzeppelin_token::erc20::erc20::ERC20Component::ERC20Impl::transfer
+       at [..]erc20/erc20.cairo:118:5
+   8: openzeppelin_token::erc20::erc20::ERC20Component::__wrapper__ERC20Impl__transfer
+       at [..]erc20/erc20.cairo:118:5
+
 
 Failures:
     backtrace_panic::Test::test_contract_panics
     backtrace_panic::Test::test_fork_contract_panics
+    backtrace_panic::Test::test_predeployed_contract_panics
