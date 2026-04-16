@@ -1,4 +1,3 @@
-use anyhow::Result;
 use clap::Args;
 use conversions::IntoConv;
 use sncast::get_block_id;
@@ -32,7 +31,9 @@ pub struct ClassHashAt {
 pub async fn class_hash_at(args: ClassHashAt, config: CastConfig, ui: &UI) -> anyhow::Result<()> {
     let provider = args.rpc.get_provider(&config, ui).await?;
 
-    let result = get_class_hash_at(&provider, args.contract_address, &args.block_id).await;
+    let result = get_class_hash_at(&provider, args.contract_address, &args.block_id)
+        .await
+        .map_err(anyhow::Error::from);
 
     let chain_id = provider.chain_id().await?;
     let block_explorer_link = block_explorer_link_if_allowed(&result, chain_id, &config).await;
@@ -45,7 +46,7 @@ async fn get_class_hash_at(
     provider: &JsonRpcClient<HttpTransport>,
     contract_address: Felt,
     block_id: &str,
-) -> Result<ClassHashAtResponse> {
+) -> Result<ClassHashAtResponse, StarknetCommandError> {
     let block_id = get_block_id(block_id)?;
 
     let class_hash = provider

@@ -30,7 +30,9 @@ pub struct Transaction {
 pub async fn transaction(tx: Transaction, config: CastConfig, ui: &UI) -> Result<()> {
     let provider = tx.rpc.get_provider(&config, ui).await?;
 
-    let result = get_transaction(&provider, tx.transaction_hash, tx.with_proof_facts).await;
+    let result = get_transaction(&provider, tx.transaction_hash, tx.with_proof_facts)
+        .await
+        .map_err(anyhow::Error::from);
 
     let chain_id = provider.chain_id().await?;
     let block_explorer_link = block_explorer_link_if_allowed(&result, chain_id, &config).await;
@@ -43,7 +45,7 @@ async fn get_transaction(
     provider: &JsonRpcClient<HttpTransport>,
     transaction_hash: Felt,
     with_proof_facts: bool,
-) -> Result<TransactionResponse> {
+) -> Result<TransactionResponse, StarknetCommandError> {
     let response_flags = if with_proof_facts {
         Some(&[TransactionResponseFlag::IncludeProofFacts][..])
     } else {

@@ -74,7 +74,9 @@ pub async fn balance(balance: Balance, config: CastConfig, ui: &UI) -> anyhow::R
     let provider = balance.rpc.get_provider(&config, ui).await?;
     let account = get_account(&config, &provider, &balance.rpc, ui).await?;
 
-    let result = get_balance(account.address(), &provider, &balance).await;
+    let result = get_balance(account.address(), &provider, &balance)
+        .await
+        .map_err(anyhow::Error::from);
 
     process_command_result("get balance", result, ui, None);
 
@@ -85,7 +87,7 @@ pub async fn get_balance(
     account_address: Felt,
     provider: &JsonRpcClient<HttpTransport>,
     balance: &Balance,
-) -> Result<BalanceResponse> {
+) -> Result<BalanceResponse, StarknetCommandError> {
     let call = FunctionCall {
         contract_address: balance.token_identifier.contract_address(),
         entry_point_selector: get_selector_from_name("balance_of").expect("Failed to get selector"),
@@ -103,7 +105,7 @@ pub async fn get_balance(
         .token_suffix()
         .map(|token| token.as_token_unit());
 
-    let balance = erc20_balance_to_u256(&res)?;
+    let balance = erc20_balance_to_u256(&res).map_err(StarknetCommandError::from)?;
 
     Ok(BalanceResponse {
         balance,

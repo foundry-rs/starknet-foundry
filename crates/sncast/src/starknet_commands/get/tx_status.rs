@@ -21,10 +21,12 @@ pub struct TxStatus {
     pub rpc: RpcArgs,
 }
 
-pub async fn tx_status(tx_status: TxStatus, config: CastConfig, ui: &UI) -> Result<()> {
+pub async fn tx_status(tx_status: TxStatus, config: CastConfig, ui: &UI) -> anyhow::Result<()> {
     let provider = tx_status.rpc.get_provider(&config, ui).await?;
 
-    let result = get_tx_status(&provider, tx_status.transaction_hash).await;
+    let result = get_tx_status(&provider, tx_status.transaction_hash)
+        .await
+        .map_err(anyhow::Error::from);
 
     process_command_result("get tx-status", result, ui, None);
     Ok(())
@@ -33,7 +35,7 @@ pub async fn tx_status(tx_status: TxStatus, config: CastConfig, ui: &UI) -> Resu
 pub async fn get_tx_status(
     provider: &JsonRpcClient<HttpTransport>,
     transaction_hash: Felt,
-) -> Result<TransactionStatusResponse> {
+) -> Result<TransactionStatusResponse, StarknetCommandError> {
     let response = provider
         .get_transaction_status(transaction_hash)
         .await
