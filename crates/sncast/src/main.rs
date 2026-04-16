@@ -152,8 +152,9 @@ impl Cli {
         .to_string()
     }
 
-    pub fn to_partial_config(&self) -> PartialCastConfig {
-        PartialCastConfig {
+    /// Prepares and validates [`PartialCastConfig`] from CLI args.
+    pub fn to_partial_config(&self) -> Result<PartialCastConfig> {
+        let config = PartialCastConfig {
             account: self.account.clone(),
             keystore: self.keystore.clone(),
             accounts_file: self.accounts_file_path.clone(),
@@ -162,7 +163,9 @@ impl Cli {
                 retry_interval: self.wait_retry_interval,
             }),
             ..Default::default()
-        }
+        };
+        config.validate()?;
+        Ok(config)
     }
 }
 
@@ -766,7 +769,7 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
     };
     let local_config = PartialCastConfig::local(&opts)?;
     let global_config = PartialCastConfig::global(&opts, ui)?;
-    let cli_config = cli.to_partial_config();
+    let cli_config = cli.to_partial_config()?;
 
     let partial_config = global_config
         .override_with(local_config)
