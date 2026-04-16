@@ -3,7 +3,7 @@ use clap::Args;
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::errors::StarknetCommandError;
+use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transaction::TransactionResponse;
 use sncast::response::ui::UI;
@@ -32,7 +32,7 @@ pub async fn transaction(tx: Transaction, config: CastConfig, ui: &UI) -> Result
 
     let result = get_transaction(&provider, tx.transaction_hash, tx.with_proof_facts)
         .await
-        .map_err(anyhow::Error::from);
+        .map_err(handle_starknet_command_error);
 
     let chain_id = provider.chain_id().await?;
     let block_explorer_link = block_explorer_link_if_allowed(&result, chain_id, &config).await;
