@@ -67,14 +67,14 @@ pub fn load_predeployed_contracts() -> Result<ContractsData> {
         ),
     ];
 
-    for (contract_name, class_hash) in class_hashes_to_change.into_iter() {
+    for (contract_name, class_hash) in class_hashes_to_change {
         let class_hash = TryFromHexStr::try_from_hex_str(&class_hash)?;
 
-        let contract_data = contracts_data
+        let predeployed_contract = contracts_data
             .contracts
             .get_mut(&contract_name)
             .ok_or_else(|| anyhow!("contract data for {contract_name} should exist"))?;
-        contract_data.class_hash = class_hash;
+        predeployed_contract.class_hash = class_hash;
     }
 
     Ok(contracts_data)
@@ -89,15 +89,12 @@ fn save_sierra_file_to_cache(contract_name: &str, sierra: &str) -> Result<Utf8Pa
 
     let parent = path
         .parent()
-        .with_context(|| format!("Failed to get parent directory for {}", path))?;
+        .with_context(|| format!("Failed to get parent directory for {path}"))?;
     fs::create_dir_all(parent).with_context(|| {
-        format!(
-            "Failed to create directory for sierra of {contract_name} at {}",
-            parent
-        )
+        format!("Failed to create directory for sierra of {contract_name} at {parent}")
     })?;
     fs::write(&path, sierra)
-        .with_context(|| format!("Failed to write Sierra for {contract_name} to {}", path))?;
+        .with_context(|| format!("Failed to write Sierra for {contract_name} to {path}"))?;
 
     Ok(path)
 }
