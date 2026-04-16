@@ -2,8 +2,8 @@ use std::{collections::HashMap, fs};
 
 use crate::{
     predeployment::erc20::{
-        eth::{ETH_CONTRACT_NAME, ETH_SIERRA_CLASS_HASH},
-        strk::{STRK_CONTRACT_NAME, STRK_SIERRA_CLASS_HASH},
+        eth::{ERC20MINTABLE_SIERRA_CLASS_HASH, ETH_CONTRACT_NAME},
+        strk::{ERC20LOCKABLE_SIERRA_CLASS_HASH, STRK_CONTRACT_NAME},
     },
     runtime_extensions::forge_runtime_extension::contracts_data::ContractsData,
 };
@@ -33,7 +33,7 @@ macro_rules! load_contract {
         };
 
         (
-            $name.to_string(),
+            format!("{} (predeployed contract)", $name),
             (
                 artifacts,
                 persist_embedded_sierra($path_part.to_uppercase().as_str(), sierra)?,
@@ -44,8 +44,8 @@ macro_rules! load_contract {
 
 pub fn load_predeployed_contracts() -> Result<ContractsData> {
     let contracts = HashMap::from([
-        load_contract!(STRK_CONTRACT_NAME, "strk"),
-        load_contract!(ETH_CONTRACT_NAME, "eth"),
+        load_contract!(STRK_CONTRACT_NAME, "ERC20Lockable"),
+        load_contract!(ETH_CONTRACT_NAME, "ERC20Mintable"),
     ]);
 
     let mut contracts_data = ContractsData::try_from(contracts)?;
@@ -60,11 +60,11 @@ pub fn load_predeployed_contracts() -> Result<ContractsData> {
     let class_hashes_to_change = vec![
         (
             STRK_CONTRACT_NAME.to_string(),
-            STRK_SIERRA_CLASS_HASH.to_string(),
+            ERC20LOCKABLE_SIERRA_CLASS_HASH.to_string(),
         ),
         (
             ETH_CONTRACT_NAME.to_string(),
-            ETH_SIERRA_CLASS_HASH.to_string(),
+            ERC20MINTABLE_SIERRA_CLASS_HASH.to_string(),
         ),
     ];
 
