@@ -259,7 +259,10 @@ async fn test_ledger_import_and_invoke(
     let (client, url) = setup_speculos(port).await;
 
     client
-        .automation(&[automation::APPROVE_BLIND_SIGN_HASH])
+        .automation(&[
+            automation::APPROVE_BLIND_SIGN_HASH,
+            automation::APPROVE_PUBLIC_KEY,
+        ])
         .await
         .unwrap();
 
