@@ -15,9 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Added
+
+- Aliases `sncast get transaction` and `sncast get transaction-status` for `get tx` and `get tx-status`.
+
+#### Changed
+
+- In JSON output for `sncast utils` commands, the `"command"` field now includes the `utils` prefix (e.g. `"serialize"` -> `"utils serialize"`).
+
 #### Fixed
 
 - `sncast verify` now uses the configured network or infers it from the RPC chain ID when `--network` is omitted.
+- `sncast` now returns non-zero exit code when a command fails.
 
 ## [0.59.0] - 2026-04-10
 

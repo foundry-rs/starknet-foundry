@@ -113,7 +113,7 @@ async fn test_invalid_path() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert!(output.as_stdout().is_empty());
 
@@ -152,7 +152,7 @@ async fn test_deploy_fail() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -187,7 +187,7 @@ async fn test_invoke_fail() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -223,7 +223,7 @@ async fn test_deploy_success_invoke_fails() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
     assert_stderr_contains(
         output,
         indoc! {r"

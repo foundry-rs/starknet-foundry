@@ -524,7 +524,7 @@ pub async fn test_invalid_private_key_file_path() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     let expected_file_error = "No such file or directory [..]";
 
@@ -566,7 +566,7 @@ pub async fn test_invalid_private_key_in_file() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -871,7 +871,7 @@ pub async fn test_use_url_from_config() {
         "account",
         "import",
         "--address",
-        "0x123",
+        DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
         "--private-key",
         "0x456",
         "--type",

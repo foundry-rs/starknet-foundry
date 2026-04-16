@@ -104,6 +104,8 @@ sections.
 
 To import an account to the `default accounts file`, use the `account import` command.
 
+<!-- TODO(#4225) -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast \
     account import \
@@ -158,6 +160,8 @@ There is also possibility to show private keys with the `--display-private-keys`
 Delete an account from `accounts-file` and its associated Scarb profile. If you pass this command, you will be asked to
 confirm the deletion.
 
+<!-- TODO(#4225) -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast account delete \
     --name new_account \
