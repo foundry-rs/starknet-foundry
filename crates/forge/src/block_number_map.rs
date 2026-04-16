@@ -7,51 +7,51 @@ use starknet_rust::{
 };
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
+use std::sync::Mutex;
 use tokio::runtime::Handle;
 use url::Url;
 
+/// Caches block numbers fetched from RPC nodes, shared across concurrent config passes.
 #[derive(Default)]
 pub struct BlockNumberMap {
-    url_to_latest_block_number: HashMap<Url, BlockNumber>,
-    url_and_hash_to_block_number: HashMap<(Url, Felt), BlockNumber>,
+    url_to_latest_block_number: Mutex<HashMap<Url, BlockNumber>>,
+    url_and_hash_to_block_number: Mutex<HashMap<(Url, Felt), BlockNumber>>,
 }
 
 impl BlockNumberMap {
-    pub async fn get_latest_block_number(&mut self, url: Url) -> Result<BlockNumber> {
-        let block_number = if let Some(block_number) = self.url_to_latest_block_number.get(&url) {
-            *block_number
-        } else {
-            let latest_block_number = fetch_latest_block_number(url.clone()).await?;
+    pub async fn get_latest_block_number(&self, url: Url) -> Result<BlockNumber> {
+        // Release lock before awaiting.
+        {
+            let map = self.url_to_latest_block_number.lock().unwrap();
+            if let Some(&block_number) = map.get(&url) {
+                return Ok(block_number);
+            }
+        }
 
-            self.url_to_latest_block_number
-                .insert(url, latest_block_number);
+        let fetched = fetch_latest_block_number(url.clone()).await?;
 
-            latest_block_number
-        };
-
-        Ok(block_number)
+        // or_insert avoids overwriting if a concurrent task raced us.
+        let mut map = self.url_to_latest_block_number.lock().unwrap();
+        Ok(*map.entry(url).or_insert(fetched))
     }
 
-    pub async fn get_block_number_for_hash(&mut self, url: Url, hash: Felt) -> Result<BlockNumber> {
-        let block_number = if let Some(block_number) =
-            self.url_and_hash_to_block_number.get(&(url.clone(), hash))
+    pub async fn get_block_number_for_hash(&self, url: Url, hash: Felt) -> Result<BlockNumber> {
         {
-            *block_number
-        } else {
-            let block_number = fetch_block_number_for_hash(url.clone(), hash).await?;
+            let map = self.url_and_hash_to_block_number.lock().unwrap();
+            if let Some(&block_number) = map.get(&(url.clone(), hash)) {
+                return Ok(block_number);
+            }
+        }
 
-            self.url_and_hash_to_block_number
-                .insert((url, hash), block_number);
+        let fetched = fetch_block_number_for_hash(url.clone(), hash).await?;
 
-            block_number
-        };
-
-        Ok(block_number)
+        let mut map = self.url_and_hash_to_block_number.lock().unwrap();
+        Ok(*map.entry((url, hash)).or_insert(fetched))
     }
 
     #[must_use]
-    pub fn get_url_to_latest_block_number(&self) -> &HashMap<Url, BlockNumber> {
-        &self.url_to_latest_block_number
+    pub fn get_url_to_latest_block_number(&self) -> HashMap<Url, BlockNumber> {
+        self.url_to_latest_block_number.lock().unwrap().clone()
     }
 }
 

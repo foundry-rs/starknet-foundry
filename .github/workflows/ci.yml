@@ -34,12 +34,17 @@ jobs:
           echo ${scarb_versions[@]}
           echo "versions=[${scarb_versions[@]}]" >> "$GITHUB_OUTPUT"
 
-  test-forge-unit:
-    name: Test Forge / Unit Tests
+  test-workspace:
+    # Runs tests from all crates across the workspace, except:
+    # - `sncast` tests
+    # - `forge` integration and e2e tests
+    # `native-api` is also excluded as there are no tests and it requires extra setup to compile.
+    name: Workspace Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
+      - run: cargo test --profile ci --workspace --exclude sncast --exclude forge --exclude native-api
       - run: cargo test --profile ci --lib -p forge
 
   build-test-forge-nextest-archive:
@@ -308,32 +313,6 @@ jobs:
 
       - run: cargo test --profile ci --package forge --features scarb_2_12_0 --test main e2e::requirements::test_warning_on_scarb_version_below_recommended
 
-  test-forge-runner:
-    name: Test Forge Runner
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-tools
-      - run: cargo test --profile ci -p forge_runner
-
-  test-cheatnet:
-    name: Test Cheatnet
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-tools
-      - name: Run Cheatnet tests
-        run: cargo test --profile ci -p cheatnet
-
-  test-data-transformer:
-    name: Test Data Transformer
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-tools
-      - name: Run Data Transformer tests
-        run: cargo test --profile ci -p data-transformer
-
   test-forge-oracles:
     name: Test Oracles in Forge
     runs-on: ubuntu-latest
@@ -376,42 +355,34 @@ jobs:
       - name: Run tests
         run: cargo test --profile ci -p sncast --features ledger-emulator ledger -- --ignored
 
-  test-conversions:
-    name: Test Conversions
+  fmt-lint-typos:
+    name: Lint and Format
     runs-on: ubuntu-latest
+    env:
+      # Make sure CI fails on all warnings - including Clippy lints.
+      RUSTFLAGS: "-Dwarnings"
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
         with:
-          setup-scarb: 'false'
+          install-llvm: 'true'
           setup-usc: 'false'
-      - name: Run tests
-        run: cargo test --profile ci -p conversions
+      - run: rustup component add rustfmt
 
-  test-shared:
-    name: Test Shared
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-tools
-        with:
-          setup-scarb: 'false'
-          setup-usc: 'false'
-      - run: cargo test --profile ci -p shared
+      - name: Check formatting
+        run: cargo fmt --check
 
-  test-scarb-api:
-    name: Test Scarb Api
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-tools
-      - run: cargo test --profile ci -p scarb-api
+      - name: Check formatting snforge-scarb-plugin
+        run: cargo fmt --check
+        working-directory: crates/snforge-scarb-plugin
 
-  scarbfmt:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: software-mansion/setup-scarb@v1
+      - name: Lint
+        run: cargo lint
+
+      - name: Lint snforge-scarb-plugin
+        run: cargo lint
+        working-directory: crates/snforge-scarb-plugin
+
       - name: Check cairo files format
         run: |
           output=$(find . -type f -name "Scarb.toml" -execdir sh -c '
@@ -424,39 +395,8 @@ jobs:
           fi
           exit 0
 
-  rustfmt:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@0b1efabc08b657293548b77fb76cc02d26091c7e
-        with:
-          toolchain: stable
-          components: rustfmt
-      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
-      - name: Check formatting
-        run: cargo fmt --check
-
-      - name: Check formatting snforge-scarb-plugin
-        run: cargo fmt --check
-        working-directory: crates/snforge-scarb-plugin
-
-  clippy:
-    runs-on: ubuntu-latest
-    env:
-      # Make sure CI fails on all warnings - including Clippy lints.
-      RUSTFLAGS: "-Dwarnings"
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-tools
-        with:
-          install-llvm: 'true'
-          setup-scarb: 'false'
-          setup-usc: 'false'
-      - run: cargo lint
-
-      - name: Lint snforge-scarb-plugin
-        run: cargo lint
-        working-directory: crates/snforge-scarb-plugin
+      - name: Check typos
+        uses: crate-ci/typos@v1.40.0
 
   build-docs:
     name: Test Building Docs
@@ -487,11 +427,3 @@ jobs:
       - name: Verify Cairo listings
         run: |
           ./scripts/verify_cairo_listings.sh
-
-  typos:
-    name: Check typos
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: typos-action
-        uses: crate-ci/typos@v1.40.0

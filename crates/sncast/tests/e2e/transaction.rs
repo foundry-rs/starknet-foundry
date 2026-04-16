@@ -106,7 +106,7 @@ async fn test_deploy_account_transaction() {
             Constructor Calldata:        [0x[..]]
             Resource Bounds L1 Gas:      max_amount=0, max_price_per_unit=1500000000
             Resource Bounds L1 Data Gas: max_amount=672, max_price_per_unit=1500000000
-            Resource Bounds L2 Gas:      max_amount=1313760, max_price_per_unit=1500000000
+            Resource Bounds L2 Gas:      max_amount=3302760, max_price_per_unit=1500000000
             Tip:                         0
             Paymaster Data:              []
             Nonce DA Mode:               L1
