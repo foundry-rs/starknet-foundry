@@ -49,7 +49,7 @@ fn validate_path_argument(
     if *path_argument.last().unwrap() != param_type.split("::").last().unwrap()
         && path_argument_joined != param_type
     {
-        bail!(r#"Invalid argument type, expected "{param_type}", got "{path_argument_joined}""#,)
+        bail!(r#"Invalid argument type, expected "{param_type}", got "{path_argument_joined}""#)
     }
     Ok(())
 }
@@ -276,7 +276,7 @@ impl SupportedCalldataKind for ExprPath<'_> {
             find_enum_variant_position(enum_variant_name, enum_path, abi)?;
 
         if enum_variant.r#type != "()" {
-            bail!(r#"Couldn't find variant "{enum_variant_name}" in enum "{enum_path_joined}""#,)
+            bail!(r#"Couldn't find variant "{enum_variant_name}" in enum "{enum_path_joined}""#)
         }
 
         Ok(AllowedCalldataArgument::Enum(CalldataEnum::new(
@@ -327,7 +327,7 @@ impl SupportedCalldataKind for ExprListParenthesized<'_> {
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArgument> {
         let Expr::Tuple(tuple) = parse_expression(expected_type, db)? else {
-            bail!(r#"Invalid argument type, expected "{expected_type}", got tuple"#,);
+            bail!(r#"Invalid argument type, expected "{expected_type}", got tuple"#);
         };
 
         let tuple_types = tuple
