@@ -23,7 +23,7 @@ impl SupportedCalldataKind for ExprInlineMacro<'_> {
 
         // We do not expect any other expression in proper ABI
         let Expr::Path(path) = parse_expression(expected_type, db)? else {
-            bail!("Unexpected expression encountered in ABI: {expected_type}. ABI may be invalid",);
+            bail!("Unexpected expression encountered in ABI: {expected_type}. ABI may be invalid");
         };
 
         let type_parameters_from_abi = path
