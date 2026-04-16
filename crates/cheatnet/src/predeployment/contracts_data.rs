@@ -1,5 +1,3 @@
-use std::{collections::HashMap, fs};
-
 use crate::{
     predeployment::erc20::{
         eth::{ERC20MINTABLE_SIERRA_CLASS_HASH, ETH_CONTRACT_NAME},
@@ -11,6 +9,7 @@ use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
 use conversions::string::TryFromHexStr;
 use scarb_api::StarknetContractArtifacts;
+use std::{collections::HashMap, fs};
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
@@ -51,13 +50,12 @@ pub fn load_predeployed_contracts() -> Result<ContractsData> {
 
     let mut contracts_data = ContractsData::try_from(contracts)?;
 
-    // Additional settings for backtrace and debug info (in Scarb.toml) impact generated sierra.
-    // Predeployed contracts are compiled with these settings, because we need support for
-    // debugging features (backtrace and traces).
-    // These settings affect generated sierra, which means that class hashes of sierra with and without these
-    // settings will differ. Contracts on network are compiled without these settings, because they
-    // don't need to support mentioned debugging features, and because of that they have different class hashes than predeployed contracts.
-    // Considering this, we need to manually override class hashes of predeployed contracts with class hashes of contracts on network.
+    // Local predeployed contracts are compiled with debug features (backtrace and traces) enabled
+    // in Scarb.toml to work with debugging features. Since these settings modify the
+    // generated Sierra code, the resulting class hashes differ from those of contracts
+    // deployed on-chain, which are compiled without mentioned compiler settings.
+    // To ensure consistency with the network, we manually override the local class hashes
+    // with their official on-chain equivalents.
     let class_hashes_to_change = vec![
         (
             STRK_CONTRACT_NAME.to_string(),
