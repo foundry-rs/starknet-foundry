@@ -4,7 +4,7 @@
 
 ## Adding new predeployed contract
 
-To add a new predeployed contract, you need to add a new subdirectory with the name of the contract to the `crates/cheatnet/src/data/predeployed_contracts` directory. Then, you need to add artifact files to this subdirectory. CASM files should be renamed to `casm.json`.
+To add a new predeployed contract, you need to add a new subdirectory with the name of the contract to the `crates/cheatnet/src/data/predeployed_contracts` directory. Then, you need to add artifact files to this subdirectory. CASM files should be renamed to `casm.json` and sierra files to `sierra.json`.
 
 Structure of `predeployed_contracts` directory should be as follows:
 
@@ -13,10 +13,13 @@ $ tree
 .
 ├── ERC20Lockable
 │   └── casm.json
+│   └── sierra.json
 ├── ERC20Mintable
 │   └── casm.json
+│   └── sierra.json
 └── <Other contract>
     └── casm.json
+    └── sierra.json
 ```
 
 ## Updating existing predeployed contracts
