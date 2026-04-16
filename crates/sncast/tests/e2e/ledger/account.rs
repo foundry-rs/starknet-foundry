@@ -24,12 +24,11 @@ use test_case::test_case;
 #[test_case("ready", "ready", READY_CLASS_HASH.into_hex_string(), 6002, &[automation::APPROVE_PUBLIC_KEY]; "ready_account_type")]
 // Braavos calls sign_hash twice during fee estimation (tx_hash + aux_hash) because
 // is_signer_interactive() always returns false — see BraavosAccountFactory::is_signer_interactive.
-// That means we need ENABLE_BLIND_SIGN + two APPROVE_BLIND_SIGN_HASH after the public key approval.
+// That means we need two APPROVE_BLIND_SIGN_HASH after the public key approval.
 #[test_case(
     "braavos", "braavos", BRAAVOS_CLASS_HASH.into_hex_string(), 6003,
     &[
         automation::APPROVE_PUBLIC_KEY,
-        automation::ENABLE_BLIND_SIGN,
         automation::APPROVE_BLIND_SIGN_HASH, // tx_hash
         automation::APPROVE_BLIND_SIGN_HASH, // aux_hash
     ];
@@ -44,7 +43,7 @@ async fn test_create_ledger_account(
     port: u16,
     automations: &[speculos_client::AutomationRule<'static>],
 ) {
-    let (client, url) = setup_speculos(port);
+    let (client, url) = setup_speculos(port).await;
     let tempdir = tempdir().unwrap();
 
     client.automation(automations).await.unwrap();
@@ -115,7 +114,7 @@ async fn test_create_ledger_account(
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_create_ledger_account_add_profile() {
-    let (client, url) = setup_speculos(6004);
+    let (client, url) = setup_speculos(6004).await;
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
 
     client
@@ -160,10 +159,9 @@ async fn test_create_ledger_account_add_profile() {
 #[test_case(
     "oz", OZ_LEDGER_PATH, 6005,
     // create: public key only (OZ skips signing during fee estimation)
-    // deploy: enable blind sign + 1 sign_hash
+    // deploy: 1 sign_hash
     &[
         automation::APPROVE_PUBLIC_KEY,
-        automation::ENABLE_BLIND_SIGN,
         automation::APPROVE_BLIND_SIGN_HASH,
     ];
     "oz_account_type"
@@ -171,21 +169,19 @@ async fn test_create_ledger_account_add_profile() {
 #[test_case(
     "ready", READY_LEDGER_PATH, 6006,
     // create: public key only (Ready skips signing during fee estimation)
-    // deploy: enable blind sign + 1 sign_hash
+    // deploy: 1 sign_hash
     &[
         automation::APPROVE_PUBLIC_KEY,
-        automation::ENABLE_BLIND_SIGN,
         automation::APPROVE_BLIND_SIGN_HASH,
     ];
     "ready_account_type"
 )]
 #[test_case(
     "braavos", BRAAVOS_LEDGER_PATH, 6007,
-    // create: public key + enable blind sign + 2x sign_hash (tx_hash + aux_hash)
-    // deploy: 2x sign_hash again (tx_hash + aux_hash), blind sign already enabled
+    // create: public key + 2x sign_hash (tx_hash + aux_hash)
+    // deploy: 2x sign_hash (tx_hash + aux_hash)
     &[
         automation::APPROVE_PUBLIC_KEY,
-        automation::ENABLE_BLIND_SIGN,
         automation::APPROVE_BLIND_SIGN_HASH, // create: tx_hash
         automation::APPROVE_BLIND_SIGN_HASH, // create: aux_hash
         automation::APPROVE_BLIND_SIGN_HASH, // deploy: tx_hash
@@ -201,7 +197,7 @@ async fn test_deploy_ledger_account(
     port: u16,
     automations: &[AutomationRule<'static>],
 ) {
-    let (client, url) = setup_speculos(port);
+    let (client, url) = setup_speculos(port).await;
 
     client.automation(automations).await.unwrap();
 
@@ -275,7 +271,7 @@ async fn test_deploy_ledger_account(
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_invalid_derivation_path() {
-    let (_client, url) = setup_speculos(6008);
+    let (_client, url) = setup_speculos(6008).await;
 
     let output = runner(&[
         "ledger",
@@ -305,7 +301,7 @@ async fn test_import_ledger_account(
     class_hash: String,
     port: u16,
 ) {
-    let (client, url) = setup_speculos(port);
+    let (client, url) = setup_speculos(port).await;
     let tempdir = tempdir().unwrap();
 
     client
@@ -368,7 +364,7 @@ async fn test_import_ledger_account(
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_import_ledger_account_add_profile() {
-    let (client, url) = setup_speculos(6012);
+    let (client, url) = setup_speculos(6012).await;
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
 
     client

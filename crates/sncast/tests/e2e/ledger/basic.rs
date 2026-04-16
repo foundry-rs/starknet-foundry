@@ -5,7 +5,7 @@ use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_co
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_get_app_version() {
-    let (_client, url) = setup_speculos(4001);
+    let (_client, url) = setup_speculos(4001).await;
 
     let output = runner(&["ledger", "app-version"])
         .env("LEDGER_EMULATOR_URL", &url)
@@ -18,7 +18,7 @@ async fn test_get_app_version() {
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_get_public_key_headless() {
-    let (_client, url) = setup_speculos(4002);
+    let (_client, url) = setup_speculos(4002).await;
 
     let output = runner(&[
         "ledger",
@@ -40,7 +40,7 @@ async fn test_get_public_key_headless() {
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_get_public_key_with_confirmation() {
-    let (client, url) = setup_speculos(4003);
+    let (client, url) = setup_speculos(4003).await;
 
     client
         .automation(&[automation::APPROVE_PUBLIC_KEY])
@@ -61,13 +61,10 @@ async fn test_get_public_key_with_confirmation() {
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_sign_hash() {
-    let (client, url) = setup_speculos(4004);
+    let (client, url) = setup_speculos(4004).await;
 
     client
-        .automation(&[
-            automation::ENABLE_BLIND_SIGN,
-            automation::APPROVE_BLIND_SIGN_HASH,
-        ])
+        .automation(&[automation::APPROVE_BLIND_SIGN_HASH])
         .await
         .unwrap();
 
@@ -88,7 +85,7 @@ async fn test_sign_hash() {
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_sign_hash_invalid_format() {
-    let (_client, url) = setup_speculos(4005);
+    let (_client, url) = setup_speculos(4005).await;
 
     let output = runner(&[
         "ledger",

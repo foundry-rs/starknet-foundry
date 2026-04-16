@@ -55,7 +55,7 @@ async fn test_ledger_docs_snippets() {
 
     // sign-hash snippets need a fresh Speculos instance each time: ENABLE_BLIND_SIGN fires
     // All other snippets share one instance to keep the total startup count low.
-    let (shared_client, shared_url) = setup_speculos(DOCS_SNIPPETS_PORT_BASE);
+    let (shared_client, shared_url) = setup_speculos(DOCS_SNIPPETS_PORT_BASE).await;
     let mut sign_hash_port_offset = 1;
 
     for snippet in &snippets {
@@ -88,7 +88,7 @@ async fn test_ledger_docs_snippets() {
         let (snippet_client, snippet_url) = if args.contains(&"sign-hash") {
             let port = DOCS_SNIPPETS_PORT_BASE + sign_hash_port_offset;
             sign_hash_port_offset += 1;
-            setup_speculos(port)
+            setup_speculos(port).await
         } else {
             (shared_client.clone(), shared_url.clone())
         };

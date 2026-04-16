@@ -22,13 +22,10 @@ use test_case::test_case;
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_ledger_invoke_happy_case() {
-    let (client, url) = setup_speculos(5001);
+    let (client, url) = setup_speculos(5001).await;
 
     client
-        .automation(&[
-            automation::ENABLE_BLIND_SIGN,
-            automation::APPROVE_BLIND_SIGN_HASH,
-        ])
+        .automation(&[automation::APPROVE_BLIND_SIGN_HASH])
         .await
         .unwrap();
 
@@ -69,13 +66,10 @@ async fn test_ledger_invoke_happy_case() {
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_ledger_invoke_with_wait() {
-    let (client, url) = setup_speculos(5002);
+    let (client, url) = setup_speculos(5002).await;
 
     client
-        .automation(&[
-            automation::ENABLE_BLIND_SIGN,
-            automation::APPROVE_BLIND_SIGN_HASH,
-        ])
+        .automation(&[automation::APPROVE_BLIND_SIGN_HASH])
         .await
         .unwrap();
 
@@ -118,13 +112,10 @@ async fn test_ledger_invoke_with_wait() {
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_ledger_deploy_happy_case() {
-    let (client, url) = setup_speculos(5004);
+    let (client, url) = setup_speculos(5004).await;
 
     client
-        .automation(&[
-            automation::ENABLE_BLIND_SIGN,
-            automation::APPROVE_BLIND_SIGN_HASH,
-        ])
+        .automation(&[automation::APPROVE_BLIND_SIGN_HASH])
         .await
         .unwrap();
 
@@ -164,13 +155,10 @@ async fn test_ledger_deploy_happy_case() {
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_ledger_deploy_with_constructor() {
-    let (client, url) = setup_speculos(5005);
+    let (client, url) = setup_speculos(5005).await;
 
     client
-        .automation(&[
-            automation::ENABLE_BLIND_SIGN,
-            automation::APPROVE_BLIND_SIGN_HASH,
-        ])
+        .automation(&[automation::APPROVE_BLIND_SIGN_HASH])
         .await
         .unwrap();
 
@@ -212,13 +200,10 @@ async fn test_ledger_deploy_with_constructor() {
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_ledger_declare() {
-    let (client, url) = setup_speculos(5006);
+    let (client, url) = setup_speculos(5006).await;
 
     client
-        .automation(&[
-            automation::ENABLE_BLIND_SIGN,
-            automation::APPROVE_BLIND_SIGN_HASH,
-        ])
+        .automation(&[automation::APPROVE_BLIND_SIGN_HASH])
         .await
         .unwrap();
 
@@ -271,11 +256,10 @@ async fn test_ledger_import_and_invoke(
     ledger_account_id: Option<u32>,
     port: u16,
 ) {
-    let (client, url) = setup_speculos(port);
+    let (client, url) = setup_speculos(port).await;
 
     client
         .automation(&[
-            automation::ENABLE_BLIND_SIGN,
             automation::APPROVE_BLIND_SIGN_HASH,
             automation::APPROVE_PUBLIC_KEY,
         ])
@@ -359,13 +343,10 @@ async fn test_ledger_import_and_invoke(
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_ledger_multicall() {
-    let (client, url) = setup_speculos(5007);
+    let (client, url) = setup_speculos(5007).await;
 
     client
-        .automation(&[
-            automation::ENABLE_BLIND_SIGN,
-            automation::APPROVE_BLIND_SIGN_HASH,
-        ])
+        .automation(&[automation::APPROVE_BLIND_SIGN_HASH])
         .await
         .unwrap();
 
