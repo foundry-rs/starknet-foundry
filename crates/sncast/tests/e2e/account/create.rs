@@ -281,8 +281,6 @@ pub async fn test_happy_case_add_profile(rpc_flag: &str, rpc_value: &str) {
         "accounts-file = \"accounts.json\"",
     ];
     let expected_block = expected_lines.join("\n");
-    println!("Expected:\n{expected_block}");
-    println!("Contents:\n{contents}");
 
     assert!(contents.contains(&expected_block));
 }
