@@ -27,7 +27,10 @@ fn io_err(e: impl Into<Box<dyn std::error::Error + Send + Sync>>) -> LedgerError
 
 impl SpeculosHttpTransport {
     pub fn new(url: String) -> Result<Self, LedgerError> {
-        let client = Client::builder().build().map_err(io_err)?;
+        let client = Client::builder()
+            .timeout(std::time::Duration::from_secs(30))
+            .build()
+            .map_err(io_err)?;
         Ok(Self {
             client,
             base_url: url,

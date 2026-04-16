@@ -49,6 +49,13 @@ pub(crate) const LEDGER_ACCOUNT_NAME: &str = "my_ledger";
 pub(crate) fn setup_speculos(port: u16) -> (Arc<SpeculosClient>, String) {
     let client = Arc::new(SpeculosClient::new(DeviceModel::Nanox, port, APP_PATH).unwrap());
     let url = format!("http://127.0.0.1:{port}");
+
+    // Arbitrary wait time to prevent premature automation trigger:
+    // SpeculosClient::new() returns once the Speculos launcher starts
+    // but the Starknet app may not be loaded yet. If rules are registered before the app
+    // finishes initializing, it fires at the wrong time and leaves emulator in a broken state.
+    std::thread::sleep(std::time::Duration::from_secs(2));
+
     (client, url)
 }
 
