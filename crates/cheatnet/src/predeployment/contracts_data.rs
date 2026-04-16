@@ -1,7 +1,7 @@
 use crate::{
     predeployment::erc20::contracts_data::load_erc20_predeployed_contracts,
-    predeployment::erc20::eth::{ETH_CONTRACT_CLASS_HASH, ETH_CONTRACT_NAME},
-    predeployment::erc20::strk::{STRK_CONTRACT_CLASS_HASH, STRK_CONTRACT_NAME},
+    predeployment::erc20::eth::{ETH_CONTRACT_NAME, ETH_SIERRA_CLASS_HASH},
+    predeployment::erc20::strk::{STRK_CONTRACT_NAME, STRK_SIERRA_CLASS_HASH},
     runtime_extensions::forge_runtime_extension::contracts_data::ContractsData,
 };
 use anyhow::{Result, anyhow};
@@ -16,8 +16,8 @@ pub fn load_predeployed_contracts() -> Result<ContractsData> {
     // Class hashes for STRK and ETH contract are different on network than the ones
     // calculated from their sierras, so we need to update them.
     let class_hashes_to_update = vec![
-        (STRK_CONTRACT_NAME.to_string(), STRK_CONTRACT_CLASS_HASH),
-        (ETH_CONTRACT_NAME.to_string(), ETH_CONTRACT_CLASS_HASH),
+        (STRK_CONTRACT_NAME.to_string(), STRK_SIERRA_CLASS_HASH),
+        (ETH_CONTRACT_NAME.to_string(), ETH_SIERRA_CLASS_HASH),
     ];
 
     for (contract_name, class_hash) in class_hashes_to_update {
