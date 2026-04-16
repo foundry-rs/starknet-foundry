@@ -6,17 +6,17 @@ use super::constructor_data::ERC20ConstructorData;
 
 pub const STRK_CONTRACT_ADDRESS: &str =
     "0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
-pub const STRK_SIERRA_CLASS_HASH: &str =
+pub const ERC20LOCKABLE_SIERRA_CLASS_HASH: &str =
     "0x02e77ee61d4df3d988ee1f42ea5442e913862cc82c2584d212ecda76666498fc";
 
 #[must_use]
 pub fn strk_predeployed_contract() -> PredeployedContract {
     // starkgate-contracts v3.0.0
     // Link to Cairo contract: https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/strk/src/erc20_lockable.cairo
-    let raw_casm = include_str!("../../data/predeployed_contracts/strk/casm.json");
+    let raw_casm = include_str!("../../data/predeployed_contracts/ERC20Lockable/casm.json");
 
     let contract_address = TryFromHexStr::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
-    let class_hash = TryFromHexStr::try_from_hex_str(STRK_SIERRA_CLASS_HASH).unwrap();
+    let class_hash = TryFromHexStr::try_from_hex_str(ERC20LOCKABLE_SIERRA_CLASS_HASH).unwrap();
 
     // All storage values are taken from https://voyager.online/contract/0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d#readStorage
     // Block 747469
