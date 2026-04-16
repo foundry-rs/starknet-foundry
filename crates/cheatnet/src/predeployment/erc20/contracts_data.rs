@@ -7,8 +7,8 @@ use scarb_api::StarknetContractArtifacts;
 
 pub fn load_erc20_predeployed_contracts()
 -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
-    let strk_sierra = include_str!("../../data/predeployed_contracts/STRK/sierra.json");
-    let eth_sierra = include_str!("../../data/predeployed_contracts/ETH/sierra.json");
+    let strk_sierra = include_str!("../../data/predeployed_contracts/strk/sierra.json");
+    let eth_sierra = include_str!("../../data/predeployed_contracts/eth/sierra.json");
 
     Ok(HashMap::from([
         (
@@ -17,7 +17,7 @@ pub fn load_erc20_predeployed_contracts()
                 StarknetContractArtifacts {
                     sierra: strk_sierra.to_string(),
                     casm: serde_json::from_str(include_str!(
-                        "../../data/predeployed_contracts/STRK/casm.json"
+                        "../../data/predeployed_contracts/strk/casm.json"
                     ))?,
                     #[cfg(feature = "cairo-native")]
                     executor: None,
@@ -31,7 +31,7 @@ pub fn load_erc20_predeployed_contracts()
                 StarknetContractArtifacts {
                     sierra: eth_sierra.to_string(),
                     casm: serde_json::from_str(include_str!(
-                        "../../data/predeployed_contracts/ETH/casm.json"
+                        "../../data/predeployed_contracts/eth/casm.json"
                     ))?,
                     #[cfg(feature = "cairo-native")]
                     executor: None,
