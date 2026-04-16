@@ -72,4 +72,3 @@ This should be done in `sg_token` and `strk` packages.
     ```
 
 5. Visit `target/release` directory and copy relevant artifacts into relevant `predeployed_contracts` subdirectories in `cheatnet` codebase.
-
