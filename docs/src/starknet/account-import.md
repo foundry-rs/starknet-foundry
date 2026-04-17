@@ -13,7 +13,7 @@ This section shows how to export your private key from specific wallets.
 
 ### Examples
 
-#### Ready (formerly Argent)
+#### Ready
 
 1. Open the Ready app > Settings.
 <br/>
@@ -111,7 +111,7 @@ Type in your private key and press enter:
 </details>
 <br>
 
-#### Ready (formerly Argent)
+#### Ready
 
 To import Ready account, set the `--type` flag to `ready`.
 

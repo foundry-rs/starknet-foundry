@@ -138,7 +138,7 @@ pub(crate) async fn deploy_ledger_account_of_type(
             .unwrap();
             deploy_if_needed(factory, salt, &provider).await
         }
-        AccountType::Ready | AccountType::Argent => {
+        AccountType::Ready => {
             let factory = ArgentAccountFactory::new(
                 READY_CLASS_HASH,
                 chain_id,
