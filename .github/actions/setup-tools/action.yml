@@ -18,6 +18,14 @@ inputs:
     description: 'Whether to setup universal-sierra-compiler'
     required: false
     default: 'true'
+  setup-rust-cache:
+    description: 'Whether to restore/save the Rust build cache. Set to false for jobs that only run pre-built artifacts.'
+    required: false
+    default: 'true'
+  cache-key:
+    description: 'Suffix appended to the rust-cache shared-key to isolate cache entries between different feature sets.'
+    required: false
+    default: 'default'
 
 runs:
   using: "composite"
@@ -25,6 +33,9 @@ runs:
     - uses: dtolnay/rust-toolchain@stable
 
     - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      if: ${{ inputs.setup-rust-cache == 'true' }}
+      with:
+        shared-key: ${{ inputs.cache-key }}
 
     - uses: software-mansion/setup-scarb@v1
       if: ${{ inputs.setup-scarb == 'true' }}
@@ -34,9 +45,17 @@ runs:
     - uses: software-mansion/setup-universal-sierra-compiler@v1
       if: ${{ inputs.setup-usc == 'true' }}
 
+    - name: Cache LLVM
+      if: ${{ inputs.install-llvm == 'true' }}
+      id: cache-llvm
+      uses: actions/cache@v4
+      with:
+        path: /usr/lib/llvm-19
+        key: llvm-19-${{ runner.os }}
+
     - name: Add LLVM APT repository
       uses: myci-actions/add-deb-repo@11
-      if: ${{ inputs.install-llvm == 'true' }}
+      if: ${{ inputs.install-llvm == 'true' && steps.cache-llvm.outputs.cache-hit != 'true' }}
       with:
         repo: deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main
         repo-name: llvm-repo
@@ -44,7 +63,7 @@ runs:
 
     - name: Install LLVM
       shell: bash
-      if: ${{ inputs.install-llvm == 'true' }}
+      if: ${{ inputs.install-llvm == 'true' && steps.cache-llvm.outputs.cache-hit != 'true' }}
       run: |
         sudo apt-get update
         sudo apt-get install -y \
