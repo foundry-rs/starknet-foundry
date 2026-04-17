@@ -59,35 +59,29 @@ pub fn load_predeployed_contracts() -> Result<ContractsData> {
     // deployed on-chain, which are compiled without mentioned compiler settings.
     // To ensure consistency with the network, we manually override the local class hashes
     // with their official on-chain equivalents.
-    let class_hashes_to_change = vec![
-        (
-            STRK_CONTRACT_NAME.to_string(),
-            ERC20LOCKABLE_SIERRA_CLASS_HASH.to_string(),
-        ),
-        (
-            ETH_CONTRACT_NAME.to_string(),
-            ERC20MINTABLE_SIERRA_CLASS_HASH.to_string(),
-        ),
+    let class_hashes_to_change = [
+        (STRK_CONTRACT_NAME, ERC20LOCKABLE_SIERRA_CLASS_HASH),
+        (ETH_CONTRACT_NAME, ERC20MINTABLE_SIERRA_CLASS_HASH),
     ];
 
     for (contract_name, class_hash) in class_hashes_to_change {
-        let class_hash = TryFromHexStr::try_from_hex_str(&class_hash)?;
+        let class_hash = TryFromHexStr::try_from_hex_str(class_hash)?;
 
-        // Keep both ContractsData lookups in sync: debug Sierra produces a different
-        // class hash, but debugging/backtrace logic should identify predeployed
-        // contracts by their official on-chain class hashes.
+        // Keep the reverse lookup consistent with ContractData.class_hash. Trace/backtrace
+        // resolves predeployed contracts by their official on-chain class hashes, not by
+        // hashes computed from the local debug Sierra.
         contracts_data
             .class_hashes
-            .remove_by_left(&contract_name)
+            .remove_by_left(contract_name)
             .ok_or_else(|| anyhow!("class hash mapping for {contract_name} should exist"))?;
         contracts_data
             .class_hashes
-            .insert_no_overwrite(contract_name.clone(), class_hash)
+            .insert_no_overwrite(contract_name.to_string(), class_hash)
             .map_err(|_| anyhow!("class hash mapping for {contract_name} should be unique"))?;
 
         let predeployed_contract = contracts_data
             .contracts
-            .get_mut(&contract_name)
+            .get_mut(contract_name)
             .ok_or_else(|| anyhow!("contract data for {contract_name} should exist"))?;
         predeployed_contract.class_hash = class_hash;
     }
@@ -103,7 +97,6 @@ fn maybe_cache_contract_sierra(contract_name: &str, sierra: &str) -> Result<Utf8
         .join(env!("CARGO_PKG_VERSION"))
         .join(format!("{contract_name}.sierra.json"));
 
-    // If the file already exists and matches the embedded Sierra, return the path without writing.
     if fs::read_to_string(&path).is_ok_and(|cached_sierra| cached_sierra == sierra) {
         return Ok(path);
     }
