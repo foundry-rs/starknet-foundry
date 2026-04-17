@@ -20,7 +20,7 @@ fn test_fail_wrong_scarb_toml_configuration_for_launch_debugger() {
     assert_stdout_contains(
         output,
         indoc! {
-            "[ERROR] Scarb.toml must have the following Cairo compiler configuration to launch the debugger:
+            "[ERROR] [..]/Scarb.toml must have the following Cairo compiler configuration to launch the debugger:
 
             [profile.dev.cairo]
             unstable-add-statements-code-locations-debug-info = true
