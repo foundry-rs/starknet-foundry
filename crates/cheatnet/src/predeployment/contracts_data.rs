@@ -36,7 +36,10 @@ macro_rules! load_contract {
 
         (
             $name.to_string(),
-            (artifacts, save_sierra_file_to_cache($contract_dir, sierra)?),
+            (
+                artifacts,
+                maybe_cache_contract_sierra($contract_dir, sierra)?,
+            ),
         )
     }};
 }
@@ -81,11 +84,16 @@ pub fn load_predeployed_contracts() -> Result<ContractsData> {
 }
 
 /// Saves sierra file of predeployed contract to cache, and returns path to it.
-fn save_sierra_file_to_cache(contract_name: &str, sierra: &str) -> Result<Utf8PathBuf> {
+/// If the file already exists in the cache, it skips the write operation.
+fn maybe_cache_contract_sierra(contract_name: &str, sierra: &str) -> Result<Utf8PathBuf> {
     let path = Utf8PathBuf::from(CACHE_DIR)
-        .join("predeployed-contracts")
+        .join("predeployed_contracts")
         .join(env!("CARGO_PKG_VERSION"))
         .join(format!("{contract_name}.sierra.json"));
+
+    if path.exists() {
+        return Ok(path);
+    }
 
     let parent = path
         .parent()
