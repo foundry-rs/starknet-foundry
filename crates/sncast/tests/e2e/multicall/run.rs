@@ -2,7 +2,7 @@ use crate::helpers::constants::{ACCOUNT_FILE_PATH, MULTICALL_CONFIGS_DIR, URL};
 use crate::helpers::fixtures::create_and_deploy_oz_account;
 use crate::helpers::runner::runner;
 use indoc::{formatdoc, indoc};
-use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
+use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
 use std::path::Path;
 use test_case::test_case;
 
@@ -93,6 +93,91 @@ async fn test_calldata_ids() {
         To see invocation details, visit:
         transaction: [..]
     "});
+}
+
+#[tokio::test]
+async fn test_dry_run() {
+    let tempdir = create_and_deploy_oz_account().await;
+
+    let path = project_root::get_project_root().expect("failed to get project root path");
+    let path = Path::new(&path)
+        .join(MULTICALL_CONFIGS_DIR)
+        .join("deploy_invoke_calldata_ids.toml");
+    let path = path.to_str().expect("failed converting path to str");
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "multicall",
+        "run",
+        "--url",
+        URL,
+        "--path",
+        path,
+        "--dry-run",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Dry run completed
+
+            Overall Fee: [..] Fri (~[..] STRK)
+            "
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_dry_run_detailed() {
+    let tempdir = create_and_deploy_oz_account().await;
+
+    let path = project_root::get_project_root().expect("failed to get project root path");
+    let path = Path::new(&path)
+        .join(MULTICALL_CONFIGS_DIR)
+        .join("deploy_invoke_calldata_ids.toml");
+    let path = path.to_str().expect("failed converting path to str");
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "multicall",
+        "run",
+        "--url",
+        URL,
+        "--path",
+        path,
+        "--dry-run",
+        "--detailed",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Dry run completed
+
+            Overall Fee: [..] Fri (~[..] STRK)
+            L1 Gas Consumed:      [..]
+            L1 Gas Price:         [..]
+            L2 Gas Consumed:      [..]
+            L2 Gas Price:         [..]
+            L1 Data Gas Consumed: [..]
+            L1 Data Gas Price:    [..]
+            "
+        },
+    );
 }
 
 #[tokio::test]
