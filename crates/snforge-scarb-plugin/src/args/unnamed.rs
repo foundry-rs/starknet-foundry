@@ -17,7 +17,7 @@ impl UnnamedArgs<'_> {
     pub fn new(unnamed: &HashMap<usize, Expr>) -> UnnamedArgs<'_> {
         let mut args: Vec<_> = unnamed.iter().collect();
 
-        args.sort_by(|(a, _), (b, _)| a.cmp(b));
+        args.sort_by_key(|(a, _)| *a);
 
         let args = args.into_iter().map(|(&pos, expr)| (pos, expr)).collect();
 

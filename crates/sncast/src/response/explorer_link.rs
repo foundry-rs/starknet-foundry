@@ -84,7 +84,5 @@ where
 
 #[must_use]
 pub fn is_explorer_link_overridden() -> bool {
-    std::env::var(SNCAST_FORCE_SHOW_EXPLORER_LINKS_ENV)
-        .map(|value| value == "1")
-        .unwrap_or(false)
+    std::env::var(SNCAST_FORCE_SHOW_EXPLORER_LINKS_ENV).is_ok_and(|value| value == "1")
 }
