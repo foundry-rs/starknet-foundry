@@ -26,7 +26,9 @@ use mimalloc::MiMalloc;
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::config::get_or_create_global_config_path;
-use sncast::helpers::configuration::{CastConfig, CliConfigOpts, MaybeConfig, PartialCastConfig};
+use sncast::helpers::configuration::{
+    CastConfig, CliConfigOpts, ConfigScope, MaybeConfig, PartialCastConfig,
+};
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
@@ -810,10 +812,14 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
     };
     let profile = opts.profile.as_deref();
 
-    let global_default = PartialCastConfig::load_maybe(global_path.as_ref(), None, "global")?;
-    let global_profile = PartialCastConfig::load_maybe(global_path.as_ref(), profile, "global")?;
-    let local_default = PartialCastConfig::load_maybe(local_path.as_ref(), None, "local")?;
-    let local_profile = PartialCastConfig::load_maybe(local_path.as_ref(), profile, "local")?;
+    let global_default =
+        PartialCastConfig::load_maybe(global_path.as_ref(), None, ConfigScope::Global)?;
+    let global_profile =
+        PartialCastConfig::load_maybe(global_path.as_ref(), profile, ConfigScope::Global)?;
+    let local_default =
+        PartialCastConfig::load_maybe(local_path.as_ref(), None, ConfigScope::Local)?;
+    let local_profile =
+        PartialCastConfig::load_maybe(local_path.as_ref(), profile, ConfigScope::Local)?;
 
     match (profile, &local_profile, &global_profile) {
         // If local config file exists, profile must be in it.
