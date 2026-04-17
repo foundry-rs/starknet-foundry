@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- `--launch-debugger` flag that allows launching a test in debug mode using `cairo-debugger` crate. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#live-debugging)
+
 #### Changed
 
 - Minimal recommended `Scarb` version is now `2.15.2` (updated from `2.14.0`)
