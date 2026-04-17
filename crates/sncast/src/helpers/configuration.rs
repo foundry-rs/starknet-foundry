@@ -262,6 +262,8 @@ pub struct CliConfigOpts {
 
 impl TryFrom<PartialCastConfig> for CastConfig {
     type Error = anyhow::Error;
+
+    /// Validates the config and returns a [`CastConfig`].
     fn try_from(p: PartialCastConfig) -> Result<Self> {
         let d = CastConfig::default();
 
@@ -273,7 +275,7 @@ impl TryFrom<PartialCastConfig> for CastConfig {
             .map(|n| d.networks.override_with(n))
             .unwrap_or(d.networks);
 
-        Ok(CastConfig {
+        let config = CastConfig {
             network_params: d.network_params.override_with(p.network_params),
             account: p.account.unwrap_or(d.account),
             accounts_file,
@@ -284,7 +286,9 @@ impl TryFrom<PartialCastConfig> for CastConfig {
             block_explorer: p.block_explorer.or(d.block_explorer),
             show_explorer_links: p.show_explorer_links.unwrap_or(d.show_explorer_links),
             networks,
-        })
+        };
+        config.validate()?;
+        Ok(config)
     }
 }
 
