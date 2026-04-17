@@ -54,7 +54,7 @@ fn test_fail_wrong_set_up() {
     assert_stdout_contains(
         output,
         indoc! {
-            "[ERROR] Scarb.toml must have the following Cairo compiler configuration to run coverage:
+            "[ERROR] [..]/Scarb.toml must have the following Cairo compiler configuration to run coverage:
 
             [profile.dev.cairo]
             unstable-add-statements-functions-debug-info = true

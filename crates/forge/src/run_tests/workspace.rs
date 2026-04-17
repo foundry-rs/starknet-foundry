@@ -1,5 +1,5 @@
 use super::package::RunForPackageArgs;
-use crate::profile_validation::check_profile_compatibility;
+use crate::profile_validation::check_compiler_config_compatibility;
 use crate::run_tests::messages::latest_blocks_numbers::LatestBlocksNumbersMessage;
 use crate::run_tests::messages::overall_summary::OverallSummaryMessage;
 use crate::run_tests::messages::partition::{PartitionFinishedMessage, PartitionStartedMessage};
@@ -76,7 +76,7 @@ pub async fn execute_workspace(
         ColorOption::Auto => (),
     }
 
-    check_profile_compatibility(args, scarb_metadata)?;
+    check_compiler_config_compatibility(args, scarb_metadata)?;
 
     error_if_snforge_std_not_compatible(scarb_metadata)?;
     warn_if_snforge_std_does_not_match_package_version(scarb_metadata, &ui)?;

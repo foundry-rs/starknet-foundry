@@ -91,7 +91,7 @@ fn test_wrong_scarb_toml_configuration() {
     assert_stdout_contains(
         output,
         indoc! {
-           "[ERROR] Scarb.toml must have the following Cairo compiler configuration to run backtrace:
+           "[ERROR] [..]/Scarb.toml must have the following Cairo compiler configuration to run backtrace:
 
             [profile.dev.cairo]
             unstable-add-statements-functions-debug-info = true
