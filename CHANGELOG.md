@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+### Added 
+
+- Support serializing corelib `Option` and `Result` values passed via `--arguments`
+
 #### Fixed
 
 - `sncast verify` now uses the configured network or infers it from the RPC chain ID when `--network` is omitted.
