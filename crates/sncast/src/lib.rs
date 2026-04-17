@@ -1,3 +1,5 @@
+use std::num::{NonZeroU16, NonZeroU8};
+
 use crate::helpers::account::{check_account_exists, get_account_from_devnet, is_devnet_account};
 use crate::helpers::configuration::CastConfig;
 use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
@@ -150,12 +152,12 @@ pub struct WaitForTx {
 
 #[derive(Deserialize, Serialize, Clone, Debug, Copy, PartialEq, Default)]
 pub struct PartialWaitParams {
-    pub timeout: Option<u16>,
+    pub timeout: Option<NonZeroU16>,
     #[serde(
         default,
         rename(serialize = "retry-interval", deserialize = "retry-interval")
     )]
-    pub retry_interval: Option<u8>,
+    pub retry_interval: Option<NonZeroU8>,
 }
 
 impl Override for PartialWaitParams {
@@ -183,12 +185,12 @@ impl TryFrom<PartialWaitParams> for ValidatedWaitParams {
 /// Note: Built from [`PartialWaitParams`], not (de)serialized.
 #[derive(Clone, Debug, Copy, PartialEq)]
 pub struct ValidatedWaitParams {
-    timeout: u16,
-    retry_interval: u8,
+    timeout: NonZeroU16,
+    retry_interval: NonZeroU8,
 }
 
 impl ValidatedWaitParams {
-    pub fn new(retry_interval: u8, timeout: u16) -> Result<Self> {
+    pub fn new(retry_interval: NonZeroU8, timeout: NonZeroU16) -> Result<Self> {
         let res = Self {
             timeout,
             retry_interval,
@@ -199,31 +201,27 @@ impl ValidatedWaitParams {
 
     #[must_use]
     pub fn get_retries(&self) -> u16 {
-        self.timeout / u16::from(self.retry_interval)
+        self.timeout.get() / u16::from(self.retry_interval.get())
     }
 
     #[must_use]
     pub fn remaining_time(&self, steps_done: u16) -> u16 {
-        steps_done * u16::from(self.retry_interval)
+        steps_done * u16::from(self.retry_interval.get())
     }
 
     #[must_use]
-    pub fn get_retry_interval(&self) -> u8 {
+    pub fn get_retry_interval(&self) -> NonZeroU8 {
         self.retry_interval
     }
 
     #[must_use]
-    pub fn get_timeout(&self) -> u16 {
+    pub fn get_timeout(&self) -> NonZeroU16 {
         self.timeout
     }
 
     pub fn validate(&self) -> anyhow::Result<()> {
         ensure!(
-            self.retry_interval != 0 && self.timeout != 0,
-            "retry_interval and timeout must be greater than 0"
-        );
-        ensure!(
-            u16::from(self.retry_interval) <= self.timeout,
+            u16::from(self.retry_interval.get()) <= self.timeout.get(),
             "retry_interval cannot be greater than timeout"
         );
         Ok(())
@@ -788,12 +786,12 @@ pub async fn wait_for_tx(
                             .to_string(),
                     );
                 });
-                sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
+                sleep(Duration::from_secs(wait_params.get_retry_interval().get().into()));
             }
             Err(err) => return Err(WaitForTransactionError::ProviderError(err.into())),
         }
 
-        sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
+        sleep(Duration::from_secs(wait_params.get_retry_interval().get().into()));
     }
 
     Err(WaitForTransactionError::TimedOut)
@@ -911,6 +909,8 @@ pub fn get_default_state_file_name(script_name: &str, chain_id: &str) -> String 
 
 #[cfg(test)]
 mod tests {
+    use std::num::{NonZeroU16, NonZeroU8};
+
     use crate::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
     use crate::{
         AccountType, PartialWaitParams, chain_id_to_network_name, extract_or_generate_salt,
@@ -1009,45 +1009,45 @@ mod tests {
     #[test]
     fn test_partial_wait_params_override_with() {
         let base = PartialWaitParams {
-            timeout: Some(200),
-            retry_interval: Some(5),
+            timeout: NonZeroU16::new(200),
+            retry_interval: NonZeroU8::new(5),
         };
         let other = PartialWaitParams {
-            timeout: Some(300),
+            timeout: NonZeroU16::new(300),
             retry_interval: None,
         };
         let overridden = base.override_with(other);
-        assert_eq!(overridden.timeout, Some(300));
-        assert_eq!(overridden.retry_interval, Some(5));
+        assert_eq!(overridden.timeout, NonZeroU16::new(300));
+        assert_eq!(overridden.retry_interval, NonZeroU8::new(5));
 
         let base2 = PartialWaitParams {
             timeout: None,
-            retry_interval: Some(5),
+            retry_interval: NonZeroU8::new(5),
         };
         let other2 = PartialWaitParams {
-            timeout: Some(200),
+            timeout: NonZeroU16::new(200),
             retry_interval: None,
         };
         let overridden2 = base2.override_with(other2);
-        assert_eq!(overridden2.timeout, Some(200));
-        assert_eq!(overridden2.retry_interval, Some(5));
+        assert_eq!(overridden2.timeout, NonZeroU16::new(200));
+        assert_eq!(overridden2.retry_interval, NonZeroU8::new(5));
     }
 
     #[test]
     fn test_wait_params_override_optional() {
         let base = PartialWaitParams {
-            timeout: Some(200),
-            retry_interval: Some(5),
+            timeout: NonZeroU16::new(200),
+            retry_interval: NonZeroU8::new(5),
         };
         let other = PartialWaitParams {
             timeout: None,
-            retry_interval: Some(5),
+            retry_interval: NonZeroU8::new(5),
         };
         assert_eq!(
             override_optional(Some(base), Some(other)),
             Some(PartialWaitParams {
-                timeout: Some(200),
-                retry_interval: Some(5),
+                timeout: NonZeroU16::new(200),
+                retry_interval: NonZeroU8::new(5),
             })
         );
         assert_eq!(
