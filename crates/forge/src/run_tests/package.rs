@@ -77,6 +77,7 @@ pub struct RunForPackageArgs {
 
 impl RunForPackageArgs {
     #[tracing::instrument(skip_all, level = "debug")]
+    #[expect(clippy::too_many_arguments)]
     pub fn build(
         package: PackageMetadata,
         scarb_metadata: &Metadata,

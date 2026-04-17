@@ -110,8 +110,9 @@ pub async fn execute_workspace(
 
     let partitioning_config = get_partitioning_config(args, &ui, &packages, &artifacts_dir_path)?;
 
+    // Load predeployed contracts if backtrace is enabled or any trace-related arguments are provided.
     let predeployed_contracts = should_load_predeployed_contracts_sierra(&args.trace_args)
-        .then(|| load_predeployed_contracts())
+        .then(load_predeployed_contracts)
         .transpose()?;
 
     // Spawn config passes for all packages before running any tests so that
