@@ -17,16 +17,14 @@ use crate::starknet_commands::{get, multicall};
 use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
-use configuration::{Override, load_config};
+use configuration::Override;
 use conversions::IntoConv;
 use data_transformer::transform;
 use foundry_ui::components::warning::WarningMessage;
 use mimalloc::MiMalloc;
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::command::process_command_result;
-use sncast::helpers::config::get_global_config_path;
 use sncast::helpers::configuration::{CastConfig, CliConfigOpts, PartialCastConfig};
-use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
@@ -41,7 +39,7 @@ use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transformed_call::transform_response;
 use sncast::response::ui::UI;
 use sncast::{
-    PartialWaitParams, ValidatedWaitParams, WaitForTx, get_account, get_block_id,
+    PartialWaitParams, WaitForTx, get_account, get_block_id,
     get_class_hash_by_address, get_contract_class, with_account,
 };
 use starknet_commands::ledger::{self, Ledger};
