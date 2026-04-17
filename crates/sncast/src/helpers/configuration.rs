@@ -183,7 +183,10 @@ impl Config for PartialCastConfig {
         let deserializer = config.into_deserializer();
         let config: Self = serde_path_to_error::deserialize(deserializer).map_err(|err| {
             let path_to_field = err.path().to_string();
-            anyhow::anyhow!("{path_to_field}: {}", err.into_inner())
+            anyhow::anyhow!(
+                "Failed to parse field `{path_to_field}`: {}",
+                err.into_inner()
+            )
         })?;
         config.validate()?;
         Ok(config)
