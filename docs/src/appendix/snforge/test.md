@@ -18,6 +18,8 @@ Valid values:
 - `standard`: Includes calldata and call result
 - `detailed`: Full trace, including nested calls, caller address, and panic reasons
 
+Read more [here](../../snforge-advanced-features/debugging.md#trace).
+
 ## `--trace-components <TRACE_COMPONENTS>...`
 
 Selects specific trace elements to include in the execution flow output.
@@ -32,6 +34,9 @@ Available components:
 - `call-type`
 - `call-result`
 - `gas`
+
+Read more [here](../../snforge-advanced-features/debugging.md#trace).
+
 
 ## `--run-native`
 
@@ -97,7 +102,7 @@ Display additional info about used resources for passed tests.
 
 ## `--save-trace-data`
 
-Saves execution traces of test cases which pass and are not fuzz tests. You can use traces for profiling purposes.
+Saves execution traces of test cases which pass and are not fuzz tests. You can use traces for profiling and coverage purposes.
 
 ## `--build-profile`
 
@@ -163,7 +168,7 @@ Print help.
 True values are `1`.
 
 When enabled, enables backtrace output on test failure. 
-See [Debugging](../../snforge-advanced-features/debugging.md).
+Read more [here](../../snforge-advanced-features/debugging.md#backtrace).
 
 ## `SNFORGE_DETERMINISTIC_OUTPUT` (environment variable)
 
@@ -171,3 +176,8 @@ True values are `1`, `true`, `t`, `yes`, `y`, and `on`.
 False values are `0`, `false`, `f`, `no`, `n`, and `off`.
 
 When enabled, sorts test result outputs by test name, for reproducible outputs.
+
+## `--launch-debugger`
+
+Launch the given test in debug mode, making snforge act as a debug adapter.
+Read more [here](../../snforge-advanced-features/debugging.md#live-debugging).
