@@ -521,3 +521,56 @@ async fn test_invalid_effective_config_from_cli() {
         " },
     );
 }
+
+#[tokio::test]
+async fn test_zero_wait_params_in_config() {
+    let t = tempdir().unwrap();
+    fs::write(
+        t.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            account = "user"
+            wait-params = { timeout = 0, retry-interval = 0 }
+        "#},
+    )
+    .unwrap();
+
+    let snapbox = runner(&["show-config"]).current_dir(t.path());
+
+    let output = snapbox.assert().failure();
+    assert_stderr_contains(
+        output,
+        indoc! { r"
+            Error: Failed to load local config at [..]snfoundry.toml
+
+            Caused by:
+                wait-params.retry-interval: invalid value: integer `0`, expected a nonzero u8
+        "},
+    );
+}
+
+#[tokio::test]
+async fn test_zero_wait_timeout_from_cli() {
+    let t = tempdir().unwrap();
+
+    let snapbox = runner(&["--wait-timeout", "0", "show-config"]).current_dir(t.path());
+
+    let output = snapbox.assert().failure();
+    assert_stderr_contains(
+        output,
+        "error: invalid value '0' for '--wait-timeout <WAIT_TIMEOUT>': number would be zero for non-zero type",
+    );
+}
+
+#[tokio::test]
+async fn test_zero_wait_retry_interval_from_cli() {
+    let t = tempdir().unwrap();
+
+    let snapbox = runner(&["--wait-retry-interval", "0", "show-config"]).current_dir(t.path());
+
+    let output = snapbox.assert().failure();
+    assert_stderr_contains(
+        output,
+        "error: invalid value '0' for '--wait-retry-interval <WAIT_RETRY_INTERVAL>': number would be zero for non-zero type",
+    );
+}

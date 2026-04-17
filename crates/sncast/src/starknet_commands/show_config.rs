@@ -54,8 +54,8 @@ pub async fn show_config(
         account,
         accounts_file_path,
         keystore,
-        wait_timeout: wait_timeout.map(u64::from),
-        wait_retry_interval: wait_retry_interval.map(u64::from),
+        wait_timeout: wait_timeout.map(|v| u64::from(v.get())),
+        wait_retry_interval: wait_retry_interval.map(|v| u64::from(v.get())),
         show_explorer_links: cast_config.show_explorer_links,
         block_explorer,
     })

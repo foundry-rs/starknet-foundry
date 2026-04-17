@@ -4,6 +4,7 @@ use crate::{Network, PartialWaitParams, ValidatedWaitParams};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use configuration::{Config, Override, load_config, override_optional};
+use serde::de::IntoDeserializer;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use std::collections::{BTreeMap, HashMap};
@@ -179,7 +180,11 @@ impl Config for PartialCastConfig {
     }
 
     fn from_raw(config: serde_json::Value) -> Result<Self> {
-        let config = serde_json::from_value::<Self>(config)?;
+        let deserializer = config.into_deserializer();
+        let config: Self = serde_path_to_error::deserialize(deserializer).map_err(|err| {
+            let path_to_field = err.path().to_string();
+            anyhow::anyhow!("{path_to_field}: {}", err.into_inner())
+        })?;
         config.validate()?;
         Ok(config)
     }

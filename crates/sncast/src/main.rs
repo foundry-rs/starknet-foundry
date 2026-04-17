@@ -1,3 +1,4 @@
+use std::num::{NonZeroU16, NonZeroU8};
 use std::str::FromStr;
 
 use crate::starknet_commands::declare::declare;
@@ -118,11 +119,11 @@ struct Cli {
 
     /// Adjusts the time after which --wait assumes transaction was not received or rejected
     #[arg(long)]
-    wait_timeout: Option<u16>,
+    wait_timeout: Option<NonZeroU16>,
 
     /// Adjusts the time between consecutive attempts to fetch transaction by --wait flag
     #[arg(long)]
-    wait_retry_interval: Option<u8>,
+    wait_retry_interval: Option<NonZeroU8>,
 
     #[command(subcommand)]
     command: Commands,
