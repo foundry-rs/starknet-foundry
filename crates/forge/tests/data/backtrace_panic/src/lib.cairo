@@ -44,8 +44,14 @@ pub mod InnerContract {
 #[cfg(test)]
 mod Test {
     use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
-    use snforge_std::{ContractClassTrait, declare};
+    use snforge_std::{ContractClassTrait, Token, TokenTrait, declare};
+    use starknet::ContractAddress;
     use super::{IOuterContractDispatcher, IOuterContractDispatcherTrait};
+
+    #[starknet::interface]
+    trait IERC20<TContractState> {
+        fn transfer(ref self: TContractState, recipient: ContractAddress, amount: u256) -> bool;
+    }
 
     #[test]
     fn test_contract_panics() {
@@ -88,5 +94,12 @@ mod Test {
 
         let dispatcher = IOuterContractDispatcher { contract_address: contract_address_outer };
         dispatcher.outer(contract_address_inner);
+    }
+
+    #[test]
+    fn test_predeployed_contract_panics() {
+        let dispatcher = IERC20Dispatcher { contract_address: Token::STRK.contract_address() };
+        let recipient = 0x123.try_into().unwrap();
+        dispatcher.transfer(recipient, 100);
     }
 }

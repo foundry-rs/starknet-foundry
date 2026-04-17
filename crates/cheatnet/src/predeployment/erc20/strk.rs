@@ -4,6 +4,8 @@ use crate::predeployment::predeployed_contract::PredeployedContract;
 
 use super::constructor_data::ERC20ConstructorData;
 
+pub const STRK_TOKEN_NAME: &str = "STRK";
+pub const STRK_CONTRACT_NAME: &str = "STRK (predeployed contract)";
 pub const STRK_CONTRACT_ADDRESS: &str =
     "0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
 pub const ERC20LOCKABLE_SIERRA_CLASS_HASH: &str =
@@ -27,8 +29,8 @@ pub fn strk_predeployed_contract() -> PredeployedContract {
     .unwrap();
 
     let constructor_data = ERC20ConstructorData {
-        name: "STRK".to_string(),
-        symbol: "STRK".to_string(),
+        name: STRK_TOKEN_NAME.to_string(),
+        symbol: STRK_TOKEN_NAME.to_string(),
         decimals: 18,
         total_supply: (total_supply_low, 0),
         permitted_minter,
