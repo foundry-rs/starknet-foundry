@@ -8,6 +8,7 @@ use serde::de::IntoDeserializer;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use std::collections::{BTreeMap, HashMap};
+use std::fmt::{Display, Formatter};
 use url::Url;
 
 #[must_use]
@@ -242,8 +243,23 @@ impl MaybeConfig {
     }
 }
 
+#[derive(Clone, Copy, Debug)]
+pub enum ConfigScope {
+    Local,
+    Global,
+}
+
+impl Display for ConfigScope {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Local => write!(f, "local"),
+            Self::Global => write!(f, "global"),
+        }
+    }
+}
+
 impl PartialCastConfig {
-    fn load(path: &Utf8PathBuf, profile: Option<&str>, scope: &str) -> Result<Option<Self>> {
+    fn load(path: &Utf8PathBuf, profile: Option<&str>, scope: ConfigScope) -> Result<Option<Self>> {
         load_config::<Self>(path, profile)
             .with_context(|| format!("Failed to load {scope} config at {path}"))
     }
@@ -251,7 +267,7 @@ impl PartialCastConfig {
     pub fn load_maybe(
         path: Option<&Utf8PathBuf>,
         profile: Option<&str>,
-        scope: &str,
+        scope: ConfigScope,
     ) -> Result<MaybeConfig> {
         match path {
             None => Ok(MaybeConfig::NoFile),
