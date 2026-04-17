@@ -5,7 +5,7 @@ use crate::{
 };
 use cairo_lang_macro::{Diagnostic, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::{Terminal, ast::Expr};
+use cairo_lang_syntax::node::{ast::Expr, Terminal};
 use num_bigint::BigInt;
 use url::Url;
 
@@ -103,7 +103,7 @@ impl ParseFromExpr<Expr> for Number {
 
                 Ok(Self(num))
             }
-            _ => Err(T::error(format!("<{arg_name}> should be number literal",))),
+            _ => Err(T::error(format!("<{arg_name}> should be number literal"))),
         }
     }
 }
