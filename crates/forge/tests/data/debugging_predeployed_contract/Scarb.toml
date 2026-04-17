@@ -1,10 +1,10 @@
 [package]
 name = "debugging_predeployed_contract"
 version = "0.1.0"
-edition = "2023_01"
+edition = "2024_07"
 
 [dependencies]
-starknet = ">=2.8.0"
+starknet = "2.12.0"
 
 [[target.starknet-contract]]
 sierra = true
