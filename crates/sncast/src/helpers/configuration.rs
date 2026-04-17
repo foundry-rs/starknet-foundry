@@ -87,7 +87,7 @@ impl Override for NetworksConfig {
 }
 
 /// Effective config used at runtime.
-/// Note: Built from [`PartialCastConfig`], not (de)sereliazed.
+/// Note: Built from [`PartialCastConfig`], not (de)serialized.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CastConfig {
     pub network_params: NetworkParams,
