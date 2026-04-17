@@ -161,6 +161,7 @@ pub struct PartialCastConfig {
     pub show_explorer_links: Option<bool>,
 
     #[serde(default)]
+    /// Configurable urls of predefined networks - mainnet, sepolia, and devnet are supported
     pub networks: Option<NetworksConfig>,
 }
 
