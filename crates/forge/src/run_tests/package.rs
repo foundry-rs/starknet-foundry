@@ -102,7 +102,7 @@ impl RunForPackageArgs {
         )?;
         let mut contracts_data = ContractsData::try_from(contracts)?;
         if let Some(predeployed_contracts) = predeployed_contracts {
-            contracts_data.extend(predeployed_contracts)?;
+            contracts_data.try_extend(predeployed_contracts)?;
         }
 
         let forge_config_from_scarb =
