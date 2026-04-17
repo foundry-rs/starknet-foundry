@@ -73,6 +73,18 @@ pub fn load_predeployed_contracts() -> Result<ContractsData> {
     for (contract_name, class_hash) in class_hashes_to_change {
         let class_hash = TryFromHexStr::try_from_hex_str(&class_hash)?;
 
+        // Keep both ContractsData lookups in sync: debug Sierra produces a different
+        // class hash, but debugging/backtrace logic should identify predeployed
+        // contracts by their official on-chain class hashes.
+        contracts_data
+            .class_hashes
+            .remove_by_left(&contract_name)
+            .ok_or_else(|| anyhow!("class hash mapping for {contract_name} should exist"))?;
+        contracts_data
+            .class_hashes
+            .insert_no_overwrite(contract_name.clone(), class_hash)
+            .map_err(|_| anyhow!("class hash mapping for {contract_name} should be unique"))?;
+
         let predeployed_contract = contracts_data
             .contracts
             .get_mut(&contract_name)
@@ -84,14 +96,15 @@ pub fn load_predeployed_contracts() -> Result<ContractsData> {
 }
 
 /// Saves sierra file of predeployed contract to cache, and returns path to it.
-/// If the file already exists in the cache, it skips the write operation.
+/// If the file already exists in the cache and matches the embedded Sierra, it skips the write operation.
 fn maybe_cache_contract_sierra(contract_name: &str, sierra: &str) -> Result<Utf8PathBuf> {
     let path = Utf8PathBuf::from(CACHE_DIR)
         .join("predeployed_contracts")
         .join(env!("CARGO_PKG_VERSION"))
         .join(format!("{contract_name}.sierra.json"));
 
-    if path.exists() {
+    // If the file already exists and matches the embedded Sierra, return the path without writing.
+    if fs::read_to_string(&path).is_ok_and(|cached_sierra| cached_sierra == sierra) {
         return Ok(path);
     }
 
