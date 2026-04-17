@@ -15,6 +15,8 @@ mod contract_artifacts;
 #[cfg(not(feature = "cairo-native"))]
 mod coverage;
 #[cfg(not(feature = "cairo-native"))]
+mod debugger;
+#[cfg(not(feature = "cairo-native"))]
 mod debugging;
 mod docs_snippets_validation;
 mod env;

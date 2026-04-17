@@ -304,6 +304,9 @@ name = "arbitrary"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
+dependencies = [
+ "derive_arbitrary",
+]
 
 [[package]]
 name = "ark-ec"
@@ -955,6 +958,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairo-debugger"
+version = "0.1.0"
+source = "git+https://github.com/software-mansion-labs/cairo-debugger?rev=90fa679cd7572fedc5e17dadf15ec44a97b9ce11#90fa679cd7572fedc5e17dadf15ec44a97b9ce11"
+dependencies = [
+ "anyhow",
+ "cairo-annotations",
+ "cairo-lang-casm",
+ "cairo-lang-sierra",
+ "cairo-lang-sierra-to-casm",
+ "cairo-lang-sierra-type-size",
+ "cairo-vm",
+ "dap",
+ "indexmap 2.14.0",
+ "scarb-metadata",
+ "serde_json",
+ "starknet-types-core",
+ "tracing",
+]
+
+[[package]]
 name = "cairo-lang-casm"
 version = "2.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1596,6 +1619,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "38fb2559063ab5f35c1596b6b79a8a18809306a419a3cbd141c2149639386da9"
 dependencies = [
  "anyhow",
+ "arbitrary",
  "bitvec",
  "generic-array",
  "indoc",
@@ -2539,6 +2563,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "dap"
+version = "0.4.1-alpha1"
+source = "git+https://github.com/software-mansion-labs/dap-rs?rev=27542c413184732cd8cb5632c8349d605ed4fe04#27542c413184732cd8cb5632c8349d605ed4fe04"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "darling"
 version = "0.14.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2817,6 +2851,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "derive_arbitrary"
+version = "1.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e567bd82dcff979e4b03460c307b3cdc9e96fde3d73bed1496d2bc75d9dd62a"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -3494,6 +3539,7 @@ dependencies = [
  "anyhow",
  "blockifier",
  "cairo-annotations",
+ "cairo-debugger",
  "cairo-lang-casm",
  "cairo-lang-sierra",
  "cairo-lang-starknet-classes",
@@ -7785,6 +7831,7 @@ version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90d23b1bc014ee4cce40056ab3114bcbcdc2dbc1e845bbfb1f8bd0bab63507d4"
 dependencies = [
+ "arbitrary",
  "blake2",
  "digest",
  "lambdaworks-crypto",

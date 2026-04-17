@@ -117,7 +117,7 @@ impl GasCalculationResources {
                     vm_resources_output.clone()
                 };
                 let sierra_gas = format!("\n        sierra gas: {}", sierra_gas.0);
-                format!("{sierra_gas}{syscalls}{events}{messages}{vm_output}\n",)
+                format!("{sierra_gas}{syscalls}{events}{messages}{vm_output}\n")
             }
         }
     }
@@ -129,7 +129,7 @@ fn format_syscalls(syscalls: &SyscallUsageMap) -> String {
         .map(|(selector, usage)| (selector, usage.call_count))
         .collect();
     // Sort syscalls by call count
-    syscall_usage.sort_by(|a, b| b.1.cmp(&a.1));
+    syscall_usage.sort_by_key(|b| std::cmp::Reverse(b.1));
 
     let content = format_items(&syscall_usage);
     format!("\n        syscalls: ({content})")
