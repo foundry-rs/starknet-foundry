@@ -544,7 +544,7 @@ async fn test_zero_wait_params_in_config() {
             Error: Failed to load local config at [..]snfoundry.toml
 
             Caused by:
-                wait-params.retry-interval: invalid value: integer `0`, expected a nonzero u8
+                Failed to parse field `wait-params.retry-interval`: invalid value: integer `0`, expected a nonzero u8
         "},
     );
 }
