@@ -863,7 +863,7 @@ pub async fn test_happy_case_default_name_generation() {
 
 #[tokio::test]
 pub async fn test_use_url_from_config() {
-    let temp_dir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let temp_dir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let accounts_file = "accounts.json";
     let args = vec![
         "--accounts-file",

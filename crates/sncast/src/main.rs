@@ -1,3 +1,4 @@
+use std::num::{NonZeroU16, NonZeroU8};
 use std::str::FromStr;
 
 use crate::starknet_commands::declare::declare;
@@ -17,14 +18,17 @@ use crate::starknet_commands::{get, multicall};
 use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
-use configuration::Override;
+use configuration::{Override, find_config_file};
 use conversions::IntoConv;
 use data_transformer::transform;
 use foundry_ui::components::warning::WarningMessage;
 use mimalloc::MiMalloc;
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::command::process_command_result;
-use sncast::helpers::configuration::{CastConfig, CliConfigOpts, PartialCastConfig};
+use sncast::helpers::config::get_or_create_global_config_path;
+use sncast::helpers::configuration::{
+    CastConfig, CliConfigOpts, ConfigScope, MaybeConfig, PartialCastConfig,
+};
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
@@ -117,11 +121,11 @@ struct Cli {
 
     /// Adjusts the time after which --wait assumes transaction was not received or rejected
     #[arg(long)]
-    wait_timeout: Option<u16>,
+    wait_timeout: Option<NonZeroU16>,
 
     /// Adjusts the time between consecutive attempts to fetch transaction by --wait flag
     #[arg(long)]
-    wait_retry_interval: Option<u8>,
+    wait_retry_interval: Option<NonZeroU8>,
 
     #[command(subcommand)]
     command: Commands,
@@ -688,7 +692,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         Commands::Account(account) => account::account(account, config, ui, wait_config).await,
 
         Commands::ShowConfig(show) => {
-            let provider = show.rpc.get_provider(&config, ui).await.ok();
+            let provider = match show.rpc.get_provider(&config, ui).await {
+                Ok(p) => Some(p),
+                Err(err) => {
+                    ui.print_warning(format!("Could not reach RPC provider: {err:#}"));
+                    None
+                }
+            };
 
             let result = starknet_commands::show_config::show_config(
                 &show,
@@ -765,15 +775,72 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
         command_name: cli.command_name(),
         profile: cli.profile.clone(),
     };
-    let local_config = PartialCastConfig::local(&opts)?;
-    let global_config = PartialCastConfig::global(&opts, ui)?;
-    let cli_config = cli.to_partial_config()?;
 
-    let partial_config = global_config
-        .override_with(local_config)
+    let local_path = find_config_file().ok();
+    let global_path = match get_or_create_global_config_path() {
+        Ok(p) => Some(p),
+        Err(err) => {
+            ui.print_warning(WarningMessage::new(format!(
+                "Could not get or create global config file: {err:?}. Proceeding without global config."
+            )));
+            None
+        }
+    };
+    let profile = opts.profile.as_deref();
+
+    let global_default =
+        PartialCastConfig::load_maybe(global_path.as_ref(), None, ConfigScope::Global)?;
+    let global_profile =
+        PartialCastConfig::load_maybe(global_path.as_ref(), profile, ConfigScope::Global)?;
+    let local_default =
+        PartialCastConfig::load_maybe(local_path.as_ref(), None, ConfigScope::Local)?;
+    let local_profile =
+        PartialCastConfig::load_maybe(local_path.as_ref(), profile, ConfigScope::Local)?;
+
+    match (profile, &local_profile, &global_profile) {
+        // If local config file exists, profile must be in it.
+        (Some(profile), MaybeConfig::NoProfile, _) => {
+            bail!(
+                "Profile [{profile}] not found in local config at {}",
+                local_path.unwrap_or_default()
+            );
+        }
+        // No local config file; profile must be in global config.
+        (Some(profile), MaybeConfig::NoFile, MaybeConfig::NoProfile) => {
+            // TODO: (#pending) Streamline approach wrt. `--profile` being re-used for foundry and `scarb`.
+            ui.print_warning(WarningMessage::new(format!(
+                "Profile [{profile}] not found in global config at {}, and no local config found.",
+                global_path.clone().unwrap_or_default()
+            )));
+        }
+        // Note: this is potentially unreachable: `get_or_create_global_config_path` should always return dir with existing config file.
+        // TODO: (#3436) remove this if missing global config becomes an error
+        (Some(profile), MaybeConfig::NoFile, MaybeConfig::NoFile) => {
+            bail!("Profile [{profile}] not found: no config files present");
+        }
+        _ => {}
+    }
+
+    let cli_config = cli.to_partial_config()?;
+    let partial_config = PartialCastConfig::default()
+        .override_with(global_default.unwrap_or_default())
+        .override_with(global_profile.unwrap_or_default())
+        .override_with(local_default.unwrap_or_default())
+        .override_with(local_profile.unwrap_or_default())
         .override_with(cli_config);
 
-    Ok(CastConfig::from(partial_config))
+    CastConfig::try_from(partial_config).with_context(|| {
+        indoc::formatdoc! {"
+            Unable to combine configs. Fix conflicts between config sources and try again.
+            Sources:
+            - CLI flags
+            - Local config: {local}
+            - Global config: {global}
+        ",
+            global = global_path.as_ref().map_or("missing", |p| p.as_str()),
+            local = local_path.as_ref().map_or("missing", |p| p.as_str()),
+        }
+    })
 }
 
 fn print_cmd_move_warning(command_name: &str, new_command_name: &str, ui: &UI) {
