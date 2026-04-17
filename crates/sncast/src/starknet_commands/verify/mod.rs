@@ -190,7 +190,8 @@ pub async fn verify(
         }
     };
 
-    let network = resolve_verification_network(network, config.network_params.network(), &provider).await?;
+    let network =
+        resolve_verification_network(network, config.network_params.network(), &provider).await?;
 
     // Handle test_files warning for Walnut
     if matches!(verifier, Verifier::Walnut) && test_files {

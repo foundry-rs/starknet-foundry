@@ -39,8 +39,8 @@ use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transformed_call::transform_response;
 use sncast::response::ui::UI;
 use sncast::{
-    PartialWaitParams, WaitForTx, get_account, get_block_id,
-    get_class_hash_by_address, get_contract_class, with_account,
+    PartialWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
+    get_contract_class, with_account,
 };
 use starknet_commands::ledger::{self, Ledger};
 use starknet_commands::verify::Verify;

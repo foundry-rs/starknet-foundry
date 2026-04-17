@@ -22,9 +22,9 @@ use sncast::{AccountType, chain_id_to_network_name, decode_chain_id};
 use sncast::{SignerSource, SignerType, WaitForTx, get_chain_id};
 use starknet_rust::providers::Provider;
 use starknet_types_core::felt::Felt;
+use std::collections::BTreeMap;
 use std::io::{self, IsTerminal};
 use std::{fs::OpenOptions, io::Write};
-use std::collections::BTreeMap;
 
 pub mod create;
 pub mod delete;
