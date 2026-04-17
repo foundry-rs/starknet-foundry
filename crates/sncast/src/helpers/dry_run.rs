@@ -4,7 +4,7 @@ use std::future::Future;
 
 use crate::response::dry_run::DryRunResponse;
 
-#[derive(Args, Debug, Clone, Default)]
+#[derive(Args, Debug, Clone, Copy, Default)]
 pub struct DryRunArgs {
     /// If passed, the transaction will not be sent to the network and the fee will be estimated instead.
     #[arg(long, conflicts_with = "fee_args")]

@@ -79,8 +79,9 @@ where
     };
 
     if dry_run_args.dry_run {
+        let execution = account.execute_v3(vec![call]);
         return dry_run_args
-            .estimate(|| async { account.execute_v3(vec![call]).estimate_fee().await })
+            .estimate(|| execution.estimate_fee())
             .await
             .map(InvokeResponse::DryRun)
             .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"))
@@ -116,8 +117,6 @@ pub async fn execute_calls<S>(
 where
     S: Signer + Sync + Send,
 {
-    // let execution = create_execution(account, calls, fee_args, proof_args, nonce).await;
-
     let execution_calls = account.execute_v3(calls);
 
     let fee_settings = if fee_args.max_fee.is_some() {

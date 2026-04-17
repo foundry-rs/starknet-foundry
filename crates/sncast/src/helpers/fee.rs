@@ -4,7 +4,7 @@ use conversions::serde::deserialize::CairoDeserialize;
 use starknet_rust::core::types::FeeEstimate;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 
-#[derive(Args, Debug, Clone)]
+#[derive(Args, Debug, Clone, Copy)]
 #[group(id = "fee_args", multiple = true)]
 pub struct FeeArgs {
     /// Max fee for the transaction. If not provided, will be automatically estimated.
@@ -91,7 +91,7 @@ impl FeeArgs {
 
             Ok(fee_settings)
         } else {
-            let fee_settings = FeeSettings::from(self.clone());
+            let fee_settings = FeeSettings::from(*self);
             Ok(fee_settings)
         }
     }

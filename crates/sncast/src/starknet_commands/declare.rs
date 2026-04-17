@@ -153,7 +153,7 @@ where
 
     if dry_run_args.dry_run {
         return dry_run_args
-            .estimate(|| async { declaration.estimate_fee().await })
+            .estimate(|| declaration.estimate_fee())
             .await
             .map(DeclareResponse::DryRun)
             .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"))

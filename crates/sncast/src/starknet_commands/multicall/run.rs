@@ -94,8 +94,8 @@ pub async fn run<S>(
 where
     S: Signer + Sync + Send,
 {
-    let fee_args = run.fee_args.clone();
-    let dry_run_args = run.dry_run_args.clone();
+    let fee_args = run.fee_args;
+    let dry_run_args = run.dry_run_args;
     let nonce = run.nonce;
 
     let contents = std::fs::read_to_string(&run.path)?;
@@ -123,13 +123,9 @@ where
     }
 
     if dry_run_args.dry_run {
+        let execution = account.execute_v3(parsed_calls);
         return dry_run_args
-            .estimate(|| async {
-                account
-                    .execute_v3(parsed_calls.clone())
-                    .estimate_fee()
-                    .await
-            })
+            .estimate(|| execution.estimate_fee())
             .await
             .map(MulticallRunResponse::DryRun)
             .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"));

@@ -102,9 +102,10 @@ where
     }
 
     if execute.dry_run_args.dry_run {
+        let execution = account.execute_v3(calls);
         return execute
             .dry_run_args
-            .estimate(|| async { account.execute_v3(calls.clone()).estimate_fee().await })
+            .estimate(|| execution.estimate_fee())
             .await
             .map(MulticallRunResponse::DryRun)
             .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"));
