@@ -3,8 +3,8 @@ use crate::attributes::{AttributeInfo, ErrorExt};
 use cairo_lang_macro::Diagnostic;
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::{
-    Terminal,
     ast::{ArgClause, Expr, OptionArgListParenthesized},
+    Terminal,
 };
 use smol_str::SmolStr;
 use std::collections::HashMap;
@@ -62,6 +62,7 @@ impl Arguments {
         this
     }
 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.named.is_empty() && self.unnamed.is_empty() && self.shorthand.is_empty()
     }
