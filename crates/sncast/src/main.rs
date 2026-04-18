@@ -337,6 +337,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 starknet_commands::declare::declare(
                     declare.contract_name.clone(),
                     declare.common.fee_args,
+                    declare.common.dry_run_args,
                     declare.common.nonce,
                     account,
                     &artifacts,
@@ -345,16 +346,21 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     ui,
                 )
                 .await
-            })
-            .map_err(handle_starknet_command_error)
-            .map(|result| match result {
-                DeclareResponse::Success(declare_transaction_response) => {
-                    declare_transaction_response
+            });
+
+            let result = match result {
+                Ok(DeclareResponse::DryRun(response)) => {
+                    process_command_result("declare", Ok(response), ui, None);
+                    return Ok(());
                 }
-                DeclareResponse::AlreadyDeclared(_) => {
+                Ok(DeclareResponse::Success(declare_transaction_response)) => {
+                    Ok(declare_transaction_response)
+                }
+                Ok(DeclareResponse::AlreadyDeclared(_)) => {
                     unreachable!("Argument `skip_on_already_declared` is false")
                 }
-            });
+                Err(err) => Err(handle_starknet_command_error(err)),
+            };
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
@@ -419,16 +425,21 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     ui,
                 )
                 .await
-            })
-            .map_err(handle_starknet_command_error)
-            .map(|result| match result {
-                DeclareResponse::Success(declare_transaction_response) => {
-                    declare_transaction_response
+            });
+
+            let result = match result {
+                Ok(DeclareResponse::DryRun(response)) => {
+                    process_command_result("declare", Ok(response), ui, None);
+                    return Ok(());
                 }
-                DeclareResponse::AlreadyDeclared(_) => {
+                Ok(DeclareResponse::Success(declare_transaction_response)) => {
+                    Ok(declare_transaction_response)
+                }
+                Ok(DeclareResponse::AlreadyDeclared(_)) => {
                     unreachable!("Argument `skip_on_already_declared` is false")
                 }
-            });
+                Err(err) => Err(handle_starknet_command_error(err)),
+            };
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
@@ -444,10 +455,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         contract_identifier: identifier,
                         arguments,
                         package,
-                        salt,
-                        unique,
+                        ..
                     },
                 fee_args,
+                dry_run_args,
                 rpc,
                 mut nonce,
                 ..
@@ -478,7 +489,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 let declare_result = with_account!(&account, |account| {
                     declare(
                         contract_name,
-                        fee_args.clone(),
+                        fee_args,
+                        dry_run_args,
                         nonce,
                         account,
                         &artifacts,
@@ -505,6 +517,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         declare_transaction_response.class_hash.into_(),
                         Some(declare_transaction_response),
                     ),
+                    Ok(DeclareResponse::DryRun(_)) => {
+                        unreachable!(
+                            "Declaration run by deploy command should not return dry run response"
+                        )
+                    }
                     Err(err) => {
                         // TODO(#3960) This will return json output saying that `deploy` command was run
                         //  even though the invoked command was declare.
@@ -533,9 +550,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 starknet_commands::deploy::deploy(
                     class_hash,
                     &calldata,
-                    salt,
-                    unique,
+                    deploy.common.salt,
+                    deploy.common.unique,
                     fee_args,
+                    dry_run_args,
                     nonce,
                     account,
                     wait_config,
@@ -611,6 +629,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         arguments,
                     },
                 fee_args,
+                dry_run_args,
                 proof_args,
                 rpc,
                 nonce,
@@ -636,6 +655,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     calldata,
                     nonce,
                     fee_args,
+                    dry_run_args,
                     proof_args,
                     selector,
                     account,

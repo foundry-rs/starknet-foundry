@@ -4,6 +4,7 @@ use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
 use shared::rpc::get_starknet_version;
 use sncast::helpers::artifacts::CastStarknetContractArtifacts;
+use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::declare::{
@@ -35,6 +36,9 @@ pub struct DeclareCommonArgs {
     #[command(flatten)]
     pub fee_args: FeeArgs,
 
+    #[command(flatten)]
+    pub dry_run_args: DryRunArgs,
+
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[arg(short, long)]
     pub nonce: Option<Felt>,
@@ -63,6 +67,7 @@ pub struct Declare {
 pub async fn declare<S>(
     contract_name: String,
     fee_args: FeeArgs,
+    dry_run_args: DryRunArgs,
     nonce: Option<Felt>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     artifacts: &HashMap<String, CastStarknetContractArtifacts>,
@@ -89,6 +94,7 @@ where
         contract_definition,
         casm_contract_definition,
         &fee_args,
+        &dry_run_args,
         nonce,
         account,
         wait_config,
@@ -116,11 +122,12 @@ pub fn compile_sierra_to_casm(
     Ok(casm)
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 pub async fn declare_with_artifacts<S>(
     sierra_class: SierraClass,
     compiled_casm: CompiledClass,
     fee_args: &FeeArgs,
+    dry_run_args: &DryRunArgs,
     nonce: Option<Felt>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     wait_config: WaitForTx,
@@ -143,6 +150,15 @@ where
         Arc::new(sierra_class.flatten().map_err(anyhow::Error::from)?),
         casm_class_hash,
     );
+
+    if dry_run_args.dry_run {
+        return dry_run_args
+            .estimate(|| declaration.estimate_fee())
+            .await
+            .map(DeclareResponse::DryRun)
+            .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"))
+            .map_err(StarknetCommandError::from);
+    }
 
     let fee_settings = if fee_args.max_fee.is_some() {
         let fee_estimate = declaration
