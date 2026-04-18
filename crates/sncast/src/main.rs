@@ -735,9 +735,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         }
 
         Commands::Ledger(ledger) => {
-            let result = ledger::ledger(&ledger, ui).await?;
+            let result = ledger::ledger(&ledger, ui).await;
 
-            process_command_result("ledger", Ok(result), ui, None);
+            process_command_result("ledger", result, ui, None);
 
             Ok(())
         }
