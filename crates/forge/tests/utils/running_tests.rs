@@ -53,7 +53,11 @@ pub fn run_test_case(
     rt.block_on(async {
         let target_handles = raw_test_targets
             .into_iter()
-            .map(|t| tokio::task::spawn_blocking(move || prepare_test_target(t, &tracked_resource)))
+            .map(|t| {
+                tokio::task::spawn_blocking(move || {
+                    prepare_test_target(t, &tracked_resource, |_| true)
+                })
+            })
             .collect();
         run_for_package(
             RunForPackageArgs {

@@ -7,7 +7,7 @@ use forge_runner::package_tests::with_config_resolved::{
 };
 use forge_runner::partition::PartitionConfig;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 // Specifies what tests should be included
 pub struct TestsFilter {
     // based on name
@@ -23,18 +23,25 @@ pub struct TestsFilter {
     pub(crate) partitioning_config: PartitionConfig,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub(crate) enum NameFilter {
     All,
     Match(String),
     ExactMatch(String),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum IgnoredFilter {
     IncludeAll,
     IgnoredOnly,
     ExcludeIgnored,
+}
+
+pub(crate) struct PreConfigTestFilter {
+    name_filter: NameFilter,
+    skip_filter: Vec<String>,
+    failed_tests: Option<Vec<String>>,
+    partition_config: PartitionConfig,
 }
 
 impl TestsFilter {
@@ -85,19 +92,23 @@ impl TestsFilter {
         }
     }
 
-    fn is_in_partition(&self, sanitized_name: &str) -> bool {
-        match &self.partitioning_config {
-            PartitionConfig::Disabled => true,
-            PartitionConfig::Enabled {
-                partition,
-                partition_map,
-            } => {
-                let idx = partition_map
-                    .get_assigned_index(sanitized_name)
-                    .expect("Partition map must contain all test cases");
-                idx == partition.index()
-            }
-        }
+    pub(crate) fn pre_config_filter(&self) -> Result<PreConfigTestFilter> {
+        let failed_tests = if self.last_failed_filter {
+            Some(self.failed_tests_cache.load()?)
+        } else {
+            None
+        };
+
+        Ok(PreConfigTestFilter {
+            name_filter: self.name_filter.clone(),
+            skip_filter: self.skip_filter.clone(),
+            failed_tests,
+            partition_config: self.partitioning_config.clone(),
+        })
+    }
+
+    pub(crate) fn has_name_filter(&self) -> bool {
+        !matches!(&self.name_filter, NameFilter::All)
     }
 
     pub(crate) fn filter_tests(
@@ -140,6 +151,43 @@ impl TestsFilter {
     }
 }
 
+impl PreConfigTestFilter {
+    pub(crate) fn includes(&self, raw_name: &str) -> bool {
+        let name = sanitize_test_case_name(raw_name);
+
+        if !self.matches_name_filter(&name) {
+            return false;
+        }
+
+        if self.skip_filter.iter().any(|skip| name.contains(skip)) {
+            return false;
+        }
+
+        if !self.matches_failed_tests_filter(&name) {
+            return false;
+        }
+
+        self.partition_config.includes_test(&name)
+    }
+
+    fn matches_name_filter(&self, name: &str) -> bool {
+        match &self.name_filter {
+            NameFilter::All => true,
+            NameFilter::Match(filter) => name.contains(filter),
+            NameFilter::ExactMatch(exact) => name == exact,
+        }
+    }
+
+    fn matches_failed_tests_filter(&self, name: &str) -> bool {
+        match &self.failed_tests {
+            Some(failed_tests) if !failed_tests.is_empty() => {
+                failed_tests.iter().any(|failed_test| failed_test == name)
+            }
+            Some(_) | None => true,
+        }
+    }
+}
+
 impl TestCaseFilter for TestsFilter {
     fn filter<T>(&self, test_case: &TestCase<T>) -> FilterResult
     where
@@ -147,8 +195,7 @@ impl TestCaseFilter for TestsFilter {
     {
         // Order of filter checks matters, because we do not want to display a test as ignored if
         // it was excluded due to partitioning.
-        let sanitized_test_case_name = sanitize_test_case_name(&test_case.name);
-        if !self.is_in_partition(&sanitized_test_case_name) {
+        if !self.partitioning_config.includes_test(&test_case.name) {
             return FilterResult::Excluded(ExcludeReason::ExcludedFromPartition);
         }
 
@@ -175,8 +222,8 @@ impl TestCaseFilter for TestsFilter {
 mod tests {
     use crate::shared_cache::FailedTestsCache;
     use crate::test_filter::TestsFilter;
-    use cairo_lang_sierra::program::Program;
-    use cairo_lang_sierra::program::ProgramArtifact;
+    use cairo_lang_sierra::program::{Program, ProgramArtifact};
+    use camino::Utf8PathBuf;
     use forge_runner::expected_result::ExpectedTestResult;
     use forge_runner::package_tests::with_config_resolved::{
         TestCaseResolvedConfig, TestCaseWithResolvedConfig, TestTargetWithResolvedConfig,
@@ -226,6 +273,31 @@ mod tests {
             FailedTestsCache::default(),
             PartitionConfig::default(),
         );
+    }
+
+    #[test]
+    fn pre_config_filter_applies_name_skip_and_failed_tests_filters() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let cache_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf()).unwrap();
+        std::fs::write(cache_dir.join(".prev_tests_failed"), "crate::matched\n").unwrap();
+
+        let tests_filter = TestsFilter::from_flags(
+            Some("matched".to_string()),
+            false,
+            vec!["skip".to_string()],
+            false,
+            false,
+            true,
+            FailedTestsCache::new(&cache_dir),
+            PartitionConfig::default(),
+        );
+
+        let pre_config_filter = tests_filter.pre_config_filter().unwrap();
+
+        assert!(pre_config_filter.includes("crate::matched__snforge_internal_test_generated"));
+        assert!(!pre_config_filter.includes("crate::not_matched"));
+        assert!(!pre_config_filter.includes("crate::matched_skip"));
+        assert!(!pre_config_filter.includes("crate::matched_but_not_failed"));
     }
 
     #[test]

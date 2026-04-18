@@ -25,9 +25,8 @@ use console::Style;
 use forge_runner::{
     forge_config::{ForgeConfig, ForgeTrackedResource},
     package_tests::{
-        raw::TestTargetRaw,
-        with_config::TestTargetWithConfig,
-        with_config_resolved::{TestCaseWithResolvedConfig, sanitize_test_case_name},
+        raw::TestTargetRaw, with_config::TestTargetWithConfig,
+        with_config_resolved::TestCaseWithResolvedConfig,
     },
     partition::PartitionConfig,
     running::target::prepare_test_target,
@@ -126,9 +125,16 @@ impl RunForPackageArgs {
 
         let tracked_resource = forge_config.test_runner_config.tracked_resource;
 
+        let pre_config_filter = Arc::new(tests_filter.pre_config_filter()?);
+
         let target_handles = raw_test_targets
             .into_iter()
-            .map(|t| spawn_prepare_test_target(t, tracked_resource))
+            .map(|t| {
+                let pre_config_filter = pre_config_filter.clone();
+                spawn_prepare_test_target(t, tracked_resource, move |name| {
+                    pre_config_filter.includes(name)
+                })
+            })
             .collect();
 
         Ok(RunForPackageArgs {
@@ -145,29 +151,21 @@ impl RunForPackageArgs {
 fn spawn_prepare_test_target(
     target: TestTargetRaw,
     tracked_resource: ForgeTrackedResource,
+    should_run_config_pass: impl Fn(&str) -> bool + Sync + Send + 'static,
 ) -> JoinHandle<Result<TestTargetWithConfig>> {
-    tokio::task::spawn_blocking(move || prepare_test_target(target, &tracked_resource))
+    tokio::task::spawn_blocking(move || {
+        prepare_test_target(target, &tracked_resource, should_run_config_pass)
+    })
 }
 
 fn sum_test_cases_from_test_target(
     test_cases: &[TestCaseWithResolvedConfig],
     partitioning_config: &PartitionConfig,
 ) -> usize {
-    match partitioning_config {
-        PartitionConfig::Disabled => test_cases.len(),
-        PartitionConfig::Enabled {
-            partition,
-            partition_map,
-        } => test_cases
-            .iter()
-            .filter(|test_case| {
-                let test_assigned_index = partition_map
-                    .get_assigned_index(&sanitize_test_case_name(&test_case.name))
-                    .expect("Partition map must contain all test cases");
-                test_assigned_index == partition.index()
-            })
-            .count(),
-    }
+    test_cases
+        .iter()
+        .filter(|test_case| partitioning_config.includes_test(&test_case.name))
+        .count()
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
@@ -184,7 +182,6 @@ pub async fn run_for_package(
     ui: Arc<UI>,
     exit_first_channel: &mut ExitFirstChannel,
 ) -> Result<PackageTestResult> {
-    // Resolve all targets first so the collected count includes #[ignore] filtering.
     let mut resolved_targets = vec![];
     let mut all_tests = 0;
     let mut not_filtered_total = 0;

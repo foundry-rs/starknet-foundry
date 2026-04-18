@@ -139,7 +139,7 @@ fn fork_aliased_decorator() {
                 .into_iter()
                 .map(|t| {
                     tokio::task::spawn_blocking(move || {
-                        prepare_test_target(t, &ForgeTrackedResource::CairoSteps)
+                        prepare_test_target(t, &ForgeTrackedResource::CairoSteps, |_| true)
                     })
                 })
                 .collect();
@@ -245,7 +245,7 @@ fn fork_aliased_decorator_overrding() {
                 .into_iter()
                 .map(|t| {
                     tokio::task::spawn_blocking(move || {
-                        prepare_test_target(t, &ForgeTrackedResource::CairoSteps)
+                        prepare_test_target(t, &ForgeTrackedResource::CairoSteps, |_| true)
                     })
                 })
                 .collect();
