@@ -72,7 +72,7 @@ jobs:
             cargo nextest archive --cargo-profile ci -p forge --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
           fi
       - name: Upload archive to workflow
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: nextest-archive-${{ runner.os }}
           path: nextest-archive-${{ runner.os }}.tar.zst
@@ -98,7 +98,7 @@ jobs:
       - name: Build and archive tests
         run: cargo nextest archive --cargo-profile ci -p forge --features "${{ steps.test_features.outputs.features }}" --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst'
       - name: Upload archive to workflow
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: nextest-archive-${{ runner.os }}-native
           path: nextest-archive-${{ runner.os }}-native.tar.zst
@@ -117,7 +117,7 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: nextest-archive-${{ runner.os }}
       - name: nextest partition ${{ matrix.partition }}/3
@@ -137,7 +137,7 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: nextest-archive-${{ runner.os }}-native
       - name: nextest partition ${{ matrix.partition }}/3
@@ -185,7 +185,7 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: nextest-archive-${{ runner.os }}
       - name: nextest partition ${{ matrix.partition }}/3
@@ -233,7 +233,7 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: nextest-archive-${{ runner.os }}-native
       - name: nextest partition ${{ matrix.partition }}/3
@@ -317,7 +317,7 @@ jobs:
     name: Test Oracles in Forge
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
         with:
           scarb-version: '2.13.1'
@@ -396,7 +396,7 @@ jobs:
           exit 0
 
       - name: Check typos
-        uses: crate-ci/typos@v1.40.0
+        uses: crate-ci/typos@v1.45.1
 
   build-docs:
     name: Test Building Docs
