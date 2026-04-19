@@ -18,6 +18,7 @@ use sncast::helpers::fee::FeeArgs;
 use starknet_rust::core::types::TransactionReceipt::Invoke;
 use starknet_rust::core::types::{InvokeTransaction, Transaction, TransactionExecutionStatus};
 use starknet_types_core::felt::{Felt, NonZeroFelt};
+use tempfile::tempdir;
 use test_case::test_case;
 
 #[tokio::test]
@@ -472,7 +473,7 @@ async fn test_dry_run_json_output() {
 
 #[tokio::test]
 async fn test_dry_run_args_conflict_with_fee_args() {
-    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
 
     let args = vec![
         "--accounts-file",

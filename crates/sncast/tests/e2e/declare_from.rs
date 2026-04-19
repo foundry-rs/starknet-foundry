@@ -13,13 +13,13 @@ use std::fs;
 use std::process::Stdio;
 use tempfile::tempdir;
 
+const EXAMPLE_CONTRACT_CLASS_HASH_SEPOLIA: &str =
+    "0x66802613e2cd02ea21430a56181d9ee83c54d4ccdc45efa497d41fe1dc55a0e";
+
 #[tokio::test]
 async fn test_happy_case() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
-
-    let example_contract_class_hash_sepolia =
-        "0x66802613e2cd02ea21430a56181d9ee83c54d4ccdc45efa497d41fe1dc55a0e";
 
     let args = vec![
         "--accounts-file",
@@ -28,7 +28,7 @@ async fn test_happy_case() {
         "user1",
         "declare-from",
         "--class-hash",
-        example_contract_class_hash_sepolia,
+        EXAMPLE_CONTRACT_CLASS_HASH_SEPOLIA,
         "--source-url",
         SEPOLIA_RPC_URL,
         "--url",
