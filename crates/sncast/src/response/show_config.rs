@@ -53,7 +53,7 @@ impl SncastCommandMessage for ShowConfigResponse {
             })
             .field("Show Explorer Links", &self.show_explorer_links.to_string())
             .if_some(self.block_explorer.as_ref(), |b, explorer| {
-                b.field("Block Explorer", &format!("{explorer:?}",))
+                b.field("Block Explorer", &format!("{explorer:?}"))
             });
 
         builder.build()

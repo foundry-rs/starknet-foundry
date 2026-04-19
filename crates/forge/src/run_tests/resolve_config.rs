@@ -23,7 +23,7 @@ use starknet_api::block::BlockNumber;
 pub async fn resolve_config(
     test_target: TestTargetWithConfig,
     fork_targets: &[ForkTarget],
-    block_number_map: &mut BlockNumberMap,
+    block_number_map: &BlockNumberMap,
     tests_filter: &TestsFilter,
 ) -> Result<TestTargetWithResolvedConfig> {
     let mut test_cases = Vec::with_capacity(test_target.test_cases.len());
@@ -64,7 +64,7 @@ pub async fn resolve_config(
 
 async fn resolve_fork_config(
     fork_config: Option<RawForkConfig>,
-    block_number_map: &mut BlockNumberMap,
+    block_number_map: &BlockNumberMap,
     fork_targets: &[ForkTarget],
 ) -> Result<Option<ResolvedForkConfig>> {
     let Some(fc) = fork_config else {
@@ -232,7 +232,7 @@ mod tests {
                     "https://not_taken.com",
                     BlockId::BlockNumber(120)
                 )],
-                &mut BlockNumberMap::default(),
+                &BlockNumberMap::default(),
                 &tests_filter,
             )
             .await
@@ -262,14 +262,9 @@ mod tests {
             PartitionConfig::default(),
         );
 
-        let resolved = resolve_config(
-            test_target,
-            &[],
-            &mut BlockNumberMap::default(),
-            &tests_filter,
-        )
-        .await
-        .unwrap();
+        let resolved = resolve_config(test_target, &[], &BlockNumberMap::default(), &tests_filter)
+            .await
+            .unwrap();
 
         assert_eq!(resolved.test_cases.len(), 1);
         assert!(resolved.test_cases[0].config.ignored);
@@ -306,7 +301,7 @@ mod tests {
         let resolved = resolve_config(
             test_target,
             &fork_targets,
-            &mut BlockNumberMap::default(),
+            &BlockNumberMap::default(),
             &tests_filter,
         )
         .await
@@ -351,7 +346,7 @@ mod tests {
         let resolved = resolve_config(
             test_target,
             &fork_targets,
-            &mut BlockNumberMap::default(),
+            &BlockNumberMap::default(),
             &tests_filter,
         )
         .await
@@ -408,7 +403,7 @@ mod tests {
         let resolved = resolve_config(
             test_target,
             &fork_targets,
-            &mut BlockNumberMap::default(),
+            &BlockNumberMap::default(),
             &tests_filter,
         )
         .await
@@ -477,7 +472,7 @@ mod tests {
         let resolved = resolve_config(
             test_target,
             &fork_targets,
-            &mut BlockNumberMap::default(),
+            &BlockNumberMap::default(),
             &tests_filter,
         )
         .await
@@ -535,7 +530,7 @@ mod tests {
         let resolved = resolve_config(
             test_target,
             &fork_targets,
-            &mut BlockNumberMap::default(),
+            &BlockNumberMap::default(),
             &tests_filter,
         )
         .await
@@ -582,14 +577,9 @@ mod tests {
             PartitionConfig::default(),
         );
 
-        let resolved = resolve_config(
-            test_target,
-            &[],
-            &mut BlockNumberMap::default(),
-            &tests_filter,
-        )
-        .await
-        .unwrap();
+        let resolved = resolve_config(test_target, &[], &BlockNumberMap::default(), &tests_filter)
+            .await
+            .unwrap();
 
         assert_eq!(resolved.test_cases.len(), 1);
 
@@ -634,7 +624,7 @@ mod tests {
         let resolved = resolve_config(
             test_target,
             &fork_targets,
-            &mut BlockNumberMap::default(),
+            &BlockNumberMap::default(),
             &tests_filter,
         )
         .await
@@ -679,7 +669,7 @@ mod tests {
         let resolved = resolve_config(
             test_target,
             &fork_targets,
-            &mut BlockNumberMap::default(),
+            &BlockNumberMap::default(),
             &tests_filter,
         )
         .await
