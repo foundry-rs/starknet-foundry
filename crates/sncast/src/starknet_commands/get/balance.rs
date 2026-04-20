@@ -6,8 +6,7 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::helpers::token::Token;
 use sncast::response::balance::BalanceResponse;
-use sncast::response::errors::SNCastProviderError;
-use sncast::response::errors::StarknetCommandError;
+use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
 use sncast::response::ui::UI;
 use sncast::{get_account, get_block_id};
 use starknet_rust::{
@@ -75,9 +74,11 @@ pub async fn balance(balance: Balance, config: CastConfig, ui: &UI) -> anyhow::R
     let provider = balance.rpc.get_provider(&config, ui).await?;
     let account = get_account(&config, &provider, &balance.rpc, ui).await?;
 
-    let result = get_balance(account.address(), &provider, &balance).await?;
+    let result = get_balance(account.address(), &provider, &balance)
+        .await
+        .map_err(handle_starknet_command_error);
 
-    process_command_result("get balance", Ok(result), ui, None);
+    process_command_result("get balance", result, ui, None);
 
     Ok(())
 }
@@ -86,7 +87,7 @@ pub async fn get_balance(
     account_address: Felt,
     provider: &JsonRpcClient<HttpTransport>,
     balance: &Balance,
-) -> Result<BalanceResponse> {
+) -> Result<BalanceResponse, StarknetCommandError> {
     let call = FunctionCall {
         contract_address: balance.token_identifier.contract_address(),
         entry_point_selector: get_selector_from_name("balance_of").expect("Failed to get selector"),
@@ -97,14 +98,14 @@ pub async fn get_balance(
     let res = provider
         .call(call, block_id)
         .await
-        .map_err(|err| StarknetCommandError::ProviderError(SNCastProviderError::from(err)))?;
+        .map_err(|err| StarknetCommandError::ProviderError(err.into()))?;
 
     let token_unit = balance
         .token_identifier
         .token_suffix()
         .map(|token| token.as_token_unit());
 
-    let balance = erc20_balance_to_u256(&res)?;
+    let balance = erc20_balance_to_u256(&res).map_err(StarknetCommandError::from)?;
 
     Ok(BalanceResponse {
         balance,
