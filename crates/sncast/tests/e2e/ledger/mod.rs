@@ -2,7 +2,7 @@
 
 use std::env;
 use std::{borrow::Cow, sync::Arc};
-
+use std::time::Duration;
 use crate::helpers::constants::URL;
 use crate::helpers::fixtures::mint_token;
 use clap::Command;
@@ -47,7 +47,7 @@ pub(crate) const LEDGER_PUBLIC_KEY: &str =
 pub(crate) const LEDGER_ACCOUNT_NAME: &str = "my_ledger";
 
 pub(crate) fn setup_speculos(port: u16) -> (Arc<SpeculosClient>, String) {
-    let client = Arc::new(SpeculosClient::new(DeviceModel::Nanox, port, APP_PATH).unwrap());
+    let client = Arc::new(SpeculosClient::new_with_timeout(DeviceModel::Nanox, port, APP_PATH, Duration::from_secs(60)).unwrap());
     let url = format!("http://127.0.0.1:{port}");
     (client, url)
 }
