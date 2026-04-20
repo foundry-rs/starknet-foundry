@@ -104,7 +104,7 @@ block-explorer = "Voyager"
 
 The `scarb-profile` field sets which [Scarb profile](https://docs.swmansion.com/scarb/docs/reference/manifest.html#profiles) `sncast` uses when it runs `scarb` commands (e.g. `scarb build` when declaring contracts or running scripts).
 
-If omitted, the effective default is `release`.
+Defaults to `release`.
 
 ```toml
 [sncast.myprofile]
