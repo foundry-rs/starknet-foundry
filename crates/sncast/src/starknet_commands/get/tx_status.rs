@@ -22,7 +22,11 @@ pub struct TxStatus {
     pub rpc: RpcArgs,
 }
 
-pub async fn tx_status(tx_status: TxStatus, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCode> {
+pub async fn tx_status(
+    tx_status: TxStatus,
+    config: CastConfig,
+    ui: &UI,
+) -> anyhow::Result<ExitCode> {
     let provider = tx_status.rpc.get_provider(&config, ui).await?;
 
     let result = get_tx_status(&provider, tx_status.transaction_hash)

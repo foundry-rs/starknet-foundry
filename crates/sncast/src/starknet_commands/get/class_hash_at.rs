@@ -29,7 +29,11 @@ pub struct ClassHashAt {
     pub rpc: RpcArgs,
 }
 
-pub async fn class_hash_at(args: ClassHashAt, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCode> {
+pub async fn class_hash_at(
+    args: ClassHashAt,
+    config: CastConfig,
+    ui: &UI,
+) -> anyhow::Result<ExitCode> {
     let provider = args.rpc.get_provider(&config, ui).await?;
 
     let result = get_class_hash_at(&provider, args.contract_address, &args.block_id)
