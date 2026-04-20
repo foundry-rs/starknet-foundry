@@ -61,6 +61,8 @@ fn strip_generic_suffix(type_str: &str) -> &str {
     }
 }
 
+/// Returns just the last path segment of a type, ignoring generic arguments.
+/// E.g. `"core::option::Option::<u32>"` → `"Option"`.
 fn base_type_name(type_str: &str) -> &str {
     strip_generic_suffix(type_str)
         .split("::")
@@ -71,6 +73,10 @@ fn base_type_name(type_str: &str) -> &str {
 fn validate_path_argument(param_type: &str, path_argument_joined: &str) -> Result<()> {
     let canonical = strip_generic_suffix(param_type);
 
+    // Validate that the argument matches the expected type, allowing partially-qualified
+    // paths (e.g. `option::Option` for `core::option::Option`). The `::` prefix ensures
+    // the match starts at a real segment boundary, rejecting mid-segment substrings
+    // (e.g. `ion::Option` would falsely match `core::option::Option` without it).
     if canonical != path_argument_joined
         && !canonical.ends_with(&format!("::{path_argument_joined}"))
     {
@@ -88,6 +94,9 @@ fn extract_generic_args<'a>(type_str: &'a str, type_prefix: &str) -> Option<&'a 
         .and_then(|s| s.strip_suffix('>'))
 }
 
+/// Resolves a variant for the built-in `Option` and `Result` types, which are not
+/// listed in the ABI and must be handled specially. Returns `None` if `expected_type`
+/// is neither, signalling the caller to fall through to a regular ABI lookup.
 fn resolve_corelib_enum_variant<'a>(
     expected_type: &'a str,
     variant_name: &str,
@@ -130,6 +139,9 @@ fn resolve_corelib_enum_variant<'a>(
     Ok(None)
 }
 
+/// Finds the position of the first comma that is not nested inside `<>` or `()`.
+/// Used to split the two generic arguments of `Result::<OkType, ErrType>` without
+/// being confused by commas inside nested generic types.
 fn top_level_comma_pos(s: &str) -> Option<usize> {
     let mut angle_depth = 0;
     let mut paren_depth = 0;
@@ -171,6 +183,8 @@ fn find_all_structs(abi: &[AbiEntry]) -> Vec<&AbiStruct> {
         .collect()
 }
 
+/// Looks up `variant` in the ABI enum identified by `path` and returns its
+/// index in the enum definition together with the full `AbiNamedMember`.
 fn find_enum_variant_position<'a>(
     variant: &str,
     path: &[String],
@@ -367,6 +381,7 @@ fn resolve_enum_variant<'a>(
     let enum_path_joined = enum_path.join("::");
     validate_path_argument(expected_type, &enum_path_joined)?;
 
+    // First, check if the variant belongs to a corelib type (Option or Result) that is not listed in the contract's ABI.
     if let Some(resolved) = resolve_corelib_enum_variant(expected_type, variant_name)? {
         Ok(resolved)
     } else {
