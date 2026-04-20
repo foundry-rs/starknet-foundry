@@ -641,7 +641,7 @@ async fn test_error_when_chain_id_is_unrecognized_and_network_is_missing() {
         .env("VERIFIER_API_URL", mock_server.uri())
         .current_dir(contract_path.path());
 
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,

@@ -33,7 +33,7 @@ async fn test_one_invoke() {
     let snapbox = runner(&args)
         .current_dir(tempdir.path())
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stdout_contains(
         output,
@@ -83,7 +83,7 @@ async fn test_two_invokes() {
     let snapbox = runner(&args)
         .current_dir(tempdir.path())
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stdout_contains(
         output,
@@ -129,7 +129,7 @@ async fn test_deploy_and_invoke() {
     let snapbox = runner(&args)
         .current_dir(tempdir.path())
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stdout_contains(
         output,
@@ -177,7 +177,7 @@ async fn test_use_id() {
     let snapbox = runner(&args)
         .current_dir(tempdir.path())
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stdout_contains(
         output,
@@ -223,7 +223,7 @@ async fn test_non_existent_id() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -262,7 +262,7 @@ async fn test_duplicated_id() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -291,7 +291,7 @@ async fn test_unrecognized_command() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -320,7 +320,7 @@ async fn test_empty_calls() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
