@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `--dry-run` and `--detailed` flags to estimate the fee of a transaction without sending it to the network
+- `--dry-run` and `--detailed` flags for all transaction commands, allowing users to validate transaction logic and estimate fees without submitting to the network
 
 #### Fixed
 
