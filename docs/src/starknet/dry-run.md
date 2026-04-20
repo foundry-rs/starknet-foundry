@@ -44,6 +44,8 @@ Overall Fee: [..] Fri (~[..] STRK)
 
 To include a detailed fee breakdown, add `--detailed`:
 
+<!-- TODO(#2736) -->
+<!-- { "ignored_output": true } -->
 ```shell
 $ sncast invoke \
   --network sepolia \
