@@ -62,7 +62,6 @@ impl Arguments {
         this
     }
 
-    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.named.is_empty() && self.unnamed.is_empty() && self.shorthand.is_empty()
     }
