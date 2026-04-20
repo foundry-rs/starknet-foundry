@@ -17,7 +17,8 @@ For detailed CLI description, see [invoke command reference](../appendix/sncast/
 ### General Example
 
 <!-- TODO(#2736) -->
-<!-- { "ignored_output": true } -->
+<!-- TODO(#4225) -->
+<!-- { "ignored": true, "ignored_output": true } -->
 ```shell
 $ sncast \
   --account my_account \

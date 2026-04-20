@@ -338,7 +338,7 @@ async fn test_contract_already_declared() {
     runner(&args).current_dir(tempdir.path()).assert().success();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -377,7 +377,7 @@ async fn test_contract_already_declared_estimate_fee() {
     runner(&args).current_dir(tempdir.path()).assert().success();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -408,7 +408,7 @@ async fn test_invalid_nonce() {
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -441,7 +441,7 @@ async fn test_wrong_contract_name_passed() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
     assert_stderr_contains(
         output,
         indoc! {r"
@@ -554,7 +554,7 @@ fn test_too_low_gas() {
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -695,7 +695,7 @@ async fn test_workspaces_package_no_contract() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,

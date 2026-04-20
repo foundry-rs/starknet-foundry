@@ -22,6 +22,7 @@ use sncast::{SignerSource, SignerType, WaitForTx, get_chain_id};
 use starknet_rust::providers::Provider;
 use starknet_types_core::felt::Felt;
 use std::io::{self, IsTerminal};
+use std::process::ExitCode;
 use std::{fs::OpenOptions, io::Write};
 use toml::Value;
 
@@ -223,7 +224,7 @@ pub async fn account(
     config: CastConfig,
     ui: &UI,
     wait_config: WaitForTx,
-) -> anyhow::Result<()> {
+) -> Result<ExitCode> {
     match account.command {
         Commands::Import(import) => {
             let provider = import.rpc.get_provider(&config, ui).await?;
@@ -251,8 +252,7 @@ pub async fn account(
                 );
             }
 
-            process_command_result("account import", result, ui, None);
-            Ok(())
+            Ok(process_command_result("account import", result, ui, None))
         }
         Commands::Create(create) => {
             let provider = create.rpc.get_provider(&config, ui).await?;
@@ -289,8 +289,12 @@ pub async fn account(
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
 
-            process_command_result("account create", result, ui, block_explorer_link);
-            Ok(())
+            Ok(process_command_result(
+                "account create",
+                result,
+                ui,
+                block_explorer_link,
+            ))
         }
 
         Commands::Deploy(deploy) => {
@@ -332,8 +336,12 @@ pub async fn account(
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
-            process_command_result("account deploy", result, ui, block_explorer_link);
-            Ok(())
+            Ok(process_command_result(
+                "account deploy",
+                result,
+                ui,
+                block_explorer_link,
+            ))
         }
 
         Commands::Delete(delete) => {
@@ -347,8 +355,7 @@ pub async fn account(
                 delete.yes,
             );
 
-            process_command_result("account delete", result, ui, None);
-            Ok(())
+            Ok(process_command_result("account delete", result, ui, None))
         }
 
         Commands::List(options) => {
@@ -356,7 +363,7 @@ pub async fn account(
                 "account delete",
                 AccountsListMessage::new(config.accounts_file, options.display_private_keys)?,
             );
-            Ok(())
+            Ok(ExitCode::SUCCESS)
         }
     }
 }

@@ -171,7 +171,7 @@ fn test_wrong_calldata() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     // TODO(#3107)
     // 0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 is "Input too long for arguments"
@@ -233,7 +233,7 @@ fn test_wrong_block_id() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,

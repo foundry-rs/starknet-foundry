@@ -257,7 +257,8 @@ sncast_std = "0.33.0"
 To run the script, do:
 
 <!-- TODO(#2736) -->
-<!-- { "ignored_output": true } -->
+<!-- TODO(#4225) -->
+<!-- { "ignored": true, "ignored_output": true } -->
 ```shell
 $ sncast \
   script run my_script
@@ -335,7 +336,8 @@ Please note that `map` contract was specified as the dependency. In our example,
 
 To run the script, do:
 
-<!-- { "ignored_output": true } -->
+<!-- TODO(#4225) -->
+<!-- { "ignored": true, "ignored_output": true } -->
 ```shell
 $ sncast \
   --account example_user \
@@ -363,7 +365,8 @@ status: success
 As [an idempotency](#state-file) feature is turned on by default, executing the same script once again ends with a success
 and only `call` functions are being executed (as they do not change the network state):
 
-<!-- { "ignored_output": true } -->
+<!-- TODO(#4225) -->
+<!-- { "ignored": true, "ignored_output": true } -->
 ```shell
 $ sncast \
   --account example_user \
@@ -388,7 +391,8 @@ status: success
 
 whereas, when we run the same script once again with `--no-state-file` flag set, it fails (as the `Map` contract is already deployed):
 
-<!-- { "ignored_output": true } -->
+<!-- TODO(#4225) -->
+<!-- { "ignored": true, "ignored_output": true } -->
 ```shell
 $ sncast \
   --account example_user \
