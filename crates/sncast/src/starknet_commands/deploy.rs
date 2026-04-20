@@ -111,8 +111,9 @@ where
             .estimate(|| deployment.estimate_fee())
             .await
             .map(StandardDeployResponse::DryRun)
-            .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"))
-            .map_err(StarknetCommandError::from);
+            .map_err(|e| {
+                StarknetCommandError::from(anyhow!("Failed to estimate fee for dry run: {e}"))
+            });
     }
 
     let fee_settings = if fee_args.max_fee.is_some() {

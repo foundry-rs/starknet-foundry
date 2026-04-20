@@ -84,8 +84,9 @@ where
             .estimate(|| execution.estimate_fee())
             .await
             .map(InvokeResponse::DryRun)
-            .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"))
-            .map_err(StarknetCommandError::from);
+            .map_err(|e| {
+                StarknetCommandError::from(anyhow!("Failed to estimate fee for dry run: {e}"))
+            });
     }
 
     execute_calls(
