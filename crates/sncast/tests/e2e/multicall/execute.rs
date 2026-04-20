@@ -33,7 +33,7 @@ async fn test_one_invoke() {
     let snapbox = runner(&args)
         .current_dir(tempdir.path())
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
-    let output = snapbox.assert().failure();
+    let output = snapbox.assert().success();
 
     assert_stdout_contains(
         output,
@@ -83,7 +83,7 @@ async fn test_two_invokes() {
     let snapbox = runner(&args)
         .current_dir(tempdir.path())
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
-    let output = snapbox.assert().failure();
+    let output = snapbox.assert().success();
 
     assert_stdout_contains(
         output,
@@ -129,7 +129,7 @@ async fn test_deploy_and_invoke() {
     let snapbox = runner(&args)
         .current_dir(tempdir.path())
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
-    let output = snapbox.assert().failure();
+    let output = snapbox.assert().success();
 
     assert_stdout_contains(
         output,
@@ -177,7 +177,7 @@ async fn test_use_id() {
     let snapbox = runner(&args)
         .current_dir(tempdir.path())
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
-    let output = snapbox.assert().failure();
+    let output = snapbox.assert().success();
 
     assert_stdout_contains(
         output,
