@@ -13,8 +13,116 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test-ledger:
-    name: Test Ledger
+  test-ledger-1:
+    name: Test Ledger 1
+    runs-on: ubuntu-latest
+    container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
+      - uses: ./.github/actions/setup-tools
+      - name: Run tests
+        run: cargo test --profile ci -p sncast --features ledger-emulator ledger -- --ignored
+
+  test-ledger-2:
+    name: Test Ledger 2
+    runs-on: ubuntu-latest
+    container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
+      - uses: ./.github/actions/setup-tools
+      - name: Run tests
+        run: cargo test --profile ci -p sncast --features ledger-emulator ledger -- --ignored
+
+  test-ledger-3:
+    name: Test Ledger 3
+    runs-on: ubuntu-latest
+    container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
+      - uses: ./.github/actions/setup-tools
+      - name: Run tests
+        run: cargo test --profile ci -p sncast --features ledger-emulator ledger -- --ignored
+
+  test-ledger-4:
+    name: Test Ledger 4
+    runs-on: ubuntu-latest
+    container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
+      - uses: ./.github/actions/setup-tools
+      - name: Run tests
+        run: cargo test --profile ci -p sncast --features ledger-emulator ledger -- --ignored
+
+  test-ledger-5:
+    name: Test Ledger 5
+    runs-on: ubuntu-latest
+    container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
+      - uses: ./.github/actions/setup-tools
+      - name: Run tests
+        run: cargo test --profile ci -p sncast --features ledger-emulator ledger -- --ignored
+
+  test-ledger-6:
+    name: Test Ledger 6
+    runs-on: ubuntu-latest
+    container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
+      - uses: ./.github/actions/setup-tools
+      - name: Run tests
+        run: cargo test --profile ci -p sncast --features ledger-emulator ledger -- --ignored
+
+  test-ledger-7:
+    name: Test Ledger 7
+    runs-on: ubuntu-latest
+    container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
+      - uses: ./.github/actions/setup-tools
+      - name: Run tests
+        run: cargo test --profile ci -p sncast --features ledger-emulator ledger -- --ignored
+
+  test-ledger-8:
+    name: Test Ledger 8
+    runs-on: ubuntu-latest
+    container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
+      - uses: ./.github/actions/setup-tools
+      - name: Run tests
+        run: cargo test --profile ci -p sncast --features ledger-emulator ledger -- --ignored
+
+  test-ledger-9:
+    name: Test Ledger 9
+    runs-on: ubuntu-latest
+    container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
+      - uses: ./.github/actions/setup-tools
+      - name: Run tests
+        run: cargo test --profile ci -p sncast --features ledger-emulator ledger -- --ignored
+
+  test-ledger-10:
+    name: Test Ledger 10
     runs-on: ubuntu-latest
     container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools
 
