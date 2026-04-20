@@ -861,8 +861,8 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
             - Local config: {local}
             - Global config: {global}
         ",
-            global = global_path.as_ref().map_or("missing", |p| p.as_str()),
             local = local_path.as_ref().map_or("missing", |p| p.as_str()),
+            global = global_path.as_ref().map_or("missing", |p| p.as_str()),
         }
     })
 }
