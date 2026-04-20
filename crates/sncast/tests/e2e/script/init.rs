@@ -118,7 +118,7 @@ fn test_init_fails_when_scripts_dir_exists_in_cwd() {
         .expect("Failed to create scripts directory in the current temp directory");
 
     let snapbox = runner(&["script", "init", script_name]).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -143,7 +143,7 @@ fn test_init_twice_fails() {
     assert!(temp_dir.path().join(INIT_SCRIPTS_DIR).exists());
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,

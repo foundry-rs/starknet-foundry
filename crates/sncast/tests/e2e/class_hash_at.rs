@@ -73,7 +73,7 @@ async fn test_json_output() {
 async fn test_nonexistent_contract_address() {
     let args = vec!["get", "class-hash-at", "0x0", "--url", URL];
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -96,7 +96,7 @@ async fn test_invalid_block_id() {
         URL,
     ];
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
