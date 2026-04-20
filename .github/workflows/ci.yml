@@ -132,3 +132,42 @@ jobs:
       - uses: ./.github/actions/setup-tools
       - name: Run tests
         run: cargo test --profile ci -p sncast --features ledger-emulator ledger -- --ignored
+
+  ledger-tally:
+    name: Ledger Tally
+    if: always()
+    needs:
+      - test-ledger-1
+      - test-ledger-2
+      - test-ledger-3
+      - test-ledger-4
+      - test-ledger-5
+      - test-ledger-6
+      - test-ledger-7
+      - test-ledger-8
+      - test-ledger-9
+      - test-ledger-10
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Count and report
+        id: tally
+        env:
+          RESULTS: ${{ needs.test-ledger-1.result }} ${{ needs.test-ledger-2.result }} ${{ needs.test-ledger-3.result }} ${{ needs.test-ledger-4.result }} ${{ needs.test-ledger-5.result }} ${{ needs.test-ledger-6.result }} ${{ needs.test-ledger-7.result }} ${{ needs.test-ledger-8.result }} ${{ needs.test-ledger-9.result }} ${{ needs.test-ledger-10.result }}
+        run: |
+          pass=$(echo "$RESULTS" | tr ' ' '\n' | grep -c '^success$' || true)
+          if   [ "$pass" -eq 10 ]; then verdict="✅ $pass/10 passed. OK."
+          elif [ "$pass" -ge 4  ]; then verdict="⚠️ $pass/10 passed. Flaky."
+          else                          verdict="❌ $pass/10 passed. Fail."
+          fi
+          echo "$verdict"
+          echo "$verdict" >> "$GITHUB_STEP_SUMMARY"
+          echo "verdict=$verdict" >> "$GITHUB_OUTPUT"
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.tally.outputs.verdict }}
