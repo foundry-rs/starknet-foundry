@@ -707,7 +707,7 @@ async fn test_workspaces_package_no_contract() {
 }
 
 #[tokio::test]
-async fn test_no_scarb_profile() {
+async fn test_non_existent_profile() {
     let contract_path =
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "694215");
     fs::copy(
@@ -721,6 +721,8 @@ async fn test_no_scarb_profile() {
         accounts_json_path.as_str(),
         "--profile",
         "profile5",
+        "--scarb-profile",
+        "nonexistent_profile",
         "declare",
         "--url",
         URL,
@@ -737,7 +739,7 @@ async fn test_no_scarb_profile() {
         output,
         indoc! {"
             [..]
-            [WARNING] Profile profile5 does not exist in scarb, using 'release' profile.
+            [WARNING] Profile nonexistent_profile does not exist in scarb, using 'release' profile.
             Success: Declaration completed
 
             Class Hash:       [..]
