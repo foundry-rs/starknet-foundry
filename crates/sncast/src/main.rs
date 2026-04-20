@@ -351,8 +351,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
 
             let result = match result {
                 Ok(DeclareResponse::DryRun(response)) => {
-                    process_command_result("declare", Ok(response), ui, None);
-                    return Ok(());
+                    return Ok(process_command_result("declare", Ok(response), ui, None));
                 }
                 Ok(DeclareResponse::Success(declare_transaction_response)) => {
                     Ok(declare_transaction_response)
@@ -430,8 +429,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
 
             let result = match result {
                 Ok(DeclareResponse::DryRun(response)) => {
-                    process_command_result("declare", Ok(response), ui, None);
-                    return Ok(());
+                    return Ok(process_command_result("declare", Ok(response), ui, None));
                 }
                 Ok(DeclareResponse::Success(declare_transaction_response)) => {
                     Ok(declare_transaction_response)
