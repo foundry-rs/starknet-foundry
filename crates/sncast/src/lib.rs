@@ -1,4 +1,4 @@
-use std::num::{NonZeroU16, NonZeroU8};
+use std::num::{NonZeroU8, NonZeroU16};
 
 use crate::helpers::account::{check_account_exists, get_account_from_devnet, is_devnet_account};
 use crate::helpers::configuration::CastConfig;
@@ -786,12 +786,16 @@ pub async fn wait_for_tx(
                             .to_string(),
                     );
                 });
-                sleep(Duration::from_secs(wait_params.get_retry_interval().get().into()));
+                sleep(Duration::from_secs(
+                    wait_params.get_retry_interval().get().into(),
+                ));
             }
             Err(err) => return Err(WaitForTransactionError::ProviderError(err.into())),
         }
 
-        sleep(Duration::from_secs(wait_params.get_retry_interval().get().into()));
+        sleep(Duration::from_secs(
+            wait_params.get_retry_interval().get().into(),
+        ));
     }
 
     Err(WaitForTransactionError::TimedOut)
@@ -909,7 +913,7 @@ pub fn get_default_state_file_name(script_name: &str, chain_id: &str) -> String 
 
 #[cfg(test)]
 mod tests {
-    use std::num::{NonZeroU16, NonZeroU8};
+    use std::num::{NonZeroU8, NonZeroU16};
 
     use crate::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
     use crate::{

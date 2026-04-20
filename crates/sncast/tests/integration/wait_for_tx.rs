@@ -1,4 +1,4 @@
-use std::num::{NonZeroU16, NonZeroU8};
+use std::num::{NonZeroU8, NonZeroU16};
 
 use crate::helpers::{
     constants::{ACCOUNT, ACCOUNT_FILE_PATH, URL},
@@ -169,9 +169,8 @@ async fn test_happy_path_handle_wait_for_tx() {
 
 #[tokio::test]
 async fn test_wait_for_wrong_retry_values() {
-    let err =
-        ValidatedWaitParams::new(NonZeroU8::new(2).unwrap(), NonZeroU16::new(1).unwrap())
-            .unwrap_err();
+    let err = ValidatedWaitParams::new(NonZeroU8::new(2).unwrap(), NonZeroU16::new(1).unwrap())
+        .unwrap_err();
     assert_eq!(
         err.to_string(),
         "retry_interval cannot be greater than timeout"

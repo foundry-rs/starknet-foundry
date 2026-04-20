@@ -1,4 +1,4 @@
-use std::num::{NonZeroU16, NonZeroU8};
+use std::num::{NonZeroU8, NonZeroU16};
 
 use starknet_rust::macros::felt;
 use starknet_types_core::felt::Felt;

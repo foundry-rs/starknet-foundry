@@ -37,8 +37,8 @@ impl Cast {
 
     #[must_use]
     pub fn command(self) -> CastCommand {
-        let inner =
-            Command::new(self.sncast_bin).env("SNFOUNDRY_GLOBAL_CONFIG", self.state.config_dir.path());
+        let inner = Command::new(self.sncast_bin)
+            .env("SNFOUNDRY_GLOBAL_CONFIG", self.state.config_dir.path());
         CastCommand {
             inner,
             state: self.state,
