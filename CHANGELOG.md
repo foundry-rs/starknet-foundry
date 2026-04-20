@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - Aliases `sncast get transaction` and `sncast get transaction-status` for `get tx` and `get tx-status`.
-- Support serializing corelib `Option` and `Result` values passed via `--arguments`
+- Support for serialization of corelib `Option` and `Result`, values passed via `--arguments`
 
 #### Changed
 
