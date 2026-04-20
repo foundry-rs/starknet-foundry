@@ -29,7 +29,7 @@ impl Cast {
         }
     }
 
-    /// Override the global config dir (`SNFOUNDRY_CONFIG`).
+    /// Override the global config dir (`SNFOUNDRY_GLOBAL_CONFIG`).
     pub fn config_dir(mut self, path: impl AsRef<Path>) -> Self {
         self.state.config_dir = EnvPath::borrow(path);
         self
@@ -38,7 +38,7 @@ impl Cast {
     #[must_use]
     pub fn command(self) -> CastCommand {
         let inner =
-            Command::new(self.sncast_bin).env("SNFOUNDRY_CONFIG", self.state.config_dir.path());
+            Command::new(self.sncast_bin).env("SNFOUNDRY_GLOBAL_CONFIG", self.state.config_dir.path());
         CastCommand {
             inner,
             state: self.state,
