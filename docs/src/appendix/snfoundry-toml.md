@@ -102,7 +102,7 @@ block-explorer = "Voyager"
 
 #### `scarb-profile`
 
-The `scarb-profile` field sets which [Scarb profile](https://docs.swmansion.com/scarb/docs/reference/manifest.html#profiles) `sncast` uses when it runs `scarb` commands (e.g. `scarb build` when declaring contracts or running scripts).
+The `scarb-profile` field sets which [Scarb profile](https://docs.swmansion.com/scarb/docs/reference/profiles.html) `sncast` uses when it runs `scarb` commands (e.g. `scarb build` when declaring contracts or running scripts).
 
 Defaults to `release`.
 
