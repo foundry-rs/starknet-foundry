@@ -1,0 +1,23 @@
+[profile.default]
+fail-fast = false
+
+[profile.sncast-ci]
+fail-fast = false
+retries = 0
+
+[test-groups]
+devnet-sequential = { max-threads = 1 }
+ledger-emulator = { max-threads = 1 }
+
+[[profile.sncast-ci.overrides]]
+filter = 'test(/^e2e::/) | test(/^integration::/) | test(/^docs_snippets::/)'
+test-group = "devnet-sequential"
+
+[[profile.sncast-ci.overrides]]
+filter = 'test(/^e2e::devnet_accounts::/) | test(/^e2e::script::init::/)'
+retries = 2
+
+[[profile.sncast-ci.overrides]]
+filter = 'test(/^e2e::ledger::/)'
+test-group = "ledger-emulator"
+retries = 3
