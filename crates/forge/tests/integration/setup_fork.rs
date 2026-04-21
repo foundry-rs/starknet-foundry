@@ -27,7 +27,7 @@ use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
-use forge_runner::running::target::prepare_test_target;
+use forge_runner::running::target::{TestSelectionMode, prepare_test_target};
 use forge_runner::scarb::load_test_artifacts;
 use scarb_api::ScarbCommand;
 use scarb_api::metadata::metadata_for_dir;
@@ -139,7 +139,11 @@ fn fork_aliased_decorator() {
                 .into_iter()
                 .map(|t| {
                     tokio::task::spawn_blocking(move || {
-                        prepare_test_target(t, &ForgeTrackedResource::CairoSteps)
+                        prepare_test_target(
+                            t,
+                            &ForgeTrackedResource::CairoSteps,
+                            TestSelectionMode::All,
+                        )
                     })
                 })
                 .collect();
@@ -245,7 +249,11 @@ fn fork_aliased_decorator_overrding() {
                 .into_iter()
                 .map(|t| {
                     tokio::task::spawn_blocking(move || {
-                        prepare_test_target(t, &ForgeTrackedResource::CairoSteps)
+                        prepare_test_target(
+                            t,
+                            &ForgeTrackedResource::CairoSteps,
+                            TestSelectionMode::All,
+                        )
                     })
                 })
                 .collect();

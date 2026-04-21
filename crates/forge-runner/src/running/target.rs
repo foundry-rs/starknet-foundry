@@ -4,6 +4,7 @@ use crate::{
         TestDetails,
         raw::TestTargetRaw,
         with_config::{TestCaseWithConfig, TestTargetWithConfig},
+        with_config_resolved::sanitize_test_case_name,
     },
     running::config_run::run_config_pass,
 };
@@ -12,15 +13,24 @@ use cairo_lang_sierra::{
     ids::ConcreteTypeId,
     program::{GenFunction, StatementIdx, TypeDeclaration},
 };
+use rayon::iter::IntoParallelIterator;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use std::{collections::HashMap, sync::Arc};
 use universal_sierra_compiler_api::compile_raw_sierra_at_path;
+use universal_sierra_compiler_api::representation::{AssembledCairoProgram, RawCasmProgram};
+
+#[derive(Debug, Clone, Copy)]
+pub enum TestSelectionMode<'a> {
+    All,
+    Exact(&'a str),
+}
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn prepare_test_target(
     test_target_raw: TestTargetRaw,
     tracked_resource: &ForgeTrackedResource,
+    test_selection_mode: TestSelectionMode<'_>,
 ) -> Result<TestTargetWithConfig> {
     macro_rules! by_id {
         ($field:ident) => {{
@@ -38,10 +48,6 @@ pub fn prepare_test_target(
     let funcs = by_id!(funcs);
     let type_declarations = by_id!(type_declarations);
 
-    let casm_program = Arc::new(compile_raw_sierra_at_path(
-        test_target_raw.sierra_program_path.as_std_path(),
-    )?);
-
     let default_executables = vec![];
     let executables = test_target_raw
         .sierra_program
@@ -50,22 +56,54 @@ pub fn prepare_test_target(
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
         .unwrap_or(&default_executables);
 
-    let test_cases = executables
-        .par_iter()
-        .map(|case| -> Result<TestCaseWithConfig> {
-            let func = funcs[&case.id];
+    let exact_matches = match test_selection_mode.clone() {
+        TestSelectionMode::All => None,
+        TestSelectionMode::Exact(exact_match) => Some(
+            executables
+                .iter()
+                .filter_map(|case| {
+                    let name: String = case.debug_name.clone().unwrap().into();
+                    (sanitize_test_case_name(&name) == exact_match).then_some((case, name))
+                })
+                .collect::<Vec<_>>(),
+        ),
+    };
 
-            let test_details = build_test_details(func, &type_declarations);
+    if exact_matches.as_ref().is_some_and(Vec::is_empty) {
+        return Ok(empty_test_target(test_target_raw));
+    }
 
-            let raw_config = run_config_pass(&test_details, &casm_program, tracked_resource)?;
+    let casm_program = Arc::new(compile_raw_sierra_at_path(
+        test_target_raw.sierra_program_path.as_std_path(),
+    )?);
 
-            Ok(TestCaseWithConfig {
-                config: raw_config.into(),
-                name: case.debug_name.clone().unwrap().into(),
-                test_details,
+    let test_cases = if let Some(exact_matches) = exact_matches {
+        exact_matches
+            .into_par_iter()
+            .map(|(case, name)| {
+                build_test_case_with_config(
+                    funcs[&case.id],
+                    name,
+                    &type_declarations,
+                    &casm_program,
+                    tracked_resource,
+                )
             })
-        })
-        .collect::<Result<_>>()?;
+            .collect::<Result<_>>()?
+    } else {
+        executables
+            .par_iter()
+            .map(|case| {
+                build_test_case_with_config(
+                    funcs[&case.id],
+                    case.debug_name.clone().unwrap().into(),
+                    &type_declarations,
+                    &casm_program,
+                    tracked_resource,
+                )
+            })
+            .collect::<Result<_>>()?
+    };
 
     Ok(TestTargetWithConfig {
         tests_location: test_target_raw.tests_location,
@@ -73,6 +111,39 @@ pub fn prepare_test_target(
         sierra_program: test_target_raw.sierra_program,
         sierra_program_path: test_target_raw.sierra_program_path.into(),
         casm_program,
+    })
+}
+
+fn empty_test_target(test_target_raw: TestTargetRaw) -> TestTargetWithConfig {
+    TestTargetWithConfig {
+        tests_location: test_target_raw.tests_location,
+        test_cases: vec![],
+        sierra_program: test_target_raw.sierra_program,
+        sierra_program_path: test_target_raw.sierra_program_path.into(),
+        casm_program: Arc::new(RawCasmProgram {
+            assembled_cairo_program: AssembledCairoProgram {
+                bytecode: vec![],
+                hints: vec![],
+            },
+            debug_info: vec![],
+        }),
+    }
+}
+
+fn build_test_case_with_config(
+    func: &GenFunction<StatementIdx>,
+    name: String,
+    type_declarations: &HashMap<u64, &TypeDeclaration>,
+    casm_program: &Arc<RawCasmProgram>,
+    tracked_resource: &ForgeTrackedResource,
+) -> Result<TestCaseWithConfig> {
+    let test_details = build_test_details(func, type_declarations);
+    let raw_config = run_config_pass(&test_details, casm_program, tracked_resource)?;
+
+    Ok(TestCaseWithConfig {
+        config: raw_config.into(),
+        name,
+        test_details,
     })
 }
 
