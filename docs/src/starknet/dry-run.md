@@ -45,7 +45,7 @@ Overall Fee: [..] Fri (~[..] STRK)
 To include a detailed fee breakdown, add `--detailed`:
 
 <!-- TODO(#2736) -->
-<!-- { "ignored_output": true } -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast invoke \
   --network sepolia \
@@ -58,3 +58,20 @@ $ sncast invoke \
   --dry-run \
   --detailed
 ```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Success: Dry run completed
+
+Overall Fee: [..] Fri (~[..] STRK)
+L1 Gas Consumed:      [..]
+L1 Gas Price:         [..]
+L2 Gas Consumed:      [..]
+L2 Gas Price:         [..]
+L1 Data Gas Consumed: [..]
+L1 Data Gas Price:    [..]
+```
+</details>
+<br>
