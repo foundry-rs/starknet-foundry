@@ -125,14 +125,14 @@ impl RunForPackageArgs {
         }
 
         let tracked_resource = forge_config.test_runner_config.tracked_resource;
-        let exact_sanitized_name = match &tests_filter.name_filter {
+        let maybe_exact_name = match &tests_filter.name_filter {
             NameFilter::ExactMatch(name) => Some(name.clone()),
             _ => None,
         };
 
         let target_handles = raw_test_targets
             .into_iter()
-            .map(|t| spawn_prepare_test_target(t, tracked_resource, exact_sanitized_name.clone()))
+            .map(|t| spawn_prepare_test_target(t, tracked_resource, maybe_exact_name.clone()))
             .collect();
 
         Ok(RunForPackageArgs {
@@ -149,10 +149,10 @@ impl RunForPackageArgs {
 fn spawn_prepare_test_target(
     target: TestTargetRaw,
     tracked_resource: ForgeTrackedResource,
-    exact_sanitized_name: Option<String>,
+    maybe_exact_name: Option<String>,
 ) -> JoinHandle<Result<TestTargetWithConfig>> {
     tokio::task::spawn_blocking(move || {
-        let selection = match exact_sanitized_name.as_deref() {
+        let selection = match maybe_exact_name.as_deref() {
             Some(exact_match) => TestSelectionMode::Exact(exact_match),
             None => TestSelectionMode::All,
         };

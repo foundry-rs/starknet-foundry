@@ -56,7 +56,7 @@ pub fn prepare_test_target(
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
         .unwrap_or(&default_executables);
 
-    let exact_matches = match test_selection_mode.clone() {
+    let exact_matches = match test_selection_mode {
         TestSelectionMode::All => None,
         TestSelectionMode::Exact(exact_match) => Some(
             executables
