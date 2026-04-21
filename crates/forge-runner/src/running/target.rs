@@ -23,7 +23,7 @@ use universal_sierra_compiler_api::representation::{AssembledCairoProgram, RawCa
 #[derive(Debug, Clone, Copy)]
 pub enum TestSelectionMode<'a> {
     All,
-    Exact(&'a str),
+    ExactMatch(&'a str),
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
@@ -58,12 +58,12 @@ pub fn prepare_test_target(
 
     let exact_matches = match test_selection_mode {
         TestSelectionMode::All => None,
-        TestSelectionMode::Exact(exact_match) => Some(
+        TestSelectionMode::ExactMatch(exact_match) => Some(
             executables
                 .iter()
-                .filter_map(|case| {
+                .filter(|case| {
                     let name: String = case.debug_name.clone().unwrap().into();
-                    (sanitize_test_case_name(&name) == exact_match).then_some((case, name))
+                    sanitize_test_case_name(&name) == exact_match
                 })
                 .collect::<Vec<_>>(),
         ),
@@ -80,10 +80,10 @@ pub fn prepare_test_target(
     let test_cases = if let Some(exact_matches) = exact_matches {
         exact_matches
             .into_par_iter()
-            .map(|(case, name)| {
+            .map(|case| {
                 build_test_case_with_config(
                     funcs[&case.id],
-                    name,
+                    case.debug_name.clone().unwrap().into(),
                     &type_declarations,
                     &casm_program,
                     *tracked_resource,
@@ -115,6 +115,7 @@ pub fn prepare_test_target(
 }
 
 fn empty_test_target(test_target_raw: TestTargetRaw) -> TestTargetWithConfig {
+    // For non-matching `--exact` targets, return an empty test target.
     TestTargetWithConfig {
         tests_location: test_target_raw.tests_location,
         test_cases: vec![],

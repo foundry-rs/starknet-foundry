@@ -153,7 +153,7 @@ fn spawn_prepare_test_target(
 ) -> JoinHandle<Result<TestTargetWithConfig>> {
     tokio::task::spawn_blocking(move || {
         let selection = match maybe_exact_name.as_deref() {
-            Some(exact_match) => TestSelectionMode::Exact(exact_match),
+            Some(exact_match) => TestSelectionMode::ExactMatch(exact_match),
             None => TestSelectionMode::All,
         };
         prepare_test_target(target, &tracked_resource, selection)
