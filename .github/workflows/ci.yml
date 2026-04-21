@@ -416,6 +416,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
+        with:
+          save-cache: 'false'
       - uses: taiki-e/install-action@v2
         with:
           # TODO(#3970): Upgrade mdbook-variables after resolving issue
