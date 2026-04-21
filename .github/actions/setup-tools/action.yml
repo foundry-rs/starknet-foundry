@@ -27,9 +27,9 @@ inputs:
     required: false
     default: 'default'
   save-cache:
-    description: 'Whether to save the Rust build cache after the job. Set to false to only restore an existing cache.'
+    description: 'Whether to save the Rust build cache after the job. Set to true to persist the cache for future runs.'
     required: false
-    default: 'true'
+    default: 'false'
 
 runs:
   using: "composite"
