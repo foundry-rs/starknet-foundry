@@ -7,6 +7,12 @@ pub const ACCOUNT_FILE_PATH: &str = "tests/data/accounts/accounts.json";
 pub const SEPOLIA_RPC_URL: &str = "http://188.34.188.184:7070/rpc/v0_10";
 
 pub const URL: &str = "http://127.0.0.1:5055/rpc";
+
+#[must_use]
+pub fn devnet_url() -> String {
+    std::env::var("SNCAST_TEST_DEVNET_URL").unwrap_or_else(|_| URL.to_string())
+}
+
 pub const NETWORK: &str = "testnet";
 pub const DEVNET_SEED: u32 = 1_053_545_548;
 pub const DEVNET_ACCOUNTS_NUMBER: u8 = 20;
