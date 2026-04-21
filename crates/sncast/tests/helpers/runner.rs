@@ -4,6 +4,8 @@ use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 
+use shared::test_utils::nextest::is_nextest;
+
 #[must_use]
 pub fn runner(args: &[&str]) -> CastCommand {
     Cast::new().command().args(args)
@@ -25,7 +27,7 @@ impl Cast {
             state: CastState {
                 config_dir: EnvPath::temp_dir(),
             },
-            sncast_bin: cargo_bin!("sncast").to_path_buf(),
+            sncast_bin: sncast_test_bin_path(),
         }
     }
 
@@ -128,4 +130,14 @@ impl EnvPath {
             EnvPath::Unmanaged(p) => p,
         }
     }
+}
+
+fn sncast_test_bin_path() -> PathBuf {
+    if is_nextest() {
+        let sncast_nextest_env =
+            std::env::var("NEXTEST_BIN_EXE_sncast").expect("No sncast binary for nextest found");
+        return PathBuf::from(sncast_nextest_env);
+    }
+
+    cargo_bin!("sncast").to_path_buf()
 }
