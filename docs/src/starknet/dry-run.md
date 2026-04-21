@@ -16,7 +16,7 @@ Dry run is available for transaction commands such as:
 ## Example
 
 <!-- TODO(#2736) -->
-<!-- { "ignored_output": true } -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast \
   --account my_account \
