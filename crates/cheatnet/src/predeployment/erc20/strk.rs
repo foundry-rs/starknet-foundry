@@ -1,4 +1,5 @@
 use conversions::string::TryFromHexStr;
+use starknet_api::core::ContractAddress;
 
 use crate::predeployment::predeployed_contract::PredeployedContract;
 
