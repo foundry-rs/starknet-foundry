@@ -8,6 +8,7 @@ use crate::helpers::{
 };
 use indoc::indoc;
 use serde_json::Value;
+use shared::test_utils::output_assert::assert_stdout_contains;
 
 fn extract_contract_address(output: &[u8]) -> String {
     let stdout = std::str::from_utf8(output).expect("stdout is not utf8");
@@ -33,7 +34,7 @@ fn test_happy_case_class_hash() {
     ];
     runner(&args).assert().success().stdout_eq(indoc! {r"
     Contract Address: 0x0[..]
-    Salt: 0x0[..]
+    Salt:             0x0[..]
     "});
 }
 
@@ -64,7 +65,7 @@ fn test_happy_case_no_salt() {
     ];
     runner(&args).assert().success().stdout_eq(indoc! {r"
     Contract Address: 0x0[..]
-    Salt: 0x0[..]
+    Salt:             0x0[..]
     "});
 }
 
@@ -83,7 +84,7 @@ fn test_happy_case_unique() {
     ];
     runner(&args).assert().success().stdout_eq(indoc! {r"
     Contract Address: 0x0[..]
-    Salt: 0x0[..]
+    Salt:             0x0[..]
     "});
 }
 
@@ -152,7 +153,7 @@ fn test_happy_case_constructor_calldata() {
     ];
     runner(&args).assert().success().stdout_eq(indoc! {r"
     Contract Address: 0x0[..]
-    Salt: 0x0[..]
+    Salt:             0x0[..]
     "});
 }
 
@@ -198,7 +199,7 @@ fn test_happy_case_arguments() {
     ];
     runner(&args).assert().success().stdout_eq(indoc! {r"
     Contract Address: 0x0[..]
-    Salt: 0x0[..]
+    Salt:             0x0[..]
     "});
 }
 
@@ -219,14 +220,18 @@ fn test_happy_case_contract_name() {
         "0x1",
     ];
 
-    runner(&args)
+    let output = runner(&args)
         .current_dir(contract_path.path())
         .assert()
-        .success()
-        .stdout_eq(indoc! {r"
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
         Contract Address: 0x0[..]
-        Salt: 0x0[..]
-        "});
+        Salt:             0x0[..]
+        "},
+    );
 }
 
 #[test]
@@ -356,7 +361,7 @@ fn test_unique_without_account_address() {
     ];
     runner(&args).assert().success().stdout_eq(indoc! {r"
     Contract Address: 0x0[..]
-    Salt: 0x0[..]
+    Salt:             0x0[..]
     "});
 }
 
@@ -389,6 +394,7 @@ fn test_contract_name_not_found_in_artifacts() {
         .assert()
         .failure()
         .stderr_eq(indoc! {"
-        [..]NonExistentContract[..]
+        Command: utils contract-address
+        Error: [..]NonExistentContract[..]
         "});
 }

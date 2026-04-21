@@ -124,7 +124,12 @@ pub async fn utils(
                     .await
                     .map_err(handle_starknet_command_error);
 
-            Ok(process_command_result("utils contract-address", result, ui, None))
+            Ok(process_command_result(
+                "utils contract-address",
+                result,
+                ui,
+                None,
+            ))
         }
 
         Commands::Selector(sel) => {
