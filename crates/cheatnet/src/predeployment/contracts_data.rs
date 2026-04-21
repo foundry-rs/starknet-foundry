@@ -8,28 +8,29 @@ use crate::{
 use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
 use conversions::string::TryFromHexStr;
+use flate2::read::GzDecoder;
 use scarb_api::StarknetContractArtifacts;
-use std::{collections::HashMap, fs};
+use std::{collections::HashMap, fs, io::Read};
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
 /// Load data of predeployed contract from its artifacts
 macro_rules! load_contract {
     ($name:expr, $contract_dir:expr) => {{
-        let sierra = include_str!(concat!(
+        let sierra = load_gzipped_artifact(include_bytes!(concat!(
             "../data/predeployed_contracts/",
             $contract_dir,
-            "/sierra.json"
-        ));
-        let casm = include_str!(concat!(
+            "/sierra.json.gz"
+        )))?;
+        let casm = load_gzipped_artifact(include_bytes!(concat!(
             "../data/predeployed_contracts/",
             $contract_dir,
-            "/casm.json"
-        ));
+            "/casm.json.gz"
+        )))?;
 
         let artifacts = StarknetContractArtifacts {
-            sierra: sierra.to_string(),
-            casm: serde_json::from_str(casm)?,
+            sierra: sierra.clone(),
+            casm: serde_json::from_str(&casm)?,
             #[cfg(feature = "cairo-native")]
             executor: None,
         };
@@ -38,10 +39,18 @@ macro_rules! load_contract {
             $name.to_string(),
             (
                 artifacts,
-                maybe_cache_contract_sierra($contract_dir, sierra)?,
+                maybe_cache_contract_sierra($contract_dir, &sierra)?,
             ),
         )
     }};
+}
+
+fn load_gzipped_artifact(bytes: &[u8]) -> Result<String> {
+    let mut decoder = GzDecoder::new(bytes);
+    let mut artifact = String::new();
+    decoder.read_to_string(&mut artifact)?;
+
+    Ok(artifact)
 }
 
 /// Loads data of predeployed contracts from their artifacts, and prepares it for usage in cheatnet.

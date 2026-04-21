@@ -1,10 +1,10 @@
 # Predpeloyed contracts
 
-`snforge` provides a set of predeployed contracts for use in testing. To support this functionality, we maintain CASM of these contracts directly within our codebase. Because these contracts are subject to periodic updates, these files need to be updated. The list below details all predeployed contracts and the information required to keep them current.
+`snforge` provides a set of predeployed contracts for use in testing. To support this functionality, we maintain their artifacts directly in the codebase. The embedded artifacts are stored in gzipped form to reduce the size of the final binary.
 
 ## Adding new predeployed contract
 
-To add a new predeployed contract, you need to add a new subdirectory with the name of the contract to the `crates/cheatnet/src/data/predeployed_contracts` directory. Then, you need to add artifact files to this subdirectory. CASM files should be renamed to `casm.json` and sierra files to `sierra.json`.
+To add a new predeployed contract, add a new subdirectory with the name of the contract to `crates/cheatnet/src/data/predeployed_contracts`. Then add gzipped artifact files to this subdirectory: `casm.json.gz` and `sierra.json.gz`.
 
 Structure of `predeployed_contracts` directory should be as follows:
 
@@ -12,14 +12,14 @@ Structure of `predeployed_contracts` directory should be as follows:
 $ tree
 .
 ├── ERC20Lockable
-│   └── casm.json
-│   └── sierra.json
+│   ├── casm.json.gz
+│   └── sierra.json.gz
 ├── ERC20Mintable
-│   └── casm.json
-│   └── sierra.json
+│   ├── casm.json.gz
+│   └── sierra.json.gz
 └── <Other contract>
-    └── casm.json
-    └── sierra.json
+    ├── casm.json.gz
+    └── sierra.json.gz
 ```
 
 ## Updating existing predeployed contracts
@@ -74,4 +74,13 @@ This should be done in `sg_token` and `strk` packages.
     scarb --release build
     ```
 
-5. Visit `target/release` directory and copy relevant artifacts into relevant `predeployed_contracts` subdirectories in `cheatnet` codebase.
+5. Compress the generated artifacts directly into the appropriate `predeployed_contracts` subdirectories in the `cheatnet` codebase:
+
+    ```shell
+    gzip -9 -c target/release/strk_ERC20Lockable.compiled_contract_class.json > /path/to/starknet-foundry/crates/cheatnet/src/data/predeployed_contracts/ERC20Lockable/casm.json.gz
+    gzip -9 -c target/release/strk_ERC20Lockable.contract_class.json > /path/to/starknet-foundry/crates/cheatnet/src/data/predeployed_contracts/ERC20Lockable/sierra.json.gz
+    gzip -9 -c target/release/sg_token_ERC20Mintable.compiled_contract_class.json > /path/to/starknet-foundry/crates/cheatnet/src/data/predeployed_contracts/ERC20Mintable/casm.json.gz
+    gzip -9 -c target/release/sg_token_ERC20Mintable.contract_class.json > /path/to/starknet-foundry/crates/cheatnet/src/data/predeployed_contracts/ERC20Mintable/sierra.json.gz
+    ```
+
+`snforge` loads the gzipped artifacts at runtime and caches the decompressed Sierra files when debugging metadata is needed.
