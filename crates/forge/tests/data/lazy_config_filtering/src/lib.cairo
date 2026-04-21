@@ -5,9 +5,9 @@ mod tests {
         assert(true, 'ok');
     }
 
-    // This config is intentionally invalid.
-    // When running with `--exact lazy_config_filtering::tests::selected_exact`, this test
-    // should be filtered out and thus not fail.
+    // This config is intentionally invalid. When running with
+    // `--exact lazy_config_filtering::tests::selected_exact`, this test should be
+    // filtered out and thus not fail.
     #[test]
     #[fork("missing_fork")]
     fn filtered_out_broken_config() {
