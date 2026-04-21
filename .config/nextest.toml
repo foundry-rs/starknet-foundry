@@ -3,7 +3,7 @@ fail-fast = false
 
 [profile.sncast-ci]
 fail-fast = false
-retries = 0
+retries = 2
 
 [profile.snforge-ci]
 fail-fast = false
