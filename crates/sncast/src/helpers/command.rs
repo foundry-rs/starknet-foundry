@@ -8,6 +8,7 @@ use foundry_ui::Message;
 use serde::Serialize;
 use std::process::ExitCode;
 
+#[must_use]
 pub fn process_command_result<T>(
     command: &str,
     result: Result<T>,

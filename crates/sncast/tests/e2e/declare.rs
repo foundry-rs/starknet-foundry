@@ -338,7 +338,7 @@ async fn test_contract_already_declared() {
     runner(&args).current_dir(tempdir.path()).assert().success();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -377,7 +377,7 @@ async fn test_contract_already_declared_estimate_fee() {
     runner(&args).current_dir(tempdir.path()).assert().success();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -408,7 +408,7 @@ async fn test_invalid_nonce() {
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -441,7 +441,7 @@ async fn test_wrong_contract_name_passed() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
     assert_stderr_contains(
         output,
         indoc! {r"
@@ -554,7 +554,7 @@ fn test_too_low_gas() {
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -695,7 +695,7 @@ async fn test_workspaces_package_no_contract() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -782,5 +782,88 @@ async fn test_no_explorer_links_on_localhost() {
         !output
             .as_stdout()
             .contains("To see declaration details, visit:")
+    );
+}
+
+#[tokio::test]
+async fn test_dry_run() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "human_readable",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+        "--dry-run",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Dry run completed
+
+            Overall Fee: [..] Fri (~[..] STRK)
+            "
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_dry_run_detailed() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "human_readable",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+        "--dry-run",
+        "--detailed",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Dry run completed
+
+            Overall Fee: [..] Fri (~[..] STRK)
+            L1 Gas Consumed:      [..]
+            L1 Gas Price:         [..]
+            L2 Gas Consumed:      [..]
+            L2 Gas Price:         [..]
+            L1 Data Gas Consumed: [..]
+            L1 Data Gas Price:    [..]
+            "
+        },
     );
 }

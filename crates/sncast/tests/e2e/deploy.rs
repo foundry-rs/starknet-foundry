@@ -259,7 +259,7 @@ fn test_wrong_calldata() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -337,7 +337,7 @@ fn test_contract_already_deployed() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -373,7 +373,7 @@ fn test_too_low_gas() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
     // TODO Check extra blank line
     println!("====\n{}\n====", output.as_stderr());
 
@@ -652,7 +652,7 @@ async fn test_deploy_with_declare_invalid_nonce() {
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -660,5 +660,76 @@ async fn test_deploy_with_declare_invalid_nonce() {
         Command: deploy
         Error: Transaction execution error = TransactionExecutionErrorData { transaction_index: 0, execution_error: Message("Account transaction nonce is invalid.") }
         "#},
+    );
+}
+
+#[tokio::test]
+async fn test_dry_run() {
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "deploy",
+        "--url",
+        URL,
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--dry-run",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Dry run completed
+
+            Overall Fee: [..] Fri (~[..] STRK)
+            "
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_dry_run_detailed() {
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "deploy",
+        "--url",
+        URL,
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--dry-run",
+        "--detailed",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Dry run completed
+
+            Overall Fee: [..] Fri (~[..] STRK)
+            L1 Gas Consumed:      [..]
+            L1 Gas Price:         [..]
+            L2 Gas Consumed:      [..]
+            L2 Gas Price:         [..]
+            L1 Data Gas Consumed: [..]
+            L1 Data Gas Price:    [..]
+            "
+        },
     );
 }

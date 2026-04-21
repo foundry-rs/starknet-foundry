@@ -1,4 +1,5 @@
 use conversions::string::TryFromHexStr;
+use starknet::core::types::ContractAddress;
 
 use crate::predeployment::predeployed_contract::PredeployedContract;
 
@@ -17,7 +18,7 @@ pub fn eth_predeployed_contract() -> PredeployedContract {
     // Link to Cairo contract: https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/sg_token/src/erc20_mintable.cairo
     let raw_casm = include_str!("../../data/predeployed_contracts/ERC20Mintable/casm.json");
 
-    let contract_address = TryFromHexStr::try_from_hex_str(ETH_CONTRACT_ADDRESS).unwrap();
+    let contract_address = ContractAddress::try_from_hex_str(ETH_CONTRACT_ADDRESS).unwrap();
     let class_hash = TryFromHexStr::try_from_hex_str(ERC20MINTABLE_SIERRA_CLASS_HASH).unwrap();
 
     // All storage values are taken from https://voyager.online/contract/0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7#readStorage

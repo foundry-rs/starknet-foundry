@@ -13,6 +13,10 @@ pub trait OutputLink {
     const TITLE: &'static str;
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String;
+
+    fn is_dry_run(&self) -> bool {
+        false
+    }
 }
 
 #[derive(Serialize)]
@@ -65,6 +69,10 @@ where
     let Ok(response) = result else {
         return None;
     };
+
+    if response.is_dry_run() {
+        return None;
+    }
 
     let network = chain_id.try_into().ok()?;
 

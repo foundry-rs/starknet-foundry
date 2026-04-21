@@ -40,6 +40,15 @@ async fn test_get_invoke_transaction() {
 }
 
 #[tokio::test]
+async fn test_get_invoke_transaction_alias_transaction() {
+    let args = vec!["get", "transaction", INVOKE_TX_HASH, "--url", URL];
+    let snapbox = runner(&args).env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(output, "Success: Transaction found");
+}
+
+#[tokio::test]
 async fn test_json_output() {
     let args = vec!["--json", "get", "tx", INVOKE_TX_HASH, "--url", URL];
     let snapbox = runner(&args);
@@ -147,13 +156,13 @@ async fn test_declare_transaction() {
 async fn test_nonexistent_transaction() {
     let args = vec!["get", "tx", "0x1", "--url", URL];
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
         indoc! {r"
         Command: get tx
-        Error: Failed to get transaction: Transaction with provided hash was not found (does not exist)
+        Error: Transaction with provided hash was not found (does not exist)
         "},
     );
 }
