@@ -19,6 +19,8 @@ pub enum Component {
     CallType,
     /// The result of the call, transformed for display.
     CallResult,
+    /// The raw events emitted by the call.
+    Events,
     /// The L2 gas used by the call.
     Gas,
 }
@@ -33,6 +35,7 @@ impl Component {
             | Component::CallerAddress
             | Component::EntryPointType
             | Component::CallType
+            | Component::Events
             | Component::Gas => TraceVerbosity::Detailed,
         }
     }
@@ -48,6 +51,7 @@ impl From<&Component> for debugging::Component {
             Component::CallerAddress => debugging::Component::CallerAddress,
             Component::CallType => debugging::Component::CallType,
             Component::CallResult => debugging::Component::CallResult,
+            Component::Events => debugging::Component::Events,
             Component::Gas => debugging::Component::Gas,
         }
     }

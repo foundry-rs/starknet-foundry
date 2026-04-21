@@ -136,6 +136,66 @@ fn debugging_double_flags() {
         "});
 }
 
+#[test]
+fn debugging_trace_events_component_only() {
+    let temp = setup_package("debugging_events");
+
+    let output = test_runner(&temp)
+        .arg("test_debugging_trace_events_component")
+        .arg("--trace-components")
+        .arg("events")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        formatdoc! {r"
+            [..]Compiling[..]
+            [..]Finished[..]
+
+            Collected 1 test(s) from debugging_events package
+            Running 0 test(s) from src/
+            Running 1 test(s) from tests/
+            [PASS] debugging_events_integrationtest::test_trace::test_debugging_trace_events_component (l1_gas: ~[..], l1_data_gas: ~[..], l2_gas: ~[..])
+            [test name] debugging_events_integrationtest::test_trace::test_debugging_trace_events_component
+            └─ [selector] emit_event
+               └─ [events] [Event {{ keys: [[..]], data: [0x2a] }}]
+
+            Tests: 1 passed, 0 failed, 0 ignored, 1 filtered out
+        "},
+    );
+}
+
+#[test]
+fn debugging_trace_events_component_empty_list() {
+    let temp = setup_package("debugging_events");
+
+    let output = test_runner(&temp)
+        .arg("test_debugging_trace_eventless_success")
+        .arg("--trace-components")
+        .arg("events")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        formatdoc! {r"
+            [..]Compiling[..]
+            [..]Finished[..]
+
+            Collected 1 test(s) from debugging_events package
+            Running 0 test(s) from src/
+            Running 1 test(s) from tests/
+            [PASS] debugging_events_integrationtest::test_trace::test_debugging_trace_eventless_success (l1_gas: ~[..], l1_data_gas: ~[..], l2_gas: ~[..])
+            [test name] debugging_events_integrationtest::test_trace::test_debugging_trace_eventless_success
+            └─ [selector] do_not_emit
+               └─ [events] []
+
+            Tests: 1 passed, 0 failed, 0 ignored, 1 filtered out
+        "},
+    );
+}
+
 fn test_output(trace_message_fn: fn(&str, &str) -> String, package_name: &str) -> String {
     formatdoc! {r"
         [..]Compiling[..]
@@ -175,6 +235,7 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │  ├─ [caller address] [..]
         │  ├─ [call type] Call
         │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  ├─ [events] [Event {{ keys: [[..]], data: [0x2] }}]
         │  ├─ [L2 gas] [..]
         │  ├─ [selector] execute_calls
         │  │  ├─ [contract name] SimpleContract
@@ -184,6 +245,7 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │  │  ├─ [caller address] [..]
         │  │  ├─ [call type] Call
         │  │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  │  ├─ [events] [Event {{ keys: [[..]], data: [0x2] }}]
         │  │  ├─ [L2 gas] [..]
         │  │  ├─ [selector] execute_calls
         │  │  │  ├─ [contract name] SimpleContract
@@ -193,6 +255,7 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │  │  │  ├─ [caller address] [..]
         │  │  │  ├─ [call type] Call
         │  │  │  ├─ [call result] success: array![]
+        │  │  │  ├─ [events] [Event {{ keys: [[..]], data: [0x0] }}]
         │  │  │  └─ [L2 gas] [..]
         │  │  └─ [selector] execute_calls
         │  │     ├─ [contract name] SimpleContract
@@ -202,6 +265,7 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │  │     ├─ [caller address] [..]
         │  │     ├─ [call type] Call
         │  │     ├─ [call result] success: array![]
+        │  │     ├─ [events] [Event {{ keys: [[..]], data: [0x0] }}]
         │  │     └─ [L2 gas] [..]
         │  └─ [selector] execute_calls
         │     ├─ [contract name] SimpleContract
@@ -211,6 +275,7 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │     ├─ [caller address] [..]
         │     ├─ [call type] Call
         │     ├─ [call result] success: array![]
+        │     ├─ [events] [Event {{ keys: [[..]], data: [0x0] }}]
         │     └─ [L2 gas] [..]
         └─ [selector] fail
            ├─ [contract name] SimpleContract
