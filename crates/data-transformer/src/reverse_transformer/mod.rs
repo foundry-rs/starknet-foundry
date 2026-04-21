@@ -1,6 +1,8 @@
+mod event;
 mod transform;
 mod types;
 
+pub use self::event::{ReverseTransformEventError, reverse_transform_event};
 use crate::reverse_transformer::transform::{ReverseTransformer, TransformationError};
 use crate::shared::extraction::extract_function_from_selector;
 use cairo_lang_parser::utils::SimpleParserDatabase;
