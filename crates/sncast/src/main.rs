@@ -822,20 +822,29 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
         PartialCastConfig::load_maybe(local_path.as_ref(), profile, ConfigScope::Local)?;
 
     match (profile, &local_profile, &global_profile) {
-        // If local config file exists, profile must be in it.
-        (Some(profile), MaybeConfig::NoProfile, _) => {
+        // Profile must be defined in at least local or global config
+        (Some(profile), MaybeConfig::NoProfile, MaybeConfig::NoProfile) => {
             bail!(
-                "Profile [{profile}] not found in local config at {}",
-                local_path.unwrap_or_default()
+                "Profile [{profile}] not found in neither local config at {} nor global config at {}",
+                local_path.unwrap_or_default(),
+                global_path.unwrap_or_default()
             );
         }
         // No local config file; profile must be in global config.
         (Some(profile), MaybeConfig::NoFile, MaybeConfig::NoProfile) => {
-            // TODO: (#pending) Streamline approach wrt. `--profile` being re-used for foundry and `scarb`.
+            // Note: changed to error in the next PR
             ui.print_warning(WarningMessage::new(format!(
                 "Profile [{profile}] not found in global config at {}, and no local config found.",
                 global_path.clone().unwrap_or_default()
             )));
+        }
+        // Note: this is potentially unreachable: `get_or_create_global_config_path` should always return dir with existing config file.
+        // TODO: (#3436) remove this if missing global config becomes an error
+        (Some(profile), MaybeConfig::NoProfile, MaybeConfig::NoFile) => {
+            bail!(
+                "Profile [{profile}] not found in local config at {}, and no global config found.",
+                global_path.clone().unwrap_or_default()
+            );
         }
         // Note: this is potentially unreachable: `get_or_create_global_config_path` should always return dir with existing config file.
         // TODO: (#3436) remove this if missing global config becomes an error

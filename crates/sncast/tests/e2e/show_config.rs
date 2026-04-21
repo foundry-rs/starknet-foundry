@@ -320,6 +320,27 @@ async fn test_show_config_global_only_profile() {
 }
 
 #[tokio::test]
+async fn test_show_config_global_only_profile_with_local_config_present() {
+    let global_dir = copy_config_to_tempdir("tests/data/files/snfoundry_global_correct.toml", None);
+    let local_dir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
+    let args = vec!["--profile", "global_only_profile", "show-config"];
+
+    let snapbox = Cast::new()
+        .config_dir(global_dir.path())
+        .command()
+        .args(&args)
+        .current_dir(local_dir.path());
+
+    assert_stdout_contains(
+        snapbox.assert().success(),
+        indoc! {r"
+            Profile:             global_only_profile
+            [..]
+        "},
+    );
+}
+
+#[tokio::test]
 async fn test_show_config_global_and_local_default() {
     let global_dir = copy_config_to_tempdir("tests/data/files/snfoundry_global_correct.toml", None);
     let local_dir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
@@ -369,7 +390,7 @@ async fn test_show_config_global_and_local_profile() {
 }
 
 #[tokio::test]
-async fn test_profile_missing_in_local_config() {
+async fn test_profile_missing_in_local_and_global_config() {
     // Local config exists, but does not contain used profile.
     let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let args = vec!["--profile", "nonexistent", "show-config"];
@@ -379,7 +400,7 @@ async fn test_profile_missing_in_local_config() {
     assert_stderr_contains(
         snapbox.assert().failure(),
         indoc! { r"
-            Error: Profile [nonexistent] not found in local config at [..]snfoundry.toml
+            Error: Profile [nonexistent] not found in neither local config at [..]snfoundry.toml nor global config at [..]snfoundry.toml
         " },
     );
 }
