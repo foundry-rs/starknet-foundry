@@ -1,4 +1,5 @@
 use crate::e2e::common::runner::{setup_package, snforge_test_bin_path, test_runner};
+use assert_fs::TempDir;
 use assert_fs::fixture::{FileWriteStr, PathChild};
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stdout_contains;
@@ -20,7 +21,7 @@ fn test_fail_wrong_scarb_toml_configuration_for_launch_debugger() {
     assert_stdout_contains(
         output,
         indoc! {
-            "[ERROR] Scarb.toml must have the following Cairo compiler configuration to launch the debugger:
+            "[ERROR] [..]/Scarb.toml must have the Cairo compiler configuration equivalent to the following one to launch the debugger:
 
             [profile.dev.cairo]
             unstable-add-statements-code-locations-debug-info = true
@@ -52,6 +53,34 @@ fn test_launch_debugger_waits_for_connection() {
         ))
         .unwrap();
 
+    launch_and_wait_for_connection(temp)
+}
+
+#[test]
+fn test_launch_debugger_waits_for_connection_with_complex_config() {
+    let temp = setup_package("debugging");
+
+    let manifest_path = temp.child("Scarb.toml");
+
+    let existing = fs::read_to_string(&manifest_path).unwrap();
+    manifest_path
+        .write_str(&formatdoc!(
+            "{existing}
+            [profile.dev.cairo]
+            add-statements-functions-debug-info = true
+            add-functions-debug-info = true
+
+            [cairo]
+            skip-optimizations = true
+            unstable-add-statements-code-locations-debug-info = true
+            ",
+        ))
+        .unwrap();
+
+    launch_and_wait_for_connection(temp)
+}
+
+fn launch_and_wait_for_connection(temp: TempDir) {
     let mut child = Command::new(snforge_test_bin_path())
         .args([
             "test",
