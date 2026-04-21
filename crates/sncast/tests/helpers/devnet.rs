@@ -1,5 +1,6 @@
 use crate::helpers::constants::{
-    DEVNET_ACCOUNTS_NUMBER, DEVNET_FORK_BLOCK_NUMBER, DEVNET_SEED, SEPOLIA_RPC_URL, URL,
+    DEVNET_ACCOUNTS_NUMBER, DEVNET_FORK_BLOCK_NUMBER, DEVNET_SEED, SEPOLIA_RPC_URL,
+    devnet_url,
 };
 use crate::helpers::fixtures::{
     deploy_braavos_account, deploy_cairo_0_account, deploy_keystore_account,
@@ -31,8 +32,9 @@ fn start_devnet() {
         return;
     }
 
-    let port = Url::parse(URL).unwrap().port().unwrap_or(80).to_string();
-    let host = Url::parse(URL)
+    let devnet_url = devnet_url();
+    let port = Url::parse(&devnet_url).unwrap().port().unwrap_or(80).to_string();
+    let host = Url::parse(&devnet_url)
         .unwrap()
         .host()
         .expect("Can't parse devnet URL!")
@@ -102,7 +104,8 @@ fn stop_devnet() {
         return;
     }
 
-    let port = Url::parse(URL).unwrap().port().unwrap_or(80).to_string();
+    let devnet_url = devnet_url();
+    let port = Url::parse(&devnet_url).unwrap().port().unwrap_or(80).to_string();
     let pattern = format!("starknet-devnet.*{port}.*{DEVNET_SEED}");
 
     Command::new("pkill")
