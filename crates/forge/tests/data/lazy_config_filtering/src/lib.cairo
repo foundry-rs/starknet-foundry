@@ -6,7 +6,7 @@ mod tests {
     }
 
     // This config is intentionally invalid.
-    // When runninng with `--exact lazy_config_filtering::tests::selected_exact`, this test
+    // When running with `--exact lazy_config_filtering::tests::selected_exact`, this test
     // should be filtered out and thus not fail.
     #[test]
     #[fork("missing_fork")]
