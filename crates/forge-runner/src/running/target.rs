@@ -86,7 +86,7 @@ pub fn prepare_test_target(
                     name,
                     &type_declarations,
                     &casm_program,
-                    tracked_resource,
+                    *tracked_resource,
                 )
             })
             .collect::<Result<_>>()?
@@ -99,7 +99,7 @@ pub fn prepare_test_target(
                     case.debug_name.clone().unwrap().into(),
                     &type_declarations,
                     &casm_program,
-                    tracked_resource,
+                    *tracked_resource,
                 )
             })
             .collect::<Result<_>>()?
@@ -135,10 +135,10 @@ fn build_test_case_with_config(
     name: String,
     type_declarations: &HashMap<u64, &TypeDeclaration>,
     casm_program: &Arc<RawCasmProgram>,
-    tracked_resource: &ForgeTrackedResource,
+    tracked_resource: ForgeTrackedResource,
 ) -> Result<TestCaseWithConfig> {
     let test_details = build_test_details(func, type_declarations);
-    let raw_config = run_config_pass(&test_details, casm_program, tracked_resource)?;
+    let raw_config = run_config_pass(&test_details, casm_program, &tracked_resource)?;
 
     Ok(TestCaseWithConfig {
         config: raw_config.into(),
