@@ -2,12 +2,14 @@ use crate::Context;
 use crate::trace::collect::Collector;
 use crate::trace::components::{
     CallResultContainer, CallTypeContainer, CalldataContainer, CallerAddressContainer,
-    ContractAddressContainer, ContractNameContainer, EntryPointTypeContainer, GasContainer,
+    ContractAddressContainer, ContractNameContainer, EntryPointTypeContainer, EventsContainer,
+    GasContainer,
 };
 use crate::tree::TreeSerialize;
 use cheatnet::trace_data::CallTrace;
 use starknet_api::core::ContractAddress as ApiContractAddress;
 use starknet_api::execution_resources::GasAmount as ApiGasAmount;
+use starknet_types_core::felt::Felt;
 use std::fmt;
 use std::fmt::Display;
 
@@ -33,6 +35,7 @@ pub struct TraceInfo {
     pub call_type: CallTypeContainer,
     pub nested_calls: Vec<ContractTrace>,
     pub call_result: CallResultContainer,
+    pub events: EventsContainer,
     pub gas: GasContainer,
 }
 
@@ -59,6 +62,15 @@ pub struct CallerAddress(pub ApiContractAddress);
 
 #[derive(Debug, Clone)]
 pub struct Gas(pub ApiGasAmount);
+
+#[derive(Debug, Clone)]
+pub struct Events(pub Vec<Event>);
+
+#[derive(Debug, Clone)]
+pub struct Event {
+    pub keys: Vec<Felt>,
+    pub data: Vec<Felt>,
+}
 
 impl Trace {
     /// Creates a new [`Trace`] from a given [`Context`] and a test name.
