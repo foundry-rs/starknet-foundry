@@ -411,28 +411,13 @@ jobs:
   build-docs:
     name: Test Building Docs
     runs-on: ubuntu-latest
-    env:
-      MDBOOK_VERSION: 0.4.52
-      # TODO(#3970): Use latest version after resolving issue
-      MDBOOK_VARIABLES_VERSION: 0.3.0
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
-      - name: Cache mdBook binaries
-        id: cache-mdbook
-        uses: actions/cache@v4
+      - uses: taiki-e/install-action@v2
         with:
-          path: ~/.cargo/bin
-          key: cargo-bin-mdbook-${{ env.MDBOOK_VERSION }}-mdbook-variables-${{ env.MDBOOK_VARIABLES_VERSION }}-${{ runner.os }}
-      - name: Install mdBook
-        if: steps.cache-mdbook.outputs.cache-hit != 'true'
-        run: |
-          cargo install --version ${MDBOOK_VERSION} mdbook
-          cargo install --version ${MDBOOK_VARIABLES_VERSION} mdbook-variables
-      - name: Install mdBook Link-Check
-        if: steps.cache-mdbook.outputs.cache-hit != 'true'
-        run: |
-          cargo install mdbook-linkcheck
+          # TODO(#3970): Upgrade mdbook-variables after resolving issue
+          tool: mdbook@0.4.52,mdbook-variables@0.3.0,mdbook-linkcheck
       - name: Build with mdBook
         run: |
           # TODO(#2781): Use `mdbook build`
