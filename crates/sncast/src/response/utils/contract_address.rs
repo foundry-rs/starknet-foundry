@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct ContractAddressResponse {
     pub contract_address: PaddedFelt,
+    pub salt: PaddedFelt,
 }
 
 impl SncastCommandMessage for ContractAddressResponse {
@@ -16,6 +17,7 @@ impl SncastCommandMessage for ContractAddressResponse {
                 "Contract Address",
                 &self.contract_address.into_padded_hex_str(),
             )
+            .field("Salt", &self.salt.into_padded_hex_str())
             .build()
     }
 }

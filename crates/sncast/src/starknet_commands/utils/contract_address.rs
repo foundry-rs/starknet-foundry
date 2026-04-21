@@ -54,7 +54,9 @@ pub async fn get_contract_address(
             .common
             .contract_identifier
             .contract_name
-            .expect("contract_name must be set when class_hash is None");
+            .ok_or_else(|| {
+                anyhow::anyhow!("`--contract-name` must be provided when `--class-hash` is None")
+            })?;
         let sierra = sierra_class_from_artifacts(
             &contract_name,
             artifacts
@@ -78,6 +80,9 @@ pub async fn get_contract_address(
         vec![]
     };
 
+    // Note: when `--constructor-calldata` is used with `--class-hash`, the ABI is not resolved
+    // and will be empty, so this check is only effective for the `--arguments` path
+    // and the `--contract-name` path (which always has the ABI from the sierra artifact).
     if !calldata.is_empty() && !abi.is_empty() {
         let has_constructor = abi.iter().any(|e| matches!(e, AbiEntry::Constructor(_)));
         if !has_constructor {
@@ -96,5 +101,6 @@ pub async fn get_contract_address(
 
     Ok(ContractAddressResponse {
         contract_address: contract_address.into_(),
+        salt: salt.into_(),
     })
 }

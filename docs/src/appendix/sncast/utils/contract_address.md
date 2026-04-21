@@ -34,7 +34,7 @@ For more information on supported expressions and syntax, see [Calldata Transfor
 ## `--salt, -s <SALT>`
 Optional.
 
-Salt for the address. If not provided, a random salt is generated.
+Salt for the address. If not provided, a random salt is generated and included in the response.
 
 ## `--unique`
 Optional.

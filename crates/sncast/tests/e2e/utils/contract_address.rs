@@ -8,7 +8,6 @@ use crate::helpers::{
 };
 use indoc::indoc;
 use serde_json::Value;
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 
 fn extract_contract_address(output: &[u8]) -> String {
     let stdout = std::str::from_utf8(output).expect("stdout is not utf8");
@@ -32,8 +31,10 @@ fn test_happy_case_class_hash() {
         "--salt",
         "0x1",
     ];
-    let output = runner(&args).assert().success();
-    assert_stdout_contains(output, indoc! {r"Contract Address: 0x0[..]"});
+    runner(&args).assert().success().stdout_eq(indoc! {r"
+    Contract Address: 0x0[..]
+    Salt: 0x0[..]
+    "});
 }
 
 #[test]
@@ -47,24 +48,24 @@ fn test_happy_case_class_hash_json() {
         "--salt",
         "0x1",
     ];
-    let output = runner(&args).assert().success();
-    assert_stdout_contains(
-        output,
-        indoc! {r#"{"command":"contract-address","contract_address":"0x0[..]","type":"response"}"#},
-    );
+    runner(&args).assert().success().stdout_eq(indoc! {r#"
+    {"command":"contract-address","contract_address":"0x0[..]","salt":"0x0[..]","type":"response"}
+    "#});
 }
 
 #[test]
 fn test_happy_case_no_salt() {
-    // When --salt is omitted, a random salt is generated and a valid address is still returned.
+    // When --salt is omitted, a random salt is generated and included in the response.
     let args = vec![
         "utils",
         "contract-address",
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
     ];
-    let output = runner(&args).assert().success();
-    assert_stdout_contains(output, indoc! {r"Contract Address: 0x0[..]"});
+    runner(&args).assert().success().stdout_eq(indoc! {r"
+    Contract Address: 0x0[..]
+    Salt: 0x0[..]
+    "});
 }
 
 #[test]
@@ -80,8 +81,10 @@ fn test_happy_case_unique() {
         "--deployer-address",
         "0x123",
     ];
-    let output = runner(&args).assert().success();
-    assert_stdout_contains(output, indoc! {r"Contract Address: 0x0[..]"});
+    runner(&args).assert().success().stdout_eq(indoc! {r"
+    Contract Address: 0x0[..]
+    Salt: 0x0[..]
+    "});
 }
 
 #[test]
@@ -147,8 +150,10 @@ fn test_happy_case_constructor_calldata() {
         "--salt",
         "0x1",
     ];
-    let output = runner(&args).assert().success();
-    assert_stdout_contains(output, indoc! {r"Contract Address: 0x0[..]"});
+    runner(&args).assert().success().stdout_eq(indoc! {r"
+    Contract Address: 0x0[..]
+    Salt: 0x0[..]
+    "});
 }
 
 #[test]
@@ -191,8 +196,10 @@ fn test_happy_case_arguments() {
         "--url",
         URL,
     ];
-    let output = runner(&args).assert().success();
-    assert_stdout_contains(output, indoc! {r"Contract Address: 0x0[..]"});
+    runner(&args).assert().success().stdout_eq(indoc! {r"
+    Contract Address: 0x0[..]
+    Salt: 0x0[..]
+    "});
 }
 
 #[test]
@@ -212,11 +219,14 @@ fn test_happy_case_contract_name() {
         "0x1",
     ];
 
-    let output = runner(&args)
+    runner(&args)
         .current_dir(contract_path.path())
         .assert()
-        .success();
-    assert_stdout_contains(output, indoc! {r"Contract Address: 0x0[..]"});
+        .success()
+        .stdout_eq(indoc! {r"
+        Contract Address: 0x0[..]
+        Salt: 0x0[..]
+        "});
 }
 
 #[test]
@@ -344,8 +354,10 @@ fn test_unique_without_account_address() {
         "0x1",
         "--unique",
     ];
-    let output = runner(&args).assert().success();
-    assert_stdout_contains(output, indoc! {r"Contract Address: 0x0[..]"});
+    runner(&args).assert().success().stdout_eq(indoc! {r"
+    Contract Address: 0x0[..]
+    Salt: 0x0[..]
+    "});
 }
 
 #[test]
@@ -372,9 +384,11 @@ fn test_contract_name_not_found_in_artifacts() {
         "0x1",
     ];
 
-    let output = runner(&args)
+    runner(&args)
         .current_dir(contract_path.path())
         .assert()
-        .failure();
-    assert_stderr_contains(output, indoc! {"[..]NonExistentContract[..]"});
+        .failure()
+        .stderr_eq(indoc! {"
+        [..]NonExistentContract[..]
+        "});
 }
