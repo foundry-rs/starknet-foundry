@@ -1,7 +1,9 @@
 [profile.default]
 fail-fast = false
 
-# sncast
+[profile.snforge-ci]
+fail-fast = false
+retries = 0
 
 [profile.sncast-ci]
 fail-fast = false
@@ -23,10 +25,3 @@ retries = 1
 filter = 'test(/^e2e::ledger::/)'
 test-group = "ledger"
 retries = 3
-
-# snforge
-
-[profile.snforge-ci]
-fail-fast = false
-retries = 0
-
