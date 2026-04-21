@@ -1,19 +1,15 @@
 [profile.default]
 fail-fast = false
 
-[profile.sncast-ci]
-fail-fast = false
-retries = 2
+# sncast
 
-[profile.snforge-ci]
+[profile.sncast-ci]
 fail-fast = false
 retries = 0
 
 [test-groups]
 devnet-sequential = { max-threads = 1 }
-ledger-emulator = { max-threads = 1 }
-
-# sncast overrides
+ledger = { max-threads = 1 }
 
 [[profile.sncast-ci.overrides]]
 filter = 'test(/^e2e::/) | test(/^integration::/) | test(/^docs_snippets::/) | test(/^helpers::devnet_provider::/) | test(/^helpers::devnet_detection::/)'
@@ -21,12 +17,16 @@ test-group = "devnet-sequential"
 
 [[profile.sncast-ci.overrides]]
 filter = 'test(/^e2e::devnet_accounts::/) | test(/^e2e::script::init::/)'
-retries = 2
+retries = 1
 
 [[profile.sncast-ci.overrides]]
 filter = 'test(/^e2e::ledger::/)'
-test-group = "ledger-emulator"
+test-group = "ledger"
 retries = 3
 
-# snforge overrides
+# snforge
+
+[profile.snforge-ci]
+fail-fast = false
+retries = 0
 
