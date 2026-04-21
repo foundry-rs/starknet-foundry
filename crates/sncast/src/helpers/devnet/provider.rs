@@ -91,8 +91,7 @@ impl DevnetProvider {
             ))
             .send()
             .await
-            .map(|res| res.status().is_success())
-            .unwrap_or(false);
+            .is_ok_and(|res| res.status().is_success());
 
         ensure!(
             is_alive,

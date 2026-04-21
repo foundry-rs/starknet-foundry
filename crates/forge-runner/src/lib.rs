@@ -2,7 +2,7 @@ use crate::coverage_api::run_coverage;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig};
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
-use anyhow::Result;
+use anyhow::{Result, bail};
 use build_trace_data::save_trace_data;
 use cairo_lang_sierra::program::{ConcreteTypeLongId, Function, TypeDeclaration};
 use camino::Utf8PathBuf;
@@ -124,6 +124,9 @@ pub fn run_for_test_case(
         })
     } else {
         tokio::task::spawn(async move {
+            if forge_config.test_runner_config.launch_debugger {
+                bail!("--launch-debugger is not supported for fuzzer tests");
+            }
             let res = run_with_fuzzing(
                 case,
                 casm_program,

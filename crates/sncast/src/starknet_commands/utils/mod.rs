@@ -11,6 +11,7 @@ use sncast::{
     },
     response::errors::handle_starknet_command_error,
 };
+use std::process::ExitCode;
 
 use crate::{
     process_command_result,
@@ -56,14 +57,14 @@ pub async fn utils(
     ui: &UI,
     json: bool,
     profile: String,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<ExitCode> {
     match utils.command {
         Commands::Serialize(serialize) => {
             let result = starknet_commands::utils::serialize::serialize(serialize, config, ui)
                 .await
-                .map_err(handle_starknet_command_error)?;
+                .map_err(handle_starknet_command_error);
 
-            process_command_result("serialize", Ok(result), ui, None);
+            Ok(process_command_result("utils serialize", result, ui, None))
         }
 
         Commands::ClassHash(class_hash) => {
@@ -84,9 +85,9 @@ pub async fn utils(
             .expect("Failed to build contract");
 
             let result = class_hash::get_class_hash(&class_hash, &artifacts)
-                .map_err(handle_starknet_command_error)?;
+                .map_err(handle_starknet_command_error);
 
-            process_command_result("class-hash", Ok(result), ui, None);
+            Ok(process_command_result("utils class-hash", result, ui, None))
         }
 
         Commands::ContractAddress(contract_address) => {
@@ -121,16 +122,14 @@ pub async fn utils(
             let result =
                 contract_address::get_contract_address(contract_address, artifacts, config, ui)
                     .await
-                    .map_err(handle_starknet_command_error)?;
+                    .map_err(handle_starknet_command_error);
 
-            process_command_result("contract-address", Ok(result), ui, None);
+            Ok(process_command_result("utils contract-address", result, ui, None))
         }
 
         Commands::Selector(sel) => {
-            let result = selector::get_selector(&sel).map_err(handle_starknet_command_error)?;
-            process_command_result("selector", Ok(result), ui, None);
+            let result = selector::get_selector(&sel).map_err(handle_starknet_command_error);
+            Ok(process_command_result("utils selector", result, ui, None))
         }
     }
-
-    Ok(())
 }

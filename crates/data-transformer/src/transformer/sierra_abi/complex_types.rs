@@ -6,7 +6,7 @@ use super::{SupportedCalldataKind, build_representation};
 use crate::shared;
 use crate::shared::parsing::parse_expression;
 use crate::shared::path::SplitResult;
-use anyhow::{Context, Result, bail, ensure};
+use anyhow::{Context, Result, anyhow, bail, ensure};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::{
     Expr, ExprFunctionCall, ExprListParenthesized, ExprPath, ExprStructCtorCall,
@@ -21,6 +21,14 @@ pub trait EnumOrStruct {
     const VARIANT: &'static str;
     const VARIANT_CAPITALIZED: &'static str;
     fn name(&self) -> String;
+}
+
+/// A resolved enum variant with its serialization position and optional inner type.
+struct ResolvedEnumVariant<'a> {
+    /// 0-based position used for serialization
+    position: usize,
+    /// Inner type, or `None` for unit variants
+    inner_type: Option<&'a str>,
 }
 
 impl EnumOrStruct for AbiStruct {
@@ -41,17 +49,120 @@ impl EnumOrStruct for AbiEnum {
     }
 }
 
-fn validate_path_argument(
-    param_type: &str,
-    path_argument: &[String],
-    path_argument_joined: &String,
-) -> Result<()> {
-    if *path_argument.last().unwrap() != param_type.split("::").last().unwrap()
-        && path_argument_joined != param_type
+const UNIT_TYPE: &str = "()";
+const OPTION_TYPE: &str = "core::option::Option";
+const RESULT_TYPE: &str = "core::result::Result";
+
+fn strip_generic_suffix(type_str: &str) -> &str {
+    if let Some(idx) = type_str.find("::<") {
+        &type_str[..idx]
+    } else {
+        type_str
+    }
+}
+
+/// Returns just the last path segment of a type, ignoring generic arguments.
+/// E.g. `"core::option::Option::<u32>"` → `"Option"`.
+fn base_type_name(type_str: &str) -> &str {
+    strip_generic_suffix(type_str)
+        .split("::")
+        .last()
+        .unwrap_or(type_str)
+}
+
+fn validate_path_argument(param_type: &str, path_argument_joined: &str) -> Result<()> {
+    let canonical = strip_generic_suffix(param_type);
+
+    // Validate that the argument matches the expected type, allowing partially-qualified
+    // paths (e.g. `option::Option` for `core::option::Option`). The `::` prefix ensures
+    // the match starts at a real segment boundary, rejecting mid-segment substrings
+    // (e.g. `ion::Option` would falsely match `core::option::Option` without it).
+    if canonical != path_argument_joined
+        && !canonical.ends_with(&format!("::{path_argument_joined}"))
     {
-        bail!(r#"Invalid argument type, expected "{param_type}", got "{path_argument_joined}""#,)
+        bail!(r#"Invalid argument type, expected "{param_type}", got "{path_argument_joined}""#)
     }
     Ok(())
+}
+
+/// Extracts the generic argument string from `type_str` if it starts with `type_prefix`.
+/// e.g. `"core::option::Option::<u32>"` with prefix `"core::option::Option"` → `"u32"`.
+fn extract_generic_args<'a>(type_str: &'a str, type_prefix: &str) -> Option<&'a str> {
+    type_str
+        .strip_prefix(type_prefix)
+        .and_then(|s| s.strip_prefix("::<"))
+        .and_then(|s| s.strip_suffix('>'))
+}
+
+/// Resolves a variant for the built-in `Option` and `Result` types, which are not
+/// listed in the ABI and must be handled specially. Returns `None` if `expected_type`
+/// is neither, signalling the caller to fall through to a regular ABI lookup.
+fn resolve_corelib_enum_variant<'a>(
+    expected_type: &'a str,
+    variant_name: &str,
+) -> Result<Option<ResolvedEnumVariant<'a>>> {
+    let invalid_variant =
+        || anyhow!(r#"Invalid variant "{variant_name}" for type "{expected_type}""#);
+
+    if let Some(inner) = extract_generic_args(expected_type, OPTION_TYPE) {
+        let (position, inner_type) = match variant_name {
+            "Some" => (0, Some(inner)),
+            "None" => (1, None),
+            _ => return Err(invalid_variant()),
+        };
+
+        return Ok(Some(ResolvedEnumVariant {
+            position,
+            inner_type,
+        }));
+    }
+
+    if let Some(inner) = extract_generic_args(expected_type, RESULT_TYPE) {
+        let Some(split_pos) = top_level_comma_pos(inner) else {
+            bail!(
+                r#"Malformed ABI type "{expected_type}": missing comma between Ok and Err types"#
+            );
+        };
+
+        let (position, inner_type) = match variant_name {
+            "Ok" => (0, Some(inner[..split_pos].trim())),
+            "Err" => (1, Some(inner[split_pos + 1..].trim())),
+            _ => return Err(invalid_variant()),
+        };
+
+        return Ok(Some(ResolvedEnumVariant {
+            position,
+            inner_type,
+        }));
+    }
+
+    Ok(None)
+}
+
+/// Finds the position of the first comma that is not nested inside `<>` or `()`.
+/// Used to split the two generic arguments of `Result::<OkType, ErrType>` without
+/// being confused by commas inside nested generic types.
+fn top_level_comma_pos(s: &str) -> Option<usize> {
+    let mut angle_depth = 0;
+    let mut paren_depth = 0;
+    s.char_indices().find_map(|(i, c)| {
+        match c {
+            '<' => angle_depth += 1,
+            '>' => angle_depth -= 1,
+            '(' => paren_depth += 1,
+            ')' => paren_depth -= 1,
+            ',' if angle_depth == 0 && paren_depth == 0 => return Some(i),
+            _ => {}
+        }
+        None
+    })
+}
+
+fn split_variant_from_path(path: &[String]) -> Result<(&str, &[String])> {
+    let (variant, rest) = path
+        .split_last()
+        .ok_or_else(|| anyhow!("Expected an enum variant path, got an empty path"))?;
+    Ok((variant, rest))
 }
 
 fn split(path: &ExprPath, db: &SimpleParserDatabase) -> Result<Vec<String>> {
@@ -72,8 +183,10 @@ fn find_all_structs(abi: &[AbiEntry]) -> Vec<&AbiStruct> {
         .collect()
 }
 
+/// Looks up `variant` in the ABI enum identified by `path` and returns its
+/// index in the enum definition together with the full `AbiNamedMember`.
 fn find_enum_variant_position<'a>(
-    variant: &String,
+    variant: &str,
     path: &[String],
     abi: &'a [AbiEntry],
 ) -> Result<(usize, &'a AbiNamedMember)> {
@@ -112,24 +225,26 @@ fn find_item_with_path<'item, T: EnumOrStruct>(
 ) -> Result<&'item T> {
     // Argument is a module path to an item (module_name::StructName {})
     if path.len() > 1 {
-        let full_path_item = items_from_abi
-            .into_iter()
-            .find(|x| x.name() == path.join("::"));
+        let path_joined = path.join("::");
+        let full_path_item = items_from_abi.into_iter().find(|x| {
+            let name = x.name();
+            // Also match monomorphized generics, e.g. ABI name `foo::Bar::<u32>` against path `foo::Bar`
+            name == path_joined || strip_generic_suffix(&name) == path_joined
+        });
 
-        ensure!(
-            full_path_item.is_some(),
-            r#"{} "{}" not found in ABI"#,
-            T::VARIANT_CAPITALIZED,
-            path.join("::")
-        );
-
-        return Ok(full_path_item.unwrap());
+        return full_path_item.ok_or_else(|| {
+            anyhow!(
+                r#"{} "{}" not found in ABI"#,
+                T::VARIANT_CAPITALIZED,
+                path.join("::")
+            )
+        });
     }
 
     // Argument is just the name of the item (Struct {})
     let mut matching_items_from_abi: Vec<&T> = items_from_abi
         .into_iter()
-        .filter(|x| x.name().split("::").last() == path.last().map(String::as_str))
+        .filter(|x| base_type_name(&x.name()) == path.last().map_or("", String::as_str))
         .collect();
 
     ensure!(
@@ -196,7 +311,7 @@ impl SupportedCalldataKind for ExprStructCtorCall<'_> {
         let struct_path: Vec<String> = split(&self.path(db), db)?;
         let struct_path_joined = struct_path.clone().join("::");
 
-        validate_path_argument(expected_type, &struct_path, &struct_path_joined)?;
+        validate_path_argument(expected_type, &struct_path_joined)?;
 
         let structs_from_abi = find_all_structs(abi);
         let struct_abi_definition = find_item_with_path(structs_from_abi, &struct_path)?;
@@ -257,6 +372,27 @@ impl SupportedCalldataKind for ExprStructCtorCall<'_> {
     }
 }
 
+fn resolve_enum_variant<'a>(
+    variant_name: &str,
+    enum_path: &[String],
+    expected_type: &'a str,
+    abi: &'a [AbiEntry],
+) -> Result<ResolvedEnumVariant<'a>> {
+    let enum_path_joined = enum_path.join("::");
+    validate_path_argument(expected_type, &enum_path_joined)?;
+
+    // First, check if the variant belongs to a corelib type (Option or Result) that is not listed in the contract's ABI.
+    if let Some(resolved) = resolve_corelib_enum_variant(expected_type, variant_name)? {
+        Ok(resolved)
+    } else {
+        let (position, variant) = find_enum_variant_position(variant_name, enum_path, abi)?;
+        Ok(ResolvedEnumVariant {
+            position,
+            inner_type: Some(variant.r#type.as_str()).filter(|t| *t != UNIT_TYPE),
+        })
+    }
+}
+
 // Unit enum variants
 impl SupportedCalldataKind for ExprPath<'_> {
     fn transform(
@@ -265,22 +401,18 @@ impl SupportedCalldataKind for ExprPath<'_> {
         abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArgument> {
-        // Enums with no value - Enum::Variant
-        let enum_path_with_variant = split(self, db)?;
-        let (enum_variant_name, enum_path) = enum_path_with_variant.split_last().unwrap();
-        let enum_path_joined = enum_path.join("::");
+        let path = split(self, db)?;
+        let (enum_variant_name, enum_path) = split_variant_from_path(&path)?;
 
-        validate_path_argument(expected_type, enum_path, &enum_path_joined)?;
+        let resolved = resolve_enum_variant(enum_variant_name, enum_path, expected_type, abi)?;
 
-        let (enum_position, enum_variant) =
-            find_enum_variant_position(enum_variant_name, enum_path, abi)?;
-
-        if enum_variant.r#type != "()" {
-            bail!(r#"Couldn't find variant "{enum_variant_name}" in enum "{enum_path_joined}""#,)
-        }
+        ensure!(
+            resolved.inner_type.is_none(),
+            r#"Variant "{enum_variant_name}" of "{expected_type}" requires a value, use "{enum_variant_name}(<value>)""#
+        );
 
         Ok(AllowedCalldataArgument::Enum(CalldataEnum::new(
-            enum_position,
+            resolved.position,
             None,
         )))
     }
@@ -294,25 +426,29 @@ impl SupportedCalldataKind for ExprFunctionCall<'_> {
         abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArgument> {
-        // Enums with value - Enum::Variant(10)
-        let enum_path_with_variant = split(&self.path(db), db)?;
-        let (enum_variant_name, enum_path) = enum_path_with_variant.split_last().unwrap();
-        let enum_path_joined = enum_path.join("::");
+        let path = split(&self.path(db), db)?;
+        let (enum_variant_name, enum_path) = split_variant_from_path(&path)?;
 
-        validate_path_argument(expected_type, enum_path, &enum_path_joined)?;
+        let resolved = resolve_enum_variant(enum_variant_name, enum_path, expected_type, abi)?;
 
-        let (enum_position, enum_variant) =
-            find_enum_variant_position(enum_variant_name, enum_path, abi)?;
+        let inner_type = resolved.inner_type.with_context(|| {
+            format!(r#"Variant "{enum_variant_name}" of "{expected_type}" takes no value"#)
+        })?;
 
         let arguments = self.arguments(db).arguments(db);
-        // Enum variant constructor invocation has one argument - an ArgList.
-        // We parse it to a vector of expressions and pop + unwrap safely.
-        let expr = parse_argument_list(&arguments, db)?.pop().unwrap();
 
-        let parsed_expr = build_representation(expr, &enum_variant.r#type, abi, db)?;
+        let mut args_list = parse_argument_list(&arguments, db)?;
+        ensure!(
+            args_list.len() == 1,
+            r#"Variant "{enum_variant_name}" of "{expected_type}" expects exactly 1 argument, got {}"#,
+            args_list.len()
+        );
+        let expr = args_list.pop().unwrap();
+
+        let parsed_expr = build_representation(expr, inner_type, abi, db)?;
 
         Ok(AllowedCalldataArgument::Enum(CalldataEnum::new(
-            enum_position,
+            resolved.position,
             Some(Box::new(parsed_expr)),
         )))
     }
@@ -327,7 +463,7 @@ impl SupportedCalldataKind for ExprListParenthesized<'_> {
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArgument> {
         let Expr::Tuple(tuple) = parse_expression(expected_type, db)? else {
-            bail!(r#"Invalid argument type, expected "{expected_type}", got tuple"#,);
+            bail!(r#"Invalid argument type, expected "{expected_type}", got tuple"#);
         };
 
         let tuple_types = tuple

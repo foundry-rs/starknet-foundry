@@ -103,7 +103,7 @@ impl ParseFromExpr<Expr> for Number {
 
                 Ok(Self(num))
             }
-            _ => Err(T::error(format!("<{arg_name}> should be number literal",))),
+            _ => Err(T::error(format!("<{arg_name}> should be number literal"))),
         }
     }
 }

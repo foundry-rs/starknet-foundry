@@ -6,11 +6,12 @@ use serde_json::Map;
 use sncast::helpers::account::load_accounts;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::BRAAVOS_BASE_ACCOUNT_CLASS_HASH;
+use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::ledger;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::deploy::AccountDeployResponse;
-use sncast::response::invoke::InvokeResponse;
+use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
 use sncast::response::ui::UI;
 use sncast::{
     AccountData, AccountType, SignerType, WaitForTx, apply_optional_fields,
@@ -40,6 +41,9 @@ pub struct Deploy {
     pub fee_args: FeeArgs,
 
     #[command(flatten)]
+    pub dry_run_args: DryRunArgs,
+
+    #[command(flatten)]
     pub rpc: RpcArgs,
 
     /// If passed, the command will not trigger an interactive prompt to add an account as a default
@@ -57,6 +61,7 @@ pub async fn deploy(
     account: &str,
     keystore_path: Option<Utf8PathBuf>,
     fee_args: FeeArgs,
+    dry_run_args: DryRunArgs,
     ui: &UI,
 ) -> Result<AccountDeployResponse> {
     if let Some(keystore_path) = keystore_path {
@@ -64,6 +69,7 @@ pub async fn deploy(
             provider,
             chain_id,
             fee_args,
+            dry_run_args,
             wait_config,
             account,
             keystore_path,
@@ -83,6 +89,7 @@ pub async fn deploy(
             account_name,
             chain_id,
             fee_args,
+            dry_run_args,
             wait_config,
             ui,
         )
@@ -91,10 +98,12 @@ pub async fn deploy(
     }
 }
 
+#[expect(clippy::too_many_arguments)]
 async fn deploy_from_keystore(
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: Felt,
     fee_args: FeeArgs,
+    dry_run_args: DryRunArgs,
     wait_config: WaitForTx,
     account: &str,
     keystore_path: Utf8PathBuf,
@@ -133,22 +142,27 @@ async fn deploy_from_keystore(
         salt,
         chain_id,
         fee_args,
+        dry_run_args,
         wait_config,
         ui,
     )
     .await?;
 
-    update_keystore_account(account, address)?;
+    if let InvokeResponse::Transaction(_) = &result {
+        update_keystore_account(account, address)?;
+    }
 
     Ok(result)
 }
 
+#[expect(clippy::too_many_arguments)]
 async fn deploy_from_accounts_file(
     provider: &JsonRpcClient<HttpTransport>,
     accounts_file: &Utf8PathBuf,
     name: String,
     chain_id: Felt,
     fee_args: FeeArgs,
+    dry_run_args: DryRunArgs,
     wait_config: WaitForTx,
     ui: &UI,
 ) -> Result<InvokeResponse> {
@@ -172,6 +186,7 @@ async fn deploy_from_accounts_file(
                 salt,
                 chain_id,
                 fee_args,
+                dry_run_args,
                 wait_config,
                 ui,
             )
@@ -189,6 +204,7 @@ async fn deploy_from_accounts_file(
                 salt,
                 chain_id,
                 fee_args,
+                dry_run_args,
                 wait_config,
                 ui,
             )
@@ -196,7 +212,9 @@ async fn deploy_from_accounts_file(
         }
     };
 
-    update_account_in_accounts_file(accounts_file, &name, chain_id)?;
+    if let InvokeResponse::Transaction(_) = &result {
+        update_account_in_accounts_file(accounts_file, &name, chain_id)?;
+    }
 
     Ok(result)
 }
@@ -210,6 +228,7 @@ async fn create_factory_and_deploy<S>(
     salt: Felt,
     chain_id: Felt,
     fee_args: FeeArgs,
+    dry_run_args: DryRunArgs,
     wait_config: WaitForTx,
     ui: &UI,
 ) -> Result<InvokeResponse>
@@ -227,6 +246,7 @@ where
                 provider,
                 salt,
                 fee_args,
+                dry_run_args,
                 wait_config,
                 class_hash,
                 ui,
@@ -241,6 +261,7 @@ where
                 provider,
                 salt,
                 fee_args,
+                dry_run_args,
                 wait_config,
                 class_hash,
                 ui,
@@ -261,6 +282,7 @@ where
                 provider,
                 salt,
                 fee_args,
+                dry_run_args,
                 wait_config,
                 class_hash,
                 ui,
@@ -289,11 +311,13 @@ fn execution_error_message(error: &ContractExecutionError) -> &str {
     }
 }
 
+#[expect(clippy::too_many_arguments)]
 async fn deploy_account<T>(
     account_factory: T,
     provider: &JsonRpcClient<HttpTransport>,
     salt: Felt,
     fee_args: FeeArgs,
+    dry_run_args: DryRunArgs,
     wait_config: WaitForTx,
     class_hash: Felt,
     ui: &UI,
@@ -302,6 +326,14 @@ where
     T: AccountFactory + Sync,
 {
     let deployment = account_factory.deploy_v3(salt);
+
+    if dry_run_args.dry_run {
+        return dry_run_args
+            .estimate(|| deployment.estimate_fee())
+            .await
+            .map(InvokeResponse::DryRun)
+            .map_err(|error| anyhow!("Failed to estimate fee for dry run: {error}"));
+    }
 
     let fee_settings = if fee_args.max_fee.is_some() {
         let fee_estimate = deployment
@@ -333,6 +365,7 @@ where
         l1_data_gas_price => AccountDeploymentV3::l1_data_gas_price,
         tip => AccountDeploymentV3::tip
     );
+
     let result = deployment.send().await;
 
     match result {
@@ -348,9 +381,9 @@ where
         },
         Err(_) => Err(anyhow!("Unknown AccountFactoryError")),
         Ok(result) => {
-            let return_value = InvokeResponse {
+            let return_value = InvokeResponse::Transaction(InvokeTransactionResponse {
                 transaction_hash: result.transaction_hash.into_(),
-            };
+            });
             if let Err(message) = handle_wait_for_tx(
                 provider,
                 result.transaction_hash,

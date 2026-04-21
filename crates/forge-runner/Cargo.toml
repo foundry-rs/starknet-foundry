@@ -46,6 +46,7 @@ scarb-oracle-hint-service.workspace = true
 tracing.workspace = true
 comfy-table.workspace = true
 scarb-api = { path = "../scarb-api" }
+cairo-debugger.workspace = true
 
 [dev-dependencies]
 test-case.workspace = true

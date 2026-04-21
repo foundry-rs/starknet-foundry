@@ -53,3 +53,35 @@ fn test_max_fee_used_with_other_args() {
         "},
     );
 }
+
+#[test]
+fn test_detailed_without_dry_run() {
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        "user11",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1",
+        "0x2",
+        "--detailed",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        error: the following required arguments were not provided:
+          --dry-run
+        "},
+    );
+}

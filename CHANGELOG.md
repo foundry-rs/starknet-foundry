@@ -7,11 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- `--launch-debugger` flag that allows launching a test in debug mode using `cairo-debugger` crate. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#live-debugging)
+
+#### Changed
+
+- Minimal recommended `Scarb` version is now `2.15.2` (updated from `2.14.0`)
+
 ### Cast
 
 #### Added
 
 - `contract-address` command to `sncast utils`, which calculates the contract address
+- Aliases `sncast get transaction` and `sncast get transaction-status` for `get tx` and `get tx-status`.
+- Support for serialization of corelib `Option` and `Result`, values passed via `--arguments`
+- `--dry-run` and `--detailed` flags for all transaction commands, allowing users to validate transaction logic and estimate fees without submitting to the network
+
+#### Changed
+
+- In JSON output for `sncast utils` commands, the `"command"` field now includes the `utils` prefix (e.g. `"serialize"` -> `"utils serialize"`).
+
+#### Fixed
+
+- `sncast verify` now uses the configured network or infers it from the RPC chain ID when `--network` is omitted.
+- `sncast` now returns non-zero exit code when a command fails.
 
 ## [0.59.0] - 2026-04-10
 

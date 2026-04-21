@@ -1,23 +1,26 @@
+use crate::starknet_commands::invoke::execute_calls;
 use std::str::FromStr;
 
-use crate::starknet_commands::invoke::execute_calls;
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::deploy::MulticallDeploy;
 use crate::starknet_commands::multicall::invoke::MulticallInvoke;
 use crate::starknet_commands::utils::felt_or_id::FeltOrId;
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
 use clap::Args;
+use conversions::IntoConv;
 use serde::Deserialize;
 use serde_json::Number;
 use sncast::WaitForTx;
+use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::FeeArgs;
 use sncast::helpers::proof::ProofArgs;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::handle_starknet_command_error;
+use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
 use sncast::response::multicall::run::MulticallRunResponse;
 use sncast::response::ui::UI;
-use starknet_rust::accounts::SingleOwnerAccount;
+use starknet_rust::accounts::{Account, SingleOwnerAccount};
 use starknet_rust::core::types::Call;
 use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
@@ -33,6 +36,9 @@ pub struct Run {
 
     #[command(flatten)]
     pub fee_args: FeeArgs,
+
+    #[command(flatten)]
+    pub dry_run_args: DryRunArgs,
 
     #[command(flatten)]
     pub rpc: RpcArgs,
@@ -88,7 +94,8 @@ pub async fn run<S>(
 where
     S: Signer + Sync + Send,
 {
-    let fee_args = run.fee_args.clone();
+    let fee_args = run.fee_args;
+    let dry_run_args = run.dry_run_args;
     let nonce = run.nonce;
 
     let contents = std::fs::read_to_string(&run.path)?;
@@ -115,6 +122,15 @@ where
         }
     }
 
+    if dry_run_args.dry_run {
+        let execution = account.execute_v3(parsed_calls);
+        return dry_run_args
+            .estimate(|| execution.estimate_fee())
+            .await
+            .map(MulticallRunResponse::DryRun)
+            .map_err(|e| anyhow!("Failed to estimate fee for dry run: {e}"));
+    }
+
     execute_calls(
         account,
         parsed_calls,
@@ -125,7 +141,12 @@ where
         ui,
     )
     .await
-    .map(Into::into)
+    .map(|result| {
+        InvokeResponse::Transaction(InvokeTransactionResponse {
+            transaction_hash: result.transaction_hash.into_(),
+        })
+        .into()
+    })
     .map_err(handle_starknet_command_error)
 }
 

@@ -49,7 +49,7 @@ fn test_happy_case_class_hash_json() {
         "0x1",
     ];
     runner(&args).assert().success().stdout_eq(indoc! {r#"
-    {"command":"contract-address","contract_address":"0x0[..]","salt":"0x0[..]","type":"response"}
+    {"command":"utils contract-address","contract_address":"0x0[..]","salt":"0x0[..]","type":"response"}
     "#});
 }
 
