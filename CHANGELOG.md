@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `#[should_panic(expected: (...))]` now supports regular strings inside mixed tuples, alongside short strings and numbers.
 - `#[derive(Fuzzable)]` macro that automatically generates `Fuzzable` trait implementations for structs and enums
 - `SNFOUNDRY_CACHE` environment variable to allow to specify a custom cache directory
-- Contract debug traces now include emitted Starknet events via the `events` trace component and `detailed` trace verbosity.
+- Contract debug traces now include emitted Starknet events via the `events` trace component and `detailed` trace verbosity. A dedicated reversed data transformer decodes raw keys and values of an event into a struct-like output.
 
 #### Changed
 
