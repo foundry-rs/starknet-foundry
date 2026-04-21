@@ -26,6 +26,10 @@ inputs:
     description: 'Suffix appended to the rust-cache shared-key to isolate cache entries between different feature sets.'
     required: false
     default: 'default'
+  save-cache:
+    description: 'Whether to save the Rust build cache after the job. Set to false to only restore an existing cache.'
+    required: false
+    default: 'true'
 
 runs:
   using: "composite"
@@ -36,6 +40,7 @@ runs:
       if: ${{ inputs.setup-rust-cache == 'true' }}
       with:
         shared-key: ${{ inputs.cache-key }}
+        save-if: ${{ inputs.save-cache }}
 
     - uses: software-mansion/setup-scarb@v1
       if: ${{ inputs.setup-scarb == 'true' }}

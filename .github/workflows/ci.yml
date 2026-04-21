@@ -376,6 +376,7 @@ jobs:
         with:
           install-llvm: 'true'
           setup-usc: 'false'
+          save-cache: 'false'
       - run: rustup component add rustfmt
 
       - name: Check formatting
