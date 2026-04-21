@@ -6,16 +6,13 @@ use crate::helpers::fixtures::{
     deploy_latest_oz_account, deploy_ready_account,
 };
 use ctor::{ctor, dtor};
+use shared::test_utils::nextest::is_nextest;
 use std::net::TcpStream;
 use std::process::{Command, Stdio};
 use std::string::ToString;
 use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
 use url::Url;
-
-fn is_nextest() -> bool {
-    std::env::var("NEXTEST").as_deref() == Ok("1")
-}
 
 fn is_listing() -> bool {
     std::env::args().any(|a| a == "--list")
