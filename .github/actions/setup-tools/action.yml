@@ -45,17 +45,9 @@ runs:
     - uses: software-mansion/setup-universal-sierra-compiler@v1
       if: ${{ inputs.setup-usc == 'true' }}
 
-    - name: Cache LLVM
-      if: ${{ inputs.install-llvm == 'true' }}
-      id: cache-llvm
-      uses: actions/cache@v4
-      with:
-        path: /usr/lib/llvm-19
-        key: llvm-19-${{ runner.os }}
-
     - name: Add LLVM APT repository
       uses: myci-actions/add-deb-repo@11
-      if: ${{ inputs.install-llvm == 'true' && steps.cache-llvm.outputs.cache-hit != 'true' }}
+      if: ${{ inputs.install-llvm == 'true' }}
       with:
         repo: deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main
         repo-name: llvm-repo
@@ -63,7 +55,7 @@ runs:
 
     - name: Install LLVM
       shell: bash
-      if: ${{ inputs.install-llvm == 'true' && steps.cache-llvm.outputs.cache-hit != 'true' }}
+      if: ${{ inputs.install-llvm == 'true' }}
       run: |
         sudo apt-get update
         sudo apt-get install -y \
