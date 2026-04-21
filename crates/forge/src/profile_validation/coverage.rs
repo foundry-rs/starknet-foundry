@@ -5,11 +5,6 @@ use scarb_metadata::Metadata;
 
 /// Checks if coverage can be based on scarb version and profile settings extracted from the provided [`Metadata`].
 pub fn check_coverage_compatibility(scarb_metadata: &Metadata) -> anyhow::Result<()> {
-    check_profile(scarb_metadata)
-}
-
-/// Checks if the runtime profile settings in the provided from [`Metadata`] contain the required entries for coverage generation.
-fn check_profile(scarb_metadata: &Metadata) -> anyhow::Result<()> {
     const CAIRO_COVERAGE_REQUIRED_ENTRIES: &[(&str, &str)] = &[
         ("unstable-add-statements-functions-debug-info", "true"),
         ("unstable-add-statements-code-locations-debug-info", "true"),
