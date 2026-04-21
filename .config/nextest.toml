@@ -5,9 +5,15 @@ fail-fast = false
 fail-fast = false
 retries = 0
 
+[profile.snforge-ci]
+fail-fast = false
+retries = 0
+
 [test-groups]
 devnet-sequential = { max-threads = 1 }
 ledger-emulator = { max-threads = 1 }
+
+# sncast overrides
 
 [[profile.sncast-ci.overrides]]
 filter = 'test(/^e2e::/) | test(/^integration::/) | test(/^docs_snippets::/)'
@@ -21,3 +27,6 @@ retries = 2
 filter = 'test(/^e2e::ledger::/)'
 test-group = "ledger-emulator"
 retries = 3
+
+# snforge overrides
+
