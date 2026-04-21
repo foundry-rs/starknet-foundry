@@ -6,6 +6,7 @@ use starknet_types_core::felt::Felt;
 use tokio::sync::OnceCell;
 use url::Url;
 
+mod event_reverse_transformer;
 mod identity;
 mod reverse_transformer;
 mod transformer;
