@@ -19,7 +19,7 @@ inputs:
     required: false
     default: 'true'
   setup-rust-cache:
-    description: 'Whether to restore/save the Rust build cache. Set to false for jobs that only run pre-built artifacts.'
+    description: 'Whether to restore/save the Rust build cache.'
     required: false
     default: 'true'
   cache-key:

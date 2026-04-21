@@ -338,6 +338,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
+        with:
+          setup-rust-cache: 'false'
       - name: Run Forge Scarb Plugin tests
         working-directory: crates/snforge-scarb-plugin
         run: cargo test --profile ci
