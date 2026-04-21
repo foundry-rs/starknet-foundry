@@ -16,7 +16,7 @@ ledger-emulator = { max-threads = 1 }
 # sncast overrides
 
 [[profile.sncast-ci.overrides]]
-filter = 'test(/^e2e::/) | test(/^integration::/) | test(/^docs_snippets::/)'
+filter = 'test(/^e2e::/) | test(/^integration::/) | test(/^docs_snippets::/) | test(/^helpers::devnet_provider::/) | test(/^helpers::devnet_detection::/)'
 test-group = "devnet-sequential"
 
 [[profile.sncast-ci.overrides]]
