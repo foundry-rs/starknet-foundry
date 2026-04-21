@@ -67,9 +67,11 @@ pub struct Gas(pub ApiGasAmount);
 pub struct Events(pub Vec<Event>);
 
 #[derive(Debug, Clone)]
-pub struct Event {
-    pub keys: Vec<Felt>,
-    pub data: Vec<Felt>,
+pub enum Event {
+    /// A successfully reverse-transformed event, pretty-formatted as a human-readable struct.
+    Decoded(String),
+    /// A fallback for legacy Cairo1 events, events from contract which is missing an ABI, etc.
+    Raw { keys: Vec<Felt>, data: Vec<Felt> },
 }
 
 impl Trace {
