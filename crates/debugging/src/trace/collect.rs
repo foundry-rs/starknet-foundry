@@ -1,9 +1,10 @@
 use crate::contracts_data_store::ContractsDataStore;
 use crate::trace::types::{
-    CallerAddress, ContractAddress, ContractName, ContractTrace, Gas, Selector, TestName,
-    TraceInfo, TransformedCallResult, TransformedCalldata,
+    CallerAddress, ContractAddress, ContractName, ContractTrace, Event, Events, Gas, Selector,
+    TestName, TraceInfo, TransformedCallResult, TransformedCalldata,
 };
 use crate::{Context, Trace};
+use blockifier::execution::call_info::OrderedEvent;
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::{CallFailure, CallSuccess};
 use cheatnet::trace_data::{CallTrace, CallTraceNode};
 use data_transformer::{ReverseTransformError, reverse_transform_input, reverse_transform_output};
@@ -51,6 +52,7 @@ impl<'a> Collector<'a> {
             call_type: components.call_type(entry_point.call_type),
             nested_calls,
             call_result: components.call_result_lazy(|| self.collect_transformed_call_result(abi)),
+            events: components.events_lazy(|| self.collect_events()),
             gas: components.gas_lazy(|| self.collect_gas()),
         };
 
@@ -146,6 +148,23 @@ impl<'a> Collector<'a> {
             .expect("Gas report data must be updated after test execution")
             .get_gas()
             .l2_gas)
+    }
+
+    fn collect_events(&self) -> Events {
+        Events(
+            self.call_trace
+                .events
+                .iter()
+                .map(Self::collect_event)
+                .collect(),
+        )
+    }
+
+    fn collect_event(event: &OrderedEvent) -> Event {
+        Event {
+            keys: event.event.keys.iter().map(|key| key.0).collect(),
+            data: event.event.data.0.clone(),
+        }
     }
 
     fn class_hash(&self) -> &ClassHash {
