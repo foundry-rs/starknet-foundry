@@ -21,7 +21,7 @@ use universal_sierra_compiler_api::compile_raw_sierra_at_path;
 use universal_sierra_compiler_api::representation::{AssembledCairoProgram, RawCasmProgram};
 
 #[derive(Debug, Clone, Copy)]
-pub enum TestSelectionMode<'a> {
+pub enum TestNameSelection<'a> {
     All,
     ExactMatch(&'a str),
 }
@@ -30,7 +30,7 @@ pub enum TestSelectionMode<'a> {
 pub fn prepare_test_target(
     test_target_raw: TestTargetRaw,
     tracked_resource: &ForgeTrackedResource,
-    test_selection_mode: TestSelectionMode<'_>,
+    test_name_selection: TestNameSelection<'_>,
 ) -> Result<TestTargetWithConfig> {
     let default_executables = vec![];
     let executables = test_target_raw
@@ -40,9 +40,9 @@ pub fn prepare_test_target(
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
         .unwrap_or(&default_executables);
 
-    let selected_test_cases = match test_selection_mode {
-        TestSelectionMode::All => None,
-        TestSelectionMode::ExactMatch(exact_match) => Some(
+    let selected_test_cases = match test_name_selection {
+        TestNameSelection::All => None,
+        TestNameSelection::ExactMatch(exact_match) => Some(
             executables
                 .iter()
                 .filter(|case| {

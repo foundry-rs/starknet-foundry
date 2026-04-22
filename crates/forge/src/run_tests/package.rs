@@ -30,7 +30,7 @@ use forge_runner::{
         with_config_resolved::{TestCaseWithResolvedConfig, sanitize_test_case_name},
     },
     partition::PartitionConfig,
-    running::target::{TestSelectionMode, prepare_test_target},
+    running::target::{TestNameSelection, prepare_test_target},
     scarb::load_test_artifacts,
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
@@ -153,8 +153,8 @@ fn spawn_prepare_test_target(
 ) -> JoinHandle<Result<TestTargetWithConfig>> {
     tokio::task::spawn_blocking(move || {
         let selection = match maybe_exact_name.as_deref() {
-            Some(exact_match) => TestSelectionMode::ExactMatch(exact_match),
-            None => TestSelectionMode::All,
+            Some(exact_match) => TestNameSelection::ExactMatch(exact_match),
+            None => TestNameSelection::All,
         };
         prepare_test_target(target, &tracked_resource, selection)
     })

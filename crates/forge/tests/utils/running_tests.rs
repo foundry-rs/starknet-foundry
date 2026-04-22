@@ -14,7 +14,7 @@ use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, ForgeTrackedResource, OutputConfig, TestRunnerConfig,
 };
 use forge_runner::partition::PartitionConfig;
-use forge_runner::running::target::{TestSelectionMode, prepare_test_target};
+use forge_runner::running::target::{TestNameSelection, prepare_test_target};
 use forge_runner::scarb::load_test_artifacts;
 use forge_runner::test_target_summary::TestTargetSummary;
 use foundry_ui::UI;
@@ -55,7 +55,7 @@ pub fn run_test_case(
             .into_iter()
             .map(|t| {
                 tokio::task::spawn_blocking(move || {
-                    prepare_test_target(t, &tracked_resource, TestSelectionMode::All)
+                    prepare_test_target(t, &tracked_resource, TestNameSelection::All)
                 })
             })
             .collect();
