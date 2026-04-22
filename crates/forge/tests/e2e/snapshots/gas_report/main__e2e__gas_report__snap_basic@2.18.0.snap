@@ -5,13 +5,13 @@ expression: stdout
 
 
 
-[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~974690)
+[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~972380)
 ╭------------------------+-------+-------+-------+---------+---------╮
 | HelloStarknet Contract |       |       |       |         |         |
 +====================================================================+
 | Function Name          | Min   | Max   | Avg   | Std Dev | # Calls |
 |------------------------+-------+-------+-------+---------+---------|
-| get_balance            | 21410 | 21410 | 21410 | 0       | 2       |
+| get_balance            | 20640 | 20640 | 20640 | 0       | 2       |
 |------------------------+-------+-------+-------+---------+---------|
-| increase_balance       | 67980 | 67980 | 67980 | 0       | 1       |
+| increase_balance       | 67210 | 67210 | 67210 | 0       | 1       |
 ╰------------------------+-------+-------+-------+---------+---------╯
