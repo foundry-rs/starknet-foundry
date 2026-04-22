@@ -40,7 +40,7 @@ pub fn prepare_test_target(
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
         .unwrap_or(&default_executables);
 
-    let exact_matches = match test_selection_mode {
+    let selected_test_cases = match test_selection_mode {
         TestSelectionMode::All => None,
         TestSelectionMode::ExactMatch(exact_match) => Some(
             executables
@@ -53,7 +53,7 @@ pub fn prepare_test_target(
         ),
     };
 
-    if exact_matches.as_ref().is_some_and(Vec::is_empty) {
+    if selected_test_cases.as_ref().is_some_and(Vec::is_empty) {
         return Ok(empty_test_target(test_target_raw));
     }
 
@@ -77,7 +77,7 @@ pub fn prepare_test_target(
         test_target_raw.sierra_program_path.as_std_path(),
     )?);
 
-    let test_cases = if let Some(exact_matches) = exact_matches {
+    let test_cases = if let Some(exact_matches) = selected_test_cases {
         exact_matches
             .into_par_iter()
             .map(|case| {
