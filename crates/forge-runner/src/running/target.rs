@@ -32,22 +32,6 @@ pub fn prepare_test_target(
     tracked_resource: &ForgeTrackedResource,
     test_selection_mode: TestSelectionMode<'_>,
 ) -> Result<TestTargetWithConfig> {
-    macro_rules! by_id {
-        ($field:ident) => {{
-            let temp: HashMap<_, _> = test_target_raw
-                .sierra_program
-                .program
-                .$field
-                .iter()
-                .map(|f| (f.id.id, f))
-                .collect();
-
-            temp
-        }};
-    }
-    let funcs = by_id!(funcs);
-    let type_declarations = by_id!(type_declarations);
-
     let default_executables = vec![];
     let executables = test_target_raw
         .sierra_program
@@ -72,6 +56,22 @@ pub fn prepare_test_target(
     if exact_matches.as_ref().is_some_and(Vec::is_empty) {
         return Ok(empty_test_target(test_target_raw));
     }
+
+    macro_rules! by_id {
+        ($field:ident) => {{
+            let temp: HashMap<_, _> = test_target_raw
+                .sierra_program
+                .program
+                .$field
+                .iter()
+                .map(|f| (f.id.id, f))
+                .collect();
+
+            temp
+        }};
+    }
+    let funcs = by_id!(funcs);
+    let type_declarations = by_id!(type_declarations);
 
     let casm_program = Arc::new(compile_raw_sierra_at_path(
         test_target_raw.sierra_program_path.as_std_path(),
