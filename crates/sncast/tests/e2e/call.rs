@@ -1,7 +1,10 @@
 use crate::helpers::constants::{
-    ACCOUNT_FILE_PATH, DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
+    ACCOUNT_FILE_PATH, DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA, DATA_TRANSFORMER_CONTRACT_DIR,
+    MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
 };
-use crate::helpers::fixtures::invoke_contract;
+use crate::helpers::fixtures::{
+    copy_directory_to_tempdir, create_and_deploy_oz_account, invoke_contract, join_tempdirs,
+};
 use crate::helpers::runner::runner;
 use crate::helpers::shell::os_specific_shell;
 use camino::Utf8PathBuf;
@@ -171,7 +174,7 @@ fn test_wrong_calldata() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     // TODO(#3107)
     // 0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 is "Input too long for arguments"
@@ -233,7 +236,7 @@ fn test_wrong_block_id() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -292,4 +295,98 @@ fn test_json_output_format() {
     snapbox.assert().success().stdout_eq(indoc! {r#"
         {"command":"call","response":"0x0","response_raw":["0x0"],"type":"response"}
     "#});
+}
+
+async fn deploy_data_transformer_contract() -> (tempfile::TempDir, String) {
+    let contract_dir = copy_directory_to_tempdir(DATA_TRANSFORMER_CONTRACT_DIR);
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_dir, &tempdir);
+
+    let contents = std::fs::read_to_string(tempdir.path().join("accounts.json")).unwrap();
+    let items: serde_json::Value = serde_json::from_str(&contents).unwrap();
+    let account_address = items["alpha-sepolia"]["my_account"]["address"]
+        .as_str()
+        .unwrap()
+        .to_string();
+
+    let deploy_args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "--json",
+        "deploy",
+        "--url",
+        URL,
+        "--contract-name",
+        "DataTransformer",
+        "--arguments",
+        &account_address,
+    ];
+    let deploy_output = runner(&deploy_args)
+        .current_dir(tempdir.path())
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let contract_address = deploy_output
+        .split(|&b| b == b'\n')
+        .find_map(|line| {
+            let json: serde_json::Value = serde_json::from_slice(line).ok()?;
+            json["contract_address"].as_str().map(str::to_string)
+        })
+        .unwrap();
+
+    (tempdir, contract_address)
+}
+
+#[tokio::test]
+async fn test_happy_case_call_with_option_and_result() {
+    let (tempdir, contract_address) = deploy_data_transformer_contract().await;
+
+    runner(&[
+        "--accounts-file",
+        "accounts.json",
+        "call",
+        "--url",
+        URL,
+        "--contract-address",
+        &contract_address,
+        "--function",
+        "option_fn",
+        "--arguments",
+        "Option::Some(42_u32)",
+    ])
+    .current_dir(tempdir.path())
+    .assert()
+    .success()
+    .stdout_eq(indoc! {r"
+        Success: Call completed
+
+        Response: [0x0, 0x2a]
+    "});
+
+    runner(&[
+        "--accounts-file",
+        "accounts.json",
+        "call",
+        "--url",
+        URL,
+        "--contract-address",
+        &contract_address,
+        "--function",
+        "result_fn",
+        "--arguments",
+        "Result::Ok(99_u32)",
+    ])
+    .current_dir(tempdir.path())
+    .assert()
+    .success()
+    .stdout_eq(indoc! {r"
+        Success: Call completed
+
+        Response: [0x0, 0x63]
+    "});
 }

@@ -18,7 +18,7 @@ pub fn test_no_accounts_in_network() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -43,7 +43,7 @@ pub fn test_account_does_not_exist() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -75,7 +75,7 @@ pub fn test_delete_abort() {
     // Run test with a negative user input
     let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("n");
 
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
     assert_stderr_contains(
         output,
         indoc! {r"

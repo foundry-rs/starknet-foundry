@@ -9,7 +9,7 @@ use camino::Utf8PathBuf;
 use configuration::test_utils::copy_config_to_tempdir;
 use conversions::string::IntoHexStr;
 use indoc::indoc;
-use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
+use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
 use sncast::AccountType;
 use sncast::helpers::account::load_accounts;
 use sncast::helpers::constants::{
@@ -323,6 +323,80 @@ pub async fn test_happy_case_keystore(account_type: &str) {
 }
 
 #[tokio::test]
+pub async fn test_dry_run() {
+    let tempdir = create_account(true, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--profile",
+        "deploy_profile",
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "deploy",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--dry-run",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Dry run completed
+
+            Overall Fee: [..] Fri (~[..] STRK)
+            "
+        },
+    );
+}
+
+#[tokio::test]
+pub async fn test_dry_run_detailed() {
+    let tempdir = create_account(true, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--profile",
+        "deploy_profile",
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "deploy",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--dry-run",
+        "--detailed",
+    ];
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Dry run completed
+
+            Overall Fee: [..] Fri (~[..] STRK)
+            L1 Gas Consumed:      [..]
+            L1 Gas Price:         [..]
+            L2 Gas Consumed:      [..]
+            L2 Gas Price:         [..]
+            L1 Data Gas Consumed: [..]
+            L1 Data Gas Price:    [..]
+            "
+        },
+    );
+}
+
+#[tokio::test]
 pub async fn test_keystore_already_deployed() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
 
@@ -351,7 +425,7 @@ pub async fn test_keystore_already_deployed() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -392,7 +466,7 @@ pub async fn test_keystore_key_mismatch() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -428,7 +502,7 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -464,7 +538,7 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -504,7 +578,7 @@ pub async fn test_deploy_keystore_no_status() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
