@@ -6,7 +6,6 @@ use forge::CAIRO_EDITION;
 use forge::Template;
 use forge::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use indoc::{formatdoc, indoc};
-use itertools::Itertools;
 use regex::Regex;
 use scarb_api::ScarbCommand;
 use shared::consts::FREE_RPC_PROVIDER_URL;
@@ -125,7 +124,7 @@ fn validate_init(project_path: &PathBuf, validate_snforge_std: bool, template: &
     let scarb_toml = fs::read_to_string(manifest_path.clone()).unwrap();
 
     let expected = get_expected_manifest_content(template, validate_snforge_std);
-    assert_manifest_matches(&expected, &scarb_toml);
+    assert_data_eq!(&scarb_toml, expected);
 
     let mut scarb_toml = DocumentMut::from_str(&scarb_toml).unwrap();
 
@@ -311,21 +310,4 @@ fn create_new_project_and_check_gitignore() {
     };
 
     assert_eq!(gitignore_content, expected_gitignore_content);
-}
-
-/// Asserts that two manifest contents match, ignoring the order of lines.
-///
-/// # Why Line Order Can Vary
-///
-/// Starting from Scarb version 2.13, `scarb init` no longer inserts the `[dev-dependencies]` section.
-/// When tools like `forge new` generate a new project, they insert this section later
-/// in the manifest. As a result, the relative placement of `[dev-dependencies]` and other sections
-/// might differ depending on the version of Scarb used.
-fn assert_manifest_matches(expected: &str, actual: &str) {
-    // TODO(#3910)
-    fn sort_lines(s: &str) -> String {
-        s.lines().sorted().join("\n")
-    }
-
-    assert_data_eq!(sort_lines(actual), sort_lines(expected));
 }
