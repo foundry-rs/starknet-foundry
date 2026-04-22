@@ -30,7 +30,7 @@ use forge_runner::{
         with_config_resolved::{TestCaseWithResolvedConfig, sanitize_test_case_name},
     },
     partition::PartitionConfig,
-    running::target::{TestNameSelection, prepare_test_target},
+    running::target::{TestSelectionMode, prepare_test_target},
     scarb::load_test_artifacts,
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
@@ -125,12 +125,14 @@ impl RunForPackageArgs {
         }
 
         let tracked_resource = forge_config.test_runner_config.tracked_resource;
+        let maybe_exact_name = match &tests_filter.name_filter {
+            NameFilter::ExactMatch(name) => Some(name.clone()),
+            _ => None,
+        };
 
         let target_handles = raw_test_targets
             .into_iter()
-            .map(|t| {
-                spawn_prepare_test_target(t, tracked_resource, tests_filter.name_filter.clone())
-            })
+            .map(|t| spawn_prepare_test_target(t, tracked_resource, maybe_exact_name.clone()))
             .collect();
 
         Ok(RunForPackageArgs {
@@ -147,13 +149,12 @@ impl RunForPackageArgs {
 fn spawn_prepare_test_target(
     target: TestTargetRaw,
     tracked_resource: ForgeTrackedResource,
-    name_filter: NameFilter,
+    maybe_exact_name: Option<String>,
 ) -> JoinHandle<Result<TestTargetWithConfig>> {
     tokio::task::spawn_blocking(move || {
-        let selection = match &name_filter {
-            NameFilter::All => TestNameSelection::All,
-            NameFilter::Match(filter) => TestNameSelection::Match(filter),
-            NameFilter::ExactMatch(exact_match) => TestNameSelection::ExactMatch(exact_match),
+        let selection = match maybe_exact_name.as_deref() {
+            Some(exact_match) => TestSelectionMode::ExactMatch(exact_match),
+            None => TestSelectionMode::All,
         };
         prepare_test_target(target, &tracked_resource, selection)
     })

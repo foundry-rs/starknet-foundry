@@ -21,9 +21,8 @@ use universal_sierra_compiler_api::compile_raw_sierra_at_path;
 use universal_sierra_compiler_api::representation::{AssembledCairoProgram, RawCasmProgram};
 
 #[derive(Debug, Clone, Copy)]
-pub enum TestNameSelection<'a> {
+pub enum TestSelectionMode<'a> {
     All,
-    Match(&'a str),
     ExactMatch(&'a str),
 }
 
@@ -31,7 +30,7 @@ pub enum TestNameSelection<'a> {
 pub fn prepare_test_target(
     test_target_raw: TestTargetRaw,
     tracked_resource: &ForgeTrackedResource,
-    test_selection_mode: TestNameSelection<'_>,
+    test_selection_mode: TestSelectionMode<'_>,
 ) -> Result<TestTargetWithConfig> {
     macro_rules! by_id {
         ($field:ident) => {{
@@ -57,37 +56,20 @@ pub fn prepare_test_target(
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
         .unwrap_or(&default_executables);
 
-    let selected_cases = match test_selection_mode {
-        TestNameSelection::All => None,
-        TestNameSelection::Match(filter) => Some(
+    let exact_matches = match test_selection_mode {
+        TestSelectionMode::All => None,
+        TestSelectionMode::ExactMatch(exact_match) => Some(
             executables
                 .iter()
                 .filter(|case| {
-                    let name: String = case
-                        .debug_name
-                        .clone()
-                        .expect("Failed to get test debug name")
-                        .into();
-                    sanitize_test_case_name(&name).contains(filter)
-                })
-                .collect::<Vec<_>>(),
-        ),
-        TestNameSelection::ExactMatch(exact_match) => Some(
-            executables
-                .iter()
-                .filter(|case| {
-                    let name: String = case
-                        .debug_name
-                        .clone()
-                        .expect("Failed to get test debug name")
-                        .into();
+                    let name: String = case.debug_name.clone().unwrap().into();
                     sanitize_test_case_name(&name) == exact_match
                 })
                 .collect::<Vec<_>>(),
         ),
     };
 
-    if selected_cases.as_ref().is_some_and(Vec::is_empty) {
+    if exact_matches.as_ref().is_some_and(Vec::is_empty) {
         return Ok(empty_test_target(test_target_raw));
     }
 
@@ -95,8 +77,8 @@ pub fn prepare_test_target(
         test_target_raw.sierra_program_path.as_std_path(),
     )?);
 
-    let test_cases = if let Some(selected_cases) = selected_cases {
-        selected_cases
+    let test_cases = if let Some(exact_matches) = exact_matches {
+        exact_matches
             .into_par_iter()
             .map(|case| {
                 build_test_case_with_config(
