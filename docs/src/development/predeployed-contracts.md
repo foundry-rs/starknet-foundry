@@ -1,4 +1,4 @@
-# Predpeloyed contracts
+# Predeployed contracts
 
 `snforge` provides a set of predeployed contracts for use in testing. To support this functionality, we maintain their artifacts directly in the codebase. The embedded artifacts are stored in gzipped form to reduce the size of the final binary.
 
