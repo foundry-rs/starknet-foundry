@@ -989,7 +989,6 @@ fn should_panic() {
 
 #[ignore = "TODO Restore this test once there are at least 2 versions supporting v2 macros"]
 #[test]
-// #[cfg_attr(feature = "skip_test_for_only_latest_scarb", ignore = "Plugin checks skipped")]
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");

@@ -94,13 +94,7 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
-      - name: Determine test features
-        id: test_features
-        run: |
-          FEATURES="skip_test_for_only_latest_scarb"
-          echo "features=$FEATURES" >> "$GITHUB_OUTPUT"
-
-      - run: cargo test --profile ci -p forge --features "${{ steps.test_features.outputs.features }}" e2e
+      - run: cargo test --profile ci -p forge --features scheduled_latest_scarb_only e2e
 
   test-cast:
     if: github.event.repository.fork == false
