@@ -18,11 +18,10 @@ use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, env};
 use url::Url;
 use voyager_verifier::{
-    api::ApiClient,
     core::project::ProjectType,
     voyager::{
-        MAINNET_API_URL, SEPOLIA_API_URL, collect_verification_files, prepare_verification_request,
-        submit_verification_request,
+        MAINNET_API_URL, SEPOLIA_API_URL, STATUS_ENDPOINT, collect_verification_files,
+        prepare_verification_request, submit_verification_request,
     },
 };
 
@@ -40,6 +39,15 @@ impl Voyager<'_> {
         let files = collect_verification_files(&self.metadata, include_test_files)?;
 
         Ok((files.prefix, files.files))
+    }
+
+    fn get_job_status_url(base_url: &Url, job_id: &str) -> Result<Url> {
+        let mut url = base_url.clone();
+        let url_clone = url.clone();
+        url.path_segments_mut()
+            .map_err(|()| anyhow::anyhow!("Voyager API URL cannot be used as a base: {url_clone}"))?
+            .extend(STATUS_ENDPOINT.split('/').chain(std::iter::once(job_id)));
+        Ok(url)
     }
 }
 
@@ -95,11 +103,10 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
 
         let explorer_url = self.gen_explorer_url()?;
         let api_base_url = Url::parse(&explorer_url)?;
-        let api_client = ApiClient::new(api_base_url.clone())?;
         let class_hash = format!("{class_hash:#066x}");
         let job_id =
             submit_verification_request(&api_base_url, &class_hash, &prepared.request).await?;
-        let status_url = api_client.get_job_status_url(&job_id)?;
+        let status_url = Self::get_job_status_url(&api_base_url, &job_id)?;
         let message = format!(
             "{contract_name} submitted for verification, you can query the status at: {status_url}"
         );
