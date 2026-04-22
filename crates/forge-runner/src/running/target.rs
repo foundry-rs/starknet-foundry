@@ -46,7 +46,11 @@ pub fn prepare_test_target(
             executables
                 .iter()
                 .filter(|case| {
-                    let name: String = case.debug_name.clone().unwrap().into();
+                    let name: String = case
+                        .debug_name
+                        .clone()
+                        .expect("Failed to get test case name")
+                        .into();
                     sanitize_test_case_name(&name) == exact_match
                 })
                 .collect::<Vec<_>>(),
@@ -83,7 +87,10 @@ pub fn prepare_test_target(
             .map(|case| {
                 build_test_case_with_config(
                     funcs[&case.id],
-                    case.debug_name.clone().unwrap().into(),
+                    case.debug_name
+                        .clone()
+                        .expect("Failed to get test case name")
+                        .into(),
                     &type_declarations,
                     &casm_program,
                     *tracked_resource,
@@ -96,7 +103,10 @@ pub fn prepare_test_target(
             .map(|case| {
                 build_test_case_with_config(
                     funcs[&case.id],
-                    case.debug_name.clone().unwrap().into(),
+                    case.debug_name
+                        .clone()
+                        .expect("Failed to get test case name")
+                        .into(),
                     &type_declarations,
                     &casm_program,
                     *tracked_resource,
@@ -114,8 +124,8 @@ pub fn prepare_test_target(
     })
 }
 
+/// For non-matching name-selected targets, return an empty test target; its CASM is never used.
 fn empty_test_target(test_target_raw: TestTargetRaw) -> TestTargetWithConfig {
-    // For non-matching `--exact` targets, return an empty test target.
     TestTargetWithConfig {
         tests_location: test_target_raw.tests_location,
         test_cases: vec![],
