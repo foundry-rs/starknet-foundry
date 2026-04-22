@@ -324,6 +324,30 @@ fn exact_filter_does_not_resolve_config_for_filtered_out_tests() {
 }
 
 #[test]
+fn name_filter_does_not_resolve_config_for_filtered_out_tests() {
+    let temp = setup_package("lazy_config_filtering");
+
+    let output = test_runner(&temp)
+        .arg("selected_by_name_")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from lazy_config_filtering package
+        Running 1 test(s) from src/
+        [PASS] lazy_config_filtering::tests::selected_by_name_filter [..]
+        Tests: 1 passed, 0 failed, 0 ignored, 2 filtered out
+        "},
+    );
+}
+
+#[test]
 fn with_skip_filter_matching_module() {
     let temp = setup_package("simple_package");
 

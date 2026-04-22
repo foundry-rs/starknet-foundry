@@ -5,6 +5,11 @@ mod tests {
         assert(true, 'ok');
     }
 
+    #[test]
+    fn selected_by_name_filter() {
+        assert(true, 'ok');
+    }
+
     // This config is intentionally invalid. When running with
     // `--exact lazy_config_filtering::tests::selected_exact`, this test should be
     // filtered out and thus not fail.

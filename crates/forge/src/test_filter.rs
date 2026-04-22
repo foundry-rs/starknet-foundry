@@ -23,7 +23,7 @@ pub struct TestsFilter {
     pub(crate) partitioning_config: PartitionConfig,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub(crate) enum NameFilter {
     All,
     Match(String),
