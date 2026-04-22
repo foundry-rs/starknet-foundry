@@ -1,4 +1,4 @@
-# Predpeloyed contracts
+# Predeployed contracts
 
 `snforge` provides a set of predeployed contracts for use in testing. To support this functionality, we maintain CASM of these contracts directly within our codebase. Because these contracts are subject to periodic updates, these files need to be updated. The list below details all predeployed contracts and the information required to keep them current.
 
