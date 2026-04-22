@@ -9,7 +9,9 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallSuccess,
 };
 use cheatnet::trace_data::{CallTrace, CallTraceNode};
-use data_transformer::{reverse_transform_input, reverse_transform_output};
+use data_transformer::{
+    reverse_transform_event, reverse_transform_input, reverse_transform_output,
+};
 use starknet_api::core::ClassHash;
 use starknet_api::execution_utils::format_panic_data;
 use starknet_rust::core::types::contract::AbiEntry;
@@ -53,7 +55,7 @@ impl<'a> Collector<'a> {
             call_type: components.call_type(entry_point.call_type),
             nested_calls,
             call_result: components.call_result_lazy(|| self.collect_transformed_call_result(abi)),
-            events: components.events_lazy(|| self.collect_events()),
+            events: components.events_lazy(|| self.collect_events(abi)),
             gas: components.gas_lazy(|| self.collect_gas()),
         };
 
@@ -145,20 +147,23 @@ impl<'a> Collector<'a> {
             .l2_gas)
     }
 
-    fn collect_events(&self) -> Events {
+    fn collect_events(&self, abi: &[AbiEntry]) -> Events {
         Events(
             self.call_trace
                 .events
                 .iter()
-                .map(Self::collect_event)
+                .map(|event| self.collect_event(event, abi))
                 .collect(),
         )
     }
 
-    fn collect_event(event: &OrderedEvent) -> Event {
-        Event {
-            keys: event.event.keys.iter().map(|key| key.0.into()).collect(),
-            data: event.event.data.0.to_vec(),
+    fn collect_event(&self, event: &OrderedEvent, abi: &[AbiEntry]) -> Event {
+        let keys: Vec<_> = event.event.keys.iter().map(|key| key.0.into()).collect();
+        let data = event.event.data.0.to_vec();
+
+        match reverse_transform_event(&keys, &data, abi) {
+            Ok(decoded) => Event::Decoded(decoded),
+            Err(_) => Event::Raw { keys, data },
         }
     }
 

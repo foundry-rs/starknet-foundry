@@ -17,3 +17,11 @@ fn test_debugging_trace_eventless_success() {
 
     IEventsCheckerDispatcher { contract_address }.do_not_emit();
 }
+
+#[test]
+fn test_debugging_trace_raw_event_fallback() {
+    let contract_class = declare("EventsChecker").unwrap().contract_class();
+    let (contract_address, _) = contract_class.deploy(@array![]).unwrap();
+
+    IEventsCheckerDispatcher { contract_address }.emit_custom_event(0x123, 0x456);
+}
