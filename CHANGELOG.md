@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
+- `contract-address` command to `sncast utils`, which calculates the contract address
 - Aliases `sncast get transaction` and `sncast get transaction-status` for `get tx` and `get tx-status`.
 - Support for serialization of corelib `Option` and `Result`, values passed via `--arguments`
 - `--dry-run` and `--detailed` flags for all transaction commands, allowing users to validate transaction logic and estimate fees without submitting to the network
