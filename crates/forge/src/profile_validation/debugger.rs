@@ -1,23 +1,26 @@
-use crate::profile_validation::{bool_field, bool_field_or_unstable, str_field};
+use crate::profile_validation::{check_cairo_profile_entries, get_manifest};
 use anyhow::ensure;
-use camino::Utf8PathBuf;
 use indoc::formatdoc;
-use serde_json::Value;
+use scarb_metadata::Metadata;
 
-pub fn check_debugger_compatibility(
-    compiler_config: &Value,
-    profile: &str,
-    workspace_manifest_path: &Utf8PathBuf,
-) -> anyhow::Result<()> {
-    let has_needed_entries = bool_field(compiler_config, "add_functions_debug_info")
-        && bool_field_or_unstable(compiler_config, "add_statements_code_locations_debug_info")
-        && bool_field_or_unstable(compiler_config, "add_statements_functions_debug_info")
-        && str_field(compiler_config, "compiler_optimizations") == "Disabled";
+/// Checks if debugger can be launched based on profile settings extracted from the provided [`Metadata`].
+pub fn check_debugger_compatibility(scarb_metadata: &Metadata) -> anyhow::Result<()> {
+    const DEBUGGER_REQUIRED_ENTRIES: &[(&str, &str)] = &[
+        ("unstable-add-statements-code-locations-debug-info", "true"),
+        ("unstable-add-statements-functions-debug-info", "true"),
+        ("add-functions-debug-info", "true"),
+        ("skip-optimizations", "true"),
+    ];
+
+    let manifest = get_manifest(scarb_metadata)?;
+
+    let has_needed_entries =
+        check_cairo_profile_entries(&manifest, scarb_metadata, DEBUGGER_REQUIRED_ENTRIES);
 
     ensure!(
         has_needed_entries,
         formatdoc! {
-            "{workspace_manifest_path} must have the Cairo compiler configuration equivalent to the following one to launch the debugger:
+            "Scarb.toml must have the following Cairo compiler configuration to launch the debugger:
 
             [profile.{profile}.cairo]
             unstable-add-statements-code-locations-debug-info = true
@@ -26,6 +29,7 @@ pub fn check_debugger_compatibility(
             skip-optimizations = true
             ... other entries ...
             ",
+            profile = scarb_metadata.current_profile
         },
     );
 

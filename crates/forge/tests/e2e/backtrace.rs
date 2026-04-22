@@ -91,7 +91,7 @@ fn test_wrong_scarb_toml_configuration() {
     assert_stdout_contains(
         output,
         indoc! {
-           "[ERROR] [..]/Scarb.toml must have the Cairo compiler configuration equivalent to the following one to run backtrace:
+           "[ERROR] Scarb.toml must have the following Cairo compiler configuration to run backtrace:
 
             [profile.dev.cairo]
             unstable-add-statements-functions-debug-info = true
@@ -99,75 +99,6 @@ fn test_wrong_scarb_toml_configuration() {
             panic-backtrace = true
             ... other entries ..."
         },
-    );
-}
-
-// `add-statements-code-locations-debug-info` is available from Scarb 2.15.0
-#[test]
-fn test_complex_scarb_toml_configuration_without_unstable() {
-    let temp = setup_package("backtrace_vm_error");
-
-    let manifest_path = temp.child("Scarb.toml");
-
-    let mut scarb_toml = fs::read_to_string(&manifest_path)
-        .unwrap()
-        .parse::<DocumentMut>()
-        .unwrap();
-
-    scarb_toml["profile"]["dev"]["cairo"]
-        .as_table_like_mut()
-        .unwrap()
-        .remove("unstable-add-statements-code-locations-debug-info")
-        .unwrap();
-    scarb_toml["cairo"]["add-statements-code-locations-debug-info"] = value(true);
-
-    manifest_path.write_str(&scarb_toml.to_string()).unwrap();
-
-    let output = test_runner(&temp)
-        .env("SNFORGE_BACKTRACE", "1")
-        .assert()
-        .failure();
-
-    assert_stdout_contains(
-        output,
-        indoc! {r#"
-            error occurred in contract 'OuterContract'
-            stack backtrace:
-        "#},
-    );
-}
-
-#[test]
-fn test_complex_scarb_toml_configuration() {
-    let temp = setup_package("backtrace_vm_error");
-
-    let manifest_path = temp.child("Scarb.toml");
-
-    let mut scarb_toml = fs::read_to_string(&manifest_path)
-        .unwrap()
-        .parse::<DocumentMut>()
-        .unwrap();
-
-    scarb_toml["profile"]["dev"]["cairo"]
-        .as_table_like_mut()
-        .unwrap()
-        .remove("unstable-add-statements-code-locations-debug-info")
-        .unwrap();
-    scarb_toml["cairo"]["unstable-add-statements-code-locations-debug-info"] = value(true);
-
-    manifest_path.write_str(&scarb_toml.to_string()).unwrap();
-
-    let output = test_runner(&temp)
-        .env("SNFORGE_BACKTRACE", "1")
-        .assert()
-        .failure();
-
-    assert_stdout_contains(
-        output,
-        indoc! {r#"
-            error occurred in contract 'OuterContract'
-            stack backtrace:
-        "#},
     );
 }
 

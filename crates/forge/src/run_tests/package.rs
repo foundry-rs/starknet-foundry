@@ -30,7 +30,7 @@ use forge_runner::{
         with_config_resolved::{TestCaseWithResolvedConfig, sanitize_test_case_name},
     },
     partition::PartitionConfig,
-    running::target::prepare_test_target,
+    running::target::{TestNameSelection, prepare_test_target},
     scarb::load_test_artifacts,
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
@@ -128,7 +128,9 @@ impl RunForPackageArgs {
 
         let target_handles = raw_test_targets
             .into_iter()
-            .map(|t| spawn_prepare_test_target(t, tracked_resource))
+            .map(|t| {
+                spawn_prepare_test_target(t, tracked_resource, tests_filter.name_filter.clone())
+            })
             .collect();
 
         Ok(RunForPackageArgs {
@@ -145,8 +147,16 @@ impl RunForPackageArgs {
 fn spawn_prepare_test_target(
     target: TestTargetRaw,
     tracked_resource: ForgeTrackedResource,
+    name_filter: NameFilter,
 ) -> JoinHandle<Result<TestTargetWithConfig>> {
-    tokio::task::spawn_blocking(move || prepare_test_target(target, &tracked_resource))
+    tokio::task::spawn_blocking(move || {
+        let selection = match &name_filter {
+            NameFilter::All => TestNameSelection::All,
+            NameFilter::Match(filter) => TestNameSelection::Match(filter),
+            NameFilter::ExactMatch(exact_match) => TestNameSelection::ExactMatch(exact_match),
+        };
+        prepare_test_target(target, &tracked_resource, selection)
+    })
 }
 
 fn sum_test_cases_from_test_target(

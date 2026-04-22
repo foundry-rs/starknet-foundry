@@ -34,69 +34,6 @@ fn test_coverage_project_and_pass_args() {
 }
 
 #[test]
-fn test_complex_correct_set_up() {
-    let temp = setup_package("coverage_project");
-
-    let manifest_path = temp.child("Scarb.toml");
-
-    let mut scarb_toml = fs::read_to_string(&manifest_path)
-        .unwrap()
-        .parse::<DocumentMut>()
-        .unwrap();
-
-    scarb_toml["profile"]["dev"]["cairo"]
-        .as_table_like_mut()
-        .unwrap()
-        .remove("inlining-strategy")
-        .unwrap();
-    scarb_toml["cairo"]["inlining-strategy"] = value("avoid");
-
-    manifest_path.write_str(&scarb_toml.to_string()).unwrap();
-
-    test_runner(&temp)
-        .arg("--coverage")
-        .arg("--")
-        .arg("--output-path")
-        .arg("./my_file.lcov")
-        .assert()
-        .success();
-
-    assert!(temp.join("my_file.lcov").is_file())
-}
-
-// `skip-optimizations` also sets `inlining-strategy` to `avoid` - available from Scarb 2.14.0
-#[test]
-fn test_complex_correct_set_up_with_skip_optimizations() {
-    let temp = setup_package("coverage_project");
-
-    let manifest_path = temp.child("Scarb.toml");
-
-    let mut scarb_toml = fs::read_to_string(&manifest_path)
-        .unwrap()
-        .parse::<DocumentMut>()
-        .unwrap();
-
-    scarb_toml["profile"]["dev"]["cairo"]
-        .as_table_like_mut()
-        .unwrap()
-        .remove("inlining-strategy")
-        .unwrap();
-    scarb_toml["cairo"]["skip-optimizations"] = value(true);
-
-    manifest_path.write_str(&scarb_toml.to_string()).unwrap();
-
-    test_runner(&temp)
-        .arg("--coverage")
-        .arg("--")
-        .arg("--output-path")
-        .arg("./my_file.lcov")
-        .assert()
-        .success();
-
-    assert!(temp.join("my_file.lcov").is_file())
-}
-
-#[test]
 fn test_fail_wrong_set_up() {
     let temp = setup_package("coverage_project");
 
@@ -117,7 +54,7 @@ fn test_fail_wrong_set_up() {
     assert_stdout_contains(
         output,
         indoc! {
-            "[ERROR] [..]/Scarb.toml must have the Cairo compiler configuration equivalent to the following one to run coverage:
+            "[ERROR] Scarb.toml must have the following Cairo compiler configuration to run coverage:
 
             [profile.dev.cairo]
             unstable-add-statements-functions-debug-info = true
