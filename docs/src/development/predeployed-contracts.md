@@ -6,6 +6,10 @@
 
 To add a new predeployed contract, you need to add a new subdirectory with the name of the contract to the `crates/cheatnet/src/data/predeployed_contracts` directory. Then, you need to add artifact files to this subdirectory. CASM files should be renamed to `casm.json`.
 
+> 📝 **Note**
+>
+> When adding a new predeployed contract, make sure the class matches the one deployed on mainnet.
+
 Structure of `predeployed_contracts` directory should be as follows:
 
 ```shell
@@ -23,12 +27,16 @@ $ tree
 
 ### STRK and ETH 
 
-Contracts are taken from the [`starkgate-contracts`](https://github.com/starknet-io/starkgate-contracts) repository.
-Currently used version: [`v3.0.0`](https://github.com/starknet-io/starkgate-contracts/commit/07e11c39119a10d5742735be5b1d51894ebf5311).
+These contracts are sourced from the [starkgate-contracts](https://github.com/starknet-io/starkgate-contracts) repository.
 
-Links to Cairo contracts:
-- STRK: [`ERC20Lockable`](https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/strk/src/erc20_lockable.cairo)
-- ETH : [`ERC20Mintable`](https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/sg_token/src/erc20_mintable.cairo)
+**Current Build Configuration:**
+- **Version:** `v3.0.0`
+- **Commit Hash:** [`07e11c3`](https://github.com/starknet-io/starkgate-contracts/commit/07e11c39119a10d5742735be5b1d51894ebf5311)
+
+| Token | Contract Name | Source Code (Cairo) | Class on Mainnet |
+| :--- | :--- | :--- | :--- |
+| **STRK** | `ERC20Lockable` | [View Source](https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/strk/src/erc20_lockable.cairo) | [`0x02e7...98fc`](https://voyager.online/class/0x02e77ee61d4df3d988ee1f42ea5442e913862cc82c2584d212ecda76666498fc) |
+| **ETH** | `ERC20Mintable` | [View Source](https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/sg_token/src/erc20_mintable.cairo) | [`0x00b4...4ec`](https://voyager.online/class/0x00b45dbc3714180381c5680e41931172d67194d77d504413465390e0bef194ec) |
 
 Steps to update STRK and ETH predeployed contracts:
 
