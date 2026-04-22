@@ -57,11 +57,11 @@ pub fn prepare_test_target(
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
         .unwrap_or(&default_executables);
 
-    let selected_cases = match test_selection_mode {
+    let test_cases = match test_selection_mode {
         TestNameSelection::All => None,
         TestNameSelection::Match(filter) => Some(
             executables
-                .iter()
+                .par_iter()
                 .filter(|case| {
                     let name: String = case
                         .debug_name
@@ -74,7 +74,7 @@ pub fn prepare_test_target(
         ),
         TestNameSelection::ExactMatch(exact_match) => Some(
             executables
-                .iter()
+                .par_iter()
                 .filter(|case| {
                     let name: String = case
                         .debug_name
@@ -87,7 +87,7 @@ pub fn prepare_test_target(
         ),
     };
 
-    if selected_cases.as_ref().is_some_and(Vec::is_empty) {
+    if test_cases.as_ref().is_some_and(Vec::is_empty) {
         return Ok(empty_test_target(test_target_raw));
     }
 
@@ -95,7 +95,7 @@ pub fn prepare_test_target(
         test_target_raw.sierra_program_path.as_std_path(),
     )?);
 
-    let test_cases = if let Some(selected_cases) = selected_cases {
+    let test_cases = if let Some(selected_cases) = test_cases {
         selected_cases
             .into_par_iter()
             .map(|case| {
@@ -132,8 +132,9 @@ pub fn prepare_test_target(
     })
 }
 
+/// Builds a test target with an empty list of test cases.
+/// Used when no test cases are selected by the filter and we still want to run the test target.
 fn empty_test_target(test_target_raw: TestTargetRaw) -> TestTargetWithConfig {
-    // For non-matching `--exact` targets, return an empty test target.
     TestTargetWithConfig {
         tests_location: test_target_raw.tests_location,
         test_cases: vec![],
