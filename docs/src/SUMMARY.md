@@ -73,6 +73,7 @@
 * [Environment Setup](development/environment-setup.md)
 * [Shell snippets](development/shell-snippets.md)
 * [Snapshot tests](development/snapshot-tests.md)
+* [Predeployed contracts](development/predeployed-contracts.md)
 
 ---
 
