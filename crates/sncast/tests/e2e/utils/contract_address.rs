@@ -150,6 +150,8 @@ fn test_happy_case_constructor_calldata() {
         "0x2",
         "--salt",
         "0x1",
+        "--url",
+        URL,
     ];
     runner(&args).assert().success().stdout_eq(indoc! {r"
     Contract Address: 0x0[..]
@@ -165,11 +167,13 @@ fn test_calldata_affects_address() {
             "utils",
             "contract-address",
             "--class-hash",
-            MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+            CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
             "--constructor-calldata",
             calldata,
             "--salt",
             "0x1",
+            "--url",
+            URL,
         ];
         let out = runner(&args).assert().success();
         extract_contract_address(&out.get_output().stdout)

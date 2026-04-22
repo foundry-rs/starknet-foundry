@@ -43,7 +43,9 @@ pub async fn get_contract_address(
 ) -> Result<ContractAddressResponse, StarknetCommandError> {
     let salt = extract_or_generate_salt(args.common.salt);
     let (class_hash, abi) = if let Some(class_hash) = args.common.contract_identifier.class_hash {
-        let abi = if args.common.arguments.arguments.is_some() {
+        let abi = if args.common.arguments.arguments.is_some()
+            || args.common.arguments.constructor_calldata.is_some()
+        {
             resolve_abi(Location::ClassHash(class_hash), args.rpc, &config, ui).await?
         } else {
             vec![]
@@ -80,9 +82,6 @@ pub async fn get_contract_address(
         vec![]
     };
 
-    // Note: when `--constructor-calldata` is used with `--class-hash`, the ABI is not resolved
-    // and will be empty, so this check is only effective for the `--arguments` path
-    // and the `--contract-name` path (which always has the ABI from the sierra artifact).
     if !calldata.is_empty() && !abi.is_empty() {
         let has_constructor = abi.iter().any(|e| matches!(e, AbiEntry::Constructor(_)));
         if !has_constructor {

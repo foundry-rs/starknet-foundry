@@ -20,6 +20,8 @@ Conflicts with: [`--arguments`](#--arguments)
 
 Constructor calldata as a series of felts.
 
+Requires `--url` or `--network` to fetch the contract ABI when used together with `--class-hash`.
+
 ## `--arguments <ARGUMENTS>`
 Optional.
 Conflicts with: [`--constructor-calldata`](#--constructor-calldata)
@@ -56,7 +58,7 @@ Specifies the Scarb package to use when looking up the contract by name.
 ## `--url, -u <RPC_URL>`
 Optional.
 
-Starknet RPC node url address. Required when using `--arguments` together with `--class-hash`.
+Starknet RPC node url address. Required when using `--arguments` or `--constructor-calldata` together with `--class-hash`.
 
 Overrides url from `snfoundry.toml`.
 
