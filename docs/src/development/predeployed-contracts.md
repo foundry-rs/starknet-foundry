@@ -61,8 +61,8 @@ This should be done in `sg_token` and `strk` packages.
     ...
 
     [profile.release.cairo]
-    unstable-add-statements-code-locations-debug-info = true
-    unstable-add-statements-functions-debug-info = true
+    add-statements-code-locations-debug-info = true
+    add-statements-functions-debug-info = true
     panic-backtrace = true
 
     ...
