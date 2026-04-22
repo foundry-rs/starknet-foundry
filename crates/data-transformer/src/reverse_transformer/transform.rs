@@ -62,6 +62,13 @@ impl<'a> ReverseTransformer<'a> {
         self.transform_expr(&parsed_expr, db)
     }
 
+    /// Extracts the remaining, non-processed stream of [`Felt`]s. Used in reverse transformer for events,
+    /// where two parallel sub-streams exist in one stram of felts.
+    #[must_use]
+    pub fn into_remaining(self) -> &'a [Felt] {
+        self.buffer_reader.into_remaining()
+    }
+
     /// Transforms the given [`Expr`] to a [`Type`].
     fn transform_expr(
         &mut self,
