@@ -23,7 +23,7 @@ inputs:
     required: false
     default: 'true'
   cache-key:
-    description: 'Suffix appended to the rust-cache shared-key to isolate cache entries between different feature sets.'
+    description: 'Custom name used in the rust cache filename. Jobs with different dependencies or feature sets should use separate names.'
     required: false
     default: 'default'
   save-cache:
