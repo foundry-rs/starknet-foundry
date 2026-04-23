@@ -1,7 +1,7 @@
 use crate::{
     predeployment::erc20::{
-        eth::{ERC20MINTABLE_SIERRA_CLASS_HASH, ETH_CONTRACT_NAME},
-        strk::{ERC20LOCKABLE_SIERRA_CLASS_HASH, STRK_CONTRACT_NAME},
+        eth::{ERC20MINTABLE_SIERRA_CLASS_HASH, ETH_TOKEN_NAME},
+        strk::{ERC20LOCKABLE_SIERRA_CLASS_HASH, STRK_TOKEN_NAME},
     },
     predeployment::load_gzipped_artifact,
     runtime_extensions::forge_runtime_extension::contracts_data::ContractsData,
@@ -46,8 +46,8 @@ macro_rules! load_contract {
 /// Loads data of predeployed contracts from their artifacts, and prepares it for usage in cheatnet.
 pub fn load_predeployed_contracts(cache_dir: &Utf8PathBuf) -> Result<ContractsData> {
     let contracts = HashMap::from([
-        load_contract!(cache_dir, STRK_CONTRACT_NAME, "ERC20Lockable"),
-        load_contract!(cache_dir, ETH_CONTRACT_NAME, "ERC20Mintable"),
+        load_contract!(cache_dir, STRK_TOKEN_NAME, "ERC20Lockable"),
+        load_contract!(cache_dir, ETH_TOKEN_NAME, "ERC20Mintable"),
     ]);
 
     let mut contracts_data = ContractsData::try_from(contracts)?;
@@ -58,8 +58,8 @@ pub fn load_predeployed_contracts(cache_dir: &Utf8PathBuf) -> Result<ContractsDa
     // To ensure consistency with the network, we manually override the local class hashes
     // with their official on-chain equivalents.
     let class_hashes_to_change = [
-        (STRK_CONTRACT_NAME, ERC20LOCKABLE_SIERRA_CLASS_HASH),
-        (ETH_CONTRACT_NAME, ERC20MINTABLE_SIERRA_CLASS_HASH),
+        (STRK_TOKEN_NAME, ERC20LOCKABLE_SIERRA_CLASS_HASH),
+        (ETH_TOKEN_NAME, ERC20MINTABLE_SIERRA_CLASS_HASH),
     ];
 
     for (contract_name, class_hash) in class_hashes_to_change {
