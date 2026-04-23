@@ -814,12 +814,18 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
 
     let global_default =
         PartialCastConfig::load_maybe(global_path.as_ref(), None, ConfigScope::Global)?;
-    let global_profile =
-        PartialCastConfig::load_maybe(global_path.as_ref(), profile, ConfigScope::Global)?;
+    let global_profile = if profile.is_some() {
+        PartialCastConfig::load_maybe(global_path.as_ref(), profile, ConfigScope::Global)?
+    } else {
+        MaybeConfig::NoProfile
+    };
     let local_default =
         PartialCastConfig::load_maybe(local_path.as_ref(), None, ConfigScope::Local)?;
-    let local_profile =
-        PartialCastConfig::load_maybe(local_path.as_ref(), profile, ConfigScope::Local)?;
+    let local_profile = if profile.is_some() {
+        PartialCastConfig::load_maybe(local_path.as_ref(), profile, ConfigScope::Local)?
+    } else {
+        MaybeConfig::NoProfile
+    };
 
     match (profile, &local_profile, &global_profile) {
         // Profile must be defined in at least local or global config
