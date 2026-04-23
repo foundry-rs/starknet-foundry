@@ -14,6 +14,7 @@ use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
 use url::Url;
 
+/// Detects nextest test discovery mode (`--list`) to skip devnet lifecycle side effects.
 fn is_listing() -> bool {
     std::env::args().any(|a| a == "--list")
 }
