@@ -4,7 +4,7 @@ use std::process::{Child, Command, Stdio};
 use std::time::{Duration, Instant};
 use url::Url;
 
-use crate::helpers::constants::devnet_url;
+use crate::helpers::constants::URL;
 
 // These tests are marked to run serially to avoid interference from second devnet instance
 
@@ -16,12 +16,11 @@ async fn test_devnet_detection() {
 }
 
 async fn test_detect_devnet_url() {
-    let url = devnet_url();
     let result = detect_devnet_url()
         .await
         .expect("Failed to detect devnet URL");
 
-    assert_eq!(result, Url::parse(&url.replace("/rpc", "")).unwrap());
+    assert_eq!(result, Url::parse(&URL.replace("/rpc", "")).unwrap());
 }
 
 async fn test_multiple_devnet_instances_error() {
