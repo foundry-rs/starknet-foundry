@@ -52,10 +52,9 @@ pub fn load_predeployed_contracts(cache_dir: &Utf8PathBuf) -> Result<ContractsDa
 
     let mut contracts_data = ContractsData::try_from(contracts)?;
 
-    // Local predeployed contracts are compiled with debug features (backtrace and traces) enabled
-    // in Scarb.toml to work with debugging features. Since these settings modify the
-    // generated Sierra code, the resulting class hashes differ from those of contracts
-    // deployed on-chain, which are compiled without mentioned compiler settings.
+    // Since `panic-backtrace` setting modifies generated Sierra program,
+    // the resulting class hashes differ from those of contracts
+    // deployed on-chain, which are compiled without mentioned compiler setting.
     // To ensure consistency with the network, we manually override the local class hashes
     // with their official on-chain equivalents.
     let class_hashes_to_change = [
