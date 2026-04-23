@@ -170,8 +170,6 @@ fn predeployed_contract_test_output(package_name: &str) -> String {
         └─ [selector] decimals
            └─ [contract name] STRK
 
-        Latest block number = [..] for url = [..]
-
         Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
         ",
     }
