@@ -289,9 +289,9 @@ async fn test_keystore_undeployed_account() {
     let contract_path =
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "8");
     // TODO(#4311): Remove temporary `--accounts-file` workaround for `devnet-<i>`.
-    let accounts_file = "accounts.json";
+    let accounts_file = "empty_accounts.json";
     copy_file(
-        "tests/data/accounts/accounts.json",
+        "tests/data/accounts/empty_accounts.json",
         contract_path.path().join(accounts_file),
     );
     let my_key_path = get_keystores_path("tests/data/keystore/my_key.json");

@@ -11,10 +11,10 @@ use test_case::test_case;
 #[tokio::test]
 pub async fn happy_case(account_number: u8) {
     // TODO(#4311): Remove temporary `--accounts-file` workaround for `devnet-<i>`.
-    let accounts_file = "accounts.json";
+    let accounts_file = "empty_accounts.json";
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     copy_file(
-        "tests/data/accounts/accounts.json",
+        "tests/data/accounts/empty_accounts.json",
         temp_dir.path().join(accounts_file),
     );
 
@@ -55,10 +55,10 @@ pub async fn happy_case(account_number: u8) {
 #[tokio::test]
 pub async fn account_number_out_of_range(account_number: u8) {
     // TODO(#4311): Remove temporary `--accounts-file` workaround for `devnet-<i>`.
-    let accounts_file = "accounts.json";
+    let accounts_file = "empty_accounts.json";
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     copy_file(
-        "tests/data/accounts/accounts.json",
+        "tests/data/accounts/empty_accounts.json",
         temp_dir.path().join(accounts_file),
     );
 
@@ -138,10 +138,10 @@ pub async fn account_name_already_exists() {
 #[tokio::test]
 pub async fn use_devnet_account_with_network_not_being_devnet() {
     // TODO(#4311): Remove temporary `--accounts-file` workaround for `devnet-<i>`.
-    let accounts_file = "accounts.json";
+    let accounts_file = "empty_accounts.json";
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     copy_file(
-        "tests/data/accounts/accounts.json",
+        "tests/data/accounts/empty_accounts.json",
         temp_dir.path().join(accounts_file),
     );
 
