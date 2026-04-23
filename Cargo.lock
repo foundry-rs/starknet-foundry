@@ -3530,7 +3530,6 @@ dependencies = [
  "rand 0.8.5",
  "rayon",
  "regex",
- "reqwest 0.13.2",
  "scarb-api",
  "scarb-metadata",
  "scarb-ui",
