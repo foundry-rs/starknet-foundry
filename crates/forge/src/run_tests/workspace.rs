@@ -112,7 +112,7 @@ pub async fn execute_workspace(
 
     // Load predeployed contracts if backtrace is enabled or any trace-related arguments are provided.
     let predeployed_contracts = should_load_predeployed_contracts_sierra(&args.trace_args)
-        .then(load_predeployed_contracts)
+        .then(|| load_predeployed_contracts(&cache_dir))
         .transpose()?;
 
     // Spawn config passes for all packages before running any tests so that

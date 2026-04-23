@@ -12,11 +12,9 @@ use conversions::string::TryFromHexStr;
 use scarb_api::StarknetContractArtifacts;
 use std::{collections::HashMap, fs};
 
-pub const CACHE_DIR: &str = ".snfoundry_cache";
-
 /// Load data of predeployed contract from its artifacts
 macro_rules! load_contract {
-    ($name:expr, $contract_dir:expr) => {{
+    ($cache_dir:expr, $name:expr, $contract_dir:expr) => {{
         let sierra = load_gzipped_artifact(include_bytes!(concat!(
             "../data/predeployed_contracts/",
             $contract_dir,
@@ -39,17 +37,17 @@ macro_rules! load_contract {
             $name.to_string(),
             (
                 artifacts,
-                maybe_cache_contract_sierra($contract_dir, &sierra)?,
+                maybe_cache_contract_sierra($cache_dir, $contract_dir, &sierra)?,
             ),
         )
     }};
 }
 
 /// Loads data of predeployed contracts from their artifacts, and prepares it for usage in cheatnet.
-pub fn load_predeployed_contracts() -> Result<ContractsData> {
+pub fn load_predeployed_contracts(cache_dir: &Utf8PathBuf) -> Result<ContractsData> {
     let contracts = HashMap::from([
-        load_contract!(STRK_CONTRACT_NAME, "ERC20Lockable"),
-        load_contract!(ETH_CONTRACT_NAME, "ERC20Mintable"),
+        load_contract!(cache_dir, STRK_CONTRACT_NAME, "ERC20Lockable"),
+        load_contract!(cache_dir, ETH_CONTRACT_NAME, "ERC20Mintable"),
     ]);
 
     let mut contracts_data = ContractsData::try_from(contracts)?;
@@ -92,8 +90,12 @@ pub fn load_predeployed_contracts() -> Result<ContractsData> {
 
 /// Saves sierra file of predeployed contract to cache, and returns path to it.
 /// If the file already exists in the cache and matches the embedded Sierra, it skips the write operation.
-fn maybe_cache_contract_sierra(contract_name: &str, sierra: &str) -> Result<Utf8PathBuf> {
-    let path = Utf8PathBuf::from(CACHE_DIR)
+fn maybe_cache_contract_sierra(
+    cache_dir: &Utf8PathBuf,
+    contract_name: &str,
+    sierra: &str,
+) -> Result<Utf8PathBuf> {
+    let path = cache_dir
         .join("predeployed_contracts")
         .join(env!("CARGO_PKG_VERSION"))
         .join(format!("{contract_name}.sierra.json"));
