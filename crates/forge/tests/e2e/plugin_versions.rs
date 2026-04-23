@@ -8,10 +8,6 @@ use snapbox::cmd::Command;
 use toml_edit::Document;
 
 #[test]
-#[cfg_attr(
-    not(feature = "test_for_multiple_scarb_versions"),
-    ignore = "Multiple scarb versions must be installed"
-)]
 fn new_with_new_scarb() {
     let temp = tempdir_with_tool_versions().unwrap();
     runner(&temp)
@@ -33,11 +29,8 @@ fn new_with_new_scarb() {
     assert_eq!(snforge_std, env!("CARGO_PKG_VERSION"));
 }
 
+#[cfg(feature = "scarb_2_12_0")]
 #[test]
-#[cfg_attr(
-    not(feature = "test_for_multiple_scarb_versions"),
-    ignore = "Multiple scarb versions must be installed"
-)]
 fn new_with_minimal_scarb() {
     let temp = tempdir_with_tool_versions().unwrap();
     Command::new("asdf")
@@ -65,10 +58,6 @@ fn new_with_minimal_scarb() {
 }
 
 #[test]
-#[cfg_attr(
-    not(feature = "test_for_multiple_scarb_versions"),
-    ignore = "Multiple scarb versions must be installed"
-)]
 fn new_scarb_new_macros() {
     let temp = tempdir_with_tool_versions().unwrap();
     runner(&temp)
@@ -105,10 +94,6 @@ fn new_scarb_new_macros() {
 }
 
 #[test]
-#[cfg_attr(
-    not(feature = "test_for_multiple_scarb_versions"),
-    ignore = "Multiple scarb versions must be installed"
-)]
 fn new_scarb_old_macros() {
     let temp = tempdir_with_tool_versions().unwrap();
     runner(&temp)
