@@ -50,6 +50,7 @@ jobs:
       - run: cargo test --profile ci --lib -p forge
 
   build-test-forge-nextest-archive:
+    name: Build Nextest Archive (Forge)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -81,6 +82,7 @@ jobs:
           path: nextest-archive-forge-${{ runner.os }}.tar.zst
 
   build-test-forge-nextest-archive-native:
+    name: Build Nextest Archive (Forge Native)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -349,6 +351,7 @@ jobs:
         run: cargo test --profile ci
 
   build-test-cast-nextest-archive:
+    name: Build Nextest Archive (Cast)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
