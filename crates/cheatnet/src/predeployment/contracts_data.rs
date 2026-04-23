@@ -3,14 +3,14 @@ use crate::{
         eth::{ERC20MINTABLE_SIERRA_CLASS_HASH, ETH_CONTRACT_NAME},
         strk::{ERC20LOCKABLE_SIERRA_CLASS_HASH, STRK_CONTRACT_NAME},
     },
+    predeployment::load_gzipped_artifact,
     runtime_extensions::forge_runtime_extension::contracts_data::ContractsData,
 };
 use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
 use conversions::string::TryFromHexStr;
-use flate2::read::GzDecoder;
 use scarb_api::StarknetContractArtifacts;
-use std::{collections::HashMap, fs, io::Read};
+use std::{collections::HashMap, fs};
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
@@ -43,14 +43,6 @@ macro_rules! load_contract {
             ),
         )
     }};
-}
-
-fn load_gzipped_artifact(bytes: &[u8]) -> Result<String> {
-    let mut decoder = GzDecoder::new(bytes);
-    let mut artifact = String::new();
-    decoder.read_to_string(&mut artifact)?;
-
-    Ok(artifact)
 }
 
 /// Loads data of predeployed contracts from their artifacts, and prepares it for usage in cheatnet.

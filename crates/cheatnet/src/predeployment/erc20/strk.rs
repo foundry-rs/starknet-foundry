@@ -1,7 +1,7 @@
 use conversions::string::TryFromHexStr;
 use starknet_api::core::ContractAddress;
 
-use crate::predeployment::predeployed_contract::PredeployedContract;
+use crate::predeployment::{load_gzipped_artifact, predeployed_contract::PredeployedContract};
 
 use super::constructor_data::ERC20ConstructorData;
 
@@ -16,7 +16,10 @@ pub const ERC20LOCKABLE_SIERRA_CLASS_HASH: &str =
 pub fn strk_predeployed_contract() -> PredeployedContract {
     // starkgate-contracts v3.0.0
     // Link to Cairo contract: https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/strk/src/erc20_lockable.cairo
-    let raw_casm = include_str!("../../data/predeployed_contracts/ERC20Lockable/casm.json");
+    let raw_casm = load_gzipped_artifact(include_bytes!(
+        "../../data/predeployed_contracts/ERC20Lockable/casm.json.gz"
+    ))
+    .expect("predeployed STRK CASM should be a valid gzip artifact");
 
     let contract_address = ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
     let class_hash = TryFromHexStr::try_from_hex_str(ERC20LOCKABLE_SIERRA_CLASS_HASH).unwrap();
@@ -38,5 +41,5 @@ pub fn strk_predeployed_contract() -> PredeployedContract {
         upgrade_delay: 0,
     };
 
-    PredeployedContract::erc20(contract_address, class_hash, raw_casm, constructor_data)
+    PredeployedContract::erc20(contract_address, class_hash, &raw_casm, constructor_data)
 }
