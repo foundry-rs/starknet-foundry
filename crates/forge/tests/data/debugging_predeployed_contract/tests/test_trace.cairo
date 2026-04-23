@@ -10,3 +10,10 @@ fn test_decimals() {
     let dispatcher = IERC20Dispatcher { contract_address: Token::STRK.contract_address() };
     dispatcher.decimals();
 }
+
+#[test]
+#[fork(url: "{{ NODE_RPC_URL }}", block_number: 806134)]
+fn test_fork_decimals() {
+    let dispatcher = IERC20Dispatcher { contract_address: Token::STRK.contract_address() };
+    dispatcher.decimals();
+}

@@ -157,15 +157,22 @@ fn predeployed_contract_test_output(package_name: &str) -> String {
         [..]Compiling[..]
         [..]Finished[..]
 
-        Collected 1 test(s) from {package_name} package
+        Collected 2 test(s) from {package_name} package
         Running 0 test(s) from src/
-        Running 1 test(s) from tests/
+        Running 2 test(s) from tests/
         [PASS] {package_name}_integrationtest::test_trace::test_decimals (l1_gas: ~[..], l1_data_gas: ~[..], l2_gas: ~[..])
         [test name] {package_name}_integrationtest::test_trace::test_decimals
         └─ [selector] decimals
            └─ [contract name] STRK
 
-        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
+        [PASS] {package_name}_integrationtest::test_trace::test_fork_decimals (l1_gas: ~[..], l1_data_gas: ~[..], l2_gas: ~[..])
+        [test name] {package_name}_integrationtest::test_trace::test_fork_decimals
+        └─ [selector] decimals
+           └─ [contract name] STRK
+
+        Latest block number = [..] for url = [..]
+
+        Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
         ",
     }
 }
