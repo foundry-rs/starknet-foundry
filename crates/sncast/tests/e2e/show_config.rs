@@ -165,20 +165,21 @@ async fn test_show_config_cli_url_overrides_config_network() {
         "profile7",
         "show-config",
         "--url",
-        "http://127.0.0.1:1111",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().success().stdout_eq(formatdoc! {r"
         Profile:             profile7
-        RPC URL:             http://127.0.0.1:1111/
+        Chain ID:            alpha-sepolia
+        RPC URL:             {}
         Account:             user1
         Accounts File Path:  /path/to/account.json
         Wait Timeout:        300s
         Wait Retry Interval: 5s
         Show Explorer Links: true
         Block Explorer:      Voyager
-    "});
+    ", URL});
 }
 
 #[tokio::test]
