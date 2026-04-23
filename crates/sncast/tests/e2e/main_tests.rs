@@ -242,7 +242,17 @@ async fn test_inexistent_keystore() {
 
 #[tokio::test]
 async fn test_keystore_account_required() {
+    // TODO(#4311): Remove temporary `--accounts-file` workaround for missing default accounts file.
+    let accounts_file = "empty_accounts.json";
+    let temp_dir = tempfile::tempdir().expect("Unable to create a temporary directory");
+    copy_file(
+        "tests/data/accounts/empty_accounts.json",
+        temp_dir.path().join(accounts_file),
+    );
+
     let args = vec![
+        "--accounts-file",
+        accounts_file,
         "--keystore",
         "tests/data/keystore/my_key.json",
         "declare",
@@ -252,7 +262,7 @@ async fn test_keystore_account_required() {
         "my_contract",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().failure();
 
     assert_stderr_contains(
