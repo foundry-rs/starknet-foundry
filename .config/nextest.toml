@@ -22,6 +22,6 @@ filter = 'test(/^e2e::devnet_accounts::/) | test(/^e2e::script::init::/)'
 retries = 1
 
 [[profile.sncast-ci.overrides]]
-filter = 'test(/^e2e::ledger::/)'
+filter = 'test(/^e2e::ledger::/) | test(/^docs_snippets::ledger::/)'
 test-group = "ledger"
 retries = 3
