@@ -20,6 +20,19 @@ pub trait Config {
         Self: Sized;
 }
 
+pub trait Override {
+    #[must_use]
+    fn override_with(&self, other: Self) -> Self;
+}
+
+pub fn override_optional<T: Override>(base: Option<T>, other: Option<T>) -> Option<T> {
+    match (base, other) {
+        (Some(base), Some(other)) => Some(base.override_with(other)),
+        (None, Some(other)) => Some(other),
+        (base, None) => base,
+    }
+}
+
 #[must_use]
 pub fn resolve_config_file() -> Utf8PathBuf {
     find_config_file().unwrap_or_else(|_| {

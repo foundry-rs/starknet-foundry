@@ -338,9 +338,9 @@ pub async fn test_happy_case_add_profile(rpc_flag: &str, rpc_value: &str) {
         .expect("Unable to read snfoundry.toml");
     let expected_lines = [
         "[sncast.my_account_import]",
+        &format!("{} = \"{}\"", rpc_flag.trim_start_matches("--"), rpc_value),
         "account = \"my_account_import\"",
         "accounts-file = \"accounts.json\"",
-        &format!("{} = \"{}\"", rpc_flag.trim_start_matches("--"), rpc_value),
     ];
     let expected_block = expected_lines.join("\n");
 

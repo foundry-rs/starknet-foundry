@@ -18,6 +18,7 @@ async fn test_show_config_from_snfoundry_toml() {
         Wait Timeout:        300s
         Wait Retry Interval: 5s
         Show Explorer Links: true
+        Block Explorer:      Voyager
     ", URL});
 }
 
@@ -47,6 +48,7 @@ async fn test_show_config_from_cli() {
         Wait Timeout:        2s
         Wait Retry Interval: 1s
         Show Explorer Links: true
+        Block Explorer:      Voyager
     ", URL});
 }
 
@@ -86,6 +88,7 @@ async fn test_show_config_when_no_keystore() {
         Wait Timeout:        300s
         Wait Retry Interval: 5s
         Show Explorer Links: true
+        Block Explorer:      Voyager
     ", URL});
 }
 
@@ -105,6 +108,7 @@ async fn test_show_config_when_keystore() {
         Wait Timeout:        300s
         Wait Retry Interval: 5s
         Show Explorer Links: true
+        Block Explorer:      Voyager
     ", URL});
 }
 
@@ -122,6 +126,7 @@ async fn test_show_config_no_url() {
         Wait Timeout:        500s
         Wait Retry Interval: 10s
         Show Explorer Links: false
+        Block Explorer:      Voyager
     "});
 }
 
@@ -141,6 +146,31 @@ async fn test_show_config_with_network() {
         Wait Timeout:        300s
         Wait Retry Interval: 5s
         Show Explorer Links: true
+        Block Explorer:      Voyager
+    "});
+}
+
+#[tokio::test]
+async fn test_show_config_cli_url_overrides_config_network() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let args = vec![
+        "--profile",
+        "profile7",
+        "show-config",
+        "--url",
+        "http://127.0.0.1:1111",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    snapbox.assert().success().stdout_eq(formatdoc! {r"
+        Profile:             profile7
+        RPC URL:             http://127.0.0.1:1111/
+        Account:             user1
+        Accounts File Path:  /path/to/account.json
+        Wait Timeout:        300s
+        Wait Retry Interval: 5s
+        Show Explorer Links: true
+        Block Explorer:      Voyager
     "});
 }
 
