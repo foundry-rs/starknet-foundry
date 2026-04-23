@@ -27,7 +27,7 @@ pub fn eth_predeployed_contract() -> PredeployedContract {
     // Block 747469
     let total_supply_low: u128 = 15_000_000_000_000_000_000_000;
     let permitted_minter = ContractAddress::try_from_hex_str(
-        "0x4c5772d1914fe6ce891b64eb35bf3522aeae1315647314aac58b01137607f3f",
+        "0x73314940630fd6dcda0d772d4c972c4e0a9946bef9dabf4ef84eda8ef542b82",
     )
     .unwrap();
 
