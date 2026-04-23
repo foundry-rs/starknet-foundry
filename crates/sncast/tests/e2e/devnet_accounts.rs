@@ -10,10 +10,18 @@ use test_case::test_case;
 #[test_case(20)]
 #[tokio::test]
 pub async fn happy_case(account_number: u8) {
+    // TODO(#4311): Remove temporary `--accounts-file` workaround for `devnet-<i>`.
+    let accounts_file = "accounts.json";
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    copy_file(
+        "tests/data/accounts/accounts.json",
+        temp_dir.path().join(accounts_file),
+    );
 
     let account = format!("devnet-{account_number}");
     let args = vec![
+        "--accounts-file",
+        accounts_file,
         "--account",
         &account,
         "invoke",
@@ -46,10 +54,18 @@ pub async fn happy_case(account_number: u8) {
 #[test_case(21)]
 #[tokio::test]
 pub async fn account_number_out_of_range(account_number: u8) {
+    // TODO(#4311): Remove temporary `--accounts-file` workaround for `devnet-<i>`.
+    let accounts_file = "accounts.json";
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    copy_file(
+        "tests/data/accounts/accounts.json",
+        temp_dir.path().join(accounts_file),
+    );
 
     let account = format!("devnet-{account_number}");
     let args = vec![
+        "--accounts-file",
+        accounts_file,
         "--account",
         &account,
         "invoke",
@@ -121,9 +137,17 @@ pub async fn account_name_already_exists() {
 
 #[tokio::test]
 pub async fn use_devnet_account_with_network_not_being_devnet() {
+    // TODO(#4311): Remove temporary `--accounts-file` workaround for `devnet-<i>`.
+    let accounts_file = "accounts.json";
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    copy_file(
+        "tests/data/accounts/accounts.json",
+        temp_dir.path().join(accounts_file),
+    );
 
     let args = vec![
+        "--accounts-file",
+        accounts_file,
         "--account",
         "devnet-1",
         "invoke",
