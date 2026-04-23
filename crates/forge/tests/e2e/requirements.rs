@@ -30,7 +30,7 @@ fn test_warning_on_scarb_version_below_recommended() {
         indoc! {r"
     Checking requirements
 
-    ⚠️  Scarb Version 2.12.0 doesn't satisfy minimal recommended [..]
+    ⚠️  Scarb Version 2.13.1 doesn't satisfy minimal recommended [..]
     ✅ Universal Sierra Compiler [..]
     "},
     );
