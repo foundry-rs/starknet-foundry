@@ -104,7 +104,7 @@ mod Test {
     }
 
     #[test]
-    #[fork(url: "{{ NODE_RPC_URL }}", block_number: 806134)]
+    #[fork(url: "{{ NODE_RPC_URL }}", block_number: 9035290)]
     fn test_fork_predeployed_contract_panics() {
         let dispatcher = IERC20Dispatcher { contract_address: Token::STRK.contract_address() };
         let recipient = 0x123.try_into().unwrap();
