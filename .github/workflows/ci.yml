@@ -279,7 +279,8 @@ jobs:
         with:
           setup-scarb: 'false'
       - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
-      - run: cargo test --profile ci --package forge --features test_for_multiple_scarb_versions e2e::plugin_diagnostic
+      - run: asdf install scarb 2.12.0
+      - run: cargo test --profile ci --package forge --features scarb_2_12_0 --test main e2e::plugin_versions
 
   test-requirements-check-special-conditions:
     name: Test requirements check special conditions
