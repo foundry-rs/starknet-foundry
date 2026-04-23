@@ -128,7 +128,7 @@ pub async fn execute_workspace(
             &cache_dir,
             &artifacts_dir_path,
             partitioning_config.clone(),
-            predeployed_contracts.clone(),
+            predeployed_contracts.as_ref(),
             &ui,
         )?;
         env::set_current_dir(&cwd)?;

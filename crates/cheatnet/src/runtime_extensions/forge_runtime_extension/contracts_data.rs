@@ -74,7 +74,7 @@ impl ContractsData {
         })
     }
 
-    pub fn try_extend(&mut self, other: Self) -> Result<()> {
+    pub fn try_extend(&mut self, other: &Self) -> Result<()> {
         for (name, contract_data) in &other.contracts {
             if self.contracts.contains_key(name) {
                 bail!("duplicate contract name: {name}");
@@ -90,14 +90,14 @@ impl ContractsData {
             }
         }
 
-        for (name, contract_data) in other.contracts {
+        for (name, contract_data) in &other.contracts {
             self.class_hashes
                 .insert_no_overwrite(name.clone(), contract_data.class_hash)
                 .map_err(|_| anyhow!("class hash mapping for {name} should be unique"))?;
-            self.contracts.insert(name, contract_data);
+            self.contracts.insert(name.clone(), contract_data.clone());
         }
 
-        self.selectors.extend(other.selectors);
+        self.selectors.extend(other.selectors.clone());
 
         Ok(())
     }
