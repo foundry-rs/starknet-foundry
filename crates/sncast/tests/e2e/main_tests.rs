@@ -244,17 +244,22 @@ async fn test_inexistent_keystore() {
 async fn test_keystore_account_required() {
     // TODO(#4311): Remove temporary `--accounts-file` workaround for missing default accounts file.
     let accounts_file = "empty_accounts.json";
+    let keystore_file = "my_key.json";
     let temp_dir = tempfile::tempdir().expect("Unable to create a temporary directory");
     copy_file(
         "tests/data/accounts/empty_accounts.json",
         temp_dir.path().join(accounts_file),
+    );
+    copy_file(
+        "tests/data/keystore/my_key.json",
+        temp_dir.path().join(keystore_file),
     );
 
     let args = vec![
         "--accounts-file",
         accounts_file,
         "--keystore",
-        "tests/data/keystore/my_key.json",
+        keystore_file,
         "declare",
         "--url",
         URL,
@@ -275,17 +280,22 @@ async fn test_keystore_account_required() {
 async fn test_keystore_inexistent_account() {
     // TODO(#4311): Remove temporary `--accounts-file` workaround for missing default accounts file.
     let accounts_file = "empty_accounts.json";
+    let keystore_file = "my_key.json";
     let temp_dir = tempfile::tempdir().expect("Unable to create a temporary directory");
     copy_file(
         "tests/data/accounts/empty_accounts.json",
         temp_dir.path().join(accounts_file),
+    );
+    copy_file(
+        "tests/data/keystore/my_key.json",
+        temp_dir.path().join(keystore_file),
     );
 
     let args = vec![
         "--accounts-file",
         accounts_file,
         "--keystore",
-        "tests/data/keystore/my_key.json",
+        keystore_file,
         "--account",
         "inexistent_account",
         "declare",
