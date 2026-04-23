@@ -151,6 +151,30 @@ async fn test_show_config_with_network() {
 }
 
 #[tokio::test]
+async fn test_show_config_cli_url_overrides_config_network() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let args = vec![
+        "--profile",
+        "profile7",
+        "show-config",
+        "--url",
+        "http://127.0.0.1:1111",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    snapbox.assert().success().stdout_eq(formatdoc! {r"
+        Profile:             profile7
+        RPC URL:             http://127.0.0.1:1111/
+        Account:             user1
+        Accounts File Path:  /path/to/account.json
+        Wait Timeout:        300s
+        Wait Retry Interval: 5s
+        Show Explorer Links: true
+        Block Explorer:      Voyager
+    "});
+}
+
+#[tokio::test]
 async fn test_only_one_from_url_and_network_allowed() {
     let tempdir = copy_config_to_tempdir("tests/data/files/invalid_snfoundry.toml", None);
     let args = vec!["--profile", "url_and_network", "show-config"];

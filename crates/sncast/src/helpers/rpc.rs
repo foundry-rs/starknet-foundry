@@ -24,6 +24,12 @@ pub struct RpcArgs {
 }
 
 impl RpcArgs {
+    pub fn get_network_params(&self, config: &CastConfig) -> Result<NetworkParams> {
+        let cli_params = NetworkParams::new(self.url.clone(), self.network)?;
+
+        Ok(config.network_params.clone().override_with(cli_params))
+    }
+
     pub async fn get_provider(
         &self,
         config: &CastConfig,
@@ -39,8 +45,7 @@ impl RpcArgs {
     }
 
     pub async fn get_url(&self, config: &CastConfig) -> Result<Url> {
-        let cli_params = NetworkParams::new(self.url.clone(), self.network)?;
-        let effective = config.network_params.clone().override_with(cli_params);
+        let effective = self.get_network_params(config)?;
 
         match (effective.url(), effective.network()) {
             (Some(url), None) => Ok(url.clone()),
