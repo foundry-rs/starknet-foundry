@@ -45,19 +45,22 @@ pub struct ExtendedStateReader {
     pub fork_state_reader: Option<ForkStateReader>,
 }
 
+/// Controls how predeployed contracts are registered.
 #[derive(Clone, Copy)]
 enum PredeploymentMode {
-    Full,
-    ClassOnly,
+    /// Register only contract class and rely on the fork for address and storage.
+    Fork,
+    /// Register contract class, address mapping, and storage values initialized
+    /// by the contract's constructor.
+    NonFork,
 }
 
 impl ExtendedStateReader {
     pub fn predeploy_contracts(&mut self) {
-        // We consider contract as deployed solely based on the fact that the test used forking
         let mode = if self.fork_state_reader.is_some() {
-            PredeploymentMode::ClassOnly
+            PredeploymentMode::Fork
         } else {
-            PredeploymentMode::Full
+            PredeploymentMode::NonFork
         };
         let contracts = vec![strk_predeployed_contract(), eth_predeployed_contract()];
 
@@ -77,7 +80,7 @@ impl ExtendedStateReader {
             .class_hash_to_class
             .insert(class_hash, contract_class);
 
-        if matches!(mode, PredeploymentMode::Full) {
+        if matches!(mode, PredeploymentMode::NonFork) {
             self.dict_state_reader
                 .address_to_class_hash
                 .insert(contract_address, class_hash);
