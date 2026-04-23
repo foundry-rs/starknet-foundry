@@ -1,3 +1,4 @@
+use anyhow::Context;
 use clap::{Args, Subcommand};
 use sncast::response::ui::UI;
 use sncast::{
@@ -16,11 +17,15 @@ use crate::{
     process_command_result,
     starknet_commands::{
         self,
-        utils::{class_hash::ClassHash, selector::Selector, serialize::Serialize},
+        utils::{
+            class_hash::ClassHash, contract_address::ContractAddress, selector::Selector,
+            serialize::Serialize,
+        },
     },
 };
 
 pub mod class_hash;
+pub mod contract_address;
 pub mod felt_or_id;
 pub mod selector;
 pub mod serialize;
@@ -38,6 +43,9 @@ pub enum Commands {
 
     /// Get contract class hash
     ClassHash(ClassHash),
+
+    /// Calculate the address of a not yet deployed contract
+    ContractAddress(ContractAddress),
 
     /// Calculate selector from name
     Selector(Selector),
@@ -80,6 +88,48 @@ pub async fn utils(
                 .map_err(handle_starknet_command_error);
 
             Ok(process_command_result("utils class-hash", result, ui, None))
+        }
+
+        Commands::ContractAddress(contract_address) => {
+            let artifacts = if contract_address
+                .common
+                .contract_identifier
+                .contract_name
+                .is_some()
+            {
+                let manifest_path = assert_manifest_path_exists()?;
+                let package_metadata =
+                    get_package_metadata(&manifest_path, &contract_address.common.package)?;
+
+                Some(
+                    build_and_load_artifacts(
+                        &package_metadata,
+                        &BuildConfig {
+                            scarb_toml_path: manifest_path,
+                            json,
+                            profile,
+                        },
+                        false,
+                        // TODO(#3959) Remove `base_ui`
+                        ui.base_ui(),
+                    )
+                    .context("Failed to build contract")?,
+                )
+            } else {
+                None
+            };
+
+            let result =
+                contract_address::get_contract_address(contract_address, artifacts, config, ui)
+                    .await
+                    .map_err(handle_starknet_command_error);
+
+            Ok(process_command_result(
+                "utils contract-address",
+                result,
+                ui,
+                None,
+            ))
         }
 
         Commands::Selector(sel) => {

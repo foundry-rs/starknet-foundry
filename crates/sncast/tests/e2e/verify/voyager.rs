@@ -5,7 +5,7 @@ use crate::helpers::fixtures::copy_directory_to_tempdir;
 use crate::helpers::runner::runner;
 use indoc::formatdoc;
 use serde_json::json;
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::SEPOLIA;
 use starknet_types_core::felt::Felt;
 use std::fs;
@@ -84,7 +84,18 @@ async fn test_happy_case_contract_address() {
         .current_dir(contract_path.path())
         .stdin("Y");
 
-    snapbox.assert().success();
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        formatdoc! {"
+        Success: Verification completed
+
+        Map submitted for verification, you can query the status at: {}/class-verify/job/{job_id}
+        ",
+        mock_server.uri(),
+        },
+    );
 }
 
 #[tokio::test]
