@@ -436,10 +436,9 @@ jobs:
           # TODO(#2781): Use `mdbook build`
           ./scripts/build_docs.sh
       - name: Install Forge
-        env:
-          CARGO_INCREMENTAL: 0
         run: |
-          cargo install --path crates/forge --locked --debug
+          cargo build --profile ci -p forge --locked
+          cp target/ci/snforge ~/.cargo/bin/
       - name: Verify Cairo listings
         run: |
           ./scripts/verify_cairo_listings.sh
