@@ -1,30 +1,32 @@
-use crate::profile_validation::{check_cairo_profile_entries, get_manifest};
+use crate::profile_validation::{bool_field_or_unstable, str_field};
 use anyhow::ensure;
+use camino::Utf8PathBuf;
 use indoc::formatdoc;
-use scarb_metadata::Metadata;
+use serde_json::Value;
 
-/// Checks if coverage can be based on scarb version and profile settings extracted from the provided [`Metadata`].
-pub fn check_coverage_compatibility(scarb_metadata: &Metadata) -> anyhow::Result<()> {
-    check_profile(scarb_metadata)
-}
-
-/// Checks if the runtime profile settings in the provided from [`Metadata`] contain the required entries for coverage generation.
-fn check_profile(scarb_metadata: &Metadata) -> anyhow::Result<()> {
-    const CAIRO_COVERAGE_REQUIRED_ENTRIES: &[(&str, &str)] = &[
-        ("unstable-add-statements-functions-debug-info", "true"),
-        ("unstable-add-statements-code-locations-debug-info", "true"),
-        ("inlining-strategy", "avoid"),
-    ];
-
-    let manifest = get_manifest(scarb_metadata)?;
-
+pub fn check_coverage_compatibility(
+    compiler_config: &Value,
+    profile: &str,
+    workspace_manifest_path: &Utf8PathBuf,
+) -> anyhow::Result<()> {
     let has_needed_entries =
-        check_cairo_profile_entries(&manifest, scarb_metadata, CAIRO_COVERAGE_REQUIRED_ENTRIES);
+        bool_field_or_unstable(compiler_config, "add_statements_code_locations_debug_info")
+            && bool_field_or_unstable(compiler_config, "add_statements_functions_debug_info")
+            && (compiler_config
+                .get("compiler_optimizations")
+                .and_then(|v| v.get("Enabled"))
+                .and_then(|v| v.get("inlining_strategy"))
+                .and_then(|v| v.as_str())
+                == Some("avoid")
+                // When optimizations are disabled, the inlining strategy is set to `avoid`.
+                || str_field(compiler_config, "compiler_optimizations") == "Disabled"
+                // For compatibility with older Scarb versions.
+                || str_field(compiler_config, "inlining_strategy") == "avoid");
 
     ensure!(
         has_needed_entries,
         formatdoc! {
-            "Scarb.toml must have the following Cairo compiler configuration to run coverage:
+            "{workspace_manifest_path} must have the Cairo compiler configuration equivalent to the following one to run coverage:
 
             [profile.{profile}.cairo]
             unstable-add-statements-functions-debug-info = true
@@ -32,7 +34,6 @@ fn check_profile(scarb_metadata: &Metadata) -> anyhow::Result<()> {
             inlining-strategy = \"avoid\"
             ... other entries ...
             ",
-            profile = scarb_metadata.current_profile
         },
     );
 
