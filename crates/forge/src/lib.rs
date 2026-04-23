@@ -249,6 +249,7 @@ pub struct TestArgs {
     ///
     /// It makes snforge act as a debug adapter, enabling communication with an editor/IDE
     /// such as `VSCode` over DAP protocol.
+    /// It is meant for communication with a DAP client, not command line live debugging.
     #[arg(long, requires = "exact")]
     #[cfg_attr(feature = "cairo-native", arg(conflicts_with = "run_native"))]
     launch_debugger: bool,
