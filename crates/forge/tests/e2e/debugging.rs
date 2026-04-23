@@ -163,7 +163,7 @@ fn predeployed_contract_test_output(package_name: &str) -> String {
         [PASS] {package_name}_integrationtest::test_trace::test_decimals (l1_gas: ~[..], l1_data_gas: ~[..], l2_gas: ~[..])
         [test name] {package_name}_integrationtest::test_trace::test_decimals
         └─ [selector] decimals
-           └─ [contract name] STRK (predeployed contract)
+           └─ [contract name] STRK
 
         Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
         ",

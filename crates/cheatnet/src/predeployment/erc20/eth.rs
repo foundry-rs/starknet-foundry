@@ -6,7 +6,7 @@ use crate::predeployment::{load_gzipped_artifact, predeployed_contract::Predeplo
 use super::constructor_data::ERC20ConstructorData;
 
 pub const ETH_TOKEN_NAME: &str = "ETH";
-pub const ETH_CONTRACT_NAME: &str = "ETH (predeployed contract)";
+pub const ETH_CONTRACT_NAME: &str = "ETH";
 pub const ETH_CONTRACT_ADDRESS: &str =
     "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
 pub const ERC20MINTABLE_SIERRA_CLASS_HASH: &str =
