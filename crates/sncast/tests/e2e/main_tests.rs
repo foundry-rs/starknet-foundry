@@ -3,7 +3,7 @@ use crate::helpers::constants::{
 };
 use crate::helpers::env::set_keystore_password_env;
 use crate::helpers::fixtures::{
-    duplicate_contract_directory_with_salt, get_accounts_path, get_keystores_path,
+    copy_file, duplicate_contract_directory_with_salt, get_accounts_path, get_keystores_path,
 };
 use crate::helpers::runner::runner;
 use configuration::test_utils::copy_config_to_tempdir;
@@ -288,11 +288,19 @@ async fn test_keystore_inexistent_account() {
 async fn test_keystore_undeployed_account() {
     let contract_path =
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "8");
+    // TODO(#4311): Remove temporary `--accounts-file` workaround for `devnet-<i>`.
+    let accounts_file = "accounts.json";
+    copy_file(
+        "tests/data/accounts/accounts.json",
+        contract_path.path().join(accounts_file),
+    );
     let my_key_path = get_keystores_path("tests/data/keystore/my_key.json");
     let my_account_undeployed_path =
         get_keystores_path("tests/data/keystore/my_account_undeployed.json");
 
     let args = vec![
+        "--accounts-file",
+        accounts_file,
         "--keystore",
         my_key_path.as_str(),
         "--account",
