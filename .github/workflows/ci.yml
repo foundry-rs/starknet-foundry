@@ -348,7 +348,7 @@ jobs:
         working-directory: crates/snforge-scarb-plugin
         run: cargo test --profile ci
 
-  build-test-sncast-nextest-archive:
+  build-test-cast-nextest-archive:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -371,7 +371,7 @@ jobs:
   test-cast:
     name: Test Cast
     runs-on: ubuntu-latest
-    needs: [ build-test-sncast-nextest-archive ]
+    needs: [ build-test-cast-nextest-archive ]
     strategy:
       fail-fast: false
       matrix:
