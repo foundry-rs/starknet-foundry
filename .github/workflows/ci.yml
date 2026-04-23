@@ -371,7 +371,8 @@ jobs:
       - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
       - uses: ./.github/actions/setup-tools
         with:
-          cache-key: 'cast'
+          cache-key: 'cast-ledger'
+          save-cache: 'true'
       - name: Run tests
         run: cargo test --profile ci -p sncast --features ledger-emulator ledger -- --ignored
 
@@ -387,6 +388,8 @@ jobs:
         with:
           install-llvm: 'true'
           setup-usc: 'false'
+          cache-key: 'lint'
+          save-cache: 'true'
       - run: rustup component add rustfmt
 
       - name: Check formatting
