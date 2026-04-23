@@ -102,4 +102,12 @@ mod Test {
         let recipient = 0x123.try_into().unwrap();
         dispatcher.transfer(recipient, 100);
     }
+
+    #[test]
+    #[fork(url: "{{ NODE_RPC_URL }}", block_number: 806134)]
+    fn test_fork_predeployed_contract_panics() {
+        let dispatcher = IERC20Dispatcher { contract_address: Token::STRK.contract_address() };
+        let recipient = 0x123.try_into().unwrap();
+        dispatcher.transfer(recipient, 100);
+    }
 }
