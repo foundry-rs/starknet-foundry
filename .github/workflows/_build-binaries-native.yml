@@ -71,7 +71,7 @@ jobs:
         run: |
           rustup target add ${{ matrix.target }}
 
-      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4
 
       - name: Setup LLVM on MacOS
         if: matrix.system == 'macos'
@@ -113,7 +113,7 @@ jobs:
           ./scripts/package.sh "${{ matrix.target }}" "$PKG_FULL_NAME"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           # TODO(#3790): Perhaps this name needs to be changed to avoid conflicts with `_build-binaries.yml` workflow
           name: build-${{ matrix.target }}
