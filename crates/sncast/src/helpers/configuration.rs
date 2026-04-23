@@ -203,7 +203,7 @@ impl PartialCastConfig {
         }
         block_explorer::Service::validate_for_config(self.block_explorer)?;
         if let Some(ref wp) = self.wait_params {
-            ValidatedWaitParams::try_from(*wp)?;
+            wp.validate()?;
         }
         self.network_params.validate()?;
         Ok(())

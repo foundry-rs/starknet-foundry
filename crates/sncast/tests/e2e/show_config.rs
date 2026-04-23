@@ -568,6 +568,33 @@ async fn test_invalid_effective_config_from_cli() {
 }
 
 #[tokio::test]
+async fn test_show_config_merges_partial_wait_params_with_cli() {
+    let t = tempdir().unwrap();
+    fs::write(
+        t.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            url = "http://127.0.0.1:1/rpc"
+            account = "user"
+            wait-params = { timeout = 2 }
+        "#},
+    )
+    .unwrap();
+
+    let snapbox = runner(&["--wait-retry-interval", "1", "show-config"]).current_dir(t.path());
+
+    assert_stdout_contains(
+        snapbox.assert().success(),
+        indoc! {r"
+            RPC URL:             http://127.0.0.1:1/rpc
+            Account:             user
+            Wait Timeout:        2s
+            Wait Retry Interval: 1s
+        "},
+    );
+}
+
+#[tokio::test]
 async fn test_zero_wait_params_in_config() {
     let t = tempdir().unwrap();
     fs::write(

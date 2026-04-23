@@ -181,6 +181,16 @@ impl TryFrom<PartialWaitParams> for ValidatedWaitParams {
     }
 }
 
+impl PartialWaitParams {
+    /// Rejects invalid params, allows not fully specified params
+    pub fn validate(&self) -> anyhow::Result<()> {
+        if let (Some(retry_interval), Some(timeout)) = (self.retry_interval, self.timeout) {
+            ValidatedWaitParams::new(retry_interval, timeout)?;
+        }
+        Ok(())
+    }
+}
+
 /// Effective wait params used at runtime.
 /// Note: Built from [`PartialWaitParams`], not (de)serialized.
 #[derive(Clone, Debug, Copy, PartialEq)]
