@@ -242,7 +242,6 @@ async fn test_inexistent_keystore() {
 
 #[tokio::test]
 async fn test_keystore_account_required() {
-    // TODO(#4311): Remove temporary `--accounts-file` workaround for missing default accounts file.
     let accounts_file = "empty_accounts.json";
     let keystore_file = "my_key.json";
     let temp_dir = tempfile::tempdir().expect("Unable to create a temporary directory");
@@ -278,7 +277,6 @@ async fn test_keystore_account_required() {
 
 #[tokio::test]
 async fn test_keystore_inexistent_account() {
-    // TODO(#4311): Remove temporary `--accounts-file` workaround for missing default accounts file.
     let accounts_file = "empty_accounts.json";
     let keystore_file = "my_key.json";
     let temp_dir = tempfile::tempdir().expect("Unable to create a temporary directory");
