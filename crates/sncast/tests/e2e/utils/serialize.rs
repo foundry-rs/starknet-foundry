@@ -2,12 +2,11 @@ use crate::helpers::constants::{
     DATA_TRANSFORMER_CONTRACT_ABI_PATH, DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA,
     DATA_TRANSFORMER_CONTRACT_CLASS_HASH_SEPOLIA, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
 };
-use crate::helpers::runner::runner;
+use crate::helpers::runner::{runner, sncast_test_bin_path};
 use crate::helpers::shell::os_specific_shell;
 use camino::Utf8PathBuf;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
-use snapbox::cargo_bin;
 use tempfile::tempdir;
 
 #[tokio::test]
@@ -284,7 +283,7 @@ async fn test_rpc_args_not_passed_when_using_contract_address() {
 
 #[tokio::test]
 async fn test_happy_case_shell() {
-    let binary_path = cargo_bin!("sncast");
+    let binary_path = sncast_test_bin_path();
     let command = os_specific_shell(&Utf8PathBuf::from("tests/shell/serialize"));
 
     let snapbox = command

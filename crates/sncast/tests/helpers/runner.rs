@@ -132,7 +132,8 @@ impl EnvPath {
     }
 }
 
-fn sncast_test_bin_path() -> PathBuf {
+#[must_use]
+pub fn sncast_test_bin_path() -> PathBuf {
     if is_nextest() {
         let sncast_nextest_env =
             std::env::var("NEXTEST_BIN_EXE_sncast").expect("No sncast binary for nextest found");
