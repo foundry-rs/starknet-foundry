@@ -160,13 +160,7 @@ async fn test_show_config_with_network() {
 #[tokio::test]
 async fn test_show_config_cli_url_overrides_config_network() {
     let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
-    let args = vec![
-        "--profile",
-        "profile7",
-        "show-config",
-        "--url",
-        URL,
-    ];
+    let args = vec!["--profile", "profile7", "show-config", "--url", URL];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().success().stdout_eq(formatdoc! {r"
