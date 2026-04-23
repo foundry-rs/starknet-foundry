@@ -86,7 +86,6 @@ impl ExtendedStateReader {
                 let entry = (contract_address, *key);
                 self.dict_state_reader.storage_view.insert(entry, *value);
             }
-            return;
         }
     }
 }
