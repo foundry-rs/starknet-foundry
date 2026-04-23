@@ -1,4 +1,4 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL, devnet_url};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use crate::helpers::runner::runner;
 use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
@@ -89,8 +89,7 @@ pub async fn deploy_latest_oz_account() {
     .await;
 }
 pub async fn deploy_ready_account() {
-    let provider =
-        get_provider(&Url::parse(&devnet_url()).unwrap()).expect("Failed to get the provider");
+    let provider = get_provider(&Url::parse(URL).unwrap()).expect("Failed to get the provider");
     let chain_id = get_chain_id(&provider)
         .await
         .expect("Failed to get chain id");
@@ -111,8 +110,7 @@ pub async fn deploy_ready_account() {
 }
 
 pub async fn deploy_braavos_account() {
-    let provider =
-        get_provider(&Url::parse(&devnet_url()).unwrap()).expect("Failed to get the provider");
+    let provider = get_provider(&Url::parse(URL).unwrap()).expect("Failed to get the provider");
     let chain_id = get_chain_id(&provider)
         .await
         .expect("Failed to get chain id");
@@ -133,8 +131,7 @@ pub async fn deploy_braavos_account() {
 }
 
 async fn deploy_oz_account(address: &str, class_hash: &str, salt: &str, private_key: SigningKey) {
-    let provider =
-        get_provider(&Url::parse(&devnet_url()).unwrap()).expect("Failed to get the provider");
+    let provider = get_provider(&Url::parse(URL).unwrap()).expect("Failed to get the provider");
     let chain_id = get_chain_id(&provider)
         .await
         .expect("Failed to get chain id");
@@ -202,15 +199,14 @@ pub async fn invoke_contract(
     fee_settings: FeeSettings,
     constructor_calldata: &[&str],
 ) -> InvokeTransactionResult {
-    let provider =
-        get_provider(&Url::parse(&devnet_url()).unwrap()).expect("Could not get the provider");
+    let provider = get_provider(&Url::parse(URL).unwrap()).expect("Could not get the provider");
     let config = CastConfig {
         account: account.to_string(),
         accounts_file: Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         ..Default::default()
     };
     let rpc_args = RpcArgs {
-        url: Some(Url::parse(&devnet_url()).expect("Failed to parse URL")),
+        url: Some(Url::parse(URL).expect("Failed to parse URL")),
         network: None,
     };
     let account = get_account(&config, &provider, &rpc_args, &UI::default())
@@ -268,7 +264,7 @@ pub async fn mint_token(recipient: &str, amount: u128) {
         "id": 0,
     });
     let resp = client
-        .post(devnet_url())
+        .post("http://127.0.0.1:5055/rpc")
         .header("Content-Type", "application/json")
         .body(json.to_string())
         .send()
@@ -327,7 +323,7 @@ pub async fn get_transaction_receipt(tx_hash: Felt) -> TransactionReceipt {
     );
     let resp: Value = serde_json::from_str(
         &client
-            .post(devnet_url())
+            .post(URL)
             .header("Content-Type", "application/json")
             .body(json.to_string())
             .send()
@@ -360,7 +356,7 @@ pub async fn get_transaction_by_hash(tx_hash: Felt) -> Transaction {
     );
     let resp: Value = serde_json::from_str(
         &client
-            .post(devnet_url())
+            .post(URL)
             .header("Content-Type", "application/json")
             .body(json.to_string())
             .send()
@@ -380,7 +376,7 @@ pub async fn get_transaction_by_hash(tx_hash: Felt) -> Transaction {
 
 #[must_use]
 pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
-    let parsed_url = Url::parse(&devnet_url()).unwrap();
+    let parsed_url = Url::parse(URL).unwrap();
     JsonRpcClient::new(HttpTransport::new(parsed_url))
 }
 

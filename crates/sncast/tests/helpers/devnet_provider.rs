@@ -1,11 +1,10 @@
-use crate::helpers::constants::{DEVNET_ACCOUNTS_NUMBER, DEVNET_SEED, SEPOLIA_RPC_URL, devnet_url};
+use crate::helpers::constants::{DEVNET_ACCOUNTS_NUMBER, DEVNET_SEED, SEPOLIA_RPC_URL, URL};
 use num_traits::ToPrimitive;
 use sncast::helpers::{constants::OZ_CLASS_HASH, devnet::provider::DevnetProvider};
 
 #[tokio::test]
 async fn test_get_config() {
-    let url = devnet_url();
-    let devnet_provider = DevnetProvider::new(&url);
+    let devnet_provider = DevnetProvider::new(URL);
     let config = devnet_provider
         .get_config()
         .await
@@ -18,8 +17,7 @@ async fn test_get_config() {
 
 #[tokio::test]
 async fn test_get_predeployed_accounts() {
-    let url = devnet_url();
-    let devnet_provider = DevnetProvider::new(&url);
+    let devnet_provider = DevnetProvider::new(URL);
     let predeployed_accounts = devnet_provider
         .get_predeployed_accounts()
         .await
@@ -30,8 +28,7 @@ async fn test_get_predeployed_accounts() {
 
 #[tokio::test]
 async fn test_is_alive_happy_case() {
-    let url = devnet_url();
-    let devnet_provider = DevnetProvider::new(&url);
+    let devnet_provider = DevnetProvider::new(URL);
     devnet_provider
         .ensure_alive()
         .await
