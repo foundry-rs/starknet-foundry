@@ -16,8 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- Minimal recommended `Scarb` version is now `2.15.2` (updated from `2.14.0`)
 - Updated predeployed ETH and STRK token contracts, matching Starknet `v0.14.2` token event changes from SNIP-13
+- Minimal recommended `Scarb` version is now `2.16.1` (updated from `2.14.0`)
 
 #### Fixed
 

@@ -1,3 +1,27 @@
+/// Asserts a binary (PNG) snapshot using `insta`, versioned by the current Scarb version.
+/// Snapshots are stored in `./snapshots/<module>/` alongside text snapshots.
+#[macro_export]
+macro_rules! assert_png_snapshot {
+    ($name:expr, $bytes:expr) => {{
+        let scarb_version = scarb_api::version::scarb_version()
+            .expect("Failed to get scarb version")
+            .scarb;
+
+        let module_path = module_path!();
+        let snapshot_subdir = module_path
+            .split("::")
+            .last()
+            .unwrap_or("");
+
+        insta::with_settings!({
+            snapshot_suffix => scarb_version.to_string(),
+            snapshot_path => format!("./snapshots/{}", snapshot_subdir),
+        }, {
+            insta::assert_binary_snapshot!($name, $bytes);
+        });
+    }};
+}
+
 /// Asserts a cleaned `stdout` snapshot using `insta`, filtered for non-deterministic lines.
 /// Additionally, to ensure deterministic snapshots, tests must be run with:
 /// `SNFORGE_DETERMINISTIC_OUTPUT=1`
