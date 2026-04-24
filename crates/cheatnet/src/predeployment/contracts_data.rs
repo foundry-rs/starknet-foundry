@@ -17,7 +17,7 @@ use std::{collections::HashMap, fs};
 
 /// Load data of predeployed contract from its artifacts
 macro_rules! load_contract {
-    ($cache_dir:expr, $name:expr, $contract_dir:expr) => {{
+    ($name:expr, $contract_dir:expr, $cache_dir:expr) => {{
         let sierra = load_gzipped_artifact(include_bytes!(concat!(
             "../data/predeployed_contracts/",
             $contract_dir,
@@ -49,8 +49,8 @@ macro_rules! load_contract {
 /// Loads data of predeployed contracts from their artifacts, and prepares it for usage in cheatnet.
 pub fn load_predeployed_contracts(cache_dir: &Utf8PathBuf) -> Result<ContractsData> {
     let contracts = HashMap::from([
-        load_contract!(cache_dir, STRK_CONTRACT_NAME, "ERC20Lockable"),
-        load_contract!(cache_dir, ETH_CONTRACT_NAME, "ERC20Mintable"),
+        load_contract!(STRK_CONTRACT_NAME, "ERC20Lockable", cache_dir),
+        load_contract!(ETH_CONTRACT_NAME, "ERC20Mintable", cache_dir),
     ]);
 
     let mut contracts_data = ContractsData::try_from(contracts)?;
