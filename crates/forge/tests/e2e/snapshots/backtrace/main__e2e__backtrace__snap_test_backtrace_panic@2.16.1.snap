@@ -41,7 +41,7 @@ stack backtrace:
 Failure data:
     (0x45524332303a20696e73756666696369656e742062616c616e6365 ('ERC20: insufficient balance'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
 
-error occurred in contract 'STRK'
+error occurred in contract 'STRK Token'
 stack backtrace:
    0: core::panic_with_const_felt252
        at [..]lib.cairo:364:5
@@ -67,7 +67,7 @@ stack backtrace:
 Failure data:
     (0x45524332303a20696e73756666696369656e742062616c616e6365 ('ERC20: insufficient balance'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
 
-error occurred in contract 'STRK'
+error occurred in contract 'STRK Token'
 stack backtrace:
    0: core::panic_with_const_felt252
        at [..]lib.cairo:364:5

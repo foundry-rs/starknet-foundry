@@ -5,6 +5,7 @@ use crate::predeployment::{load_gzipped_artifact, predeployed_contract::Predeplo
 
 use super::constructor_data::ERC20ConstructorData;
 
+pub const ETH_CONTRACT_NAME: &str = "ETH Token";
 pub const ETH_TOKEN_NAME: &str = "ETH";
 pub const ETH_CONTRACT_ADDRESS: &str =
     "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
@@ -32,7 +33,7 @@ pub fn eth_predeployed_contract() -> PredeployedContract {
     .unwrap();
 
     let constructor_data = ERC20ConstructorData {
-        name: ETH_TOKEN_NAME.to_string(),
+        name: ETH_CONTRACT_NAME.to_string(),
         symbol: ETH_TOKEN_NAME.to_string(),
         decimals: 18,
         total_supply: (total_supply_low, 0),
