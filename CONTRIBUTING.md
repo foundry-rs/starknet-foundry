@@ -28,6 +28,16 @@ If you are a more experienced Starknet Foundry contributor you can pick any issu
 Please make sure the feature you are implementing is thoroughly tested with automatic tests.
 You can check existing tests in the repository to see the recommended approach to testing.
 
+#### Flaky tests
+
+Some tests fail intermittently due to dependence on an external service, network issues, etc.
+
+If no clear fix is possible or trivial, to avoid blocking CI, configure targeted retries for known flaky tests in [`.config/nextest.toml`](./.config/nextest.toml).
+Choose retry count, backoff and other options based on context: 
+- observed fail rate
+- external dependency reliability
+- expected recovery time
+
 #### Snapshot tests
 Some tests use [`insta`](https://crates.io/crates/insta) snapshots files (`.snap`) to store expected test output, specifically for testing some of Starknet Foundry features with older Scarb versions.
 When adding such test case, please add a `snap_` prefix to its name to ensure it's tested on CI for all supported Scarb versions.
