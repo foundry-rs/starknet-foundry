@@ -238,7 +238,7 @@ where
     S::SignError: 'static,
 {
     match account_type {
-        AccountType::Argent | AccountType::Ready => {
+        AccountType::Ready => {
             let factory =
                 ArgentAccountFactory::new(class_hash, chain_id, None, signer, provider).await?;
             deploy_account(
@@ -446,7 +446,7 @@ pub(crate) fn compute_account_address(
     chain_id: Felt,
 ) -> Felt {
     match account_type {
-        AccountType::Argent | AccountType::Ready => {
+        AccountType::Ready => {
             get_contract_address(salt, class_hash, &[public_key, Felt::ZERO], Felt::ZERO)
         }
         AccountType::OpenZeppelin => {
