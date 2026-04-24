@@ -51,7 +51,12 @@ pub enum Commands {
     Selector(Selector),
 }
 
-pub async fn utils(utils: Utils, config: CastConfig, ui: &UI, json: bool) -> anyhow::Result<ExitCode> {
+pub async fn utils(
+    utils: Utils,
+    config: CastConfig,
+    ui: &UI,
+    json: bool,
+) -> anyhow::Result<ExitCode> {
     match utils.command {
         Commands::Serialize(serialize) => {
             let result = starknet_commands::utils::serialize::serialize(serialize, config, ui)
