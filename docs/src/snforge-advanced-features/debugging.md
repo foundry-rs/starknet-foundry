@@ -74,6 +74,7 @@ The `--trace-components` flag allows you to specify which components of the trac
 - `caller-address`: the address of the caller contract
 - `call-type`: the type of the call (e.g., `Call`, `Delegate`, etc.)
 - `call-result`: the result of the call, transformed for display
+- `events`: raw events emitted by the call, shown as Starknet `keys` and `data`
 - `gas`: estimated L2 gas consumed by the call 
 
 Example usage:
@@ -121,7 +122,7 @@ The `--trace-verbosity` flag accepts the following values:
 
 - `minimal`: shows test name, contract name, and selector
 - `standard`: includes test name, contract name, selector, calldata, and call result
-- `detailed`: displays the entire trace, including internal calls, caller addresses, and panic reasons
+- `detailed`: displays the entire trace, including internal calls, caller addresses, emitted events, and panic reasons
 
 Example usage:
 
@@ -179,6 +180,7 @@ Here's what each tag in the trace represents:
 | `[caller address]`   | (In detailed view) The address of the account or contract that made this call. Important to identify who triggered the function.                                                 |
 | `[call type]`        | (In detailed view) Call, Delegate. Describes how the function is being invoked.                                                                                                  |
 | `[call result]`      | (In standard view and above) The return value of the call, success or panic.                                                                                                     |
+| `[events]`           | (In detailed view) Raw Starknet events emitted by the call, shown as `keys` and `data`.                                                                                         |
 | `[gas]`              | (In detailed view) L2 gas needed to execute the call. The calculation ignores state changes, calldata and signature lengths, L1 handler payload length and Starknet OS overhead. |
 
 

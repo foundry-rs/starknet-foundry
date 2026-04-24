@@ -1,6 +1,6 @@
 use crate::trace::types::{
-    CallerAddress, ContractAddress, ContractName, Gas, Selector, TestName, TransformedCallResult,
-    TransformedCalldata,
+    CallerAddress, ContractAddress, ContractName, Event, Events, Gas, Selector, TestName,
+    TransformedCallResult, TransformedCalldata,
 };
 use blockifier::execution::entry_point::CallType;
 use starknet_api::contract_class::EntryPointType;
@@ -84,6 +84,20 @@ impl NodeDisplay for TransformedCallResult {
     }
 }
 
+impl NodeDisplay for Events {
+    const TAG: &'static str = "events";
+    fn string_pretty(&self) -> String {
+        format!(
+            "[{}]",
+            self.0
+                .iter()
+                .map(Event::string_pretty)
+                .collect::<Vec<_>>()
+                .join(", ")
+        )
+    }
+}
+
 impl NodeDisplay for Gas {
     const TAG: &'static str = "L2 gas";
     fn string_pretty(&self) -> String {
@@ -101,4 +115,22 @@ fn string_hex(data: impl Into<Felt>) -> String {
 /// Mainly used for enums that hold no data or vectors of felts.
 fn string_debug(data: impl Debug) -> String {
     format!("{data:?}")
+}
+
+impl Event {
+    fn string_pretty(&self) -> String {
+        format!(
+            "Event {{ keys: [{}], data: [{}] }}",
+            self.keys
+                .iter()
+                .map(Felt::to_hex_string)
+                .collect::<Vec<_>>()
+                .join(", "),
+            self.data
+                .iter()
+                .map(Felt::to_hex_string)
+                .collect::<Vec<_>>()
+                .join(", "),
+        )
+    }
 }
