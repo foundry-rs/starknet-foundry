@@ -6,6 +6,7 @@ use crate::helpers::fixtures::{
     deploy_latest_oz_account, deploy_ready_account,
 };
 use ctor::{ctor, dtor};
+use shared::test_utils::nextest::is_nextest;
 use std::net::TcpStream;
 use std::process::{Command, Stdio};
 use std::string::ToString;
@@ -13,12 +14,21 @@ use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
 use url::Url;
 
+/// Detects nextest test discovery mode (`--list`) to skip devnet lifecycle side effects.
+fn is_listing() -> bool {
+    std::env::args().any(|a| a == "--list")
+}
+
+fn verify_devnet_availability(address: &str) -> bool {
+    TcpStream::connect(address).is_ok()
+}
+
 #[expect(clippy::zombie_processes)]
 #[cfg(test)]
 #[ctor]
 fn start_devnet() {
-    fn verify_devnet_availability(address: &str) -> bool {
-        TcpStream::connect(address).is_ok()
+    if is_listing() {
+        return;
     }
 
     let port = Url::parse(URL).unwrap().port().unwrap_or(80).to_string();
@@ -27,12 +37,19 @@ fn start_devnet() {
         .host()
         .expect("Can't parse devnet URL!")
         .to_string();
+    let addr = format!("{host}:{port}");
 
-    loop {
-        if verify_devnet_availability(&format!("{host}:{port}")) {
-            stop_devnet();
-        } else {
-            break;
+    if is_nextest() {
+        if verify_devnet_availability(&addr) {
+            return;
+        }
+    } else {
+        loop {
+            if verify_devnet_availability(&addr) {
+                stop_devnet();
+            } else {
+                break;
+            }
         }
     }
 
@@ -61,7 +78,7 @@ fn start_devnet() {
     let timeout = Duration::from_secs(30);
 
     loop {
-        if verify_devnet_availability(&format!("{host}:{port}")) {
+        if verify_devnet_availability(&addr) {
             break;
         } else if now.elapsed() >= timeout {
             eprintln!("Timed out while waiting for devnet!");
@@ -81,6 +98,10 @@ fn start_devnet() {
 #[cfg(test)]
 #[dtor]
 fn stop_devnet() {
+    if is_nextest() || is_listing() {
+        return;
+    }
+
     let port = Url::parse(URL).unwrap().port().unwrap_or(80).to_string();
     let pattern = format!("starknet-devnet.*{port}.*{DEVNET_SEED}");
 
