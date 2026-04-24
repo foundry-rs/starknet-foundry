@@ -38,6 +38,9 @@ network = "sepolia"
 account = "user1"
 accounts-file = "/path/to/account.json"
 
+[sncast.profile7.networks]
+sepolia = "http://127.0.0.1:5055/rpc"
+
 [sncast.no_url]
 accounts-file = "../account-file"
 account = "user1"

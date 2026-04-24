@@ -245,7 +245,7 @@ pub async fn test_happy_case_generate_salt() {
 #[test_case("--network", "devnet"; "with_network")]
 #[tokio::test]
 pub async fn test_happy_case_add_profile(rpc_flag: &str, rpc_value: &str) {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -334,7 +334,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
 
 #[tokio::test]
 pub async fn test_profile_already_exists() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -495,7 +495,7 @@ pub async fn test_happy_case_keystore_argent_with_deprecation_warning() {
 
 #[tokio::test]
 pub async fn test_happy_case_keystore_add_profile() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let keystore_file = "my_key.json";
     let account_file = "my_account.json";
     let accounts_json_file = "accounts.json";
@@ -1030,7 +1030,7 @@ pub async fn test_no_explorer_links_on_localhost() {
 #[tokio::test]
 pub async fn test_use_url_from_config() {
     let accounts_file = "accounts.json";
-    let temp_dir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let temp_dir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     copy_file(
         "tests/data/accounts/accounts.json",
         temp_dir.path().join(accounts_file),

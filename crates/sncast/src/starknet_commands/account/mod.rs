@@ -130,11 +130,12 @@ pub fn add_created_profile_to_configuration(
     cast_config: &CastConfig,
     path: &Utf8PathBuf,
 ) -> Result<()> {
-    if !load_config::<PartialCastConfig>(Some(path), profile)
-        .unwrap_or_default()
-        .account
-        .unwrap_or_default()
-        .is_empty()
+    let config_path = search_config_upwards_relative_to(path)?;
+    let existing = load_config::<PartialCastConfig>(&config_path, profile)?;
+    if existing
+        .as_ref()
+        .and_then(|c| c.account.as_ref())
+        .is_some_and(|a| !a.is_empty())
     {
         bail!(
             "Failed to add profile = {} to the snfoundry.toml. Profile already exists",
@@ -158,8 +159,6 @@ pub fn add_created_profile_to_configuration(
         sncast: BTreeMap::from([(profile_key, profile_config)]),
     };
     let toml_string = toml::to_string(&append).context("Failed to convert toml to string")?;
-
-    let config_path = search_config_upwards_relative_to(path)?;
 
     let mut snfoundry_toml = OpenOptions::new()
         .create(true)
@@ -369,7 +368,7 @@ mod tests {
 
     #[test]
     fn test_add_created_profile_to_configuration_happy_case() {
-        let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+        let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
         let path = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
         let config = CastConfig {
             network_params: NetworkParams::new(
@@ -399,7 +398,7 @@ mod tests {
 
     #[test]
     fn test_add_created_profile_to_configuration_profile_already_exists() {
-        let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+        let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
         let config = CastConfig {
             network_params: NetworkParams::new(
                 Some(Url::parse("http://some-url.com/").unwrap()),

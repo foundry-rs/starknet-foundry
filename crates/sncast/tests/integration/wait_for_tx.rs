@@ -1,3 +1,5 @@
+use std::num::{NonZeroU8, NonZeroU16};
+
 use crate::helpers::{
     constants::{ACCOUNT, ACCOUNT_FILE_PATH, URL},
     fixtures::{create_test_provider, invoke_contract},
@@ -117,7 +119,7 @@ async fn test_wait_for_reverted_transaction() {
     wait_for_tx(
         &provider,
         transaction_hash,
-        ValidatedWaitParams::new(1, 3),
+        ValidatedWaitParams::new(NonZeroU8::new(1).unwrap(), NonZeroU16::new(3).unwrap()).unwrap(),
         Some(&ui),
     )
     .await
@@ -133,7 +135,7 @@ async fn test_wait_for_nonexistent_tx() {
     wait_for_tx(
         &provider,
         "0x123456789".parse().expect("Could not parse a number"),
-        ValidatedWaitParams::new(1, 3),
+        ValidatedWaitParams::new(NonZeroU8::new(1).unwrap(), NonZeroU16::new(3).unwrap()).unwrap(),
         Some(&ui),
     )
     .await
@@ -151,7 +153,11 @@ async fn test_happy_path_handle_wait_for_tx() {
         1,
         WaitForTx {
             wait: true,
-            wait_params: ValidatedWaitParams::new(5, 63),
+            wait_params: ValidatedWaitParams::new(
+                NonZeroU8::new(5).unwrap(),
+                NonZeroU16::new(63).unwrap(),
+            )
+            .unwrap(),
             show_ui_outputs: true,
         },
         &ui,
@@ -162,46 +168,11 @@ async fn test_happy_path_handle_wait_for_tx() {
 }
 
 #[tokio::test]
-#[should_panic(expected = "Invalid values for retry_interval and/or timeout!")]
 async fn test_wait_for_wrong_retry_values() {
-    let provider = create_test_provider();
-    let ui = UI::default();
-    wait_for_tx(
-        &provider,
-        MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
-        ValidatedWaitParams::new(2, 1),
-        Some(&ui),
-    )
-    .await
-    .unwrap();
-}
-
-#[tokio::test]
-#[should_panic(expected = "Invalid values for retry_interval and/or timeout!")]
-async fn test_wait_for_wrong_retry_values_timeout_zero() {
-    let provider = create_test_provider();
-    let ui = UI::default();
-    wait_for_tx(
-        &provider,
-        MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
-        ValidatedWaitParams::new(2, 0),
-        Some(&ui),
-    )
-    .await
-    .unwrap();
-}
-
-#[tokio::test]
-#[should_panic(expected = "Invalid values for retry_interval and/or timeout!")]
-async fn test_wait_for_wrong_retry_values_interval_zero() {
-    let provider = create_test_provider();
-    let ui = UI::default();
-    wait_for_tx(
-        &provider,
-        MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
-        ValidatedWaitParams::new(0, 1),
-        Some(&ui),
-    )
-    .await
-    .unwrap();
+    let err = ValidatedWaitParams::new(NonZeroU8::new(2).unwrap(), NonZeroU16::new(1).unwrap())
+        .unwrap_err();
+    assert_eq!(
+        err.to_string(),
+        "retry_interval cannot be greater than timeout"
+    );
 }

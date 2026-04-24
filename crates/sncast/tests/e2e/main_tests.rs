@@ -12,7 +12,7 @@ use shared::test_utils::output_assert::assert_stderr_contains;
 
 #[tokio::test]
 async fn test_happy_case_from_sncast_config() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -36,7 +36,7 @@ async fn test_happy_case_from_sncast_config() {
 
 #[tokio::test]
 async fn test_happy_case_predefined_network() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -62,7 +62,7 @@ async fn test_happy_case_predefined_network() {
 
 #[tokio::test]
 async fn test_url_with_network_args() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -115,7 +115,7 @@ async fn test_happy_case_from_cli_no_scarb() {
 
 #[tokio::test]
 async fn test_happy_case_from_cli_with_sncast_config() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -148,7 +148,7 @@ async fn test_happy_case_from_cli_with_sncast_config() {
 
 #[tokio::test]
 async fn test_happy_case_mixed() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
