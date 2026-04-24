@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - Validation of Scarb's compiler config now properly takes into account `[cairo]` section and keys without `unstable-` prefix
-- Permitted minter of ETH token (predeployed contract) has now the same value as on mainnet
+- Permitted minter storage value of ETH predeployed contract, has now the same value as on mainnet
 
 ### Cast
 
