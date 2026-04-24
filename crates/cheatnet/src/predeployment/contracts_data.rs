@@ -11,7 +11,6 @@ use crate::{
 use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
 use conversions::string::TryFromHexStr;
-use runtime::starknet::context::ETH_CONTRACT_ADDRESS;
 use scarb_api::StarknetContractArtifacts;
 use std::{collections::HashMap, fs};
 
@@ -62,7 +61,7 @@ pub fn load_predeployed_contracts(cache_dir: &Utf8PathBuf) -> Result<ContractsDa
     // with their official on-chain equivalents.
     let class_hashes_to_change = [
         (STRK_CONTRACT_NAME, ERC20LOCKABLE_SIERRA_CLASS_HASH),
-        (ETH_CONTRACT_ADDRESS, ERC20MINTABLE_SIERRA_CLASS_HASH),
+        (ETH_CONTRACT_NAME, ERC20MINTABLE_SIERRA_CLASS_HASH),
     ];
 
     for (contract_name, class_hash) in class_hashes_to_change {
