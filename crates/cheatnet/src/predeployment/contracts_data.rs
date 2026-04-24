@@ -1,8 +1,8 @@
 use crate::{
     predeployment::{
         erc20::{
-            eth::{ERC20MINTABLE_SIERRA_CLASS_HASH, ETH_CONTRACT_NAME, ETH_TOKEN_NAME},
-            strk::{ERC20LOCKABLE_SIERRA_CLASS_HASH, STRK_CONTRACT_NAME, STRK_TOKEN_NAME},
+            eth::{ERC20MINTABLE_SIERRA_CLASS_HASH, ETH_CONTRACT_NAME},
+            strk::{ERC20LOCKABLE_SIERRA_CLASS_HASH, STRK_CONTRACT_NAME},
         },
         load_gzipped_artifact,
     },
