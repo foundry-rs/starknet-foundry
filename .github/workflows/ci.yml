@@ -357,6 +357,8 @@ jobs:
       - uses: actions/checkout@v6
       - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
       - uses: ./.github/actions/setup-tools
+        with:
+          save-cache: 'true'
       - name: Install nextest
         uses: taiki-e/install-action@v2
         with:
@@ -384,8 +386,7 @@ jobs:
       - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
       - uses: ./.github/actions/setup-tools
         with:
-          cache-key: 'cast'
-          save-cache: 'true'
+          setup-rust-cache: 'false'
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
