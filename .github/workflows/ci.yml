@@ -62,18 +62,8 @@ jobs:
         uses: taiki-e/install-action@055f5df8c3f65ea01cd41e9dc855becd88953486 # 2.75.18
         with:
           tool: nextest@0.9.98
-      - name: Determine test features
-        id: test_features
-        run: |
-          FEATURES="run_test_for_scarb_since_2_15_1"
-          echo "features=$FEATURES" >> "$GITHUB_OUTPUT"
       - name: Build and archive tests
-        run: |
-          if [ -n "${{ steps.test_features.outputs.features }}" ]; then
-            cargo nextest archive --cargo-profile ci -p forge --features "${{ steps.test_features.outputs.features }}" --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
-          else
-            cargo nextest archive --cargo-profile ci -p forge --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
-          fi
+        run: cargo nextest archive --cargo-profile ci -p forge --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v5
         with:
@@ -95,13 +85,8 @@ jobs:
         uses: taiki-e/install-action@055f5df8c3f65ea01cd41e9dc855becd88953486 # 2.75.18
         with:
           tool: nextest@0.9.98
-      - name: Determine test features
-        id: test_features
-        run: |
-          FEATURES="cairo-native,run_test_for_scarb_since_2_15_1"
-          echo "features=$FEATURES" >> "$GITHUB_OUTPUT"
       - name: Build and archive tests
-        run: cargo nextest archive --cargo-profile ci -p forge --features "${{ steps.test_features.outputs.features }}" --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst'
+        run: cargo nextest archive --cargo-profile ci -p forge --features "cairo-native" --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst'
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v5
         with:
@@ -307,7 +292,8 @@ jobs:
         with:
           setup-scarb: 'false'
       - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
-      - run: cargo test --profile ci --package forge --features test_for_multiple_scarb_versions e2e::plugin_diagnostic
+      - run: asdf install scarb 2.12.0
+      - run: cargo test --profile ci --package forge --features scarb_2_12_0 --test main e2e::plugin_versions
 
   test-requirements-check-special-conditions:
     name: Test requirements check special conditions
@@ -325,16 +311,6 @@ jobs:
           scarb-version: "2.12.0"
 
       - run: cargo test --profile ci --package forge --features scarb_2_12_0 --test main e2e::requirements::test_warning_on_scarb_version_below_recommended
-
-  test-forge-oracles:
-    name: Test Oracles in Forge
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-tools
-        with:
-          scarb-version: '2.13.1'
-      - run: cargo test --profile ci -p forge --features run_test_for_scarb_since_2_13_1 e2e::oracles
 
   test-forge-scarb-plugin:
     name: Test Forge Scarb Plugin
