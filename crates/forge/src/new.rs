@@ -20,8 +20,6 @@ const OZ_UTILS_VERSION: Version = Version::new(2, 1, 0);
 
 static TEMPLATES_DIR: Dir = include_dir!("snforge_templates");
 
-const SCARB_WITHOUT_CAIRO_TEST_TEMPLATE: Version = Version::new(2, 13, 0);
-
 struct Dependency {
     name: String,
     version: String,
@@ -360,30 +358,10 @@ pub fn new(
             cmd.arg("--no-vcs");
         }
 
-        // TODO(#3910)
-        let test_runner = if scarb_version < SCARB_WITHOUT_CAIRO_TEST_TEMPLATE {
-            "cairo-test"
-        } else {
-            "none"
-        };
-
-        cmd.env("SCARB_INIT_TEST_RUNNER", test_runner)
+        cmd.env("SCARB_INIT_TEST_RUNNER", "none")
             .env("SCARB_INIT_EMPTY", "true")
             .run()
             .context("Failed to initialize a new project")?;
-
-        // TODO(#3910)
-        if scarb_version < SCARB_WITHOUT_CAIRO_TEST_TEMPLATE {
-            ScarbCommand::new_with_stdio()
-                .current_dir(&project_path)
-                .manifest_path(scarb_manifest_path.clone())
-                .offline()
-                .arg("remove")
-                .arg("--dev")
-                .arg("cairo_test")
-                .run()
-                .context("Failed to remove cairo_test dependency")?;
-        }
     }
 
     add_template_to_scarb_manifest(&scarb_manifest_path)?;

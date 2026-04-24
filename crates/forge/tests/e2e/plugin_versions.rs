@@ -42,7 +42,7 @@ fn new_with_minimal_scarb() {
     let temp = tempdir_with_tool_versions().unwrap();
     Command::new("asdf")
         .current_dir(&temp)
-        .args(["set", "scarb", "2.12.0"])
+        .args(["set", "scarb", "2.13.1"])
         .assert()
         .success();
     runner(&temp)
