@@ -224,7 +224,16 @@ async fn test_missing_account_flag() {
 
 #[tokio::test]
 async fn test_inexistent_keystore() {
+    let accounts_file = "empty_accounts.json";
+    let temp_dir = tempfile::tempdir().expect("Unable to create a temporary directory");
+    copy_file(
+        "tests/data/accounts/empty_accounts.json",
+        temp_dir.path().join(accounts_file),
+    );
+
     let args = vec![
+        "--accounts-file",
+        accounts_file,
         "--keystore",
         "inexistent_key.json",
         "declare",
@@ -234,7 +243,7 @@ async fn test_inexistent_keystore() {
         "my_contract",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(temp_dir.path());
 
     let output = snapbox.assert().failure();
     assert_stderr_contains(output, "Error: Failed to find keystore file");
@@ -351,9 +360,16 @@ async fn test_keystore_undeployed_account() {
 async fn test_keystore_declare() {
     let contract_path =
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "999");
+    let accounts_file = "empty_accounts.json";
+    copy_file(
+        "tests/data/accounts/empty_accounts.json",
+        contract_path.path().join(accounts_file),
+    );
     let my_key_path = get_keystores_path("tests/data/keystore/predeployed_key.json");
     let my_account_path = get_keystores_path("tests/data/keystore/predeployed_account.json");
     let args = vec![
+        "--accounts-file",
+        accounts_file,
         "--keystore",
         my_key_path.as_str(),
         "--account",
