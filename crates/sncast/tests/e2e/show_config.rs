@@ -24,6 +24,7 @@ async fn test_show_config_from_snfoundry_toml() {
         Wait Retry Interval: 5s
         Show Explorer Links: true
         Block Explorer:      Voyager
+        Scarb Profile:       release
     ", URL});
 }
 
@@ -54,6 +55,7 @@ async fn test_show_config_from_cli() {
         Wait Retry Interval: 1s
         Show Explorer Links: true
         Block Explorer:      Voyager
+        Scarb Profile:       release
     ", URL});
 }
 
@@ -74,6 +76,7 @@ async fn test_show_config_from_cli_and_snfoundry_toml() {
         Wait Retry Interval: 5s
         Show Explorer Links: true
         Block Explorer:      ViewBlock
+        Scarb Profile:       release
     ", URL});
 }
 
@@ -94,6 +97,7 @@ async fn test_show_config_when_no_keystore() {
         Wait Retry Interval: 5s
         Show Explorer Links: true
         Block Explorer:      Voyager
+        Scarb Profile:       release
     ", URL});
 }
 
@@ -114,6 +118,7 @@ async fn test_show_config_when_keystore() {
         Wait Retry Interval: 5s
         Show Explorer Links: true
         Block Explorer:      Voyager
+        Scarb Profile:       release
     ", URL});
 }
 
@@ -134,6 +139,7 @@ async fn test_show_config_no_url() {
         Wait Retry Interval: 10s
         Show Explorer Links: false
         Block Explorer:      Voyager
+        Scarb Profile:       release
     ", URL});
 }
 
@@ -154,6 +160,7 @@ async fn test_show_config_with_network() {
         Wait Retry Interval: 5s
         Show Explorer Links: true
         Block Explorer:      Voyager
+        Scarb Profile:       release
     "});
 }
 
@@ -173,6 +180,7 @@ async fn test_show_config_cli_url_overrides_config_network() {
         Wait Retry Interval: 5s
         Show Explorer Links: true
         Block Explorer:      Voyager
+        Scarb Profile:       release
     ", URL});
 }
 
@@ -212,6 +220,16 @@ async fn test_stark_scan_as_block_explorer() {
                 starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice.
         " },
     );
+}
+
+#[tokio::test]
+async fn test_show_config_with_scarb_profile() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
+    let args = vec!["--profile", "profile8", "show-config"];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    assert_stdout_contains(snapbox.assert().success(), "Scarb Profile:       dev");
 }
 
 #[tokio::test]
@@ -261,6 +279,7 @@ async fn test_show_config_provider_error() {
             Wait Retry Interval: 5s
             Show Explorer Links: true
             Block Explorer:      Voyager
+            Scarb Profile:       release
         "},
     );
 }
@@ -286,6 +305,7 @@ async fn test_show_config_global_no_local() {
         Wait Retry Interval: 3s
         Show Explorer Links: true
         Block Explorer:      Voyager
+        Scarb Profile:       release
     ", URL});
 }
 
@@ -311,6 +331,7 @@ async fn test_show_config_global_only_profile() {
         Wait Retry Interval: 5s
         Show Explorer Links: false
         Block Explorer:      Voyager
+        Scarb Profile:       release
     ", URL});
 }
 
@@ -356,6 +377,7 @@ async fn test_show_config_global_and_local_default() {
         Wait Retry Interval: 3s
         Show Explorer Links: true
         Block Explorer:      Voyager
+        Scarb Profile:       release
     ", URL});
 }
 
@@ -381,6 +403,7 @@ async fn test_show_config_global_and_local_profile() {
         Wait Retry Interval: 3s
         Show Explorer Links: true
         Block Explorer:      ViewBlock
+        Scarb Profile:       release
     ", URL});
 }
 
@@ -413,10 +436,10 @@ async fn test_profile_missing_in_global_config() {
         .args(&args)
         .current_dir(t.path());
 
-    assert_stdout_contains(
-        snapbox.assert().success(),
+    assert_stderr_contains(
+        snapbox.assert().failure(),
         indoc! { r"
-            [WARNING] Profile [nonexistent] not found in global config at [..]snfoundry.toml, and no local config found.
+            Error: Profile [nonexistent] not found in global config at [..]snfoundry.toml, and no local config found.
         " },
     );
 }
@@ -639,5 +662,25 @@ async fn test_zero_wait_retry_interval_from_cli() {
     assert_stderr_contains(
         output,
         "error: invalid value '0' for '--wait-retry-interval <WAIT_RETRY_INTERVAL>': number would be zero for non-zero type",
+    );
+}
+
+#[tokio::test]
+async fn test_profile_missing_in_both_configs() {
+    let global_dir = copy_config_to_tempdir("tests/data/files/snfoundry_global_correct.toml", None);
+    let local_dir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
+    let args = vec!["--profile", "nonexistent", "show-config"];
+
+    let snapbox = Cast::new()
+        .config_dir(global_dir.path())
+        .command()
+        .args(&args)
+        .current_dir(local_dir.path());
+
+    assert_stderr_contains(
+        snapbox.assert().failure(),
+        indoc! { r"
+            Error: Profile [nonexistent] not found in neither local config at [..]snfoundry.toml nor global config at [..]snfoundry.toml
+        " },
     );
 }

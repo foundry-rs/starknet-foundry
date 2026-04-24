@@ -42,8 +42,12 @@ defined in the profile.
 > `snfoundry.toml` file has to be present in current or any of the parent directories.
 
 > 📝 **Note**
-> If there is a profile with the same name in Scarb.toml, scarb will use this profile. If not, scarb will default to using the dev profile.
-> (This applies only to subcommands using scarb - namely `declare` and `script`).
+> `--profile` only selects the `snfoundry.toml` profile. 
+> 
+> The Scarb profile is set with `--scarb-profile` or the `scarb-profile` field under `[sncast.<profile>]` (defaults to value `release`). 
+> See [common flags](../appendix/sncast/common.md)). 
+> If that Scarb profile does not exist in `Scarb.toml`, `sncast` falls back with a warning.
+> (Applies to subcommands using Scarb - namely `declare`, `verify`, `script`, and `utils class-hash`.)
 
 > 💡 **Info**
 > Not all parameters have to be present in the configuration - you can choose to include only some of them and supply

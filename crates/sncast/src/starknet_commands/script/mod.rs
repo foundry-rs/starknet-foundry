@@ -51,7 +51,7 @@ pub fn run_script_command(
                 &BuildConfig {
                     scarb_toml_path: manifest_path.clone(),
                     json: cli.json,
-                    profile: cli.profile.clone().unwrap_or("dev".to_string()),
+                    profile: config.scarb_profile.clone(),
                 },
                 true,
                 // TODO(#3959) Remove `base_ui`
