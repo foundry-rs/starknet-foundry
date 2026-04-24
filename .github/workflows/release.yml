@@ -30,7 +30,7 @@ jobs:
 
       - name: Get version from Cargo.toml
         id: lookupVersion
-        uses: mikefarah/yq@7ccaf8e700ce99eb3f0f6cef7f5930a0b3c827cd
+        uses: mikefarah/yq@751d8ad57b84f1794661bc70c0afb92a22ad7b3c
         with:
           cmd: yq -oy '.workspace.package.version' 'Cargo.toml'
 
@@ -146,7 +146,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           path: artifacts-dl
 
@@ -157,7 +157,7 @@ jobs:
 
       - name: Create GitHub release
         id: create-release
-        uses: taiki-e/create-gh-release-action@26b80501670402f1999aff4b934e1574ef2d3705
+        uses: taiki-e/create-gh-release-action@eba8ea96c86cca8a37f1b56e94b4d13301fba651
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
