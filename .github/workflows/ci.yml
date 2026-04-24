@@ -128,7 +128,7 @@ jobs:
         with:
           name: nextest-archive-${{ runner.os }}
       - name: nextest partition ${{ matrix.partition }}/3
-        run: cargo nextest run --no-fail-fast --profile snforge-ci --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}.tar.zst' integration
+        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}.tar.zst' integration
 
   test-forge-integration-native:
     name: Test Forge / Integration Tests (native)
@@ -150,7 +150,7 @@ jobs:
         with:
           name: nextest-archive-${{ runner.os }}-native
       - name: nextest partition ${{ matrix.partition }}/3
-        run: cargo nextest run --no-fail-fast --profile snforge-ci --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst' integration
+        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst' integration
 
   test-forge-e2e:
     name: Test Forge / E2E Tests
@@ -200,7 +200,7 @@ jobs:
         with:
           name: nextest-archive-${{ runner.os }}
       - name: nextest partition ${{ matrix.partition }}/3
-        run: cargo nextest run --no-fail-fast --profile snforge-ci --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}.tar.zst' e2e
+        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}.tar.zst' e2e
 
   test-forge-e2e-native:
     name: Test Forge / E2E Tests (native)
@@ -250,7 +250,7 @@ jobs:
         with:
           name: nextest-archive-${{ runner.os }}-native
       - name: nextest partition ${{ matrix.partition }}/3
-        run: cargo nextest run --no-fail-fast --profile snforge-ci --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst' e2e
+        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}-native.tar.zst' e2e
 
   test-forge-e2e-snap:
     if: github.event_name == 'merge_group'
@@ -362,7 +362,7 @@ jobs:
         with:
           tool: nextest@0.9.98
       - name: Run tests (nextest)
-        run: cargo nextest run --no-fail-fast --cargo-profile ci -p sncast --profile sncast-ci
+        run: cargo nextest run --no-fail-fast --cargo-profile ci -p sncast
       - name: Run doctests
         run: cargo test --profile ci -p sncast --doc
 
@@ -382,7 +382,7 @@ jobs:
         with:
           tool: nextest@0.9.98
       - name: Run tests (nextest)
-        run: cargo nextest run --no-fail-fast --cargo-profile ci -p sncast --profile sncast-ci --features ledger-emulator ledger --run-ignored all
+        run: cargo nextest run --no-fail-fast --cargo-profile ci -p sncast --features ledger-emulator ledger --run-ignored all
 
   fmt-lint-typos:
     name: Lint and Format

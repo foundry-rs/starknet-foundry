@@ -1,27 +1,20 @@
 [profile.default]
 fail-fast = false
-
-[profile.snforge-ci]
-fail-fast = false
-retries = 0
-
-[profile.sncast-ci]
-fail-fast = false
 retries = 0
 
 [test-groups]
 devnet-sequential = { max-threads = 1 }
 ledger = { max-threads = 1 }
 
-[[profile.sncast-ci.overrides]]
-filter = 'test(/^e2e::/) | test(/^integration::/) | test(/^docs_snippets::/) | test(/^helpers::devnet_provider::/) | test(/^helpers::devnet_detection::/)'
+[[profile.default.overrides]]
+filter = 'package(sncast) and (test(/^e2e::/) | test(/^integration::/) | test(/^docs_snippets::/) | test(/^helpers::devnet_provider::/) | test(/^helpers::devnet_detection::/))'
 test-group = "devnet-sequential"
 
-[[profile.sncast-ci.overrides]]
-filter = 'test(/^e2e::devnet_accounts::/) | test(/^e2e::script::init::/)'
+[[profile.default.overrides]]
+filter = 'package(sncast) and (test(/^e2e::devnet_accounts::/) | test(/^e2e::script::init::/))'
 retries = 1
 
-[[profile.sncast-ci.overrides]]
-filter = 'test(/^e2e::ledger::/) | test(/^docs_snippets::ledger::/)'
+[[profile.default.overrides]]
+filter = 'package(sncast) and (test(/^e2e::ledger::/) | test(/^docs_snippets::ledger::/))'
 test-group = "ledger"
 retries = 3

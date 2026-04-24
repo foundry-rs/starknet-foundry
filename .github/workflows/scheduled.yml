@@ -140,7 +140,7 @@ jobs:
         with:
           tool: nextest@0.9.98
 
-      - run: cargo nextest run --no-fail-fast --cargo-profile ci -p sncast --profile sncast-ci
+      - run: cargo nextest run --no-fail-fast --cargo-profile ci -p sncast
 
   get-version:
     name: Get current foundry version
