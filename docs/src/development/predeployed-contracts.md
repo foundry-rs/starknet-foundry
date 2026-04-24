@@ -82,7 +82,7 @@ This should be done in `sg_token` and `strk` packages.
     scarb --release build
     ```
 
-5. Compress the generated artifacts directly into the appropriate `predeployed_contracts` subdirectories in the `cheatnet` codebase:
+5. Visit `target/release` directory and compress the generated artifacts directly into the appropriate `predeployed_contracts` subdirectories in the `cheatnet` codebase:
 
     ```shell
     gzip -9 -c target/release/strk_ERC20Lockable.compiled_contract_class.json > /path/to/starknet-foundry/crates/cheatnet/src/data/predeployed_contracts/ERC20Lockable/casm.json.gz
