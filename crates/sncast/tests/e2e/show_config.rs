@@ -180,6 +180,7 @@ async fn test_show_config_cli_url_overrides_config_network() {
         Wait Retry Interval: 5s
         Show Explorer Links: true
         Block Explorer:      Voyager
+        Scarb Profile:       release
     ", URL});
 }
 
@@ -679,7 +680,7 @@ async fn test_profile_missing_in_both_configs() {
     assert_stderr_contains(
         snapbox.assert().failure(),
         indoc! { r"
-            Error: Profile [nonexistent] not found in local config at [..]snfoundry.toml
+            Error: Profile [nonexistent] not found in neither local config at [..]snfoundry.toml nor global config at [..]snfoundry.toml
         " },
     );
 }
