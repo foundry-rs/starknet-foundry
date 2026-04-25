@@ -34,6 +34,21 @@ jobs:
           echo ${scarb_versions[@]}
           echo "versions=[${scarb_versions[@]}]" >> "$GITHUB_OUTPUT"
 
+  prepare-predeployed-contracts:
+    name: Prepare predeployed contract artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-tools
+        with:
+          setup-usc: 'false'
+      - uses: ./.github/actions/prepare-predeployed-contracts
+      - uses: actions/upload-artifact@v5
+        with:
+          name: predeployed-contracts
+          path: crates/cheatnet/src/data/predeployed_contracts
+          overwrite: true
+
   test-workspace:
     # Runs tests from all crates across the workspace, except:
     # - `sncast` tests
@@ -41,16 +56,26 @@ jobs:
     # `native-api` is also excluded as there are no tests and it requires extra setup to compile.
     name: Workspace Tests
     runs-on: ubuntu-latest
+    needs: [ prepare-predeployed-contracts ]
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v6
+        with:
+          name: predeployed-contracts
+          path: crates/cheatnet/src/data
       - uses: ./.github/actions/setup-tools
       - run: cargo test --profile ci --workspace --exclude sncast --exclude forge --exclude native-api
       - run: cargo test --profile ci --lib -p forge
 
   build-test-forge-nextest-archive:
     runs-on: ubuntu-latest
+    needs: [ prepare-predeployed-contracts ]
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v6
+        with:
+          name: predeployed-contracts
+          path: crates/cheatnet/src/data
       - uses: ./.github/actions/setup-tools
         with:
           setup-scarb: 'false'
@@ -79,8 +104,13 @@ jobs:
 
   build-test-forge-nextest-archive-native:
     runs-on: ubuntu-latest
+    needs: [ prepare-predeployed-contracts ]
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v6
+        with:
+          name: predeployed-contracts
+          path: crates/cheatnet/src/data
       - uses: ./.github/actions/setup-tools
         with:
           install-llvm: 'true'
@@ -243,7 +273,7 @@ jobs:
     if: github.event_name == 'merge_group'
     name: Test Forge / E2E Snap (Scarb ${{ matrix.version }})
     runs-on: ubuntu-latest
-    needs: get-scarb-versions
+    needs: [ get-scarb-versions, prepare-predeployed-contracts ]
     strategy:
       fail-fast: false
       matrix:
@@ -278,6 +308,10 @@ jobs:
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
       - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v6
+        with:
+          name: predeployed-contracts
+          path: crates/cheatnet/src/data
       - uses: ./.github/actions/setup-tools
         with:
           scarb-version: ${{ matrix.version }}
@@ -287,8 +321,13 @@ jobs:
   test-plugin-checks:
     name: Test plugin across different scarb versions
     runs-on: ubuntu-latest
+    needs: [ prepare-predeployed-contracts ]
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v6
+        with:
+          name: predeployed-contracts
+          path: crates/cheatnet/src/data
       - uses: ./.github/actions/setup-tools
         # No setup scarb action is used because we want to install multiple versions of scarb through asdf
         with:
@@ -299,8 +338,13 @@ jobs:
   test-requirements-check-special-conditions:
     name: Test requirements check special conditions
     runs-on: ubuntu-latest
+    needs: [ prepare-predeployed-contracts ]
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v6
+        with:
+          name: predeployed-contracts
+          path: crates/cheatnet/src/data
       - uses: ./.github/actions/setup-tools
         with:
           setup-scarb: 'false'
@@ -316,8 +360,13 @@ jobs:
   test-forge-oracles:
     name: Test Oracles in Forge
     runs-on: ubuntu-latest
+    needs: [ prepare-predeployed-contracts ]
     steps:
       - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v6
+        with:
+          name: predeployed-contracts
+          path: crates/cheatnet/src/data
       - uses: ./.github/actions/setup-tools
         with:
           scarb-version: '2.13.1'
@@ -358,11 +407,16 @@ jobs:
   fmt-lint-typos:
     name: Lint and Format
     runs-on: ubuntu-latest
+    needs: [ prepare-predeployed-contracts ]
     env:
       # Make sure CI fails on all warnings - including Clippy lints.
       RUSTFLAGS: "-Dwarnings"
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v6
+        with:
+          name: predeployed-contracts
+          path: crates/cheatnet/src/data
       - uses: ./.github/actions/setup-tools
         with:
           install-llvm: 'true'

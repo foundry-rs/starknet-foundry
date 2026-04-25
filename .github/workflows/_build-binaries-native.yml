@@ -73,6 +73,10 @@ jobs:
 
       - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
 
+      - uses: software-mansion/setup-scarb@v1
+
+      - uses: ./.github/actions/prepare-predeployed-contracts
+
       - name: Setup LLVM on MacOS
         if: matrix.system == 'macos'
         run: |

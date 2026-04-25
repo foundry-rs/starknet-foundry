@@ -1,0 +1,21 @@
+name: Prepare Predeployed Contracts
+description: Restores cached predeployed contract artifacts or generates them when missing
+
+runs:
+  using: composite
+  steps:
+    - name: Restore predeployed contract artifacts cache
+      id: cache-predeployed-contracts
+      uses: actions/cache@v5
+      with:
+        path: crates/cheatnet/src/data/predeployed_contracts
+        key: >-
+          ${{ runner.os }}-predeployed-contracts-${{
+          hashFiles(
+            'scripts/setup_predeployed_contracts.sh',
+            '.github/actions/prepare-predeployed-contracts/action.yml'
+          ) }}
+
+    - name: Generate predeployed contract artifacts
+      if: ${{ steps.cache-predeployed-contracts.outputs.cache-hit != 'true' }}
+      run: ./scripts/setup_predeployed_contracts.sh
