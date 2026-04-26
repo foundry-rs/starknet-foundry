@@ -1,2 +1,2 @@
-scarb 2.18.0
+scarb 2.18.0 2.15.1 # scarb 2.15.1 is used to compile starkgate-contracts (see `scripts/setup_predeployed_contracts.sh`)
 starknet-devnet 0.8.0

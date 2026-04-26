@@ -65,6 +65,10 @@ jobs:
         with:
           workspaces: starknet-foundry
 
+      - uses: software-mansion/setup-scarb@v1
+
+      - uses: ./.github/actions/prepare-predeployed-contracts
+
       - name: Install cross
         if: matrix.cross
         uses: taiki-e/install-action@cross

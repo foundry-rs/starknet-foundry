@@ -13,6 +13,9 @@ use crate::{
     scarb::build_artifacts_with_scarb, shared_cache::FailedTestsCache,
 };
 use anyhow::Result;
+use cheatnet::predeployment::contracts_data::load_predeployed_contracts;
+use forge_runner::backtrace::is_backtrace_enabled;
+use forge_runner::debugging::TraceArgs;
 use forge_runner::partition::PartitionConfig;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
@@ -107,6 +110,11 @@ pub async fn execute_workspace(
 
     let partitioning_config = get_partitioning_config(args, &ui, &packages, &artifacts_dir_path)?;
 
+    // Load predeployed contracts if backtrace is enabled or any trace-related arguments are provided.
+    let predeployed_contracts = should_load_predeployed_contracts_sierra(&args.trace_args)
+        .then(|| load_predeployed_contracts(&cache_dir))
+        .transpose()?;
+
     // Spawn config passes for all packages before running any tests so that
     // compilation overlaps with test execution across packages.
     let mut all_package_args = Vec::with_capacity(packages.len());
@@ -120,6 +128,7 @@ pub async fn execute_workspace(
             &cache_dir,
             &artifacts_dir_path,
             partitioning_config.clone(),
+            predeployed_contracts.as_ref(),
             &ui,
         )?;
         env::set_current_dir(&cwd)?;
@@ -237,4 +246,8 @@ fn unset_forge_test_filter() {
     unsafe {
         env::remove_var(SNFORGE_TEST_FILTER);
     };
+}
+
+fn should_load_predeployed_contracts_sierra(trace_args: &TraceArgs) -> bool {
+    is_backtrace_enabled() || !trace_args.is_empty()
 }

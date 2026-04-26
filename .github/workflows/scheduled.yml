@@ -44,6 +44,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/prepare-predeployed-contracts
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
       - uses: software-mansion/setup-scarb@v1
@@ -81,6 +82,7 @@ jobs:
         run: echo "REPO_NAME=$(echo ${{ github.event.pull_request.head.repo.full_name }}.git)" >> $GITHUB_ENV
 
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/prepare-predeployed-contracts
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
       - uses: software-mansion/setup-scarb@v1

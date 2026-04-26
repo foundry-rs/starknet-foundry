@@ -16,3 +16,4 @@ snfoundry_trace/
 coverage/
 **/.forge_e2e_cache/
 *.snap.new
+crates/cheatnet/src/data/predeployed_contracts/*/*.json.gz

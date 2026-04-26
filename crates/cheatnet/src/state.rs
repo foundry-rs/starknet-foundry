@@ -45,19 +45,31 @@ pub struct ExtendedStateReader {
     pub fork_state_reader: Option<ForkStateReader>,
 }
 
+/// Controls how predeployed contracts are registered.
+#[derive(Clone, Copy)]
+enum PredeploymentMode {
+    /// Register only contract class and rely on the fork for address and storage.
+    Fork,
+    /// Register contract class, address mapping, and storage values initialized
+    /// by the contract's constructor.
+    NonFork,
+}
+
 impl ExtendedStateReader {
     pub fn predeploy_contracts(&mut self) {
-        // We consider contract as deployed solely based on the fact that the test used forking
-        let is_fork = self.fork_state_reader.is_some();
-        if !is_fork {
-            let contracts = vec![strk_predeployed_contract(), eth_predeployed_contract()];
-            for contract in contracts {
-                self.predeploy_contract(contract);
-            }
+        let mode = if self.fork_state_reader.is_some() {
+            PredeploymentMode::Fork
+        } else {
+            PredeploymentMode::NonFork
+        };
+        let contracts = vec![strk_predeployed_contract(), eth_predeployed_contract()];
+
+        for contract in contracts {
+            self.predeploy_contract(contract, mode);
         }
     }
 
-    fn predeploy_contract(&mut self, contract: PredeployedContract) {
+    fn predeploy_contract(&mut self, contract: PredeployedContract, mode: PredeploymentMode) {
         let PredeployedContract {
             contract_address,
             class_hash,
@@ -65,16 +77,18 @@ impl ExtendedStateReader {
             storage_kv_updates,
         } = contract;
         self.dict_state_reader
-            .address_to_class_hash
-            .insert(contract_address, class_hash);
-
-        self.dict_state_reader
             .class_hash_to_class
             .insert(class_hash, contract_class);
 
-        for (key, value) in &storage_kv_updates {
-            let entry = (contract_address, *key);
-            self.dict_state_reader.storage_view.insert(entry, *value);
+        if matches!(mode, PredeploymentMode::NonFork) {
+            self.dict_state_reader
+                .address_to_class_hash
+                .insert(contract_address, class_hash);
+
+            for (key, value) in &storage_kv_updates {
+                let entry = (contract_address, *key);
+                self.dict_state_reader.storage_view.insert(entry, *value);
+            }
         }
     }
 }

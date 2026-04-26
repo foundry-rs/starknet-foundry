@@ -43,6 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/prepare-predeployed-contracts
       - uses: ./.github/actions/setup-tools
         with:
           save-cache: 'true'
@@ -53,6 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/prepare-predeployed-contracts
       - uses: ./.github/actions/setup-tools
         with:
           setup-scarb: 'false'
@@ -84,6 +86,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/prepare-predeployed-contracts
       - uses: ./.github/actions/setup-tools
         with:
           install-llvm: 'true'
@@ -291,6 +294,7 @@ jobs:
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/prepare-predeployed-contracts
       - uses: ./.github/actions/setup-tools
         with:
           scarb-version: ${{ matrix.version }}
@@ -302,6 +306,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/prepare-predeployed-contracts
       - uses: ./.github/actions/setup-tools
         # No setup scarb action is used because we want to install multiple versions of scarb through asdf
         with:
@@ -314,6 +319,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/prepare-predeployed-contracts
       - uses: ./.github/actions/setup-tools
         with:
           setup-scarb: 'false'
@@ -331,6 +337,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - uses: ./.github/actions/prepare-predeployed-contracts
       - uses: ./.github/actions/setup-tools
         with:
           scarb-version: '2.13.1'
@@ -384,6 +391,7 @@ jobs:
       RUSTFLAGS: "-Dwarnings"
     steps:
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/prepare-predeployed-contracts
       - uses: ./.github/actions/setup-tools
         with:
           install-llvm: 'true'
