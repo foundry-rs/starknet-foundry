@@ -47,29 +47,3 @@ $ tree crates/cheatnet/src/data/predeployed_contracts
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **STRK** | `ERC20Lockable` | [View Source](https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/strk/src/erc20_lockable.cairo) | [`0x02e7...98fc`](https://voyager.online/class/0x02e77ee61d4df3d988ee1f42ea5442e913862cc82c2584d212ecda76666498fc) | [`07e11c3`](https://github.com/starknet-io/starkgate-contracts/commit/07e11c39119a10d5742735be5b1d51894ebf5311) | v3.0.0 |
 | **ETH** | `ERC20Mintable` | [View Source](https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/sg_token/src/erc20_mintable.cairo) | [`0x00b4...4ec`](https://voyager.online/class/0x00b45dbc3714180381c5680e41931172d67194d77d504413465390e0bef194ec) | [`07e11c3`](https://github.com/starknet-io/starkgate-contracts/commit/07e11c39119a10d5742735be5b1d51894ebf5311) | v3.0.0 |
-
-Steps to update STRK and ETH predeployed contracts:
-
-1. Run:
-
-    ```shell
-    ./scripts/setup_predeployed_contracts.sh
-    ```
-
-2. By default, the script:
-   - clones `starkgate-contracts`
-   - checks out commit `07e11c39119a10d5742735be5b1d51894ebf5311`
-   - enables CASM generation and debug info needed for trace/backtrace support
-   - writes generated `casm.json.gz` and `sierra.json.gz` files into `crates/cheatnet/src/data/predeployed_contracts`
-
-3. If needed, you can override the source repo, revision, source directory, output directory, or `scarb` binary:
-
-    ```shell
-    PREDEPLOYED_CONTRACTS_SOURCE_DIR=/path/to/starkgate-contracts \
-    PREDEPLOYED_CONTRACTS_REF=07e11c39119a10d5742735be5b1d51894ebf5311 \
-    PREDEPLOYED_CONTRACTS_OUTPUT_DIR=/path/to/starknet-foundry/crates/cheatnet/src/data/predeployed_contracts \
-    SCARB_BIN=scarb \
-    ./scripts/setup_predeployed_contracts.sh
-    ```
-
-The generated files are gitignored. CI uses the shared `.github/actions/prepare-predeployed-contracts` action, which restores cached artifacts when possible and falls back to `scripts/setup_predeployed_contracts.sh` when the cache is cold. `snforge` loads the gzipped artifacts at runtime and caches the decompressed Sierra files when debugging metadata is needed.

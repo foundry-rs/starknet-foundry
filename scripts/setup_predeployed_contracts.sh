@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
 
+# Generates gzipped predeployed contract artifacts used by cheatnet.
+# Clones repositories with source code, adjusts compiler settings,
+# builds the contracts, and gzips the generated artifacts in the expected location.
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 
-STARKGATE_REPO="${PREDEPLOYED_CONTRACTS_REPO:-https://github.com/starknet-io/starkgate-contracts.git}"
-STARKGATE_REF="${PREDEPLOYED_CONTRACTS_REF:-07e11c39119a10d5742735be5b1d51894ebf5311}" # v3.0.0
+# starkgate-contracts v3.0.0
+STARKGATE_REPO="https://github.com/starknet-io/starkgate-contracts.git"
+STARKGATE_REF="07e11c39119a10d5742735be5b1d51894ebf5311"
 
-SOURCE_DIR="${PREDEPLOYED_CONTRACTS_SOURCE_DIR:-}"
-OUTPUT_DIR="${PREDEPLOYED_CONTRACTS_OUTPUT_DIR:-${REPO_ROOT}/crates/cheatnet/src/data/predeployed_contracts}"
+OUTPUT_DIR="${REPO_ROOT}/crates/cheatnet/src/data/predeployed_contracts"
 
 TMP_DIR=""
 cleanup() {
@@ -22,13 +26,7 @@ trap cleanup EXIT
 prepare_starkgate_repo() {
   local repo_url="$1"
   local repo_ref="$2"
-  local source_dir="$3"
-  local clone_dir_name="$4"
-
-  if [[ -n "${source_dir}" ]]; then
-    echo "${source_dir}"
-    return
-  fi
+  local clone_dir_name="$3"
 
   TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/${clone_dir_name}.XXXXXX")"
   local repo_dir="${TMP_DIR}/${clone_dir_name}"
@@ -206,7 +204,7 @@ prepare_starkgate_contracts() {
 
 main() {
   local starkgate_dir
-  starkgate_dir="$(prepare_starkgate_repo "${STARKGATE_REPO}" "${STARKGATE_REF}" "${SOURCE_DIR}" "starkgate-contracts")"
+  starkgate_dir="$(prepare_starkgate_repo "${STARKGATE_REPO}" "${STARKGATE_REF}" "starkgate-contracts")"
 
   prepare_starkgate_contracts "${starkgate_dir}"
 

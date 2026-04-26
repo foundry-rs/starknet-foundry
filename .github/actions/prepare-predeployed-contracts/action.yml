@@ -1,11 +1,12 @@
 name: Prepare Predeployed Contracts
-description: Restores cached predeployed contract artifacts or generates them when missing
+description: Sets up asdf and restores cached predeployed contract artifacts
 
 runs:
   using: composite
   steps:
+    - uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47
+
     - name: Restore predeployed contract artifacts cache
-      id: cache-predeployed-contracts
       uses: actions/cache@v5
       with:
         path: crates/cheatnet/src/data/predeployed_contracts
@@ -15,7 +16,3 @@ runs:
             'scripts/setup_predeployed_contracts.sh',
             '.github/actions/prepare-predeployed-contracts/action.yml'
           ) }}
-
-    - name: Generate predeployed contract artifacts
-      if: ${{ steps.cache-predeployed-contracts.outputs.cache-hit != 'true' }}
-      run: ./scripts/setup_predeployed_contracts.sh
