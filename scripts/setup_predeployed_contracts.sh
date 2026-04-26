@@ -52,15 +52,6 @@ ensure_scarb_installed() {
     echo "Missing scarb version in ${repo_dir}/.tool-versions" >&2
     exit 1
   fi
-
-  if ! command -v asdf >/dev/null 2>&1; then
-    echo "asdf is required to install scarb ${expected_scarb_version} from ${repo_dir}/.tool-versions" >&2
-    exit 1
-  fi
-
-  asdf plugin add scarb >/dev/null 2>&1 || true
-  asdf install scarb "${expected_scarb_version}" >/dev/null
-  asdf set --home scarb "${expected_scarb_version}" >/dev/null
 }
 
 print_scarb_version_info() {
@@ -190,12 +181,11 @@ prepare_starkgate_contracts() {
   ensure_scarb_installed "${repo_dir}"
   print_scarb_version_info "${repo_dir}" "starkgate-contracts" "${STARKGATE_REF}"
 
-  ensure_casm_generaton "${repo_dir}/packages/strk/Scarb.toml"
-  ensure_casm_generaton "${repo_dir}/packages/sg_token/Scarb.toml"
-  ensure_debug_info_and_backtrace "${repo_dir}/Scarb.toml"
-
   (
     cd "${repo_dir}"
+    ensure_casm_generaton "packages/strk/Scarb.toml"
+    ensure_casm_generaton "packages/sg_token/Scarb.toml"
+    ensure_debug_info_and_backtrace "Scarb.toml"
     scarb --release build -p strk -p sg_token
   )
 
