@@ -25,7 +25,8 @@ fn main() {
         return;
     }
 
-    let status = Command::new(&setup_script)
+    let status = Command::new("bash")
+        .arg(&setup_script)
         .current_dir(
             manifest_dir
                 .parent()
