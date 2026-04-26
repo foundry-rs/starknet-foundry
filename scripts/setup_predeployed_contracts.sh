@@ -43,6 +43,16 @@ scarb_version_from_tool_versions() {
   awk '$1 == "scarb" { print $2; exit }' "${repo_dir}/.tool-versions" 2>/dev/null || true
 }
 
+run_scarb_in_repo() {
+  local repo_dir="$1"
+  shift
+
+  (
+    cd "${repo_dir}"
+    asdf exec scarb "$@"
+  )
+}
+
 ensure_scarb_installed() {
   local repo_dir="$1"
   local expected_scarb_version
@@ -62,10 +72,7 @@ print_scarb_version_info() {
   local current_scarb_version
 
   expected_scarb_version="$(scarb_version_from_tool_versions "${repo_dir}")"
-  current_scarb_version="$(
-    cd "${repo_dir}"
-    scarb --version | awk '{print $2; exit}'
-  )"
+  current_scarb_version="$(run_scarb_in_repo "${repo_dir}" --version | awk '{print $2; exit}')"
 
   echo "Using ${repo_label} at ${repo_ref} with scarb ${current_scarb_version}"
 
@@ -181,13 +188,10 @@ prepare_starkgate_contracts() {
   ensure_scarb_installed "${repo_dir}"
   print_scarb_version_info "${repo_dir}" "starkgate-contracts" "${STARKGATE_REF}"
 
-  (
-    cd "${repo_dir}"
-    ensure_casm_generaton "packages/strk/Scarb.toml"
-    ensure_casm_generaton "packages/sg_token/Scarb.toml"
-    ensure_debug_info_and_backtrace "Scarb.toml"
-    scarb --release build -p strk -p sg_token
-  )
+  ensure_casm_generaton "${repo_dir}/packages/strk/Scarb.toml"
+  ensure_casm_generaton "${repo_dir}/packages/sg_token/Scarb.toml"
+  ensure_debug_info_and_backtrace "${repo_dir}/Scarb.toml"
+  run_scarb_in_repo "${repo_dir}" --release build -p strk -p sg_token
 
   gzip_artifacts_from_mappings "${repo_dir}" "${artifact_mappings[@]}"
 }
