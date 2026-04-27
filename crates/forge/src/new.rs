@@ -74,13 +74,14 @@ impl TemplateManifestConfig {
             .parse::<DocumentMut>()
             .context("invalid document")?;
 
+        set_cairo_edition(&mut document, CAIRO_EDITION);
+        add_assert_macros(&mut document)?;
+
         if self.contract_target {
             add_target_to_toml(&mut document);
         }
 
-        set_cairo_edition(&mut document, CAIRO_EDITION);
         add_test_script(&mut document);
-        add_assert_macros(&mut document)?;
         add_allow_prebuilt_macros(&mut document)?;
 
         if self.fork_config {

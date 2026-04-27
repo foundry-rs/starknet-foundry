@@ -292,7 +292,7 @@ mod tests {
 
         assert!(!is_valid);
         assert!(validation_output.contains("❌ Scarb Version"));
-        assert!(validation_output.contains("doesn't satisfy minimal 999.0.0"));
+        assert!(validation_output.contains("doesn't satisfy minimal 111.0.0"));
     }
 
     #[cfg(feature = "no_scarb_installed")]
