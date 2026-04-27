@@ -128,14 +128,12 @@ Layer precedence (highest to lowest):
 3. `[local.default]`
 4. `[global.<profile>]`
 5. `[global.default]`
-6. implicit defaults
+6. internal defaults
 
-Settings not defined in a given layer fall through to the next one.
+If a layer is missing, or it doesn't define a particular setting, the setting is looked up in the next layer.
 
-When `--profile <name>` is provided:
-
-- if local config file exists, `local.<name>` **must exist**
-- if local config file does not exist, `global.<name>` **must exist**
+The [local.<name>] and [global.<name>] layers are considered only when `--profile <name>` is set.
+If `--profile <name>` is provided, at least one of `[local.<name>]` or `[global.<name>]` must be present.
 
 
 #### Global Configuration File Location
@@ -160,19 +158,43 @@ root/
                 └── opus-magnum/
 ```
 
-**Glossary:**
+#### Glossary:
 
-- **A:** Global configuration file containing the profiles `default` and `testnet`.
-- **B:** Local configuration file containing the profiles `default` and `mainnet`.
+**A:** Global configuration file containing the profiles `default` and `testnet`:
+```toml
+[sncast.default]
+..
 
-In any directory in the file system, a user can run the `sncast` command using the `default` and `testnet` profiles, 
-because they are defined in global config (file A). 
+[sncast.testnet]
+..
+```
+**B:** Local configuration file containing the profiles `default` and `mainnet`:
+```toml
+[sncast.default]
+..
 
-If no profile is explicitly specified, the effective config is built by merging `global.default` with `local.default` (if a local config exists). Local values take precedence.
+[sncast.mainnet]
+..
+```
+
+#### No local config
+
+In any directory in the file system, a user can run the `sncast` command using the `default` and `testnet` profiles, because they are defined in global config (file A).
+If no local config file is present, only profiles defined in global config will be used.
+
+- If the `testnet` profile is specified, the effective config is built by layering `global.testnet` -> `global.default` -> internal defaults.
+- If no profile is specified, the effective config is built by layering `global.default` -> internal defaults.
+
+#### Local config present
 
 When running `sncast` from the `opus-magnum` directory, there is a configuration file in the parent directory (file B). 
-This setup allows for the use of the following profiles: `default`, `testnet`, and `mainnet`. If the `mainnet` profile is specified, 
-the effective config is built by layering `global.default` → `local.default` → `local.mainnet`. The `mainnet` profile does not need to exist in the global configuration as long as it is present in the local one.
+This setup allows for the use of the following profiles: `default`, `testnet`, and `mainnet`:
+
+- If the `mainnet` profile is specified, the effective config is built by layering `local.mainnet` -> `local.default` -> `global.default` -> internal defaults. 
+  The `mainnet` profile does not need to exist in the global configuration as long as it is present in the local one.
+- If the `testnet` profile is specified, the effective config is built by layering  `local.default` -> `global.testnet` -> `global.default` -> internal defaults.
+  The `testnet` profile does not need to exist in the local configuration as long as it is present in the global one.
+- If no profile is specified, the effective config is built by layering `local.default` -> `global.default` -> internal defaults.
 
 ## Environmental Variables
 
