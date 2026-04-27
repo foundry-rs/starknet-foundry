@@ -35,6 +35,7 @@ jobs:
           echo "versions=[${scarb_versions[@]}]" >> "$GITHUB_OUTPUT"
 
   prepare-predeployed-contracts:
+    name: Prepare predeployed contracts
     uses: ./.github/workflows/_prepare-predeployed-contracts.yml
 
   test-workspace:
