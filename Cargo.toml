@@ -32,7 +32,7 @@ incremental = false
 debug = "line-tables-only"
 
 [workspace.package]
-version = "0.59.0"
+version = "0.60.0"
 edition = "2024"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
