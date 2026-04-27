@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Predeployed contracts are now supported in debugging traces and backtrace
 
+#### Fixed
+
+- Permitted minter storage value of ETH predeployed contract, has now the same value as on mainnet
+
 ## [0.60.0] - 2026-04-27
 
 ### Forge
