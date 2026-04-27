@@ -38,8 +38,7 @@ pub(crate) const TEST_LEDGER_PATH: &str = OZ_LEDGER_PATH;
 
 pub(crate) const TEST_LEDGER_PATH_STORED: &str = "m/2645'/1195502025'/355113700'/0'/0'/0";
 
-// TODO(#4221): Update to latest version and build in workflow
-const APP_PATH: &str = "tests/data/ledger-app/nanox#strk#0.25.13.elf";
+const APP_PATH: &str = "tests/data/ledger-app/nanox.elf";
 
 pub(crate) const LEDGER_PUBLIC_KEY: &str =
     "0x51f3e99d539868d8f45ca705ad6f75e68229a6037a919b15216b4e92a4d6d8";
