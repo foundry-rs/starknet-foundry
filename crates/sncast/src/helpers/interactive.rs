@@ -95,8 +95,7 @@ fn update_config(toml_doc: &mut DocumentMut, profile: &str, key: &str, value: &s
 }
 
 fn to_tilde_path(path: &Utf8PathBuf) -> String {
-    if cfg!(not(target_os = "windows"))
-        && let Some(home_dir) = dirs::home_dir()
+    if let Some(home_dir) = dirs::home_dir()
         && let Ok(canonical_path) = path.canonicalize()
         && let Ok(stripped_path) = canonical_path.strip_prefix(&home_dir)
     {
