@@ -249,5 +249,6 @@ fn unset_forge_test_filter() {
 }
 
 fn should_load_predeployed_contracts_sierra(trace_args: &TraceArgs) -> bool {
+    // TODO(#4322)
     is_backtrace_enabled() || !trace_args.is_empty()
 }
