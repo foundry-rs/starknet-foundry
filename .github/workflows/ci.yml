@@ -390,6 +390,15 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
+      - name: Build Starknet Ledger App (Nano X)
+        run: |
+          git clone --depth 1 --branch nanox_2.7.0_2.4.0_sdk_v26.0.2 \
+            https://github.com/LedgerHQ/app-starknet /tmp/app-starknet
+          cd /tmp/app-starknet/starknet
+          cargo +${RUST_NIGHTLY} ledger build nanox
+          mkdir -p ${GITHUB_WORKSPACE}/crates/sncast/tests/data/ledger-app
+          cp target/nanox/release/starknet \
+            ${GITHUB_WORKSPACE}/crates/sncast/tests/data/ledger-app/nanox.elf
       - name: Run tests (nextest)
         run: cargo nextest run --no-fail-fast --cargo-profile ci -p sncast --features ledger-emulator ledger --run-ignored all
 

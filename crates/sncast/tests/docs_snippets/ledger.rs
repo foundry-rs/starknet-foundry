@@ -1,4 +1,4 @@
-use crate::e2e::ledger::{automation, setup_speculos};
+use crate::e2e::ledger::{set_automation, setup_speculos};
 use crate::helpers::constants::URL;
 use crate::helpers::runner::runner;
 use docs::snippet::SnippetType;
@@ -7,6 +7,9 @@ use docs::utils::{
 };
 use docs::validation::{extract_snippets_from_directory, extract_snippets_from_file};
 use shared::test_utils::output_assert::assert_stdout_contains;
+use speculos_client::starknet_app::{
+    APPROVE_BLIND_SIGN_HASH, APPROVE_PUBLIC_KEY, ENABLE_BLIND_SIGN,
+};
 use std::sync::Arc;
 use tempfile::TempDir;
 
@@ -14,18 +17,9 @@ const DOCS_SNIPPETS_PORT_BASE: u16 = 4006;
 
 async fn setup_speculos_automation(client: &Arc<speculos_client::SpeculosClient>, args: &[&str]) {
     if args.contains(&"get-public-key") && !args.contains(&"--no-display") {
-        client
-            .automation(&[automation::APPROVE_PUBLIC_KEY])
-            .await
-            .unwrap();
+        set_automation(client, &[APPROVE_PUBLIC_KEY]).await;
     } else if args.contains(&"sign-hash") {
-        client
-            .automation(&[
-                automation::ENABLE_BLIND_SIGN,
-                automation::APPROVE_BLIND_SIGN_HASH,
-            ])
-            .await
-            .unwrap();
+        set_automation(client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
     }
 }
 
