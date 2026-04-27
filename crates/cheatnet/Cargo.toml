@@ -2,6 +2,7 @@
 name = "cheatnet"
 version.workspace = true
 edition.workspace = true
+build = "build.rs"
 
 [features]
 testing = []

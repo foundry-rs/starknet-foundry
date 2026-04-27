@@ -34,6 +34,9 @@ jobs:
           echo ${scarb_versions[@]}
           echo "versions=[${scarb_versions[@]}]" >> "$GITHUB_OUTPUT"
 
+  prepare-predeployed-contracts:
+    uses: ./.github/workflows/_prepare-predeployed-contracts.yml
+
   test-workspace:
     # Runs tests from all crates across the workspace, except:
     # - `sncast` tests
@@ -41,8 +44,10 @@ jobs:
     # `native-api` is also excluded as there are no tests and it requires extra setup to compile.
     name: Workspace Tests
     runs-on: ubuntu-latest
+    needs: prepare-predeployed-contracts
     steps:
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: ./.github/actions/setup-tools
         with:
           save-cache: 'true'
@@ -51,8 +56,10 @@ jobs:
 
   build-test-forge-nextest-archive:
     runs-on: ubuntu-latest
+    needs: prepare-predeployed-contracts
     steps:
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: ./.github/actions/setup-tools
         with:
           setup-scarb: 'false'
@@ -82,8 +89,10 @@ jobs:
 
   build-test-forge-nextest-archive-native:
     runs-on: ubuntu-latest
+    needs: prepare-predeployed-contracts
     steps:
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: ./.github/actions/setup-tools
         with:
           install-llvm: 'true'
@@ -256,7 +265,7 @@ jobs:
     if: github.event_name == 'merge_group'
     name: Test Forge / E2E Snap (Scarb ${{ matrix.version }})
     runs-on: ubuntu-latest
-    needs: get-scarb-versions
+    needs: [get-scarb-versions, prepare-predeployed-contracts]
     strategy:
       fail-fast: false
       matrix:
@@ -291,6 +300,7 @@ jobs:
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: ./.github/actions/setup-tools
         with:
           scarb-version: ${{ matrix.version }}
@@ -300,8 +310,10 @@ jobs:
   test-plugin-checks:
     name: Test plugin across different scarb versions
     runs-on: ubuntu-latest
+    needs: prepare-predeployed-contracts
     steps:
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: ./.github/actions/setup-tools
         # No setup scarb action is used because we want to install multiple versions of scarb through asdf
         with:
@@ -312,8 +324,10 @@ jobs:
   test-requirements-check-special-conditions:
     name: Test requirements check special conditions
     runs-on: ubuntu-latest
+    needs: prepare-predeployed-contracts
     steps:
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: ./.github/actions/setup-tools
         with:
           setup-scarb: 'false'
@@ -329,8 +343,10 @@ jobs:
   test-forge-oracles:
     name: Test Oracles in Forge
     runs-on: ubuntu-latest
+    needs: prepare-predeployed-contracts
     steps:
       - uses: actions/checkout@v5
+      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: ./.github/actions/setup-tools
         with:
           scarb-version: '2.13.1'
@@ -351,8 +367,10 @@ jobs:
   test-cast:
     name: Test Cast
     runs-on: ubuntu-latest
+    needs: prepare-predeployed-contracts
     steps:
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
       - uses: ./.github/actions/setup-tools
         with:
@@ -365,9 +383,11 @@ jobs:
     name: Test Ledger
     runs-on: ubuntu-latest
     container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools
+    needs: prepare-predeployed-contracts
 
     steps:
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
       - uses: ./.github/actions/setup-tools
         with:
@@ -379,11 +399,13 @@ jobs:
   fmt-lint-typos:
     name: Lint and Format
     runs-on: ubuntu-latest
+    needs: prepare-predeployed-contracts
     env:
       # Make sure CI fails on all warnings - including Clippy lints.
       RUSTFLAGS: "-Dwarnings"
     steps:
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: ./.github/actions/setup-tools
         with:
           install-llvm: 'true'
@@ -424,8 +446,10 @@ jobs:
   build-docs:
     name: Test Building Docs
     runs-on: ubuntu-latest
+    needs: prepare-predeployed-contracts
     steps:
       - uses: actions/checkout@v6
+      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: ./.github/actions/setup-tools
       - uses: taiki-e/install-action@055f5df8c3f65ea01cd41e9dc855becd88953486 # 2.75.18
         with:
