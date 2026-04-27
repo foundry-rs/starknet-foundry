@@ -53,28 +53,15 @@ scarb_version_from_tool_versions() {
   awk '$1 == "scarb" { print $2; exit }' "${repo_dir}/.tool-versions" 2>/dev/null || true
 }
 
-current_scarb_version() {
-  if ! command -v scarb >/dev/null 2>&1; then
-    return 1
-  fi
-
-  scarb --version | awk '{ print $2; exit }'
-}
-
 ensure_scarb_available() {
   local repo_dir="$1"
   local expected_scarb_version
   local installed_scarb_version
 
   expected_scarb_version="$(scarb_version_from_tool_versions "${repo_dir}")"
+
   if [[ -z "${expected_scarb_version}" ]]; then
     echo "Missing scarb version in ${repo_dir}/.tool-versions" >&2
-    exit 1
-  fi
-
-  if ! command -v asdf >/dev/null 2>&1; then
-    echo "Expected scarb ${expected_scarb_version} for ${repo_dir}, but found ${installed_scarb_version:-none}." >&2
-    echo "Install matching scarb or install asdf and rerun ${0}." >&2
     exit 1
   fi
 
@@ -228,4 +215,4 @@ main() {
   echo "Generated predeployed contract artifacts in ${OUTPUT_DIR}"
 }
 
-main "$@"
+main || exit 1
