@@ -7,6 +7,7 @@ use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::formatdoc;
 use shared::command::CommandExt;
+use shared::test_utils::nextest::is_nextest;
 use shared::test_utils::node_url::node_rpc_url;
 use snapbox::cargo_bin;
 use snapbox::cmd::Command as SnapboxCommand;
@@ -23,7 +24,7 @@ pub(crate) fn runner<T: AsRef<Path>>(temp_dir: T) -> SnapboxCommand {
 
 // If ran on CI, we want to get the nextest's built binary
 pub fn snforge_test_bin_path() -> PathBuf {
-    if env::var("NEXTEST").unwrap_or("0".to_string()) == "1" {
+    if is_nextest() {
         let snforge_nextest_env =
             env::var("NEXTEST_BIN_EXE_snforge").expect("No snforge binary for nextest found");
         return PathBuf::from(snforge_nextest_env);

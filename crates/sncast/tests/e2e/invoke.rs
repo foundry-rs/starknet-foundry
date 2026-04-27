@@ -6,12 +6,11 @@ use crate::helpers::fixtures::{
     create_and_deploy_account, create_and_deploy_oz_account, get_transaction_by_hash,
     get_transaction_hash, get_transaction_receipt,
 };
-use crate::helpers::runner::runner;
+use crate::helpers::runner::{runner, sncast_test_bin_path};
 use crate::helpers::shell::os_specific_shell;
 use camino::Utf8PathBuf;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
-use snapbox::cargo_bin;
 use sncast::AccountType;
 use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
 use sncast::helpers::fee::FeeArgs;
@@ -343,7 +342,7 @@ async fn test_happy_case_cairo_expression_calldata() {
 #[tokio::test]
 async fn test_happy_case_shell() {
     let tempdir = create_and_deploy_oz_account().await;
-    let binary_path = cargo_bin!("sncast");
+    let binary_path = sncast_test_bin_path();
     let command = os_specific_shell(&Utf8PathBuf::from("tests/shell/invoke"));
 
     let snapbox = command

@@ -7,12 +7,11 @@ use crate::helpers::fixtures::{
     duplicate_contract_directory_with_salt, get_transaction_by_hash, get_transaction_hash,
     get_transaction_receipt, join_tempdirs,
 };
-use crate::helpers::runner::runner;
+use crate::helpers::runner::{runner, sncast_test_bin_path};
 use crate::helpers::shell::os_specific_shell;
 use camino::Utf8PathBuf;
 use indoc::indoc;
 use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
-use snapbox::cargo_bin;
 use sncast::AccountType;
 use sncast::helpers::constants::OZ_CLASS_HASH;
 use sncast::helpers::fee::FeeArgs;
@@ -389,7 +388,7 @@ fn test_too_low_gas() {
 #[tokio::test]
 async fn test_happy_case_shell() {
     let tempdir = create_and_deploy_oz_account().await;
-    let binary_path = cargo_bin!("sncast");
+    let binary_path = sncast_test_bin_path();
     let command = os_specific_shell(&Utf8PathBuf::from("tests/shell/deploy"));
 
     let snapbox = command

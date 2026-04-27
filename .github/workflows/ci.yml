@@ -358,8 +358,13 @@ jobs:
         with:
           cache-key: 'cast'
           save-cache: 'true'
-      - name: Run tests
-        run: cargo test --profile ci -p sncast
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: nextest@0.9.98
+      - name: Run tests (nextest)
+        run: cargo nextest run --no-fail-fast --cargo-profile ci -p sncast
+      - name: Run doctests
+        run: cargo test --profile ci -p sncast --doc
 
   test-ledger:
     name: Test Ledger
@@ -373,8 +378,11 @@ jobs:
         with:
           cache-key: 'cast-ledger'
           save-cache: 'true'
-      - name: Run tests
-        run: cargo test --profile ci -p sncast --features ledger-emulator ledger -- --ignored
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: nextest@0.9.98
+      - name: Run tests (nextest)
+        run: cargo nextest run --no-fail-fast --cargo-profile ci -p sncast --features ledger-emulator ledger --run-ignored all
 
   fmt-lint-typos:
     name: Lint and Format

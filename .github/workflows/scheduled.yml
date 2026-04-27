@@ -136,7 +136,11 @@ jobs:
           tool_versions: |
             starknet-devnet ${{ steps.get-devnet-version.outputs.version }}
 
-      - run: cargo test --profile ci -p sncast
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: nextest@0.9.98
+
+      - run: cargo nextest run --no-fail-fast --cargo-profile ci -p sncast
 
   get-version:
     name: Get current foundry version

@@ -5,12 +5,11 @@ use crate::helpers::constants::{
 use crate::helpers::fixtures::{
     copy_directory_to_tempdir, create_and_deploy_oz_account, invoke_contract, join_tempdirs,
 };
-use crate::helpers::runner::runner;
+use crate::helpers::runner::{runner, sncast_test_bin_path};
 use crate::helpers::shell::os_specific_shell;
 use camino::Utf8PathBuf;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
-use snapbox::cargo_bin;
 use sncast::helpers::fee::FeeSettings;
 
 #[test]
@@ -249,7 +248,7 @@ fn test_wrong_block_id() {
 
 #[test]
 fn test_happy_case_shell() {
-    let binary_path = cargo_bin!("sncast");
+    let binary_path = sncast_test_bin_path();
     let command = os_specific_shell(&Utf8PathBuf::from("tests/shell/call"));
 
     let snapbox = command
@@ -261,7 +260,7 @@ fn test_happy_case_shell() {
 
 #[test]
 fn test_leading_negative_values() {
-    let binary_path = cargo_bin!("sncast");
+    let binary_path = sncast_test_bin_path();
     let command = os_specific_shell(&Utf8PathBuf::from("tests/shell/call_unsigned"));
 
     let snapbox = command
