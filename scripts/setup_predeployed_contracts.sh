@@ -13,11 +13,10 @@ REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 STARKGATE_REPO="https://github.com/starknet-io/starkgate-contracts.git"
 STARKGATE_REF="07e11c39119a10d5742735be5b1d51894ebf5311"
 
-DEFAULT_OUTPUT_DIR="${REPO_ROOT}/crates/cheatnet/src/data/predeployed_contracts"
-OUTPUT_DIR="${DEFAULT_OUTPUT_DIR}"
-SCARB_CMD=(scarb)
+OUTPUT_DIR="${REPO_ROOT}/crates/cheatnet/src/data/predeployed_contracts"
 
 TMP_DIR=""
+
 cleanup() {
   if [[ -n "${TMP_DIR}" && -d "${TMP_DIR}" ]]; then
     rm -rf "${TMP_DIR}"
@@ -73,11 +72,6 @@ ensure_scarb_available() {
     exit 1
   fi
 
-  if installed_scarb_version="$(current_scarb_version)" && [[ "${installed_scarb_version}" == "${expected_scarb_version}" ]]; then
-    SCARB_CMD=(scarb)
-    return
-  fi
-
   if ! command -v asdf >/dev/null 2>&1; then
     echo "Expected scarb ${expected_scarb_version} for ${repo_dir}, but found ${installed_scarb_version:-none}." >&2
     echo "Install matching scarb or install asdf and rerun ${0}." >&2
@@ -86,7 +80,6 @@ ensure_scarb_available() {
 
   asdf plugin add scarb >/dev/null 2>&1 || true
   asdf install scarb "${expected_scarb_version}" >/dev/null 2>&1
-  SCARB_CMD=("asdf" "exec" "scarb")
 }
 
 print_scarb_version_info() {
@@ -97,7 +90,7 @@ print_scarb_version_info() {
 
   (
     cd "${repo_dir}"
-    current_scarb_version="$("${SCARB_CMD[@]}" --version | awk '{print $2; exit}')"
+    current_scarb_version="$(scarb --version | awk '{print $2; exit}')"
     echo "Using ${repo_label} at ${repo_ref} with scarb ${current_scarb_version}"
   )
 }
@@ -181,18 +174,17 @@ gzip_artifacts_from_mappings() {
   shift
 
   for artifact_mapping in "$@"; do
-    IFS='|' read -r source_relative_path output_relative_path <<< "${artifact_mapping}"
-    mkdir -p "${OUTPUT_DIR}/$(dirname "${output_relative_path}")"
-  done
+    IFS='|' read -r src_rel out_rel <<< "${artifact_mapping}"
+    local src_file="${source_root}/${src_rel}"
+    local out_file="${OUTPUT_DIR}/${out_rel}"
 
-  for artifact_mapping in "$@"; do
-    IFS='|' read -r source_relative_path output_relative_path <<< "${artifact_mapping}"
-    require_file "${source_root}/${source_relative_path}"
-  done
+    if [[ ! -f "${src_file}" ]]; then
+      echo "Missing expected artifact: ${src_file}" >&2
+      exit 1
+    fi
 
-  for artifact_mapping in "$@"; do
-    IFS='|' read -r source_relative_path output_relative_path <<< "${artifact_mapping}"
-    gzip -n -9 -c "${source_root}/${source_relative_path}" > "${OUTPUT_DIR}/${output_relative_path}"
+    mkdir -p "$(dirname "${out_file}")"
+    gzip -n -9 -c "${src_file}" > "${out_file}"
   done
 }
 
@@ -213,7 +205,7 @@ prepare_starkgate_contracts() {
   ensure_debug_info_and_backtrace "${repo_dir}/Scarb.toml"
   (
     cd "${repo_dir}"
-    "${SCARB_CMD[@]}" --release build -p strk -p sg_token
+    scarb --release build -p strk -p sg_token
   )
 
   gzip_artifacts_from_mappings "${repo_dir}" "${artifact_mappings[@]}"
