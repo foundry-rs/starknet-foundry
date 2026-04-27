@@ -14,7 +14,8 @@ use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
 use url::Url;
 
-/// Detects `nextest` list phase to skip devnet lifecycle side effects.
+/// Detects `nextest` list phase: https://github.com/foundry-rs/starknet-foundry/pull/4297#discussion_r3147207375
+/// This allows us to avoid devnet lifecycle side effects.
 fn is_nextest_list_mode() -> bool {
     is_nextest()
         && (std::env::var("NEXTEST_TEST_PHASE").as_deref() == Ok("list")
