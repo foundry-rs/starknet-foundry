@@ -16,7 +16,7 @@ $ ./scripts/setup_predeployed_contracts.sh
 To add a new predeployed contract or update an existing one, extend the generator script so that it writes `casm.json.gz` and `sierra.json.gz` into a
 new subdirectory under `crates/cheatnet/src/data/predeployed_contracts`.
 
-Also, append the artifacts paths in the `.github/actions/restore-predeployed-contracts/action.yml` workflow to be included in the required files.
+Also, update list of artifacts in the `.github/actions/restore-predeployed-contracts/action.yml` workflow and in `crates/cheatnet/build.rs`.
 
 > 📝 **Note**
 >
