@@ -100,7 +100,6 @@ fn maybe_cache_contract_sierra(
 ) -> Result<Utf8PathBuf> {
     let path = cache_dir
         .join("predeployed_contracts")
-        // .join(env!("CARGO_PKG_VERSION"))
         .join(SNFORGE_VERSION)
         .join(format!("{contract_name}.sierra.json"));
 
