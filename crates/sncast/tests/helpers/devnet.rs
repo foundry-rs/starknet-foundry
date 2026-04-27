@@ -14,9 +14,12 @@ use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
 use url::Url;
 
-/// Detects nextest test discovery mode (`--list`) to skip devnet lifecycle side effects.
-fn is_listing() -> bool {
-    std::env::args().any(|a| a == "--list")
+/// Detects `nextest` list phase to skip devnet lifecycle side effects.
+fn is_nextest_list_mode() -> bool {
+    is_nextest()
+        && (std::env::var("NEXTEST_TEST_PHASE").as_deref() == Ok("list")
+            // Fallback for older versions of `nextest` that don't set `NEXTEST_TEST_PHASE`.
+            || std::env::args().any(|a| a == "--list"))
 }
 
 fn verify_devnet_availability(address: &str) -> bool {
@@ -27,7 +30,7 @@ fn verify_devnet_availability(address: &str) -> bool {
 #[cfg(test)]
 #[ctor]
 fn start_devnet() {
-    if is_listing() {
+    if is_nextest_list_mode() {
         return;
     }
 
@@ -98,7 +101,7 @@ fn start_devnet() {
 #[cfg(test)]
 #[dtor]
 fn stop_devnet() {
-    if is_nextest() || is_listing() {
+    if is_nextest() {
         return;
     }
 
