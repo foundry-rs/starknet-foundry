@@ -14,6 +14,8 @@ use conversions::string::TryFromHexStr;
 use scarb_api::StarknetContractArtifacts;
 use std::{collections::HashMap, fs};
 
+pub const SNFORGE_VERSION: &str = env!("CARGO_PKG_VERSION");
+
 /// Load data of predeployed contract from its artifacts
 macro_rules! load_contract {
     ($name:expr, $contract_dir:expr, $cache_dir:expr) => {{
@@ -98,7 +100,8 @@ fn maybe_cache_contract_sierra(
 ) -> Result<Utf8PathBuf> {
     let path = cache_dir
         .join("predeployed_contracts")
-        .join(env!("CARGO_PKG_VERSION"))
+        // .join(env!("CARGO_PKG_VERSION"))
+        .join(SNFORGE_VERSION)
         .join(format!("{contract_name}.sierra.json"));
 
     if fs::read_to_string(&path).is_ok_and(|cached_sierra| cached_sierra == sierra) {
