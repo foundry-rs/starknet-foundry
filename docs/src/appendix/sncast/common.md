@@ -4,8 +4,18 @@ These flags must be specified directly after the `sncast` command and before the
 ## `--profile, -p <PROFILE_NAME>`
 Optional.
 
-Used for both `snfoundry.toml` and `Scarb.toml` if specified.
-Defaults to `default` (`snfoundry.toml`) and `release` (`Scarb.toml`) in most contexts.
+Used for `snfoundry.toml`.
+
+Selects the `[sncast.<PROFILE_NAME>]` section in `snfoundry.toml` (local and/or global).
+
+Defaults to `default`.
+
+## `--scarb-profile <PROFILE_NAME>`
+Optional.
+
+Used for `scarb` and `Scarb.toml` uses, mainly for building contracts.
+
+Defaults to `release`.
 
 ## `--account, -a <ACCOUNT_NAME>`
 Optional.

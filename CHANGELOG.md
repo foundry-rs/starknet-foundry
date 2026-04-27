@@ -30,10 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Aliases `sncast get transaction` and `sncast get transaction-status` for `get tx` and `get tx-status`.
 - Support for serialization of corelib `Option` and `Result`, values passed via `--arguments`
 - `--dry-run` and `--detailed` flags for all transaction commands, allowing users to validate transaction logic and estimate fees without submitting to the network
+- Config setting for Scarb profile, as `scarb-profile` field in `snfoundry.toml`, and `--scarb-profile` cli flag
+
 
 #### Changed
 
 - In JSON output for `sncast utils` commands, the `"command"` field now includes the `utils` prefix (e.g. `"serialize"` -> `"utils serialize"`).
+- `--profile` now only determines `snfoundry.toml` profile. For Scarb profile, use `--scarb-profile` flag or `scarb-profile` from `snfoundry.toml` instead. Defaults to `release` if unspecified.
 
 #### Fixed
 

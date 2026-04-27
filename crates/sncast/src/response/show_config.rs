@@ -19,6 +19,7 @@ pub struct ShowConfigResponse {
     pub wait_retry_interval: Option<u64>,
     pub show_explorer_links: bool,
     pub block_explorer: Option<block_explorer::Service>,
+    pub scarb_profile: String,
 }
 
 impl SncastCommandMessage for ShowConfigResponse {
@@ -54,7 +55,8 @@ impl SncastCommandMessage for ShowConfigResponse {
             .field("Show Explorer Links", &self.show_explorer_links.to_string())
             .if_some(self.block_explorer.as_ref(), |b, explorer| {
                 b.field("Block Explorer", &format!("{explorer:?}"))
-            });
+            })
+            .field("Scarb Profile", &self.scarb_profile);
 
         builder.build()
     }

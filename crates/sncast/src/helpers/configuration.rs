@@ -98,6 +98,7 @@ pub struct CastConfig {
     pub block_explorer: Option<block_explorer::Service>,
     pub show_explorer_links: bool,
     pub networks: NetworksConfig,
+    pub scarb_profile: String,
 }
 
 impl CastConfig {
@@ -120,6 +121,7 @@ impl Default for CastConfig {
             block_explorer: Some(block_explorer::Service::default()),
             show_explorer_links: show_explorer_links_default(),
             networks: NetworksConfig::default(),
+            scarb_profile: "release".to_string(),
         }
     }
 }
@@ -163,6 +165,12 @@ pub struct PartialCastConfig {
     #[serde(default)]
     /// Configurable urls of predefined networks - mainnet, sepolia, and devnet are supported
     pub networks: Option<NetworksConfig>,
+
+    #[serde(
+        default,
+        rename(serialize = "scarb-profile", deserialize = "scarb-profile")
+    )]
+    pub scarb_profile: Option<String>,
 
     /// Additional data not captured by deserializer.
     #[doc(hidden)]
@@ -221,6 +229,7 @@ impl Override for PartialCastConfig {
             block_explorer: other.block_explorer.or(self.block_explorer),
             show_explorer_links: other.show_explorer_links.or(self.show_explorer_links),
             networks: override_optional(self.networks.clone(), other.networks),
+            scarb_profile: other.scarb_profile.or_else(|| self.scarb_profile.clone()),
             unknown_fields: HashMap::default(),
         }
     }
@@ -310,6 +319,7 @@ impl TryFrom<PartialCastConfig> for CastConfig {
             block_explorer: p.block_explorer.or(d.block_explorer),
             show_explorer_links: p.show_explorer_links.unwrap_or(d.show_explorer_links),
             networks,
+            scarb_profile: p.scarb_profile.unwrap_or(d.scarb_profile),
         };
         config.validate()?;
         Ok(config)

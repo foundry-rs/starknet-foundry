@@ -55,5 +55,6 @@ pub async fn show_config(
         wait_retry_interval: wait_retry_interval.map(|v| u64::from(v.get())),
         show_explorer_links: cast_config.show_explorer_links,
         block_explorer,
+        scarb_profile: cast_config.scarb_profile,
     })
 }
