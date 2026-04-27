@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - In JSON output for `sncast utils` commands, the `"command"` field now includes the `utils` prefix (e.g. `"serialize"` -> `"utils serialize"`).
 - Layering logic for `snfoundry.toml` configs. Read more [here](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#interaction-between-local-and-global-profiles).
   - `[sncast.default]` now always acts as base layer for other profiles in that file.
-  - Allows profiles defined only in global `snfoundry.toml` to be used in any context, regardless of local `snfoundry.toml` config being present or not.
+  - Allows profiles defined only in global `snfoundry.toml` to be used regardless of local `snfoundry.toml` config being present or not.
 - Improved `snfoundry.toml` config error reporting.
 - `--profile` now only determines `snfoundry.toml` profile. For Scarb profile, use `--scarb-profile` flag or `scarb-profile` from `snfoundry.toml` instead. Defaults to `release` if unspecified.
 
