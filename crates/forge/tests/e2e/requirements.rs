@@ -19,7 +19,7 @@ fn happy_path() {
     );
 }
 
-#[cfg(feature = "scarb_2_12_0")]
+#[cfg(feature = "scarb_2_13_1")]
 #[test]
 fn test_warning_on_scarb_version_below_recommended() {
     let temp = setup_package("simple_package");
