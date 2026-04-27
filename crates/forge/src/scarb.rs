@@ -36,7 +36,8 @@ pub fn load_package_config<T: Config + Default>(
         .cloned();
 
     match maybe_raw_metadata {
-        Some(raw_metadata) => configuration::core::load_config(raw_metadata, Profile::None),
+        Some(raw_metadata) => configuration::core::load_config(raw_metadata, Profile::None)
+            .map(|opt| opt.expect("failed to parse Scarb.toml")),
         None => Ok(T::default()),
     }
 }

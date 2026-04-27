@@ -1,4 +1,4 @@
-use crate::helpers::config::get_global_config_path;
+use crate::helpers::config::get_or_create_global_config_path;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use configuration::search_config_upwards_relative_to;
@@ -31,7 +31,7 @@ impl Display for PromptSelection {
 pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
     let mut options = Vec::new();
 
-    if let Ok(global_path) = get_global_config_path() {
+    if let Ok(global_path) = get_or_create_global_config_path() {
         options.push(PromptSelection::GlobalDefault(global_path));
     }
 

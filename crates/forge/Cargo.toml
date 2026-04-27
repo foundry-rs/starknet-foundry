@@ -37,7 +37,6 @@ regex.workspace = true
 serde_json.workspace = true
 serde.workspace = true
 starknet-rust.workspace = true
-reqwest.workspace = true
 num-bigint.workspace = true
 clap.workspace = true
 clap_complete.workspace = true

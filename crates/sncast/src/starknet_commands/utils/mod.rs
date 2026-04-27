@@ -56,7 +56,6 @@ pub async fn utils(
     config: CastConfig,
     ui: &UI,
     json: bool,
-    profile: String,
 ) -> anyhow::Result<ExitCode> {
     match utils.command {
         Commands::Serialize(serialize) => {
@@ -76,7 +75,7 @@ pub async fn utils(
                 &BuildConfig {
                     scarb_toml_path: manifest_path,
                     json,
-                    profile,
+                    profile: config.scarb_profile.clone(),
                 },
                 false,
                 // TODO(#3959) Remove `base_ui`
@@ -107,7 +106,7 @@ pub async fn utils(
                         &BuildConfig {
                             scarb_toml_path: manifest_path,
                             json,
-                            profile,
+                            profile: config.scarb_profile.clone(),
                         },
                         false,
                         // TODO(#3959) Remove `base_ui`

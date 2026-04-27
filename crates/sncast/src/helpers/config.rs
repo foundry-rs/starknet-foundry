@@ -1,23 +1,26 @@
 use crate::ValidatedWaitParams;
-use crate::helpers::configuration::{CastConfig, show_explorer_links_default};
+use crate::helpers::configuration::show_explorer_links_default;
 use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use indoc::formatdoc;
-use std::fs;
 use std::fs::File;
 use std::io::Write;
+use std::{env, fs};
 
-pub fn get_global_config_path() -> Result<Utf8PathBuf> {
-    let global_config_dir = {
-        if cfg!(target_os = "windows") {
-            dirs::config_dir()
-                .ok_or_else(|| anyhow::anyhow!("Could not determine config directory"))?
-                .join("starknet-foundry")
-        } else {
-            dirs::home_dir()
-                .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?
-                .join(".config/starknet-foundry")
+pub fn get_or_create_global_config_path() -> Result<Utf8PathBuf> {
+    let global_config_dir = match env::var("SNFOUNDRY_GLOBAL_CONFIG").ok() {
+        Some(dir) => Utf8PathBuf::from(shellexpand::tilde(&dir).to_string()).into_std_path_buf(),
+        None => {
+            if cfg!(target_os = "windows") {
+                dirs::config_dir()
+                    .ok_or_else(|| anyhow::anyhow!("Could not determine config directory"))?
+                    .join("starknet-foundry")
+            } else {
+                dirs::home_dir()
+                    .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?
+                    .join(".config/starknet-foundry")
+            }
         }
     };
 
@@ -58,8 +61,8 @@ fn build_default_manifest() -> String {
         # devnet = "http://127.0.0.1:5050/rpc"
         "#,
         default_accounts_file = DEFAULT_ACCOUNTS_FILE,
-        default_wait_timeout = default_wait_params.timeout,
-        default_wait_retry_interval = default_wait_params.retry_interval,
+        default_wait_timeout = default_wait_params.get_timeout(),
+        default_wait_retry_interval = default_wait_params.get_retry_interval(),
         default_block_explorer = "Voyager",
         default_show_explorer_links = show_explorer_links_default(),
     }
@@ -71,52 +74,42 @@ fn create_global_config(global_config_path: Utf8PathBuf) -> Result<()> {
 
     Ok(())
 }
-macro_rules! clone_field {
-    ($global_config:expr, $local_config:expr, $default_config:expr, $field:ident) => {
-        if $local_config.$field != $default_config.$field {
-            $local_config.$field.clone()
-        } else {
-            $global_config.$field.clone()
-        }
-    };
-}
 
-#[must_use]
-pub fn combine_cast_configs(global_config: &CastConfig, local_config: &CastConfig) -> CastConfig {
-    let default_cast_config = CastConfig::default();
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::helpers::configuration::PartialCastConfig;
+    use configuration::load_config;
+    use tempfile::tempdir;
 
-    let mut networks = global_config.networks.clone();
-    networks.override_with(&local_config.networks);
+    #[test]
+    fn build_default_manifest_produces_valid_config_when_uncommented() {
+        let manifest = build_default_manifest();
+        let lines: Vec<&str> = manifest.lines().collect();
+        assert_eq!(
+            lines[0],
+            "# Visit https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html"
+        );
+        assert_eq!(
+            lines[1],
+            "# and https://foundry-rs.github.io/starknet-foundry/projects/configuration.html for more information"
+        );
 
-    CastConfig {
-        url: clone_field!(global_config, local_config, default_cast_config, url),
-        network: clone_field!(global_config, local_config, default_cast_config, network),
-        account: clone_field!(global_config, local_config, default_cast_config, account),
-        accounts_file: clone_field!(
-            global_config,
-            local_config,
-            default_cast_config,
-            accounts_file
-        ),
-        keystore: clone_field!(global_config, local_config, default_cast_config, keystore),
-        wait_params: clone_field!(
-            global_config,
-            local_config,
-            default_cast_config,
-            wait_params
-        ),
-        block_explorer: clone_field!(
-            global_config,
-            local_config,
-            default_cast_config,
-            block_explorer
-        ),
-        show_explorer_links: clone_field!(
-            global_config,
-            local_config,
-            default_cast_config,
-            show_explorer_links
-        ),
-        networks,
+        let toml: String = lines
+            .into_iter()
+            .filter_map(|l| l.strip_prefix("# "))
+            // skip comments that are not part of the config
+            .filter(|l| l.starts_with('[') || l.contains('='))
+            // drop `url = ""`
+            .filter(|l| *l != "url = \"\"")
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        let t = tempdir().unwrap();
+        let path = Utf8PathBuf::try_from(t.path().join("snfoundry.toml")).unwrap();
+        fs::write(&path, toml).unwrap();
+
+        let config: PartialCastConfig = load_config(&path, None).unwrap().unwrap();
+        config.validate().unwrap();
     }
 }

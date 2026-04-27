@@ -1,0 +1,14 @@
+[sncast.default]
+url = "http://127.0.0.1:5055/rpc"
+accounts-file = "../global-account-file"
+account = "global_default_user"
+wait-params = { timeout = 120, retry-interval = 3 }
+
+[sncast.global_only_profile]
+wait-params = { timeout = 123, retry-interval = 5 }
+account = "global_profile_user"
+show-explorer-links = false
+
+[sncast.profile2]
+account = "global_profile2_user"
+block-explorer = "Voyager"

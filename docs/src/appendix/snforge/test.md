@@ -180,4 +180,5 @@ When enabled, sorts test result outputs by test name, for reproducible outputs.
 ## `--launch-debugger`
 
 Launch the given test in debug mode, making snforge act as a debug adapter.
-Read more [here](../../snforge-advanced-features/debugging.md#live-debugging).
+It is meant for communication with a [DAP](https://microsoft.github.io/debug-adapter-protocol/) client, not command line live debugging.
+Read more [here](../../snforge-advanced-features/debugging.md#live-debugging) and check out [Cairo Debugger documentation](https://docs.swmansion.com/cairo-debugger/).

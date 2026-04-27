@@ -16,6 +16,15 @@ pub enum Service {
 }
 
 impl Service {
+    pub fn validate_for_config(block_explorer: Option<Self>) -> anyhow::Result<()> {
+        if block_explorer.unwrap_or_default() == Self::StarkScan {
+            anyhow::bail!(
+                "starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice."
+            );
+        }
+        Ok(())
+    }
+
     pub fn as_provider(&self, network: Network) -> Result<Box<dyn LinkProvider>, ExplorerError> {
         match (self, network) {
             (Service::StarkScan, _) => unreachable!("Should be caught by config validation"),

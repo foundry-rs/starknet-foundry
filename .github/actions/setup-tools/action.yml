@@ -18,6 +18,18 @@ inputs:
     description: 'Whether to setup universal-sierra-compiler'
     required: false
     default: 'true'
+  setup-rust-cache:
+    description: 'Whether to restore/save the Rust build cache.'
+    required: false
+    default: 'true'
+  cache-key:
+    description: 'Custom name used in the rust cache filename. Jobs with different dependencies or feature sets should use separate names.'
+    required: false
+    default: 'default'
+  save-cache:
+    description: 'Whether to save the Rust build cache after the job. Set to true to persist the cache for future runs.'
+    required: false
+    default: 'false'
 
 runs:
   using: "composite"
@@ -25,6 +37,10 @@ runs:
     - uses: dtolnay/rust-toolchain@stable
 
     - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      if: ${{ inputs.setup-rust-cache == 'true' }}
+      with:
+        shared-key: ${{ inputs.cache-key }}
+        save-if: ${{ inputs.save-cache }}
 
     - uses: software-mansion/setup-scarb@v1
       if: ${{ inputs.setup-scarb == 'true' }}

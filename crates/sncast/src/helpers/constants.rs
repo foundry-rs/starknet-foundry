@@ -1,3 +1,5 @@
+use std::num::{NonZeroU8, NonZeroU16};
+
 use starknet_rust::macros::felt;
 use starknet_types_core::felt::Felt;
 
@@ -29,8 +31,8 @@ pub const BRAAVOS_BASE_ACCOUNT_CLASS_HASH: Felt =
     felt!("0x03d16c7a9a60b0593bd202f660a28c5d76e0403601d9ccc7e4fa253b6a70c201"); // v1.2.0
 
 // used in wait_for_tx. Txs will be fetched every 5s with timeout of 300s - so 60 attempts
-pub const WAIT_TIMEOUT: u16 = 300;
-pub const WAIT_RETRY_INTERVAL: u8 = 5;
+pub const WAIT_TIMEOUT: NonZeroU16 = NonZeroU16::new(300).unwrap();
+pub const WAIT_RETRY_INTERVAL: NonZeroU8 = NonZeroU8::new(5).unwrap();
 
 pub const DEFAULT_ACCOUNTS_FILE: &str = "~/.starknet_accounts/starknet_open_zeppelin_accounts.json";
 

@@ -338,9 +338,9 @@ pub async fn test_happy_case_add_profile(rpc_flag: &str, rpc_value: &str) {
         .expect("Unable to read snfoundry.toml");
     let expected_lines = [
         "[sncast.my_account_import]",
+        &format!("{} = \"{}\"", rpc_flag.trim_start_matches("--"), rpc_value),
         "account = \"my_account_import\"",
         "accounts-file = \"accounts.json\"",
-        &format!("{} = \"{}\"", rpc_flag.trim_start_matches("--"), rpc_value),
     ];
     let expected_block = expected_lines.join("\n");
 
@@ -863,7 +863,7 @@ pub async fn test_happy_case_default_name_generation() {
 
 #[tokio::test]
 pub async fn test_use_url_from_config() {
-    let temp_dir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let temp_dir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let accounts_file = "accounts.json";
     let args = vec![
         "--accounts-file",
