@@ -153,9 +153,7 @@ fn get_contract_id(contracts_data: &ContractsDataStore, class_hash: ClassHash) -
 fn get_selector(contracts_data: &ContractsDataStore, selector: EntryPointSelector) -> Selector {
     contracts_data
         .get_selector(&selector)
-        .expect("`Selector` should be present")
-        .0
-        .clone()
+        .map_or_else(|| format!("{:#x}", selector.0), |s| s.0.clone())
 }
 
 pub fn format_table_output(contract_info: &ContractInfo, contract_id: &ContractId) -> Table {
