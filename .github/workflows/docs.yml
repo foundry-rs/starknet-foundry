@@ -35,10 +35,10 @@ jobs:
       MDBOOK_VARIABLES_VERSION: 0.3.0
     steps:
       - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@0b1efabc08b657293548b77fb76cc02d26091c7e
+      - uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4
       - uses: actions/setup-node@v6
       - name: Install sitemap CLI
         run: |
@@ -62,7 +62,7 @@ jobs:
         working-directory: ./sncast_std
       - name: Setup Pages
         id: pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Build with mdBook
         run: mdbook build
         working-directory: ./docs
@@ -79,7 +79,7 @@ jobs:
           sscli --base https://foundry-rs.github.io/starknet-foundry
         working-directory: ./docs/book/html
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ./docs/book/html
   # Deployment job
@@ -92,4 +92,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
