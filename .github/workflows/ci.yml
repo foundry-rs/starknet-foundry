@@ -185,10 +185,14 @@ jobs:
 
       - name: Install cairo-profiler
         run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/cairo-profiler/main/scripts/install.sh | sh
+          set -euo pipefail
+          curl -sSL --fail --retry 5 --retry-all-errors --connect-timeout 10 -H "Authorization: Bearer ${{ github.token }}" https://raw.githubusercontent.com/software-mansion/cairo-profiler/main/scripts/install.sh | sh
+          cairo-profiler --version
       - name: Install cairo-coverage
         run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
+          set -euo pipefail
+          curl -sSL --fail --retry 5 --retry-all-errors --connect-timeout 10 -H "Authorization: Bearer ${{ github.token }}" https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
+          cairo-coverage --version
 
       - uses: actions/checkout@v6
       - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
@@ -235,10 +239,14 @@ jobs:
 
       - name: Install cairo-profiler
         run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/cairo-profiler/main/scripts/install.sh | sh
+          set -euo pipefail
+          curl -sSL --fail --retry 5 --retry-all-errors --connect-timeout 10 -H "Authorization: Bearer ${{ github.token }}" https://raw.githubusercontent.com/software-mansion/cairo-profiler/main/scripts/install.sh | sh
+          cairo-profiler --version
       - name: Install cairo-coverage
         run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
+          set -euo pipefail
+          curl -sSL --fail --retry 5 --retry-all-errors --connect-timeout 10 -H "Authorization: Bearer ${{ github.token }}" https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
+          cairo-coverage --version
 
       - uses: actions/checkout@v6
       - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
@@ -287,10 +295,14 @@ jobs:
 
       - name: Install cairo-profiler
         run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/cairo-profiler/main/scripts/install.sh | sh
+          set -euo pipefail
+          curl -sSL --fail --retry 5 --retry-all-errors --connect-timeout 10 -H "Authorization: Bearer ${{ github.token }}" https://raw.githubusercontent.com/software-mansion/cairo-profiler/main/scripts/install.sh | sh
+          cairo-profiler --version
       - name: Install cairo-coverage
         run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
+          set -euo pipefail
+          curl -sSL --fail --retry 5 --retry-all-errors --connect-timeout 10 -H "Authorization: Bearer ${{ github.token }}" https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
+          cairo-coverage --version
 
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-tools
