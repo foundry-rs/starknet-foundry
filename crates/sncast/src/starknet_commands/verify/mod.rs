@@ -101,6 +101,47 @@ async fn resolve_verification_network(
         })
 }
 
+fn resolve_contract_identifier(
+    class_hash: Option<Felt>,
+    contract_address: Option<Felt>,
+) -> ContractIdentifier {
+    match (class_hash, contract_address) {
+        (Some(class_hash), None) => ContractIdentifier::ClassHash {
+            class_hash: class_hash.to_fixed_hex_string(),
+        },
+        (None, Some(contract_address)) => ContractIdentifier::Address {
+            contract_address: contract_address.to_fixed_hex_string(),
+        },
+        _ => unreachable!("Exactly one of class_hash or contract_address must be provided."),
+    }
+}
+
+fn build_and_validate_contract(
+    package: &PackageMetadata,
+    json: bool,
+    contract_name: &str,
+    ui: &UI,
+) -> Result<()> {
+    let artifacts = build_and_load_artifacts(
+        package,
+        &BuildConfig {
+            scarb_toml_path: package.manifest_path.clone(),
+            json,
+            profile: "release".to_string(),
+        },
+        false,
+        // TODO(#3959) Remove `base_ui`
+        ui.base_ui(),
+    )
+    .context("Failed to build contract")?;
+
+    if !artifacts.contains_key(contract_name) {
+        bail!("Contract named '{contract_name}' was not found");
+    }
+
+    Ok(())
+}
+
 fn display_files_and_confirm(
     verifier: &Verifier,
     files_to_display: Vec<String>,
@@ -164,46 +205,17 @@ pub async fn verify(
     };
     let provider = get_provider(&rpc_url)?;
 
-    // Build JSON Payload for the verification request
-    // get the parent dir of the manifest path
     let workspace_dir = package
         .manifest_path
         .parent()
         .ok_or(anyhow!("Failed to obtain workspace dir"))?;
 
-    let contract_identifier = match (class_hash, contract_address) {
-        (Some(class_hash), None) => ContractIdentifier::ClassHash {
-            class_hash: class_hash.to_fixed_hex_string(),
-        },
-        (None, Some(contract_address)) => ContractIdentifier::Address {
-            contract_address: contract_address.to_fixed_hex_string(),
-        },
-
-        _ => {
-            unreachable!("Exactly one of class_hash or contract_address must be provided.");
-        }
-    };
+    let contract_identifier = resolve_contract_identifier(class_hash, contract_address);
 
     let network =
         resolve_verification_network(network, config.network_params.network(), &provider).await?;
 
-    // Compilation is done as part of the validation and to check that the contract exists.
-    let artifacts = build_and_load_artifacts(
-        package,
-        &BuildConfig {
-            scarb_toml_path: package.manifest_path.clone(),
-            json,
-            profile: "release".to_string(),
-        },
-        false,
-        // TODO(#3959) Remove `base_ui`
-        ui.base_ui(),
-    )
-    .context("Failed to build contract")?;
-
-    if !artifacts.contains_key(&contract_name) {
-        bail!("Contract named '{contract_name}' was not found");
-    }
+    build_and_validate_contract(package, json, &contract_name, ui)?;
 
     // Handle test_files warning for Walnut
     if matches!(verifier, Verifier::Walnut) && test_files {
