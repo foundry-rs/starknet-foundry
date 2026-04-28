@@ -167,41 +167,16 @@ pub(crate) async fn deploy_ledger_account_of_type(
 pub(crate) mod automation {
     use super::*;
 
+    // Screen flow: "Public Key (1/2)" -> Right -> "Public Key (2/2)" -> Right -> "Approve" -> Both
+    // Trigger fires on the "Approve" confirm page; a single Both press confirms.
     pub(crate) const APPROVE_PUBLIC_KEY: AutomationRule<'static> = AutomationRule {
-        text: Some(Cow::Borrowed("Confirm Public Key")),
+        text: Some(Cow::Borrowed("Approve")),
         regexp: None,
         x: None,
         y: None,
         conditions: &[],
         actions: &[
-            // Press right
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Press right
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Press right
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Press both
+            // Press both (confirm)
             AutomationAction::Button {
                 button: Button::Left,
                 pressed: true,
@@ -221,6 +196,8 @@ pub(crate) mod automation {
         ],
     };
 
+    // Screen flow from home "Starknet": Right -> "App settings" -> Both -> settings list ->
+    // Both -> blind signing toggled on.
     pub(crate) const ENABLE_BLIND_SIGN: AutomationRule<'static> = AutomationRule {
         text: None,
         regexp: Some(Cow::Borrowed("^(S)?tarknet$")),
@@ -231,7 +208,7 @@ pub(crate) mod automation {
             value: false,
         }],
         actions: &[
-            // Right
+            // Right (navigate to "App settings")
             AutomationAction::Button {
                 button: Button::Right,
                 pressed: true,
@@ -240,16 +217,7 @@ pub(crate) mod automation {
                 button: Button::Right,
                 pressed: false,
             },
-            // Right
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Both
+            // Both (enter settings)
             AutomationAction::Button {
                 button: Button::Left,
                 pressed: true,
@@ -266,7 +234,7 @@ pub(crate) mod automation {
                 button: Button::Right,
                 pressed: false,
             },
-            // Both
+            // Both (toggle blind signing on)
             AutomationAction::Button {
                 button: Button::Left,
                 pressed: true,
@@ -281,15 +249,6 @@ pub(crate) mod automation {
             },
             AutomationAction::Button {
                 button: Button::Right,
-                pressed: false,
-            },
-            // Left
-            AutomationAction::Button {
-                button: Button::Left,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Left,
                 pressed: false,
             },
             // Mark as done
@@ -300,10 +259,12 @@ pub(crate) mod automation {
         ],
     };
 
+    // Screen flow: "Blind signing ahead." -> Both -> "Review hash" -> Right -> "Hash (1/2)" ->
+    // Right -> "Hash (2/2)" -> Right -> "Sign Hash ?" -> Both -> "Message signed"
     /// Must be used with [`ENABLE_BLIND_SIGN`].
     pub(crate) const APPROVE_BLIND_SIGN_HASH: AutomationRule<'static> = AutomationRule {
         text: None,
-        regexp: Some(Cow::Borrowed("^Cancel$")),
+        regexp: Some(Cow::Borrowed("^Blind signing ahead")),
         x: None,
         y: None,
         conditions: &[AutomationCondition {
@@ -311,16 +272,7 @@ pub(crate) mod automation {
             value: true,
         }],
         actions: &[
-            // Right
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Both
+            // Both (accept "Blind signing ahead" warning)
             AutomationAction::Button {
                 button: Button::Left,
                 pressed: true,
@@ -337,7 +289,7 @@ pub(crate) mod automation {
                 button: Button::Right,
                 pressed: false,
             },
-            // Right
+            // Right (to "Hash (1/2)")
             AutomationAction::Button {
                 button: Button::Right,
                 pressed: true,
@@ -346,7 +298,7 @@ pub(crate) mod automation {
                 button: Button::Right,
                 pressed: false,
             },
-            // Right
+            // Right (to "Hash (2/2)")
             AutomationAction::Button {
                 button: Button::Right,
                 pressed: true,
@@ -355,7 +307,7 @@ pub(crate) mod automation {
                 button: Button::Right,
                 pressed: false,
             },
-            // Right
+            // Right (to "Sign Hash ?")
             AutomationAction::Button {
                 button: Button::Right,
                 pressed: true,
@@ -364,7 +316,7 @@ pub(crate) mod automation {
                 button: Button::Right,
                 pressed: false,
             },
-            // Both
+            // Both (confirm)
             AutomationAction::Button {
                 button: Button::Left,
                 pressed: true,
