@@ -117,6 +117,22 @@ fn debugging_trace_minimal_fork() {
 }
 
 #[test]
+fn debugging_trace_no_abi() {
+    let temp = setup_package("debugging_no_abi");
+
+    let output = test_runner(&temp)
+        .arg("--trace-verbosity")
+        .arg("standard")
+        .assert()
+        .code(0);
+
+    assert_stdout_contains(
+        output,
+        test_output(standard_debugging_trace_no_abi, "debugging_no_abi"),
+    );
+}
+
+#[test]
 fn debugging_double_flags() {
     let temp = setup_package("debugging");
 
@@ -407,5 +423,15 @@ fn custom_output_trace_message(test_name: &str, package_name: &str) -> String {
            ├─ [contract name] SimpleContract
            ├─ [call type] Call
            └─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
+        "}
+}
+
+fn standard_debugging_trace_no_abi(test_name: &str, package_name: &str) -> String {
+    formatdoc! {r"
+        [test name] {package_name}_integrationtest::test_trace::{test_name}
+        └─ [selector] 0x32564d7e0fe091d49b4c20f4632191e4ed6986bf993849879abfef9465def25
+           ├─ [contract name] FailingContract
+           ├─ [calldata] 0x0
+           └─ [call result] success
         "}
 }
