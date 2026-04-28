@@ -128,7 +128,22 @@ fn debugging_trace_no_abi() {
 
     assert_stdout_contains(
         output,
-        test_output(standard_debugging_trace_no_abi, "debugging_no_abi"),
+        formatdoc! {r"
+            [..]Compiling[..]
+            [..]Finished[..]
+
+            Collected 1 test(s) from debugging_no_abi package
+            Running 0 test(s) from src/
+            Running 1 test(s) from tests/
+            [PASS] debugging_no_abi_integrationtest::test_trace::test_nested_safe_call_no_abi (l1_gas: ~0, l1_data_gas: ~[..], l2_gas: ~[..])
+            [test name] debugging_no_abi_integrationtest::test_trace::test_nested_safe_call_no_abi
+            └─ [selector] 0x32564d7e0fe091d49b4c20f4632191e4ed6986bf993849879abfef9465def25
+               ├─ [contract name] CallerContract
+               ├─ [calldata] 0x0
+               └─ [call result] success
+
+            Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out"
+        },
     );
 }
 
@@ -423,15 +438,5 @@ fn custom_output_trace_message(test_name: &str, package_name: &str) -> String {
            ├─ [contract name] SimpleContract
            ├─ [call type] Call
            └─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
-        "}
-}
-
-fn standard_debugging_trace_no_abi(test_name: &str, package_name: &str) -> String {
-    formatdoc! {r"
-        [test name] {package_name}_integrationtest::test_trace::{test_name}
-        └─ [selector] 0x32564d7e0fe091d49b4c20f4632191e4ed6986bf993849879abfef9465def25
-           ├─ [contract name] FailingContract
-           ├─ [calldata] 0x0
-           └─ [call result] success
         "}
 }
