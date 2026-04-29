@@ -44,12 +44,16 @@ Optional.
 
 Starknet RPC node url address of the source network where the contract is already declared.
 
+Can only be used with `--class-hash`.
+
 ## `--source-network <NETWORK>`
 Optional.
 
 Use predefined network with public provider where the contract is already declared.
 
 Possible values: `mainnet`, `sepolia`, `devnet`.
+
+Can only be used with `--class-hash`.
 
 ## `--max-fee, -m <MAX_FEE>`
 Optional.
@@ -120,9 +124,13 @@ Optional.
 
 If passed, omits ABI from the declared class. This changes the resulting class hash.
 
+Can only be used with `--sierra-file`.
+
 ## `--block-id, -b <BLOCK_ID>`
 Optional.
 
 Block identifier on which class of declared contract should be fetched.
 Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string), and block number (u64).
 `latest` is used as a default value.
+
+Can only be used with `--class-hash`.
