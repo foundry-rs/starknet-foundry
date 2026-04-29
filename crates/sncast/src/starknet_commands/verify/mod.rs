@@ -119,6 +119,7 @@ fn resolve_contract_identifier(
 fn build_and_validate_contract(
     package: &PackageMetadata,
     json: bool,
+    profile: String,
     contract_name: &str,
     ui: &UI,
 ) -> Result<()> {
@@ -127,7 +128,7 @@ fn build_and_validate_contract(
         &BuildConfig {
             scarb_toml_path: package.manifest_path.clone(),
             json,
-            profile: "release".to_string(),
+            profile,
         },
         false,
         // TODO(#3959) Remove `base_ui`
@@ -215,7 +216,13 @@ pub async fn verify(
     let network =
         resolve_verification_network(network, config.network_params.network(), &provider).await?;
 
-    build_and_validate_contract(package, json, &contract_name, ui)?;
+    build_and_validate_contract(
+        package,
+        json,
+        config.scarb_profile.clone(),
+        &contract_name,
+        ui,
+    )?;
 
     // Handle test_files warning for Walnut
     if matches!(verifier, Verifier::Walnut) && test_files {
