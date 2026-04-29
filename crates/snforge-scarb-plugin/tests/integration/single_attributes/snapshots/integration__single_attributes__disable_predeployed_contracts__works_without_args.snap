@@ -1,0 +1,13 @@
+---
+source: tests/integration/single_attributes/disable_predeployed_contracts.rs
+expression: format_output(&result)
+---
+fn empty_fn() {
+    if snforge_std::_internals::is_config_run() {
+        let mut data = array![];
+        snforge_std::_internals::config_types::PredeployedContractsConfig { is_disabled: true }
+            .serialize(ref data);
+        starknet::testing::cheatcode::<'set_config_disable_contracts'>(data.span());
+        return;
+    }
+}

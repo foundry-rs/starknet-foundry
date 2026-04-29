@@ -1,4 +1,4 @@
-use crate::utils::{assert_diagnostics, assert_output, empty_function};
+use crate::utils::{assert_diagnostics, empty_function, format_output};
 use cairo_lang_macro::{Diagnostic, TokenStream, quote};
 use snforge_scarb_plugin::attributes::test_case::test_case;
 
@@ -16,26 +16,7 @@ fn works_with_args() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
-            #[snforge_internal_test_executable]
-            fn test_add_1_2_3(mut _data: Span<felt252>) -> Span<felt252> {
-                core::internal::require_implicit::<System>();
-                core::internal::revoke_ap_tracking();
-                core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
-                core::option::OptionTraitImpl::expect(
-                    core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
-                );
-                test_add(1, 2, 3);
-                let mut arr = ArrayTrait::new();
-                core::array::ArrayTrait::span(@arr)
-            }
-            #[__internal_config_statement]
-            fn test_add(x: i128, y: i128, expected: i128) {}
-        ",
-    );
+    insta::assert_snapshot!(format_output(&result));
 }
 
 #[test]
@@ -46,26 +27,7 @@ fn works_with_name_and_args() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
-            #[snforge_internal_test_executable]
-            fn test_add_one_and_two(mut _data: Span<felt252>) -> Span<felt252> {
-                core::internal::require_implicit::<System>();
-                core::internal::revoke_ap_tracking();
-                core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
-                core::option::OptionTraitImpl::expect(
-                    core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
-                );
-                test_add(1, 2, 3);
-                let mut arr = ArrayTrait::new();
-                core::array::ArrayTrait::span(@arr)
-            }
-            #[__internal_config_statement]
-            fn test_add(x: i128, y: i128, expected: i128) {}
-        ",
-    );
+    insta::assert_snapshot!(format_output(&result));
 }
 
 #[test]

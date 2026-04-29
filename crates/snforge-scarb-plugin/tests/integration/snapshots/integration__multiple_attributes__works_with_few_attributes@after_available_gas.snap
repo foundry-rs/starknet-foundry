@@ -1,0 +1,15 @@
+---
+source: tests/integration/multiple_attributes.rs
+expression: format_output(&result)
+---
+fn empty_fn() {
+    if snforge_std::_internals::is_config_run() {
+        let mut data = array![];
+        snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
+            l1_gas: 0x1, l1_data_gas: 0x2, l2_gas: 0x3,
+        }
+            .serialize(ref data);
+        starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
+        return;
+    }
+}

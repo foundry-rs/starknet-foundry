@@ -41,21 +41,10 @@ pub fn assert_diagnostics(result: &ProcMacroResult, expected: &[Diagnostic]) {
     );
 }
 
-// Before asserting output token, format both strings with `CairoFormatter` and normalize by removing newlines
-pub fn assert_output(result: &ProcMacroResult, expected: &str) {
+pub fn format_output(result: &ProcMacroResult) -> String {
     let fmt = CairoFormatter::new(FormatterConfig::default());
-    let format_and_normalize_code = |code: String| -> String {
-        fmt.format_to_string(&code)
-            .unwrap_or_else(|_| panic!("Failed to format provided code: {code}"))
-            .into_output_text()
-            .replace('\n', "")
-            .trim()
-            .to_string()
-    };
-
-    assert_eq!(
-        format_and_normalize_code(result.token_stream.to_string()),
-        format_and_normalize_code(expected.to_string()),
-        "Invalid code generated"
-    );
+    let code = result.token_stream.to_string();
+    fmt.format_to_string(&code)
+        .unwrap_or_else(|_| panic!("Failed to format provided code: {code}"))
+        .into_output_text()
 }
