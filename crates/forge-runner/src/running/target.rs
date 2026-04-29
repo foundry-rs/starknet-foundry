@@ -45,13 +45,10 @@ pub fn prepare_test_target(
         TestNameSelection::ExactMatch(exact_match) => Some(
             executables
                 .iter()
-                .filter(|case| {
-                    let name: String = case
-                        .debug_name
-                        .clone()
-                        .expect("Failed to get test case name")
-                        .into();
-                    sanitize_test_case_name(&name) == exact_match
+                .filter_map(|case| {
+                    let raw_name: String = case.debug_name.clone()?.into();
+                    (sanitize_test_case_name(&raw_name) == exact_match)
+                        .then_some((&case.id, raw_name))
                 })
                 .collect::<Vec<_>>(),
         ),
@@ -84,13 +81,10 @@ pub fn prepare_test_target(
     let test_cases = if let Some(exact_matches) = selected_test_cases {
         exact_matches
             .into_par_iter()
-            .map(|case| {
+            .map(|(id, name)| {
                 build_test_case_with_config(
-                    funcs[&case.id],
-                    case.debug_name
-                        .clone()
-                        .expect("Failed to get test case name")
-                        .into(),
+                    funcs[id],
+                    name,
                     &type_declarations,
                     &casm_program,
                     *tracked_resource,
