@@ -113,6 +113,8 @@ Calldata: [0x24, 0x60]
 * `bytes31`
 * `Array` - using `array![]` macro
 * `Span` - using `array![].span()` macro and function call
+* `Option` - using `Option::Some(value)` or `Option::None`
+* `Result` - using `Result::Ok(value)` or `Result::Err(value)`
 
 Numeric types (primitives and `felt252`) can be paseed with type suffix specified for example `--arguments 420_u64`.
 

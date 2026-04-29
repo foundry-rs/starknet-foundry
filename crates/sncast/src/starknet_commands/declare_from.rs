@@ -158,6 +158,7 @@ where
         sierra,
         casm,
         &common_args.fee_args,
+        &common_args.dry_run_args,
         common_args.nonce,
         common_args.no_abi,
         account,

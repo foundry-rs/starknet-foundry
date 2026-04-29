@@ -28,8 +28,9 @@ pub async fn show_config(
         None
     };
 
-    let rpc_url = show.rpc.url.clone().or(cast_config.url);
-    let network = show.rpc.network.or(cast_config.network);
+    let effective_network_params = show.rpc.get_network_params(&cast_config)?;
+    let rpc_url = effective_network_params.url().cloned();
+    let network = effective_network_params.network();
 
     let account = Some(cast_config.account).filter(|p| !p.is_empty());
     let mut accounts_file_path =
@@ -50,9 +51,10 @@ pub async fn show_config(
         account,
         accounts_file_path,
         keystore,
-        wait_timeout: wait_timeout.map(u64::from),
-        wait_retry_interval: wait_retry_interval.map(u64::from),
+        wait_timeout: wait_timeout.map(|v| u64::from(v.get())),
+        wait_retry_interval: wait_retry_interval.map(|v| u64::from(v.get())),
         show_explorer_links: cast_config.show_explorer_links,
         block_explorer,
+        scarb_profile: cast_config.scarb_profile,
     })
 }

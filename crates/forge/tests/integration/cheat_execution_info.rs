@@ -591,6 +591,8 @@ fn cheat_transaction_hash_with_span() {
             use array::SpanTrait;
             use snforge_std::{ test_address, declare, ContractClassTrait, DeclareResultTrait, cheat_transaction_hash, stop_cheat_transaction_hash, CheatSpan };
             use starknet::info::v2::ResourceBounds;
+            use starknet::syscalls::get_execution_info_v2_syscall;
+            use starknet::SyscallResultTrait;
 
             #[starknet::interface]
             trait ICheatTxInfoChecker<TContractState> {
@@ -659,19 +661,19 @@ fn cheat_transaction_hash_with_span() {
 
             #[test]
             fn test_cheat_transaction_hash_test_address() {
-                let tx_info_before = starknet::get_tx_info().unbox();
+                let tx_info_before = get_execution_info_v2_syscall().unwrap_syscall().unbox().tx_info.unbox();
 
                 cheat_transaction_hash(test_address(), 421,CheatSpan::TargetCalls(1) );
 
                 let mut expected_tx_info = tx_info_before;
                 expected_tx_info.transaction_hash = 421;
 
-                let tx_info = starknet::get_tx_info().unbox();
+                let tx_info = get_execution_info_v2_syscall().unwrap_syscall().unbox().tx_info.unbox();
                 assert_tx_info(tx_info, expected_tx_info);
 
                 stop_cheat_transaction_hash(test_address());
 
-                let tx_info = starknet::get_tx_info().unbox();
+                let tx_info = get_execution_info_v2_syscall().unwrap_syscall().unbox().tx_info.unbox();
                 assert_tx_info(tx_info, tx_info_before);
             }
         "#

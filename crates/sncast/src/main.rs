@@ -1,3 +1,4 @@
+use std::num::{NonZeroU8, NonZeroU16};
 use std::str::FromStr;
 
 use crate::starknet_commands::declare::declare;
@@ -17,16 +18,17 @@ use crate::starknet_commands::{get, multicall};
 use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
-use configuration::load_config;
+use configuration::{Override, find_config_file};
 use conversions::IntoConv;
 use data_transformer::transform;
 use foundry_ui::components::warning::WarningMessage;
 use mimalloc::MiMalloc;
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::command::process_command_result;
-use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
-use sncast::helpers::configuration::CastConfig;
-use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
+use sncast::helpers::config::get_or_create_global_config_path;
+use sncast::helpers::configuration::{
+    CastConfig, CliConfigOpts, ConfigScope, MaybeConfig, PartialCastConfig,
+};
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
@@ -41,7 +43,7 @@ use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transformed_call::transform_response;
 use sncast::response::ui::UI;
 use sncast::{
-    ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
+    PartialWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
     get_contract_class, with_account,
 };
 use starknet_commands::ledger::{self, Ledger};
@@ -51,6 +53,7 @@ use starknet_rust::core::types::contract::{AbiEntry, SierraClass};
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_rust::providers::Provider;
 use starknet_types_core::felt::Felt;
+use std::process::ExitCode;
 use tokio::runtime::Runtime;
 
 mod starknet_commands;
@@ -109,6 +112,10 @@ struct Cli {
     #[arg(short, long)]
     keystore: Option<Utf8PathBuf>,
 
+    /// Scarb profile for building contracts (e.g. release, dev)
+    #[arg(long)]
+    scarb_profile: Option<String>,
+
     /// If passed, output will be displayed in json format
     #[arg(short, long)]
     json: bool,
@@ -119,11 +126,11 @@ struct Cli {
 
     /// Adjusts the time after which --wait assumes transaction was not received or rejected
     #[arg(long)]
-    wait_timeout: Option<u16>,
+    wait_timeout: Option<NonZeroU16>,
 
     /// Adjusts the time between consecutive attempts to fetch transaction by --wait flag
     #[arg(long)]
-    wait_retry_interval: Option<u8>,
+    wait_retry_interval: Option<NonZeroU8>,
 
     #[command(subcommand)]
     command: Commands,
@@ -150,6 +157,23 @@ impl Cli {
             Commands::Ledger(_) => "ledger",
         }
         .to_string()
+    }
+
+    /// Prepares and validates [`PartialCastConfig`] from CLI args.
+    pub fn to_partial_config(&self) -> Result<PartialCastConfig> {
+        let config = PartialCastConfig {
+            account: self.account.clone(),
+            keystore: self.keystore.clone(),
+            accounts_file: self.accounts_file_path.clone(),
+            wait_params: Some(PartialWaitParams {
+                timeout: self.wait_timeout,
+                retry_interval: self.wait_retry_interval,
+            }),
+            scarb_profile: self.scarb_profile.clone(),
+            ..Default::default()
+        };
+        config.validate()?;
+        Ok(config)
     }
 }
 
@@ -284,7 +308,7 @@ fn init_logging() {
         .expect("could not set up global logger");
 }
 
-fn main() -> Result<()> {
+fn main() -> Result<ExitCode> {
     init_logging();
 
     let cli = Cli::parse();
@@ -304,7 +328,7 @@ fn main() -> Result<()> {
 }
 
 #[expect(clippy::too_many_lines)]
-async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> {
+async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<ExitCode> {
     let wait_config = WaitForTx {
         wait: cli.wait,
         wait_params: config.wait_params,
@@ -325,7 +349,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 &BuildConfig {
                     scarb_toml_path: manifest_path,
                     json: cli.json,
-                    profile: cli.profile.unwrap_or("release".to_string()),
+                    profile: config.scarb_profile.clone(),
                 },
                 false,
                 // TODO(#3959) Remove `base_ui`
@@ -337,6 +361,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 starknet_commands::declare::declare(
                     declare.contract_name.clone(),
                     declare.common.fee_args,
+                    declare.common.dry_run_args,
                     declare.common.nonce,
                     declare.common.no_abi,
                     account,
@@ -346,16 +371,20 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     ui,
                 )
                 .await
-            })
-            .map_err(handle_starknet_command_error)
-            .map(|result| match result {
-                DeclareResponse::Success(declare_transaction_response) => {
-                    declare_transaction_response
+            });
+
+            let result = match result {
+                Ok(DeclareResponse::DryRun(response)) => {
+                    return Ok(process_command_result("declare", Ok(response), ui, None));
                 }
-                DeclareResponse::AlreadyDeclared(_) => {
+                Ok(DeclareResponse::Success(declare_transaction_response)) => {
+                    Ok(declare_transaction_response)
+                }
+                Ok(DeclareResponse::AlreadyDeclared(_)) => {
                     unreachable!("Argument `skip_on_already_declared` is false")
                 }
-            });
+                Err(err) => Err(handle_starknet_command_error(err)),
+            };
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
@@ -381,13 +410,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 None
             };
 
-            process_command_result("declare", result, ui, block_explorer_link);
+            let exit_code = process_command_result("declare", result, ui, block_explorer_link);
 
             if let Some(deploy_command_message) = deploy_command_message {
                 ui.print_notification(deploy_command_message?);
             }
 
-            Ok(())
+            Ok(exit_code)
         }
 
         Commands::DeclareFrom(declare_from) => {
@@ -425,22 +454,29 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     ui,
                 )
                 .await
-            })
-            .map_err(handle_starknet_command_error)
-            .map(|result| match result {
-                DeclareResponse::Success(declare_transaction_response) => {
-                    declare_transaction_response
+            });
+
+            let result = match result {
+                Ok(DeclareResponse::DryRun(response)) => {
+                    return Ok(process_command_result("declare", Ok(response), ui, None));
                 }
-                DeclareResponse::AlreadyDeclared(_) => {
+                Ok(DeclareResponse::Success(declare_transaction_response)) => {
+                    Ok(declare_transaction_response)
+                }
+                Ok(DeclareResponse::AlreadyDeclared(_)) => {
                     unreachable!("Argument `skip_on_already_declared` is false")
                 }
-            });
+                Err(err) => Err(handle_starknet_command_error(err)),
+            };
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
-            process_command_result("declare-from", result, ui, block_explorer_link);
-
-            Ok(())
+            Ok(process_command_result(
+                "declare-from",
+                result,
+                ui,
+                block_explorer_link,
+            ))
         }
 
         Commands::Deploy(deploy) => {
@@ -454,10 +490,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         contract_identifier: identifier,
                         arguments,
                         package,
-                        salt,
-                        unique,
+                        ..
                     },
                 fee_args,
+                dry_run_args,
                 rpc,
                 mut nonce,
                 no_abi,
@@ -478,7 +514,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     &BuildConfig {
                         scarb_toml_path: manifest_path,
                         json: cli.json,
-                        profile: cli.profile.unwrap_or("release".to_string()),
+                        profile: config.scarb_profile.clone(),
                     },
                     false,
                     // TODO(#3959) Remove `base_ui`
@@ -489,7 +525,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 let declare_result = with_account!(&account, |account| {
                     declare(
                         contract_name,
-                        fee_args.clone(),
+                        fee_args,
+                        dry_run_args,
                         nonce,
                         no_abi,
                         account,
@@ -517,16 +554,20 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         declare_transaction_response.class_hash.into_(),
                         Some(declare_transaction_response),
                     ),
+                    Ok(DeclareResponse::DryRun(_)) => {
+                        unreachable!(
+                            "Declaration run by deploy command should not return dry run response"
+                        )
+                    }
                     Err(err) => {
                         // TODO(#3960) This will return json output saying that `deploy` command was run
                         //  even though the invoked command was declare.
-                        process_command_result::<DeclareTransactionResponse>(
+                        return Ok(process_command_result::<DeclareTransactionResponse>(
                             "deploy",
                             Err(err),
                             ui,
                             None,
-                        );
-                        return Ok(());
+                        ));
                     }
                 }
             } else {
@@ -545,9 +586,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 starknet_commands::deploy::deploy(
                     class_hash,
                     &calldata,
-                    salt,
-                    unique,
+                    deploy.common.salt,
+                    deploy.common.unique,
                     fee_args,
+                    dry_run_args,
                     nonce,
                     account,
                     wait_config,
@@ -570,9 +612,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
-            process_command_result("deploy", result, ui, block_explorer_link);
-
-            Ok(())
+            Ok(process_command_result(
+                "deploy",
+                result,
+                ui,
+                block_explorer_link,
+            ))
         }
 
         Commands::Call(Call {
@@ -606,12 +651,15 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             if let Some(transformed_result) =
                 transform_response(&result, &contract_class, &selector)
             {
-                process_command_result("call", Ok(transformed_result), ui, None);
+                Ok(process_command_result(
+                    "call",
+                    Ok(transformed_result),
+                    ui,
+                    None,
+                ))
             } else {
-                process_command_result("call", result, ui, None);
+                Ok(process_command_result("call", result, ui, None))
             }
-
-            Ok(())
         }
 
         Commands::Invoke(invoke) => {
@@ -623,6 +671,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         arguments,
                     },
                 fee_args,
+                dry_run_args,
                 proof_args,
                 rpc,
                 nonce,
@@ -648,6 +697,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                     calldata,
                     nonce,
                     fee_args,
+                    dry_run_args,
                     proof_args,
                     selector,
                     account,
@@ -661,23 +711,17 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
 
-            process_command_result("invoke", result, ui, block_explorer_link);
-
-            Ok(())
+            Ok(process_command_result(
+                "invoke",
+                result,
+                ui,
+                block_explorer_link,
+            ))
         }
 
         Commands::Get(get) => get::get(get, config, ui).await,
 
-        Commands::Utils(utils) => {
-            utils::utils(
-                utils,
-                config,
-                ui,
-                cli.json,
-                cli.profile.clone().unwrap_or("release".to_string()),
-            )
-            .await
-        }
+        Commands::Utils(utils) => utils::utils(utils, config, ui, cli.json).await,
 
         Commands::Multicall(multicall) => {
             multicall::multicall(multicall, config, ui, wait_config).await
@@ -686,7 +730,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         Commands::Account(account) => account::account(account, config, ui, wait_config).await,
 
         Commands::ShowConfig(show) => {
-            let provider = show.rpc.get_provider(&config, ui).await.ok();
+            let provider = match show.rpc.get_provider(&config, ui).await {
+                Ok(p) => Some(p),
+                Err(err) => {
+                    ui.print_warning(format!("Could not reach RPC provider: {err:#}"));
+                    None
+                }
+            };
 
             let result = starknet_commands::show_config::show_config(
                 &show,
@@ -696,9 +746,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             )
             .await;
 
-            process_command_result("show-config", result, ui, None);
-
-            Ok(())
+            Ok(process_command_result("show-config", result, ui, None))
         }
 
         // TODO(#4214): Remove moved sncast commands
@@ -715,7 +763,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 &BuildConfig {
                     scarb_toml_path: manifest_path.clone(),
                     json: cli.json,
-                    profile: cli.profile.unwrap_or("release".to_string()),
+                    profile: config.scarb_profile.clone(),
                 },
                 false,
                 // TODO(#3959) Remove `base_ui`
@@ -731,13 +779,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             )
             .await;
 
-            process_command_result("verify", result, ui, None);
-            Ok(())
+            Ok(process_command_result("verify", result, ui, None))
         }
 
         Commands::Completions(completions) => {
             generate_completions(completions.shell, &mut Cli::command())?;
-            Ok(())
+            Ok(ExitCode::SUCCESS)
         }
 
         // TODO(#4214): Remove moved sncast commands
@@ -747,62 +794,99 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         }
 
         Commands::Ledger(ledger) => {
-            let result = ledger::ledger(&ledger, ui).await?;
-
-            process_command_result("ledger", Ok(result), ui, None);
-
-            Ok(())
+            let result = ledger::ledger(&ledger, ui).await;
+            Ok(process_command_result("ledger", result, ui, None))
         }
 
         Commands::Script(_) => unreachable!(),
     }
 }
 
-fn config_with_cli(config: &mut CastConfig, cli: &Cli) {
-    macro_rules! clone_or_else {
-        ($field:expr, $config_field:expr) => {
-            $field.clone().unwrap_or_else(|| $config_field.clone())
-        };
-    }
-
-    config.account = clone_or_else!(cli.account, config.account);
-    config.keystore = cli.keystore.clone().or(config.keystore.clone());
-
-    if config.accounts_file == Utf8PathBuf::default() {
-        config.accounts_file = Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE);
-    }
-    let new_accounts_file = clone_or_else!(cli.accounts_file_path, config.accounts_file);
-
-    config.accounts_file = Utf8PathBuf::from(shellexpand::tilde(&new_accounts_file).to_string());
-
-    config.wait_params = ValidatedWaitParams::new(
-        clone_or_else!(
-            cli.wait_retry_interval,
-            config.wait_params.get_retry_interval()
-        ),
-        clone_or_else!(cli.wait_timeout, config.wait_params.get_timeout()),
-    );
-}
-
 fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
-    let command = cli.command_name();
-    let global_config_path = get_global_config_path().unwrap_or_else(|err| {
-        ui.print_error(&command, format!("Error getting global config path: {err}"));
-        Utf8PathBuf::new()
-    });
+    let opts = CliConfigOpts {
+        command_name: cli.command_name(),
+        profile: cli.profile.clone(),
+    };
 
-    let global_config =
-        load_config::<CastConfig>(Some(&global_config_path.clone()), cli.profile.as_deref())
-            .or_else(|_| load_config::<CastConfig>(Some(&global_config_path), None))
-            .map_err(|err| anyhow::anyhow!(format!("Failed to load config: {err}")))?;
+    let local_path = find_config_file().ok();
+    let global_path = match get_or_create_global_config_path() {
+        Ok(p) => Some(p),
+        Err(err) => {
+            ui.print_warning(WarningMessage::new(format!(
+                "Could not get or create global config file: {err:?}. Proceeding without global config."
+            )));
+            None
+        }
+    };
+    let profile = opts.profile.as_deref();
 
-    let local_config = load_config::<CastConfig>(None, cli.profile.as_deref())
-        .map_err(|err| anyhow::anyhow!(format!("Failed to load config: {err}")))?;
+    let global_default =
+        PartialCastConfig::load_maybe(global_path.as_ref(), None, ConfigScope::Global)?;
+    let global_profile = if profile.is_some() {
+        PartialCastConfig::load_maybe(global_path.as_ref(), profile, ConfigScope::Global)?
+    } else {
+        MaybeConfig::NoProfile
+    };
+    let local_default =
+        PartialCastConfig::load_maybe(local_path.as_ref(), None, ConfigScope::Local)?;
+    let local_profile = if profile.is_some() {
+        PartialCastConfig::load_maybe(local_path.as_ref(), profile, ConfigScope::Local)?
+    } else {
+        MaybeConfig::NoProfile
+    };
 
-    let mut combined_config = combine_cast_configs(&global_config, &local_config);
+    match (profile, &local_profile, &global_profile) {
+        // Profile must be defined in at least local or global config
+        (Some(profile), MaybeConfig::NoProfile, MaybeConfig::NoProfile) => {
+            bail!(
+                "Profile [{profile}] not found in neither local config at {} nor global config at {}",
+                local_path.unwrap_or_default(),
+                global_path.unwrap_or_default()
+            );
+        }
+        // No local config file; profile must be in global config.
+        (Some(profile), MaybeConfig::NoFile, MaybeConfig::NoProfile) => {
+            bail!(
+                "Profile [{profile}] not found in global config at {}, and no local config found.",
+                global_path.unwrap_or_default()
+            );
+        }
+        // Note: this is potentially unreachable: `get_or_create_global_config_path` should always return dir with existing config file.
+        // TODO: (#3436) remove this if missing global config becomes an error
+        (Some(profile), MaybeConfig::NoProfile, MaybeConfig::NoFile) => {
+            bail!(
+                "Profile [{profile}] not found in local config at {}, and no global config found.",
+                global_path.clone().unwrap_or_default()
+            );
+        }
+        // Note: this is potentially unreachable: `get_or_create_global_config_path` should always return dir with existing config file.
+        // TODO: (#3436) remove this if missing global config becomes an error
+        (Some(profile), MaybeConfig::NoFile, MaybeConfig::NoFile) => {
+            bail!("Profile [{profile}] not found: no config files present");
+        }
+        _ => {}
+    }
 
-    config_with_cli(&mut combined_config, cli);
-    Ok(combined_config)
+    let cli_config = cli.to_partial_config()?;
+    let partial_config = PartialCastConfig::default()
+        .override_with(global_default.unwrap_or_default())
+        .override_with(global_profile.unwrap_or_default())
+        .override_with(local_default.unwrap_or_default())
+        .override_with(local_profile.unwrap_or_default())
+        .override_with(cli_config);
+
+    CastConfig::try_from(partial_config).with_context(|| {
+        indoc::formatdoc! {"
+            Unable to combine configs. Fix conflicts between config sources and try again.
+            Sources:
+            - CLI flags
+            - Local config: {local}
+            - Global config: {global}
+        ",
+            local = local_path.as_ref().map_or("missing", |p| p.as_str()),
+            global = global_path.as_ref().map_or("missing", |p| p.as_str()),
+        }
+    })
 }
 
 fn print_cmd_move_warning(command_name: &str, new_command_name: &str, ui: &UI) {

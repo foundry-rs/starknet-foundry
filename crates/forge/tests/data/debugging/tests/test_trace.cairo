@@ -40,3 +40,8 @@ fn run_test() {
     let failing_dispatcher = FailingDispatcher { contract_address: contract_address_A };
     failing_dispatcher.fail(array![1, 2, 3, 4, 5]);
 }
+
+#[cfg(feature: 'fuzzer')]
+#[test]
+#[fuzzer]
+fn test_debugging_fuzzer(_x: felt252) {}

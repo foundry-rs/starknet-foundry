@@ -149,7 +149,7 @@ async fn test_failed_verification_contract_address() {
         .current_dir(contract_path.path())
         .stdin("Y");
 
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -200,7 +200,7 @@ async fn test_failed_verification_class_hash() {
         .current_dir(contract_path.path())
         .stdin("Y");
 
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -234,7 +234,7 @@ async fn test_verification_abort() {
 
     let snapbox = runner(&args).current_dir(contract_path.path()).stdin("n");
 
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -319,7 +319,7 @@ async fn test_wrong_contract_name_passed() {
 
     let snapbox = runner(&args).current_dir(contract_path.path()).stdin("Y");
 
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -514,7 +514,7 @@ async fn test_worskpaces_package_no_contract() {
 
     let snapbox = runner(&args).current_dir(tempdir.path()).stdin("Y");
 
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,

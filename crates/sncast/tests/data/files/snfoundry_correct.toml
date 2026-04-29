@@ -1,0 +1,49 @@
+[sncast.default]
+url = "http://127.0.0.1:5055/rpc"
+accounts-file = "../account-file"
+account = "user1"
+
+[sncast.profile1]
+url = "http://127.0.0.1:5050/rpc"
+account = "user3"
+
+[sncast.profile2]
+url = "http://127.0.0.1:5055/rpc"
+accounts-file = "../account-file"
+account = "user100"
+block-explorer = "ViewBlock"
+
+[sncast.profile3]
+url = "http://127.0.0.1:5055/rpc"
+account = "/path/to/account.json"
+keystore = "../keystore"
+
+[sncast.profile4]
+url = "http://127.0.0.1:5055/rpc"
+accounts-file = "../account-file"
+account = "user3"
+
+[sncast.profile5]
+url = "http://127.0.0.1:5055/rpc"
+account = "user8"
+
+[sncast.profile6]
+accounts-file = "/path/to/account.json"
+account = "user1"
+wait-params = { timeout = 500, retry-interval = 10 }
+show-explorer-links = false
+
+[sncast.profile7]
+network = "sepolia"
+account = "user1"
+accounts-file = "/path/to/account.json"
+
+[sncast.profile8]
+scarb-profile = "dev"
+
+[sncast.profile7.networks]
+sepolia = "http://127.0.0.1:5055/rpc"
+
+[sncast.no_url]
+accounts-file = "../account-file"
+account = "user1"

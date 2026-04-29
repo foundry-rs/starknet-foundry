@@ -148,7 +148,7 @@ pub fn create_version_parser<'a>(name: &'a str, pattern: &'a str) -> Box<Version
     let regex = Regex::new(pattern).unwrap();
     Box::new(move |raw_version: &str| {
         let matches = regex.captures(raw_version).with_context(|| {
-            format!("Failed to match {name} version from output: {raw_version}",)
+            format!("Failed to match {name} version from output: {raw_version}")
         })?;
         let version_str = matches
             .name("version")

@@ -1,6 +1,8 @@
 # `get tx`
 
-Get the details of a transaction
+Get the details of a transaction. 
+
+This command is also available as `get transaction`.
 
 ## `<TRANSACTION_HASH>`
 

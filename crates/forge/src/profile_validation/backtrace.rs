@@ -1,20 +1,20 @@
 use crate::TestArgs;
-use crate::profile_validation::{check_cairo_profile_entries, get_manifest};
+use crate::profile_validation::{bool_field, bool_field_or_unstable};
 use anyhow::ensure;
+use camino::Utf8PathBuf;
 use indoc::formatdoc;
-use scarb_metadata::Metadata;
+use serde_json::Value;
 
-/// Checks if backtrace can be generated based on scarb version, profile settings extracted from
-/// the provided [`Metadata`] and if native execution is disabled in the provided [`TestArgs`].
 #[allow(unused_variables)]
 pub fn check_backtrace_compatibility(
     test_args: &TestArgs,
-    scarb_metadata: &Metadata,
+    compiler_config: &Value,
+    profile: &str,
+    workspace_manifest_path: &Utf8PathBuf,
 ) -> anyhow::Result<()> {
     #[cfg(feature = "cairo-native")]
     check_if_native_disabled(test_args)?;
-    check_profile(scarb_metadata)?;
-    Ok(())
+    check_profile(compiler_config, profile, workspace_manifest_path)
 }
 
 /// Checks if native execution is disabled in the provided [`TestArgs`].
@@ -27,23 +27,20 @@ fn check_if_native_disabled(test_args: &TestArgs) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Checks if the runtime profile settings in the provided from [`Metadata`] contain the required entries for backtrace generation.
-fn check_profile(scarb_metadata: &Metadata) -> anyhow::Result<()> {
-    const BACKTRACE_REQUIRED_ENTRIES: &[(&str, &str)] = &[
-        ("unstable-add-statements-functions-debug-info", "true"),
-        ("unstable-add-statements-code-locations-debug-info", "true"),
-        ("panic-backtrace", "true"),
-    ];
-
-    let manifest = get_manifest(scarb_metadata)?;
-
+fn check_profile(
+    compiler_config: &Value,
+    profile: &str,
+    workspace_manifest_path: &Utf8PathBuf,
+) -> anyhow::Result<()> {
     let has_needed_entries =
-        check_cairo_profile_entries(&manifest, scarb_metadata, BACKTRACE_REQUIRED_ENTRIES);
+        bool_field_or_unstable(compiler_config, "add_statements_code_locations_debug_info")
+            && bool_field_or_unstable(compiler_config, "add_statements_functions_debug_info")
+            && bool_field(compiler_config, "panic_backtrace");
 
     ensure!(
         has_needed_entries,
         formatdoc! {
-            "Scarb.toml must have the following Cairo compiler configuration to run backtrace:
+            "{workspace_manifest_path} must have the Cairo compiler configuration equivalent to the following one to run backtrace:
 
             [profile.{profile}.cairo]
             unstable-add-statements-functions-debug-info = true
@@ -51,7 +48,6 @@ fn check_profile(scarb_metadata: &Metadata) -> anyhow::Result<()> {
             panic-backtrace = true
             ... other entries ...
             ",
-            profile = scarb_metadata.current_profile
         },
     );
 

@@ -13,7 +13,8 @@ traverse-parent-directories = false
 exclude = [
     "foundry-rs.github.io/starknet-foundry/snforge_std",
     "foundry-rs.github.io/starknet-foundry/sncast_std",
-    "starknet-faucet.vercel.app"
+    "starknet-faucet.vercel.app",
+    "marketplace.visualstudio.com"
 ]
 
 [output.html]
@@ -29,5 +30,5 @@ enable = true
 level = 0
 
 [preprocessor.variables.variables]
-snforge_std_version = "0.59.0"
+snforge_std_version = "0.60.0"
 matrix.partition = "{{ matrix.partition }}"

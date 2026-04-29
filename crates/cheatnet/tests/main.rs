@@ -21,6 +21,6 @@ fn init() {
     if !output.status.success() {
         let stderr = String::from_utf8(output.stderr).expect("Decoding scarb stderr failed");
         let stdout = String::from_utf8(output.stdout).expect("Decoding scarb stdout failed");
-        panic!("scarb build failed,\nstderr: \n{stderr}\nstdout: \n{stdout}",);
+        panic!("scarb build failed,\nstderr: \n{stderr}\nstdout: \n{stdout}");
     }
 }

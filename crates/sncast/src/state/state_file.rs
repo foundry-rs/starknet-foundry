@@ -1,9 +1,9 @@
 use crate::WaitForTransactionError;
 use crate::helpers::constants::STATE_FILE_VERSION;
 use crate::response::declare::DeclareResponse;
-use crate::response::deploy::StandardDeployResponse;
+use crate::response::deploy::StandardDeployTransactionResponse;
 use crate::response::errors::StarknetCommandError;
-use crate::response::invoke::InvokeResponse;
+use crate::response::invoke::InvokeTransactionResponse;
 use crate::state::hashing::generate_id;
 use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
@@ -177,14 +177,14 @@ impl ScriptTransactionEntry {
 #[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
 #[serde(tag = "type")]
 pub enum ScriptTransactionOutput {
-    InvokeResponse(InvokeResponse),
+    InvokeResponse(InvokeTransactionResponse),
     DeclareResponse(DeclareResponse),
-    DeployResponse(StandardDeployResponse),
+    DeployResponse(StandardDeployTransactionResponse),
     ErrorResponse(ErrorResponse),
 }
 
-impl From<InvokeResponse> for ScriptTransactionOutput {
-    fn from(value: InvokeResponse) -> Self {
+impl From<InvokeTransactionResponse> for ScriptTransactionOutput {
+    fn from(value: InvokeTransactionResponse) -> Self {
         Self::InvokeResponse(value)
     }
 }
@@ -195,8 +195,8 @@ impl From<DeclareResponse> for ScriptTransactionOutput {
     }
 }
 
-impl From<StandardDeployResponse> for ScriptTransactionOutput {
-    fn from(value: StandardDeployResponse) -> Self {
+impl From<StandardDeployTransactionResponse> for ScriptTransactionOutput {
+    fn from(value: StandardDeployTransactionResponse) -> Self {
         Self::DeployResponse(value)
     }
 }
@@ -311,6 +311,8 @@ fn verify_version(version: u8) -> Result<()> {
 mod tests {
     use super::*;
     use crate::response::declare::DeclareTransactionResponse;
+    use crate::response::deploy::StandardDeployTransactionResponse;
+    use crate::response::invoke::InvokeTransactionResponse;
     use crate::state::state_file::ScriptTransactionOutput::ErrorResponse;
     use camino::Utf8PathBuf;
     use conversions::IntoConv;
@@ -474,7 +476,7 @@ mod tests {
         let inputs = vec![101u8, 22u8];
         let transaction2 = ScriptTransactionEntry {
             name: "invoke".to_string(),
-            output: ScriptTransactionOutput::InvokeResponse(InvokeResponse {
+            output: ScriptTransactionOutput::InvokeResponse(InvokeTransactionResponse {
                 transaction_hash: Felt::try_from_hex_str("0x3").unwrap().into_(),
             }),
             status: ScriptTransactionStatus::Success,
@@ -546,7 +548,7 @@ mod tests {
         let inputs = vec![13u8, 15u8];
         let transaction2 = ScriptTransactionEntry {
             name: "invoke".to_string(),
-            output: ScriptTransactionOutput::InvokeResponse(InvokeResponse {
+            output: ScriptTransactionOutput::InvokeResponse(InvokeTransactionResponse {
                 transaction_hash: Felt::try_from_hex_str("0x3").unwrap().into_(),
             }),
             status: ScriptTransactionStatus::Success,
@@ -608,7 +610,7 @@ mod tests {
 
         let new_transaction = ScriptTransactionEntry {
             name: "deploy".to_string(),
-            output: ScriptTransactionOutput::DeployResponse(StandardDeployResponse {
+            output: ScriptTransactionOutput::DeployResponse(StandardDeployTransactionResponse {
                 transaction_hash: Felt::try_from_hex_str("0x3").unwrap().into_(),
                 contract_address: Felt::try_from_hex_str("0x333").unwrap().into_(),
             }),

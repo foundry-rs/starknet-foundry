@@ -6,6 +6,7 @@ pub mod class_hash_at;
 pub mod completions;
 pub mod declare;
 pub mod deploy;
+pub mod dry_run;
 pub mod errors;
 pub mod explorer_link;
 pub mod invoke;

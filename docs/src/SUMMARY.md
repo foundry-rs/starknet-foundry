@@ -53,6 +53,7 @@
 * [Declaring New Contracts](starknet/declare.md)
 * [Deploying New Contracts](starknet/deploy.md)
 * [Invoking Contracts](starknet/invoke.md)
+* [Dry Run](starknet/dry-run.md)
 * [Calling Contracts](starknet/call.md)
 * [Performing Multicall](starknet/multicall.md)
 * [Cairo Deployment Scripts](starknet/script.md)
@@ -72,6 +73,7 @@
 * [Environment Setup](development/environment-setup.md)
 * [Shell snippets](development/shell-snippets.md)
 * [Snapshot tests](development/snapshot-tests.md)
+* [Predeployed contracts](development/predeployed-contracts.md)
 
 ---
 
@@ -174,6 +176,7 @@
     * [utils](appendix/sncast/utils/utils.md)
         * [serialize](appendix/sncast/utils/serialize.md)
         * [class-hash](appendix/sncast/utils/class_hash.md)
+        * [contract-address](appendix/sncast/utils/contract_address.md)
         * [selector](appendix/sncast/utils/selector.md)
 * [`sncast` Library Reference](appendix/sncast-library.md)
     * [declare](appendix/sncast-library/declare.md)

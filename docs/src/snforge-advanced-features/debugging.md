@@ -1,10 +1,55 @@
 # Debugging
 
 When a contract call fails, the error message alone may not always provide enough information to identify the root cause
-of the issue. To aid in debugging, `snforge` offers following features:
+of the issue. To aid in debugging, `snforge` offers the following features:
 
+- [live debugging](debugging.md#live-debugging)
 - [trace](debugging.md#trace)
 - [backtrace](debugging.md#backtrace)
+
+
+## Live Debugging
+
+> 💡 **Tip**
+>
+> Make sure to check [Cairo Debugger website](https://docs.swmansion.com/cairo-debugger/) for more information!
+
+> ⚠️ **Warning**
+>
+> Entering contract calls are currently not supported. Read more [here](https://docs.swmansion.com/cairo-debugger/docs/troubleshooting.html#contract-calls-are-skipped).
+
+From version `0.60.0` onwards, the `snforge` is integrated with [Cairo Debugger](https://github.com/software-mansion/cairo-debugger),
+which enables step-through, breakpoint-based debugging of tests.
+
+### Prerequisites
+
+Live debugging relies on debug information provided by Scarb. To generate the necessary debug information, you need
+to have:
+
+1. `snforge` version `0.60.0` or higher.
+2. [Scarb](https://github.com/software-mansion/scarb) version `2.18.0` or higher.
+3. `Scarb.toml` file with compiler configuration equivalent to the following one:
+
+```toml
+[profile.dev.cairo]
+add-statements-code-locations-debug-info = true
+add-statements-functions-debug-info = true
+add-functions-debug-info = true
+skip-optimizations = true
+```
+
+### Debugging in VSCode
+
+1. Open your Cairo project in VSCode.
+2. Make sure the latest [Cairo extension](https://marketplace.visualstudio.com/items?itemName=starkware.cairo1) is installed.
+3. Set breakpoints in your cairo files.
+4.  Use the extension's **▶ Debug Test** code lens (displayed above each test function) to launch the debugger - 
+     it will invoke `snforge` with `--launch-debugger` automatically and start a debugging session.
+   
+     ![debugger lens image](images/debugger_lens.png)
+
+Check [this guide](https://docs.swmansion.com/cairo-debugger/docs/guide.html) for details on how to use live debugging
+with VSCode.
 
 ## Trace
 
@@ -145,7 +190,7 @@ Here's what each tag in the trace represents:
 Backtrace feature relies on debug information provided by Scarb. To generate the necessary debug information, you need
 to have:
 
-1. [Scarb](https://github.com/software-mansion/scarb) version `2.12.0` or higher
+1. [Scarb](https://github.com/software-mansion/scarb) version `2.12.0` or higher.
 2. `Scarb.toml` file with the following Cairo compiler configuration:
 
 ```toml

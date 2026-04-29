@@ -42,8 +42,8 @@ mod warn;
 pub const CAIRO_EDITION: &str = "2024_07";
 
 const MINIMAL_SCARB_VERSION: Version = Version::new(2, 12, 0);
-const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 14, 0);
-const MAXIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 16, 0);
+const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 16, 1);
+const MAXIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 18, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
 const MINIMAL_SNFORGE_STD_VERSION: Version = Version::new(0, 50, 0);
 
@@ -244,6 +244,15 @@ pub struct TestArgs {
 
     #[command(flatten)]
     scarb_args: ScarbArgs,
+
+    /// Launch the given test in debug mode using `cairo-debugger` crate.
+    ///
+    /// It makes snforge act as a debug adapter, enabling communication with an editor/IDE
+    /// such as `VSCode` over DAP protocol.
+    /// It is meant for communication with a DAP client, not command line live debugging.
+    #[arg(long, requires = "exact")]
+    #[cfg_attr(feature = "cairo-native", arg(conflicts_with = "run_native"))]
+    launch_debugger: bool,
 }
 
 impl TestArgs {

@@ -87,7 +87,7 @@ $ sncast \
     --name my_ledger_account
 ```
 
-<!-- { "requires_ledger": true } -->
+<!-- { "ignored": true, "requires_ledger": true } -->
 ```shell
 $ sncast \
     account create \
@@ -112,7 +112,7 @@ A signing confirmation will be shown on the Ledger device. Once approved, the de
 
 If you already have a deployed account managed by your Ledger, you can import it:
 
-<!-- { "requires_ledger": true } -->
+<!-- { "ignored": true, "requires_ledger": true } -->
 ```shell
 $ sncast \
     account import \
@@ -123,7 +123,7 @@ $ sncast \
     --type oz
 ```
 
-<!-- { "requires_ledger": true } -->
+<!-- { "ignored": true, "requires_ledger": true } -->
 ```shell
 $ sncast \
     account import \

@@ -73,7 +73,7 @@ async fn test_directory_non_existent() {
     ];
 
     let snapbox = runner(&args).current_dir(tmp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert!(output.as_stdout().is_empty());
 
@@ -105,7 +105,7 @@ async fn test_file_invalid_path() {
     ];
 
     let snapbox = runner(&args).current_dir(tmp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert!(output.as_stdout().is_empty());
     assert_stderr_contains(

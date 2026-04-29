@@ -61,10 +61,6 @@ jobs:
         run: |
           rustup target add ${{ matrix.target }}
 
-      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
-        with:
-          workspaces: starknet-foundry
-
       - name: Install cross
         if: matrix.cross
         uses: taiki-e/install-action@cross

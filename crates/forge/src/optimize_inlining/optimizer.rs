@@ -285,7 +285,7 @@ impl Optimizer {
                     run_optimization_iteration(current, args, &self.scarb_metadata, cores, ui)?;
 
                 if let Some(ref error) = result.error {
-                    ui.println(&format!("  ✗ {error}",));
+                    ui.println(&format!("  ✗ {error}"));
                 } else {
                     ui.println(&format!(
                         "  ✓ Tests passed, gas: {:.0}, max contract size: {} bytes, contract bytecode L2 gas: {}",

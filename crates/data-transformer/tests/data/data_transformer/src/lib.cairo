@@ -34,6 +34,29 @@ pub struct BitArray {
     bit: felt252,
 }
 
+#[derive(Serde, Drop)]
+pub struct StructWithOption {
+    a: felt252,
+    b: Option<u32>,
+}
+
+#[derive(Serde, Drop)]
+pub enum EnumWithOption {
+    None: (),
+    Some: Option<felt252>,
+}
+
+#[derive(Serde, Drop)]
+pub struct Wrapper<T> {
+    value: T,
+}
+
+#[derive(Serde, Drop)]
+pub enum MaybeValue<T> {
+    Nothing: (),
+    Just: T,
+}
+
 #[starknet::interface]
 pub trait IDataTransformer<TContractState> {
     fn simple_fn(ref self: TContractState, a: felt252) -> felt252;
@@ -63,6 +86,15 @@ pub trait IDataTransformer<TContractState> {
     fn span_fn(ref self: TContractState, a: Span<felt252>) -> Span<felt252>;
     fn multiple_signed_fn(ref self: TContractState, a: i32, b: i8);
     fn no_args_fn(ref self: TContractState);
+    fn option_fn(ref self: TContractState, a: Option<u32>) -> Option<u32>;
+    fn struct_with_option_fn(ref self: TContractState, a: StructWithOption) -> StructWithOption;
+    fn enum_with_option_fn(ref self: TContractState, a: EnumWithOption) -> EnumWithOption;
+    fn option_of_enum_fn(
+        ref self: TContractState, a: Option<EnumWithOption>,
+    ) -> Option<EnumWithOption>;
+    fn result_fn(ref self: TContractState, a: Result<u32, felt252>) -> Result<u32, felt252>;
+    fn wrapper_fn(ref self: TContractState, a: Wrapper<u32>) -> Wrapper<u32>;
+    fn maybe_value_fn(ref self: TContractState, a: MaybeValue<felt252>) -> MaybeValue<felt252>;
 }
 
 #[starknet::contract]
@@ -131,6 +163,29 @@ mod DataTransformer {
         }
         fn multiple_signed_fn(ref self: ContractState, a: i32, b: i8) {}
         fn no_args_fn(ref self: ContractState) {}
+        fn option_fn(ref self: ContractState, a: Option<u32>) -> Option<u32> {
+            a
+        }
+        fn struct_with_option_fn(ref self: ContractState, a: StructWithOption) -> StructWithOption {
+            a
+        }
+        fn enum_with_option_fn(ref self: ContractState, a: EnumWithOption) -> EnumWithOption {
+            a
+        }
+        fn option_of_enum_fn(
+            ref self: ContractState, a: Option<EnumWithOption>,
+        ) -> Option<EnumWithOption> {
+            a
+        }
+        fn result_fn(ref self: ContractState, a: Result<u32, felt252>) -> Result<u32, felt252> {
+            a
+        }
+        fn wrapper_fn(ref self: ContractState, a: Wrapper<u32>) -> Wrapper<u32> {
+            a
+        }
+        fn maybe_value_fn(ref self: ContractState, a: MaybeValue<felt252>) -> MaybeValue<felt252> {
+            a
+        }
     }
 }
 

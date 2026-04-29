@@ -62,7 +62,7 @@ async fn test_happy_case_json() {
 async fn test_nonexistent_contract_address() {
     let args = vec!["get", "nonce", "0x0", "--url", URL];
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -85,7 +85,7 @@ async fn test_invalid_block_id() {
         URL,
     ];
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,

@@ -8,3 +8,6 @@ starknet = ">=2.8.0"
 
 [dev-dependencies]
 snforge_std = { path = "../../../../../snforge_std" }
+
+[features]
+fuzzer = []

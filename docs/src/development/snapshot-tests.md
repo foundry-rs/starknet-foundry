@@ -15,7 +15,7 @@ This allows us to explicitly run these on CI.
 
 ## The check script
 
-Locally, **`scripts/check_snapshot.sh`** script can be used to run snapshot tests (and fix snapshots).
+Locally, **`scripts/check_snapshots.sh`** script can be used to run snapshot tests (and fix snapshots).
 
 ### Usage
 

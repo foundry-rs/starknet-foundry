@@ -1,6 +1,7 @@
 use super::explorer_link::OutputLink;
 use crate::helpers::block_explorer::LinkProvider;
 use crate::response::cast_message::SncastCommandMessage;
+use crate::response::dry_run::DryRunResponse;
 use anyhow::Error;
 use camino::Utf8PathBuf;
 use conversions::string::IntoHexStr;
@@ -41,6 +42,8 @@ pub enum DeclareResponse {
     AlreadyDeclared(AlreadyDeclaredResponse),
     #[serde(untagged)]
     Success(DeclareTransactionResponse),
+    #[serde(untagged)]
+    DryRun(DryRunResponse),
 }
 
 impl DeclareResponse {
@@ -49,6 +52,9 @@ impl DeclareResponse {
         match self {
             DeclareResponse::AlreadyDeclared(response) => response.class_hash.into_(),
             DeclareResponse::Success(response) => response.class_hash.into_(),
+            DeclareResponse::DryRun(_) => unreachable!(
+                "Dry run response should not be used to get class hash, as it does not contain one"
+            ),
         }
     }
 }

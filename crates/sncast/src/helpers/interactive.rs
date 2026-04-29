@@ -1,4 +1,4 @@
-use crate::helpers::config::get_global_config_path;
+use crate::helpers::config::get_or_create_global_config_path;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use configuration::search_config_upwards_relative_to;
@@ -31,7 +31,7 @@ impl Display for PromptSelection {
 pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
     let mut options = Vec::new();
 
-    if let Ok(global_path) = get_global_config_path() {
+    if let Ok(global_path) = get_or_create_global_config_path() {
         options.push(PromptSelection::GlobalDefault(global_path));
     }
 
@@ -95,8 +95,7 @@ fn update_config(toml_doc: &mut DocumentMut, profile: &str, key: &str, value: &s
 }
 
 fn to_tilde_path(path: &Utf8PathBuf) -> String {
-    if cfg!(not(target_os = "windows"))
-        && let Some(home_dir) = dirs::home_dir()
+    if let Some(home_dir) = dirs::home_dir()
         && let Ok(canonical_path) = path.canonicalize()
         && let Ok(stripped_path) = canonical_path.strip_prefix(&home_dir)
     {

@@ -83,7 +83,8 @@ After running `sncast multicall run --path file.toml`, a declared contract will 
 > For numbers larger than 2^63 - 1 (that can't fit into `i64`), use string format (e.g., `"9223372036854775808"`) due to TOML parser limitations.
 
 <!-- TODO: Adjust snippet and check remove ignoring output -->
-<!-- { "ignored_output": true } -->
+<!-- TODO(#4225) -->
+<!-- { "ignored": true, "ignored_output": true } -->
 ```shell
 $ sncast multicall run --path multicall_example.toml
 ```

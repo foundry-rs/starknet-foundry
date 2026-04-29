@@ -1,3 +1,4 @@
+use anyhow::Context;
 use clap::{Args, Subcommand};
 use sncast::response::ui::UI;
 use sncast::{
@@ -10,16 +11,21 @@ use sncast::{
     },
     response::errors::handle_starknet_command_error,
 };
+use std::process::ExitCode;
 
 use crate::{
     process_command_result,
     starknet_commands::{
         self,
-        utils::{class_hash::ClassHash, selector::Selector, serialize::Serialize},
+        utils::{
+            class_hash::ClassHash, contract_address::ContractAddress, selector::Selector,
+            serialize::Serialize,
+        },
     },
 };
 
 pub mod class_hash;
+pub mod contract_address;
 pub mod felt_or_id;
 pub mod selector;
 pub mod serialize;
@@ -38,6 +44,9 @@ pub enum Commands {
     /// Get contract class hash
     ClassHash(ClassHash),
 
+    /// Calculate the address of a not yet deployed contract
+    ContractAddress(ContractAddress),
+
     /// Calculate selector from name
     Selector(Selector),
 }
@@ -47,15 +56,14 @@ pub async fn utils(
     config: CastConfig,
     ui: &UI,
     json: bool,
-    profile: String,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<ExitCode> {
     match utils.command {
         Commands::Serialize(serialize) => {
             let result = starknet_commands::utils::serialize::serialize(serialize, config, ui)
                 .await
-                .map_err(handle_starknet_command_error)?;
+                .map_err(handle_starknet_command_error);
 
-            process_command_result("serialize", Ok(result), ui, None);
+            Ok(process_command_result("utils serialize", result, ui, None))
         }
 
         Commands::ClassHash(class_hash) => {
@@ -67,7 +75,7 @@ pub async fn utils(
                 &BuildConfig {
                     scarb_toml_path: manifest_path,
                     json,
-                    profile,
+                    profile: config.scarb_profile.clone(),
                 },
                 false,
                 // TODO(#3959) Remove `base_ui`
@@ -76,16 +84,56 @@ pub async fn utils(
             .expect("Failed to build contract");
 
             let result = class_hash::get_class_hash(&class_hash, &artifacts)
-                .map_err(handle_starknet_command_error)?;
+                .map_err(handle_starknet_command_error);
 
-            process_command_result("class-hash", Ok(result), ui, None);
+            Ok(process_command_result("utils class-hash", result, ui, None))
+        }
+
+        Commands::ContractAddress(contract_address) => {
+            let artifacts = if contract_address
+                .common
+                .contract_identifier
+                .contract_name
+                .is_some()
+            {
+                let manifest_path = assert_manifest_path_exists()?;
+                let package_metadata =
+                    get_package_metadata(&manifest_path, &contract_address.common.package)?;
+
+                Some(
+                    build_and_load_artifacts(
+                        &package_metadata,
+                        &BuildConfig {
+                            scarb_toml_path: manifest_path,
+                            json,
+                            profile: config.scarb_profile.clone(),
+                        },
+                        false,
+                        // TODO(#3959) Remove `base_ui`
+                        ui.base_ui(),
+                    )
+                    .context("Failed to build contract")?,
+                )
+            } else {
+                None
+            };
+
+            let result =
+                contract_address::get_contract_address(contract_address, artifacts, config, ui)
+                    .await
+                    .map_err(handle_starknet_command_error);
+
+            Ok(process_command_result(
+                "utils contract-address",
+                result,
+                ui,
+                None,
+            ))
         }
 
         Commands::Selector(sel) => {
-            let result = selector::get_selector(&sel).map_err(handle_starknet_command_error)?;
-            process_command_result("selector", Ok(result), ui, None);
+            let result = selector::get_selector(&sel).map_err(handle_starknet_command_error);
+            Ok(process_command_result("utils selector", result, ui, None))
         }
     }
-
-    Ok(())
 }

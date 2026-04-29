@@ -4,8 +4,11 @@ use serde_json::Value;
 
 pub struct SncastMessage<T: SncastCommandMessage + Serialize>(pub T);
 
-pub trait SncastCommandMessage {
+pub trait SncastCommandMessage: Serialize {
     fn text(&self) -> String;
+    fn json(&self) -> Value {
+        serde_json::to_value(self).expect("Should be serializable to JSON")
+    }
 }
 
 impl<T> Message for SncastMessage<T>
@@ -17,6 +20,6 @@ where
     }
 
     fn json(&self) -> Value {
-        serde_json::to_value(&self.0).expect("Should be serializable to JSON")
+        self.0.json()
     }
 }

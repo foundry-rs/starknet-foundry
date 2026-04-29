@@ -50,6 +50,7 @@ base16ct.workspace = true
 starknet-rust-crypto.workspace = true
 async-trait.workspace = true
 serde_path_to_error.workspace = true
+serde_with.workspace = true
 walkdir.workspace = true
 const-hex.workspace = true
 regex.workspace = true
@@ -59,6 +60,7 @@ toml_edit.workspace = true
 num-traits.workspace = true
 foundry-ui = { path = "../foundry-ui" }
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
+voyager-verifier = "2.3.0"
 tracing-subscriber.workspace = true
 tracing.workspace = true
 tracing-log.workspace = true

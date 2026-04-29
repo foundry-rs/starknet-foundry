@@ -8,12 +8,11 @@ use crate::helpers::fixtures::{
     duplicate_contract_directory_with_salt, get_transaction_by_hash, get_transaction_hash,
     get_transaction_receipt, join_tempdirs,
 };
-use crate::helpers::runner::runner;
+use crate::helpers::runner::{runner, sncast_test_bin_path};
 use crate::helpers::shell::os_specific_shell;
 use camino::Utf8PathBuf;
 use indoc::indoc;
 use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
-use snapbox::cargo_bin;
 use sncast::AccountType;
 use sncast::helpers::constants::OZ_CLASS_HASH;
 use sncast::helpers::fee::FeeArgs;
@@ -262,7 +261,7 @@ fn test_wrong_calldata() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -340,7 +339,7 @@ fn test_contract_already_deployed() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -376,7 +375,7 @@ fn test_too_low_gas() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
     // TODO Check extra blank line
     println!("====\n{}\n====", output.as_stderr());
 
@@ -392,7 +391,7 @@ fn test_too_low_gas() {
 #[tokio::test]
 async fn test_happy_case_shell() {
     let tempdir = create_and_deploy_oz_account().await;
-    let binary_path = cargo_bin!("sncast");
+    let binary_path = sncast_test_bin_path();
     let command = os_specific_shell(&Utf8PathBuf::from("tests/shell/deploy"));
 
     let snapbox = command
@@ -708,7 +707,7 @@ async fn test_deploy_with_declare_invalid_nonce() {
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -735,5 +734,76 @@ fn test_deploy_no_abi_with_class_hash_disallowed() {
     assert_stderr_contains(
         output,
         "Error: `--no-abi` can only be used with `--contract-name`",
+    );
+}
+
+#[tokio::test]
+async fn test_dry_run() {
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "deploy",
+        "--url",
+        URL,
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--dry-run",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Dry run completed
+
+            Overall Fee: [..] Fri (~[..] STRK)
+            "
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_dry_run_detailed() {
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "deploy",
+        "--url",
+        URL,
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--dry-run",
+        "--detailed",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Dry run completed
+
+            Overall Fee: [..] Fri (~[..] STRK)
+            L1 Gas Consumed:      [..]
+            L1 Gas Price:         [..]
+            L2 Gas Consumed:      [..]
+            L2 Gas Price:         [..]
+            L1 Data Gas Consumed: [..]
+            L1 Data Gas Price:    [..]
+            "
+        },
     );
 }

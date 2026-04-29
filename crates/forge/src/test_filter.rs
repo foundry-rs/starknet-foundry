@@ -85,6 +85,21 @@ impl TestsFilter {
         }
     }
 
+    fn is_in_partition(&self, sanitized_name: &str) -> bool {
+        match &self.partitioning_config {
+            PartitionConfig::Disabled => true,
+            PartitionConfig::Enabled {
+                partition,
+                partition_map,
+            } => {
+                let idx = partition_map
+                    .get_assigned_index(sanitized_name)
+                    .expect("Partition map must contain all test cases");
+                idx == partition.index()
+            }
+        }
+    }
+
     pub(crate) fn filter_tests(
         &self,
         test_cases: &mut Vec<TestCaseWithResolvedConfig>,
@@ -132,22 +147,9 @@ impl TestCaseFilter for TestsFilter {
     {
         // Order of filter checks matters, because we do not want to display a test as ignored if
         // it was excluded due to partitioning.
-        match &self.partitioning_config {
-            PartitionConfig::Enabled {
-                partition,
-                partition_map,
-            } => {
-                let sanitized_test_case_name = sanitize_test_case_name(&test_case.name);
-                let test_assigned_index = partition_map
-                    .get_assigned_index(&sanitized_test_case_name)
-                    .expect("Partition map must contain all test cases");
-                let partition_index = partition.index();
-
-                if test_assigned_index != partition_index {
-                    return FilterResult::Excluded(ExcludeReason::ExcludedFromPartition);
-                }
-            }
-            PartitionConfig::Disabled => {}
+        let sanitized_test_case_name = sanitize_test_case_name(&test_case.name);
+        if !self.is_in_partition(&sanitized_test_case_name) {
+            return FilterResult::Excluded(ExcludeReason::ExcludedFromPartition);
         }
 
         let case_ignored = test_case.config.is_ignored();

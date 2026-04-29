@@ -29,8 +29,8 @@ impl ForkData {
             .collect();
 
         let selectors = abi
-            .iter()
-            .flat_map(|(_, abi)| build_name_selector_map(abi.clone()))
+            .values()
+            .flat_map(|abi| build_name_selector_map(abi.clone()))
             .collect();
 
         Self { abi, selectors }

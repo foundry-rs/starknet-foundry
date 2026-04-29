@@ -44,3 +44,5 @@ pub const DATA_TRANSFORMER_CONTRACT_CLASS_HASH_SEPOLIA: &str =
     "0x0786d1f010d66f838837290e472415186ba6a789fb446e7f92e444bed7b5d9c0";
 pub const DATA_TRANSFORMER_CONTRACT_ABI_PATH: &str =
     "tests/data/files/data_transformer_contract_abi.json";
+pub const DATA_TRANSFORMER_CONTRACT_DIR: &str =
+    "../../crates/data-transformer/tests/data/data_transformer";

@@ -104,7 +104,7 @@ fn syntax() {
         note: this error originates in the attribute macro: `fuzzer`
         note: this error originates in the attribute macro: `fork`
         
-        error[E2105]: Unexpected type for tuple pattern. "core::result::Result::<(core::starknet::contract_address::ContractAddress, core::array::Span::<core::felt252>), core::array::Array::<core::felt252>>" is not a tuple.
+        error[E2103]: Mismatched types: pattern cannot match against type "core::result::Result::<(core::starknet::contract_address::ContractAddress, core::array::Span::<core::felt252>), core::array::Array::<core::felt252>>".
          --> [..]/tests/contract.cairo:14:9
             let (contract_address, _) = contract.deploy(constructor_calldata),unwrap();
                 ^^^^^^^^^^^^^^^^^^^^^

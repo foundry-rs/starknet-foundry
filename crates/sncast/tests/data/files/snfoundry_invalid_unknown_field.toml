@@ -1,0 +1,6 @@
+[sncast.default]
+url = "http://127.0.0.1:5055/rpc"
+account = "user1"
+foo = "hello"
+bar = { a = 1, b = 2 }
+baz = false

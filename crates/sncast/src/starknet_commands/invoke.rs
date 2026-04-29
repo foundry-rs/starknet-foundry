@@ -3,11 +3,12 @@ use crate::starknet_commands::utils::felt_or_id::FeltOrId;
 use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
+use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::proof::ProofArgs;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
-use sncast::response::invoke::InvokeResponse;
+use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
 use sncast::response::ui::UI;
 use sncast::{WaitForTx, apply_optional_fields, handle_wait_for_tx};
 use starknet_rust::accounts::AccountError::Provider;
@@ -42,6 +43,9 @@ pub struct Invoke {
     pub fee_args: FeeArgs,
 
     #[command(flatten)]
+    pub dry_run_args: DryRunArgs,
+
+    #[command(flatten)]
     pub proof_args: ProofArgs,
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
@@ -58,6 +62,7 @@ pub async fn invoke<S>(
     calldata: Vec<Felt>,
     nonce: Option<Felt>,
     fee_args: FeeArgs,
+    dry_run_args: DryRunArgs,
     proof_args: ProofArgs,
     function_selector: Felt,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
@@ -73,6 +78,17 @@ where
         calldata,
     };
 
+    if dry_run_args.dry_run {
+        let execution = account.execute_v3(vec![call]);
+        return dry_run_args
+            .estimate(|| execution.estimate_fee())
+            .await
+            .map(InvokeResponse::DryRun)
+            .map_err(|e| {
+                StarknetCommandError::from(anyhow!("Failed to estimate fee for dry run: {e}"))
+            });
+    }
+
     execute_calls(
         account,
         vec![call],
@@ -83,6 +99,11 @@ where
         ui,
     )
     .await
+    .map(|result| {
+        InvokeResponse::Transaction(InvokeTransactionResponse {
+            transaction_hash: result.transaction_hash.into_(),
+        })
+    })
 }
 
 pub async fn execute_calls<S>(
@@ -93,7 +114,7 @@ pub async fn execute_calls<S>(
     nonce: Option<Felt>,
     wait_config: WaitForTx,
     ui: &UI,
-) -> Result<InvokeResponse, StarknetCommandError>
+) -> Result<InvokeTransactionResult, StarknetCommandError>
 where
     S: Signer + Sync + Send,
 {
@@ -142,12 +163,10 @@ where
     let result = execution.send().await;
 
     match result {
-        Ok(InvokeTransactionResult { transaction_hash }) => handle_wait_for_tx(
+        Ok(invoke_response) => handle_wait_for_tx(
             account.provider(),
-            transaction_hash,
-            InvokeResponse {
-                transaction_hash: transaction_hash.into_(),
-            },
+            invoke_response.transaction_hash,
+            invoke_response,
             wait_config,
             ui,
         )

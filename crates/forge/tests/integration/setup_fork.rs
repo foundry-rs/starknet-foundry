@@ -27,6 +27,7 @@ use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
+use forge_runner::running::target::prepare_test_target;
 use forge_runner::scarb::load_test_artifacts;
 use scarb_api::ScarbCommand;
 use scarb_api::metadata::metadata_for_dir;
@@ -74,6 +75,7 @@ fn fork_simple_decorator() {
     assert_passed(&result);
 }
 
+#[expect(clippy::too_many_lines)]
 #[test]
 fn fork_aliased_decorator() {
     let test = test_case!(indoc!(
@@ -132,54 +134,66 @@ fn fork_aliased_decorator() {
 
     let ui = Arc::new(UI::default());
     let result = rt
-        .block_on(run_for_package(
-            RunForPackageArgs {
-                test_targets: raw_test_targets,
-                package_name: "test_package".to_string(),
-                tests_filter: TestsFilter::from_flags(
-                    None,
-                    false,
-                    Vec::new(),
-                    false,
-                    false,
-                    false,
-                    FailedTestsCache::default(),
-                    PartitionConfig::default(),
-                ),
-                forge_config: Arc::new(ForgeConfig {
-                    test_runner_config: Arc::new(TestRunnerConfig {
-                        exit_first: false,
-                        deterministic_output: false,
-                        fuzzer_runs: NonZeroU32::new(256).unwrap(),
-                        fuzzer_seed: 12345,
-                        max_n_steps: None,
-                        is_vm_trace_needed: false,
-                        cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
-                            .unwrap()
-                            .join(CACHE_DIR),
-                        contracts_data: ContractsData::try_from(test.contracts(&ui).unwrap())
-                            .unwrap(),
-                        tracked_resource: ForgeTrackedResource::CairoSteps,
-                        environment_variables: test.env().clone(),
+        .block_on(async {
+            let target_handles = raw_test_targets
+                .into_iter()
+                .map(|t| {
+                    tokio::task::spawn_blocking(move || {
+                        prepare_test_target(t, &ForgeTrackedResource::CairoSteps)
+                    })
+                })
+                .collect();
+            run_for_package(
+                RunForPackageArgs {
+                    target_handles,
+                    package_name: "test_package".to_string(),
+                    package_root: Utf8PathBuf::default(),
+                    tests_filter: TestsFilter::from_flags(
+                        None,
+                        false,
+                        Vec::new(),
+                        false,
+                        false,
+                        false,
+                        FailedTestsCache::default(),
+                        PartitionConfig::default(),
+                    ),
+                    forge_config: Arc::new(ForgeConfig {
+                        test_runner_config: Arc::new(TestRunnerConfig {
+                            exit_first: false,
+                            deterministic_output: false,
+                            fuzzer_runs: NonZeroU32::new(256).unwrap(),
+                            fuzzer_seed: 12345,
+                            max_n_steps: None,
+                            is_vm_trace_needed: false,
+                            cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
+                                .unwrap()
+                                .join(CACHE_DIR),
+                            contracts_data: ContractsData::try_from(test.contracts(&ui).unwrap())
+                                .unwrap(),
+                            tracked_resource: ForgeTrackedResource::CairoSteps,
+                            environment_variables: test.env().clone(),
+                            launch_debugger: false,
+                        }),
+                        output_config: Arc::new(OutputConfig {
+                            detailed_resources: false,
+                            execution_data_to_save: ExecutionDataToSave::default(),
+                            trace_args: TraceArgs::default(),
+                            gas_report: false,
+                        }),
                     }),
-                    output_config: Arc::new(OutputConfig {
-                        detailed_resources: false,
-                        execution_data_to_save: ExecutionDataToSave::default(),
-                        trace_args: TraceArgs::default(),
-                        gas_report: false,
-                    }),
-                }),
-                fork_targets: vec![ForkTarget {
-                    name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                    url: node_rpc_url().as_str().parse().unwrap(),
-                    block_id: BlockId::BlockTag,
-                }],
-            },
-            &mut BlockNumberMap::default(),
-            ui,
-            &mut ExitFirstChannel::default(),
-            false,
-        ))
+                    fork_targets: vec![ForkTarget {
+                        name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
+                        url: node_rpc_url().as_str().parse().unwrap(),
+                        block_id: BlockId::BlockTag,
+                    }],
+                },
+                &BlockNumberMap::default(),
+                ui,
+                &mut ExitFirstChannel::default(),
+            )
+            .await
+        })
         .expect("Runner fail")
         .summaries();
 
@@ -226,54 +240,66 @@ fn fork_aliased_decorator_overrding() {
 
     let ui = Arc::new(UI::default());
     let result = rt
-        .block_on(run_for_package(
-            RunForPackageArgs {
-                test_targets: raw_test_targets,
-                package_name: "test_package".to_string(),
-                tests_filter: TestsFilter::from_flags(
-                    None,
-                    false,
-                    Vec::new(),
-                    false,
-                    false,
-                    false,
-                    FailedTestsCache::default(),
-                    PartitionConfig::default(),
-                ),
-                forge_config: Arc::new(ForgeConfig {
-                    test_runner_config: Arc::new(TestRunnerConfig {
-                        exit_first: false,
-                        deterministic_output: false,
-                        fuzzer_runs: NonZeroU32::new(256).unwrap(),
-                        fuzzer_seed: 12345,
-                        max_n_steps: None,
-                        is_vm_trace_needed: false,
-                        cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
-                            .unwrap()
-                            .join(CACHE_DIR),
-                        contracts_data: ContractsData::try_from(test.contracts(&ui).unwrap())
-                            .unwrap(),
-                        tracked_resource: ForgeTrackedResource::CairoSteps,
-                        environment_variables: test.env().clone(),
+        .block_on(async {
+            let target_handles = raw_test_targets
+                .into_iter()
+                .map(|t| {
+                    tokio::task::spawn_blocking(move || {
+                        prepare_test_target(t, &ForgeTrackedResource::CairoSteps)
+                    })
+                })
+                .collect();
+            run_for_package(
+                RunForPackageArgs {
+                    target_handles,
+                    package_name: "test_package".to_string(),
+                    package_root: Utf8PathBuf::default(),
+                    tests_filter: TestsFilter::from_flags(
+                        None,
+                        false,
+                        Vec::new(),
+                        false,
+                        false,
+                        false,
+                        FailedTestsCache::default(),
+                        PartitionConfig::default(),
+                    ),
+                    forge_config: Arc::new(ForgeConfig {
+                        test_runner_config: Arc::new(TestRunnerConfig {
+                            exit_first: false,
+                            deterministic_output: false,
+                            fuzzer_runs: NonZeroU32::new(256).unwrap(),
+                            fuzzer_seed: 12345,
+                            max_n_steps: None,
+                            is_vm_trace_needed: false,
+                            cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
+                                .unwrap()
+                                .join(CACHE_DIR),
+                            contracts_data: ContractsData::try_from(test.contracts(&ui).unwrap())
+                                .unwrap(),
+                            tracked_resource: ForgeTrackedResource::CairoSteps,
+                            environment_variables: test.env().clone(),
+                            launch_debugger: false,
+                        }),
+                        output_config: Arc::new(OutputConfig {
+                            detailed_resources: false,
+                            execution_data_to_save: ExecutionDataToSave::default(),
+                            trace_args: TraceArgs::default(),
+                            gas_report: false,
+                        }),
                     }),
-                    output_config: Arc::new(OutputConfig {
-                        detailed_resources: false,
-                        execution_data_to_save: ExecutionDataToSave::default(),
-                        trace_args: TraceArgs::default(),
-                        gas_report: false,
-                    }),
-                }),
-                fork_targets: vec![ForkTarget {
-                    name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                    url: node_rpc_url().as_str().parse().unwrap(),
-                    block_id: BlockId::BlockNumber(12_341_234),
-                }],
-            },
-            &mut BlockNumberMap::default(),
-            ui,
-            &mut ExitFirstChannel::default(),
-            false,
-        ))
+                    fork_targets: vec![ForkTarget {
+                        name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
+                        url: node_rpc_url().as_str().parse().unwrap(),
+                        block_id: BlockId::BlockNumber(12_341_234),
+                    }],
+                },
+                &BlockNumberMap::default(),
+                ui,
+                &mut ExitFirstChannel::default(),
+            )
+            .await
+        })
         .expect("Runner fail")
         .summaries();
 

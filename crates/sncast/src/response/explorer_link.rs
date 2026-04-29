@@ -13,6 +13,10 @@ pub trait OutputLink {
     const TITLE: &'static str;
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String;
+
+    fn is_dry_run(&self) -> bool {
+        false
+    }
 }
 
 #[derive(Serialize)]
@@ -66,6 +70,10 @@ where
         return None;
     };
 
+    if response.is_dry_run() {
+        return None;
+    }
+
     let network = chain_id.try_into().ok()?;
 
     let is_devnet = matches!(network, Network::Devnet) || detection::is_devnet_running().await;
@@ -84,7 +92,5 @@ where
 
 #[must_use]
 pub fn is_explorer_link_overridden() -> bool {
-    std::env::var(SNCAST_FORCE_SHOW_EXPLORER_LINKS_ENV)
-        .map(|value| value == "1")
-        .unwrap_or(false)
+    std::env::var(SNCAST_FORCE_SHOW_EXPLORER_LINKS_ENV).is_ok_and(|value| value == "1")
 }

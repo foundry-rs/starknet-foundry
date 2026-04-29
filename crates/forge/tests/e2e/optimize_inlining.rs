@@ -1,5 +1,5 @@
 use super::common::runner::{runner, setup_package};
-use crate::assert_cleaned_output;
+use crate::{assert_cleaned_output, assert_png_snapshot};
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use std::fs;
@@ -36,7 +36,7 @@ fn snap_optimize_inlining_dry_run() {
     assert_cleaned_output!(output);
 
     let graph_bytes = read_optimization_graph(temp.path(), 0, 100, 50);
-    insta::assert_binary_snapshot!("optimize_inlining_dry_run.png", graph_bytes);
+    assert_png_snapshot!("optimize_inlining_dry_run.png", graph_bytes);
 }
 
 #[test]
@@ -84,7 +84,7 @@ fn snap_optimize_inlining_updates_manifest() {
     assert_cleaned_output!(output);
 
     let graph_bytes = read_optimization_graph(temp.path(), 0, 10, 10);
-    insta::assert_binary_snapshot!("optimize_inlining_updates_manifest.png", graph_bytes);
+    assert_png_snapshot!("optimize_inlining_updates_manifest.png", graph_bytes);
 
     let scarb_toml = fs::read_to_string(temp.path().join("Scarb.toml"))
         .expect("Failed to read updated Scarb.toml");

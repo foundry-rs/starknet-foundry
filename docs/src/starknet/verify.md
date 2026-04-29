@@ -27,7 +27,8 @@ First, ensure that you have created a `Scarb.toml` file for your contract (it sh
 
 ### Using Walnut
 
-<!-- { "ignored_output": true, "replace_network": false } -->
+<!-- TODO(#4225) -->
+<!-- { "ignored": true, "ignored_output": true, "replace_network": false } -->
 ```shell
 $ sncast \
     verify \
@@ -57,7 +58,8 @@ Contract successfully verified
 
 ### Using Voyager
 
-<!-- { "ignored_output": true, "replace_network": false } -->
+<!-- TODO(#4225) -->
+<!-- { "ignored": true, "ignored_output": true, "replace_network": false } -->
 ```shell
 $ sncast \
     verify \

@@ -179,7 +179,7 @@ pub async fn test_invalid_class_hash() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -245,7 +245,7 @@ pub async fn test_happy_case_generate_salt() {
 #[test_case("--network", "devnet"; "with_network")]
 #[tokio::test]
 pub async fn test_happy_case_add_profile(rpc_flag: &str, rpc_value: &str) {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -276,9 +276,9 @@ pub async fn test_happy_case_add_profile(rpc_flag: &str, rpc_value: &str) {
         .expect("Unable to read snfoundry.toml");
     let expected_lines = [
         "[sncast.my_account]",
+        &format!("{} = \"{}\"", rpc_flag.trim_start_matches("--"), rpc_value),
         "account = \"my_account\"",
         "accounts-file = \"accounts.json\"",
-        &format!("{} = \"{}\"", rpc_flag.trim_start_matches("--"), rpc_value),
     ];
     let expected_block = expected_lines.join("\n");
 
@@ -334,7 +334,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
 
 #[tokio::test]
 pub async fn test_profile_already_exists() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -378,7 +378,7 @@ pub async fn test_account_already_exists() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -495,7 +495,7 @@ pub async fn test_happy_case_keystore_argent_with_deprecation_warning() {
 
 #[tokio::test]
 pub async fn test_happy_case_keystore_add_profile() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let keystore_file = "my_key.json";
     let account_file = "my_account.json";
     let accounts_json_file = "accounts.json";
@@ -561,7 +561,7 @@ pub async fn test_keystore_without_account() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -597,7 +597,7 @@ pub async fn test_keystore_file_already_exists() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -634,7 +634,7 @@ pub async fn test_keystore_account_file_already_exists() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
@@ -1026,10 +1026,11 @@ pub async fn test_no_explorer_links_on_localhost() {
     );
 }
 
+// TODO(#4027): Fix either test or underlying bug
 #[tokio::test]
 pub async fn test_use_url_from_config() {
     let accounts_file = "accounts.json";
-    let temp_dir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let temp_dir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     copy_file(
         "tests/data/accounts/accounts.json",
         temp_dir.path().join(accounts_file),

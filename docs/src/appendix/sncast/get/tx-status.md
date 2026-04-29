@@ -1,6 +1,8 @@
 # `get tx-status`
 
-Get the status of a transaction
+Get the status of a transaction. 
+
+This command is also available as `get transaction-status`.
 
 ## `<TRANSACTION_HASH>`
 

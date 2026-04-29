@@ -1,5 +1,5 @@
 use super::package::RunForPackageArgs;
-use crate::profile_validation::check_profile_compatibility;
+use crate::profile_validation::check_compiler_config_compatibility;
 use crate::run_tests::messages::latest_blocks_numbers::LatestBlocksNumbersMessage;
 use crate::run_tests::messages::overall_summary::OverallSummaryMessage;
 use crate::run_tests::messages::partition::{PartitionFinishedMessage, PartitionStartedMessage};
@@ -76,13 +76,13 @@ pub async fn execute_workspace(
         ColorOption::Auto => (),
     }
 
-    check_profile_compatibility(args, scarb_metadata)?;
+    let packages: Vec<PackageMetadata> =
+        packages_from_filter(scarb_metadata, &args.scarb_args.packages_filter)?;
+
+    check_compiler_config_compatibility(args, scarb_metadata, &packages)?;
 
     error_if_snforge_std_not_compatible(scarb_metadata)?;
     warn_if_snforge_std_does_not_match_package_version(scarb_metadata, &ui)?;
-
-    let packages: Vec<PackageMetadata> =
-        packages_from_filter(scarb_metadata, &args.scarb_args.packages_filter)?;
 
     let artifacts_dir_path =
         target_dir_for_workspace(scarb_metadata).join(&scarb_metadata.current_profile);
@@ -96,7 +96,7 @@ pub async fn execute_workspace(
         }
     }
 
-    let mut block_number_map = BlockNumberMap::default();
+    let block_number_map = BlockNumberMap::default();
     let mut all_tests = vec![];
     let mut total_filtered_count = Some(0);
     let mut exit_first_channel = ExitFirstChannel::new();
@@ -107,12 +107,14 @@ pub async fn execute_workspace(
 
     let partitioning_config = get_partitioning_config(args, &ui, &packages, &artifacts_dir_path)?;
 
-    for package in packages {
+    // Spawn config passes for all packages before running any tests so that
+    // compilation overlaps with test execution across packages.
+    let mut all_package_args = Vec::with_capacity(packages.len());
+    for pkg in packages {
         let cwd = env::current_dir()?;
-        env::set_current_dir(&package.root)?;
-
-        let args = RunForPackageArgs::build(
-            package,
+        env::set_current_dir(&pkg.root)?;
+        let pkg_args = RunForPackageArgs::build(
+            pkg,
             scarb_metadata,
             args,
             &cache_dir,
@@ -120,21 +122,25 @@ pub async fn execute_workspace(
             partitioning_config.clone(),
             &ui,
         )?;
+        env::set_current_dir(&cwd)?;
+        all_package_args.push(pkg_args);
+    }
+
+    for pkg_args in all_package_args {
+        let cwd = env::current_dir()?;
+        env::set_current_dir(&pkg_args.package_root)?;
 
         let result = run_for_package(
-            args,
-            &mut block_number_map,
+            pkg_args,
+            &block_number_map,
             ui.clone(),
             &mut exit_first_channel,
-            deterministic_output,
         )
         .await?;
 
         let filtered = result.filtered();
         all_tests.extend(result.summaries());
-
         total_filtered_count = calculate_total_filtered_count(total_filtered_count, filtered);
-        // Restore the original working directory.
         env::set_current_dir(&cwd)?;
     }
 
@@ -146,10 +152,9 @@ pub async fn execute_workspace(
 
     FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
 
-    if !block_number_map.get_url_to_latest_block_number().is_empty() {
-        ui.println(&LatestBlocksNumbersMessage::new(
-            block_number_map.get_url_to_latest_block_number().clone(),
-        ));
+    let url_to_block_number = block_number_map.get_url_to_latest_block_number();
+    if !url_to_block_number.is_empty() {
+        ui.println(&LatestBlocksNumbersMessage::new(url_to_block_number));
     }
 
     ui.println(&TestsFailureSummaryMessage::new(&all_failed_tests));
