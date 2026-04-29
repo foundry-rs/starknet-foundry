@@ -49,7 +49,7 @@ async fn test_happy_case() {
 
         Class Hash:       0x66802613e2cd02ea21430a56181d9ee83c54d4ccdc45efa497d41fe1dc55a0e
         Transaction Hash: 0x[..]
-        
+
         To see declaration details, visit:
         class: https://[..]
         transaction: https://[..]
@@ -93,7 +93,7 @@ async fn test_happy_case_with_block_id() {
 
         Class Hash:       0x3de1a95e27b385c882c79355ca415915989e71f67c0f6f8ce146d4bcee7163c
         Transaction Hash: 0x[..]
-        
+
         To see declaration details, visit:
         class: https://[..]
         transaction: https://[..]
@@ -615,6 +615,6 @@ fn test_declare_from_no_abi_with_class_hash_disallowed() {
 
     assert_stderr_contains(
         output,
-        "Error: `--no-abi` can only be used with `--sierra-file`",
+        "error: the argument '--class-hash <CLASS_HASH>' cannot be used with '--no-abi'",
     );
 }

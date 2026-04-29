@@ -374,7 +374,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                     declare.common.fee_args,
                     declare.common.dry_run_args,
                     declare.common.nonce,
-                    declare.common.no_abi,
+                    declare.no_abi,
                     account,
                     &artifacts,
                     wait_config,
@@ -411,7 +411,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 let network_flag = generate_network_flag(&rpc, &config);
                 Some(DeployCommandMessage::new(
                     &contract_definition.abi,
-                    declare.common.no_abi,
+                    declare.no_abi,
                     response,
                     &config.account,
                     &config.accounts_file,
@@ -431,10 +431,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
         }
 
         Commands::DeclareFrom(declare_from) => {
-            if declare_from.sierra_file.is_none() && declare_from.common.no_abi {
-                bail!("`--no-abi` can only be used with `--sierra-file`");
-            }
-
             let provider = declare_from.common.rpc.get_provider(&config, ui).await?;
 
             let contract_source = if let Some(sierra_file) = declare_from.sierra_file {
@@ -458,6 +454,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let result = with_account!(&account, |account| {
                 starknet_commands::declare_from::declare_from(
                     contract_source,
+                    declare_from.no_abi,
                     &declare_from.common,
                     account,
                     wait_config,

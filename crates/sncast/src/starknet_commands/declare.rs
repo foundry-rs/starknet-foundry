@@ -43,10 +43,6 @@ pub struct DeclareCommonArgs {
     #[arg(short, long)]
     pub nonce: Option<Felt>,
 
-    /// If passed, omits ABI from the declared Sierra class. This changes the resulting class hash
-    #[arg(long)]
-    pub no_abi: bool,
-
     #[command(flatten)]
     pub rpc: RpcArgs,
 }
@@ -61,6 +57,10 @@ pub struct Declare {
     /// Specifies scarb package to be used
     #[arg(long)]
     pub package: Option<String>,
+
+    /// If passed, omits ABI from the declared Sierra class. This changes the resulting class hash
+    #[arg(long)]
+    pub no_abi: bool,
 
     #[command(flatten)]
     pub common: DeclareCommonArgs,
