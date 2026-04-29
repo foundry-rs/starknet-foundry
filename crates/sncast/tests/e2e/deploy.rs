@@ -538,6 +538,35 @@ async fn test_happy_case_with_declare_no_abi() {
 }
 
 #[tokio::test]
+async fn test_happy_case_with_declare_no_abi_and_arguments() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/contract_with_constructor_params",
+        "put",
+        "with_declare_no_abi_and_arguments",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "--json",
+        "deploy",
+        "--url",
+        URL,
+        "--contract-name",
+        "ContractWithConstructorParams",
+        "--arguments",
+        "10, 20",
+        "--no-abi",
+    ];
+
+    runner(&args).current_dir(tempdir.path()).assert().success();
+}
+
+#[tokio::test]
 async fn test_happy_case_with_already_declared() {
     let contract_path = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",

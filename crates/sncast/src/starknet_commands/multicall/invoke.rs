@@ -3,7 +3,7 @@ use clap::Args;
 use starknet_rust::core::{types::Call, utils::get_selector_from_name};
 
 use crate::{
-    Arguments, calldata_to_felts,
+    AbiOrContractClass, Arguments, calldata_to_felts,
     starknet_commands::{
         invoke::InvokeCommonArgs,
         multicall::{
@@ -56,7 +56,8 @@ impl MulticallInvoke {
             let contract_class = contract_registry
                 .get_contract_class_by_class_hash(&class_hash)
                 .await?;
-            arguments.try_into_calldata(contract_class, &selector)?
+            arguments
+                .try_into_calldata(AbiOrContractClass::ContractClass(contract_class), &selector)?
         };
 
         Ok(Call {
