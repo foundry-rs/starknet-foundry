@@ -537,33 +537,69 @@ async fn test_happy_case_with_declare_no_abi() {
     assert_eq!(declared_class_hash, stripped_class_hash);
 }
 
+#[test_case(true; "arguments")]
+#[test_case(false; "constructor_calldata")]
 #[tokio::test]
-async fn test_happy_case_with_declare_no_abi_and_arguments() {
+async fn test_happy_case_with_declare_no_abi_and_constructor_inputs(use_arguments: bool) {
     let contract_path = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/contract_with_constructor_params",
-        "put",
-        "with_declare_no_abi_and_arguments",
+        "salt",
+        if use_arguments {
+            "with_declare_no_abi_and_arguments"
+        } else {
+            "with_declare_no_abi_and_constructor_calldata"
+        },
     );
     let tempdir = create_and_deploy_oz_account().await;
     join_tempdirs(&contract_path, &tempdir);
 
-    let args = vec![
+    let mut args = vec![
         "--accounts-file",
         "accounts.json",
         "--account",
         "my_account",
-        "--json",
         "deploy",
         "--url",
         URL,
         "--contract-name",
         "ContractWithConstructorParams",
-        "--arguments",
-        "10, 20",
         "--no-abi",
     ];
 
-    runner(&args).current_dir(tempdir.path()).assert().success();
+    if use_arguments {
+        args.push("--arguments");
+        args.push("10, 20");
+    } else {
+        args.push("--constructor-calldata");
+        args.push("10");
+        args.push("20");
+    }
+
+    let output = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path())
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Deployment completed
+
+            Contract Address:         0x0[..]
+            Class Hash:               0x0[..]
+            Declare Transaction Hash: 0x0[..]
+            Deploy Transaction Hash:  0x0[..]
+
+            To see deployment details, visit:
+            contract: [..]
+            class: [..]
+            deploy transaction: [..]
+            declare transaction: [..]
+            "
+        },
+    );
 }
 
 #[tokio::test]
