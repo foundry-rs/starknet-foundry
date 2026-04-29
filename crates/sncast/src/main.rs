@@ -371,6 +371,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 let network_flag = generate_network_flag(&rpc, &config);
                 Some(DeployCommandMessage::new(
                     &contract_definition.abi,
+                    declare.common.no_abi,
                     response,
                     &config.account,
                     &config.accounts_file,

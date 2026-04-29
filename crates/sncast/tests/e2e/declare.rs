@@ -32,17 +32,23 @@ pub fn get_declared_class_hash_from_json_output(output: &[u8]) -> Felt {
         .expect("Failed to deserialize declared class hash from stdout JSON")
 }
 
+#[test_case(false; "with_abi")]
+#[test_case(true; "no_abi")]
 #[tokio::test]
-async fn test_happy_case_human_readable() {
+async fn test_happy_case_human_readable(no_abi: bool) {
     let contract_path = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "put",
-        "human_readable",
+        if no_abi {
+            "human_readable_no_abi"
+        } else {
+            "human_readable"
+        },
     );
     let tempdir = create_and_deploy_oz_account().await;
     join_tempdirs(&contract_path, &tempdir);
 
-    let args = vec![
+    let mut args = vec![
         "--accounts-file",
         "accounts.json",
         "--account",
@@ -53,6 +59,9 @@ async fn test_happy_case_human_readable() {
         "--contract-name",
         "Map",
     ];
+    if no_abi {
+        args.push("--no-abi");
+    }
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
@@ -187,13 +196,61 @@ async fn test_contract_with_constructor_params() {
 
         Class Hash:       0x[..]
         Transaction Hash: 0x[..]
-        
+
         To see declaration details, visit:
         class: https://[..]
         transaction: https://[..]
 
         To deploy a contract of this class, replace the placeholders in `--arguments` with your actual values, then run:
         sncast --accounts-file accounts.json --account my_account deploy --class-hash 0x[..] --arguments '<foo: felt252>, <bar: felt252>' --url http://127.0.0.1:5055/rpc
+    " },
+    );
+}
+
+#[tokio::test]
+async fn test_contract_with_constructor_params_no_abi() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/contract_with_constructor_params",
+        "put",
+        "human_readable_no_abi",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "ContractWithConstructorParams",
+        "--no-abi",
+    ];
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        Success: Declaration completed
+
+        Class Hash:       0x[..]
+        Transaction Hash: 0x[..]
+
+        To see declaration details, visit:
+        class: https://[..]
+        transaction: https://[..]
+
+        To deploy a contract of this class, replace the placeholders in `--constructor-calldata` with your actual values, then run:
+        sncast --accounts-file accounts.json --account my_account deploy --class-hash 0x[..] --constructor-calldata <serialized-constructor-args> --url http://127.0.0.1:5055/rpc
+
+        Hint: Constructor arguments must be pre-serialized. Use `sncast utils serialize --abi-file <path-to-abi> --function constructor --arguments '<foo: felt252>, <bar: felt252>'` and pass the returned felts to `--constructor-calldata`.
     " },
     );
 }
