@@ -215,7 +215,7 @@ async fn test_failed_verification_class_hash() {
 }
 
 #[tokio::test]
-async fn test_nonexistent_contract() {
+async fn test_verification_abort() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
     let args = vec![
@@ -225,7 +225,7 @@ async fn test_nonexistent_contract() {
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--contract-name",
-        "nonexistent",
+        "Map",
         "--verifier",
         "walnut",
         "--network",
@@ -241,7 +241,7 @@ async fn test_nonexistent_contract() {
         formatdoc!(
             r"
         Command: verify
-        Error: Contract named 'nonexistent' was not found
+        Error: Verification aborted
         "
         ),
     );
