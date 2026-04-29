@@ -8,6 +8,6 @@ fn empty_fn() {
         snforge_std::_internals::config_types::IgnoreConfig { is_ignored: true }
             .serialize(ref data);
         starknet::testing::cheatcode::<'set_config_ignore'>(data.span());
-        return;
+        return Default::default();
     }
 }

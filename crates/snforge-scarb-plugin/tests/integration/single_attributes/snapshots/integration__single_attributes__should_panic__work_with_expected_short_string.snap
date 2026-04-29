@@ -10,6 +10,6 @@ fn empty_fn() {
         }
             .serialize(ref data);
         starknet::testing::cheatcode::<'set_config_should_panic'>(data.span());
-        return;
+        return Default::default();
     }
 }

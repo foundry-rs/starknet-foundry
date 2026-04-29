@@ -6,7 +6,7 @@ expression: format_output(&result)
 fn empty_fn__snforge_internal_fuzzer_generated() {
     if snforge_std::_internals::is_config_run() {
         empty_fn();
-        return;
+        return Default::default();
     }
     empty_fn();
 }

@@ -29,6 +29,6 @@ fn empty_fn__snforge_internal_test_generated(mut _data: Span<felt252>) -> Span<f
 }
 fn empty_fn() {
     if snforge_std::_internals::is_config_run() {
-        return;
+        return Default::default();
     }
 }

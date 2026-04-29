@@ -6,6 +6,6 @@ expression: format_output(&result)
 #[__fuzzer_wrapper]
 fn empty_fn() {
     if snforge_std::_internals::is_config_run() {
-        return;
+        return Default::default();
     }
 }
