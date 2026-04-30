@@ -114,7 +114,7 @@ async fn test_create_ledger_account(
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_create_ledger_account_add_profile() {
-    let (client, url) = setup_speculos(6004);
+    let (_, url) = setup_speculos(6004);
     let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
 
     let output = runner(&[
