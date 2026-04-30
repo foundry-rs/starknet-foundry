@@ -4,7 +4,7 @@ mod ContractWithConstructorParams {
 
     #[storage]
     struct Storage {
-        salt: felt252
+        salt: felt252,
     }
 
     #[constructor]
