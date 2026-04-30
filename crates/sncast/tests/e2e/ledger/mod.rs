@@ -251,6 +251,23 @@ pub(crate) mod automation {
                 button: Button::Right,
                 pressed: false,
             },
+            // Left to menu
+            AutomationAction::Button {
+                button: Button::Left,
+                pressed: true,
+            },
+            AutomationAction::Button {
+                button: Button::Left,
+                pressed: false,
+            },
+            AutomationAction::Button {
+                button: Button::Right,
+                pressed: false,
+            },
+            AutomationAction::Button {
+                button: Button::Right,
+                pressed: false,
+            },
             // Mark as done
             AutomationAction::Setbool {
                 varname: Cow::Borrowed("blind_enabled"),
