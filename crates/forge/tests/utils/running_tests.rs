@@ -10,11 +10,12 @@ use forge::{
 };
 use forge_runner::CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
+use forge_runner::filtering::NameFilter;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, ForgeTrackedResource, OutputConfig, TestRunnerConfig,
 };
 use forge_runner::partition::PartitionConfig;
-use forge_runner::running::target::{TestNameSelection, prepare_test_target};
+use forge_runner::running::target::prepare_test_target;
 use forge_runner::scarb::load_test_artifacts;
 use forge_runner::test_target_summary::TestTargetSummary;
 use foundry_ui::UI;
@@ -55,7 +56,7 @@ pub fn run_test_case(
             .into_iter()
             .map(|t| {
                 tokio::task::spawn_blocking(move || {
-                    prepare_test_target(t, &tracked_resource, TestNameSelection::All)
+                    prepare_test_target(t, &tracked_resource, &NameFilter::All)
                 })
             })
             .collect();

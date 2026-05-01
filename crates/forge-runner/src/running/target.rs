@@ -1,4 +1,5 @@
 use crate::{
+    filtering::NameFilter,
     forge_config::ForgeTrackedResource,
     package_tests::{
         TestDetails,
@@ -20,17 +21,11 @@ use std::{collections::HashMap, sync::Arc};
 use universal_sierra_compiler_api::compile_raw_sierra_at_path;
 use universal_sierra_compiler_api::representation::{AssembledCairoProgram, RawCasmProgram};
 
-#[derive(Debug, Clone, Copy)]
-pub enum TestNameSelection<'a> {
-    All,
-    ExactMatch(&'a str),
-}
-
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn prepare_test_target(
     test_target_raw: TestTargetRaw,
     tracked_resource: &ForgeTrackedResource,
-    test_name_selection: TestNameSelection<'_>,
+    name_filter: &NameFilter,
 ) -> Result<TestTargetWithConfig> {
     let default_executables = vec![];
     let executables = test_target_raw
@@ -40,19 +35,17 @@ pub fn prepare_test_target(
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
         .unwrap_or(&default_executables);
 
-    let selected_test_cases = match test_name_selection {
-        TestNameSelection::All => None,
-        TestNameSelection::ExactMatch(exact_match) => Some(
-            executables
-                .iter()
-                .filter_map(|case| {
-                    let raw_name: String = case.debug_name.clone()?.into();
-                    (sanitize_test_case_name(&raw_name) == exact_match)
-                        .then_some((&case.id, raw_name))
-                })
-                .collect::<Vec<_>>(),
-        ),
-    };
+    let selected_test_cases = name_filter.exact_match().map(|exact_match| {
+        executables
+            .iter()
+            .filter_map(|case| {
+                let raw_name: String = case.debug_name.clone()?.into();
+                (name_filter.matches(&sanitize_test_case_name(&raw_name))
+                    && sanitize_test_case_name(&raw_name) == exact_match)
+                    .then_some((&case.id, raw_name))
+            })
+            .collect::<Vec<_>>()
+    });
 
     if selected_test_cases.as_ref().is_some_and(Vec::is_empty) {
         return Ok(empty_test_target(test_target_raw));

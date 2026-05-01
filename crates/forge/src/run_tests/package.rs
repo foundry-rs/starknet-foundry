@@ -15,7 +15,7 @@ use crate::{
         tests_summary::TestsSummaryMessage,
     },
     shared_cache::FailedTestsCache,
-    test_filter::{NameFilter, TestsFilter},
+    test_filter::TestsFilter,
     warn::warn_if_incompatible_rpc_version,
 };
 use anyhow::Result;
@@ -23,6 +23,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use console::Style;
 use forge_runner::{
+    filtering::NameFilter,
     forge_config::{ForgeConfig, ForgeTrackedResource},
     package_tests::{
         raw::TestTargetRaw,
@@ -30,7 +31,7 @@ use forge_runner::{
         with_config_resolved::{TestCaseWithResolvedConfig, sanitize_test_case_name},
     },
     partition::PartitionConfig,
-    running::target::{TestNameSelection, prepare_test_target},
+    running::target::prepare_test_target,
     scarb::load_test_artifacts,
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
@@ -125,14 +126,11 @@ impl RunForPackageArgs {
         }
 
         let tracked_resource = forge_config.test_runner_config.tracked_resource;
-        let maybe_exact_name = match &tests_filter.name_filter {
-            NameFilter::ExactMatch(name) => Some(name.clone()),
-            _ => None,
-        };
+        let name_filter = tests_filter.name_filter.clone();
 
         let target_handles = raw_test_targets
             .into_iter()
-            .map(|t| spawn_prepare_test_target(t, tracked_resource, maybe_exact_name.clone()))
+            .map(|t| spawn_prepare_test_target(t, tracked_resource, name_filter.clone()))
             .collect();
 
         Ok(RunForPackageArgs {
@@ -149,14 +147,10 @@ impl RunForPackageArgs {
 fn spawn_prepare_test_target(
     target: TestTargetRaw,
     tracked_resource: ForgeTrackedResource,
-    maybe_exact_name: Option<String>,
+    name_filter: NameFilter,
 ) -> JoinHandle<Result<TestTargetWithConfig>> {
     tokio::task::spawn_blocking(move || {
-        let selection = match maybe_exact_name.as_deref() {
-            Some(exact_match) => TestNameSelection::ExactMatch(exact_match),
-            None => TestNameSelection::All,
-        };
-        prepare_test_target(target, &tracked_resource, selection)
+        prepare_test_target(target, &tracked_resource, &name_filter)
     })
 }
 
