@@ -7662,8 +7662,7 @@ dependencies = [
 [[package]]
 name = "speculos-client"
 version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aab48e66d675276b5970b3243e9638053a9ff8d693d4a0f9c2514e83dbbc8cab"
+source = "git+https://github.com/MKowalski8/speculos-client?rev=58d9523#58d9523edebb4b14facfcb8f496ed23bf152a36c"
 dependencies = [
  "hex",
  "reqwest 0.12.28",
