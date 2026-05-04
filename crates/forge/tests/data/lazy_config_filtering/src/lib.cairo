@@ -11,6 +11,6 @@ mod tests {
     #[test]
     #[fork("missing_fork")]
     fn filtered_out_broken_config() {
-        assert(true, 'should never run');
+        assert(false, 'should never run');
     }
 }
