@@ -15,7 +15,6 @@ use cairo_lang_sierra::{
     program::{GenFunction, StatementIdx, TypeDeclaration},
 };
 use rayon::iter::IntoParallelIterator;
-use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use std::{collections::HashMap, sync::Arc};
 use universal_sierra_compiler_api::compile_raw_sierra_at_path;
@@ -35,19 +34,17 @@ pub fn prepare_test_target(
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
         .unwrap_or(&default_executables);
 
-    let selected_test_cases = name_filter.exact_match().map(|exact_match| {
-        executables
-            .iter()
-            .filter_map(|case| {
-                let raw_name: String = case.debug_name.clone()?.into();
-                (name_filter.matches(&sanitize_test_case_name(&raw_name))
-                    && sanitize_test_case_name(&raw_name) == exact_match)
-                    .then_some((&case.id, raw_name))
-            })
-            .collect::<Vec<_>>()
-    });
+    let selected_test_cases: Vec<_> = executables
+        .iter()
+        .filter_map(|case| {
+            let raw_name: String = case.debug_name.clone()?.into();
+            name_filter
+                .matches(&sanitize_test_case_name(&raw_name))
+                .then_some((&case.id, raw_name))
+        })
+        .collect();
 
-    if selected_test_cases.as_ref().is_some_and(Vec::is_empty) {
+    if selected_test_cases.is_empty() {
         return Ok(None);
     }
 
@@ -71,36 +68,18 @@ pub fn prepare_test_target(
         test_target_raw.sierra_program_path.as_std_path(),
     )?);
 
-    let test_cases = if let Some(exact_matches) = selected_test_cases {
-        exact_matches
-            .into_par_iter()
-            .map(|(id, name)| {
-                build_test_case_with_config(
-                    funcs[id],
-                    name,
-                    &type_declarations,
-                    &casm_program,
-                    *tracked_resource,
-                )
-            })
-            .collect::<Result<_>>()?
-    } else {
-        executables
-            .par_iter()
-            .map(|case| {
-                build_test_case_with_config(
-                    funcs[&case.id],
-                    case.debug_name
-                        .clone()
-                        .expect("Failed to get test case name")
-                        .into(),
-                    &type_declarations,
-                    &casm_program,
-                    *tracked_resource,
-                )
-            })
-            .collect::<Result<_>>()?
-    };
+    let test_cases = selected_test_cases
+        .into_par_iter()
+        .map(|(id, name)| {
+            build_test_case_with_config(
+                funcs[id],
+                name,
+                &type_declarations,
+                &casm_program,
+                *tracked_resource,
+            )
+        })
+        .collect::<Result<_>>()?;
 
     Ok(Some(TestTargetWithConfig {
         tests_location: test_target_raw.tests_location,
