@@ -2,7 +2,7 @@ use std::fs;
 
 use crate::e2e::ledger::{
     BRAAVOS_LEDGER_PATH, LEDGER_ACCOUNT_NAME, LEDGER_PUBLIC_KEY, OZ_LEDGER_PATH, READY_LEDGER_PATH,
-    TEST_LEDGER_PATH, TEST_LEDGER_PATH_STORED, automation, setup_speculos,
+    TEST_LEDGER_PATH, TEST_LEDGER_PATH_STORED, automation, set_automation, setup_speculos,
 };
 use crate::helpers::constants::URL;
 use crate::helpers::fixtures::mint_token;
@@ -46,7 +46,7 @@ async fn test_create_ledger_account(
     let (client, url) = setup_speculos(port);
     let tempdir = tempdir().unwrap();
 
-    client.automation(automations).await.unwrap();
+    set_automation(&client, automations).await;
 
     let output = runner(&[
         "--accounts-file",
@@ -114,7 +114,7 @@ async fn test_create_ledger_account(
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_create_ledger_account_add_profile() {
-    let (_, url) = setup_speculos(6004);
+    let (_client, url) = setup_speculos(6004);
     let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
 
     let output = runner(&[
@@ -194,7 +194,7 @@ async fn test_deploy_ledger_account(
 ) {
     let (client, url) = setup_speculos(port);
 
-    client.automation(automations).await.unwrap();
+    set_automation(&client, automations).await;
 
     let tempdir = tempdir().unwrap();
     let accounts_file = tempdir.path().join("accounts.json");
