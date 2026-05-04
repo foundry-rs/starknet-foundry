@@ -18,8 +18,7 @@ pub fn check_enable_gas(
                 .compilation_units
                 .iter()
                 .find(|cu| &cu.target == *test_target)
-                .map(|cu| bool_field_with_default(&cu.compiler_config, "enable_gas", true))
-                .unwrap_or(true);
+                .is_none_or(|cu| bool_field_with_default(&cu.compiler_config, "enable_gas", true));
 
             ensure!(
                 enable_gas,
