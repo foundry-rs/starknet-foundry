@@ -68,7 +68,7 @@ impl PackageTestResult {
 }
 
 pub struct RunForPackageArgs {
-    pub target_handles: Vec<JoinHandle<Result<TestTargetWithConfig>>>,
+    pub target_handles: Vec<JoinHandle<Result<Option<TestTargetWithConfig>>>>,
     pub tests_filter: TestsFilter,
     pub forge_config: Arc<ForgeConfig>,
     pub fork_targets: Vec<ForkTarget>,
@@ -148,7 +148,7 @@ fn spawn_prepare_test_target(
     target: TestTargetRaw,
     tracked_resource: ForgeTrackedResource,
     name_filter: NameFilter,
-) -> JoinHandle<Result<TestTargetWithConfig>> {
+) -> JoinHandle<Result<Option<TestTargetWithConfig>>> {
     tokio::task::spawn_blocking(move || {
         prepare_test_target(target, &tracked_resource, &name_filter)
     })
@@ -195,7 +195,9 @@ pub async fn run_for_package(
     let mut not_filtered_total = 0;
 
     for handle in target_handles {
-        let target_with_config = handle.await??;
+        let Some(target_with_config) = handle.await?? else {
+            continue;
+        };
 
         let mut resolved = resolve_config(
             target_with_config,

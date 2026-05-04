@@ -19,14 +19,14 @@ use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use std::{collections::HashMap, sync::Arc};
 use universal_sierra_compiler_api::compile_raw_sierra_at_path;
-use universal_sierra_compiler_api::representation::{AssembledCairoProgram, RawCasmProgram};
+use universal_sierra_compiler_api::representation::RawCasmProgram;
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn prepare_test_target(
     test_target_raw: TestTargetRaw,
     tracked_resource: &ForgeTrackedResource,
     name_filter: &NameFilter,
-) -> Result<TestTargetWithConfig> {
+) -> Result<Option<TestTargetWithConfig>> {
     let default_executables = vec![];
     let executables = test_target_raw
         .sierra_program
@@ -48,7 +48,7 @@ pub fn prepare_test_target(
     });
 
     if selected_test_cases.as_ref().is_some_and(Vec::is_empty) {
-        return Ok(empty_test_target(test_target_raw));
+        return Ok(None);
     }
 
     macro_rules! by_id {
@@ -102,30 +102,13 @@ pub fn prepare_test_target(
             .collect::<Result<_>>()?
     };
 
-    Ok(TestTargetWithConfig {
+    Ok(Some(TestTargetWithConfig {
         tests_location: test_target_raw.tests_location,
         test_cases,
         sierra_program: test_target_raw.sierra_program,
         sierra_program_path: test_target_raw.sierra_program_path.into(),
         casm_program,
-    })
-}
-
-/// For non-matching name-selected targets, return an empty test target; its CASM is never used.
-fn empty_test_target(test_target_raw: TestTargetRaw) -> TestTargetWithConfig {
-    TestTargetWithConfig {
-        tests_location: test_target_raw.tests_location,
-        test_cases: vec![],
-        sierra_program: test_target_raw.sierra_program,
-        sierra_program_path: test_target_raw.sierra_program_path.into(),
-        casm_program: Arc::new(RawCasmProgram {
-            assembled_cairo_program: AssembledCairoProgram {
-                bytecode: vec![],
-                hints: vec![],
-            },
-            debug_info: vec![],
-        }),
-    }
+    }))
 }
 
 fn build_test_case_with_config(
