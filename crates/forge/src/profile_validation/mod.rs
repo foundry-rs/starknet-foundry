@@ -10,6 +10,7 @@ use serde_json::Value;
 mod backtrace;
 mod coverage;
 mod debugger;
+pub mod enable_gas;
 
 /// Checks if the compiler settings provided in [`Metadata`] can be used to run
 /// coverage, backtrace and debugger if applicable.
@@ -86,10 +87,14 @@ fn bool_field_or_unstable(compiler_config: &Value, key: &str) -> bool {
 }
 
 fn bool_field(compiler_config: &Value, key: &str) -> bool {
+    bool_field_with_default(compiler_config, key, false)
+}
+
+fn bool_field_with_default(compiler_config: &Value, key: &str, default: bool) -> bool {
     compiler_config
         .get(key)
         .and_then(Value::as_bool)
-        .unwrap_or(false)
+        .unwrap_or(default)
 }
 
 fn str_field<'a>(compiler_config: &'a Value, key: &str) -> &'a str {
