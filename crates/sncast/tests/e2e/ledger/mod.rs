@@ -1,6 +1,5 @@
 #![cfg(not(target_arch = "wasm32"))]
 
-use std::env;
 use std::{borrow::Cow, sync::Arc};
 
 use crate::helpers::constants::URL;
@@ -13,7 +12,7 @@ use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{
     BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH,
 };
-use sncast::helpers::ledger::{DerivationPathParser, create_ledger_app};
+use sncast::helpers::ledger::{DerivationPathParser, SncastLedgerTransport};
 use sncast::response::ui::UI;
 use speculos_client::{
     AutomationAction, AutomationCondition, AutomationRule, Button, DeviceModel, SpeculosClient,
@@ -23,6 +22,7 @@ use starknet_rust::core::types::{BlockId, BlockTag};
 use starknet_rust::providers::Provider;
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet_rust::signers::LedgerSigner;
+use starknet_rust::signers::ledger::LedgerStarknetApp;
 use starknet_types_core::felt::Felt;
 use tempfile::TempDir;
 use url::Url;
@@ -49,6 +49,21 @@ pub(crate) fn setup_speculos(port: u16) -> (Arc<SpeculosClient>, String) {
     let client = Arc::new(SpeculosClient::new(DeviceModel::Nanox, port, APP_PATH).unwrap());
     let url = format!("http://127.0.0.1:{port}");
     (client, url)
+}
+
+/// Sets automation rules and, when `ENABLE_BLIND_SIGN` is among them, presses RIGHT to
+/// navigate from the home screen to "App settings" so the rule triggers immediately.
+pub(crate) async fn set_automation(
+    client: &SpeculosClient,
+    rules: &[speculos_client::AutomationRule<'static>],
+) {
+    client.automation(rules).await.unwrap();
+    let needs_blind_sign = rules
+        .iter()
+        .any(|r| r.text.as_deref() == Some("App settings"));
+    if needs_blind_sign {
+        client.click_button(Button::Right).await.unwrap();
+    }
 }
 
 fn create_jsonrpc_client() -> JsonRpcClient<HttpTransport> {
@@ -113,15 +128,8 @@ pub(crate) async fn deploy_ledger_account_of_type(
     parsed.print_warnings(&ui);
     let parsed_path = parsed.path;
 
-    // SAFETY: All tests share the same devnet instance, so even if a race condition causes
-    // `set_var` to race with another test using a different ledger emulator URL, the account
-    // deployment will still reach the correct devnet and remain accessible to the original test.
-    // The ledger emulator URL has no effect on account deployment when using the emulator.
-    unsafe {
-        env::set_var("LEDGER_EMULATOR_URL", speculos_url);
-    };
-
-    let app = create_ledger_app().await.unwrap();
+    let transport = SncastLedgerTransport::new(speculos_url.to_string()).unwrap();
+    let app = LedgerStarknetApp::from_transport(transport);
     let ledger_signer = LedgerSigner::new_with_app(parsed_path, app).unwrap();
     let chain_id = starknet_rust::core::chain_id::SEPOLIA;
 
@@ -168,15 +176,33 @@ pub(crate) mod automation {
     use super::*;
 
     // Screen flow: "Public Key (1/2)" -> Right -> "Public Key (2/2)" -> Right -> "Approve" -> Both
-    // Trigger fires on the "Approve" confirm page; a single Both press confirms.
+    // Trigger fires on "Public Key (1/2)" and navigates to Approve, then confirms.
     pub(crate) const APPROVE_PUBLIC_KEY: AutomationRule<'static> = AutomationRule {
-        text: Some(Cow::Borrowed("Approve")),
+        text: Some(Cow::Borrowed("Public Key (1/2)")),
         regexp: None,
         x: None,
         y: None,
         conditions: &[],
         actions: &[
-            // Press both (confirm)
+            // Right (to "Public Key (2/2)")
+            AutomationAction::Button {
+                button: Button::Right,
+                pressed: true,
+            },
+            AutomationAction::Button {
+                button: Button::Right,
+                pressed: false,
+            },
+            // Right (to "Approve")
+            AutomationAction::Button {
+                button: Button::Right,
+                pressed: true,
+            },
+            AutomationAction::Button {
+                button: Button::Right,
+                pressed: false,
+            },
+            // Both (confirm)
             AutomationAction::Button {
                 button: Button::Left,
                 pressed: true,
@@ -196,11 +222,13 @@ pub(crate) mod automation {
         ],
     };
 
-    // Screen flow from home "Starknet": Right -> "App settings" -> Both -> settings list ->
-    // Both -> blind signing toggled on.
+    // Screen flow: navigate to "App settings" (via press_button RIGHT from home) ->
+    // Both (enter settings, shows "Blind signing" toggle OFF) -> Both (toggle ON).
+    // The trigger is "App settings" so the caller must press RIGHT after registering this
+    // rule to navigate away from the home screen and land on "App settings".
     pub(crate) const ENABLE_BLIND_SIGN: AutomationRule<'static> = AutomationRule {
-        text: None,
-        regexp: Some(Cow::Borrowed("^(S)?tarknet$")),
+        text: Some(Cow::Borrowed("App settings")),
+        regexp: None,
         x: None,
         y: None,
         conditions: &[AutomationCondition {
@@ -208,16 +236,7 @@ pub(crate) mod automation {
             value: false,
         }],
         actions: &[
-            // Right (navigate to "App settings")
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Both (enter settings)
+            // Both (enter settings, shows "Blind signing" toggle OFF)
             AutomationAction::Button {
                 button: Button::Left,
                 pressed: true,
@@ -234,7 +253,7 @@ pub(crate) mod automation {
                 button: Button::Right,
                 pressed: false,
             },
-            // Both (toggle blind signing on)
+            // Both (toggle blind signing ON)
             AutomationAction::Button {
                 button: Button::Left,
                 pressed: true,
@@ -245,23 +264,6 @@ pub(crate) mod automation {
             },
             AutomationAction::Button {
                 button: Button::Left,
-                pressed: false,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Left to menu
-            AutomationAction::Button {
-                button: Button::Left,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Left,
-                pressed: false,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
                 pressed: false,
             },
             AutomationAction::Button {

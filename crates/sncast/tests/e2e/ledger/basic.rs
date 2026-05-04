@@ -1,4 +1,4 @@
-use crate::e2e::ledger::{TEST_LEDGER_PATH, automation, setup_speculos};
+use crate::e2e::ledger::{TEST_LEDGER_PATH, automation, set_automation, setup_speculos};
 use crate::helpers::runner::runner;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 
@@ -12,7 +12,7 @@ async fn test_get_app_version() {
         .assert()
         .success();
 
-    assert_stdout_contains(output, "App Version: 2.3.4");
+    assert_stdout_contains(output, "App Version: 2.4.0");
 }
 
 #[tokio::test]
@@ -63,13 +63,14 @@ async fn test_get_public_key_with_confirmation() {
 async fn test_sign_hash() {
     let (client, url) = setup_speculos(4004);
 
-    client
-        .automation(&[
+    set_automation(
+        &client,
+        &[
             automation::ENABLE_BLIND_SIGN,
             automation::APPROVE_BLIND_SIGN_HASH,
-        ])
-        .await
-        .unwrap();
+        ],
+    )
+    .await;
 
     let output = runner(&[
         "ledger",
