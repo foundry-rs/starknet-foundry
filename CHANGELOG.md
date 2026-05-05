@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Changes
+
+- `snforge_scarb_plugin` diagnostics for named-argument kind violations now include both possible values and invalid arguments found.
+
 #### Fixed
 
 - Bug in forge debugging and `--gas-report` that caused panic in case of a call to non-existent selector
