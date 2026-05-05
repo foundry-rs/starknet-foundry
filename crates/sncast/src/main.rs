@@ -357,7 +357,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 // TODO(#3959) Remove `base_ui`
                 ui.base_ui(),
             )
-            .expect("Failed to build contract");
+            .context("Failed to build contract")?;
 
             let result = with_account!(&account, |account| {
                 starknet_commands::declare::declare(
@@ -394,7 +394,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 // TODO(#3785)
                 let contract_artifacts = artifacts
                     .get(&declare.contract_name)
-                    .expect("Failed to get contract artifacts");
+                    .context("Failed to get contract artifacts")?;
                 let contract_definition: SierraClass =
                     serde_json::from_str(&contract_artifacts.sierra)
                         .context("Failed to parse sierra artifact")?;
@@ -511,7 +511,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                     // TODO(#3959) Remove `base_ui`
                     ui.base_ui(),
                 )
-                .expect("Failed to build contract");
+                .context("Failed to build contract")?;
 
                 let declare_result = with_account!(&account, |account| {
                     declare(
