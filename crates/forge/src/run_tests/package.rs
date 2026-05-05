@@ -231,11 +231,13 @@ pub async fn run_for_package(
         resolved_targets.push((tests_location, Some(resolved)));
     }
 
-    let resolved_targets_for_warning: Vec<_> = resolved_targets
-        .iter()
-        .filter_map(|(_, resolved)| resolved.clone())
-        .collect();
-    warn_if_incompatible_rpc_version(&resolved_targets_for_warning, ui.clone()).await?;
+    warn_if_incompatible_rpc_version(
+        resolved_targets
+            .iter()
+            .filter_map(|(_, resolved)| resolved.as_ref()),
+        ui.clone(),
+    )
+    .await?;
 
     ui.println(&CollectedTestsCountMessage {
         tests_num: not_filtered_total,
