@@ -243,7 +243,7 @@ pub async fn run_for_package(
 
     let resolved_targets: Vec<_> = prepared_targets
         .iter()
-        .filter_map(|target| target.resolved.as_ref().cloned())
+        .filter_map(|target| target.resolved.clone())
         .collect();
     warn_if_incompatible_rpc_version(&resolved_targets, ui.clone()).await?;
 
