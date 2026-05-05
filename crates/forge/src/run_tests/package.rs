@@ -47,11 +47,6 @@ use tokio::task::JoinHandle;
 
 type PrepareTargetHandle = JoinHandle<Result<(Option<TestTargetWithConfig>, TestTargetLocation)>>;
 
-struct PreparedTarget {
-    location: TestTargetLocation,
-    resolved: Option<TestTargetWithResolvedConfig>,
-}
-
 pub struct PackageTestResult {
     summaries: Vec<TestTargetSummary>,
     filtered: Option<usize>,
@@ -200,7 +195,8 @@ pub async fn run_for_package(
     exit_first_channel: &mut ExitFirstChannel,
 ) -> Result<PackageTestResult> {
     // Resolve all targets first so the collected count includes #[ignore] filtering.
-    let mut prepared_targets = vec![];
+    let mut resolved_targets: Vec<(TestTargetLocation, Option<TestTargetWithResolvedConfig>)> =
+        vec![];
     let mut all_tests = 0;
     let mut not_filtered_total = 0;
 
@@ -208,10 +204,7 @@ pub async fn run_for_package(
         let (maybe_target, tests_location) = handle.await??;
 
         let Some(target_with_config) = maybe_target else {
-            prepared_targets.push(PreparedTarget {
-                location: tests_location,
-                resolved: None,
-            });
+            resolved_targets.push((tests_location, None));
             continue;
         };
 
@@ -235,17 +228,14 @@ pub async fn run_for_package(
         all_tests += all;
         not_filtered_total += not_filtered;
 
-        prepared_targets.push(PreparedTarget {
-            location: tests_location,
-            resolved: Some(resolved),
-        });
+        resolved_targets.push((tests_location, Some(resolved)));
     }
 
-    let resolved_targets: Vec<_> = prepared_targets
+    let resolved_targets_for_warning: Vec<_> = resolved_targets
         .iter()
-        .filter_map(|target| target.resolved.clone())
+        .filter_map(|(_, resolved)| resolved.clone())
         .collect();
-    warn_if_incompatible_rpc_version(&resolved_targets, ui.clone()).await?;
+    warn_if_incompatible_rpc_version(&resolved_targets_for_warning, ui.clone()).await?;
 
     ui.println(&CollectedTestsCountMessage {
         tests_num: not_filtered_total,
@@ -254,9 +244,9 @@ pub async fn run_for_package(
 
     let mut summaries = vec![];
 
-    for prepared_target in prepared_targets {
-        let Some(resolved) = prepared_target.resolved else {
-            ui.println(&TestsRunMessage::new(prepared_target.location, 0));
+    for (location, resolved) in resolved_targets {
+        let Some(resolved) = resolved else {
+            ui.println(&TestsRunMessage::new(location, 0));
             continue;
         };
 
