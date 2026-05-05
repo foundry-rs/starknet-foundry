@@ -208,11 +208,9 @@ async fn test_invalid_selector() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        Error: Failed to convert entry point selector to FieldElement
-
-        Caused by:
-            the provided name contains non-ASCII characters
-  "},
+        Command: call
+        Error: Failed to convert entry point selector to FieldElement: the provided name contains non-ASCII characters
+        "},
     );
 }
 
