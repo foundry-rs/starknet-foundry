@@ -256,6 +256,20 @@ async fn test_show_config_malformed() {
 }
 
 #[tokio::test]
+async fn test_show_config_malformed_json() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_malformed.toml", None);
+    let args = vec!["--json", "show-config"];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        r#"{"command":"show-config","error":"Failed to load local config at [..]snfoundry.toml: Failed to parse snfoundry.toml config file: TOML parse error at line 2, column 10\n  |\n2 | invalid =\n  |          ^\nstring values must be quoted, expected literal string\n","type":"error"}"#,
+    );
+}
+
+#[tokio::test]
 async fn test_show_config_provider_error() {
     let t = tempdir().unwrap();
     fs::write(

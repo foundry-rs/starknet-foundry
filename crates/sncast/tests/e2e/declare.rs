@@ -472,7 +472,39 @@ fn test_scarb_build_fails_when_wrong_cairo_path() {
     let output = snapbox.assert().failure();
     assert_stderr_contains(
         output,
-        "Failed to build contract: Failed to build using scarb; `scarb` exited with error",
+        indoc! {r"
+            Command: declare
+            Error: Failed to build contract
+
+            Caused by:
+                Failed to build using scarb; `scarb` exited with error
+        "},
+    );
+}
+
+#[test]
+fn test_scarb_build_fails_when_wrong_cairo_path_json() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/build_fails");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let args = vec![
+        "--json",
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user1",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "BuildFails",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+    assert_stderr_contains(
+        output,
+        r#"{"command":"declare","error":"Failed to build contract: Failed to build using scarb; `scarb` exited with error","type":"error"}"#,
     );
 }
 
