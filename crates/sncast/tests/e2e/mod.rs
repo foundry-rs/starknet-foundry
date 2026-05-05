@@ -7,7 +7,6 @@ mod declare;
 mod declare_from;
 mod deploy;
 mod devnet_accounts;
-mod error_routing_baseline;
 mod fee;
 mod invoke;
 pub(crate) mod ledger;
