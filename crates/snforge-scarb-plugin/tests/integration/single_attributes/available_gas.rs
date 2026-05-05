@@ -78,7 +78,7 @@ fn does_not_work_with_unnamed_arg() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(formatdoc!(
-            "#[available_gas] can be used with named arguments only"
+            "#[available_gas] can be used with named arguments only [possible values: l1_gas, l1_data_gas, l2_gas]"
         ))],
     );
 }

@@ -39,9 +39,7 @@ impl AttributeCollector for FuzzerCollector {
         args: Arguments,
         _warns: &mut Vec<Diagnostic>,
     ) -> Result<TokenStream, Diagnostics> {
-        let named_args = args.named_only::<Self>()?;
-
-        named_args.allow_only::<Self>(&["seed", "runs"])?;
+        let named_args = args.named_only::<Self>(&["seed", "runs"])?;
 
         let seed = named_args
             .as_once_optional("seed")?

@@ -67,12 +67,18 @@ impl Arguments {
     }
 
     #[inline]
-    pub fn named_only<T: AttributeInfo>(&self) -> Result<&NamedArgs, Diagnostic> {
-        if self.shorthand.is_empty() && self.unnamed.is_empty() {
-            Ok(&self.named)
-        } else {
-            Err(T::error("can be used with named arguments only"))
+    pub fn named_only<T: AttributeInfo>(
+        &self,
+        allowed: &[&str],
+    ) -> Result<&NamedArgs, Diagnostic> {
+        if !self.shorthand.is_empty() || !self.unnamed.is_empty() {
+            let possible = allowed.join(", ");
+            return Err(T::error(format!(
+                "can be used with named arguments only [possible values: {possible}]",
+            )));
         }
+        self.named.allow_only::<T>(allowed)?;
+        Ok(&self.named)
     }
 
     #[inline]

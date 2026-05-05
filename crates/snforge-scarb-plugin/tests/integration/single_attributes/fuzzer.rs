@@ -200,7 +200,7 @@ fn fail_with_unnamed_arg() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(
-            "#[fuzzer] can be used with named arguments only",
+            "#[fuzzer] can be used with named arguments only [possible values: seed, runs]",
         )],
     );
 }
