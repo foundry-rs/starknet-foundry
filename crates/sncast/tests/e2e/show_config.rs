@@ -196,7 +196,10 @@ async fn test_only_one_from_url_and_network_allowed() {
         output,
         indoc! { r"
             Command: show-config
-            Error: Failed to load local config at [..]snfoundry.toml: Only one of `url` or `network` may be specified
+            Error: Failed to load local config at [..]snfoundry.toml
+
+            Caused by:
+                Only one of `url` or `network` may be specified
         " },
     );
 }
@@ -213,7 +216,10 @@ async fn test_stark_scan_as_block_explorer() {
         output,
         indoc! { r"
             Command: show-config
-            Error: Failed to load local config at [..]snfoundry.toml: starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice.
+            Error: Failed to load local config at [..]snfoundry.toml
+
+            Caused by:
+                starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice.
         " },
     );
 }
@@ -240,11 +246,11 @@ async fn test_show_config_malformed() {
         output,
         indoc! { r"
             Command: show-config
-            Error: Failed to load local config at [..]snfoundry.toml: Failed to parse snfoundry.toml config file: TOML parse error at line 2, column 10
-              |
-            2 | invalid =
-              |          ^
-            string values must be quoted, expected literal string
+            Error: Failed to load local config at [..]snfoundry.toml
+
+            Caused by:
+                0: Failed to parse snfoundry.toml config file
+                1: TOML parse error at line 2, column 10
         " },
     );
 }
@@ -460,7 +466,10 @@ async fn test_default_global_profile_with_invalid_values() {
         output,
         indoc! { r"
             Command: show-config
-            Error: Failed to load global config at [..]snfoundry.toml: starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice.
+            Error: Failed to load global config at [..]snfoundry.toml
+
+            Caused by:
+                starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice.
         " },
     );
 }
@@ -486,7 +495,10 @@ async fn test_default_global_profile_with_unsupported_field() {
         output,
         indoc! { r#"
             Command: show-config
-            Error: Failed to load global config at [..]snfoundry.toml: unknown field(s) ["bar", "baz", "foo"]
+            Error: Failed to load global config at [..]snfoundry.toml
+
+            Caused by:
+                unknown field(s) ["bar", "baz", "foo"]
         "# },
     );
 }
@@ -532,7 +544,10 @@ async fn test_invalid_effective_config() {
             - CLI flags
             - Local config: [..]snfoundry.toml
             - Global config: [..]snfoundry.toml
-            : retry_interval cannot be greater than timeout
+
+
+            Caused by:
+                retry_interval cannot be greater than timeout
         " },
     );
 }
@@ -571,7 +586,10 @@ async fn test_invalid_effective_config_from_cli() {
             - CLI flags
             - Local config: missing
             - Global config: [..]snfoundry.toml
-            : retry_interval cannot be greater than timeout
+
+
+            Caused by:
+                retry_interval cannot be greater than timeout
         " },
     );
 }
@@ -623,7 +641,10 @@ async fn test_zero_wait_params_in_config() {
         output,
         indoc! { r"
             Command: show-config
-            Error: Failed to load local config at [..]snfoundry.toml: Failed to parse field `wait-params.retry-interval`: invalid value: integer `0`, expected a nonzero u8
+            Error: Failed to load local config at [..]snfoundry.toml
+
+            Caused by:
+                Failed to parse field `wait-params.retry-interval`: invalid value: integer `0`, expected a nonzero u8
         "},
     );
 }

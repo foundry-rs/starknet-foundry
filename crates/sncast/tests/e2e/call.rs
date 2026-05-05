@@ -209,7 +209,10 @@ async fn test_invalid_selector() {
         output,
         indoc! {r"
         Command: call
-        Error: Failed to convert entry point selector to FieldElement: the provided name contains non-ASCII characters
+        Error: Failed to convert entry point selector to FieldElement
+
+        Caused by:
+            the provided name contains non-ASCII characters
         "},
     );
 }

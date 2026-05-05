@@ -302,7 +302,7 @@ fn main() -> ExitCode {
         Err(err) => {
             ui.print_error(
                 &command_name,
-                ResponseError::new(command_name.clone(), format!("{err:#}")),
+                ResponseError::from_anyhow(command_name.clone(), &err),
             );
             ExitCode::FAILURE
         }
