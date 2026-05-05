@@ -26,6 +26,7 @@ use forge_runner::{
     filtering::NameFilter,
     forge_config::{ForgeConfig, ForgeTrackedResource},
     package_tests::{
+        TestTargetLocation,
         raw::TestTargetRaw,
         with_config::TestTargetWithConfig,
         with_config_resolved::{TestCaseWithResolvedConfig, sanitize_test_case_name},
@@ -42,7 +43,7 @@ use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
 use tokio::task::JoinHandle;
 
-type PrepareTargetHandle = JoinHandle<Result<Option<TestTargetWithConfig>>>;
+type PrepareTargetHandle = JoinHandle<Result<(Option<TestTargetWithConfig>, TestTargetLocation)>>;
 
 pub struct PackageTestResult {
     summaries: Vec<TestTargetSummary>,
@@ -192,12 +193,22 @@ pub async fn run_for_package(
     exit_first_channel: &mut ExitFirstChannel,
 ) -> Result<PackageTestResult> {
     // Resolve all targets first so the collected count includes #[ignore] filtering.
+    // target_order preserves the original handle order for "Running X" messages.
+    enum TargetOrder {
+        Skipped(TestTargetLocation),
+        ResolvedIdx(usize),
+    }
+
     let mut resolved_targets = vec![];
+    let mut target_order: Vec<TargetOrder> = vec![];
     let mut all_tests = 0;
     let mut not_filtered_total = 0;
 
     for handle in target_handles {
-        let Some(target_with_config) = handle.await?? else {
+        let (maybe_target, tests_location) = handle.await??;
+
+        let Some(target_with_config) = maybe_target else {
+            target_order.push(TargetOrder::Skipped(tests_location));
             continue;
         };
 
@@ -221,6 +232,7 @@ pub async fn run_for_package(
         all_tests += all;
         not_filtered_total += not_filtered;
 
+        target_order.push(TargetOrder::ResolvedIdx(resolved_targets.len()));
         resolved_targets.push(resolved);
     }
 
@@ -233,7 +245,15 @@ pub async fn run_for_package(
 
     let mut summaries = vec![];
 
-    for resolved in resolved_targets {
+    for order in target_order {
+        let resolved = match order {
+            TargetOrder::Skipped(location) => {
+                ui.println(&TestsRunMessage::new(location, 0));
+                continue;
+            }
+            TargetOrder::ResolvedIdx(idx) => resolved_targets.remove(idx - summaries.len()),
+        };
+
         ui.println(&TestsRunMessage::new(
             resolved.tests_location,
             sum_test_cases_from_test_target(

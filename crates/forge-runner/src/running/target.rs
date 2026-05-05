@@ -2,7 +2,7 @@ use crate::{
     filtering::NameFilter,
     forge_config::ForgeTrackedResource,
     package_tests::{
-        TestDetails,
+        TestDetails, TestTargetLocation,
         raw::TestTargetRaw,
         with_config::{TestCaseWithConfig, TestTargetWithConfig},
         with_config_resolved::sanitize_test_case_name,
@@ -26,7 +26,8 @@ pub fn prepare_test_target(
     test_target_raw: TestTargetRaw,
     tracked_resource: &ForgeTrackedResource,
     name_filter: &NameFilter,
-) -> Result<Option<TestTargetWithConfig>> {
+) -> Result<(Option<TestTargetWithConfig>, TestTargetLocation)> {
+    let tests_location = test_target_raw.tests_location;
     let default_executables = vec![];
     let executables = test_target_raw
         .sierra_program
@@ -48,7 +49,7 @@ pub fn prepare_test_target(
     });
 
     if exact_matches.as_ref().is_some_and(Vec::is_empty) {
-        return Ok(None);
+        return Ok((None, tests_location));
     }
 
     macro_rules! by_id {
@@ -102,13 +103,16 @@ pub fn prepare_test_target(
             .collect::<Result<_>>()?
     };
 
-    Ok(Some(TestTargetWithConfig {
-        tests_location: test_target_raw.tests_location,
-        test_cases,
-        sierra_program: test_target_raw.sierra_program,
-        sierra_program_path: test_target_raw.sierra_program_path.into(),
-        casm_program,
-    }))
+    Ok((
+        Some(TestTargetWithConfig {
+            tests_location,
+            test_cases,
+            sierra_program: test_target_raw.sierra_program,
+            sierra_program_path: test_target_raw.sierra_program_path.into(),
+            casm_program,
+        }),
+        tests_location,
+    ))
 }
 
 fn build_test_case_with_config(
