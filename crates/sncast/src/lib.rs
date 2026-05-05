@@ -535,6 +535,11 @@ pub fn get_account_data_from_keystore(
         .pointer("/variant/legacy")
         .and_then(Value::as_bool);
     let account_type = get_string_value_from_json(&account_info, "/variant/type")
+        // "argent" was renamed to "ready"; map for backward compat with old account files
+        .map(|t| match t.as_str() {
+            "argent" => "ready".to_string(),
+            _ => t,
+        })
         .and_then(|account_type| account_type.parse().ok());
 
     let public_key = match account_type.context("Failed to get type key")? {
@@ -1133,6 +1138,21 @@ mod tests {
         assert_eq!(account.deployed, Some(true));
         assert_eq!(account.legacy, Some(true));
         assert_eq!(account.account_type, Some(AccountType::OpenZeppelin));
+    }
+
+    #[test]
+    fn test_get_argent_account_from_keystore_backward_compat() {
+        set_keystore_password_env();
+        let account = get_account_data_from_keystore(
+            "tests/data/keystore/my_account_argent.json",
+            &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
+        )
+        .unwrap();
+        assert_eq!(account.account_type, Some(AccountType::Ready));
+        assert_eq!(
+            account.public_key.into_hex_string(),
+            "0xe2d3d7080bfc665e0060a06e8e95c3db3ff78a1fec4cc81ddc87e49a12e0a"
+        );
     }
 
     #[test]
