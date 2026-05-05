@@ -41,7 +41,7 @@ impl AttributeCollector for ForkCollector {
 
 fn inline_args(db: &SimpleParserDatabase, args: &Arguments) -> Result<TokenStream, Diagnostic> {
     let named_args = args
-        .named_only::<ForkCollector>(&["url", "block_hash", "block_number", "block_tag"])?;
+        .named_only::<ForkCollector>(db, &["url", "block_hash", "block_number", "block_tag"])?;
 
     let block_id = named_args.one_of_once(&[
         BlockIdVariants::Hash,

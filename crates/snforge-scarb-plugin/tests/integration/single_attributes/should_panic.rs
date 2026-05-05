@@ -118,7 +118,7 @@ fn fails_with_unnamed_arg() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(
-            "#[should_panic] can be used with named arguments only [possible values: expected]",
+            "#[should_panic] can be used with named arguments only [possible values: expected]. invalid arguments found: \"uwu\"",
         )],
     );
 }
