@@ -36,21 +36,25 @@ pub fn prepare_test_target(
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
         .unwrap_or(&default_executables);
 
-    let exact_matches = name_filter.exact_match().map(|_| {
-        executables
-            .iter()
-            .filter_map(|case| {
-                let raw_name: String = case.debug_name.clone()?.into();
-                name_filter
-                    .matches(&sanitize_test_case_name(&raw_name))
-                    .then_some((&case.id, raw_name))
-            })
-            .collect::<Vec<_>>()
-    });
+    let exact_matches = match name_filter {
+        NameFilter::ExactMatch(exact_match) => {
+            let matches = executables
+                .iter()
+                .filter_map(|case| {
+                    let raw_name: String = case.debug_name.clone()?.into();
+                    let sanitized_name = sanitize_test_case_name(&raw_name);
+                    (sanitized_name == *exact_match).then_some((&case.id, raw_name))
+                })
+                .collect::<Vec<_>>();
 
-    if exact_matches.as_ref().is_some_and(Vec::is_empty) {
-        return Ok((None, tests_location));
-    }
+            if matches.is_empty() {
+                return Ok((None, tests_location));
+            }
+
+            Some(matches)
+        }
+        NameFilter::All | NameFilter::Match(_) => None,
+    };
 
     macro_rules! by_id {
         ($field:ident) => {{
