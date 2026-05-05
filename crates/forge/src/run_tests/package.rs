@@ -29,7 +29,9 @@ use forge_runner::{
         TestTargetLocation,
         raw::TestTargetRaw,
         with_config::TestTargetWithConfig,
-        with_config_resolved::{TestCaseWithResolvedConfig, sanitize_test_case_name},
+        with_config_resolved::{
+            TestCaseWithResolvedConfig, TestTargetWithResolvedConfig, sanitize_test_case_name,
+        },
     },
     partition::PartitionConfig,
     running::target::prepare_test_target,
@@ -44,6 +46,11 @@ use std::sync::Arc;
 use tokio::task::JoinHandle;
 
 type PrepareTargetHandle = JoinHandle<Result<(Option<TestTargetWithConfig>, TestTargetLocation)>>;
+
+struct PreparedTarget {
+    location: TestTargetLocation,
+    resolved: Option<TestTargetWithResolvedConfig>,
+}
 
 pub struct PackageTestResult {
     summaries: Vec<TestTargetSummary>,
@@ -193,14 +200,7 @@ pub async fn run_for_package(
     exit_first_channel: &mut ExitFirstChannel,
 ) -> Result<PackageTestResult> {
     // Resolve all targets first so the collected count includes #[ignore] filtering.
-    // target_order preserves the original handle order for "Running X" messages.
-    enum TargetOrder {
-        Skipped(TestTargetLocation),
-        ResolvedIdx(usize),
-    }
-
-    let mut resolved_targets = vec![];
-    let mut target_order: Vec<TargetOrder> = vec![];
+    let mut prepared_targets = vec![];
     let mut all_tests = 0;
     let mut not_filtered_total = 0;
 
@@ -208,7 +208,10 @@ pub async fn run_for_package(
         let (maybe_target, tests_location) = handle.await??;
 
         let Some(target_with_config) = maybe_target else {
-            target_order.push(TargetOrder::Skipped(tests_location));
+            prepared_targets.push(PreparedTarget {
+                location: tests_location,
+                resolved: None,
+            });
             continue;
         };
 
@@ -232,10 +235,16 @@ pub async fn run_for_package(
         all_tests += all;
         not_filtered_total += not_filtered;
 
-        target_order.push(TargetOrder::ResolvedIdx(resolved_targets.len()));
-        resolved_targets.push(resolved);
+        prepared_targets.push(PreparedTarget {
+            location: tests_location,
+            resolved: Some(resolved),
+        });
     }
 
+    let resolved_targets: Vec<_> = prepared_targets
+        .iter()
+        .filter_map(|target| target.resolved.as_ref().cloned())
+        .collect();
     warn_if_incompatible_rpc_version(&resolved_targets, ui.clone()).await?;
 
     ui.println(&CollectedTestsCountMessage {
@@ -245,13 +254,10 @@ pub async fn run_for_package(
 
     let mut summaries = vec![];
 
-    for order in target_order {
-        let resolved = match order {
-            TargetOrder::Skipped(location) => {
-                ui.println(&TestsRunMessage::new(location, 0));
-                continue;
-            }
-            TargetOrder::ResolvedIdx(idx) => resolved_targets.remove(idx - summaries.len()),
+    for prepared_target in prepared_targets {
+        let Some(resolved) = prepared_target.resolved else {
+            ui.println(&TestsRunMessage::new(prepared_target.location, 0));
+            continue;
         };
 
         ui.println(&TestsRunMessage::new(
