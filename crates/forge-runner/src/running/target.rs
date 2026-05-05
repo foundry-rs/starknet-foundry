@@ -15,7 +15,6 @@ use cairo_lang_sierra::{
     program::{GenFunction, StatementIdx, TypeDeclaration},
 };
 use rayon::iter::IntoParallelIterator;
-use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use std::{collections::HashMap, sync::Arc};
 use universal_sierra_compiler_api::compile_raw_sierra_at_path;
@@ -26,7 +25,7 @@ pub fn prepare_test_target(
     test_target_raw: TestTargetRaw,
     tracked_resource: &ForgeTrackedResource,
     name_filter: &NameFilter,
-) -> Result<Option<TestTargetWithConfig>> {
+) -> Result<(Option<TestTargetWithConfig>, usize)> {
     let default_executables = vec![];
     let executables = test_target_raw
         .sierra_program
@@ -35,23 +34,20 @@ pub fn prepare_test_target(
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
         .unwrap_or(&default_executables);
 
-    // For exact matching, pre-filter here to skip CASM compilation entirely when
-    // no test in this target matches. For other filters, all test cases must flow
-    // through resolve_config so that the "filtered out" count stays correct.
-    let exact_matches = name_filter.exact_match().map(|_| {
-        executables
-            .iter()
-            .filter_map(|case| {
-                let raw_name: String = case.debug_name.clone()?.into();
-                name_filter
-                    .matches(&sanitize_test_case_name(&raw_name))
-                    .then_some((&case.id, raw_name))
-            })
-            .collect::<Vec<_>>()
-    });
+    let matching: Vec<_> = executables
+        .iter()
+        .filter_map(|case| {
+            let raw_name: String = case.debug_name.clone()?.into();
+            name_filter
+                .matches(&sanitize_test_case_name(&raw_name))
+                .then_some((&case.id, raw_name))
+        })
+        .collect();
 
-    if exact_matches.as_ref().is_some_and(Vec::is_empty) {
-        return Ok(None);
+    let pre_filtered_count = executables.len() - matching.len();
+
+    if matching.is_empty() {
+        return Ok((None, pre_filtered_count));
     }
 
     macro_rules! by_id {
@@ -74,44 +70,29 @@ pub fn prepare_test_target(
         test_target_raw.sierra_program_path.as_std_path(),
     )?);
 
-    let test_cases = if let Some(matches) = exact_matches {
-        matches
-            .into_par_iter()
-            .map(|(id, name)| {
-                build_test_case_with_config(
-                    funcs[id],
-                    name,
-                    &type_declarations,
-                    &casm_program,
-                    *tracked_resource,
-                )
-            })
-            .collect::<Result<_>>()?
-    } else {
-        executables
-            .par_iter()
-            .map(|case| {
-                build_test_case_with_config(
-                    funcs[&case.id],
-                    case.debug_name
-                        .clone()
-                        .expect("Failed to get test case name")
-                        .into(),
-                    &type_declarations,
-                    &casm_program,
-                    *tracked_resource,
-                )
-            })
-            .collect::<Result<_>>()?
-    };
+    let test_cases = matching
+        .into_par_iter()
+        .map(|(id, name)| {
+            build_test_case_with_config(
+                funcs[id],
+                name,
+                &type_declarations,
+                &casm_program,
+                *tracked_resource,
+            )
+        })
+        .collect::<Result<_>>()?;
 
-    Ok(Some(TestTargetWithConfig {
-        tests_location: test_target_raw.tests_location,
-        test_cases,
-        sierra_program: test_target_raw.sierra_program,
-        sierra_program_path: test_target_raw.sierra_program_path.into(),
-        casm_program,
-    }))
+    Ok((
+        Some(TestTargetWithConfig {
+            tests_location: test_target_raw.tests_location,
+            test_cases,
+            sierra_program: test_target_raw.sierra_program,
+            sierra_program_path: test_target_raw.sierra_program_path.into(),
+            casm_program,
+        }),
+        pre_filtered_count,
+    ))
 }
 
 fn build_test_case_with_config(
