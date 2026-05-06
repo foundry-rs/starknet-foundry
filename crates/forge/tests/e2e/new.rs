@@ -25,14 +25,7 @@ static RE_NEWLINES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\n{3,}").unw
 
 #[test_case(&Template::CairoProgram; "cairo-program")]
 #[test_case(&Template::BalanceContract; "balance-contract")]
-#[cfg_attr(
-    not(feature = "run_test_for_scarb_since_2_15_1"),
-    test_case(&Template::Erc20Contract => ignore["Skipping test because feature run_test_for_scarb_since_2_15_1 is not enabled"] (); "erc20-contract")
-)]
-#[cfg_attr(
-    feature = "run_test_for_scarb_since_2_15_1",
-    test_case(&Template::Erc20Contract; "erc20-contract")
-)]
+#[test_case(&Template::Erc20Contract; "erc20-contract")]
 fn create_new_project_dir_not_exist(template: &Template) {
     let temp = tempdir_with_tool_versions().unwrap();
     let project_path = temp.join("new").join("project");
