@@ -8,7 +8,7 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallSuccess,
 };
 use cheatnet::trace_data::{CallTrace, CallTraceNode};
-use data_transformer::{reverse_transform_input, reverse_transform_output};
+use data_transformer::{ReverseTransformError, reverse_transform_input, reverse_transform_output};
 use starknet_api::core::ClassHash;
 use starknet_api::execution_utils::format_panic_data;
 use starknet_rust::core::types::contract::AbiEntry;
@@ -109,13 +109,15 @@ impl<'a> Collector<'a> {
     fn collect_transformed_calldata(&self, abi: &[AbiEntry]) -> TransformedCalldata {
         let calldata = &self.call_trace.entry_point.calldata.0;
         let selector = &self.call_trace.entry_point.entry_point_selector.0;
-        let transformed = reverse_transform_input(calldata, abi, selector).unwrap_or_else(|_| {
-            calldata
+        let transformed = match reverse_transform_input(calldata, abi, selector) {
+            Ok(s) => s,
+            Err(ReverseTransformError::FunctionNotFound(_)) => calldata
                 .iter()
                 .map(|f| format!("{f:#x}"))
                 .collect::<Vec<_>>()
-                .join(", ")
-        });
+                .join(", "),
+            Err(e) => format!("Failed to decode calldata: {e}"),
+        };
         TransformedCalldata(transformed)
     }
 
@@ -123,14 +125,15 @@ impl<'a> Collector<'a> {
         let selector = &self.call_trace.entry_point.entry_point_selector.0;
         TransformedCallResult(match &self.call_trace.result {
             Ok(CallSuccess { ret_data }) => {
-                let ret_data_str = reverse_transform_output(ret_data, abi, selector)
-                    .unwrap_or_else(|_| {
-                        ret_data
-                            .iter()
-                            .map(|f| format!("{f:#x}"))
-                            .collect::<Vec<_>>()
-                            .join(", ")
-                    });
+                let ret_data_str = match reverse_transform_output(ret_data, abi, selector) {
+                    Ok(s) => s,
+                    Err(ReverseTransformError::FunctionNotFound(_)) => ret_data
+                        .iter()
+                        .map(|f| format!("{f:#x}"))
+                        .collect::<Vec<_>>()
+                        .join(", "),
+                    Err(e) => format!("Failed to decode call result: {e}"),
+                };
                 format_result_message("success", &ret_data_str)
             }
             Err(failure) => match failure {
