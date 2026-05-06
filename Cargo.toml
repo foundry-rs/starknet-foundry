@@ -122,7 +122,6 @@ serde_path_to_error = "0.1.20"
 serde_with = "3.18.0"
 wiremock = "0.6.3"
 coins-ledger = "0.13.0"
-speculos-client = { git = "https://github.com/MKowalski8/speculos-client", rev = "58d9523" }
 const-hex = "1.18.1"
 indicatif = "0.18.3"
 shell-words = "1.1.0"

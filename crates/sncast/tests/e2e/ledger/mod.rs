@@ -14,9 +14,7 @@ use sncast::helpers::constants::{
 };
 use sncast::helpers::ledger::{DerivationPathParser, SncastLedgerTransport};
 use sncast::response::ui::UI;
-use speculos_client::{
-    AutomationAction, AutomationCondition, AutomationRule, Button, DeviceModel, SpeculosClient,
-};
+use speculos::{AutomationAction, AutomationCondition, AutomationRule, Button, SpeculosClient};
 use starknet_rust::accounts::{AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory};
 use starknet_rust::core::types::{BlockId, BlockTag};
 use starknet_rust::providers::Provider;
@@ -30,6 +28,7 @@ use url::Url;
 mod account;
 mod basic;
 mod network;
+pub(crate) mod speculos;
 
 pub(crate) const OZ_LEDGER_PATH: &str = "m//starknet'/sncast'/0'/0'/0";
 pub(crate) const READY_LEDGER_PATH: &str = "m//starknet'/sncast'/0'/1'/0";
@@ -46,21 +45,19 @@ pub(crate) const LEDGER_PUBLIC_KEY: &str =
 pub(crate) const LEDGER_ACCOUNT_NAME: &str = "my_ledger";
 
 pub(crate) fn setup_speculos(port: u16) -> (Arc<SpeculosClient>, String) {
-    let client = Arc::new(SpeculosClient::new(DeviceModel::Nanox, port, APP_PATH).unwrap());
+    let client = Arc::new(SpeculosClient::new(port, APP_PATH).unwrap());
     let url = format!("http://127.0.0.1:{port}");
     (client, url)
 }
 
-/// Sets automation rules and, when `ENABLE_BLIND_SIGN` is among them, presses RIGHT to
-/// navigate from the home screen to "App settings" so the rule triggers immediately.
+/// Sets automation rules and, when `ENABLE_BLIND_SIGN` is among them, presses RIGHT so the
+/// blind-sign flow advances immediately.
 pub(crate) async fn set_automation(
     client: &SpeculosClient,
-    rules: &[speculos_client::AutomationRule<'static>],
+    rules: &[speculos::AutomationRule<'static>],
 ) {
     client.automation(rules).await.unwrap();
-    let needs_blind_sign = rules
-        .iter()
-        .any(|r| r.text.as_deref() == Some("App settings"));
+    let needs_blind_sign = rules.iter().any(|r| r == &automation::ENABLE_BLIND_SIGN);
     if needs_blind_sign {
         client.click_button(Button::Right).await.unwrap();
     }
