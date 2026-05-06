@@ -192,9 +192,11 @@ mod tests {
     use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallSuccess;
     use cheatnet::trace_data::CallTrace;
     use starknet_api::core::{ClassHash, EntryPointSelector};
+    use starknet_api::transaction::fields::Calldata;
     use starknet_rust::core::types::contract::AbiEntry;
     use starknet_types_core::felt::Felt;
     use std::collections::{HashMap, HashSet};
+    use std::sync::Arc;
 
     fn make_call_trace(class_hash: ClassHash, selector: EntryPointSelector) -> CallTrace {
         CallTrace {
@@ -256,6 +258,24 @@ mod tests {
     }
 
     #[test]
+    fn collect_transformed_calldata_renders_hex_when_function_not_in_abi() {
+        let class_hash = ClassHash::default();
+        let selector = EntryPointSelector(Felt::from_hex_unchecked("0x5678"));
+
+        let mut trace = make_call_trace(class_hash, selector);
+        trace.entry_point.calldata = Calldata(Arc::new(vec![
+            Felt::from_hex_unchecked("0x1"),
+            Felt::from_hex_unchecked("0x2a"),
+            Felt::from_hex_unchecked("0xff"),
+        ]));
+        let context = make_context(class_hash, vec![]);
+        let collector = Collector::new(&trace, &context);
+
+        let result = collector.collect_transformed_calldata(&[]);
+        assert_eq!(result.0, "0x1, 0x2a, 0xff");
+    }
+
+    #[test]
     fn collect_transformed_call_result_falls_back_when_function_not_in_abi() {
         let class_hash = ClassHash::default();
         let selector = EntryPointSelector(Felt::from_hex_unchecked("0x5678"));
@@ -267,5 +287,25 @@ mod tests {
         // Empty ret_data and empty ABI → "success" (no panic)
         let result = collector.collect_transformed_call_result(&[]);
         assert_eq!(result.0, "success");
+    }
+
+    #[test]
+    fn collect_transformed_call_result_renders_hex_when_function_not_in_abi() {
+        let class_hash = ClassHash::default();
+        let selector = EntryPointSelector(Felt::from_hex_unchecked("0x5678"));
+
+        let mut trace = make_call_trace(class_hash, selector);
+        trace.result = Ok(CallSuccess {
+            ret_data: vec![
+                Felt::from_hex_unchecked("0x1"),
+                Felt::from_hex_unchecked("0x2a"),
+                Felt::from_hex_unchecked("0xff"),
+            ],
+        });
+        let context = make_context(class_hash, vec![]);
+        let collector = Collector::new(&trace, &context);
+
+        let result = collector.collect_transformed_call_result(&[]);
+        assert_eq!(result.0, "success: 0x1, 0x2a, 0xff");
     }
 }
