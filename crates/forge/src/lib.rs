@@ -4,10 +4,10 @@ use camino::Utf8PathBuf;
 use clap::builder::BoolishValueParser;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use derive_more::Display;
-use forge_runner::CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::partition::Partition;
+use forge_runner::resolve_cache_dir;
 use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use run_tests::workspace::run_for_workspace;
@@ -334,7 +334,7 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
         ForgeSubcommand::CleanCache {} => {
             ui.println(&WarningMessage::new("`snforge clean-cache` is deprecated and will be removed in the future. Use `snforge clean cache` instead"));
             let scarb_metadata = metadata()?;
-            let cache_dir = scarb_metadata.workspace.root.join(CACHE_DIR);
+            let cache_dir = resolve_cache_dir(&scarb_metadata.workspace.root);
 
             if cache_dir.exists() {
                 fs::remove_dir_all(&cache_dir)?;

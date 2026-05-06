@@ -21,7 +21,7 @@ use crate::utils::test_case;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::run_tests::package::RunForPackageArgs;
 use forge::shared_cache::FailedTestsCache;
-use forge_runner::CACHE_DIR;
+use forge_runner::DEFAULT_CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::forge_config::{
@@ -168,7 +168,7 @@ fn fork_aliased_decorator() {
                             is_vm_trace_needed: false,
                             cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
                                 .unwrap()
-                                .join(CACHE_DIR),
+                                .join(DEFAULT_CACHE_DIR),
                             contracts_data: ContractsData::try_from(test.contracts(&ui).unwrap())
                                 .unwrap(),
                             tracked_resource: ForgeTrackedResource::CairoSteps,
@@ -274,7 +274,7 @@ fn fork_aliased_decorator_overrding() {
                             is_vm_trace_needed: false,
                             cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
                                 .unwrap()
-                                .join(CACHE_DIR),
+                                .join(DEFAULT_CACHE_DIR),
                             contracts_data: ContractsData::try_from(test.contracts(&ui).unwrap())
                                 .unwrap(),
                             tracked_resource: ForgeTrackedResource::CairoSteps,

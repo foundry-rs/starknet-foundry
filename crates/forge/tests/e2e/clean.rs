@@ -1,13 +1,14 @@
 use super::common::runner::{runner, setup_package, test_runner};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
+use forge_runner::DEFAULT_CACHE_DIR;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use shared::test_utils::output_assert::assert_stdout_contains;
+use std::fs;
 use std::path::Path;
 
 const COVERAGE_DIR: &str = "coverage";
 const PROFILE_DIR: &str = "profile";
-const CACHE_DIR: &str = ".snfoundry_cache";
 const TRACE_DIR: &str = "snfoundry_trace";
 
 #[expect(clippy::struct_excessive_bools)]
@@ -121,6 +122,43 @@ fn test_clean_cache() {
     assert_eq!(
         check_clean_components_state(temp_dir.path()),
         expected_state
+    );
+}
+
+#[test]
+fn test_clean_cache_with_custom_cache_dir() {
+    let temp_dir = setup_package("coverage_project");
+
+    let custom_cache_dir = temp_dir.path().join("custom_cache");
+    fs::create_dir(&custom_cache_dir).unwrap();
+
+    generate_clean_components(
+        CleanComponentsState {
+            coverage: false,
+            profile: false,
+            cache: true,
+            trace: false,
+        },
+        &temp_dir,
+    );
+
+    runner(&temp_dir)
+        .arg("clean")
+        .arg("cache")
+        .env("SNFOUNDRY_CACHE", &custom_cache_dir)
+        .assert()
+        .success();
+
+    assert!(!custom_cache_dir.exists());
+
+    assert_eq!(
+        check_clean_components_state(temp_dir.path()),
+        CleanComponentsState {
+            coverage: false,
+            profile: false,
+            cache: true,
+            trace: false,
+        }
     );
 }
 
@@ -248,7 +286,7 @@ fn check_clean_components_state(path: &Path) -> CleanComponentsState {
     CleanComponentsState {
         coverage: dirs_exist(&packages_root, COVERAGE_DIR),
         profile: dirs_exist(&packages_root, PROFILE_DIR),
-        cache: dir_exists(&workspace_root, CACHE_DIR),
+        cache: dir_exists(&workspace_root, DEFAULT_CACHE_DIR),
         trace: dir_exists(&workspace_root, TRACE_DIR),
     }
 }
