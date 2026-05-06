@@ -88,7 +88,7 @@ jobs:
         with:
           tool: nextest@0.9.98
       - name: Build and archive tests
-        run: cargo nextest archive --cargo-profile ci -p forge --features "cairo-native" --archive-file 'nextest-archive-forge-native-${{ runner.os }}.tar.zst'
+        run: cargo nextest archive --cargo-profile ci -p forge --features cairo-native --archive-file 'nextest-archive-forge-native-${{ runner.os }}.tar.zst'
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v5
         with:
