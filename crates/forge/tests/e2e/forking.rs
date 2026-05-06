@@ -5,6 +5,7 @@ use forge_runner::DEFAULT_CACHE_DIR;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::node_url::node_rpc_url;
 use shared::test_utils::output_assert::assert_stdout_contains;
+use std::fs;
 
 #[test]
 fn without_cache() {
@@ -106,6 +107,55 @@ fn with_clean_cache() {
         Running 1 test(s) from src/
         [PASS] forking::tests::test_fork_simple [..]
         Tests: 1 passed, 0 failed, 0 ignored, 5 filtered out
+        "},
+    );
+}
+
+#[test]
+fn with_custom_cache_dir() {
+    let temp = setup_package_with_file_patterns(
+        Package::Name("forking".to_string()),
+        &[
+            BASE_FILE_PATTERNS,
+            &[&format!("{DEFAULT_CACHE_DIR}/*.json")],
+        ]
+        .concat(),
+    );
+
+    let default_cache_dir = temp.path().join(DEFAULT_CACHE_DIR);
+    let custom_cache_dir = temp.path().join("custom_cache");
+    fs::create_dir(&custom_cache_dir).unwrap();
+
+    for entry in fs::read_dir(&default_cache_dir).unwrap() {
+        let entry = entry.unwrap();
+        fs::copy(entry.path(), custom_cache_dir.join(entry.file_name())).unwrap();
+    }
+    fs::remove_dir_all(&default_cache_dir).unwrap();
+
+    let output = test_runner(&temp)
+        .env("SNFOUNDRY_CACHE", &custom_cache_dir)
+        .args(["--exact", "forking::tests::test_fork_simple"])
+        .assert()
+        .code(1);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from forking package
+        Running 1 test(s) from src/
+        [FAIL] forking::tests::test_fork_simple
+
+        Failure data:
+            0x42616c616e63652073686f756c642062652030 ('Balance should be 0')
+
+        Tests: 0 passed, 1 failed, 0 ignored, other filtered out
+
+        Failures:
+            forking::tests::test_fork_simple
         "},
     );
 }
