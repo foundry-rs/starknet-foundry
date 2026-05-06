@@ -758,6 +758,105 @@ fn with_rerun_failed_flag() {
 }
 
 #[test]
+fn with_rerun_failed_flag_and_custom_cache_dir() {
+    let temp = setup_package("simple_package");
+    let custom_cache_dir = temp.path().join("custom_cache");
+    fs::create_dir(&custom_cache_dir).unwrap();
+
+    test_runner(&temp)
+        .env("SNFOUNDRY_CACHE", &custom_cache_dir)
+        .assert()
+        .code(1);
+
+    assert!(custom_cache_dir.join(".prev_tests_failed").exists());
+    assert!(!temp.path().join(".snfoundry_cache").exists());
+
+    let output = test_runner(&temp)
+        .env("SNFOUNDRY_CACHE", &custom_cache_dir)
+        .arg("--rerun-failed")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+        Collected 2 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+        [FAIL] simple_package_integrationtest::test_simple::test_another_failing
+
+        Failure data:
+            0x6661696c696e6720636865636b ('failing check')
+
+        [FAIL] simple_package_integrationtest::test_simple::test_failing
+
+        Failure data:
+            0x6661696c696e6720636865636b ('failing check')
+
+        Tests: 0 passed, 2 failed, 0 ignored, 11 filtered out
+
+        Failures:
+            simple_package_integrationtest::test_simple::test_another_failing
+            simple_package_integrationtest::test_simple::test_failing
+
+        "},
+    );
+}
+
+#[test]
+fn with_rerun_failed_flag_and_complex_relative_custom_cache_dir() {
+    let temp = setup_package("simple_package");
+    let custom_cache_dir = "artifacts/cache/../custom_cache";
+    let expected_cache_dir = temp.path().join("artifacts/custom_cache");
+    fs::create_dir_all(&expected_cache_dir).unwrap();
+
+    test_runner(&temp)
+        .env("SNFOUNDRY_CACHE", custom_cache_dir)
+        .assert()
+        .code(1);
+
+    assert!(expected_cache_dir.join(".prev_tests_failed").exists());
+    assert!(!temp.path().join(".snfoundry_cache").exists());
+
+    let output = test_runner(&temp)
+        .env("SNFOUNDRY_CACHE", custom_cache_dir)
+        .arg("--rerun-failed")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+        Collected 2 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+        [FAIL] simple_package_integrationtest::test_simple::test_another_failing
+
+        Failure data:
+            0x6661696c696e6720636865636b ('failing check')
+
+        [FAIL] simple_package_integrationtest::test_simple::test_failing
+
+        Failure data:
+            0x6661696c696e6720636865636b ('failing check')
+
+        Tests: 0 passed, 2 failed, 0 ignored, 11 filtered out
+
+        Failures:
+            simple_package_integrationtest::test_simple::test_another_failing
+            simple_package_integrationtest::test_simple::test_failing
+
+        "},
+    );
+}
+
+#[test]
 fn with_panic_data_decoding() {
     let temp = setup_package("panic_decoding");
 

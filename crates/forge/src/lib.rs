@@ -126,7 +126,7 @@ pub enum CleanComponent {
     Coverage,
     /// Clean the `profile` directory
     Profile,
-    /// Clean the `.snfoundry_cache` directory
+    /// Clean the cache directory
     Cache,
     /// Clean the `snfoundry_trace` directory
     Trace,

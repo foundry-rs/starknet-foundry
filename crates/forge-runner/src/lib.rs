@@ -5,7 +5,7 @@ use crate::test_case_summary::TestCaseSummary;
 use anyhow::{Result, bail};
 use build_trace_data::save_trace_data;
 use cairo_lang_sierra::program::{ConcreteTypeLongId, Function, TypeDeclaration};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_config_extension::config::RawFuzzerConfig;
 use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
@@ -45,7 +45,7 @@ pub mod tests_summary;
 
 pub const DEFAULT_CACHE_DIR: &str = ".snfoundry_cache";
 
-pub fn resolve_cache_dir(workspace_root: &Utf8PathBuf) -> Utf8PathBuf {
+pub fn resolve_cache_dir(workspace_root: &Utf8Path) -> Utf8PathBuf {
     let cache_dir = env::var("SNFOUNDRY_CACHE").unwrap_or_else(|_| DEFAULT_CACHE_DIR.to_string());
     workspace_root.join(cache_dir)
 }
