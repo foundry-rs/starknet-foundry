@@ -12,6 +12,7 @@ use data_transformer::{ReverseTransformError, reverse_transform_input, reverse_t
 use starknet_api::core::ClassHash;
 use starknet_api::execution_utils::format_panic_data;
 use starknet_rust::core::types::contract::AbiEntry;
+use starknet_types_core::felt::Felt;
 
 pub struct Collector<'a> {
     call_trace: &'a CallTrace,
@@ -111,11 +112,7 @@ impl<'a> Collector<'a> {
         let selector = &self.call_trace.entry_point.entry_point_selector.0;
         let transformed = match reverse_transform_input(calldata, abi, selector) {
             Ok(s) => s,
-            Err(ReverseTransformError::FunctionNotFound(_)) => calldata
-                .iter()
-                .map(|f| format!("{f:#x}"))
-                .collect::<Vec<_>>()
-                .join(", "),
+            Err(ReverseTransformError::FunctionNotFound(_)) => format_raw_felts(calldata),
             Err(e) => format!("Failed to decode calldata: {e}"),
         };
         TransformedCalldata(transformed)
@@ -127,11 +124,7 @@ impl<'a> Collector<'a> {
             Ok(CallSuccess { ret_data }) => {
                 let ret_data_str = match reverse_transform_output(ret_data, abi, selector) {
                     Ok(s) => s,
-                    Err(ReverseTransformError::FunctionNotFound(_)) => ret_data
-                        .iter()
-                        .map(|f| format!("{f:#x}"))
-                        .collect::<Vec<_>>()
-                        .join(", "),
+                    Err(ReverseTransformError::FunctionNotFound(_)) => format_raw_felts(ret_data),
                     Err(e) => format!("Failed to decode call result: {e}"),
                 };
                 format_result_message("success", &ret_data_str)
@@ -176,6 +169,14 @@ fn format_result_message(tag: &str, message: &str) -> String {
     } else {
         format!("{tag}: {message}")
     }
+}
+
+fn format_raw_felts(felts: &[Felt]) -> String {
+    felts
+        .iter()
+        .map(|felt| format!("{felt:#x}"))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 #[cfg(test)]
