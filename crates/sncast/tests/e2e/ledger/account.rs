@@ -1,5 +1,6 @@
 use std::fs;
 
+use super::speculos::AutomationRule;
 use crate::e2e::ledger::{
     BRAAVOS_LEDGER_PATH, LEDGER_ACCOUNT_NAME, LEDGER_PUBLIC_KEY, OZ_LEDGER_PATH, READY_LEDGER_PATH,
     TEST_LEDGER_PATH, TEST_LEDGER_PATH_STORED, automation, set_automation, setup_speculos,
@@ -16,7 +17,6 @@ use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_co
 use snapbox::assert_data_eq;
 use sncast::helpers::account::load_accounts;
 use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
-use speculos_client::AutomationRule;
 use tempfile::tempdir;
 use test_case::test_case;
 
@@ -41,7 +41,7 @@ async fn test_create_ledger_account(
     saved_type: &str,
     class_hash: String,
     port: u16,
-    automations: &[speculos_client::AutomationRule<'static>],
+    automations: &[AutomationRule<'static>],
 ) {
     let (client, url) = setup_speculos(port);
     let tempdir = tempdir().unwrap();
