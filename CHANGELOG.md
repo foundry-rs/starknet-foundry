@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-`SNFOUNDRY_CACHE` environment variable to allow to specify a custom cache directory
+- `SNFOUNDRY_CACHE` environment variable to allow to specify a custom cache directory
 
 #### Changed
 
