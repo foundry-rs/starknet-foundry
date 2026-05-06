@@ -12,7 +12,10 @@ use tempfile::TempDir;
 
 const DOCS_SNIPPETS_PORT_BASE: u16 = 4006;
 
-async fn setup_speculos_automation(client: &Arc<speculos_client::SpeculosClient>, args: &[&str]) {
+async fn setup_speculos_automation(
+    client: &Arc<crate::e2e::ledger::speculos::SpeculosClient>,
+    args: &[&str],
+) {
     if args.contains(&"get-public-key") && !args.contains(&"--no-display") {
         set_automation(client, &[automation::APPROVE_PUBLIC_KEY]).await;
     } else if args.contains(&"sign-hash") {
