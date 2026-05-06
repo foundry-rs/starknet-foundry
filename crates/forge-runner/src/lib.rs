@@ -45,6 +45,7 @@ pub mod tests_summary;
 
 pub const DEFAULT_CACHE_DIR: &str = ".snfoundry_cache";
 
+#[must_use]
 pub fn resolve_cache_dir(workspace_root: &Utf8Path) -> Utf8PathBuf {
     let cache_dir = env::var("SNFOUNDRY_CACHE").unwrap_or_else(|_| DEFAULT_CACHE_DIR.to_string());
     workspace_root.join(cache_dir)
