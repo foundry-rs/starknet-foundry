@@ -195,6 +195,47 @@ fn test_clean_all() {
 }
 
 #[test]
+#[cfg_attr(
+    feature = "cairo-native",
+    ignore = "Native doesn't support trace, coverage and profiler yet"
+)]
+fn test_clean_all_with_custom_cache_dir() {
+    let temp_dir = setup_package("coverage_project");
+
+    let custom_cache_dir = temp_dir.path().join("custom_cache");
+    fs::create_dir(&custom_cache_dir).unwrap();
+
+    generate_clean_components(
+        CleanComponentsState {
+            coverage: true,
+            cache: true,
+            trace: true,
+            profile: true,
+        },
+        &temp_dir,
+    );
+
+    runner(&temp_dir)
+        .arg("clean")
+        .arg("all")
+        .env("SNFOUNDRY_CACHE", &custom_cache_dir)
+        .assert()
+        .success();
+
+    assert!(!custom_cache_dir.exists());
+
+    assert_eq!(
+        check_clean_components_state(temp_dir.path()),
+        CleanComponentsState {
+            coverage: false,
+            profile: false,
+            cache: true,
+            trace: false,
+        }
+    );
+}
+
+#[test]
 fn test_clean_all_and_component() {
     let temp_dir = setup_package("coverage_project");
 
