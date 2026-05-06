@@ -11,7 +11,7 @@ fn test_add_one_and_two__snforge_internal_fuzzer_generated() {
             .serialize(ref data);
         starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
         test_add_one_and_two(snforge_std::fuzzable::Fuzzable::blank());
-        return;
+        return Default::default();
     }
     let _data = snforge_std::fuzzable::Fuzzable::<Span<felt252>>::generate();
     snforge_std::_internals::save_fuzzer_arg(@_data);

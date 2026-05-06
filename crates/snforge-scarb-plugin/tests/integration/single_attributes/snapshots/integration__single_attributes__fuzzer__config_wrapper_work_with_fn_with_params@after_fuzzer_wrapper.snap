@@ -13,7 +13,7 @@ fn empty_fn__snforge_internal_fuzzer_generated() {
         empty_fn(
             snforge_std::fuzzable::Fuzzable::blank(), snforge_std::fuzzable::Fuzzable::blank(),
         );
-        return;
+        return Default::default();
     }
     let f = snforge_std::fuzzable::Fuzzable::<felt252>::generate();
     snforge_std::_internals::save_fuzzer_arg(@f);

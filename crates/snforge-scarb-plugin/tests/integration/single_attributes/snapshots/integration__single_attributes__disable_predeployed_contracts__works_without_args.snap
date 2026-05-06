@@ -8,6 +8,6 @@ fn empty_fn() {
         snforge_std::_internals::config_types::PredeployedContractsConfig { is_disabled: true }
             .serialize(ref data);
         starknet::testing::cheatcode::<'set_config_disable_contracts'>(data.span());
-        return;
+        return Default::default();
     }
 }

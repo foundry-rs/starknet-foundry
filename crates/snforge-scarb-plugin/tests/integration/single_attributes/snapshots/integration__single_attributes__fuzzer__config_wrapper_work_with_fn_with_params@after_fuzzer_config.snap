@@ -10,6 +10,6 @@ fn empty_fn(f: felt252, u: u32) {
         }
             .serialize(ref data);
         starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
-        return;
+        return Default::default();
     }
 }

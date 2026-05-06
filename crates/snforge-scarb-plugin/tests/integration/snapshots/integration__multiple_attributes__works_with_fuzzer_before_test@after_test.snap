@@ -31,6 +31,6 @@ fn empty_fn__snforge_internal_test_generated(mut _data: Span<felt252>) -> Span<f
 #[__fuzzer_wrapper]
 fn empty_fn(f: felt252) {
     if snforge_std::_internals::is_config_run() {
-        return;
+        return Default::default();
     }
 }
