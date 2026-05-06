@@ -113,7 +113,7 @@ impl<'a> Collector<'a> {
         let transformed = match reverse_transform_input(calldata, abi, selector) {
             Ok(s) => s,
             Err(ReverseTransformError::FunctionNotFound(_)) => format_raw_felts(calldata),
-            Err(e) => format!("Failed to decode calldata: {e}"),
+            Err(e) => panic!("Failed to decode calldata: {e}"),
         };
         TransformedCalldata(transformed)
     }
@@ -125,7 +125,7 @@ impl<'a> Collector<'a> {
                 let ret_data_str = match reverse_transform_output(ret_data, abi, selector) {
                     Ok(s) => s,
                     Err(ReverseTransformError::FunctionNotFound(_)) => format_raw_felts(ret_data),
-                    Err(e) => format!("Failed to decode call result: {e}"),
+                    Err(e) => panic!("Failed to decode call result: {e}"),
                 };
                 format_result_message("success", &ret_data_str)
             }
