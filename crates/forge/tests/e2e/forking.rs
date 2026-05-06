@@ -89,7 +89,7 @@ fn with_clean_cache() {
         .concat(),
     );
 
-    runner(&temp).arg("clean cache").assert().code(0);
+    runner(&temp).args(["clean", "cache"]).assert().code(0);
 
     let output = test_runner(&temp)
         .args(["--exact", "forking::tests::test_fork_simple"])
