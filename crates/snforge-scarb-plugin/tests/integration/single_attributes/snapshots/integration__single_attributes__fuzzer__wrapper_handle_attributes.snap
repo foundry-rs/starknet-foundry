@@ -1,0 +1,15 @@
+---
+source: tests/integration/single_attributes/fuzzer.rs
+expression: format_output(&result)
+---
+#[test]
+fn empty_fn__snforge_internal_fuzzer_generated() {
+    if snforge_std::_internals::is_config_run() {
+        empty_fn();
+        return;
+    }
+    empty_fn();
+}
+#[available_gas(l2_gas: 40000)]
+#[__internal_config_statement]
+fn empty_fn() {}

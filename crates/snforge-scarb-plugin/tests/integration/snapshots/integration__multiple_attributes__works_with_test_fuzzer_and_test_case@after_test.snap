@@ -1,0 +1,6 @@
+---
+source: tests/integration/multiple_attributes.rs
+expression: format_output(&result)
+---
+#[test_case(name: "one_and_two", 1, 2, 3)]
+fn test_add(x: i128, y: i128, expected: i128) {}

@@ -1,0 +1,29 @@
+---
+source: tests/integration/multiple_attributes.rs
+expression: format_output(&result)
+---
+fn empty_fn__snforge_internal_fuzzer_generated() {
+    if snforge_std::_internals::is_config_run() {
+        empty_fn(snforge_std::fuzzable::Fuzzable::blank());
+        return;
+    }
+    let f = snforge_std::fuzzable::Fuzzable::<felt252>::generate();
+    snforge_std::_internals::save_fuzzer_arg(@f);
+    empty_fn(f);
+}
+#[implicit_precedence(
+    core::pedersen::Pedersen,
+    core::RangeCheck,
+    core::integer::Bitwise,
+    core::ec::EcOp,
+    core::poseidon::Poseidon,
+    core::SegmentArena,
+    core::circuit::RangeCheck96,
+    core::circuit::AddMod,
+    core::circuit::MulMod,
+    core::gas::GasBuiltin,
+    System,
+)]
+#[snforge_internal_test_executable]
+#[__internal_config_statement]
+fn empty_fn(f: felt252) {}
