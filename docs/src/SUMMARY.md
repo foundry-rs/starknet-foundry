@@ -83,7 +83,6 @@
     * [test](appendix/snforge/test.md)
     * [new](appendix/snforge/new.md)
     * [clean](appendix/snforge/clean.md)
-    * [clean-cache](appendix/snforge/clean-cache.md)
     * [check-requirements](appendix/snforge/check-requirements.md)
     * [completions](appendix/snforge/completions.md)
     * [optimize-inlining](appendix/snforge/optimize-inlining.md)
