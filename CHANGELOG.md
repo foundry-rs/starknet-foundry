@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `snforge_scarb_plugin` diagnostics for named-argument kind violations now include both possible values and invalid arguments found.
 - `snforge test --exact` now reports the exact number of filtered-out tests in summaries instead of `other`.
 
+#### Removed
+
+- The deprecated `snforge clean-cache` command. Use `snforge clean cache` instead
+
 #### Fixed
 
 - Bug in forge debugging and `--gas-report` that caused panic in case of a call to non-existent selector

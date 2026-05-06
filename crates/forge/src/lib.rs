@@ -100,8 +100,6 @@ enum ForgeSubcommand {
         #[command(flatten)]
         args: CleanArgs,
     },
-    /// Clean Forge cache directory
-    CleanCache {},
     /// Check if all `snforge` requirements are installed
     CheckRequirements,
     /// Generate completions script
@@ -328,14 +326,6 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
         }
         ForgeSubcommand::Clean { args } => {
             clean::clean(args, &ui)?;
-            Ok(ExitStatus::Success)
-        }
-        ForgeSubcommand::CleanCache {} => {
-            ui.println(&WarningMessage::new("`snforge clean-cache` is deprecated and will be removed in the future. Use `snforge clean cache` instead"));
-            let scarb_metadata = metadata()?;
-            let cache_dir = resolve_cache_dir(&scarb_metadata.workspace.root)?;
-            clean::clean_cache_dir(&cache_dir, &ui)?;
-
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Test { mut args } => {
