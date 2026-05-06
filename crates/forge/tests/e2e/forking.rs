@@ -1,7 +1,7 @@
 use super::common::runner::{
     BASE_FILE_PATTERNS, Package, runner, setup_package_with_file_patterns, test_runner,
 };
-use forge_runner::CACHE_DIR;
+use forge_runner::DEFAULT_CACHE_DIR;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::node_url::node_rpc_url;
 use shared::test_utils::output_assert::assert_stdout_contains;
@@ -35,14 +35,18 @@ fn without_cache() {
 }
 
 #[test]
-/// The cache file at `forking/$CACHE_DIR` was modified to have different value stored
+/// The cache file at `forking/$DEFAULT_CACHE_DIR` was modified to have different value stored
 /// that this from the real network. We use it to verify that values from cache are actually used.
 ///
 /// The test that passed when using data from network, should fail for fabricated data.
 fn with_cache() {
     let temp = setup_package_with_file_patterns(
         Package::Name("forking".to_string()),
-        &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
+        &[
+            BASE_FILE_PATTERNS,
+            &[&format!("{DEFAULT_CACHE_DIR}/*.json")],
+        ]
+        .concat(),
     );
 
     let output = test_runner(&temp)
@@ -77,7 +81,11 @@ fn with_cache() {
 fn with_clean_cache() {
     let temp = setup_package_with_file_patterns(
         Package::Name("forking".to_string()),
-        &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
+        &[
+            BASE_FILE_PATTERNS,
+            &[&format!("{DEFAULT_CACHE_DIR}/*.json")],
+        ]
+        .concat(),
     );
 
     runner(&temp).arg("clean-cache").assert().code(0);
@@ -106,7 +114,11 @@ fn with_clean_cache() {
 fn printing_latest_block_number() {
     let temp = setup_package_with_file_patterns(
         Package::Name("forking".to_string()),
-        &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
+        &[
+            BASE_FILE_PATTERNS,
+            &[&format!("{DEFAULT_CACHE_DIR}/*.json")],
+        ]
+        .concat(),
     );
     let node_rpc_url = node_rpc_url();
 

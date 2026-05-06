@@ -10,6 +10,10 @@ Clean all generated directories
 
 Clean the `.snfoundry_cache` directory.
 
+> ℹ️ **Info**
+>
+> The default cache directory can be overridden by setting the `SNFOUNDRY_CACHE` environment variable.
+
 ## `trace`
 
 Clean the `snfoundry_trace` directory.

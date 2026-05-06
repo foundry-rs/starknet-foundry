@@ -17,6 +17,7 @@ use rand::SeedableRng;
 use rand::prelude::StdRng;
 use shared::spinner::Spinner;
 use std::collections::HashMap;
+use std::env;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
@@ -42,7 +43,12 @@ pub mod test_case_summary;
 pub mod test_target_summary;
 pub mod tests_summary;
 
-pub const CACHE_DIR: &str = ".snfoundry_cache";
+pub const DEFAULT_CACHE_DIR: &str = ".snfoundry_cache";
+
+pub fn resolve_cache_dir(workspace_root: &Utf8PathBuf) -> Utf8PathBuf {
+    let cache_dir = env::var("SNFOUNDRY_CACHE").unwrap_or_else(|_| DEFAULT_CACHE_DIR.to_string());
+    workspace_root.join(cache_dir)
+}
 
 const BUILTINS: [&str; 11] = [
     "Pedersen",
