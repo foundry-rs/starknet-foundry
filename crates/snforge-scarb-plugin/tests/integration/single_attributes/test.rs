@@ -1,4 +1,4 @@
-use crate::utils::{assert_diagnostics, assert_output, empty_function};
+use crate::utils::{assert_diagnostics, empty_function, format_output};
 use cairo_lang_macro::{Diagnostic, TokenStream, quote};
 use snforge_scarb_plugin::attributes::test::test;
 
@@ -10,32 +10,7 @@ fn appends_internal_config_and_executable() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
-            #[snforge_internal_test_executable]
-            fn empty_fn__snforge_internal_test_generated(mut _data: Span<felt252>) -> Span::<felt252> {
-                core::internal::require_implicit::<System>();
-                core::internal::revoke_ap_tracking();
-                core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
-
-                core::option::OptionTraitImpl::expect(
-                    core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
-                );
-                empty_fn();
-
-                let mut arr = ArrayTrait::new();
-                core::array::ArrayTrait::span(@arr)
-            }
-
-            fn empty_fn() {
-                if snforge_std::_internals::is_config_run() {
-                    return;
-                }
-            }
-        ",
-    );
+    insta::assert_snapshot!(format_output(&result));
 }
 
 #[test]

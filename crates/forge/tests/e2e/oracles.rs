@@ -4,10 +4,6 @@ use crate::e2e::common::runner::{
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
-#[cfg_attr(
-    not(feature = "run_test_for_scarb_since_2_13_1"),
-    ignore = "Skipping test because feature skip_test_for_scarb_2_13 enabled"
-)]
 #[test]
 fn wasm() {
     let temp = setup_package_with_file_patterns(
