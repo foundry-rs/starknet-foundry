@@ -674,7 +674,7 @@ async fn test_many_packages_default() {
 
     assert_stderr_contains(
         output,
-        "Error: More than one package found in scarb metadata - specify package using --package flag",
+        r#"{"command":"declare","error":"More than one package found in scarb metadata - specify package using --package flag","type":"error"}"#,
     );
 }
 
