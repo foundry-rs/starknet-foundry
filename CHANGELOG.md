@@ -38,9 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - In JSON output for `sncast utils` commands, the `"command"` field now includes the `utils` prefix (e.g. `"serialize"` -> `"utils serialize"`).
-- Layering logic for `snfoundry.toml` configs. Read more [here](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#interaction-between-local-and-global-profiles).
-  - `[sncast.default]` now always acts as base layer for other profiles in that file.
-  - Allows profiles defined only in global `snfoundry.toml` to be used regardless of local `snfoundry.toml` config being present or not.
+- Reworked profile layering in `snfoundry.toml`: `[sncast.default]` is always the base layer, and global-only profiles can work without a local config. Read more [here](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#interaction-between-local-and-global-profiles).
 - Improved `snfoundry.toml` config error reporting.
 - `--profile` now only determines `snfoundry.toml` profile. For Scarb profile, use `--scarb-profile` flag or `scarb-profile` from `snfoundry.toml` instead. Defaults to `release` if unspecified.
 
@@ -48,8 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `sncast verify` now uses the configured network or infers it from the RPC chain ID when `--network` is omitted.
 - `sncast` now returns non-zero exit code when a command fails.
-- Invalid config files are no longer silently ignored, commands fail on errors
-  - Unknown fields are no longer allowed in configs
+- Invalid `snfoundry.toml` configs now fail with errors instead of being silently ignored.
 - Panics in config validation. Errors are now properly propagated and reported.
 - `sncast show-config` quietly ignoring provider errors
 
