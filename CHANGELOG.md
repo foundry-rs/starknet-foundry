@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- `--no-abi` flag for `declare`, `declare-from`, and `deploy`, erasing the ABI before class declaration.
+
 ## [0.60.0] - 2026-04-27
 
 ### Forge
@@ -280,7 +286,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
-#### Added 
+#### Added
 
 - Possibility to configure urls of predefined networks used by `--network` flag via `sncast` profile in `snfoundry.toml`
 
@@ -324,7 +330,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast declare` command now outputs a ready-to-use deployment command after successful declaration.
 - Possibility to use [`starknet-devnet`](https://github.com/0xSpaceShard/starknet-devnet) predeployed accounts directly in `sncast` without needing to import them. They are available under specific names - `devnet-1`, `devnet-2`, ..., `devnet-<N>`. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/integration_with_devnet.html#predeployed-accounts)
 - Support for `--network devnet` flag that attempts to auto-detect running `starknet-devnet` instance and connect to it.
-- Support for automatically declaring the contract when running `sncast deploy`, by providing `--contract-name` flag instead of `--class-hash`. 
+- Support for automatically declaring the contract when running `sncast deploy`, by providing `--contract-name` flag instead of `--class-hash`.
 - `sncast balance` command to fetch the balance of an account for a specified token.
 
 #### Fixed

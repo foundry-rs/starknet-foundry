@@ -79,19 +79,19 @@ pub struct DeployCommandMessage {
     accounts_file: Option<String>,
     account: String,
     class_hash: PaddedFelt,
-    arguments_flag: Option<String>,
+    constructor_args: Option<ConstructorArgs>,
     network_flag: String,
 }
 
 impl DeployCommandMessage {
     pub fn new(
         abi: &[AbiEntry],
+        no_abi: bool,
         response: &DeclareTransactionResponse,
         account: &str,
         accounts_file: &Utf8PathBuf,
         network_flag: String,
     ) -> Result<Self, Error> {
-        let arguments_flag: Option<String> = generate_arguments_flag(abi);
         let accounts_file_str = accounts_file.to_string();
         let accounts_file = (!accounts_file_str
             .contains("starknet_accounts/starknet_open_zeppelin_accounts.json"))
@@ -101,7 +101,7 @@ impl DeployCommandMessage {
             account: account.to_string(),
             accounts_file,
             class_hash: response.class_hash,
-            arguments_flag,
+            constructor_args: ConstructorArgs::from_abi(abi, no_abi),
             network_flag,
         })
     }
@@ -128,22 +128,32 @@ impl Message for DeployCommandMessage {
         )
         .unwrap();
 
-        if let Some(arguments) = &self.arguments_flag {
-            write!(command, " {arguments}").unwrap();
+        if let Some(constructor_args) = &self.constructor_args {
+            write!(command, " {}", constructor_args.text()).unwrap();
         }
 
         write!(command, " {}", self.network_flag).unwrap();
 
-        let header = if self.arguments_flag.is_some() {
-            "To deploy a contract of this class, replace the placeholders in `--arguments` with your actual values, then run:"
-        } else {
-            "To deploy a contract of this class, run:"
+        let header = match &self.constructor_args {
+            Some(arguments_flag) => format!(
+                "To deploy a contract of this class, replace the placeholders in `{}` with your actual values, then run:",
+                arguments_flag.flag_name()
+            ),
+            None => "To deploy a contract of this class, run:".to_string(),
         };
+
+        let hint = self
+            .constructor_args
+            .as_ref()
+            .and_then(ConstructorArgs::hint)
+            .map(|hint| format!("\n\nHint: {hint}"))
+            .unwrap_or_default();
 
         formatdoc!(
             "
             {header}
             {command}
+            {hint}
             "
         )
     }
@@ -155,10 +165,70 @@ impl Message for DeployCommandMessage {
     }
 }
 
-fn generate_constructor_placeholder_arguments(constructor: AbiConstructor) -> String {
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+struct ConstructorArgs {
+    cairo_args: String,
+    typ: ConstructorArgsType,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+enum ConstructorArgsType {
+    CairoLike,
+    RawCalldata,
+}
+
+impl ConstructorArgs {
+    fn from_abi(abi: &[AbiEntry], no_abi: bool) -> Option<Self> {
+        abi.iter().find_map(|entry| {
+            let AbiEntry::Constructor(constructor) = entry else {
+                return None;
+            };
+            if constructor.inputs.is_empty() {
+                return None;
+            }
+
+            Some(Self {
+                cairo_args: generate_constructor_placeholder_arguments(constructor),
+                typ: if no_abi {
+                    ConstructorArgsType::RawCalldata
+                } else {
+                    ConstructorArgsType::CairoLike
+                },
+            })
+        })
+    }
+
+    fn flag_name(&self) -> &'static str {
+        match &self.typ {
+            ConstructorArgsType::CairoLike => "--arguments",
+            ConstructorArgsType::RawCalldata => "--constructor-calldata",
+        }
+    }
+
+    fn text(&self) -> String {
+        match &self.typ {
+            ConstructorArgsType::CairoLike => format!("--arguments '{}'", self.cairo_args),
+            ConstructorArgsType::RawCalldata => {
+                "--constructor-calldata <serialized-constructor-args>".to_string()
+            }
+        }
+    }
+
+    fn hint(&self) -> Option<String> {
+        match &self.typ {
+            ConstructorArgsType::CairoLike => None,
+            ConstructorArgsType::RawCalldata => Some(format!(
+                "Constructor arguments must be pre-serialized. Use `sncast utils serialize --abi-file <path-to-abi> --function constructor --arguments '{}'` and pass the returned felts to `--constructor-calldata`.",
+                self.cairo_args
+            )),
+        }
+    }
+}
+
+fn generate_constructor_placeholder_arguments(constructor: &AbiConstructor) -> String {
     constructor
         .inputs
-        .into_iter()
+        .iter()
         .map(|input| {
             let input_type = input
                 .r#type
@@ -169,19 +239,6 @@ fn generate_constructor_placeholder_arguments(constructor: AbiConstructor) -> St
         })
         .collect::<Vec<String>>()
         .join(", ")
-}
-
-fn generate_arguments_flag(abi: &[AbiEntry]) -> Option<String> {
-    let arguments = abi.iter().find_map(|entry| {
-        if let AbiEntry::Constructor(constructor) = entry {
-            let arguments = generate_constructor_placeholder_arguments(constructor.clone());
-            (!arguments.is_empty()).then_some(arguments)
-        } else {
-            None
-        }
-    });
-
-    arguments.map(|arguments| format!("--arguments '{arguments}'"))
 }
 
 fn generate_accounts_file_flag(accounts_file: Option<&String>) -> Option<String> {

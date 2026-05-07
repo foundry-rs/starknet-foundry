@@ -36,7 +36,7 @@ pub struct DeclareFrom {
     pub sierra_file: Option<PathBuf>,
 
     /// Class hash of contract declared on a different Starknet instance
-    #[arg(short = 'g', long)]
+    #[arg(short = 'g', long, conflicts_with_all = ["no_abi"])]
     pub class_hash: Option<Felt>,
 
     #[command(flatten)]
@@ -47,6 +47,10 @@ pub struct DeclareFrom {
     /// and block number (u64)
     #[arg(short, long, default_value = "latest")]
     pub block_id: String,
+
+    /// If passed, omits ABI from the declared Sierra class. This changes the resulting class hash
+    #[arg(long)]
+    pub no_abi: bool,
 
     #[command(flatten)]
     pub common: DeclareCommonArgs,
@@ -102,6 +106,7 @@ pub enum ContractSource {
 
 pub async fn declare_from<S>(
     contract_source: ContractSource,
+    no_abi: bool,
     common_args: &DeclareCommonArgs,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     wait_config: WaitForTx,
@@ -160,6 +165,7 @@ where
         &common_args.fee_args,
         &common_args.dry_run_args,
         common_args.nonce,
+        no_abi,
         account,
         wait_config,
         skip_on_already_declared,
