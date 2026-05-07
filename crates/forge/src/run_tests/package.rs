@@ -38,6 +38,7 @@ use forge_runner::{
     scarb::load_test_artifacts,
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
+    tests_summary::FilteredTestsCount,
 };
 use foundry_ui::{UI, components::labeled::LabeledMessage};
 use scarb_api::{CompilationOpts, get_contracts_artifacts_and_source_sierra_paths};
@@ -45,16 +46,17 @@ use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
 use tokio::task::JoinHandle;
 
-type PrepareTargetHandle = JoinHandle<Result<(Option<TestTargetWithConfig>, TestTargetLocation)>>;
+type PrepareTargetHandleResult = (Option<TestTargetWithConfig>, TestTargetLocation, usize);
+type PrepareTargetHandle = JoinHandle<Result<PrepareTargetHandleResult>>;
 
 pub struct PackageTestResult {
     summaries: Vec<TestTargetSummary>,
-    filtered: Option<usize>,
+    filtered: FilteredTestsCount,
 }
 
 impl PackageTestResult {
     #[must_use]
-    pub fn new(summaries: Vec<TestTargetSummary>, filtered: Option<usize>) -> Self {
+    pub fn new(summaries: Vec<TestTargetSummary>, filtered: FilteredTestsCount) -> Self {
         Self {
             summaries,
             filtered,
@@ -62,7 +64,7 @@ impl PackageTestResult {
     }
 
     #[must_use]
-    pub fn filtered(&self) -> Option<usize> {
+    pub fn filtered(&self) -> FilteredTestsCount {
         self.filtered
     }
 
@@ -199,9 +201,12 @@ pub async fn run_for_package(
         vec![];
     let mut all_tests = 0;
     let mut not_filtered_total = 0;
+    let mut prefiltered_out_total = 0;
 
     for handle in target_handles {
-        let (maybe_target, tests_location) = handle.await??;
+        let (maybe_target, tests_location, prefiltered_out_count): PrepareTargetHandleResult =
+            handle.await??;
+        prefiltered_out_total += prefiltered_out_count;
 
         let Some(target_with_config) = maybe_target else {
             resolved_targets.push((tests_location, None));
@@ -275,9 +280,9 @@ pub async fn run_for_package(
 
     // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
     let filtered_count = if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
-        None
+        FilteredTestsCount::Other
     } else {
-        Some(all_tests - not_filtered_total)
+        FilteredTestsCount::Exact(prefiltered_out_total + all_tests - not_filtered_total)
     };
 
     ui.println(&TestsSummaryMessage::new(&summaries, filtered_count));

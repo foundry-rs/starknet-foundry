@@ -15,6 +15,7 @@ use crate::{
 use anyhow::Result;
 use forge_runner::partition::PartitionConfig;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
+use forge_runner::tests_summary::FilteredTestsCount;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
 use foundry_ui::UI;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
@@ -98,7 +99,7 @@ pub async fn execute_workspace(
 
     let block_number_map = BlockNumberMap::default();
     let mut all_tests = vec![];
-    let mut total_filtered_count = Some(0);
+    let mut total_filtered_count = FilteredTestsCount::Exact(0);
     let mut exit_first_channel = ExitFirstChannel::new();
 
     let workspace_root = &scarb_metadata.workspace.root;
@@ -188,14 +189,16 @@ pub async fn execute_workspace(
 }
 
 fn calculate_total_filtered_count(
-    total_filtered_count: Option<usize>,
-    filtered: Option<usize>,
-) -> Option<usize> {
+    total_filtered_count: FilteredTestsCount,
+    filtered: FilteredTestsCount,
+) -> FilteredTestsCount {
     // Calculate filtered test counts across packages. When using `--exact` flag,
     // `result.filtered_count` is None, so `total_filtered_count` becomes None too.
     match (total_filtered_count, filtered) {
-        (Some(total), Some(f)) => Some(total + f),
-        _ => None,
+        (FilteredTestsCount::Exact(total), FilteredTestsCount::Exact(filtered)) => {
+            FilteredTestsCount::Exact(total + filtered)
+        }
+        _ => FilteredTestsCount::Other,
     }
 }
 
