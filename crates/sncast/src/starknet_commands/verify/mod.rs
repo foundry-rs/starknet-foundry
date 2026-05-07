@@ -1,5 +1,5 @@
 use anyhow::{Context, Result, anyhow, bail};
-use clap::{ArgGroup, Args, ValueEnum};
+use clap::{Args, ValueEnum};
 use promptly::prompt;
 use scarb_metadata::PackageMetadata;
 use sncast::helpers::configuration::CastConfig;
@@ -25,19 +25,9 @@ use walnut::WalnutVerificationInterface;
 
 #[derive(Args)]
 #[command(about = "Verify a contract through a block explorer")]
-#[command(group(
-    ArgGroup::new("contract_identifier")
-        .required(true)
-        .args(&["class_hash", "contract_address"])
-))]
 pub struct Verify {
-    /// Class hash of a contract to be verified
-    #[arg(short = 'g', long)]
-    pub class_hash: Option<Felt>,
-
-    /// Address of a contract to be verified
-    #[arg(short = 'd', long)]
-    pub contract_address: Option<Felt>,
+    #[command(flatten)]
+    pub contract_identifier: ContractIdentifierArgs,
 
     /// Name of the contract that is being verified
     #[arg(short, long)]
@@ -66,6 +56,32 @@ pub struct Verify {
     /// Include test files under src/ for verification (only applies to voyager)
     #[arg(long, default_value = "false")]
     pub test_files: bool,
+}
+
+#[derive(Args, Clone, Debug)]
+#[group(required = true, multiple = false)]
+pub struct ContractIdentifierArgs {
+    /// Class hash of a contract to be verified
+    #[arg(short = 'g', long)]
+    pub class_hash: Option<Felt>,
+
+    /// Address of a contract to be verified
+    #[arg(short = 'd', long)]
+    pub contract_address: Option<Felt>,
+}
+
+impl ContractIdentifierArgs {
+    pub fn get_identifier(&self) -> ContractIdentifier {
+        match (self.class_hash, self.contract_address) {
+            (Some(class_hash), None) => ContractIdentifier::ClassHash {
+                class_hash: class_hash.to_fixed_hex_string(),
+            },
+            (None, Some(contract_address)) => ContractIdentifier::Address {
+                contract_address: contract_address.to_fixed_hex_string(),
+            },
+            _ => unreachable!("Exactly one of class_hash or contract_address must be provided."),
+        }
+    }
 }
 
 #[derive(ValueEnum, Clone, Debug)]
@@ -101,24 +117,9 @@ async fn resolve_verification_network(
         })
 }
 
-fn resolve_contract_identifier(
-    class_hash: Option<Felt>,
-    contract_address: Option<Felt>,
-) -> ContractIdentifier {
-    match (class_hash, contract_address) {
-        (Some(class_hash), None) => ContractIdentifier::ClassHash {
-            class_hash: class_hash.to_fixed_hex_string(),
-        },
-        (None, Some(contract_address)) => ContractIdentifier::Address {
-            contract_address: contract_address.to_fixed_hex_string(),
-        },
-        _ => unreachable!("Exactly one of class_hash or contract_address must be provided."),
-    }
-}
-
 fn build_and_validate_contract(
     package: &PackageMetadata,
-    json: bool,
+    scarb_json: bool,
     profile: String,
     contract_name: &str,
     ui: &UI,
@@ -127,7 +128,7 @@ fn build_and_validate_contract(
         package,
         &BuildConfig {
             scarb_toml_path: package.manifest_path.clone(),
-            json,
+            json: scarb_json,
             profile,
         },
         false,
@@ -179,8 +180,7 @@ pub async fn verify(
     ui: &UI,
 ) -> Result<VerifyResponse> {
     let Verify {
-        contract_address,
-        class_hash,
+        contract_identifier,
         contract_name,
         verifier,
         network,
@@ -211,7 +211,7 @@ pub async fn verify(
         .parent()
         .ok_or(anyhow!("Failed to obtain workspace dir"))?;
 
-    let contract_identifier = resolve_contract_identifier(class_hash, contract_address);
+    let contract_identifier = contract_identifier.get_identifier();
 
     let network =
         resolve_verification_network(network, config.network_params.network(), &provider).await?;
