@@ -35,4 +35,13 @@ impl Context {
     pub fn components(&self) -> &Components {
         &self.components
     }
+
+    #[cfg(test)]
+    #[must_use]
+    pub fn for_testing(contracts_data_store: ContractsDataStore, components: Components) -> Self {
+        Self {
+            contracts_data_store,
+            components,
+        }
+    }
 }
