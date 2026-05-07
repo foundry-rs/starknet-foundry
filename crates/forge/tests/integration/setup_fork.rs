@@ -23,6 +23,7 @@ use forge::run_tests::package::RunForPackageArgs;
 use forge::shared_cache::FailedTestsCache;
 use forge_runner::DEFAULT_CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
+use forge_runner::filtering::NameFilter;
 use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
@@ -139,7 +140,7 @@ fn fork_aliased_decorator() {
                 .into_iter()
                 .map(|t| {
                     tokio::task::spawn_blocking(move || {
-                        prepare_test_target(t, &ForgeTrackedResource::CairoSteps)
+                        prepare_test_target(t, &ForgeTrackedResource::CairoSteps, &NameFilter::All)
                     })
                 })
                 .collect();
@@ -245,7 +246,7 @@ fn fork_aliased_decorator_overrding() {
                 .into_iter()
                 .map(|t| {
                     tokio::task::spawn_blocking(move || {
-                        prepare_test_target(t, &ForgeTrackedResource::CairoSteps)
+                        prepare_test_target(t, &ForgeTrackedResource::CairoSteps, &NameFilter::All)
                     })
                 })
                 .collect();

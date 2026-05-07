@@ -1,0 +1,10 @@
+[package]
+name = "lazy_config_filtering"
+version = "0.1.0"
+edition = "2024_07"
+
+[dev-dependencies]
+snforge_std = { path = "../../../../../snforge_std" }
+
+[scripts]
+test = "snforge test"

@@ -1,4 +1,4 @@
-use crate::utils::{assert_diagnostics, assert_output, empty_function};
+use crate::utils::{assert_diagnostics, empty_function, format_output};
 use cairo_lang_macro::{Diagnostic, TextSpan, Token, TokenStream, TokenTree, quote};
 use snforge_scarb_plugin::attributes::fuzzer::wrapper::fuzzer_wrapper;
 use snforge_scarb_plugin::attributes::fuzzer::{fuzzer, fuzzer_config};
@@ -11,14 +11,7 @@ fn work_without_args() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            #[__fuzzer_config]
-            #[__fuzzer_wrapper]
-            fn empty_fn() {}
-        ",
-    );
+    insta::assert_snapshot!(format_output(&result));
 }
 
 #[test]
@@ -29,14 +22,7 @@ fn work_with_args() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            #[__fuzzer_config(runs: 655, seed: 32872357)]
-            #[__fuzzer_wrapper]
-            fn empty_fn() {}
-        ",
-    );
+    insta::assert_snapshot!(format_output(&result));
 }
 
 #[test]
@@ -47,26 +33,7 @@ fn config_works_with_runs_only() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            fn empty_fn() {
-                if snforge_std::_internals::is_config_run() {
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::FuzzerConfig {
-                        seed: Option::None,
-                        runs: Option::Some(0x28f)
-                    }
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
-
-                    return;
-                }
-            }
-        ",
-    );
+    insta::assert_snapshot!(format_output(&result));
 }
 
 #[test]
@@ -77,26 +44,7 @@ fn config_works_with_seed_only() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            fn empty_fn() {
-                if snforge_std::_internals::is_config_run() {
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::FuzzerConfig {
-                        seed: Option::Some(0x28f),
-                        runs: Option::None
-                    }
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
-
-                    return;
-                }
-            }
-        ",
-    );
+    insta::assert_snapshot!(format_output(&result));
 }
 
 #[test]
@@ -107,26 +55,7 @@ fn config_works_with_both_args() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            fn empty_fn() {
-                if snforge_std::_internals::is_config_run() {
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::FuzzerConfig {
-                        seed: Option::Some(0x1f597a5),
-                        runs: Option::Some(0x28f)
-                    }
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
-
-                    return;
-                }
-            }
-        ",
-    );
+    insta::assert_snapshot!(format_output(&result));
 }
 
 #[test]
@@ -137,26 +66,9 @@ fn config_wrapper_work_without_args() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            fn empty_fn() {
-                if snforge_std::_internals::is_config_run() {
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::FuzzerConfig {
-                        seed: Option::None,
-                        runs: Option::None
-                    }
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
-
-                    return;
-                }
-            }
-        ",
-    );
+    insta::with_settings!({ snapshot_suffix => "after_fuzzer_config" }, {
+        insta::assert_snapshot!(format_output(&result));
+    });
 
     let item = result.token_stream;
     let args = TokenStream::empty();
@@ -165,33 +77,9 @@ fn config_wrapper_work_without_args() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            fn empty_fn__snforge_internal_fuzzer_generated() {
-                if snforge_std::_internals::is_config_run() {
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::FuzzerConfig {
-                        seed: Option::None,
-                        runs: Option::None
-                    }
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
-
-                    empty_fn();
-
-                    return;
-                }
-                empty_fn();
-            }
-
-            #[__internal_config_statement]
-            fn empty_fn() {
-            }
-        ",
-    );
+    insta::with_settings!({ snapshot_suffix => "after_fuzzer_wrapper" }, {
+        insta::assert_snapshot!(format_output(&result));
+    });
 }
 
 #[test]
@@ -202,26 +90,9 @@ fn config_wrapper_work_with_both_args() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            fn empty_fn() {
-                if snforge_std::_internals::is_config_run() {
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::FuzzerConfig {
-                        seed: Option::Some(0x1f597a5),
-                        runs: Option::Some(0x28f)
-                    }
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
-
-                    return;
-                }
-            }
-        ",
-    );
+    insta::with_settings!({ snapshot_suffix => "after_fuzzer_config" }, {
+        insta::assert_snapshot!(format_output(&result));
+    });
 
     let item = result.token_stream;
     let args = TokenStream::empty();
@@ -230,33 +101,9 @@ fn config_wrapper_work_with_both_args() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            fn empty_fn__snforge_internal_fuzzer_generated() {
-                if snforge_std::_internals::is_config_run() {
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::FuzzerConfig {
-                        seed: Option::Some(0x1f597a5),
-                        runs: Option::Some(0x28f)
-                    }
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
-
-                    empty_fn();
-
-                    return;
-                }
-                empty_fn();
-            }
-
-            #[__internal_config_statement]
-            fn empty_fn() {
-            }
-        ",
-    );
+    insta::with_settings!({ snapshot_suffix => "after_fuzzer_wrapper" }, {
+        insta::assert_snapshot!(format_output(&result));
+    });
 }
 
 #[test]
@@ -270,26 +117,9 @@ fn config_wrapper_work_with_fn_with_single_param() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            fn empty_fn(f: felt252) {
-                if snforge_std::_internals::is_config_run() {
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::FuzzerConfig {
-                        seed: Option::None,
-                        runs: Option::None
-                    }
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
-
-                    return;
-                }
-            }
-        ",
-    );
+    insta::with_settings!({ snapshot_suffix => "after_fuzzer_config" }, {
+        insta::assert_snapshot!(format_output(&result));
+    });
 
     let item = result.token_stream;
     let args = TokenStream::empty();
@@ -298,34 +128,9 @@ fn config_wrapper_work_with_fn_with_single_param() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            fn empty_fn__snforge_internal_fuzzer_generated() {
-                if snforge_std::_internals::is_config_run() {
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::FuzzerConfig {
-                        seed: Option::None,
-                        runs: Option::None
-                    }
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
-
-                    empty_fn(snforge_std::fuzzable::Fuzzable::blank());
-
-                    return;
-                }
-                let f = snforge_std::fuzzable::Fuzzable::<felt252>::generate();
-                snforge_std::_internals::save_fuzzer_arg(@f);
-                empty_fn(f);
-            }
-            #[__internal_config_statement]
-            fn empty_fn(f: felt252) {
-            }
-        ",
-    );
+    insta::with_settings!({ snapshot_suffix => "after_fuzzer_wrapper" }, {
+        insta::assert_snapshot!(format_output(&result));
+    });
 }
 
 #[test]
@@ -339,26 +144,9 @@ fn config_wrapper_work_with_fn_with_params() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            fn empty_fn(f: felt252, u: u32) {
-                if snforge_std::_internals::is_config_run() {
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::FuzzerConfig {
-                        seed: Option::None,
-                        runs: Option::None
-                    }
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
-
-                    return;
-                }
-            }
-        ",
-    );
+    insta::with_settings!({ snapshot_suffix => "after_fuzzer_config" }, {
+        insta::assert_snapshot!(format_output(&result));
+    });
 
     let item = result.token_stream;
     let args = TokenStream::empty();
@@ -367,36 +155,9 @@ fn config_wrapper_work_with_fn_with_params() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            fn empty_fn__snforge_internal_fuzzer_generated() {
-                if snforge_std::_internals::is_config_run() {
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::FuzzerConfig {
-                        seed: Option::None,
-                        runs: Option::None
-                    }
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
-
-                    empty_fn(snforge_std::fuzzable::Fuzzable::blank(), snforge_std::fuzzable::Fuzzable::blank());
-
-                    return;
-                }
-                let f = snforge_std::fuzzable::Fuzzable::<felt252>::generate();
-                snforge_std::_internals::save_fuzzer_arg(@f);
-                let u = snforge_std::fuzzable::Fuzzable::<u32>::generate();
-                snforge_std::_internals::save_fuzzer_arg(@u);
-                empty_fn(f, u);
-            }
-            #[__internal_config_statement]
-            fn empty_fn(f: felt252, u: u32) {
-            }
-        ",
-    );
+    insta::with_settings!({ snapshot_suffix => "after_fuzzer_wrapper" }, {
+        insta::assert_snapshot!(format_output(&result));
+    });
 }
 
 #[test]
@@ -410,25 +171,7 @@ fn wrapper_handle_attributes() {
 
     let result = fuzzer_wrapper(args, item);
 
-    assert_output(
-        &result,
-        "
-            #[test]
-            fn empty_fn__snforge_internal_fuzzer_generated() {
-                if snforge_std::_internals::is_config_run() {
-                    empty_fn();
-
-                    return;
-                }
-                empty_fn();
-            }
-
-            #[available_gas(l2_gas: 40000)]
-            #[__internal_config_statement]
-            fn empty_fn() {
-            }
-        ",
-    );
+    insta::assert_snapshot!(format_output(&result));
 }
 
 #[test]

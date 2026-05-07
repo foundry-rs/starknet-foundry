@@ -300,6 +300,30 @@ fn with_exact_filter() {
 }
 
 #[test]
+fn exact_filter_does_not_resolve_config_for_filtered_out_tests() {
+    let temp = setup_package("lazy_config_filtering");
+
+    let output = test_runner(&temp)
+        .args(["--exact", "lazy_config_filtering::tests::selected_exact"])
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from lazy_config_filtering package
+        Running 1 test(s) from src/
+        [PASS] lazy_config_filtering::tests::selected_exact [..]
+        Tests: 1 passed, 0 failed, 0 ignored, other filtered out
+        "},
+    );
+}
+
+#[test]
 fn with_skip_filter_matching_module() {
     let temp = setup_package("simple_package");
 
@@ -1088,7 +1112,6 @@ fn should_panic() {
 
 #[ignore = "TODO Restore this test once there are at least 2 versions supporting v2 macros"]
 #[test]
-// #[cfg_attr(feature = "skip_test_for_only_latest_scarb", ignore = "Plugin checks skipped")]
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
