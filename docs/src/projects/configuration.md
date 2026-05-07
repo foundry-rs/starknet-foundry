@@ -132,7 +132,7 @@ Layer precedence (highest to lowest):
 
 If a layer is missing, or it doesn't define a particular setting, the setting is looked up in the next layer.
 
-The [local.<name>] and [global.<name>] layers are considered only when `--profile <name>` is set.
+The `[local.<name>]` and `[global.<name>]` layers are considered only when `--profile <name>` is set.
 If `--profile <name>` is provided, at least one of `[local.<name>]` or `[global.<name>]` must be present.
 
 
