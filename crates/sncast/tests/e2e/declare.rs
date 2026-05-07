@@ -653,7 +653,7 @@ fn test_scarb_no_casm_artifact() {
 }
 
 #[tokio::test]
-async fn test_many_packages_default() {
+async fn test_many_packages_default_json() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
@@ -679,7 +679,7 @@ async fn test_many_packages_default() {
 }
 
 #[tokio::test]
-async fn test_workspaces_package_specified_virtual_fibonacci() {
+async fn test_workspaces_package_specified_virtual_fibonacci_json() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
