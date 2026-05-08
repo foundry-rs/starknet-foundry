@@ -137,10 +137,13 @@ fn debugging_trace_no_abi() {
             Running 1 test(s) from tests/
             [PASS] debugging_no_abi_integrationtest::test_trace::test_nested_safe_call_no_abi (l1_gas: ~0, l1_data_gas: ~[..], l2_gas: ~[..])
             [test name] debugging_no_abi_integrationtest::test_trace::test_nested_safe_call_no_abi
-            └─ [selector] 0x32564d7e0fe091d49b4c20f4632191e4ed6986bf993849879abfef9465def25
+            └─ [selector] call
                ├─ [contract name] CallerContract
-               ├─ [calldata] 0x0
-               └─ [call result] success
+               ├─ [call result] success
+               └─ [selector] 0x32564d7e0fe091d49b4c20f4632191e4ed6986bf993849879abfef9465def25
+                  ├─ [contract name] CallerContract
+                  ├─ [calldata] 0x0
+                  └─ [call result] panic: 0x454e545259504f494e545f4e4f545f464f554e44 ('ENTRYPOINT_NOT_FOUND')
 
             Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out"
         },
