@@ -12,9 +12,8 @@ Clean the cache directory.
 
 > ℹ️ **Info**
 >
-> The default cache directory is `.snfoundry_cache`.
-> You can override it with the `SNFOUNDRY_CACHE` environment variable.
-> Both paths are resolved relative to the workspace root.
+> The default cache directory is `.snfoundry_cache`, relative to the workspace root.
+> You can override it with the `SNFOUNDRY_CACHE` environment variable, which must be an absolute path.
 
 ## `trace`
 

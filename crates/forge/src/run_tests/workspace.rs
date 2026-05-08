@@ -102,7 +102,7 @@ pub async fn execute_workspace(
     let mut total_filtered_count = Some(0);
     let mut exit_first_channel = ExitFirstChannel::new();
 
-    let cache_dir = resolve_cache_dir(&scarb_metadata.workspace.root);
+    let cache_dir = resolve_cache_dir(&scarb_metadata.workspace.root)?;
     let packages_len = packages.len();
 
     let partitioning_config = get_partitioning_config(args, &ui, &packages, &artifacts_dir_path)?;

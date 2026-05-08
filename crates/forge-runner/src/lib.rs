@@ -2,7 +2,7 @@ use crate::coverage_api::run_coverage;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig};
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
-use anyhow::{Result, bail};
+use anyhow::{Result, bail, ensure};
 use build_trace_data::save_trace_data;
 use cairo_lang_sierra::program::{ConcreteTypeLongId, Function, TypeDeclaration};
 use camino::{Utf8Path, Utf8PathBuf};
@@ -45,11 +45,18 @@ pub mod tests_summary;
 
 pub const DEFAULT_CACHE_DIR: &str = ".snfoundry_cache";
 
-#[must_use]
-pub fn resolve_cache_dir(workspace_root: &Utf8Path) -> Utf8PathBuf {
-    let cache_dir = env::var("SNFOUNDRY_CACHE").unwrap_or_else(|_| DEFAULT_CACHE_DIR.to_string());
-    // If SNFOUNDRY_CACHE is absolute, join() discards workspace_root.
-    workspace_root.join(cache_dir)
+pub fn resolve_cache_dir(workspace_root: &Utf8Path) -> Result<Utf8PathBuf> {
+    match env::var("SNFOUNDRY_CACHE") {
+        Ok(cache_dir) => {
+            let cache_dir = Utf8PathBuf::from(cache_dir);
+            ensure!(
+                cache_dir.is_absolute(),
+                "SNFOUNDRY_CACHE must be an absolute path"
+            );
+            Ok(cache_dir)
+        }
+        Err(_) => Ok(workspace_root.join(DEFAULT_CACHE_DIR)),
+    }
 }
 
 const BUILTINS: [&str; 11] = [

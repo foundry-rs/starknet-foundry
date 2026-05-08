@@ -20,7 +20,6 @@ use std::cell::RefCell;
 use std::ffi::OsString;
 use std::sync::Arc;
 use std::{
-    fs,
     num::{NonZeroU32, NonZeroUsize},
     thread::available_parallelism,
 };
@@ -334,10 +333,10 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
         ForgeSubcommand::CleanCache {} => {
             ui.println(&WarningMessage::new("`snforge clean-cache` is deprecated and will be removed in the future. Use `snforge clean cache` instead"));
             let scarb_metadata = metadata()?;
-            let cache_dir = resolve_cache_dir(&scarb_metadata.workspace.root);
+            let cache_dir = resolve_cache_dir(&scarb_metadata.workspace.root)?;
 
             if cache_dir.exists() {
-                fs::remove_dir_all(&cache_dir)?;
+                clean::clean_cache_dir(&cache_dir, std::env::var("SNFOUNDRY_CACHE").is_ok(), &ui)?;
             }
 
             Ok(ExitStatus::Success)
