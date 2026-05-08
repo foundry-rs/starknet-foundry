@@ -119,14 +119,21 @@ This file is stored in a predefined location and is used to store profiles that 
 
 #### Interaction Between Local and Global Profiles
 
-Global config can be overridden by a local config.
+Each setting in the effective config comes from the highest-precedence layer that defines it.
 
-If both local and global profiles with the same name are present, local profile will be combined with global profile. For any setting defined in both profiles, the local setting will take precedence. For settings not defined in the local profile, values from the corresponding global profile will be used, or if not defined, values from the global default profile will be used instead.
+Layer precedence (highest to lowest):
 
-This same behavior applies for [default profiles](#default-profile) as well. A local default profile will override a global default profile.
+1. CLI flags
+2. `[local.<profile>]`
+3. `[local.default]`
+4. `[global.<profile>]`
+5. `[global.default]`
+6. internal defaults
 
-> 📝 **Note**
-> Remember that arguments passed in the CLI have the highest priority and will always override the configuration file settings.
+If a layer is missing, or it doesn't define a particular setting, the setting is looked up in the next layer.
+
+The `[local.<name>]` and `[global.<name>]` layers are considered only when `--profile <name>` is set.
+If `--profile <name>` is provided, at least one of `[local.<name>]` or `[global.<name>]` must be present.
 
 
 #### Global Configuration File Location
@@ -151,19 +158,43 @@ root/
                 └── opus-magnum/
 ```
 
-**Glossary:**
+#### Glossary
 
-- **A:** Global configuration file containing the profiles `default` and `testnet`.
-- **B:** Local configuration file containing the profiles `default` and `mainnet`.
+**A:** Global configuration file containing the profiles `default` and `testnet`:
+```toml
+[sncast.default]
+..
 
-In any directory in the file system, a user can run the `sncast` command using the `default` and `testnet` profiles, 
-because they are defined in global config (file A). 
+[sncast.testnet]
+..
+```
+**B:** Local configuration file containing the profiles `default` and `mainnet`:
+```toml
+[sncast.default]
+..
 
-If no profiles are explicitly specified, the `default` profile from the global configuration file will be used.
+[sncast.mainnet]
+..
+```
+
+#### No local config
+
+In any directory in the file system, a user can run the `sncast` command using the `default` and `testnet` profiles, because they are defined in global config (file A).
+If no local config file is present, only profiles defined in global config will be used.
+
+- If the `testnet` profile is specified, the effective config is built by layering `global.testnet` -> `global.default` -> internal defaults.
+- If no profile is specified, the effective config is built by layering `global.default` -> internal defaults.
+
+#### Local config present
 
 When running `sncast` from the `opus-magnum` directory, there is a configuration file in the parent directory (file B). 
-This setup allows for the use of the following profiles: `default`, `testnet`, and `mainnet`. If the `mainnet` profile is specified, 
-the configuration from the local file will be used to override the global `default` profile, as the `mainnet` profile does not exist in the global configuration.
+This setup allows for the use of the following profiles: `default`, `testnet`, and `mainnet`:
+
+- If the `mainnet` profile is specified, the effective config is built by layering `local.mainnet` -> `local.default` -> `global.default` -> internal defaults. 
+  The `mainnet` profile does not need to exist in the global configuration as long as it is present in the local one.
+- If the `testnet` profile is specified, the effective config is built by layering  `local.default` -> `global.testnet` -> `global.default` -> internal defaults.
+  The `testnet` profile does not need to exist in the local configuration as long as it is present in the global one.
+- If no profile is specified, the effective config is built by layering `local.default` -> `global.default` -> internal defaults.
 
 ## Environmental Variables
 

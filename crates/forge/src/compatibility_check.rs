@@ -300,8 +300,8 @@ mod tests {
         assert!(validation_output.contains("doesn't satisfy minimal 999.0.0"));
     }
 
+    #[cfg(feature = "no_scarb_installed")]
     #[test]
-    #[cfg_attr(not(feature = "no_scarb_installed"), ignore)]
     fn failing_tool_not_installed() {
         let temp_dir = TempDir::new().unwrap();
         temp_dir

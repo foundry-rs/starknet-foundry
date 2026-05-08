@@ -1,4 +1,4 @@
-use crate::utils::{assert_diagnostics, assert_output, empty_function};
+use crate::utils::{assert_diagnostics, empty_function, format_output};
 use cairo_lang_macro::{Diagnostic, TokenStream, quote};
 use snforge_scarb_plugin::attributes::disable_predeployed_contracts::disable_predeployed_contracts;
 
@@ -24,25 +24,7 @@ fn works_without_args() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            fn empty_fn() {
-                if snforge_std::_internals::is_config_run() {
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::PredeployedContractsConfig {
-                        is_disabled: true
-                    }
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_disable_contracts'>(data.span());
-
-                    return;
-                }
-            }
-        ",
-    );
+    insta::assert_snapshot!(format_output(&result));
 }
 
 #[test]

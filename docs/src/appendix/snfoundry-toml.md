@@ -69,6 +69,9 @@ keystore = "path/to/keystore"
 The `wait-params` field defines the waiting parameters for transactions. By default, timeout (in seconds) is set to `300` and retry-interval (in seconds) to `5`. 
 This means transactions will be checked every `5 seconds`, with a total of `60 attempts` before timing out.
 
+`retry-interval` and `timeout` must be greater than `0`.
+`retry-interval` cannot be greater than `timeout`.
+
 ```toml
 [sncast.myprofile]
 wait-params = { timeout = 300, retry-interval = 5 }

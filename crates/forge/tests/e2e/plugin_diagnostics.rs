@@ -8,8 +8,8 @@ use std::fs;
 
 #[test]
 #[cfg_attr(
-    feature = "skip_test_for_only_latest_scarb",
-    ignore = "Plugin checks skipped"
+    feature = "scheduled_latest_scarb_only",
+    ignore = "Only passes with the latest Scarb"
 )]
 #[allow(clippy::too_many_lines)]
 fn syntax() {
@@ -126,10 +126,6 @@ fn syntax() {
 }
 
 #[test]
-#[cfg_attr(
-    feature = "skip_test_for_only_latest_scarb",
-    ignore = "Plugin checks skipped"
-)]
 fn semantic() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/semantic"));
     let output = SnapboxCommand::from_std(
@@ -174,10 +170,6 @@ fn semantic() {
 }
 
 #[test]
-#[cfg_attr(
-    feature = "skip_test_for_only_latest_scarb",
-    ignore = "Plugin checks skipped"
-)]
 fn parameters() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/parameters"));
     let output = SnapboxCommand::from_std(
@@ -231,10 +223,6 @@ fn parameters() {
 }
 
 #[test]
-#[cfg_attr(
-    feature = "skip_test_for_only_latest_scarb",
-    ignore = "Plugin checks skipped"
-)]
 fn multiple() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/multiple"));
     let output = SnapboxCommand::from_std(
@@ -335,10 +323,6 @@ fn multiple() {
 }
 
 #[test]
-#[cfg_attr(
-    feature = "skip_test_for_only_latest_scarb",
-    ignore = "Plugin checks skipped"
-)]
 fn generic() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/generic"));
     let output = SnapboxCommand::from_std(
@@ -371,10 +355,6 @@ fn generic() {
 }
 
 #[test]
-#[cfg_attr(
-    feature = "skip_test_for_only_latest_scarb",
-    ignore = "Plugin checks skipped"
-)]
 fn inline_macros() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/inline_macros"));
     let output = SnapboxCommand::from_std(
@@ -407,10 +387,6 @@ fn inline_macros() {
 }
 
 #[test]
-#[cfg_attr(
-    feature = "skip_test_for_only_latest_scarb",
-    ignore = "Plugin checks skipped"
-)]
 fn different_attributes() {
     fn generate_attributes() -> impl Iterator<Item = String> {
         let attributes = vec![
@@ -459,10 +435,6 @@ fn different_attributes() {
 }
 
 #[test]
-#[cfg_attr(
-    feature = "skip_test_for_only_latest_scarb",
-    ignore = "Plugin checks skipped"
-)]
 fn test_case() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/test_case_attr"));
     let output = SnapboxCommand::from_std(

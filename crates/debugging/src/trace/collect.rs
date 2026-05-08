@@ -8,10 +8,11 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallSuccess,
 };
 use cheatnet::trace_data::{CallTrace, CallTraceNode};
-use data_transformer::{reverse_transform_input, reverse_transform_output};
+use data_transformer::{ReverseTransformError, reverse_transform_input, reverse_transform_output};
 use starknet_api::core::ClassHash;
 use starknet_api::execution_utils::format_panic_data;
 use starknet_rust::core::types::contract::AbiEntry;
+use starknet_types_core::felt::Felt;
 
 pub struct Collector<'a> {
     call_trace: &'a CallTrace,
@@ -56,7 +57,7 @@ impl<'a> Collector<'a> {
         };
 
         ContractTrace {
-            selector: self.collect_selector().clone(),
+            selector: self.collect_selector(),
             trace_info,
         }
     }
@@ -88,10 +89,16 @@ impl<'a> Collector<'a> {
             .unwrap_or_else(|| ContractName("forked contract".to_string()))
     }
 
-    fn collect_selector(&self) -> &Selector {
+    fn collect_selector(&self) -> Selector {
         self.contracts_data_store()
             .get_selector(&self.call_trace.entry_point.entry_point_selector)
-            .expect("`Selector` should be present")
+            .cloned()
+            .unwrap_or_else(|| {
+                Selector(format!(
+                    "{:#x}",
+                    self.call_trace.entry_point.entry_point_selector.0
+                ))
+            })
     }
 
     fn collect_abi(&self) -> &[AbiEntry] {
@@ -101,26 +108,26 @@ impl<'a> Collector<'a> {
     }
 
     fn collect_transformed_calldata(&self, abi: &[AbiEntry]) -> TransformedCalldata {
-        TransformedCalldata(
-            reverse_transform_input(
-                &self.call_trace.entry_point.calldata.0,
-                abi,
-                &self.call_trace.entry_point.entry_point_selector.0,
-            )
-            .expect("calldata should be successfully transformed"),
-        )
+        let calldata = &self.call_trace.entry_point.calldata.0;
+        let selector = &self.call_trace.entry_point.entry_point_selector.0;
+        let transformed = match reverse_transform_input(calldata, abi, selector) {
+            Ok(s) => s,
+            Err(ReverseTransformError::FunctionNotFound(_)) => format_raw_felts(calldata),
+            Err(e) => panic!("Failed to decode calldata: {e}"),
+        };
+        TransformedCalldata(transformed)
     }
 
     fn collect_transformed_call_result(&self, abi: &[AbiEntry]) -> TransformedCallResult {
+        let selector = &self.call_trace.entry_point.entry_point_selector.0;
         TransformedCallResult(match &self.call_trace.result {
             Ok(CallSuccess { ret_data }) => {
-                let ret_data = reverse_transform_output(
-                    ret_data,
-                    abi,
-                    &self.call_trace.entry_point.entry_point_selector.0,
-                )
-                .expect("call result should be successfully transformed");
-                format_result_message("success", &ret_data)
+                let ret_data_str = match reverse_transform_output(ret_data, abi, selector) {
+                    Ok(s) => s,
+                    Err(ReverseTransformError::FunctionNotFound(_)) => format_raw_felts(ret_data),
+                    Err(e) => panic!("Failed to decode call result: {e}"),
+                };
+                format_result_message("success", &ret_data_str)
             }
             Err(failure) => match failure {
                 CallFailure::Recoverable { panic_data } => {
@@ -161,5 +168,144 @@ fn format_result_message(tag: &str, message: &str) -> String {
         tag.to_string()
     } else {
         format!("{tag}: {message}")
+    }
+}
+
+fn format_raw_felts(felts: &[Felt]) -> String {
+    felts
+        .iter()
+        .map(|felt| format!("{felt:#x}"))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::contracts_data_store::ContractsDataStore;
+    use crate::trace::components::Components;
+    use crate::trace::context::Context;
+    use blockifier::execution::{
+        call_info::ExtendedExecutionResources, entry_point::CallEntryPoint,
+    };
+    use cairo_annotations::trace_data::L1Resources;
+    use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallSuccess;
+    use cheatnet::trace_data::CallTrace;
+    use starknet_api::core::{ClassHash, EntryPointSelector};
+    use starknet_api::transaction::fields::Calldata;
+    use starknet_rust::core::types::contract::AbiEntry;
+    use starknet_types_core::felt::Felt;
+    use std::collections::{HashMap, HashSet};
+    use std::sync::Arc;
+
+    fn make_call_trace(class_hash: ClassHash, selector: EntryPointSelector) -> CallTrace {
+        CallTrace {
+            entry_point: CallEntryPoint {
+                class_hash: Some(class_hash),
+                entry_point_selector: selector,
+                ..Default::default()
+            },
+            nested_calls: vec![],
+            result: Ok(CallSuccess { ret_data: vec![] }),
+            used_execution_resources: ExtendedExecutionResources::default(),
+            used_l1_resources: L1Resources::default(),
+            used_syscalls_vm_resources: HashMap::default(),
+            used_syscalls_sierra_gas: HashMap::default(),
+            vm_trace: None,
+            gas_consumed: 0,
+            events: vec![],
+            signature: vec![],
+            gas_report_data: None,
+        }
+    }
+
+    fn make_context(class_hash: ClassHash, abi: Vec<AbiEntry>) -> Context {
+        let store =
+            ContractsDataStore::for_testing(HashMap::from([(class_hash, abi)]), HashMap::new());
+        Context::for_testing(store, Components::new(HashSet::new()))
+    }
+
+    #[test]
+    fn collect_selector_falls_back_to_hex_when_not_in_map() {
+        let class_hash = ClassHash::default();
+        let felt = Felt::from_hex_unchecked("0x1234");
+        let selector = EntryPointSelector(felt);
+
+        let trace = make_call_trace(class_hash, selector);
+        let context = make_context(class_hash, vec![]);
+        let collector = Collector::new(&trace, &context);
+
+        let result = collector.collect_selector();
+        assert!(
+            result.0.starts_with("0x"),
+            "expected hex fallback, got: {}",
+            result.0
+        );
+    }
+
+    #[test]
+    fn collect_transformed_calldata_falls_back_when_function_not_in_abi() {
+        let class_hash = ClassHash::default();
+        let selector = EntryPointSelector(Felt::from_hex_unchecked("0x5678"));
+
+        let trace = make_call_trace(class_hash, selector);
+        let context = make_context(class_hash, vec![]);
+        let collector = Collector::new(&trace, &context);
+
+        // Empty calldata and empty ABI → empty string fallback (no panic)
+        let result = collector.collect_transformed_calldata(&[]);
+        assert_eq!(result.0, "");
+    }
+
+    #[test]
+    fn collect_transformed_calldata_renders_hex_when_function_not_in_abi() {
+        let class_hash = ClassHash::default();
+        let selector = EntryPointSelector(Felt::from_hex_unchecked("0x5678"));
+
+        let mut trace = make_call_trace(class_hash, selector);
+        trace.entry_point.calldata = Calldata(Arc::new(vec![
+            Felt::from_hex_unchecked("0x1"),
+            Felt::from_hex_unchecked("0x2a"),
+            Felt::from_hex_unchecked("0xff"),
+        ]));
+        let context = make_context(class_hash, vec![]);
+        let collector = Collector::new(&trace, &context);
+
+        let result = collector.collect_transformed_calldata(&[]);
+        assert_eq!(result.0, "0x1, 0x2a, 0xff");
+    }
+
+    #[test]
+    fn collect_transformed_call_result_falls_back_when_function_not_in_abi() {
+        let class_hash = ClassHash::default();
+        let selector = EntryPointSelector(Felt::from_hex_unchecked("0x5678"));
+
+        let trace = make_call_trace(class_hash, selector);
+        let context = make_context(class_hash, vec![]);
+        let collector = Collector::new(&trace, &context);
+
+        // Empty ret_data and empty ABI → "success" (no panic)
+        let result = collector.collect_transformed_call_result(&[]);
+        assert_eq!(result.0, "success");
+    }
+
+    #[test]
+    fn collect_transformed_call_result_renders_hex_when_function_not_in_abi() {
+        let class_hash = ClassHash::default();
+        let selector = EntryPointSelector(Felt::from_hex_unchecked("0x5678"));
+
+        let mut trace = make_call_trace(class_hash, selector);
+        trace.result = Ok(CallSuccess {
+            ret_data: vec![
+                Felt::from_hex_unchecked("0x1"),
+                Felt::from_hex_unchecked("0x2a"),
+                Felt::from_hex_unchecked("0xff"),
+            ],
+        });
+        let context = make_context(class_hash, vec![]);
+        let collector = Collector::new(&trace, &context);
+
+        let result = collector.collect_transformed_call_result(&[]);
+        assert_eq!(result.0, "success: 0x1, 0x2a, 0xff");
     }
 }

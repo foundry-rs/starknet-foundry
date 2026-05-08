@@ -60,6 +60,19 @@ fn snap_fork() {
 }
 
 #[test]
+fn snap_gas_report_no_abi() {
+    let temp = setup_package("debugging_no_abi");
+
+    let output = test_runner(&temp)
+        .arg("--gas-report")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
+        .assert()
+        .code(0);
+
+    assert_cleaned_output!(output);
+}
+
+#[test]
 fn no_transactions() {
     let temp = setup_package("simple_package");
     let output = test_runner(&temp)

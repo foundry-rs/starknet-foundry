@@ -19,8 +19,8 @@ fn happy_path() {
     );
 }
 
+#[cfg(feature = "scarb_2_12_0")]
 #[test]
-#[cfg_attr(not(feature = "scarb_2_12_0"), ignore)]
 fn test_warning_on_scarb_version_below_recommended() {
     let temp = setup_package("simple_package");
     let output = runner(&temp).arg("check-requirements").assert();

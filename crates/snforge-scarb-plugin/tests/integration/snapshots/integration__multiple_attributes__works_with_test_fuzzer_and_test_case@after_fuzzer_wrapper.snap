@@ -1,0 +1,45 @@
+---
+source: tests/integration/multiple_attributes.rs
+expression: format_output(&result)
+---
+fn test_add_one_and_two__snforge_internal_fuzzer_generated() {
+    if snforge_std::_internals::is_config_run() {
+        let mut data = array![];
+        snforge_std::_internals::config_types::FuzzerConfig {
+            seed: Option::None, runs: Option::None,
+        }
+            .serialize(ref data);
+        starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
+        test_add_one_and_two(snforge_std::fuzzable::Fuzzable::blank());
+        return Default::default();
+    }
+    let _data = snforge_std::fuzzable::Fuzzable::<Span<felt252>>::generate();
+    snforge_std::_internals::save_fuzzer_arg(@_data);
+    test_add_one_and_two(_data);
+}
+#[implicit_precedence(
+    core::pedersen::Pedersen,
+    core::RangeCheck,
+    core::integer::Bitwise,
+    core::ec::EcOp,
+    core::poseidon::Poseidon,
+    core::SegmentArena,
+    core::circuit::RangeCheck96,
+    core::circuit::AddMod,
+    core::circuit::MulMod,
+    core::gas::GasBuiltin,
+    System,
+)]
+#[snforge_internal_test_executable]
+#[__internal_config_statement]
+fn test_add_one_and_two(mut _data: Span<felt252>) -> Span<felt252> {
+    core::internal::require_implicit::<System>();
+    core::internal::revoke_ap_tracking();
+    core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), "Out of gas");
+    core::option::OptionTraitImpl::expect(
+        core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), "Out of gas",
+    );
+    test_add(1, 2, 3);
+    let mut arr = ArrayTrait::new();
+    core::array::ArrayTrait::span(@arr)
+}

@@ -100,4 +100,18 @@ impl ContractsDataStore {
     pub fn get_program_artifact(&self, class_hash: &ClassHash) -> Option<&ProgramArtifact> {
         self.programs.get(class_hash)
     }
+
+    #[cfg(test)]
+    #[must_use]
+    pub fn for_testing(
+        abi: HashMap<ClassHash, Vec<AbiEntry>>,
+        selectors: HashMap<EntryPointSelector, Selector>,
+    ) -> Self {
+        Self {
+            abi,
+            contract_names: HashMap::new(),
+            selectors,
+            programs: HashMap::new(),
+        }
+    }
 }

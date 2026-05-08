@@ -253,8 +253,7 @@ mod tests {
             .unwrap()
             .canonicalize_utf8()
             .unwrap()
-            .to_string()
-            .replace('\\', "/");
+            .to_string();
 
         let manifest_path = temp.child("Scarb.toml");
         manifest_path
@@ -479,8 +478,7 @@ mod tests {
             .unwrap()
             .canonicalize_utf8()
             .unwrap()
-            .to_string()
-            .replace('\\', "/");
+            .to_string();
 
         let scarb_path = temp.child("Scarb.toml");
         scarb_path

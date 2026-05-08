@@ -2,14 +2,10 @@ use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 use scarb_api::ScarbCommand;
-use scarb_api::version::scarb_version;
-use semver::Version;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::helpers::constants::INIT_SCRIPTS_DIR;
 use sncast::helpers::scarb_utils::get_cairo_version;
 use tempfile::TempDir;
-
-const SCARB_2_14_0: Version = Version::new(2, 14, 0);
 
 #[test]
 fn test_script_init_happy_case() {
@@ -38,45 +34,26 @@ fn test_script_init_happy_case() {
     let scarb_toml_path = Utf8PathBuf::from_path_buf(scarb_toml_path).unwrap();
     let cairo_version = get_cairo_version(&scarb_toml_path).unwrap();
 
-    let scarb_version = scarb_version().unwrap().scarb;
+    let expected_scarb_toml = formatdoc!(
+        r#"
+        [package]
+        name = "{script_name}"
+        version = "0.1.0"
+        edition = [..]
 
-    let expected_scarb_toml = if scarb_version >= SCARB_2_14_0 {
-        formatdoc!(
-            r#"
-            [package]
-            name = "{script_name}"
-            version = "0.1.0"
-            edition = [..]
+        # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
-            # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
+        [executable]
 
-            [executable]
+        [cairo]
+        enable-gas = false
 
-            [cairo]
-            enable-gas = false
-
-            [dependencies]
-            cairo_execute = "{cairo_version}"
-            sncast_std = "{cast_version}"
-            starknet = ">={cairo_version}"
-        "#
-        )
-    } else {
-        formatdoc!(
-            r#"
-            [package]
-            name = "{script_name}"
-            version = "0.1.0"
-            edition = [..]
-
-            # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
-
-            [dependencies]
-            sncast_std = "{cast_version}"
-            starknet = ">={cairo_version}"
-        "#
-        )
-    };
+        [dependencies]
+        cairo_execute = "{cairo_version}"
+        sncast_std = "{cast_version}"
+        starknet = ">={cairo_version}"
+    "#
+    );
 
     snapbox::assert_data_eq!(scarb_toml_content, expected_scarb_toml);
 

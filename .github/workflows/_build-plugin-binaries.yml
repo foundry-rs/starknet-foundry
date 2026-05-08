@@ -86,8 +86,6 @@ jobs:
         run: |
           rustup target add ${{ matrix.target }}
 
-      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
-
       - name: Install cross
         if: matrix.cross
         uses: taiki-e/install-action@cross
@@ -106,9 +104,9 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          
+
           source scripts/handle_version.sh
-          
+
           PACKAGE_NAME=${{ inputs.plugin_name }}
           PACKAGE_NAME=${PACKAGE_NAME//-/_}  # Replace `-` with `_` in name
           PACKAGE_VERSION=$(get_version "${{ inputs.overridden_plugin_version }}" "crates/${{ inputs.plugin_name }}/Scarb.toml")

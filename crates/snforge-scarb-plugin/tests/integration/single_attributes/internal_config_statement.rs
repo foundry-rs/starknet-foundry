@@ -1,4 +1,4 @@
-use crate::utils::{assert_diagnostics, assert_output, empty_function};
+use crate::utils::{assert_diagnostics, empty_function, format_output};
 use cairo_lang_macro::{Diagnostic, TokenStream, quote};
 use snforge_scarb_plugin::attributes::internal_config_statement::internal_config_statement;
 
@@ -15,6 +15,7 @@ fn fails_with_non_empty_args() {
         )],
     );
 }
+
 #[test]
 fn appends_config_statement() {
     let args = TokenStream::empty();
@@ -23,16 +24,7 @@ fn appends_config_statement() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            fn empty_fn() {
-                if snforge_std::_internals::is_config_run() {
-                    return;
-                }
-            }
-        ",
-    );
+    insta::assert_snapshot!(format_output(&result));
 }
 
 #[test]

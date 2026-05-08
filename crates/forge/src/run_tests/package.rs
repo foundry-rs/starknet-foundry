@@ -15,7 +15,7 @@ use crate::{
         tests_summary::TestsSummaryMessage,
     },
     shared_cache::FailedTestsCache,
-    test_filter::{NameFilter, TestsFilter},
+    test_filter::TestsFilter,
     warn::warn_if_incompatible_rpc_version,
 };
 use anyhow::Result;
@@ -23,11 +23,15 @@ use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use console::Style;
 use forge_runner::{
+    filtering::NameFilter,
     forge_config::{ForgeConfig, ForgeTrackedResource},
     package_tests::{
+        TestTargetLocation,
         raw::TestTargetRaw,
         with_config::TestTargetWithConfig,
-        with_config_resolved::{TestCaseWithResolvedConfig, sanitize_test_case_name},
+        with_config_resolved::{
+            TestCaseWithResolvedConfig, TestTargetWithResolvedConfig, sanitize_test_case_name,
+        },
     },
     partition::PartitionConfig,
     running::target::prepare_test_target,
@@ -40,6 +44,8 @@ use scarb_api::{CompilationOpts, get_contracts_artifacts_and_source_sierra_paths
 use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
 use tokio::task::JoinHandle;
+
+type PrepareTargetHandle = JoinHandle<Result<(Option<TestTargetWithConfig>, TestTargetLocation)>>;
 
 pub struct PackageTestResult {
     summaries: Vec<TestTargetSummary>,
@@ -67,7 +73,7 @@ impl PackageTestResult {
 }
 
 pub struct RunForPackageArgs {
-    pub target_handles: Vec<JoinHandle<Result<TestTargetWithConfig>>>,
+    pub target_handles: Vec<PrepareTargetHandle>,
     pub tests_filter: TestsFilter,
     pub forge_config: Arc<ForgeConfig>,
     pub fork_targets: Vec<ForkTarget>,
@@ -130,10 +136,11 @@ impl RunForPackageArgs {
         }
 
         let tracked_resource = forge_config.test_runner_config.tracked_resource;
+        let name_filter = tests_filter.name_filter.clone();
 
         let target_handles = raw_test_targets
             .into_iter()
-            .map(|t| spawn_prepare_test_target(t, tracked_resource))
+            .map(|t| spawn_prepare_test_target(t, tracked_resource, name_filter.clone()))
             .collect();
 
         Ok(RunForPackageArgs {
@@ -150,8 +157,11 @@ impl RunForPackageArgs {
 fn spawn_prepare_test_target(
     target: TestTargetRaw,
     tracked_resource: ForgeTrackedResource,
-) -> JoinHandle<Result<TestTargetWithConfig>> {
-    tokio::task::spawn_blocking(move || prepare_test_target(target, &tracked_resource))
+    name_filter: NameFilter,
+) -> PrepareTargetHandle {
+    tokio::task::spawn_blocking(move || {
+        prepare_test_target(target, &tracked_resource, &name_filter)
+    })
 }
 
 fn sum_test_cases_from_test_target(
@@ -190,12 +200,18 @@ pub async fn run_for_package(
     exit_first_channel: &mut ExitFirstChannel,
 ) -> Result<PackageTestResult> {
     // Resolve all targets first so the collected count includes #[ignore] filtering.
-    let mut resolved_targets = vec![];
+    let mut resolved_targets: Vec<(TestTargetLocation, Option<TestTargetWithResolvedConfig>)> =
+        vec![];
     let mut all_tests = 0;
     let mut not_filtered_total = 0;
 
     for handle in target_handles {
-        let target_with_config = handle.await??;
+        let (maybe_target, tests_location) = handle.await??;
+
+        let Some(target_with_config) = maybe_target else {
+            resolved_targets.push((tests_location, None));
+            continue;
+        };
 
         let mut resolved = resolve_config(
             target_with_config,
@@ -217,10 +233,16 @@ pub async fn run_for_package(
         all_tests += all;
         not_filtered_total += not_filtered;
 
-        resolved_targets.push(resolved);
+        resolved_targets.push((tests_location, Some(resolved)));
     }
 
-    warn_if_incompatible_rpc_version(&resolved_targets, ui.clone()).await?;
+    warn_if_incompatible_rpc_version(
+        resolved_targets
+            .iter()
+            .filter_map(|(_, resolved)| resolved.as_ref()),
+        ui.clone(),
+    )
+    .await?;
 
     ui.println(&CollectedTestsCountMessage {
         tests_num: not_filtered_total,
@@ -229,7 +251,12 @@ pub async fn run_for_package(
 
     let mut summaries = vec![];
 
-    for resolved in resolved_targets {
+    for (location, resolved) in resolved_targets {
+        let Some(resolved) = resolved else {
+            ui.println(&TestsRunMessage::new(location, 0));
+            continue;
+        };
+
         ui.println(&TestsRunMessage::new(
             resolved.tests_location,
             sum_test_cases_from_test_target(

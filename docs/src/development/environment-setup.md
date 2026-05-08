@@ -62,6 +62,18 @@ Tests can be run with:
 $ cargo test
 ```
 
+`cargo test` is the primary way to run tests locally.
+
+> ❗️ **Warning**
+>
+> `cargo nextest run` may leave an orphan `starknet-devnet` process in some scenarios.
+> For local runs, prefer `cargo test`.
+> If you want to use `nextest`, find and `kill` orphan devnet process:
+>
+> ```shell
+> $ ps aux | grep starknet-devnet | grep -v grep
+> ```
+
 ## Cairo Native
 
 To develop Starknet Foundry with Cairo Native support, you need to enable the `cairo-native` feature in Cargo and
