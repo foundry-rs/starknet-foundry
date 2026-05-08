@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bug in forge debugging and `--gas-report` that caused panic in case of a call to non-existent selector
 
+#### Removed
+
+- The deprecated `snforge clean-cache` command. Use `snforge clean cache` instead
+
 ## [0.60.0] - 2026-04-27
 
 ### Forge

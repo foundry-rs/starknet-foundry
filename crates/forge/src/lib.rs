@@ -7,12 +7,10 @@ use derive_more::Display;
 use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::partition::Partition;
-use forge_runner::resolve_cache_dir;
 use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::ScarbCommand;
-use scarb_api::metadata::metadata;
 use scarb_ui::args::{FeaturesSpec, PackagesFilter, ProfileSpec};
 use semver::Version;
 use shared::auto_completions::{Completions, generate_completions};
@@ -100,8 +98,6 @@ enum ForgeSubcommand {
         #[command(flatten)]
         args: CleanArgs,
     },
-    /// Clean Forge cache directory
-    CleanCache {},
     /// Check if all `snforge` requirements are installed
     CheckRequirements,
     /// Generate completions script
@@ -328,17 +324,6 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
         }
         ForgeSubcommand::Clean { args } => {
             clean::clean(args, &ui)?;
-            Ok(ExitStatus::Success)
-        }
-        ForgeSubcommand::CleanCache {} => {
-            ui.println(&WarningMessage::new("`snforge clean-cache` is deprecated and will be removed in the future. Use `snforge clean cache` instead"));
-            let scarb_metadata = metadata()?;
-            let cache_dir = resolve_cache_dir(&scarb_metadata.workspace.root)?;
-
-            if cache_dir.exists() {
-                clean::clean_cache_dir(&cache_dir, std::env::var("SNFOUNDRY_CACHE").is_ok(), &ui)?;
-            }
-
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Test { mut args } => {
