@@ -11,6 +11,13 @@ run:
 $ ./scripts/setup_predeployed_contracts.sh
 ```
 
+## List of predeployed contracts
+
+| Token | Contract Name | Source Code (Cairo) | Class on Mainnet | Commit Hash | Version |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **STRK** | `ERC20Lockable` | [View Source](https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/strk/src/erc20_lockable.cairo) | [`0x02e7...98fc`](https://voyager.online/class/0x02e77ee61d4df3d988ee1f42ea5442e913862cc82c2584d212ecda76666498fc) | [`07e11c3`](https://github.com/starknet-io/starkgate-contracts/commit/07e11c39119a10d5742735be5b1d51894ebf5311) | `v3.0.0` |
+| **ETH** | `ERC20Mintable` | [View Source](https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/sg_token/src/erc20_mintable.cairo) | [`0x00b4...4ec`](https://voyager.online/class/0x00b45dbc3714180381c5680e41931172d67194d77d504413465390e0bef194ec) | [`07e11c3`](https://github.com/starknet-io/starkgate-contracts/commit/07e11c39119a10d5742735be5b1d51894ebf5311) | `v3.0.0` |
+
 ## Updating predeployed contracts
 
 To add a new predeployed contract or update an existing one, extend the generator script so that it writes `casm.json.gz` and `sierra.json.gz` into a
@@ -34,10 +41,3 @@ crates/cheatnet/src/data/predeployed_contracts
     ├── casm.json.gz
     └── sierra.json.gz
 ```
-
-## List of predeployed contracts
-
-| Token | Contract Name | Source Code (Cairo) | Class on Mainnet | Commit Hash | Version |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **STRK** | `ERC20Lockable` | [View Source](https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/strk/src/erc20_lockable.cairo) | [`0x02e7...98fc`](https://voyager.online/class/0x02e77ee61d4df3d988ee1f42ea5442e913862cc82c2584d212ecda76666498fc) | [`07e11c3`](https://github.com/starknet-io/starkgate-contracts/commit/07e11c39119a10d5742735be5b1d51894ebf5311) | `v3.0.0` |
-| **ETH** | `ERC20Mintable` | [View Source](https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/sg_token/src/erc20_mintable.cairo) | [`0x00b4...4ec`](https://voyager.online/class/0x00b45dbc3714180381c5680e41931172d67194d77d504413465390e0bef194ec) | [`07e11c3`](https://github.com/starknet-io/starkgate-contracts/commit/07e11c39119a10d5742735be5b1d51894ebf5311) | `v3.0.0` |

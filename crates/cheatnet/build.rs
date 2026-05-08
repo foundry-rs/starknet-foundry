@@ -8,6 +8,8 @@ const REQUIRED_ARTIFACTS: &[&str] = &[
 ];
 
 fn main() {
+    // Re-run the build script when its validation logic changes, even if the
+    // generated artifacts themselves stay untouched.
     println!("cargo:rerun-if-changed=build.rs");
 
     for artifact in REQUIRED_ARTIFACTS {

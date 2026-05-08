@@ -25,12 +25,14 @@ cleanup() {
 trap cleanup EXIT
 
 need_cmd() {
-  local cmd="$1"
-
-  if ! command -v "${cmd}" >/dev/null 2>&1; then
-    echo "Required command not found: ${cmd}" >&2
+  if ! check_cmd "$1"; then
+    echo "need '$1' (command not found)" >&2
     exit 1
   fi
+}
+
+check_cmd() {
+  command -v "$1" >/dev/null 2>&1
 }
 
 prepare_starkgate_repo() {
@@ -41,8 +43,8 @@ prepare_starkgate_repo() {
   TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/${clone_dir_name}.XXXXXX")"
   local repo_dir="${TMP_DIR}/${clone_dir_name}"
 
-  git clone "${repo_url}" "${repo_dir}" >/dev/null 2>&1
-  git -C "${repo_dir}" checkout "${repo_ref}" >/dev/null 2>&1
+  git clone "${repo_url}" "${repo_dir}" >/dev/null
+  git -C "${repo_dir}" checkout "${repo_ref}" >/dev/null
 
   echo "${repo_dir}"
 }
@@ -65,8 +67,19 @@ ensure_scarb_available() {
     exit 1
   fi
 
-  asdf plugin add scarb >/dev/null 2>&1 || true
-  asdf install scarb "${expected_scarb_version}" >/dev/null 2>&1
+  if ! asdf plugin list | grep -qx "scarb"; then
+    asdf plugin add scarb >/dev/null
+  fi
+  asdf install scarb "${expected_scarb_version}" >/dev/null
+
+  (
+    cd "${repo_dir}"
+    installed_scarb_version="$(asdf exec scarb --version | awk '{print $2; exit}')"
+    if [[ "${installed_scarb_version}" != "${expected_scarb_version}" ]]; then
+      echo "Expected scarb ${expected_scarb_version}, but asdf resolves ${installed_scarb_version}" >&2
+      exit 1
+    fi
+  )
 }
 
 print_scarb_version_info() {
@@ -77,7 +90,7 @@ print_scarb_version_info() {
 
   (
     cd "${repo_dir}"
-    current_scarb_version="$(scarb --version | awk '{print $2; exit}')"
+    current_scarb_version="$(asdf exec scarb --version | awk '{print $2; exit}')"
     echo "Using ${repo_label} at ${repo_ref} with scarb ${current_scarb_version}"
   )
 }
@@ -192,7 +205,7 @@ prepare_starkgate_contracts() {
   ensure_debug_info_and_backtrace "${repo_dir}/Scarb.toml"
   (
     cd "${repo_dir}"
-    scarb --release build -p strk -p sg_token
+    asdf exec scarb --release build -p strk -p sg_token
   )
 
   gzip_artifacts_from_mappings "${repo_dir}" "${artifact_mappings[@]}"

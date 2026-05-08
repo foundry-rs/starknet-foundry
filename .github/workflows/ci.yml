@@ -48,8 +48,8 @@ jobs:
     needs: prepare-predeployed-contracts
     steps:
       - uses: actions/checkout@v6
-      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: ./.github/actions/setup-tools
+      - uses: ./.github/actions/restore-predeployed-contracts
         with:
           save-cache: 'true'
       - run: cargo test --profile ci --workspace --exclude sncast --exclude forge --exclude native-api
@@ -60,8 +60,8 @@ jobs:
     needs: prepare-predeployed-contracts
     steps:
       - uses: actions/checkout@v6
-      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: ./.github/actions/setup-tools
+      - uses: ./.github/actions/restore-predeployed-contracts
         with:
           setup-scarb: 'false'
           setup-usc: 'false'
@@ -93,8 +93,8 @@ jobs:
     needs: prepare-predeployed-contracts
     steps:
       - uses: actions/checkout@v6
-      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: ./.github/actions/setup-tools
+      - uses: ./.github/actions/restore-predeployed-contracts
         with:
           install-llvm: 'true'
           setup-scarb: 'false'
@@ -301,8 +301,8 @@ jobs:
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
       - uses: actions/checkout@v6
-      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: ./.github/actions/setup-tools
+      - uses: ./.github/actions/restore-predeployed-contracts
         with:
           scarb-version: ${{ matrix.version }}
       - name: Run snap E2E tests
@@ -314,8 +314,8 @@ jobs:
     needs: prepare-predeployed-contracts
     steps:
       - uses: actions/checkout@v6
-      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: ./.github/actions/setup-tools
+      - uses: ./.github/actions/restore-predeployed-contracts
         # No setup scarb action is used because we want to install multiple versions of scarb through asdf
         with:
           setup-scarb: 'false'
@@ -328,8 +328,8 @@ jobs:
     needs: prepare-predeployed-contracts
     steps:
       - uses: actions/checkout@v6
-      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: ./.github/actions/setup-tools
+      - uses: ./.github/actions/restore-predeployed-contracts
         with:
           setup-scarb: 'false'
 
@@ -347,8 +347,8 @@ jobs:
     needs: prepare-predeployed-contracts
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: ./.github/actions/setup-tools
+      - uses: ./.github/actions/restore-predeployed-contracts
         with:
           scarb-version: '2.13.1'
       - run: cargo test --profile ci -p forge --features run_test_for_scarb_since_2_13_1 e2e::oracles
@@ -406,8 +406,8 @@ jobs:
       RUSTFLAGS: "-Dwarnings"
     steps:
       - uses: actions/checkout@v6
-      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: ./.github/actions/setup-tools
+      - uses: ./.github/actions/restore-predeployed-contracts
         with:
           install-llvm: 'true'
           setup-usc: 'false'
@@ -450,8 +450,8 @@ jobs:
     needs: prepare-predeployed-contracts
     steps:
       - uses: actions/checkout@v6
-      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: ./.github/actions/setup-tools
+      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: taiki-e/install-action@055f5df8c3f65ea01cd41e9dc855becd88953486 # 2.75.18
         with:
           # TODO(#3970): Upgrade mdbook-variables after resolving issue
