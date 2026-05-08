@@ -124,13 +124,7 @@ fn with_custom_cache_dir() {
 
     let default_cache_dir = temp.path().join(DEFAULT_CACHE_DIR);
     let custom_cache_dir = temp.path().join("custom_cache");
-    fs::create_dir(&custom_cache_dir).unwrap();
-
-    for entry in fs::read_dir(&default_cache_dir).unwrap() {
-        let entry = entry.unwrap();
-        fs::copy(entry.path(), custom_cache_dir.join(entry.file_name())).unwrap();
-    }
-    fs::remove_dir_all(&default_cache_dir).unwrap();
+    fs::rename(&default_cache_dir, &custom_cache_dir).unwrap();
 
     let output = test_runner(&temp)
         .env("SNFOUNDRY_CACHE", &custom_cache_dir)

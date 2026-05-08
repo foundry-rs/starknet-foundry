@@ -163,9 +163,40 @@ fn test_clean_cache_with_custom_cache_dir() {
 }
 
 #[test]
+fn test_clean_cache_with_custom_cache_dir_preserves_unrelated_files() {
+    let temp_dir = setup_package("coverage_project");
+
+    let custom_cache_dir = temp_dir.path().join("custom_cache");
+    fs::create_dir(&custom_cache_dir).unwrap();
+    fs::write(custom_cache_dir.join(".prev_tests_failed"), "failed_test").unwrap();
+    fs::write(
+        custom_cache_dir.join("http___rpc_example_54060_v0_60_0.json"),
+        "{}",
+    )
+    .unwrap();
+    fs::write(custom_cache_dir.join("keep.txt"), "keep").unwrap();
+
+    runner(&temp_dir)
+        .arg("clean")
+        .arg("cache")
+        .env("SNFOUNDRY_CACHE", &custom_cache_dir)
+        .assert()
+        .success();
+
+    assert!(custom_cache_dir.exists());
+    assert!(!custom_cache_dir.join(".prev_tests_failed").exists());
+    assert!(
+        !custom_cache_dir
+            .join("http___rpc_example_54060_v0_60_0.json")
+            .exists()
+    );
+    assert!(custom_cache_dir.join("keep.txt").exists());
+}
+
+#[test]
 #[cfg_attr(
     feature = "cairo-native",
-    ignore = "Native doesn't support trace, coverage and profiler yet"
+    ignore = "Native doesn't support trace, coverage and profiler"
 )]
 fn test_clean_all() {
     let temp_dir = setup_package("coverage_project");
@@ -197,7 +228,7 @@ fn test_clean_all() {
 #[test]
 #[cfg_attr(
     feature = "cairo-native",
-    ignore = "Native doesn't support trace, coverage and profiler yet"
+    ignore = "Native doesn't support trace, coverage and profiler"
 )]
 fn test_clean_all_with_custom_cache_dir() {
     let temp_dir = setup_package("coverage_project");

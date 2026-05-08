@@ -4,9 +4,11 @@ use camino::{Utf8Path, Utf8PathBuf};
 use forge_runner::resolve_cache_dir;
 use foundry_ui::UI;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
+use std::env;
 use std::fs;
 
 const COVERAGE_DIR: &str = "coverage";
+const FILE_WITH_PREV_TESTS_FAILED: &str = ".prev_tests_failed";
 const PROFILE_DIR: &str = "profile";
 const TRACE_DIR: &str = "snfoundry_trace";
 
@@ -31,6 +33,7 @@ pub fn clean(args: CleanArgs, ui: &UI) -> Result<()> {
         ..MetadataOpts::default()
     })?;
     let workspace_root = scarb_metadata.workspace.root;
+    let has_custom_cache_dir = env::var("SNFOUNDRY_CACHE").is_ok();
 
     let packages_root: Vec<Utf8PathBuf> = scarb_metadata
         .packages
@@ -46,7 +49,11 @@ pub fn clean(args: CleanArgs, ui: &UI) -> Result<()> {
             CleanComponent::Profile => packages_root
                 .iter()
                 .try_for_each(|root| clean_dir(&root.join(PROFILE_DIR), ui))?,
-            CleanComponent::Cache => clean_dir(&resolve_cache_dir(&workspace_root), ui)?,
+            CleanComponent::Cache => clean_cache_dir(
+                &resolve_cache_dir(&workspace_root)?,
+                has_custom_cache_dir,
+                ui,
+            )?,
             CleanComponent::Trace => clean_dir(&workspace_root.join(TRACE_DIR), ui)?,
             CleanComponent::All => unreachable!("All component should have been handled earlier"),
         }
@@ -62,4 +69,70 @@ fn clean_dir(path: &Utf8Path, ui: &UI) -> Result<()> {
     }
 
     Ok(())
+}
+
+pub fn clean_cache_dir(path: &Utf8Path, has_custom_cache_dir: bool, ui: &UI) -> Result<()> {
+    if !path.exists() {
+        return Ok(());
+    }
+
+    if !has_custom_cache_dir {
+        return clean_dir(path, ui);
+    }
+
+    for entry in path
+        .read_dir_utf8()
+        .with_context(|| format!("Failed to read cache directory: {path}"))?
+    {
+        let entry = entry.with_context(|| format!("Failed to read cache directory: {path}"))?;
+        let entry_path = entry.path();
+
+        if is_snfoundry_cache_file(entry_path) {
+            fs::remove_file(entry_path)
+                .with_context(|| format!("Failed to remove cache file: {entry_path}"))?;
+            ui.println(&format!("Removed file: {entry_path}"));
+        }
+    }
+
+    let is_empty = path
+        .read_dir_utf8()
+        .with_context(|| format!("Failed to read cache directory: {path}"))?
+        .next()
+        .is_none();
+
+    if is_empty {
+        fs::remove_dir(path).with_context(|| format!("Failed to remove directory: {path}"))?;
+        ui.println(&format!("Removed directory: {path}"));
+    }
+
+    Ok(())
+}
+
+fn is_snfoundry_cache_file(path: &Utf8Path) -> bool {
+    let Some(file_name) = path.file_name() else {
+        return false;
+    };
+
+    if file_name == FILE_WITH_PREV_TESTS_FAILED {
+        return true;
+    }
+
+    let Some(stem) = file_name.strip_suffix(".json") else {
+        return false;
+    };
+
+    let Some((prefix, version)) = stem.rsplit_once("_v") else {
+        return false;
+    };
+    let Some((sanitized_url, block_number)) = prefix.rsplit_once('_') else {
+        return false;
+    };
+
+    !sanitized_url.is_empty()
+        && !block_number.is_empty()
+        && block_number.chars().all(|char| char.is_ascii_digit())
+        && version.split('_').count() >= 3
+        && version
+            .split('_')
+            .all(|segment| !segment.is_empty() && segment.chars().all(|char| char.is_ascii_digit()))
 }
