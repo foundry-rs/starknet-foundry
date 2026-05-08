@@ -100,6 +100,7 @@ jobs:
         uses: taiki-e/install-action@055f5df8c3f65ea01cd41e9dc855becd88953486 # 2.75.18
         with:
           tool: nextest@0.9.98
+      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
       - name: Build and archive tests
         run: cargo nextest archive --cargo-profile ci -p forge --features cairo-native --archive-file 'nextest-archive-forge-native-${{ runner.os }}.tar.zst'
       - name: Upload archive to workflow
