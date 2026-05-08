@@ -158,7 +158,7 @@ root/
                 └── opus-magnum/
 ```
 
-#### Glossary:
+#### Glossary
 
 **A:** Global configuration file containing the profiles `default` and `testnet`:
 ```toml
