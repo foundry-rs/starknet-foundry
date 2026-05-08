@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
+- Fix `verify` command prompt behavior to correctly interpret empty input as "yes" for (Y/n) confirmation
 - Bug in forge debugging and `--gas-report` that caused panic in case of a call to non-existent selector
 
 ## [0.60.0] - 2026-04-27
