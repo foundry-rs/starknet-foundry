@@ -1,6 +1,6 @@
 use crate::{CleanArgs, CleanComponent};
 use anyhow::{Context, Result, ensure};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use forge_runner::resolve_cache_dir;
 use foundry_ui::UI;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
@@ -55,7 +55,7 @@ pub fn clean(args: CleanArgs, ui: &UI) -> Result<()> {
     Ok(())
 }
 
-fn clean_dir(path: &Utf8PathBuf, ui: &UI) -> Result<()> {
+fn clean_dir(path: &Utf8Path, ui: &UI) -> Result<()> {
     if path.exists() {
         fs::remove_dir_all(path).with_context(|| format!("Failed to remove directory: {path}"))?;
         ui.println(&format!("Removed directory: {path}"));
