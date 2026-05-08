@@ -320,18 +320,13 @@ fn main() -> Result<ExitCode> {
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Completions(completions) = &cli.command {
-        run_completions_command(completions)
+        generate_completions(completions.shell, &mut Cli::command())
     } else if let Commands::Script(script) = &cli.command {
         run_script_command(&cli, runtime, script, &ui)
     } else {
         let config = get_cast_config(&cli, &ui)?;
         runtime.block_on(run_async_command(cli, config, &ui))
     }
-}
-
-fn run_completions_command(completions: &Completions) -> Result<ExitCode> {
-    generate_completions(completions.shell, &mut Cli::command())?;
-    Ok(ExitCode::SUCCESS)
 }
 
 #[expect(clippy::too_many_lines)]
