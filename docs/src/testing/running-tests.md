@@ -23,7 +23,9 @@ Tests: 3 passed, 0 failed, 0 ignored, 0 filtered out
 
 ## Prerequisites
 
-`snforge test` requires **enabled** gas calculation. See [`enable-gas`](../appendix/scarb-toml.md#enable-gas) in the `Scarb.toml` reference for details.
+`snforge test` requires **enabled** gas calculation. 
+This is true by default, so unless you have explicitly disabled it, you shouldn't have to do anything.
+See [`enable-gas`](../appendix/scarb-toml.md#enable-gas) in the `Scarb.toml` reference for details.
 
 ## Filtering Tests
 
