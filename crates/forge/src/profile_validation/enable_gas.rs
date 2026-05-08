@@ -23,7 +23,7 @@ pub fn check_enable_gas(
             ensure!(
                 enable_gas,
                 formatdoc! {
-                    "snforge test does not support gas calculation being disabled
+                    "`snforge test` does not support gas calculation being disabled
                     help: enable gas calculation by adding the following entry to {workspace_manifest_path}:
 
                     [profile.{profile}.cairo]
