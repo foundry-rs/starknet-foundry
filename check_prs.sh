@@ -4,12 +4,9 @@
 REPO_OWNER="foundry-rs"
 REPO_NAME="starknet-foundry"
 
-# Slack integration: when SLACK_WEBHOOK_URL is set, POST the message instead
-# of printing it. SLACK_PAYLOAD_FIELD is the JSON field name expected by the
-# webhook ("text" for incoming webhooks; for Workflow Builder set this to the
-# variable name your trigger defines, e.g. "message").
+# Slack integration: when SLACK_WEBHOOK_URL is set, POST the message as a
+# Block Kit payload (header + context + one divider/section group per reviewer).
 SLACK_WEBHOOK_URL="${SLACK_WEBHOOK_URL:-}"
-SLACK_PAYLOAD_FIELD="${SLACK_PAYLOAD_FIELD:-text}"
 
 # 2. Check for dependencies
 REQUIRED=(gh jq)
@@ -34,6 +31,8 @@ query($owner: String!, $name: String!) {
         title
         url
         number
+        additions
+        deletions
         reviewRequests(first: 20) {
           nodes {
             requestedReviewer {
@@ -61,9 +60,9 @@ query($owner: String!, $name: String!) {
 }
 '
 
-# Emit one TSV row per (reviewer, PR) pair: reviewer, title, "<url|#N>", seconds.
-# Skips the `starknet-foundry` team. Sorted by reviewer asc, then waiting time desc.
-ROWS=$(gh api graphql -f query="$QUERY" -F owner="$REPO_OWNER" -F name="$REPO_NAME" | jq -r '
+# Emit a JSON array, one object per (reviewer, PR) pair. Skips the
+# `starknet-foundry` team. Sorted by reviewer asc, then waiting time desc.
+ROWS_JSON=$(gh api graphql -f query="$QUERY" -F owner="$REPO_OWNER" -F name="$REPO_NAME" | jq '
   [
     .data.repository.pullRequests.nodes[]
     | . as $pr
@@ -82,48 +81,86 @@ ROWS=$(gh api graphql -f query="$QUERY" -F owner="$REPO_OWNER" -F name="$REPO_NA
     | {
         reviewer: $reviewer,
         title: $pr.title,
-        link: "<\($pr.url)|#\($pr.number)>",
-        waiting_s: (if $ts then ((now - $ts) | floor) else null end)
+        url: $pr.url,
+        number: $pr.number,
+        waiting_s: (if $ts then ((now - $ts) | floor) else null end),
+        additions: $pr.additions,
+        deletions: $pr.deletions
       }
   ]
   | sort_by(.reviewer, -(.waiting_s // -1))
-  | .[]
-  | [.reviewer, .title, .link, (.waiting_s // "" | tostring)]
-  | @tsv
 ')
 
-humanize() {
-    local s=$1
-    if [ -z "$s" ]; then echo "?"; return; fi
-    if [ "$s" -lt 60 ]; then echo "${s}s"
-    elif [ "$s" -lt 3600 ]; then echo "$((s/60))m"
-    elif [ "$s" -lt 86400 ]; then echo "$((s/3600))h"
-    else echo "$((s/86400))d"
-    fi
-}
+# 4. Build the Block Kit payload directly from the JSON rows.
+PAYLOAD=$(printf '%s' "$ROWS_JSON" | jq --arg repo "$REPO_OWNER/$REPO_NAME" '
+  def humanize:
+    if . == null then "?"
+    elif . < 60 then "\(.)s"
+    elif . < 3600 then "\(. / 60 | floor)m"
+    elif . < 86400 then "\(. / 3600 | floor)h"
+    else "\(. / 86400 | floor)d"
+    end;
 
-# 4. Build the Slack-formatted message in $MSG.
-if [ -z "$ROWS" ]; then
-    MSG="No pending review requests. :tada:"
-else
-    MSG=$(
-        current_reviewer=""
-        while IFS=$'\t' read -r reviewer title link waiting; do
-            [ -z "$reviewer" ] && continue
-            if [ "$reviewer" != "$current_reviewer" ]; then
-                [ -n "$current_reviewer" ] && echo ""
-                echo "*$reviewer*"
-                current_reviewer="$reviewer"
-            fi
-            echo "• \`$(humanize "$waiting")\` $link $title"
-        done <<< "$ROWS"
-    )
-fi
+  # Age dot: green < 1d, yellow 1-3d, red > 3d.
+  def age_icon:
+    if . == null then ":grey_question:"
+    elif . < 86400 then ":large_green_circle:"
+    elif . < 259200 then ":large_yellow_circle:"
+    else ":red_circle:"
+    end;
 
-# 5. Send to Slack if a webhook is configured; otherwise print to stdout.
+  def plural($n; $word):
+    "\($n) \($word)\(if $n == 1 then "" else "s" end)";
+
+  def rpad($s; $n):
+    ($n - ($s | length)) as $p
+    | if $p > 0 then $s + (" " * $p) else $s end;
+
+  if length == 0 then
+    {
+      blocks: [
+        {type: "header",  text: {type: "plain_text", text: "Pending Review Requests", emoji: true}},
+        {type: "section", text: {type: "mrkdwn", text: ":tada: No pending review requests in *<https://github.com/\($repo)|\($repo)>*."}}
+      ]
+    }
+  else
+    group_by(.reviewer) as $groups
+    | {
+        blocks: (
+          [
+            {type: "header",  text: {type: "plain_text", text: "Pending Review Requests", emoji: true}},
+            {type: "context", elements: [
+              {type: "mrkdwn", text: "*<https://github.com/\($repo)|\($repo)>* — \(plural(length; "pending review")) across \(plural($groups | length; "reviewer"))"}
+            ]}
+          ]
+          + ($groups | map(
+              . as $group
+              | ($group | map(.waiting_s | humanize | length) | max) as $wmax
+              | ($group | map("+\(.additions)/-\(.deletions)" | length) | max) as $smax
+              | ($group | map("#\(.number)" | length) | max) as $nmax
+              | [
+                  {type: "divider"},
+                  {type: "section", text: {type: "mrkdwn",
+                    text: "*\(.[0].reviewer)*  ·  \(plural(length; "PR"))"
+                  }},
+                  {type: "section", text: {type: "mrkdwn", text: (
+                    map(
+                      (.waiting_s | humanize) as $w
+                      | "+\(.additions)/-\(.deletions)" as $sz
+                      | "#\(.number)" as $num
+                      | "\(.waiting_s | age_icon) `\(rpad($w; $wmax))` `\(rpad($sz; $smax))`  <\(.url)|\(rpad($num; $nmax))>  \(.title)"
+                    )
+                    | join("\n")
+                  )}}
+                ]
+            ) | add)
+        )
+      }
+  end
+')
+
+# 5. Send to Slack if a webhook is configured; otherwise print the payload.
 if [ -n "$SLACK_WEBHOOK_URL" ]; then
-    PAYLOAD=$(jq -n --arg msg "$MSG" --arg field "$SLACK_PAYLOAD_FIELD" \
-        '{($field): $msg}')
     RESP_FILE=$(mktemp)
     HTTP_CODE=$(curl -sS -o "$RESP_FILE" -w "%{http_code}" \
         -X POST -H 'Content-Type: application/json' \
@@ -136,7 +173,7 @@ if [ -n "$SLACK_WEBHOOK_URL" ]; then
         exit 1
     fi
 else
-    printf '%s\n' "$MSG"
+    printf '%s\n' "$PAYLOAD"
     echo "" >&2
-    echo "✅ Extraction complete. (set SLACK_WEBHOOK_URL to post to Slack)" >&2
+    echo "✅ Block Kit payload built. (set SLACK_WEBHOOK_URL to post to Slack)" >&2
 fi
