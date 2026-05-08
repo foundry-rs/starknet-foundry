@@ -3,7 +3,7 @@ use clap::ValueEnum;
 use clap_complete::Shell;
 use configuration::test_utils::copy_config_to_tempdir;
 use indoc::formatdoc;
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
 use tempfile::tempdir;
 
 #[test]
@@ -48,7 +48,8 @@ fn test_completions_invalid_local_config() {
 
     let snapbox = runner(&args).current_dir(t.path());
 
-    snapbox.assert().success();
+    let output = snapbox.assert().success();
+    assert!(output.as_stdout().starts_with("_sncast() {"));
 }
 
 #[test]
@@ -63,5 +64,6 @@ fn test_completions_invalid_global_config() {
         .args(&args)
         .current_dir(local_dir.path());
 
-    snapbox.assert().success();
+    let output = snapbox.assert().success();
+    assert!(output.as_stdout().starts_with("_sncast() {"));
 }
