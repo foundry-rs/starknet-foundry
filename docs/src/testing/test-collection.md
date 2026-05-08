@@ -60,9 +60,9 @@ mod tests {
 > 📝 **Note**
 >
 > Thanks to Scarb's [incremental compilation](https://docs.swmansion.com/scarb/docs/procedural-macros/incremental.html) (enabled by default),
-> the integration test layout usually recompiles faster than the unit test layout. 
-> 
-> Each `tests/*.cairo` target gets its own cache slot, so editing one test does not invalidate the others.
+> the integration test layout usually recompiles faster than the unit test layout.
+>
+> The main package and the test code are cached separately, so editing tests does not invalidate the main package's build cache.
 
 
 Integration tests are placed in `tests` directory.
