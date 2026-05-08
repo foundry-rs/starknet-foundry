@@ -746,26 +746,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
         Commands::Verify(verify) => {
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &verify.package)?;
-            let artifacts = build_and_load_artifacts(
-                &package_metadata,
-                &BuildConfig {
-                    scarb_toml_path: manifest_path.clone(),
-                    json: cli.json,
-                    profile: config.scarb_profile.clone(),
-                },
-                false,
-                // TODO(#3959) Remove `base_ui`
-                ui.base_ui(),
-            )
-            .expect("Failed to build contract");
-            let result = starknet_commands::verify::verify(
-                verify,
-                &package_metadata.manifest_path,
-                &artifacts,
-                &config,
-                ui,
-            )
-            .await;
+            let result =
+                starknet_commands::verify::verify(verify, &package_metadata, cli.json, &config, ui)
+                    .await;
 
             Ok(process_command_result("verify", result, ui, None))
         }
