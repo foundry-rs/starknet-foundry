@@ -771,7 +771,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             Ok(process_command_result("ledger", result, ui, None))
         }
 
-        Commands::Completions(_) | Commands::Script(_) => unreachable!(),
+        Commands::Completions(_) | Commands::Script(_) => unreachable!("should be handled before this function is called"),
     }
 }
 
