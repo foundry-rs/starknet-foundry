@@ -134,10 +134,18 @@ impl RunForPackageArgs {
 
         let tracked_resource = forge_config.test_runner_config.tracked_resource;
         let name_filter = tests_filter.name_filter.clone();
+        let partitioning_config = tests_filter.partitioning_config.clone();
 
         let target_handles = raw_test_targets
             .into_iter()
-            .map(|t| spawn_prepare_test_target(t, tracked_resource, name_filter.clone()))
+            .map(|t| {
+                spawn_prepare_test_target(
+                    t,
+                    tracked_resource,
+                    name_filter.clone(),
+                    partitioning_config.clone(),
+                )
+            })
             .collect();
 
         Ok(RunForPackageArgs {
@@ -155,9 +163,15 @@ fn spawn_prepare_test_target(
     target: TestTargetRaw,
     tracked_resource: ForgeTrackedResource,
     name_filter: NameFilter,
+    partitioning_config: PartitionConfig,
 ) -> PrepareTargetHandle {
     tokio::task::spawn_blocking(move || {
-        prepare_test_target(target, &tracked_resource, &name_filter)
+        prepare_test_target(
+            target,
+            &tracked_resource,
+            &name_filter,
+            &partitioning_config,
+        )
     })
 }
 

@@ -7,6 +7,7 @@ use crate::{
         with_config::{TestCaseWithConfig, TestTargetWithConfig},
         with_config_resolved::sanitize_test_case_name,
     },
+    partition::PartitionConfig,
     running::config_run::run_config_pass,
 };
 use anyhow::Result;
@@ -26,6 +27,7 @@ pub fn prepare_test_target(
     test_target_raw: TestTargetRaw,
     tracked_resource: &ForgeTrackedResource,
     name_filter: &NameFilter,
+    partitioning_config: &PartitionConfig,
 ) -> Result<(Option<TestTargetWithConfig>, TestTargetLocation, usize)> {
     let tests_location = test_target_raw.tests_location;
     let default_executables = vec![];
@@ -35,6 +37,19 @@ pub fn prepare_test_target(
         .as_ref()
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
         .unwrap_or(&default_executables);
+
+    let is_in_partition = |test_name: &str| match partitioning_config {
+        PartitionConfig::Disabled => true,
+        PartitionConfig::Enabled {
+            partition,
+            partition_map,
+        } => {
+            let test_assigned_index = partition_map
+                .get_assigned_index(test_name)
+                .expect("Partition map must contain all test cases");
+            test_assigned_index == partition.index()
+        }
+    };
 
     let (matching_cases, prefiltered_out_count) = match name_filter {
         NameFilter::ExactMatch(exact_match) => {
@@ -54,17 +69,22 @@ pub fn prepare_test_target(
             (Some(matches), 0)
         }
         NameFilter::Match(filter) => {
-            let matches = executables
-                .iter()
-                .filter_map(|case| {
-                    let raw_name: String = case.debug_name.clone()?.into();
-                    let sanitized_name = sanitize_test_case_name(&raw_name);
-                    sanitized_name
-                        .contains(filter)
-                        .then_some((&case.id, raw_name))
-                })
-                .collect::<Vec<_>>();
-            let filtered_out_count = executables.len() - matches.len();
+            let mut matches = vec![];
+            let mut filtered_out_count = 0;
+
+            for case in executables {
+                let Some(debug_name) = case.debug_name.clone() else {
+                    continue;
+                };
+                let raw_name: String = debug_name.into();
+                let sanitized_name = sanitize_test_case_name(&raw_name);
+
+                if sanitized_name.contains(filter) {
+                    matches.push((&case.id, raw_name));
+                } else if is_in_partition(&sanitized_name) {
+                    filtered_out_count += 1;
+                }
+            }
 
             if matches.is_empty() {
                 return Ok((None, tests_location, filtered_out_count));
