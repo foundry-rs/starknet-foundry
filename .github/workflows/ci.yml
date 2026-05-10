@@ -90,12 +90,11 @@ jobs:
       - uses: ./.github/actions/setup-tools
         with:
           install-llvm: 'true'
-      - uses: ./.github/actions/restore-predeployed-contracts
-        with:
           setup-scarb: 'false'
           setup-usc: 'false'
           cache-key: 'native'
           save-cache: 'true'
+      - uses: ./.github/actions/restore-predeployed-contracts
       - name: Install nextest
         uses: taiki-e/install-action@055f5df8c3f65ea01cd41e9dc855becd88953486 # 2.75.18
         with:
