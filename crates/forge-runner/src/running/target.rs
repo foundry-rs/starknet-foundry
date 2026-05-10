@@ -23,6 +23,7 @@ use universal_sierra_compiler_api::compile_raw_sierra_at_path;
 use universal_sierra_compiler_api::representation::RawCasmProgram;
 
 #[tracing::instrument(skip_all, level = "debug")]
+#[expect(clippy::too_many_arguments)]
 pub fn prepare_test_target(
     test_target_raw: TestTargetRaw,
     tracked_resource: &ForgeTrackedResource,
