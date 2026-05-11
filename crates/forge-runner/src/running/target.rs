@@ -74,14 +74,15 @@ pub fn prepare_test_target(
             let mut filtered_out_count = 0;
 
             for case in executables {
-                let Some(debug_name) = case.debug_name.clone() else {
-                    continue;
-                };
-                let raw_name: String = debug_name.into();
-                let sanitized_name = sanitize_test_case_name(&raw_name);
+                let debug_name: String = case
+                    .debug_name
+                    .clone()
+                    .expect("Failed to get test case name")
+                    .into();
+                let sanitized_name = sanitize_test_case_name(&debug_name);
 
                 if sanitized_name.contains(filter) {
-                    matches.push((&case.id, raw_name));
+                    matches.push((&case.id, debug_name));
                 } else if is_in_partition(&sanitized_name) {
                     filtered_out_count += 1;
                 }
