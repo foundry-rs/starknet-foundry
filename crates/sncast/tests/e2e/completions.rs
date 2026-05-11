@@ -1,8 +1,10 @@
-use crate::helpers::runner::runner;
+use crate::helpers::runner::{Cast, runner};
 use clap::ValueEnum;
 use clap_complete::Shell;
+use configuration::test_utils::copy_config_to_tempdir;
 use indoc::formatdoc;
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
+use tempfile::tempdir;
 
 #[test]
 fn test_happy_case() {
@@ -37,4 +39,31 @@ fn test_generate_completions_unsupported_shell() {
             "
         ),
     );
+}
+
+#[test]
+fn test_completions_invalid_local_config() {
+    let t = copy_config_to_tempdir("tests/data/files/snfoundry_malformed.toml", None);
+    let args = vec!["completions", "bash"];
+
+    let snapbox = runner(&args).current_dir(t.path());
+
+    let output = snapbox.assert().success();
+    assert!(output.as_stdout().starts_with("_sncast() {"));
+}
+
+#[test]
+fn test_completions_invalid_global_config() {
+    let global_dir = copy_config_to_tempdir("tests/data/files/snfoundry_malformed.toml", None);
+    let local_dir = tempdir().unwrap();
+    let args = vec!["completions", "bash"];
+
+    let snapbox = Cast::new()
+        .config_dir(global_dir.path())
+        .command()
+        .args(&args)
+        .current_dir(local_dir.path());
+
+    let output = snapbox.assert().success();
+    assert!(output.as_stdout().starts_with("_sncast() {"));
 }

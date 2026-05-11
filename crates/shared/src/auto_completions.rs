@@ -2,6 +2,7 @@ use anyhow::Result;
 use clap::{Args, Command};
 use clap_complete::{Generator, Shell};
 use std::io;
+use std::process::ExitCode;
 
 #[derive(Args, Debug)]
 pub struct Completions {
@@ -13,12 +14,12 @@ pub fn generate_completions_to_stdout<G: Generator>(shell: G, cmd: &mut Command)
 }
 
 // TODO(#3960) JSON output support
-pub fn generate_completions(shell: Option<Shell>, cmd: &mut Command) -> Result<()> {
+pub fn generate_completions(shell: Option<Shell>, cmd: &mut Command) -> Result<ExitCode> {
     let Some(shell) = shell.or_else(Shell::from_env) else {
         anyhow::bail!("Unsupported shell")
     };
 
     generate_completions_to_stdout(shell, cmd);
 
-    Ok(())
+    Ok(ExitCode::SUCCESS)
 }

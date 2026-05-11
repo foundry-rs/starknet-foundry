@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bug in forge debugging and `--gas-report` that caused panic in case of a call to non-existent selector
 
+### Cast
+
+#### Fixed
+
+- `sncast completions` no longer fails due to invalid local or global `snfoundry.toml` config.
+
 ## [0.60.0] - 2026-04-27
 
 ### Forge
