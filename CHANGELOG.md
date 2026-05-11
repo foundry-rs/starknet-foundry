@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Non-panic errors no longer bypass foundry UI; `--json` now works for user-facing errors where plain text was printed before (excluding clap arg-parsing errors).
 - Build failures now return command errors instead of panicking.
-- In command errors, `command` tag now universally displays a full command path (`get tx-status`, `account import`) (previously in some cases, only top-level command name was shown, e.g. `get`, `account`).
+- In command errors, `command` field now universally displays a full command path (`get tx-status`, `account import`) (previously in some cases, only top-level command name was shown, e.g. `get`, `account`).
 
 ## [0.60.0] - 2026-04-27
 
