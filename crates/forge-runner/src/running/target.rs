@@ -28,7 +28,7 @@ pub fn prepare_test_target(
     test_target_raw: TestTargetRaw,
     tracked_resource: &ForgeTrackedResource,
     name_filter: &NameFilter,
-    partitioning_config: &PartitionConfig,
+    partition_config: &PartitionConfig,
 ) -> Result<(Option<TestTargetWithConfig>, TestTargetLocation, usize)> {
     let tests_location = test_target_raw.tests_location;
     let default_executables = vec![];
@@ -39,7 +39,7 @@ pub fn prepare_test_target(
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
         .unwrap_or(&default_executables);
 
-    let is_in_partition = |test_name: &str| match partitioning_config {
+    let is_in_partition = |test_name: &str| match partition_config {
         PartitionConfig::Disabled => true,
         PartitionConfig::Enabled {
             partition,
