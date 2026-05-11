@@ -125,9 +125,9 @@ async fn test_happy_case_with_legacy_argent_account_type() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
-    let stdout = output.get_output().stdout.clone();
+    let stdout = &output.get_output().stdout;
 
-    let hash = get_transaction_hash(&stdout);
+    let hash = get_transaction_hash(stdout);
     let receipt = get_transaction_receipt(hash).await;
 
     assert!(matches!(receipt, Invoke(_)));
