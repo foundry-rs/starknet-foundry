@@ -66,6 +66,8 @@ When you already have a compiled contract (Sierra file) and want to declare it d
 
 ## Example
 
+<!-- TODO(#2736) -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast --account my_account \
     declare-from \
