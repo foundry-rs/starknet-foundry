@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
-#### Changes
+#### Changed
 
 - `snforge_scarb_plugin` diagnostics for named-argument kind violations now include both possible values and invalid arguments found.
 
