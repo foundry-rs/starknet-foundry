@@ -60,6 +60,19 @@ sncast --account my_account deploy --class-hash 0x[..] --network sepolia
 > `--max-fee` and the individual resource flags are mutually exclusive.
 > Any individual resource flag that is not provided will be estimated automatically
 
+# Declaring an Already Compiled Contract
+
+When you already have a compiled contract (Sierra file) and want to declare it directly, use [`declare-from`](../appendix/sncast/declare_from.md) with [`--sierra-file`](../appendix/sncast/declare_from.md#--sierra-file-sierra_file) option.
+
+## Example
+
+```shell
+$ sncast --account my_account \
+    declare-from \
+    --sierra-file target/dev/hello_Hello.contract_class.json \
+    --network sepolia
+```
+
 # Declaring a Contract by Fetching It From a Different Starknet Instance
 
 In some cases, you may need to declare a contract that was already compiled elsewhere and reuse the exact same class hash across multiple networks.
