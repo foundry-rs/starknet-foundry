@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - `sncast completions` no longer fails due to invalid local or global `snfoundry.toml` config.
+- `sncast account deploy` now correctly writes deployed address to keystore account file.
 
 #### Removed
 
