@@ -1,5 +1,6 @@
 use super::package::RunForPackageArgs;
 use crate::profile_validation::check_compiler_config_compatibility;
+use crate::profile_validation::enable_gas::check_enable_gas;
 use crate::run_tests::messages::latest_blocks_numbers::LatestBlocksNumbersMessage;
 use crate::run_tests::messages::overall_summary::OverallSummaryMessage;
 use crate::run_tests::messages::partition::{PartitionFinishedMessage, PartitionStartedMessage};
@@ -42,6 +43,8 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
 
     let packages: Vec<PackageMetadata> =
         packages_from_filter(&scarb_metadata, &args.scarb_args.packages_filter)?;
+
+    check_enable_gas(&scarb_metadata, &packages)?;
 
     let filter = PackagesFilter::generate_for::<Metadata>(packages.iter());
 
