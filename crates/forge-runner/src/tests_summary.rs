@@ -1,6 +1,7 @@
 use crate::test_target_summary::TestTargetSummary;
 use serde::Serialize;
 
+// TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub enum FilteredTestsCount {
     Exact(usize),
