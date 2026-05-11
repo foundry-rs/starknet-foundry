@@ -636,7 +636,7 @@ pub async fn test_happy_case_valid_address_computation() {
         "--name",
         "my_account_import",
         "--address",
-        "0x721c21e0cc9d37aec8e176797effd1be222aff6db25f068040adefabb7cfb6d",
+        "0x3d8e70d1cbeca6eed8d4cf58fe812b24e741112730903dc91486afe9a5130cc",
         "--private-key",
         "0x2",
         "--salt",
@@ -664,7 +664,7 @@ pub async fn test_happy_case_valid_address_computation() {
             {
                 "alpha-sepolia": {
                   "my_account_import": {
-                    "address": "0x721c21e0cc9d37aec8e176797effd1be222aff6db25f068040adefabb7cfb6d",
+                    "address": "0x3d8e70d1cbeca6eed8d4cf58fe812b24e741112730903dc91486afe9a5130cc",
                     "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
                     "deployed": false,
                     "salt": "0x3",
@@ -706,7 +706,7 @@ pub async fn test_invalid_address_computation() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let computed_address = "0xaf550326d32c8106ef08d25cbc0dba06e5cd10a2201c2e9bc5ad4cbbce45e6";
+    let computed_address = "0x7298d9fc4bde13623bd53f4adb0110bd77ab5f3f3675402b5dfb418e149e56a";
     snapbox.assert().stderr_eq(formatdoc! {r"
         Command: account import
         Error: Computed address {computed_address} does not match the provided address 0x123. Please ensure that the provided salt, class hash, and account type are correct.
