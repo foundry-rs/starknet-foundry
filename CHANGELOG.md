@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `sncast completions` no longer fails due to invalid local or global `snfoundry.toml` config.
 
+#### Removed
+
+- `argent` option for `--type` flag in `account create` and `account import` commands. Use `ready` instead. Old account files with `"type": "argent"` are still loaded correctly.
+
 ## [0.60.0] - 2026-04-27
 
 ### Forge
