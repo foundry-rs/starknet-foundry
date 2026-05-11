@@ -22,7 +22,7 @@ fn test_disabled_gas_in_scarb_toml() {
     assert_stdout_contains(
         output,
         indoc! {"
-        [ERROR] snforge test does not support gas calculation being disabled
+        [ERROR] `snforge test` does not support gas calculation being disabled
         help: enable gas calculation by adding the following entry to [..]Scarb.toml:
 
         [profile.dev.cairo]
