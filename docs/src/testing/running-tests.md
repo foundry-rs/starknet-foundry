@@ -77,6 +77,13 @@ Tests: 1 passed, 0 failed, 0 ignored, other filtered out
 </details>
 <br>
 
+## Speeding Up Test Compilation
+
+For best cache reuse across repeat runs, prefer the **integration test layout** (`tests/`) over unit tests in `src/`.
+
+Thanks to Scarb's [incremental compilation](https://docs.swmansion.com/scarb/docs/procedural-macros/incremental.html) (enabled by default), the main package and the test code are cached separately, so editing tests does not invalidate the main package's build cache.
+For details on the layout difference, see [Test Collection](test-collection.md).
+
 ## Skipping tests
 
 You can use the `--skip` flag to exclude tests matching a specified filter pattern.
