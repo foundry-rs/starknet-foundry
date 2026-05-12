@@ -117,6 +117,40 @@ fn debugging_trace_minimal_fork() {
 }
 
 #[test]
+fn debugging_trace_no_abi() {
+    let temp = setup_package("debugging_no_abi");
+
+    let output = test_runner(&temp)
+        .arg("--trace-verbosity")
+        .arg("standard")
+        .assert()
+        .code(0);
+
+    assert_stdout_contains(
+        output,
+        formatdoc! {r"
+            [..]Compiling[..]
+            [..]Finished[..]
+
+            Collected 1 test(s) from debugging_no_abi package
+            Running 0 test(s) from src/
+            Running 1 test(s) from tests/
+            [PASS] debugging_no_abi_integrationtest::test_trace::test_nested_safe_call_no_abi (l1_gas: ~0, l1_data_gas: ~[..], l2_gas: ~[..])
+            [test name] debugging_no_abi_integrationtest::test_trace::test_nested_safe_call_no_abi
+            └─ [selector] call
+               ├─ [contract name] CallerContract
+               ├─ [call result] success
+               └─ [selector] 0x32564d7e0fe091d49b4c20f4632191e4ed6986bf993849879abfef9465def25
+                  ├─ [contract name] CallerContract
+                  ├─ [calldata] 0x0
+                  └─ [call result] panic: 0x454e545259504f494e545f4e4f545f464f554e44 ('ENTRYPOINT_NOT_FOUND')
+
+            Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out"
+        },
+    );
+}
+
+#[test]
 fn debugging_double_flags() {
     let temp = setup_package("debugging");
 

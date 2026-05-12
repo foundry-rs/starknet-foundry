@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Fixed
+
+- Bug in forge debugging and `--gas-report` that caused panic in case of a call to non-existent selector
+
 ## [0.60.0] - 2026-04-27
 
 ### Forge
@@ -38,12 +44,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - In JSON output for `sncast utils` commands, the `"command"` field now includes the `utils` prefix (e.g. `"serialize"` -> `"utils serialize"`).
+- Reworked profile layering in `snfoundry.toml`: `[sncast.default]` is always the base layer, and global-only profiles can work without a local config. Read more [here](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#interaction-between-local-and-global-profiles).
+- Improved `snfoundry.toml` config error reporting.
 - `--profile` now only determines `snfoundry.toml` profile. For Scarb profile, use `--scarb-profile` flag or `scarb-profile` from `snfoundry.toml` instead. Defaults to `release` if unspecified.
 
 #### Fixed
 
 - `sncast verify` now uses the configured network or infers it from the RPC chain ID when `--network` is omitted.
 - `sncast` now returns non-zero exit code when a command fails.
+- Invalid `snfoundry.toml` configs now fail with errors instead of being silently ignored.
+- Panics in config validation. Errors are now properly propagated and reported.
+- `sncast show-config` quietly ignoring provider errors
 
 ## [0.59.0] - 2026-04-10
 

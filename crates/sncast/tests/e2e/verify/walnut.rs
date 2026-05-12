@@ -225,7 +225,7 @@ async fn test_verification_abort() {
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--contract-name",
-        "nonexistent",
+        "Map",
         "--verifier",
         "walnut",
         "--network",
