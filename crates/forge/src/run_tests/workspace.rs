@@ -198,6 +198,7 @@ fn calculate_total_filtered_count(
         (FilteredTestsCount::Exact(total), FilteredTestsCount::Exact(filtered)) => {
             FilteredTestsCount::Exact(total + filtered)
         }
+        // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
         _ => FilteredTestsCount::Other,
     }
 }

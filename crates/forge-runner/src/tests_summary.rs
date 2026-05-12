@@ -41,6 +41,7 @@ impl TestsSummary {
     pub fn format_summary_message(&self) -> String {
         let filtered = match self.filtered {
             FilteredTestsCount::Exact(value) => value.to_string(),
+            // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
             FilteredTestsCount::Other => "other".to_string(),
         };
 
