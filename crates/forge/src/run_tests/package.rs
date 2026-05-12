@@ -45,8 +45,7 @@ use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
 use tokio::task::JoinHandle;
 
-type PrepareTargetHandleResult = PrepareTestTargetResult;
-type PrepareTargetHandle = JoinHandle<Result<PrepareTargetHandleResult>>;
+type PrepareTargetHandle = JoinHandle<Result<PrepareTestTargetResult>>;
 
 pub struct PackageTestResult {
     summaries: Vec<TestTargetSummary>,
@@ -221,7 +220,7 @@ pub async fn run_for_package(
             target: maybe_target,
             location: tests_location,
             prefiltered_out_count,
-        }: PrepareTargetHandleResult = handle.await??;
+        } = handle.await??;
         prefiltered_out_total += prefiltered_out_count;
 
         let Some(target_with_config) = maybe_target else {
