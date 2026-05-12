@@ -57,6 +57,14 @@ mod tests {
 
 ### Integration Tests
 
+> 📝 **Note**
+>
+> Thanks to Scarb's [incremental compilation](https://docs.swmansion.com/scarb/docs/procedural-macros/incremental.html) (enabled by default),
+> the integration test layout usually recompiles faster than the unit test layout.
+>
+> The main package and the test code are cached separately, so editing tests does not invalidate the main package's build cache.
+
+
 Integration tests are placed in `tests` directory.
 This directory is a special directory in Scarb.
 Tests do not have to be wrapped in `#[cfg(test)]` and each file is treated as a separate module.

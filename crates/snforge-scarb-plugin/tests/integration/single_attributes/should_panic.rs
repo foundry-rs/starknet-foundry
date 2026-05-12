@@ -108,3 +108,17 @@ fn fails_with_unexpected_args() {
         )],
     );
 }
+
+#[test]
+fn fails_with_unnamed_arg() {
+    let args = quote!(("uwu"));
+
+    let result = should_panic(args, empty_function());
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(
+            "#[should_panic] can be used with named arguments only [possible values: expected]. invalid arguments found: \"uwu\"",
+        )],
+    );
+}
