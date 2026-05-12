@@ -28,13 +28,12 @@ use forge_runner::{
     package_tests::{
         TestTargetLocation,
         raw::TestTargetRaw,
-        with_config::TestTargetWithConfig,
         with_config_resolved::{
             TestCaseWithResolvedConfig, TestTargetWithResolvedConfig, sanitize_test_case_name,
         },
     },
     partition::PartitionConfig,
-    running::target::prepare_test_target,
+    running::target::{PrepareTestTargetResult, prepare_test_target},
     scarb::load_test_artifacts,
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
@@ -46,7 +45,7 @@ use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
 use tokio::task::JoinHandle;
 
-type PrepareTargetHandleResult = (Option<TestTargetWithConfig>, TestTargetLocation, usize);
+type PrepareTargetHandleResult = PrepareTestTargetResult;
 type PrepareTargetHandle = JoinHandle<Result<PrepareTargetHandleResult>>;
 
 pub struct PackageTestResult {
@@ -218,8 +217,11 @@ pub async fn run_for_package(
     let mut prefiltered_out_total = 0;
 
     for handle in target_handles {
-        let (maybe_target, tests_location, prefiltered_out_count): PrepareTargetHandleResult =
-            handle.await??;
+        let PrepareTestTargetResult {
+            target: maybe_target,
+            location: tests_location,
+            prefiltered_out_count,
+        }: PrepareTargetHandleResult = handle.await??;
         prefiltered_out_total += prefiltered_out_count;
 
         let Some(target_with_config) = maybe_target else {
