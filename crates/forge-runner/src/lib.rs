@@ -18,6 +18,7 @@ use rand::prelude::StdRng;
 use shared::spinner::Spinner;
 use std::collections::HashMap;
 use std::env;
+use std::env::VarError;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
@@ -55,7 +56,10 @@ pub fn resolve_cache_dir(workspace_root: &Utf8Path) -> Result<Utf8PathBuf> {
             );
             Ok(cache_dir)
         }
-        Err(_) => Ok(workspace_root.join(DEFAULT_CACHE_DIR)),
+        Err(VarError::NotPresent) => Ok(workspace_root.join(DEFAULT_CACHE_DIR)),
+        Err(VarError::NotUnicode(_)) => {
+            bail!("SNFOUNDRY_CACHE must be a valid UTF-8 string")
+        }
     }
 }
 
