@@ -1,14 +1,15 @@
+use crate::shared_cache::FILE_WITH_PREV_TESTS_FAILED;
 use crate::{CleanArgs, CleanComponent};
 use anyhow::{Context, Result, ensure};
 use camino::{Utf8Path, Utf8PathBuf};
 use forge_runner::resolve_cache_dir;
 use foundry_ui::UI;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
+use semver::Version;
 use std::env;
 use std::fs;
 
 const COVERAGE_DIR: &str = "coverage";
-const FILE_WITH_PREV_TESTS_FAILED: &str = ".prev_tests_failed";
 const PROFILE_DIR: &str = "profile";
 const TRACE_DIR: &str = "snfoundry_trace";
 
