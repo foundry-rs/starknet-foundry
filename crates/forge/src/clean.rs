@@ -4,14 +4,23 @@ use anyhow::{Context, Result, ensure};
 use camino::{Utf8Path, Utf8PathBuf};
 use forge_runner::resolve_cache_dir;
 use foundry_ui::UI;
+use regex::Regex;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use semver::Version;
 use std::env;
 use std::fs;
+use std::sync::OnceLock;
 
 const COVERAGE_DIR: &str = "coverage";
 const PROFILE_DIR: &str = "profile";
 const TRACE_DIR: &str = "snfoundry_trace";
+
+fn snfoundry_cache_file_regex() -> &'static Regex {
+    static REGEX: OnceLock<Regex> = OnceLock::new();
+    REGEX.get_or_init(|| {
+        Regex::new(r"^(?<sanitized_url>.+)_(?<block_number>\d+)_v(?<version>.+)\.json$").unwrap()
+    })
+}
 
 pub fn clean(args: CleanArgs, ui: &UI) -> Result<()> {
     let components = if args.clean_components.contains(&CleanComponent::All) {
@@ -110,24 +119,12 @@ fn is_snfoundry_cache_file(path: &Utf8Path) -> bool {
         return true;
     }
 
-    let Some(stem) = file_name.strip_suffix(".json") else {
+    let Some(captures) = snfoundry_cache_file_regex().captures(file_name) else {
         return false;
     };
 
-    let Some((prefix, version)) = stem.rsplit_once("_v") else {
-        return false;
-    };
-    let Some((sanitized_url, block_number)) = prefix.rsplit_once('_') else {
-        return false;
-    };
-
-    !sanitized_url.is_empty()
-        && !block_number.is_empty()
-        && block_number.chars().all(|char| char.is_ascii_digit())
-        && version.split('_').count() >= 3
-        && version
-            .split('_')
-            .all(|segment| !segment.is_empty() && segment.chars().all(|char| char.is_ascii_digit()))
+    let version = captures.name("version").unwrap().as_str();
+    Version::parse(&version.replace('_', ".")).is_ok()
 }
 
 #[cfg(test)]
