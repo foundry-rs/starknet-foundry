@@ -39,11 +39,6 @@ enum MatchedCases {
     None,
 }
 
-struct MatchedTests {
-    matched_cases: MatchedCases,
-    prefiltered_out_count: usize,
-}
-
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn prepare_test_target(
     test_target_raw: TestTargetRaw,
@@ -60,10 +55,8 @@ pub fn prepare_test_target(
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
         .unwrap_or(&default_executables);
 
-    let MatchedTests {
-        matched_cases,
-        prefiltered_out_count,
-    } = collect_matching_cases(executables, name_filter, partition_config);
+    let (matched_cases, prefiltered_out_count) =
+        collect_matching_cases(executables, name_filter, partition_config);
 
     if matches!(matched_cases, MatchedCases::None) {
         return Ok(PrepareTestTargetResult {
@@ -141,7 +134,7 @@ fn collect_matching_cases(
     executables: &[FunctionId],
     name_filter: &NameFilter,
     partition_config: &PartitionConfig,
-) -> MatchedTests {
+) -> (MatchedCases, usize) {
     let is_in_partition = |test_name: &str| match partition_config {
         PartitionConfig::Disabled => true,
         PartitionConfig::Enabled {
@@ -156,8 +149,8 @@ fn collect_matching_cases(
     };
 
     match name_filter {
-        NameFilter::ExactMatch(_) => MatchedTests {
-            matched_cases: executables
+        NameFilter::ExactMatch(_) => (
+            executables
                 .iter()
                 .find_map(|case| {
                     let raw_name: String = case.debug_name.clone()?.into();
@@ -172,8 +165,8 @@ fn collect_matching_cases(
                 .map_or(MatchedCases::None, |matched_case| {
                     MatchedCases::Selected(vec![matched_case])
                 }),
-            prefiltered_out_count: 0,
-        },
+            0,
+        ),
         NameFilter::Match(_) => {
             let mut matched_cases = vec![];
             let mut filtered_out_count = 0;
@@ -196,19 +189,16 @@ fn collect_matching_cases(
                 }
             }
 
-            MatchedTests {
-                matched_cases: if matched_cases.is_empty() {
+            (
+                if matched_cases.is_empty() {
                     MatchedCases::None
                 } else {
                     MatchedCases::Selected(matched_cases)
                 },
-                prefiltered_out_count: filtered_out_count,
-            }
+                filtered_out_count,
+            )
         }
-        NameFilter::All => MatchedTests {
-            matched_cases: MatchedCases::All,
-            prefiltered_out_count: 0,
-        },
+        NameFilter::All => (MatchedCases::All, 0),
     }
 }
 
