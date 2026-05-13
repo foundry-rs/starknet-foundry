@@ -56,7 +56,7 @@ pub fn prepare_test_target(
         .unwrap_or(&default_executables);
 
     let (matched_cases, prefiltered_out_count) =
-        collect_matching_cases(executables, name_filter, partition_config);
+        collect_matched_cases(executables, name_filter, partition_config);
 
     if matches!(matched_cases, MatchedCases::None) {
         return Ok(PrepareTestTargetResult {
@@ -130,7 +130,7 @@ pub fn prepare_test_target(
     })
 }
 
-fn collect_matching_cases(
+fn collect_matched_cases(
     executables: &[FunctionId],
     name_filter: &NameFilter,
     partition_config: &PartitionConfig,
