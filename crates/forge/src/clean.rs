@@ -128,3 +128,47 @@ fn is_snfoundry_cache_file(path: &Utf8Path) -> bool {
             .split('_')
             .all(|segment| !segment.is_empty() && segment.chars().all(|char| char.is_ascii_digit()))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::is_snfoundry_cache_file;
+    use camino::Utf8Path;
+
+    #[test]
+    fn recognizes_prev_failed_tests_file() {
+        assert!(is_snfoundry_cache_file(Utf8Path::new(".prev_tests_failed")));
+    }
+
+    #[test]
+    fn recognizes_rpc_cache_file() {
+        assert!(is_snfoundry_cache_file(Utf8Path::new(
+            "http_111_222_333_444_5050_123_v0_1_0.json"
+        )));
+    }
+
+    #[test]
+    fn rejects_file_without_json_extension() {
+        assert!(!is_snfoundry_cache_file(Utf8Path::new(
+            "http_111_222_333_444_5050_123_v0_1_0.txt"
+        )));
+    }
+
+    #[test]
+    fn rejects_file_with_non_numeric_block_number() {
+        assert!(!is_snfoundry_cache_file(Utf8Path::new(
+            "http_111_222_333_444_5050_latest_v0_1_0.json"
+        )));
+    }
+
+    #[test]
+    fn rejects_file_with_incomplete_version() {
+        assert!(!is_snfoundry_cache_file(Utf8Path::new(
+            "http_111_222_333_444_5050_123_v0_1.json"
+        )));
+    }
+
+    #[test]
+    fn rejects_file_with_empty_sanitized_url() {
+        assert!(!is_snfoundry_cache_file(Utf8Path::new("_123_v0_1_0.json")));
+    }
+}

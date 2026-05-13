@@ -336,7 +336,7 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
             let cache_dir = resolve_cache_dir(&scarb_metadata.workspace.root)?;
 
             if cache_dir.exists() {
-                clean::clean_cache_dir(&cache_dir, std::env::var("SNFOUNDRY_CACHE").is_ok(), &ui)?;
+                clean::clean_cache_dir(&cache_dir, &ui)?;
             }
 
             Ok(ExitStatus::Success)
