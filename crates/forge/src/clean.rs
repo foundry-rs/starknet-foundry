@@ -33,8 +33,6 @@ pub fn clean(args: CleanArgs, ui: &UI) -> Result<()> {
         ..MetadataOpts::default()
     })?;
     let workspace_root = scarb_metadata.workspace.root;
-    let has_custom_cache_dir = env::var("SNFOUNDRY_CACHE").is_ok();
-
     let packages_root: Vec<Utf8PathBuf> = scarb_metadata
         .packages
         .into_iter()
@@ -49,11 +47,7 @@ pub fn clean(args: CleanArgs, ui: &UI) -> Result<()> {
             CleanComponent::Profile => packages_root
                 .iter()
                 .try_for_each(|root| clean_dir(&root.join(PROFILE_DIR), ui))?,
-            CleanComponent::Cache => clean_cache_dir(
-                &resolve_cache_dir(&workspace_root)?,
-                has_custom_cache_dir,
-                ui,
-            )?,
+            CleanComponent::Cache => clean_cache_dir(&resolve_cache_dir(&workspace_root)?, ui)?,
             CleanComponent::Trace => clean_dir(&workspace_root.join(TRACE_DIR), ui)?,
             CleanComponent::All => unreachable!("All component should have been handled earlier"),
         }
@@ -71,11 +65,12 @@ fn clean_dir(path: &Utf8Path, ui: &UI) -> Result<()> {
     Ok(())
 }
 
-pub fn clean_cache_dir(path: &Utf8Path, has_custom_cache_dir: bool, ui: &UI) -> Result<()> {
+pub fn clean_cache_dir(path: &Utf8Path, ui: &UI) -> Result<()> {
     if !path.exists() {
         return Ok(());
     }
 
+    let has_custom_cache_dir = env::var("SNFOUNDRY_CACHE").is_ok();
     if !has_custom_cache_dir {
         return clean_dir(path, ui);
     }
