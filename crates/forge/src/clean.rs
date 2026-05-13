@@ -75,6 +75,7 @@ pub fn clean_cache_dir(path: &Utf8Path, ui: &UI) -> Result<()> {
         return clean_dir(path, ui);
     }
 
+    let mut any_skipped = false;
     for entry in path
         .read_dir_utf8()
         .with_context(|| format!("Failed to read cache directory: {path}"))?
@@ -86,16 +87,12 @@ pub fn clean_cache_dir(path: &Utf8Path, ui: &UI) -> Result<()> {
             fs::remove_file(entry_path)
                 .with_context(|| format!("Failed to remove cache file: {entry_path}"))?;
             ui.println(&format!("Removed file: {entry_path}"));
+        } else {
+            any_skipped = true;
         }
     }
 
-    let is_empty = path
-        .read_dir_utf8()
-        .with_context(|| format!("Failed to read cache directory: {path}"))?
-        .next()
-        .is_none();
-
-    if is_empty {
+    if !any_skipped {
         fs::remove_dir(path).with_context(|| format!("Failed to remove directory: {path}"))?;
         ui.println(&format!("Removed directory: {path}"));
     }
