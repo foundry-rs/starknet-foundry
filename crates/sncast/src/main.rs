@@ -319,7 +319,9 @@ fn main() -> Result<ExitCode> {
 
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
-    if let Commands::Script(script) = &cli.command {
+    if let Commands::Completions(completions) = &cli.command {
+        generate_completions(completions.shell, &mut Cli::command())
+    } else if let Commands::Script(script) = &cli.command {
         run_script_command(&cli, runtime, script, &ui)
     } else {
         let config = get_cast_config(&cli, &ui)?;
@@ -746,33 +748,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
         Commands::Verify(verify) => {
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &verify.package)?;
-            let artifacts = build_and_load_artifacts(
-                &package_metadata,
-                &BuildConfig {
-                    scarb_toml_path: manifest_path.clone(),
-                    json: cli.json,
-                    profile: config.scarb_profile.clone(),
-                },
-                false,
-                // TODO(#3959) Remove `base_ui`
-                ui.base_ui(),
-            )
-            .expect("Failed to build contract");
-            let result = starknet_commands::verify::verify(
-                verify,
-                &package_metadata.manifest_path,
-                &artifacts,
-                &config,
-                ui,
-            )
-            .await;
+            let result =
+                starknet_commands::verify::verify(verify, &package_metadata, cli.json, &config, ui)
+                    .await;
 
             Ok(process_command_result("verify", result, ui, None))
-        }
-
-        Commands::Completions(completions) => {
-            generate_completions(completions.shell, &mut Cli::command())?;
-            Ok(ExitCode::SUCCESS)
         }
 
         // TODO(#4214): Remove moved sncast commands
@@ -786,7 +766,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             Ok(process_command_result("ledger", result, ui, None))
         }
 
-        Commands::Script(_) => unreachable!(),
+        Commands::Completions(_) | Commands::Script(_) => {
+            unreachable!("should be handled before this function is called")
+        }
     }
 }
 
