@@ -195,8 +195,8 @@ fn calculate_total_filtered_count(
     total_filtered_count: FilteredTestsCount,
     filtered: FilteredTestsCount,
 ) -> FilteredTestsCount {
-    // Calculate filtered test counts across packages. When using `--exact` flag,
-    // `result.filtered_count` is None, so `total_filtered_count` becomes None too.
+    // Sum exact filtered counts across packages. If any package reports `Other`,
+    // the workspace summary falls back to `Other` as well.
     match (total_filtered_count, filtered) {
         (FilteredTestsCount::Exact(total), FilteredTestsCount::Exact(filtered)) => {
             FilteredTestsCount::Exact(total + filtered)

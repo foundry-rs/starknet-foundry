@@ -212,7 +212,9 @@ pub async fn run_for_package(
     let mut resolved_targets: Vec<(TestTargetLocation, Option<TestTargetWithResolvedConfig>)> =
         vec![];
     let mut all_tests = 0;
+    // Tests left after target preparation and runtime filtering (`#[ignore]`, rerun-failed, etc.).
     let mut not_filtered_total = 0;
+    // Tests excluded before config resolution, currently only by name filtering outside the partition.
     let mut prefiltered_out_total = 0;
 
     for handle in target_handles {

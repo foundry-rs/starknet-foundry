@@ -33,8 +33,14 @@ struct MatchedTestCase {
     name: String,
 }
 
+enum MatchedCases {
+    All,
+    Selected(Vec<MatchedTestCase>),
+    None,
+}
+
 struct MatchedTests {
-    matching_cases: Option<Vec<MatchedTestCase>>,
+    matched_cases: MatchedCases,
     prefiltered_out_count: usize,
 }
 
@@ -55,11 +61,11 @@ pub fn prepare_test_target(
         .unwrap_or(&default_executables);
 
     let MatchedTests {
-        matching_cases,
+        matched_cases,
         prefiltered_out_count,
     } = collect_matching_cases(executables, name_filter, partition_config);
 
-    if matching_cases.as_ref().is_some_and(Vec::is_empty) {
+    if matches!(matched_cases, MatchedCases::None) {
         return Ok(PrepareTestTargetResult {
             target: None,
             location: tests_location,
@@ -87,8 +93,8 @@ pub fn prepare_test_target(
         test_target_raw.sierra_program_path.as_std_path(),
     )?);
 
-    let test_cases = if let Some(matches) = matching_cases {
-        matches
+    let test_cases = match matched_cases {
+        MatchedCases::Selected(matches) => matches
             .into_par_iter()
             .map(|matched_test| {
                 build_test_case_with_config(
@@ -99,9 +105,8 @@ pub fn prepare_test_target(
                     *tracked_resource,
                 )
             })
-            .collect::<Result<_>>()?
-    } else {
-        executables
+            .collect::<Result<_>>()?,
+        MatchedCases::All => executables
             .par_iter()
             .map(|case| {
                 build_test_case_with_config(
@@ -115,7 +120,8 @@ pub fn prepare_test_target(
                     *tracked_resource,
                 )
             })
-            .collect::<Result<_>>()?
+            .collect::<Result<_>>()?,
+        MatchedCases::None => unreachable!("This case is handled above"),
     };
 
     Ok(PrepareTestTargetResult {
@@ -150,24 +156,26 @@ fn collect_matching_cases(
     };
 
     match name_filter {
-        NameFilter::ExactMatch(exact_match) => MatchedTests {
-            matching_cases: Some(
-                executables
-                    .iter()
-                    .filter_map(|case| {
-                        let raw_name: String = case.debug_name.clone()?.into();
-                        let sanitized_name = sanitize_test_case_name(&raw_name);
-                        (sanitized_name == *exact_match).then_some(MatchedTestCase {
+        NameFilter::ExactMatch(_) => MatchedTests {
+            matched_cases: executables
+                .iter()
+                .find_map(|case| {
+                    let raw_name: String = case.debug_name.clone()?.into();
+                    let sanitized_name = sanitize_test_case_name(&raw_name);
+                    name_filter
+                        .matches(&sanitized_name)
+                        .then_some(MatchedTestCase {
                             id: case.id,
                             name: raw_name,
                         })
-                    })
-                    .collect(),
-            ),
+                })
+                .map_or(MatchedCases::None, |matched_case| {
+                    MatchedCases::Selected(vec![matched_case])
+                }),
             prefiltered_out_count: 0,
         },
-        NameFilter::Match(filter) => {
-            let mut matches = vec![];
+        NameFilter::Match(_) => {
+            let mut matched_cases = vec![];
             let mut filtered_out_count = 0;
 
             for case in executables {
@@ -178,8 +186,8 @@ fn collect_matching_cases(
                     .into();
                 let sanitized_name = sanitize_test_case_name(&debug_name);
 
-                if sanitized_name.contains(filter) {
-                    matches.push(MatchedTestCase {
+                if name_filter.matches(&sanitized_name) {
+                    matched_cases.push(MatchedTestCase {
                         id: case.id,
                         name: debug_name,
                     });
@@ -189,12 +197,16 @@ fn collect_matching_cases(
             }
 
             MatchedTests {
-                matching_cases: Some(matches),
+                matched_cases: if matched_cases.is_empty() {
+                    MatchedCases::None
+                } else {
+                    MatchedCases::Selected(matched_cases)
+                },
                 prefiltered_out_count: filtered_out_count,
             }
         }
         NameFilter::All => MatchedTests {
-            matching_cases: None,
+            matched_cases: MatchedCases::All,
             prefiltered_out_count: 0,
         },
     }
