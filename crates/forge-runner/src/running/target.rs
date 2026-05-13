@@ -36,7 +36,7 @@ struct MatchedTestCase {
 enum MatchedCases {
     All,
     Selected(Vec<MatchedTestCase>),
-    None,
+    NoMatch,
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
@@ -58,7 +58,7 @@ pub fn prepare_test_target(
     let (matched_cases, prefiltered_out_count) =
         collect_matched_cases(executables, name_filter, partition_config);
 
-    if matches!(matched_cases, MatchedCases::None) {
+    if matches!(matched_cases, MatchedCases::NoMatch) {
         return Ok(PrepareTestTargetResult {
             target: None,
             location: tests_location,
@@ -114,7 +114,7 @@ pub fn prepare_test_target(
                 )
             })
             .collect::<Result<_>>()?,
-        MatchedCases::None => unreachable!("This case is handled above"),
+        MatchedCases::NoMatch => unreachable!("This case is handled above"),
     };
 
     Ok(PrepareTestTargetResult {
@@ -153,7 +153,11 @@ fn collect_matched_cases(
             executables
                 .iter()
                 .find_map(|case| {
-                    let raw_name: String = case.debug_name.clone()?.into();
+                    let raw_name: String = case
+                        .debug_name
+                        .clone()
+                        .expect("Failed to get test case name")
+                        .into();
                     let sanitized_name = sanitize_test_case_name(&raw_name);
                     name_filter
                         .matches(&sanitized_name)
@@ -162,7 +166,7 @@ fn collect_matched_cases(
                             name: raw_name,
                         })
                 })
-                .map_or(MatchedCases::None, |matched_case| {
+                .map_or(MatchedCases::NoMatch, |matched_case| {
                     MatchedCases::Selected(vec![matched_case])
                 }),
             0,
@@ -191,7 +195,7 @@ fn collect_matched_cases(
 
             (
                 if matched_cases.is_empty() {
-                    MatchedCases::None
+                    MatchedCases::NoMatch
                 } else {
                     MatchedCases::Selected(matched_cases)
                 },
