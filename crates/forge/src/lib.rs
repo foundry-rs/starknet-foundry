@@ -334,10 +334,7 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
             ui.println(&WarningMessage::new("`snforge clean-cache` is deprecated and will be removed in the future. Use `snforge clean cache` instead"));
             let scarb_metadata = metadata()?;
             let cache_dir = resolve_cache_dir(&scarb_metadata.workspace.root)?;
-
-            if cache_dir.exists() {
-                clean::clean_cache_dir(&cache_dir, &ui)?;
-            }
+            clean::clean_cache_dir(&cache_dir, &ui)?;
 
             Ok(ExitStatus::Success)
         }
