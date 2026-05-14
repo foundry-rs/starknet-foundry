@@ -290,6 +290,7 @@ mod tests {
 
         let resolved = resolve_cache_dir(Utf8Path::new("/tmp/workspace")).unwrap();
 
+        // SAFETY: Clean up environment variables to prevent interference
         unsafe { env::remove_var("SNFOUNDRY_CACHE") };
 
         assert_eq!(resolved, Utf8Path::new("/var/cache/snfoundry"));
@@ -302,6 +303,7 @@ mod tests {
 
         let err = resolve_cache_dir(Utf8Path::new("/tmp/workspace")).unwrap_err();
 
+        // SAFETY: Clean up environment variables to prevent interference
         unsafe { env::remove_var("SNFOUNDRY_CACHE") };
 
         assert!(err.to_string().contains("absolute path"));
