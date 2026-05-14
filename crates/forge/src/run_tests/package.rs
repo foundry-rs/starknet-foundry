@@ -131,8 +131,6 @@ impl RunForPackageArgs {
         }
 
         let tracked_resource = forge_config.test_runner_config.tracked_resource;
-        let name_filter = tests_filter.name_filter.clone();
-        let partitioning_config = tests_filter.partitioning_config.clone();
 
         let target_handles = raw_test_targets
             .into_iter()
@@ -140,8 +138,8 @@ impl RunForPackageArgs {
                 spawn_prepare_test_target(
                     t,
                     tracked_resource,
-                    name_filter.clone(),
-                    partitioning_config.clone(),
+                    tests_filter.name_filter.clone(),
+                    tests_filter.partitioning_config.clone(),
                 )
             })
             .collect();
