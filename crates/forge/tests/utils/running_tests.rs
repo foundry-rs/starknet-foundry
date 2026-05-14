@@ -56,7 +56,12 @@ pub fn run_test_case(
             .into_iter()
             .map(|t| {
                 tokio::task::spawn_blocking(move || {
-                    prepare_test_target(t, &tracked_resource, &NameFilter::All)
+                    prepare_test_target(
+                        t,
+                        &tracked_resource,
+                        &NameFilter::All,
+                        &PartitionConfig::default(),
+                    )
                 })
             })
             .collect();

@@ -1,5 +1,8 @@
 use console::style;
-use forge_runner::{test_target_summary::TestTargetSummary, tests_summary::TestsSummary};
+use forge_runner::{
+    test_target_summary::TestTargetSummary,
+    tests_summary::{FilteredTestsCount, TestsSummary},
+};
 use foundry_ui::{Message, components::labeled::LabeledMessage};
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -13,7 +16,7 @@ impl TestsSummaryMessage {
     pub const LABEL: &str = "Tests";
 
     #[must_use]
-    pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
+    pub fn new(summaries: &[TestTargetSummary], filtered: FilteredTestsCount) -> Self {
         Self {
             summary: TestsSummary::new(summaries, filtered),
         }

@@ -7,26 +7,40 @@ use crate::{
         with_config::{TestCaseWithConfig, TestTargetWithConfig},
         with_config_resolved::sanitize_test_case_name,
     },
+    partition::PartitionConfig,
     running::config_run::run_config_pass,
 };
 use anyhow::Result;
 use cairo_lang_sierra::{
-    ids::ConcreteTypeId,
+    ids::{ConcreteTypeId, FunctionId},
     program::{GenFunction, StatementIdx, TypeDeclaration},
 };
 use rayon::iter::IntoParallelIterator;
-use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use std::{collections::HashMap, sync::Arc};
 use universal_sierra_compiler_api::compile_raw_sierra_at_path;
 use universal_sierra_compiler_api::representation::RawCasmProgram;
+
+pub struct PrepareTestTargetResult {
+    pub target: Option<TestTargetWithConfig>,
+    pub location: TestTargetLocation,
+    // Tests filtered out before config resolution so summary counts stay correct,
+    // in particular for regular name filtering.
+    pub prefiltered_out_count: usize,
+}
+
+struct MatchedTestCase {
+    id: u64,
+    name: String,
+}
 
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn prepare_test_target(
     test_target_raw: TestTargetRaw,
     tracked_resource: &ForgeTrackedResource,
     name_filter: &NameFilter,
-) -> Result<(Option<TestTargetWithConfig>, TestTargetLocation)> {
+    partition_config: &PartitionConfig,
+) -> Result<PrepareTestTargetResult> {
     let tests_location = test_target_raw.tests_location;
     let default_executables = vec![];
     let executables = test_target_raw
@@ -36,25 +50,16 @@ pub fn prepare_test_target(
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
         .unwrap_or(&default_executables);
 
-    let exact_matches = match name_filter {
-        NameFilter::ExactMatch(exact_match) => {
-            let matches = executables
-                .iter()
-                .filter_map(|case| {
-                    let raw_name: String = case.debug_name.clone()?.into();
-                    let sanitized_name = sanitize_test_case_name(&raw_name);
-                    (sanitized_name == *exact_match).then_some((&case.id, raw_name))
-                })
-                .collect::<Vec<_>>();
+    let (matched_cases, prefiltered_out_count) =
+        collect_matched_cases(executables, name_filter, partition_config);
 
-            if matches.is_empty() {
-                return Ok((None, tests_location));
-            }
-
-            Some(matches)
-        }
-        NameFilter::All | NameFilter::Match(_) => None,
-    };
+    if matched_cases.is_empty() {
+        return Ok(PrepareTestTargetResult {
+            target: None,
+            location: tests_location,
+            prefiltered_out_count,
+        });
+    }
 
     macro_rules! by_id {
         ($field:ident) => {{
@@ -76,47 +81,101 @@ pub fn prepare_test_target(
         test_target_raw.sierra_program_path.as_std_path(),
     )?);
 
-    let test_cases = if let Some(matches) = exact_matches {
-        matches
-            .into_par_iter()
-            .map(|(id, name)| {
-                build_test_case_with_config(
-                    funcs[id],
-                    name,
-                    &type_declarations,
-                    &casm_program,
-                    *tracked_resource,
-                )
-            })
-            .collect::<Result<_>>()?
-    } else {
-        executables
-            .par_iter()
-            .map(|case| {
-                build_test_case_with_config(
-                    funcs[&case.id],
-                    case.debug_name
-                        .clone()
-                        .expect("Failed to get test case name")
-                        .into(),
-                    &type_declarations,
-                    &casm_program,
-                    *tracked_resource,
-                )
-            })
-            .collect::<Result<_>>()?
-    };
+    let test_cases = matched_cases
+        .into_par_iter()
+        .map(|matched_test| {
+            build_test_case_with_config(
+                funcs[&matched_test.id],
+                matched_test.name,
+                &type_declarations,
+                &casm_program,
+                *tracked_resource,
+            )
+        })
+        .collect::<Result<_>>()?;
 
-    Ok((
-        Some(TestTargetWithConfig {
+    Ok(PrepareTestTargetResult {
+        target: Some(TestTargetWithConfig {
             tests_location,
             test_cases,
             sierra_program: test_target_raw.sierra_program,
             sierra_program_path: test_target_raw.sierra_program_path.into(),
             casm_program,
         }),
-        tests_location,
-    ))
+        location: tests_location,
+        prefiltered_out_count,
+    })
+}
+
+fn collect_matched_cases(
+    executables: &[FunctionId],
+    name_filter: &NameFilter,
+    partition_config: &PartitionConfig,
+) -> (Vec<MatchedTestCase>, usize) {
+    match name_filter {
+        NameFilter::ExactMatch(_) => {
+            let mut matched_case = None;
+            let mut filtered_out_count = 0;
+
+            for case in executables {
+                let raw_name: String = case
+                    .debug_name
+                    .clone()
+                    .expect("Failed to get test case name")
+                    .into();
+                let sanitized_name = sanitize_test_case_name(&raw_name);
+
+                if name_filter.matches(&sanitized_name) {
+                    matched_case = Some(MatchedTestCase {
+                        id: case.id,
+                        name: raw_name,
+                    });
+                } else {
+                    filtered_out_count += 1;
+                }
+            }
+
+            (matched_case.into_iter().collect(), filtered_out_count)
+        }
+        NameFilter::Match(_) => {
+            let mut matched_cases = vec![];
+            let mut filtered_out_count = 0;
+
+            for case in executables {
+                let debug_name: String = case
+                    .debug_name
+                    .clone()
+                    .expect("Failed to get test case name")
+                    .into();
+                let sanitized_name = sanitize_test_case_name(&debug_name);
+
+                if name_filter.matches(&sanitized_name) {
+                    matched_cases.push(MatchedTestCase {
+                        id: case.id,
+                        name: debug_name,
+                    });
+                } else if partition_config.is_in_partition(&sanitized_name) {
+                    filtered_out_count += 1;
+                }
+            }
+
+            (matched_cases, filtered_out_count)
+        }
+        NameFilter::All => (
+            executables
+                .iter()
+                .map(|case| MatchedTestCase {
+                    id: case.id,
+                    name: case
+                        .debug_name
+                        .clone()
+                        .expect("Failed to get test case name")
+                        .into(),
+                })
+                .collect(),
+            0,
+        ),
+    }
 }
 
 fn build_test_case_with_config(

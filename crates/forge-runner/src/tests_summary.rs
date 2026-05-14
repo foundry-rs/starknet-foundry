@@ -2,18 +2,24 @@ use crate::test_target_summary::TestTargetSummary;
 use serde::Serialize;
 
 // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub enum FilteredTestsCount {
+    Exact(usize),
+    Other,
+}
+
 #[derive(Serialize)]
 pub struct TestsSummary {
     passed: usize,
     failed: usize,
     interrupted: usize,
     ignored: usize,
-    filtered: Option<usize>,
+    filtered: FilteredTestsCount,
 }
 
 impl TestsSummary {
     #[must_use]
-    pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
+    pub fn new(summaries: &[TestTargetSummary], filtered: FilteredTestsCount) -> Self {
         let passed = summaries.iter().map(TestTargetSummary::count_passed).sum();
         let failed = summaries.iter().map(TestTargetSummary::count_failed).sum();
         let interrupted = summaries
@@ -33,9 +39,11 @@ impl TestsSummary {
 
     #[must_use]
     pub fn format_summary_message(&self) -> String {
-        let filtered = self
-            .filtered
-            .map_or_else(|| "other".to_string(), |v| v.to_string());
+        let filtered = match self.filtered {
+            FilteredTestsCount::Exact(value) => value.to_string(),
+            // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
+            FilteredTestsCount::Other => "other".to_string(),
+        };
 
         let interrupted = if self.interrupted > 0 {
             format!("\nInterrupted execution of {} test(s).", self.interrupted)
