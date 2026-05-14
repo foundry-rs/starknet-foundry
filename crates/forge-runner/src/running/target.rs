@@ -112,19 +112,6 @@ fn collect_matched_cases(
     name_filter: &NameFilter,
     partition_config: &PartitionConfig,
 ) -> (Vec<MatchedTestCase>, usize) {
-    let is_in_partition = |test_name: &str| match partition_config {
-        PartitionConfig::Disabled => true,
-        PartitionConfig::Enabled {
-            partition,
-            partition_map,
-        } => {
-            let test_assigned_index = partition_map
-                .get_assigned_index(test_name)
-                .expect("Partition map must contain all test cases");
-            test_assigned_index == partition.index()
-        }
-    };
-
     match name_filter {
         NameFilter::ExactMatch(_) => {
             let mut matched_case = None;
@@ -167,7 +154,7 @@ fn collect_matched_cases(
                         id: case.id,
                         name: debug_name,
                     });
-                } else if is_in_partition(&sanitized_name) {
+                } else if partition_config.is_in_partition(&sanitized_name) {
                     filtered_out_count += 1;
                 }
             }

@@ -175,21 +175,12 @@ fn sum_test_cases_from_test_target(
     test_cases: &[TestCaseWithResolvedConfig],
     partitioning_config: &PartitionConfig,
 ) -> usize {
-    match partitioning_config {
-        PartitionConfig::Disabled => test_cases.len(),
-        PartitionConfig::Enabled {
-            partition,
-            partition_map,
-        } => test_cases
-            .iter()
-            .filter(|test_case| {
-                let test_assigned_index = partition_map
-                    .get_assigned_index(&sanitize_test_case_name(&test_case.name))
-                    .expect("Partition map must contain all test cases");
-                test_assigned_index == partition.index()
-            })
-            .count(),
-    }
+    test_cases
+        .iter()
+        .filter(|test_case| {
+            partitioning_config.is_in_partition(&sanitize_test_case_name(&test_case.name))
+        })
+        .count()
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
