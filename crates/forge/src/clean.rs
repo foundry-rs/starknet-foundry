@@ -18,7 +18,7 @@ const TRACE_DIR: &str = "snfoundry_trace";
 fn snfoundry_cache_file_regex() -> &'static Regex {
     static REGEX: OnceLock<Regex> = OnceLock::new();
     REGEX.get_or_init(|| {
-        Regex::new(r"^(?<sanitized_url>.+)_(?<block_number>\d+)_v(?<version>.+)\.json$").unwrap()
+        Regex::new(r"^[a-zA-Z0-9_]+_\d+_v(?<version>[A-Za-z0-9_.+-]+)\.json$").unwrap()
     })
 }
 
