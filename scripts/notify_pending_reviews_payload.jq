@@ -32,6 +32,17 @@ def rpad($s; $n):
   ($n - ($s | length)) as $p
   | if $p > 0 then $s + (" " * $p) else $s end;
 
+# Split a string on backticks and emit one rich_text text element per segment:
+# even-indexed segments are plain text, odd-indexed ones are inline-code styled.
+# Slack rich_text blocks don't interpret markdown, so inline code must be
+# expressed via `style: {code: true}` on individual text elements.
+def title_elements:
+  split("`")
+  | to_entries
+  | map(select(.value != ""))
+  | map({type: "text", text: .value}
+        + (if (.key % 2 == 1) then {style: {code: true}} else {} end));
+
 def header_block:
   {type: "header", text: {type: "plain_text", text: "Pending Review Requests", emoji: true}};
 
@@ -70,14 +81,16 @@ else
                     | "#\(.number)" as $num
                     | {
                         type: "rich_text_section",
-                        elements: [
+                        elements: ([
                           {type: "emoji", name: (.waiting_s | age_name)},
                           {type: "text",  text: " "},
                           {type: "text",  text: rpad($w; $wmax), style: {bold: true, code: true}},
                           {type: "text",  text: "  "},
                           {type: "link",  url: .url, text: rpad($num; $nmax)},
-                          {type: "text",  text: "  \(.title) (\($sz))\n"}
-                        ]
+                          {type: "text",  text: "  "}
+                        ] + (.title | title_elements) + [
+                          {type: "text",  text: " (\($sz))\n"}
+                        ])
                       }
                   ))
                 }
