@@ -102,11 +102,11 @@ PAYLOAD=$(printf '%s' "$ROWS_JSON" | jq --arg repo "$REPO_OWNER/$REPO_NAME" '
     end;
 
   # Age dot: green < 1d, yellow 1-3d, red > 3d.
-  def age_icon:
-    if . == null then ":grey_question:"
-    elif . < 86400 then ":large_green_circle:"
-    elif . < 259200 then ":large_yellow_circle:"
-    else ":red_circle:"
+  def age_name:
+    if . == null then "grey_question"
+    elif . < 86400 then "large_green_circle"
+    elif . < 259200 then "large_yellow_circle"
+    else "red_circle"
     end;
 
   def plural($n; $word):
@@ -136,22 +136,31 @@ PAYLOAD=$(printf '%s' "$ROWS_JSON" | jq --arg repo "$REPO_OWNER/$REPO_NAME" '
           + ($groups | map(
               . as $group
               | ($group | map(.waiting_s | humanize | length) | max) as $wmax
-              | ($group | map("+\(.additions)/-\(.deletions)" | length) | max) as $smax
               | ($group | map("#\(.number)" | length) | max) as $nmax
               | [
                   {type: "divider"},
                   {type: "section", text: {type: "mrkdwn",
                     text: "*\(.[0].reviewer)*  ·  \(plural(length; "PR"))"
                   }},
-                  {type: "section", text: {type: "mrkdwn", text: (
-                    map(
+                  {
+                    type: "rich_text",
+                    elements: ($group | map(
                       (.waiting_s | humanize) as $w
                       | "+\(.additions)/-\(.deletions)" as $sz
                       | "#\(.number)" as $num
-                      | "\(.waiting_s | age_icon) `\(rpad($w; $wmax))` `\(rpad($sz; $smax))`  <\(.url)|\(rpad($num; $nmax))>  \(.title)"
-                    )
-                    | join("\n")
-                  )}}
+                      | {
+                          type: "rich_text_section",
+                          elements: [
+                            {type: "emoji", name: (.waiting_s | age_name)},
+                            {type: "text",  text: " "},
+                            {type: "text",  text: rpad($w; $wmax), style: {bold: true, code: true}},
+                            {type: "text",  text: "  "},
+                            {type: "link",  url: .url, text: rpad($num; $nmax)},
+                            {type: "text",  text: "  \(.title) (\($sz))\n"}
+                          ]
+                        }
+                    ))
+                  }
                 ]
             ) | add)
         )
