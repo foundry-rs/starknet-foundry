@@ -16,6 +16,7 @@ use crate::{
 use anyhow::Result;
 use forge_runner::partition::PartitionConfig;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
+use forge_runner::tests_summary::FilteredTestsCount;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
 use foundry_ui::UI;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
