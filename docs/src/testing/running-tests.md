@@ -176,3 +176,4 @@ Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
 <br>
 
 For more information about how starknet-foundry calculates those, see [gas and resource estimation](gas-and-resource-estimation.md) section.
+

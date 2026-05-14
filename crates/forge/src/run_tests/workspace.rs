@@ -141,9 +141,8 @@ pub async fn execute_workspace(
         )
         .await?;
 
-        let filtered = result.filtered();
+        total_filtered_count += result.filtered();
         all_tests.extend(result.summaries());
-        total_filtered_count = calculate_total_filtered_count(total_filtered_count, filtered);
         env::set_current_dir(&cwd)?;
     }
 
@@ -188,10 +187,6 @@ pub async fn execute_workspace(
     }
 
     Ok(WorkspaceExecutionSummary { all_tests })
-}
-
-fn calculate_total_filtered_count(total_filtered_count: usize, filtered: usize) -> usize {
-    total_filtered_count + filtered
 }
 
 fn get_partitioning_config(
