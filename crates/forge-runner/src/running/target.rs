@@ -24,6 +24,8 @@ use universal_sierra_compiler_api::representation::RawCasmProgram;
 pub struct PrepareTestTargetResult {
     pub target: Option<TestTargetWithConfig>,
     pub location: TestTargetLocation,
+    // Tests filtered out before config resolution so summary counts stay correct,
+    // in particular for regular name filtering.
     pub prefiltered_out_count: usize,
 }
 
