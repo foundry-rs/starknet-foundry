@@ -1,23 +1,18 @@
 use crate::test_target_summary::TestTargetSummary;
 use serde::Serialize;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
-pub enum FilteredTestsCount {
-    Exact(usize),
-}
-
 #[derive(Serialize)]
 pub struct TestsSummary {
     passed: usize,
     failed: usize,
     interrupted: usize,
     ignored: usize,
-    filtered: FilteredTestsCount,
+    filtered: usize,
 }
 
 impl TestsSummary {
     #[must_use]
-    pub fn new(summaries: &[TestTargetSummary], filtered: FilteredTestsCount) -> Self {
+    pub fn new(summaries: &[TestTargetSummary], filtered: usize) -> Self {
         let passed = summaries.iter().map(TestTargetSummary::count_passed).sum();
         let failed = summaries.iter().map(TestTargetSummary::count_failed).sum();
         let interrupted = summaries
@@ -37,8 +32,7 @@ impl TestsSummary {
 
     #[must_use]
     pub fn format_summary_message(&self) -> String {
-        let FilteredTestsCount::Exact(filtered) = self.filtered;
-        let filtered = filtered.to_string();
+        let filtered = self.filtered.to_string();
 
         let interrupted = if self.interrupted > 0 {
             format!("\nInterrupted execution of {} test(s).", self.interrupted)

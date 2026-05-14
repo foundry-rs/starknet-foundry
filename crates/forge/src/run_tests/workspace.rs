@@ -16,7 +16,6 @@ use crate::{
 use anyhow::Result;
 use forge_runner::partition::PartitionConfig;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
-use forge_runner::tests_summary::FilteredTestsCount;
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
 use foundry_ui::UI;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
@@ -102,7 +101,7 @@ pub async fn execute_workspace(
 
     let block_number_map = BlockNumberMap::default();
     let mut all_tests = vec![];
-    let mut total_filtered_count = FilteredTestsCount::Exact(0);
+    let mut total_filtered_count = 0;
     let mut exit_first_channel = ExitFirstChannel::new();
 
     let workspace_root = &scarb_metadata.workspace.root;
@@ -191,13 +190,8 @@ pub async fn execute_workspace(
     Ok(WorkspaceExecutionSummary { all_tests })
 }
 
-fn calculate_total_filtered_count(
-    total_filtered_count: FilteredTestsCount,
-    filtered: FilteredTestsCount,
-) -> FilteredTestsCount {
-    let FilteredTestsCount::Exact(total) = total_filtered_count;
-    let FilteredTestsCount::Exact(filtered) = filtered;
-    FilteredTestsCount::Exact(total + filtered)
+fn calculate_total_filtered_count(total_filtered_count: usize, filtered: usize) -> usize {
+    total_filtered_count + filtered
 }
 
 fn get_partitioning_config(
