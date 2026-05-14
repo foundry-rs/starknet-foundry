@@ -1,0 +1,21 @@
+name: 'Notify about pending review requests'
+
+on:
+  schedule:
+    # Monday, Wednesday, Friday at 06:00 UTC.
+    - cron: '0 6 * * 1,3,5'
+  workflow_dispatch:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run script and send message to Slack
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_REVIEW_REMINDER_WEBHOOK_URL }}
+        run: ./scripts/notify_pending_reviews.sh

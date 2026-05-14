@@ -5,9 +5,9 @@
 #   { reviewer, title, url, number, waiting_s, additions, deletions }
 #
 # Args:
-#   --arg repo  "owner/name" — used to render repo links in the header context.
+#   --arg repo "owner/name" — used to render repo links in the header context.
 #
-# Output: a single JSON object suitable for POSTing to a Slack webhook.
+# Output: a single JSON object suitable for posting to a Slack webhook.
 
 def humanize:
   if . == null then "?"
