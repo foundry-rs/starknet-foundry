@@ -284,12 +284,8 @@ pub async fn run_for_package(
         summaries.push(s);
     }
 
-    // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
-    let filtered_count = if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
-        FilteredTestsCount::Other
-    } else {
-        FilteredTestsCount::Exact(prefiltered_out_total + all_tests - not_filtered_total)
-    };
+    let filtered_count =
+        FilteredTestsCount::Exact(prefiltered_out_total + all_tests - not_filtered_total);
 
     ui.println(&TestsSummaryMessage::new(&summaries, filtered_count));
 

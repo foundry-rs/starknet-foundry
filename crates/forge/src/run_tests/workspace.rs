@@ -195,15 +195,9 @@ fn calculate_total_filtered_count(
     total_filtered_count: FilteredTestsCount,
     filtered: FilteredTestsCount,
 ) -> FilteredTestsCount {
-    // Sum exact filtered counts across packages. If any package reports `Other`,
-    // the workspace summary falls back to `Other` as well.
-    match (total_filtered_count, filtered) {
-        (FilteredTestsCount::Exact(total), FilteredTestsCount::Exact(filtered)) => {
-            FilteredTestsCount::Exact(total + filtered)
-        }
-        // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
-        _ => FilteredTestsCount::Other,
-    }
+    let FilteredTestsCount::Exact(total) = total_filtered_count;
+    let FilteredTestsCount::Exact(filtered) = filtered;
+    FilteredTestsCount::Exact(total + filtered)
 }
 
 fn get_partitioning_config(
