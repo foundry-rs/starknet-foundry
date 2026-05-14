@@ -16,7 +16,6 @@ use cairo_lang_sierra::{
     program::{GenFunction, StatementIdx, TypeDeclaration},
 };
 use rayon::iter::IntoParallelIterator;
-use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use std::{collections::HashMap, sync::Arc};
 use universal_sierra_compiler_api::compile_raw_sierra_at_path;
@@ -31,12 +30,6 @@ pub struct PrepareTestTargetResult {
 struct MatchedTestCase {
     id: u64,
     name: String,
-}
-
-enum MatchedCases {
-    All,
-    Selected(Vec<MatchedTestCase>),
-    NoMatch,
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
@@ -58,7 +51,7 @@ pub fn prepare_test_target(
     let (matched_cases, prefiltered_out_count) =
         collect_matched_cases(executables, name_filter, partition_config);
 
-    if matches!(matched_cases, MatchedCases::NoMatch) {
+    if matched_cases.is_empty() {
         return Ok(PrepareTestTargetResult {
             target: None,
             location: tests_location,
@@ -86,36 +79,18 @@ pub fn prepare_test_target(
         test_target_raw.sierra_program_path.as_std_path(),
     )?);
 
-    let test_cases = match matched_cases {
-        MatchedCases::Selected(matches) => matches
-            .into_par_iter()
-            .map(|matched_test| {
-                build_test_case_with_config(
-                    funcs[&matched_test.id],
-                    matched_test.name,
-                    &type_declarations,
-                    &casm_program,
-                    *tracked_resource,
-                )
-            })
-            .collect::<Result<_>>()?,
-        MatchedCases::All => executables
-            .par_iter()
-            .map(|case| {
-                build_test_case_with_config(
-                    funcs[&case.id],
-                    case.debug_name
-                        .clone()
-                        .expect("Failed to get test case name")
-                        .into(),
-                    &type_declarations,
-                    &casm_program,
-                    *tracked_resource,
-                )
-            })
-            .collect::<Result<_>>()?,
-        MatchedCases::NoMatch => unreachable!("This case is handled above"),
-    };
+    let test_cases = matched_cases
+        .into_par_iter()
+        .map(|matched_test| {
+            build_test_case_with_config(
+                funcs[&matched_test.id],
+                matched_test.name,
+                &type_declarations,
+                &casm_program,
+                *tracked_resource,
+            )
+        })
+        .collect::<Result<_>>()?;
 
     Ok(PrepareTestTargetResult {
         target: Some(TestTargetWithConfig {
@@ -134,7 +109,7 @@ fn collect_matched_cases(
     executables: &[FunctionId],
     name_filter: &NameFilter,
     partition_config: &PartitionConfig,
-) -> (MatchedCases, usize) {
+) -> (Vec<MatchedTestCase>, usize) {
     let is_in_partition = |test_name: &str| match partition_config {
         PartitionConfig::Disabled => true,
         PartitionConfig::Enabled {
@@ -166,9 +141,8 @@ fn collect_matched_cases(
                             name: raw_name,
                         })
                 })
-                .map_or(MatchedCases::NoMatch, |matched_case| {
-                    MatchedCases::Selected(vec![matched_case])
-                }),
+                .into_iter()
+                .collect(),
             0,
         ),
         NameFilter::Match(_) => {
@@ -193,16 +167,22 @@ fn collect_matched_cases(
                 }
             }
 
-            (
-                if matched_cases.is_empty() {
-                    MatchedCases::NoMatch
-                } else {
-                    MatchedCases::Selected(matched_cases)
-                },
-                filtered_out_count,
-            )
+            (matched_cases, filtered_out_count)
         }
-        NameFilter::All => (MatchedCases::All, 0),
+        NameFilter::All => (
+            executables
+                .iter()
+                .map(|case| MatchedTestCase {
+                    id: case.id,
+                    name: case
+                        .debug_name
+                        .clone()
+                        .expect("Failed to get test case name")
+                        .into(),
+                })
+                .collect(),
+            0,
+        ),
     }
 }
 
