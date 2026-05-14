@@ -124,27 +124,30 @@ fn collect_matched_cases(
     };
 
     match name_filter {
-        NameFilter::ExactMatch(_) => (
-            executables
-                .iter()
-                .find_map(|case| {
-                    let raw_name: String = case
-                        .debug_name
-                        .clone()
-                        .expect("Failed to get test case name")
-                        .into();
-                    let sanitized_name = sanitize_test_case_name(&raw_name);
-                    name_filter
-                        .matches(&sanitized_name)
-                        .then_some(MatchedTestCase {
-                            id: case.id,
-                            name: raw_name,
-                        })
-                })
-                .into_iter()
-                .collect(),
-            0,
-        ),
+        NameFilter::ExactMatch(_) => {
+            let mut matched_case = None;
+            let mut filtered_out_count = 0;
+
+            for case in executables {
+                let raw_name: String = case
+                    .debug_name
+                    .clone()
+                    .expect("Failed to get test case name")
+                    .into();
+                let sanitized_name = sanitize_test_case_name(&raw_name);
+
+                if name_filter.matches(&sanitized_name) {
+                    matched_case = Some(MatchedTestCase {
+                        id: case.id,
+                        name: raw_name,
+                    });
+                } else {
+                    filtered_out_count += 1;
+                }
+            }
+
+            (matched_case.into_iter().collect(), filtered_out_count)
+        }
         NameFilter::Match(_) => {
             let mut matched_cases = vec![];
             let mut filtered_out_count = 0;
