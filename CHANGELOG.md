@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `snforge_scarb_plugin` diagnostics for named-argument kind violations now include both possible values and invalid arguments found.
+- `snforge test --exact` now reports the exact number of filtered-out tests in summaries instead of `other`.
 
 #### Fixed
 

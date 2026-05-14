@@ -37,7 +37,6 @@ use forge_runner::{
     scarb::load_test_artifacts,
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
-    tests_summary::FilteredTestsCount,
 };
 use foundry_ui::{UI, components::labeled::LabeledMessage};
 use scarb_api::{CompilationOpts, get_contracts_artifacts_and_source_sierra_paths};
@@ -49,12 +48,12 @@ type PrepareTargetHandle = JoinHandle<Result<PrepareTestTargetResult>>;
 
 pub struct PackageTestResult {
     summaries: Vec<TestTargetSummary>,
-    filtered: FilteredTestsCount,
+    filtered: usize,
 }
 
 impl PackageTestResult {
     #[must_use]
-    pub fn new(summaries: Vec<TestTargetSummary>, filtered: FilteredTestsCount) -> Self {
+    pub fn new(summaries: Vec<TestTargetSummary>, filtered: usize) -> Self {
         Self {
             summaries,
             filtered,
@@ -62,7 +61,7 @@ impl PackageTestResult {
     }
 
     #[must_use]
-    pub fn filtered(&self) -> FilteredTestsCount {
+    pub fn filtered(&self) -> usize {
         self.filtered
     }
 
@@ -284,12 +283,7 @@ pub async fn run_for_package(
         summaries.push(s);
     }
 
-    // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
-    let filtered_count = if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
-        FilteredTestsCount::Other
-    } else {
-        FilteredTestsCount::Exact(prefiltered_out_total + all_tests - not_filtered_total)
-    };
+    let filtered_count = prefiltered_out_total + all_tests - not_filtered_total;
 
     ui.println(&TestsSummaryMessage::new(&summaries, filtered_count));
 

@@ -72,7 +72,7 @@ Collected 1 test(s) from hello_snforge package
 Running 1 test(s) from tests/
 [PASS] hello_snforge_integrationtest::test_contract::test_calling (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Running 0 test(s) from src/
-Tests: 1 passed, 0 failed, 0 ignored, other filtered out
+Tests: 1 passed, 0 failed, 0 ignored, 2 filtered out
 ```
 </details>
 <br>
