@@ -32,8 +32,6 @@ impl TestsSummary {
 
     #[must_use]
     pub fn format_summary_message(&self) -> String {
-        let filtered = self.filtered.to_string();
-
         let interrupted = if self.interrupted > 0 {
             format!("\nInterrupted execution of {} test(s).", self.interrupted)
         } else {
@@ -41,8 +39,8 @@ impl TestsSummary {
         };
 
         format!(
-            "{} passed, {} failed, {} ignored, {filtered} filtered out{interrupted}",
-            self.passed, self.failed, self.ignored,
+            "{} passed, {} failed, {} ignored, {} filtered out{interrupted}",
+            self.passed, self.failed, self.ignored, self.filtered
         )
     }
 }
