@@ -37,7 +37,6 @@ use forge_runner::{
     scarb::load_test_artifacts,
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
-    tests_summary::FilteredTestsCount,
 };
 use foundry_ui::{UI, components::labeled::LabeledMessage};
 use scarb_api::{CompilationOpts, get_contracts_artifacts_and_source_sierra_paths};
