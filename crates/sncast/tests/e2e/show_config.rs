@@ -25,7 +25,21 @@ async fn test_show_config_from_snfoundry_toml() {
         Show Explorer Links: true
         Block Explorer:      Voyager
         Scarb Profile:       release
+        Aliases:             0
     ", URL});
+}
+
+#[test]
+fn test_show_config_displays_aliases_count() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let args = vec!["show-config"];
+
+    let output = runner(&args).current_dir(tempdir.path()).assert().success();
+
+    assert_stdout_contains(
+        output,
+        "Aliases:             1 (use `sncast alias list` to display)",
+    );
 }
 
 #[tokio::test]

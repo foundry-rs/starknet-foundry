@@ -1,4 +1,5 @@
 mod account;
+mod alias;
 mod call;
 mod completions;
 mod declare;
