@@ -15,9 +15,8 @@ pub fn fuzzable_derive(item: &TokenStream) -> ProcMacroResult {
     let db = SimpleParserDatabase::default();
     let (parsed, diagnostics) = db.parse_token_stream(item);
 
-    if !diagnostics.is_empty() {
-        return ProcMacroResult::new(TokenStream::empty())
-            .with_diagnostics(Diagnostic::error("Failed because of invalid syntax").into());
+    if diagnostics.check_error_free().is_err() {
+        return ProcMacroResult::new(TokenStream::empty());
     }
 
     let syntax_db = db.upcast();
