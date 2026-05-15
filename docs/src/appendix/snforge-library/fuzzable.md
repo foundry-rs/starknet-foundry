@@ -18,9 +18,37 @@ Any type that is used as a parameter in a test function with the [`#[fuzzer]`](.
 - `generate()` function is used to return a random value of the given type. To implement this function, it is necessary to either use a `Fuzzable` implementation from a different type,
 or use the [generate_arg](../cheatcodes/generate_arg.md) cheatcode, which can uniformly generate a random number within a specified range.
 
-## Example
+## `#[derive(Fuzzable)]`
 
-Implementation for a custom type `Message`:
+For structs and enums whose fields/variants already implement `Fuzzable`, use the derive macro to generate the implementation automatically instead of writing it by hand:
+
+```rust
+#[derive(Debug, Drop, Fuzzable)]
+struct Point {
+    x: u64,
+    y: u64,
+}
+
+#[derive(Debug, Drop, Fuzzable)]
+enum Direction {
+    North,
+    South,
+    East,
+    West,
+}
+```
+
+For generic types, `#[derive(Fuzzable)]` automatically appends a `+snforge_std::fuzzable::Fuzzable<T>` and `+core::fmt::Debug<T>` bound for each type parameter.
+
+The macro can be used on:
+- Structs - all field types must implement `Fuzzable`
+- Enums - the variant's type must implement `Fuzzable`
+
+It cannot be used on empty enums.
+
+## Manual Implementation Example
+
+For custom fuzzing logic, implement the trait manually.
 
 ```rust
 use core::num::traits::Bounded;

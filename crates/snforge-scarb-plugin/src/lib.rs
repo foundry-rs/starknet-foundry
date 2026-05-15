@@ -9,7 +9,10 @@ use attributes::{
     internal_config_statement::internal_config_statement, should_panic::should_panic, test::test,
     test_case::test_case,
 };
-use cairo_lang_macro::{ProcMacroResult, TokenStream, attribute_macro, executable_attribute};
+use cairo_lang_macro::{
+    ProcMacroResult, TokenStream, attribute_macro, derive_macro, executable_attribute,
+};
+use derives::fuzzable::fuzzable_derive;
 
 mod args;
 mod asserts;
@@ -17,6 +20,7 @@ pub mod attributes;
 mod cairo_expression;
 mod common;
 mod config_statement;
+pub mod derives;
 mod external_inputs;
 mod parse;
 mod types;
@@ -79,4 +83,10 @@ fn should_panic(args: TokenStream, item: TokenStream) -> ProcMacroResult {
 #[attribute_macro]
 fn disable_predeployed_contracts(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     disable_predeployed_contracts(args, item)
+}
+
+#[derive_macro]
+#[expect(clippy::needless_pass_by_value)]
+fn fuzzable(item: TokenStream) -> ProcMacroResult {
+    fuzzable_derive(&item)
 }

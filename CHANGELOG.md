@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `argent` option for `--type` flag in `account create` and `account import` commands. Use `ready` instead. Old account files with `"type": "argent"` are still loaded correctly.
 
+#### Added
+
+- `#[derive(Fuzzable)]` macro that automatically generates `Fuzzable` trait implementations for structs and enums
+
 ## [0.60.0] - 2026-04-27
 
 ### Forge

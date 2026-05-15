@@ -1,0 +1,19 @@
+---
+source: tests/integration/fuzzable.rs
+expression: format_output(&result)
+---
+impl FuzzableWithConstImpl<
+    T, +snforge_std::fuzzable::Fuzzable<T>, +core::fmt::Debug<T>, const X: u8,
+> of snforge_std::fuzzable::Fuzzable<WithConst<T, X>> {
+    fn blank() -> WithConst<T, X> {
+        WithConst::Value(snforge_std::fuzzable::Fuzzable::<T>::blank())
+    }
+    fn generate() -> WithConst<T, X> {
+        let variant_idx = snforge_std::fuzzable::generate_arg(0, 1);
+        match variant_idx {
+            0 => { WithConst::Value(snforge_std::fuzzable::Fuzzable::<T>::generate()) },
+            1 => { WithConst::Empty },
+            _ => panic!("unexpected value of generate_arg cheatcode"),
+        }
+    }
+}
