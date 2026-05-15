@@ -290,7 +290,6 @@ fn main() -> ExitCode {
     init_logging();
 
     let matches = Cli::command().get_matches();
-    // Avoids duplicate arguments parsing
     let cli = Cli::from_arg_matches(&matches)
         .expect("should always be possible to reconstruct cli from its own matches");
 
