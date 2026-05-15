@@ -163,6 +163,8 @@ jobs:
 
   publish-plugin:
     needs: [ get-version, build-plugin-binaries ]
+    # Skip publishing on dependabot PRs with action updates.
+    if: github.event_name != 'pull_request' || github.actor != 'dependabot[bot]'
     uses: ./.github/workflows/_publish-plugin.yml
     secrets: inherit
     with:
