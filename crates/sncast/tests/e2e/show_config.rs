@@ -559,7 +559,6 @@ async fn test_invalid_effective_config() {
             - Local config: [..]snfoundry.toml
             - Global config: [..]snfoundry.toml
 
-
             Caused by:
                 retry_interval cannot be greater than timeout
         " },
@@ -600,7 +599,6 @@ async fn test_invalid_effective_config_from_cli() {
             - CLI flags
             - Local config: missing
             - Global config: [..]snfoundry.toml
-
 
             Caused by:
                 retry_interval cannot be greater than timeout
