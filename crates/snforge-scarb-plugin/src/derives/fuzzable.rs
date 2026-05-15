@@ -1,13 +1,13 @@
 use crate::format_ident;
-use crate::utils::{SyntaxNodeUtils, create_single_token};
-use cairo_lang_macro::{Diagnostic, ProcMacroResult, TokenStream, quote};
+use crate::utils::{create_single_token, SyntaxNodeUtils};
+use cairo_lang_macro::{quote, Diagnostic, ProcMacroResult, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::Terminal;
-use cairo_lang_syntax::node::TypedSyntaxNode;
 use cairo_lang_syntax::node::ast::{
     GenericParam, ItemEnum, ItemStruct, ModuleItem, OptionTypeClause,
     OptionWrappedGenericParamList, SyntaxFile, TerminalIdentifier, Variant,
 };
+use cairo_lang_syntax::node::Terminal;
+use cairo_lang_syntax::node::TypedSyntaxNode;
 use cairo_lang_utils::Upcast;
 
 #[must_use]
