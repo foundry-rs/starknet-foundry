@@ -1,4 +1,5 @@
 mod account;
+mod alias;
 pub mod balance;
 mod call;
 mod class_hash_at;

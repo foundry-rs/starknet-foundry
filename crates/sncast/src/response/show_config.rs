@@ -20,6 +20,7 @@ pub struct ShowConfigResponse {
     pub show_explorer_links: bool,
     pub block_explorer: Option<block_explorer::Service>,
     pub scarb_profile: String,
+    pub alias_count: usize,
 }
 
 impl SncastCommandMessage for ShowConfigResponse {
@@ -56,7 +57,15 @@ impl SncastCommandMessage for ShowConfigResponse {
             .if_some(self.block_explorer.as_ref(), |b, explorer| {
                 b.field("Block Explorer", &format!("{explorer:?}"))
             })
-            .field("Scarb Profile", &self.scarb_profile);
+            .field("Scarb Profile", &self.scarb_profile)
+            .field(
+                "Aliases",
+                &if self.alias_count == 0 {
+                    format!("{}", self.alias_count)
+                } else {
+                    format!("{} (use `sncast alias list` to display)", self.alias_count)
+                },
+            );
 
         builder.build()
     }
