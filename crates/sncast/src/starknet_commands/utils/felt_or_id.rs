@@ -1,9 +1,9 @@
 use anyhow::{Context, Result, bail};
 use serde::Deserialize;
 use sncast::helpers::configuration::CastConfig;
+use sncast::helpers::felt::parse_string_to_felt;
 use starknet_types_core::felt::Felt;
 use std::str::FromStr;
-use sncast::helpers::felt::parse_string_to_felt;
 
 pub const ID_PREFIX: char = '@';
 
@@ -33,7 +33,6 @@ impl FeltOrId {
                 .get(name)
                 .copied()
                 .with_context(|| format!("Alias `{name}` not found in config"))
-           
         } else {
             self.try_into_felt()
         }
@@ -83,7 +82,10 @@ mod tests {
         let input = FeltOrId::new("@missing".into());
         let result = input.resolve_alias_or_felt(&config);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err().to_string(), "Alias `missing` not found in config");
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Alias `missing` not found in config"
+        );
     }
 
     #[test]
@@ -92,6 +94,9 @@ mod tests {
         let input = FeltOrId::new("@".into());
         let result = input.resolve_alias_or_felt(&config);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err().to_string(), "Alias name cannot be empty");
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Alias name cannot be empty"
+        );
     }
 }
