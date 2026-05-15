@@ -30,6 +30,7 @@ use sncast::helpers::config::get_or_create_global_config_path;
 use sncast::helpers::configuration::{
     CastConfig, CliConfigOpts, ConfigScope, MaybeConfig, PartialCastConfig,
 };
+use sncast::helpers::felt::parse_string_to_felt;
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
@@ -56,6 +57,7 @@ use starknet_rust::core::types::contract::{AbiEntry, CompiledClass, SierraClass}
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_rust::providers::Provider;
 use starknet_types_core::felt::Felt;
+use std::num::{NonZeroU8, NonZeroU16};
 use std::process::ExitCode;
 use tokio::runtime::Runtime;
 
@@ -243,7 +245,7 @@ impl Arguments {
 pub fn calldata_to_felts(calldata: &[String]) -> Result<Vec<Felt>> {
     calldata
         .iter()
-        .map(|data| Felt::from_str(data).with_context(|| format!("Failed to parse {data} to felt")))
+        .map(|data| parse_string_to_felt(data))
         .collect()
 }
 
@@ -658,6 +660,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
         }) => {
             let provider = rpc.get_provider(&config, ui).await?;
 
+            let contract_address = contract_address
+                .resolve_alias_or_felt(&config)
+                .context("Invalid contract address")?;
+
             let block_id = get_block_id(&block_id)?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
@@ -715,7 +721,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let contract_address = contract_address.try_into_felt()?;
+            let contract_address = contract_address.resolve_alias_or_felt(&config)?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
