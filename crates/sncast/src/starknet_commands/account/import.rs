@@ -159,7 +159,7 @@ pub async fn import(
         .await?;
         ensure!(
             computed_address == import.address,
-            "Computed address {:#x} does not match the provided address {:#x}. Please ensure that the provided salt, class hash, and account type are correct.",
+            "Computed address {:#x} does not match the provided address {:#x}. Please ensure that the provided salt, class hash, and account type are correct. Note: for Ready accounts, address validation only supports accounts deployed with guardian set to 0.",
             computed_address,
             import.address
         );

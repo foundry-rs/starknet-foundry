@@ -709,7 +709,7 @@ pub async fn test_invalid_address_computation() {
     let computed_address = "0x7298d9fc4bde13623bd53f4adb0110bd77ab5f3f3675402b5dfb418e149e56a";
     snapbox.assert().stderr_eq(formatdoc! {r"
         Command: account import
-        Error: Computed address {computed_address} does not match the provided address 0x123. Please ensure that the provided salt, class hash, and account type are correct.
+        Error: Computed address {computed_address} does not match the provided address 0x123. Please ensure that the provided salt, class hash, and account type are correct. Note: for Ready accounts, address validation only supports accounts deployed with guardian set to 0.
     "});
 }
 
