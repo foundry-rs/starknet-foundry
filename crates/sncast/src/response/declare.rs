@@ -114,13 +114,11 @@ impl Message for DeployCommandMessage {
     fn text(&self) -> String {
         let mut command = String::from("sncast");
 
-        let accounts_file_flag = generate_accounts_file_flag(self.accounts_file.as_ref());
-        if let Some(flag) = accounts_file_flag {
-            write!(command, " {flag}").unwrap();
-        }
-
+        // TODO(#4367): --accounts-file and --keystore should be mutually exclusive at the CLI level
         if let Some(keystore) = &self.keystore {
             write!(command, " --keystore {keystore}").unwrap();
+        } else if let Some(flag) = generate_accounts_file_flag(self.accounts_file.as_ref()) {
+            write!(command, " {flag}").unwrap();
         }
 
         let account_flag = format!("--account {}", self.account);
