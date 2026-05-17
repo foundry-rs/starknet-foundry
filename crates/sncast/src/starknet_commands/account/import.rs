@@ -1,7 +1,8 @@
 use std::str::FromStr;
 
 use crate::starknet_commands::account::{
-    generate_add_profile_message, prepare_account_json, write_account_to_accounts_file,
+    compute_account_address, generate_add_profile_message, prepare_account_json,
+    write_account_to_accounts_file,
 };
 use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
@@ -10,7 +11,6 @@ use conversions::string::{TryFromDecStr, TryFromHexStr};
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
 use sncast::helpers::configuration::CastConfig;
-use sncast::helpers::constants::BRAAVOS_BASE_ACCOUNT_CLASS_HASH;
 use sncast::helpers::ledger;
 use sncast::helpers::ledger::LedgerKeyLocatorAccount;
 use sncast::helpers::rpc::RpcArgs;
@@ -18,7 +18,6 @@ use sncast::response::account::import::AccountImportResponse;
 use sncast::response::ui::UI;
 use sncast::{AccountType, SignerType, check_class_hash_exists, get_chain_id, handle_rpc_error};
 use starknet_rust::core::types::{BlockId, BlockTag, StarknetError};
-use starknet_rust::core::utils::get_contract_address;
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet_rust::providers::{Provider, ProviderError};
 use starknet_rust::signers::SigningKey;
@@ -148,8 +147,16 @@ pub async fn import(
     let chain_id = get_chain_id(provider).await?;
 
     if let Some(salt) = import.salt {
-        let computed_address =
-            compute_account_address(salt, public_key, class_hash, import.account_type);
+        let computed_address = compute_account_address(
+            salt,
+            class_hash,
+            import.account_type,
+            chain_id,
+            &signer_type,
+            provider,
+            ui,
+        )
+        .await?;
         ensure!(
             computed_address == import.address,
             "Computed address {:#x} does not match the provided address {:#x}. Please ensure that the provided salt, class hash, and account type are correct.",
@@ -203,34 +210,6 @@ fn get_private_key_from_input() -> Result<Felt> {
     let input = rpassword::prompt_password("Type in your private key and press enter: ")
         .expect("Failed to read private key from input");
     parse_input_to_felt(&input)
-}
-
-fn compute_account_address(
-    salt: Felt,
-    public_key: Felt,
-    class_hash: Felt,
-    account_type: AccountType,
-) -> Felt {
-    match account_type {
-        AccountType::Ready => {
-            // Calldata matches ArgentAccountFactory: owner = Starknet(pubkey) = [0, pubkey], guardian = None = [1]
-            get_contract_address(
-                salt,
-                class_hash,
-                &[Felt::ZERO, public_key, Felt::ONE],
-                Felt::ZERO,
-            )
-        }
-        AccountType::OpenZeppelin => {
-            get_contract_address(salt, class_hash, &[public_key], Felt::ZERO)
-        }
-        AccountType::Braavos => get_contract_address(
-            salt,
-            BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
-            &[public_key],
-            Felt::ZERO,
-        ),
-    }
 }
 
 #[cfg(test)]
