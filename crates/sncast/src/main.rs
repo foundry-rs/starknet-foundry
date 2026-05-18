@@ -30,7 +30,7 @@ use sncast::helpers::config::get_or_create_global_config_path;
 use sncast::helpers::configuration::{
     CastConfig, CliConfigOpts, ConfigScope, MaybeConfig, PartialCastConfig,
 };
-use sncast::helpers::felt::parse_string_to_felt;
+use sncast::helpers::felt::string_to_felt;
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
@@ -245,7 +245,7 @@ impl Arguments {
 pub fn calldata_to_felts(calldata: &[String]) -> Result<Vec<Felt>> {
     calldata
         .iter()
-        .map(|data| parse_string_to_felt(data))
+        .map(|data| string_to_felt(data))
         .collect()
 }
 

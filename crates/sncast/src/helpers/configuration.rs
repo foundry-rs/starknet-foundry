@@ -1,5 +1,5 @@
 use super::block_explorer;
-use super::felt::parse_string_to_felt;
+use super::felt::string_to_felt;
 use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use crate::{Network, PartialWaitParams, ValidatedWaitParams};
 use anyhow::{Context, Result};
@@ -98,7 +98,7 @@ impl<'de> Deserialize<'de> for AliasesConfig {
     {
         BTreeMap::<String, String>::deserialize(deserializer)?
             .into_iter()
-            .map(|(name, value)| parse_string_to_felt(&value).map(|felt| (name, felt)))
+            .map(|(name, value)| string_to_felt(&value).map(|felt| (name, felt)))
             .collect::<Result<BTreeMap<_, _>, _>>()
             .map_err(serde::de::Error::custom)
             .map(AliasesConfig)
