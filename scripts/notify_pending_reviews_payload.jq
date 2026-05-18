@@ -89,7 +89,8 @@ else
                           {type: "link",  url: .url, text: rpad($num; $nmax)},
                           {type: "text",  text: "  "}
                         ] + (.title | title_elements) + [
-                          {type: "text",  text: " (\($sz))\n"}
+                          {type: "text", text: " "},
+                          {type: "text", text: "(\($sz))", style: {bold: true}}
                         ])
                       }
                   ))
