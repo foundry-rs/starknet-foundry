@@ -17,11 +17,12 @@ def humanize:
   else "\(. / 86400 | floor)d"
   end;
 
-# Age dot: green < 2d, yellow 2-4d, red > 4d.
+# Age dot: green < 2d, yellow 2-4d, orange 4-8d, red > 8d.
 def age_name:
   if . == null then "grey_question"
   elif . < 172800 then "large_green_circle"
   elif . < 345600 then "large_yellow_circle"
+  elif . < 691200 then "large_orange_circle"
   else "red_circle"
   end;
 
