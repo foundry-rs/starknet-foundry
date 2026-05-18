@@ -1,4 +1,4 @@
-use crate::e2e::ledger::{automation, setup_speculos};
+use crate::e2e::ledger::{automation, set_automation, setup_speculos};
 use crate::helpers::constants::URL;
 use crate::helpers::runner::runner;
 use docs::snippet::SnippetType;
@@ -12,20 +12,21 @@ use tempfile::TempDir;
 
 const DOCS_SNIPPETS_PORT_BASE: u16 = 4006;
 
-async fn setup_speculos_automation(client: &Arc<speculos_client::SpeculosClient>, args: &[&str]) {
+async fn setup_speculos_automation(
+    client: &Arc<crate::e2e::ledger::speculos::SpeculosClient>,
+    args: &[&str],
+) {
     if args.contains(&"get-public-key") && !args.contains(&"--no-display") {
-        client
-            .automation(&[automation::APPROVE_PUBLIC_KEY])
-            .await
-            .unwrap();
+        set_automation(client, &[automation::APPROVE_PUBLIC_KEY]).await;
     } else if args.contains(&"sign-hash") {
-        client
-            .automation(&[
+        set_automation(
+            client,
+            &[
                 automation::ENABLE_BLIND_SIGN,
                 automation::APPROVE_BLIND_SIGN_HASH,
-            ])
-            .await
-            .unwrap();
+            ],
+        )
+        .await;
     }
 }
 

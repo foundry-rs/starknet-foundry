@@ -1,8 +1,9 @@
 use std::fs;
 
+use super::speculos::AutomationRule;
 use crate::e2e::ledger::{
     BRAAVOS_LEDGER_PATH, LEDGER_ACCOUNT_NAME, LEDGER_PUBLIC_KEY, OZ_LEDGER_PATH, READY_LEDGER_PATH,
-    TEST_LEDGER_PATH, TEST_LEDGER_PATH_STORED, automation, setup_speculos,
+    TEST_LEDGER_PATH, TEST_LEDGER_PATH_STORED, automation, set_automation, setup_speculos,
 };
 use crate::helpers::constants::URL;
 use crate::helpers::fixtures::mint_token;
@@ -16,19 +17,17 @@ use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_co
 use snapbox::assert_data_eq;
 use sncast::helpers::account::load_accounts;
 use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
-use speculos_client::AutomationRule;
 use tempfile::tempdir;
 use test_case::test_case;
 
-#[test_case("oz", "open_zeppelin", OZ_CLASS_HASH.into_hex_string(), 6001, &[automation::APPROVE_PUBLIC_KEY]; "oz_account_type")]
-#[test_case("ready", "ready", READY_CLASS_HASH.into_hex_string(), 6002, &[automation::APPROVE_PUBLIC_KEY]; "ready_account_type")]
+#[test_case("oz", "open_zeppelin", OZ_CLASS_HASH.into_hex_string(), 6001, &[]; "oz_account_type")]
+#[test_case("ready", "ready", READY_CLASS_HASH.into_hex_string(), 6002, &[]; "ready_account_type")]
 // Braavos calls sign_hash twice during fee estimation (tx_hash + aux_hash) because
 // is_signer_interactive() always returns false — see BraavosAccountFactory::is_signer_interactive.
-// That means we need ENABLE_BLIND_SIGN + two APPROVE_BLIND_SIGN_HASH after the public key approval.
+// That means we need ENABLE_BLIND_SIGN + two APPROVE_BLIND_SIGN_HASH during creation.
 #[test_case(
     "braavos", "braavos", BRAAVOS_CLASS_HASH.into_hex_string(), 6003,
     &[
-        automation::APPROVE_PUBLIC_KEY,
         automation::ENABLE_BLIND_SIGN,
         automation::APPROVE_BLIND_SIGN_HASH, // tx_hash
         automation::APPROVE_BLIND_SIGN_HASH, // aux_hash
@@ -42,12 +41,12 @@ async fn test_create_ledger_account(
     saved_type: &str,
     class_hash: String,
     port: u16,
-    automations: &[speculos_client::AutomationRule<'static>],
+    automations: &[AutomationRule<'static>],
 ) {
     let (client, url) = setup_speculos(port);
     let tempdir = tempdir().unwrap();
 
-    client.automation(automations).await.unwrap();
+    set_automation(&client, automations).await;
 
     let output = runner(&[
         "--accounts-file",
@@ -115,13 +114,8 @@ async fn test_create_ledger_account(
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
 async fn test_create_ledger_account_add_profile() {
-    let (client, url) = setup_speculos(6004);
+    let (_client, url) = setup_speculos(6004);
     let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
-
-    client
-        .automation(&[automation::APPROVE_PUBLIC_KEY])
-        .await
-        .unwrap();
 
     let output = runner(&[
         "--accounts-file",
@@ -159,10 +153,9 @@ async fn test_create_ledger_account_add_profile() {
 
 #[test_case(
     "oz", OZ_LEDGER_PATH, 6005,
-    // create: public key only (OZ skips signing during fee estimation)
+    // create: no confirmation needed
     // deploy: enable blind sign + 1 sign_hash
     &[
-        automation::APPROVE_PUBLIC_KEY,
         automation::ENABLE_BLIND_SIGN,
         automation::APPROVE_BLIND_SIGN_HASH,
     ];
@@ -170,10 +163,9 @@ async fn test_create_ledger_account_add_profile() {
 )]
 #[test_case(
     "ready", READY_LEDGER_PATH, 6006,
-    // create: public key only (Ready skips signing during fee estimation)
+    // create: no confirmation needed
     // deploy: enable blind sign + 1 sign_hash
     &[
-        automation::APPROVE_PUBLIC_KEY,
         automation::ENABLE_BLIND_SIGN,
         automation::APPROVE_BLIND_SIGN_HASH,
     ];
@@ -181,10 +173,9 @@ async fn test_create_ledger_account_add_profile() {
 )]
 #[test_case(
     "braavos", BRAAVOS_LEDGER_PATH, 6007,
-    // create: public key + enable blind sign + 2x sign_hash (tx_hash + aux_hash)
+    // create: enable blind sign + 2x sign_hash (tx_hash + aux_hash)
     // deploy: 2x sign_hash again (tx_hash + aux_hash), blind sign already enabled
     &[
-        automation::APPROVE_PUBLIC_KEY,
         automation::ENABLE_BLIND_SIGN,
         automation::APPROVE_BLIND_SIGN_HASH, // create: tx_hash
         automation::APPROVE_BLIND_SIGN_HASH, // create: aux_hash
@@ -203,7 +194,7 @@ async fn test_deploy_ledger_account(
 ) {
     let (client, url) = setup_speculos(port);
 
-    client.automation(automations).await.unwrap();
+    set_automation(&client, automations).await;
 
     let tempdir = tempdir().unwrap();
     let accounts_file = tempdir.path().join("accounts.json");

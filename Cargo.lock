@@ -4046,9 +4046,6 @@ name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
-dependencies = [
- "serde",
-]
 
 [[package]]
 name = "hidapi-rusb"
@@ -6447,38 +6444,6 @@ checksum = "ba39f3699c378cd8970968dcbff9c43159ea4cfbd88d43c00b22f2ef10a435d2"
 
 [[package]]
 name = "reqwest"
-version = "0.12.28"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eddd3ca559203180a307f12d114c268abf583f59b03cb906fd0b3ff8646c1147"
-dependencies = [
- "base64 0.22.1",
- "bytes",
- "futures-core",
- "http",
- "http-body",
- "http-body-util",
- "hyper",
- "hyper-util",
- "js-sys",
- "log",
- "percent-encoding",
- "pin-project-lite",
- "serde",
- "serde_json",
- "serde_urlencoded",
- "sync_wrapper",
- "tokio",
- "tower",
- "tower-http",
- "tower-service",
- "url",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "reqwest"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ab3f43e3283ab1488b624b44b0e988d0acea0b3214e694730a055cb6b2efa801"
@@ -7505,7 +7470,7 @@ dependencies = [
  "promptly",
  "rand 0.8.6",
  "regex",
- "reqwest 0.13.2",
+ "reqwest",
  "rpassword",
  "runtime",
  "scarb-api",
@@ -7521,7 +7486,6 @@ dependencies = [
  "shared",
  "shellexpand",
  "snapbox",
- "speculos-client",
  "starknet-rust",
  "starknet-rust-crypto 0.9.0",
  "starknet-types-core",
@@ -7561,17 +7525,6 @@ checksum = "3a766e1110788c36f4fa1c2b71b387a7815aa65f88ce0229841826633d93723e"
 dependencies = [
  "libc",
  "windows-sys 0.61.2",
-]
-
-[[package]]
-name = "speculos-client"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aab48e66d675276b5970b3243e9638053a9ff8d693d4a0f9c2514e83dbbc8cab"
-dependencies = [
- "hex",
- "reqwest 0.12.28",
- "serde",
 ]
 
 [[package]]
@@ -7831,7 +7784,7 @@ dependencies = [
  "flate2",
  "getrandom 0.2.17",
  "log",
- "reqwest 0.13.2",
+ "reqwest",
  "serde",
  "serde_json",
  "serde_with",
@@ -8920,7 +8873,7 @@ dependencies = [
  "lazy_static 1.5.0",
  "log",
  "regex",
- "reqwest 0.13.2",
+ "reqwest",
  "scarb-metadata",
  "semver",
  "serde",
