@@ -51,8 +51,22 @@ Fuzzer currently supports generating values for these types out of the box:
 - `i8`, `i16`, `i32`, `i64`, `i128`
 - `ByteArray`
 
-To use other types, it is required to implement the [`Fuzzable`](../appendix/snforge-library/fuzzable.md) trait for them.
+To use other types, you can either derive or manually implement the [`Fuzzable`](../appendix/snforge-library/fuzzable.md) trait.
 Providing non-fuzzable types will result in a compilation error.
+
+### Deriving `Fuzzable`
+
+For structs and enums whose fields already implement `Fuzzable`, you can use `#[derive(Fuzzable)]` to generate the implementation automatically:
+
+```rust
+{{#include ../../listings/fuzz_testing/src/derive_fuzzable.cairo}}
+```
+
+The macro requires all field/variant types to implement `Fuzzable`. For generic types, it automatically adds the `+snforge_std::fuzzable::Fuzzable<T>` and `+core::fmt::Debug<T>` constraints for each type parameter.
+
+### Manual `Fuzzable` Implementation
+
+For types that need custom fuzzing logic, implement the trait manually — see the [Fuzzable](../appendix/snforge-library/fuzzable.md) appendix for details.
 
 ## Fuzzer Configuration
 

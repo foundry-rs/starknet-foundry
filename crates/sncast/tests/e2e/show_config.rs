@@ -195,6 +195,7 @@ async fn test_only_one_from_url_and_network_allowed() {
     assert_stderr_contains(
         output,
         indoc! { r"
+            Command: show-config
             Error: Failed to load local config at [..]snfoundry.toml
 
             Caused by:
@@ -214,6 +215,7 @@ async fn test_stark_scan_as_block_explorer() {
     assert_stderr_contains(
         output,
         indoc! { r"
+            Command: show-config
             Error: Failed to load local config at [..]snfoundry.toml
 
             Caused by:
@@ -243,12 +245,27 @@ async fn test_show_config_malformed() {
     assert_stderr_contains(
         output,
         indoc! { r"
+            Command: show-config
             Error: Failed to load local config at [..]snfoundry.toml
 
             Caused by:
                 0: Failed to parse snfoundry.toml config file
                 1: TOML parse error at line 2, column 10
         " },
+    );
+}
+
+#[tokio::test]
+async fn test_show_config_malformed_json() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_malformed.toml", None);
+    let args = vec!["--json", "show-config"];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        r#"{"command":"show-config","error":"Failed to load local config at [..]snfoundry.toml: Failed to parse snfoundry.toml config file: TOML parse error at line 2, column 10\n  |\n2 | invalid =\n  |          ^\nstring values must be quoted, expected literal string\n","type":"error"}"#,
     );
 }
 
@@ -462,6 +479,7 @@ async fn test_default_global_profile_with_invalid_values() {
     assert_stderr_contains(
         output,
         indoc! { r"
+            Command: show-config
             Error: Failed to load global config at [..]snfoundry.toml
 
             Caused by:
@@ -490,6 +508,7 @@ async fn test_default_global_profile_with_unsupported_field() {
     assert_stderr_contains(
         output,
         indoc! { r#"
+            Command: show-config
             Error: Failed to load global config at [..]snfoundry.toml
 
             Caused by:
@@ -533,6 +552,7 @@ async fn test_invalid_effective_config() {
     assert_stderr_contains(
         output,
         indoc! { r"
+            Command: show-config
             Error: Unable to combine configs. Fix conflicts between config sources and try again.
             Sources:
             - CLI flags
@@ -573,6 +593,7 @@ async fn test_invalid_effective_config_from_cli() {
     assert_stderr_contains(
         output,
         indoc! { r"
+            Command: show-config
             Error: Unable to combine configs. Fix conflicts between config sources and try again.
             Sources:
             - CLI flags
@@ -631,6 +652,7 @@ async fn test_zero_wait_params_in_config() {
     assert_stderr_contains(
         output,
         indoc! { r"
+            Command: show-config
             Error: Failed to load local config at [..]snfoundry.toml
 
             Caused by:

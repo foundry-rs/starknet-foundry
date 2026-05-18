@@ -1,0 +1,17 @@
+---
+source: tests/integration/fuzzable.rs
+expression: format_output(&result)
+---
+impl FuzzableMixedImpl<> of snforge_std::fuzzable::Fuzzable<Mixed<>> {
+    fn blank() -> Mixed<> {
+        Mixed::Unit
+    }
+    fn generate() -> Mixed<> {
+        let variant_idx = snforge_std::fuzzable::generate_arg(0, 1);
+        match variant_idx {
+            0 => { Mixed::Unit },
+            1 => { Mixed::WithData(snforge_std::fuzzable::Fuzzable::<u64>::generate()) },
+            _ => panic!("unexpected value of generate_arg cheatcode"),
+        }
+    }
+}
