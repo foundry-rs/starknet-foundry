@@ -70,6 +70,7 @@ async fn test_show_config_from_cli() {
         Show Explorer Links: true
         Block Explorer:      Voyager
         Scarb Profile:       release
+        Aliases:             0
     ", URL});
 }
 
@@ -91,6 +92,7 @@ async fn test_show_config_from_cli_and_snfoundry_toml() {
         Show Explorer Links: true
         Block Explorer:      ViewBlock
         Scarb Profile:       release
+        Aliases:             0
     ", URL});
 }
 
@@ -112,6 +114,7 @@ async fn test_show_config_when_no_keystore() {
         Show Explorer Links: true
         Block Explorer:      Voyager
         Scarb Profile:       release
+        Aliases:             0
     ", URL});
 }
 
@@ -133,6 +136,7 @@ async fn test_show_config_when_keystore() {
         Show Explorer Links: true
         Block Explorer:      Voyager
         Scarb Profile:       release
+        Aliases:             0
     ", URL});
 }
 
@@ -154,6 +158,7 @@ async fn test_show_config_no_url() {
         Show Explorer Links: false
         Block Explorer:      Voyager
         Scarb Profile:       release
+        Aliases:             0
     ", URL});
 }
 
@@ -175,6 +180,7 @@ async fn test_show_config_with_network() {
         Show Explorer Links: true
         Block Explorer:      Voyager
         Scarb Profile:       release
+        Aliases:             0
     "});
 }
 
@@ -195,6 +201,7 @@ async fn test_show_config_cli_url_overrides_config_network() {
         Show Explorer Links: true
         Block Explorer:      Voyager
         Scarb Profile:       release
+        Aliases:             0
     ", URL});
 }
 
@@ -294,6 +301,7 @@ async fn test_show_config_provider_error() {
             Show Explorer Links: true
             Block Explorer:      Voyager
             Scarb Profile:       release
+            Aliases:             0
         "},
     );
 }
@@ -320,6 +328,7 @@ async fn test_show_config_global_no_local() {
         Show Explorer Links: true
         Block Explorer:      Voyager
         Scarb Profile:       release
+        Aliases:             0
     ", URL});
 }
 
@@ -346,6 +355,7 @@ async fn test_show_config_global_only_profile() {
         Show Explorer Links: false
         Block Explorer:      Voyager
         Scarb Profile:       release
+        Aliases:             0
     ", URL});
 }
 
@@ -392,6 +402,7 @@ async fn test_show_config_global_and_local_default() {
         Show Explorer Links: true
         Block Explorer:      Voyager
         Scarb Profile:       release
+        Aliases:             0
     ", URL});
 }
 
@@ -418,6 +429,7 @@ async fn test_show_config_global_and_local_profile() {
         Show Explorer Links: true
         Block Explorer:      ViewBlock
         Scarb Profile:       release
+        Aliases:             0
     ", URL});
 }
 
