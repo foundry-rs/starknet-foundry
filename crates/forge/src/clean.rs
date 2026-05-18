@@ -7,7 +7,6 @@ use foundry_ui::UI;
 use regex::Regex;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use semver::Version;
-use std::env;
 use std::fs;
 use std::sync::OnceLock;
 
@@ -78,11 +77,6 @@ fn clean_dir(path: &Utf8Path, ui: &UI) -> Result<()> {
 pub fn clean_cache_dir(path: &Utf8Path, ui: &UI) -> Result<()> {
     if !path.exists() {
         return Ok(());
-    }
-
-    let has_custom_cache_dir = env::var("SNFOUNDRY_CACHE").is_ok();
-    if !has_custom_cache_dir {
-        return clean_dir(path, ui);
     }
 
     let mut any_skipped = false;
