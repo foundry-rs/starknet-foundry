@@ -146,7 +146,7 @@ fn with_custom_cache_dir() {
         Failure data:
             0x42616c616e63652073686f756c642062652030 ('Balance should be 0')
 
-        Tests: 0 passed, 1 failed, 0 ignored, other filtered out
+        Tests: 0 passed, 1 failed, 0 ignored, 5 filtered out
 
         Failures:
             forking::tests::test_fork_simple
