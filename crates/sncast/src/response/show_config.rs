@@ -57,15 +57,13 @@ impl SncastCommandMessage for ShowConfigResponse {
             .if_some(self.block_explorer.as_ref(), |b, explorer| {
                 b.field("Block Explorer", &format!("{explorer:?}"))
             })
-            .field("Scarb Profile", &self.scarb_profile)
-            .field(
-                "Aliases",
-                &if self.alias_count == 0 {
-                    format!("{}", self.alias_count)
-                } else {
-                    format!("{} (use `sncast alias list` to display)", self.alias_count)
-                },
-            );
+            .field("Scarb Profile", &self.scarb_profile);
+
+        let alias_count = self.alias_count.to_string();
+        let mut builder = builder.field("Aliases", &alias_count);
+        if self.alias_count != 0 {
+            builder = builder.extra("(use `sncast alias list` to display)");
+        }
 
         builder.build()
     }
