@@ -2,4 +2,4 @@
 url = "http://127.0.0.1:5055/rpc"
 
 [sncast.default.aliases]
-my-map = "0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008"
+map = "0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008"
