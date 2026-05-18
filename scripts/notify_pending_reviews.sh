@@ -126,4 +126,5 @@ if [ -n "$SLACK_WEBHOOK_URL" ]; then
 else
     printf '%s\n' "$PAYLOAD"
     echo "✅ Block Kit payload built (set SLACK_WEBHOOK_URL to post to Slack)" >&2
+    exit 1
 fi
