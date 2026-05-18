@@ -51,11 +51,12 @@ impl std::str::FromStr for FeltOrId {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sncast::helpers::configuration::AliasesConfig;
     use std::collections::BTreeMap;
 
     fn config_with_aliases(aliases: BTreeMap<String, Felt>) -> CastConfig {
         CastConfig {
-            aliases,
+            aliases: AliasesConfig(aliases),
             ..CastConfig::default()
         }
     }

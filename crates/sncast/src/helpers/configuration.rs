@@ -11,6 +11,7 @@ use serde_with::skip_serializing_none;
 use starknet_types_core::felt::Felt;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::{Display, Formatter};
+use std::ops::Deref;
 use url::Url;
 
 #[must_use]
@@ -113,6 +114,14 @@ impl Override for AliasesConfig {
     }
 }
 
+impl Deref for AliasesConfig {
+    type Target = BTreeMap<String, Felt>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 /// Effective config used at runtime.
 /// Note: Built from [`PartialCastConfig`], not (de)serialized.
 #[derive(Clone, Debug, PartialEq)]
@@ -126,7 +135,7 @@ pub struct CastConfig {
     pub show_explorer_links: bool,
     pub networks: NetworksConfig,
     pub scarb_profile: String,
-    pub aliases: BTreeMap<String, Felt>,
+    pub aliases: AliasesConfig,
 }
 
 impl CastConfig {
@@ -150,7 +159,7 @@ impl Default for CastConfig {
             show_explorer_links: show_explorer_links_default(),
             networks: NetworksConfig::default(),
             scarb_profile: "release".to_string(),
-            aliases: BTreeMap::new(),
+            aliases: AliasesConfig::default(),
         }
     }
 }
@@ -353,7 +362,7 @@ impl TryFrom<PartialCastConfig> for CastConfig {
             show_explorer_links: p.show_explorer_links.unwrap_or(d.show_explorer_links),
             networks,
             scarb_profile: p.scarb_profile.unwrap_or(d.scarb_profile),
-            aliases: p.aliases.map(|a| a.0).unwrap_or_default(),
+            aliases: p.aliases.unwrap_or_default(),
         };
         config.validate()?;
         Ok(config)
@@ -460,8 +469,8 @@ mod tests {
 
         let merged = global.override_with(local);
 
-        assert_eq!(merged.0.get("a"), Some(&Felt::from(300)));
-        assert_eq!(merged.0.get("b"), Some(&Felt::from(200)));
+        assert_eq!(merged.0.get("a"), Some(&Felt::from(500)));
+        assert_eq!(merged.0.get("b"), Some(&Felt::from(300)));
     }
 
     // can probably remove this once covered by e2e
@@ -471,12 +480,12 @@ mod tests {
             url = "http://127.0.0.1:5055/rpc"
 
             [aliases]
-            my-map = "0x1"
+            map = "0x1"
         "#;
 
         let config: PartialCastConfig = toml::from_str(toml_str).unwrap();
         let aliases = config.aliases.expect("aliases table");
-        assert_eq!(aliases.0.get("my-map"), Some(&Felt::from(1)));
+        assert_eq!(aliases.0.get("map"), Some(&Felt::from(1)));
     }
 
     #[test]
