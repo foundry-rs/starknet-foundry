@@ -19,10 +19,11 @@ pub enum Commands {
     List(List),
 }
 
-pub fn alias(alias: Alias, config: CastConfig, ui: &UI) -> Result<ExitCode> {
+#[allow(clippy::unnecessary_wraps)]
+pub fn alias(alias: &Alias, config: &CastConfig, ui: &UI) -> Result<ExitCode> {
     match alias.command {
         Commands::List(_) => {
-            ui.print_message("alias list", list::list(&config));
+            ui.print_message("alias list", list::list(config));
             Ok(ExitCode::SUCCESS)
         }
     }
