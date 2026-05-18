@@ -1,7 +1,7 @@
 use anyhow::{Context, Result, bail};
 use serde::Deserialize;
 use sncast::helpers::configuration::CastConfig;
-use sncast::helpers::felt::string_to_felt;
+use sncast::helpers::felt::felt_from_string;
 use starknet_types_core::felt::Felt;
 
 pub const ID_PREFIX: char = '@';
@@ -15,7 +15,7 @@ impl FeltOrId {
     }
 
     pub fn try_into_felt(&self) -> Result<Felt> {
-        string_to_felt(&self.0)
+        felt_from_string(&self.0)
     }
 
     pub fn as_id(&self) -> Option<&str> {
