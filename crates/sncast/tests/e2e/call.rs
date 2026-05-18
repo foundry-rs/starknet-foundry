@@ -42,7 +42,7 @@ fn test_happy_case() {
 }
 
 #[test]
-fn test_call_with_contract_alias() {
+fn test_call_with_alias() {
     let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
     let args = vec![
         "call",
@@ -64,6 +64,36 @@ fn test_call_with_contract_alias() {
         Response:     0x0
         Response Raw: [0x0]
     "});
+}
+
+#[test]
+fn test_call_with_unknown_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let args = vec![
+        "call",
+        "--function",
+        "get",
+        "--calldata",
+        "0x0",
+        "--block-id",
+        "latest",
+        "--contract-address",
+        "@unknown",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+            Command: call
+            Error: Invalid contract address
+
+            Caused by:
+                Alias `unknown` not found in config
+        "},
+    );
 }
 
 #[test]
