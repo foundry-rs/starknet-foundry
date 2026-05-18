@@ -16,12 +16,26 @@ use thiserror::Error;
 pub struct ResponseError {
     command: String,
     error: String,
+    flat_error: String,
 }
 
 impl ResponseError {
     #[must_use]
     pub fn new(command: String, error: String) -> Self {
-        Self { command, error }
+        Self {
+            command,
+            error: error.clone(),
+            flat_error: error,
+        }
+    }
+
+    #[must_use]
+    pub fn from_anyhow(command: String, error: &anyhow::Error) -> Self {
+        Self {
+            command,
+            error: format!("{error:?}"),
+            flat_error: format!("{error:#}"),
+        }
     }
 }
 
@@ -38,7 +52,7 @@ impl Message for ResponseError {
 
     fn json(&self) -> Value {
         json!({
-            "error": self.error,
+            "error": self.flat_error,
         })
     }
 }

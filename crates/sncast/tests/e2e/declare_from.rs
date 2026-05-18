@@ -386,7 +386,10 @@ async fn test_declare_from_sierra_does_not_exist() {
         output,
         indoc! {r"
         Command: declare-from
-        Error: Failed to read sierra file at [..]contract_class.json: No such file or directory [..]
+        Error: Failed to read sierra file at [..]contract_class.json
+
+        Caused by:
+            No such file or directory [..]
         "},
     );
 }
@@ -417,7 +420,10 @@ async fn test_declare_from_sierra_invalid_json() {
         output,
         indoc! {r"
         Command: declare-from
-        Error: Failed to parse sierra file: missing field `sierra_program` at line 1 column 25
+        Error: Failed to parse sierra file
+
+        Caused by:
+            missing field `sierra_program` at line 1 column 25
         "},
     );
 }

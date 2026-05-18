@@ -223,6 +223,28 @@ async fn test_missing_account_flag() {
 }
 
 #[tokio::test]
+async fn test_missing_account_flag_json() {
+    let args = vec![
+        "--json",
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "whatever",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        r#"{"command":"declare","error":"Account name not passed nor found in snfoundry.toml","type":"error"}"#,
+    );
+}
+
+#[tokio::test]
 async fn test_inexistent_keystore() {
     let accounts_file = "empty_accounts.json";
     let temp_dir = tempfile::tempdir().expect("Unable to create a temporary directory");

@@ -36,7 +36,7 @@ fn fuzzing() {
         [PASS] fuzzing::tests::uint128_arg (runs: 256, [..]
         [PASS] fuzzing::tests::uint256_arg (runs: 256, [..]
         Running 0 test(s) from tests/
-        Tests: 12 passed, 1 failed, 0 ignored, 12 filtered out
+        Tests: 12 passed, 1 failed, 0 ignored, 13 filtered out
         Fuzzer seed: [..]
 
         Failures:
@@ -81,7 +81,7 @@ fn fuzzing_set_runs() {
         [PASS] fuzzing::tests::uint128_arg (runs: 10, [..]
         [PASS] fuzzing::tests::uint256_arg (runs: 10, [..]
         Running 0 test(s) from tests/
-        Tests: 12 passed, 1 failed, 0 ignored, 12 filtered out
+        Tests: 12 passed, 1 failed, 0 ignored, 13 filtered out
         Fuzzer seed: [..]
 
         Failures:
@@ -126,7 +126,7 @@ fn fuzzing_set_seed() {
         [PASS] fuzzing::tests::uint128_arg (runs: 256, [..]
         [PASS] fuzzing::tests::uint256_arg (runs: 256, [..]
         Running 0 test(s) from tests/
-        Tests: 12 passed, 1 failed, 0 ignored, 12 filtered out
+        Tests: 12 passed, 1 failed, 0 ignored, 13 filtered out
         Fuzzer seed: 1234
 
         Failures:
@@ -196,7 +196,7 @@ fn fuzzing_exit_first() {
         Failure data:
             0x32202b2062203d3d2032202b2062 ('2 + b == 2 + b')
 
-        Tests: 0 passed, 1 failed, 0 ignored, 23 filtered out
+        Tests: 0 passed, 1 failed, 0 ignored, 24 filtered out
         Interrupted execution of 1 test(s).
 
         Fuzzer seed: [..]
@@ -232,7 +232,7 @@ fn fuzzing_exit_first_single_fail() {
         Failures:
             fuzzing_integrationtest::exit_first_single_fail::exit_first_fails_test
 
-        Tests: 0 passed, 1 failed, 0 ignored, 23 filtered out
+        Tests: 0 passed, 1 failed, 0 ignored, 24 filtered out
         Interrupted execution of 1 test(s).
         "},
     );
@@ -260,7 +260,7 @@ fn fuzzing_multiple_attributes() {
         [PASS] fuzzing_integrationtest::multiple_attributes::with_should_panic (runs: 256, [..])
         [PASS] fuzzing_integrationtest::multiple_attributes::with_available_gas (runs: 50, [..])
         [PASS] fuzzing_integrationtest::multiple_attributes::with_both (runs: 300, [..])
-        Tests: 3 passed, 0 failed, 1 ignored, 21 filtered out
+        Tests: 3 passed, 0 failed, 1 ignored, 22 filtered out
         "},
     );
 }
@@ -286,7 +286,7 @@ fn generate_arg_cheatcode() {
             "`generate_arg` cheatcode: `min_value` must be <= `max_value`, provided values after deserialization: 101 and 100"
 
         [PASS] fuzzing_integrationtest::generate_arg::use_generate_arg_outside_fuzzer (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~[..])
-        Tests: 1 passed, 1 failed, 0 ignored, 23 filtered out
+        Tests: 1 passed, 1 failed, 0 ignored, 24 filtered out
         "#},
     );
 }
@@ -337,7 +337,40 @@ fn fuzz_generic_struct() {
         Collected 1 test(s) from fuzzing package
         Running 1 test(s) from tests/
         [PASS] fuzzing_integrationtest::generic_struct::test_generic ([..])
-        Tests: 1 passed, 0 failed, 0 ignored, 24 filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 25 filtered out
         "},
+    );
+}
+
+#[test]
+fn fuzz_derive_fuzzable() {
+    let temp = setup_package("fuzzing");
+
+    let output = test_runner(&temp)
+        .arg("derive_fuzzable")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains(
+        output,
+        indoc! { r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from fuzzing package
+        Running 1 test(s) from tests/
+        [FAIL] fuzzing_integrationtest::derive_fuzzable::test_derived_enum (runs: 1, arguments: ["OuterEnum::South(())"])
+
+        Failure data:
+            0x6578706563746564204e6f727468 ('expected North')
+
+        Tests: 0 passed, 1 failed, 0 ignored, 25 filtered out
+        Fuzzer seed: [..]
+
+        Failures:
+            fuzzing_integrationtest::derive_fuzzable::test_derived_enum
+        "#},
     );
 }

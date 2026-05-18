@@ -1,0 +1,26 @@
+---
+source: tests/integration/fuzzable.rs
+expression: format_output(&result)
+---
+impl FuzzableMultiFieldImpl<
+    T,
+    +snforge_std::fuzzable::Fuzzable<T>,
+    +core::fmt::Debug<T>,
+    +core::clone::Clone<T>,
+    A,
+    +snforge_std::fuzzable::Fuzzable<A>,
+    +core::fmt::Debug<A>,
+> of snforge_std::fuzzable::Fuzzable<MultiField<T, _, A>> {
+    fn blank() -> MultiField<T, _, A> {
+        MultiField {
+            t: snforge_std::fuzzable::Fuzzable::<T>::blank(),
+            a: snforge_std::fuzzable::Fuzzable::<A>::blank(),
+        }
+    }
+    fn generate() -> MultiField<T, _, A> {
+        MultiField {
+            t: snforge_std::fuzzable::Fuzzable::<T>::generate(),
+            a: snforge_std::fuzzable::Fuzzable::<A>::generate(),
+        }
+    }
+}

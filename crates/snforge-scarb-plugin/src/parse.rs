@@ -12,12 +12,12 @@ use cairo_lang_utils::Upcast;
 
 pub fn parse<T: AttributeInfo>(
     code: &TokenStream,
-) -> Result<(SimpleParserDatabase, FunctionWithBody), Diagnostic> {
+) -> Result<(SimpleParserDatabase, FunctionWithBody), Vec<Diagnostic>> {
     let simple_db = SimpleParserDatabase::default();
     let (parsed_node, diagnostics) = simple_db.parse_token_stream(code);
 
-    if !diagnostics.is_empty() {
-        return Err(Diagnostic::error("Failed because of invalid syntax"));
+    if diagnostics.check_error_free().is_err() {
+        return Err(vec![]);
     }
 
     let db = simple_db.upcast();
@@ -34,7 +34,7 @@ pub fn parse<T: AttributeInfo>(
 
     match function {
         Some(func) => Ok((simple_db, func)),
-        None => Err(T::error("can be used only on a function")),
+        None => Err(vec![T::error("can be used only on a function")]),
     }
 }
 

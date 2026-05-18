@@ -108,3 +108,13 @@ pub impl FuzzableContractAddress of Fuzzable<ContractAddress> {
         arg.try_into().expect('Should be a valid address')
     }
 }
+
+pub impl FuzzableUnitType of Fuzzable<()> {
+    fn blank() -> () {
+        ()
+    }
+
+    fn generate() -> () {
+        ()
+    }
+}
