@@ -9,7 +9,7 @@ pub struct FailedTestsCache {
     cache_file: Utf8PathBuf,
 }
 
-const FILE_WITH_PREV_TESTS_FAILED: &str = ".prev_tests_failed";
+pub(crate) const FILE_WITH_PREV_TESTS_FAILED: &str = ".prev_tests_failed";
 
 impl FailedTestsCache {
     #[must_use]

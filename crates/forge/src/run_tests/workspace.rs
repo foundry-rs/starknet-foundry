@@ -15,8 +15,9 @@ use crate::{
 };
 use anyhow::Result;
 use forge_runner::partition::PartitionConfig;
+use forge_runner::resolve_cache_dir;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
-use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
+use forge_runner::test_target_summary::TestTargetSummary;
 use foundry_ui::UI;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use scarb_api::{
@@ -104,8 +105,7 @@ pub async fn execute_workspace(
     let mut total_filtered_count = 0;
     let mut exit_first_channel = ExitFirstChannel::new();
 
-    let workspace_root = &scarb_metadata.workspace.root;
-    let cache_dir = workspace_root.join(CACHE_DIR);
+    let cache_dir = resolve_cache_dir(&scarb_metadata.workspace.root)?;
     let packages_len = packages.len();
 
     let partitioning_config = get_partitioning_config(args, &ui, &packages, &artifacts_dir_path)?;
