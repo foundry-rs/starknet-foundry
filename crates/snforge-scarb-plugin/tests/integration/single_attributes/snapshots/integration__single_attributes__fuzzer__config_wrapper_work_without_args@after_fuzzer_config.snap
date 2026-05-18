@@ -1,0 +1,15 @@
+---
+source: tests/integration/single_attributes/fuzzer.rs
+expression: format_output(&result)
+---
+fn empty_fn() {
+    if snforge_std::_internals::is_config_run() {
+        let mut data = array![];
+        snforge_std::_internals::config_types::FuzzerConfig {
+            seed: Option::None, runs: Option::None,
+        }
+            .serialize(ref data);
+        starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
+        return Default::default();
+    }
+}

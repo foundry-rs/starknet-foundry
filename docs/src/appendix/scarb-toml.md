@@ -120,6 +120,19 @@ See [`inlining-strategy`](https://docs.swmansion.com/scarb/docs/reference/manife
 inlining-strategy = "avoid"
 ```
 
+#### `enable-gas`
+See [`enable-gas`](https://docs.swmansion.com/scarb/docs/reference/manifest.html#enable-gas) in Scarb documentation.
+
+`snforge test` requires gas calculation to be enabled and rejects packages where it is disabled.
+The default value is `true`, so you typically do not need to set this.
+Setting it to `false` (for example, to support an [executable target](https://docs.swmansion.com/scarb/docs/reference/targets.html#executable-target) in the same package) makes tests in that package unrunnable with `snforge test`.
+In that case, use **profile separation**: keep gas enabled in the profile used for tests (for example `dev`), and disable it only in the profile used to build the executable.
+
+```toml
+[profile.dev.cairo]
+enable-gas = true
+```
+
 #### Example of configuration which allows [coverage](https://foundry-rs.github.io/starknet-foundry/testing/coverage.html) report generation
 ```toml
 [profile.dev.cairo]

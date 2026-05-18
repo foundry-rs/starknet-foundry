@@ -1,0 +1,16 @@
+---
+source: tests/integration/fuzzable.rs
+expression: format_output(&result)
+---
+impl FuzzableSingleImpl<> of snforge_std::fuzzable::Fuzzable<Single<>> {
+    fn blank() -> Single<> {
+        Single::Only
+    }
+    fn generate() -> Single<> {
+        let variant_idx = snforge_std::fuzzable::generate_arg(0, 0);
+        match variant_idx {
+            0 => { Single::Only },
+            _ => panic!("unexpected value of generate_arg cheatcode"),
+        }
+    }
+}

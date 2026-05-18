@@ -1,4 +1,4 @@
-use crate::utils::{assert_diagnostics, assert_output, empty_function};
+use crate::utils::{assert_diagnostics, empty_function, format_output};
 use cairo_lang_macro::{Diagnostic, quote};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::fork::fork;
@@ -94,24 +94,7 @@ fn accepts_string() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        r#"
-            fn empty_fn() {
-                if snforge_std::_internals::is_config_run() {
-
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::ForkConfig::Named("test")
-                        .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_fork'>(data.span());
-
-                    return;
-                }
-            }
-        "#,
-    );
+    insta::assert_snapshot!(format_output(&result));
 }
 
 #[test]
@@ -142,29 +125,7 @@ fn accepts_inline_config() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        r#"
-            fn empty_fn() {
-                if snforge_std::_internals::is_config_run() {
-
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::ForkConfig::Inline(
-                        snforge_std::_internals::config_types::InlineForkConfig {
-                            url: "http://example.com/",
-                            block: snforge_std::_internals::config_types::BlockId::BlockNumber(0x17)
-                        }
-                    )
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_fork'>(data.span());
-
-                    return;
-                }
-            }
-        "#,
-    );
+    insta::assert_snapshot!(format_output(&result));
 }
 
 #[test]
@@ -175,29 +136,7 @@ fn overriding_config_name_first() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        r#"
-            fn empty_fn() {
-                if snforge_std::_internals::is_config_run() {
-
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::ForkConfig::Overridden(
-                        snforge_std::_internals::config_types::OverriddenForkConfig {
-                            block: snforge_std::_internals::config_types::BlockId::BlockNumber(0x17),
-                            name: "MAINNET"
-                        }
-                     )
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_fork'>(data.span());
-
-                    return;
-                }
-            }
-        "#,
-    );
+    insta::assert_snapshot!(format_output(&result));
 }
 
 #[test]
@@ -208,29 +147,7 @@ fn overriding_config_name_second() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        r#"
-            fn empty_fn() {
-                if snforge_std::_internals::is_config_run() {
-
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::ForkConfig::Overridden(
-                        snforge_std::_internals::config_types::OverriddenForkConfig {
-                            block: snforge_std::_internals::config_types::BlockId::BlockNumber(0x17),
-                            name: "MAINNET"
-                        }
-                    )
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_fork'>(data.span());
-
-                    return;
-                }
-            }
-        "#,
-    );
+    insta::assert_snapshot!(format_output(&result));
 }
 
 #[test]

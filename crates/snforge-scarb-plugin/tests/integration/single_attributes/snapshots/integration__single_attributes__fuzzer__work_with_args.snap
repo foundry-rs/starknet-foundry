@@ -1,0 +1,7 @@
+---
+source: tests/integration/single_attributes/fuzzer.rs
+expression: format_output(&result)
+---
+#[__fuzzer_config(runs: 655, seed: 32872357)]
+#[__fuzzer_wrapper]
+fn empty_fn() {}

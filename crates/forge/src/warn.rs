@@ -13,8 +13,8 @@ use std::env;
 use std::sync::Arc;
 use url::Url;
 
-pub(crate) async fn warn_if_incompatible_rpc_version(
-    test_targets: &[TestTargetWithResolvedConfig],
+pub(crate) async fn warn_if_incompatible_rpc_version<'a>(
+    test_targets: impl IntoIterator<Item = &'a TestTargetWithResolvedConfig>,
     ui: Arc<UI>,
 ) -> Result<()> {
     let mut urls = HashSet::<Url>::new();

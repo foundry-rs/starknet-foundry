@@ -294,7 +294,52 @@ fn with_exact_filter() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] simple_package_integrationtest::test_simple::test_two [..]
-        Tests: 1 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 12 filtered out
+        "},
+    );
+}
+
+#[test]
+fn exact_filter_does_not_resolve_config_for_filtered_out_tests() {
+    let temp = setup_package("lazy_config_filtering");
+
+    let output = test_runner(&temp)
+        .args(["--exact", "lazy_config_filtering::tests::selected_exact"])
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from lazy_config_filtering package
+        Running 1 test(s) from src/
+        [PASS] lazy_config_filtering::tests::selected_exact [..]
+        Tests: 1 passed, 0 failed, 0 ignored, 1 filtered out
+        "},
+    );
+}
+
+#[test]
+fn match_filter_does_not_resolve_config_for_filtered_out_tests() {
+    let temp = setup_package("lazy_config_filtering");
+
+    let output = test_runner(&temp).arg("selected").assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from lazy_config_filtering package
+        Running 1 test(s) from src/
+        [PASS] lazy_config_filtering::tests::selected_exact [..]
+        Tests: 1 passed, 0 failed, 0 ignored, 1 filtered out
         "},
     );
 }
@@ -466,7 +511,7 @@ fn with_exact_filter_and_duplicated_test_names() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] duplicated_test_names_integrationtest::tests_a::test_simple [..]
-        Tests: 1 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 1 filtered out
         "},
     );
 }
@@ -989,7 +1034,6 @@ fn should_panic() {
 
 #[ignore = "TODO Restore this test once there are at least 2 versions supporting v2 macros"]
 #[test]
-// #[cfg_attr(feature = "skip_test_for_only_latest_scarb", ignore = "Plugin checks skipped")]
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");

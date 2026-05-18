@@ -1,6 +1,8 @@
 use crate::shared_cache::FailedTestsCache;
 use anyhow::Result;
-use forge_runner::filtering::{ExcludeReason, FilterResult, TestCaseFilter, TestCaseIsIgnored};
+use forge_runner::filtering::{
+    ExcludeReason, FilterResult, NameFilter, TestCaseFilter, TestCaseIsIgnored,
+};
 use forge_runner::package_tests::TestCase;
 use forge_runner::package_tests::with_config_resolved::{
     TestCaseWithResolvedConfig, sanitize_test_case_name,
@@ -21,13 +23,6 @@ pub struct TestsFilter {
 
     failed_tests_cache: FailedTestsCache,
     pub(crate) partitioning_config: PartitionConfig,
-}
-
-#[derive(Debug, PartialEq)]
-pub(crate) enum NameFilter {
-    All,
-    Match(String),
-    ExactMatch(String),
 }
 
 #[derive(Debug, PartialEq)]
@@ -64,19 +59,8 @@ impl TestsFilter {
             IgnoredFilter::ExcludeIgnored
         };
 
-        let name_filter = if exact_match {
-            NameFilter::ExactMatch(
-                test_name_filter
-                    .expect("Argument test_name_filter cannot be None with exact_match"),
-            )
-        } else if let Some(name) = test_name_filter {
-            NameFilter::Match(name)
-        } else {
-            NameFilter::All
-        };
-
         Self {
-            name_filter,
+            name_filter: NameFilter::from_flags(test_name_filter, exact_match),
             ignored_filter,
             last_failed_filter: rerun_failed,
             skip_filter: skip,
@@ -85,35 +69,11 @@ impl TestsFilter {
         }
     }
 
-    fn is_in_partition(&self, sanitized_name: &str) -> bool {
-        match &self.partitioning_config {
-            PartitionConfig::Disabled => true,
-            PartitionConfig::Enabled {
-                partition,
-                partition_map,
-            } => {
-                let idx = partition_map
-                    .get_assigned_index(sanitized_name)
-                    .expect("Partition map must contain all test cases");
-                idx == partition.index()
-            }
-        }
-    }
-
     pub(crate) fn filter_tests(
         &self,
         test_cases: &mut Vec<TestCaseWithResolvedConfig>,
     ) -> Result<()> {
-        match &self.name_filter {
-            NameFilter::All => {}
-            NameFilter::Match(filter) => {
-                test_cases.retain(|tc| tc.name.contains(filter));
-            }
-
-            NameFilter::ExactMatch(name) => {
-                test_cases.retain(|tc| tc.name == *name);
-            }
-        }
+        test_cases.retain(|tc| self.name_filter.matches(&tc.name));
 
         if self.last_failed_filter {
             match self.failed_tests_cache.load()?.as_slice() {
@@ -148,7 +108,10 @@ impl TestCaseFilter for TestsFilter {
         // Order of filter checks matters, because we do not want to display a test as ignored if
         // it was excluded due to partitioning.
         let sanitized_test_case_name = sanitize_test_case_name(&test_case.name);
-        if !self.is_in_partition(&sanitized_test_case_name) {
+        if !self
+            .partitioning_config
+            .is_in_partition(&sanitized_test_case_name)
+        {
             return FilterResult::Excluded(ExcludeReason::ExcludedFromPartition);
         }
 

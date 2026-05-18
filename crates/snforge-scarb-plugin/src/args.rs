@@ -3,7 +3,7 @@ use crate::attributes::{AttributeInfo, ErrorExt};
 use cairo_lang_macro::Diagnostic;
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::{
-    Terminal,
+    Terminal, TypedSyntaxNode,
     ast::{ArgClause, Expr, OptionArgListParenthesized},
 };
 use smol_str::SmolStr;
@@ -67,12 +67,35 @@ impl Arguments {
     }
 
     #[inline]
-    pub fn named_only<T: AttributeInfo>(&self) -> Result<&NamedArgs, Diagnostic> {
-        if self.shorthand.is_empty() && self.unnamed.is_empty() {
-            Ok(&self.named)
-        } else {
-            Err(T::error("can be used with named arguments only"))
+    pub fn named_only<T: AttributeInfo>(
+        &self,
+        db: &SimpleParserDatabase,
+        allowed: &[&str],
+    ) -> Result<&NamedArgs, Diagnostic> {
+        if !self.shorthand.is_empty() || !self.unnamed.is_empty() {
+            let mut found: Vec<(usize, String)> = Vec::new();
+
+            for (&pos, expr) in &self.unnamed {
+                found.push((pos, expr.as_syntax_node().get_text(db).trim().to_string()));
+            }
+            for (&pos, name) in &self.shorthand {
+                found.push((pos, name.to_string()));
+            }
+            found.sort_by_key(|(pos, _)| *pos);
+
+            let possible = allowed.join(", ");
+            let invalid = found
+                .into_iter()
+                .map(|(_, text)| text)
+                .collect::<Vec<_>>()
+                .join(", ");
+
+            return Err(T::error(format!(
+                "can be used with named arguments only [possible values: {possible}]. invalid arguments found: {invalid}",
+            )));
         }
+        self.named.allow_only::<T>(allowed)?;
+        Ok(&self.named)
     }
 
     #[inline]

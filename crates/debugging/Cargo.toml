@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 blockifier.workspace = true
+cairo-annotations.workspace = true
 cairo-lang-sierra.workspace = true
 cairo-lang-sierra-to-casm.workspace = true
 cairo-lang-starknet-classes.workspace = true

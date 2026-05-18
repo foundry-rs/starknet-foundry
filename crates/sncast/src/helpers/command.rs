@@ -30,7 +30,7 @@ where
             ExitCode::SUCCESS
         }
         Err(err) => {
-            let err = ResponseError::new(command.to_string(), format!("{err:#}"));
+            let err = ResponseError::from_anyhow(command.to_string(), &err);
             ui.print_error(command, err);
             ExitCode::FAILURE
         }
