@@ -17,6 +17,7 @@ set -euo pipefail
 
 REPO="foundry-rs/starknet-foundry"
 IGNORE_TEAM="starknet-foundry"
+PR_FETCH_LIMIT=50
 SLACK_WEBHOOK_URL="${SLACK_WEBHOOK_URL:-}"
 
 # Dependency check.
@@ -36,9 +37,9 @@ echo "Fetching pending review requests from: $REPO..." >&2
 # Pull current pending reviewers + ReviewRequestedEvent timestamps via GraphQL.
 # shellcheck disable=SC2016  # $owner/$name are GraphQL variables, not shell.
 QUERY='
-query($owner: String!, $name: String!) {
+query($owner: String!, $name: String!, $prFetchLimit: Int!) {
   repository(owner: $owner, name: $name) {
-    pullRequests(first: 50, states: OPEN, orderBy: {field: UPDATED_AT, direction: DESC}) {
+    pullRequests(first: $prFetchLimit, states: OPEN, orderBy: {field: UPDATED_AT, direction: DESC}) {
       nodes {
         title
         url
@@ -75,7 +76,7 @@ query($owner: String!, $name: String!) {
 # Emit a JSON array, one object per (reviewer, PR) pair.
 # Sorted by reviewer asc, then waiting time desc.
 ROWS_JSON=$(gh api graphql -f query="$QUERY" \
-        -F owner="${REPO%/*}" -F name="${REPO#*/}" \
+        -F owner="${REPO%/*}" -F name="${REPO#*/}" -F prFetchLimit="$PR_FETCH_LIMIT" \
     | jq --arg ignore_team "$IGNORE_TEAM" '
       [
         .data.repository.pullRequests.nodes[]
