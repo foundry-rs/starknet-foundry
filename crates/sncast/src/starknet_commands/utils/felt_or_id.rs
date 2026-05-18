@@ -22,7 +22,6 @@ impl FeltOrId {
         self.0.strip_prefix(ID_PREFIX)
     }
 
-
     /// If `@ID`, resolve the felt value corresponding to the ID from the config aliases.
     /// Otherwise, parse it as felt.
     pub fn resolve_alias_or_felt(&self, config: &CastConfig) -> Result<Felt> {
@@ -62,24 +61,24 @@ mod tests {
     }
 
     #[test]
-    fn resolve_alias_or_felt_hex() {
+    fn test_resolve_alias_id() {
+        let mut aliases = BTreeMap::new();
+        aliases.insert("foo".into(), Felt::from(2));
+        let config = config_with_aliases(aliases);
+
+        let input = FeltOrId::new("@foo".into());
+        assert_eq!(input.resolve_alias_or_felt(&config).unwrap(), Felt::from(2));
+    }
+
+    #[test]
+    fn test_resolve_alias_felt() {
         let config = CastConfig::default();
         let input = FeltOrId::new("0x1".into());
         assert_eq!(input.resolve_alias_or_felt(&config).unwrap(), Felt::from(1));
     }
 
     #[test]
-    fn resolve_alias_or_felt_at_prefix() {
-        let mut aliases = BTreeMap::new();
-        aliases.insert("x".into(), Felt::from(2));
-        let config = config_with_aliases(aliases);
-
-        let input = FeltOrId::new("@x".into());
-        assert_eq!(input.resolve_alias_or_felt(&config).unwrap(), Felt::from(2));
-    }
-
-    #[test]
-    fn resolve_alias_or_felt_unknown_alias() {
+    fn test_resolve_alias_unknown() {
         let config = CastConfig::default();
         let input = FeltOrId::new("@missing".into());
         let result = input.resolve_alias_or_felt(&config);
@@ -91,7 +90,7 @@ mod tests {
     }
 
     #[test]
-    fn resolve_alias_or_felt_empty_alias_name() {
+    fn test_resolve_alias_empty_alias() {
         let config = CastConfig::default();
         let input = FeltOrId::new("@".into());
         let result = input.resolve_alias_or_felt(&config);
