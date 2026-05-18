@@ -2,8 +2,8 @@ name: 'Notify about pending review requests'
 
 on:
   schedule:
-    # Monday, Wednesday, Friday at 06:00 UTC.
-    - cron: '0 6 * * 1,3,5'
+    # Monday to Friday at 06:00 UTC.
+    - cron: '0 6 * * 1-5'
   workflow_dispatch:
 
 jobs:
