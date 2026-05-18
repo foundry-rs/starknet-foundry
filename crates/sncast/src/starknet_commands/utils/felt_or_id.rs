@@ -22,6 +22,9 @@ impl FeltOrId {
         self.0.strip_prefix(ID_PREFIX)
     }
 
+
+    /// If `@ID`, resolve the felt value corresponding to the ID from the config aliases.
+    /// Otherwise, parse it as felt.
     pub fn resolve_alias_or_felt(&self, config: &CastConfig) -> Result<Felt> {
         if let Some(name) = self.as_id() {
             if name.is_empty() {
