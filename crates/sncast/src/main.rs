@@ -243,10 +243,7 @@ impl Arguments {
 }
 
 pub fn calldata_to_felts(calldata: &[String]) -> Result<Vec<Felt>> {
-    calldata
-        .iter()
-        .map(|data| felt_from_string(data))
-        .collect()
+    calldata.iter().map(|data| felt_from_string(data)).collect()
 }
 
 impl From<DeployArguments> for Arguments {
