@@ -1,4 +1,5 @@
 pub mod account;
+pub mod alias;
 pub mod balance;
 pub mod call;
 pub mod cast_message;
