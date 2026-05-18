@@ -41,7 +41,7 @@ mod warn;
 
 pub const CAIRO_EDITION: &str = "2024_07";
 
-const MINIMAL_SCARB_VERSION: Version = Version::new(2, 12, 0);
+const MINIMAL_SCARB_VERSION: Version = Version::new(2, 13, 1);
 const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 16, 1);
 const MAXIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 18, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
