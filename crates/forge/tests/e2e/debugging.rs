@@ -1,3 +1,5 @@
+use crate::assert_cleaned_output;
+
 use super::common::runner::{setup_package, test_runner};
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stdout_contains;
@@ -170,6 +172,51 @@ fn debugging_double_flags() {
         "});
 }
 
+#[test]
+fn debugging_trace_events_component_only() {
+    let temp = setup_package("debugging_events");
+
+    let output = test_runner(&temp)
+        .arg("test_debugging_trace_events_component")
+        .arg("--trace-components")
+        .arg("events")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
+        .assert()
+        .success();
+
+    assert_cleaned_output!(output);
+}
+
+#[test]
+fn debugging_trace_multiple_events_component() {
+    let temp = setup_package("debugging_events");
+
+    let output = test_runner(&temp)
+        .arg("test_debugging_trace_multiple_events")
+        .arg("--trace-components")
+        .arg("events")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
+        .assert()
+        .success();
+
+    assert_cleaned_output!(output);
+}
+
+#[test]
+fn debugging_trace_events_component_empty_list() {
+    let temp = setup_package("debugging_events");
+
+    let output = test_runner(&temp)
+        .arg("test_debugging_trace_eventless_success")
+        .arg("--trace-components")
+        .arg("events")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
+        .assert()
+        .success();
+
+    assert_cleaned_output!(output);
+}
+
 fn test_output(trace_message_fn: fn(&str, &str) -> String, package_name: &str) -> String {
     formatdoc! {r"
         [..]Compiling[..]
@@ -209,6 +256,7 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │  ├─ [caller address] [..]
         │  ├─ [call type] Call
         │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  ├─ [events] [Event {{ keys: [[..]], data: [0x2] }}]
         │  ├─ [L2 gas] [..]
         │  ├─ [selector] execute_calls
         │  │  ├─ [contract name] SimpleContract
@@ -218,6 +266,7 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │  │  ├─ [caller address] [..]
         │  │  ├─ [call type] Call
         │  │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  │  ├─ [events] [Event {{ keys: [[..]], data: [0x2] }}]
         │  │  ├─ [L2 gas] [..]
         │  │  ├─ [selector] execute_calls
         │  │  │  ├─ [contract name] SimpleContract
@@ -227,6 +276,7 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │  │  │  ├─ [caller address] [..]
         │  │  │  ├─ [call type] Call
         │  │  │  ├─ [call result] success: array![]
+        │  │  │  ├─ [events] [Event {{ keys: [[..]], data: [0x0] }}]
         │  │  │  └─ [L2 gas] [..]
         │  │  └─ [selector] execute_calls
         │  │     ├─ [contract name] SimpleContract
@@ -236,6 +286,7 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │  │     ├─ [caller address] [..]
         │  │     ├─ [call type] Call
         │  │     ├─ [call result] success: array![]
+        │  │     ├─ [events] [Event {{ keys: [[..]], data: [0x0] }}]
         │  │     └─ [L2 gas] [..]
         │  └─ [selector] execute_calls
         │     ├─ [contract name] SimpleContract
@@ -245,6 +296,7 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │     ├─ [caller address] [..]
         │     ├─ [call type] Call
         │     ├─ [call result] success: array![]
+        │     ├─ [events] [Event {{ keys: [[..]], data: [0x0] }}]
         │     └─ [L2 gas] [..]
         └─ [selector] fail
            ├─ [contract name] SimpleContract
