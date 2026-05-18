@@ -53,7 +53,7 @@ fn test_call_with_contract_alias() {
         "--block-id",
         "latest",
         "--contract-address",
-        "@my-map",
+        "@map",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
