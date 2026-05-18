@@ -82,6 +82,7 @@ pub struct RunForPackageArgs {
 
 impl RunForPackageArgs {
     #[tracing::instrument(skip_all, level = "debug")]
+    #[expect(clippy::too_many_arguments)]
     pub fn build(
         package: PackageMetadata,
         scarb_metadata: &Metadata,
@@ -89,6 +90,7 @@ impl RunForPackageArgs {
         cache_dir: &Utf8PathBuf,
         artifacts_dir: &Utf8Path,
         partitioning_config: PartitionConfig,
+        predeployed_contracts: Option<&ContractsData>,
         ui: &UI,
     ) -> Result<RunForPackageArgs> {
         let mut raw_test_targets = load_test_artifacts(artifacts_dir, &package)?;
@@ -103,7 +105,10 @@ impl RunForPackageArgs {
                 run_native: args.run_native,
             },
         )?;
-        let contracts_data = ContractsData::try_from(contracts)?;
+        let mut contracts_data = ContractsData::try_from(contracts)?;
+        if let Some(predeployed_contracts) = predeployed_contracts {
+            contracts_data.try_extend(predeployed_contracts)?;
+        }
 
         let forge_config_from_scarb =
             load_package_config::<ForgeConfigFromScarb>(scarb_metadata, &package.id)?;

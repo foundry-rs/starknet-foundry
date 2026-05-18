@@ -1,10 +1,29 @@
 # Predeployed contracts
 
-`snforge` provides a set of predeployed contracts for use in testing. To support this functionality, we maintain CASM of these contracts directly within our codebase. Because these contracts are subject to periodic updates, these files need to be updated. The list below details all predeployed contracts and the information required to keep them current.
+`snforge` provides a set of predeployed contracts for use in testing. Their artifacts are generated from pinned upstream
+sources with `scripts/setup_predeployed_contracts.sh` and embedded in gzipped form to reduce the size of the final
+binary.
 
-## Adding new predeployed contract
+The generated `*.json.gz` files are not tracked in git. Before building crates that depend on `forge` or `cheatnet`,
+run:
 
-To add a new predeployed contract, you need to add a new subdirectory with the name of the contract to the `crates/cheatnet/src/data/predeployed_contracts` directory. Then, you need to add artifact files to this subdirectory. CASM files should be renamed to `casm.json`.
+```shell
+$ ./scripts/setup_predeployed_contracts.sh
+```
+
+## List of predeployed contracts
+
+| Token | Contract Name | Source Code (Cairo) | Class on Mainnet | Commit Hash | Version |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **STRK** | `ERC20Lockable` | [View Source](https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/strk/src/erc20_lockable.cairo) | [`0x02e7...98fc`](https://voyager.online/class/0x02e77ee61d4df3d988ee1f42ea5442e913862cc82c2584d212ecda76666498fc) | [`07e11c3`](https://github.com/starknet-io/starkgate-contracts/commit/07e11c39119a10d5742735be5b1d51894ebf5311) | `v3.0.0` |
+| **ETH** | `ERC20Mintable` | [View Source](https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/sg_token/src/erc20_mintable.cairo) | [`0x00b4...4ec`](https://voyager.online/class/0x00b45dbc3714180381c5680e41931172d67194d77d504413465390e0bef194ec) | [`07e11c3`](https://github.com/starknet-io/starkgate-contracts/commit/07e11c39119a10d5742735be5b1d51894ebf5311) | `v3.0.0` |
+
+## Updating predeployed contracts
+
+To add a new predeployed contract or update an existing one, extend the generator script so that it writes `casm.json.gz` and `sierra.json.gz` into a
+new subdirectory under `crates/cheatnet/src/data/predeployed_contracts`.
+
+Also, update list of artifacts in the `.github/actions/restore-predeployed-contracts/action.yml` workflow and in `crates/cheatnet/build.rs`.
 
 > 📝 **Note**
 >
@@ -13,70 +32,12 @@ To add a new predeployed contract, you need to add a new subdirectory with the n
 Structure of `predeployed_contracts` directory should be as follows:
 
 ```shell
-$ tree
-.
+$ tree crates/cheatnet/src/data/predeployed_contracts
+crates/cheatnet/src/data/predeployed_contracts
 ├── ERC20Lockable
-│   └── casm.json
-├── ERC20Mintable
-│   └── casm.json
-└── <Other contract>
-    └── casm.json
+│   ├── casm.json.gz
+│   └── sierra.json.gz
+└── ERC20Mintable
+    ├── casm.json.gz
+    └── sierra.json.gz
 ```
-
-## Updating existing predeployed contracts
-
-### STRK and ETH 
-
-These contracts are sourced from the [starkgate-contracts](https://github.com/starknet-io/starkgate-contracts) repository.
-
-**Current Build Configuration:**
-- **Version:** `v3.0.0`
-- **Commit Hash:** [`07e11c3`](https://github.com/starknet-io/starkgate-contracts/commit/07e11c39119a10d5742735be5b1d51894ebf5311)
-
-| Token | Contract Name | Source Code (Cairo) | Class on Mainnet |
-| :--- | :--- | :--- | :--- |
-| **STRK** | `ERC20Lockable` | [View Source](https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/strk/src/erc20_lockable.cairo) | [`0x02e7...98fc`](https://voyager.online/class/0x02e77ee61d4df3d988ee1f42ea5442e913862cc82c2584d212ecda76666498fc) |
-| **ETH** | `ERC20Mintable` | [View Source](https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/sg_token/src/erc20_mintable.cairo) | [`0x00b4...4ec`](https://voyager.online/class/0x00b45dbc3714180381c5680e41931172d67194d77d504413465390e0bef194ec) |
-
-Steps to update STRK and ETH predeployed contracts:
-
-1. Clone `starkgate-contracts` repository and checkout `v3.0.0` tag.
-
-    ```shell
-    git clone https://github.com/starknet-io/starkgate-contracts
-    cd starkgate-contracts
-    git checkout v3.0.0
-    ```
-
-2. Enable CASM generation by adding the following lines to `Scarb.toml`.
-This should be done in `sg_token` and `strk` packages.
-
-    ```toml
-    ...
-
-    [[target.starknet-contract]]
-    casm = true
-
-    ...
-    ```
-
-3. Adjust compiler configuration in workspace `Scarb.toml`:
-
-    ```toml
-    ...
-
-    [profile.release.cairo]
-    add-statements-code-locations-debug-info = true
-    add-statements-functions-debug-info = true
-    panic-backtrace = true
-
-    ...
-    ```
-
-4. Compile contracts with `scarb`
-
-    ```shell
-    scarb --release build
-    ```
-
-5. Visit `target/release` directory and copy relevant artifacts into relevant `predeployed_contracts` subdirectories in `cheatnet` codebase.

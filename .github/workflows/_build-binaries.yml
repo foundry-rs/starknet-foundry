@@ -12,9 +12,13 @@ on:
         type: string
 
 jobs:
+  prepare-predeployed-contracts:
+    uses: ./.github/workflows/_prepare-predeployed-contracts.yml
+
   build-binaries:
     name: Build ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
+    needs: prepare-predeployed-contracts
 
     env:
       # Cross-compiled targets will override this to `cross`.
@@ -57,6 +61,9 @@ jobs:
         if: inputs.ref == ''
         uses: actions/checkout@v6
 
+      - uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47
+      - uses: ./.github/actions/restore-predeployed-contracts
+
       - name: Setup rust
         run: |
           rustup target add ${{ matrix.target }}
@@ -70,6 +77,8 @@ jobs:
         shell: bash
         run: |
           echo "CARGO=cross" >> $GITHUB_ENV
+
+      - uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47
 
       - name: Build
         run: ${{ env.CARGO }} build --release --locked --bins --target ${{ matrix.target }}

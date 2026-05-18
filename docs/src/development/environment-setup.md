@@ -49,6 +49,13 @@ Install [starknet-devnet](https://github.com/0xSpaceShard/starknet-devnet) via [
 Install the latest [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler) version.
 
 ## Running Tests
+Before running tests that compile `forge`, `forge_runner`, `cheatnet`, or `sncast`, generate the predeployed contract
+artifacts:
+
+```shell
+$ ./scripts/setup_predeployed_contracts.sh
+```
+
 Tests can be run with:
 
 ```shell

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- Predeployed contracts are now supported in debugging traces and backtrace
+
 #### Changed
 
 - `snforge_scarb_plugin` diagnostics for named-argument kind violations now include both possible values and invalid arguments found.
@@ -18,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bug in forge debugging and `--gas-report` that caused panic in case of a call to non-existent selector
 - `snforge test` now fails fast and explicitly when `[cairo] enable-gas = false`. Read more in [`Scarb.toml` reference](https://foundry-rs.github.io/starknet-foundry/appendix/scarb-toml.html#enable-gas).
+- Permitted minter storage value of ETH predeployed contract, has now the same value as on mainnet
 
 ### Cast
 
