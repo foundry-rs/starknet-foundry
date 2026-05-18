@@ -1,0 +1,19 @@
+---
+source: tests/integration/fuzzable.rs
+expression: format_output(&result)
+---
+impl FuzzableMaybeImpl<
+    T, +snforge_std::fuzzable::Fuzzable<T>, +core::fmt::Debug<T>, +core::clone::Clone<T>,
+> of snforge_std::fuzzable::Fuzzable<Maybe<T, _>> {
+    fn blank() -> Maybe<T, _> {
+        Maybe::Nothing
+    }
+    fn generate() -> Maybe<T, _> {
+        let variant_idx = snforge_std::fuzzable::generate_arg(0, 1);
+        match variant_idx {
+            0 => { Maybe::Nothing },
+            1 => { Maybe::Just(snforge_std::fuzzable::Fuzzable::<T>::generate()) },
+            _ => panic!("unexpected value of generate_arg cheatcode"),
+        }
+    }
+}

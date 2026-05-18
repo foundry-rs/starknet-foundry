@@ -8,7 +8,6 @@ use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
-use foundry_ui::components::warning::WarningMessage;
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
 use sncast::helpers::configuration::CastConfig;
@@ -87,14 +86,6 @@ pub async fn import(
     config: &CastConfig,
     ui: &UI,
 ) -> Result<AccountImportResponse> {
-    // TODO(#3556): Remove this warning once we drop Argent account type
-    if import.account_type == AccountType::Argent {
-        ui.print_warning(WarningMessage::new(
-                "Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account import` is deprecated, please use `ready` instead.",
-            ));
-        ui.print_blank_line();
-    }
-
     let (signer_type, public_key) = if let Some(ledger_path) = import.ledger_key_locator.resolve(ui)
     {
         let public_key = ledger::get_ledger_public_key(&ledger_path, ui).await?;

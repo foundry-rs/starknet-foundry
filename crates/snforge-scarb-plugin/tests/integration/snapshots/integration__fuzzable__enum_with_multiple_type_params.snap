@@ -1,0 +1,24 @@
+---
+source: tests/integration/fuzzable.rs
+expression: format_output(&result)
+---
+impl FuzzableEitherImpl<
+    L,
+    +snforge_std::fuzzable::Fuzzable<L>,
+    +core::fmt::Debug<L>,
+    R,
+    +snforge_std::fuzzable::Fuzzable<R>,
+    +core::fmt::Debug<R>,
+> of snforge_std::fuzzable::Fuzzable<Either<L, R>> {
+    fn blank() -> Either<L, R> {
+        Either::Left(snforge_std::fuzzable::Fuzzable::<L>::blank())
+    }
+    fn generate() -> Either<L, R> {
+        let variant_idx = snforge_std::fuzzable::generate_arg(0, 1);
+        match variant_idx {
+            0 => { Either::Left(snforge_std::fuzzable::Fuzzable::<L>::generate()) },
+            1 => { Either::Right(snforge_std::fuzzable::Fuzzable::<R>::generate()) },
+            _ => panic!("unexpected value of generate_arg cheatcode"),
+        }
+    }
+}

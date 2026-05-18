@@ -57,7 +57,7 @@ pub fn run_script_command(
                 // TODO(#3959) Remove `base_ui`
                 ui.base_ui(),
             )
-            .expect("Failed to build artifacts");
+            .context("Failed to build artifacts")?;
             // TODO(#2042): remove duplicated compilation
             build(
                 &package_metadata,
@@ -68,7 +68,7 @@ pub fn run_script_command(
                 },
                 "dev",
             )
-            .expect("Failed to build script");
+            .context("Failed to build script")?;
             let metadata_with_deps = get_scarb_metadata_with_deps(&manifest_path)?;
 
             let chain_id = runtime.block_on(get_chain_id(&provider))?;

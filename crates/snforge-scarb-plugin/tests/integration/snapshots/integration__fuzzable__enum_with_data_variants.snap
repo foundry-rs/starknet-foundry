@@ -1,0 +1,18 @@
+---
+source: tests/integration/fuzzable.rs
+expression: format_output(&result)
+---
+impl FuzzableColorImpl<> of snforge_std::fuzzable::Fuzzable<Color<>> {
+    fn blank() -> Color<> {
+        Color::Red(snforge_std::fuzzable::Fuzzable::<u8>::blank())
+    }
+    fn generate() -> Color<> {
+        let variant_idx = snforge_std::fuzzable::generate_arg(0, 2);
+        match variant_idx {
+            0 => { Color::Red(snforge_std::fuzzable::Fuzzable::<u8>::generate()) },
+            1 => { Color::Green(snforge_std::fuzzable::Fuzzable::<u8>::generate()) },
+            2 => { Color::Blue(snforge_std::fuzzable::Fuzzable::<u8>::generate()) },
+            _ => panic!("unexpected value of generate_arg cheatcode"),
+        }
+    }
+}
