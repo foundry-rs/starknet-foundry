@@ -47,7 +47,14 @@ pub mod tests_summary;
 pub const DEFAULT_CACHE_DIR: &str = ".snfoundry_cache";
 
 pub fn resolve_cache_dir(workspace_root: &Utf8Path) -> Result<Utf8PathBuf> {
-    match env::var("SNFOUNDRY_CACHE") {
+    resolve_cache_dir_impl(workspace_root, env::var("SNFOUNDRY_CACHE"))
+}
+
+fn resolve_cache_dir_impl(
+    workspace_root: &Utf8Path,
+    cache_var: Result<String, VarError>,
+) -> Result<Utf8PathBuf> {
+    match cache_var {
         Ok(cache_dir) => {
             let cache_dir = Utf8PathBuf::from(cache_dir);
             ensure!(
@@ -267,45 +274,36 @@ pub fn function_args(
 
 #[cfg(test)]
 mod tests {
-    use super::{DEFAULT_CACHE_DIR, resolve_cache_dir};
+    use super::{DEFAULT_CACHE_DIR, resolve_cache_dir_impl};
     use camino::Utf8Path;
-    use std::env;
+    use std::env::VarError;
 
     #[test]
     fn defaults_to_workspace_subdir_when_var_unset() {
-        // SAFETY: variable only modified within this test and cleaned up afterwards
-        unsafe { env::remove_var("SNFOUNDRY_CACHE") };
-
         let workspace = Utf8Path::new("/tmp/workspace");
         assert_eq!(
-            resolve_cache_dir(workspace).unwrap(),
+            resolve_cache_dir_impl(workspace, Err(VarError::NotPresent)).unwrap(),
             workspace.join(DEFAULT_CACHE_DIR)
         );
     }
 
     #[test]
     fn accepts_absolute_custom_path() {
-        // SAFETY: variable only modified within this test and cleaned up afterwards
-        unsafe { env::set_var("SNFOUNDRY_CACHE", "/var/cache/snfoundry") };
-
-        let resolved = resolve_cache_dir(Utf8Path::new("/tmp/workspace")).unwrap();
-
-        // SAFETY: Clean up environment variables to prevent interference
-        unsafe { env::remove_var("SNFOUNDRY_CACHE") };
-
+        let resolved = resolve_cache_dir_impl(
+            Utf8Path::new("/tmp/workspace"),
+            Ok("/var/cache/snfoundry".to_string()),
+        )
+        .unwrap();
         assert_eq!(resolved, Utf8Path::new("/var/cache/snfoundry"));
     }
 
     #[test]
     fn rejects_relative_custom_path() {
-        // SAFETY: variable only modified within this test and cleaned up afterwards
-        unsafe { env::set_var("SNFOUNDRY_CACHE", "relative/cache") };
-
-        let err = resolve_cache_dir(Utf8Path::new("/tmp/workspace")).unwrap_err();
-
-        // SAFETY: Clean up environment variables to prevent interference
-        unsafe { env::remove_var("SNFOUNDRY_CACHE") };
-
+        let err = resolve_cache_dir_impl(
+            Utf8Path::new("/tmp/workspace"),
+            Ok("relative/cache".to_string()),
+        )
+        .unwrap_err();
         assert!(err.to_string().contains("absolute path"));
     }
 }
