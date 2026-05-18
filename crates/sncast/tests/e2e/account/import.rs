@@ -468,14 +468,15 @@ pub async fn test_invalid_private_key_file_path() {
     let snapbox = runner(&args);
     let output = snapbox.assert().failure();
 
-    let expected_file_error = "No such file or directory [..]";
-
     assert_stderr_contains(
         output,
         formatdoc! {r"
         Command: account import
-        Error: Failed to obtain private key from the file my_private_key: {}
-        ", expected_file_error},
+        Error: Failed to obtain private key from the file my_private_key
+
+        Caused by:
+            No such file or directory [..]
+        "},
     );
 }
 
@@ -514,7 +515,10 @@ pub async fn test_invalid_private_key_in_file() {
         output,
         indoc! {r"
         Command: account import
-        Error: Failed to obtain private key from the file my_private_key: failed to create Felt from string: invalid dec string
+        Error: Failed to obtain private key from the file my_private_key
+
+        Caused by:
+            failed to create Felt from string: invalid dec string
         "},
     );
 }

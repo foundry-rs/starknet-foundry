@@ -1,0 +1,19 @@
+---
+source: tests/integration/fuzzable.rs
+expression: format_output(&result)
+---
+impl FuzzableDirectionImpl<> of snforge_std::fuzzable::Fuzzable<Direction<>> {
+    fn blank() -> Direction<> {
+        Direction::North
+    }
+    fn generate() -> Direction<> {
+        let variant_idx = snforge_std::fuzzable::generate_arg(0, 3);
+        match variant_idx {
+            0 => { Direction::North },
+            1 => { Direction::South },
+            2 => { Direction::East },
+            3 => { Direction::West },
+            _ => panic!("unexpected value of generate_arg cheatcode"),
+        }
+    }
+}

@@ -140,7 +140,12 @@ fn fork_aliased_decorator() {
                 .into_iter()
                 .map(|t| {
                     tokio::task::spawn_blocking(move || {
-                        prepare_test_target(t, &ForgeTrackedResource::CairoSteps, &NameFilter::All)
+                        prepare_test_target(
+                            t,
+                            &ForgeTrackedResource::CairoSteps,
+                            &NameFilter::All,
+                            &PartitionConfig::default(),
+                        )
                     })
                 })
                 .collect();
@@ -246,7 +251,12 @@ fn fork_aliased_decorator_overrding() {
                 .into_iter()
                 .map(|t| {
                     tokio::task::spawn_blocking(move || {
-                        prepare_test_target(t, &ForgeTrackedResource::CairoSteps, &NameFilter::All)
+                        prepare_test_target(
+                            t,
+                            &ForgeTrackedResource::CairoSteps,
+                            &NameFilter::All,
+                            &PartitionConfig::default(),
+                        )
                     })
                 })
                 .collect();

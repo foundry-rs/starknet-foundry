@@ -102,7 +102,7 @@ pub async fn execute_workspace(
 
     let block_number_map = BlockNumberMap::default();
     let mut all_tests = vec![];
-    let mut total_filtered_count = Some(0);
+    let mut total_filtered_count = 0;
     let mut exit_first_channel = ExitFirstChannel::new();
 
     let cache_dir = resolve_cache_dir(&scarb_metadata.workspace.root)?;
@@ -141,9 +141,8 @@ pub async fn execute_workspace(
         )
         .await?;
 
-        let filtered = result.filtered();
+        total_filtered_count += result.filtered();
         all_tests.extend(result.summaries());
-        total_filtered_count = calculate_total_filtered_count(total_filtered_count, filtered);
         env::set_current_dir(&cwd)?;
     }
 
@@ -188,18 +187,6 @@ pub async fn execute_workspace(
     }
 
     Ok(WorkspaceExecutionSummary { all_tests })
-}
-
-fn calculate_total_filtered_count(
-    total_filtered_count: Option<usize>,
-    filtered: Option<usize>,
-) -> Option<usize> {
-    // Calculate filtered test counts across packages. When using `--exact` flag,
-    // `result.filtered_count` is None, so `total_filtered_count` becomes None too.
-    match (total_filtered_count, filtered) {
-        (Some(total), Some(f)) => Some(total + f),
-        _ => None,
-    }
 }
 
 fn get_partitioning_config(

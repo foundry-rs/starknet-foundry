@@ -17,7 +17,7 @@ use crate::starknet_commands::{
 use crate::starknet_commands::{get, multicall};
 use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
-use clap::{CommandFactory, Parser, Subcommand};
+use clap::{ArgMatches, CommandFactory, FromArgMatches, Parser, Subcommand};
 use configuration::{Override, find_config_file};
 use conversions::IntoConv;
 use data_transformer::transform;
@@ -38,7 +38,7 @@ use sncast::response::declare::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse, DeployCommandMessage,
 };
 use sncast::response::deploy::{DeployResponse, DeployResponseWithDeclare};
-use sncast::response::errors::handle_starknet_command_error;
+use sncast::response::errors::{ResponseError, handle_starknet_command_error};
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transformed_call::transform_response;
 use sncast::response::ui::UI;
@@ -137,28 +137,6 @@ struct Cli {
 }
 
 impl Cli {
-    fn command_name(&self) -> String {
-        match self.command {
-            Commands::Get(_) => "get",
-            Commands::Declare(_) => "declare",
-            Commands::DeclareFrom(_) => "declare-from",
-            Commands::Deploy(_) => "deploy",
-            Commands::Call(_) => "call",
-            Commands::Invoke(_) => "invoke",
-            Commands::Multicall(_) => "multicall",
-            Commands::Account(_) => "account",
-            Commands::ShowConfig(_) => "show-config",
-            Commands::Script(_) => "script",
-            Commands::TxStatus(_) => "tx-status",
-            Commands::Verify(_) => "verify",
-            Commands::Completions(_) => "completions",
-            Commands::Utils(_) => "utils",
-            Commands::Balance(_) => "balance",
-            Commands::Ledger(_) => "ledger",
-        }
-        .to_string()
-    }
-
     /// Prepares and validates [`PartialCastConfig`] from CLI args.
     pub fn to_partial_config(&self) -> Result<PartialCastConfig> {
         let config = PartialCastConfig {
@@ -308,24 +286,54 @@ fn init_logging() {
         .expect("could not set up global logger");
 }
 
-fn main() -> Result<ExitCode> {
+fn main() -> ExitCode {
     init_logging();
 
-    let cli = Cli::parse();
+    let matches = Cli::command().get_matches();
+    let cli = Cli::from_arg_matches(&matches)
+        .expect("should always be possible to reconstruct cli from its own matches");
 
-    let output_format = output_format_from_json_flag(cli.json);
+    let ui = UI::new(output_format_from_json_flag(cli.json));
 
-    let ui = UI::new(output_format);
+    let command_name = command_path(&matches);
 
+    match run(cli, &ui) {
+        Ok(code) => code,
+        Err(err) => {
+            ui.print_error(
+                &command_name,
+                ResponseError::from_anyhow(command_name.clone(), &err),
+            );
+            ExitCode::FAILURE
+        }
+    }
+}
+
+/// Return canonical subcommand path (e.g. `account import`, `get tx`) or `sncast` if none.
+fn command_path(matches: &ArgMatches) -> String {
+    let mut parts = Vec::new();
+    let mut cur = matches;
+    while let Some((name, sub)) = cur.subcommand() {
+        parts.push(name.to_string());
+        cur = sub;
+    }
+    if parts.is_empty() {
+        "sncast".to_string()
+    } else {
+        parts.join(" ")
+    }
+}
+
+fn run(cli: Cli, ui: &UI) -> Result<ExitCode> {
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Completions(completions) = &cli.command {
         generate_completions(completions.shell, &mut Cli::command())
     } else if let Commands::Script(script) = &cli.command {
-        run_script_command(&cli, runtime, script, &ui)
+        run_script_command(&cli, runtime, script, ui)
     } else {
-        let config = get_cast_config(&cli, &ui)?;
-        runtime.block_on(run_async_command(cli, config, &ui))
+        let config = get_cast_config(&cli, ui)?;
+        runtime.block_on(run_async_command(cli, config, ui))
     }
 }
 
@@ -357,7 +365,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 // TODO(#3959) Remove `base_ui`
                 ui.base_ui(),
             )
-            .expect("Failed to build contract");
+            .context("Failed to build contract")?;
 
             let result = with_account!(&account, |account| {
                 starknet_commands::declare::declare(
@@ -394,7 +402,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 // TODO(#3785)
                 let contract_artifacts = artifacts
                     .get(&declare.contract_name)
-                    .expect("Failed to get contract artifacts");
+                    .context("Failed to get contract artifacts")?;
                 let contract_definition: SierraClass =
                     serde_json::from_str(&contract_artifacts.sierra)
                         .context("Failed to parse sierra artifact")?;
@@ -511,7 +519,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                     // TODO(#3959) Remove `base_ui`
                     ui.base_ui(),
                 )
-                .expect("Failed to build contract");
+                .context("Failed to build contract")?;
 
                 let declare_result = with_account!(&account, |account| {
                     declare(
@@ -774,7 +782,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
 
 fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
     let opts = CliConfigOpts {
-        command_name: cli.command_name(),
         profile: cli.profile.clone(),
     };
 
@@ -851,8 +858,7 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
             Sources:
             - CLI flags
             - Local config: {local}
-            - Global config: {global}
-        ",
+            - Global config: {global}",
             local = local_path.as_ref().map_or("missing", |p| p.as_str()),
             global = global_path.as_ref().map_or("missing", |p| p.as_str()),
         }
