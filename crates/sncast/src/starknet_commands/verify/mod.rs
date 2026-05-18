@@ -1,15 +1,16 @@
-use anyhow::{Result, anyhow, bail};
-use camino::Utf8PathBuf;
-use clap::{ArgGroup, Args, ValueEnum};
+use anyhow::{Context, Result, anyhow, bail};
+use clap::{Args, ValueEnum};
 use promptly::prompt;
+use scarb_metadata::PackageMetadata;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::FreeProvider;
+use sncast::helpers::scarb_utils::{BuildConfig, build_and_load_artifacts};
 use sncast::response::ui::UI;
 use sncast::{Network, response::verify::VerifyResponse};
 use sncast::{get_chain_id, get_provider};
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet_types_core::felt::Felt;
-use std::{collections::HashMap, fmt};
+use std::fmt;
 use url::Url;
 
 pub mod explorer;
@@ -19,25 +20,14 @@ pub mod walnut;
 use explorer::ContractIdentifier;
 use explorer::VerificationInterface;
 use foundry_ui::components::warning::WarningMessage;
-use sncast::helpers::artifacts::CastStarknetContractArtifacts;
 use voyager::Voyager;
 use walnut::WalnutVerificationInterface;
 
 #[derive(Args)]
 #[command(about = "Verify a contract through a block explorer")]
-#[command(group(
-    ArgGroup::new("contract_identifier")
-        .required(true)
-        .args(&["class_hash", "contract_address"])
-))]
 pub struct Verify {
-    /// Class hash of a contract to be verified
-    #[arg(short = 'g', long)]
-    pub class_hash: Option<Felt>,
-
-    /// Address of a contract to be verified
-    #[arg(short = 'd', long)]
-    pub contract_address: Option<Felt>,
+    #[command(flatten)]
+    pub contract_identifier: ContractIdentifierArgs,
 
     /// Name of the contract that is being verified
     #[arg(short, long)]
@@ -66,6 +56,32 @@ pub struct Verify {
     /// Include test files under src/ for verification (only applies to voyager)
     #[arg(long, default_value = "false")]
     pub test_files: bool,
+}
+
+#[derive(Args, Clone, Debug)]
+#[group(required = true, multiple = false)]
+pub struct ContractIdentifierArgs {
+    /// Class hash of a contract to be verified
+    #[arg(short = 'g', long)]
+    pub class_hash: Option<Felt>,
+
+    /// Address of a contract to be verified
+    #[arg(short = 'd', long)]
+    pub contract_address: Option<Felt>,
+}
+
+impl ContractIdentifierArgs {
+    pub fn get_identifier(&self) -> ContractIdentifier {
+        match (self.class_hash, self.contract_address) {
+            (Some(class_hash), None) => ContractIdentifier::ClassHash {
+                class_hash: class_hash.to_fixed_hex_string(),
+            },
+            (None, Some(contract_address)) => ContractIdentifier::Address {
+                contract_address: contract_address.to_fixed_hex_string(),
+            },
+            _ => unreachable!("Exactly one of class_hash or contract_address must be provided."),
+        }
+    }
 }
 
 #[derive(ValueEnum, Clone, Debug)]
@@ -101,13 +117,38 @@ async fn resolve_verification_network(
         })
 }
 
+fn build_and_validate_contract(
+    package: &PackageMetadata,
+    scarb_json: bool,
+    profile: String,
+    contract_name: &str,
+    ui: &UI,
+) -> Result<()> {
+    let artifacts = build_and_load_artifacts(
+        package,
+        &BuildConfig {
+            scarb_toml_path: package.manifest_path.clone(),
+            json: scarb_json,
+            profile,
+        },
+        false,
+        // TODO(#3959) Remove `base_ui`
+        ui.base_ui(),
+    )
+    .context("Failed to build contract")?;
+
+    if !artifacts.contains_key(contract_name) {
+        bail!("Contract named '{contract_name}' was not found");
+    }
+
+    Ok(())
+}
+
 fn display_files_and_confirm(
     verifier: &Verifier,
     files_to_display: Vec<String>,
     confirm_verification: bool,
     ui: &UI,
-    artifacts: &HashMap<String, CastStarknetContractArtifacts>,
-    contract_name: &str,
 ) -> Result<()> {
     // Display files that will be uploaded
     // TODO(#3960) JSON output support
@@ -128,29 +169,23 @@ fn display_files_and_confirm(
         }
     }
 
-    // Check contract exists after confirmation
-    if !artifacts.contains_key(contract_name) {
-        return Err(anyhow!("Contract named '{contract_name}' was not found"));
-    }
-
     Ok(())
 }
 
 pub async fn verify(
     args: Verify,
-    manifest_path: &Utf8PathBuf,
-    artifacts: &HashMap<String, CastStarknetContractArtifacts>,
+    package: &PackageMetadata,
+    json: bool,
     config: &CastConfig,
     ui: &UI,
 ) -> Result<VerifyResponse> {
     let Verify {
-        contract_address,
-        class_hash,
+        contract_identifier,
         contract_name,
         verifier,
         network,
         confirm_verification,
-        package,
+        package: scarb_package,
         url,
         test_files,
     } = args;
@@ -171,27 +206,23 @@ pub async fn verify(
     };
     let provider = get_provider(&rpc_url)?;
 
-    // Build JSON Payload for the verification request
-    // get the parent dir of the manifest path
-    let workspace_dir = manifest_path
+    let workspace_dir = package
+        .manifest_path
         .parent()
         .ok_or(anyhow!("Failed to obtain workspace dir"))?;
 
-    let contract_identifier = match (class_hash, contract_address) {
-        (Some(class_hash), None) => ContractIdentifier::ClassHash {
-            class_hash: class_hash.to_fixed_hex_string(),
-        },
-        (None, Some(contract_address)) => ContractIdentifier::Address {
-            contract_address: contract_address.to_fixed_hex_string(),
-        },
-
-        _ => {
-            unreachable!("Exactly one of class_hash or contract_address must be provided.");
-        }
-    };
+    let contract_identifier = contract_identifier.get_identifier();
 
     let network =
         resolve_verification_network(network, config.network_params.network(), &provider).await?;
+
+    build_and_validate_contract(
+        package,
+        json,
+        config.scarb_profile.clone(),
+        &contract_name,
+        ui,
+    )?;
 
     // Handle test_files warning for Walnut
     if matches!(verifier, Verifier::Walnut) && test_files {
@@ -216,18 +247,11 @@ pub async fn verify(
                 files.iter().map(|(path, _)| format!("  {path}")).collect();
 
             // Display files and confirm
-            display_files_and_confirm(
-                &verifier,
-                files_to_display,
-                confirm_verification,
-                ui,
-                artifacts,
-                &contract_name,
-            )?;
+            display_files_and_confirm(&verifier, files_to_display, confirm_verification, ui)?;
 
             // Perform verification
             walnut
-                .verify(contract_identifier, contract_name, package, false, ui)
+                .verify(contract_identifier, contract_name, scarb_package, false, ui)
                 .await
         }
         Verifier::Voyager => {
@@ -239,18 +263,17 @@ pub async fn verify(
                 files.keys().map(|name| format!("  {name}")).collect();
 
             // Display files and confirm
-            display_files_and_confirm(
-                &verifier,
-                files_to_display,
-                confirm_verification,
-                ui,
-                artifacts,
-                &contract_name,
-            )?;
+            display_files_and_confirm(&verifier, files_to_display, confirm_verification, ui)?;
 
             // Perform verification
             voyager
-                .verify(contract_identifier, contract_name, package, test_files, ui)
+                .verify(
+                    contract_identifier,
+                    contract_name,
+                    scarb_package,
+                    test_files,
+                    ui,
+                )
                 .await
         }
     }

@@ -1,0 +1,18 @@
+---
+source: tests/integration/fuzzable.rs
+expression: format_output(&result)
+---
+impl FuzzablePointImpl<> of snforge_std::fuzzable::Fuzzable<Point<>> {
+    fn blank() -> Point<> {
+        Point {
+            x: snforge_std::fuzzable::Fuzzable::<u64>::blank(),
+            y: snforge_std::fuzzable::Fuzzable::<u64>::blank(),
+        }
+    }
+    fn generate() -> Point<> {
+        Point {
+            x: snforge_std::fuzzable::Fuzzable::<u64>::generate(),
+            y: snforge_std::fuzzable::Fuzzable::<u64>::generate(),
+        }
+    }
+}

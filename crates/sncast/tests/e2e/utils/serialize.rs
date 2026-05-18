@@ -149,7 +149,10 @@ async fn test_abi_file_missing_type() {
         output,
         indoc! {r#"
         Command: utils serialize
-        Error: Error while processing Cairo-like calldata: Struct "NestedStructWithField" not found in ABI
+        Error: Error while processing Cairo-like calldata
+
+        Caused by:
+            Struct "NestedStructWithField" not found in ABI
     "#},
     );
 }

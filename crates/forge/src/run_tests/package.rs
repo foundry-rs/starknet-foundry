@@ -28,13 +28,12 @@ use forge_runner::{
     package_tests::{
         TestTargetLocation,
         raw::TestTargetRaw,
-        with_config::TestTargetWithConfig,
         with_config_resolved::{
             TestCaseWithResolvedConfig, TestTargetWithResolvedConfig, sanitize_test_case_name,
         },
     },
     partition::PartitionConfig,
-    running::target::prepare_test_target,
+    running::target::{PrepareTestTargetResult, prepare_test_target},
     scarb::load_test_artifacts,
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
@@ -45,16 +44,16 @@ use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
 use tokio::task::JoinHandle;
 
-type PrepareTargetHandle = JoinHandle<Result<(Option<TestTargetWithConfig>, TestTargetLocation)>>;
+type PrepareTargetHandle = JoinHandle<Result<PrepareTestTargetResult>>;
 
 pub struct PackageTestResult {
     summaries: Vec<TestTargetSummary>,
-    filtered: Option<usize>,
+    filtered: usize,
 }
 
 impl PackageTestResult {
     #[must_use]
-    pub fn new(summaries: Vec<TestTargetSummary>, filtered: Option<usize>) -> Self {
+    pub fn new(summaries: Vec<TestTargetSummary>, filtered: usize) -> Self {
         Self {
             summaries,
             filtered,
@@ -62,7 +61,7 @@ impl PackageTestResult {
     }
 
     #[must_use]
-    pub fn filtered(&self) -> Option<usize> {
+    pub fn filtered(&self) -> usize {
         self.filtered
     }
 
@@ -136,11 +135,17 @@ impl RunForPackageArgs {
         }
 
         let tracked_resource = forge_config.test_runner_config.tracked_resource;
-        let name_filter = tests_filter.name_filter.clone();
 
         let target_handles = raw_test_targets
             .into_iter()
-            .map(|t| spawn_prepare_test_target(t, tracked_resource, name_filter.clone()))
+            .map(|t| {
+                spawn_prepare_test_target(
+                    t,
+                    tracked_resource,
+                    tests_filter.name_filter.clone(),
+                    tests_filter.partitioning_config.clone(),
+                )
+            })
             .collect();
 
         Ok(RunForPackageArgs {
@@ -158,9 +163,15 @@ fn spawn_prepare_test_target(
     target: TestTargetRaw,
     tracked_resource: ForgeTrackedResource,
     name_filter: NameFilter,
+    partitioning_config: PartitionConfig,
 ) -> PrepareTargetHandle {
     tokio::task::spawn_blocking(move || {
-        prepare_test_target(target, &tracked_resource, &name_filter)
+        prepare_test_target(
+            target,
+            &tracked_resource,
+            &name_filter,
+            &partitioning_config,
+        )
     })
 }
 
@@ -168,21 +179,12 @@ fn sum_test_cases_from_test_target(
     test_cases: &[TestCaseWithResolvedConfig],
     partitioning_config: &PartitionConfig,
 ) -> usize {
-    match partitioning_config {
-        PartitionConfig::Disabled => test_cases.len(),
-        PartitionConfig::Enabled {
-            partition,
-            partition_map,
-        } => test_cases
-            .iter()
-            .filter(|test_case| {
-                let test_assigned_index = partition_map
-                    .get_assigned_index(&sanitize_test_case_name(&test_case.name))
-                    .expect("Partition map must contain all test cases");
-                test_assigned_index == partition.index()
-            })
-            .count(),
-    }
+    test_cases
+        .iter()
+        .filter(|test_case| {
+            partitioning_config.is_in_partition(&sanitize_test_case_name(&test_case.name))
+        })
+        .count()
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
@@ -203,10 +205,18 @@ pub async fn run_for_package(
     let mut resolved_targets: Vec<(TestTargetLocation, Option<TestTargetWithResolvedConfig>)> =
         vec![];
     let mut all_tests = 0;
+    // Tests left after target preparation and runtime filtering (`#[ignore]`, rerun-failed, etc.).
     let mut not_filtered_total = 0;
+    // Tests excluded before config resolution, currently by name filtering in `prepare_test_target`.
+    let mut prefiltered_out_total = 0;
 
     for handle in target_handles {
-        let (maybe_target, tests_location) = handle.await??;
+        let PrepareTestTargetResult {
+            target: maybe_target,
+            location: tests_location,
+            prefiltered_out_count,
+        } = handle.await??;
+        prefiltered_out_total += prefiltered_out_count;
 
         let Some(target_with_config) = maybe_target else {
             resolved_targets.push((tests_location, None));
@@ -278,12 +288,7 @@ pub async fn run_for_package(
         summaries.push(s);
     }
 
-    // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
-    let filtered_count = if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
-        None
-    } else {
-        Some(all_tests - not_filtered_total)
-    };
+    let filtered_count = prefiltered_out_total + all_tests - not_filtered_total;
 
     ui.println(&TestsSummaryMessage::new(&summaries, filtered_count));
 

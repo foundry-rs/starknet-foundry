@@ -1,0 +1,14 @@
+---
+source: tests/integration/fuzzable.rs
+expression: format_output(&result)
+---
+impl FuzzableFancyImpl<
+    T, +snforge_std::fuzzable::Fuzzable<T>, +core::fmt::Debug<T>, +core::clone::Clone<T>, +Drop<T>,
+> of snforge_std::fuzzable::Fuzzable<Fancy<T, _, _>> {
+    fn blank() -> Fancy<T, _, _> {
+        Fancy { value: snforge_std::fuzzable::Fuzzable::<T>::blank() }
+    }
+    fn generate() -> Fancy<T, _, _> {
+        Fancy { value: snforge_std::fuzzable::Fuzzable::<T>::generate() }
+    }
+}

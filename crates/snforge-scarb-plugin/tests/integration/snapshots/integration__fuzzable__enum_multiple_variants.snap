@@ -1,0 +1,18 @@
+---
+source: tests/integration/fuzzable.rs
+expression: format_output(&result)
+---
+impl FuzzableShapeImpl<> of snforge_std::fuzzable::Fuzzable<Shape<>> {
+    fn blank() -> Shape<> {
+        Shape::Circle(snforge_std::fuzzable::Fuzzable::<bool>::blank())
+    }
+    fn generate() -> Shape<> {
+        let variant_idx = snforge_std::fuzzable::generate_arg(0, 2);
+        match variant_idx {
+            0 => { Shape::Circle(snforge_std::fuzzable::Fuzzable::<bool>::generate()) },
+            1 => { Shape::Square(snforge_std::fuzzable::Fuzzable::<u8>::generate()) },
+            2 => { Shape::Triangle(snforge_std::fuzzable::Fuzzable::<u64>::generate()) },
+            _ => panic!("unexpected value of generate_arg cheatcode"),
+        }
+    }
+}

@@ -21,6 +21,12 @@ Tests: 3 passed, 0 failed, 0 ignored, 0 filtered out
 </details>
 <br>
 
+## Prerequisites
+
+`snforge test` requires **enabled** gas calculation. 
+This is true by default, so unless you have explicitly disabled it, you shouldn't have to do anything.
+See [`enable-gas`](../appendix/scarb-toml.md#enable-gas) in the `Scarb.toml` reference for details.
+
 ## Filtering Tests
 
 You can pass a filter string after the `snforge test` command to filter tests.
@@ -66,10 +72,17 @@ Collected 1 test(s) from hello_snforge package
 Running 1 test(s) from tests/
 [PASS] hello_snforge_integrationtest::test_contract::test_calling (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Running 0 test(s) from src/
-Tests: 1 passed, 0 failed, 0 ignored, other filtered out
+Tests: 1 passed, 0 failed, 0 ignored, 2 filtered out
 ```
 </details>
 <br>
+
+## Speeding Up Test Compilation
+
+For best cache reuse across repeat runs, prefer the **integration test layout** (`tests/`) over unit tests in `src/`.
+
+Thanks to Scarb's [incremental compilation](https://docs.swmansion.com/scarb/docs/procedural-macros/incremental.html) (enabled by default), the main package and the test code are cached separately, so editing tests does not invalidate the main package's build cache.
+For details on the layout difference, see [Test Collection](test-collection.md).
 
 ## Skipping tests
 
