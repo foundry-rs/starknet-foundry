@@ -723,7 +723,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
 
         Commands::Account(account) => account::account(account, config, ui, wait_config).await,
 
-        Commands::Alias(alias) => starknet_commands::alias::alias(alias, config, ui),
+        Commands::Alias(alias) => starknet_commands::alias::alias(&alias, &config, ui),
 
         Commands::ShowConfig(show) => {
             let provider = match show.rpc.get_provider(&config, ui).await {
