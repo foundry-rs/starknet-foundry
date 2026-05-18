@@ -14,7 +14,6 @@ fn test_alias_list_happy_case() {
     assert_stdout_contains(
         output,
         indoc! {r"
-            Available aliases:
             map:       0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008
             map-class: 0x2a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321
         "},

@@ -43,8 +43,6 @@ impl Message for AliasesListMessage {
             return builder.text_field("No aliases configured").build();
         }
 
-        builder = builder.text_field("Available aliases:");
-
         for alias in &self.aliases {
             builder = builder.field(&alias.name, &alias.value);
         }
