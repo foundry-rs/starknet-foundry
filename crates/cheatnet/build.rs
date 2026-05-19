@@ -1,7 +1,6 @@
 use flate2::{Compression, write::GzEncoder};
 use std::{
-    env,
-    fs,
+    env, fs,
     io::Write,
     path::{Path, PathBuf},
 };

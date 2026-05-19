@@ -16,12 +16,10 @@ pub const ERC20LOCKABLE_SIERRA_CLASS_HASH: &str =
 pub fn strk_predeployed_contract() -> PredeployedContract {
     // starkgate-contracts v3.0.0
     // Link to Cairo contract: https://github.com/starknet-io/starkgate-contracts/blob/07e11c39119a10d5742735be5b1d51894ebf5311/packages/strk/src/erc20_lockable.cairo
-    let raw_casm = load_gzipped_artifact(include_bytes!(
-        concat!(
-            env!("OUT_DIR"),
-            "/predeployed_contracts/ERC20Lockable/casm.json.gz"
-        )
-    ))
+    let raw_casm = load_gzipped_artifact(include_bytes!(concat!(
+        env!("OUT_DIR"),
+        "/predeployed_contracts/ERC20Lockable/casm.json.gz"
+    )))
     .expect("predeployed STRK CASM should be a valid gzip artifact");
 
     let contract_address = ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
