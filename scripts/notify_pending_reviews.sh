@@ -78,6 +78,8 @@ query($owner: String!, $name: String!, $prFetchLimit: Int!) {
 ROWS_JSON=$(gh api graphql -f query="$QUERY" \
         -F owner="${REPO%/*}" -F name="${REPO#*/}" -F prFetchLimit="$PR_FETCH_LIMIT" \
     | jq --arg ignore_team "$IGNORE_TEAM" '
+      if .errors then error("GitHub API error: \(.errors | tostring)") else . end
+      | [
       [
         .data.repository.pullRequests.nodes[]
         | . as $pr
@@ -113,7 +115,7 @@ PAYLOAD=$(jq -f "$SCRIPT_DIR/notify_pending_reviews_payload.jq" --arg repo "$REP
 
 # Send to Slack if a webhook is configured, otherwise print the payload.
 if [ -n "$SLACK_WEBHOOK_URL" ]; then
-    RESP=$(curl -sS -w $'\n%{http_code}' -X POST \
+    RESP=$(curl -sS --max-time 30 -w $'\n%{http_code}' -X POST \
         -H 'Content-Type: application/json' \
         --data "$PAYLOAD" "$SLACK_WEBHOOK_URL")
     HTTP_CODE=${RESP##*$'\n'}
