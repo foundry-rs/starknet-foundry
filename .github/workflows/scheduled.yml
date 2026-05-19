@@ -33,14 +33,10 @@ jobs:
           echo ${scarb_versions[@]}
           echo "versions=[${scarb_versions[@]}]" >> "$GITHUB_OUTPUT"
 
-  prepare-predeployed-contracts:
-    if: github.event.repository.fork == false
-    uses: ./.github/workflows/_prepare-predeployed-contracts.yml
-
   test-forge-unit-and-integration:
     if: github.event.repository.fork == false
     runs-on: ubuntu-latest
-    needs: [get-scarb-versions, prepare-predeployed-contracts]
+    needs: get-scarb-versions
     strategy:
       fail-fast: false
       matrix:
@@ -52,16 +48,14 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
-      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: software-mansion/setup-universal-sierra-compiler@v1
-      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
       - run: cargo test --profile ci --lib -p forge
       - run: cargo test --profile ci -p forge integration --features non_exact_gas_assertions
 
   test-forge-e2e:
     if: github.event.repository.fork == false
     runs-on: ubuntu-latest
-    needs: [get-scarb-versions, prepare-predeployed-contracts]
+    needs: get-scarb-versions
     strategy:
       fail-fast: false
       matrix:
@@ -89,7 +83,6 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
-      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Install cairo-profiler
         run: |
@@ -101,13 +94,12 @@ jobs:
           set -euo pipefail
           curl -sSL --fail --retry 5 --retry-all-errors --connect-timeout 10 -H "Authorization: Bearer ${{ github.token }}" https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
           cairo-coverage --version
-      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
       - run: cargo test --profile ci -p forge --features scheduled_latest_scarb_only e2e
 
   test-cast:
     if: github.event.repository.fork == false
     runs-on: ubuntu-latest
-    needs: [get-scarb-versions, prepare-predeployed-contracts]
+    needs: get-scarb-versions
     strategy:
       fail-fast: false
       matrix:
@@ -119,11 +111,6 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
-      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
-        with:
-          tool_versions: |
-            starknet-devnet ${{ steps.get-devnet-version.outputs.version }}
-      - uses: ./.github/actions/restore-predeployed-contracts
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Get Devnet version from .tool-versions
         id: get-devnet-version
@@ -131,6 +118,10 @@ jobs:
           devnet_version=$(grep starknet-devnet .tool-versions | cut -d " " -f 2)
           echo "Devnet version: $devnet_version"
           echo "version=$devnet_version" >> "$GITHUB_OUTPUT"
+      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
+        with:
+          tool_versions: |
+            starknet-devnet ${{ steps.get-devnet-version.outputs.version }}
 
       - uses: taiki-e/install-action@v2
         with:

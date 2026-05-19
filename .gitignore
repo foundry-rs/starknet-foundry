@@ -12,7 +12,6 @@ Scarb.lock
 .spr.yml
 .snfoundry_cache/
 .snfoundry_versioned_programs/
-crates/cheatnet/src/data/predeployed_contracts/
 snfoundry_trace/
 coverage/
 **/.forge_e2e_cache/

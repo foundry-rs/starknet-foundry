@@ -55,3 +55,6 @@ rayon.workspace = true
 glob.workspace = true
 test-case.workspace = true
 tempfile.workspace = true
+
+[build-dependencies]
+flate2.workspace = true

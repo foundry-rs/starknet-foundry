@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# Generates gzipped predeployed contract artifacts used by cheatnet.
+# Generates predeployed contract artifacts used by cheatnet.
 # Clones repositories with source code, adjusts compiler settings,
-# builds the contracts, and gzips the generated artifacts in the expected location.
+# builds the contracts, and copies the generated artifacts in the expected location.
 
 set -euo pipefail
 
@@ -29,6 +29,25 @@ need_cmd() {
     echo "need '$1' (command not found)" >&2
     exit 1
   fi
+}
+
+copy_artifacts_from_mappings() {
+  local source_root="$1"
+  shift
+
+  for artifact_mapping in "$@"; do
+    IFS='|' read -r src_rel out_rel <<< "${artifact_mapping}"
+    local src_file="${source_root}/${src_rel}"
+    local out_file="${OUTPUT_DIR}/${out_rel}"
+
+    if [[ ! -f "${src_file}" ]]; then
+      echo "Missing expected artifact: ${src_file}" >&2
+      exit 1
+    fi
+
+    mkdir -p "$(dirname "${out_file}")"
+    cp "${src_file}" "${out_file}"
+  done
 }
 
 check_cmd() {
@@ -169,32 +188,13 @@ require_file() {
   fi
 }
 
-gzip_artifacts_from_mappings() {
-  local source_root="$1"
-  shift
-
-  for artifact_mapping in "$@"; do
-    IFS='|' read -r src_rel out_rel <<< "${artifact_mapping}"
-    local src_file="${source_root}/${src_rel}"
-    local out_file="${OUTPUT_DIR}/${out_rel}"
-
-    if [[ ! -f "${src_file}" ]]; then
-      echo "Missing expected artifact: ${src_file}" >&2
-      exit 1
-    fi
-
-    mkdir -p "$(dirname "${out_file}")"
-    gzip -n -9 -c "${src_file}" > "${out_file}"
-  done
-}
-
 prepare_starkgate_contracts() {
   local repo_dir="$1"
   local artifact_mappings=(
-    "target/release/strk_ERC20Lockable.compiled_contract_class.json|ERC20Lockable/casm.json.gz"
-    "target/release/strk_ERC20Lockable.contract_class.json|ERC20Lockable/sierra.json.gz"
-    "target/release/sg_token_ERC20Mintable.compiled_contract_class.json|ERC20Mintable/casm.json.gz"
-    "target/release/sg_token_ERC20Mintable.contract_class.json|ERC20Mintable/sierra.json.gz"
+    "target/release/strk_ERC20Lockable.compiled_contract_class.json|ERC20Lockable/casm.json"
+    "target/release/strk_ERC20Lockable.contract_class.json|ERC20Lockable/sierra.json"
+    "target/release/sg_token_ERC20Mintable.compiled_contract_class.json|ERC20Mintable/casm.json"
+    "target/release/sg_token_ERC20Mintable.contract_class.json|ERC20Mintable/sierra.json"
   )
 
   ensure_scarb_available "${repo_dir}"
@@ -208,13 +208,13 @@ prepare_starkgate_contracts() {
     asdf exec scarb --release build -p strk -p sg_token
   )
 
-  gzip_artifacts_from_mappings "${repo_dir}" "${artifact_mappings[@]}"
+  copy_artifacts_from_mappings "${repo_dir}" "${artifact_mappings[@]}"
 }
 
 main() {
   need_cmd asdf
   need_cmd git
-  need_cmd gzip
+  need_cmd cp
   need_cmd awk
   need_cmd mktemp
 

@@ -20,12 +20,14 @@ pub const SNFORGE_VERSION: &str = env!("CARGO_PKG_VERSION");
 macro_rules! load_contract {
     ($name:expr, $contract_dir:expr, $cache_dir:expr) => {{
         let sierra = load_gzipped_artifact(include_bytes!(concat!(
-            "../data/predeployed_contracts/",
+            env!("OUT_DIR"),
+            "/predeployed_contracts/",
             $contract_dir,
             "/sierra.json.gz"
         )))?;
         let casm = load_gzipped_artifact(include_bytes!(concat!(
-            "../data/predeployed_contracts/",
+            env!("OUT_DIR"),
+            "/predeployed_contracts/",
             $contract_dir,
             "/casm.json.gz"
         )))?;

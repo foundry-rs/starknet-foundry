@@ -1,11 +1,12 @@
 # Predeployed contracts
 
 `snforge` provides a set of predeployed contracts for use in testing. Their artifacts are generated from pinned upstream
-sources with `scripts/setup_predeployed_contracts.sh` and embedded in gzipped form to reduce the size of the final
-binary.
+sources with `scripts/setup_predeployed_contracts.sh`.
 
-The generated `*.json.gz` files are not tracked in git. Before building crates that depend on `forge` or `cheatnet`,
-run:
+The generated `casm.json` and `sierra.json` files are tracked in git. During build, `cheatnet` gzips those committed
+artifacts into `OUT_DIR` before embedding them in the final binary.
+
+To refresh the committed artifacts after changing source revisions or generation logic, run:
 
 ```shell
 $ ./scripts/setup_predeployed_contracts.sh
@@ -20,10 +21,11 @@ $ ./scripts/setup_predeployed_contracts.sh
 
 ## Updating predeployed contracts
 
-To add a new predeployed contract or update an existing one, extend the generator script so that it writes `casm.json.gz` and `sierra.json.gz` into a
+To add a new predeployed contract or update an existing one, extend the generator script so that it writes `casm.json` and `sierra.json` into a
 new subdirectory under `crates/cheatnet/src/data/predeployed_contracts`.
 
-Also, update list of artifacts in the `.github/actions/restore-predeployed-contracts/action.yml` workflow and in `crates/cheatnet/build.rs`.
+After regenerating the artifacts, commit the updated files. CI rebuilds them from source and fails if the committed
+versions are stale.
 
 > 📝 **Note**
 >
@@ -35,9 +37,9 @@ Structure of `predeployed_contracts` directory should be as follows:
 $ tree crates/cheatnet/src/data/predeployed_contracts
 crates/cheatnet/src/data/predeployed_contracts
 ├── ERC20Lockable
-│   ├── casm.json.gz
-│   └── sierra.json.gz
+│   ├── casm.json
+│   └── sierra.json
 └── ERC20Mintable
-    ├── casm.json.gz
-    └── sierra.json.gz
+    ├── casm.json
+    └── sierra.json
 ```
