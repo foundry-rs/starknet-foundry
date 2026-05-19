@@ -80,7 +80,6 @@ ROWS_JSON=$(gh api graphql -f query="$QUERY" \
     | jq --arg ignore_team "$IGNORE_TEAM" '
       if .errors then error("GitHub API error: \(.errors | tostring)") else . end
       | [
-      [
         .data.repository.pullRequests.nodes[]
         | . as $pr
         | ($pr.reviewRequests.nodes
