@@ -207,7 +207,7 @@ fn fork_aliased_decorator() {
 }
 
 #[test]
-fn fork_aliased_decorator_overrding() {
+fn fork_aliased_decorator_overriding() {
     let test = test_case!(indoc!(
         r#"
             use starknet::syscalls::get_execution_info_syscall;
