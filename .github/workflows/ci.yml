@@ -46,17 +46,43 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [[ -n "$(git ls-files --others --exclude-standard -- crates/cheatnet/src/data/predeployed_contracts)" ]]; then
+          artifacts_dir="crates/cheatnet/src/data/predeployed_contracts"
+
+          if [[ -n "$(git ls-files --others --exclude-standard -- "${artifacts_dir}")" ]]; then
             echo "Unexpected untracked predeployed contract artifacts were generated." >&2
-            git ls-files --others --exclude-standard -- crates/cheatnet/src/data/predeployed_contracts >&2
+            git ls-files --others --exclude-standard -- "${artifacts_dir}" >&2
             exit 1
           fi
 
-          if ! git diff --quiet -- crates/cheatnet/src/data/predeployed_contracts; then
-            echo "Committed predeployed contract artifacts are different than expected." >&2
-            git diff --name-only -- crates/cheatnet/src/data/predeployed_contracts >&2
-            exit 1
+          changed_files="$(git diff --name-only -- "${artifacts_dir}")"
+          if [[ -z "${changed_files}" ]]; then
+            exit 0
           fi
+
+          while IFS= read -r file; do
+            case "${file}" in
+              */casm.json)
+                echo "Committed CASM artifact is out of date: ${file}" >&2
+                echo "Regenerate it with ./scripts/setup_predeployed_contracts.sh and commit the updated file." >&2
+                exit 1
+                ;;
+              */sierra.json)
+                tmp_expected="$(mktemp)"
+                git show "HEAD:${file}" > "${tmp_expected}"
+                if ! python3 ./scripts/compare_sierra_artifact.py "${tmp_expected}" "${file}"; then
+                  echo "Committed Sierra artifact is out of date: ${file}" >&2
+                  echo "Regenerate it with ./scripts/setup_predeployed_contracts.sh and commit the updated file." >&2
+                  rm -f "${tmp_expected}"
+                  exit 1
+                fi
+                rm -f "${tmp_expected}"
+                ;;
+              *)
+                echo "Unexpected changed predeployed artifact: ${file}" >&2
+                exit 1
+                ;;
+            esac
+          done <<< "${changed_files}"
 
   test-workspace:
     # Runs tests from all crates across the workspace, except:
