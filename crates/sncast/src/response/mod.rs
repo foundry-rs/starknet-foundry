@@ -15,6 +15,7 @@ pub mod multicall;
 pub mod nonce;
 pub mod script;
 pub mod show_config;
+pub mod spec_version;
 pub mod transaction;
 pub mod transformed_call;
 pub mod tx_status;
