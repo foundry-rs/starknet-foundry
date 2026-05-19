@@ -52,7 +52,11 @@ jobs:
             exit 1
           fi
 
-          git diff --exit-code -- crates/cheatnet/src/data/predeployed_contracts
+          if ! git diff --quiet -- crates/cheatnet/src/data/predeployed_contracts; then
+            echo "Committed predeployed contract artifacts are different than expected." >&2
+            git diff --name-only -- crates/cheatnet/src/data/predeployed_contracts >&2
+            exit 1
+          fi
 
   test-workspace:
     # Runs tests from all crates across the workspace, except:
