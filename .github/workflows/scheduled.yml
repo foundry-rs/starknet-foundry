@@ -142,7 +142,7 @@ jobs:
 
       - name: Get version from Cargo.toml
         id: lookupVersion
-        uses: mikefarah/yq@751d8ad57b84f1794661bc70c0afb92a22ad7b3c
+        uses: mikefarah/yq@751d8ad57b84f1794661bc70c0afb92a22ad7b3c # v4.53.2
         with:
           cmd: yq -oy '.workspace.package.version' 'Cargo.toml'
 
