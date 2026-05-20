@@ -87,9 +87,15 @@ With this format, the expected error message needs to be a substring of the actu
 {{#include ../../listings/should_panic_example/src/lib.cairo:felt}}
 ```
 
-3. **With tuple of felts**:
+3. **With tuple of felts, ByteArrays, or a mix of both**:
 ```rust
 {{#include ../../listings/should_panic_example/src/lib.cairo:tuple}}
+```
+
+Mixed tuples can contain regular strings, short strings, and numbers in the same `expected: (...)` value, for example:
+
+```rust
+#[should_panic(expected: ("error", 11, "hello", 5, 'short_string'))]
 ```
 
 

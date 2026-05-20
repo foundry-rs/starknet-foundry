@@ -8,8 +8,11 @@ fn empty_fn() {
         snforge_std::_internals::config_types::ShouldPanicConfig {
             expected: snforge_std::_internals::config_types::Expected::Array(
                 array![
-                    snforge_std::_internals::config_types::ExpectedValue::Felt('panic data'),
-                    snforge_std::_internals::config_types::ExpectedValue::Felt(' or not'),
+                    snforge_std::_internals::config_types::ExpectedValue::ByteArray("error"),
+                    snforge_std::_internals::config_types::ExpectedValue::Felt(0xb),
+                    snforge_std::_internals::config_types::ExpectedValue::ByteArray("hello"),
+                    snforge_std::_internals::config_types::ExpectedValue::Felt(0x5),
+                    snforge_std::_internals::config_types::ExpectedValue::Felt('short_string'),
                 ],
             ),
         }

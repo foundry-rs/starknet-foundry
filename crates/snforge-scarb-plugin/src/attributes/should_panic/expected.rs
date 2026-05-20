@@ -12,9 +12,32 @@ use cairo_lang_syntax::node::{Terminal, ast::Expr};
 pub enum Expected {
     Felt(Felt),
     ByteArray(String),
-    Array(Vec<Felt>),
+    Array(Vec<ExpectedValue>),
     #[default]
     Any,
+}
+
+#[derive(Debug, Clone)]
+pub enum ExpectedValue {
+    Felt(Felt),
+    ByteArray(String),
+}
+
+impl CairoExpression for ExpectedValue {
+    fn as_cairo_expression(&self) -> TokenStream {
+        match self {
+            Self::Felt(felt) => {
+                let felt = felt.as_cairo_expression();
+
+                quote!(snforge_std::_internals::config_types::ExpectedValue::Felt(#felt))
+            }
+            Self::ByteArray(string) => {
+                let string = string.as_cairo_expression();
+
+                quote!(snforge_std::_internals::config_types::ExpectedValue::ByteArray(#string))
+            }
+        }
+    }
 }
 
 impl CairoExpression for Expected {
@@ -47,7 +70,7 @@ impl ParseFromExpr<Expr> for Expected {
         arg_name: &str,
     ) -> Result<Self, Diagnostic> {
         let error_msg = format!(
-            "<{arg_name}> argument must be string, short string, number or list of short strings or numbers in regular brackets ()"
+            "<{arg_name}> argument must be string, short string, number or tuple of strings, short strings or numbers in regular brackets ()"
         );
 
         match expr {
@@ -67,13 +90,35 @@ impl ParseFromExpr<Expr> for Expected {
                 let elements = expressions
                     .expressions(db)
                     .elements(db)
-                    .map(|expr| Felt::parse_from_expr::<ShouldPanicCollector>(db, &expr, arg_name))
-                    .collect::<Result<Vec<Felt>, Diagnostic>>()
+                    .map(|expr| {
+                        ExpectedValue::parse_from_expr::<ShouldPanicCollector>(db, &expr, arg_name)
+                    })
+                    .collect::<Result<Vec<ExpectedValue>, Diagnostic>>()
                     .map_err(|_| ShouldPanicCollector::error(error_msg))?;
 
                 Ok(Self::Array(elements))
             }
             _ => Err(ShouldPanicCollector::error(error_msg)),
+        }
+    }
+}
+
+impl ParseFromExpr<Expr> for ExpectedValue {
+    fn parse_from_expr<T: AttributeInfo>(
+        db: &SimpleParserDatabase,
+        expr: &Expr,
+        arg_name: &str,
+    ) -> Result<Self, Diagnostic> {
+        match expr {
+            Expr::ShortString(_) | Expr::Literal(_) => {
+                Ok(Self::Felt(Felt::parse_from_expr::<T>(db, expr, arg_name)?))
+            }
+            Expr::String(string) => Ok(Self::ByteArray(
+                string.text(db).trim_matches('"').to_string(),
+            )),
+            _ => Err(T::error(format!(
+                "<{arg_name}> tuple items must be string, short string or number"
+            ))),
         }
     }
 }

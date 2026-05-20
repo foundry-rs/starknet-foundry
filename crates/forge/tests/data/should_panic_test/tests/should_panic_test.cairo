@@ -23,6 +23,21 @@ fn should_panic_multiple_messages() {
 }
 
 #[test]
+#[should_panic(expected: ("error", 11, "hello", 5, 'short_string'))]
+fn should_panic_mixed_tuple() {
+    let mut arr = ArrayTrait::new();
+    let first = "error";
+    let second = "hello";
+
+    Serde::<ByteArray>::serialize(@first, ref arr);
+    arr.append(11);
+    Serde::<ByteArray>::serialize(@second, ref arr);
+    arr.append(5);
+    arr.append('short_string');
+    panic(arr);
+}
+
+#[test]
 #[should_panic(expected: (0,))]
 fn should_panic_with_non_matching_data() {
     panic_with_felt252('failing check');
@@ -87,4 +102,3 @@ fn should_panic_felt_with_byte_array() {
 fn should_panic_expected_contains_error() {
     panic!("will");
 }
-

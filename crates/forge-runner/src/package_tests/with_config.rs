@@ -4,8 +4,8 @@ use crate::{
     filtering::TestCaseIsIgnored,
 };
 use cheatnet::runtime_extensions::forge_config_extension::config::{
-    Expected, RawAvailableResourceBoundsConfig, RawForgeConfig, RawForkConfig, RawFuzzerConfig,
-    RawShouldPanicConfig,
+    Expected, ExpectedValue, RawAvailableResourceBoundsConfig, RawForgeConfig, RawForkConfig,
+    RawFuzzerConfig, RawShouldPanicConfig,
 };
 use conversions::serde::serialize::SerializeToFeltVec;
 
@@ -52,10 +52,56 @@ impl From<Option<RawShouldPanicConfig>> for ExpectedTestResult {
             None => Self::Success,
             Some(RawShouldPanicConfig { expected }) => Self::Panics(match expected {
                 Expected::Any => ExpectedPanicValue::Any,
-                Expected::Array(arr) => ExpectedPanicValue::Exact(arr),
+                Expected::Array(arr) => ExpectedPanicValue::Exact(
+                    arr.into_iter()
+                        .flat_map(expected_value_into_felts)
+                        .collect(),
+                ),
                 Expected::ByteArray(arr) => ExpectedPanicValue::Exact(arr.serialize_with_magic()),
                 Expected::ShortString(str) => ExpectedPanicValue::Exact(str.serialize_to_vec()),
             }),
         }
+    }
+}
+
+fn expected_value_into_felts(value: ExpectedValue) -> Vec<starknet_types_core::felt::Felt> {
+    match value {
+        ExpectedValue::Felt(felt) => vec![felt],
+        ExpectedValue::ByteArray(byte_array) => byte_array.serialize_to_vec(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use conversions::byte_array::ByteArray;
+    use starknet_types_core::felt::Felt;
+
+    #[test]
+    fn mixed_tuple_byte_arrays_are_serialized_without_magic() {
+        let expected = ExpectedTestResult::from(Some(RawShouldPanicConfig {
+            expected: Expected::Array(vec![
+                ExpectedValue::ByteArray(ByteArray::from("error")),
+                ExpectedValue::Felt(Felt::from(11_u8)),
+                ExpectedValue::ByteArray(ByteArray::from("hello")),
+                ExpectedValue::Felt(Felt::from(5_u8)),
+                ExpectedValue::Felt(Felt::from_bytes_be_slice(b"short_string")),
+            ]),
+        }));
+
+        assert_eq!(
+            expected,
+            ExpectedTestResult::Panics(ExpectedPanicValue::Exact(vec![
+                Felt::from(0_u8),
+                Felt::from_bytes_be_slice(b"error"),
+                Felt::from(5_u8),
+                Felt::from(11_u8),
+                Felt::from(0_u8),
+                Felt::from_bytes_be_slice(b"hello"),
+                Felt::from(5_u8),
+                Felt::from(5_u8),
+                Felt::from_bytes_be_slice(b"short_string"),
+            ]))
+        );
     }
 }
