@@ -7,7 +7,6 @@ use derive_more::Display;
 use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::partition::Partition;
-use forge_runner::resolve_cache_dir;
 use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use run_tests::workspace::run_for_workspace;
