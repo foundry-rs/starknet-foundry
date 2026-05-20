@@ -309,8 +309,8 @@ mod tests {
 
     #[test]
     fn rejects_empty_string() {
-        let err = resolve_cache_dir_impl(Utf8Path::new("/tmp/workspace"), Ok(String::new()))
-            .unwrap_err();
+        let err =
+            resolve_cache_dir_impl(Utf8Path::new("/tmp/workspace"), Ok(String::new())).unwrap_err();
         assert_eq!(err.to_string(), "SNFOUNDRY_CACHE must be an absolute path");
     }
 }
