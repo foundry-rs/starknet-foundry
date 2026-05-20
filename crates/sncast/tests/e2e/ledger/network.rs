@@ -1,5 +1,5 @@
 use crate::e2e::ledger::{
-    BRAAVOS_LEDGER_PATH, LEDGER_ACCOUNT_NAME, OZ_LEDGER_PATH, TEST_LEDGER_PATH, automation,
+    BRAAVOS_LEDGER_PATH, LEDGER_ACCOUNT_NAME, OZ_LEDGER_PATH, TEST_LEDGER_PATH,
     create_temp_accounts_json, deploy_ledger_account, deploy_ledger_account_of_type,
     set_automation, setup_speculos,
 };
@@ -13,6 +13,9 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use sncast::AccountType;
+use speculos_client::starknet_app::{
+    APPROVE_BLIND_SIGN_HASH, APPROVE_PUBLIC_KEY, ENABLE_BLIND_SIGN,
+};
 use starknet_rust::core::types::TransactionReceipt::{Declare, Invoke};
 use starknet_types_core::felt::Felt;
 use std::path::Path;
@@ -24,14 +27,7 @@ use test_case::test_case;
 async fn test_ledger_invoke_happy_case() {
     let (client, url) = setup_speculos(5001);
 
-    set_automation(
-        &client,
-        &[
-            automation::ENABLE_BLIND_SIGN,
-            automation::APPROVE_BLIND_SIGN_HASH,
-        ],
-    )
-    .await;
+    set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
 
     let account_address = deploy_ledger_account(&url, TEST_LEDGER_PATH, Felt::from(5001_u32)).await;
     let tempdir = create_temp_accounts_json(account_address);
@@ -72,14 +68,7 @@ async fn test_ledger_invoke_happy_case() {
 async fn test_ledger_invoke_with_wait() {
     let (client, url) = setup_speculos(5002);
 
-    set_automation(
-        &client,
-        &[
-            automation::ENABLE_BLIND_SIGN,
-            automation::APPROVE_BLIND_SIGN_HASH,
-        ],
-    )
-    .await;
+    set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
 
     let account_address = deploy_ledger_account(&url, TEST_LEDGER_PATH, Felt::from(5002_u32)).await;
     let tempdir = create_temp_accounts_json(account_address);
@@ -122,14 +111,7 @@ async fn test_ledger_invoke_with_wait() {
 async fn test_ledger_deploy_happy_case() {
     let (client, url) = setup_speculos(5004);
 
-    set_automation(
-        &client,
-        &[
-            automation::ENABLE_BLIND_SIGN,
-            automation::APPROVE_BLIND_SIGN_HASH,
-        ],
-    )
-    .await;
+    set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
 
     let account_address = deploy_ledger_account(&url, TEST_LEDGER_PATH, Felt::from(5004_u32)).await;
     let tempdir = create_temp_accounts_json(account_address);
@@ -169,14 +151,7 @@ async fn test_ledger_deploy_happy_case() {
 async fn test_ledger_deploy_with_constructor() {
     let (client, url) = setup_speculos(5005);
 
-    set_automation(
-        &client,
-        &[
-            automation::ENABLE_BLIND_SIGN,
-            automation::APPROVE_BLIND_SIGN_HASH,
-        ],
-    )
-    .await;
+    set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
 
     let account_address = deploy_ledger_account(&url, TEST_LEDGER_PATH, Felt::from(6001_u32)).await;
     let tempdir = create_temp_accounts_json(account_address);
@@ -218,14 +193,7 @@ async fn test_ledger_deploy_with_constructor() {
 async fn test_ledger_declare() {
     let (client, url) = setup_speculos(5006);
 
-    set_automation(
-        &client,
-        &[
-            automation::ENABLE_BLIND_SIGN,
-            automation::APPROVE_BLIND_SIGN_HASH,
-        ],
-    )
-    .await;
+    set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
 
     let account_address = deploy_ledger_account(&url, TEST_LEDGER_PATH, Felt::from(5006_u32)).await;
 
@@ -281,9 +249,9 @@ async fn test_ledger_import_and_invoke(
     set_automation(
         &client,
         &[
-            automation::ENABLE_BLIND_SIGN,
-            automation::APPROVE_BLIND_SIGN_HASH,
-            automation::APPROVE_PUBLIC_KEY,
+            ENABLE_BLIND_SIGN,
+            APPROVE_BLIND_SIGN_HASH,
+            APPROVE_PUBLIC_KEY,
         ],
     )
     .await;
@@ -367,14 +335,7 @@ async fn test_ledger_import_and_invoke(
 async fn test_ledger_multicall() {
     let (client, url) = setup_speculos(5007);
 
-    set_automation(
-        &client,
-        &[
-            automation::ENABLE_BLIND_SIGN,
-            automation::APPROVE_BLIND_SIGN_HASH,
-        ],
-    )
-    .await;
+    set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
 
     let account_address = deploy_ledger_account(&url, TEST_LEDGER_PATH, Felt::from(5007_u32)).await;
     let tempdir = create_temp_accounts_json(account_address);
