@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `snforge test` now fails fast and explicitly when `[cairo] enable-gas = false`. Read more in [`Scarb.toml` reference](https://foundry-rs.github.io/starknet-foundry/appendix/scarb-toml.html#enable-gas).
 - `#[test]` macro now expands correctly in `snforge_scarb_plugin` for cases involving block expressions (e.g. function code starting with `[`)
 
+#### Removed
+
+- The deprecated `snforge clean-cache` command. Use `snforge clean cache` instead
+
 ### Cast
 
 #### Added
