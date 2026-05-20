@@ -9,5 +9,5 @@ fn empty_fn() {
             .serialize(ref data);
         starknet::testing::cheatcode::<'set_config_disable_contracts'>(data.span());
         return Default::default();
-    }
+    };
 }
