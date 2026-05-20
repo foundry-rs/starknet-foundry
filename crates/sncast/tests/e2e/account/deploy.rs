@@ -317,7 +317,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         .expect("Path is not valid UTF-8");
     let items = load_accounts(&path).expect("Failed to load accounts");
     assert_eq!(items["deployment"]["status"], "deployed");
-    assert!(!items["deployment"]["address"].is_null());
+    assert_eq!(items["deployment"]["address"], address.into_hex_string());
     assert!(items["deployment"]["salt"].is_null());
     assert!(items["deployment"]["context"].is_null());
 }

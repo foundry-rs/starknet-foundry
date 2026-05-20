@@ -29,7 +29,7 @@ There are two ways of configuring a fork:
 > Using fork tests means `snforge` will make (often multiple) requests to the configured RPC URL.
 > These requests are relatively slow as they happen over the network.
 >
-> `snforge` can cache these requests automatically in `.snfoundry_cache` but only if `block_hash` or `block_number` is provided.
+> `snforge` can cache these requests automatically in its cache directory but only if `block_hash` or `block_number` is provided.
 > **Using `block_tag`, especially `"latest"` disables the caching functionality.**
 
 ### Configure a Fork in the Attribute
