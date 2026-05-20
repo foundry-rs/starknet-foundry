@@ -8,7 +8,12 @@ Clean all generated directories
 
 ## `cache`
 
-Clean the `.snfoundry_cache` directory.
+Clean the cache directory.
+
+> ℹ️ **Info**
+>
+> The default cache directory is `.snfoundry_cache`, relative to the workspace root.
+> You can override it with the `SNFOUNDRY_CACHE` environment variable, which must be an absolute path to a dedicated directory.
 
 ## `trace`
 

@@ -1,8 +1,8 @@
 use std::str::FromStr;
 
-use super::deploy::compute_account_address;
 use crate::starknet_commands::account::{
-    generate_add_profile_message, prepare_account_json, write_account_to_accounts_file,
+    compute_account_address, generate_add_profile_message, prepare_account_json,
+    write_account_to_accounts_file,
 };
 use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
@@ -147,8 +147,16 @@ pub async fn import(
     let chain_id = get_chain_id(provider).await?;
 
     if let Some(salt) = import.salt {
-        let computed_address =
-            compute_account_address(salt, public_key, class_hash, import.account_type, chain_id);
+        let computed_address = compute_account_address(
+            salt,
+            class_hash,
+            import.account_type,
+            chain_id,
+            &signer_type,
+            provider,
+            ui,
+        )
+        .await?;
         ensure!(
             computed_address == import.address,
             "Computed address {:#x} does not match the provided address {:#x}. Please ensure that the provided salt, class hash, and account type are correct.",

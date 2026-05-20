@@ -7,8 +7,8 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use configuration::test_utils::copy_config_to_tempdir;
-use indoc::indoc;
-use shared::test_utils::output_assert::assert_stderr_contains;
+use indoc::{formatdoc, indoc};
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 
 #[tokio::test]
 async fn test_happy_case_from_sncast_config() {
@@ -406,7 +406,15 @@ async fn test_keystore_declare() {
     set_keystore_password_env();
     let snapbox = runner(&args).current_dir(contract_path.path());
 
-    assert!(snapbox.assert().success().get_output().stderr.is_empty());
+    let output = snapbox.assert().success();
+    assert!(output.get_output().stderr.is_empty());
+    assert_stdout_contains(
+        output,
+        formatdoc! {"
+            To deploy a contract of this class, run:
+            sncast --keystore {my_key_path} --account {my_account_path} deploy --class-hash 0x[..] --url [..]
+        "},
+    );
 }
 
 #[tokio::test]

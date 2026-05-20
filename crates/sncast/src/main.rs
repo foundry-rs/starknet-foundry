@@ -412,6 +412,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                     response,
                     &config.account,
                     &config.accounts_file,
+                    config.keystore.as_ref(),
                     network_flag,
                 ))
             } else {
