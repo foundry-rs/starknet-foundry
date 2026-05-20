@@ -1,13 +1,14 @@
 use super::common::runner::{runner, setup_package, test_runner};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
+use forge_runner::DEFAULT_CACHE_DIR;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use shared::test_utils::output_assert::assert_stdout_contains;
+use std::fs;
 use std::path::Path;
 
 const COVERAGE_DIR: &str = "coverage";
 const PROFILE_DIR: &str = "profile";
-const CACHE_DIR: &str = ".snfoundry_cache";
 const TRACE_DIR: &str = "snfoundry_trace";
 
 #[expect(clippy::struct_excessive_bools)]
@@ -125,9 +126,77 @@ fn test_clean_cache() {
 }
 
 #[test]
+fn test_clean_cache_with_custom_cache_dir() {
+    let temp_dir = setup_package("coverage_project");
+
+    let custom_cache_dir = temp_dir.path().join("custom_cache");
+    fs::create_dir(&custom_cache_dir).unwrap();
+
+    generate_clean_components(
+        CleanComponentsState {
+            coverage: false,
+            profile: false,
+            cache: true,
+            trace: false,
+        },
+        &temp_dir,
+    );
+
+    runner(&temp_dir)
+        .arg("clean")
+        .arg("cache")
+        .env("SNFOUNDRY_CACHE", &custom_cache_dir)
+        .assert()
+        .success();
+
+    assert!(!custom_cache_dir.exists());
+
+    assert_eq!(
+        check_clean_components_state(temp_dir.path()),
+        CleanComponentsState {
+            coverage: false,
+            profile: false,
+            cache: true,
+            trace: false,
+        }
+    );
+}
+
+#[test]
+fn test_clean_cache_with_custom_cache_dir_preserves_unrelated_files() {
+    let temp_dir = setup_package("coverage_project");
+
+    let custom_cache_dir = temp_dir.path().join("custom_cache");
+    fs::create_dir(&custom_cache_dir).unwrap();
+    fs::write(custom_cache_dir.join(".prev_tests_failed"), "failed_test").unwrap();
+    fs::write(
+        custom_cache_dir.join("http___rpc_example_54060_v0_60_0.json"),
+        "{}",
+    )
+    .unwrap();
+    fs::write(custom_cache_dir.join("keep.txt"), "keep").unwrap();
+
+    runner(&temp_dir)
+        .arg("clean")
+        .arg("cache")
+        .env("SNFOUNDRY_CACHE", &custom_cache_dir)
+        .assert()
+        .success();
+
+    assert!(custom_cache_dir.exists());
+    assert!(!custom_cache_dir.join(".prev_tests_failed").exists());
+    assert!(
+        !custom_cache_dir
+            .join("http___rpc_example_54060_v0_60_0.json")
+            .exists()
+    );
+    assert!(custom_cache_dir.join("keep.txt").exists());
+}
+
+#[test]
 #[cfg_attr(
     feature = "cairo-native",
-    ignore = "Native doesn't support trace, coverage and profiler yet"
+    ignore = "Native doesn't support trace, coverage and profiler"
 )]
 fn test_clean_all() {
     let temp_dir = setup_package("coverage_project");
@@ -153,6 +222,47 @@ fn test_clean_all() {
     assert_eq!(
         check_clean_components_state(temp_dir.path()),
         expected_state
+    );
+}
+
+#[test]
+#[cfg_attr(
+    feature = "cairo-native",
+    ignore = "Native doesn't support trace, coverage and profiler"
+)]
+fn test_clean_all_with_custom_cache_dir() {
+    let temp_dir = setup_package("coverage_project");
+
+    let custom_cache_dir = temp_dir.path().join("custom_cache");
+    fs::create_dir(&custom_cache_dir).unwrap();
+
+    generate_clean_components(
+        CleanComponentsState {
+            coverage: true,
+            cache: true,
+            trace: true,
+            profile: true,
+        },
+        &temp_dir,
+    );
+
+    runner(&temp_dir)
+        .arg("clean")
+        .arg("all")
+        .env("SNFOUNDRY_CACHE", &custom_cache_dir)
+        .assert()
+        .success();
+
+    assert!(!custom_cache_dir.exists());
+
+    assert_eq!(
+        check_clean_components_state(temp_dir.path()),
+        CleanComponentsState {
+            coverage: false,
+            profile: false,
+            cache: true,
+            trace: false,
+        }
     );
 }
 
@@ -248,7 +358,7 @@ fn check_clean_components_state(path: &Path) -> CleanComponentsState {
     CleanComponentsState {
         coverage: dirs_exist(&packages_root, COVERAGE_DIR),
         profile: dirs_exist(&packages_root, PROFILE_DIR),
-        cache: dir_exists(&workspace_root, CACHE_DIR),
+        cache: dir_exists(&workspace_root, DEFAULT_CACHE_DIR),
         trace: dir_exists(&workspace_root, TRACE_DIR),
     }
 }
