@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
+- `#[derive(Fuzzable)]` macro that automatically generates `Fuzzable` trait implementations for structs and enums
 - `SNFOUNDRY_CACHE` environment variable to allow to specify a custom cache directory
 
 #### Changed
@@ -26,27 +27,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Added
+
+- `sncast get spec-version` command that returns the version of the Starknet JSON-RPC specification used by the node
+
 #### Fixed
 
 - `sncast completions` no longer fails due to invalid local or global `snfoundry.toml` config.
+- Non-panic errors no longer bypass foundry UI. `--json` now works for user-facing errors where plain text was printed before (excluding clap arg-parsing errors).
+- Build failures now return command errors instead of panicking.
+- In command errors, `command` field now universally displays a full command path (`get tx-status`, `account import`) (previously in some cases, only top-level command name was shown, e.g. `get`, `account`).
 - `sncast account deploy` now correctly writes deployed address to keystore account file.
 - `sncast declare` now correctly includes `--keystore` flag in the suggested deploy command when keystore is used.
 
 #### Removed
 
 - `argent` option for `--type` flag in `account create` and `account import` commands. Use `ready` instead. Old account files with `"type": "argent"` are still loaded correctly.
-
-#### Added
-
-- `#[derive(Fuzzable)]` macro that automatically generates `Fuzzable` trait implementations for structs and enums
-
-### Cast
-
-#### Fixed
-
-- Non-panic errors no longer bypass foundry UI. `--json` now works for user-facing errors where plain text was printed before (excluding clap arg-parsing errors).
-- Build failures now return command errors instead of panicking.
-- In command errors, `command` field now universally displays a full command path (`get tx-status`, `account import`) (previously in some cases, only top-level command name was shown, e.g. `get`, `account`).
 
 ## [0.60.0] - 2026-04-27
 

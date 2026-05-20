@@ -5,5 +5,6 @@ It has the following subcommands:
 * [`balance`](./balance.md)
 * [`class-hash-at`](./class_hash_at.md)
 * [`nonce`](./nonce.md)
+* [`spec-version`](./spec-version.md)
 * [`tx`](./tx.md) (alias: `transaction`)
 * [`tx-status`](./tx-status.md) (alias: `transaction-status`)
