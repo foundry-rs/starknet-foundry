@@ -10,9 +10,9 @@ pub struct SpecVersionResponse {
 impl SncastCommandMessage for SpecVersionResponse {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
-            .success_message("Specification version retrieved")
+            .success_message("Spec version retrieved")
             .blank_line()
-            .field("Specification Version", &self.spec_version)
+            .field("Spec Version", &self.spec_version)
             .build()
     }
 }

@@ -8,9 +8,9 @@ async fn test_happy_case() {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r"
-        Success: Specification version retrieved
+        Success: Spec version retrieved
 
-        Specification Version: [..]
+        Spec Version: [..]
     "});
 }
 
