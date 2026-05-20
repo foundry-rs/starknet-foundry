@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - `sncast completions` no longer fails due to invalid local or global `snfoundry.toml` config.
-- - Non-panic errors no longer bypass foundry UI. `--json` now works for user-facing errors where plain text was printed before (excluding clap arg-parsing errors).
+- Non-panic errors no longer bypass foundry UI. `--json` now works for user-facing errors where plain text was printed before (excluding clap arg-parsing errors).
 - Build failures now return command errors instead of panicking.
 - In command errors, `command` field now universally displays a full command path (`get tx-status`, `account import`) (previously in some cases, only top-level command name was shown, e.g. `get`, `account`).
 
