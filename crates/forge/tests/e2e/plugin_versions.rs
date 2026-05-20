@@ -29,13 +29,13 @@ fn new_with_new_scarb() {
     assert_eq!(snforge_std, env!("CARGO_PKG_VERSION"));
 }
 
-#[cfg(feature = "scarb_2_12_0")]
+#[cfg(feature = "scarb_2_13_1")]
 #[test]
 fn new_with_minimal_scarb() {
     let temp = tempdir_with_tool_versions().unwrap();
     Command::new("asdf")
         .current_dir(&temp)
-        .args(["set", "scarb", "2.12.0"])
+        .args(["set", "scarb", "2.13.1"])
         .assert()
         .success();
     runner(&temp)
