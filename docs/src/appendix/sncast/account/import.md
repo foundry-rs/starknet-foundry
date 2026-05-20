@@ -75,6 +75,8 @@ Optional.
 
 Salt for the account address.
 
+> **Limitation:** For `ready` (formerly `argent`) accounts, address validation only supports accounts deployed with guardian key set to 0.
+
 ## `--add-profile <NAME>`
 Optional.
 

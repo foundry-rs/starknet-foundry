@@ -6,6 +6,7 @@ use std::process::ExitCode;
 pub mod balance;
 pub mod class_hash_at;
 pub mod nonce;
+pub mod spec_version;
 pub mod transaction;
 pub mod tx_status;
 
@@ -34,6 +35,9 @@ pub enum GetCommands {
 
     /// Get class hash of a contract at a given address
     ClassHashAt(class_hash_at::ClassHashAt),
+
+    /// Get version of Starknet JSON-RPC specification used by the node
+    SpecVersion(spec_version::SpecVersion),
 }
 
 pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCode> {
@@ -47,5 +51,7 @@ pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCo
         GetCommands::Nonce(nonce) => nonce::nonce(nonce, config, ui).await,
 
         GetCommands::ClassHashAt(args) => class_hash_at::class_hash_at(args, config, ui).await,
+
+        GetCommands::SpecVersion(args) => spec_version::spec_version(args, config, ui).await,
     }
 }
