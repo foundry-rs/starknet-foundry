@@ -304,13 +304,13 @@ mod tests {
             Ok("relative/cache".to_string()),
         )
         .unwrap_err();
-        assert!(err.to_string().contains("absolute path"));
+        assert_eq!(err.to_string(), "SNFOUNDRY_CACHE must be an absolute path");
     }
 
     #[test]
     fn rejects_empty_string() {
         let err = resolve_cache_dir_impl(Utf8Path::new("/tmp/workspace"), Ok(String::new()))
             .unwrap_err();
-        assert!(err.to_string().contains("absolute path"));
+        assert_eq!(err.to_string(), "SNFOUNDRY_CACHE must be an absolute path");
     }
 }
