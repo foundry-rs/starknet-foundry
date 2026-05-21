@@ -61,6 +61,7 @@
 * [Verifying Contracts](starknet/verify.md)
 * [Calldata Transformation](starknet/calldata-transformation.md)
 * [Block Explorers](starknet/block_explorer.md)
+* [Aliases](starknet/aliases.md)
 * [Integration With Devnet](starknet/integration_with_devnet.md)
 * [Developer Functionalities](starknet/developer.md)
 * [Ledger Hardware Wallet](starknet/ledger.md)
