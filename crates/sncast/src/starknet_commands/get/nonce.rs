@@ -1,5 +1,5 @@
-use crate::starknet_commands::utils::felt_or_id::FeltOrId;
-use anyhow::{Context, Result};
+use crate::starknet_commands::utils::felt_or_id::ContractAddress;
+use anyhow::Result;
 use clap::Args;
 use sncast::get_block_id;
 use sncast::helpers::command::process_command_result;
@@ -17,7 +17,7 @@ use std::process::ExitCode;
 #[command(about = "Get the nonce of a contract")]
 pub struct Nonce {
     /// Address of the contract (hex, decimal, or @alias from snfoundry.toml)
-    pub contract_address: FeltOrId,
+    pub contract_address: ContractAddress,
 
     /// Block identifier on which nonce should be fetched.
     /// Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string)
@@ -32,10 +32,7 @@ pub struct Nonce {
 pub async fn nonce(nonce: Nonce, config: CastConfig, ui: &UI) -> Result<ExitCode> {
     let provider = nonce.rpc.get_provider(&config, ui).await?;
 
-    let contract_address = nonce
-        .contract_address
-        .resolve_alias_or_felt(&config)
-        .context("Invalid contract address")?;
+    let contract_address = nonce.contract_address.resolve(&config)?;
 
     let result = get_nonce(&provider, contract_address, &nonce.block_id)
         .await

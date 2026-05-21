@@ -1,4 +1,4 @@
-use crate::starknet_commands::utils::felt_or_id::FeltOrId;
+use crate::starknet_commands::utils::felt_or_id::{ClassHash, FeltOrId};
 use anyhow::{Context, Result};
 use clap::Args;
 use conversions::string::IntoHexStr;
@@ -35,7 +35,7 @@ impl MulticallDeploy {
             common: DeployCommonArgs {
                 contract_identifier: ContractIdentifier {
                     // TODO: add full support for multicall id <> alias id resolution (will be done in next PR)
-                    class_hash: Some(FeltOrId::new(item.class_hash.into_hex_string())),
+                    class_hash: Some(ClassHash(FeltOrId::new(item.class_hash.into_hex_string()))),
                     contract_name: None,
                 },
                 arguments: DeployArguments {
@@ -78,8 +78,7 @@ impl MulticallDeploy {
             .class_hash
             .as_ref()
             .context("Using deploy with multicall requires providing class hash")?
-            .try_into_felt()
-            .context("Invalid class hash")?;
+            .as_felt()?;
         let constructor_calldata = if let Some(raw_calldata) = &constructor_arguments.calldata {
             calldata_to_felts(raw_calldata)?
         } else {

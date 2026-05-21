@@ -1,5 +1,5 @@
-use crate::starknet_commands::utils::felt_or_id::FeltOrId;
-use anyhow::{Context, Error, Result};
+use crate::starknet_commands::utils::felt_or_id::TokenAddress;
+use anyhow::{Error, Result};
 use clap::Args;
 use primitive_types::U256;
 use sncast::helpers::command::process_command_result;
@@ -29,14 +29,13 @@ pub struct TokenIdentifier {
     /// Token contract address to check the balance for (hex, decimal, or @alias from snfoundry.toml).
     /// Token needs to be compatible with ERC-20 standard.
     #[arg(short = 'd', long)]
-    pub token_address: Option<FeltOrId>,
+    pub token_address: Option<TokenAddress>,
 }
 
 impl TokenIdentifier {
     pub fn contract_address(&self, config: &CastConfig) -> Result<Felt> {
         if let Some(addr) = &self.token_address {
-            addr.resolve_alias_or_felt(config)
-                .context("Invalid token address")
+            addr.resolve(config)
         } else if let Some(tok) = self.token {
             Ok(tok.contract_address())
         } else {

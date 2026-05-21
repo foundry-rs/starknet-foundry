@@ -40,13 +40,6 @@ impl FeltOrId {
     }
 }
 
-pub fn resolve_optional(value: Option<&FeltOrId>, config: &CastConfig) -> Result<Option<Felt>> {
-    value
-        .as_ref()
-        .map(|felt_or_id| felt_or_id.resolve_alias_or_felt(config))
-        .transpose()
-}
-
 impl std::str::FromStr for FeltOrId {
     type Err = anyhow::Error;
 
@@ -54,6 +47,43 @@ impl std::str::FromStr for FeltOrId {
         Ok(FeltOrId(s.to_owned()))
     }
 }
+
+macro_rules! felt_or_id_newtype {
+    ($name:ident, $context:literal) => {
+        #[derive(Clone, Debug, Deserialize)]
+        pub struct $name(pub FeltOrId);
+
+        #[allow(dead_code)]
+        impl $name {
+            pub fn resolve(&self, config: &CastConfig) -> Result<Felt> {
+                self.0.resolve_alias_or_felt(config).context($context)
+            }
+
+            pub fn as_felt(&self) -> Result<Felt> {
+                self.0.try_into_felt()
+            }
+
+            pub fn resolve_optional(
+                value: &Option<Self>,
+                config: &CastConfig,
+            ) -> Result<Option<Felt>> {
+                value.as_ref().map(|v| v.resolve(config)).transpose()
+            }
+        }
+
+        impl std::str::FromStr for $name {
+            type Err = anyhow::Error;
+
+            fn from_str(s: &str) -> Result<Self, Self::Err> {
+                Ok(Self(FeltOrId::from_str(s)?))
+            }
+        }
+    };
+}
+
+felt_or_id_newtype!(ContractAddress, "Invalid contract address");
+felt_or_id_newtype!(ClassHash, "Invalid class hash");
+felt_or_id_newtype!(TokenAddress, "Invalid token address");
 
 #[cfg(test)]
 mod tests {

@@ -1,4 +1,4 @@
-use crate::starknet_commands::utils::felt_or_id::FeltOrId;
+use crate::starknet_commands::utils::felt_or_id::{ClassHash, ContractAddress};
 use anyhow::{Context, Result, anyhow, bail};
 use clap::{Args, ValueEnum};
 use promptly::prompt;
@@ -63,32 +63,22 @@ pub struct Verify {
 pub struct ContractIdentifierArgs {
     /// Class hash of a contract to be verified (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short = 'g', long)]
-    pub class_hash: Option<FeltOrId>,
+    pub class_hash: Option<ClassHash>,
 
     /// Address of a contract to be verified (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short = 'd', long)]
-    pub contract_address: Option<FeltOrId>,
+    pub contract_address: Option<ContractAddress>,
 }
 
 impl ContractIdentifierArgs {
     pub fn get_identifier(&self, config: &CastConfig) -> Result<ContractIdentifier> {
         match (&self.class_hash, &self.contract_address) {
-            (Some(class_hash), None) => {
-                let class_hash = class_hash
-                    .resolve_alias_or_felt(config)
-                    .context("Invalid class hash")?;
-                Ok(ContractIdentifier::ClassHash {
-                    class_hash: class_hash.to_fixed_hex_string(),
-                })
-            }
-            (None, Some(contract_address)) => {
-                let contract_address = contract_address
-                    .resolve_alias_or_felt(config)
-                    .context("Invalid contract address")?;
-                Ok(ContractIdentifier::Address {
-                    contract_address: contract_address.to_fixed_hex_string(),
-                })
-            }
+            (Some(class_hash), None) => Ok(ContractIdentifier::ClassHash {
+                class_hash: class_hash.resolve(config)?.to_fixed_hex_string(),
+            }),
+            (None, Some(contract_address)) => Ok(ContractIdentifier::Address {
+                contract_address: contract_address.resolve(config)?.to_fixed_hex_string(),
+            }),
             _ => unreachable!("Exactly one of class_hash or contract_address must be provided."),
         }
     }

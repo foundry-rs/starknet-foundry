@@ -1,5 +1,5 @@
 use crate::Arguments;
-use crate::starknet_commands::utils::felt_or_id::FeltOrId;
+use crate::starknet_commands::utils::felt_or_id::ContractAddress;
 use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
@@ -23,7 +23,7 @@ use starknet_types_core::felt::Felt;
 pub struct InvokeCommonArgs {
     /// Address of the contract to invoke (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short = 'd', long)]
-    pub contract_address: FeltOrId,
+    pub contract_address: ContractAddress,
 
     /// Name of the function to invoke
     #[arg(short, long)]

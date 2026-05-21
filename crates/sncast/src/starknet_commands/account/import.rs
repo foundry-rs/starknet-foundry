@@ -4,7 +4,7 @@ use crate::starknet_commands::account::{
     compute_account_address, generate_add_profile_message, prepare_account_json,
     write_account_to_accounts_file,
 };
-use crate::starknet_commands::utils::felt_or_id::{FeltOrId, resolve_optional};
+use crate::starknet_commands::utils::felt_or_id::{ClassHash, ContractAddress};
 use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::Args;
@@ -33,7 +33,7 @@ pub struct Import {
 
     /// Address of the account (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short, long)]
-    pub address: FeltOrId,
+    pub address: ContractAddress,
 
     /// Type of the account
     #[arg(short = 't', long = "type", value_parser = AccountType::from_str)]
@@ -41,7 +41,7 @@ pub struct Import {
 
     /// Class hash of the account (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short, long)]
-    pub class_hash: Option<FeltOrId>,
+    pub class_hash: Option<ClassHash>,
 
     /// Account private key
     #[arg(
@@ -80,13 +80,11 @@ pub struct Import {
 
 impl Import {
     pub fn resolved_address(&self, config: &CastConfig) -> Result<Felt> {
-        self.address
-            .resolve_alias_or_felt(config)
-            .context("Invalid address")
+        self.address.resolve(config)
     }
 
     pub fn resolved_class_hash(&self, config: &CastConfig) -> Result<Option<Felt>> {
-        resolve_optional(self.class_hash.as_ref(), config).context("Invalid class hash")
+        ClassHash::resolve_optional(&self.class_hash, config)
     }
 }
 

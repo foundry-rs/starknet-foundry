@@ -1,7 +1,7 @@
 use crate::starknet_commands::account::{
     generate_add_profile_message, prepare_account_json, write_account_to_accounts_file,
 };
-use crate::starknet_commands::utils::felt_or_id::{FeltOrId, resolve_optional};
+use crate::starknet_commands::utils::felt_or_id::ClassHash;
 use anyhow::{Context, Result, anyhow, bail};
 use bigdecimal::BigDecimal;
 use camino::Utf8PathBuf;
@@ -55,7 +55,7 @@ pub struct Create {
 
     /// Custom contract class hash of declared contract (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short, long, requires = "account_type")]
-    pub class_hash: Option<FeltOrId>,
+    pub class_hash: Option<ClassHash>,
 
     #[command(flatten)]
     pub rpc: RpcArgs,
@@ -66,7 +66,7 @@ pub struct Create {
 
 impl Create {
     pub fn resolved_class_hash(&self, config: &CastConfig) -> Result<Option<Felt>> {
-        resolve_optional(self.class_hash.as_ref(), config).context("Invalid class hash")
+        ClassHash::resolve_optional(&self.class_hash, config)
     }
 }
 

@@ -1,7 +1,7 @@
 use crate::starknet_commands::declare::{
     DeclareCommonArgs, compile_sierra_to_casm, declare_with_artifacts,
 };
-use crate::starknet_commands::utils::felt_or_id::FeltOrId;
+use crate::starknet_commands::utils::felt_or_id::ClassHash;
 use anyhow::{Context, Result};
 use clap::{ArgGroup, Args};
 use shared::verify_and_warn_if_incompatible_rpc_version;
@@ -38,7 +38,7 @@ pub struct DeclareFrom {
 
     /// Class hash of contract declared on a different Starknet instance (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short = 'g', long, conflicts_with = "no_abi")]
-    pub class_hash: Option<FeltOrId>,
+    pub class_hash: Option<ClassHash>,
 
     #[command(flatten)]
     pub source_rpc: SourceRpcArgs,
