@@ -9,6 +9,8 @@ Instead, you can create aliases for felt values (contract addresses, class hashe
 
 Then, you can pass them on CLI using the `@alias` syntax:
 
+<!-- TODO(#4225): this would require extended doc test setup (e.g. defining config or emulating aliases using env var) -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast call --contract-address @map --function get --calldata 0x0 --block-id latest
 ```
@@ -47,6 +49,8 @@ $ sncast call --contract-address @map --function get --calldata 0x0 --block-id l
 
 Where a command accepts a felt argument that supports aliases, you can pass `@alias` instead of felt literal:
 
+<!-- TODO(#4225): this would require extended doc test setup (e.g. defining config or emulating aliases using env var) -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast call --contract-address @map --function get --calldata 0x0 --block-id latest
 ```
