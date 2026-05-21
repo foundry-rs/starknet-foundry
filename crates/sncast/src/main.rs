@@ -1,4 +1,3 @@
-use std::borrow::Borrow;
 use std::num::{NonZeroU8, NonZeroU16};
 use std::str::FromStr;
 
@@ -241,34 +240,22 @@ pub struct Arguments {
     pub arguments: Option<String>,
 }
 
-enum AbiOrContractClass<C> {
-    Abi(Vec<AbiEntry>),
-    ContractClass(C),
+fn abi_from_contract_class(contract_class: &ContractClass) -> Result<Vec<AbiEntry>> {
+    let ContractClass::Sierra(sierra_class) = contract_class else {
+        bail!("Transformation of arguments is not available for Cairo Zero contracts")
+    };
+
+    serde_json::from_str(sierra_class.abi.as_str())
+        .context("Couldn't deserialize ABI received from network")
 }
 
 impl Arguments {
-    fn try_into_calldata(
-        self,
-        abi_or_contract_class: AbiOrContractClass<impl Borrow<ContractClass>>,
-        selector: &Felt,
-    ) -> Result<Vec<Felt>> {
+    fn try_into_calldata(self, abi: &Vec<AbiEntry>, selector: &Felt) -> Result<Vec<Felt>> {
         if let Some(calldata) = self.calldata {
             return calldata_to_felts(&calldata);
         }
 
-        let abi = match abi_or_contract_class {
-            AbiOrContractClass::Abi(abi) => abi,
-            AbiOrContractClass::ContractClass(contract_class) => {
-                let ContractClass::Sierra(sierra_class) = contract_class.borrow() else {
-                    bail!("Transformation of arguments is not available for Cairo Zero contracts")
-                };
-
-                serde_json::from_str::<Vec<_>>(sierra_class.abi.as_str())
-                    .context("Couldn't deserialize ABI received from network")?
-            }
-        };
-
-        transform(&self.arguments.unwrap_or_default(), &abi, selector)
+        transform(&self.arguments.unwrap_or_default(), abi, selector)
     }
 }
 
@@ -411,7 +398,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 let network_flag = generate_network_flag(&rpc, &config);
                 Some(DeployCommandMessage::new(
                     &contract_definition.abi,
-                    declare.no_abi,
+                    !declare.no_abi,
                     response,
                     &config.account,
                     &config.accounts_file,
@@ -600,15 +587,14 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let selector = get_selector_from_name("constructor").unwrap();
 
             let arguments: Arguments = arguments.into();
-            let calldata = arguments.try_into_calldata(
-                match local_abi {
-                    Some(abi) => AbiOrContractClass::Abi(abi),
-                    None => AbiOrContractClass::ContractClass(
-                        get_contract_class(class_hash, &provider).await?,
-                    ),
-                },
-                &selector,
-            )?;
+            let abi = match local_abi {
+                Some(abi) => abi,
+                None => {
+                    let contract_class = get_contract_class(class_hash, &provider).await?;
+                    abi_from_contract_class(&contract_class)?
+                }
+            };
+            let calldata = arguments.try_into_calldata(&abi, &selector)?;
 
             let result = with_account!(&account, |account| {
                 starknet_commands::deploy::deploy(
@@ -664,10 +650,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let calldata = arguments.try_into_calldata(
-                AbiOrContractClass::ContractClass(&contract_class),
-                &selector,
-            )?;
+            let calldata = arguments
+                .try_into_calldata(&abi_from_contract_class(&contract_class)?, &selector)?;
 
             let result = starknet_commands::call::call(
                 contract_address,
@@ -720,10 +704,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
-            let calldata = arguments.try_into_calldata(
-                AbiOrContractClass::ContractClass(&contract_class),
-                &selector,
-            )?;
+            let calldata = arguments
+                .try_into_calldata(&abi_from_contract_class(&contract_class)?, &selector)?;
 
             let result = with_account!(&account, |account| {
                 starknet_commands::invoke::invoke(

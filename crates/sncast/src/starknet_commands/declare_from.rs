@@ -36,7 +36,7 @@ pub struct DeclareFrom {
     pub sierra_file: Option<PathBuf>,
 
     /// Class hash of contract declared on a different Starknet instance
-    #[arg(short = 'g', long, conflicts_with_all = ["no_abi"])]
+    #[arg(short = 'g', long, conflicts_with = "no_abi")]
     pub class_hash: Option<Felt>,
 
     #[command(flatten)]

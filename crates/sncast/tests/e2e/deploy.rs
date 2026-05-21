@@ -1,4 +1,3 @@
-use crate::e2e::declare::get_declared_class_hash_from_json_output;
 use crate::helpers::constants::{
     ACCOUNT, ACCOUNT_FILE_PATH, CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA, CONTRACTS_DIR,
     DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
@@ -8,6 +7,7 @@ use crate::helpers::fixtures::{
     duplicate_contract_directory_with_salt, get_transaction_by_hash, get_transaction_hash,
     get_transaction_receipt, join_tempdirs,
 };
+use crate::helpers::output::get_declared_class_hash_from_json_output;
 use crate::helpers::runner::{runner, sncast_test_bin_path};
 use crate::helpers::shell::os_specific_shell;
 use camino::Utf8PathBuf;

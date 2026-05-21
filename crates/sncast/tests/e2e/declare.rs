@@ -4,10 +4,10 @@ use crate::helpers::fixtures::{
     duplicate_contract_directory_with_salt, get_accounts_path, get_transaction_by_hash,
     get_transaction_hash, get_transaction_receipt, join_tempdirs,
 };
+use crate::helpers::output::get_declared_class_hash_from_json_output;
 use crate::helpers::runner::runner;
 use configuration::CONFIG_FILENAME;
 use indoc::indoc;
-use serde::Deserialize;
 use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
 use sncast::AccountType;
 use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
@@ -18,19 +18,6 @@ use starknet_rust::core::types::{DeclareTransaction, Transaction, TransactionExe
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 use std::fs;
 use test_case::test_case;
-
-pub fn get_declared_class_hash_from_json_output(output: &[u8]) -> Felt {
-    #[derive(Deserialize)]
-    struct DeclareClassHashJsonOutput {
-        class_hash: Felt,
-    }
-
-    output
-        .split(|byte| *byte == b'\n')
-        .find_map(|line| serde_json::from_slice::<DeclareClassHashJsonOutput>(line).ok())
-        .map(|output| output.class_hash)
-        .expect("Failed to deserialize declared class hash from stdout JSON")
-}
 
 #[test_case(false; "with_abi")]
 #[test_case(true; "no_abi")]

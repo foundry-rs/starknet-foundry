@@ -1,4 +1,3 @@
-use crate::e2e::declare::get_declared_class_hash_from_json_output;
 use crate::helpers::constants::{
     CONTRACTS_DIR, MAP_CONTRACT_CLASS_HASH_SEPOLIA, SEPOLIA_RPC_URL, URL,
 };
@@ -6,6 +5,7 @@ use crate::helpers::fixtures::{
     create_and_deploy_oz_account, duplicate_contract_directory_with_salt, get_accounts_path,
     join_tempdirs,
 };
+use crate::helpers::output::get_declared_class_hash_from_json_output;
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use scarb_api::ScarbCommand;

@@ -14,7 +14,7 @@ use crate::starknet_commands::deploy::{ContractIdentifier, DeployArguments, Depl
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::replaced_arguments;
 use crate::starknet_commands::multicall::run::{DeployItem, parse_inputs};
-use crate::{AbiOrContractClass, Arguments, calldata_to_felts};
+use crate::{Arguments, abi_from_contract_class, calldata_to_felts};
 
 #[derive(Args)]
 pub struct MulticallDeploy {
@@ -81,7 +81,7 @@ impl MulticallDeploy {
                 .get_contract_class_by_class_hash(&class_hash)
                 .await?;
             constructor_arguments.try_into_calldata(
-                AbiOrContractClass::ContractClass(contract_class),
+                &abi_from_contract_class(contract_class)?,
                 &constructor_selector,
             )?
         };

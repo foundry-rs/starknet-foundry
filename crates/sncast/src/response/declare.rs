@@ -86,7 +86,7 @@ pub struct DeployCommandMessage {
 impl DeployCommandMessage {
     pub fn new(
         abi: &[AbiEntry],
-        no_abi: bool,
+        abi_in_declared_class: bool,
         response: &DeclareTransactionResponse,
         account: &str,
         accounts_file: &Utf8PathBuf,
@@ -101,7 +101,7 @@ impl DeployCommandMessage {
             account: account.to_string(),
             accounts_file,
             class_hash: response.class_hash,
-            constructor_args: ConstructorArgs::from_abi(abi, no_abi),
+            constructor_args: ConstructorArgs::from_abi(abi, abi_in_declared_class),
             network_flag,
         })
     }
@@ -166,19 +166,13 @@ impl Message for DeployCommandMessage {
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
-struct ConstructorArgs {
-    cairo_args: String,
-    typ: ConstructorArgsType,
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
-enum ConstructorArgsType {
-    CairoLike,
-    RawCalldata,
+enum ConstructorArgs {
+    CairoLike(String),
+    RawCalldata(String),
 }
 
 impl ConstructorArgs {
-    fn from_abi(abi: &[AbiEntry], no_abi: bool) -> Option<Self> {
+    fn from_abi(abi: &[AbiEntry], abi_in_declared_class: bool) -> Option<Self> {
         abi.iter().find_map(|entry| {
             let AbiEntry::Constructor(constructor) = entry else {
                 return None;
@@ -187,39 +181,38 @@ impl ConstructorArgs {
                 return None;
             }
 
-            Some(Self {
-                cairo_args: generate_constructor_placeholder_arguments(constructor),
-                typ: if no_abi {
-                    ConstructorArgsType::RawCalldata
-                } else {
-                    ConstructorArgsType::CairoLike
-                },
+            let cairo_args = generate_constructor_placeholder_arguments(constructor);
+
+            Some(if abi_in_declared_class {
+                Self::CairoLike(cairo_args)
+            } else {
+                Self::RawCalldata(cairo_args)
             })
         })
     }
 
     fn flag_name(&self) -> &'static str {
-        match &self.typ {
-            ConstructorArgsType::CairoLike => "--arguments",
-            ConstructorArgsType::RawCalldata => "--constructor-calldata",
+        match self {
+            Self::CairoLike(_) => "--arguments",
+            Self::RawCalldata(_) => "--constructor-calldata",
         }
     }
 
     fn text(&self) -> String {
-        match &self.typ {
-            ConstructorArgsType::CairoLike => format!("--arguments '{}'", self.cairo_args),
-            ConstructorArgsType::RawCalldata => {
+        match self {
+            Self::CairoLike(cairo_args) => format!("--arguments '{cairo_args}'"),
+            Self::RawCalldata(_) => {
                 "--constructor-calldata <serialized-constructor-args>".to_string()
             }
         }
     }
 
     fn hint(&self) -> Option<String> {
-        match &self.typ {
-            ConstructorArgsType::CairoLike => None,
-            ConstructorArgsType::RawCalldata => Some(format!(
+        match self {
+            Self::CairoLike(_) => None,
+            Self::RawCalldata(cairo_args) => Some(format!(
                 "Constructor arguments must be pre-serialized. Use `sncast utils serialize --abi-file <path-to-abi> --function constructor --arguments '{}'` and pass the returned felts to `--constructor-calldata`.",
-                self.cairo_args
+                cairo_args
             )),
         }
     }
