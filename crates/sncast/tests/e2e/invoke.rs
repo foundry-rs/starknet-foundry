@@ -4,8 +4,9 @@ use crate::helpers::constants::{
 };
 use crate::helpers::fixtures::{
     create_and_deploy_account, create_and_deploy_oz_account, get_transaction_by_hash,
-    get_transaction_hash, get_transaction_receipt,
+    get_transaction_hash, get_transaction_receipt, join_tempdirs,
 };
+use configuration::test_utils::copy_config_to_tempdir;
 use crate::helpers::runner::{runner, sncast_test_bin_path};
 use crate::helpers::shell::os_specific_shell;
 use camino::Utf8PathBuf;
@@ -92,6 +93,62 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let receipt = get_transaction_receipt(hash).await;
 
     assert!(matches!(receipt, Invoke(_)));
+}
+
+#[tokio::test]
+async fn test_invoke_with_alias() {
+    let account_dir = create_and_deploy_oz_account().await;
+    let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    join_tempdirs(&account_dir, &config_dir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "invoke",
+        "--contract-address",
+        "@map",
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 0x2",
+    ];
+
+    let output = runner(&args).current_dir(config_dir.path()).assert().success();
+
+    assert_stdout_contains(output, "Success: Invoke completed");
+}
+
+#[tokio::test]
+async fn test_invoke_with_unknown_alias() {
+    let account_dir = create_and_deploy_oz_account().await;
+    let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    join_tempdirs(&account_dir, &config_dir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "invoke",
+        "--contract-address",
+        "@unknown",
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 0x2",
+    ];
+
+    let output = runner(&args).current_dir(config_dir.path()).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+            Command: invoke
+            Error: Alias `unknown` not found in config
+        "},
+    );
 }
 
 #[tokio::test]
