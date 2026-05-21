@@ -48,8 +48,8 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
-
       - uses: software-mansion/setup-universal-sierra-compiler@v1
+
       - run: cargo test --profile ci --lib -p forge
       - run: cargo test --profile ci -p forge integration --features non_exact_gas_assertions
 
