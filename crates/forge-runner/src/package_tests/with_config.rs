@@ -67,7 +67,11 @@ impl From<Option<RawShouldPanicConfig>> for ExpectedTestResult {
 fn serialize_expected_tuple_item(value: ExpectedTupleItem) -> Vec<starknet_types_core::felt::Felt> {
     match value {
         ExpectedTupleItem::Felt(felt) => vec![felt],
-        ExpectedTupleItem::ByteArray(byte_array) => byte_array.serialize_to_vec(),
+        ExpectedTupleItem::ByteArray(byte_array) => {
+            // Tuple items are flattened into the surrounding panic-data array, so they must
+            // serialize as raw ByteArray contents without the ByteArray magic value.
+            byte_array.serialize_to_vec()
+        }
     }
 }
 
