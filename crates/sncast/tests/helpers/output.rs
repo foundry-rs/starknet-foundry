@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use starknet_types_core::felt::Felt;
 
+#[must_use]
 pub fn get_declared_class_hash_from_json_output(output: &[u8]) -> Felt {
     #[derive(Deserialize)]
     struct DeclareClassHashJsonOutput {

@@ -211,8 +211,7 @@ impl ConstructorArgs {
         match self {
             Self::CairoLike(_) => None,
             Self::RawCalldata(cairo_args) => Some(format!(
-                "Constructor arguments must be pre-serialized. Use `sncast utils serialize --abi-file <path-to-abi> --function constructor --arguments '{}'` and pass the returned felts to `--constructor-calldata`.",
-                cairo_args
+                "Constructor arguments must be pre-serialized. Use `sncast utils serialize --abi-file <path-to-abi> --function constructor --arguments '{cairo_args}'` and pass the returned felts to `--constructor-calldata`.",
             )),
         }
     }

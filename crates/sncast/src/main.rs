@@ -250,7 +250,7 @@ fn abi_from_contract_class(contract_class: &ContractClass) -> Result<Vec<AbiEntr
 }
 
 impl Arguments {
-    fn try_into_calldata(self, abi: &Vec<AbiEntry>, selector: &Felt) -> Result<Vec<Felt>> {
+    fn try_into_calldata(self, abi: &[AbiEntry], selector: &Felt) -> Result<Vec<Felt>> {
         if let Some(calldata) = self.calldata {
             return calldata_to_felts(&calldata);
         }
@@ -587,12 +587,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let selector = get_selector_from_name("constructor").unwrap();
 
             let arguments: Arguments = arguments.into();
-            let abi = match local_abi {
-                Some(abi) => abi,
-                None => {
-                    let contract_class = get_contract_class(class_hash, &provider).await?;
-                    abi_from_contract_class(&contract_class)?
-                }
+            let abi = if let Some(local_abi) = local_abi {
+                local_abi
+            } else {
+                let contract_class = get_contract_class(class_hash, &provider).await?;
+                abi_from_contract_class(&contract_class)?
             };
             let calldata = arguments.try_into_calldata(&abi, &selector)?;
 
