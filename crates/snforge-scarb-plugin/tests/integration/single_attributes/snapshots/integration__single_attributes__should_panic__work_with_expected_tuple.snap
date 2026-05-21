@@ -8,8 +8,8 @@ fn empty_fn() {
         snforge_std::_internals::config_types::ShouldPanicConfig {
             expected: snforge_std::_internals::config_types::Expected::Array(
                 array![
-                    snforge_std::_internals::config_types::ExpectedValue::Felt('panic data'),
-                    snforge_std::_internals::config_types::ExpectedValue::Felt(' or not'),
+                    snforge_std::_internals::config_types::ExpectedTupleItem::Felt('panic data'),
+                    snforge_std::_internals::config_types::ExpectedTupleItem::Felt(' or not'),
                 ],
             ),
         }

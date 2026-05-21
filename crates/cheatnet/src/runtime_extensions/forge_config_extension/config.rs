@@ -135,7 +135,7 @@ pub struct RawFuzzerConfig {
 // should panic
 
 #[derive(Debug, Clone, CairoDeserialize)]
-pub enum ExpectedValue {
+pub enum ExpectedTupleItem {
     Felt(Felt),
     ByteArray(ByteArray),
 }
@@ -144,7 +144,7 @@ pub enum ExpectedValue {
 pub enum Expected {
     ShortString(Felt),
     ByteArray(ByteArray),
-    Array(Vec<ExpectedValue>),
+    Array(Vec<ExpectedTupleItem>),
     Any,
 }
 

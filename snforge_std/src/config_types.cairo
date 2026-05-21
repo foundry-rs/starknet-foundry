@@ -44,7 +44,7 @@ pub struct FuzzerConfig {
 }
 
 #[derive(Drop, Serde)]
-pub enum ExpectedValue {
+pub enum ExpectedTupleItem {
     Felt: felt252,
     ByteArray: ByteArray,
 }
@@ -53,7 +53,7 @@ pub enum ExpectedValue {
 pub enum Expected {
     ShortString: felt252,
     ByteArray: ByteArray,
-    Array: Array<ExpectedValue>,
+    Array: Array<ExpectedTupleItem>,
     Any,
 }
 

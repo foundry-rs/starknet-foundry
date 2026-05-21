@@ -4,37 +4,37 @@ use crate::{
     cairo_expression::CairoExpression,
     types::{Felt, ParseFromExpr},
 };
-use cairo_lang_macro::{Diagnostic, TokenStream, quote};
+use cairo_lang_macro::{quote, Diagnostic, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::{Terminal, ast::Expr};
+use cairo_lang_syntax::node::{ast::Expr, Terminal};
 
 #[derive(Debug, Clone, Default)]
 pub enum Expected {
     Felt(Felt),
     ByteArray(String),
-    Array(Vec<ExpectedValue>),
+    Array(Vec<ExpectedTupleItem>),
     #[default]
     Any,
 }
 
 #[derive(Debug, Clone)]
-pub enum ExpectedValue {
+pub enum ExpectedTupleItem {
     Felt(Felt),
     ByteArray(String),
 }
 
-impl CairoExpression for ExpectedValue {
+impl CairoExpression for ExpectedTupleItem {
     fn as_cairo_expression(&self) -> TokenStream {
         match self {
             Self::Felt(felt) => {
                 let felt = felt.as_cairo_expression();
 
-                quote!(snforge_std::_internals::config_types::ExpectedValue::Felt(#felt))
+                quote!(snforge_std::_internals::config_types::ExpectedTupleItem::Felt(#felt))
             }
             Self::ByteArray(string) => {
                 let string = string.as_cairo_expression();
 
-                quote!(snforge_std::_internals::config_types::ExpectedValue::ByteArray(#string))
+                quote!(snforge_std::_internals::config_types::ExpectedTupleItem::ByteArray(#string))
             }
         }
     }
@@ -91,9 +91,11 @@ impl ParseFromExpr<Expr> for Expected {
                     .expressions(db)
                     .elements(db)
                     .map(|expr| {
-                        ExpectedValue::parse_from_expr::<ShouldPanicCollector>(db, &expr, arg_name)
+                        ExpectedTupleItem::parse_from_expr::<ShouldPanicCollector>(
+                            db, &expr, arg_name,
+                        )
                     })
-                    .collect::<Result<Vec<ExpectedValue>, Diagnostic>>()
+                    .collect::<Result<Vec<ExpectedTupleItem>, Diagnostic>>()
                     .map_err(|_| ShouldPanicCollector::error(error_msg))?;
 
                 Ok(Self::Array(elements))
@@ -103,7 +105,7 @@ impl ParseFromExpr<Expr> for Expected {
     }
 }
 
-impl ParseFromExpr<Expr> for ExpectedValue {
+impl ParseFromExpr<Expr> for ExpectedTupleItem {
     fn parse_from_expr<T: AttributeInfo>(
         db: &SimpleParserDatabase,
         expr: &Expr,
