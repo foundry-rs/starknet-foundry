@@ -34,13 +34,13 @@ $ sncast call --contract-address @map --function get --calldata 0x0 --block-id l
 > Aliases follow the same rules as other `snfoundry.toml` settings.
 > That means you can define aliases in the global and local config files, and create the per-profile aliases, for example:
 > ```toml
-> [sncast.myprofile.alises]
+> [sncast.myprofile.aliases]
 > network = "devnet"
 > 
 > [sncast.myprofile.aliases]
 > predeployed-account = "0x691a61b12a7105b1372cc377f135213c11e8400a546f6b0e7ea0296046690ce"
 > ```
-> Aliases follow the same [precendence rules](../projects/configuration.md#interaction-between-local-and-global-profiles) as other `snfoundry.toml` settings: aliases defined in higher-precedence config override lower-precedence ones.
+> Aliases follow the same [precedence rules](../projects/configuration.md#interaction-between-local-and-global-profiles) as other `snfoundry.toml` settings: aliases defined in higher-precedence config override lower-precedence ones.
 
 
 ## Using aliases in CLI
@@ -58,7 +58,7 @@ TBD
 
 ## `@alias` interaction with multicall `@id`
 
-<!-- TODO: explain @alias_id vs @id precendence -->
+<!-- TODO: explain @alias_id vs @id precedence -->
 TBD
 
 ## Supported commands

@@ -121,7 +121,7 @@ Frequently used felt values (contract addresses, class hashes, etc.) can be defi
 > 📝 **Note**
 > For details on how aliases are used and the list of supported commands, see the [Aliases](../starknet/aliases.md) section.
 
-Aliases follow the same [precendence rules](../projects/configuration.md#interaction-between-local-and-global-profiles) as other `snfoundry.toml` settings, meaning they can be overridden via a higher-precedence config.
+Aliases follow the same [precedence rules](../projects/configuration.md#interaction-between-local-and-global-profiles) as other `snfoundry.toml` settings, meaning they can be overridden via a higher-precedence config.
 
 ```toml
 [sncast.myprofile.aliases]
