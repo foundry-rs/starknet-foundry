@@ -691,4 +691,3 @@ async fn test_declare_from_with_unknown_alias() {
         "},
     );
 }
-

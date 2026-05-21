@@ -84,7 +84,7 @@ impl Import {
     }
 
     pub fn resolved_class_hash(&self, config: &CastConfig) -> Result<Option<Felt>> {
-        ClassHash::resolve_optional(&self.class_hash, config)
+        ClassHash::resolve_optional(self.class_hash.as_ref(), config)
     }
 }
 

@@ -64,10 +64,10 @@ macro_rules! felt_or_id_newtype {
             }
 
             pub fn resolve_optional(
-                value: &Option<Self>,
+                value: Option<&Self>,
                 config: &CastConfig,
             ) -> Result<Option<Felt>> {
-                value.as_ref().map(|v| v.resolve(config)).transpose()
+                value.map(|v| v.resolve(config)).transpose()
             }
         }
 
