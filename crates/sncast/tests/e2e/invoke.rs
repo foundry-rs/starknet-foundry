@@ -6,10 +6,10 @@ use crate::helpers::fixtures::{
     create_and_deploy_account, create_and_deploy_oz_account, get_transaction_by_hash,
     get_transaction_hash, get_transaction_receipt, join_tempdirs,
 };
-use configuration::test_utils::copy_config_to_tempdir;
 use crate::helpers::runner::{runner, sncast_test_bin_path};
 use crate::helpers::shell::os_specific_shell;
 use camino::Utf8PathBuf;
+use configuration::test_utils::copy_config_to_tempdir;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::AccountType;
@@ -115,7 +115,10 @@ async fn test_invoke_with_alias() {
         "0x1 0x2",
     ];
 
-    let output = runner(&args).current_dir(config_dir.path()).assert().success();
+    let output = runner(&args)
+        .current_dir(config_dir.path())
+        .assert()
+        .success();
 
     assert_stdout_contains(output, "Success: Invoke completed");
 }
@@ -140,7 +143,10 @@ async fn test_invoke_with_unknown_alias() {
         "0x1 0x2",
     ];
 
-    let output = runner(&args).current_dir(config_dir.path()).assert().failure();
+    let output = runner(&args)
+        .current_dir(config_dir.path())
+        .assert()
+        .failure();
 
     assert_stderr_contains(
         output,
