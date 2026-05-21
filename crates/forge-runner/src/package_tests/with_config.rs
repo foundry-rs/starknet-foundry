@@ -8,6 +8,7 @@ use cheatnet::runtime_extensions::forge_config_extension::config::{
     RawFuzzerConfig, RawShouldPanicConfig,
 };
 use conversions::serde::serialize::SerializeToFeltVec;
+use starknet_types_core::felt::Felt;
 
 pub type TestTargetWithConfig = TestTarget<TestCaseConfig>;
 
@@ -64,12 +65,12 @@ impl From<Option<RawShouldPanicConfig>> for ExpectedTestResult {
     }
 }
 
-fn serialize_expected_tuple_item(value: ExpectedTupleItem) -> Vec<starknet_types_core::felt::Felt> {
+fn serialize_expected_tuple_item(value: ExpectedTupleItem) -> Vec<Felt> {
     match value {
         ExpectedTupleItem::Felt(felt) => vec![felt],
         ExpectedTupleItem::ByteArray(byte_array) => {
-            // Tuple items are flattened into the surrounding panic-data array, so they must
-            // serialize as raw ByteArray contents without the ByteArray magic value.
+            // If byte array is a standalone value, it should be serialized with magic,
+            // but if it's part of a tuple, it should be serialized without magic.
             byte_array.serialize_to_vec()
         }
     }
