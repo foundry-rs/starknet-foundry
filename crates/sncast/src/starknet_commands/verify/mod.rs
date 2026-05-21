@@ -1,9 +1,9 @@
+use crate::starknet_commands::utils::felt_or_id::FeltOrId;
 use anyhow::{Context, Result, anyhow, bail};
 use clap::{Args, ValueEnum};
 use promptly::prompt;
 use scarb_metadata::PackageMetadata;
 use sncast::helpers::configuration::CastConfig;
-use crate::starknet_commands::utils::felt_or_id::FeltOrId;
 use sncast::helpers::rpc::FreeProvider;
 use sncast::helpers::scarb_utils::{BuildConfig, build_and_load_artifacts};
 use sncast::response::ui::UI;

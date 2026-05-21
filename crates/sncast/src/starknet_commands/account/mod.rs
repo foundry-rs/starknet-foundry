@@ -215,7 +215,6 @@ pub async fn account(
             let provider = import.rpc.get_provider(&config, ui).await?;
 
             let address = import.resolved_address(&config)?;
-            let class_hash = import.resolved_class_hash(&config)?;
 
             let result = starknet_commands::account::import::import(
                 import.name.clone(),
@@ -223,7 +222,6 @@ pub async fn account(
                 &provider,
                 &import,
                 address,
-                class_hash,
                 &config,
                 ui,
             )

@@ -40,10 +40,7 @@ impl FeltOrId {
     }
 }
 
-pub fn resolve_optional(
-    value: &Option<FeltOrId>,
-    config: &CastConfig,
-) -> Result<Option<Felt>> {
+pub fn resolve_optional(value: Option<&FeltOrId>, config: &CastConfig) -> Result<Option<Felt>> {
     value
         .as_ref()
         .map(|felt_or_id| felt_or_id.resolve_alias_or_felt(config))

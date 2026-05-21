@@ -66,7 +66,7 @@ pub struct Create {
 
 impl Create {
     pub fn resolved_class_hash(&self, config: &CastConfig) -> Result<Option<Felt>> {
-        resolve_optional(&self.class_hash, config).context("Invalid class hash")
+        resolve_optional(self.class_hash.as_ref(), config).context("Invalid class hash")
     }
 }
 

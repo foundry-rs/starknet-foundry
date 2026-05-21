@@ -86,7 +86,7 @@ impl Import {
     }
 
     pub fn resolved_class_hash(&self, config: &CastConfig) -> Result<Option<Felt>> {
-        resolve_optional(&self.class_hash, config).context("Invalid class hash")
+        resolve_optional(self.class_hash.as_ref(), config).context("Invalid class hash")
     }
 }
 
@@ -97,10 +97,11 @@ pub async fn import(
     provider: &JsonRpcClient<HttpTransport>,
     import: &Import,
     address: Felt,
-    class_hash: Option<Felt>,
     config: &CastConfig,
     ui: &UI,
 ) -> Result<AccountImportResponse> {
+    let class_hash = import.resolved_class_hash(config)?;
+
     let (signer_type, public_key) = if let Some(ledger_path) = import.ledger_key_locator.resolve(ui)
     {
         let public_key = ledger::get_ledger_public_key(&ledger_path, ui).await?;
@@ -142,9 +143,7 @@ pub async fn import(
     {
         ensure!(
             from_provider == from_user,
-            "Incorrect class hash {:#x} for account address {:#x} was provided",
-            from_user,
-            address
+            "Incorrect class hash {from_user:#x} for account address {address:#x} was provided"
         );
         from_provider
     } else if let Some(from_user) = class_hash {
@@ -154,8 +153,7 @@ pub async fn import(
         from_provider
     } else {
         bail!(
-            "Class hash for the account address {:#x} could not be found. Please provide the class hash",
-            address
+            "Class hash for the account address {address:#x} could not be found. Please provide the class hash"
         );
     };
 
@@ -174,9 +172,7 @@ pub async fn import(
         .await?;
         ensure!(
             computed_address == address,
-            "Computed address {:#x} does not match the provided address {:#x}. Please ensure that the provided salt, class hash, and account type are correct.",
-            computed_address,
-            address
+            "Computed address {computed_address:#x} does not match the provided address {address:#x}. Please ensure that the provided salt, class hash, and account type are correct."
         );
     }
 
