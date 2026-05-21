@@ -1,13 +1,11 @@
-use crate::helpers::constants::URL;
+use crate::helpers::constants::{REVERTED_TX_HASH, SUCCEEDED_TX_HASH, URL};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 
-const INVOKE_TX_HASH: &str = "0x07d2067cd7675f88493a9d773b456c8d941457ecc2f6201d2fe6b0607daadfd1";
-
 #[tokio::test]
 async fn test_get_tx_receipt() {
-    let args = vec!["get", "tx-receipt", INVOKE_TX_HASH, "--url", URL];
+    let args = vec!["get", "tx-receipt", SUCCEEDED_TX_HASH, "--url", URL];
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
 
@@ -26,7 +24,13 @@ async fn test_get_tx_receipt() {
 
 #[tokio::test]
 async fn test_get_tx_receipt_alias() {
-    let args = vec!["get", "transaction-receipt", INVOKE_TX_HASH, "--url", URL];
+    let args = vec![
+        "get",
+        "transaction-receipt",
+        SUCCEEDED_TX_HASH,
+        "--url",
+        URL,
+    ];
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
 
@@ -34,8 +38,34 @@ async fn test_get_tx_receipt_alias() {
 }
 
 #[tokio::test]
+async fn test_get_tx_receipt_reverted() {
+    let args = vec!["get", "tx-receipt", REVERTED_TX_HASH, "--url", URL];
+    let snapbox = runner(&args);
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        Success: Transaction receipt retrieved
+
+        Type:                 INVOKE
+        Transaction Hash:     0x00ae35dacba17cde62b8ceb12e3b18f4ab6e103fa2d5e3d9821cb9dc59d59a3c
+        Finality Status:      Accepted on L1
+        Execution Status:     Reverted
+        "},
+    );
+}
+
+#[tokio::test]
 async fn test_json_output() {
-    let args = vec!["--json", "get", "tx-receipt", INVOKE_TX_HASH, "--url", URL];
+    let args = vec![
+        "--json",
+        "get",
+        "tx-receipt",
+        SUCCEEDED_TX_HASH,
+        "--url",
+        URL,
+    ];
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
     let stdout = output.get_output().stdout.clone();
