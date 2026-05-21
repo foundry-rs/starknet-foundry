@@ -12,6 +12,7 @@ def normalize_debug_info(debug_info: dict[str, object]) -> dict[str, object]:
         if key in normalized:
             normalized[key] = sorted(normalized[key], key=lambda item: item[0])
 
+    # The `annotations` field contains file paths that may differ between environments.
     normalized.pop("annotations", None)
     return normalized
 
