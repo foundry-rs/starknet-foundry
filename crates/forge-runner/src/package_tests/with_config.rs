@@ -126,4 +126,55 @@ mod tests {
             ))
         );
     }
+
+    #[test]
+    fn should_panic_tuple_empty_string() {
+        let expected = ExpectedTestResult::from(Some(RawShouldPanicConfig {
+            expected: Expected::Array(vec![
+                ExpectedTupleItem::ByteArray(ByteArray::from("")),
+                ExpectedTupleItem::Felt(Felt::from(11_u8)),
+                ExpectedTupleItem::ByteArray(ByteArray::from("hello")),
+            ]),
+        }));
+
+        let mut expected_data = ByteArray::from("").serialize_to_vec();
+        expected_data.push(Felt::from(11_u8));
+        expected_data.extend(ByteArray::from("hello").serialize_to_vec());
+
+        assert_eq!(
+            expected,
+            ExpectedTestResult::Panics(ExpectedPanicValue::Exact(expected_data))
+        );
+    }
+
+    #[test]
+    fn should_panic_tuple_long_string() {
+        let long_string = "this string is definitely longer than thirty one bytes";
+        let expected = ExpectedTestResult::from(Some(RawShouldPanicConfig {
+            expected: Expected::Array(vec![
+                ExpectedTupleItem::ByteArray(ByteArray::from(long_string)),
+                ExpectedTupleItem::Felt(Felt::from(5_u8)),
+            ]),
+        }));
+
+        let mut expected_data = ByteArray::from(long_string).serialize_to_vec();
+        expected_data.push(Felt::from(5_u8));
+
+        assert_eq!(
+            expected,
+            ExpectedTestResult::Panics(ExpectedPanicValue::Exact(expected_data))
+        );
+    }
+
+    #[test]
+    fn should_panic_standalone_and_tuple_single_string_use_different_encodings() {
+        let standalone = ExpectedTestResult::from(Some(RawShouldPanicConfig {
+            expected: Expected::ByteArray(ByteArray::from("error")),
+        }));
+        let tuple = ExpectedTestResult::from(Some(RawShouldPanicConfig {
+            expected: Expected::Array(vec![ExpectedTupleItem::ByteArray(ByteArray::from("error"))]),
+        }));
+
+        assert_ne!(standalone, tuple);
+    }
 }
