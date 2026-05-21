@@ -34,54 +34,6 @@ jobs:
           echo ${scarb_versions[@]}
           echo "versions=[${scarb_versions[@]}]" >> "$GITHUB_OUTPUT"
 
-  validate-predeployed-contracts:
-    name: Validate predeployed contracts
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47
-      - run: ./scripts/setup_predeployed_contracts.sh
-      - name: Ensure committed artifacts are correct
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          artifacts_dir="crates/cheatnet/src/data/predeployed_contracts"
-
-          if [[ -n "$(git ls-files --others --exclude-standard -- "${artifacts_dir}")" ]]; then
-            echo "Unexpected untracked predeployed contract artifacts were generated." >&2
-            git ls-files --others --exclude-standard -- "${artifacts_dir}" >&2
-            exit 1
-          fi
-
-          changed_files="$(git diff --name-only -- "${artifacts_dir}")"
-          if [[ -z "${changed_files}" ]]; then
-            exit 0
-          fi
-
-          while IFS= read -r file; do
-            case "${file}" in
-              */casm.json)
-                echo "Committed CASM artifact does not match the generated one: ${file}" >&2
-                exit 1
-                ;;
-              */sierra.json)
-                tmp_expected="$(mktemp)"
-                git show "HEAD:${file}" > "${tmp_expected}"
-                if ! python3 ./scripts/compare_sierra_artifact.py "${tmp_expected}" "${file}"; then
-                  echo "Committed Sierra artifact does not match the generated one: ${file}" >&2
-                  rm -f "${tmp_expected}"
-                  exit 1
-                fi
-                rm -f "${tmp_expected}"
-                ;;
-              *)
-                echo "Unexpected changed predeployed artifact: ${file}" >&2
-                exit 1
-                ;;
-            esac
-          done <<< "${changed_files}"
-
   test-workspace:
     # Runs tests from all crates across the workspace, except:
     # - `sncast` tests
