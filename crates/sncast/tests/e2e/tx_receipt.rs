@@ -15,7 +15,7 @@ async fn test_get_tx_receipt() {
         Transaction Hash:     0x04cba686fa76bfa4b4ac788bf2ca9bfac3dd354561f2621c2ac7cf17fa46f75a
         Finality Status:      Accepted on L1
         Execution Status:     Succeeded
-        Actual Fee:           0x19470f45bbcbe0 FRI
+        Actual Fee:           7115005337783264 FRI
         L1 Gas Consumed:      0
         L1 Data Gas Consumed: 288
         L2 Gas Consumed:      889345
@@ -66,7 +66,7 @@ async fn test_get_tx_receipt_reverted() {
         Error in the called contract (0x00132303a40ae2f271f4e1b707596a63f6f2921c4d400b38822548ed1bb0cbe0):
         Execution failed. Failure reason: 0x7374616c65207265706f7274 ('stale report').
 
-        Actual Fee:           0xb2a72b1ed0f0906 FRI
+        Actual Fee:           804581591951018246 FRI
         L1 Gas Consumed:      0
         L1 Data Gas Consumed: 0
         L2 Gas Consumed:      0
@@ -94,7 +94,7 @@ async fn test_json_output() {
     let json: serde_json::Value = serde_json::from_slice(&stdout).unwrap();
 
     assert_eq!(json["command"], "get tx-receipt");
-    assert_eq!(json["type"], "response");
+    assert_eq!(json["type"], "INVOKE");
     assert_eq!(
         json["transaction_hash"],
         "0x4cba686fa76bfa4b4ac788bf2ca9bfac3dd354561f2621c2ac7cf17fa46f75a"

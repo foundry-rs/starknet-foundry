@@ -1,4 +1,5 @@
 use crate::response::cast_message::SncastCommandMessage;
+use conversions::string::IntoDecStr;
 use foundry_ui::styling::OutputBuilder;
 use serde::{Serialize, Serializer};
 use starknet_rust::core::types::{
@@ -144,7 +145,7 @@ fn append_common(
             "Actual Fee",
             &format!(
                 "{} {}",
-                actual_fee.amount.to_hex_string(),
+                actual_fee.amount.into_dec_string(),
                 fmt_price_unit(actual_fee.unit)
             ),
         )
