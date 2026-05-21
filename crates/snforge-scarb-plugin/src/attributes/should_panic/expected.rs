@@ -4,9 +4,9 @@ use crate::{
     cairo_expression::CairoExpression,
     types::{Felt, ParseFromExpr},
 };
-use cairo_lang_macro::{quote, Diagnostic, TokenStream};
+use cairo_lang_macro::{Diagnostic, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::{ast::Expr, Terminal};
+use cairo_lang_syntax::node::{Terminal, ast::Expr};
 
 #[derive(Debug, Clone, Default)]
 pub enum Expected {
