@@ -77,8 +77,11 @@ mod tests {
     use conversions::byte_array::ByteArray;
     use starknet_types_core::felt::Felt;
 
+    // Standalone `expected: "..."` serializes as a top-level ByteArray. String items inside
+    // `expected: (...)` serialize as raw ByteArray contents flattened into the surrounding felt
+    // array, alongside the other tuple items.
     #[test]
-    fn mixed_tuple_byte_arrays_are_serialized_without_magic() {
+    fn should_panic_tuple_strings_are_flattened_without_magic() {
         let expected = ExpectedTestResult::from(Some(RawShouldPanicConfig {
             expected: Expected::Array(vec![
                 ExpectedTupleItem::ByteArray(ByteArray::from("error")),
@@ -102,6 +105,21 @@ mod tests {
                 Felt::from(5_u8),
                 Felt::from_bytes_be_slice(b"short_string"),
             ]))
+        );
+    }
+
+    #[test]
+    fn should_panic_standalone_string_uses_bytearray_magic() {
+        let byte_array = ByteArray::from("error");
+        let expected = ExpectedTestResult::from(Some(RawShouldPanicConfig {
+            expected: Expected::ByteArray(byte_array.clone()),
+        }));
+
+        assert_eq!(
+            expected,
+            ExpectedTestResult::Panics(ExpectedPanicValue::Exact(
+                byte_array.serialize_with_magic()
+            ))
         );
     }
 }
