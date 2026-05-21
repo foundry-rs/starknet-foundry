@@ -1,3 +1,4 @@
+use crate::starknet_commands::utils::felt_or_id::FeltOrId;
 use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
@@ -23,7 +24,7 @@ use starknet_types_core::felt::Felt;
 pub struct ContractIdentifier {
     /// Class hash of contract to deploy
     #[arg(short = 'g', long, conflicts_with = "package")]
-    pub class_hash: Option<Felt>,
+    pub class_hash: Option<FeltOrId>,
 
     /// Contract name
     #[arg(long)]

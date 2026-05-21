@@ -3,13 +3,13 @@ use clap::{Args, ValueEnum};
 use promptly::prompt;
 use scarb_metadata::PackageMetadata;
 use sncast::helpers::configuration::CastConfig;
+use crate::starknet_commands::utils::felt_or_id::FeltOrId;
 use sncast::helpers::rpc::FreeProvider;
 use sncast::helpers::scarb_utils::{BuildConfig, build_and_load_artifacts};
 use sncast::response::ui::UI;
 use sncast::{Network, response::verify::VerifyResponse};
 use sncast::{get_chain_id, get_provider};
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
-use starknet_types_core::felt::Felt;
 use std::fmt;
 use url::Url;
 
@@ -61,24 +61,34 @@ pub struct Verify {
 #[derive(Args, Clone, Debug)]
 #[group(required = true, multiple = false)]
 pub struct ContractIdentifierArgs {
-    /// Class hash of a contract to be verified
+    /// Class hash of a contract to be verified (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short = 'g', long)]
-    pub class_hash: Option<Felt>,
+    pub class_hash: Option<FeltOrId>,
 
-    /// Address of a contract to be verified
+    /// Address of a contract to be verified (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short = 'd', long)]
-    pub contract_address: Option<Felt>,
+    pub contract_address: Option<FeltOrId>,
 }
 
 impl ContractIdentifierArgs {
-    pub fn get_identifier(&self) -> ContractIdentifier {
-        match (self.class_hash, self.contract_address) {
-            (Some(class_hash), None) => ContractIdentifier::ClassHash {
-                class_hash: class_hash.to_fixed_hex_string(),
-            },
-            (None, Some(contract_address)) => ContractIdentifier::Address {
-                contract_address: contract_address.to_fixed_hex_string(),
-            },
+    pub fn get_identifier(&self, config: &CastConfig) -> Result<ContractIdentifier> {
+        match (&self.class_hash, &self.contract_address) {
+            (Some(class_hash), None) => {
+                let class_hash = class_hash
+                    .resolve_alias_or_felt(config)
+                    .context("Invalid class hash")?;
+                Ok(ContractIdentifier::ClassHash {
+                    class_hash: class_hash.to_fixed_hex_string(),
+                })
+            }
+            (None, Some(contract_address)) => {
+                let contract_address = contract_address
+                    .resolve_alias_or_felt(config)
+                    .context("Invalid contract address")?;
+                Ok(ContractIdentifier::Address {
+                    contract_address: contract_address.to_fixed_hex_string(),
+                })
+            }
             _ => unreachable!("Exactly one of class_hash or contract_address must be provided."),
         }
     }
@@ -211,7 +221,7 @@ pub async fn verify(
         .parent()
         .ok_or(anyhow!("Failed to obtain workspace dir"))?;
 
-    let contract_identifier = contract_identifier.get_identifier();
+    let contract_identifier = contract_identifier.get_identifier(config)?;
 
     let network =
         resolve_verification_network(network, config.network_params.network(), &provider).await?;

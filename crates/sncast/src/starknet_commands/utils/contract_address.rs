@@ -43,6 +43,9 @@ pub async fn get_contract_address(
 ) -> Result<ContractAddressResponse, StarknetCommandError> {
     let salt = extract_or_generate_salt(args.common.salt);
     let (class_hash, abi) = if let Some(class_hash) = args.common.contract_identifier.class_hash {
+        let class_hash = class_hash
+            .resolve_alias_or_felt(&config)
+            .context("Invalid class hash")?;
         let abi = if args.common.arguments.arguments.is_some()
             || args.common.arguments.constructor_calldata.is_some()
         {

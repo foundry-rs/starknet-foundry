@@ -4,7 +4,7 @@ use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
 use conversions::string::IntoHexStr;
 use core::str;
-use fs_extra::dir::{CopyOptions, copy};
+use fs_extra::dir::CopyOptions;
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value, json};
@@ -413,19 +413,24 @@ pub fn duplicate_contract_directory_with_salt(
     temp_dir
 }
 
-#[must_use]
-pub fn copy_directory_to_tempdir(src_dir: impl AsRef<Utf8Path>) -> TempDir {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
-
+pub fn copy_directory_to_dir(
+    dest: impl AsRef<std::path::Path>,
+    src_dir: impl AsRef<std::path::Path>,
+) {
     fs_extra::dir::copy(
         src_dir.as_ref(),
-        temp_dir.as_ref(),
+        dest.as_ref(),
         &fs_extra::dir::CopyOptions::new()
             .overwrite(true)
             .content_only(true),
     )
     .expect("Failed to copy the directory");
+}
 
+#[must_use]
+pub fn copy_directory_to_tempdir(src_dir: impl AsRef<Utf8Path>) -> TempDir {
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    copy_directory_to_dir(temp_dir.path(), src_dir.as_ref().as_std_path());
     temp_dir
 }
 
@@ -691,10 +696,5 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
 }
 
 pub fn join_tempdirs(from: &TempDir, to: &TempDir) {
-    copy(
-        from.path(),
-        to.path(),
-        &CopyOptions::new().overwrite(true).content_only(true),
-    )
-    .expect("Failed to copy the directory");
+    copy_directory_to_dir(to.path(), from.path());
 }

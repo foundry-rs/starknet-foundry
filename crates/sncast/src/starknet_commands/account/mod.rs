@@ -213,11 +213,17 @@ pub async fn account(
     match account.command {
         Commands::Import(import) => {
             let provider = import.rpc.get_provider(&config, ui).await?;
+
+            let address = import.resolved_address(&config)?;
+            let class_hash = import.resolved_class_hash(&config)?;
+
             let result = starknet_commands::account::import::import(
                 import.name.clone(),
                 &config.accounts_file,
                 &provider,
                 &import,
+                address,
+                class_hash,
                 &config,
                 ui,
             )
@@ -259,11 +265,15 @@ pub async fn account(
             } else {
                 config.account.clone()
             };
+
+            let class_hash = create.resolved_class_hash(&config)?;
+
             let result = starknet_commands::account::create::create(
                 &account,
                 &config.accounts_file,
                 &provider,
                 chain_id,
+                class_hash,
                 &create,
                 &config,
                 &signer_source,

@@ -1,5 +1,6 @@
 use crate::helpers::constants::{DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, URL};
 use crate::helpers::runner::runner;
+use configuration::test_utils::copy_config_to_tempdir;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
 
@@ -92,6 +93,40 @@ async fn test_invalid_block_id() {
         indoc! {r"
         Command: get nonce
         Error: Incorrect value passed for block_id = invalid_block. Possible values are `pre_confirmed`, `latest`, block hash (hex) and block number (u64)
+        "},
+    );
+}
+
+#[tokio::test]
+async fn test_get_nonce_with_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let args = vec!["get", "nonce", "@map"];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_eq(indoc! {r"
+        Success: Nonce retrieved
+
+        Nonce: 0x[..]
+    "});
+}
+
+#[tokio::test]
+async fn test_get_nonce_with_unknown_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let args = vec!["get", "nonce", "@unknown"];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+            Command: get nonce
+            Error: Invalid contract address
+
+            Caused by:
+                Alias `unknown` not found in config
         "},
     );
 }

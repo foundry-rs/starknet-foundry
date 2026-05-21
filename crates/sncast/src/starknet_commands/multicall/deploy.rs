@@ -1,5 +1,7 @@
+use crate::starknet_commands::utils::felt_or_id::FeltOrId;
 use anyhow::{Context, Result};
 use clap::Args;
+use conversions::string::IntoHexStr;
 use sncast::helpers::constants::UDC_ADDRESS;
 use sncast::{extract_or_generate_salt, udc_uniqueness};
 use starknet_rust::accounts::{Account, SingleOwnerAccount};
@@ -32,7 +34,8 @@ impl MulticallDeploy {
         let deploy = MulticallDeploy {
             common: DeployCommonArgs {
                 contract_identifier: ContractIdentifier {
-                    class_hash: Some(item.class_hash),
+                    // TODO: add full support for multicall id <> alias id resolution (will be done in next PR)
+                    class_hash: Some(FeltOrId::new(item.class_hash.into_hex_string())),
                     contract_name: None,
                 },
                 arguments: DeployArguments {
@@ -73,7 +76,10 @@ impl MulticallDeploy {
             .common
             .contract_identifier
             .class_hash
-            .context("Using deploy with multicall requires providing class hash")?;
+            .as_ref()
+            .context("Using deploy with multicall requires providing class hash")?
+            .try_into_felt()
+            .context("Invalid class hash")?;
         let constructor_calldata = if let Some(raw_calldata) = &constructor_arguments.calldata {
             calldata_to_felts(raw_calldata)?
         } else {

@@ -39,6 +39,7 @@ impl MulticallInvoke {
     pub async fn build_call(&self, contract_registry: &mut ContractRegistry) -> Result<Call> {
         let selector = get_selector_from_name(&self.common.function)?;
         let arguments = replaced_arguments(&self.common.arguments, contract_registry)?;
+        // TODO: add full support for multicall id <> alias id resolution (will be done in next PR)
         let contract_address = if let Some(id) = self.common.contract_address.as_id() {
             contract_registry
                 .get_address_by_id(id)

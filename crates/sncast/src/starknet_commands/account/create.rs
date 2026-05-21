@@ -1,6 +1,7 @@
 use crate::starknet_commands::account::{
     generate_add_profile_message, prepare_account_json, write_account_to_accounts_file,
 };
+use crate::starknet_commands::utils::felt_or_id::{FeltOrId, resolve_optional};
 use anyhow::{Context, Result, anyhow, bail};
 use bigdecimal::BigDecimal;
 use camino::Utf8PathBuf;
@@ -52,9 +53,9 @@ pub struct Create {
     #[arg(long)]
     pub add_profile: Option<String>,
 
-    /// Custom contract class hash of declared contract
+    /// Custom contract class hash of declared contract (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short, long, requires = "account_type")]
-    pub class_hash: Option<Felt>,
+    pub class_hash: Option<FeltOrId>,
 
     #[command(flatten)]
     pub rpc: RpcArgs,
@@ -63,19 +64,26 @@ pub struct Create {
     pub ledger_key_locator: LedgerKeyLocatorAccount,
 }
 
+impl Create {
+    pub fn resolved_class_hash(&self, config: &CastConfig) -> Result<Option<Felt>> {
+        resolve_optional(&self.class_hash, config).context("Invalid class hash")
+    }
+}
+
 #[allow(clippy::too_many_arguments, clippy::too_many_lines)]
 pub async fn create(
     account: &str,
     accounts_file: &Utf8PathBuf,
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: Felt,
+    class_hash: Option<Felt>,
     create: &Create,
     config: &CastConfig,
     signer_source: &SignerSource,
     ui: &UI,
 ) -> Result<AccountCreateResponse> {
     let salt = extract_or_generate_salt(create.salt);
-    let class_hash = create.class_hash.unwrap_or(match create.account_type {
+    let class_hash = class_hash.unwrap_or(match create.account_type {
         AccountType::OpenZeppelin => OZ_CLASS_HASH,
         AccountType::Ready => READY_CLASS_HASH,
         AccountType::Braavos => BRAAVOS_CLASS_HASH,

@@ -4,6 +4,7 @@ use crate::starknet_commands::account::{
     compute_account_address, generate_add_profile_message, prepare_account_json,
     write_account_to_accounts_file,
 };
+use crate::starknet_commands::utils::felt_or_id::{FeltOrId, resolve_optional};
 use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::Args;
@@ -30,17 +31,17 @@ pub struct Import {
     #[arg(short, long)]
     pub name: Option<String>,
 
-    /// Address of the account
+    /// Address of the account (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short, long)]
-    pub address: Felt,
+    pub address: FeltOrId,
 
     /// Type of the account
     #[arg(short = 't', long = "type", value_parser = AccountType::from_str)]
     pub account_type: AccountType,
 
-    /// Class hash of the account
+    /// Class hash of the account (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short, long)]
-    pub class_hash: Option<Felt>,
+    pub class_hash: Option<FeltOrId>,
 
     /// Account private key
     #[arg(
@@ -77,12 +78,26 @@ pub struct Import {
     pub ledger_key_locator: LedgerKeyLocatorAccount,
 }
 
+impl Import {
+    pub fn resolved_address(&self, config: &CastConfig) -> Result<Felt> {
+        self.address
+            .resolve_alias_or_felt(config)
+            .context("Invalid address")
+    }
+
+    pub fn resolved_class_hash(&self, config: &CastConfig) -> Result<Option<Felt>> {
+        resolve_optional(&self.class_hash, config).context("Invalid class hash")
+    }
+}
+
 #[allow(clippy::too_many_lines)]
 pub async fn import(
     account: Option<String>,
     accounts_file: &Utf8PathBuf,
     provider: &JsonRpcClient<HttpTransport>,
     import: &Import,
+    address: Felt,
+    class_hash: Option<Felt>,
     config: &CastConfig,
     ui: &UI,
 ) -> Result<AccountImportResponse> {
@@ -113,7 +128,7 @@ pub async fn import(
         .unwrap_or_else(|| generate_account_name(accounts_file).unwrap());
 
     let fetched_class_hash = match provider
-        .get_class_hash_at(BlockId::Tag(BlockTag::PreConfirmed), import.address)
+        .get_class_hash_at(BlockId::Tag(BlockTag::PreConfirmed), address)
         .await
     {
         Ok(class_hash) => Ok(Some(class_hash)),
@@ -123,16 +138,16 @@ pub async fn import(
 
     let deployed: bool = fetched_class_hash.is_some();
     let class_hash = if let (Some(from_provider), Some(from_user)) =
-        (fetched_class_hash, import.class_hash)
+        (fetched_class_hash, class_hash)
     {
         ensure!(
             from_provider == from_user,
             "Incorrect class hash {:#x} for account address {:#x} was provided",
             from_user,
-            import.address
+            address
         );
         from_provider
-    } else if let Some(from_user) = import.class_hash {
+    } else if let Some(from_user) = class_hash {
         check_class_hash_exists(provider, from_user).await?;
         from_user
     } else if let Some(from_provider) = fetched_class_hash {
@@ -140,7 +155,7 @@ pub async fn import(
     } else {
         bail!(
             "Class hash for the account address {:#x} could not be found. Please provide the class hash",
-            import.address
+            address
         );
     };
 
@@ -158,19 +173,19 @@ pub async fn import(
         )
         .await?;
         ensure!(
-            computed_address == import.address,
+            computed_address == address,
             "Computed address {:#x} does not match the provided address {:#x}. Please ensure that the provided salt, class hash, and account type are correct.",
             computed_address,
-            import.address
+            address
         );
     }
 
-    let legacy = check_if_legacy_contract(Some(class_hash), import.address, provider).await?;
+    let legacy = check_if_legacy_contract(Some(class_hash), address, provider).await?;
 
     let account_json = prepare_account_json(
         &signer_type,
         public_key,
-        import.address,
+        address,
         deployed,
         legacy,
         import.account_type,

@@ -21,7 +21,7 @@ use starknet_types_core::felt::Felt;
 
 #[derive(Args, Clone, Debug)]
 pub struct InvokeCommonArgs {
-    /// Address of contract to invoke
+    /// Address of the contract to invoke (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short = 'd', long)]
     pub contract_address: FeltOrId,
 

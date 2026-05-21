@@ -16,8 +16,11 @@ fn test_alias_list_happy_case() {
     assert_stdout_contains(
         output,
         indoc! {r"
-            map:       0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008
-            map-class: 0x2a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321
+            example-class: 0x066802613e2cd02ea21430a56181d9ee83c54d4ccdc45efa497d41fe1dc55a0e
+            map:           0x00cd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008
+            map-class:     0x02a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321
+            oz-devnet:     0x04d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f
+            strk-token:    0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
         "},
     );
 }

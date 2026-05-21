@@ -808,6 +808,182 @@ pub async fn test_happy_case_default_name_generation() {
 }
 
 #[tokio::test]
+pub async fn test_import_with_address_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "import",
+        "--name",
+        "my_account_import",
+        "--address",
+        "@map",
+        "--private-key",
+        "0x456",
+        "--type",
+        "oz",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().stdout_eq(indoc! {r"
+        Success: Account imported successfully
+
+        Account Name: my_account_import
+    "});
+
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file))
+        .expect("Unable to read created file");
+    let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
+    assert_eq!(
+        contents_json,
+        json!(
+            {
+                "alpha-sepolia": {
+                  "my_account_import": {
+                    "address": "0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008",
+                    "class_hash": "0x2a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321",
+                    "deployed": true,
+                    "legacy": false,
+                    "private_key": "0x456",
+                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
+                    "type": "open_zeppelin"
+                  }
+                }
+            }
+        )
+    );
+}
+
+#[tokio::test]
+pub async fn test_import_with_class_hash_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "import",
+        "--name",
+        "my_account_import",
+        "--address",
+        "0x123",
+        "--private-key",
+        "0x456",
+        "--class-hash",
+        "@map-class",
+        "--type",
+        "oz",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().stdout_eq(indoc! {r"
+        Success: Account imported successfully
+
+        Account Name: my_account_import
+    "});
+
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file))
+        .expect("Unable to read created file");
+    let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
+    assert_eq!(
+        contents_json,
+        json!(
+            {
+                "alpha-sepolia": {
+                  "my_account_import": {
+                    "address": "0x123",
+                    "class_hash": "0x2a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321",
+                    "deployed": false,
+                    "legacy": false,
+                    "private_key": "0x456",
+                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
+                    "type": "open_zeppelin"
+                  }
+                }
+            }
+        )
+    );
+}
+
+#[tokio::test]
+pub async fn test_import_with_unknown_address_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "import",
+        "--name",
+        "my_account_import",
+        "--address",
+        "@unknown",
+        "--private-key",
+        "0x456",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        "--type",
+        "oz",
+    ];
+
+    let output = runner(&args).current_dir(tempdir.path()).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+            Command: account import
+            Error: Invalid address
+
+            Caused by:
+                Alias `unknown` not found in config
+        "},
+    );
+}
+
+#[tokio::test]
+pub async fn test_import_with_unknown_class_hash_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "import",
+        "--name",
+        "my_account_import",
+        "--address",
+        "0x123",
+        "--private-key",
+        "0x456",
+        "--class-hash",
+        "@unknown",
+        "--type",
+        "oz",
+    ];
+
+    let output = runner(&args).current_dir(tempdir.path()).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+            Command: account import
+            Error: Invalid class hash
+
+            Caused by:
+                Alias `unknown` not found in config
+        "},
+    );
+}
+
+#[tokio::test]
 pub async fn test_use_url_from_config() {
     let temp_dir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let accounts_file = "accounts.json";
