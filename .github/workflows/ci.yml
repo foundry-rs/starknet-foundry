@@ -62,16 +62,14 @@ jobs:
           while IFS= read -r file; do
             case "${file}" in
               */casm.json)
-                echo "Committed CASM artifact is out of date: ${file}" >&2
-                echo "Regenerate it with ./scripts/setup_predeployed_contracts.sh and commit the updated file." >&2
+                echo "Committed CASM artifact does not match the generated one: ${file}" >&2
                 exit 1
                 ;;
               */sierra.json)
                 tmp_expected="$(mktemp)"
                 git show "HEAD:${file}" > "${tmp_expected}"
                 if ! python3 ./scripts/compare_sierra_artifact.py "${tmp_expected}" "${file}"; then
-                  echo "Committed Sierra artifact is out of date: ${file}" >&2
-                  echo "Regenerate it with ./scripts/setup_predeployed_contracts.sh and commit the updated file." >&2
+                  echo "Committed Sierra artifact does not match the generated one: ${file}" >&2
                   rm -f "${tmp_expected}"
                   exit 1
                 fi
