@@ -939,7 +939,7 @@ pub async fn test_import_with_unknown_address_alias() {
         output,
         indoc! {r"
             Command: account import
-            Error: Invalid address
+            Error: Invalid contract address
 
             Caused by:
                 Alias `unknown` not found in config

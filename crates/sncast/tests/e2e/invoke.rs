@@ -152,7 +152,10 @@ async fn test_invoke_with_unknown_alias() {
         output,
         indoc! {r"
             Command: invoke
-            Error: Alias `unknown` not found in config
+            Error: Invalid contract address
+
+            Caused by:
+                Alias `unknown` not found in confi
         "},
     );
 }
