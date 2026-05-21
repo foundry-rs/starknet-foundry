@@ -23,7 +23,7 @@ use crate::starknet_commands::utils::serialize::{Location, resolve_abi};
 
 #[derive(Args, Debug)]
 #[command(about = "Calculate the address of a not yet deployed contract")]
-pub struct ContractAddress {
+pub struct ContractAddressArgs {
     #[command(flatten)]
     pub common: DeployCommonArgs,
 
@@ -36,7 +36,7 @@ pub struct ContractAddress {
 }
 
 pub async fn get_contract_address(
-    args: ContractAddress,
+    args: ContractAddressArgs,
     artifacts: Option<HashMap<String, CastStarknetContractArtifacts>>,
     config: CastConfig,
     ui: &UI,
