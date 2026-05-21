@@ -80,8 +80,8 @@ pub fn append_config_statements(
 
                 #config_statements
 
-                return;
-            }
+                return Default::default();
+            };
 
             #statements
         }

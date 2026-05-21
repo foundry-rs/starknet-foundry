@@ -8,8 +8,9 @@ use forge::{
     run_tests::test_target::ExitFirstChannel,
     test_filter::TestsFilter,
 };
-use forge_runner::CACHE_DIR;
+use forge_runner::DEFAULT_CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
+use forge_runner::filtering::NameFilter;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, ForgeTrackedResource, OutputConfig, TestRunnerConfig,
 };
@@ -53,7 +54,16 @@ pub fn run_test_case(
     rt.block_on(async {
         let target_handles = raw_test_targets
             .into_iter()
-            .map(|t| tokio::task::spawn_blocking(move || prepare_test_target(t, &tracked_resource)))
+            .map(|t| {
+                tokio::task::spawn_blocking(move || {
+                    prepare_test_target(
+                        t,
+                        &tracked_resource,
+                        &NameFilter::All,
+                        &PartitionConfig::default(),
+                    )
+                })
+            })
             .collect();
         run_for_package(
             RunForPackageArgs {
@@ -80,7 +90,7 @@ pub fn run_test_case(
                         is_vm_trace_needed: false,
                         cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
                             .unwrap()
-                            .join(CACHE_DIR),
+                            .join(DEFAULT_CACHE_DIR),
                         contracts_data: ContractsData::try_from(test.contracts(&ui).unwrap())
                             .unwrap(),
                         tracked_resource,

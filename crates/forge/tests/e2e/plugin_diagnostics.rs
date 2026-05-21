@@ -8,8 +8,8 @@ use std::fs;
 
 #[test]
 #[cfg_attr(
-    feature = "skip_test_for_only_latest_scarb",
-    ignore = "Plugin checks skipped"
+    feature = "scheduled_latest_scarb_only",
+    ignore = "Only passes with the latest Scarb"
 )]
 #[allow(clippy::too_many_lines)]
 fn syntax() {
@@ -78,32 +78,6 @@ fn syntax() {
         note: this error originates in the attribute macro: `fuzzer`
         note: this error originates in the attribute macro: `fork`
         
-        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
-         --> [..]/tests/contract.cairo:7:1
-        #[test]
-        ^^^^^^^
-        
-        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
-         --> [..]/tests/contract.cairo:8:1
-        #[fuzzer]
-        ^^^^^^^^^
-        note: this error originates in the attribute macro: `test`
-        
-        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
-         --> [..]/tests/contract.cairo:9:1
-        #[fork(url: "http://127.0.0.1:3030", block_tag: latest)]
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        note: this error originates in the attribute macro: `test`
-        note: this error originates in the attribute macro: `fuzzer`
-        
-        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
-         --> [..]/tests/contract.cairo:10:1
-        #[ignore]
-        ^^^^^^^^^
-        note: this error originates in the attribute macro: `test`
-        note: this error originates in the attribute macro: `fuzzer`
-        note: this error originates in the attribute macro: `fork`
-        
         error[E2103]: Mismatched types: pattern cannot match against type "core::result::Result::<(core::starknet::contract_address::ContractAddress, core::array::Span::<core::felt252>), core::array::Array::<core::felt252>>".
          --> [..]/tests/contract.cairo:14:9
             let (contract_address, _) = contract.deploy(constructor_calldata),unwrap();
@@ -120,16 +94,12 @@ fn syntax() {
         note: this error originates in the attribute macro: `fuzzer`
         note: this error originates in the attribute macro: `fork`
         
-        error: could not compile `syntax_integrationtest` due to 14 previous errors and 1 warning
+        error: could not compile `syntax_integrationtest` due to 10 previous errors and 1 warning
     "#},
     );
 }
 
 #[test]
-#[cfg_attr(
-    feature = "skip_test_for_only_latest_scarb",
-    ignore = "Plugin checks skipped"
-)]
 fn semantic() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/semantic"));
     let output = SnapboxCommand::from_std(
@@ -174,10 +144,6 @@ fn semantic() {
 }
 
 #[test]
-#[cfg_attr(
-    feature = "skip_test_for_only_latest_scarb",
-    ignore = "Plugin checks skipped"
-)]
 fn parameters() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/parameters"));
     let output = SnapboxCommand::from_std(
@@ -191,7 +157,7 @@ fn parameters() {
 
     assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {"
         error[E1001]: Missing token ','.
          --> [..]/tests/contract.cairo:9:31
         fn call_and_invoke(_a: felt252; b: u256) {
@@ -214,27 +180,12 @@ fn parameters() {
                                       ^^
         note: this error originates in the attribute macro: `test`
         
-        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
-         --> [..]/tests/contract.cairo:7:1
-        #[test]
-        ^^^^^^^
-        
-        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
-         --> [..]/tests/contract.cairo:8:1
-        #[fork("TESTNET")]
-        ^^^^^^^^^^^^^^^^^^
-        note: this error originates in the attribute macro: `test`
-        
-        error: could not compile `parameters_integrationtest` due to 6 previous errors and 1 warning
-    "#},
+        error: could not compile `parameters_integrationtest` due to 4 previous errors and 1 warning
+    "},
     );
 }
 
 #[test]
-#[cfg_attr(
-    feature = "skip_test_for_only_latest_scarb",
-    ignore = "Plugin checks skipped"
-)]
 fn multiple() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/multiple"));
     let output = SnapboxCommand::from_std(
@@ -248,7 +199,7 @@ fn multiple() {
 
     assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {"
         error[E1002]: Missing tokens. Expected an expression.
          --> [..]/tests/contract.cairo:19:22
             assert(balance === 0, 'balance == 0');
@@ -274,33 +225,7 @@ fn multiple() {
         note: this error originates in the attribute macro: `test`
         note: this error originates in the attribute macro: `fuzzer`
         note: this error originates in the attribute macro: `fork`
-        
-        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
-         --> [..]/tests/contract.cairo:7:1
-        #[test]
-        ^^^^^^^
-        
-        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
-         --> [..]/tests/contract.cairo:8:1
-        #[fuzzer]
-        ^^^^^^^^^
-        note: this error originates in the attribute macro: `test`
-        
-        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
-         --> [..]/tests/contract.cairo:9:1
-        #[fork(url: "http://127.0.0.1:3030", block_tag: latest)]
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        note: this error originates in the attribute macro: `test`
-        note: this error originates in the attribute macro: `fuzzer`
-        
-        error[E2200]: Plugin diagnostic: Failed because of invalid syntax
-         --> [..]/tests/contract.cairo:10:1
-        #[ignore]
-        ^^^^^^^^^
-        note: this error originates in the attribute macro: `test`
-        note: this error originates in the attribute macro: `fuzzer`
-        note: this error originates in the attribute macro: `fork`
-        
+
         error[E2000]: Unsupported feature.
          --> [..]/tests/contract.cairo:19:22
             assert(balance === 0, 'balance == 0');
@@ -329,16 +254,12 @@ fn multiple() {
         note: this error originates in the attribute macro: `ignore`
         note: this error originates in the attribute macro: `__internal_config_statement`
         
-        error: could not compile `multiple_integrationtest` due to 11 previous errors and 1 warning
-    "#},
+        error: could not compile `multiple_integrationtest` due to 7 previous errors and 1 warning
+    "},
     );
 }
 
 #[test]
-#[cfg_attr(
-    feature = "skip_test_for_only_latest_scarb",
-    ignore = "Plugin checks skipped"
-)]
 fn generic() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/generic"));
     let output = SnapboxCommand::from_std(
@@ -371,10 +292,6 @@ fn generic() {
 }
 
 #[test]
-#[cfg_attr(
-    feature = "skip_test_for_only_latest_scarb",
-    ignore = "Plugin checks skipped"
-)]
 fn inline_macros() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/inline_macros"));
     let output = SnapboxCommand::from_std(
@@ -407,10 +324,6 @@ fn inline_macros() {
 }
 
 #[test]
-#[cfg_attr(
-    feature = "skip_test_for_only_latest_scarb",
-    ignore = "Plugin checks skipped"
-)]
 fn different_attributes() {
     fn generate_attributes() -> impl Iterator<Item = String> {
         let attributes = vec![
@@ -436,7 +349,6 @@ fn different_attributes() {
             .args(["build", "--test"])
             .assert()
             .failure();
-        let expected_underline = "^".repeat(attribute.len());
 
         case_assert_stdout_contains(
             attribute.clone(),
@@ -445,24 +357,14 @@ fn different_attributes() {
             error[E1001]: Missing token ';'.
              --> [..]/tests/contract.cairo:10:81
                 let (_contract_address1, _) = contract.deploy(constructor_calldata).unwrap()
-                                                                                            ^
-            
-            error[E2200]: Plugin diagnostic: Failed because of invalid syntax
-             --> [..]/tests/contract.cairo:6:1
-            {attribute}
-            {expected_underline}
-            
-            error: could not compile `attributes_integrationtest` due to 2 previous errors and 1 warning
+
+            error: could not compile `attributes_integrationtest` due to 1 previous error and 1 warning
     "},
         );
     }
 }
 
 #[test]
-#[cfg_attr(
-    feature = "skip_test_for_only_latest_scarb",
-    ignore = "Plugin checks skipped"
-)]
 fn test_case() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/test_case_attr"));
     let output = SnapboxCommand::from_std(

@@ -1,4 +1,4 @@
-use crate::utils::{assert_diagnostics, assert_output, empty_function};
+use crate::utils::{assert_diagnostics, empty_function, format_output};
 use cairo_lang_macro::{Diagnostic, quote};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::available_gas::available_gas;
@@ -9,25 +9,7 @@ fn works_with_empty() {
 
     let result = available_gas(args, empty_function());
 
-    assert_output(
-        &result,
-        "
-            fn empty_fn() {
-                if snforge_std::_internals::is_config_run() {
-                    let mut data = array![];
-                    
-                    snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
-                        l1_gas: 0xffffffffffffffff,
-                        l1_data_gas: 0xffffffffffffffff,
-                        l2_gas: 0xffffffffffffffff
-                    }
-                    .serialize(ref data);
-                    starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
-                    return;
-                }
-            }
-        ",
-    );
+    insta::assert_snapshot!(format_output(&result));
 
     assert_diagnostics(
         &result,
@@ -59,27 +41,7 @@ fn work_with_number_some_set() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            fn empty_fn() {
-                if snforge_std::_internals::is_config_run() {
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
-                        l1_gas: 0x7b,
-                        l1_data_gas: 0xffffffffffffffff,
-                        l2_gas: 0xffffffffffffffff
-                    }
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
-
-                    return;
-                }
-            }
-        ",
-    );
+    insta::assert_snapshot!(format_output(&result));
 }
 
 #[test]
@@ -90,26 +52,7 @@ fn work_with_number_all_set() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            fn empty_fn() {
-                if snforge_std::_internals::is_config_run() {
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
-                        l1_gas: 0x1,
-                        l1_data_gas: 0x2,
-                        l2_gas: 0x3
-                    }
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
-
-                    return;
-                }
-            }",
-    );
+    insta::assert_snapshot!(format_output(&result));
 }
 
 #[test]
@@ -135,7 +78,7 @@ fn does_not_work_with_unnamed_arg() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(formatdoc!(
-            "#[available_gas] can be used with named arguments only"
+            "#[available_gas] can be used with named arguments only [possible values: l1_gas, l1_data_gas, l2_gas]. invalid arguments found: 3"
         ))],
     );
 }
@@ -203,25 +146,5 @@ fn max_permissible_value() {
 
     assert_diagnostics(&result, &[]);
 
-    assert_output(
-        &result,
-        "
-            fn empty_fn() {
-                if snforge_std::_internals::is_config_run() {
-                    let mut data = array![];
-
-                    snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
-                        l1_gas: 0xffffffffffffffff,
-                        l1_data_gas: 0xffffffffffffffff,
-                        l2_gas: 0xffffffffffffffff
-                    }
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
-
-                    return;
-                }
-            }
-        ",
-    );
+    insta::assert_snapshot!(format_output(&result));
 }

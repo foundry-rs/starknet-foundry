@@ -1,0 +1,12 @@
+---
+source: tests/integration/fuzzable.rs
+expression: format_output(&result)
+---
+impl FuzzableWrapperImpl<> of snforge_std::fuzzable::Fuzzable<Wrapper<>> {
+    fn blank() -> Wrapper<> {
+        Wrapper { value: snforge_std::fuzzable::Fuzzable::<u32>::blank() }
+    }
+    fn generate() -> Wrapper<> {
+        Wrapper { value: snforge_std::fuzzable::Fuzzable::<u32>::generate() }
+    }
+}

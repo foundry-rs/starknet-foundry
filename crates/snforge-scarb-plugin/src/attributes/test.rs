@@ -107,8 +107,8 @@ fn test_internal(
                if snforge_std::_internals::is_config_run() {
                    #if_content
 
-                   return;
-               }
+                   return Default::default();
+               };
 
                #statements
            }

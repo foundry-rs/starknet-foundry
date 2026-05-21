@@ -24,7 +24,6 @@ use starknet_rust::core::types::{
     ContractExecutionError, StarknetError::ClassHashNotFound,
     StarknetError::TransactionExecutionError, TransactionExecutionErrorData,
 };
-use starknet_rust::core::utils::get_contract_address;
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, ProviderError::StarknetError};
 use starknet_rust::signers::{LocalWallet, Signer, SigningKey};
@@ -131,10 +130,8 @@ async fn deploy_from_keystore(
 
     let (account_type, class_hash, salt) = extract_deployment_fields(&account_data)?;
 
-    let address = compute_account_address(salt, public_key, class_hash, account_type, chain_id);
-
     let signer = LocalWallet::from_signing_key(private_key);
-    let result = create_factory_and_deploy(
+    let (address, result) = create_factory_and_deploy(
         provider,
         account_type,
         class_hash,
@@ -169,7 +166,7 @@ async fn deploy_from_accounts_file(
     let account_data = get_account_data_from_accounts_file(&name, chain_id, accounts_file)?;
     let (account_type, class_hash, salt) = extract_deployment_fields(&account_data)?;
 
-    let result = match &account_data.signer_type {
+    let (_, result) = match &account_data.signer_type {
         SignerType::Ledger { ledger_path } => {
             let signer = ledger::create_ledger_signer(ledger_path, ui, true).await?;
 
@@ -231,14 +228,14 @@ async fn create_factory_and_deploy<S>(
     dry_run_args: DryRunArgs,
     wait_config: WaitForTx,
     ui: &UI,
-) -> Result<InvokeResponse>
+) -> Result<(Felt, InvokeResponse)>
 where
     S: Signer + Send + Sync,
     S::GetPublicKeyError: 'static,
     S::SignError: 'static,
 {
     match account_type {
-        AccountType::Argent | AccountType::Ready => {
+        AccountType::Ready => {
             let factory =
                 ArgentAccountFactory::new(class_hash, chain_id, None, signer, provider).await?;
             deploy_account(
@@ -321,17 +318,18 @@ async fn deploy_account<T>(
     wait_config: WaitForTx,
     class_hash: Felt,
     ui: &UI,
-) -> Result<InvokeResponse>
+) -> Result<(Felt, InvokeResponse)>
 where
     T: AccountFactory + Sync,
 {
     let deployment = account_factory.deploy_v3(salt);
+    let address = deployment.address();
 
     if dry_run_args.dry_run {
         return dry_run_args
             .estimate(|| deployment.estimate_fee())
             .await
-            .map(InvokeResponse::DryRun)
+            .map(|response| (address, InvokeResponse::DryRun(response)))
             .map_err(|error| anyhow!("Failed to estimate fee for dry run: {error}"));
     }
 
@@ -396,7 +394,7 @@ where
                 return Err(anyhow!(message));
             }
 
-            Ok(return_value)
+            Ok((address, return_value))
         }
     }
 }
@@ -436,27 +434,4 @@ fn update_keystore_account(account: &str, address: Felt) -> Result<()> {
         .context("Failed to write to account file")?;
 
     Ok(())
-}
-
-pub(crate) fn compute_account_address(
-    salt: Felt,
-    public_key: Felt,
-    class_hash: Felt,
-    account_type: AccountType,
-    chain_id: Felt,
-) -> Felt {
-    match account_type {
-        AccountType::Argent | AccountType::Ready => {
-            get_contract_address(salt, class_hash, &[public_key, Felt::ZERO], Felt::ZERO)
-        }
-        AccountType::OpenZeppelin => {
-            get_contract_address(salt, class_hash, &[public_key], chain_id)
-        }
-        AccountType::Braavos => get_contract_address(
-            salt,
-            BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
-            &[public_key],
-            chain_id,
-        ),
-    }
 }

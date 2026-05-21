@@ -5,7 +5,6 @@ use crate::helpers::fixtures::{
     deploy_braavos_account, deploy_cairo_0_account, deploy_keystore_account,
     deploy_latest_oz_account, deploy_ready_account,
 };
-use ctor::{ctor, dtor};
 use shared::test_utils::nextest::is_nextest;
 use std::net::TcpStream;
 use std::process::{Command, Stdio};
@@ -29,7 +28,7 @@ fn verify_devnet_availability(address: &str) -> bool {
 
 #[expect(clippy::zombie_processes)]
 #[cfg(test)]
-#[ctor]
+#[ctor::ctor(unsafe)]
 fn start_devnet() {
     if is_nextest_list_mode() {
         return;
@@ -100,7 +99,7 @@ fn start_devnet() {
 }
 
 #[cfg(test)]
-#[dtor]
+#[dtor::dtor(unsafe)]
 fn stop_devnet() {
     if is_nextest() {
         return;

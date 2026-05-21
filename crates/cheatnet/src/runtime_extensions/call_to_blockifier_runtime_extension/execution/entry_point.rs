@@ -236,7 +236,7 @@ pub fn execute_call_entry_point(
                 PreExecutionError::InsufficientEntryPointGas => OUT_OF_GAS_ERROR,
                 _ => return Err(err.into()),
             };
-            Ok(CallInfo {
+            let call_info = CallInfo {
                 call: entry_point.into(),
                 execution: CallExecution {
                     retdata: Retdata(vec![Felt::from_hex(error_code).unwrap()]),
@@ -246,7 +246,17 @@ pub fn execute_call_entry_point(
                 },
                 tracked_resource: current_tracked_resource,
                 ..CallInfo::default()
-            })
+            };
+            if !opts.trace_data_handled_by_revert_call {
+                update_trace_data(
+                    &call_info,
+                    &SyscallUsageMap::default(),
+                    &SyscallUsageMap::default(),
+                    cheatnet_state,
+                );
+                cheatnet_state.trace_data.exit_nested_call();
+            }
+            Ok(call_info)
         }
         Err(err) => {
             exit_error_call(&err, cheatnet_state, &entry_point);

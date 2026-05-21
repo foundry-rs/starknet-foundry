@@ -1,10 +1,11 @@
 use super::common::runner::{
     BASE_FILE_PATTERNS, Package, runner, setup_package_with_file_patterns, test_runner,
 };
-use forge_runner::CACHE_DIR;
+use forge_runner::DEFAULT_CACHE_DIR;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::node_url::node_rpc_url;
 use shared::test_utils::output_assert::assert_stdout_contains;
+use std::fs;
 
 #[test]
 fn without_cache() {
@@ -35,14 +36,18 @@ fn without_cache() {
 }
 
 #[test]
-/// The cache file at `forking/$CACHE_DIR` was modified to have different value stored
+/// The cache file at `forking/$DEFAULT_CACHE_DIR` was modified to have different value stored
 /// that this from the real network. We use it to verify that values from cache are actually used.
 ///
 /// The test that passed when using data from network, should fail for fabricated data.
 fn with_cache() {
     let temp = setup_package_with_file_patterns(
         Package::Name("forking".to_string()),
-        &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
+        &[
+            BASE_FILE_PATTERNS,
+            &[&format!("{DEFAULT_CACHE_DIR}/*.json")],
+        ]
+        .concat(),
     );
 
     let output = test_runner(&temp)
@@ -65,7 +70,7 @@ fn with_cache() {
         Failure data:
             0x42616c616e63652073686f756c642062652030 ('Balance should be 0')
 
-        Tests: 0 passed, 1 failed, 0 ignored, other filtered out
+        Tests: 0 passed, 1 failed, 0 ignored, 5 filtered out
 
         Failures:
             forking::tests::test_fork_simple
@@ -77,10 +82,14 @@ fn with_cache() {
 fn with_clean_cache() {
     let temp = setup_package_with_file_patterns(
         Package::Name("forking".to_string()),
-        &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
+        &[
+            BASE_FILE_PATTERNS,
+            &[&format!("{DEFAULT_CACHE_DIR}/*.json")],
+        ]
+        .concat(),
     );
 
-    runner(&temp).arg("clean-cache").assert().code(0);
+    runner(&temp).args(["clean", "cache"]).assert().code(0);
 
     let output = test_runner(&temp)
         .args(["--exact", "forking::tests::test_fork_simple"])
@@ -97,7 +106,50 @@ fn with_clean_cache() {
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
         [PASS] forking::tests::test_fork_simple [..]
-        Tests: 1 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 5 filtered out
+        "},
+    );
+}
+
+#[test]
+fn with_custom_cache_dir() {
+    let temp = setup_package_with_file_patterns(
+        Package::Name("forking".to_string()),
+        &[
+            BASE_FILE_PATTERNS,
+            &[&format!("{DEFAULT_CACHE_DIR}/*.json")],
+        ]
+        .concat(),
+    );
+
+    let default_cache_dir = temp.path().join(DEFAULT_CACHE_DIR);
+    let custom_cache_dir = temp.path().join("custom_cache");
+    fs::rename(&default_cache_dir, &custom_cache_dir).unwrap();
+
+    let output = test_runner(&temp)
+        .env("SNFOUNDRY_CACHE", &custom_cache_dir)
+        .args(["--exact", "forking::tests::test_fork_simple"])
+        .assert()
+        .code(1);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from forking package
+        Running 1 test(s) from src/
+        [FAIL] forking::tests::test_fork_simple
+
+        Failure data:
+            0x42616c616e63652073686f756c642062652030 ('Balance should be 0')
+
+        Tests: 0 passed, 1 failed, 0 ignored, 5 filtered out
+
+        Failures:
+            forking::tests::test_fork_simple
         "},
     );
 }
@@ -106,7 +158,11 @@ fn with_clean_cache() {
 fn printing_latest_block_number() {
     let temp = setup_package_with_file_patterns(
         Package::Name("forking".to_string()),
-        &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
+        &[
+            BASE_FILE_PATTERNS,
+            &[&format!("{DEFAULT_CACHE_DIR}/*.json")],
+        ]
+        .concat(),
     );
     let node_rpc_url = node_rpc_url();
 
@@ -125,7 +181,7 @@ fn printing_latest_block_number() {
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
         [PASS] forking::tests::print_block_number_when_latest [..]
-        Tests: 1 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 5 filtered out
 
         Latest block number = [..] for url = {node_rpc_url}
         "},

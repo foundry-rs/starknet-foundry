@@ -77,6 +77,7 @@ impl OutputLink for DeclareTransactionResponse {
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct DeployCommandMessage {
     accounts_file: Option<String>,
+    keystore: Option<String>,
     account: String,
     class_hash: PaddedFelt,
     constructor_args: Option<ConstructorArgs>,
@@ -90,6 +91,7 @@ impl DeployCommandMessage {
         response: &DeclareTransactionResponse,
         account: &str,
         accounts_file: &Utf8PathBuf,
+        keystore: Option<&Utf8PathBuf>,
         network_flag: String,
     ) -> Result<Self, Error> {
         let accounts_file_str = accounts_file.to_string();
@@ -100,6 +102,7 @@ impl DeployCommandMessage {
         Ok(Self {
             account: account.to_string(),
             accounts_file,
+            keystore: keystore.map(std::string::ToString::to_string),
             class_hash: response.class_hash,
             constructor_args: ConstructorArgs::from_abi(abi, abi_in_declared_class),
             network_flag,
@@ -111,8 +114,10 @@ impl Message for DeployCommandMessage {
     fn text(&self) -> String {
         let mut command = String::from("sncast");
 
-        let accounts_file_flag = generate_accounts_file_flag(self.accounts_file.as_ref());
-        if let Some(flag) = accounts_file_flag {
+        // TODO(#4367): --accounts-file and --keystore should be mutually exclusive at the CLI level
+        if let Some(keystore) = &self.keystore {
+            write!(command, " --keystore {keystore}").unwrap();
+        } else if let Some(flag) = generate_accounts_file_flag(self.accounts_file.as_ref()) {
             write!(command, " {flag}").unwrap();
         }
 

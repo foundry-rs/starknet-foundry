@@ -17,13 +17,7 @@ Address of the account.
 ## `--type, -t <ACCOUNT_TYPE>`
 Required.
 
-<!-- TODO(#3556): Remove `argent` option once we drop Argent account type. -->
-Type of the account. Possible values: `oz`, `argent`, `ready`, `braavos`.
-
-<!-- TODO(#3556): Remove warning once we drop Argent account type. -->
-> ⚠️ **Warning**
->
-> Argent has rebranded as Ready. The `argent` option is deprecated, please use `ready` instead.
+Type of the account. Possible values: `oz`, `ready`, `braavos`.
 
 ## `--url, -u <RPC_URL>`
 Optional.
@@ -80,6 +74,8 @@ Path to the file holding account private key.
 Optional.
 
 Salt for the account address.
+
+> **Limitation:** For `ready` (formerly `argent`) accounts, address validation only supports accounts deployed with guardian key set to 0.
 
 ## `--add-profile <NAME>`
 Optional.

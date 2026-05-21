@@ -2,10 +2,10 @@ use crate::coverage_api::run_coverage;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig};
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
-use anyhow::{Result, bail};
+use anyhow::{Result, bail, ensure};
 use build_trace_data::save_trace_data;
 use cairo_lang_sierra::program::{ConcreteTypeLongId, Function, TypeDeclaration};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_config_extension::config::RawFuzzerConfig;
 use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
@@ -17,6 +17,8 @@ use rand::SeedableRng;
 use rand::prelude::StdRng;
 use shared::spinner::Spinner;
 use std::collections::HashMap;
+use std::env;
+use std::env::VarError;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
@@ -42,7 +44,31 @@ pub mod test_case_summary;
 pub mod test_target_summary;
 pub mod tests_summary;
 
-pub const CACHE_DIR: &str = ".snfoundry_cache";
+pub const DEFAULT_CACHE_DIR: &str = ".snfoundry_cache";
+
+pub fn resolve_cache_dir(workspace_root: &Utf8Path) -> Result<Utf8PathBuf> {
+    resolve_cache_dir_impl(workspace_root, env::var("SNFOUNDRY_CACHE"))
+}
+
+fn resolve_cache_dir_impl(
+    workspace_root: &Utf8Path,
+    cache_var: Result<String, VarError>,
+) -> Result<Utf8PathBuf> {
+    match cache_var {
+        Ok(cache_dir) => {
+            let cache_dir = Utf8PathBuf::from(cache_dir);
+            ensure!(
+                cache_dir.is_absolute(),
+                "SNFOUNDRY_CACHE must be an absolute path"
+            );
+            Ok(cache_dir)
+        }
+        Err(VarError::NotPresent) => Ok(workspace_root.join(DEFAULT_CACHE_DIR)),
+        Err(VarError::NotUnicode(_)) => {
+            bail!("SNFOUNDRY_CACHE must be a valid UTF-8 string")
+        }
+    }
+}
 
 const BUILTINS: [&str; 11] = [
     "Pedersen",
@@ -244,4 +270,47 @@ pub fn function_args(
             _ => None,
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{DEFAULT_CACHE_DIR, resolve_cache_dir_impl};
+    use camino::Utf8Path;
+    use std::env::VarError;
+
+    #[test]
+    fn defaults_to_workspace_subdir_when_var_unset() {
+        let workspace = Utf8Path::new("/tmp/workspace");
+        assert_eq!(
+            resolve_cache_dir_impl(workspace, Err(VarError::NotPresent)).unwrap(),
+            workspace.join(DEFAULT_CACHE_DIR)
+        );
+    }
+
+    #[test]
+    fn accepts_absolute_custom_path() {
+        let resolved = resolve_cache_dir_impl(
+            Utf8Path::new("/tmp/workspace"),
+            Ok("/var/cache/snfoundry".to_string()),
+        )
+        .unwrap();
+        assert_eq!(resolved, Utf8Path::new("/var/cache/snfoundry"));
+    }
+
+    #[test]
+    fn rejects_relative_custom_path() {
+        let err = resolve_cache_dir_impl(
+            Utf8Path::new("/tmp/workspace"),
+            Ok("relative/cache".to_string()),
+        )
+        .unwrap_err();
+        assert_eq!(err.to_string(), "SNFOUNDRY_CACHE must be an absolute path");
+    }
+
+    #[test]
+    fn rejects_empty_string() {
+        let err =
+            resolve_cache_dir_impl(Utf8Path::new("/tmp/workspace"), Ok(String::new())).unwrap_err();
+        assert_eq!(err.to_string(), "SNFOUNDRY_CACHE must be an absolute path");
+    }
 }

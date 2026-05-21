@@ -1,0 +1,18 @@
+---
+source: tests/integration/single_attributes/fork.rs
+expression: format_output(&result)
+---
+fn empty_fn() {
+    if snforge_std::_internals::is_config_run() {
+        let mut data = array![];
+        snforge_std::_internals::config_types::ForkConfig::Overridden(
+            snforge_std::_internals::config_types::OverriddenForkConfig {
+                block: snforge_std::_internals::config_types::BlockId::BlockNumber(0x17),
+                name: "MAINNET",
+            },
+        )
+            .serialize(ref data);
+        starknet::testing::cheatcode::<'set_config_fork'>(data.span());
+        return Default::default();
+    };
+}

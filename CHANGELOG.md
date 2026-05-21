@@ -7,11 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- `#[derive(Fuzzable)]` macro that automatically generates `Fuzzable` trait implementations for structs and enums
+- `SNFOUNDRY_CACHE` environment variable to allow to specify a custom cache directory
+
+#### Changed
+
+- `snforge_scarb_plugin` diagnostics for named-argument kind violations now include both possible values and invalid arguments found.
+- `snforge test --exact` now reports the exact number of filtered-out tests in summaries instead of `other`.
+- Minimal required `Scarb` version is now `2.13.1` (updated from `2.12.0`).
+
+#### Fixed
+
+- Bug in forge debugging and `--gas-report` that caused panic in case of a call to non-existent selector
+- `snforge test` now fails fast and explicitly when `[cairo] enable-gas = false`. Read more in [`Scarb.toml` reference](https://foundry-rs.github.io/starknet-foundry/appendix/scarb-toml.html#enable-gas).
+- `#[test]` macro now expands correctly in `snforge_scarb_plugin` for cases involving block expressions (e.g. function code starting with `[`)
+
+#### Removed
+
+- The deprecated `snforge clean-cache` command. Use `snforge clean cache` instead
+
 ### Cast
 
 #### Added
 
+- `sncast get spec-version` command that returns the version of the Starknet JSON-RPC specification used by the node
 - `--no-abi` flag for `declare`, `declare-from`, and `deploy`, erasing the ABI before class declaration.
+
+#### Fixed
+
+- `sncast completions` no longer fails due to invalid local or global `snfoundry.toml` config.
+- Non-panic errors no longer bypass foundry UI. `--json` now works for user-facing errors where plain text was printed before (excluding clap arg-parsing errors).
+- Build failures now return command errors instead of panicking.
+- In command errors, `command` field now universally displays a full command path (`get tx-status`, `account import`) (previously in some cases, only top-level command name was shown, e.g. `get`, `account`).
+- `sncast account deploy` now correctly writes deployed address to keystore account file.
+- `sncast declare` now correctly includes `--keystore` flag in the suggested deploy command when keystore is used.
+
+#### Removed
+
+- `argent` option for `--type` flag in `account create` and `account import` commands. Use `ready` instead. Old account files with `"type": "argent"` are still loaded correctly.
 
 ## [0.60.0] - 2026-04-27
 
@@ -44,12 +81,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - In JSON output for `sncast utils` commands, the `"command"` field now includes the `utils` prefix (e.g. `"serialize"` -> `"utils serialize"`).
+- Reworked profile layering in `snfoundry.toml`: `[sncast.default]` is always the base layer, and global-only profiles can work without a local config. Read more [here](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#interaction-between-local-and-global-profiles).
+- Improved `snfoundry.toml` config error reporting.
 - `--profile` now only determines `snfoundry.toml` profile. For Scarb profile, use `--scarb-profile` flag or `scarb-profile` from `snfoundry.toml` instead. Defaults to `release` if unspecified.
 
 #### Fixed
 
 - `sncast verify` now uses the configured network or infers it from the RPC chain ID when `--network` is omitted.
 - `sncast` now returns non-zero exit code when a command fails.
+- Invalid `snfoundry.toml` configs now fail with errors instead of being silently ignored.
+- Panics in config validation. Errors are now properly propagated and reported.
+- `sncast show-config` quietly ignoring provider errors
 
 ## [0.59.0] - 2026-04-10
 
