@@ -5,30 +5,6 @@ import sys
 from pathlib import Path
 
 
-def normalize_path(path: str) -> str:
-    for marker in ("/starkgate-contracts/", "/registry/std/"):
-        if marker in path:
-            return path.split(marker, 1)[1]
-    return path
-
-
-def normalize_code_location(location: list[object]) -> tuple[object, ...]:
-    path, span, is_user_code = location
-    return (
-        normalize_path(path),
-        span["start"]["line"],
-        span["start"]["col"],
-        span["end"]["line"],
-        span["end"]["col"],
-        is_user_code,
-    )
-
-
-def normalize_code_location_value(location: list[object]) -> list[object]:
-    path, span, is_user_code = location
-    return [normalize_path(path), span, is_user_code]
-
-
 def normalize_debug_info(debug_info: dict[str, object]) -> dict[str, object]:
     normalized = dict(debug_info)
 
@@ -36,30 +12,7 @@ def normalize_debug_info(debug_info: dict[str, object]) -> dict[str, object]:
         if key in normalized:
             normalized[key] = sorted(normalized[key], key=lambda item: item[0])
 
-    annotations = dict(normalized.get("annotations", {}))
-
-    profiler = dict(annotations.get("github.com/software-mansion/cairo-profiler", {}))
-    if "statements_functions" in profiler:
-        profiler["statements_functions"] = {
-            statement_idx: sorted(functions)
-            for statement_idx, functions in profiler["statements_functions"].items()
-        }
-    if profiler:
-        annotations["github.com/software-mansion/cairo-profiler"] = profiler
-
-    coverage = dict(annotations.get("github.com/software-mansion/cairo-coverage", {}))
-    if "statements_code_locations" in coverage:
-        coverage["statements_code_locations"] = {
-            statement_idx: sorted(
-                [normalize_code_location_value(location) for location in locations],
-                key=normalize_code_location,
-            )
-            for statement_idx, locations in coverage["statements_code_locations"].items()
-        }
-    if coverage:
-        annotations["github.com/software-mansion/cairo-coverage"] = coverage
-
-    normalized["annotations"] = annotations
+    normalized.pop("annotations", None)
     return normalized
 
 
