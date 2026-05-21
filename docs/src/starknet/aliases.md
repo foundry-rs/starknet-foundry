@@ -36,7 +36,7 @@ $ sncast call --contract-address @map --function get --calldata 0x0 --block-id l
 > Aliases follow the same rules as other `snfoundry.toml` settings.
 > That means you can define aliases in the global and local config files, and create the per-profile aliases, for example:
 > ```toml
-> [sncast.myprofile.aliases]
+> [sncast.myprofile]
 > network = "devnet"
 > 
 > [sncast.myprofile.aliases]
