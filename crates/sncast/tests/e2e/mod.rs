@@ -17,6 +17,7 @@ mod proof;
 mod script;
 mod selector;
 mod show_config;
+mod spec_version;
 mod transaction;
 mod tx_status;
 mod utils;
