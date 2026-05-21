@@ -87,7 +87,7 @@ With this format, the expected error message needs to be a substring of the actu
 {{#include ../../listings/should_panic_example/src/lib.cairo:felt}}
 ```
 
-3. **With tuple of felts, ByteArrays, or a mix of both**:
+3. **With tuple of felts, byte arrays, or a mix of both**:
 ```rust
 {{#include ../../listings/should_panic_example/src/lib.cairo:tuple}}
 ```
