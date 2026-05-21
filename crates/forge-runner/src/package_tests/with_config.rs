@@ -81,9 +81,6 @@ mod tests {
     use conversions::byte_array::ByteArray;
     use starknet_types_core::felt::Felt;
 
-    // Standalone `expected: "..."` serializes as a top-level ByteArray. String items inside
-    // `expected: (...)` serialize as raw ByteArray contents flattened into the surrounding felt
-    // array, alongside the other tuple items.
     #[test]
     fn should_panic_tuple_strings_are_flattened_without_magic() {
         let expected = ExpectedTestResult::from(Some(RawShouldPanicConfig {
