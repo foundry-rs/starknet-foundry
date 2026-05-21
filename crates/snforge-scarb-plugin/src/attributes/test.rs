@@ -108,7 +108,7 @@ fn test_internal(
                    #if_content
 
                    return Default::default();
-               }
+               };
 
                #statements
            }
