@@ -87,7 +87,7 @@ pub struct DeployCommandMessage {
 impl DeployCommandMessage {
     pub fn new(
         abi: &[AbiEntry],
-        abi_in_declared_class: bool,
+        no_abi: bool,
         response: &DeclareTransactionResponse,
         account: &str,
         accounts_file: &Utf8PathBuf,
@@ -104,7 +104,7 @@ impl DeployCommandMessage {
             accounts_file,
             keystore: keystore.map(std::string::ToString::to_string),
             class_hash: response.class_hash,
-            constructor_args: ConstructorArgs::from_abi(abi, abi_in_declared_class),
+            constructor_args: ConstructorArgs::from_abi(abi, !no_abi),
             network_flag,
         })
     }
@@ -177,7 +177,7 @@ enum ConstructorArgs {
 }
 
 impl ConstructorArgs {
-    fn from_abi(abi: &[AbiEntry], abi_in_declared_class: bool) -> Option<Self> {
+    fn from_abi(abi: &[AbiEntry], is_abi_declared: bool) -> Option<Self> {
         abi.iter().find_map(|entry| {
             let AbiEntry::Constructor(constructor) = entry else {
                 return None;
@@ -188,7 +188,7 @@ impl ConstructorArgs {
 
             let cairo_args = generate_constructor_placeholder_arguments(constructor);
 
-            Some(if abi_in_declared_class {
+            Some(if is_abi_declared {
                 Self::CairoLike(cairo_args)
             } else {
                 Self::RawCalldata(cairo_args)
