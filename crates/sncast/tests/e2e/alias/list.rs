@@ -16,11 +16,14 @@ fn test_alias_list_happy_case() {
     assert_stdout_contains(
         output,
         indoc! {r"
-            example-class: 0x66802613e2cd02ea21430a56181d9ee83c54d4ccdc45efa497d41fe1dc55a0e
-            map:           0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008
-            map-class:     0x2a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321
-            oz-devnet:     0x4d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f
-            strk-token:    0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
+            data-transformer-class: 0x786d1f010d66f838837290e472415186ba6a789fb446e7f92e444bed7b5d9c0
+            data-transformer:       0x351c816183324878714973f3da1a43c1a40d661b8dac5cb69294cc333342ed
+            deployer-123:           0x123
+            example-class:          0x66802613e2cd02ea21430a56181d9ee83c54d4ccdc45efa497d41fe1dc55a0e
+            map-class:              0x2a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321
+            map:                    0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008
+            oz-devnet:              0x4d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f
+            strk-token:             0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
         "},
     );
 }
@@ -47,7 +50,7 @@ fn test_alias_list_json() {
 
     assert_stdout_contains(
         output,
-        r#"{"aliases":[{"name":"example-class","value":"0x66802613e2cd02ea21430a56181d9ee83c54d4ccdc45efa497d41fe1dc55a0e"},{"name":"map","value":"0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008"},{"name":"map-class","value":"0x2a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321"},{"name":"oz-devnet","value":"0x4d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f"},{"name":"strk-token","value":"0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"}],"command":"alias list","type":"response"}"#,
+        r#"{"aliases":[{"name":"data-transformer","value":"0x351c816183324878714973f3da1a43c1a40d661b8dac5cb69294cc333342ed"},{"name":"data-transformer-class","value":"0x786d1f010d66f838837290e472415186ba6a789fb446e7f92e444bed7b5d9c0"},{"name":"deployer-123","value":"0x123"},{"name":"example-class","value":"0x66802613e2cd02ea21430a56181d9ee83c54d4ccdc45efa497d41fe1dc55a0e"},{"name":"map","value":"0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008"},{"name":"map-class","value":"0x2a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321"},{"name":"oz-devnet","value":"0x4d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f"},{"name":"strk-token","value":"0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"}],"command":"alias list","type":"response"}"#,
     );
 }
 

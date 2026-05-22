@@ -2,6 +2,7 @@ use crate::helpers::constants::{
     DATA_TRANSFORMER_CONTRACT_ABI_PATH, DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA,
     DATA_TRANSFORMER_CONTRACT_CLASS_HASH_SEPOLIA, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
 };
+use configuration::test_utils::copy_config_to_tempdir;
 use crate::helpers::runner::{runner, sncast_test_bin_path};
 use crate::helpers::shell::os_specific_shell;
 use camino::Utf8PathBuf;
@@ -282,6 +283,91 @@ async fn test_rpc_args_not_passed_when_using_contract_address() {
     Command: utils serialize
     Error: Either `--network` or `--url` must be provided when using `--contract-address`
     "});
+}
+
+#[tokio::test]
+async fn test_serialize_with_contract_address_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
+
+    let args = vec![
+        "utils",
+        "serialize",
+        "--arguments",
+        calldata,
+        "--contract-address",
+        "@data-transformer",
+        "--function",
+        "nested_struct_fn",
+        "--url",
+        URL,
+    ];
+
+    runner(&args)
+        .current_dir(tempdir.path())
+        .assert()
+        .success()
+        .stdout_eq(indoc! {r"
+    Calldata: [0x24, 0x60]
+    "});
+}
+
+#[tokio::test]
+async fn test_serialize_with_class_hash_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
+
+    let args = vec![
+        "utils",
+        "serialize",
+        "--arguments",
+        calldata,
+        "--class-hash",
+        "@data-transformer-class",
+        "--function",
+        "nested_struct_fn",
+        "--url",
+        URL,
+    ];
+
+    runner(&args)
+        .current_dir(tempdir.path())
+        .assert()
+        .success()
+        .stdout_eq(indoc! {r"
+    Calldata: [0x24, 0x60]
+    "});
+}
+
+#[tokio::test]
+async fn test_serialize_with_unknown_contract_address_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+
+    let args = vec![
+        "utils",
+        "serialize",
+        "--arguments",
+        "0",
+        "--contract-address",
+        "@unknown",
+        "--function",
+        "nested_struct_fn",
+        "--url",
+        URL,
+    ];
+
+    let output = runner(&args).current_dir(tempdir.path()).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+            Command: utils serialize
+            Error: Invalid contract address
+
+            Caused by:
+                Alias `unknown` not found in config
+        "},
+    );
 }
 
 #[tokio::test]

@@ -94,4 +94,6 @@ Currently, aliases are supported for:
 - `sncast get nonce`: `<CONTRACT_ADDRESS>`
 - `sncast get class-hash-at`: `<CONTRACT_ADDRESS>`
 - `sncast verify`: `--class-hash`, `--contract-address`
+- `sncast utils serialize`: `--class-hash`, `--contract-address`
+- `sncast utils contract-address`: `--class-hash`, `--deployer-address`
 

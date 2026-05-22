@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - Aliases in `snfoundry.toml`. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html#sncastprofile-namealiases).
-- `@alias` syntax for felt arguments in `sncast call`, `invoke`, `deploy`, `declare-from`, `account create`, `account import`, `get balance`, `get nonce`, `get class-hash-at`, and `verify`. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/aliases.html).
+- `@alias` syntax for felt arguments in `sncast call`, `invoke`, `deploy`, `declare-from`, `account create`, `account import`, `get balance`, `get nonce`, `get class-hash-at`, `verify`, `utils serialize`, and `utils contract-address`. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/aliases.html).
 - `sncast alias list` command for listing aliases. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/alias/list.html).
 
 ## [0.61.0] - 2026-05-26

@@ -84,6 +84,7 @@ macro_rules! felt_or_id_newtype {
 felt_or_id_newtype!(ContractAddress, "Invalid contract address");
 felt_or_id_newtype!(ClassHash, "Invalid class hash");
 felt_or_id_newtype!(TokenAddress, "Invalid token address");
+felt_or_id_newtype!(DeployerAccountAddress, "Invalid deployer account address");
 
 #[cfg(test)]
 mod tests {
