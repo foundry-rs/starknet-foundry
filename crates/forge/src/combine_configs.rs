@@ -163,7 +163,7 @@ mod tests {
                     fuzzer_runs: NonZeroU32::new(1234).unwrap(),
                     fuzzer_seed: 500,
                     max_n_steps: Some(1_000_000),
-                    tracked_resource: ForgeTrackedResource::SierraGas,
+                    tracked_resource: ForgeTrackedResource::CairoSteps,
                     is_vm_trace_needed: true,
                     cache_dir: Utf8PathBuf::default(),
                     contracts_data: ContractsData::default(),
