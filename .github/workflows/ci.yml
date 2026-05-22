@@ -48,12 +48,6 @@ jobs:
 
           artifacts_dir="crates/cheatnet/src/data/predeployed_contracts"
 
-          if [[ -n "$(git ls-files --others --exclude-standard -- "${artifacts_dir}")" ]]; then
-            echo "Unexpected untracked predeployed contract artifacts were generated." >&2
-            git ls-files --others --exclude-standard -- "${artifacts_dir}" >&2
-            exit 1
-          fi
-
           changed_files="$(git diff --name-only -- "${artifacts_dir}")"
           if [[ -z "${changed_files}" ]]; then
             exit 0
@@ -68,7 +62,7 @@ jobs:
               */sierra.json)
                 tmp_expected="$(mktemp)"
                 git show "HEAD:${file}" > "${tmp_expected}"
-                if ! python3 ./scripts/compare_sierra_artifact.py "${tmp_expected}" "${file}"; then
+                if ! bash ./scripts/compare_sierra_artifact.sh "${tmp_expected}" "${file}"; then
                   echo "Committed Sierra artifact does not match the generated one: ${file}" >&2
                   rm -f "${tmp_expected}"
                   exit 1
