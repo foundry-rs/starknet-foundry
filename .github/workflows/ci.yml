@@ -48,6 +48,12 @@ jobs:
 
           artifacts_dir="crates/cheatnet/src/data/predeployed_contracts"
 
+          if [[ -n "$(git ls-files --others --exclude-standard -- "${artifacts_dir}")" ]]; then
+            echo "Unexpected untracked predeployed contract artifacts were generated." >&2
+            git ls-files --others --exclude-standard -- "${artifacts_dir}" >&2
+            exit 1
+          fi
+
           changed_files="$(git diff --name-only -- "${artifacts_dir}")"
           if [[ -z "${changed_files}" ]]; then
             exit 0
