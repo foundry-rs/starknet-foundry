@@ -155,7 +155,7 @@ async fn test_invoke_with_unknown_alias() {
             Error: Invalid contract address
 
             Caused by:
-                Alias `unknown` not found in confi
+                Alias `unknown` not found in config
         "},
     );
 }
