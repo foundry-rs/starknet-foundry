@@ -1,8 +1,9 @@
 use crate::helpers::constants::{
     MAP_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
 };
-use crate::helpers::fixtures::create_and_deploy_account;
+use crate::helpers::fixtures::{create_and_deploy_account, join_tempdirs};
 use crate::helpers::runner::runner;
+use configuration::test_utils::copy_config_to_tempdir;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::AccountType;
@@ -229,7 +230,10 @@ async fn test_non_existent_id() {
         output,
         indoc! {
             "
-            Error: Failed to find contract address for id: non_existent_id
+            Error: Invalid contract address
+
+            Caused by:
+                `@non_existent_id`: not found as multicall step id or in [sncast.<profile>.aliases]
             "
         },
     );
@@ -411,6 +415,56 @@ async fn test_dry_run_detailed() {
             L2 Gas Price:         [..]
             L1 Data Gas Consumed: [..]
             L1 Data Gas Price:    [..]
+            "
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_execute_alias_precedence_step_wins() {
+    let account_dir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+    let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    join_tempdirs(&account_dir, &config_dir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "multicall",
+        "execute",
+        "--url",
+        URL,
+        "deploy",
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--id",
+        "shadowed",
+        "/",
+        "invoke",
+        "--contract-address",
+        "@shadowed",
+        "--function",
+        "put",
+        "--calldata",
+        "0x123 0x234",
+    ];
+
+    let snapbox = runner(&args)
+        .current_dir(config_dir.path())
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Multicall completed
+
+            Transaction Hash: 0x[..]
+
+            To see invocation details, visit:
+            transaction: [..]
             "
         },
     );
