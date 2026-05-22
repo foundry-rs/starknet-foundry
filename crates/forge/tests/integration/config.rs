@@ -96,6 +96,32 @@ fn get_forge_config_for_package() {
 }
 
 #[test]
+fn get_forge_config_for_package_with_tracked_resource() {
+    let temp = setup_package_with_toml();
+    let manifest_path = temp.child("Scarb.toml");
+    let manifest_contents = fs::read_to_string(&manifest_path).unwrap();
+    let manifest_contents = formatdoc!(
+        r#"
+        {manifest_contents}
+
+        [tool.snforge]
+        tracked_resource = "cairo-steps"
+    "#
+    );
+    manifest_path.write_str(manifest_contents.as_str()).unwrap();
+
+    let scarb_metadata = metadata_for_dir(temp.path()).unwrap();
+
+    let config = load_package_config::<ForgeConfigFromScarb>(
+        &scarb_metadata,
+        &scarb_metadata.workspace.members[0],
+    )
+    .unwrap();
+
+    assert_eq!(config.tracked_resource, ForgeTrackedResource::CairoSteps);
+}
+
+#[test]
 fn get_forge_config_for_package_err_on_invalid_package() {
     let temp = setup_package_with_toml();
     let scarb_metadata = metadata_for_dir(temp.path()).unwrap();

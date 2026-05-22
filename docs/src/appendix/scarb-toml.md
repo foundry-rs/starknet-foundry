@@ -35,6 +35,19 @@ fuzzer_runs = 1234
 fuzzer_seed = 1111
 ```
 
+#### `tracked_resource`
+The `tracked_resource` field specifies which execution resource `snforge` should track.
+When `--tracked-resource` is passed on the CLI, the CLI value takes precedence over `Scarb.toml`.
+
+Valid values are:
+- `sierra-gas`
+- `cairo-steps`
+
+```toml
+[tool.snforge]
+tracked_resource = "cairo-steps"
+```
+
 ### `[[tool.snforge.fork]]`
 ```toml
 [[tool.snforge.fork]]
