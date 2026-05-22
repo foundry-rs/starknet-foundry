@@ -1,3 +1,4 @@
+use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use anyhow::{Context, Result, bail};
 use serde::Deserialize;
 use sncast::helpers::configuration::CastConfig;
@@ -38,6 +39,33 @@ impl FeltOrId {
             self.try_into_felt()
         }
     }
+
+    /// If `@ID`, attempt to resolve felt value from, in the following order:
+    /// 1. [`ContractRegistry`]
+    /// 2. Aliases from config
+    ///
+    /// Otherwise, parse it as felt.
+    pub fn resolve_for_multicall(
+        &self,
+        registry: &ContractRegistry,
+        config: &CastConfig,
+    ) -> Result<Felt> {
+        if let Some(name) = self.as_id() {
+            if name.is_empty() {
+                bail!("Alias name cannot be empty");
+            }
+            if let Some(addr) = registry.get_address_by_id(name) {
+                return Ok(addr);
+            }
+            config.aliases.get(name).copied().with_context(|| {
+                format!(
+                    "`@{name}`: not found as multicall step id or in [sncast.<profile>.aliases]"
+                )
+            })
+        } else {
+            self.try_into_felt()
+        }
+    }
 }
 
 impl std::str::FromStr for FeltOrId {
@@ -68,6 +96,16 @@ macro_rules! felt_or_id_newtype {
                 config: &CastConfig,
             ) -> Result<Option<Felt>> {
                 value.map(|v| v.resolve(config)).transpose()
+            }
+
+            pub fn resolve_in_multicall(
+                &self,
+                registry: &ContractRegistry,
+                config: &CastConfig,
+            ) -> Result<Felt> {
+                self.0
+                    .resolve_for_multicall(registry, config)
+                    .context($context)
             }
         }
 
