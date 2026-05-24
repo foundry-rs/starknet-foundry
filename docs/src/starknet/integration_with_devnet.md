@@ -1,6 +1,6 @@
 # Integration With Devnet
 
-[`starknet-devnet`](https://0xspaceshard.github.io/starknet-devnet/) is a local Starknet node used for development and testing. `sncast` provides inbuilt support for some of its features, making it easier to work with it.
+[`starknet-devnet`](https://starknet-io.github.io/starknet-devnet/) is a local Starknet node used for development and testing. `sncast` provides inbuilt support for some of its features, making it easier to work with it.
 
 ## Automatic Devnet Detection
 
