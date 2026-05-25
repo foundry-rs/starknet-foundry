@@ -7,6 +7,7 @@ use starknet_rust::core::types::contract::{
 };
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
+use std::collections::HashSet;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ReverseTransformEventError {
@@ -16,8 +17,12 @@ pub enum ReverseTransformEventError {
     UnsupportedUntypedEvent(String),
     #[error("event `{0}` is unsupported by reverse transformer")]
     UnsupportedEvent(String),
-    #[error("abi is invalid")]
-    InvalidAbi,
+    #[error(
+        "abi is invalid: event `{0}` matched selector but left {1} key(s) and {2} data felt(s) unconsumed"
+    )]
+    InvalidAbi(String, usize, usize),
+    #[error("abi is invalid: type `{0}` referenced in event but not found in abi")]
+    InvalidAbiMissingType(String),
     #[error(transparent)]
     TransformationError(#[from] TransformationError),
 }
@@ -40,6 +45,12 @@ impl From<ReverseTransformEventError> for InternalEventError {
     }
 }
 
+struct EventReverseTransformer<'a> {
+    abi: &'a [AbiEntry],
+    keys: &'a [Felt],
+    data: &'a [Felt],
+}
+
 /// Transforms a set of event keys and data into a Cairo-like string representation of the event.
 pub fn reverse_transform_event(
     keys: &[Felt],
@@ -56,16 +67,20 @@ pub fn reverse_transform_event(
 
     let mut first_error = None;
 
-    for typed_event in top_level_typed_events(abi) {
+    for typed_event in top_level_typed_events(abi, selector) {
         let mut transformer = EventReverseTransformer::new(keys, data, abi);
 
         match transformer.transform_typed_event(typed_event, SelectorSource::Consume, &db) {
             Ok(decoded) if transformer.keys.is_empty() && transformer.data.is_empty() => {
                 return Ok(decoded.to_string());
             }
-            Ok(_) => {
+            Ok(decoded) => {
                 if first_error.is_none() {
-                    first_error = Some(ReverseTransformEventError::InvalidAbi);
+                    first_error = Some(ReverseTransformEventError::InvalidAbi(
+                        decoded.to_string(),
+                        transformer.keys.len(),
+                        transformer.data.len(),
+                    ));
                 }
             }
             Err(InternalEventError::SelectorMismatch) => {}
@@ -88,12 +103,6 @@ pub fn reverse_transform_event(
     }
 
     Err(ReverseTransformEventError::EventNotFound(selector))
-}
-
-struct EventReverseTransformer<'a> {
-    abi: &'a [AbiEntry],
-    keys: &'a [Felt],
-    data: &'a [Felt],
 }
 
 impl<'a> EventReverseTransformer<'a> {
@@ -153,12 +162,18 @@ impl<'a> EventReverseTransformer<'a> {
         for variant in &abi_event_enum.variants {
             match variant.kind {
                 EventFieldKind::Flat => {
-                    if self.event_type_matches_selector(&variant.r#type, selector)? {
-                        return self.transform_event_type(
+                    if event_type_matches_selector(self.abi, &variant.r#type, selector)? {
+                        let argument = self.transform_event_type(
                             &variant.r#type,
                             SelectorSource::Provided(selector),
                             db,
-                        );
+                        )?;
+
+                        return Ok(Type::Enum(Enum {
+                            name: short_name(&abi_event_enum.name),
+                            variant: variant.name.clone(),
+                            argument: Some(Box::new(argument)),
+                        }));
                     }
                 }
                 EventFieldKind::Nested | EventFieldKind::Data | EventFieldKind::Key => {
@@ -213,8 +228,9 @@ impl<'a> EventReverseTransformer<'a> {
         selector_source: SelectorSource,
         db: &SimpleParserDatabase,
     ) -> Result<Type, InternalEventError> {
-        let typed_event =
-            find_typed_event(self.abi, type_name).ok_or(ReverseTransformEventError::InvalidAbi)?;
+        let typed_event = find_typed_event(self.abi, type_name).ok_or_else(|| {
+            ReverseTransformEventError::InvalidAbiMissingType(type_name.to_string())
+        })?;
         self.transform_typed_event(typed_event, selector_source, db)
     }
 
@@ -245,6 +261,10 @@ impl<'a> EventReverseTransformer<'a> {
         event_name: &str,
         selector_source: SelectorSource,
     ) -> Result<(), InternalEventError> {
+        if let SelectorSource::None = selector_source {
+            return Ok(());
+        }
+
         let expected_selector = selector_from_name(event_name)?;
         let selector = self.resolve_selector(selector_source)?;
 
@@ -275,38 +295,6 @@ impl<'a> EventReverseTransformer<'a> {
                 "event enum without selector".to_string(),
             )
             .into()),
-        }
-    }
-
-    fn event_type_matches_selector(
-        &self,
-        type_name: &str,
-        selector: Felt,
-    ) -> Result<bool, ReverseTransformEventError> {
-        let typed_event =
-            find_typed_event(self.abi, type_name).ok_or(ReverseTransformEventError::InvalidAbi)?;
-
-        match typed_event {
-            TypedAbiEvent::Struct(abi_event_struct) => {
-                Ok(selector_matches_name(selector, &abi_event_struct.name)?)
-            }
-            TypedAbiEvent::Enum(abi_event_enum) => {
-                for variant in &abi_event_enum.variants {
-                    match variant.kind {
-                        EventFieldKind::Flat => {
-                            if self.event_type_matches_selector(&variant.r#type, selector)? {
-                                return Ok(true);
-                            }
-                        }
-                        EventFieldKind::Nested | EventFieldKind::Data | EventFieldKind::Key => {
-                            if selector_matches_name(selector, &variant.name)? {
-                                return Ok(true);
-                            }
-                        }
-                    }
-                }
-                Ok(false)
-            }
         }
     }
 }
@@ -340,7 +328,10 @@ fn find_typed_event<'a>(abi: &'a [AbiEntry], type_name: &str) -> Option<&'a Type
 ///
 /// In reverse transformation, we only care about *top-level* events,
 /// i.e. such that are emitted directly and thus don't appear inside other events.
-fn top_level_typed_events(abi: &[AbiEntry]) -> impl Iterator<Item = &TypedAbiEvent> {
+fn top_level_typed_events(
+    abi: &[AbiEntry],
+    selector: Felt,
+) -> impl Iterator<Item = &TypedAbiEvent> {
     // All types ever referenced inside any typed event
     let all_types_in_events = abi
         .iter()
@@ -360,12 +351,13 @@ fn top_level_typed_events(abi: &[AbiEntry]) -> impl Iterator<Item = &TypedAbiEve
                 .map(|field| field.r#type.as_str())
                 .collect::<Vec<_>>(),
         })
-        .collect::<Vec<_>>();
+        .collect::<HashSet<_>>();
 
     // Select only top-level events, i.e. such that are not referenced by other events.
     abi.iter().filter_map(move |entry| match entry {
         AbiEntry::Event(AbiEvent::Typed(typed_event))
-            if !all_types_in_events.contains(&typed_event_name(typed_event)) =>
+            if !all_types_in_events.contains(typed_event_name(typed_event))
+                || typed_event_matches_selector(abi, typed_event, selector).unwrap_or(false) =>
         {
             Some(typed_event)
         }
@@ -381,6 +373,46 @@ fn typed_event_name(typed_event: &TypedAbiEvent) -> &str {
     }
 }
 
+fn event_type_matches_selector(
+    abi: &[AbiEntry],
+    type_name: &str,
+    selector: Felt,
+) -> Result<bool, ReverseTransformEventError> {
+    let typed_event = find_typed_event(abi, type_name)
+        .ok_or_else(|| ReverseTransformEventError::InvalidAbiMissingType(type_name.to_string()))?;
+
+    typed_event_matches_selector(abi, typed_event, selector)
+}
+
+fn typed_event_matches_selector(
+    abi: &[AbiEntry],
+    typed_event: &TypedAbiEvent,
+    selector: Felt,
+) -> Result<bool, ReverseTransformEventError> {
+    match typed_event {
+        TypedAbiEvent::Struct(abi_event_struct) => {
+            Ok(selector_matches_name(selector, &abi_event_struct.name)?)
+        }
+        TypedAbiEvent::Enum(abi_event_enum) => {
+            for variant in &abi_event_enum.variants {
+                match variant.kind {
+                    EventFieldKind::Flat => {
+                        if event_type_matches_selector(abi, &variant.r#type, selector)? {
+                            return Ok(true);
+                        }
+                    }
+                    EventFieldKind::Nested | EventFieldKind::Data | EventFieldKind::Key => {
+                        if selector_matches_name(selector, &variant.name)? {
+                            return Ok(true);
+                        }
+                    }
+                }
+            }
+            Ok(false)
+        }
+    }
+}
+
 /// Checks if the given `selector` refers to the `name`.
 fn selector_matches_name(selector: Felt, name: &str) -> Result<bool, ReverseTransformEventError> {
     Ok(selector == selector_from_name(name)?)
@@ -388,7 +420,8 @@ fn selector_matches_name(selector: Felt, name: &str) -> Result<bool, ReverseTran
 
 /// Calculates the selector value for a given `name`.
 fn selector_from_name(name: &str) -> Result<Felt, ReverseTransformEventError> {
-    get_selector_from_name(&short_name(name)).map_err(|_| ReverseTransformEventError::InvalidAbi)
+    get_selector_from_name(&short_name(name))
+        .map_err(|_| ReverseTransformEventError::InvalidAbiMissingType(name.to_string()))
 }
 
 fn short_name(name: &str) -> String {

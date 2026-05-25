@@ -90,7 +90,32 @@ fn test_flattened_event_enum_variant() {
 
     assert_eq!(
         result,
-        "AccessControlEvent::RoleGranted(RoleGranted { role: 0x7 })"
+        "Event::AccessControlEvent(AccessControlEvent::RoleGranted(RoleGranted { role: 0x7 }))"
+    );
+}
+
+#[test]
+fn test_flattened_event_struct_field() {
+    let abi = vec![
+        typed_struct_event(
+            "test::OuterEvent",
+            &[
+                ("inner", "test::InnerEvent", EventFieldKind::Flat),
+                ("tail", "core::felt252", EventFieldKind::Data),
+            ],
+        ),
+        typed_struct_event(
+            "test::InnerEvent",
+            &[("value", "core::felt252", EventFieldKind::Data)],
+        ),
+    ];
+
+    let result =
+        reverse_transform_event(&[selector("OuterEvent")], &[felt(1), felt(2)], &abi).unwrap();
+
+    assert_eq!(
+        result,
+        "OuterEvent { inner: InnerEvent { value: 0x1 }, tail: 0x2 }"
     );
 }
 
@@ -124,6 +149,27 @@ fn test_nested_event_field() {
 }
 
 #[test]
+fn test_direct_event_also_referenced_as_nested_payload() {
+    let abi = vec![
+        typed_struct_event(
+            "test::OuterEvent",
+            &[
+                ("inner", "test::InnerEvent", EventFieldKind::Nested),
+                ("tail", "core::felt252", EventFieldKind::Data),
+            ],
+        ),
+        typed_struct_event(
+            "test::InnerEvent",
+            &[("value", "core::felt252", EventFieldKind::Data)],
+        ),
+    ];
+
+    let result = reverse_transform_event(&[selector("InnerEvent")], &[felt(1)], &abi).unwrap();
+
+    assert_eq!(result, "InnerEvent { value: 0x1 }");
+}
+
+#[test]
 fn test_untyped_event_is_unsupported() {
     let abi = vec![AbiEntry::Event(AbiEvent::Untyped(UntypedAbiEvent {
         name: "test::LegacyEvent".to_string(),
@@ -147,7 +193,10 @@ fn test_malformed_event_abi_returns_invalid_abi() {
 
     let error = reverse_transform_event(&[selector("Missing")], &[], &abi).unwrap_err();
 
-    assert!(matches!(error, ReverseTransformEventError::InvalidAbi));
+    assert!(matches!(
+        error,
+        ReverseTransformEventError::InvalidAbiMissingType(name) if name == "test::MissingEvent"
+    ));
 }
 
 #[test]
