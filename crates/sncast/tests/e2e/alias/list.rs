@@ -23,8 +23,8 @@ fn test_alias_list_happy_case() {
             map-class:              0x2a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321
             map:                    0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008
             oz-devnet:              0x4d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f
-            shadowed:      0xdead
             strk-token:             0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
+            shadowed:               0xdead
         "},
     );
 }
