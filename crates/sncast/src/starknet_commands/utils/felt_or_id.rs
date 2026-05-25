@@ -5,7 +5,7 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::felt::felt_from_string;
 use starknet_types_core::felt::Felt;
 
-const ID_PREFIX: char = '@';
+pub const ID_PREFIX: char = '@';
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct FeltOrId(String);
