@@ -1,5 +1,4 @@
 use std::num::{NonZeroU8, NonZeroU16};
-use std::str::FromStr;
 
 use crate::starknet_commands::declare::declare_with_artifacts;
 use crate::starknet_commands::declare_from::{ContractSource, DeclareFrom};
@@ -57,7 +56,6 @@ use starknet_rust::core::types::contract::{AbiEntry, CompiledClass, SierraClass}
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_rust::providers::Provider;
 use starknet_types_core::felt::Felt;
-use std::num::{NonZeroU8, NonZeroU16};
 use std::process::ExitCode;
 use tokio::runtime::Runtime;
 
