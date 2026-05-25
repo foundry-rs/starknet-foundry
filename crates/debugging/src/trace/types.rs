@@ -70,7 +70,7 @@ pub struct Events(pub Vec<Event>);
 pub enum Event {
     /// A successfully reverse-transformed event, pretty-formatted as a human-readable struct.
     Decoded(String),
-    /// A fallback for legacy Cairo1 events, events from contract which is missing an ABI, etc.
+    /// A fallback for legacy Cairo1 events, events without matching ABI entries, or non-standard raw events.
     Raw { keys: Vec<Felt>, data: Vec<Felt> },
 }
 

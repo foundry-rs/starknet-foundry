@@ -8,8 +8,8 @@ use blockifier::execution::call_info::OrderedEvent;
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::{CallFailure, CallSuccess};
 use cheatnet::trace_data::{CallTrace, CallTraceNode};
 use data_transformer::{
-    ReverseTransformError, reverse_transform_event, reverse_transform_input,
-    reverse_transform_output,
+    ReverseTransformError, ReverseTransformEventError, reverse_transform_event,
+    reverse_transform_input, reverse_transform_output,
 };
 use starknet_api::core::ClassHash;
 use starknet_api::execution_utils::format_panic_data;
@@ -198,7 +198,11 @@ fn collect_event(event: &OrderedEvent, abi: &[AbiEntry]) -> Event {
 
     match reverse_transform_event(&keys, &data, abi) {
         Ok(decoded) => Event::Decoded(decoded),
-        Err(_) => Event::Raw { keys, data },
+        Err(
+            ReverseTransformEventError::EventNotFound(_)
+            | ReverseTransformEventError::UnsupportedUntypedEvent(_),
+        ) => Event::Raw { keys, data },
+        Err(error) => panic!("Failed to decode event: {error}"),
     }
 }
 
@@ -216,7 +220,11 @@ mod tests {
     use cheatnet::trace_data::CallTrace;
     use starknet_api::core::{ClassHash, EntryPointSelector};
     use starknet_api::transaction::fields::Calldata;
-    use starknet_rust::core::types::contract::AbiEntry;
+    use starknet_api::transaction::{EventContent, EventData, EventKey};
+    use starknet_rust::core::types::contract::{
+        AbiEntry, AbiEvent, AbiEventEnum, EventField, EventFieldKind, TypedAbiEvent,
+    };
+    use starknet_rust::core::utils::get_selector_from_name;
     use starknet_types_core::felt::Felt;
     use std::collections::{HashMap, HashSet};
     use std::sync::Arc;
@@ -246,6 +254,34 @@ mod tests {
         let store =
             ContractsDataStore::for_testing(HashMap::from([(class_hash, abi)]), HashMap::new());
         Context::for_testing(store, Components::new(HashSet::new()))
+    }
+
+    fn make_ordered_event(keys: Vec<Felt>, data: Vec<Felt>) -> OrderedEvent {
+        OrderedEvent {
+            order: 0,
+            event: EventContent {
+                keys: keys.into_iter().map(EventKey).collect(),
+                data: EventData(data),
+            },
+        }
+    }
+
+    fn typed_enum_event(name: &str, variants: &[(&str, &str, EventFieldKind)]) -> AbiEntry {
+        AbiEntry::Event(AbiEvent::Typed(TypedAbiEvent::Enum(AbiEventEnum {
+            name: name.to_string(),
+            variants: variants
+                .iter()
+                .map(|(name, ty, kind)| EventField {
+                    name: (*name).to_string(),
+                    r#type: (*ty).to_string(),
+                    kind: kind.clone(),
+                })
+                .collect(),
+        })))
+    }
+
+    fn selector(name: &str) -> Felt {
+        get_selector_from_name(name).unwrap()
     }
 
     #[test]
@@ -330,5 +366,32 @@ mod tests {
 
         let result = collector.collect_transformed_call_result(&[]);
         assert_eq!(result.0, "success: 0x1, 0x2a, 0xff");
+    }
+
+    #[test]
+    fn collect_event_falls_back_to_raw_when_event_not_in_abi() {
+        let event = make_ordered_event(vec![Felt::from(0x123)], vec![Felt::from(0x456)]);
+
+        let result = collect_event(&event, &[]);
+
+        match result {
+            Event::Raw { keys, data } => {
+                assert_eq!(keys, vec![Felt::from(0x123)]);
+                assert_eq!(data, vec![Felt::from(0x456)]);
+            }
+            Event::Decoded(decoded) => panic!("expected raw event fallback, got {decoded}"),
+        }
+    }
+
+    #[test]
+    #[should_panic(expected = "Failed to decode event: abi is invalid")]
+    fn collect_event_panics_on_invalid_event_abi() {
+        let abi = vec![typed_enum_event(
+            "test::Event",
+            &[("Missing", "test::MissingEvent", EventFieldKind::Nested)],
+        )];
+        let event = make_ordered_event(vec![selector("Missing")], vec![]);
+
+        collect_event(&event, &abi);
     }
 }
