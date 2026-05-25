@@ -44,7 +44,9 @@ Overrides network from `snfoundry.toml`.
 Optional.
 Conflicts with: [`--arguments`](#--arguments)
 
-Calldata for the contract constructor.
+Calldata for the contract constructor. Each token may be:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../starknet/aliases.md).
 
 ## `--arguments`
 Optional.
