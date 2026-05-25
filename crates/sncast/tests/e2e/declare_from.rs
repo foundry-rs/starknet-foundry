@@ -5,10 +5,12 @@ use crate::helpers::fixtures::{
     create_and_deploy_oz_account, duplicate_contract_directory_with_salt, get_accounts_path,
     join_tempdirs,
 };
+use crate::helpers::output::get_declared_class_hash_from_json_output;
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use scarb_api::ScarbCommand;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use starknet_rust::core::types::contract::SierraClass;
 use std::fs;
 use std::process::Stdio;
 use tempfile::tempdir;
@@ -47,7 +49,7 @@ async fn test_happy_case() {
 
         Class Hash:       0x66802613e2cd02ea21430a56181d9ee83c54d4ccdc45efa497d41fe1dc55a0e
         Transaction Hash: 0x[..]
-        
+
         To see declaration details, visit:
         class: https://[..]
         transaction: https://[..]
@@ -91,7 +93,7 @@ async fn test_happy_case_with_block_id() {
 
         Class Hash:       0x3de1a95e27b385c882c79355ca415915989e71f67c0f6f8ce146d4bcee7163c
         Transaction Hash: 0x[..]
-        
+
         To see declaration details, visit:
         class: https://[..]
         transaction: https://[..]
@@ -364,6 +366,74 @@ async fn test_declare_from_sierra_happy_case() {
 }
 
 #[tokio::test]
+async fn test_declare_from_sierra_happy_case_no_abi() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "declare_from_file_happy_no_abi",
+    );
+
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let build_output = ScarbCommand::new()
+        .arg("build")
+        .current_dir(tempdir.path())
+        .command()
+        .stderr(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .output()
+        .expect("Failed to run `scarb build`");
+
+    assert!(build_output.status.success(), "`scarb build` failed");
+    let sierra_path = tempdir
+        .path()
+        .join("target/dev/map_Map.contract_class.json");
+    assert!(
+        sierra_path.exists(),
+        "sierra artifact not found at {sierra_path:?}"
+    );
+    let mut sierra_class: SierraClass = serde_json::from_str(
+        &fs::read_to_string(&sierra_path).expect("Failed to read sierra artifact"),
+    )
+    .expect("Failed to parse sierra artifact");
+    let original_class_hash = sierra_class
+        .class_hash()
+        .expect("Failed to compute class hash");
+    sierra_class.abi.clear();
+    let stripped_class_hash = sierra_class
+        .class_hash()
+        .expect("Failed to compute class hash without ABI");
+    let sierra_path = sierra_path.to_str().unwrap();
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "--json",
+        "declare-from",
+        "--sierra-file",
+        sierra_path,
+        "--url",
+        URL,
+        "--no-abi",
+    ];
+
+    let output = runner(&args)
+        .current_dir(tempdir.path())
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let declared_class_hash = get_declared_class_hash_from_json_output(&output);
+    assert_ne!(declared_class_hash, original_class_hash);
+    assert_eq!(declared_class_hash, stripped_class_hash);
+}
+
+#[tokio::test]
 async fn test_declare_from_sierra_does_not_exist() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
@@ -527,10 +597,30 @@ fn test_declare_from_conflicting_contract_source() {
         output,
         indoc! {r"
         error: the argument '--class-hash <CLASS_HASH>' cannot be used with '--sierra-file <SIERRA_FILE>'
-        
+
         Usage: sncast declare-from --url <URL> <--sierra-file <SIERRA_FILE>|--class-hash <CLASS_HASH>>
 
         For more information, try '--help'.
         "},
+    );
+}
+
+#[test]
+fn test_declare_from_no_abi_with_class_hash_disallowed() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let args = vec![
+        "declare-from",
+        "--class-hash",
+        "0x1",
+        "--no-abi",
+        "--url",
+        URL,
+    ];
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "error: the argument '--class-hash <CLASS_HASH>' cannot be used with '--no-abi'",
     );
 }

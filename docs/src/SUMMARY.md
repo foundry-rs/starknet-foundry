@@ -172,6 +172,7 @@
         * [nonce](appendix/sncast/get/nonce.md)
         * [spec-version](appendix/sncast/get/spec-version.md)
         * [tx](appendix/sncast/get/tx.md)
+        * [tx-receipt](appendix/sncast/get/tx-receipt.md)
         * [tx-status](appendix/sncast/get/tx-status.md)
     * [utils](appendix/sncast/utils/utils.md)
         * [serialize](appendix/sncast/utils/serialize.md)
