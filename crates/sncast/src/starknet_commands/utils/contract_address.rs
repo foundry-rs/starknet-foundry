@@ -15,10 +15,11 @@ use starknet_rust::core::types::contract::AbiEntry;
 use starknet_rust::core::utils::{get_selector_from_name, get_udc_deployed_address};
 use std::collections::HashMap;
 
-use crate::calldata_to_felts;
 use crate::starknet_commands::deploy::DeployCommonArgs;
 use crate::starknet_commands::utils::class_hash::sierra_class_from_artifacts;
-use crate::starknet_commands::utils::felt_or_id::DeployerAccountAddress;
+use crate::starknet_commands::utils::felt_or_id::{
+    DeployerAccountAddress, resolve_calldata_to_felts,
+};
 use crate::starknet_commands::utils::serialize::{Location, resolve_abi};
 
 #[derive(Args, Debug)]
@@ -80,7 +81,7 @@ pub async fn get_contract_address(
 
     let deploy_args = args.common.arguments;
     let calldata = if let Some(raw) = deploy_args.constructor_calldata {
-        calldata_to_felts(&raw)?
+        resolve_calldata_to_felts(&raw, &config)?
     } else if let Some(ref arguments_str) = deploy_args.arguments {
         let selector =
             get_selector_from_name("constructor").context("Failed to get constructor selector")?;

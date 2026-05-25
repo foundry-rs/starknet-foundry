@@ -124,6 +124,34 @@ async fn test_invoke_with_alias() {
 }
 
 #[tokio::test]
+async fn test_invoke_with_calldata_alias() {
+    let account_dir = create_and_deploy_oz_account().await;
+    let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    join_tempdirs(&account_dir, &config_dir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "invoke",
+        "--contract-address",
+        "@map",
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 @deployer-123",
+    ];
+
+    let output = runner(&args)
+        .current_dir(config_dir.path())
+        .assert()
+        .success();
+
+    assert_stdout_contains(output, "Success: Invoke completed");
+}
+
+#[tokio::test]
 async fn test_invoke_with_unknown_alias() {
     let account_dir = create_and_deploy_oz_account().await;
     let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);

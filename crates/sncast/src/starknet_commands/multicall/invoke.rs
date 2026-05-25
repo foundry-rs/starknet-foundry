@@ -9,10 +9,9 @@ use crate::{
         invoke::InvokeCommonArgs,
         multicall::{
             contract_registry::ContractRegistry,
-            replaced_arguments,
             run::{InvokeItem, parse_inputs},
         },
-        utils::felt_or_id::ContractAddress,
+        utils::felt_or_id::{ContractAddress, resolve_multicall_calldata_to_felts},
     },
 };
 
@@ -48,14 +47,14 @@ impl MulticallInvoke {
         config: &CastConfig,
     ) -> Result<Call> {
         let selector = get_selector_from_name(&self.common.function)?;
-        let arguments = replaced_arguments(&self.common.arguments, contract_registry, config)?;
+        let arguments = &self.common.arguments;
         let contract_address = self
             .common
             .contract_address
             .resolve_in_multicall(contract_registry, config)?;
 
         let calldata = if let Some(raw_calldata) = &arguments.calldata {
-            calldata_to_felts(raw_calldata)?
+            resolve_multicall_calldata_to_felts(raw_calldata, config, contract_registry)?
         } else {
             let class_hash = contract_registry
                 .get_class_hash_by_address(&contract_address)
@@ -63,7 +62,9 @@ impl MulticallInvoke {
             let contract_class = contract_registry
                 .get_contract_class_by_class_hash(&class_hash)
                 .await?;
-            arguments.try_into_calldata(&abi_from_contract_class(contract_class)?, &selector)?
+            arguments
+                .clone()
+                .try_into_calldata(&abi_from_contract_class(contract_class)?, &selector, config)?
         };
 
         Ok(Call {

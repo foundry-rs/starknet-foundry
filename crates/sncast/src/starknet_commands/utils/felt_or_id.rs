@@ -77,6 +77,49 @@ impl std::str::FromStr for FeltOrId {
     }
 }
 
+/// If `@ID`, attempt to resolve the felt value from aliases in config.
+///
+/// Non-`@` values are parsed as felts (hex or decimal).
+pub fn resolve_calldata_to_felts(
+    calldata: &[String],
+    config: &CastConfig,
+) -> Result<Vec<Felt>> {
+    calldata
+        .iter()
+        .map(|raw_input| {
+            let input = FeltOrId::new(raw_input.clone());
+            if input.as_id().is_some() {
+                input.resolve_alias_or_felt(config)
+            } else {
+                input.try_into_felt()
+            }
+        })
+        .collect()
+}
+
+/// If `@ID`, attempt to resolve the felt value from, in the following order:
+/// 1. [`ContractRegistry`]
+/// 2. Aliases from config
+///
+/// Non-`@` values are parsed as felts (hex or decimal).
+pub fn resolve_multicall_calldata_to_felts(
+    calldata: &[String],
+    config: &CastConfig,
+    registry: &ContractRegistry,
+) -> Result<Vec<Felt>> {
+    calldata
+        .iter()
+        .map(|raw_input| {
+            let input = FeltOrId::new(raw_input.clone());
+            if input.as_id().is_some() {
+                input.resolve_for_multicall(registry, config)
+            } else {
+                input.try_into_felt()
+            }
+        })
+        .collect()
+}
+
 macro_rules! felt_or_id_newtype {
     ($name:ident, $context:literal) => {
         #[derive(Clone, Debug, Deserialize)]
