@@ -48,6 +48,7 @@ pub struct ExecutionDataToSave {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Deserialize, Eq, ValueEnum)]
+#[serde(rename_all = "kebab-case")]
 pub enum ForgeTrackedResource {
     CairoSteps,
     #[default]
