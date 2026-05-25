@@ -462,14 +462,14 @@ mod tests {
     fn test_aliases_config_override() {
         let global = AliasesConfig(BTreeMap::from([("a".to_string(), Felt::from(100))]));
         let local = AliasesConfig(BTreeMap::from([
-            ("b".to_string(), Felt::from(300)),
-            ("a".to_string(), Felt::from(500)),
+            ("a".to_string(), Felt::from(300)),
+            ("b".to_string(), Felt::from(200)),
         ]));
 
         let merged = global.override_with(local);
 
-        assert_eq!(merged.0.get("a"), Some(&Felt::from(500)));
-        assert_eq!(merged.0.get("b"), Some(&Felt::from(300)));
+        assert_eq!(merged.0.get("a"), Some(&Felt::from(300)));
+        assert_eq!(merged.0.get("b"), Some(&Felt::from(200)));
     }
 
     // can probably remove this once covered by e2e
