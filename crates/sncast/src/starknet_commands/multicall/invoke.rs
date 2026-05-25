@@ -4,7 +4,7 @@ use sncast::helpers::configuration::CastConfig;
 use starknet_rust::core::{types::Call, utils::get_selector_from_name};
 
 use crate::{
-    Arguments, abi_from_contract_class, calldata_to_felts,
+    Arguments, abi_from_contract_class,
     starknet_commands::{
         invoke::InvokeCommonArgs,
         multicall::{
@@ -62,9 +62,11 @@ impl MulticallInvoke {
             let contract_class = contract_registry
                 .get_contract_class_by_class_hash(&class_hash)
                 .await?;
-            arguments
-                .clone()
-                .try_into_calldata(&abi_from_contract_class(contract_class)?, &selector, config)?
+            arguments.clone().try_into_calldata(
+                &abi_from_contract_class(contract_class)?,
+                &selector,
+                config,
+            )?
         };
 
         Ok(Call {

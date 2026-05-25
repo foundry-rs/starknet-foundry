@@ -80,10 +80,7 @@ impl std::str::FromStr for FeltOrId {
 /// If `@ID`, attempt to resolve the felt value from aliases in config.
 ///
 /// Non-`@` values are parsed as felts (hex or decimal).
-pub fn resolve_calldata_to_felts(
-    calldata: &[String],
-    config: &CastConfig,
-) -> Result<Vec<Felt>> {
+pub fn resolve_calldata_to_felts(calldata: &[String], config: &CastConfig) -> Result<Vec<Felt>> {
     calldata
         .iter()
         .map(|raw_input| {

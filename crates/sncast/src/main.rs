@@ -7,6 +7,7 @@ use crate::starknet_commands::get::Get;
 use crate::starknet_commands::get::balance::Balance;
 use crate::starknet_commands::invoke::InvokeCommonArgs;
 use crate::starknet_commands::script::run_script_command;
+use crate::starknet_commands::utils::felt_or_id::resolve_calldata_to_felts;
 use crate::starknet_commands::utils::{self, Utils};
 use crate::starknet_commands::{
     account, account::Account as AccountCommand, alias::Alias, call::Call, config_path::ConfigPath,
@@ -57,7 +58,6 @@ use starknet_rust::providers::Provider;
 use starknet_types_core::felt::Felt;
 use std::process::ExitCode;
 use tokio::runtime::Runtime;
-use crate::starknet_commands::utils::felt_or_id::resolve_calldata_to_felts;
 
 mod starknet_commands;
 
@@ -238,7 +238,12 @@ fn abi_from_contract_class(contract_class: &ContractClass) -> Result<Vec<AbiEntr
 }
 
 impl Arguments {
-    fn try_into_calldata(self, abi: &[AbiEntry], selector: &Felt, config: &CastConfig) -> Result<Vec<Felt>> {
+    fn try_into_calldata(
+        self,
+        abi: &[AbiEntry],
+        selector: &Felt,
+        config: &CastConfig,
+    ) -> Result<Vec<Felt>> {
         if let Some(calldata) = self.calldata {
             return resolve_calldata_to_felts(&calldata, config);
         }
@@ -674,8 +679,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let calldata = arguments
-                .try_into_calldata(&abi_from_contract_class(&contract_class)?, &selector, &config)?;
+            let calldata = arguments.try_into_calldata(
+                &abi_from_contract_class(&contract_class)?,
+                &selector,
+                &config,
+            )?;
 
             let result = starknet_commands::call::call(
                 contract_address,
@@ -728,8 +736,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
-            let calldata = arguments
-                .try_into_calldata(&abi_from_contract_class(&contract_class)?, &selector, &config)?;
+            let calldata = arguments.try_into_calldata(
+                &abi_from_contract_class(&contract_class)?,
+                &selector,
+                &config,
+            )?;
 
             let result = with_account!(&account, |account| {
                 starknet_commands::invoke::invoke(

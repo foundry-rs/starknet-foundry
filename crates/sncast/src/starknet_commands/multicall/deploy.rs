@@ -14,9 +14,8 @@ use starknet_types_core::felt::Felt;
 use crate::starknet_commands::deploy::{ContractIdentifier, DeployArguments, DeployCommonArgs};
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::run::{DeployItem, parse_inputs};
-use crate::{Arguments, abi_from_contract_class, calldata_to_felts};
 use crate::starknet_commands::utils::felt_or_id::resolve_multicall_calldata_to_felts;
-use crate::Arguments;
+use crate::{Arguments, abi_from_contract_class};
 
 #[derive(Args)]
 pub struct MulticallDeploy {
