@@ -7,9 +7,9 @@ use crate::helpers::{
     runner::runner,
 };
 use configuration::test_utils::copy_config_to_tempdir;
-use shared::test_utils::output_assert::assert_stderr_contains;
 use indoc::indoc;
 use serde_json::Value;
+use shared::test_utils::output_assert::assert_stderr_contains;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
 fn extract_contract_address(output: &[u8]) -> String {

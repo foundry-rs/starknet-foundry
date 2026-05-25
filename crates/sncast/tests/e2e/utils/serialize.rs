@@ -2,10 +2,10 @@ use crate::helpers::constants::{
     DATA_TRANSFORMER_CONTRACT_ABI_PATH, DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA,
     DATA_TRANSFORMER_CONTRACT_CLASS_HASH_SEPOLIA, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
 };
-use configuration::test_utils::copy_config_to_tempdir;
 use crate::helpers::runner::{runner, sncast_test_bin_path};
 use crate::helpers::shell::os_specific_shell;
 use camino::Utf8PathBuf;
+use configuration::test_utils::copy_config_to_tempdir;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
 use tempfile::tempdir;
