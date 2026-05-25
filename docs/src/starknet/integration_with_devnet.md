@@ -1,6 +1,6 @@
 # Integration With Devnet
 
-[`starknet-devnet`](https://0xspaceshard.github.io/starknet-devnet/) is a local Starknet node used for development and testing. `sncast` provides inbuilt support for some of its features, making it easier to work with it.
+[`starknet-devnet`](https://starknet-io.github.io/starknet-devnet/) is a local Starknet node used for development and testing. `sncast` provides inbuilt support for some of its features, making it easier to work with it.
 
 ## Automatic Devnet Detection
 
@@ -10,7 +10,7 @@ This eliminates the need to manually specify the URL when working with devnet.
 
 ## Predeployed Accounts
 
-When you start `starknet-devnet`, it automatically predeploys some contracts, including set of accounts with known details (read more about them [here](https://0xspaceshard.github.io/starknet-devnet/docs/predeployed)).
+When you start `starknet-devnet`, it automatically predeploys some contracts, including set of accounts with known details (read more about them [here](https://starknet-io.github.io/starknet-devnet/docs/predeployed)).
 
 You can use these accounts directly in `sncast` without needing to import them. 
 They are available under specific names - `devnet-1`, `devnet-2`, ..., `devnet-<N>` (where N is the number of predeployed accounts, by default it's 10). 
