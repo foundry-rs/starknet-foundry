@@ -72,7 +72,7 @@ fn test_alias_list_invalid_alias_value() {
             Error: Failed to load local config at [..]snfoundry.toml
 
             Caused by:
-                Failed to parse field `aliases`: Failed to parse not-a-felt to felt
+                Failed to parse field `aliases`: Failed to parse `not-a-felt` to felt
         "},
     );
 }
