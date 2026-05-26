@@ -6,13 +6,13 @@ use itertools::Itertools;
 use serde::Serialize;
 use serde_json::{Value, json};
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, Clone)]
 pub struct AliasEntryMessage {
     pub name: String,
     pub value: String,
 }
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, Clone)]
 pub struct AliasesListMessage {
     aliases: Vec<AliasEntryMessage>,
 }
