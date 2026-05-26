@@ -562,20 +562,17 @@ mod tests {
     }
 
     #[test]
-    fn test_warn_ignored_unknown_keys_dedupes_across_slices() {
+    fn test_warn_ignored_unknown_keys_dedupes_across_configs() {
         let config = PartialCastConfig {
             unknown_fields: HashMap::from([("foo".to_string(), serde_json::Value::Null)]),
             ..Default::default()
         };
-        let slices = [
+        let configs = [
             MaybeConfig::Loaded(Box::new(config.clone())),
             MaybeConfig::Loaded(Box::new(config)),
             MaybeConfig::NoFile,
         ];
 
-        warn_unknown_keys(
-            &[&slices[0], &slices[1], &slices[2]],
-            &UI::default(),
-        );
+        warn_unknown_keys(&[&configs[0], &configs[1], &configs[2]], &UI::default());
     }
 }
