@@ -5,7 +5,7 @@ When you use commands like `sncast call`, `sncast invoke`, etc. you typically ne
 $ sncast call --contract-address 0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008 --function get --calldata 0x0 --block-id latest
 ```
 
-Instead, you can create aliases for felt values (contract addresses, class hashes, etc.) in `snfoundry.toml`.
+Instead, you can define aliases for felt values (contract addresses, class hashes, etc.) in `snfoundry.toml`.
 
 Then, you can pass them on CLI using the `@alias` syntax:
 
