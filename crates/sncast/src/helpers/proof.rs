@@ -1,6 +1,7 @@
 use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
+use super::felt::felt_from_string;
 use starknet_types_core::felt::Felt;
 
 #[derive(Args, Debug, Clone, Default)]
@@ -52,9 +53,7 @@ impl ProofArgs {
                     .map(str::trim)
                     .map(|s| {
                         let stripped = strip_quotes(s);
-                        stripped
-                            .parse::<Felt>()
-                            .with_context(|| format!("Failed to parse felt from '{stripped}'"))
+                        felt_from_string(stripped)
                     })
                     .collect::<Result<Vec<_>>>()?;
                 Ok(Some(felts))
@@ -172,7 +171,7 @@ mod tests {
         };
         let err = args.resolve_proof_facts().unwrap_err().to_string();
 
-        assert_eq!(err, "Failed to parse felt from 'invalid'");
+        assert_eq!(err, "Failed to parse invalid to felt");
     }
 
     #[test]

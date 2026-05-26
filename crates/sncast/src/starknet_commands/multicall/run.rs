@@ -1,5 +1,4 @@
 use crate::starknet_commands::invoke::execute_calls;
-use std::str::FromStr;
 
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::deploy::MulticallDeploy;
@@ -12,6 +11,7 @@ use conversions::IntoConv;
 use serde::Deserialize;
 use serde_json::Number;
 use sncast::WaitForTx;
+use sncast::helpers::felt::felt_from_string;
 use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::FeeArgs;
 use sncast::helpers::proof::ProofArgs;
@@ -156,9 +156,8 @@ pub fn parse_inputs(inputs: &[Input], contract_registry: &ContractRegistry) -> R
         let felt_value = match input {
             Input::String(s) => contract_registry
                 .get_address_by_id(s)
-                .map_or_else(|| s.parse(), Ok)?,
-            Input::Number(n) => Felt::from_str(&n.to_string())
-                .with_context(|| format!("Failed to parse {n} to felt"))?,
+                .map_or_else(|| felt_from_string(s), Ok)?,
+            Input::Number(n) => felt_from_string(&n.to_string())?,
         };
         parsed_inputs.push(felt_value);
     }
