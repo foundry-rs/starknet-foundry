@@ -59,7 +59,7 @@ macro_rules! felt_or_id_newtype {
                 self.0.resolve_alias_or_felt(config).context($context)
             }
 
-            pub fn as_felt(&self) -> Result<Felt> {
+            pub fn try_into_felt(&self) -> Result<Felt> {
                 self.0.try_into_felt()
             }
 

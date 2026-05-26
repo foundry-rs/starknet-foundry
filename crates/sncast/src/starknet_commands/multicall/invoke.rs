@@ -46,7 +46,7 @@ impl MulticallInvoke {
                 .get_address_by_id(id)
                 .with_context(|| format!("Failed to find contract address for id: {id}"))
         } else {
-            self.common.contract_address.as_felt()
+            self.common.contract_address.try_into_felt()
         }?;
 
         let calldata = if let Some(raw_calldata) = &arguments.calldata {

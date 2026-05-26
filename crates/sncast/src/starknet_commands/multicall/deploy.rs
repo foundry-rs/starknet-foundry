@@ -78,7 +78,7 @@ impl MulticallDeploy {
             .class_hash
             .as_ref()
             .context("Using deploy with multicall requires providing class hash")?
-            .as_felt()?;
+            .try_into_felt()?;
         let constructor_calldata = if let Some(raw_calldata) = &constructor_arguments.calldata {
             calldata_to_felts(raw_calldata)?
         } else {
