@@ -1,10 +1,12 @@
 use super::block_explorer;
 use super::felt::felt_from_string;
 use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
+use crate::response::ui::UI;
 use crate::{Network, PartialWaitParams, ValidatedWaitParams};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use configuration::{Config, Override, load_config, override_optional};
+use foundry_ui::components::warning::WarningMessage;
 use serde::de::IntoDeserializer;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
@@ -61,11 +63,15 @@ impl Override for NetworkParams {
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Default)]
-#[serde(deny_unknown_fields)]
 pub struct NetworksConfig {
     pub mainnet: Option<Url>,
     pub sepolia: Option<Url>,
     pub devnet: Option<Url>,
+
+    /// Additional data not captured by deserializer.
+    #[doc(hidden)]
+    #[serde(flatten, default, skip_serializing)]
+    pub unknown_fields: HashMap<String, serde_json::Value>,
 }
 
 impl NetworksConfig {
@@ -85,6 +91,7 @@ impl Override for NetworksConfig {
             mainnet: other.mainnet.or_else(|| self.mainnet.clone()),
             sepolia: other.sepolia.or_else(|| self.sepolia.clone()),
             devnet: other.devnet.or_else(|| self.devnet.clone()),
+            unknown_fields: HashMap::default(),
         }
     }
 }
@@ -245,11 +252,6 @@ impl Config for PartialCastConfig {
 
 impl PartialCastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
-        if !self.unknown_fields.is_empty() {
-            let mut keys: Vec<&String> = self.unknown_fields.keys().collect();
-            keys.sort();
-            anyhow::bail!("unknown field(s) {keys:?}");
-        }
         block_explorer::Service::validate_for_config(self.block_explorer)?;
         if let Some(ref wp) = self.wait_params {
             wp.validate()?;
@@ -257,6 +259,28 @@ impl PartialCastConfig {
         self.network_params.validate()?;
         Ok(())
     }
+
+}
+
+pub fn warn_unknown_keys(maybe_configs: &[&MaybeConfig], ui: &UI) {
+    let mut keys = Vec::new();
+
+    for config in maybe_configs.iter().filter_map(|c| c.as_loaded()) {
+        keys.extend(config.unknown_fields.keys().cloned());
+        if let Some(networks) = &config.networks {
+            keys.extend(networks.unknown_fields.keys().cloned());
+        }
+    }
+
+    keys.sort();
+    keys.dedup();
+    if keys.is_empty() {
+        return;
+    }
+
+    ui.print_warning(WarningMessage::new(format!(
+        "unknown config key(s) {keys:?} ignored (key is incorrect or may require newer/older sncast)"
+    )));
 }
 
 impl Override for PartialCastConfig {
@@ -290,6 +314,14 @@ impl MaybeConfig {
         match self {
             Self::NoFile | Self::NoProfile => PartialCastConfig::default(),
             Self::Loaded(config) => *config,
+        }
+    }
+
+    #[must_use]
+    pub fn as_loaded(&self) -> Option<&PartialCastConfig> {
+        match self {
+            Self::NoFile | Self::NoProfile => None,
+            Self::Loaded(config) => Some(config),
         }
     }
 }
@@ -383,6 +415,7 @@ mod tests {
             mainnet: Some(Url::parse("https://mainnet.example.com").unwrap()),
             sepolia: Some(Url::parse("https://sepolia.example.com").unwrap()),
             devnet: Some(Url::parse("https://devnet.example.com").unwrap()),
+            ..Default::default()
         };
 
         assert_eq!(
@@ -405,11 +438,13 @@ mod tests {
             mainnet: Some(Url::parse("https://global-mainnet.example.com").unwrap()),
             sepolia: Some(Url::parse("https://global-sepolia.example.com").unwrap()),
             devnet: None,
+            ..Default::default()
         };
         let local = NetworksConfig {
             mainnet: Some(Url::parse("https://local-mainnet.example.com").unwrap()),
             sepolia: None,
             devnet: None,
+            ..Default::default()
         };
 
         let overridden = global.override_with(local);
@@ -503,16 +538,34 @@ mod tests {
     }
 
     #[test]
-    fn test_networks_config_rejects_unknown_fields_and_typos() {
-        // Unknown fields should cause an error
+    fn test_networks_config_collects_unknown_fields() {
         let toml_str = r#"
             mainnet = "https://mainnet.example.com"
             custom = "https://custom.example.com"
             wrong_key = "https://sepolia.example.com"
         "#;
 
-        let result: Result<NetworksConfig, _> = toml::from_str(toml_str);
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("unknown field"));
+        let config: NetworksConfig = toml::from_str(toml_str).unwrap();
+        assert_eq!(config.unknown_fields.len(), 2);
+        assert!(config.unknown_fields.contains_key("custom"));
+        assert!(config.unknown_fields.contains_key("wrong_key"));
+    }
+
+    #[test]
+    fn test_warn_ignored_unknown_keys_dedupes_across_slices() {
+        let config = PartialCastConfig {
+            unknown_fields: HashMap::from([("foo".to_string(), serde_json::Value::Null)]),
+            ..Default::default()
+        };
+        let slices = [
+            MaybeConfig::Loaded(Box::new(config.clone())),
+            MaybeConfig::Loaded(Box::new(config)),
+            MaybeConfig::NoFile,
+        ];
+
+        warn_unknown_keys(
+            &[&slices[0], &slices[1], &slices[2]],
+            &UI::default(),
+        );
     }
 }

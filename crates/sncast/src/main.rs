@@ -28,6 +28,7 @@ use sncast::helpers::command::process_command_result;
 use sncast::helpers::config::get_or_create_global_config_path;
 use sncast::helpers::configuration::{
     CastConfig, CliConfigOpts, ConfigScope, MaybeConfig, PartialCastConfig,
+    warn_unknown_keys,
 };
 use sncast::helpers::felt::felt_from_string;
 use sncast::helpers::output_format::output_format_from_json_flag;
@@ -882,6 +883,16 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
         }
         _ => {}
     }
+
+    warn_unknown_keys(
+        &[
+            &global_default,
+            &global_profile,
+            &local_default,
+            &local_profile,
+        ],
+        ui,
+    );
 
     let cli_config = cli.to_partial_config()?;
     let partial_config = PartialCastConfig::default()
