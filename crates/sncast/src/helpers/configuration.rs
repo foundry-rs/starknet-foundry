@@ -279,7 +279,7 @@ pub fn warn_unknown_keys(maybe_configs: &[&MaybeConfig], ui: &UI) {
     }
 
     ui.print_warning(WarningMessage::new(format!(
-        "unknown config key(s) {keys:?} ignored (key is incorrect or may require newer/older sncast)"
+        "unknown config key(s) {keys:?} ignored (incorrect key, or may require newer/older sncast)"
     )));
 }
 
