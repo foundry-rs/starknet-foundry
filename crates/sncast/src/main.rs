@@ -150,6 +150,7 @@ impl Cli {
             wait_params: Some(PartialWaitParams {
                 timeout: self.wait_timeout,
                 retry_interval: self.wait_retry_interval,
+                ..Default::default()
             }),
             scarb_profile: self.scarb_profile.clone(),
             ..Default::default()

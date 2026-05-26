@@ -574,6 +574,31 @@ async fn test_local_config_with_unsupported_fields() {
 }
 
 #[tokio::test]
+async fn test_local_config_with_unknown_wait_params() {
+    let local_dir = tempdir().unwrap();
+    fs::write(
+        local_dir.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            url = "http://127.0.0.1:5055/rpc"
+            account = "user1"
+            wait-params = { timeout = 10, retry-interval = 5, future-wait-flag = true }
+        "#},
+    )
+    .unwrap();
+    let args = vec!["show-config"];
+
+    let snapbox = runner(&args).current_dir(local_dir.path());
+
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        r#"[WARNING] unknown config key(s) ["future-wait-flag"] ignored (incorrect key, or may require newer/older sncast)"#,
+    );
+}
+
+#[tokio::test]
 async fn test_local_config_with_unknown_networks_field_warns_and_succeeds() {
     let local_dir = tempdir().unwrap();
     fs::write(

@@ -266,6 +266,9 @@ impl PartialCastConfig {
         if let Some(networks) = &self.networks {
             keys.extend(networks.unknown_fields.keys().cloned());
         }
+        if let Some(wait_params) = &self.wait_params {
+            keys.extend(wait_params.unknown_fields.keys().cloned());
+        }
         keys.sort();
         keys.dedup();
         keys
@@ -297,7 +300,7 @@ impl Override for PartialCastConfig {
             account: other.account.or_else(|| self.account.clone()),
             accounts_file: other.accounts_file.or_else(|| self.accounts_file.clone()),
             keystore: other.keystore.or_else(|| self.keystore.clone()),
-            wait_params: override_optional(self.wait_params, other.wait_params),
+            wait_params: override_optional(self.wait_params.clone(), other.wait_params),
             block_explorer: other.block_explorer.or(self.block_explorer),
             show_explorer_links: other.show_explorer_links.or(self.show_explorer_links),
             networks: override_optional(self.networks.clone(), other.networks),
