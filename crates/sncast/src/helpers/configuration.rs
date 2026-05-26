@@ -282,15 +282,13 @@ pub fn warn_unknown_keys(maybe_configs: &[&MaybeConfig], ui: &UI) {
         keys.extend(config.get_unknown_keys());
     }
 
-    keys.sort();
-    keys.dedup();
-    if keys.is_empty() {
-        return;
+    if !keys.is_empty() {
+        keys.sort();
+        keys.dedup();
+        ui.print_warning(WarningMessage::new(format!(
+            "unknown config key(s) {keys:?} ignored (incorrect key, or may require newer/older sncast)"
+        )));
     }
-
-    ui.print_warning(WarningMessage::new(format!(
-        "unknown config key(s) {keys:?} ignored (incorrect key, or may require newer/older sncast)"
-    )));
 }
 
 impl Override for PartialCastConfig {
