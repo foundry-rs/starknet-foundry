@@ -115,9 +115,12 @@ impl ParseFromExpr<Expr> for ExpectedTupleItem {
             Expr::ShortString(_) | Expr::Literal(_) => {
                 Ok(Self::Felt(Felt::parse_from_expr::<T>(db, expr, arg_name)?))
             }
-            Expr::String(string) => Ok(Self::ByteArray(
-                string.text(db).trim_matches('"').to_string(),
-            )),
+            Expr::String(string) => {
+                let string = string.string_value(db).ok_or_else(|| {
+                    T::error(format!("<{arg_name}> contains invalid string literal"))
+                })?;
+                Ok(Self::ByteArray(string))
+            }
             _ => Err(T::error(format!(
                 "<{arg_name}> tuple items must be string, short string or number"
             ))),
