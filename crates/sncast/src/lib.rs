@@ -149,7 +149,7 @@ pub struct WaitForTx {
     pub show_ui_outputs: bool,
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, Copy, PartialEq, Default)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Default)]
 pub struct PartialWaitParams {
     pub timeout: Option<NonZeroU16>,
     #[serde(
@@ -157,6 +157,11 @@ pub struct PartialWaitParams {
         rename(serialize = "retry-interval", deserialize = "retry-interval")
     )]
     pub retry_interval: Option<NonZeroU8>,
+
+    /// Additional data not captured by deserializer.
+    #[doc(hidden)]
+    #[serde(flatten, default, skip_serializing)]
+    pub unknown_fields: HashMap<String, Value>,
 }
 
 impl Override for PartialWaitParams {
@@ -164,6 +169,7 @@ impl Override for PartialWaitParams {
         PartialWaitParams {
             timeout: other.timeout.or(self.timeout),
             retry_interval: other.retry_interval.or(self.retry_interval),
+            unknown_fields: HashMap::default(),
         }
     }
 }
@@ -1029,10 +1035,12 @@ mod tests {
         let base = PartialWaitParams {
             timeout: NonZeroU16::new(200),
             retry_interval: NonZeroU8::new(5),
+            ..Default::default()
         };
         let other = PartialWaitParams {
             timeout: NonZeroU16::new(300),
             retry_interval: None,
+            ..Default::default()
         };
         let overridden = base.override_with(other);
         assert_eq!(overridden.timeout, NonZeroU16::new(300));
@@ -1041,10 +1049,12 @@ mod tests {
         let base2 = PartialWaitParams {
             timeout: None,
             retry_interval: NonZeroU8::new(5),
+            ..Default::default()
         };
         let other2 = PartialWaitParams {
             timeout: NonZeroU16::new(200),
             retry_interval: None,
+            ..Default::default()
         };
         let overridden2 = base2.override_with(other2);
         assert_eq!(overridden2.timeout, NonZeroU16::new(200));
@@ -1056,23 +1066,26 @@ mod tests {
         let base = PartialWaitParams {
             timeout: NonZeroU16::new(200),
             retry_interval: NonZeroU8::new(5),
+            ..Default::default()
         };
         let other = PartialWaitParams {
             timeout: None,
             retry_interval: NonZeroU8::new(5),
+            ..Default::default()
         };
         assert_eq!(
-            override_optional(Some(base), Some(other)),
+            override_optional(Some(base.clone()), Some(other.clone())),
             Some(PartialWaitParams {
                 timeout: NonZeroU16::new(200),
                 retry_interval: NonZeroU8::new(5),
+                ..Default::default()
             })
         );
         assert_eq!(
-            override_optional::<PartialWaitParams>(None, Some(other)),
+            override_optional::<PartialWaitParams>(None, Some(other.clone())),
             Some(other)
         );
-        assert_eq!(override_optional(Some(base), None), Some(base));
+        assert_eq!(override_optional(Some(base.clone()), None), Some(base));
         assert_eq!(override_optional::<PartialWaitParams>(None, None), None);
     }
 
