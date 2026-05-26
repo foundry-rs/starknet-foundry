@@ -260,16 +260,23 @@ impl PartialCastConfig {
         Ok(())
     }
 
+    #[must_use]
+    pub fn get_unknown_keys(&self) -> Vec<String> {
+        let mut keys: Vec<String> = self.unknown_fields.keys().cloned().collect();
+        if let Some(networks) = &self.networks {
+            keys.extend(networks.unknown_fields.keys().cloned());
+        }
+        keys.sort();
+        keys.dedup();
+        keys
+    }
 }
 
 pub fn warn_unknown_keys(maybe_configs: &[&MaybeConfig], ui: &UI) {
     let mut keys = Vec::new();
 
     for config in maybe_configs.iter().filter_map(|c| c.as_loaded()) {
-        keys.extend(config.unknown_fields.keys().cloned());
-        if let Some(networks) = &config.networks {
-            keys.extend(networks.unknown_fields.keys().cloned());
-        }
+        keys.extend(config.get_unknown_keys());
     }
 
     keys.sort();
