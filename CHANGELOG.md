@@ -51,6 +51,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast get spec-version` command that returns the version of the Starknet JSON-RPC specification used by the node
 - `sncast get tx-receipt` (alias: `get transaction-receipt`) command that returns the receipt of a transaction
 
+#### Changed
+
+- Unknown keys in `snfoundry.toml` now, instead of causing hard error, emit a warning and are ignored, so configs can be used across `sncast` versions.
+
 #### Fixed
 
 - `sncast completions` no longer fails due to invalid local or global `snfoundry.toml` config.
