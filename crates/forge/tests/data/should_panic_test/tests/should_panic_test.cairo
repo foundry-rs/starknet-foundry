@@ -23,10 +23,10 @@ fn should_panic_multiple_messages() {
 }
 
 #[test]
-#[should_panic(expected: ("error", 11, "hello", 5, 'short_string'))]
+#[should_panic(expected: ("this_string_is_longer_than_31_bytes", 11, "hello", 5, 'short_string'))]
 fn should_panic_mixed_tuple() {
     let mut arr = ArrayTrait::new();
-    let first = "error";
+    let first = "this_string_is_longer_than_31_bytes";
     let second = "hello";
 
     Serde::<ByteArray>::serialize(@first, ref arr);
