@@ -20,7 +20,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::data::ForkData;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::OuterCallExtension;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
@@ -239,7 +239,7 @@ pub fn run_test_case(
     };
 
     let call_to_blockifier_runtime = ExtendedRuntime {
-        extension: CallToBlockifierExtension {
+        extension: OuterCallExtension {
             lifetime: &PhantomData,
         },
         extended_runtime: cheatable_runtime,

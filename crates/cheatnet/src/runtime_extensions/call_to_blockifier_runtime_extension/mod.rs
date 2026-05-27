@@ -37,13 +37,13 @@ pub mod execution;
 pub mod panic_parser;
 pub mod rpc;
 
-pub struct CallToBlockifierExtension<'a> {
+pub struct OuterCallExtension<'a> {
     pub lifetime: &'a PhantomData<()>,
 }
 
-pub type CallToBlockifierRuntime<'a> = ExtendedRuntime<CallToBlockifierExtension<'a>>;
+pub type OuterCallRuntime<'a> = ExtendedRuntime<OuterCallExtension<'a>>;
 
-impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
+impl<'a> ExtensionLogic for OuterCallExtension<'a> {
     type Runtime = CheatableStarknetRuntime<'a>;
 
     fn override_system_call(
@@ -172,7 +172,7 @@ fn library_call_syscall(
     Ok(LibraryCallResponse { segment })
 }
 
-impl CallToBlockifierExtension<'_> {
+impl OuterCallExtension<'_> {
     // crates/blockifier/src/execution/syscalls/vm_syscall_utils.rs:677 (execute_syscall)
     #[expect(clippy::unused_self)]
     fn execute_syscall<Request, Response, ExecuteCallback, Error>(
