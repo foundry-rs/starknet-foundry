@@ -6,7 +6,7 @@ use crate::{
 };
 use cairo_lang_macro::{Diagnostic, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::ast::Expr;
+use cairo_lang_syntax::node::{Terminal, ast::Expr};
 
 #[derive(Debug, Clone, Default)]
 pub enum Expected {
@@ -81,12 +81,9 @@ impl ParseFromExpr<Expr> for Expected {
                         .unwrap(),
                 ))
             }
-            Expr::String(string) => {
-                let string = string.string_value(db).ok_or_else(|| {
-                    T::error(format!("<{arg_name}> contains invalid string literal"))
-                })?;
-                Ok(Self::ByteArray(string))
-            }
+            Expr::String(string) => Ok(Self::ByteArray(
+                string.text(db).trim_matches('"').to_string(),
+            )),
             Expr::Tuple(expressions) => {
                 let elements = expressions
                     .expressions(db)
@@ -116,12 +113,9 @@ impl ParseFromExpr<Expr> for ExpectedTupleItem {
             Expr::ShortString(_) | Expr::Literal(_) => {
                 Ok(Self::Felt(Felt::parse_from_expr::<T>(db, expr, arg_name)?))
             }
-            Expr::String(string) => {
-                let string = string.string_value(db).ok_or_else(|| {
-                    T::error(format!("<{arg_name}> contains invalid string literal"))
-                })?;
-                Ok(Self::ByteArray(string))
-            }
+            Expr::String(string) => Ok(Self::ByteArray(
+                string.text(db).trim_matches('"').to_string(),
+            )),
             _ => Err(T::error(format!(
                 "<{arg_name}> tuple items must be string, short string or number"
             ))),
