@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.61.0] - 2026-05-26
+
 ### Forge
 
 #### Added
@@ -36,8 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `sncast get spec-version` command that returns the version of the Starknet JSON-RPC specification used by the node
 - `--no-abi` flag for `declare`, `declare-from`, and `deploy`, erasing the ABI before class declaration.
+- `sncast get spec-version` command that returns the version of the Starknet JSON-RPC specification used by the node
 - `sncast get tx-receipt` (alias: `get transaction-receipt`) command that returns the receipt of a transaction
 
 #### Fixed
