@@ -1011,9 +1011,9 @@ fn should_panic() {
     assert_stdout_contains(
         output,
         indoc! { r"
-        Collected 14 test(s) from should_panic_test package
+        Collected 15 test(s) from should_panic_test package
         Running 0 test(s) from src/
-        Running 14 test(s) from tests/
+        Running 15 test(s) from tests/
         [FAIL] should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
 
         Failure data:
@@ -1065,6 +1065,7 @@ fn should_panic() {
 
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_multiple_messages (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_mixed_tuple (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
 
         Failure data:
             Expected to panic, but no panic occurred
@@ -1077,7 +1078,7 @@ fn should_panic() {
             Actual:    [0x6661696c696e6720636865636b] (failing check)
             Expected:  [0x0] ()
 
-        Tests: 5 passed, 9 failed, 0 ignored, 0 filtered out
+        Tests: 6 passed, 9 failed, 0 ignored, 0 filtered out
 
         Failures:
             should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
