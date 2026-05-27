@@ -238,7 +238,7 @@ pub fn run_test_case(
         },
     };
 
-    let call_to_blockifier_runtime = ExtendedRuntime {
+    let outer_call_runtime = ExtendedRuntime {
         extension: OuterCallExtension {
             lifetime: &PhantomData,
         },
@@ -253,7 +253,7 @@ pub fn run_test_case(
 
     let mut forge_runtime = ExtendedRuntime {
         extension: forge_extension,
-        extended_runtime: call_to_blockifier_runtime,
+        extended_runtime: outer_call_runtime,
     };
 
     let entry_point_initial_budget = setup::entry_point_initial_budget(
