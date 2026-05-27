@@ -145,6 +145,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     fee_args,
                     DryRunArgs::default(),
                     nonce,
+                    false,
                     self.account()?,
                     self.artifacts,
                     WaitForTx {

@@ -35,6 +35,12 @@ pub const MAP_CONTRACT_CLASS_HASH_SEPOLIA: &str =
 pub const MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA: &str =
     "0x4f644d3ea723b9c28781f2bea76e9c2cd8cc667b2861faf66b4e45402ea221c";
 
+pub const SUCCEEDED_TX_HASH: &str =
+    "0x4cba686fa76bfa4b4ac788bf2ca9bfac3dd354561f2621c2ac7cf17fa46f75a";
+
+pub const REVERTED_TX_HASH: &str =
+    "0x00ae35dacba17cde62b8ceb12e3b18f4ab6e103fa2d5e3d9821cb9dc59d59a3c";
+
 pub const CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA: &str =
     "0x59426c817fb8103edebdbf1712fa084c6744b2829db9c62d1ea4dce14ee6ded";
 

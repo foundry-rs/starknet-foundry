@@ -125,3 +125,11 @@ If passed, the output will include detailed fee estimation results instead of ju
 Optional.
 
 Nonce for transaction. If not provided, nonce will be set automatically.
+
+## `--no-abi`
+
+Optional.
+
+If passed, omits ABI from the declared class. This changes the resulting class hash.
+
+Can only be used with `--contract-name`.

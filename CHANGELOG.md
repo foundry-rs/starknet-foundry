@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bug in forge debugging and `--gas-report` that caused panic in case of a call to non-existent selector
 - `snforge test` now fails fast and explicitly when `[cairo] enable-gas = false`. Read more in [`Scarb.toml` reference](https://foundry-rs.github.io/starknet-foundry/appendix/scarb-toml.html#enable-gas).
 - `#[test]` macro now expands correctly in `snforge_scarb_plugin` for cases involving block expressions (e.g. function code starting with `[`)
+- `tracked_resource` field from `Scarb.toml` is now taken into account when running `snforge test`
 
 #### Removed
 
@@ -36,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `sncast get spec-version` command that returns the version of the Starknet JSON-RPC specification used by the node
+- `--no-abi` flag for `declare`, `declare-from`, and `deploy`, erasing the ABI before class declaration.
+- `sncast get tx-receipt` (alias: `get transaction-receipt`) command that returns the receipt of a transaction
 
 #### Fixed
 
@@ -328,7 +331,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
-#### Added 
+#### Added
 
 - Possibility to configure urls of predefined networks used by `--network` flag via `sncast` profile in `snfoundry.toml`
 
@@ -372,7 +375,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast declare` command now outputs a ready-to-use deployment command after successful declaration.
 - Possibility to use [`starknet-devnet`](https://github.com/0xSpaceShard/starknet-devnet) predeployed accounts directly in `sncast` without needing to import them. They are available under specific names - `devnet-1`, `devnet-2`, ..., `devnet-<N>`. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/integration_with_devnet.html#predeployed-accounts)
 - Support for `--network devnet` flag that attempts to auto-detect running `starknet-devnet` instance and connect to it.
-- Support for automatically declaring the contract when running `sncast deploy`, by providing `--contract-name` flag instead of `--class-hash`. 
+- Support for automatically declaring the contract when running `sncast deploy`, by providing `--contract-name` flag instead of `--class-hash`.
 - `sncast balance` command to fetch the balance of an account for a specified token.
 
 #### Fixed

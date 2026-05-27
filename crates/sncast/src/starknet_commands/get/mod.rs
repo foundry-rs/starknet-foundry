@@ -8,6 +8,7 @@ pub mod class_hash_at;
 pub mod nonce;
 pub mod spec_version;
 pub mod transaction;
+pub mod tx_receipt;
 pub mod tx_status;
 
 #[derive(Args)]
@@ -22,6 +23,10 @@ pub enum GetCommands {
     /// Get the status of a transaction
     #[command(alias = "transaction-status")]
     TxStatus(tx_status::TxStatus),
+
+    /// Get the receipt of a transaction
+    #[command(alias = "transaction-receipt")]
+    TxReceipt(tx_receipt::TxReceipt),
 
     /// Get the transaction by hash
     #[command(alias = "transaction")]
@@ -45,6 +50,8 @@ pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCo
         GetCommands::TxStatus(status) => tx_status::tx_status(status, config, ui).await,
 
         GetCommands::Tx(tx) => transaction::transaction(tx, config, ui).await,
+
+        GetCommands::TxReceipt(tx) => tx_receipt::tx_receipt(tx, config, ui).await,
 
         GetCommands::Balance(balance) => balance::balance(balance, config, ui).await,
 

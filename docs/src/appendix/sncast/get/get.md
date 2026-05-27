@@ -7,4 +7,5 @@ It has the following subcommands:
 * [`nonce`](./nonce.md)
 * [`spec-version`](./spec-version.md)
 * [`tx`](./tx.md) (alias: `transaction`)
+* [`tx-receipt`](./tx-receipt.md) (alias: `transaction-receipt`)
 * [`tx-status`](./tx-status.md) (alias: `transaction-status`)
