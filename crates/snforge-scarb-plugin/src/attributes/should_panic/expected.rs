@@ -4,9 +4,9 @@ use crate::{
     cairo_expression::CairoExpression,
     types::{Felt, ParseFromExpr},
 };
-use cairo_lang_macro::{quote, Diagnostic, TokenStream};
+use cairo_lang_macro::{Diagnostic, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::{ast::Expr, Terminal};
+use cairo_lang_syntax::node::ast::Expr;
 
 #[derive(Debug, Clone, Default)]
 pub enum Expected {
@@ -70,7 +70,7 @@ impl ParseFromExpr<Expr> for Expected {
         arg_name: &str,
     ) -> Result<Self, Diagnostic> {
         let error_msg = format!(
-                        "<{arg_name}> argument must be a string, short string, number, or tuple containing any mix of strings, short strings, and numbers in parentheses ()"
+            "<{arg_name}> argument must be a string, short string, number, or tuple containing any mix of strings, short strings, and numbers in parentheses ()"
         );
 
         match expr {
