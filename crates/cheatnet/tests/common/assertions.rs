@@ -1,7 +1,7 @@
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::DeclareResult;
+use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::{
     CallFailure, CallResult, CallSuccess,
 };
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::DeclareResult;
 use conversions::byte_array::ByteArray;
 use starknet_api::core::ClassHash;
 use starknet_types_core::felt::Felt;

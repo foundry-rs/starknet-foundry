@@ -1,9 +1,8 @@
 use self::contracts_data::ContractsData;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use crate::runtime_extensions::common::sum_syscall_usage;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
+use crate::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
 use crate::runtime_extensions::{
-    call_to_blockifier_runtime_extension::{OuterCallRuntime, rpc::CallFailure},
     common::get_relocated_vm_trace,
     forge_runtime_extension::cheatcodes::{
         CheatcodeError,
@@ -13,6 +12,7 @@ use crate::runtime_extensions::{
         l1_handler_execute::l1_handler_execute,
         storage::{calculate_variable_address, load, store},
     },
+    outer_call_runtime_extension::{OuterCallRuntime, rpc::CallFailure},
 };
 use crate::trace_data::{CallTrace, CallTraceNode, GasReportData};
 use anyhow::{Context, Result, anyhow};

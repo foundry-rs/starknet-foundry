@@ -1,7 +1,7 @@
 use crate::common::call_contract;
 use crate::common::state::create_fork_cached_state;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallSuccess;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::selector_from_name;
+use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::CallSuccess;
 use cheatnet::state::CheatnetState;
 use conversions::string::TryFromHexStr;
 use starknet_api::core::ContractAddress;

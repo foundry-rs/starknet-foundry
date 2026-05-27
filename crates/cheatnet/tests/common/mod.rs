@@ -10,19 +10,17 @@ use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::state_api::State;
 use cairo_lang_casm::hints::Hint;
 use cairo_vm::types::relocatable::Relocatable;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::execution::cheated_syscalls;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
-    ExecuteCallEntryPointExtraOptions, execute_call_entry_point,
-};
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    AddressOrClassHash, CallSuccess, call_entry_point,
-};
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    CallFailure, CallResult,
-};
 use cheatnet::runtime_extensions::common::create_execute_calldata;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
+use cheatnet::runtime_extensions::outer_call_runtime_extension::execution::cheated_syscalls;
+use cheatnet::runtime_extensions::outer_call_runtime_extension::execution::entry_point::{
+    ExecuteCallEntryPointExtraOptions, execute_call_entry_point,
+};
+use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::{
+    AddressOrClassHash, CallSuccess, call_entry_point,
+};
+use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::{CallFailure, CallResult};
 use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
 use conversions::string::TryFromHexStr;
@@ -240,7 +238,7 @@ pub fn call_contract(
 
 // This executes a library call as from a test contract.
 // `entry_point` below should match `library_call_syscall` entry point, except for `selector` and `calldata`:
-// https://github.com/foundry-rs/starknet-foundry/blob/421a339168a9e0b6502eac4fdc4fdeb0598c72b7/crates/cheatnet/src/runtime_extensions/call_to_blockifier_runtime_extension/mod.rs#L151
+// https://github.com/foundry-rs/starknet-foundry/blob/421a339168a9e0b6502eac4fdc4fdeb0598c72b7/crates/cheatnet/src/runtime_extensions/outer_call_runtime_extension/mod.rs#L151
 pub fn library_call_contract(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,

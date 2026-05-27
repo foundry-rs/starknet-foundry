@@ -23,7 +23,7 @@ use starknet_api::core::ContractAddress;
 use starknet_api::execution_resources::GasAmount;
 use starknet_types_core::felt::Felt;
 
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
+use crate::runtime_extensions::outer_call_runtime_extension::rpc::{
     AddressOrClassHash, call_entry_point,
 };
 

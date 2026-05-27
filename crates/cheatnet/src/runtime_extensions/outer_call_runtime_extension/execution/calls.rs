@@ -1,5 +1,5 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::execution_utils::clear_events_and_messages_from_reverted_call;
+use crate::runtime_extensions::outer_call_runtime_extension::CheatnetState;
+use crate::runtime_extensions::outer_call_runtime_extension::execution::execution_utils::clear_events_and_messages_from_reverted_call;
 use blockifier::execution::syscalls::hint_processor::ENTRYPOINT_FAILED_ERROR;
 use blockifier::execution::{
     entry_point::{CallEntryPoint, CallType},

@@ -1,5 +1,5 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::cheated_syscalls::execute_deployment;
 use crate::runtime_extensions::native::native_syscall_handler::BaseSyscallResult;
+use crate::runtime_extensions::outer_call_runtime_extension::execution::cheated_syscalls::execute_deployment;
 use crate::state::CheatnetState;
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::entry_point::ConstructorContext;

@@ -1,9 +1,9 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    AddressOrClassHash, from_error, from_non_error,
-};
 use crate::runtime_extensions::common::sum_syscall_usage;
 use crate::runtime_extensions::forge_runtime_extension::{
     get_nested_calls_syscalls_sierra_gas, get_nested_calls_syscalls_vm_resources,
+};
+use crate::runtime_extensions::outer_call_runtime_extension::rpc::{
+    AddressOrClassHash, from_error, from_non_error,
 };
 use crate::state::{CheatedData, CheatnetState};
 use blockifier::execution::call_info::CallInfo;

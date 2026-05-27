@@ -20,14 +20,14 @@ use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::data::ForkData;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::OuterCallExtension;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
     ForgeExtension, ForgeRuntime, add_resources_to_top_call, compute_and_store_execution_summary,
     get_all_used_resources, update_top_call_l1_resources, update_top_call_resources,
     update_top_call_vm_trace,
 };
+use cheatnet::runtime_extensions::outer_call_runtime_extension::OuterCallExtension;
+use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
 use cheatnet::state::{BlockInfoReader, CheatnetState, EncounteredErrors, ExtendedStateReader};
 use cheatnet::trace_data::CallTrace;
 use execution::finalize_execution;
