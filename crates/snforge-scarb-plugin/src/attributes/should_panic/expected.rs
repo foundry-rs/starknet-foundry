@@ -4,9 +4,9 @@ use crate::{
     cairo_expression::CairoExpression,
     types::{Felt, ParseFromExpr},
 };
-use cairo_lang_macro::{Diagnostic, TokenStream, quote};
+use cairo_lang_macro::{quote, Diagnostic, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::{Terminal, ast::Expr};
+use cairo_lang_syntax::node::{ast::Expr, Terminal};
 
 #[derive(Debug, Clone, Default)]
 pub enum Expected {
@@ -70,7 +70,7 @@ impl ParseFromExpr<Expr> for Expected {
         arg_name: &str,
     ) -> Result<Self, Diagnostic> {
         let error_msg = format!(
-            "<{arg_name}> argument must be string, short string, number or tuple of strings, short strings or numbers in regular brackets ()"
+                        "<{arg_name}> argument must be a string, short string, number, or tuple containing any mix of strings, short strings, and numbers in parentheses ()"
         );
 
         match expr {
@@ -82,8 +82,9 @@ impl ParseFromExpr<Expr> for Expected {
                 ))
             }
             Expr::String(string) => {
-                let string = string.text(db).trim_matches('"').to_string();
-
+                let string = string.string_value(db).ok_or_else(|| {
+                    T::error(format!("<{arg_name}> contains invalid string literal"))
+                })?;
                 Ok(Self::ByteArray(string))
             }
             Expr::Tuple(expressions) => {
