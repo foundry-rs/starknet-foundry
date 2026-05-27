@@ -12,7 +12,7 @@ pub const DEVNET_SEED: u32 = 1_053_545_548;
 pub const DEVNET_ACCOUNTS_NUMBER: u8 = 20;
 
 // Block number used by devnet to fork the Sepolia testnet network in the tests
-pub const DEVNET_FORK_BLOCK_NUMBER: u32 = 7_776_133;
+pub const DEVNET_FORK_BLOCK_NUMBER: u32 = 721_720;
 
 pub const CONTRACTS_DIR: &str = "tests/data/contracts";
 pub const SCRIPTS_DIR: &str = "tests/data/scripts";
