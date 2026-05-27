@@ -108,6 +108,89 @@ LLVM_SYS_191_PREFIX=/usr/lib/llvm-19
 TABLEGEN_190_PREFIX=/usr/lib/llvm-19
 ```
 
+## Ledger Testing
+
+Ledger tests use [Speculos](https://github.com/LedgerHQ/speculos), a Ledger device emulator running inside Docker. No physical Ledger device is needed.
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) installed and running
+
+### Setup
+
+**1. Get the Ledger app binary**
+
+The test suite expects a pre-built Nano X ELF binary at:
+
+```
+crates/sncast/tests/data/ledger-app/nanox.elf
+```
+
+Build it from the [app-starknet repository](https://github.com/LedgerHQ/app-starknet):
+
+```shell
+$ git clone https://github.com/LedgerHQ/app-starknet
+$ docker run --rm \
+    -v "$(pwd)/app-starknet:/app-starknet" \
+    ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:latest \
+    bash -c "cd /app-starknet/starknet && cargo ledger build nanox"
+$ cp app-starknet/starknet/target/nanox/release/starknet \
+    crates/sncast/tests/data/ledger-app/nanox.elf
+```
+
+### Running Ledger Tests
+
+Tests run inside the `ledger-app-dev-tools` Docker image, which provides Speculos and all required tooling.
+
+```shell
+$ docker run --rm -it \
+    -p 4001-4005:4001-4005 \
+    -p 5001-5007:5001-5007 \
+    -p 6001-6012:6001-6012 \
+    -p 5055:5055 \
+    -v "$(pwd):/workspace" \
+    -v ledger_build_cache:/workspace/target \
+    -v "$HOME/.cargo/registry:/root/.cargo/registry" \
+    -v ledger_asdf_cache:/root/.asdf \
+    -v ledger_local_cache:/root/.local \
+    -w /workspace \
+    -e CARGO_TARGET_DIR=/workspace/target \
+    ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:latest \
+    bash -c '
+        [ -f /opt/.cargo/env ] && source /opt/.cargo/env
+        if ! [ -x "$HOME/.asdf/shims/scarb" ]; then
+            curl --proto "=https" --tlsv1.2 -sSf https://sh.starkup.sh | sh -s -- --yes
+        fi
+        export PATH="$HOME/.asdf/shims:$HOME/.asdf/bin:$HOME/.local/bin:$PATH"
+        [ -f "$HOME/.asdf/asdf.sh" ] && source "$HOME/.asdf/asdf.sh"
+        SCARB_VERSION=$(grep "scarb " /workspace/.tool-versions | cut -d " " -f 2)
+        asdf set -u scarb "$SCARB_VERSION"
+        cargo test -p sncast --features ledger-emulator --test main ledger -- --nocapture --ignored
+    '
+```
+
+> ❗️ **Note**
+>
+> The first run compiles all dependencies and installs the Scarb toolchain via starkup, which can take around 30 minutes. Subsequent runs reuse the cached volumes and finish in a couple of minutes.
+>
+> Pasting the multi-line `docker run` directly into the terminal may break due to quoting or bracketed-paste behavior. If you hit problems, save the command to a file (e.g. `run_ledger_tests.sh`).
+
+> 💡 **Tip: Clearing the cache**
+>
+> To wipe all cached volumes and start fresh:
+>
+> ```shell
+> $ docker volume rm ledger_build_cache ledger_asdf_cache ledger_local_cache
+> ```
+
+> 💡 **Tip: Linux users**
+>
+> On Linux, [Speculos](https://github.com/LedgerHQ/speculos) can be installed natively. In that case, tests can be run directly with:
+>
+> ```shell
+> $ cargo test -p sncast --features ledger-emulator --test main ledger -- --nocapture --ignored
+> ```
+
 ## Formatting and Lints
 
 Starknet Foundry uses [rustfmt](https://github.com/rust-lang/rustfmt) for formatting. You can run the formatter with
