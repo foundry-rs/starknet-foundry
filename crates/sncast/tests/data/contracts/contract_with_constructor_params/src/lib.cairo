@@ -1,10 +1,14 @@
 #[starknet::contract]
 mod ContractWithConstructorParams {
+    use starknet::storage::StoragePointerWriteAccess;
+
     #[storage]
-    struct Storage {}
+    struct Storage {
+        salt: felt252,
+    }
 
     #[constructor]
     fn constructor(ref self: ContractState, foo: felt252, bar: felt252) {
-        let _x = foo + bar;
+        self.salt.write(foo + bar);
     }
 }

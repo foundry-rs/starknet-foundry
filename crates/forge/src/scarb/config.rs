@@ -12,6 +12,7 @@ pub const SCARB_MANIFEST_TEMPLATE_CONTENT: &str = r#"
 # exit_first = true                                          # Stop tests execution immediately upon the first failure
 # fuzzer_runs = 1234                                         # Number of runs of the random fuzzer
 # fuzzer_seed = 1111                                         # Seed for the random fuzzer
+# tracked_resource = "sierra-gas"                            # Resource tracked by `snforge`
 
 # [[tool.snforge.fork]]                                      # Used for fork testing
 # name = "SOME_NAME"                                         # Fork name

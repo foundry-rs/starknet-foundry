@@ -217,9 +217,9 @@ pub struct TestArgs {
     #[arg(long)]
     no_optimization: bool,
 
-    /// Specify tracked resource type
-    #[arg(long, value_enum, default_value_t)]
-    tracked_resource: ForgeTrackedResource,
+    /// Specify tracked resource type. Overrides `Scarb.toml` when passed.
+    #[arg(long, value_enum)]
+    tracked_resource: Option<ForgeTrackedResource>,
 
     /// Display a table of L2 gas breakdown for each contract and selector
     #[arg(long)]
@@ -260,7 +260,7 @@ impl TestArgs {
         // as otherwise it would run on vm.
         #[cfg(feature = "cairo-native")]
         if self.run_native {
-            self.tracked_resource = ForgeTrackedResource::SierraGas;
+            self.tracked_resource = Some(ForgeTrackedResource::SierraGas);
         }
     }
 }
