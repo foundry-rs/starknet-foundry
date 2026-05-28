@@ -29,7 +29,10 @@ fn test_alias_list_empty() {
 
     let output = runner(&args).current_dir(tempdir.path()).assert().success();
 
-    assert_stdout_contains(output, "No aliases configured");
+    assert_stdout_contains(
+        output,
+        "No aliases configured. See aliases guide: https://foundry-rs.github.io/starknet-foundry/starknet/aliases.html",
+    );
 }
 
 #[test]
