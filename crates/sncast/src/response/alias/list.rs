@@ -38,9 +38,11 @@ impl Message for AliasesListMessage {
         let mut builder = styling::OutputBuilder::new();
 
         if self.aliases.is_empty() {
-            // TODO: consider expanding error message to include instructions on how to add aliases,
-            //  either via link to docs, or by referring to potential future `alias add` command.
-            return builder.text_field("No aliases configured").build();
+            return builder
+                .text_field(
+                    "No aliases configured. For details on adding aliases and supported commands, see: https://foundry-rs.github.io/starknet-foundry/starknet/aliases.html",
+                )
+                .build();
         }
 
         for alias in &self.aliases {
