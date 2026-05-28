@@ -1,9 +1,49 @@
 use crate::snippet::{Snippet, SnippetConfig, SnippetType};
+use crate::utils::get_nth_ancestor;
 use regex::Regex;
+use std::collections::HashMap;
 use std::sync::LazyLock;
 use std::{fs, io, path::Path};
+use toml_edit::DocumentMut;
 
 const EXTENSION: Option<&str> = Some("md");
+
+static BOOK_VARIABLES: LazyLock<HashMap<String, String>> = LazyLock::new(load_book_variables);
+
+fn load_book_variables() -> HashMap<String, String> {
+    let book_toml_path = get_nth_ancestor(2).join("docs/book.toml");
+    let content = fs::read_to_string(&book_toml_path).expect("Failed to read book.toml");
+    let doc = content
+        .parse::<DocumentMut>()
+        .expect("Failed to parse book.toml");
+
+    let variables = doc
+        .get("preprocessor")
+        .and_then(|preprocessor| preprocessor.get("variables"))
+        .and_then(|variables| variables.get("variables"))
+        .and_then(|variables| variables.as_table());
+
+    let Some(variables) = variables else {
+        return HashMap::new();
+    };
+
+    variables
+        .iter()
+        .filter_map(|(key, value)| {
+            value
+                .as_str()
+                .map(|value| (key.to_string(), value.to_string()))
+        })
+        .collect()
+}
+
+fn substitute_book_variables(text: &str) -> String {
+    let mut result = text.to_string();
+    for (key, value) in BOOK_VARIABLES.iter() {
+        result = result.replace(&format!("{{{{{key}}}}}"), value);
+    }
+    result
+}
 
 pub fn extract_snippets_from_file(
     file_path: &Path,
@@ -33,9 +73,10 @@ pub fn extract_snippets_from_file(
                 });
 
                 let output = GAS_RE.replace_all(m.as_str(), "gas: [..]").to_string();
-                EXECUTION_RESOURCES_RE
+                let output = EXECUTION_RESOURCES_RE
                     .replace_all(output.as_str(), "${1}: [..]")
-                    .to_string()
+                    .to_string();
+                substitute_book_variables(&output)
             });
 
             let config = if config_str.is_empty() {
