@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast 
+
+#### Added
+
+- Aliases in `snfoundry.toml`. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/aliases.html).
+- `--contract-address @alias` syntax in `sncast call` and `sncast invoke`.
+
 ## [0.61.0] - 2026-05-26
 
 ### Forge
@@ -41,8 +48,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--no-abi` flag for `declare`, `declare-from`, and `deploy`, erasing the ABI before class declaration.
 - `sncast get spec-version` command that returns the version of the Starknet JSON-RPC specification used by the node
 - `sncast get tx-receipt` (alias: `get transaction-receipt`) command that returns the receipt of a transaction
-- Aliases in `snfoundry.toml`. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/aliases.html).
-- `--contract-address @alias` syntax in `sncast call` and `sncast invoke`.
 
 #### Fixed
 
