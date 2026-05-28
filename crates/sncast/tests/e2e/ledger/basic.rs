@@ -63,7 +63,7 @@ async fn test_get_public_key_with_confirmation() {
 async fn test_sign_hash() {
     let (client, url) = setup_speculos(4004);
 
-    set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
+    let _ = set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
 
     let output = runner(&[
         "ledger",

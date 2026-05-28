@@ -49,7 +49,7 @@ async fn test_create_ledger_account(
     let (client, url) = setup_speculos(port);
     let tempdir = tempdir().unwrap();
 
-    set_automation(&client, automations).await;
+    let _ = set_automation(&client, automations).await;
 
     let output = runner(&[
         "--accounts-file",
@@ -197,7 +197,7 @@ async fn test_deploy_ledger_account(
 ) {
     let (client, url) = setup_speculos(port);
 
-    set_automation(&client, automations).await;
+    let _ = set_automation(&client, automations).await;
 
     let tempdir = tempdir().unwrap();
     let accounts_file = tempdir.path().join("accounts.json");
