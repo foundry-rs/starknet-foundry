@@ -17,9 +17,9 @@ const DOCS_SNIPPETS_PORT_BASE: u16 = 4006;
 
 async fn setup_speculos_automation(client: &Arc<speculos_client::SpeculosClient>, args: &[&str]) {
     if args.contains(&"get-public-key") && !args.contains(&"--no-display") {
-        set_automation(client, &[APPROVE_PUBLIC_KEY]).await;
+        let _ = set_automation(client, &[APPROVE_PUBLIC_KEY]).await;
     } else if args.contains(&"sign-hash") {
-        set_automation(client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
+        let _ = set_automation(client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
     }
 }
 
