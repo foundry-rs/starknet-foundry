@@ -44,7 +44,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Aliases in `snfoundry.toml`. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/aliases.html).
 - `--contract-address @alias` syntax in `sncast call` and `sncast invoke`.
 
-
 #### Fixed
 
 - `sncast completions` no longer fails due to invalid local or global `snfoundry.toml` config.
