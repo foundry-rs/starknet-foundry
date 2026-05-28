@@ -402,8 +402,8 @@ jobs:
           tool: nextest@0.9.98
       - name: Build Starknet Ledger App (Nano X)
         run: |
-          git clone --depth 1 --branch nanox_2.7.0_2.4.0_sdk_v26.0.2 \
-            https://github.com/LedgerHQ/app-starknet /tmp/app-starknet
+          git clone https://github.com/LedgerHQ/app-starknet /tmp/app-starknet
+          git -C /tmp/app-starknet checkout a14a61e3061f8793188fa57cbdafc2cc0d96c8bd
           cd /tmp/app-starknet/starknet
           cargo +${RUST_NIGHTLY} ledger build nanox
           mkdir -p ${GITHUB_WORKSPACE}/crates/sncast/tests/data/ledger-app
