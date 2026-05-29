@@ -31,7 +31,7 @@ fn test_alias_list_empty() {
 
     assert_stdout_contains(
         output,
-        "No aliases configured. See aliases guide: https://foundry-rs.github.io/starknet-foundry/starknet/aliases.html",
+        "No aliases configured. For details on adding aliases and supported commands, see: https://foundry-rs.github.io/starknet-foundry/starknet/aliases.html",
     );
 }
 
