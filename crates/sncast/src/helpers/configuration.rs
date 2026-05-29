@@ -1,4 +1,5 @@
 use super::block_explorer;
+use super::felt::felt_from_string;
 use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use crate::{Network, PartialWaitParams, ValidatedWaitParams};
 use anyhow::{Context, Result};
@@ -7,8 +8,10 @@ use configuration::{Config, Override, load_config, override_optional};
 use serde::de::IntoDeserializer;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+use starknet_types_core::felt::Felt;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::{Display, Formatter};
+use std::ops::Deref;
 use url::Url;
 
 #[must_use]
@@ -86,6 +89,39 @@ impl Override for NetworksConfig {
     }
 }
 
+#[derive(Serialize, Clone, Debug, PartialEq, Default)]
+pub struct AliasesConfig(pub BTreeMap<String, Felt>);
+
+impl<'de> Deserialize<'de> for AliasesConfig {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        BTreeMap::<String, String>::deserialize(deserializer)?
+            .into_iter()
+            .map(|(name, value)| felt_from_string(&value).map(|felt| (name, felt)))
+            .collect::<Result<BTreeMap<_, _>, _>>()
+            .map_err(serde::de::Error::custom)
+            .map(AliasesConfig)
+    }
+}
+
+impl Override for AliasesConfig {
+    fn override_with(&self, other: AliasesConfig) -> AliasesConfig {
+        let mut merged = self.0.clone();
+        merged.extend(other.0);
+        AliasesConfig(merged)
+    }
+}
+
+impl Deref for AliasesConfig {
+    type Target = BTreeMap<String, Felt>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 /// Effective config used at runtime.
 /// Note: Built from [`PartialCastConfig`], not (de)serialized.
 #[derive(Clone, Debug, PartialEq)]
@@ -99,6 +135,7 @@ pub struct CastConfig {
     pub show_explorer_links: bool,
     pub networks: NetworksConfig,
     pub scarb_profile: String,
+    pub aliases: AliasesConfig,
 }
 
 impl CastConfig {
@@ -122,6 +159,7 @@ impl Default for CastConfig {
             show_explorer_links: show_explorer_links_default(),
             networks: NetworksConfig::default(),
             scarb_profile: "release".to_string(),
+            aliases: AliasesConfig::default(),
         }
     }
 }
@@ -171,6 +209,9 @@ pub struct PartialCastConfig {
         rename(serialize = "scarb-profile", deserialize = "scarb-profile")
     )]
     pub scarb_profile: Option<String>,
+
+    #[serde(default)]
+    pub aliases: Option<AliasesConfig>,
 
     /// Additional data not captured by deserializer.
     #[doc(hidden)]
@@ -230,6 +271,7 @@ impl Override for PartialCastConfig {
             show_explorer_links: other.show_explorer_links.or(self.show_explorer_links),
             networks: override_optional(self.networks.clone(), other.networks),
             scarb_profile: other.scarb_profile.or_else(|| self.scarb_profile.clone()),
+            aliases: override_optional(self.aliases.clone(), other.aliases),
             unknown_fields: HashMap::default(),
         }
     }
@@ -319,6 +361,7 @@ impl TryFrom<PartialCastConfig> for CastConfig {
             show_explorer_links: p.show_explorer_links.unwrap_or(d.show_explorer_links),
             networks,
             scarb_profile: p.scarb_profile.unwrap_or(d.scarb_profile),
+            aliases: p.aliases.unwrap_or_default(),
         };
         config.validate()?;
         Ok(config)
@@ -328,6 +371,10 @@ impl TryFrom<PartialCastConfig> for CastConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::helpers::constants::{
+        MAP_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+    };
+    use std::str::FromStr;
     use url::Url;
 
     #[test]
@@ -413,6 +460,46 @@ mod tests {
 
         assert_eq!(result.url(), base.url());
         assert_eq!(result.network(), None);
+    }
+
+    #[test]
+    fn test_aliases_config_override() {
+        let global = AliasesConfig(BTreeMap::from([("a".to_string(), Felt::from(100))]));
+        let local = AliasesConfig(BTreeMap::from([
+            ("a".to_string(), Felt::from(300)),
+            ("b".to_string(), Felt::from(200)),
+        ]));
+
+        let merged = global.override_with(local);
+
+        assert_eq!(merged.0.get("a"), Some(&Felt::from(300)));
+        assert_eq!(merged.0.get("b"), Some(&Felt::from(200)));
+    }
+
+    #[test]
+    fn test_partial_cast_config_deserializes_aliases() {
+        let toml_str = format!(
+            r#"
+            url = "http://127.0.0.1:5055/rpc"
+
+            [aliases]
+            map = "{MAP_CONTRACT_ADDRESS_SEPOLIA}"
+            map-class = "{MAP_CONTRACT_CLASS_HASH_SEPOLIA}"
+            decimal = "123"
+            "#,
+        );
+
+        let config: PartialCastConfig = toml::from_str(&toml_str).unwrap();
+        let aliases = config.aliases.expect("aliases table");
+        assert_eq!(
+            aliases.0.get("map"),
+            Some(&Felt::from_str(MAP_CONTRACT_ADDRESS_SEPOLIA).unwrap())
+        );
+        assert_eq!(
+            aliases.0.get("map-class"),
+            Some(&Felt::from_str(MAP_CONTRACT_CLASS_HASH_SEPOLIA).unwrap())
+        );
+        assert_eq!(aliases.0.get("decimal"), Some(&Felt::from(123)));
     }
 
     #[test]

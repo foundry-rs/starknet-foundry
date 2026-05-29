@@ -8,7 +8,9 @@ Send an invoke transaction to Starknet.
 ## `--contract-address, -d <CONTRACT_ADDRESS>`
 Required.
 
-The address of the contract being called in hex (prefixed with '0x') or decimal representation.
+The address of the contract being called. It can be either:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../starknet/aliases.md)..
 
 ## `--function, -f <FUNCTION_NAME>`
 Required.

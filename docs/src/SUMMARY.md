@@ -56,6 +56,7 @@
 * [Dry Run](starknet/dry-run.md)
 * [Calling Contracts](starknet/call.md)
 * [Performing Multicall](starknet/multicall.md)
+* [Aliases](starknet/aliases.md)
 * [Cairo Deployment Scripts](starknet/script.md)
 * [Inspecting Transactions](starknet/tx-status.md)
 * [Verifying Contracts](starknet/verify.md)
