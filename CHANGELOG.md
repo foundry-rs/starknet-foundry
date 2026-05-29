@@ -11,8 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Aliases in `snfoundry.toml`. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/aliases.html).
+- Aliases in `snfoundry.toml`. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html#sncastprofile-namealiases).
 - `--contract-address @alias` syntax in `sncast call` and `sncast invoke`.
+- `sncast alias list` command for listing aliases. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/alias/list.html).
 
 ## [0.61.0] - 2026-05-26
 

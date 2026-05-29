@@ -171,7 +171,7 @@ mod tests {
         };
         let err = args.resolve_proof_facts().unwrap_err().to_string();
 
-        assert_eq!(err, "Failed to parse invalid to felt");
+        assert_eq!(err, "Failed to parse `invalid` to felt");
     }
 
     #[test]

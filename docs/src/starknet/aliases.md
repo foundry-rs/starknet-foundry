@@ -57,8 +57,23 @@ $ sncast call --contract-address @map --function get --calldata 0x0 --block-id l
 
 ## Listing aliases
 
-<!-- TODO: add `sncast aliases` command -->
-TBD
+Run `sncast alias list` to list aliases from the current effective config:
+
+<!-- TODO(#4225): this would require extended doc test setup (e.g. defining config or emulating aliases using env var) -->
+<!-- { "ignored": true } -->
+```shell
+$ sncast alias list
+```
+<details>
+<summary>Output:</summary>
+
+```
+map:       0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008
+map-class: 0x2a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321
+```
+
+</details>
+<br>
 
 ## `@alias` interaction with multicall `@id`
 
