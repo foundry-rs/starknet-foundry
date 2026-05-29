@@ -60,7 +60,7 @@ impl SncastCommandMessage for ShowConfigResponse {
             .field("Scarb Profile", &self.scarb_profile);
 
         let alias_count = self.alias_count.to_string();
-        let mut builder = builder.field("Aliases", &alias_count);
+        let mut builder = builder.field("Alias Count", &alias_count);
         if self.alias_count != 0 {
             builder = builder.extra("(use `sncast alias list` to display)");
         }
