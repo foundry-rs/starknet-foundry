@@ -238,7 +238,7 @@ pub fn call_contract(
 
 // This executes a library call as from a test contract.
 // `entry_point` below should match `library_call_syscall` entry point, except for `selector` and `calldata`:
-// https://github.com/foundry-rs/starknet-foundry/blob/421a339168a9e0b6502eac4fdc4fdeb0598c72b7/crates/cheatnet/src/runtime_extensions/outer_call_runtime_extension/mod.rs#L151
+// crates/cheatnet/src/runtime_extensions/outer_call_runtime_extension/mod.rs#L151
 pub fn library_call_contract(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
