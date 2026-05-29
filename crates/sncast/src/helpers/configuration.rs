@@ -371,6 +371,10 @@ impl TryFrom<PartialCastConfig> for CastConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::helpers::constants::{
+        MAP_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+    };
+    use std::str::FromStr;
     use url::Url;
 
     #[test]
@@ -472,19 +476,30 @@ mod tests {
         assert_eq!(merged.0.get("b"), Some(&Felt::from(200)));
     }
 
-    // can probably remove this once covered by e2e
     #[test]
     fn test_partial_cast_config_deserializes_aliases() {
-        let toml_str = r#"
+        let toml_str = format!(
+            r#"
             url = "http://127.0.0.1:5055/rpc"
 
             [aliases]
-            map = "0x1"
-        "#;
+            map = "{MAP_CONTRACT_ADDRESS_SEPOLIA}"
+            map-class = "{MAP_CONTRACT_CLASS_HASH_SEPOLIA}"
+            decimal = "123"
+            "#,
+        );
 
-        let config: PartialCastConfig = toml::from_str(toml_str).unwrap();
+        let config: PartialCastConfig = toml::from_str(&toml_str).unwrap();
         let aliases = config.aliases.expect("aliases table");
-        assert_eq!(aliases.0.get("map"), Some(&Felt::from(1)));
+        assert_eq!(
+            aliases.0.get("map"),
+            Some(&Felt::from_str(MAP_CONTRACT_ADDRESS_SEPOLIA).unwrap())
+        );
+        assert_eq!(
+            aliases.0.get("map-class"),
+            Some(&Felt::from_str(MAP_CONTRACT_CLASS_HASH_SEPOLIA).unwrap())
+        );
+        assert_eq!(aliases.0.get("decimal"), Some(&Felt::from(123)));
     }
 
     #[test]
