@@ -11,11 +11,11 @@ fn test_alias_list_happy_case() {
     let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
     let args = vec!["alias", "list"];
 
-    let output = runner(&args).current_dir(tempdir.path()).assert().success();
-
-    assert_stdout_contains(
-        output,
-        indoc! {r"
+    runner(&args)
+        .current_dir(tempdir.path())
+        .assert()
+        .success()
+        .stdout_eq(indoc! {r"
             data-transformer:       0x351c816183324878714973f3da1a43c1a40d661b8dac5cb69294cc333342ed
             data-transformer-class: 0x786d1f010d66f838837290e472415186ba6a789fb446e7f92e444bed7b5d9c0
             deployer-123:           0x123
@@ -28,8 +28,7 @@ fn test_alias_list_happy_case() {
             strk-token:             0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
             two:                    0x2
             zero:                   0x0
-        "},
-    );
+        "});
 }
 
 #[test]
