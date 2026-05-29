@@ -53,7 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- Unknown keys in `snfoundry.toml` now, instead of causing hard error, emit a warning and are ignored, so configs can be used across `sncast` versions.
+- Unknown keys in `snfoundry.toml` (`[sncast.<profile>]`, `[sncast.<profile>.networks]`) now emit a warning and are ignored instead of causing a hard error, so configs can be shared across `sncast` versions. Read more in [configuration](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html).
+- Unknown keys inside `wait-params` in `snfoundry.toml` now emit a warning.
 
 #### Fixed
 
