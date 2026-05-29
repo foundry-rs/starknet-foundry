@@ -42,7 +42,7 @@ $ sncast call --contract-address @map --function get --calldata 0x0 --block-id l
 > [sncast.myprofile.aliases]
 > predeployed-account = "0x691a61b12a7105b1372cc377f135213c11e8400a546f6b0e7ea0296046690ce"
 > ```
-> Aliases follow the same [precedence rules](../projects/configuration.md#interaction-between-local-and-global-profiles) as other `snfoundry.toml` settings: aliases defined in higher-precedence config override lower-precedence ones.
+> Same as other `snfoundry.toml` settings, aliases defined in higher-precedence config override lower-precedence ones.
 
 
 ## Using aliases in CLI
