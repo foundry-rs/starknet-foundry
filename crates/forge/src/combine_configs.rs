@@ -16,6 +16,10 @@ pub fn combine_configs(
     cache_dir: Utf8PathBuf,
     forge_config_from_scarb: &ForgeConfigFromScarb,
 ) -> ForgeConfig {
+    let tracked_resource = args
+        .tracked_resource
+        .unwrap_or(forge_config_from_scarb.tracked_resource);
+
     let execution_data_to_save = ExecutionDataToSave::from_flags(
         args.save_trace_data || forge_config_from_scarb.save_trace_data,
         args.build_profile || forge_config_from_scarb.build_profile,
@@ -39,7 +43,7 @@ pub fn combine_configs(
             is_vm_trace_needed: execution_data_to_save.is_vm_trace_needed(),
             cache_dir,
             contracts_data,
-            tracked_resource: args.tracked_resource,
+            tracked_resource,
             environment_variables: env::vars().collect(),
             launch_debugger: args.launch_debugger,
         }),
@@ -159,9 +163,7 @@ mod tests {
                     fuzzer_runs: NonZeroU32::new(1234).unwrap(),
                     fuzzer_seed: 500,
                     max_n_steps: Some(1_000_000),
-                    // tracked_resource comes from args only; ForgeConfigFromScarb.tracked_resource
-                    // is not used by combine_configs, so this stays at the args default.
-                    tracked_resource: ForgeTrackedResource::SierraGas,
+                    tracked_resource: ForgeTrackedResource::CairoSteps,
                     is_vm_trace_needed: true,
                     cache_dir: Utf8PathBuf::default(),
                     contracts_data: ContractsData::default(),

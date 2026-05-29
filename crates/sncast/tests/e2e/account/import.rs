@@ -72,64 +72,6 @@ pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
     );
 }
 
-// TODO(#3556): Remove this test once we drop Argent account type
-#[tokio::test]
-pub async fn test_happy_case_argent_with_deprecation_warning() {
-    let tempdir = tempdir().expect("Unable to create a temporary directory");
-    let accounts_file = "accounts.json";
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file,
-        "account",
-        "import",
-        "--url",
-        URL,
-        "--name",
-        "my_account_import",
-        "--address",
-        "0x123",
-        "--private-key",
-        "0x456",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_0,
-        "--type",
-        "argent",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-
-    snapbox.assert().stdout_eq(indoc! {r"
-        [WARNING] Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account import` is deprecated, please use `ready` instead.
-        
-        Success: Account imported successfully
-
-        Account Name: my_account_import
-    "});
-
-    let contents = fs::read_to_string(tempdir.path().join(accounts_file))
-        .expect("Unable to read created file");
-    let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
-    assert_eq!(
-        contents_json,
-        json!(
-            {
-                "alpha-sepolia": {
-                  "my_account_import": {
-                    "address": "0x123",
-                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
-                    "deployed": false,
-                    "legacy": true,
-                    "private_key": "0x456",
-                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
-                    "type": "ready"
-                  }
-                }
-            }
-        )
-    );
-}
-
 #[tokio::test]
 pub async fn test_existent_account_address() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
@@ -526,14 +468,15 @@ pub async fn test_invalid_private_key_file_path() {
     let snapbox = runner(&args);
     let output = snapbox.assert().failure();
 
-    let expected_file_error = "No such file or directory [..]";
-
     assert_stderr_contains(
         output,
         formatdoc! {r"
         Command: account import
-        Error: Failed to obtain private key from the file my_private_key: {}
-        ", expected_file_error},
+        Error: Failed to obtain private key from the file my_private_key
+
+        Caused by:
+            No such file or directory [..]
+        "},
     );
 }
 
@@ -572,7 +515,10 @@ pub async fn test_invalid_private_key_in_file() {
         output,
         indoc! {r"
         Command: account import
-        Error: Failed to obtain private key from the file my_private_key: failed to create Felt from string: invalid dec string
+        Error: Failed to obtain private key from the file my_private_key
+
+        Caused by:
+            failed to create Felt from string: invalid dec string
         "},
     );
 }
@@ -690,7 +636,7 @@ pub async fn test_happy_case_valid_address_computation() {
         "--name",
         "my_account_import",
         "--address",
-        "0x721c21e0cc9d37aec8e176797effd1be222aff6db25f068040adefabb7cfb6d",
+        "0x3d8e70d1cbeca6eed8d4cf58fe812b24e741112730903dc91486afe9a5130cc",
         "--private-key",
         "0x2",
         "--salt",
@@ -718,7 +664,7 @@ pub async fn test_happy_case_valid_address_computation() {
             {
                 "alpha-sepolia": {
                   "my_account_import": {
-                    "address": "0x721c21e0cc9d37aec8e176797effd1be222aff6db25f068040adefabb7cfb6d",
+                    "address": "0x3d8e70d1cbeca6eed8d4cf58fe812b24e741112730903dc91486afe9a5130cc",
                     "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
                     "deployed": false,
                     "salt": "0x3",
@@ -760,7 +706,7 @@ pub async fn test_invalid_address_computation() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let computed_address = "0xaf550326d32c8106ef08d25cbc0dba06e5cd10a2201c2e9bc5ad4cbbce45e6";
+    let computed_address = "0x7298d9fc4bde13623bd53f4adb0110bd77ab5f3f3675402b5dfb418e149e56a";
     snapbox.assert().stderr_eq(formatdoc! {r"
         Command: account import
         Error: Computed address {computed_address} does not match the provided address 0x123. Please ensure that the provided salt, class hash, and account type are correct.

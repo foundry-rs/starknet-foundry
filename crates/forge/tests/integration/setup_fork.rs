@@ -21,7 +21,7 @@ use crate::utils::test_case;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::run_tests::package::RunForPackageArgs;
 use forge::shared_cache::FailedTestsCache;
-use forge_runner::CACHE_DIR;
+use forge_runner::DEFAULT_CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
 use forge_runner::filtering::NameFilter;
 use forge_runner::forge_config::ForgeTrackedResource;
@@ -140,7 +140,12 @@ fn fork_aliased_decorator() {
                 .into_iter()
                 .map(|t| {
                     tokio::task::spawn_blocking(move || {
-                        prepare_test_target(t, &ForgeTrackedResource::CairoSteps, &NameFilter::All)
+                        prepare_test_target(
+                            t,
+                            &ForgeTrackedResource::CairoSteps,
+                            &NameFilter::All,
+                            &PartitionConfig::default(),
+                        )
                     })
                 })
                 .collect();
@@ -169,7 +174,7 @@ fn fork_aliased_decorator() {
                             is_vm_trace_needed: false,
                             cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
                                 .unwrap()
-                                .join(CACHE_DIR),
+                                .join(DEFAULT_CACHE_DIR),
                             contracts_data: ContractsData::try_from(test.contracts(&ui).unwrap())
                                 .unwrap(),
                             tracked_resource: ForgeTrackedResource::CairoSteps,
@@ -202,7 +207,7 @@ fn fork_aliased_decorator() {
 }
 
 #[test]
-fn fork_aliased_decorator_overrding() {
+fn fork_aliased_decorator_overriding() {
     let test = test_case!(indoc!(
         r#"
             use starknet::syscalls::get_execution_info_syscall;
@@ -246,7 +251,12 @@ fn fork_aliased_decorator_overrding() {
                 .into_iter()
                 .map(|t| {
                     tokio::task::spawn_blocking(move || {
-                        prepare_test_target(t, &ForgeTrackedResource::CairoSteps, &NameFilter::All)
+                        prepare_test_target(
+                            t,
+                            &ForgeTrackedResource::CairoSteps,
+                            &NameFilter::All,
+                            &PartitionConfig::default(),
+                        )
                     })
                 })
                 .collect();
@@ -275,7 +285,7 @@ fn fork_aliased_decorator_overrding() {
                             is_vm_trace_needed: false,
                             cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
                                 .unwrap()
-                                .join(CACHE_DIR),
+                                .join(DEFAULT_CACHE_DIR),
                             contracts_data: ContractsData::try_from(test.contracts(&ui).unwrap())
                                 .unwrap(),
                             tracked_resource: ForgeTrackedResource::CairoSteps,

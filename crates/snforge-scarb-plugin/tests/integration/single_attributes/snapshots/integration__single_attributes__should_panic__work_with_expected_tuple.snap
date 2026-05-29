@@ -7,11 +7,14 @@ fn empty_fn() {
         let mut data = array![];
         snforge_std::_internals::config_types::ShouldPanicConfig {
             expected: snforge_std::_internals::config_types::Expected::Array(
-                array!['panic data', ' or not'],
+                array![
+                    snforge_std::_internals::config_types::ExpectedTupleItem::Felt('panic data'),
+                    snforge_std::_internals::config_types::ExpectedTupleItem::Felt(' or not'),
+                ],
             ),
         }
             .serialize(ref data);
         starknet::testing::cheatcode::<'set_config_should_panic'>(data.span());
         return Default::default();
-    }
+    };
 }

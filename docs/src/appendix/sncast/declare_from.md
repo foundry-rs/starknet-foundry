@@ -1,11 +1,11 @@
 # `declare-from`
-Declare a contract either: 
+Declare a contract either:
 - from a compiled Sierra file
 - by fetching it from another Starknet instance.
 
 The allowed args depend on the chosen contract source:
-- **File:** `--sierra-file` (required)
-- **Network:** `--class-hash` (required), `--block-id` (optional),  `--source-url` (optional), `--source-network` (optional)
+- **File:** `--sierra-file` (required), `--no-abi` (optional)
+- **Network:** `--class-hash` (required), `--block-id` (optional), `--source-url` (optional), `--source-network` (optional)
 
 Note: **file** and **network** args are mutually exclusive.
 
@@ -44,12 +44,16 @@ Optional.
 
 Starknet RPC node url address of the source network where the contract is already declared.
 
+Can only be used with `--class-hash`.
+
 ## `--source-network <NETWORK>`
 Optional.
 
 Use predefined network with public provider where the contract is already declared.
 
 Possible values: `mainnet`, `sepolia`, `devnet`.
+
+Can only be used with `--class-hash`.
 
 ## `--max-fee, -m <MAX_FEE>`
 Optional.
@@ -114,9 +118,19 @@ Optional.
 
 Nonce for transaction. If not provided, nonce will be set automatically.
 
+## `--no-abi`
+
+Optional.
+
+If passed, omits ABI from the declared class. This changes the resulting class hash.
+
+Can only be used with `--sierra-file`.
+
 ## `--block-id, -b <BLOCK_ID>`
 Optional.
 
 Block identifier on which class of declared contract should be fetched.
 Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string), and block number (u64).
 `latest` is used as a default value.
+
+Can only be used with `--class-hash`.

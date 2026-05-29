@@ -14,5 +14,5 @@ fn empty_fn() {
         snforge_std::_internals::config_types::ForkConfig::Named("test").serialize(ref data);
         starknet::testing::cheatcode::<'set_config_fork'>(data.span());
         return Default::default();
-    }
+    };
 }

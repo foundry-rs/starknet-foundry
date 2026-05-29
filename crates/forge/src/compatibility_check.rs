@@ -38,16 +38,11 @@ impl Requirement<'_> {
                 },
             );
 
-            let min_version_to_display = self
-                .minimal_recommended_version
-                .as_ref()
-                .unwrap_or(&self.minimal_version);
-
             if !is_valid {
                 is_valid = false;
                 format!(
                     "❌ {} Version {} doesn't satisfy minimal {}\n{}",
-                    self.name, version, min_version_to_display, self.helper_text
+                    self.name, version, self.minimal_version, self.helper_text
                 )
             } else if !is_min_recommended {
                 format!(
@@ -297,7 +292,7 @@ mod tests {
 
         assert!(!is_valid);
         assert!(validation_output.contains("❌ Scarb Version"));
-        assert!(validation_output.contains("doesn't satisfy minimal 999.0.0"));
+        assert!(validation_output.contains("doesn't satisfy minimal 111.0.0"));
     }
 
     #[cfg(feature = "no_scarb_installed")]

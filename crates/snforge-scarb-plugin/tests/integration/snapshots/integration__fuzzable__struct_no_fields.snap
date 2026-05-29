@@ -1,0 +1,12 @@
+---
+source: tests/integration/fuzzable.rs
+expression: format_output(&result)
+---
+impl FuzzableEmptyImpl<> of snforge_std::fuzzable::Fuzzable<Empty<>> {
+    fn blank() -> Empty<> {
+        Empty {}
+    }
+    fn generate() -> Empty<> {
+        Empty {}
+    }
+}

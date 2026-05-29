@@ -1,0 +1,25 @@
+---
+source: tests/integration/fuzzable.rs
+expression: format_output(&result)
+---
+impl FuzzablePairImpl<
+    T,
+    +snforge_std::fuzzable::Fuzzable<T>,
+    +core::fmt::Debug<T>,
+    U,
+    +snforge_std::fuzzable::Fuzzable<U>,
+    +core::fmt::Debug<U>,
+> of snforge_std::fuzzable::Fuzzable<Pair<T, U>> {
+    fn blank() -> Pair<T, U> {
+        Pair {
+            first: snforge_std::fuzzable::Fuzzable::<T>::blank(),
+            second: snforge_std::fuzzable::Fuzzable::<U>::blank(),
+        }
+    }
+    fn generate() -> Pair<T, U> {
+        Pair {
+            first: snforge_std::fuzzable::Fuzzable::<T>::generate(),
+            second: snforge_std::fuzzable::Fuzzable::<U>::generate(),
+        }
+    }
+}

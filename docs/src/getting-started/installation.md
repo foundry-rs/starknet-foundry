@@ -14,7 +14,7 @@ In this section, we will walk through the process of installing Starknet Foundry
       * [Requirements](#requirements)
       * [Linux and macOS](#linux-and-macos)
           * [Install asdf](#install-asdf)
-          * [Install Scarb version >= 2.12.0](#install-scarb-version--2120)
+          * [Install Scarb version >= 2.13.1](#install-scarb-version--2131)
           * [(Optional) Rust Installation](#optional-rust-installation)
           * [Install Starknet Foundry](#install-starknet-foundry)
       * [Windows](#windows)
@@ -63,7 +63,7 @@ snforge --version
 
 To use Starknet Foundry, you need:
 
-- [Scarb](https://docs.swmansion.com/scarb/download.html) version >= 2.12.0
+- [Scarb](https://docs.swmansion.com/scarb/download.html) version >= 2.13.1
 - [Universal-Sierra-Compiler](https://github.com/software-mansion/universal-sierra-compiler)
 - _(Optional for Scarb >= 2.10.0)_[^note] [Rust](https://www.rust-lang.org/tools/install) version >= 1.80.1
 
@@ -97,7 +97,7 @@ To verify that asdf was installed, run
 asdf --version
 ```
 
-#### Install Scarb version >= 2.12.0
+#### Install Scarb version >= 2.13.1
 
 First, add Scarb plugin to asdf
 
@@ -123,7 +123,7 @@ To verify that Scarb was installed, run
 scarb --version
 ```
 
-and verify that version is >= 2.12.0
+and verify that version is >= 2.13.1
 
 #### (Optional) Rust Installation
 

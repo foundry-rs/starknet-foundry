@@ -873,23 +873,23 @@ fn root_workspace_for_entire_workspace_with_exact() {
         Collected 0 test(s) from addition package
         Running 0 test(s) from src/
         Running 0 test(s) from tests/
-        Tests: 0 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 0 passed, 0 failed, 0 ignored, 5 filtered out
         
         
         Collected 0 test(s) from fibonacci package
         Running 0 test(s) from src/
         Running 0 test(s) from tests/
-        Tests: 0 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 0 passed, 0 failed, 0 ignored, 6 filtered out
         
         
         Collected 1 test(s) from hello_workspaces package
         Running 1 test(s) from src/
         [PASS] hello_workspaces::tests::test_simple [..]
         Running 0 test(s) from tests/
-        Tests: 1 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 2 filtered out
         
 
-        Tests summary: 1 passed, 0 failed, 0 ignored, other filtered out
+        Tests summary: 1 passed, 0 failed, 0 ignored, 13 filtered out
         "},
     );
 }

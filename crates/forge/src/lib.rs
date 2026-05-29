@@ -4,7 +4,6 @@ use camino::Utf8PathBuf;
 use clap::builder::BoolishValueParser;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use derive_more::Display;
-use forge_runner::CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::partition::Partition;
@@ -12,7 +11,6 @@ use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::ScarbCommand;
-use scarb_api::metadata::metadata;
 use scarb_ui::args::{FeaturesSpec, PackagesFilter, ProfileSpec};
 use semver::Version;
 use shared::auto_completions::{Completions, generate_completions};
@@ -20,7 +18,6 @@ use std::cell::RefCell;
 use std::ffi::OsString;
 use std::sync::Arc;
 use std::{
-    fs,
     num::{NonZeroU32, NonZeroUsize},
     thread::available_parallelism,
 };
@@ -41,7 +38,7 @@ mod warn;
 
 pub const CAIRO_EDITION: &str = "2024_07";
 
-const MINIMAL_SCARB_VERSION: Version = Version::new(2, 12, 0);
+const MINIMAL_SCARB_VERSION: Version = Version::new(2, 13, 1);
 const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 16, 1);
 const MAXIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 18, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
@@ -101,8 +98,6 @@ enum ForgeSubcommand {
         #[command(flatten)]
         args: CleanArgs,
     },
-    /// Clean Forge cache directory
-    CleanCache {},
     /// Check if all `snforge` requirements are installed
     CheckRequirements,
     /// Generate completions script
@@ -126,7 +121,7 @@ pub enum CleanComponent {
     Coverage,
     /// Clean the `profile` directory
     Profile,
-    /// Clean the `.snfoundry_cache` directory
+    /// Clean the cache directory
     Cache,
     /// Clean the `snfoundry_trace` directory
     Trace,
@@ -222,9 +217,9 @@ pub struct TestArgs {
     #[arg(long)]
     no_optimization: bool,
 
-    /// Specify tracked resource type
-    #[arg(long, value_enum, default_value_t)]
-    tracked_resource: ForgeTrackedResource,
+    /// Specify tracked resource type. Overrides `Scarb.toml` when passed.
+    #[arg(long, value_enum)]
+    tracked_resource: Option<ForgeTrackedResource>,
 
     /// Display a table of L2 gas breakdown for each contract and selector
     #[arg(long)]
@@ -265,7 +260,7 @@ impl TestArgs {
         // as otherwise it would run on vm.
         #[cfg(feature = "cairo-native")]
         if self.run_native {
-            self.tracked_resource = ForgeTrackedResource::SierraGas;
+            self.tracked_resource = Some(ForgeTrackedResource::SierraGas);
         }
     }
 }
@@ -329,17 +324,6 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
         }
         ForgeSubcommand::Clean { args } => {
             clean::clean(args, &ui)?;
-            Ok(ExitStatus::Success)
-        }
-        ForgeSubcommand::CleanCache {} => {
-            ui.println(&WarningMessage::new("`snforge clean-cache` is deprecated and will be removed in the future. Use `snforge clean cache` instead"));
-            let scarb_metadata = metadata()?;
-            let cache_dir = scarb_metadata.workspace.root.join(CACHE_DIR);
-
-            if cache_dir.exists() {
-                fs::remove_dir_all(&cache_dir)?;
-            }
-
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Test { mut args } => {

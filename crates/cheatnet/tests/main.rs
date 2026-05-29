@@ -7,7 +7,7 @@ mod starknet;
 
 // Build testing contracts before executing the tests
 #[cfg(test)]
-#[ctor::ctor]
+#[ctor::ctor(unsafe)]
 fn init() {
     use camino::Utf8PathBuf;
     let contracts_path = Utf8PathBuf::from("tests").join("contracts");

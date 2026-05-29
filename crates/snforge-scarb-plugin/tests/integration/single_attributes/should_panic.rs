@@ -78,6 +78,20 @@ fn work_with_expected_tuple() {
 }
 
 #[test]
+fn work_with_expected_mixed_tuple() {
+    let args = TokenStream::new(vec![TokenTree::Ident(Token::new(
+        r#"(expected: ("error", 11, "hello", 5, 'short_string'))"#,
+        TextSpan::call_site(),
+    ))]);
+
+    let result = should_panic(args, empty_function());
+
+    assert_diagnostics(&result, &[]);
+
+    insta::assert_snapshot!(format_output(&result));
+}
+
+#[test]
 fn is_used_once() {
     let item = quote!(
         #[should_panic]
@@ -105,6 +119,20 @@ fn fails_with_unexpected_args() {
         &result,
         &[Diagnostic::error(
             "#[should_panic] unexpected argument(s): <tomato>",
+        )],
+    );
+}
+
+#[test]
+fn fails_with_unnamed_arg() {
+    let args = quote!(("uwu"));
+
+    let result = should_panic(args, empty_function());
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(
+            "#[should_panic] can be used with named arguments only [possible values: expected]. invalid arguments found: \"uwu\"",
         )],
     );
 }

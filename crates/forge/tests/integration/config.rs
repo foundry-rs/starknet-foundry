@@ -9,6 +9,7 @@ use indoc::{formatdoc, indoc};
 use scarb_api::metadata::metadata_for_dir;
 use scarb_metadata::PackageId;
 use std::{env, fs};
+use toml_edit::{DocumentMut, value};
 
 fn setup_package_with_toml() -> TempDir {
     let temp = setup_package("simple_package");
@@ -93,6 +94,28 @@ fn get_forge_config_for_package() {
             gas_report: false,
         }
     );
+}
+
+#[test]
+fn get_forge_config_for_package_with_tracked_resource() {
+    let temp = setup_package_with_toml();
+    let manifest_path = temp.child("Scarb.toml");
+    let mut scarb_toml = fs::read_to_string(&manifest_path)
+        .unwrap()
+        .parse::<DocumentMut>()
+        .unwrap();
+    scarb_toml["tool"]["snforge"]["tracked_resource"] = value("cairo-steps");
+    manifest_path.write_str(&scarb_toml.to_string()).unwrap();
+
+    let scarb_metadata = metadata_for_dir(temp.path()).unwrap();
+
+    let config = load_package_config::<ForgeConfigFromScarb>(
+        &scarb_metadata,
+        &scarb_metadata.workspace.members[0],
+    )
+    .unwrap();
+
+    assert_eq!(config.tracked_resource, ForgeTrackedResource::CairoSteps);
 }
 
 #[test]

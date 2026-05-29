@@ -1,0 +1,14 @@
+---
+source: tests/integration/fuzzable.rs
+expression: format_output(&result)
+---
+impl FuzzableWithConstImpl<
+    T, +snforge_std::fuzzable::Fuzzable<T>, +core::fmt::Debug<T>, const X: u8,
+> of snforge_std::fuzzable::Fuzzable<WithConst<T, X>> {
+    fn blank() -> WithConst<T, X> {
+        WithConst { value: snforge_std::fuzzable::Fuzzable::<T>::blank() }
+    }
+    fn generate() -> WithConst<T, X> {
+        WithConst { value: snforge_std::fuzzable::Fuzzable::<T>::generate() }
+    }
+}

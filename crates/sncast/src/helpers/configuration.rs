@@ -289,7 +289,6 @@ impl PartialCastConfig {
 }
 
 pub struct CliConfigOpts {
-    pub command_name: String,
     pub profile: Option<String>,
 }
 

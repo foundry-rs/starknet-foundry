@@ -36,8 +36,8 @@ this [here](./testing.md#ignoring-some-tests-unless-specifically-requested).
 A test function can be marked with this attribute, in order to assert that the test function itself will panic.
 If the test panics when marked with this attribute, it's considered as "passed".
 
-Moreover, it can be used with either a tuple of shortstrings or a string for assessment of the exit panic data
-(depending on what your contract throws).
+Moreover, it can be used with a string, a shortstring, a number, or a tuple containing any mix of those values
+for assessment of the exit panic data (depending on what your contract throws).
 
 #### Usage
 
@@ -59,6 +59,12 @@ Tuple of shortstrings:
 
 ```rust
 #[should_panic(expected: ('panic message', 'second message', )]
+```
+
+Mixed tuple of strings, shortstrings and numbers:
+
+```rust
+#[should_panic(expected: ("error", 11, "hello", 5, 'short_string'))]
 ```
 
 Asserting that the function panics (with any panic data):

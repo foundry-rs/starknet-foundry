@@ -1,5 +1,6 @@
 use super::common::runner::{
     get_current_branch, get_remote_url, setup_package, test_runner, test_runner_native,
+    test_runner_vm,
 };
 use crate::utils::get_snforge_std_entry;
 use assert_fs::fixture::{FileWriteStr, PathChild};
@@ -294,7 +295,7 @@ fn with_exact_filter() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] simple_package_integrationtest::test_simple::test_two [..]
-        Tests: 1 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 12 filtered out
         "},
     );
 }
@@ -318,7 +319,28 @@ fn exact_filter_does_not_resolve_config_for_filtered_out_tests() {
         Collected 1 test(s) from lazy_config_filtering package
         Running 1 test(s) from src/
         [PASS] lazy_config_filtering::tests::selected_exact [..]
-        Tests: 1 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 1 filtered out
+        "},
+    );
+}
+
+#[test]
+fn match_filter_does_not_resolve_config_for_filtered_out_tests() {
+    let temp = setup_package("lazy_config_filtering");
+
+    let output = test_runner(&temp).arg("selected").assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from lazy_config_filtering package
+        Running 1 test(s) from src/
+        [PASS] lazy_config_filtering::tests::selected_exact [..]
+        Tests: 1 passed, 0 failed, 0 ignored, 1 filtered out
         "},
     );
 }
@@ -490,7 +512,7 @@ fn with_exact_filter_and_duplicated_test_names() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] duplicated_test_names_integrationtest::tests_a::test_simple [..]
-        Tests: 1 passed, 0 failed, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 1 filtered out
         "},
     );
 }
@@ -782,6 +804,66 @@ fn with_rerun_failed_flag() {
 }
 
 #[test]
+fn with_rerun_failed_flag_and_custom_cache_dir() {
+    let temp = setup_package("simple_package");
+    let custom_cache_dir = temp.path().join("custom_cache");
+    fs::create_dir(&custom_cache_dir).unwrap();
+
+    test_runner(&temp)
+        .env("SNFOUNDRY_CACHE", &custom_cache_dir)
+        .assert()
+        .code(1);
+
+    assert!(custom_cache_dir.join(".prev_tests_failed").exists());
+    assert!(!temp.path().join(".snfoundry_cache").exists());
+
+    let output = test_runner(&temp)
+        .env("SNFOUNDRY_CACHE", &custom_cache_dir)
+        .arg("--rerun-failed")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+        Collected 2 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+        [FAIL] simple_package_integrationtest::test_simple::test_another_failing
+
+        Failure data:
+            0x6661696c696e6720636865636b ('failing check')
+
+        [FAIL] simple_package_integrationtest::test_simple::test_failing
+
+        Failure data:
+            0x6661696c696e6720636865636b ('failing check')
+
+        Tests: 0 passed, 2 failed, 0 ignored, 11 filtered out
+
+        Failures:
+            simple_package_integrationtest::test_simple::test_another_failing
+            simple_package_integrationtest::test_simple::test_failing
+
+        "},
+    );
+}
+
+#[test]
+fn fails_with_relative_custom_cache_dir() {
+    let temp = setup_package("simple_package");
+    let output = test_runner(&temp)
+        .env("SNFOUNDRY_CACHE", "artifacts/cache/../custom_cache")
+        .assert()
+        .failure();
+
+    assert_stdout_contains(output, "[ERROR] SNFOUNDRY_CACHE must be an absolute path");
+}
+
+#[test]
 fn with_panic_data_decoding() {
     let temp = setup_package("panic_decoding");
 
@@ -929,9 +1011,9 @@ fn should_panic() {
     assert_stdout_contains(
         output,
         indoc! { r"
-        Collected 14 test(s) from should_panic_test package
+        Collected 15 test(s) from should_panic_test package
         Running 0 test(s) from src/
-        Running 14 test(s) from tests/
+        Running 15 test(s) from tests/
         [FAIL] should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
 
         Failure data:
@@ -983,6 +1065,7 @@ fn should_panic() {
 
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_multiple_messages (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_mixed_tuple (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
 
         Failure data:
             Expected to panic, but no panic occurred
@@ -995,7 +1078,7 @@ fn should_panic() {
             Actual:    [0x6661696c696e6720636865636b] (failing check)
             Expected:  [0x0] ()
 
-        Tests: 5 passed, 9 failed, 0 ignored, 0 filtered out
+        Tests: 6 passed, 9 failed, 0 ignored, 0 filtered out
 
         Failures:
             should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
@@ -1101,6 +1184,86 @@ fn detailed_resources_flag_cairo_steps() {
                 steps: [..]
                 memory holes: [..]
                 builtins: ([..])
+                syscalls: ([..])
+                events: (count: [..], keys: [..], data size: [..])
+                messages: ([..])
+        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
+        "},
+    );
+}
+
+#[test]
+fn detailed_resources_from_scarb_tracked_resource() {
+    let temp = setup_package("erc20_package");
+    let manifest_path = temp.child("Scarb.toml");
+    let mut scarb_toml = fs::read_to_string(&manifest_path)
+        .unwrap()
+        .parse::<DocumentMut>()
+        .unwrap();
+    scarb_toml["tool"]["snforge"]["tracked_resource"] = value("cairo-steps");
+    manifest_path.write_str(&scarb_toml.to_string()).unwrap();
+
+    let output = test_runner_vm(&temp)
+        .arg("--detailed-resources")
+        .assert()
+        .success();
+
+    assert!(!output.as_stdout().contains("sierra gas:"));
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from erc20_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] erc20_package_integrationtest::test_complex::complex[..]
+                steps: [..]
+                memory holes: [..]
+                builtins: ([..])
+                syscalls: ([..])
+                events: (count: [..], keys: [..], data size: [..])
+                messages: ([..])
+        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
+        "},
+    );
+}
+
+#[test]
+fn detailed_resources_cli_overrides_scarb_tracked_resource() {
+    let temp = setup_package("erc20_package");
+    let manifest_path = temp.child("Scarb.toml");
+    let mut scarb_toml = fs::read_to_string(&manifest_path)
+        .unwrap()
+        .parse::<DocumentMut>()
+        .unwrap();
+    scarb_toml["tool"]["snforge"]["tracked_resource"] = value("cairo-steps");
+    manifest_path.write_str(&scarb_toml.to_string()).unwrap();
+
+    let output = test_runner_vm(&temp)
+        .arg("--detailed-resources")
+        .arg("--tracked-resource")
+        .arg("sierra-gas")
+        .assert()
+        .success();
+
+    assert!(!output.as_stdout().contains("steps:"));
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 1 test(s) from erc20_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] erc20_package_integrationtest::test_complex::complex[..]
+                sierra gas: [..]
                 syscalls: ([..])
                 events: (count: [..], keys: [..], data size: [..])
                 messages: ([..])
