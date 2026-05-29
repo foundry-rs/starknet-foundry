@@ -40,7 +40,7 @@ impl Message for AliasesListMessage {
         if self.aliases.is_empty() {
             return builder
                 .text_field(
-                    "No aliases configured. For details on adding aliases and supported commands, see: https://foundry-rs.github.io/starknet-foundry/starknet/aliases.html",
+                    "No aliases configured. For details on adding aliases, see: https://foundry-rs.github.io/starknet-foundry/starknet/aliases.html",
                 )
                 .build();
         }
