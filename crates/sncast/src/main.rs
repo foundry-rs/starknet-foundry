@@ -884,15 +884,13 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
         _ => {}
     }
 
-    warn_unknown_keys(
-        &[
-            &global_default,
-            &global_profile,
-            &local_default,
-            &local_profile,
-        ],
-        ui,
-    );
+    let configs = vec![
+        &global_default,
+        &global_profile,
+        &local_default,
+        &local_profile,
+    ];
+    warn_unknown_keys(&configs, ui);
 
     let cli_config = cli.to_partial_config()?;
     let partial_config = PartialCastConfig::default()
