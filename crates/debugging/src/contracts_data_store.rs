@@ -78,6 +78,16 @@ impl ContractsDataStore {
         }
     }
 
+    /// Merges two stores into one; entries from `other` take precedence over `self`.
+    #[must_use]
+    pub fn merge(mut self, other: Self) -> Self {
+        self.abi.extend(other.abi);
+        self.contract_names.extend(other.contract_names);
+        self.selectors.extend(other.selectors);
+        self.programs.extend(other.programs);
+        self
+    }
+
     /// Gets the [`ContractName`] for a given contract [`ClassHash`].
     #[must_use]
     pub fn get_contract_name(&self, class_hash: &ClassHash) -> Option<&ContractName> {
@@ -109,6 +119,22 @@ impl ContractsDataStore {
     ) -> Self {
         Self {
             abi,
+            contract_names: HashMap::new(),
+            selectors,
+            programs: HashMap::new(),
+        }
+    }
+}
+
+impl From<ForkData> for ContractsDataStore {
+    fn from(data: ForkData) -> Self {
+        let selectors = data
+            .selectors
+            .into_iter()
+            .map(|(k, v)| (k, Selector(v)))
+            .collect();
+        Self {
+            abi: data.abi,
             contract_names: HashMap::new(),
             selectors,
             programs: HashMap::new(),
