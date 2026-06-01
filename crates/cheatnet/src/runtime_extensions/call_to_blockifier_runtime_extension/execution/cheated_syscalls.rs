@@ -28,8 +28,7 @@ use blockifier::transaction::objects::{
 };
 use blockifier::{
     execution::entry_point::{
-        CallEntryPoint, CallType, ConstructorEntryPointExecutionResult,
-        EntryPointExecutionContext,
+        CallEntryPoint, CallType, ConstructorEntryPointExecutionResult, EntryPointExecutionContext,
     },
     state::state_api::State,
 };
@@ -197,11 +196,12 @@ pub fn execute_deployment(
     // Address allocation in the state is done before calling the constructor, so that it is
     // visible from it.
     let deployed_contract_address = ctor_context.storage_address;
-    let current_class_hash = state
-        .get_class_hash_at(deployed_contract_address)
-        .map_err(|error| {
-            ConstructorEntryPointExecutionError::new(error.into(), ctor_context, None)
-        })?;
+    let current_class_hash =
+        state
+            .get_class_hash_at(deployed_contract_address)
+            .map_err(|error| {
+                ConstructorEntryPointExecutionError::new(error.into(), ctor_context, None)
+            })?;
     if current_class_hash != ClassHash::default() {
         return Err(ConstructorEntryPointExecutionError::new(
             StateError::UnavailableContractAddress(deployed_contract_address).into(),
@@ -216,7 +216,7 @@ pub fn execute_deployment(
             ConstructorEntryPointExecutionError::new(error.into(), ctor_context, None)
         })?;
 
-    let call_info = execute_constructor_entry_point(
+    execute_constructor_entry_point(
         state,
         cheatnet_state,
         context,
@@ -224,9 +224,6 @@ pub fn execute_deployment(
         constructor_calldata,
         remaining_gas,
     )
-    .map_err(|error| ConstructorEntryPointExecutionError::new(error, ctor_context, None))?;
-
-    Ok(call_info)
 }
 
 // blockifier/src/execution/syscalls/mod.rs:407 (library_call)
