@@ -1,4 +1,4 @@
-use crate::backtrace::{add_backtrace_footer, get_backtrace, is_backtrace_enabled};
+use crate::backtrace::{add_test_backtrace_footer, get_backtrace, is_backtrace_enabled};
 use crate::build_trace_data::build_profiler_call_trace;
 use crate::debugging::{TraceArgs, build_contracts_data_store, build_debugging_trace};
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
@@ -293,6 +293,7 @@ impl TestCaseSummary<Single> {
             encountered_errors,
             fuzzer_args,
             fork_data,
+            test_backtrace,
         }: RunCompleted,
         test_case: &TestCaseWithResolvedConfig,
         contracts_data: &ContractsData,
@@ -351,9 +352,17 @@ impl TestCaseSummary<Single> {
             },
             RunStatus::Panic(value) => match &test_case.config.expected_result {
                 ExpectedTestResult::Success => TestCaseSummary::Failed {
-                    name,
-                    msg: build_readable_text(&value)
-                        .map(|msg| add_backtrace_footer(msg, contracts_data, &encountered_errors)),
+                    name: name.clone(),
+                    msg: build_readable_text(&value).map(|msg| {
+                        add_test_backtrace_footer(
+                            msg,
+                            contracts_data,
+                            &encountered_errors,
+                            test_backtrace.as_ref(),
+                            versioned_program_path,
+                            &name,
+                        )
+                    }),
                     fuzzer_args,
                     test_statistics: (),
                     debugging_trace,
@@ -379,9 +388,16 @@ impl TestCaseSummary<Single> {
                         }
                     } else {
                         TestCaseSummary::Failed {
-                            name,
+                            name: name.clone(),
                             msg: msg.map(|msg| {
-                                add_backtrace_footer(msg, contracts_data, &encountered_errors)
+                                add_test_backtrace_footer(
+                                    msg,
+                                    contracts_data,
+                                    &encountered_errors,
+                                    test_backtrace.as_ref(),
+                                    versioned_program_path,
+                                    &name,
+                                )
                             }),
                             fuzzer_args,
                             test_statistics: (),

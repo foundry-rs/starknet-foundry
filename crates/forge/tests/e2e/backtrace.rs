@@ -221,6 +221,45 @@ fn snap_test_backtrace_panic_without_inlines() {
     assert_cleaned_output!(output);
 }
 
+// A panic that originates directly in the test body (no contract involved) should still
+// prompt for `SNFORGE_BACKTRACE=1`, which previously only happened for contract-level panics.
+#[test]
+fn test_backtrace_test_level_missing_env() {
+    let temp = setup_package("backtrace_test_panic");
+
+    let output = test_runner(&temp).assert().failure();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+            Failure data:
+                0x417373657274206661696c6564 ('Assert failed')
+            note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace
+       "},
+   
+    );
+}
+
+// With the env var set, the backtrace for a test-level panic points at the test source itself.
+#[test]
+fn test_backtrace_test_level() {
+    let temp = setup_package("backtrace_test_panic");
+
+    let output = test_runner(&temp)
+        .env("SNFORGE_BACKTRACE", "1")
+        .assert()
+        .failure();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+           "error occurred in contract 'backtrace_test_panic::tests::test_panics_in_test_body'
+            stack backtrace:
+            [..]at [..]src/lib.cairo:13:5"
+        },
+    );
+}
+
 #[test]
 fn snap_test_handled_error_not_display() {
     let temp = setup_package("dispatchers");
