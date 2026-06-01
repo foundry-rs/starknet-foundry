@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Fixed
+
+- Debugging trace now correctly decodes function names and parameters for predeployed contracts (STRK, ETH) in non-fork tests.
+
 ### Cast 
 
 #### Added
