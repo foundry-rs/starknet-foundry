@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - Support for structs, enums, tuples, arrays and spans in [live debugging]((https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#live-debugging))
+- Backtrace support for panics that originate directly in a test function body, not only inside called contracts. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#backtrace).
 
 #### Fixed
 
