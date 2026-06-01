@@ -6,7 +6,7 @@ use crate::common::{
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::syscalls::hint_processor::ENTRYPOINT_FAILED_ERROR_FELT;
 use blockifier::state::state_api::StateReader;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallFailure;
+use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::CallFailure;
 use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
 use conversions::felt::FromShortString;

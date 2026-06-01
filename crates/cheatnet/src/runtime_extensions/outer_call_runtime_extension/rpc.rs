@@ -1,11 +1,11 @@
 use super::CheatnetState;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
+use crate::runtime_extensions::outer_call_runtime_extension::execution::entry_point::{
     ExecuteCallEntryPointExtraOptions, clear_handled_errors, execute_call_entry_point,
 };
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::execution_utils::clear_events_and_messages_from_reverted_call;
+use crate::runtime_extensions::outer_call_runtime_extension::execution::execution_utils::clear_events_and_messages_from_reverted_call;
 use crate::runtime_extensions::{
-    call_to_blockifier_runtime_extension::panic_parser::try_extract_panic_data,
     common::create_execute_calldata,
+    outer_call_runtime_extension::panic_parser::try_extract_panic_data,
 };
 use blockifier::execution::call_info::{CallExecution, ExecutionSummary, Retdata};
 use blockifier::execution::contract_class::TrackedResource;

@@ -1,8 +1,8 @@
 use super::calls::{execute_inner_call, execute_library_call};
 use super::execution_info::get_cheated_exec_info_ptr;
 use super::execution_utils::clear_events_and_messages_from_reverted_call;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_constructor_entry_point;
+use crate::runtime_extensions::outer_call_runtime_extension::CheatnetState;
+use crate::runtime_extensions::outer_call_runtime_extension::execution::entry_point::execute_constructor_entry_point;
 use blockifier::context::TransactionContext;
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::errors::EntryPointExecutionError;

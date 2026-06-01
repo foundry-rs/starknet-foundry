@@ -4,9 +4,7 @@ use crate::trace::types::{
     TraceInfo, TransformedCallResult, TransformedCalldata,
 };
 use crate::{Context, Trace};
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    CallFailure, CallSuccess,
-};
+use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::{CallFailure, CallSuccess};
 use cheatnet::trace_data::{CallTrace, CallTraceNode};
 use data_transformer::{ReverseTransformError, reverse_transform_input, reverse_transform_output};
 use starknet_api::core::ClassHash;
@@ -189,7 +187,7 @@ mod tests {
         call_info::ExtendedExecutionResources, entry_point::CallEntryPoint,
     };
     use cairo_annotations::trace_data::L1Resources;
-    use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallSuccess;
+    use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::CallSuccess;
     use cheatnet::trace_data::CallTrace;
     use starknet_api::core::{ClassHash, EntryPointSelector};
     use starknet_api::transaction::fields::Calldata;
