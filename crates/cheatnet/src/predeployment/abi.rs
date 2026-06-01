@@ -19,7 +19,7 @@ fn abi_entry(class_hash_str: &str, abi_json: &str) -> (ClassHash, Vec<AbiEntry>)
     (class_hash, abi)
 }
 
-/// Returns hardcoded ABI data for contracts predeployed in every snforge test environment.
+/// Returns hardcoded fork data for contracts predeployed in every `snforge`` test environment.
 #[must_use]
 pub fn predeployed_contracts_fork_data() -> ForkData {
     let abi = HashMap::from([
