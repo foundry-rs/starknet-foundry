@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- Backtrace support for panics that originate directly in a test function body, not only inside called contracts. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#backtrace).
+
 #### Fixed
 
 - Debugging trace is now correctly displayed for predeployed contracts (STRK, ETH) in non-fork tests.
