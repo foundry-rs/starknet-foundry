@@ -7,6 +7,7 @@ use starknet_api::core::ClassHash;
 use starknet_rust::core::types::contract::AbiEntry;
 use std::collections::HashMap;
 
+// starkgate-contracts v3.0.0
 const ERC20LOCKABLE_ABI_JSON: &str =
     include_str!("../data/predeployed_contracts/ERC20Lockable/abi.json");
 const ERC20MINTABLE_ABI_JSON: &str =
