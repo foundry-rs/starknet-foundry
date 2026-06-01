@@ -4,7 +4,7 @@ use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use crate::response::ui::UI;
 use crate::{Network, PartialWaitParams, ValidatedWaitParams};
 use anyhow::{Context, Result};
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::Utf8PathBuf;
 use configuration::{Config, Override, load_config, override_optional};
 use foundry_ui::components::warning::WarningMessage;
 use serde::de::IntoDeserializer;
@@ -275,32 +275,16 @@ impl PartialCastConfig {
     }
 }
 
-pub struct ConfigSource<'a> {
-    pub path: Option<&'a Utf8Path>,
-    pub config: &'a MaybeConfig,
-}
-
-impl<'a> ConfigSource<'a> {
-    pub fn new(path: Option<&'a Utf8PathBuf>, config: &'a MaybeConfig) -> Self {
-        Self {
-            path: path.map(|p| p.as_path()),
-            config,
-        }
-    }
-}
-
-pub fn warn_unknown_keys(sources: &[ConfigSource<'_>], ui: &UI) {
+pub fn warn_unknown_keys(configs: &[&MaybeConfig], ui: &UI) {
     let mut keys = Vec::new();
     let mut affected_paths = Vec::new();
 
-    for source in sources {
-        if let Some(config) = source.config.as_loaded() {
+    for config in configs {
+        if let MaybeConfig::Loaded { path, config } = config {
             let unknown = config.get_unknown_keys();
             if !unknown.is_empty() {
                 keys.extend(unknown);
-                if let Some(path) = source.path {
-                    affected_paths.push(path);
-                }
+                affected_paths.push(path.as_path());
             }
         }
     }
@@ -347,7 +331,10 @@ impl Override for PartialCastConfig {
 pub enum MaybeConfig {
     NoFile,
     NoProfile,
-    Loaded(Box<PartialCastConfig>),
+    Loaded {
+        path: Utf8PathBuf,
+        config: Box<PartialCastConfig>,
+    },
 }
 
 impl MaybeConfig {
@@ -355,15 +342,7 @@ impl MaybeConfig {
     pub fn unwrap_or_default(self) -> PartialCastConfig {
         match self {
             Self::NoFile | Self::NoProfile => PartialCastConfig::default(),
-            Self::Loaded(config) => *config,
-        }
-    }
-
-    #[must_use]
-    pub fn as_loaded(&self) -> Option<&PartialCastConfig> {
-        match self {
-            Self::NoFile | Self::NoProfile => None,
-            Self::Loaded(config) => Some(config),
+            Self::Loaded { config, .. } => *config,
         }
     }
 }
@@ -398,7 +377,10 @@ impl PartialCastConfig {
             None => Ok(MaybeConfig::NoFile),
             Some(p) => match Self::load(p, profile, scope)? {
                 None => Ok(MaybeConfig::NoProfile),
-                Some(config) => Ok(MaybeConfig::Loaded(Box::from(config))),
+                Some(config) => Ok(MaybeConfig::Loaded {
+                    path: p.clone(),
+                    config: Box::from(config),
+                }),
             },
         }
     }
