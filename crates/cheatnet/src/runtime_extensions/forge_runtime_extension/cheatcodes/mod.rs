@@ -1,4 +1,4 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallFailure;
+use crate::runtime_extensions::outer_call_runtime_extension::rpc::CallFailure;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use runtime::EnhancedHintError;
 use starknet_types_core::felt::Felt;

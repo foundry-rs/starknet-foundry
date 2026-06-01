@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast 
+
+#### Added
+
+- Aliases in `snfoundry.toml`. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html#sncastprofile-namealiases).
+- `--contract-address @alias` syntax in `sncast call` and `sncast invoke`.
+- `sncast alias list` command for listing aliases. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/alias/list.html).
+
 ## [0.61.0] - 2026-05-26
 
 ### Forge
@@ -22,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `snforge_scarb_plugin` diagnostics for named-argument kind violations now include both possible values and invalid arguments found.
 - `snforge test --exact` now reports the exact number of filtered-out tests in summaries instead of `other`.
 - Minimal required `Scarb` version is now `2.13.1` (updated from `2.12.0`).
+- Fix `verify` command prompt behavior to correctly interpret empty input as "yes" for (Y/n) confirmation
 
 #### Fixed
 

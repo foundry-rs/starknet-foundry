@@ -1,7 +1,5 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    CallResult, CallSuccess,
-};
 use crate::runtime_extensions::common::sum_syscall_usage;
+use crate::runtime_extensions::outer_call_runtime_extension::rpc::{CallResult, CallSuccess};
 use crate::state::CheatedData;
 use blockifier::blockifier_versioned_constants::VersionedConstants;
 use blockifier::execution::call_info::{

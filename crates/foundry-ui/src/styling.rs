@@ -6,7 +6,11 @@ use std::fmt::Write;
 enum OutputEntry {
     SuccessMessage(String),
     ErrorMessage(String),
-    Field { label: String, value: String },
+    Field {
+        label: String,
+        value: String,
+        extra: Option<String>,
+    },
     BlankLine,
     Text(String),
 }
@@ -62,7 +66,19 @@ impl OutputBuilder {
         self.entries.push(OutputEntry::Field {
             label: label_text.to_string(),
             value: value.to_string(),
+            extra: None,
         });
+        self
+    }
+
+    #[must_use]
+    pub fn extra(mut self, extra: &str) -> Self {
+        if let Some(OutputEntry::Field {
+            extra: field_extra, ..
+        }) = self.entries.last_mut()
+        {
+            *field_extra = Some(extra.to_string());
+        }
         self
     }
 
@@ -118,12 +134,21 @@ impl OutputBuilder {
                 OutputEntry::ErrorMessage(message) => {
                     writeln!(content, "{}: {}", style("Error").red(), message).unwrap();
                 }
-                OutputEntry::Field { label, value } => {
+                OutputEntry::Field {
+                    label,
+                    value,
+                    extra,
+                } => {
+                    let styled_value = style(&value).yellow();
+                    let field_value = match extra {
+                        Some(extra) => format!("{styled_value} {extra}"),
+                        None => format!("{styled_value}"),
+                    };
                     writeln!(
                         content,
                         "{:field_width$} {}",
                         format!("{}:", label),
-                        style(value).yellow(),
+                        field_value,
                     )
                     .unwrap();
                 }

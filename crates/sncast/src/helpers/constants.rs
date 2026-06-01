@@ -30,6 +30,15 @@ pub const BRAAVOS_CLASS_HASH: Felt =
 pub const BRAAVOS_BASE_ACCOUNT_CLASS_HASH: Felt =
     felt!("0x03d16c7a9a60b0593bd202f660a28c5d76e0403601d9ccc7e4fa253b6a70c201"); // v1.2.0
 
+pub const MAP_CONTRACT_ADDRESS_SEPOLIA: &str =
+    "0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008";
+
+pub const MAP_CONTRACT_CLASS_HASH_SEPOLIA: &str =
+    "0x2a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321";
+
+pub const MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA: &str =
+    "0x4f644d3ea723b9c28781f2bea76e9c2cd8cc667b2861faf66b4e45402ea221c";
+
 // used in wait_for_tx. Txs will be fetched every 5s with timeout of 300s - so 60 attempts
 pub const WAIT_TIMEOUT: NonZeroU16 = NonZeroU16::new(300).unwrap();
 pub const WAIT_RETRY_INTERVAL: NonZeroU8 = NonZeroU8::new(5).unwrap();

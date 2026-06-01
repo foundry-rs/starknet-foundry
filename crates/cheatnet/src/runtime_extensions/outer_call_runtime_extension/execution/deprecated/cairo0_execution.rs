@@ -1,11 +1,11 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
-    CallInfoWithExecutionData, ContractClassEntryPointExecutionResult,
-    extract_trace_and_register_errors,
-};
 use crate::runtime_extensions::deprecated_cheatable_starknet_extension::DeprecatedCheatableStarknetRuntimeExtension;
 use crate::runtime_extensions::deprecated_cheatable_starknet_extension::runtime::{
     DeprecatedExtendedRuntime, DeprecatedStarknetRuntime,
+};
+use crate::runtime_extensions::outer_call_runtime_extension::CheatnetState;
+use crate::runtime_extensions::outer_call_runtime_extension::execution::entry_point::{
+    CallInfoWithExecutionData, ContractClassEntryPointExecutionResult,
+    extract_trace_and_register_errors,
 };
 use blockifier::execution::contract_class::CompiledClassV0;
 use blockifier::execution::deprecated_entry_point_execution::{

@@ -8,6 +8,7 @@ use crate::helpers::fixtures::{
 use crate::helpers::runner::{runner, sncast_test_bin_path};
 use crate::helpers::shell::os_specific_shell;
 use camino::Utf8PathBuf;
+use configuration::test_utils::copy_config_to_tempdir;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
 use sncast::helpers::fee::FeeSettings;
@@ -38,6 +39,61 @@ fn test_happy_case() {
         Response:     0x0
         Response Raw: [0x0]
     "});
+}
+
+#[test]
+fn test_call_with_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let args = vec![
+        "call",
+        "--function",
+        "get",
+        "--calldata",
+        "0x0",
+        "--block-id",
+        "latest",
+        "--contract-address",
+        "@map",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_eq(indoc! {r"
+        Success: Call completed
+
+        Response:     0x0
+        Response Raw: [0x0]
+    "});
+}
+
+#[test]
+fn test_call_with_unknown_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let args = vec![
+        "call",
+        "--function",
+        "get",
+        "--calldata",
+        "0x0",
+        "--block-id",
+        "latest",
+        "--contract-address",
+        "@unknown",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+            Command: call
+            Error: Invalid contract address
+
+            Caused by:
+                Alias `unknown` not found in config
+        "},
+    );
 }
 
 #[test]
