@@ -4,7 +4,7 @@ use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use crate::response::ui::UI;
 use crate::{Network, PartialWaitParams, ValidatedWaitParams};
 use anyhow::{Context, Result};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use configuration::{Config, Override, load_config, override_optional};
 use foundry_ui::components::warning::WarningMessage;
 use serde::de::IntoDeserializer;
@@ -275,20 +275,54 @@ impl PartialCastConfig {
     }
 }
 
-pub fn warn_unknown_keys(maybe_configs: &[&MaybeConfig], ui: &UI) {
+pub struct ConfigSource<'a> {
+    pub path: Option<&'a Utf8Path>,
+    pub config: &'a MaybeConfig,
+}
+
+impl<'a> ConfigSource<'a> {
+    pub fn new(path: Option<&'a Utf8PathBuf>, config: &'a MaybeConfig) -> Self {
+        Self {
+            path: path.map(|p| p.as_path()),
+            config,
+        }
+    }
+}
+
+pub fn warn_unknown_keys(sources: &[ConfigSource<'_>], ui: &UI) {
     let mut keys = Vec::new();
+    let mut affected_paths = Vec::new();
 
-    for config in maybe_configs.iter().filter_map(|c| c.as_loaded()) {
-        keys.extend(config.get_unknown_keys());
+    for source in sources {
+        if let Some(config) = source.config.as_loaded() {
+            let unknown = config.get_unknown_keys();
+            if !unknown.is_empty() {
+                keys.extend(unknown);
+                if let Some(path) = source.path {
+                    affected_paths.push(path);
+                }
+            }
+        }
     }
 
-    if !keys.is_empty() {
-        keys.sort();
-        keys.dedup();
-        ui.print_warning(WarningMessage::new(format!(
-            "unknown config key(s) {keys:?} ignored (incorrect key, or may require newer/older sncast)"
-        )));
+    if keys.is_empty() {
+        return;
     }
+
+    keys.sort();
+    keys.dedup();
+    affected_paths.dedup();
+
+    let affected = affected_paths
+        .iter()
+        .map(|path| path.as_str())
+        .collect::<Vec<_>>()
+        .join(", ");
+
+    ui.print_warning(WarningMessage::new(indoc::formatdoc! {"
+        unknown config key(s) {keys:?} ignored (incorrect key, or may require newer/older sncast).
+        Affected config(s): {affected}"
+    }));
 }
 
 impl Override for PartialCastConfig {
