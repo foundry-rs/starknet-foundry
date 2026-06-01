@@ -7,6 +7,7 @@ use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use configuration::{Config, Override, load_config, override_optional};
 use foundry_ui::components::warning::WarningMessage;
+use indoc::formatdoc;
 use serde::de::IntoDeserializer;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
@@ -303,7 +304,7 @@ pub fn warn_unknown_keys(configs: &[&MaybeConfig], ui: &UI) {
         .collect::<Vec<_>>()
         .join(", ");
 
-    ui.print_warning(WarningMessage::new(indoc::formatdoc! {"
+    ui.print_warning(WarningMessage::new(formatdoc! {"
         unknown config key(s) {keys:?} ignored (incorrect key, or may require newer/older sncast).
         Affected config(s): {affected}"
     }));
