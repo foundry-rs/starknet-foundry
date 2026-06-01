@@ -1,4 +1,4 @@
-use crate::backtrace::add_backtrace_footer;
+use crate::backtrace::{TestBacktrace, add_test_backtrace_footer};
 use crate::forge_config::{ForgeConfig, RuntimeConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
@@ -36,6 +36,7 @@ use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use scarb_oracle_hint_service::OracleHintService;
+use shared::vm::VirtualMachineExt;
 use starknet_api::execution_resources::GasVector;
 use std::cell::RefCell;
 use std::default::Default;
@@ -149,6 +150,7 @@ pub struct RunCompleted {
     pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
     pub(crate) fork_data: ForkData,
+    pub(crate) test_backtrace: Option<TestBacktrace>,
 }
 
 pub struct RunError {
@@ -157,11 +159,12 @@ pub struct RunError {
     pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
     pub(crate) fork_data: ForkData,
+    pub(crate) test_backtrace: Option<TestBacktrace>,
 }
 
 pub enum RunResult {
     Completed(Box<RunCompleted>),
-    Error(RunError),
+    Error(Box<RunError>),
 }
 
 #[expect(clippy::too_many_lines)]
@@ -346,6 +349,38 @@ pub fn run_test_case(
         .encountered_errors
         .clone();
 
+    // Capture PCs for a panic that originates in the test body itself.
+    // Mirrors the contract-level logic in `cairo1_execution.rs`,
+    // Note: test target is not deployed contract, so the PCs are carried separately instead of `register_error`.
+    let test_backtrace = {
+        let casm_start_offsets: Vec<usize> = casm_program
+            .debug_info
+            .iter()
+            .map(|(offset, _)| *offset)
+            .collect();
+
+        match &result {
+            Ok(call_info) if call_info.execution.failed => {
+                let pcs = forge_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .panic_traceback
+                    .clone()
+                    .unwrap_or_else(|| runner.vm.get_reversed_pc_traceback());
+                Some(TestBacktrace {
+                    pcs,
+                    casm_start_offsets,
+                })
+            }
+            Err(_) => Some(TestBacktrace {
+                pcs: runner.vm.get_reversed_pc_traceback(),
+                casm_start_offsets,
+            }),
+            Ok(_) => None,
+        }
+    };
+
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
 
     update_top_call_resources(&mut forge_runtime, tracked_resource);
@@ -388,15 +423,17 @@ pub fn run_test_case(
                 encountered_errors,
                 fuzzer_args,
                 fork_data,
+                test_backtrace,
             }))
         }
-        Err(error) => RunResult::Error(RunError {
+        Err(error) => RunResult::Error(Box::new(RunError {
             error: Box::new(error),
             call_trace: call_trace_ref,
             encountered_errors,
             fuzzer_args,
             fork_data,
-        }),
+            test_backtrace,
+        })),
     })
 }
 
@@ -436,7 +473,14 @@ fn extract_test_case_summary(
                 TestCaseSummary::Failed {
                     name: case.name.clone(),
                     msg: Some(message).map(|msg| {
-                        add_backtrace_footer(msg, contracts_data, &run_error.encountered_errors)
+                        add_test_backtrace_footer(
+                            msg,
+                            contracts_data,
+                            &run_error.encountered_errors,
+                            run_error.test_backtrace.as_ref(),
+                            versioned_program_path,
+                            &case.name,
+                        )
                     }),
                     fuzzer_args: run_error.fuzzer_args,
                     test_statistics: (),
