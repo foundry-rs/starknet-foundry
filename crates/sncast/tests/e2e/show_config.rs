@@ -534,7 +534,8 @@ async fn test_global_config_with_unknown_field() {
     assert_stdout_contains(
         output,
         indoc! { r#"
-            [WARNING] unknown config key(s) ["bar", "baz", "foo"] ignored (incorrect key, or may require newer/older sncast)
+            [WARNING] unknown config key(s) ["bar", "baz", "foo"] ignored (incorrect key, or may require newer/older sncast).
+            Affected config(s): [..]snfoundry.toml
         "# },
     );
 }
@@ -568,7 +569,8 @@ async fn test_local_config_with_unknown_fields() {
     assert_stdout_contains(
         output,
         indoc! { r#"
-            [WARNING] unknown config key(s) ["bar", "baz", "foo"] ignored (incorrect key, or may require newer/older sncast)
+            [WARNING] unknown config key(s) ["bar", "baz", "foo"] ignored (incorrect key, or may require newer/older sncast).
+            Affected config(s): [..]snfoundry.toml
         "# },
     );
 }
@@ -612,7 +614,8 @@ async fn test_global_and_local_unknown_fields() {
     assert_stdout_contains(
         output,
         indoc! { r#"
-            [WARNING] unknown config key(s) ["global_only", "local_only", "shared"] ignored (incorrect key, or may require newer/older sncast)
+            [WARNING] unknown config key(s) ["global_only", "local_only", "shared"] ignored (incorrect key, or may require newer/older sncast).
+            Affected config(s): [..]snfoundry.toml, [..]snfoundry.toml
         "# },
     );
 }
@@ -638,7 +641,10 @@ async fn test_unknown_wait_params() {
 
     assert_stdout_contains(
         output,
-        r#"[WARNING] unknown config key(s) ["future-wait-flag"] ignored (incorrect key, or may require newer/older sncast)"#,
+        indoc! { r#"
+            [WARNING] unknown config key(s) ["future-wait-flag"] ignored (incorrect key, or may require newer/older sncast).
+            Affected config(s): [..]snfoundry.toml
+        "# },
     );
 }
 
@@ -666,7 +672,10 @@ async fn test_unknown_networks() {
 
     assert_stdout_contains(
         output,
-        r#"[WARNING] unknown config key(s) ["custom"] ignored (incorrect key, or may require newer/older sncast)"#,
+        indoc! { r#"
+            [WARNING] unknown config key(s) ["custom"] ignored (incorrect key, or may require newer/older sncast).
+            Affected config(s): [..]snfoundry.toml
+        "# },
     );
 }
 
