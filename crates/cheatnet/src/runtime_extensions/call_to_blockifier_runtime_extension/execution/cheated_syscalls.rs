@@ -92,7 +92,7 @@ fn convert_deploy_failure_to_revert(
     })
 }
 
-// blockifier/src/execution/syscalls/mod.rs:222 (deploy_syscall)
+// blockifier/src/execution/syscalls/syscall_base.rs:380 (deploy)
 pub fn deploy_syscall(
     request: DeployRequest,
     vm: &mut VirtualMachine,
