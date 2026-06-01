@@ -515,7 +515,7 @@ async fn test_default_global_profile_with_invalid_values() {
 }
 
 #[tokio::test]
-async fn test_default_global_profile_with_unsupported_field() {
+async fn test_global_config_with_unknown_field() {
     let global_dir = copy_config_to_tempdir(
         "tests/data/files/snfoundry_invalid_unknown_field.toml",
         None,
@@ -540,7 +540,7 @@ async fn test_default_global_profile_with_unsupported_field() {
 }
 
 #[tokio::test]
-async fn test_local_config_with_unsupported_fields() {
+async fn test_local_config_with_unknown_fields() {
     let global_dir = tempdir().unwrap();
     fs::write(
         global_dir.path().join("snfoundry.toml"),
@@ -574,7 +574,51 @@ async fn test_local_config_with_unsupported_fields() {
 }
 
 #[tokio::test]
-async fn test_local_config_with_unknown_wait_params() {
+async fn test_global_and_local_unknown_fields() {
+    let global_dir = tempdir().unwrap();
+    fs::write(
+        global_dir.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            url = "http://127.0.0.1:5055/rpc"
+            account = "user1"
+            shared = "shared"
+            global_only = true
+        "#},
+    )
+    .unwrap();
+    let local_dir = tempdir().unwrap();
+    fs::write(
+        local_dir.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            url = "http://127.0.0.1:5055/rpc"
+            account = "user1"
+            shared = "shared"
+            local_only = "local"
+        "#},
+    )
+    .unwrap();
+    let args = vec!["show-config"];
+
+    let snapbox = Cast::new()
+        .config_dir(global_dir.path())
+        .command()
+        .args(&args)
+        .current_dir(local_dir.path());
+
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! { r#"
+            [WARNING] unknown config key(s) ["global_only", "local_only", "shared"] ignored (incorrect key, or may require newer/older sncast)
+        "# },
+    );
+}
+
+#[tokio::test]
+async fn test_unknown_wait_params() {
     let local_dir = tempdir().unwrap();
     fs::write(
         local_dir.path().join("snfoundry.toml"),
@@ -599,7 +643,7 @@ async fn test_local_config_with_unknown_wait_params() {
 }
 
 #[tokio::test]
-async fn test_local_config_with_unknown_networks_field_warns_and_succeeds() {
+async fn test_unknown_networks() {
     let local_dir = tempdir().unwrap();
     fs::write(
         local_dir.path().join("snfoundry.toml"),
