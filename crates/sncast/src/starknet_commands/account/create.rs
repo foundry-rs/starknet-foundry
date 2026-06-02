@@ -76,14 +76,15 @@ pub async fn create(
     accounts_file: &Utf8PathBuf,
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: Felt,
-    class_hash: Option<Felt>,
     create: &Create,
     config: &CastConfig,
     signer_source: &SignerSource,
     ui: &UI,
 ) -> Result<AccountCreateResponse> {
     let salt = extract_or_generate_salt(create.salt);
-    let class_hash = class_hash.unwrap_or(match create.account_type {
+    let class_hash = create
+        .resolved_class_hash(config)?
+        .unwrap_or(match create.account_type {
         AccountType::OpenZeppelin => OZ_CLASS_HASH,
         AccountType::Ready => READY_CLASS_HASH,
         AccountType::Braavos => BRAAVOS_CLASS_HASH,

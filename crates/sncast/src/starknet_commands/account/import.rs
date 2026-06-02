@@ -94,10 +94,10 @@ pub async fn import(
     accounts_file: &Utf8PathBuf,
     provider: &JsonRpcClient<HttpTransport>,
     import: &Import,
-    address: Felt,
     config: &CastConfig,
     ui: &UI,
 ) -> Result<AccountImportResponse> {
+    let address = import.resolved_address(config)?;
     let class_hash = import.resolved_class_hash(config)?;
 
     let (signer_type, public_key) = if let Some(ledger_path) = import.ledger_key_locator.resolve(ui)
