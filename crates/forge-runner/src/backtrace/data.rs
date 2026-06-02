@@ -224,5 +224,10 @@ pub fn render_test_backtrace(
         profiler_annotations,
     };
 
-    data.render_backtrace(pcs)
+    let backtrace = data.render_backtrace(pcs)?;
+    Ok(backtrace.replacen(
+        "error occurred in contract '",
+        "error occurred in test '",
+        1,
+    ))
 }
