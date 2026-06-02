@@ -3,8 +3,8 @@ use clap::Args;
 use configuration::find_config_file;
 use foundry_ui::components::warning::WarningMessage;
 use sncast::helpers::config::get_or_create_global_config_path;
-use sncast::response::ui::UI;
 use sncast::response::config_path::ConfigPathResponse;
+use sncast::response::ui::UI;
 
 #[derive(Args)]
 #[command(
