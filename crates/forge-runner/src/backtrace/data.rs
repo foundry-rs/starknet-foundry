@@ -194,7 +194,6 @@ impl ContractBacktraceData {
     }
 }
 
-
 pub fn render_test_backtrace(
     test_name: &str,
     casm_start_offsets: Vec<usize>,
