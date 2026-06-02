@@ -20,8 +20,13 @@ pub fn build_debugging_trace(
     fork_data: &ForkData,
 ) -> Option<debugging::Trace> {
     let components = trace_args.to_components()?;
-    let store = ContractsDataStore::from(predeployed_contracts_debugging_data())
-        .merge(ContractsDataStore::new(contracts_data, fork_data));
+    let is_fork = !fork_data.abi.is_empty() || !fork_data.selectors.is_empty();
+    let store = if is_fork {
+        ContractsDataStore::new(contracts_data, fork_data)
+    } else {
+        ContractsDataStore::from(predeployed_contracts_debugging_data())
+            .merge(ContractsDataStore::new(contracts_data, fork_data))
+    };
     let context = debugging::Context::new(store, components);
     Some(debugging::Trace::new(call_trace, &context, test_name))
 }
