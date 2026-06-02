@@ -48,8 +48,8 @@ $ sncast config-path
 <summary>Output:</summary>
 
 ```shell
-Local Config:  /path/to/my-project/snfoundry.toml
-Global Config: /Users/user/.config/starknet-foundry/snfoundry.toml
+Local Config:  [..]snfoundry.toml
+Global Config: [..]snfoundry.toml
 ```
 </details>
 <br>
