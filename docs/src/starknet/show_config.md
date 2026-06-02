@@ -3,18 +3,22 @@
 ## Overview
 
 Sometimes, before executing any other `sncast` command, one may want to make sure that the right
-configuration settings are being used (eg proper network or account is used).
+configuration settings are being used (e.g., proper network or account is used).
 
-To see just that, a `show-config` subcommand can be used. You can just
-replace any subcommand (and its parameters) with `show-config` and it will show currently used configuration.
+Top see what `sncast` will use before running other commands, you can use:
 
+- [`show-config`](#show-config) to show the **effective configuration** for the selected profile
+- [`config-path`](#config-path) to show **actual files** that contribute to effective config
 
-## Examples
+## `show-config`
 
-### General Example
+Replace any subcommand (and its parameters) with `show-config` to print the effective configuration.
+
+### Example
 
 ```shell
 $ sncast \
+  --profile default \
   --account my_account \
   show-config 
 ```
@@ -33,3 +37,21 @@ Show Explorer Links: true
 ```
 </details>
 <br>
+
+## `config-path`
+
+```shell
+$ sncast config-path
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Local Config:  /path/to/my-project/snfoundry.toml
+Global Config: /Users/user/.config/starknet-foundry/snfoundry.toml
+```
+</details>
+<br>
+
+See [Project Configuration](../projects/configuration.md#sncast) for how local and global configs are combined.
