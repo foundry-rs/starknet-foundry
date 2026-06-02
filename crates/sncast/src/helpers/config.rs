@@ -1,40 +1,12 @@
 use crate::ValidatedWaitParams;
 use crate::helpers::configuration::show_explorer_links_default;
 use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
-use crate::response::ui::UI;
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use configuration::find_config_file;
-use foundry_ui::components::warning::WarningMessage;
 use indoc::formatdoc;
 use std::fs::File;
 use std::io::Write;
 use std::{env, fs};
-
-pub struct ConfigFilePaths {
-    pub local: Option<Utf8PathBuf>,
-    pub global: Option<Utf8PathBuf>,
-}
-
-#[must_use]
-pub fn resolve_config_file_paths(ui: &UI) -> ConfigFilePaths {
-    let local = find_config_file()
-        .ok()
-        .map(|path| path.canonicalize_utf8().unwrap_or(path));
-
-    // TODO: consider adding a wrapper-helper for this logic
-    let global = match get_or_create_global_config_path() {
-        Ok(path) => Some(path.canonicalize_utf8().unwrap_or(path)),
-        Err(err) => {
-            ui.print_warning(WarningMessage::new(format!(
-                "Could not get or create global config file: {err:?}. Proceeding without global config."
-            )));
-            None
-        }
-    };
-
-    ConfigFilePaths { local, global }
-}
 
 pub fn get_or_create_global_config_path() -> Result<Utf8PathBuf> {
     let global_config_dir = match env::var("SNFOUNDRY_GLOBAL_CONFIG").ok() {

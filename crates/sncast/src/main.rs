@@ -25,7 +25,7 @@ use foundry_ui::components::warning::WarningMessage;
 use mimalloc::MiMalloc;
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::command::process_command_result;
-use sncast::helpers::config::{get_or_create_global_config_path, resolve_config_file_paths};
+use sncast::helpers::config::get_or_create_global_config_path;
 use sncast::helpers::configuration::{
     CastConfig, CliConfigOpts, ConfigScope, MaybeConfig, PartialCastConfig, warn_unknown_keys,
 };
@@ -337,8 +337,7 @@ fn run(cli: Cli, ui: &UI) -> Result<ExitCode> {
     } else if let Commands::Script(script) = &cli.command {
         run_script_command(&cli, runtime, script, ui)
     } else if let Commands::ConfigPath(_) = &cli.command {
-        let paths = resolve_config_file_paths(ui);
-        let result = Ok(starknet_commands::config_path::config_path(paths));
+        let result = starknet_commands::config_path::config_path(ui);
         Ok(process_command_result("config-path", result, ui, None))
     } else {
         let config = get_cast_config(&cli, ui)?;
