@@ -13,6 +13,13 @@ const ERC20LOCKABLE_ABI_JSON: &str =
 const ERC20MINTABLE_ABI_JSON: &str =
     include_str!("../data/predeployed_contracts/ERC20Mintable/abi.json");
 
+#[derive(Clone)]
+pub struct ContractsDebuggingData {
+    pub abi: HashMap<ClassHash, Vec<AbiEntry>>,
+    pub selectors: HashMap<EntryPointSelector, String>,
+    pub contract_names: HashMap<ClassHash, String>,
+}
+
 fn abi_entry(class_hash_str: &str, abi_json: &str) -> (ClassHash, Vec<AbiEntry>) {
     let class_hash = parse_class_hash(class_hash_str);
     let abi = serde_json::from_str::<Vec<AbiEntry>>(abi_json).expect("ABI should be valid");
@@ -23,14 +30,7 @@ fn parse_class_hash(class_hash_str: &str) -> ClassHash {
     TryFromHexStr::try_from_hex_str(class_hash_str).expect("class hash should be valid")
 }
 
-#[derive(Clone)]
-pub struct PredeployedContractsDebuggingData {
-    pub abi: HashMap<ClassHash, Vec<AbiEntry>>,
-    pub selectors: HashMap<EntryPointSelector, String>,
-    pub contract_names: HashMap<ClassHash, String>,
-}
-
-fn build_predeployed_contracts_debugging_data() -> PredeployedContractsDebuggingData {
+fn build_predeployed_contracts_debugging_data() -> ContractsDebuggingData {
     let abi = HashMap::from([
         abi_entry(ERC20LOCKABLE_SIERRA_CLASS_HASH, ERC20LOCKABLE_ABI_JSON),
         abi_entry(ERC20MINTABLE_SIERRA_CLASS_HASH, ERC20MINTABLE_ABI_JSON),
@@ -52,18 +52,18 @@ fn build_predeployed_contracts_debugging_data() -> PredeployedContractsDebugging
         ),
     ]);
 
-    PredeployedContractsDebuggingData {
+    ContractsDebuggingData {
         abi,
         selectors,
         contract_names,
     }
 }
 
-static PREDEPLOYED_CONTRACTS_DEBUGGING_DATA: LazyLock<PredeployedContractsDebuggingData> =
+static PREDEPLOYED_CONTRACTS_DEBUGGING_DATA: LazyLock<ContractsDebuggingData> =
     LazyLock::new(build_predeployed_contracts_debugging_data);
 
 /// Returns debugging data for contracts predeployed in every `snforge` test environment.
 #[must_use]
-pub fn predeployed_contracts_debugging_data() -> PredeployedContractsDebuggingData {
+pub fn predeployed_contracts_debugging_data() -> ContractsDebuggingData {
     PREDEPLOYED_CONTRACTS_DEBUGGING_DATA.clone()
 }

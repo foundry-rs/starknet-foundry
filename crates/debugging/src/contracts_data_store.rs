@@ -2,7 +2,7 @@ use crate::trace::types::{ContractName, Selector};
 use cairo_lang_sierra::program::ProgramArtifact;
 use cairo_lang_starknet_classes::contract_class::ContractClass;
 use cheatnet::forking::data::ForkData;
-use cheatnet::predeployment::abi::PredeployedContractsDebuggingData;
+use cheatnet::predeployment::abi::ContractsDebuggingData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
@@ -127,8 +127,8 @@ impl ContractsDataStore {
     }
 }
 
-impl From<PredeployedContractsDebuggingData> for ContractsDataStore {
-    fn from(data: PredeployedContractsDebuggingData) -> Self {
+impl From<ContractsDebuggingData> for ContractsDataStore {
+    fn from(data: ContractsDebuggingData) -> Self {
         let selectors = data
             .selectors
             .into_iter()
