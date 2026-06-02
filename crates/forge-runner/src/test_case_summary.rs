@@ -373,16 +373,17 @@ impl TestCaseSummary<Single> {
                     let (matching, msg) =
                         check_if_matching_and_get_message(&value, expected_panic_value);
                     if matching {
-                        let backtrace_msg = is_backtrace_enabled().then(|| {
-                            if !encountered_errors.is_empty() {
-                                Some(get_backtrace(contracts_data, &encountered_errors))
-                            } else {
-                                test_backtrace.as_ref().map(|bt| {
-                                    get_test_backtrace(bt, versioned_program_path, &name)
-                                })
-                            }
-                        }).flatten();
-                   
+                        let backtrace_msg = is_backtrace_enabled()
+                            .then(|| {
+                                if !encountered_errors.is_empty() {
+                                    Some(get_backtrace(contracts_data, &encountered_errors))
+                                } else {
+                                    test_backtrace.as_ref().map(|bt| {
+                                        get_test_backtrace(bt, versioned_program_path, &name)
+                                    })
+                                }
+                            })
+                            .flatten();
 
                         TestCaseSummary::Passed {
                             name,
