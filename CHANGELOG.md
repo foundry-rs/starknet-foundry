@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Aliases in `snfoundry.toml`. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html#sncastprofile-namealiases).
 - `--contract-address @alias` syntax in `sncast call` and `sncast invoke`.
 - `sncast alias list` command for listing aliases. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/alias/list.html).
+- `sncast config-path` for printing the paths to the local and global `snfoundry.toml` config files. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/config_path.html).
 
 #### Changed
 
