@@ -127,22 +127,6 @@ impl ContractsDataStore {
     }
 }
 
-impl From<ForkData> for ContractsDataStore {
-    fn from(data: ForkData) -> Self {
-        let selectors = data
-            .selectors
-            .into_iter()
-            .map(|(k, v)| (k, Selector(v)))
-            .collect();
-        Self {
-            abi: data.abi,
-            contract_names: HashMap::new(),
-            selectors,
-            programs: HashMap::new(),
-        }
-    }
-}
-
 impl From<PredeployedContractsDebuggingData> for ContractsDataStore {
     fn from(data: PredeployedContractsDebuggingData) -> Self {
         let selectors = data
