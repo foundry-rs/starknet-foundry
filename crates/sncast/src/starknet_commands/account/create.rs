@@ -85,10 +85,10 @@ pub async fn create(
     let class_hash = create
         .resolved_class_hash(config)?
         .unwrap_or(match create.account_type {
-        AccountType::OpenZeppelin => OZ_CLASS_HASH,
-        AccountType::Ready => READY_CLASS_HASH,
-        AccountType::Braavos => BRAAVOS_CLASS_HASH,
-    });
+            AccountType::OpenZeppelin => OZ_CLASS_HASH,
+            AccountType::Ready => READY_CLASS_HASH,
+            AccountType::Braavos => BRAAVOS_CLASS_HASH,
+        });
     check_class_hash_exists(provider, class_hash).await?;
 
     let (account_json, estimated_fee) = generate_account(

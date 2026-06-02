@@ -44,7 +44,9 @@ fn location_from_args(args: LocationArgs, config: &CastConfig) -> Result<Locatio
         (None, Some(address), None) => Ok(Location::ContractAddress(address.resolve(config)?)),
         (None, None, Some(path)) => Ok(Location::AbiFile(path)),
         _ => {
-            bail!("Exactly one of `--class-hash`, `--contract-address`, or `--abi-file` must be provided")
+            bail!(
+                "Exactly one of `--class-hash`, `--contract-address`, or `--abi-file` must be provided"
+            )
         }
     }
 }
