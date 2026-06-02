@@ -46,7 +46,7 @@ impl TokenIdentifier {
     }
 
     pub fn token_suffix(&self) -> Option<Token> {
-        match (self.token, self.token_address.clone()) {
+        match (self.token, self.token_address.as_ref()) {
             (Some(token), None) => Some(token),
             (None, Some(_)) => None,
             (None, None) => Some(Token::default()),
