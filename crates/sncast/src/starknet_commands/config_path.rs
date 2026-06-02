@@ -1,8 +1,7 @@
 use anyhow::Result;
 use clap::Args;
 use configuration::find_config_file;
-use foundry_ui::components::warning::WarningMessage;
-use sncast::helpers::config::get_or_create_global_config_path;
+use sncast::helpers::config::resolve_global_config_path_or_warn;
 use sncast::response::config_path::ConfigPathResponse;
 use sncast::response::ui::UI;
 
@@ -16,16 +15,8 @@ pub fn config_path(ui: &UI) -> Result<ConfigPathResponse> {
         .ok()
         .map(|path| path.canonicalize_utf8().unwrap_or(path));
 
-    // TODO: consider adding a wrapper-helper for this logic
-    let global = match get_or_create_global_config_path() {
-        Ok(path) => Some(path.canonicalize_utf8().unwrap_or(path)),
-        Err(err) => {
-            ui.print_warning(WarningMessage::new(format!(
-                "Could not get or create global config file: {err:?}. Proceeding without global config."
-            )));
-            None
-        }
-    };
+    let global =
+        resolve_global_config_path_or_warn(ui).map(|path| path.canonicalize_utf8().unwrap_or(path));
 
     Ok(ConfigPathResponse {
         local_config: local,
