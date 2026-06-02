@@ -1,4 +1,6 @@
-use crate::backtrace::{add_test_backtrace_footer, get_backtrace, is_backtrace_enabled};
+use crate::backtrace::{
+    add_test_backtrace_footer, get_backtrace, get_test_backtrace, is_backtrace_enabled,
+};
 use crate::build_trace_data::build_profiler_call_trace;
 use crate::debugging::{TraceArgs, build_contracts_data_store, build_debugging_trace};
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
@@ -371,10 +373,20 @@ impl TestCaseSummary<Single> {
                     let (matching, msg) =
                         check_if_matching_and_get_message(&value, expected_panic_value);
                     if matching {
+                        let backtrace_msg = is_backtrace_enabled().then(|| {
+                            if !encountered_errors.is_empty() {
+                                Some(get_backtrace(contracts_data, &encountered_errors))
+                            } else {
+                                test_backtrace.as_ref().map(|bt| {
+                                    get_test_backtrace(bt, versioned_program_path, &name)
+                                })
+                            }
+                        }).flatten();
+                   
+
                         TestCaseSummary::Passed {
                             name,
-                            msg: is_backtrace_enabled()
-                                .then(|| get_backtrace(contracts_data, &encountered_errors)),
+                            msg: backtrace_msg,
                             test_statistics: (),
                             gas_info,
                             used_resources,
