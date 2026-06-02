@@ -1,6 +1,7 @@
 pub mod account;
 pub mod alias;
 pub mod call;
+pub mod config_path;
 pub mod declare;
 pub mod declare_from;
 pub mod deploy;

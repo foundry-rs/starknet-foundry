@@ -5,6 +5,7 @@ pub mod call;
 pub mod cast_message;
 pub mod class_hash_at;
 pub mod completions;
+pub mod config_path;
 pub mod declare;
 pub mod deploy;
 pub mod dry_run;
