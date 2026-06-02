@@ -1,7 +1,7 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
+use crate::runtime_extensions::native::native_syscall_handler::CheatableNativeSyscallHandler;
+use crate::runtime_extensions::outer_call_runtime_extension::execution::entry_point::{
     CallInfoWithExecutionData, ContractClassEntryPointExecutionResult,
 };
-use crate::runtime_extensions::native::native_syscall_handler::CheatableNativeSyscallHandler;
 use crate::state::CheatnetState;
 use blockifier::execution::call_info::{
     CairoPrimitiveCounterMap, CallExecution, CallInfo, OpcodeName, Retdata,

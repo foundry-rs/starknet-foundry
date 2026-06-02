@@ -1,7 +1,7 @@
 use crate::forge_config::ForgeTrackedResource;
 use crate::gas::resources::GasCalculationResources;
 use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary};
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
+use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
 use console::style;
 use foundry_ui::Message;
 use serde::Serialize;

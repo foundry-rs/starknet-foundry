@@ -1,8 +1,8 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
+use crate::runtime_extensions::native::native_syscall_handler::BaseSyscallResult;
+use crate::runtime_extensions::outer_call_runtime_extension::execution::entry_point::{
     ExecuteCallEntryPointExtraOptions, execute_call_entry_point,
 };
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::execution_utils::clear_events_and_messages_from_reverted_call;
-use crate::runtime_extensions::native::native_syscall_handler::BaseSyscallResult;
+use crate::runtime_extensions::outer_call_runtime_extension::execution::execution_utils::clear_events_and_messages_from_reverted_call;
 use crate::state::CheatnetState;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::syscalls::hint_processor::{

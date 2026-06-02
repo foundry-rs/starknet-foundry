@@ -1,8 +1,8 @@
 use super::cairo1_execution::execute_entry_point_call_cairo1;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::execution_utils::{exit_error_call, resolve_cheated_data_for_call, update_trace_data};
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallSuccess;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
+use crate::runtime_extensions::outer_call_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
+use crate::runtime_extensions::outer_call_runtime_extension::execution::execution_utils::{exit_error_call, resolve_cheated_data_for_call, update_trace_data};
+use crate::runtime_extensions::outer_call_runtime_extension::rpc::CallSuccess;
+use crate::runtime_extensions::outer_call_runtime_extension::CheatnetState;
 use crate::runtime_extensions::common::get_relocated_vm_trace;
 #[cfg(feature = "cairo-native")]
 use crate::runtime_extensions::native::execution::execute_entry_point_call_native;
