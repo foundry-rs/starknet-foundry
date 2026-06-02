@@ -165,12 +165,12 @@ fn debugging_trace_predeployed_contracts() {
         formatdoc! {r"
             [PASS] debugging_predeployed_contract_integrationtest::test_trace::test_balance_of_strk ([..])
             └─ [selector] balance_of
-               ├─ [contract name] forked contract
+               ├─ [contract name] STRK (predeployed)
                ├─ [calldata] ContractAddress(0x1234)
                └─ [call result] success: 0_u256
             [PASS] debugging_predeployed_contract_integrationtest::test_trace::test_balance_of_eth ([..])
             └─ [selector] balance_of
-               ├─ [contract name] forked contract
+               ├─ [contract name] ETH (predeployed)
                ├─ [calldata] ContractAddress(0x1234)
                └─ [call result] success: 0_u256
             "},

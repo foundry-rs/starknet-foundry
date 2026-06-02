@@ -3,7 +3,7 @@ mod component;
 mod trace_verbosity;
 
 use cheatnet::forking::data::ForkData;
-use cheatnet::predeployment::abi::predeployed_contracts_fork_data;
+use cheatnet::predeployment::abi::predeployed_contracts_debugging_data;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::trace_data::CallTrace;
 use debugging::ContractsDataStore;
@@ -20,7 +20,7 @@ pub fn build_debugging_trace(
     fork_data: &ForkData,
 ) -> Option<debugging::Trace> {
     let components = trace_args.to_components()?;
-    let store = ContractsDataStore::from(predeployed_contracts_fork_data())
+    let store = ContractsDataStore::from(predeployed_contracts_debugging_data())
         .merge(ContractsDataStore::new(contracts_data, fork_data));
     let context = debugging::Context::new(store, components);
     Some(debugging::Trace::new(call_trace, &context, test_name))

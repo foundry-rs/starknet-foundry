@@ -10,7 +10,6 @@ use crate::running::{RunCompleted, RunStatus};
 use blockifier::execution::syscalls::hint_processor::ENTRYPOINT_FAILED_ERROR_FELT;
 use cairo_annotations::trace_data::VersionedCallTrace as VersionedProfilerCallTrace;
 use camino::Utf8Path;
-use cheatnet::predeployment::abi::predeployed_contracts_fork_data;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
 use conversions::byte_array::ByteArray;
@@ -315,8 +314,7 @@ impl TestCaseSummary<Single> {
         let gas_info = if gas_report_enabled {
             gas_info.get_with_report_data(
                 &call_trace.borrow(),
-                &ContractsDataStore::from(predeployed_contracts_fork_data())
-                    .merge(ContractsDataStore::new(contracts_data, &fork_data)),
+                &ContractsDataStore::new(contracts_data, &fork_data),
             )
         } else {
             gas_info

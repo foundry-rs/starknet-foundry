@@ -1,9 +1,8 @@
-use crate::forking::data::ForkData;
 use crate::predeployment::erc20::eth::ERC20MINTABLE_SIERRA_CLASS_HASH;
 use crate::predeployment::erc20::strk::ERC20LOCKABLE_SIERRA_CLASS_HASH;
 use crate::runtime_extensions::forge_runtime_extension::contracts_data::build_name_selector_map;
 use conversions::string::TryFromHexStr;
-use starknet_api::core::ClassHash;
+use starknet_api::core::{ClassHash, EntryPointSelector};
 use starknet_rust::core::types::contract::AbiEntry;
 use std::collections::HashMap;
 
@@ -14,15 +13,24 @@ const ERC20MINTABLE_ABI_JSON: &str =
     include_str!("../data/predeployed_contracts/ERC20Mintable/abi.json");
 
 fn abi_entry(class_hash_str: &str, abi_json: &str) -> (ClassHash, Vec<AbiEntry>) {
-    let class_hash: ClassHash =
-        TryFromHexStr::try_from_hex_str(class_hash_str).expect("class hash should be valid");
+    let class_hash = parse_class_hash(class_hash_str);
     let abi = serde_json::from_str::<Vec<AbiEntry>>(abi_json).expect("ABI should be valid");
     (class_hash, abi)
 }
 
-/// Returns hardcoded fork data for contracts predeployed in every `snforge` test environment.
+fn parse_class_hash(class_hash_str: &str) -> ClassHash {
+    TryFromHexStr::try_from_hex_str(class_hash_str).expect("class hash should be valid")
+}
+
+pub struct PredeployedContractsDebuggingData {
+    pub abi: HashMap<ClassHash, Vec<AbiEntry>>,
+    pub selectors: HashMap<EntryPointSelector, String>,
+    pub contract_names: HashMap<ClassHash, String>,
+}
+
+/// Returns debugging data for contracts predeployed in every `snforge` test environment.
 #[must_use]
-pub fn predeployed_contracts_fork_data() -> ForkData {
+pub fn predeployed_contracts_debugging_data() -> PredeployedContractsDebuggingData {
     let abi = HashMap::from([
         abi_entry(ERC20LOCKABLE_SIERRA_CLASS_HASH, ERC20LOCKABLE_ABI_JSON),
         abi_entry(ERC20MINTABLE_SIERRA_CLASS_HASH, ERC20MINTABLE_ABI_JSON),
@@ -33,5 +41,20 @@ pub fn predeployed_contracts_fork_data() -> ForkData {
         .flat_map(|a| build_name_selector_map(a.clone()))
         .collect();
 
-    ForkData { abi, selectors }
+    let contract_names = HashMap::from([
+        (
+            parse_class_hash(ERC20LOCKABLE_SIERRA_CLASS_HASH),
+            "STRK (predeployed)".to_string(),
+        ),
+        (
+            parse_class_hash(ERC20MINTABLE_SIERRA_CLASS_HASH),
+            "ETH (predeployed)".to_string(),
+        ),
+    ]);
+
+    PredeployedContractsDebuggingData {
+        abi,
+        selectors,
+        contract_names,
+    }
 }

@@ -2,6 +2,7 @@ use crate::trace::types::{ContractName, Selector};
 use cairo_lang_sierra::program::ProgramArtifact;
 use cairo_lang_starknet_classes::contract_class::ContractClass;
 use cheatnet::forking::data::ForkData;
+use cheatnet::predeployment::abi::PredeployedContractsDebuggingData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
@@ -136,6 +137,28 @@ impl From<ForkData> for ContractsDataStore {
         Self {
             abi: data.abi,
             contract_names: HashMap::new(),
+            selectors,
+            programs: HashMap::new(),
+        }
+    }
+}
+
+impl From<PredeployedContractsDebuggingData> for ContractsDataStore {
+    fn from(data: PredeployedContractsDebuggingData) -> Self {
+        let selectors = data
+            .selectors
+            .into_iter()
+            .map(|(k, v)| (k, Selector(v)))
+            .collect();
+        let contract_names = data
+            .contract_names
+            .into_iter()
+            .map(|(class_hash, name)| (class_hash, ContractName(name)))
+            .collect();
+
+        Self {
+            abi: data.abi,
+            contract_names,
             selectors,
             programs: HashMap::new(),
         }
