@@ -13,6 +13,7 @@ use sncast::response::ui::UI;
 )]
 pub struct ConfigPath {}
 
+#[allow(clippy::unnecessary_wraps)]
 pub fn config_path(ui: &UI) -> Result<ConfigPathResponse> {
     let local = find_config_file()
         .ok()
