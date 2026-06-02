@@ -11,7 +11,6 @@ use std::fs::File;
 use std::io::Write;
 use std::{env, fs};
 
-/// Resolved locations of the `snfoundry.toml` config files that sncast reads.
 pub struct ConfigFilePaths {
     pub local: Option<Utf8PathBuf>,
     pub global: Option<Utf8PathBuf>,

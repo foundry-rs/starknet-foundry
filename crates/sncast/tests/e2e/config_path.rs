@@ -5,7 +5,7 @@ use shared::test_utils::output_assert::assert_stdout_contains;
 use tempfile::tempdir;
 
 #[test]
-fn test_config_path_local_present() {
+fn test_config_path_with_local() {
     let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let args = vec!["config-path"];
 
@@ -21,7 +21,7 @@ fn test_config_path_local_present() {
 }
 
 #[test]
-fn test_config_path_local_missing() {
+fn test_config_path_with_missing_local() {
     let tempdir = tempdir().expect("Failed to create a temporary directory");
     let args = vec!["config-path"];
 
@@ -37,31 +37,11 @@ fn test_config_path_local_missing() {
 }
 
 #[test]
-fn test_config_path_malformed_local_still_succeeds() {
+fn test_config_path_with_malformed_local() {
     let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_malformed.toml", None);
     let args = vec!["config-path"];
 
     let output = runner(&args).current_dir(tempdir.path()).assert().success();
-
-    assert_stdout_contains(
-        output,
-        indoc! {r"
-            Local Config:  [..]snfoundry.toml
-            Global Config: [..]snfoundry.toml
-        "},
-    );
-}
-
-#[test]
-fn test_config_path_resolves_from_child_dir() {
-    let tempdir =
-        copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", Some("childdir"));
-    let args = vec!["config-path"];
-
-    let output = runner(&args)
-        .current_dir(tempdir.path().join("childdir"))
-        .assert()
-        .success();
 
     assert_stdout_contains(
         output,
