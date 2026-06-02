@@ -1,0 +1,5 @@
+[[call]]
+call_type = "invoke"
+contract_address = "@map"
+function = "put"
+inputs = ["@unknown", "0x2"]

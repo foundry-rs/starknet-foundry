@@ -469,3 +469,75 @@ async fn test_execute_alias_precedence_step_wins() {
         },
     );
 }
+
+#[tokio::test]
+async fn test_execute_invoke_with_unknown_alias_in_calldata() {
+    let account_dir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+    let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    join_tempdirs(&account_dir, &config_dir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "multicall",
+        "execute",
+        "--url",
+        URL,
+        "invoke",
+        "--contract-address",
+        "@map",
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 @unknown",
+    ];
+
+    let output = runner(&args).current_dir(config_dir.path()).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {
+            "
+            Command: multicall execute
+            Error: `@unknown`: not found as multicall step id or in [sncast.<profile>.aliases]
+            "
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_execute_deploy_with_unknown_alias_in_constructor_calldata() {
+    let account_dir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+    let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    join_tempdirs(&account_dir, &config_dir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "multicall",
+        "execute",
+        "--url",
+        URL,
+        "deploy",
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--constructor-calldata",
+        "@unknown 0x1",
+    ];
+
+    let output = runner(&args).current_dir(config_dir.path()).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {
+            "
+            Command: multicall execute
+            Error: `@unknown`: not found as multicall step id or in [sncast.<profile>.aliases]
+            "
+        },
+    );
+}
