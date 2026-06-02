@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- Debugging trace now correctly decodes function names and parameters for predeployed contracts (STRK, ETH) in non-fork tests.
+- Debugging trace is now correctly displayed for predeployed contracts (STRK, ETH) in non-fork tests.
 
 ### Cast 
 
