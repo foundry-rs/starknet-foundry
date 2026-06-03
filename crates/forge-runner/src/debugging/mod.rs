@@ -18,10 +18,11 @@ pub fn build_debugging_trace(
     trace_args: &TraceArgs,
     test_name: String,
     fork_data: &ForkData,
+    disable_predeployed_contracts: bool,
 ) -> Option<debugging::Trace> {
     let components = trace_args.to_components()?;
     let is_fork = !fork_data.abi.is_empty() || !fork_data.selectors.is_empty();
-    let store = if is_fork {
+    let store = if is_fork || disable_predeployed_contracts {
         ContractsDataStore::new(contracts_data, fork_data)
     } else {
         ContractsDataStore::from(predeployed_contracts_debugging_data())

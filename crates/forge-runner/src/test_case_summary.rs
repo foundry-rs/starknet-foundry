@@ -308,6 +308,7 @@ impl TestCaseSummary<Single> {
             trace_args,
             name.clone(),
             &fork_data,
+            test_case.config.disable_predeployed_contracts,
         );
 
         let gas_info = SingleTestGasInfo::new(gas_used);

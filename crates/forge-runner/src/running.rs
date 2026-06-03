@@ -446,6 +446,7 @@ fn extract_test_case_summary(
                         trace_args,
                         case.name.clone(),
                         &run_error.fork_data,
+                        case.config.disable_predeployed_contracts,
                     ),
                 }
             }
