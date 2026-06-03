@@ -1,6 +1,6 @@
 use crate::predeployment::erc20::eth::ERC20MINTABLE_SIERRA_CLASS_HASH;
 use crate::predeployment::erc20::strk::ERC20LOCKABLE_SIERRA_CLASS_HASH;
-use crate::runtime_extensions::forge_runtime_extension::contracts_data::build_name_selector_map;
+use crate::runtime_extensions::forge_runtime_extension::contracts_data::build_selectors_from_abi_map;
 use conversions::string::TryFromHexStr;
 use starknet_api::core::{ClassHash, EntryPointSelector};
 use starknet_rust::core::types::contract::AbiEntry;
@@ -31,25 +31,16 @@ fn parse_class_hash(class_hash_str: &str) -> ClassHash {
 }
 
 fn build_predeployed_contracts_debugging_data() -> ContractsDebuggingData {
-    let abi = HashMap::from([
-        abi_entry(ERC20LOCKABLE_SIERRA_CLASS_HASH, ERC20LOCKABLE_ABI_JSON),
-        abi_entry(ERC20MINTABLE_SIERRA_CLASS_HASH, ERC20MINTABLE_ABI_JSON),
-    ]);
+    let (strk_class_hash, strk_abi) = abi_entry(ERC20LOCKABLE_SIERRA_CLASS_HASH, ERC20LOCKABLE_ABI_JSON);
+    let (eth_class_hash, eth_abi) = abi_entry(ERC20MINTABLE_SIERRA_CLASS_HASH, ERC20MINTABLE_ABI_JSON);
 
-    let selectors = abi
-        .values()
-        .flat_map(|a| build_name_selector_map(a.clone()))
-        .collect();
+    let abi = HashMap::from([(strk_class_hash, strk_abi), (eth_class_hash, eth_abi)]);
+
+    let selectors = build_selectors_from_abi_map(&abi);
 
     let contract_names = HashMap::from([
-        (
-            parse_class_hash(ERC20LOCKABLE_SIERRA_CLASS_HASH),
-            "STRK (predeployed)".to_string(),
-        ),
-        (
-            parse_class_hash(ERC20MINTABLE_SIERRA_CLASS_HASH),
-            "ETH (predeployed)".to_string(),
-        ),
+        (strk_class_hash, "STRK (predeployed)".to_string()),
+        (eth_class_hash, "ETH (predeployed)".to_string()),
     ]);
 
     ContractsDebuggingData {

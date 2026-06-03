@@ -119,6 +119,15 @@ impl ContractsData {
 }
 
 #[must_use]
+pub fn build_selectors_from_abi_map(
+    abi: &HashMap<ClassHash, Vec<AbiEntry>>,
+) -> HashMap<EntryPointSelector, FunctionName> {
+    abi.values()
+        .flat_map(|a| build_name_selector_map(a.clone()))
+        .collect()
+}
+
+#[must_use]
 pub fn build_name_selector_map(abi: Vec<AbiEntry>) -> HashMap<EntryPointSelector, FunctionName> {
     let mut selector_map = HashMap::new();
     for abi_entry in abi {
