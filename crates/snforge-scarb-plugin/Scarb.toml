@@ -3,5 +3,6 @@ name = "snforge_scarb_plugin"
 version = "0.61.0"
 edition = "2024_07"
 include = ["target/scarb/cairo-plugin/"]
+no-core = true
 
 [cairo-plugin]
