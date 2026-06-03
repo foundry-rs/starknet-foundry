@@ -31,8 +31,10 @@ fn parse_class_hash(class_hash_str: &str) -> ClassHash {
 }
 
 fn build_predeployed_contracts_debugging_data() -> ContractsDebuggingData {
-    let (strk_class_hash, strk_abi) = abi_entry(ERC20LOCKABLE_SIERRA_CLASS_HASH, ERC20LOCKABLE_ABI_JSON);
-    let (eth_class_hash, eth_abi) = abi_entry(ERC20MINTABLE_SIERRA_CLASS_HASH, ERC20MINTABLE_ABI_JSON);
+    let (strk_class_hash, strk_abi) =
+        abi_entry(ERC20LOCKABLE_SIERRA_CLASS_HASH, ERC20LOCKABLE_ABI_JSON);
+    let (eth_class_hash, eth_abi) =
+        abi_entry(ERC20MINTABLE_SIERRA_CLASS_HASH, ERC20MINTABLE_ABI_JSON);
 
     let abi = HashMap::from([(strk_class_hash, strk_abi), (eth_class_hash, eth_abi)]);
 
