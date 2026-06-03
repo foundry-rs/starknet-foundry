@@ -119,8 +119,8 @@ impl ContractsData {
 }
 
 #[must_use]
-pub fn build_selectors_from_abi_map(
-    abi: &HashMap<ClassHash, Vec<AbiEntry>>,
+pub fn build_selectors_from_abi_map<S: ::std::hash::BuildHasher>(
+    abi: &HashMap<ClassHash, Vec<AbiEntry>, S>,
 ) -> HashMap<EntryPointSelector, FunctionName> {
     abi.values()
         .flat_map(|a| build_name_selector_map(a))
