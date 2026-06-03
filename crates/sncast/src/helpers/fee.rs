@@ -1,3 +1,4 @@
+use super::felt::felt_from_string;
 use anyhow::{Result, ensure};
 use clap::Args;
 use conversions::serde::deserialize::CairoDeserialize;
@@ -165,7 +166,7 @@ impl From<FeeArgs> for FeeSettings {
 }
 
 fn parse_non_zero_felt(s: &str) -> Result<NonZeroFelt, String> {
-    let felt: Felt = s.parse().map_err(|_| "Failed to parse value")?;
+    let felt = felt_from_string(s).map_err(|e| e.to_string())?;
     felt.try_into()
         .map_err(|_| "Value should be greater than 0".to_string())
 }

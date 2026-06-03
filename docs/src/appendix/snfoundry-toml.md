@@ -114,6 +114,21 @@ Defaults to `release`.
 scarb-profile = "release"
 ```
 
+#### `[sncast.<profile-name>.aliases]`
+
+Frequently used felt values (contract addresses, class hashes, etc.) can be defined in the `aliases` table and later used in commands, e.g. `sncast call --contract-address @map`.
+
+> 📝 **Note**
+> For details on how aliases are used and the list of supported commands, see the [Aliases](../starknet/aliases.md) section.
+
+Aliases follow the same [precedence rules](../projects/configuration.md#interaction-between-local-and-global-profiles) as other `snfoundry.toml` settings, meaning they can be overridden via a higher-precedence config.
+
+```toml
+[sncast.myprofile.aliases]
+map = "0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008"
+map-class = "0x2a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321"
+```
+
 #### `[sncast.<profile-name>.networks]`
 
 The URLs of the predefined networks can be configured.

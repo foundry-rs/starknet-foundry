@@ -213,9 +213,10 @@ impl ValidatedWaitParams {
         self.timeout.get() / u16::from(self.retry_interval.get())
     }
 
+    /// Remaining time (in seconds) until timeout, given the number of retries still left to run.
     #[must_use]
-    pub fn remaining_time(&self, steps_done: u16) -> u16 {
-        steps_done * u16::from(self.retry_interval.get())
+    pub fn remaining_time(&self, retries_left: u16) -> u16 {
+        retries_left * u16::from(self.retry_interval.get())
     }
 
     #[must_use]

@@ -1,4 +1,5 @@
 pub mod account;
+pub mod alias;
 pub mod balance;
 pub mod call;
 pub mod cast_message;
@@ -15,8 +16,10 @@ pub mod multicall;
 pub mod nonce;
 pub mod script;
 pub mod show_config;
+pub mod spec_version;
 pub mod transaction;
 pub mod transformed_call;
+pub mod tx_receipt;
 pub mod tx_status;
 pub mod ui;
 pub mod utils;

@@ -1,5 +1,6 @@
 use super::common::runner::{
     get_current_branch, get_remote_url, setup_package, test_runner, test_runner_native,
+    test_runner_vm,
 };
 use crate::utils::get_snforge_std_entry;
 use assert_fs::fixture::{FileWriteStr, PathChild};
@@ -1010,9 +1011,9 @@ fn should_panic() {
     assert_stdout_contains(
         output,
         indoc! { r"
-        Collected 14 test(s) from should_panic_test package
+        Collected 15 test(s) from should_panic_test package
         Running 0 test(s) from src/
-        Running 14 test(s) from tests/
+        Running 15 test(s) from tests/
         [FAIL] should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
 
         Failure data:
@@ -1064,6 +1065,7 @@ fn should_panic() {
 
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_multiple_messages (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_mixed_tuple (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
 
         Failure data:
             Expected to panic, but no panic occurred
@@ -1076,7 +1078,7 @@ fn should_panic() {
             Actual:    [0x6661696c696e6720636865636b] (failing check)
             Expected:  [0x0] ()
 
-        Tests: 5 passed, 9 failed, 0 ignored, 0 filtered out
+        Tests: 6 passed, 9 failed, 0 ignored, 0 filtered out
 
         Failures:
             should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
@@ -1182,6 +1184,86 @@ fn detailed_resources_flag_cairo_steps() {
                 steps: [..]
                 memory holes: [..]
                 builtins: ([..])
+                syscalls: ([..])
+                events: (count: [..], keys: [..], data size: [..])
+                messages: ([..])
+        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
+        "},
+    );
+}
+
+#[test]
+fn detailed_resources_from_scarb_tracked_resource() {
+    let temp = setup_package("erc20_package");
+    let manifest_path = temp.child("Scarb.toml");
+    let mut scarb_toml = fs::read_to_string(&manifest_path)
+        .unwrap()
+        .parse::<DocumentMut>()
+        .unwrap();
+    scarb_toml["tool"]["snforge"]["tracked_resource"] = value("cairo-steps");
+    manifest_path.write_str(&scarb_toml.to_string()).unwrap();
+
+    let output = test_runner_vm(&temp)
+        .arg("--detailed-resources")
+        .assert()
+        .success();
+
+    assert!(!output.as_stdout().contains("sierra gas:"));
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from erc20_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] erc20_package_integrationtest::test_complex::complex[..]
+                steps: [..]
+                memory holes: [..]
+                builtins: ([..])
+                syscalls: ([..])
+                events: (count: [..], keys: [..], data size: [..])
+                messages: ([..])
+        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
+        "},
+    );
+}
+
+#[test]
+fn detailed_resources_cli_overrides_scarb_tracked_resource() {
+    let temp = setup_package("erc20_package");
+    let manifest_path = temp.child("Scarb.toml");
+    let mut scarb_toml = fs::read_to_string(&manifest_path)
+        .unwrap()
+        .parse::<DocumentMut>()
+        .unwrap();
+    scarb_toml["tool"]["snforge"]["tracked_resource"] = value("cairo-steps");
+    manifest_path.write_str(&scarb_toml.to_string()).unwrap();
+
+    let output = test_runner_vm(&temp)
+        .arg("--detailed-resources")
+        .arg("--tracked-resource")
+        .arg("sierra-gas")
+        .assert()
+        .success();
+
+    assert!(!output.as_stdout().contains("steps:"));
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 1 test(s) from erc20_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] erc20_package_integrationtest::test_complex::complex[..]
+                sierra gas: [..]
                 syscalls: ([..])
                 events: (count: [..], keys: [..], data size: [..])
                 messages: ([..])

@@ -1,7 +1,6 @@
 use std::num::{NonZeroU8, NonZeroU16};
-use std::str::FromStr;
 
-use crate::starknet_commands::declare::declare;
+use crate::starknet_commands::declare::declare_with_artifacts;
 use crate::starknet_commands::declare_from::{ContractSource, DeclareFrom};
 use crate::starknet_commands::deploy::{DeployArguments, DeployCommonArgs};
 use crate::starknet_commands::get::Get;
@@ -10,8 +9,8 @@ use crate::starknet_commands::invoke::InvokeCommonArgs;
 use crate::starknet_commands::script::run_script_command;
 use crate::starknet_commands::utils::{self, Utils};
 use crate::starknet_commands::{
-    account, account::Account as AccountCommand, call::Call, declare::Declare, deploy::Deploy,
-    get::tx_status::TxStatus, invoke::Invoke, multicall::Multicall, script::Script,
+    account, account::Account as AccountCommand, alias::Alias, call::Call, declare::Declare,
+    deploy::Deploy, get::tx_status::TxStatus, invoke::Invoke, multicall::Multicall, script::Script,
     show_config::ShowConfig,
 };
 use crate::starknet_commands::{get, multicall};
@@ -20,6 +19,7 @@ use camino::Utf8PathBuf;
 use clap::{ArgMatches, CommandFactory, FromArgMatches, Parser, Subcommand};
 use configuration::{Override, find_config_file};
 use conversions::IntoConv;
+use conversions::byte_array::ByteArray;
 use data_transformer::transform;
 use foundry_ui::components::warning::WarningMessage;
 use mimalloc::MiMalloc;
@@ -29,6 +29,7 @@ use sncast::helpers::config::get_or_create_global_config_path;
 use sncast::helpers::configuration::{
     CastConfig, CliConfigOpts, ConfigScope, MaybeConfig, PartialCastConfig,
 };
+use sncast::helpers::felt::felt_from_string;
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
@@ -38,18 +39,20 @@ use sncast::response::declare::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse, DeployCommandMessage,
 };
 use sncast::response::deploy::{DeployResponse, DeployResponseWithDeclare};
-use sncast::response::errors::{ResponseError, handle_starknet_command_error};
+use sncast::response::errors::{
+    ResponseError, StarknetCommandError, handle_starknet_command_error,
+};
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transformed_call::transform_response;
 use sncast::response::ui::UI;
 use sncast::{
-    PartialWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
+    ErrorData, PartialWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
     get_contract_class, with_account,
 };
 use starknet_commands::ledger::{self, Ledger};
 use starknet_commands::verify::Verify;
 use starknet_rust::core::types::ContractClass;
-use starknet_rust::core::types::contract::{AbiEntry, SierraClass};
+use starknet_rust::core::types::contract::{AbiEntry, CompiledClass, SierraClass};
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_rust::providers::Provider;
 use starknet_types_core::felt::Felt;
@@ -181,6 +184,9 @@ enum Commands {
     /// Create and deploy an account
     Account(AccountCommand),
 
+    /// Manage saved aliases for contract addresses, class hashes, etc.
+    Alias(Alias),
+
     /// Show current configuration being used
     ShowConfig(ShowConfig),
 
@@ -218,32 +224,27 @@ pub struct Arguments {
     pub arguments: Option<String>,
 }
 
+fn abi_from_contract_class(contract_class: &ContractClass) -> Result<Vec<AbiEntry>> {
+    let ContractClass::Sierra(sierra_class) = contract_class else {
+        bail!("Transformation of arguments is not available for Cairo Zero contracts")
+    };
+
+    serde_json::from_str(sierra_class.abi.as_str())
+        .context("Couldn't deserialize ABI received from network")
+}
+
 impl Arguments {
-    fn try_into_calldata(
-        self,
-        contract_class: &ContractClass,
-        selector: &Felt,
-    ) -> Result<Vec<Felt>> {
+    fn try_into_calldata(self, abi: &[AbiEntry], selector: &Felt) -> Result<Vec<Felt>> {
         if let Some(calldata) = self.calldata {
-            calldata_to_felts(&calldata)
-        } else {
-            let ContractClass::Sierra(sierra_class) = contract_class else {
-                bail!("Transformation of arguments is not available for Cairo Zero contracts")
-            };
-
-            let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str())
-                .context("Couldn't deserialize ABI received from network")?;
-
-            transform(&self.arguments.unwrap_or_default(), &abi, selector)
+            return calldata_to_felts(&calldata);
         }
+
+        transform(&self.arguments.unwrap_or_default(), abi, selector)
     }
 }
 
 pub fn calldata_to_felts(calldata: &[String]) -> Result<Vec<Felt>> {
-    calldata
-        .iter()
-        .map(|data| Felt::from_str(data).with_context(|| format!("Failed to parse {data} to felt")))
-        .collect()
+    calldata.iter().map(|data| felt_from_string(data)).collect()
 }
 
 impl From<DeployArguments> for Arguments {
@@ -373,6 +374,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                     declare.common.fee_args,
                     declare.common.dry_run_args,
                     declare.common.nonce,
+                    declare.no_abi,
                     account,
                     &artifacts,
                     wait_config,
@@ -409,6 +411,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 let network_flag = generate_network_flag(&rpc, &config);
                 Some(DeployCommandMessage::new(
                     &contract_definition.abi,
+                    declare.no_abi,
                     response,
                     &config.account,
                     &config.accounts_file,
@@ -452,6 +455,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let result = with_account!(&account, |account| {
                 starknet_commands::declare_from::declare_from(
                     contract_source,
+                    declare_from.no_abi,
                     &declare_from.common,
                     account,
                     wait_config,
@@ -485,6 +489,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
         }
 
         Commands::Deploy(deploy) => {
+            if deploy.common.contract_identifier.contract_name.is_none() && deploy.no_abi {
+                bail!("`--no-abi` can only be used with `--contract-name`");
+            }
+
             let Deploy {
                 common:
                     DeployCommonArgs {
@@ -497,6 +505,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 dry_run_args,
                 rpc,
                 mut nonce,
+                no_abi,
                 ..
             } = deploy;
 
@@ -504,8 +513,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
 
             let account = get_account(&config, &provider, &rpc, ui).await?;
 
-            let (class_hash, declare_response) = if let Some(class_hash) = identifier.class_hash {
-                (class_hash, None)
+            let (class_hash, declare_response, local_abi) = if let Some(class_hash) =
+                identifier.class_hash
+            {
+                (class_hash, None, None)
             } else if let Some(contract_name) = identifier.contract_name {
                 let manifest_path = assert_manifest_path_exists()?;
                 let package_metadata = get_package_metadata(&manifest_path, &package)?;
@@ -522,14 +533,28 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 )
                 .context("Failed to build contract")?;
 
+                let contract_artifacts = artifacts.get(&contract_name).ok_or(
+                    StarknetCommandError::ContractArtifactsNotFound(ErrorData {
+                        data: ByteArray::from(contract_name.as_str()),
+                    }),
+                )?;
+                let contract_definition: SierraClass =
+                    serde_json::from_str(&contract_artifacts.sierra)
+                        .context("Failed to parse sierra artifact")?;
+                let casm_contract_definition: CompiledClass =
+                    serde_json::from_str(&contract_artifacts.casm)
+                        .context("Failed to parse casm artifact")?;
+                let local_abi = contract_definition.abi.clone();
+
                 let declare_result = with_account!(&account, |account| {
-                    declare(
-                        contract_name,
-                        fee_args,
-                        dry_run_args,
+                    declare_with_artifacts(
+                        contract_definition,
+                        casm_contract_definition,
+                        &fee_args,
+                        &dry_run_args,
                         nonce,
+                        no_abi,
                         account,
-                        &artifacts,
                         WaitForTx {
                             wait: true,
                             wait_params: wait_config.wait_params,
@@ -548,10 +573,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 match declare_result {
                     Ok(DeclareResponse::AlreadyDeclared(AlreadyDeclaredResponse {
                         class_hash,
-                    })) => (class_hash.into_(), None),
+                    })) => (class_hash.into_(), None, Some(local_abi)),
                     Ok(DeclareResponse::Success(declare_transaction_response)) => (
                         declare_transaction_response.class_hash.into_(),
                         Some(declare_transaction_response),
+                        Some(local_abi),
                     ),
                     Ok(DeclareResponse::DryRun(_)) => {
                         unreachable!(
@@ -576,10 +602,14 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             // safe to unwrap because "constructor" is a standardized name
             let selector = get_selector_from_name("constructor").unwrap();
 
-            let contract_class = get_contract_class(class_hash, &provider).await?;
-
             let arguments: Arguments = arguments.into();
-            let calldata = arguments.try_into_calldata(&contract_class, &selector)?;
+            let abi = if let Some(local_abi) = local_abi {
+                local_abi
+            } else {
+                let contract_class = get_contract_class(class_hash, &provider).await?;
+                abi_from_contract_class(&contract_class)?
+            };
+            let calldata = arguments.try_into_calldata(&abi, &selector)?;
 
             let result = with_account!(&account, |account| {
                 starknet_commands::deploy::deploy(
@@ -628,6 +658,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
         }) => {
             let provider = rpc.get_provider(&config, ui).await?;
 
+            let contract_address = contract_address
+                .resolve_alias_or_felt(&config)
+                .context("Invalid contract address")?;
+
             let block_id = get_block_id(&block_id)?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
@@ -635,7 +669,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let calldata = arguments.try_into_calldata(&contract_class, &selector)?;
+            let calldata = arguments
+                .try_into_calldata(&abi_from_contract_class(&contract_class)?, &selector)?;
 
             let result = starknet_commands::call::call(
                 contract_address,
@@ -684,11 +719,12 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let contract_address = contract_address.try_into_felt()?;
+            let contract_address = contract_address.resolve_alias_or_felt(&config)?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
-            let calldata = arguments.try_into_calldata(&contract_class, &selector)?;
+            let calldata = arguments
+                .try_into_calldata(&abi_from_contract_class(&contract_class)?, &selector)?;
 
             let result = with_account!(&account, |account| {
                 starknet_commands::invoke::invoke(
@@ -727,6 +763,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
         }
 
         Commands::Account(account) => account::account(account, config, ui, wait_config).await,
+
+        Commands::Alias(alias) => starknet_commands::alias::alias(&alias, &config, ui),
 
         Commands::ShowConfig(show) => {
             let provider = match show.rpc.get_provider(&config, ui).await {

@@ -4,7 +4,7 @@ use blockifier::execution::call_info::{EventSummary, ExtendedExecutionResources}
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
 use blockifier::fee::resources::{ArchivalDataResources, ComputationResources, MessageResources};
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
+use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
 use starknet_api::execution_resources::GasAmount;
 
 pub struct GasCalculationResources {

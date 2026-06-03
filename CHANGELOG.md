@@ -7,45 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast 
+
+#### Added
+
+- Aliases in `snfoundry.toml`. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html#sncastprofile-namealiases).
+- `--contract-address @alias` syntax in `sncast call` and `sncast invoke`.
+- `sncast alias list` command for listing aliases. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/alias/list.html).
+
+## [0.61.0] - 2026-05-26
+
 ### Forge
 
 #### Added
 
+- `#[should_panic(expected: (...))]` now supports regular strings inside mixed tuples, alongside short strings and numbers.
+- `#[derive(Fuzzable)]` macro that automatically generates `Fuzzable` trait implementations for structs and enums
 - `SNFOUNDRY_CACHE` environment variable to allow to specify a custom cache directory
 
 #### Changed
 
 - `snforge_scarb_plugin` diagnostics for named-argument kind violations now include both possible values and invalid arguments found.
 - `snforge test --exact` now reports the exact number of filtered-out tests in summaries instead of `other`.
+- Minimal required `Scarb` version is now `2.13.1` (updated from `2.12.0`).
+- Fix `verify` command prompt behavior to correctly interpret empty input as "yes" for (Y/n) confirmation
 
 #### Fixed
 
 - Bug in forge debugging and `--gas-report` that caused panic in case of a call to non-existent selector
 - `snforge test` now fails fast and explicitly when `[cairo] enable-gas = false`. Read more in [`Scarb.toml` reference](https://foundry-rs.github.io/starknet-foundry/appendix/scarb-toml.html#enable-gas).
+- `#[test]` macro now expands correctly in `snforge_scarb_plugin` for cases involving block expressions (e.g. function code starting with `[`)
+- `tracked_resource` field from `Scarb.toml` is now taken into account when running `snforge test`
+
+#### Removed
+
+- The deprecated `snforge clean-cache` command. Use `snforge clean cache` instead
 
 ### Cast
+
+#### Added
+
+- `--no-abi` flag for `declare`, `declare-from`, and `deploy`, erasing the ABI before class declaration.
+- `sncast get spec-version` command that returns the version of the Starknet JSON-RPC specification used by the node
+- `sncast get tx-receipt` (alias: `get transaction-receipt`) command that returns the receipt of a transaction
 
 #### Fixed
 
 - `sncast completions` no longer fails due to invalid local or global `snfoundry.toml` config.
+- Non-panic errors no longer bypass foundry UI. `--json` now works for user-facing errors where plain text was printed before (excluding clap arg-parsing errors).
+- Build failures now return command errors instead of panicking.
+- In command errors, `command` field now universally displays a full command path (`get tx-status`, `account import`) (previously in some cases, only top-level command name was shown, e.g. `get`, `account`).
 - `sncast account deploy` now correctly writes deployed address to keystore account file.
 - `sncast declare` now correctly includes `--keystore` flag in the suggested deploy command when keystore is used.
 
 #### Removed
 
 - `argent` option for `--type` flag in `account create` and `account import` commands. Use `ready` instead. Old account files with `"type": "argent"` are still loaded correctly.
-
-#### Added
-
-- `#[derive(Fuzzable)]` macro that automatically generates `Fuzzable` trait implementations for structs and enums
-
-### Cast
-
-#### Fixed
-
-- Non-panic errors no longer bypass foundry UI. `--json` now works for user-facing errors where plain text was printed before (excluding clap arg-parsing errors).
-- Build failures now return command errors instead of panicking.
-- In command errors, `command` field now universally displays a full command path (`get tx-status`, `account import`) (previously in some cases, only top-level command name was shown, e.g. `get`, `account`).
 
 ## [0.60.0] - 2026-04-27
 
@@ -325,7 +342,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
-#### Added 
+#### Added
 
 - Possibility to configure urls of predefined networks used by `--network` flag via `sncast` profile in `snfoundry.toml`
 
@@ -369,7 +386,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast declare` command now outputs a ready-to-use deployment command after successful declaration.
 - Possibility to use [`starknet-devnet`](https://github.com/0xSpaceShard/starknet-devnet) predeployed accounts directly in `sncast` without needing to import them. They are available under specific names - `devnet-1`, `devnet-2`, ..., `devnet-<N>`. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/integration_with_devnet.html#predeployed-accounts)
 - Support for `--network devnet` flag that attempts to auto-detect running `starknet-devnet` instance and connect to it.
-- Support for automatically declaring the contract when running `sncast deploy`, by providing `--contract-name` flag instead of `--class-hash`. 
+- Support for automatically declaring the contract when running `sncast deploy`, by providing `--contract-name` flag instead of `--class-hash`.
 - `sncast balance` command to fetch the balance of an account for a specified token.
 
 #### Fixed

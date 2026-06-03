@@ -2,7 +2,7 @@ use crate::{
     cheatcodes::test_environment::TestEnvironment,
     common::{assertions::assert_success, get_contracts, state::create_fork_cached_state_at},
 };
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallSuccess;
+use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::CallSuccess;
 use conversions::string::TryFromHexStr;
 use num_traits::Zero;
 use starknet_api::core::{ClassHash, ContractAddress};

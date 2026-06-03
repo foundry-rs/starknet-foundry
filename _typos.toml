@@ -1,5 +1,6 @@
 [default.extend-words]
 ba = "ba"
+bimap = "bimap"
 
 [files]
 extend-exclude = ["docs/theme/head.hbs"]
