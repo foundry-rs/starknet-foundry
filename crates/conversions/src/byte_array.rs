@@ -5,6 +5,10 @@ use cairo_lang_utils::byte_array::{BYTE_ARRAY_MAGIC, BYTES_IN_WORD};
 use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
 use starknet_types_core::felt::Felt;
 use std::fmt;
+use std::sync::LazyLock;
+
+pub static BYTE_ARRAY_MAGIC_FELT: LazyLock<Felt> =
+    LazyLock::new(|| Felt::try_from_hex_str(&format!("0x{BYTE_ARRAY_MAGIC}")).unwrap());
 
 #[derive(CairoDeserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct ByteArray {
