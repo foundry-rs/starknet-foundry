@@ -17,16 +17,17 @@ pub fn build_debugging_trace(
     contracts_data: &ContractsData,
     trace_args: &TraceArgs,
     test_name: String,
-    fork_data: &ForkData,
+    fork_data: Option<&ForkData>,
     disable_predeployed_contracts: bool,
 ) -> Option<debugging::Trace> {
     let components = trace_args.to_components()?;
-    let is_fork = !fork_data.abi.is_empty() || !fork_data.selectors.is_empty();
-    let store = if is_fork || disable_predeployed_contracts {
-        ContractsDataStore::new(contracts_data, fork_data)
+    let empty_fork_data = ForkData::default();
+    let fork_data_ref = fork_data.unwrap_or(&empty_fork_data);
+    let store = if fork_data.is_some() || disable_predeployed_contracts {
+        ContractsDataStore::new(contracts_data, fork_data_ref)
     } else {
         ContractsDataStore::from(predeployed_contracts_debugging_data())
-            .merge(ContractsDataStore::new(contracts_data, fork_data))
+            .merge(ContractsDataStore::new(contracts_data, fork_data_ref))
     };
     let context = debugging::Context::new(store, components);
     Some(debugging::Trace::new(call_trace, &context, test_name))

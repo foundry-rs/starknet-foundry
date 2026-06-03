@@ -10,6 +10,7 @@ use crate::running::{RunCompleted, RunStatus};
 use blockifier::execution::syscalls::hint_processor::ENTRYPOINT_FAILED_ERROR_FELT;
 use cairo_annotations::trace_data::VersionedCallTrace as VersionedProfilerCallTrace;
 use camino::Utf8Path;
+use cheatnet::forking::data::ForkData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
 use conversions::byte_array::ByteArray;
@@ -307,15 +308,17 @@ impl TestCaseSummary<Single> {
             contracts_data,
             trace_args,
             name.clone(),
-            &fork_data,
+            fork_data.as_ref(),
             test_case.config.disable_predeployed_contracts,
         );
 
+        let empty = ForkData::default();
+        let fork_data_ref = fork_data.as_ref().unwrap_or(&empty);
         let gas_info = SingleTestGasInfo::new(gas_used);
         let gas_info = if gas_report_enabled {
             gas_info.get_with_report_data(
                 &call_trace.borrow(),
-                &ContractsDataStore::new(contracts_data, &fork_data),
+                &ContractsDataStore::new(contracts_data, fork_data_ref),
             )
         } else {
             gas_info
@@ -333,7 +336,7 @@ impl TestCaseSummary<Single> {
                         trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
                             &call_trace,
                             contracts_data,
-                            &fork_data,
+                            fork_data_ref,
                             versioned_program_path,
                         )),
                         debugging_trace,
@@ -371,7 +374,7 @@ impl TestCaseSummary<Single> {
                             trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
                                 &call_trace,
                                 contracts_data,
-                                &fork_data,
+                                fork_data_ref,
                                 versioned_program_path,
                             )),
                             debugging_trace,
