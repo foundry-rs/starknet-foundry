@@ -1,0 +1,17 @@
+[package]
+name = "invariant_testing_pattern"
+version = "0.1.0"
+edition = "2024_07"
+
+[dependencies]
+starknet = "2.8.5"
+assert_macros = "2.8.5"
+
+[dev-dependencies]
+snforge_std = { path = "../../../snforge_std" }
+
+[[target.starknet-contract]]
+sierra = true
+
+[scripts]
+test = "snforge test"

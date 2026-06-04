@@ -34,6 +34,7 @@
 
 * [Fork Testing](snforge-advanced-features/fork-testing.md)
 * [Fuzz Testing](snforge-advanced-features/fuzz-testing.md)
+* [Stateful Invariant Testing Pattern](snforge-advanced-features/invariant-testing-pattern.md)
 * [Direct Storage Access](snforge-advanced-features/storage-cheatcodes.md)
 * [Profiling](snforge-advanced-features/profiling.md)
 * [Debugging](snforge-advanced-features/debugging.md)
