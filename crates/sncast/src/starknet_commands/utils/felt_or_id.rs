@@ -50,21 +50,22 @@ impl FeltOrId {
         registry: &ContractRegistry,
         config: &CastConfig,
     ) -> Result<Felt> {
-        if let Some(name) = self.as_id() {
-            if name.is_empty() {
-                bail!("Alias name cannot be empty");
-            }
-            if let Some(addr) = registry.get_address_by_id(name) {
-                return Ok(addr);
-            }
-            config.aliases.get(name).copied().with_context(|| {
+        let Some(name) = self.as_id() else {
+            return self.try_into_felt();
+        };
+
+        if name.is_empty() {
+            bail!("Alias name cannot be empty");
+        }
+
+        registry
+            .get_address_by_id(name)
+            .or_else(|| config.aliases.get(name).copied())
+            .with_context(|| {
                 format!(
                     "`@{name}`: not found as multicall step id or in [sncast.<profile>.aliases]"
                 )
             })
-        } else {
-            self.try_into_felt()
-        }
     }
 }
 
