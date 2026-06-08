@@ -17,8 +17,8 @@ use foundry_ui::UI;
 use indoc::formatdoc;
 use scarb_api::metadata::metadata_for_dir;
 use scarb_api::{
-    CompilationOpts, StarknetContractArtifacts, get_contracts_artifacts_and_source_sierra_paths,
-    target_dir_for_workspace,
+    CompilationOpts, LoadedContract, LoadedContracts, StarknetContractArtifacts,
+    get_contracts_artifacts_and_source_sierra_paths, target_dir_for_workspace,
 };
 use shared::command::CommandExt;
 use starknet_api::execution_resources::{GasAmount, GasVector};
@@ -111,9 +111,10 @@ impl Contract {
             },
         )
         .unwrap()
-        .remove(&self.name)
+        .into_values()
+        .find(|contract| contract.contract_name == self.name)
         .ok_or(anyhow!("there is no contract with name {}", self.name))?
-        .0;
+        .artifacts;
 
         Ok(artifacts)
     }
@@ -195,10 +196,8 @@ impl<'a> TestCase {
         ]
     }
 
-    pub fn contracts(
-        &self,
-        ui: &UI,
-    ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
+    pub fn contracts(&self, ui: &UI) -> Result<LoadedContracts> {
+        // Test contracts are defined with unique names, so the name doubles as the module path.
         self.contracts
             .clone()
             .into_iter()
@@ -206,7 +205,14 @@ impl<'a> TestCase {
                 let name = contract.name.clone();
                 let artifacts = contract.generate_contract_artifacts(ui)?;
 
-                Ok((name, (artifacts, Utf8PathBuf::default())))
+                Ok((
+                    name.clone(),
+                    LoadedContract {
+                        contract_name: name,
+                        artifacts,
+                        sierra_path: Utf8PathBuf::default(),
+                    },
+                ))
             })
             .collect()
     }

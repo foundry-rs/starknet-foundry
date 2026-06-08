@@ -23,9 +23,14 @@ impl ContractsDataStore {
     #[must_use]
     pub fn new(contracts_data: &ContractsData, fork_data: &ForkData) -> Self {
         let contract_names = contracts_data
-            .class_hashes
-            .iter()
-            .map(|(name, class_hash)| (*class_hash, ContractName(name.clone())))
+            .contracts
+            .values()
+            .map(|contract_data| {
+                (
+                    contract_data.class_hash,
+                    ContractName(contract_data.contract_name.clone()),
+                )
+            })
             .collect();
 
         let selectors = contracts_data
