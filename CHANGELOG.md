@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--contract-address @alias` syntax in `sncast call` and `sncast invoke`.
 - `sncast alias list` command for listing aliases. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/alias/list.html).
 
+#### Changed
+
+- Unknown keys in `snfoundry.toml` (`[sncast.<profile>]`, `[sncast.<profile>.networks]`, `wait-params`) now emit a warning and are ignored instead of causing a hard error, so configs can be shared across `sncast` versions. Read more in [configuration](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html).
+
+
 ## [0.61.0] - 2026-05-26
 
 ### Forge
@@ -51,10 +56,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--no-abi` flag for `declare`, `declare-from`, and `deploy`, erasing the ABI before class declaration.
 - `sncast get spec-version` command that returns the version of the Starknet JSON-RPC specification used by the node
 - `sncast get tx-receipt` (alias: `get transaction-receipt`) command that returns the receipt of a transaction
-
-#### Changed
-
-- Unknown keys in `snfoundry.toml` (`[sncast.<profile>]`, `[sncast.<profile>.networks]`, `wait-params`) now emit a warning and are ignored instead of causing a hard error, so configs can be shared across `sncast` versions. Read more in [configuration](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html).
 
 #### Fixed
 
