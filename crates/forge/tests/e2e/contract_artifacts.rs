@@ -364,6 +364,23 @@ fn simple_package_no_starknet_contract_target() {
 }
 
 #[test]
+fn duplicate_contract_name_fails_deterministically() {
+    let temp = setup_package("duplicate_contract_name");
+    let output = test_runner(&temp).assert().code(1);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r#"
+        Failure data:
+            "Multiple contracts found with name = HelloStarknet. Found contracts at the following paths:
+            duplicate_contract_name::HelloStarknet
+            duplicate_contract_name_integrationtest::test_duplicate::HelloStarknet
+            Rename one of the contracts so that the name is unique."
+        "#},
+    );
+}
+
+#[test]
 fn no_optimization_flag() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)

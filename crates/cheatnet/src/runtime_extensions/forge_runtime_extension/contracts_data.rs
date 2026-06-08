@@ -5,7 +5,7 @@ use camino::Utf8PathBuf;
 use conversions::IntoConv;
 use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
-use scarb_api::StarknetContractArtifacts;
+use scarb_api::{LoadedContracts, StarknetContractArtifacts};
 use starknet_api::core::{ClassHash, EntryPointSelector};
 use starknet_rust::core::types::contract::{AbiEntry, SierraClass};
 use starknet_rust::core::utils::get_selector_from_name;
@@ -14,49 +14,63 @@ use std::collections::HashMap;
 use std::hash::BuildHasher;
 
 type ContractName = String;
+type ModulePath = String;
 type FunctionName = String;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct ContractsData {
-    pub contracts: HashMap<ContractName, ContractData>,
-    pub class_hashes: BiMap<ContractName, ClassHash>,
+    pub contracts: HashMap<ModulePath, ContractData>,
+    pub class_hashes: BiMap<ModulePath, ClassHash>,
     pub selectors: HashMap<EntryPointSelector, FunctionName>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ContractData {
+    pub contract_name: ContractName,
     pub artifacts: StarknetContractArtifacts,
     pub class_hash: ClassHash,
     source_sierra_path: Utf8PathBuf,
 }
 
+/// Outcome of resolving a (non-unique) `contract_name` to a single contract.
+pub enum ContractResolutionError {
+    /// No contract with the given name was found.
+    NotFound,
+    /// Several contracts share the name; carries their module paths (sorted) for diagnostics.
+    Ambiguous(Vec<ModulePath>),
+}
+
 impl ContractsData {
-    pub fn try_from(
-        contracts: HashMap<ContractName, (StarknetContractArtifacts, Utf8PathBuf)>,
-    ) -> Result<Self> {
-        let parsed_contracts: HashMap<ContractName, SierraClass> = contracts
+    pub fn try_from(contracts: LoadedContracts) -> Result<Self> {
+        let parsed_contracts: HashMap<ModulePath, SierraClass> = contracts
             .par_iter()
-            .map(|(name, (artifact, _))| {
-                Ok((name.clone(), serde_json::from_str(&artifact.sierra)?))
+            .map(|(module_path, contract)| {
+                Ok((
+                    module_path.clone(),
+                    serde_json::from_str(&contract.artifacts.sierra)?,
+                ))
             })
             .collect::<Result<_>>()?;
 
-        let class_hashes: Vec<(ContractName, ClassHash)> = parsed_contracts
+        let class_hashes: Vec<(ModulePath, ClassHash)> = parsed_contracts
             .par_iter()
-            .map(|(name, sierra_class)| Ok((name.clone(), get_class_hash(sierra_class)?)))
+            .map(|(module_path, sierra_class)| {
+                Ok((module_path.clone(), get_class_hash(sierra_class)?))
+            })
             .collect::<Result<_>>()?;
         let class_hashes = BiMap::from_iter(class_hashes);
 
         let contracts = contracts
             .into_iter()
-            .map(|(name, (artifacts, source_sierra_path))| {
-                let class_hash = *class_hashes.get_by_left(&name).unwrap();
+            .map(|(module_path, contract)| {
+                let class_hash = *class_hashes.get_by_left(&module_path).unwrap();
                 (
-                    name,
+                    module_path,
                     ContractData {
-                        artifacts,
+                        contract_name: contract.contract_name,
+                        artifacts: contract.artifacts,
                         class_hash,
-                        source_sierra_path,
+                        source_sierra_path: contract.sierra_path,
                     },
                 )
             })
@@ -75,30 +89,60 @@ impl ContractsData {
         })
     }
 
+    /// Resolves a `contract_name` to a single contract. Because the name is not unique, it may
+    /// match zero contracts ([`ContractResolutionError::NotFound`]) or several
+    /// ([`ContractResolutionError::Ambiguous`]).
+    pub fn resolve_by_name(
+        &self,
+        contract_name: &str,
+    ) -> Result<&ContractData, ContractResolutionError> {
+        let mut matches: Vec<(&ModulePath, &ContractData)> = self
+            .contracts
+            .iter()
+            .filter(|(_, contract)| contract.contract_name == contract_name)
+            .collect();
+
+        match matches.len() {
+            0 => Err(ContractResolutionError::NotFound),
+            1 => Ok(matches.pop().unwrap().1),
+            _ => {
+                let mut module_paths: Vec<ModulePath> = matches
+                    .into_iter()
+                    .map(|(module_path, _)| module_path.clone())
+                    .collect();
+                module_paths.sort();
+                Err(ContractResolutionError::Ambiguous(module_paths))
+            }
+        }
+    }
+
     #[must_use]
     pub fn get_artifacts(&self, contract_name: &str) -> Option<&StarknetContractArtifacts> {
-        self.contracts
-            .get(contract_name)
+        self.resolve_by_name(contract_name)
+            .ok()
             .map(|contract| &contract.artifacts)
     }
 
     #[must_use]
     pub fn get_class_hash(&self, contract_name: &str) -> Option<&ClassHash> {
-        self.contracts
-            .get(contract_name)
+        self.resolve_by_name(contract_name)
+            .ok()
             .map(|contract| &contract.class_hash)
     }
 
     #[must_use]
     pub fn get_source_sierra_path(&self, contract_name: &str) -> Option<&Utf8PathBuf> {
-        self.contracts
-            .get(contract_name)
+        self.resolve_by_name(contract_name)
+            .ok()
             .map(|contract| &contract.source_sierra_path)
     }
 
     #[must_use]
     pub fn get_contract_name(&self, class_hash: &ClassHash) -> Option<&ContractName> {
-        self.class_hashes.get_by_right(class_hash)
+        let module_path = self.class_hashes.get_by_right(class_hash)?;
+        self.contracts
+            .get(module_path)
+            .map(|contract| &contract.contract_name)
     }
 
     #[must_use]
