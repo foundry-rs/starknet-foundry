@@ -222,6 +222,41 @@ fn snap_test_backtrace_panic_without_inlines() {
 }
 
 #[test]
+fn snap_test_backtrace_test_level_missing_env() {
+    let temp = setup_package("backtrace_test_panic");
+
+    let output = test_runner(&temp).assert().failure();
+
+    assert_cleaned_output!(output);
+}
+
+#[test]
+fn snap_test_backtrace_test_level() {
+    let temp = setup_package("backtrace_test_panic");
+
+    let output = test_runner(&temp)
+        .env("SNFORGE_BACKTRACE", "1")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
+        .assert()
+        .failure();
+
+    assert_cleaned_output!(output);
+}
+
+#[test]
+fn snap_test_backtrace_test_level_should_panic() {
+    let temp = setup_package("backtrace_test_should_panic");
+
+    let output = test_runner(&temp)
+        .env("SNFORGE_BACKTRACE", "1")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
+        .assert()
+        .success();
+
+    assert_cleaned_output!(output);
+}
+
+#[test]
 fn snap_test_handled_error_not_display() {
     let temp = setup_package("dispatchers");
 

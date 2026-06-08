@@ -9,14 +9,17 @@ use cairo_annotations::annotations::profiler::{
     ProfilerAnnotationsV1, VersionedProfilerAnnotations,
 };
 use cairo_lang_sierra::program::StatementIdx;
+use cairo_lang_sierra::program::VersionedProgram;
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet_classes::contract_class::ContractClass;
+use camino::Utf8Path;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use itertools::Itertools;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 use starknet_api::core::ClassHash;
 use std::collections::{HashMap, HashSet};
+use std::fs;
 
 pub struct ContractBacktraceDataMapping(HashMap<ClassHash, ContractOrigin>);
 
@@ -188,4 +191,42 @@ impl ContractBacktraceData {
 
         Ok(backtrace_stack.to_string())
     }
+}
+
+pub fn render_test_backtrace(
+    test_name: &str,
+    casm_start_offsets: Vec<usize>,
+    versioned_program_path: &Utf8Path,
+    pcs: &[usize],
+) -> Result<String> {
+    let raw = fs::read_to_string(versioned_program_path).with_context(|| {
+        format!("failed to read test sierra program at: {versioned_program_path}")
+    })?;
+    let program_artifact = match serde_json::from_str::<VersionedProgram>(&raw)? {
+        VersionedProgram::V1 { program, .. } => program,
+    };
+
+    let sierra_debug_info = program_artifact
+        .debug_info
+        .as_ref()
+        .context("debug info not found")?;
+
+    let VersionedCoverageAnnotations::V1(coverage_annotations) =
+        VersionedCoverageAnnotations::try_from_debug_info(sierra_debug_info)?;
+    let VersionedProfilerAnnotations::V1(profiler_annotations) =
+        VersionedProfilerAnnotations::try_from_debug_info(sierra_debug_info)?;
+
+    let data = ContractBacktraceData {
+        contract_name: test_name.to_string(),
+        casm_debug_info_start_offsets: casm_start_offsets,
+        coverage_annotations,
+        profiler_annotations,
+    };
+
+    let backtrace = data.render_backtrace(pcs)?;
+    Ok(backtrace.replacen(
+        "error occurred in contract '",
+        "error occurred in test '",
+        1,
+    ))
 }
