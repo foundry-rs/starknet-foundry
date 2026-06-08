@@ -9,7 +9,6 @@ use sncast::response::ui::UI;
 #[derive(Args)]
 #[command(
     about = "Show paths to the config files contributing to the effective configuration",
-    long_about = None
 )]
 pub struct ConfigPath {}
 

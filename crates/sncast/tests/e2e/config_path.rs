@@ -66,3 +66,18 @@ fn test_config_path_json() {
         "#},
     );
 }
+
+#[test]
+fn test_config_path_json_with_missing_local() {
+    let tempdir = tempdir().expect("Failed to create a temporary directory");
+    let args = vec!["--json", "config-path"];
+
+    let output = runner(&args).current_dir(tempdir.path()).assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r#"
+            {"command":"config-path","global_config":"[..]snfoundry.toml","local_config":null,"type":"response"}
+        "#},
+    );
+}
