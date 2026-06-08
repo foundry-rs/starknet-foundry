@@ -20,12 +20,12 @@ Profiles allow you to define different sets of configurations for various enviro
 
 > 📝 **Tip**
 > 
-> If this `sncast` version does not recognize a key, this key will be ignored with a warning:
+> Keys unrecognized by the currently used `sncast` version are ignored with a warning:
 > ```toml
 > [sncast.myprofile]
 > unknown-key = "some value"
 > ```
-> To avoid these warnings, use latest `sncast` version and update your config to the latest format.
+> To avoid these warnings, use the latest `sncast` version and update your config to the latest format.
 
 #### `url`
 
