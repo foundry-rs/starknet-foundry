@@ -31,6 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast multicall run` TOML `inputs` now always require the `@` prefix for step id references. Bare step ids no longer resolve. Migration: update entries to new format (e.g. `"map"`->`"@map"`). Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/multicall.html#using-id-references).
 - `sncast get nonce` now displays the nonce in decimal instead of hexadecimal.
 
+#### Changed
+
+- Unknown keys in `snfoundry.toml` (`[sncast.<profile>]`, `[sncast.<profile>.networks]`, `wait-params`) now emit a warning and are ignored instead of causing a hard error, so configs can be shared across `sncast` versions. Read more in [configuration](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html).
+
+
 ## [0.61.0] - 2026-05-26
 
 ### Forge
