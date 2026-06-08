@@ -515,7 +515,7 @@ async fn test_default_global_profile_with_invalid_values() {
 }
 
 #[tokio::test]
-async fn test_default_global_profile_with_unsupported_field() {
+async fn test_global_config_with_unknown_field() {
     let global_dir = copy_config_to_tempdir(
         "tests/data/files/snfoundry_invalid_unknown_field.toml",
         None,
@@ -529,16 +529,152 @@ async fn test_default_global_profile_with_unsupported_field() {
         .args(&args)
         .current_dir(t.path());
 
-    let output = snapbox.assert().failure();
+    let output = snapbox.assert().success();
 
-    assert_stderr_contains(
+    assert_stdout_contains(
         output,
         indoc! { r#"
-            Command: show-config
-            Error: Failed to load global config at [..]snfoundry.toml
+            [WARNING] unknown config key(s) ["bar", "baz", "foo"] ignored (incorrect key, or may require newer/older sncast).
+            Affected config(s): [..]snfoundry.toml
+        "# },
+    );
+}
 
-            Caused by:
-                unknown field(s) ["bar", "baz", "foo"]
+#[tokio::test]
+async fn test_local_config_with_unknown_fields() {
+    let global_dir = tempdir().unwrap();
+    fs::write(
+        global_dir.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            url = "http://127.0.0.1:5055/rpc"
+            account = "user1"
+        "#},
+    )
+    .unwrap();
+    let local_dir = copy_config_to_tempdir(
+        "tests/data/files/snfoundry_invalid_unknown_field.toml",
+        None,
+    );
+    let args = vec!["show-config"];
+
+    let snapbox = Cast::new()
+        .config_dir(global_dir.path())
+        .command()
+        .args(&args)
+        .current_dir(local_dir.path());
+
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! { r#"
+            [WARNING] unknown config key(s) ["bar", "baz", "foo"] ignored (incorrect key, or may require newer/older sncast).
+            Affected config(s): [..]snfoundry.toml
+        "# },
+    );
+}
+
+#[tokio::test]
+async fn test_global_and_local_unknown_fields() {
+    let global_dir = tempdir().unwrap();
+    fs::write(
+        global_dir.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            url = "http://127.0.0.1:5055/rpc"
+            account = "user1"
+            shared = "shared"
+            global_only = true
+        "#},
+    )
+    .unwrap();
+    let local_dir = tempdir().unwrap();
+    fs::write(
+        local_dir.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            url = "http://127.0.0.1:5055/rpc"
+            account = "user1"
+            shared = "shared"
+            local_only = "local"
+        "#},
+    )
+    .unwrap();
+    let args = vec!["show-config"];
+
+    let snapbox = Cast::new()
+        .config_dir(global_dir.path())
+        .command()
+        .args(&args)
+        .current_dir(local_dir.path());
+
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! { r#"
+            [WARNING] unknown config key(s) ["global_only", "local_only", "shared"] ignored (incorrect key, or may require newer/older sncast).
+            Affected config(s): [..]snfoundry.toml, [..]snfoundry.toml
+        "# },
+    );
+}
+
+#[tokio::test]
+async fn test_unknown_wait_params() {
+    let local_dir = tempdir().unwrap();
+    fs::write(
+        local_dir.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            url = "http://127.0.0.1:5055/rpc"
+            account = "user1"
+            wait-params = { timeout = 10, retry-interval = 5, future-wait-flag = true }
+        "#},
+    )
+    .unwrap();
+    let args = vec!["show-config"];
+
+    let snapbox = runner(&args).current_dir(local_dir.path());
+
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! { r#"
+            [WARNING] unknown config key(s) ["future-wait-flag"] ignored (incorrect key, or may require newer/older sncast).
+            Affected config(s): [..]snfoundry.toml
+        "# },
+    );
+}
+
+#[tokio::test]
+async fn test_unknown_networks() {
+    let local_dir = tempdir().unwrap();
+    fs::write(
+        local_dir.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            url = "http://127.0.0.1:5055/rpc"
+            account = "user1"
+
+            [sncast.default.networks]
+            mainnet = "https://mainnet.example.com"
+            custom = "https://custom.example.com"
+        "#},
+    )
+    .unwrap();
+    let args = vec!["show-config"];
+
+    let snapbox = runner(&args).current_dir(local_dir.path());
+
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! { r#"
+            [WARNING] unknown config key(s) ["custom"] ignored (incorrect key, or may require newer/older sncast).
+            Affected config(s): [..]snfoundry.toml
         "# },
     );
 }

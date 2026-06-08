@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--contract-address @alias` syntax in `sncast call` and `sncast invoke`.
 - `sncast alias list` command for listing aliases. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/alias/list.html).
 
+#### Changed
+
+- Unknown keys in `snfoundry.toml` (`[sncast.<profile>]`, `[sncast.<profile>.networks]`, `wait-params`) now emit a warning and are ignored instead of causing a hard error, so configs can be shared across `sncast` versions. Read more in [configuration](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html).
+
+
 ## [0.61.0] - 2026-05-26
 
 ### Forge
