@@ -5,6 +5,7 @@ use crate::runtime_extensions::outer_call_runtime_extension::CheatnetState;
 use crate::runtime_extensions::outer_call_runtime_extension::execution::entry_point::execute_constructor_entry_point;
 use blockifier::context::TransactionContext;
 use blockifier::execution::common_hints::ExecutionMode;
+use blockifier::execution::entry_point::EntryPointRevertInfo;
 use blockifier::execution::errors::{
     ConstructorEntryPointExecutionError, EntryPointExecutionError,
 };
@@ -210,6 +211,12 @@ pub fn execute_deployment(
         ));
     }
 
+    context.revert_infos.0.push(EntryPointRevertInfo::new(
+        deployed_contract_address,
+        current_class_hash,
+        context.n_emitted_events,
+        context.n_sent_messages_to_l1,
+    ));
     state
         .set_class_hash_at(deployed_contract_address, ctor_context.class_hash)
         .map_err(|error| {
