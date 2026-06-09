@@ -55,7 +55,7 @@ mod setup;
 mod syscall_handler;
 pub mod target;
 
-use crate::debugging::build_debugging_trace;
+use crate::debugging::{build_contracts_data_store, build_debugging_trace};
 pub use hints::hints_to_params;
 use setup::VmExecutionContext;
 pub use syscall_handler::has_segment_arena;
@@ -441,11 +441,13 @@ fn extract_test_case_summary(
                     test_statistics: (),
                     debugging_trace: build_debugging_trace(
                         &run_error.call_trace.borrow(),
-                        contracts_data,
                         trace_args,
                         case.name.clone(),
-                        run_error.fork_data.as_ref(),
-                        case.config.disable_predeployed_contracts,
+                        build_contracts_data_store(
+                            contracts_data,
+                            run_error.fork_data.as_ref(),
+                            case.config.disable_predeployed_contracts,
+                        ),
                     ),
                 }
             }
