@@ -37,18 +37,21 @@ impl PartialEq for StarknetContractArtifacts {
     }
 }
 
-/// A single compiled contract together with its identifying metadata.
+/// A single compiled contract together with its artifacts and Sierra path.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LoadedContract {
-    /// Short contract name. Not unique across targets/packages.
     pub contract_name: String,
     pub artifacts: StarknetContractArtifacts,
     pub sierra_path: Utf8PathBuf,
 }
 
-/// Compiled Starknet artifacts for a package, keyed by the fully qualified `module_path`
-/// (globally unique). Contracts that merely share a `contract_name` are kept as separate entries;
-/// resolving such a name later is what surfaces the ambiguity.
+/// Compiled Starknet artifacts for a package, keyed by module path.
+///
+/// Module path (e.g. `my_package::sub::MyContract`) is fully qualified, so it is unique -
+/// unlike contract name, which several contracts can share (for example one in `src/` and one
+/// in `tests/`). Such name clashes are kept here as separate entries rather than collapsed into
+/// one. The clash only matters later, when a contract is looked up by its (non-unique) name:
+/// that lookup is where it is reported as ambiguous.
 pub type LoadedContracts = HashMap<String, LoadedContract>;
 
 #[derive(PartialEq, Debug)]

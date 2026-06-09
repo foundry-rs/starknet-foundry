@@ -22,9 +22,6 @@ impl StarknetArtifactsRepresentation {
     }
 
     /// Returns `(contract_name, module_path, sierra_path)` for every contract in the representation.
-    ///
-    /// `contract_name` is not unique across targets/packages, but `module_path` is fully
-    /// qualified and globally unique, so it is used to distinguish contracts sharing a name.
     pub fn artifacts(self) -> Vec<(String, String, Utf8PathBuf)> {
         self.artifacts
             .contracts
