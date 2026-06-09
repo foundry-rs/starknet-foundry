@@ -1,6 +1,6 @@
 use core::array::ArrayTrait;
-use core::panic_with_felt252;
 use core::byte_array::BYTE_ARRAY_MAGIC;
+use core::panic_with_felt252;
 
 #[test]
 #[should_panic]
