@@ -256,7 +256,7 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │  ├─ [caller address] [..]
         │  ├─ [call type] Call
         │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
-        │  ├─ [events] [Event {{ keys: [[..]], data: [0x2] }}]
+        │  ├─ [events] [CallsExecuted {{ calls_len: 0x2 }}]
         │  ├─ [L2 gas] [..]
         │  ├─ [selector] execute_calls
         │  │  ├─ [contract name] SimpleContract
@@ -266,7 +266,7 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │  │  ├─ [caller address] [..]
         │  │  ├─ [call type] Call
         │  │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
-        │  │  ├─ [events] [Event {{ keys: [[..]], data: [0x2] }}]
+        │  │  ├─ [events] [CallsExecuted {{ calls_len: 0x2 }}]
         │  │  ├─ [L2 gas] [..]
         │  │  ├─ [selector] execute_calls
         │  │  │  ├─ [contract name] SimpleContract
@@ -276,7 +276,7 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │  │  │  ├─ [caller address] [..]
         │  │  │  ├─ [call type] Call
         │  │  │  ├─ [call result] success: array![]
-        │  │  │  ├─ [events] [Event {{ keys: [[..]], data: [0x0] }}]
+        │  │  │  ├─ [events] [CallsExecuted {{ calls_len: 0x0 }}]
         │  │  │  └─ [L2 gas] [..]
         │  │  └─ [selector] execute_calls
         │  │     ├─ [contract name] SimpleContract
@@ -286,7 +286,7 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │  │     ├─ [caller address] [..]
         │  │     ├─ [call type] Call
         │  │     ├─ [call result] success: array![]
-        │  │     ├─ [events] [Event {{ keys: [[..]], data: [0x0] }}]
+        │  │     ├─ [events] [CallsExecuted {{ calls_len: 0x0 }}]
         │  │     └─ [L2 gas] [..]
         │  └─ [selector] execute_calls
         │     ├─ [contract name] SimpleContract
@@ -296,7 +296,7 @@ fn detailed_debugging_trace_message(test_name: &str, package_name: &str) -> Stri
         │     ├─ [caller address] [..]
         │     ├─ [call type] Call
         │     ├─ [call result] success: array![]
-        │     ├─ [events] [Event {{ keys: [[..]], data: [0x0] }}]
+        │     ├─ [events] [CallsExecuted {{ calls_len: 0x0 }}]
         │     └─ [L2 gas] [..]
         └─ [selector] fail
            ├─ [contract name] SimpleContract

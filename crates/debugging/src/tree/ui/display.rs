@@ -119,18 +119,19 @@ fn string_debug(data: impl Debug) -> String {
 
 impl Event {
     fn string_pretty(&self) -> String {
-        format!(
-            "Event {{ keys: [{}], data: [{}] }}",
-            self.keys
-                .iter()
-                .map(Felt::to_hex_string)
-                .collect::<Vec<_>>()
-                .join(", "),
-            self.data
-                .iter()
-                .map(Felt::to_hex_string)
-                .collect::<Vec<_>>()
-                .join(", "),
-        )
+        match self {
+            Event::Decoded(value) => value.clone(),
+            Event::Raw { keys, data } => format!(
+                "Event {{ keys: [{}], data: [{}] }}",
+                keys.iter()
+                    .map(Felt::to_hex_string)
+                    .collect::<Vec<_>>()
+                    .join(", "),
+                data.iter()
+                    .map(Felt::to_hex_string)
+                    .collect::<Vec<_>>()
+                    .join(", "),
+            ),
+        }
     }
 }
