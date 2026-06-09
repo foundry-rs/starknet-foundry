@@ -14,7 +14,7 @@ pub fn create_rpc_client(url: &Url) -> Result<JsonRpcClient<HttpTransport>> {
 
 #[must_use]
 pub fn is_expected_version(version: &Version) -> bool {
-    // TODO(#4412): Check only `EXPECTED_RPC_VERSION` and remove the fallback check for "0.10.3-rc.0".
+    // TODO(#4412): Remove the fallback check for "0.10.3-rc.0".
     VersionReq::from_str(EXPECTED_RPC_VERSION)
         .expect("Failed to parse the expected RPC version")
         .matches(version)
