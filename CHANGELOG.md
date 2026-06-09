@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - Debugging trace is now correctly displayed for predeployed contracts (STRK, ETH) in non-fork tests.
+- `snforge_std::declare` now fails with a clear, deterministic error when a contract name resolves to multiple contracts (e.g. one defined in `src/` and another in `tests/`), instead of non-deterministically selecting one of them.
 
 ### Cast 
 
