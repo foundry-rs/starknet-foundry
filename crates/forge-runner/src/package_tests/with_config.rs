@@ -68,7 +68,11 @@ impl From<Option<RawShouldPanicConfig>> for ExpectedTestResult {
 fn serialize_expected_tuple_item(value: ExpectedTupleItem) -> Vec<Felt> {
     match value {
         ExpectedTupleItem::Felt(felt) => vec![felt],
-        ExpectedTupleItem::ByteArray(byte_array) => byte_array.serialize_with_magic(),
+        ExpectedTupleItem::ByteArray(byte_array) => {
+            // If byte array is a standalone value, it should be serialized with magic,
+            // but if it's part of a tuple, it should be serialized without magic.
+            byte_array.serialize_to_vec()
+        }
     }
 }
 
@@ -79,28 +83,30 @@ mod tests {
     use starknet_types_core::felt::Felt;
 
     #[test]
-    fn should_panic_tuple_strings_are_serialized_with_magic() {
-        let byte_array_error = ByteArray::from("error");
-        let byte_array_hello = ByteArray::from("hello");
+    fn should_panic_tuple_strings_are_flattened_without_magic() {
         let expected = ExpectedTestResult::from(Some(RawShouldPanicConfig {
             expected: Expected::Array(vec![
-                ExpectedTupleItem::ByteArray(byte_array_error.clone()),
+                ExpectedTupleItem::ByteArray(ByteArray::from("error")),
                 ExpectedTupleItem::Felt(Felt::from(11_u8)),
-                ExpectedTupleItem::ByteArray(byte_array_hello.clone()),
+                ExpectedTupleItem::ByteArray(ByteArray::from("hello")),
                 ExpectedTupleItem::Felt(Felt::from(5_u8)),
                 ExpectedTupleItem::Felt(Felt::from_bytes_be_slice(b"short_string")),
             ]),
         }));
 
-        let mut expected_data = byte_array_error.serialize_with_magic();
-        expected_data.push(Felt::from(11_u8));
-        expected_data.extend(byte_array_hello.serialize_with_magic());
-        expected_data.push(Felt::from(5_u8));
-        expected_data.push(Felt::from_bytes_be_slice(b"short_string"));
-
         assert_eq!(
             expected,
-            ExpectedTestResult::Panics(ExpectedPanicValue::Exact(expected_data))
+            ExpectedTestResult::Panics(ExpectedPanicValue::Exact(vec![
+                Felt::from(0_u8),
+                Felt::from_bytes_be_slice(b"error"),
+                Felt::from(5_u8),
+                Felt::from(11_u8),
+                Felt::from(0_u8),
+                Felt::from_bytes_be_slice(b"hello"),
+                Felt::from(5_u8),
+                Felt::from(5_u8),
+                Felt::from_bytes_be_slice(b"short_string"),
+            ]))
         );
     }
 
@@ -129,9 +135,9 @@ mod tests {
             ]),
         }));
 
-        let mut expected_data = ByteArray::from("").serialize_with_magic();
+        let mut expected_data = ByteArray::from("").serialize_to_vec();
         expected_data.push(Felt::from(11_u8));
-        expected_data.extend(ByteArray::from("hello").serialize_with_magic());
+        expected_data.extend(ByteArray::from("hello").serialize_to_vec());
 
         assert_eq!(
             expected,
@@ -149,7 +155,7 @@ mod tests {
             ]),
         }));
 
-        let mut expected_data = ByteArray::from(long_string).serialize_with_magic();
+        let mut expected_data = ByteArray::from(long_string).serialize_to_vec();
         expected_data.push(Felt::from(5_u8));
 
         assert_eq!(
@@ -159,7 +165,7 @@ mod tests {
     }
 
     #[test]
-    fn should_panic_standalone_and_tuple_single_string_use_same_encoding() {
+    fn should_panic_standalone_and_tuple_single_string_use_different_encodings() {
         let standalone = ExpectedTestResult::from(Some(RawShouldPanicConfig {
             expected: Expected::ByteArray(ByteArray::from("error")),
         }));
@@ -167,6 +173,6 @@ mod tests {
             expected: Expected::Array(vec![ExpectedTupleItem::ByteArray(ByteArray::from("error"))]),
         }));
 
-        assert_eq!(standalone, tuple);
+        assert_ne!(standalone, tuple);
     }
 }

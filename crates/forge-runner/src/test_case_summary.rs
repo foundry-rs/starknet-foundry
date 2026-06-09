@@ -421,7 +421,6 @@ fn is_matching_should_panic_data(data: &[Felt], pattern: &[Felt]) -> bool {
         }
     }
 }
-
 fn convert_felts_to_byte_array_string(data: &[Felt]) -> Option<String> {
     ByteArray::deserialize_with_magic(data)
         .map(|byte_array| byte_array.to_string())
