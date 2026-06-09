@@ -364,7 +364,7 @@ fn simple_package_no_starknet_contract_target() {
 }
 
 #[test]
-fn duplicate_contract_name_fails_deterministically() {
+fn duplicate_contract_name_fails() {
     let temp = setup_package("duplicate_contract_name");
     let output = test_runner(&temp).assert().code(1);
 

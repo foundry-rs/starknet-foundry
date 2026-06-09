@@ -31,11 +31,11 @@ pub struct ContractData {
     source_sierra_path: Utf8PathBuf,
 }
 
-/// Outcome of resolving a (non-unique) `contract_name` to a single contract.
+/// Outcome of resolving a contract name to a single contract.
 pub enum ContractResolutionError {
     /// No contract with the given name was found.
     NotFound,
-    /// Several contracts share the name; carries their module paths (sorted) for diagnostics.
+    /// Several contracts share the same name. Carries their module paths (sorted) for diagnostics.
     Ambiguous(Vec<ModulePath>),
 }
 
@@ -88,9 +88,8 @@ impl ContractsData {
         })
     }
 
-    /// Resolves a `contract_name` to a single contract. Because the name is not unique, it may
-    /// match zero contracts ([`ContractResolutionError::NotFound`]) or several
-    /// ([`ContractResolutionError::Ambiguous`]).
+    /// Resolves [`ContractData`] for a given `contract_name`.
+    /// Returns an error if no contract or multiple contracts are found with the given name.
     pub fn resolve_by_name(
         &self,
         contract_name: &str,
