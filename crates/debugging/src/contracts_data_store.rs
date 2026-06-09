@@ -127,21 +127,21 @@ impl ContractsDataStore {
     }
 }
 
-impl From<ContractsDebuggingData> for ContractsDataStore {
-    fn from(data: ContractsDebuggingData) -> Self {
+impl From<&ContractsDebuggingData> for ContractsDataStore {
+    fn from(data: &ContractsDebuggingData) -> Self {
         let selectors = data
             .selectors
-            .into_iter()
-            .map(|(k, v)| (k, Selector(v)))
+            .iter()
+            .map(|(k, v)| (*k, Selector(v.clone())))
             .collect();
         let contract_names = data
             .contract_names
-            .into_iter()
-            .map(|(class_hash, name)| (class_hash, ContractName(name)))
+            .iter()
+            .map(|(class_hash, name)| (*class_hash, ContractName(name.clone())))
             .collect();
 
         Self {
-            abi: data.abi,
+            abi: data.abi.clone(),
             contract_names,
             selectors,
             programs: HashMap::new(),

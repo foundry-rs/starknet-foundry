@@ -13,7 +13,6 @@ const ERC20LOCKABLE_ABI_JSON: &str =
 const ERC20MINTABLE_ABI_JSON: &str =
     include_str!("../data/predeployed_contracts/ERC20Mintable/abi.json");
 
-#[derive(Clone)]
 pub struct ContractsDebuggingData {
     pub abi: HashMap<ClassHash, Vec<AbiEntry>>,
     pub selectors: HashMap<EntryPointSelector, String>,
@@ -56,6 +55,6 @@ static PREDEPLOYED_CONTRACTS_DEBUGGING_DATA: LazyLock<ContractsDebuggingData> =
 
 /// Returns debugging data for contracts predeployed in every `snforge` test environment.
 #[must_use]
-pub fn predeployed_contracts_debugging_data() -> ContractsDebuggingData {
-    PREDEPLOYED_CONTRACTS_DEBUGGING_DATA.clone()
+pub fn predeployed_contracts_debugging_data() -> &'static ContractsDebuggingData {
+    &PREDEPLOYED_CONTRACTS_DEBUGGING_DATA
 }
