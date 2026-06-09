@@ -13,6 +13,7 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use sncast::AccountType;
+use speculos_client::SpeculosError;
 use speculos_client::starknet_app::{
     APPROVE_BLIND_SIGN_HASH, APPROVE_PUBLIC_KEY, ENABLE_BLIND_SIGN,
 };
@@ -24,10 +25,10 @@ use test_case::test_case;
 
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
-async fn test_ledger_invoke_happy_case() {
+async fn test_ledger_invoke_happy_case() -> Result<(), SpeculosError> {
     let (client, url) = setup_speculos(5001);
 
-    let _ = set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
+    set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await?;
 
     let account_address = deploy_ledger_account(&url, TEST_LEDGER_PATH, Felt::from(5001_u32)).await;
     let tempdir = create_temp_accounts_json(account_address);
@@ -61,14 +62,15 @@ async fn test_ledger_invoke_happy_case() {
     let tx_hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(tx_hash).await;
     assert!(matches!(receipt, Invoke(_)));
+    Ok(())
 }
 
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
-async fn test_ledger_invoke_with_wait() {
+async fn test_ledger_invoke_with_wait() -> Result<(), SpeculosError> {
     let (client, url) = setup_speculos(5002);
 
-    let _ = set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
+    set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await?;
 
     let account_address = deploy_ledger_account(&url, TEST_LEDGER_PATH, Felt::from(5002_u32)).await;
     let tempdir = create_temp_accounts_json(account_address);
@@ -104,14 +106,15 @@ async fn test_ledger_invoke_with_wait() {
     let tx_hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(tx_hash).await;
     assert!(matches!(receipt, Invoke(_)));
+    Ok(())
 }
 
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
-async fn test_ledger_deploy_happy_case() {
+async fn test_ledger_deploy_happy_case() -> Result<(), SpeculosError> {
     let (client, url) = setup_speculos(5004);
 
-    let _ = set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
+    set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await?;
 
     let account_address = deploy_ledger_account(&url, TEST_LEDGER_PATH, Felt::from(5004_u32)).await;
     let tempdir = create_temp_accounts_json(account_address);
@@ -144,14 +147,15 @@ async fn test_ledger_deploy_happy_case() {
     let tx_hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(tx_hash).await;
     assert!(matches!(receipt, Invoke(_)));
+    Ok(())
 }
 
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
-async fn test_ledger_deploy_with_constructor() {
+async fn test_ledger_deploy_with_constructor() -> Result<(), SpeculosError> {
     let (client, url) = setup_speculos(5005);
 
-    let _ = set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
+    set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await?;
 
     let account_address = deploy_ledger_account(&url, TEST_LEDGER_PATH, Felt::from(6001_u32)).await;
     let tempdir = create_temp_accounts_json(account_address);
@@ -186,14 +190,15 @@ async fn test_ledger_deploy_with_constructor() {
     let tx_hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(tx_hash).await;
     assert!(matches!(receipt, Invoke(_)));
+    Ok(())
 }
 
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
-async fn test_ledger_declare() {
+async fn test_ledger_declare() -> Result<(), SpeculosError> {
     let (client, url) = setup_speculos(5006);
 
-    let _ = set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
+    set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await?;
 
     let account_address = deploy_ledger_account(&url, TEST_LEDGER_PATH, Felt::from(5006_u32)).await;
 
@@ -230,6 +235,7 @@ async fn test_ledger_declare() {
     let tx_hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(tx_hash).await;
     assert!(matches!(receipt, Declare(_)));
+    Ok(())
 }
 
 #[test_case(AccountType::OpenZeppelin, "oz", Some(OZ_LEDGER_PATH), None, 5008; "oz_account_type")]
@@ -243,10 +249,10 @@ async fn test_ledger_import_and_invoke(
     ledger_path: Option<&str>,
     ledger_account_id: Option<u32>,
     port: u16,
-) {
+) -> Result<(), SpeculosError> {
     let (client, url) = setup_speculos(port);
 
-    let _ = set_automation(
+    set_automation(
         &client,
         &[
             ENABLE_BLIND_SIGN,
@@ -254,7 +260,7 @@ async fn test_ledger_import_and_invoke(
             APPROVE_PUBLIC_KEY,
         ],
     )
-    .await;
+    .await?;
 
     let account_id_path_buf;
     let deploy_path = match (ledger_path, ledger_account_id) {
@@ -328,14 +334,15 @@ async fn test_ledger_import_and_invoke(
     let tx_hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(tx_hash).await;
     assert!(matches!(receipt, Invoke(_)));
+    Ok(())
 }
 
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
-async fn test_ledger_multicall() {
+async fn test_ledger_multicall() -> Result<(), SpeculosError> {
     let (client, url) = setup_speculos(5007);
 
-    let _ = set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
+    set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await?;
 
     let account_address = deploy_ledger_account(&url, TEST_LEDGER_PATH, Felt::from(5007_u32)).await;
     let tempdir = create_temp_accounts_json(account_address);
@@ -374,4 +381,5 @@ async fn test_ledger_multicall() {
     let tx_hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(tx_hash).await;
     assert!(matches!(receipt, Invoke(_)));
+    Ok(())
 }

@@ -45,11 +45,11 @@ async fn test_create_ledger_account(
     class_hash: String,
     port: u16,
     automations: &[AutomationRule<'static>],
-) {
+) -> Result<(), speculos_client::SpeculosError> {
     let (client, url) = setup_speculos(port);
     let tempdir = tempdir().unwrap();
 
-    let _ = set_automation(&client, automations).await;
+    set_automation(&client, automations).await?;
 
     let output = runner(&[
         "--accounts-file",
@@ -112,6 +112,7 @@ async fn test_create_ledger_account(
     );
 
     assert_data_eq!(contents, to_string_pretty(&expected).unwrap());
+    Ok(())
 }
 
 #[tokio::test]
@@ -194,10 +195,10 @@ async fn test_deploy_ledger_account(
     ledger_path: &str,
     port: u16,
     automations: &[AutomationRule<'static>],
-) {
+) -> Result<(), speculos_client::SpeculosError> {
     let (client, url) = setup_speculos(port);
 
-    let _ = set_automation(&client, automations).await;
+    set_automation(&client, automations).await?;
 
     let tempdir = tempdir().unwrap();
     let accounts_file = tempdir.path().join("accounts.json");
@@ -264,6 +265,7 @@ async fn test_deploy_ledger_account(
         items["alpha-sepolia"][LEDGER_ACCOUNT_NAME]["deployed"],
         true
     );
+    Ok(())
 }
 
 #[tokio::test]

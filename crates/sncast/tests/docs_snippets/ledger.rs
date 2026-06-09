@@ -7,6 +7,7 @@ use docs::utils::{
 };
 use docs::validation::{extract_snippets_from_directory, extract_snippets_from_file};
 use shared::test_utils::output_assert::assert_stdout_contains;
+use speculos_client::SpeculosError;
 use speculos_client::starknet_app::{
     APPROVE_BLIND_SIGN_HASH, APPROVE_PUBLIC_KEY, ENABLE_BLIND_SIGN,
 };
@@ -15,17 +16,21 @@ use tempfile::TempDir;
 
 const DOCS_SNIPPETS_PORT_BASE: u16 = 4006;
 
-async fn setup_speculos_automation(client: &Arc<speculos_client::SpeculosClient>, args: &[&str]) {
+async fn setup_speculos_automation(
+    client: &Arc<speculos_client::SpeculosClient>,
+    args: &[&str],
+) -> Result<(), SpeculosError> {
     if args.contains(&"get-public-key") && !args.contains(&"--no-display") {
-        let _ = set_automation(client, &[APPROVE_PUBLIC_KEY]).await;
+        set_automation(client, &[APPROVE_PUBLIC_KEY]).await?;
     } else if args.contains(&"sign-hash") {
-        let _ = set_automation(client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
+        set_automation(client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await?;
     }
+    Ok(())
 }
 
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
-async fn test_ledger_docs_snippets() {
+async fn test_ledger_docs_snippets() -> Result<(), SpeculosError> {
     let root_dir_path = get_nth_ancestor(2);
     let ledger_appendix_dir = root_dir_path.join("docs/src/appendix/sncast/ledger");
     let ledger_guide_path = root_dir_path.join("docs/src/starknet/ledger.md");
@@ -87,7 +92,7 @@ async fn test_ledger_docs_snippets() {
             (shared_client.clone(), shared_url.clone())
         };
 
-        setup_speculos_automation(&snippet_client, &args).await;
+        setup_speculos_automation(&snippet_client, &args).await?;
 
         let snapbox = runner(&args)
             .env("LEDGER_EMULATOR_URL", &snippet_url)
@@ -108,4 +113,5 @@ async fn test_ledger_docs_snippets() {
         .collect();
 
     print_snippets_validation_summary(&ledger_snippets, snippet_type.as_str());
+    Ok(())
 }

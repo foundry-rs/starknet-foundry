@@ -1,6 +1,7 @@
 use crate::e2e::ledger::{TEST_LEDGER_PATH, set_automation, setup_speculos};
 use crate::helpers::runner::runner;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use speculos_client::SpeculosError;
 use speculos_client::starknet_app::{
     APPROVE_BLIND_SIGN_HASH, APPROVE_PUBLIC_KEY, ENABLE_BLIND_SIGN,
 };
@@ -60,10 +61,10 @@ async fn test_get_public_key_with_confirmation() {
 
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
-async fn test_sign_hash() {
+async fn test_sign_hash() -> Result<(), SpeculosError> {
     let (client, url) = setup_speculos(4004);
 
-    let _ = set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await;
+    set_automation(&client, &[ENABLE_BLIND_SIGN, APPROVE_BLIND_SIGN_HASH]).await?;
 
     let output = runner(&[
         "ledger",
@@ -77,6 +78,7 @@ async fn test_sign_hash() {
     .success();
 
     assert_stdout_contains(output, "Hash signature:\nr: 0x[..]\ns: 0x[..]");
+    Ok(())
 }
 
 #[tokio::test]
