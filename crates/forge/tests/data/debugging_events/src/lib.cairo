@@ -3,10 +3,13 @@ trait IEventsChecker<TContractState> {
     fn emit_event(ref self: TContractState, value: felt252);
     fn emit_two_events(ref self: TContractState, first_value: felt252, second_value: felt252);
     fn do_not_emit(self: @TContractState);
+    fn emit_custom_event(ref self: TContractState, key: felt252, value: felt252);
 }
 
 #[starknet::contract]
 mod EventsChecker {
+    use starknet::SyscallResultTrait;
+
     #[storage]
     struct Storage {}
 
@@ -33,5 +36,9 @@ mod EventsChecker {
         }
 
         fn do_not_emit(self: @ContractState) {}
+
+        fn emit_custom_event(ref self: ContractState, key: felt252, value: felt252) {
+            starknet::emit_event_syscall(array![key].span(), array![value].span()).unwrap_syscall();
+        }
     }
 }

@@ -1,5 +1,4 @@
 use core::array::ArrayTrait;
-use core::byte_array::BYTE_ARRAY_MAGIC;
 use core::panic_with_felt252;
 
 #[test]
@@ -30,10 +29,8 @@ fn should_panic_mixed_tuple() {
     let first = "this_string_is_longer_than_31_bytes";
     let second = "hello";
 
-    arr.append(BYTE_ARRAY_MAGIC);
     Serde::<ByteArray>::serialize(@first, ref arr);
     arr.append(11);
-    arr.append(BYTE_ARRAY_MAGIC);
     Serde::<ByteArray>::serialize(@second, ref arr);
     arr.append(5);
     arr.append('short_string');
