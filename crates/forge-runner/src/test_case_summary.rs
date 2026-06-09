@@ -12,7 +12,7 @@ use cairo_annotations::trace_data::VersionedCallTrace as VersionedProfilerCallTr
 use camino::Utf8Path;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
-use conversions::byte_array::{BYTE_ARRAY_MAGIC_FELT, ByteArray};
+use conversions::byte_array::ByteArray;
 use conversions::felt::ToShortString;
 use debugging::ContractsDataStore;
 use shared::utils::build_readable_text;
@@ -415,10 +415,7 @@ fn is_matching_should_panic_data(data: &[Felt], pattern: &[Felt]) -> bool {
             let filtered: Vec<Felt> = data
                 .iter()
                 .copied()
-                .filter(|f| {
-                    f != &ENTRYPOINT_FAILED_ERROR_FELT
-                        && (pattern.contains(&*BYTE_ARRAY_MAGIC_FELT) || f != &*BYTE_ARRAY_MAGIC_FELT)
-                })
+                .filter(|f| f != &ENTRYPOINT_FAILED_ERROR_FELT)
                 .collect();
             filtered.as_slice() == pattern
         }
@@ -572,52 +569,5 @@ mod tests {
 
         let non_matching_pattern = vec![Felt::from(11_u8), Felt::from(22_u8)];
         assert!(!is_matching_should_panic_data(&data, &non_matching_pattern));
-    }
-
-    #[test]
-    fn test_is_matching_should_panic_data_stacked_byte_arrays() {
-        // Actual panic data: two ByteArrays interleaved with felts, each prefixed with
-        // BYTE_ARRAY_MAGIC as Cairo emits them.
-        let magic = *BYTE_ARRAY_MAGIC_FELT;
-        let actual = vec![
-            magic,
-            Felt::from(0_u8),                    // num_full_words
-            Felt::from_bytes_be_slice(b"error"), // pending word
-            Felt::from(5_u8),                    // pending len
-            Felt::from(11_u8),                   // separator felt
-            magic,
-            Felt::from(0_u8),
-            Felt::from_bytes_be_slice(b"hello"),
-            Felt::from(5_u8),
-            Felt::from(5_u8),
-            Felt::from_bytes_be_slice(b"short_string"),
-        ];
-
-        // Expected as serialized by snforge for `("error", 11, "hello", 5, 'short_string')`:
-        // ByteArrays in tuples are serialized WITHOUT BYTE_ARRAY_MAGIC.
-        let expected = vec![
-            Felt::from(0_u8),
-            Felt::from_bytes_be_slice(b"error"),
-            Felt::from(5_u8),
-            Felt::from(11_u8),
-            Felt::from(0_u8),
-            Felt::from_bytes_be_slice(b"hello"),
-            Felt::from(5_u8),
-            Felt::from(5_u8),
-            Felt::from_bytes_be_slice(b"short_string"),
-        ];
-
-        assert!(is_matching_should_panic_data(&actual, &expected));
-
-        // If the user explicitly includes BYTE_ARRAY_MAGIC in the expected tuple,
-        // the comparison should be exact (no stripping).
-        assert!(is_matching_should_panic_data(&actual, &actual));
-
-        let wrong = vec![
-            Felt::from(0_u8),
-            Felt::from_bytes_be_slice(b"wrong"),
-            Felt::from(5_u8),
-        ];
-        assert!(!is_matching_should_panic_data(&actual, &wrong));
     }
 }
