@@ -1,14 +1,20 @@
 use super::block_explorer;
+use super::felt::felt_from_string;
 use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
+use crate::response::ui::UI;
 use crate::{Network, PartialWaitParams, ValidatedWaitParams};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use configuration::{Config, Override, load_config, override_optional};
+use foundry_ui::components::warning::WarningMessage;
+use indoc::formatdoc;
 use serde::de::IntoDeserializer;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+use starknet_types_core::felt::Felt;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::{Display, Formatter};
+use std::ops::Deref;
 use url::Url;
 
 #[must_use]
@@ -58,11 +64,15 @@ impl Override for NetworkParams {
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Default)]
-#[serde(deny_unknown_fields)]
 pub struct NetworksConfig {
     pub mainnet: Option<Url>,
     pub sepolia: Option<Url>,
     pub devnet: Option<Url>,
+
+    /// Additional data not captured by deserializer.
+    #[doc(hidden)]
+    #[serde(flatten, default, skip_serializing)]
+    pub unknown_fields: HashMap<String, serde_json::Value>,
 }
 
 impl NetworksConfig {
@@ -82,7 +92,41 @@ impl Override for NetworksConfig {
             mainnet: other.mainnet.or_else(|| self.mainnet.clone()),
             sepolia: other.sepolia.or_else(|| self.sepolia.clone()),
             devnet: other.devnet.or_else(|| self.devnet.clone()),
+            unknown_fields: HashMap::default(),
         }
+    }
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq, Default)]
+pub struct AliasesConfig(pub BTreeMap<String, Felt>);
+
+impl<'de> Deserialize<'de> for AliasesConfig {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        BTreeMap::<String, String>::deserialize(deserializer)?
+            .into_iter()
+            .map(|(name, value)| felt_from_string(&value).map(|felt| (name, felt)))
+            .collect::<Result<BTreeMap<_, _>, _>>()
+            .map_err(serde::de::Error::custom)
+            .map(AliasesConfig)
+    }
+}
+
+impl Override for AliasesConfig {
+    fn override_with(&self, other: AliasesConfig) -> AliasesConfig {
+        let mut merged = self.0.clone();
+        merged.extend(other.0);
+        AliasesConfig(merged)
+    }
+}
+
+impl Deref for AliasesConfig {
+    type Target = BTreeMap<String, Felt>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -99,6 +143,7 @@ pub struct CastConfig {
     pub show_explorer_links: bool,
     pub networks: NetworksConfig,
     pub scarb_profile: String,
+    pub aliases: AliasesConfig,
 }
 
 impl CastConfig {
@@ -122,6 +167,7 @@ impl Default for CastConfig {
             show_explorer_links: show_explorer_links_default(),
             networks: NetworksConfig::default(),
             scarb_profile: "release".to_string(),
+            aliases: AliasesConfig::default(),
         }
     }
 }
@@ -172,6 +218,9 @@ pub struct PartialCastConfig {
     )]
     pub scarb_profile: Option<String>,
 
+    #[serde(default)]
+    pub aliases: Option<AliasesConfig>,
+
     /// Additional data not captured by deserializer.
     #[doc(hidden)]
     #[serde(flatten, default, skip_serializing)]
@@ -204,11 +253,6 @@ impl Config for PartialCastConfig {
 
 impl PartialCastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
-        if !self.unknown_fields.is_empty() {
-            let mut keys: Vec<&String> = self.unknown_fields.keys().collect();
-            keys.sort();
-            anyhow::bail!("unknown field(s) {keys:?}");
-        }
         block_explorer::Service::validate_for_config(self.block_explorer)?;
         if let Some(ref wp) = self.wait_params {
             wp.validate()?;
@@ -216,6 +260,54 @@ impl PartialCastConfig {
         self.network_params.validate()?;
         Ok(())
     }
+
+    #[must_use]
+    pub fn get_unknown_keys(&self) -> Vec<String> {
+        let mut keys: Vec<String> = self.unknown_fields.keys().cloned().collect();
+        if let Some(networks) = &self.networks {
+            keys.extend(networks.unknown_fields.keys().cloned());
+        }
+        if let Some(wait_params) = &self.wait_params {
+            keys.extend(wait_params.unknown_fields.keys().cloned());
+        }
+        keys.sort();
+        keys.dedup();
+        keys
+    }
+}
+
+pub fn warn_unknown_keys(configs: &[&MaybeConfig], ui: &UI) {
+    let mut keys = Vec::new();
+    let mut affected_paths = Vec::new();
+
+    for config in configs {
+        if let MaybeConfig::Loaded { path, config } = config {
+            let unknown = config.get_unknown_keys();
+            if !unknown.is_empty() {
+                keys.extend(unknown);
+                affected_paths.push(path.as_path());
+            }
+        }
+    }
+
+    if keys.is_empty() {
+        return;
+    }
+
+    keys.sort();
+    keys.dedup();
+    affected_paths.dedup();
+
+    let affected = affected_paths
+        .iter()
+        .map(|path| path.as_str())
+        .collect::<Vec<_>>()
+        .join(", ");
+
+    ui.print_warning(WarningMessage::new(formatdoc! {"
+        unknown config key(s) {keys:?} ignored (incorrect key, or may require newer/older sncast).
+        Affected config(s): {affected}"
+    }));
 }
 
 impl Override for PartialCastConfig {
@@ -225,11 +317,12 @@ impl Override for PartialCastConfig {
             account: other.account.or_else(|| self.account.clone()),
             accounts_file: other.accounts_file.or_else(|| self.accounts_file.clone()),
             keystore: other.keystore.or_else(|| self.keystore.clone()),
-            wait_params: override_optional(self.wait_params, other.wait_params),
+            wait_params: override_optional(self.wait_params.clone(), other.wait_params),
             block_explorer: other.block_explorer.or(self.block_explorer),
             show_explorer_links: other.show_explorer_links.or(self.show_explorer_links),
             networks: override_optional(self.networks.clone(), other.networks),
             scarb_profile: other.scarb_profile.or_else(|| self.scarb_profile.clone()),
+            aliases: override_optional(self.aliases.clone(), other.aliases),
             unknown_fields: HashMap::default(),
         }
     }
@@ -239,7 +332,10 @@ impl Override for PartialCastConfig {
 pub enum MaybeConfig {
     NoFile,
     NoProfile,
-    Loaded(Box<PartialCastConfig>),
+    Loaded {
+        path: Utf8PathBuf,
+        config: Box<PartialCastConfig>,
+    },
 }
 
 impl MaybeConfig {
@@ -247,7 +343,7 @@ impl MaybeConfig {
     pub fn unwrap_or_default(self) -> PartialCastConfig {
         match self {
             Self::NoFile | Self::NoProfile => PartialCastConfig::default(),
-            Self::Loaded(config) => *config,
+            Self::Loaded { config, .. } => *config,
         }
     }
 }
@@ -282,7 +378,10 @@ impl PartialCastConfig {
             None => Ok(MaybeConfig::NoFile),
             Some(p) => match Self::load(p, profile, scope)? {
                 None => Ok(MaybeConfig::NoProfile),
-                Some(config) => Ok(MaybeConfig::Loaded(Box::from(config))),
+                Some(config) => Ok(MaybeConfig::Loaded {
+                    path: p.clone(),
+                    config: Box::from(config),
+                }),
             },
         }
     }
@@ -319,6 +418,7 @@ impl TryFrom<PartialCastConfig> for CastConfig {
             show_explorer_links: p.show_explorer_links.unwrap_or(d.show_explorer_links),
             networks,
             scarb_profile: p.scarb_profile.unwrap_or(d.scarb_profile),
+            aliases: p.aliases.unwrap_or_default(),
         };
         config.validate()?;
         Ok(config)
@@ -328,6 +428,10 @@ impl TryFrom<PartialCastConfig> for CastConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::helpers::constants::{
+        MAP_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+    };
+    use std::str::FromStr;
     use url::Url;
 
     #[test]
@@ -336,6 +440,7 @@ mod tests {
             mainnet: Some(Url::parse("https://mainnet.example.com").unwrap()),
             sepolia: Some(Url::parse("https://sepolia.example.com").unwrap()),
             devnet: Some(Url::parse("https://devnet.example.com").unwrap()),
+            ..Default::default()
         };
 
         assert_eq!(
@@ -358,11 +463,13 @@ mod tests {
             mainnet: Some(Url::parse("https://global-mainnet.example.com").unwrap()),
             sepolia: Some(Url::parse("https://global-sepolia.example.com").unwrap()),
             devnet: None,
+            ..Default::default()
         };
         let local = NetworksConfig {
             mainnet: Some(Url::parse("https://local-mainnet.example.com").unwrap()),
             sepolia: None,
             devnet: None,
+            ..Default::default()
         };
 
         let overridden = global.override_with(local);
@@ -416,16 +523,56 @@ mod tests {
     }
 
     #[test]
-    fn test_networks_config_rejects_unknown_fields_and_typos() {
-        // Unknown fields should cause an error
+    fn test_aliases_config_override() {
+        let global = AliasesConfig(BTreeMap::from([("a".to_string(), Felt::from(100))]));
+        let local = AliasesConfig(BTreeMap::from([
+            ("a".to_string(), Felt::from(300)),
+            ("b".to_string(), Felt::from(200)),
+        ]));
+
+        let merged = global.override_with(local);
+
+        assert_eq!(merged.0.get("a"), Some(&Felt::from(300)));
+        assert_eq!(merged.0.get("b"), Some(&Felt::from(200)));
+    }
+
+    #[test]
+    fn test_partial_cast_config_deserializes_aliases() {
+        let toml_str = format!(
+            r#"
+            url = "http://127.0.0.1:5055/rpc"
+
+            [aliases]
+            map = "{MAP_CONTRACT_ADDRESS_SEPOLIA}"
+            map-class = "{MAP_CONTRACT_CLASS_HASH_SEPOLIA}"
+            decimal = "123"
+            "#,
+        );
+
+        let config: PartialCastConfig = toml::from_str(&toml_str).unwrap();
+        let aliases = config.aliases.expect("aliases table");
+        assert_eq!(
+            aliases.0.get("map"),
+            Some(&Felt::from_str(MAP_CONTRACT_ADDRESS_SEPOLIA).unwrap())
+        );
+        assert_eq!(
+            aliases.0.get("map-class"),
+            Some(&Felt::from_str(MAP_CONTRACT_CLASS_HASH_SEPOLIA).unwrap())
+        );
+        assert_eq!(aliases.0.get("decimal"), Some(&Felt::from(123)));
+    }
+
+    #[test]
+    fn test_networks_config_collects_unknown_fields() {
         let toml_str = r#"
             mainnet = "https://mainnet.example.com"
             custom = "https://custom.example.com"
             wrong_key = "https://sepolia.example.com"
         "#;
 
-        let result: Result<NetworksConfig, _> = toml::from_str(toml_str);
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("unknown field"));
+        let config: NetworksConfig = toml::from_str(toml_str).unwrap();
+        assert_eq!(config.unknown_fields.len(), 2);
+        assert!(config.unknown_fields.contains_key("custom"));
+        assert!(config.unknown_fields.contains_key("wrong_key"));
     }
 }

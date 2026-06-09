@@ -1,5 +1,4 @@
 use std::num::{NonZeroU8, NonZeroU16};
-use std::str::FromStr;
 
 use crate::starknet_commands::declare::declare_with_artifacts;
 use crate::starknet_commands::declare_from::{ContractSource, DeclareFrom};
@@ -10,8 +9,8 @@ use crate::starknet_commands::invoke::InvokeCommonArgs;
 use crate::starknet_commands::script::run_script_command;
 use crate::starknet_commands::utils::{self, Utils};
 use crate::starknet_commands::{
-    account, account::Account as AccountCommand, call::Call, declare::Declare, deploy::Deploy,
-    get::tx_status::TxStatus, invoke::Invoke, multicall::Multicall, script::Script,
+    account, account::Account as AccountCommand, alias::Alias, call::Call, declare::Declare,
+    deploy::Deploy, get::tx_status::TxStatus, invoke::Invoke, multicall::Multicall, script::Script,
     show_config::ShowConfig,
 };
 use crate::starknet_commands::{get, multicall};
@@ -28,8 +27,9 @@ use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::config::get_or_create_global_config_path;
 use sncast::helpers::configuration::{
-    CastConfig, CliConfigOpts, ConfigScope, MaybeConfig, PartialCastConfig,
+    CastConfig, CliConfigOpts, ConfigScope, MaybeConfig, PartialCastConfig, warn_unknown_keys,
 };
+use sncast::helpers::felt::felt_from_string;
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
@@ -149,6 +149,7 @@ impl Cli {
             wait_params: Some(PartialWaitParams {
                 timeout: self.wait_timeout,
                 retry_interval: self.wait_retry_interval,
+                ..Default::default()
             }),
             scarb_profile: self.scarb_profile.clone(),
             ..Default::default()
@@ -183,6 +184,9 @@ enum Commands {
 
     /// Create and deploy an account
     Account(AccountCommand),
+
+    /// Manage saved aliases for contract addresses, class hashes, etc.
+    Alias(Alias),
 
     /// Show current configuration being used
     ShowConfig(ShowConfig),
@@ -241,10 +245,7 @@ impl Arguments {
 }
 
 pub fn calldata_to_felts(calldata: &[String]) -> Result<Vec<Felt>> {
-    calldata
-        .iter()
-        .map(|data| Felt::from_str(data).with_context(|| format!("Failed to parse {data} to felt")))
-        .collect()
+    calldata.iter().map(|data| felt_from_string(data)).collect()
 }
 
 impl From<DeployArguments> for Arguments {
@@ -658,6 +659,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
         }) => {
             let provider = rpc.get_provider(&config, ui).await?;
 
+            let contract_address = contract_address
+                .resolve_alias_or_felt(&config)
+                .context("Invalid contract address")?;
+
             let block_id = get_block_id(&block_id)?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
@@ -715,7 +720,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let contract_address = contract_address.try_into_felt()?;
+            let contract_address = contract_address.resolve_alias_or_felt(&config)?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
@@ -759,6 +764,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
         }
 
         Commands::Account(account) => account::account(account, config, ui, wait_config).await,
+
+        Commands::Alias(alias) => starknet_commands::alias::alias(&alias, &config, ui),
 
         Commands::ShowConfig(show) => {
             let provider = match show.rpc.get_provider(&config, ui).await {
@@ -876,6 +883,14 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
         }
         _ => {}
     }
+
+    let configs = vec![
+        &global_default,
+        &global_profile,
+        &local_default,
+        &local_profile,
+    ];
+    warn_unknown_keys(&configs, ui);
 
     let cli_config = cli.to_partial_config()?;
     let partial_config = PartialCastConfig::default()

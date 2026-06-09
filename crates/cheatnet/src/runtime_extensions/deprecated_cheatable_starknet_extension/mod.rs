@@ -32,8 +32,8 @@ use self::runtime::{
     DeprecatedExtendedRuntime, DeprecatedExtensionLogic, DeprecatedStarknetRuntime,
 };
 
-use super::call_to_blockifier_runtime_extension::execution::entry_point::non_reverting_execute_call_entry_point;
-use super::call_to_blockifier_runtime_extension::execution::syscall_hooks;
+use super::outer_call_runtime_extension::execution::entry_point::non_reverting_execute_call_entry_point;
+use super::outer_call_runtime_extension::execution::syscall_hooks;
 
 pub mod runtime;
 

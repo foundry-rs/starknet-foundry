@@ -1,7 +1,7 @@
 use crate::cheatcodes::test_environment::TestEnvironment;
 use crate::common::assertions::assert_success;
 use crate::common::get_contracts;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallSuccess;
+use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::CallSuccess;
 use cheatnet::state::CheatSpan;
 use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::TEST_ADDRESS;

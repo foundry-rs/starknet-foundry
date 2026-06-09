@@ -1,0 +1,11 @@
+---
+source: crates/forge/tests/e2e/debugging.rs
+expression: stdout
+---
+
+
+
+[PASS] debugging_events_integrationtest::test_trace::test_debugging_trace_multiple_events (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~332360)
+[test name] debugging_events_integrationtest::test_trace::test_debugging_trace_multiple_events
+└─ [selector] emit_two_events
+   └─ [events] [ValueEmitted { value: 0x2a }, ValueEmitted { value: 0x2b }]

@@ -56,5 +56,6 @@ pub async fn show_config(
         show_explorer_links: cast_config.show_explorer_links,
         block_explorer,
         scarb_profile: cast_config.scarb_profile,
+        alias_count: cast_config.aliases.len(),
     })
 }

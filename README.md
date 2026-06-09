@@ -53,7 +53,7 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 - [ ] Test coverage reports (check out [cairo-coverage](https://github.com/software-mansion/cairo-coverage)) 🏗️
 - [ ] L1 ↔ L2 messaging and cross-chain testing
 
-See the [whole roadmap](./ROADMAP.md). 
+More detailed roadmap can be found [here](./roadmaps/).
 
 ## Getting Help
 

@@ -5,8 +5,8 @@ use blockifier::fee::resources::{StarknetResources, StateResources, TransactionR
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
 use blockifier::transaction::objects::HasRelatedFeeType;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableResourceBoundsConfig;
+use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
 use cheatnet::state::ExtendedStateReader;
 use starknet_api::execution_resources::GasVector;
 use starknet_api::transaction::fields::GasVectorComputationMode;

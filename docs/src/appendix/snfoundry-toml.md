@@ -18,6 +18,15 @@ If it is not found, default values will be used.
 All fields are optional and do not have to be provided. In case a field is not defined in a manifest file, it must be provided in CLI when executing a relevant `sncast` command.
 Profiles allow you to define different sets of configurations for various environments or use cases. For more details, see the [profiles explanation](../projects/configuration.md).
 
+> 📝 **Tip**
+> 
+> Keys unrecognized by the currently used `sncast` version are ignored with a warning:
+> ```toml
+> [sncast.myprofile]
+> unknown-key = "some value"
+> ```
+> To avoid these warnings, use the latest `sncast` version and update your config to the latest format.
+
 #### `url`
 
 The `url` field specifies the address of RPC provider. It's mutually exclusive with the `network` field.
@@ -112,6 +121,21 @@ Defaults to `release`.
 ```toml
 [sncast.myprofile]
 scarb-profile = "release"
+```
+
+#### `[sncast.<profile-name>.aliases]`
+
+Frequently used felt values (contract addresses, class hashes, etc.) can be defined in the `aliases` table and later used in commands, e.g. `sncast call --contract-address @map`.
+
+> 📝 **Note**
+> For details on how aliases are used and the list of supported commands, see the [Aliases](../starknet/aliases.md) section.
+
+Aliases follow the same [precedence rules](../projects/configuration.md#interaction-between-local-and-global-profiles) as other `snfoundry.toml` settings, meaning they can be overridden via a higher-precedence config.
+
+```toml
+[sncast.myprofile.aliases]
+map = "0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008"
+map-class = "0x2a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321"
 ```
 
 #### `[sncast.<profile-name>.networks]`

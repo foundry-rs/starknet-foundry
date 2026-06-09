@@ -164,7 +164,7 @@ fn display_files_and_confirm(
         );
         let input: String = prompt(prompt_text)?;
 
-        if !input.to_lowercase().starts_with('y') {
+        if !input.is_empty() && !input.to_lowercase().starts_with('y') {
             bail!("Verification aborted");
         }
     }

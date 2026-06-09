@@ -63,7 +63,7 @@ $ snforge test --coverage -- --include macros
 
 > 📝 **Note**
 > 
-> Running `snforge test --help` won't show info about `cairo-coverage` flags. To see them, run `snforge test --coverage -- --help`.
+> Running `snforge test --help` won't show info about `cairo-coverage` flags. To see them, run `cairo-coverage --help`.
 
 ## Coverage report
 
