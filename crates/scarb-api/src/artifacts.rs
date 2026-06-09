@@ -39,20 +39,14 @@ impl PartialEq for StarknetContractArtifacts {
 
 /// A single compiled contract together with its artifacts and Sierra path.
 #[derive(Debug, Clone, PartialEq)]
-pub struct LoadedContract {
+pub struct ContractData {
     pub contract_name: String,
     pub artifacts: StarknetContractArtifacts,
     pub sierra_path: Utf8PathBuf,
 }
 
-/// Compiled Starknet artifacts for a package, keyed by module path.
-///
-/// Module path (e.g. `my_package::sub::MyContract`) is fully qualified, so it is unique -
-/// unlike contract name, which several contracts can share (for example one in `src/` and one
-/// in `tests/`). Such name clashes are kept here as separate entries rather than collapsed into
-/// one. The clash only matters later, when a contract is looked up by its (non-unique) name:
-/// that lookup is where it is reported as ambiguous.
-pub type LoadedContracts = HashMap<String, LoadedContract>;
+/// A mapping of module paths to their corresponding contract data.
+pub type ContractsData = HashMap<String, ContractData>;
 
 #[derive(PartialEq, Debug)]
 pub(crate) struct StarknetArtifactsFiles {
@@ -79,7 +73,7 @@ impl StarknetArtifactsFiles {
     }
 
     #[tracing::instrument(skip_all, level = "debug")]
-    pub(crate) fn load_contracts_artifacts(self) -> Result<LoadedContracts> {
+    pub(crate) fn load_contracts_artifacts(self) -> Result<ContractsData> {
         // Gather `(contract_name, module_path, sierra_path)` across the base and all other
         // representations. The same contract may be emitted into several targets (e.g. unittest
         // and integrationtest) with an identical `module_path`; those are not real duplicates,
@@ -100,14 +94,14 @@ impl StarknetArtifactsFiles {
     fn compile_artifacts(
         &self,
         artifacts: Vec<(String, String, Utf8PathBuf)>,
-    ) -> Result<HashMap<String, LoadedContract>> {
+    ) -> Result<HashMap<String, ContractData>> {
         artifacts
             .into_par_iter()
             .map(|(contract_name, module_path, sierra_path)| {
                 let artifacts = self.compile_artifact_at_path(&sierra_path)?;
                 Ok((
                     module_path,
-                    LoadedContract {
+                    ContractData {
                         contract_name,
                         artifacts,
                         sierra_path,
@@ -271,7 +265,7 @@ mod tests {
         ))
     }
 
-    fn count_by_name(contracts: &HashMap<String, LoadedContract>, contract_name: &str) -> usize {
+    fn count_by_name(contracts: &HashMap<String, ContractData>, contract_name: &str) -> usize {
         contracts
             .values()
             .filter(|contract| contract.contract_name == contract_name)
