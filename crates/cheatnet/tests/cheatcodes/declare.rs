@@ -17,7 +17,10 @@ fn declare_simple() {
     let class_hash = declare(&mut cached_state, contract_name, &contracts_data)
         .unwrap()
         .unwrap_success();
-    let expected_class_hash = contracts_data.get_class_hash(contract_name).unwrap();
+    let expected_class_hash = &contracts_data
+        .resolve_by_name(contract_name)
+        .unwrap()
+        .class_hash;
 
     assert_eq!(class_hash, *expected_class_hash);
 }
@@ -34,7 +37,10 @@ fn declare_multiple() {
         let class_hash = declare(&mut cached_state, contract_name, &contracts_data)
             .unwrap()
             .unwrap_success();
-        let expected_class_hash = contracts_data.get_class_hash(contract_name).unwrap();
+        let expected_class_hash = &contracts_data
+            .resolve_by_name(contract_name)
+            .unwrap()
+            .class_hash;
         assert_eq!(class_hash, *expected_class_hash);
     }
 }
@@ -50,7 +56,10 @@ fn declare_same_contract() {
     let class_hash = declare(&mut cached_state, contract_name, &contracts_data)
         .unwrap()
         .unwrap_success();
-    let expected_class_hash = contracts_data.get_class_hash(contract_name).unwrap();
+    let expected_class_hash = &contracts_data
+        .resolve_by_name(contract_name)
+        .unwrap()
+        .class_hash;
     assert_eq!(class_hash, *expected_class_hash);
 
     let output = declare(&mut cached_state, contract_name, &contracts_data);
@@ -92,7 +101,7 @@ fn declare_ambiguous_name() {
     let existing = contracts_data
         .contracts
         .values()
-        .find(|contract| contract.contract_name == contract_name)
+        .find(|contract| contract.name == contract_name)
         .expect("HelloStarknet should be present in the test fixtures")
         .clone();
     contracts_data
