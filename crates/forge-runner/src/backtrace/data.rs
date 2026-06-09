@@ -74,18 +74,13 @@ struct ContractBacktraceData {
 
 impl ContractBacktraceData {
     fn new(class_hash: &ClassHash, contracts_data: &ContractsData) -> Result<Self> {
-        let contract_name = contracts_data
-            .get_contract_name(class_hash)
+        let contract = contracts_data
+            .get_contract_by_class_hash(class_hash)
             .context(format!(
-                "failed to get contract name for class hash: {class_hash}"
-            ))?
-            .clone();
-
-        let contract_artifacts = contracts_data
-            .get_artifacts(&contract_name)
-            .context(format!(
-                "failed to get artifacts for contract name: {contract_name}"
+                "failed to get contract data for class hash: {class_hash}"
             ))?;
+        let contract_name = contract.name.clone();
+        let contract_artifacts = &contract.artifacts;
 
         let contract_class = serde_json::from_str::<ContractClass>(&contract_artifacts.sierra)?;
 

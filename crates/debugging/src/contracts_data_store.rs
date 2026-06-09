@@ -28,7 +28,7 @@ impl ContractsDataStore {
             .map(|contract_data| {
                 (
                     contract_data.class_hash,
-                    ContractName(contract_data.contract_name.clone()),
+                    ContractName(contract_data.name.clone()),
                 )
             })
             .collect();

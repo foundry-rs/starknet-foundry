@@ -25,13 +25,14 @@ pub struct ContractsData {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ContractData {
-    pub contract_name: ContractName,
+    pub name: ContractName,
     pub artifacts: StarknetContractArtifacts,
     pub class_hash: ClassHash,
-    source_sierra_path: Utf8PathBuf,
+    pub source_sierra_path: Utf8PathBuf,
 }
 
 /// Outcome of resolving a contract name to a single contract.
+#[derive(Debug)]
 pub enum ContractResolutionError {
     /// No contract with the given name was found.
     NotFound,
@@ -66,7 +67,7 @@ impl ContractsData {
                 (
                     module_path,
                     ContractData {
-                        contract_name: contract.contract_name,
+                        name: contract.contract_name,
                         artifacts: contract.artifacts,
                         class_hash,
                         source_sierra_path: contract.sierra_path,
@@ -88,7 +89,7 @@ impl ContractsData {
         })
     }
 
-    /// Resolves [`ContractData`] for a given `contract_name`.
+    /// Resolves a user-provided `contract_name` to a single contract.
     /// Returns an error if no contract or multiple contracts are found with the given name.
     pub fn resolve_by_name(
         &self,
@@ -97,7 +98,7 @@ impl ContractsData {
         let mut matches: Vec<(&ModulePath, &ContractData)> = self
             .contracts
             .iter()
-            .filter(|(_, contract)| contract.contract_name == contract_name)
+            .filter(|(_, contract)| contract.name == contract_name)
             .collect();
 
         match matches.len() {
@@ -115,32 +116,15 @@ impl ContractsData {
     }
 
     #[must_use]
-    pub fn get_artifacts(&self, contract_name: &str) -> Option<&StarknetContractArtifacts> {
-        self.resolve_by_name(contract_name)
-            .ok()
-            .map(|contract| &contract.artifacts)
-    }
-
-    #[must_use]
-    pub fn get_class_hash(&self, contract_name: &str) -> Option<&ClassHash> {
-        self.resolve_by_name(contract_name)
-            .ok()
-            .map(|contract| &contract.class_hash)
-    }
-
-    #[must_use]
-    pub fn get_source_sierra_path(&self, contract_name: &str) -> Option<&Utf8PathBuf> {
-        self.resolve_by_name(contract_name)
-            .ok()
-            .map(|contract| &contract.source_sierra_path)
+    pub fn get_contract_by_class_hash(&self, class_hash: &ClassHash) -> Option<&ContractData> {
+        let module_path = self.class_hashes.get_by_right(class_hash)?;
+        self.contracts.get(module_path)
     }
 
     #[must_use]
     pub fn get_contract_name(&self, class_hash: &ClassHash) -> Option<&ContractName> {
-        let module_path = self.class_hashes.get_by_right(class_hash)?;
-        self.contracts
-            .get(module_path)
-            .map(|contract| &contract.contract_name)
+        self.get_contract_by_class_hash(class_hash)
+            .map(|contract| &contract.name)
     }
 
     #[must_use]

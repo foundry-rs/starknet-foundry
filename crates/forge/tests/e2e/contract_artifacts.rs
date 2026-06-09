@@ -373,8 +373,8 @@ fn duplicate_contract_name_fails() {
         indoc! {r#"
         Failure data:
             "Multiple contracts found with name = HelloStarknet. Found contracts at the following paths:
-            duplicate_contract_name::HelloStarknet
-            duplicate_contract_name_integrationtest::test_duplicate::HelloStarknet
+                duplicate_contract_name::HelloStarknet
+                duplicate_contract_name_integrationtest::test_duplicate::HelloStarknet
             Rename one of the contracts so that the name is unique."
         "#},
     );
