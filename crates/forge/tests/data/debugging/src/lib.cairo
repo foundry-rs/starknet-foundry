@@ -8,7 +8,7 @@ struct RecursiveCall {
 
 #[starknet::interface]
 trait RecursiveCaller<T> {
-    fn execute_calls(self: @T, calls: Array<RecursiveCall>) -> Array<RecursiveCall>;
+    fn execute_calls(ref self: T, calls: Array<RecursiveCall>) -> Array<RecursiveCall>;
 }
 
 #[starknet::interface]
@@ -20,7 +20,7 @@ trait Failing<TContractState> {
 mod SimpleContract {
     use core::array::ArrayTrait;
     use core::traits::Into;
-    use starknet::{ContractAddress, get_contract_address};
+    use starknet::ContractAddress;
     use super::{
         Failing, RecursiveCall, RecursiveCaller, RecursiveCallerDispatcher,
         RecursiveCallerDispatcherTrait,
@@ -30,12 +30,24 @@ mod SimpleContract {
     #[storage]
     struct Storage {}
 
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        CallsExecuted: CallsExecuted,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct CallsExecuted {
+        calls_len: felt252,
+    }
 
     #[abi(embed_v0)]
     impl RecursiveCallerImpl of RecursiveCaller<ContractState> {
         fn execute_calls(
-            self: @ContractState, calls: Array<RecursiveCall>,
+            ref self: ContractState, calls: Array<RecursiveCall>,
         ) -> Array<RecursiveCall> {
+            self.emit(Event::CallsExecuted(CallsExecuted { calls_len: calls.len().into() }));
+
             let mut i = 0;
             #[cairofmt::skip]
             while i < calls.len() {
