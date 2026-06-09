@@ -5,7 +5,7 @@ use camino::Utf8PathBuf;
 use conversions::IntoConv;
 use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
-use scarb_api::{LoadedContracts, StarknetContractArtifacts};
+use scarb_api::{ContractsData as ScarbContractsData, StarknetContractArtifacts};
 use starknet_api::core::{ClassHash, EntryPointSelector};
 use starknet_rust::core::types::contract::{AbiEntry, SierraClass};
 use starknet_rust::core::utils::get_selector_from_name;
@@ -42,7 +42,7 @@ pub enum ContractResolutionError {
 }
 
 impl ContractsData {
-    pub fn try_from(contracts: LoadedContracts) -> Result<Self> {
+    pub fn try_from(contracts: ScarbContractsData) -> Result<Self> {
         let parsed_contracts: HashMap<ModulePath, SierraClass> = contracts
             .par_iter()
             .map(|(module_path, contract)| {

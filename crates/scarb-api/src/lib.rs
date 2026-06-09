@@ -16,7 +16,7 @@ pub mod manifest;
 pub mod metadata;
 pub mod version;
 
-pub use crate::artifacts::{LoadedContract, LoadedContracts, StarknetContractArtifacts};
+pub use crate::artifacts::{ContractData, ContractsData, StarknetContractArtifacts};
 
 const INTEGRATION_TEST_TYPE: &str = "integration";
 
@@ -115,7 +115,7 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
         #[cfg(feature = "cairo-native")]
         run_native,
     }: CompilationOpts,
-) -> Result<LoadedContracts> {
+) -> Result<ContractsData> {
     let starknet_artifact_files = if use_test_target_contracts {
         let test_targets = test_targets_by_name(package);
         get_starknet_artifacts_paths_from_test_targets(artifacts_dir, &test_targets)
@@ -135,7 +135,7 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
         let starknet_artifact_files = starknet_artifact_files.compile_native(run_native);
         starknet_artifact_files.load_contracts_artifacts()
     } else {
-        Ok(LoadedContracts::default())
+        Ok(ContractsData::default())
     }
 }
 

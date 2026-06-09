@@ -17,7 +17,7 @@ use foundry_ui::UI;
 use indoc::formatdoc;
 use scarb_api::metadata::metadata_for_dir;
 use scarb_api::{
-    CompilationOpts, LoadedContract, LoadedContracts, StarknetContractArtifacts,
+    CompilationOpts, ContractData, ContractsData, StarknetContractArtifacts,
     get_contracts_artifacts_and_source_sierra_paths, target_dir_for_workspace,
 };
 use shared::command::CommandExt;
@@ -196,7 +196,7 @@ impl<'a> TestCase {
         ]
     }
 
-    pub fn contracts(&self, ui: &UI) -> Result<LoadedContracts> {
+    pub fn contracts(&self, ui: &UI) -> Result<ContractsData> {
         // Test contracts are defined with unique names, so the name doubles as the module path.
         self.contracts
             .clone()
@@ -207,7 +207,7 @@ impl<'a> TestCase {
 
                 Ok((
                     name.clone(),
-                    LoadedContract {
+                    ContractData {
                         contract_name: name,
                         artifacts,
                         sierra_path: Utf8PathBuf::default(),
