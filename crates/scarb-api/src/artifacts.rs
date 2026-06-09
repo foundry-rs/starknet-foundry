@@ -37,7 +37,6 @@ impl PartialEq for StarknetContractArtifacts {
     }
 }
 
-/// A single compiled contract together with its artifacts and Sierra path.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ContractData {
     pub contract_name: String,
@@ -75,10 +74,10 @@ impl StarknetArtifactsFiles {
     #[tracing::instrument(skip_all, level = "debug")]
     pub(crate) fn load_contracts_artifacts(self) -> Result<ContractsData> {
         // Gather `(contract_name, module_path, sierra_path)` across the base and all other
-        // representations. The same contract may be emitted into several targets (e.g. unittest
-        // and integrationtest) with an identical `module_path`; those are not real duplicates,
-        // so we deduplicate by `module_path`. Distinct module_paths sharing a `contract_name`
-        // are genuine duplicates and are all kept here, keyed by their unique module_path.
+        // representations. The same contract may be emitted into several test targets
+        // (e.g. unittest and integrationtest) under the same `module_path`, so we collapse
+        // identical module paths here. Distinct module paths sharing a `contract_name` are
+        // genuine duplicates and are all kept.
         let mut all_artifacts: Vec<(String, String, Utf8PathBuf)> =
             StarknetArtifactsRepresentation::try_from_path(self.base.as_path())?.artifacts();
 
@@ -142,12 +141,6 @@ impl StarknetArtifactsFiles {
     }
 }
 
-/// Deduplicates `(contract_name, module_path, sierra_path)` entries by `module_path`.
-///
-/// The same contract may be emitted into several targets (e.g. unittest and integrationtest)
-/// with an identical `module_path`; those are not real duplicates and are collapsed into one.
-/// Distinct module_paths sharing a `contract_name` are genuine duplicates and are all kept.
-/// Sorting by `module_path` makes both the deduplication and the resulting order deterministic.
 fn deduplicate_by_module_path(
     mut artifacts: Vec<(String, String, Utf8PathBuf)>,
 ) -> Vec<(String, String, Utf8PathBuf)> {
@@ -170,7 +163,6 @@ mod tests {
     #[test]
     fn test_deduplicate_by_module_path() {
         let artifacts = vec![
-            // Same contract emitted into two targets with an identical module_path -> collapsed.
             (
                 "HelloStarknet".to_string(),
                 "pkg::HelloStarknet".to_string(),
@@ -181,7 +173,6 @@ mod tests {
                 "pkg::HelloStarknet".to_string(),
                 Utf8PathBuf::from("integrationtest/HelloStarknet.sierra"),
             ),
-            // Same name, different module_path -> a genuine duplicate, kept.
             (
                 "HelloStarknet".to_string(),
                 "pkg_integrationtest::tests::HelloStarknet".to_string(),
@@ -196,7 +187,6 @@ mod tests {
 
         let result = deduplicate_by_module_path(artifacts);
 
-        // Identical module_paths are collapsed; distinct ones are kept, ordered by module_path.
         let module_paths: Vec<&str> = result.iter().map(|(_, path, _)| path.as_str()).collect();
         assert_eq!(
             module_paths,
@@ -207,7 +197,6 @@ mod tests {
             ]
         );
 
-        // The ambiguous name survives twice (two distinct module paths).
         let hello_starknet_count = result
             .iter()
             .filter(|(name, _, _)| name == "HelloStarknet")
