@@ -24,17 +24,16 @@ fn parse_class_hash(class_hash_str: &str) -> ClassHash {
     TryFromHexStr::try_from_hex_str(class_hash_str).expect("class hash should be valid")
 }
 
-fn parse_abi(class_hash: ClassHash, abi_json: &str) -> (ClassHash, Vec<AbiEntry>) {
-    let abi = serde_json::from_str::<Vec<AbiEntry>>(abi_json).expect("ABI should be valid");
-    (class_hash, abi)
+fn parse_abi(abi_json: &str) -> Vec<AbiEntry> {
+    serde_json::from_str::<Vec<AbiEntry>>(abi_json).expect("ABI should be valid")
 }
 
 fn build_predeployed_contracts_debugging_data() -> ContractsDebuggingData {
     let strk_class_hash = parse_class_hash(ERC20LOCKABLE_SIERRA_CLASS_HASH);
     let eth_class_hash = parse_class_hash(ERC20MINTABLE_SIERRA_CLASS_HASH);
 
-    let (strk_class_hash, strk_abi) = parse_abi(strk_class_hash, ERC20LOCKABLE_ABI_JSON);
-    let (eth_class_hash, eth_abi) = parse_abi(eth_class_hash, ERC20MINTABLE_ABI_JSON);
+    let strk_abi = parse_abi(ERC20LOCKABLE_ABI_JSON);
+    let eth_abi = parse_abi(ERC20MINTABLE_ABI_JSON);
 
     let abi = HashMap::from([(strk_class_hash, strk_abi), (eth_class_hash, eth_abi)]);
 

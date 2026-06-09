@@ -11,6 +11,7 @@ use starknet_rust::core::types::contract::{AbiEntry, SierraClass};
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
+use std::hash::BuildHasher;
 
 type ContractName = String;
 type FunctionName = String;
@@ -119,7 +120,7 @@ impl ContractsData {
 }
 
 #[must_use]
-pub fn build_selectors_from_abi_map<S: ::std::hash::BuildHasher>(
+pub fn build_selectors_from_abi_map<S: BuildHasher>(
     abi: &HashMap<ClassHash, Vec<AbiEntry>, S>,
 ) -> HashMap<EntryPointSelector, FunctionName> {
     abi.values()
