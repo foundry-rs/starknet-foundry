@@ -18,7 +18,7 @@ use crate::{
     starknet_commands::{
         self,
         utils::{
-            class_hash::ClassHash, contract_address::ContractAddress, selector::Selector,
+            class_hash::ClassHashArgs, contract_address::ContractAddressArgs, selector::Selector,
             serialize::Serialize,
         },
     },
@@ -42,10 +42,10 @@ pub enum Commands {
     Serialize(Serialize),
 
     /// Get contract class hash
-    ClassHash(ClassHash),
+    ClassHash(ClassHashArgs),
 
     /// Calculate the address of a not yet deployed contract
-    ContractAddress(ContractAddress),
+    ContractAddress(ContractAddressArgs),
 
     /// Calculate selector from name
     Selector(Selector),

@@ -53,7 +53,9 @@ If passed, a profile with corresponding name will be added to the local snfoundr
 ## `--class-hash, -c`
 Optional.
 
-Class hash of a custom openzeppelin account contract declared to the network.
+Class hash of a custom openzeppelin account contract declared to the network. It can be either:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../../starknet/aliases.md).
 
 ## `--ledger-path <HD_PATH>`
 Optional.

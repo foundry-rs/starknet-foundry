@@ -11,6 +11,7 @@ use crate::{
             replaced_arguments,
             run::{InvokeItem, parse_inputs},
         },
+        utils::felt_or_id::ContractAddress,
     },
 };
 
@@ -25,7 +26,7 @@ impl MulticallInvoke {
         let calldata = parse_inputs(&item.inputs, contracts)?;
         let invoke = MulticallInvoke {
             common: InvokeCommonArgs {
-                contract_address: item.contract_address.clone(),
+                contract_address: ContractAddress(item.contract_address.clone()),
                 function: item.function.clone(),
                 arguments: Arguments {
                     calldata: Some(calldata.iter().map(ToString::to_string).collect()),
@@ -39,7 +40,8 @@ impl MulticallInvoke {
     pub async fn build_call(&self, contract_registry: &mut ContractRegistry) -> Result<Call> {
         let selector = get_selector_from_name(&self.common.function)?;
         let arguments = replaced_arguments(&self.common.arguments, contract_registry)?;
-        let contract_address = if let Some(id) = self.common.contract_address.as_id() {
+        // TODO: add full support for multicall id <> alias id resolution (will be done in next PR)
+        let contract_address = if let Some(id) = self.common.contract_address.0.as_id() {
             contract_registry
                 .get_address_by_id(id)
                 .with_context(|| format!("Failed to find contract address for id: {id}"))

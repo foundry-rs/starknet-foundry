@@ -13,13 +13,17 @@ For more information on supported expressions and syntax, see [Calldata Transfor
 Optional.
 Conflicts with: [`--contract-address`](#--contract-address), [`--abi-file`](#--abi-file)
 
-The class hash of the contract class which contains the function, in hex (prefixed with '0x') or decimal representation.
+The class hash of the contract class which contains the function. It can be either:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../../starknet/aliases.md).
 
 ## `--contract-address, -d <CONTRACT_ADDRESS>`
 Optional.
 Conflicts with: [`--class-hash`](#--class-hash), [`--abi-file`](#--abi-file)
 
-The address of the contract which contains the function, in hex (prefixed with '0x') or decimal representation.
+The address of the contract which contains the function. It can be either:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../../starknet/aliases.md).
 
 ## `--abi-file, <ABI_FILE_PATH>`
 Optional.

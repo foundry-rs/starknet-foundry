@@ -131,6 +131,7 @@ pub async fn multicall(
 }
 
 /// Replaces arguments that reference user-defined ids with their corresponding values from the contract registry.
+// TODO: add full support for multicall id <> alias id resolution (will be done in next PR)
 pub fn replaced_arguments(
     arguments: &Arguments,
     contracts: &ContractRegistry,

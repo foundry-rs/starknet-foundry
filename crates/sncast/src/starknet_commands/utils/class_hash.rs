@@ -11,7 +11,7 @@ use std::collections::HashMap;
 
 #[derive(Args, Debug)]
 #[command(about = "Generate the class hash of a contract", long_about = None)]
-pub struct ClassHash {
+pub struct ClassHashArgs {
     /// Contract name
     #[arg(short = 'c', long = "contract-name")]
     pub contract: String,
@@ -41,7 +41,7 @@ pub fn sierra_class_from_artifacts(
 
 #[expect(clippy::result_large_err)]
 pub fn get_class_hash(
-    class_hash: &ClassHash,
+    class_hash: &ClassHashArgs,
     artifacts: &HashMap<String, CastStarknetContractArtifacts>,
 ) -> Result<ClassHashResponse, StarknetCommandError> {
     let sierra = sierra_class_from_artifacts(&class_hash.contract, artifacts)?;

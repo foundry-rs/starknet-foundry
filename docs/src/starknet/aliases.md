@@ -84,7 +84,16 @@ TBD
 
 Currently, aliases are supported for:
 
-- `sncast call --contract-address`
-- `sncast invoke --contract-address`
-
+- `sncast call`: `--contract-address`
+- `sncast invoke`: `--contract-address`
+- `sncast deploy`: `--class-hash`
+- `sncast declare-from`: `--class-hash`
+- `sncast account create`: `--class-hash`
+- `sncast account import`: `--address`, `--class-hash`
+- `sncast get balance`: `--token-address`
+- `sncast get nonce`: `<CONTRACT_ADDRESS>`
+- `sncast get class-hash-at`: `<CONTRACT_ADDRESS>`
+- `sncast verify`: `--class-hash`, `--contract-address`
+- `sncast utils serialize`: `--class-hash`, `--contract-address`
+- `sncast utils contract-address`: `--class-hash`, `--deployer-address`
 
