@@ -5,7 +5,7 @@ expression: stdout
 
 
 
-[PASS] debugging_events_integrationtest::test_trace::test_debugging_trace_events_component (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~304300)
+[PASS] debugging_events_integrationtest::test_trace::test_debugging_trace_events_component (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~305070)
 [test name] debugging_events_integrationtest::test_trace::test_debugging_trace_events_component
 └─ [selector] emit_event
    └─ [events] [ValueEmitted { value: 0x2a }]

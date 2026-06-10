@@ -55,7 +55,7 @@ mod setup;
 mod syscall_handler;
 pub mod target;
 
-use crate::debugging::build_debugging_trace;
+use crate::debugging::{build_contracts_data_store, build_debugging_trace};
 pub use hints::hints_to_params;
 use setup::VmExecutionContext;
 pub use syscall_handler::has_segment_arena;
@@ -148,7 +148,7 @@ pub struct RunCompleted {
     pub(crate) used_resources: UsedResources,
     pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
-    pub(crate) fork_data: ForkData,
+    pub(crate) fork_data: Option<ForkData>,
 }
 
 pub struct RunError {
@@ -156,7 +156,7 @@ pub struct RunError {
     pub(crate) call_trace: Rc<RefCell<CallTrace>>,
     pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
-    pub(crate) fork_data: ForkData,
+    pub(crate) fork_data: Option<ForkData>,
 }
 
 pub enum RunResult {
@@ -366,8 +366,7 @@ pub fn run_test_case(
         .state
         .fork_state_reader
         .as_ref()
-        .map(|fork_state_reader| ForkData::new(&fork_state_reader.compiled_contract_class_map()))
-        .unwrap_or_default();
+        .map(|fork_state_reader| ForkData::new(&fork_state_reader.compiled_contract_class_map()));
 
     Ok(match result {
         Ok(result) => {
@@ -442,10 +441,13 @@ fn extract_test_case_summary(
                     test_statistics: (),
                     debugging_trace: build_debugging_trace(
                         &run_error.call_trace.borrow(),
-                        contracts_data,
                         trace_args,
                         case.name.clone(),
-                        &run_error.fork_data,
+                        build_contracts_data_store(
+                            contracts_data,
+                            run_error.fork_data.as_ref(),
+                            case.config.disable_predeployed_contracts,
+                        ),
                     ),
                 }
             }

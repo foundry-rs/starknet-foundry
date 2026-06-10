@@ -11,6 +11,7 @@ use starknet_rust::core::types::contract::{AbiEntry, SierraClass};
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
+use std::hash::BuildHasher;
 
 type ContractName = String;
 type FunctionName = String;
@@ -63,7 +64,7 @@ impl ContractsData {
 
         let selectors = parsed_contracts
             .into_par_iter()
-            .map(|(_, sierra_class)| build_name_selector_map(sierra_class.abi))
+            .map(|(_, sierra_class)| build_name_selector_map(&sierra_class.abi))
             .flatten()
             .collect();
 
@@ -119,12 +120,21 @@ impl ContractsData {
 }
 
 #[must_use]
-pub fn build_name_selector_map(abi: Vec<AbiEntry>) -> HashMap<EntryPointSelector, FunctionName> {
+pub fn build_selectors_from_abi_map<S: BuildHasher>(
+    abi: &HashMap<ClassHash, Vec<AbiEntry>, S>,
+) -> HashMap<EntryPointSelector, FunctionName> {
+    abi.values()
+        .flat_map(|a| build_name_selector_map(a))
+        .collect()
+}
+
+#[must_use]
+pub fn build_name_selector_map(abi: &[AbiEntry]) -> HashMap<EntryPointSelector, FunctionName> {
     let mut selector_map = HashMap::new();
     for abi_entry in abi {
         match abi_entry {
             AbiEntry::Interface(abi_interface) => {
-                for abi_entry in abi_interface.items {
+                for abi_entry in &abi_interface.items {
                     add_simple_abi_entry_to_mapping(abi_entry, &mut selector_map);
                 }
             }
@@ -135,14 +145,14 @@ pub fn build_name_selector_map(abi: Vec<AbiEntry>) -> HashMap<EntryPointSelector
 }
 
 fn add_simple_abi_entry_to_mapping(
-    abi_entry: AbiEntry,
+    abi_entry: &AbiEntry,
     selector_map: &mut HashMap<EntryPointSelector, FunctionName>,
 ) {
     match abi_entry {
         AbiEntry::Function(abi_function) | AbiEntry::L1Handler(abi_function) => {
             selector_map.insert(
                 get_selector_from_name(&abi_function.name).unwrap().into_(),
-                abi_function.name,
+                abi_function.name.clone(),
             );
         }
         AbiEntry::Constructor(abi_constructor) => {
@@ -150,7 +160,7 @@ fn add_simple_abi_entry_to_mapping(
                 get_selector_from_name(&abi_constructor.name)
                     .unwrap()
                     .into_(),
-                abi_constructor.name,
+                abi_constructor.name.clone(),
             );
         }
         _ => {}
