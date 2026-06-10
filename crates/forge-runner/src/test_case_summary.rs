@@ -1,6 +1,6 @@
 use crate::backtrace::{add_backtrace_footer, get_backtrace, is_backtrace_enabled};
 use crate::build_trace_data::build_profiler_call_trace;
-use crate::debugging::{TraceArgs, build_debugging_trace};
+use crate::debugging::{TraceArgs, build_contracts_data_store, build_debugging_trace};
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
 use crate::gas::report::SingleTestGasInfo;
@@ -10,11 +10,11 @@ use crate::running::{RunCompleted, RunStatus};
 use blockifier::execution::syscalls::hint_processor::ENTRYPOINT_FAILED_ERROR_FELT;
 use cairo_annotations::trace_data::VersionedCallTrace as VersionedProfilerCallTrace;
 use camino::Utf8Path;
+use cheatnet::forking::data::ForkData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
 use conversions::byte_array::ByteArray;
 use conversions::felt::ToShortString;
-use debugging::ContractsDataStore;
 use shared::utils::build_readable_text;
 use starknet_api::execution_resources::GasVector;
 use starknet_types_core::felt::Felt;
@@ -301,24 +301,26 @@ impl TestCaseSummary<Single> {
         gas_report_enabled: bool,
     ) -> Self {
         let name = test_case.name.clone();
-
-        let debugging_trace = build_debugging_trace(
-            &call_trace.borrow(),
+        let contracts_data_store = build_contracts_data_store(
             contracts_data,
-            trace_args,
-            name.clone(),
-            &fork_data,
+            fork_data.as_ref(),
+            test_case.config.disable_predeployed_contracts,
         );
 
+        let empty = ForkData::default();
+        let fork_data_ref = fork_data.as_ref().unwrap_or(&empty);
         let gas_info = SingleTestGasInfo::new(gas_used);
         let gas_info = if gas_report_enabled {
-            gas_info.get_with_report_data(
-                &call_trace.borrow(),
-                &ContractsDataStore::new(contracts_data, &fork_data),
-            )
+            gas_info.get_with_report_data(&call_trace.borrow(), &contracts_data_store)
         } else {
             gas_info
         };
+        let debugging_trace = build_debugging_trace(
+            &call_trace.borrow(),
+            trace_args,
+            name.clone(),
+            contracts_data_store,
+        );
 
         match status {
             RunStatus::Success(data) => match &test_case.config.expected_result {
@@ -332,7 +334,7 @@ impl TestCaseSummary<Single> {
                         trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
                             &call_trace,
                             contracts_data,
-                            &fork_data,
+                            fork_data_ref,
                             versioned_program_path,
                         )),
                         debugging_trace,
@@ -370,7 +372,7 @@ impl TestCaseSummary<Single> {
                             trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
                                 &call_trace,
                                 contracts_data,
-                                &fork_data,
+                                fork_data_ref,
                                 versioned_program_path,
                             )),
                             debugging_trace,

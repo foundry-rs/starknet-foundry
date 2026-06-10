@@ -1,4 +1,4 @@
-use crate::runtime_extensions::forge_runtime_extension::contracts_data::build_name_selector_map;
+use crate::runtime_extensions::forge_runtime_extension::contracts_data::build_selectors_from_abi_map;
 use starknet_api::core::{ClassHash, EntryPointSelector};
 use starknet_rust::core::types::ContractClass;
 use starknet_rust::core::types::contract::AbiEntry;
@@ -28,10 +28,7 @@ impl ForkData {
             })
             .collect();
 
-        let selectors = abi
-            .values()
-            .flat_map(|abi| build_name_selector_map(abi.clone()))
-            .collect();
+        let selectors = build_selectors_from_abi_map(&abi);
 
         Self { abi, selectors }
     }
