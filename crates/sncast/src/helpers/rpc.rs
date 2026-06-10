@@ -5,6 +5,7 @@ use crate::{Network, get_provider};
 use anyhow::{Result, bail};
 use clap::Args;
 use configuration::Override;
+use semver::Version;
 use shared::consts::RPC_URL_VERSION;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet_rust::providers::{JsonRpcClient, jsonrpc::HttpTransport};
@@ -35,13 +36,23 @@ impl RpcArgs {
         config: &CastConfig,
         ui: &UI,
     ) -> Result<JsonRpcClient<HttpTransport>> {
+        let (provider, _) = self.get_provider_with_spec_version(config, ui).await?;
+        Ok(provider)
+    }
+
+    pub async fn get_provider_with_spec_version(
+        &self,
+        config: &CastConfig,
+        ui: &UI,
+    ) -> Result<(JsonRpcClient<HttpTransport>, Version)> {
         let url = self.get_url(config).await?;
         let provider = get_provider(&url)?;
 
         // TODO(#3959) Remove `base_ui`
-        verify_and_warn_if_incompatible_rpc_version(&provider, url, ui.base_ui()).await?;
+        let spec_version =
+            verify_and_warn_if_incompatible_rpc_version(&provider, url, ui.base_ui()).await?;
 
-        Ok(provider)
+        Ok((provider, spec_version))
     }
 
     pub async fn get_url(&self, config: &CastConfig) -> Result<Url> {
