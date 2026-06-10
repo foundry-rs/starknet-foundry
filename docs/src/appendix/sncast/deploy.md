@@ -8,7 +8,9 @@ Deploy a contract to Starknet.
 ## `--class-hash, -g <CLASS_HASH>`
 Required if `--contract-name` is not provided.
 
-Class hash of contract to deploy.
+Class hash of contract to deploy. It can be either:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../starknet/aliases.md).
 
 ## `--contract-name <CONTRACT_NAME>`
 Required if `--class-hash` is not provided.

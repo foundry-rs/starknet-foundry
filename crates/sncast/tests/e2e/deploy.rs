@@ -11,6 +11,7 @@ use crate::helpers::output::get_declared_class_hash_from_json_output;
 use crate::helpers::runner::{runner, sncast_test_bin_path};
 use crate::helpers::shell::os_specific_shell;
 use camino::Utf8PathBuf;
+use configuration::test_utils::copy_config_to_tempdir;
 use indoc::indoc;
 use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
 use sncast::AccountType;
@@ -65,6 +66,73 @@ async fn test_happy_case_human_readable() {
             transaction: [..]
             "
         },
+    );
+}
+
+#[tokio::test]
+async fn test_deploy_with_alias() {
+    let account_dir = create_and_deploy_oz_account().await;
+    let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    join_tempdirs(&account_dir, &config_dir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "deploy",
+        "--url",
+        URL,
+        "--class-hash",
+        "@map-class",
+        "--salt",
+        "0x2",
+        "--unique",
+    ];
+
+    let output = runner(&args)
+        .current_dir(config_dir.path())
+        .assert()
+        .success();
+
+    assert_stdout_contains(output, "Success: Deployment completed");
+}
+
+#[tokio::test]
+async fn test_deploy_with_unknown_alias() {
+    let account_dir = create_and_deploy_oz_account().await;
+    let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    join_tempdirs(&account_dir, &config_dir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "deploy",
+        "--url",
+        URL,
+        "--class-hash",
+        "@unknown",
+        "--salt",
+        "0x2",
+        "--unique",
+    ];
+
+    let output = runner(&args)
+        .current_dir(config_dir.path())
+        .assert()
+        .failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+            Command: deploy
+            Error: Invalid class hash
+
+            Caused by:
+                Alias `unknown` not found in config
+        "},
     );
 }
 
