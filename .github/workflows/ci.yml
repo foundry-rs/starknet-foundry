@@ -459,7 +459,7 @@ jobs:
           # TODO(#3970): Upgrade mdbook-variables after resolving issue
           tool: mdbook@0.4.52,mdbook-variables@0.3.0,mdbook-linkcheck
       - name: Build with mdBook
-        uses: nick-fields/retry@v4
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
         with:
           timeout_minutes: 10
           max_attempts: 3
