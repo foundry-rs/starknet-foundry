@@ -5,7 +5,7 @@
 Sometimes, before executing any other `sncast` command, one may want to make sure that the right
 configuration settings are being used (e.g., proper network or account is used).
 
-Top see what `sncast` will use before running other commands, you can use:
+To see what `sncast` will use before running other commands, you can use:
 
 - [`show-config`](#show-config) to show the **effective configuration** for the selected profile
 - [`config-path`](#config-path) to show **actual files** that contribute to effective config
