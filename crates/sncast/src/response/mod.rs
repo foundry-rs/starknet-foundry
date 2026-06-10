@@ -1,6 +1,7 @@
 pub mod account;
 pub mod alias;
 pub mod balance;
+pub mod block;
 pub mod call;
 pub mod cast_message;
 pub mod class_hash_at;
