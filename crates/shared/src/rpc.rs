@@ -52,7 +52,7 @@ mod tests {
     }
 
     #[test]
-    fn matches_expected_build_metadata_version() {
+    fn matches_expected_build_version() {
         assert!(is_expected_version(
             &Version::parse("0.10.3+build.1").unwrap()
         ));
