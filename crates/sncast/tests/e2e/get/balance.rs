@@ -1,6 +1,7 @@
 use crate::helpers::constants::URL;
 use crate::helpers::fixtures::get_accounts_path;
 use crate::helpers::runner::runner;
+use configuration::test_utils::copy_config_to_tempdir;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stderr_contains;
 use sncast::helpers::token::Token;
@@ -212,6 +213,96 @@ pub async fn happy_case_json_with_token_address() {
     output.stdout_eq(indoc! {r#"
         {"balance":"[..]"}
     "#});
+}
+
+#[tokio::test]
+pub async fn happy_case_with_token_address_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user1",
+        "get",
+        "balance",
+        "--token-address",
+        "@strk-token",
+        "--url",
+        URL,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().stdout_eq(indoc! {r"
+        Balance: [..]
+    "});
+}
+
+#[tokio::test]
+pub async fn unknown_token_address_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user1",
+        "get",
+        "balance",
+        "--token-address",
+        "@unknown",
+        "--url",
+        URL,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Command: get balance
+        Error: Invalid token address
+
+        Caused by:
+            Alias `unknown` not found in config
+        "},
+    );
+}
+
+#[tokio::test]
+pub async fn unknown_token_address_alias_old_command() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user1",
+        "balance",
+        "--token-address",
+        "@unknown",
+        "--url",
+        URL,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Command: get balance
+        Error: Invalid token address
+
+        Caused by:
+            Alias `unknown` not found in config
+        "},
+    );
 }
 
 #[tokio::test]

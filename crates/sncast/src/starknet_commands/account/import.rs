@@ -4,6 +4,7 @@ use crate::starknet_commands::account::{
     compute_account_address, generate_add_profile_message, prepare_account_json,
     write_account_to_accounts_file,
 };
+use crate::starknet_commands::utils::felt_or_id::{ClassHash, ContractAddress};
 use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::Args;
@@ -30,17 +31,17 @@ pub struct Import {
     #[arg(short, long)]
     pub name: Option<String>,
 
-    /// Address of the account
+    /// Address of the account (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short, long)]
-    pub address: Felt,
+    pub address: ContractAddress,
 
     /// Type of the account
     #[arg(short = 't', long = "type", value_parser = AccountType::from_str)]
     pub account_type: AccountType,
 
-    /// Class hash of the account
+    /// Class hash of the account (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short, long)]
-    pub class_hash: Option<Felt>,
+    pub class_hash: Option<ClassHash>,
 
     /// Account private key
     #[arg(
@@ -77,6 +78,16 @@ pub struct Import {
     pub ledger_key_locator: LedgerKeyLocatorAccount,
 }
 
+impl Import {
+    pub fn resolved_address(&self, config: &CastConfig) -> Result<Felt> {
+        self.address.resolve(config)
+    }
+
+    pub fn resolved_class_hash(&self, config: &CastConfig) -> Result<Option<Felt>> {
+        ClassHash::resolve_optional(self.class_hash.as_ref(), config)
+    }
+}
+
 #[allow(clippy::too_many_lines)]
 pub async fn import(
     account: Option<String>,
@@ -86,6 +97,9 @@ pub async fn import(
     config: &CastConfig,
     ui: &UI,
 ) -> Result<AccountImportResponse> {
+    let address = import.resolved_address(config)?;
+    let class_hash = import.resolved_class_hash(config)?;
+
     let (signer_type, public_key) = if let Some(ledger_path) = import.ledger_key_locator.resolve(ui)
     {
         let public_key = ledger::get_ledger_public_key(&ledger_path, ui).await?;
@@ -113,7 +127,7 @@ pub async fn import(
         .unwrap_or_else(|| generate_account_name(accounts_file).unwrap());
 
     let fetched_class_hash = match provider
-        .get_class_hash_at(BlockId::Tag(BlockTag::PreConfirmed), import.address)
+        .get_class_hash_at(BlockId::Tag(BlockTag::PreConfirmed), address)
         .await
     {
         Ok(class_hash) => Ok(Some(class_hash)),
@@ -123,24 +137,21 @@ pub async fn import(
 
     let deployed: bool = fetched_class_hash.is_some();
     let class_hash = if let (Some(from_provider), Some(from_user)) =
-        (fetched_class_hash, import.class_hash)
+        (fetched_class_hash, class_hash)
     {
         ensure!(
             from_provider == from_user,
-            "Incorrect class hash {:#x} for account address {:#x} was provided",
-            from_user,
-            import.address
+            "Incorrect class hash {from_user:#x} for account address {address:#x} was provided"
         );
         from_provider
-    } else if let Some(from_user) = import.class_hash {
+    } else if let Some(from_user) = class_hash {
         check_class_hash_exists(provider, from_user).await?;
         from_user
     } else if let Some(from_provider) = fetched_class_hash {
         from_provider
     } else {
         bail!(
-            "Class hash for the account address {:#x} could not be found. Please provide the class hash",
-            import.address
+            "Class hash for the account address {address:#x} could not be found. Please provide the class hash"
         );
     };
 
@@ -158,19 +169,17 @@ pub async fn import(
         )
         .await?;
         ensure!(
-            computed_address == import.address,
-            "Computed address {:#x} does not match the provided address {:#x}. Please ensure that the provided salt, class hash, and account type are correct.",
-            computed_address,
-            import.address
+            computed_address == address,
+            "Computed address {computed_address:#x} does not match the provided address {address:#x}. Please ensure that the provided salt, class hash, and account type are correct."
         );
     }
 
-    let legacy = check_if_legacy_contract(Some(class_hash), import.address, provider).await?;
+    let legacy = check_if_legacy_contract(Some(class_hash), address, provider).await?;
 
     let account_json = prepare_account_json(
         &signer_type,
         public_key,
-        import.address,
+        address,
         deployed,
         legacy,
         import.account_type,

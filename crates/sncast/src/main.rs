@@ -442,7 +442,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             } else {
                 let source_provider = declare_from.source_rpc.get_provider(ui).await?;
                 let block_id = get_block_id(&declare_from.block_id)?;
-                let class_hash = declare_from.class_hash.expect("missing class_hash");
+                let class_hash = declare_from
+                    .class_hash
+                    .expect("missing class_hash")
+                    .resolve(&config)?;
 
                 ContractSource::Network {
                     source_provider,
@@ -517,6 +520,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let (class_hash, declare_response, local_abi) = if let Some(class_hash) =
                 identifier.class_hash
             {
+                let class_hash = class_hash.resolve(&config)?;
                 (class_hash, None, None)
             } else if let Some(contract_name) = identifier.contract_name {
                 let manifest_path = assert_manifest_path_exists()?;
@@ -659,9 +663,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
         }) => {
             let provider = rpc.get_provider(&config, ui).await?;
 
-            let contract_address = contract_address
-                .resolve_alias_or_felt(&config)
-                .context("Invalid contract address")?;
+            let contract_address = contract_address.resolve(&config)?;
 
             let block_id = get_block_id(&block_id)?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
@@ -720,7 +722,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let contract_address = contract_address.resolve_alias_or_felt(&config)?;
+            let contract_address = contract_address.resolve(&config)?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
