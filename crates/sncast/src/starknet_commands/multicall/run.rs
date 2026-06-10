@@ -164,10 +164,6 @@ pub fn parse_inputs(
             Input::String(s) => {
                 if s.starts_with(ID_PREFIX) {
                     FeltOrId::new(s.clone()).resolve_for_multicall(contract_registry, config)?
-                // Note: Unlike other id cases, we allow bare-name `id` here (rather than `@id`)
-                // TODO: Consider requiring `@` consistently here too and deprecating the bare-name path so calldata, contract addresses, and class hashes share same syntax.
-                } else if let Some(addr) = contract_registry.get_address_by_id(s) {
-                    addr
                 } else {
                     felt_from_string(s)?
                 }
