@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Fixed
+
+- Fixed `#[should_panic(expected: (...))]` matching for panic data containing `ByteArray` values inside tuples.
+
 ### Cast 
 
 #### Added
@@ -14,11 +20,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Aliases in `snfoundry.toml`. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html#sncastprofile-namealiases).
 - `--contract-address @alias` syntax in `sncast call` and `sncast invoke`.
 - `sncast alias list` command for listing aliases. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/alias/list.html).
-
-#### Changed
-
-- Unknown keys in `snfoundry.toml` (`[sncast.<profile>]`, `[sncast.<profile>.networks]`, `wait-params`) now emit a warning and are ignored instead of causing a hard error, so configs can be shared across `sncast` versions. Read more in [configuration](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html).
-
 
 ## [0.61.0] - 2026-05-26
 
@@ -29,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `#[should_panic(expected: (...))]` now supports regular strings inside mixed tuples, alongside short strings and numbers.
 - `#[derive(Fuzzable)]` macro that automatically generates `Fuzzable` trait implementations for structs and enums
 - `SNFOUNDRY_CACHE` environment variable to allow to specify a custom cache directory
-- Contract debug traces now include emitted Starknet events via the `events` trace component and `detailed` trace verbosity, rendering ABI-decodable events in a struct-like format.
+- Contract debug traces now include emitted Starknet events via the `events` trace component and `detailed` trace verbosity.
 
 #### Changed
 
