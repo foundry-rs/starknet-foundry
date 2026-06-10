@@ -1,4 +1,5 @@
 mod balance;
+mod block;
 mod class_hash_at;
 mod nonce;
 mod spec_version;
