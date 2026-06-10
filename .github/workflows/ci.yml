@@ -461,7 +461,7 @@ jobs:
       - name: Build with mdBook
         uses: nick-fields/retry@v4
         with:
-          timeout_minutes: 30
+          timeout_minutes: 10
           max_attempts: 3
           retry_on: error
           command: |
