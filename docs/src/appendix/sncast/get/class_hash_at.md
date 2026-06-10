@@ -6,7 +6,9 @@ Get the class hash of a contract deployed at a given address.
 
 Required.
 
-Address of the contract in hex (prefixed with '0x') or decimal representation.
+Address of the contract. It can be either:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../../starknet/aliases.md).
 
 ## `--block-id, -b <BLOCK_ID>`
 

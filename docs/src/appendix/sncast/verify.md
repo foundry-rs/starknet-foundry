@@ -5,13 +5,17 @@ Verify Cairo contract on a chosen verification provider.
 
 Optional. Required if `--contract-address` is not provided.
 
-The class hash of the contract that is to be verified.
+The class hash of the contract that is to be verified. It can be either:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../starknet/aliases.md).
 
 ## `--contract-address, -d <CONTRACT_ADDRESS>`
 
 Optional. Required if `--class-hash` is not provided.
 
-The address of the contract that is to be verified.
+The address of the contract that is to be verified. It can be either:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../starknet/aliases.md).
 
 ## `--contract-name <CONTRACT_NAME>`
 Required.

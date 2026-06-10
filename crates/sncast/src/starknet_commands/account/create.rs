@@ -1,6 +1,7 @@
 use crate::starknet_commands::account::{
     generate_add_profile_message, prepare_account_json, write_account_to_accounts_file,
 };
+use crate::starknet_commands::utils::felt_or_id::ClassHash;
 use anyhow::{Context, Result, anyhow, bail};
 use bigdecimal::BigDecimal;
 use camino::Utf8PathBuf;
@@ -52,15 +53,21 @@ pub struct Create {
     #[arg(long)]
     pub add_profile: Option<String>,
 
-    /// Custom contract class hash of declared contract
+    /// Custom contract class hash of declared contract (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short, long, requires = "account_type")]
-    pub class_hash: Option<Felt>,
+    pub class_hash: Option<ClassHash>,
 
     #[command(flatten)]
     pub rpc: RpcArgs,
 
     #[command(flatten)]
     pub ledger_key_locator: LedgerKeyLocatorAccount,
+}
+
+impl Create {
+    pub fn resolved_class_hash(&self, config: &CastConfig) -> Result<Option<Felt>> {
+        ClassHash::resolve_optional(self.class_hash.as_ref(), config)
+    }
 }
 
 #[allow(clippy::too_many_arguments, clippy::too_many_lines)]
@@ -75,11 +82,13 @@ pub async fn create(
     ui: &UI,
 ) -> Result<AccountCreateResponse> {
     let salt = extract_or_generate_salt(create.salt);
-    let class_hash = create.class_hash.unwrap_or(match create.account_type {
-        AccountType::OpenZeppelin => OZ_CLASS_HASH,
-        AccountType::Ready => READY_CLASS_HASH,
-        AccountType::Braavos => BRAAVOS_CLASS_HASH,
-    });
+    let class_hash = create
+        .resolved_class_hash(config)?
+        .unwrap_or(match create.account_type {
+            AccountType::OpenZeppelin => OZ_CLASS_HASH,
+            AccountType::Ready => READY_CLASS_HASH,
+            AccountType::Braavos => BRAAVOS_CLASS_HASH,
+        });
     check_class_hash_exists(provider, class_hash).await?;
 
     let (account_json, estimated_fee) = generate_account(

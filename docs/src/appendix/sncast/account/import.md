@@ -12,7 +12,9 @@ Name of the account to be imported.
 ## `--address, -a <ADDRESS>`
 Required.
 
-Address of the account.
+Address of the account. It can be either:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../../starknet/aliases.md).
 
 ## `--type, -t <ACCOUNT_TYPE>`
 Required.
@@ -38,7 +40,9 @@ Overrides network from `snfoundry.toml`.
 ## `--class-hash, -c <CLASS_HASH>`
 Optional.
 
-Class hash of the account.
+Class hash of the account. It can be either:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../../starknet/aliases.md).
 
 ## `--private-key <PRIVATE_KEY>`
 Optional.

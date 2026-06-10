@@ -153,6 +153,58 @@ fn debugging_trace_no_abi() {
 }
 
 #[test]
+fn debugging_trace_predeployed_contracts() {
+    let temp = setup_package("debugging_predeployed_contract");
+
+    let output = test_runner(&temp)
+        .args(["test_trace::", "--trace-verbosity", "standard"])
+        .assert()
+        .code(0);
+
+    assert_stdout_contains(
+        output,
+        formatdoc! {r"
+            [PASS] debugging_predeployed_contract_integrationtest::test_trace::test_balance_of_strk ([..])
+            └─ [selector] balance_of
+               ├─ [contract name] STRK (predeployed)
+               ├─ [calldata] ContractAddress(0x1234)
+               └─ [call result] success: 0_u256
+            [PASS] debugging_predeployed_contract_integrationtest::test_trace::test_balance_of_eth ([..])
+            └─ [selector] balance_of
+               ├─ [contract name] ETH (predeployed)
+               ├─ [calldata] ContractAddress(0x1234)
+               └─ [call result] success: 0_u256
+            "},
+    );
+}
+
+#[test]
+fn debugging_trace_predeployed_contracts_fork() {
+    let temp = setup_package("debugging_predeployed_contract");
+
+    let output = test_runner(&temp)
+        .args(["test_trace_fork::", "--trace-verbosity", "standard"])
+        .assert()
+        .code(0);
+
+    assert_stdout_contains(
+        output,
+        formatdoc! {r"
+            [PASS] debugging_predeployed_contract_integrationtest::test_trace_fork::test_balance_of_eth ([..])
+            └─ [selector] balance_of
+               ├─ [contract name] forked contract
+               ├─ [calldata] ContractAddress(0x1234)
+               └─ [call result] success: [..]_u256
+            [PASS] debugging_predeployed_contract_integrationtest::test_trace_fork::test_balance_of_strk ([..])
+            └─ [selector] balance_of
+               ├─ [contract name] forked contract
+               ├─ [calldata] ContractAddress(0x1234)
+               └─ [call result] success: [..]_u256
+            "},
+    );
+}
+
+#[test]
 fn debugging_double_flags() {
     let temp = setup_package("debugging");
 

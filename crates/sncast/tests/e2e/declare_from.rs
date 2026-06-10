@@ -7,6 +7,7 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::output::get_declared_class_hash_from_json_output;
 use crate::helpers::runner::runner;
+use configuration::test_utils::copy_config_to_tempdir;
 use indoc::indoc;
 use scarb_api::ScarbCommand;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
@@ -616,5 +617,71 @@ fn test_declare_from_no_abi_with_class_hash_disallowed() {
     assert_stderr_contains(
         output,
         "error: the argument '--class-hash <CLASS_HASH>' cannot be used with '--no-abi'",
+    );
+}
+
+#[tokio::test]
+async fn test_declare_from_with_alias() {
+    let temp_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user1",
+        "declare-from",
+        "--class-hash",
+        "@example-class",
+        "--source-url",
+        SEPOLIA_RPC_URL,
+        // Note: this avoids "already declared" error caused by happy tests
+        "--dry-run",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Dry run completed
+
+            Overall Fee: [..] Fri (~[..] STRK)
+            "
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_declare_from_with_unknown_alias() {
+    let temp_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user1",
+        "declare-from",
+        "--class-hash",
+        "@unknown",
+        "--source-url",
+        SEPOLIA_RPC_URL,
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Command: declare-from
+        Error: Invalid class hash
+
+        Caused by:
+            Alias `unknown` not found in config
+        "},
     );
 }
