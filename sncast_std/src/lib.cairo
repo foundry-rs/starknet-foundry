@@ -178,6 +178,7 @@ pub enum ScriptCommandError {
     ContractArtifactsNotFound: ErrorData,
     WaitForTransactionError: WaitForTransactionError,
     ProviderError: ProviderError,
+    ContractResolutionError: ErrorData,
 }
 
 pub impl DisplayClassHash of Display<ClassHash> {
