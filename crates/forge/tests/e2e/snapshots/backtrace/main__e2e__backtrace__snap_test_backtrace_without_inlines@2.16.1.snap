@@ -27,6 +27,15 @@ stack backtrace:
    2: backtrace_vm_error::OuterContract::__wrapper__OuterContract__outer
        at [..]lib.cairo:13:5
 
+error occurred in test 'backtrace_vm_error::Test::test_fork_unwrapped_call_contract_syscall'
+stack backtrace:
+   0: backtrace_vm_error::IOuterContractDispatcherImpl::outer
+       at [..]lib.cairo:1:1
+   1: backtrace_vm_error::Test::test_fork_unwrapped_call_contract_syscall
+       at [..]lib.cairo:84:9
+   2: backtrace_vm_error::Test::test_fork_unwrapped_call_contract_syscall__snforge_internal_test_generated
+       at [..]lib.cairo:70:5
+
 [FAIL] backtrace_vm_error::Test::test_unwrapped_call_contract_syscall
 
 Failure data:
@@ -59,6 +68,15 @@ stack backtrace:
        at [..]lib.cairo:17:13
    2: backtrace_vm_error::OuterContract::__wrapper__OuterContract__outer
        at [..]lib.cairo:13:5
+
+error occurred in test 'backtrace_vm_error::Test::test_unwrapped_call_contract_syscall'
+stack backtrace:
+   0: backtrace_vm_error::IOuterContractDispatcherImpl::outer
+       at [..]lib.cairo:1:1
+   1: backtrace_vm_error::Test::test_unwrapped_call_contract_syscall
+       at [..]lib.cairo:67:9
+   2: backtrace_vm_error::Test::test_unwrapped_call_contract_syscall__snforge_internal_test_generated
+       at [..]lib.cairo:58:5
 
 
 Failures:

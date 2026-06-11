@@ -17,3 +17,12 @@ stack backtrace:
        at [..]error_handler.cairo:50:21
    3: dispatchers::error_handler::ErrorHandler::__wrapper__ErrorHandler__catch_panic_and_fail
        at [..]error_handler.cairo:27:5
+
+error occurred in test 'dispatchers_integrationtest::test::test_handle_and_panic'
+stack backtrace:
+   0: (inlined) dispatchers::error_handler::IErrorHandlerDispatcherImpl::catch_panic_and_fail
+       at [..]error_handler.cairo:1:1
+   1: (inlined) dispatchers_integrationtest::test::test_handle_and_panic
+       at [..]tests/test.cairo:34:5
+   2: dispatchers_integrationtest::test::test_handle_and_panic__snforge_internal_test_generated
+       at [..]tests/test.cairo:28:1
