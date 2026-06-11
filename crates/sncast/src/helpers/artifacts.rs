@@ -86,6 +86,15 @@ mod tests {
     }
 
     #[test]
+    fn resolves_contract_by_full_module_path() {
+        let artifacts = sample_artifacts();
+
+        let artifact = resolve_contract_artifacts("pkg::a::HelloStarknet", &artifacts).unwrap();
+
+        assert_eq!(artifact.sierra, "a");
+    }
+
+    #[test]
     fn errors_on_ambiguous_contract_name() {
         let artifacts = sample_artifacts();
 

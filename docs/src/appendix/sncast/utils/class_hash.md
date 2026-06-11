@@ -5,6 +5,8 @@ Calculate the class hash of a contract.
 Required.
 
 The name of the contract. The contract name is the part after the `mod` keyword in your contract file.
+This argument also accepts a full Cairo module path, for example `my_package::nested::HelloSncast`.
+Use the full path when more than one contract shares the same contract name.
 
 ## General Example
 
