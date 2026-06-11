@@ -1,4 +1,5 @@
-use crate::helpers::config::get_or_create_global_config_path;
+use crate::helpers::config::resolve_global_config_path_or_warn;
+use crate::response::ui::UI;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use configuration::search_config_upwards_relative_to;
@@ -28,10 +29,10 @@ impl Display for PromptSelection {
     }
 }
 
-pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
+pub fn prompt_to_add_account_as_default(account: &str, ui: &UI) -> Result<()> {
     let mut options = Vec::new();
 
-    if let Ok(global_path) = get_or_create_global_config_path() {
+    if let Some(global_path) = resolve_global_config_path_or_warn(ui) {
         options.push(PromptSelection::GlobalDefault(global_path));
     }
 
