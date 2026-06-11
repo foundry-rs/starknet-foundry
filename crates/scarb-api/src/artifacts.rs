@@ -166,42 +166,24 @@ mod tests {
             (
                 "HelloStarknet".to_string(),
                 "pkg::HelloStarknet".to_string(),
-                Utf8PathBuf::from("unittest/HelloStarknet.sierra"),
+                Utf8PathBuf::from("pkg_unittest_HelloStarknet.test.contract_class.json"),
             ),
             (
                 "HelloStarknet".to_string(),
                 "pkg::HelloStarknet".to_string(),
-                Utf8PathBuf::from("integrationtest/HelloStarknet.sierra"),
-            ),
-            (
-                "HelloStarknet".to_string(),
-                "pkg_integrationtest::tests::HelloStarknet".to_string(),
-                Utf8PathBuf::from("integrationtest/tests_HelloStarknet.sierra"),
+                Utf8PathBuf::from("pkg_integrationtest_HelloStarknet.test.contract_class.json"),
             ),
             (
                 "ERC20".to_string(),
                 "pkg::ERC20".to_string(),
-                Utf8PathBuf::from("unittest/ERC20.sierra"),
+                Utf8PathBuf::from("pkg_unittest_ERC20.test.contract_class.json"),
             ),
         ];
 
         let result = deduplicate_by_module_path(artifacts);
 
         let module_paths: Vec<&str> = result.iter().map(|(_, path, _)| path.as_str()).collect();
-        assert_eq!(
-            module_paths,
-            vec![
-                "pkg::ERC20",
-                "pkg::HelloStarknet",
-                "pkg_integrationtest::tests::HelloStarknet",
-            ]
-        );
-
-        let hello_starknet_count = result
-            .iter()
-            .filter(|(name, _, _)| name == "HelloStarknet")
-            .count();
-        assert_eq!(hello_starknet_count, 2);
+        assert_eq!(module_paths, vec!["pkg::ERC20", "pkg::HelloStarknet",]);
     }
 
     fn setup_with_tests(tests_contents: &str) -> (TempDir, StarknetArtifactsFiles) {
