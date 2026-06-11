@@ -302,7 +302,7 @@ mod tests {
         assert_eq!(count_by_name(&result, "HelloStarknet"), 1);
         let erc20 = result
             .values()
-            .find(|contract| contract.contract_name == "ERC20")
+            .find(|contract| contract.name == "ERC20")
             .unwrap();
         assert!(erc20.artifacts.executor.is_some());
     }
