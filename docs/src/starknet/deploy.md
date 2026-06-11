@@ -98,7 +98,7 @@ contract from a Scarb project by providing the `--contract-name` flag.
 Under the hood, if the passed contract was never declared to starknet, it will run the [declare](../starknet/declare.md)
 command first and then execute the contract deployment.
 
-`--contract-name` also accepts a full Cairo module path such as `my_package::nested::HelloSncast`.
+`--contract-name` also accepts a full Cairo module path such as `hello_sncast::HelloSncast`.
 Use the full path when more than one contract in the package shares the same contract name.
 
 > 📝 **Note**
