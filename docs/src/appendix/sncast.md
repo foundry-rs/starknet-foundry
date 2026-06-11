@@ -23,6 +23,7 @@
     * [init](./sncast/script/init.md)
     * [run](./sncast/script/run.md)
 * [show-config](./sncast/show_config.md)
+* [config-path](./sncast/config_path.md)
 * [get](./sncast/get/get.md)
     * [balance](./sncast/get/balance.md)
     * [class-hash-at](./sncast/get/class_hash_at.md)

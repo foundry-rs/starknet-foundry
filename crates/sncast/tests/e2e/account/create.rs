@@ -87,6 +87,81 @@ pub async fn test_happy_case(account_type: &str) {
 }
 
 #[tokio::test]
+pub async fn test_create_with_class_hash_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--name",
+        "my_account",
+        "--class-hash",
+        "@oz-devnet",
+        "--type",
+        "oz",
+    ];
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_eq(indoc! {r"
+        Success: Account created
+
+        Address: 0x0[..]
+        
+        Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
+
+        After prefunding the account, run:
+        sncast --accounts-file accounts.json account deploy  --name my_account
+
+        To see account creation details, visit:
+        account: [..]
+        "});
+
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file))
+        .expect("Unable to read created file");
+    assert!(contents.contains("my_account"));
+    assert!(contents.contains(DEVNET_OZ_CLASS_HASH_CAIRO_0));
+}
+
+#[tokio::test]
+pub async fn test_create_with_unknown_class_hash_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--name",
+        "my_account",
+        "--class-hash",
+        "@unknown",
+        "--type",
+        "oz",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Command: account create
+        Error: Invalid class hash
+
+        Caused by:
+            Alias `unknown` not found in config
+        "},
+    );
+}
+
+#[tokio::test]
 pub async fn test_invalid_class_hash() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";

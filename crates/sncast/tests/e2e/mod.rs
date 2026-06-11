@@ -2,6 +2,7 @@ mod account;
 mod alias;
 mod call;
 mod completions;
+mod config_path;
 mod declare;
 mod declare_from;
 mod deploy;

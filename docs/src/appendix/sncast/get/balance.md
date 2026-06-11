@@ -13,7 +13,9 @@ Name of the token to check the balance for. Possible values
 Optional.
 Conflicts with: [`--token`](#--token--t-token)
 
-Token contract address to check the balance for. Token needs to be compatible with ERC-20 standard.
+Token contract address to check the balance for. Token needs to be compatible with ERC-20 standard. It can be either:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../../starknet/aliases.md).
 
 ## `--block-id, -b <BLOCK_ID>`
 Optional.

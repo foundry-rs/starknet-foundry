@@ -160,6 +160,7 @@
           * [deploy](appendix/sncast/multicall/execute/deploy.md)
           * [invoke](appendix/sncast/multicall/execute/invoke.md)
     * [show-config](appendix/sncast/show_config.md)
+    * [config-path](appendix/sncast/config_path.md)
     * [script](appendix/sncast/script/script.md)
         * [init](appendix/sncast/script/init.md)
         * [run](appendix/sncast/script/run.md)

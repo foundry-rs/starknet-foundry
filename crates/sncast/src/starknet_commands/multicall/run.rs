@@ -70,6 +70,7 @@ struct MulticallFile {
 
 #[derive(Deserialize, Debug)]
 pub struct DeployItem {
+    // TODO: add full support for multicall id <> alias id resolution (will be done in next PR)
     pub class_hash: Felt,
     pub inputs: Vec<Input>,
     pub unique: bool,

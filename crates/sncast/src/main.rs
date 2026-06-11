@@ -9,9 +9,9 @@ use crate::starknet_commands::invoke::InvokeCommonArgs;
 use crate::starknet_commands::script::run_script_command;
 use crate::starknet_commands::utils::{self, Utils};
 use crate::starknet_commands::{
-    account, account::Account as AccountCommand, alias::Alias, call::Call, declare::Declare,
-    deploy::Deploy, get::tx_status::TxStatus, invoke::Invoke, multicall::Multicall, script::Script,
-    show_config::ShowConfig,
+    account, account::Account as AccountCommand, alias::Alias, call::Call, config_path::ConfigPath,
+    declare::Declare, deploy::Deploy, get::tx_status::TxStatus, invoke::Invoke,
+    multicall::Multicall, script::Script, show_config::ShowConfig,
 };
 use crate::starknet_commands::{get, multicall};
 use anyhow::{Context, Result, bail};
@@ -191,6 +191,9 @@ enum Commands {
     /// Show current configuration being used
     ShowConfig(ShowConfig),
 
+    /// Show paths to the config files contributing to the effective configuration
+    ConfigPath(ConfigPath),
+
     /// Run or initialize a deployment script
     Script(Script),
 
@@ -333,6 +336,9 @@ fn run(cli: Cli, ui: &UI) -> Result<ExitCode> {
         generate_completions(completions.shell, &mut Cli::command())
     } else if let Commands::Script(script) = &cli.command {
         run_script_command(&cli, runtime, script, ui)
+    } else if let Commands::ConfigPath(_) = &cli.command {
+        let result = starknet_commands::config_path::config_path(ui);
+        Ok(process_command_result("config-path", result, ui, None))
     } else {
         let config = get_cast_config(&cli, ui)?;
         runtime.block_on(run_async_command(cli, config, ui))
@@ -442,7 +448,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             } else {
                 let source_provider = declare_from.source_rpc.get_provider(ui).await?;
                 let block_id = get_block_id(&declare_from.block_id)?;
-                let class_hash = declare_from.class_hash.expect("missing class_hash");
+                let class_hash = declare_from
+                    .class_hash
+                    .expect("missing class_hash")
+                    .resolve(&config)?;
 
                 ContractSource::Network {
                     source_provider,
@@ -517,6 +526,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let (class_hash, declare_response, local_abi) = if let Some(class_hash) =
                 identifier.class_hash
             {
+                let class_hash = class_hash.resolve(&config)?;
                 (class_hash, None, None)
             } else if let Some(contract_name) = identifier.contract_name {
                 let manifest_path = assert_manifest_path_exists()?;
@@ -659,9 +669,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
         }) => {
             let provider = rpc.get_provider(&config, ui).await?;
 
-            let contract_address = contract_address
-                .resolve_alias_or_felt(&config)
-                .context("Invalid contract address")?;
+            let contract_address = contract_address.resolve(&config)?;
 
             let block_id = get_block_id(&block_id)?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
@@ -720,7 +728,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let contract_address = contract_address.resolve_alias_or_felt(&config)?;
+            let contract_address = contract_address.resolve(&config)?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
@@ -814,7 +822,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             Ok(process_command_result("ledger", result, ui, None))
         }
 
-        Commands::Completions(_) | Commands::Script(_) => {
+        Commands::Completions(_) | Commands::Script(_) | Commands::ConfigPath(_) => {
             unreachable!("should be handled before this function is called")
         }
     }

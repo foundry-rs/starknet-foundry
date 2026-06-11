@@ -6,8 +6,10 @@ use crate::helpers::{
     fixtures::{create_and_deploy_oz_account, duplicate_contract_directory_with_salt},
     runner::runner,
 };
+use configuration::test_utils::copy_config_to_tempdir;
 use indoc::indoc;
 use serde_json::Value;
+use shared::test_utils::output_assert::assert_stderr_contains;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
 fn extract_contract_address(output: &[u8]) -> String {
@@ -20,6 +22,79 @@ fn extract_contract_address(output: &[u8]) -> String {
         }
     }
     panic!("Could not find contract_address in output:\n{stdout}");
+}
+
+#[test]
+fn test_contract_address_with_class_hash_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let args = vec![
+        "utils",
+        "contract-address",
+        "--class-hash",
+        "@map-class",
+        "--salt",
+        "0x1",
+    ];
+
+    runner(&args)
+        .current_dir(tempdir.path())
+        .assert()
+        .success()
+        .stdout_eq(indoc! {r"
+    Contract Address: 0x0[..]
+    Salt:             0x0[..]
+    "});
+}
+
+#[test]
+fn test_contract_address_with_deployer_address_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let args = vec![
+        "utils",
+        "contract-address",
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--salt",
+        "0x1",
+        "--unique",
+        "--deployer-address",
+        "@deployer-123",
+    ];
+
+    runner(&args)
+        .current_dir(tempdir.path())
+        .assert()
+        .success()
+        .stdout_eq(indoc! {r"
+    Contract Address: 0x0[..]
+    Salt:             0x0[..]
+    "});
+}
+
+#[test]
+fn test_contract_address_with_unknown_class_hash_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let args = vec![
+        "utils",
+        "contract-address",
+        "--class-hash",
+        "@unknown",
+        "--salt",
+        "0x1",
+    ];
+
+    let output = runner(&args).current_dir(tempdir.path()).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+            Command: utils contract-address
+            Error: Invalid class hash
+
+            Caused by:
+                Alias `unknown` not found in config
+        "},
+    );
 }
 
 #[test]
