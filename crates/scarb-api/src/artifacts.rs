@@ -39,7 +39,7 @@ impl PartialEq for StarknetContractArtifacts {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ContractData {
-    pub contract_name: String,
+    pub name: String,
     pub artifacts: StarknetContractArtifacts,
     pub sierra_path: Utf8PathBuf,
 }
@@ -73,10 +73,10 @@ impl StarknetArtifactsFiles {
 
     #[tracing::instrument(skip_all, level = "debug")]
     pub(crate) fn load_contracts_artifacts(self) -> Result<ContractsData> {
-        // Gather `(contract_name, module_path, sierra_path)` across the base and all other
-        // representations. The same contract may be emitted into several test targets
-        // (e.g. unittest and integrationtest) under the same `module_path`, so we collapse
-        // identical module paths here. Distinct module paths sharing a `contract_name` are
+        // Gather `(name, module_path, sierra_path)` across the base and all other
+        // representations. The same contract may be emitted into both test targets
+        // (unittest and integrationtest) under the same `module_path`, so we collapse
+        // identical module paths here. Distinct module paths sharing a `name` are
         // genuine duplicates and are all kept.
         let mut all_artifacts: Vec<(String, String, Utf8PathBuf)> =
             StarknetArtifactsRepresentation::try_from_path(self.base.as_path())?.artifacts();
@@ -96,12 +96,12 @@ impl StarknetArtifactsFiles {
     ) -> Result<HashMap<String, ContractData>> {
         artifacts
             .into_par_iter()
-            .map(|(contract_name, module_path, sierra_path)| {
+            .map(|(name, module_path, sierra_path)| {
                 let artifacts = self.compile_artifact_at_path(&sierra_path)?;
                 Ok((
                     module_path,
                     ContractData {
-                        contract_name,
+                        name,
                         artifacts,
                         sierra_path,
                     },
@@ -239,7 +239,7 @@ mod tests {
     fn count_by_name(contracts: &HashMap<String, ContractData>, contract_name: &str) -> usize {
         contracts
             .values()
-            .filter(|contract| contract.contract_name == contract_name)
+            .filter(|contract| contract.name == contract_name)
             .count()
     }
 

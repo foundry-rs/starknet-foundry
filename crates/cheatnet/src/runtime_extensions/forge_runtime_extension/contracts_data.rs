@@ -68,7 +68,7 @@ impl ContractsData {
                 (
                     module_path,
                     ContractData {
-                        name: contract.contract_name,
+                        name: contract.name,
                         artifacts: contract.artifacts,
                         class_hash,
                         source_sierra_path: contract.sierra_path,
