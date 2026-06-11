@@ -27,12 +27,12 @@ pub fn declare(
 ) -> Result<DeclareResult, CheatcodeError> {
     let contract = match contracts_data.resolve_by_name(contract_name) {
         Ok(contract) => contract,
-        Err(ContractResolutionError::NotFound) => {
+        Err(ContractResolutionError::NameNotFound) => {
             return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
                 anyhow!("Failed to get contract artifact for name = {contract_name}."),
             )));
         }
-        Err(ContractResolutionError::Ambiguous(module_paths)) => {
+        Err(ContractResolutionError::AmbiguousName(module_paths)) => {
             let paths = module_paths
                 .iter()
                 .map(|path| format!("    {path}"))

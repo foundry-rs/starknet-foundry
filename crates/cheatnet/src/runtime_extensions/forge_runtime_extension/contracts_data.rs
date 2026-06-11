@@ -36,9 +36,9 @@ pub struct ContractData {
 #[derive(Debug)]
 pub enum ContractResolutionError {
     /// No contract with the given name was found.
-    NotFound,
+    NameNotFound,
     /// Several contracts share the same name. Carries their module paths (sorted) for diagnostics.
-    Ambiguous(Vec<ModulePath>),
+    AmbiguousName(Vec<ModulePath>),
 }
 
 impl ContractsData {
@@ -103,7 +103,7 @@ impl ContractsData {
             .collect();
 
         match matches.len() {
-            0 => Err(ContractResolutionError::NotFound),
+            0 => Err(ContractResolutionError::NameNotFound),
             1 => Ok(matches.pop().unwrap().1),
             _ => {
                 let mut module_paths: Vec<ModulePath> = matches
@@ -111,7 +111,7 @@ impl ContractsData {
                     .map(|(module_path, _)| module_path.clone())
                     .collect();
                 module_paths.sort();
-                Err(ContractResolutionError::Ambiguous(module_paths))
+                Err(ContractResolutionError::AmbiguousName(module_paths))
             }
         }
     }
