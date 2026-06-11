@@ -61,6 +61,8 @@ pub fn get_backtrace(
     versioned_program_path: &Utf8Path,
     test_name: &str,
 ) -> Option<String> {
+    let mut backtrace_parts = Vec::new();
+
     if !encountered_errors.is_empty() {
         let class_hashes = encountered_errors.keys().copied().collect();
 
@@ -74,7 +76,7 @@ pub fn get_backtrace(
             })
             .unwrap_or_else(|err| format!("failed to create backtrace: {err}"));
 
-        return Some(contract_part);
+        backtrace_parts.push(contract_part);
     }
 
     if let Some(bt) = test_backtrace.filter(|bt| !bt.pcs.is_empty()) {
@@ -86,10 +88,10 @@ pub fn get_backtrace(
         .and_then(|data| data.render_backtrace(&bt.pcs))
         .unwrap_or_else(|err| format!("failed to create test backtrace: {err}"));
 
-        return Some(test_part);
+        backtrace_parts.push(test_part);
     }
 
-    None
+    (!backtrace_parts.is_empty()).then(|| backtrace_parts.join("\n"))
 }
 
 #[must_use]
