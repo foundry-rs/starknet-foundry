@@ -63,6 +63,8 @@ pub enum StarknetCommandError {
     UnknownError(#[from] anyhow::Error),
     #[error("Failed to find {} artifact in starknet_artifacts.json file. Please make sure you have specified correct package using `--package` flag.", .0.data)]
     ContractArtifactsNotFound(ErrorData),
+    #[error("{}", .0.data)]
+    ContractResolutionError(ErrorData),
     #[error(transparent)]
     WaitForTransactionError(#[from] WaitForTransactionError),
     #[error(transparent)]
