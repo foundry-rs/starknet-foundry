@@ -16,8 +16,7 @@ Class hash of contract to deploy. It can be either:
 Required if `--class-hash` is not provided.
 
 Name of the contract to deploy. Can be used instead of `--class-hash`. Requires `--package` if more than one package exists in a workspace.
-This argument also accepts a full Cairo module path, for example `my_package::nested::HelloSncast`.
-Use the full path when more than one contract shares the same contract name.
+This argument also accepts a full Cairo module path, for example `hello_sncast::HelloSncast`.
 
 ## `--package <NAME>`
 Optional.
