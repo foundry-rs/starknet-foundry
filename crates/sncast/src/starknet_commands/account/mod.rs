@@ -213,6 +213,7 @@ pub async fn account(
     match account.command {
         Commands::Import(import) => {
             let provider = import.rpc.get_provider(&config, ui).await?;
+
             let result = starknet_commands::account::import::import(
                 import.name.clone(),
                 &config.accounts_file,
@@ -259,6 +260,7 @@ pub async fn account(
             } else {
                 config.account.clone()
             };
+
             let result = starknet_commands::account::create::create(
                 &account,
                 &config.accounts_file,

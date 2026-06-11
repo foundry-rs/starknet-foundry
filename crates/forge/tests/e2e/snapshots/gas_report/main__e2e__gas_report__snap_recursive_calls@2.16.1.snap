@@ -4,13 +4,14 @@ expression: stdout
 ---
 
 
-[PASS] debugging_integrationtest::test_trace::test_debugging_trace_success (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~1382600)
+
+[PASS] debugging_integrationtest::test_trace::test_debugging_trace_success (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~1519900)
 ╭-------------------------+-------+--------+--------+---------+---------╮
 | SimpleContract Contract |       |        |        |         |         |
 +=======================================================================+
 | Function Name           | Min   | Max    | Avg    | Std Dev | # Calls |
 |-------------------------+-------+--------+--------+---------+---------|
-| execute_calls           | 11660 | 609380 | 184000 | 235987  | 5       |
+| execute_calls           | 39120 | 746680 | 244412 | 279862  | 5       |
 |-------------------------+-------+--------+--------+---------+---------|
 | fail                    | 17950 | 17950  | 17950  | 0       | 1       |
 ╰-------------------------+-------+--------+--------+---------+---------╯

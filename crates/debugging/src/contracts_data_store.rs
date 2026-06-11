@@ -2,6 +2,7 @@ use crate::trace::types::{ContractName, Selector};
 use cairo_lang_sierra::program::ProgramArtifact;
 use cairo_lang_starknet_classes::contract_class::ContractClass;
 use cheatnet::forking::data::ForkData;
+use cheatnet::predeployment::abi::ContractsDebuggingData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
@@ -83,6 +84,16 @@ impl ContractsDataStore {
         }
     }
 
+    /// Merges two stores into one; entries from `other` take precedence over `self`.
+    #[must_use]
+    pub fn merge(mut self, other: Self) -> Self {
+        self.abi.extend(other.abi);
+        self.contract_names.extend(other.contract_names);
+        self.selectors.extend(other.selectors);
+        self.programs.extend(other.programs);
+        self
+    }
+
     /// Gets the [`ContractName`] for a given contract [`ClassHash`].
     #[must_use]
     pub fn get_contract_name(&self, class_hash: &ClassHash) -> Option<&ContractName> {
@@ -115,6 +126,28 @@ impl ContractsDataStore {
         Self {
             abi,
             contract_names: HashMap::new(),
+            selectors,
+            programs: HashMap::new(),
+        }
+    }
+}
+
+impl From<&ContractsDebuggingData> for ContractsDataStore {
+    fn from(data: &ContractsDebuggingData) -> Self {
+        let selectors = data
+            .selectors
+            .iter()
+            .map(|(k, v)| (*k, Selector(v.clone())))
+            .collect();
+        let contract_names = data
+            .contract_names
+            .iter()
+            .map(|(class_hash, name)| (*class_hash, ContractName(name.clone())))
+            .collect();
+
+        Self {
+            abi: data.abi.clone(),
+            contract_names,
             selectors,
             programs: HashMap::new(),
         }

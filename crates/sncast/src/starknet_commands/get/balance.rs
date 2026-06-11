@@ -1,3 +1,4 @@
+use crate::starknet_commands::utils::felt_or_id::TokenAddress;
 use anyhow::{Error, Result};
 use clap::Args;
 use primitive_types::U256;
@@ -25,26 +26,27 @@ pub struct TokenIdentifier {
     #[arg(value_enum, short = 't', long)]
     pub token: Option<Token>,
 
-    /// Token contract address to check the balance for. Token needs to be compatible with ERC-20 standard.
+    /// Token contract address to check the balance for (hex, decimal, or @alias from snfoundry.toml).
+    /// Token needs to be compatible with ERC-20 standard.
     #[arg(short = 'd', long)]
-    pub token_address: Option<Felt>,
+    pub token_address: Option<TokenAddress>,
 }
 
 impl TokenIdentifier {
-    pub fn contract_address(&self) -> Felt {
-        if let Some(addr) = self.token_address {
-            addr
+    pub fn contract_address(&self, config: &CastConfig) -> Result<Felt> {
+        if let Some(addr) = &self.token_address {
+            addr.resolve(config)
         } else if let Some(tok) = self.token {
-            tok.contract_address()
+            Ok(tok.contract_address())
         } else {
             // Both token and token address are optional, hence we cannot have
             // default value for token at clap level.
-            Token::default().contract_address()
+            Ok(Token::default().contract_address())
         }
     }
 
     pub fn token_suffix(&self) -> Option<Token> {
-        match (self.token, self.token_address) {
+        match (self.token, self.token_address.as_ref()) {
             (Some(token), None) => Some(token),
             (None, Some(_)) => None,
             (None, None) => Some(Token::default()),
@@ -75,7 +77,7 @@ pub async fn balance(balance: Balance, config: CastConfig, ui: &UI) -> anyhow::R
     let provider = balance.rpc.get_provider(&config, ui).await?;
     let account = get_account(&config, &provider, &balance.rpc, ui).await?;
 
-    let result = get_balance(account.address(), &provider, &balance)
+    let result = get_balance(account.address(), &provider, &balance, &config)
         .await
         .map_err(handle_starknet_command_error);
 
@@ -86,9 +88,15 @@ pub async fn get_balance(
     account_address: Felt,
     provider: &JsonRpcClient<HttpTransport>,
     balance: &Balance,
+    config: &CastConfig,
 ) -> Result<BalanceResponse, StarknetCommandError> {
+    let token_contract_address = balance
+        .token_identifier
+        .contract_address(config)
+        .map_err(StarknetCommandError::from)?;
+
     let call = FunctionCall {
-        contract_address: balance.token_identifier.contract_address(),
+        contract_address: token_contract_address,
         entry_point_selector: get_selector_from_name("balance_of").expect("Failed to get selector"),
         calldata: vec![account_address],
     };

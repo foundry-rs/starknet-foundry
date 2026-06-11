@@ -12,14 +12,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - `snforge_std::declare` now fails with a clear, deterministic error when a contract name resolves to multiple contracts (e.g. one defined in `src/` and another in `tests/`), instead of non-deterministically selecting one of them.
+- Debugging trace is now correctly displayed for predeployed contracts (STRK, ETH) in non-fork tests.
 
 ### Cast 
 
 #### Added
 
 - Aliases in `snfoundry.toml`. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html#sncastprofile-namealiases).
-- `--contract-address @alias` syntax in `sncast call` and `sncast invoke`.
+- `@alias` syntax for felt arguments in `sncast call`, `invoke`, `deploy`, `declare-from`, `account create`, `account import`, `get balance`, `get nonce`, `get class-hash-at`, `verify`, `utils serialize`, and `utils contract-address`. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/aliases.html).
 - `sncast alias list` command for listing aliases. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/alias/list.html).
+- `sncast config-path` for printing the paths to the local and global `snfoundry.toml` config files. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/config_path.html).
+
+#### Changed
+
+- Unknown keys in `snfoundry.toml` (`[sncast.<profile>]`, `[sncast.<profile>.networks]`, `wait-params`) now emit a warning and are ignored instead of causing a hard error, so configs can be shared across `sncast` versions. Read more in [configuration](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html).
+
 
 ## [0.61.0] - 2026-05-26
 
@@ -30,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `#[should_panic(expected: (...))]` now supports regular strings inside mixed tuples, alongside short strings and numbers.
 - `#[derive(Fuzzable)]` macro that automatically generates `Fuzzable` trait implementations for structs and enums
 - `SNFOUNDRY_CACHE` environment variable to allow to specify a custom cache directory
-- Contract debug traces now include emitted Starknet events via the `events` trace component and `detailed` trace verbosity.
+- Contract debug traces now include emitted Starknet events via the `events` trace component and `detailed` trace verbosity, rendering ABI-decodable events in a struct-like format.
 
 #### Changed
 
