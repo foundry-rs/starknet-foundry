@@ -9,6 +9,8 @@ Send a declare transaction of Cairo contract to Starknet.
 Required.
 
 Name of the contract. Contract name is a part after the mod keyword in your contract file.
+This argument also accepts a full Cairo module path, for example `my_package::nested::HelloSncast`.
+Use the full path when more than one contract shares the same contract name.
 
 ## `--url, -u <RPC_URL>`
 Optional.

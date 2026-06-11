@@ -15,6 +15,8 @@ Conflicts with: [`--class-hash`](#--class-hash)
 
 The name of the contract. The contract name is the part after the `mod` keyword in your contract file.
 The class hash is derived from the locally built artifact.
+This argument also accepts a full Cairo module path, for example `my_package::nested::HelloSncast`.
+Use the full path when more than one contract shares the same contract name.
 
 ## `--constructor-calldata <CONSTRUCTOR_CALLDATA>`
 Optional.
@@ -75,4 +77,3 @@ Use predefined network with public provider.
 Possible values: `mainnet`, `sepolia`, `devnet`.
 
 Overrides network from `snfoundry.toml`.
-
