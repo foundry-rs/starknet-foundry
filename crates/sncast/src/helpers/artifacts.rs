@@ -1,6 +1,6 @@
 use crate::{ErrorData, response::errors::StarknetCommandError};
 use conversions::byte_array::ByteArray;
-use std::collections::HashMap;
+use std::{collections::HashMap, hash::BuildHasher};
 
 /// Contains compiled Starknet artifacts
 #[derive(Debug, Clone)]
@@ -18,10 +18,9 @@ fn contract_name_from_module_path(module_path: &str) -> &str {
         .expect("Module path should always contain at least one segment")
 }
 
-#[expect(clippy::result_large_err)]
-pub fn resolve_contract_artifact<'a>(
+pub fn resolve_contract_artifact<'a, S: BuildHasher>(
     contract_identifier: &str,
-    artifacts: &'a HashMap<String, CastStarknetContractArtifacts>,
+    artifacts: &'a HashMap<String, CastStarknetContractArtifacts, S>,
 ) -> Result<&'a CastStarknetContractArtifacts, StarknetCommandError> {
     let mut matching_module_paths: Vec<&str> = artifacts
         .keys()
