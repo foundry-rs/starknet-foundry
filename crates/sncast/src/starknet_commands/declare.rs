@@ -1,9 +1,8 @@
 use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
-use conversions::byte_array::ByteArray;
 use shared::rpc::get_starknet_version;
-use sncast::helpers::artifacts::CastStarknetContractArtifacts;
+use sncast::helpers::artifacts::{CastStarknetContractArtifacts, resolve_contract_artifact};
 use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
@@ -12,7 +11,7 @@ use sncast::response::declare::{
 };
 use sncast::response::errors::{SNCastProviderError, SNCastStarknetError, StarknetCommandError};
 use sncast::response::ui::UI;
-use sncast::{ErrorData, WaitForTx, apply_optional_fields, handle_wait_for_tx};
+use sncast::{WaitForTx, apply_optional_fields, handle_wait_for_tx};
 use starknet_rust::accounts::AccountError::Provider;
 use starknet_rust::accounts::{ConnectedAccount, DeclarationV3};
 use starknet_rust::core::types::{
@@ -83,12 +82,7 @@ pub async fn declare<S>(
 where
     S: Signer + Sync + Send,
 {
-    let contract_artifacts =
-        artifacts
-            .get(&contract_name)
-            .ok_or(StarknetCommandError::ContractArtifactsNotFound(ErrorData {
-                data: ByteArray::from(contract_name.as_str()),
-            }))?;
+    let contract_artifacts = resolve_contract_artifact(&contract_name, artifacts)?;
 
     let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
         .context("Failed to parse sierra artifact")?;

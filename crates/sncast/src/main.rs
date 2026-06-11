@@ -19,11 +19,11 @@ use camino::Utf8PathBuf;
 use clap::{ArgMatches, CommandFactory, FromArgMatches, Parser, Subcommand};
 use configuration::{Override, find_config_file};
 use conversions::IntoConv;
-use conversions::byte_array::ByteArray;
 use data_transformer::transform;
 use foundry_ui::components::warning::WarningMessage;
 use mimalloc::MiMalloc;
 use shared::auto_completions::{Completions, generate_completions};
+use sncast::helpers::artifacts::resolve_contract_artifact;
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::config::resolve_global_config_path_or_warn;
 use sncast::helpers::configuration::{
@@ -39,14 +39,12 @@ use sncast::response::declare::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse, DeployCommandMessage,
 };
 use sncast::response::deploy::{DeployResponse, DeployResponseWithDeclare};
-use sncast::response::errors::{
-    ResponseError, StarknetCommandError, handle_starknet_command_error,
-};
+use sncast::response::errors::{ResponseError, handle_starknet_command_error};
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transformed_call::transform_response;
 use sncast::response::ui::UI;
 use sncast::{
-    ErrorData, PartialWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
+    PartialWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
     get_contract_class, with_account,
 };
 use starknet_commands::ledger::{self, Ledger};
@@ -409,9 +407,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
 
             let deploy_command_message = if let Ok(response) = &result {
                 // TODO(#3785)
-                let contract_artifacts = artifacts
-                    .get(&declare.contract_name)
-                    .context("Failed to get contract artifacts")?;
+                let contract_artifacts =
+                    resolve_contract_artifact(&declare.contract_name, &artifacts)
+                        .context("Failed to get contract artifacts")?;
                 let contract_definition: SierraClass =
                     serde_json::from_str(&contract_artifacts.sierra)
                         .context("Failed to parse sierra artifact")?;
@@ -544,11 +542,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 )
                 .context("Failed to build contract")?;
 
-                let contract_artifacts = artifacts.get(&contract_name).ok_or(
-                    StarknetCommandError::ContractArtifactsNotFound(ErrorData {
-                        data: ByteArray::from(contract_name.as_str()),
-                    }),
-                )?;
+                let contract_artifacts = resolve_contract_artifact(&contract_name, &artifacts)?;
                 let contract_definition: SierraClass =
                     serde_json::from_str(&contract_artifacts.sierra)
                         .context("Failed to parse sierra artifact")?;
