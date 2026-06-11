@@ -23,6 +23,15 @@ stack backtrace:
    0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
        at [..]lib.cairo:13:5
 
+error occurred in test 'backtrace_panic::Test::test_contract_panics'
+stack backtrace:
+   0: (inlined) backtrace_panic::IOuterContractDispatcherImpl::outer
+       at [..]lib.cairo:1:1
+   1: backtrace_panic::Test::test_contract_panics
+       at [..]lib.cairo:59:9
+   2: backtrace_panic::Test::test_contract_panics__snforge_internal_test_generated
+       at [..]lib.cairo:50:5
+
 [IGNORE] backtrace_panic::Test::test_contract_panics_with_should_panic
 [FAIL] backtrace_panic::Test::test_fork_contract_panics
 
@@ -35,6 +44,15 @@ error occurred in contract 'OuterContract'
 stack backtrace:
    0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
        at [..]lib.cairo:13:5
+
+error occurred in test 'backtrace_panic::Test::test_fork_contract_panics'
+stack backtrace:
+   0: (inlined) backtrace_panic::IOuterContractDispatcherImpl::outer
+       at [..]lib.cairo:1:1
+   1: backtrace_panic::Test::test_fork_contract_panics
+       at [..]lib.cairo:90:9
+   2: backtrace_panic::Test::test_fork_contract_panics__snforge_internal_test_generated
+       at [..]lib.cairo:76:5
 
 
 Failures:
