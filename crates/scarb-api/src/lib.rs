@@ -600,7 +600,7 @@ mod tests {
         let find = |contract_name: &str| {
             contracts
                 .values()
-                .find(|contract| contract.contract_name == contract_name)
+                .find(|contract| contract.name == contract_name)
                 .unwrap()
         };
 

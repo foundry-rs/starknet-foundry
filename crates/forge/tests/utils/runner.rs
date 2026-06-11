@@ -112,7 +112,7 @@ impl Contract {
         )
         .unwrap()
         .into_values()
-        .find(|contract| contract.contract_name == self.name)
+        .find(|contract| contract.name == self.name)
         .ok_or(anyhow!("there is no contract with name {}", self.name))?
         .artifacts;
 
@@ -197,7 +197,6 @@ impl<'a> TestCase {
     }
 
     pub fn contracts(&self, ui: &UI) -> Result<ContractsData> {
-        // Test contracts are defined with unique names, so the name doubles as the module path.
         self.contracts
             .clone()
             .into_iter()
@@ -208,7 +207,7 @@ impl<'a> TestCase {
                 Ok((
                     name.clone(),
                     ContractData {
-                        contract_name: name,
+                        name,
                         artifacts,
                         sierra_path: Utf8PathBuf::default(),
                     },
