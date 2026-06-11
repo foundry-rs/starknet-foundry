@@ -109,7 +109,7 @@ impl ContractsData {
                 let mut module_paths: Vec<ModulePath> =
                     matches.iter().map(|(path, _)| (*path).clone()).collect();
                 module_paths.sort();
-                Err(ContractResolutionError::Ambiguous(module_paths))
+                Err(ContractResolutionError::AmbiguousName(module_paths))
             }
         }
     }

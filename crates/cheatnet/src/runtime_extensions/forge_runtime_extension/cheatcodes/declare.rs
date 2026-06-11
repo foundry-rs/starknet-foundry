@@ -32,7 +32,7 @@ pub fn declare(
                 anyhow!("Failed to get contract artifact for name = {contract_name}."),
             )));
         }
-        Err(ContractResolutionError::Ambiguous(module_paths)) => {
+        Err(ContractResolutionError::AmbiguousName(module_paths)) => {
             let paths = module_paths
                 .iter()
                 .map(|path| format!("    {path}"))
