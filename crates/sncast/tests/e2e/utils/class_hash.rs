@@ -38,7 +38,7 @@ fn test_errors_on_ambiguous_contract_name() {
     assert_stderr_contains(
         output,
         indoc! {r#"
-        Error: Found more than one contract named "HelloStarknet" in artifacts, pass one of the full module paths to `--contract-name`: duplicate_contract_name::first_contract::HelloStarknet, duplicate_contract_name::second_contract::HelloStarknet
+        Error: Found more than one contract named "HelloStarknet" in artifacts, pass one of the absolute module tree paths to `--contract-name`: duplicate_contract_name::first_contract::HelloStarknet, duplicate_contract_name::second_contract::HelloStarknet
         "#},
     );
 }

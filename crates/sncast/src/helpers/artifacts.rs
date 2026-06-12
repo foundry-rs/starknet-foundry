@@ -43,7 +43,7 @@ pub fn resolve_contract_artifacts<'a, S: BuildHasher>(
             .expect("artifacts should exist for resolved module path")),
         module_paths => {
             let message = format!(
-                "Found more than one contract named \"{contract_identifier}\" in artifacts, pass one of the full module paths to `--contract-name`: {}",
+                "Found more than one contract named \"{contract_identifier}\" in artifacts, pass one of the absolute module tree paths to `--contract-name`: {}",
                 module_paths.join(", ")
             );
             Err(StarknetCommandError::ContractResolutionError(ErrorData {
@@ -109,7 +109,7 @@ mod tests {
 
         assert_eq!(
             error.to_string(),
-            "Found more than one contract named \"HelloStarknet\" in artifacts, pass one of the full module paths to `--contract-name`: pkg::a::HelloStarknet, pkg::b::HelloStarknet"
+            "Found more than one contract named \"HelloStarknet\" in artifacts, pass one of the absolute module tree paths to `--contract-name`: pkg::a::HelloStarknet, pkg::b::HelloStarknet"
         );
     }
 }
