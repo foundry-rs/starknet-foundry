@@ -25,7 +25,7 @@ use foundry_ui::components::warning::WarningMessage;
 use mimalloc::MiMalloc;
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::command::process_command_result;
-use sncast::helpers::config::get_or_create_global_config_path;
+use sncast::helpers::config::resolve_global_config_path_or_warn;
 use sncast::helpers::configuration::{
     CastConfig, CliConfigOpts, ConfigScope, MaybeConfig, PartialCastConfig, warn_unknown_keys,
 };
@@ -834,15 +834,7 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
     };
 
     let local_path = find_config_file().ok();
-    let global_path = match get_or_create_global_config_path() {
-        Ok(p) => Some(p),
-        Err(err) => {
-            ui.print_warning(WarningMessage::new(format!(
-                "Could not get or create global config file: {err:?}. Proceeding without global config."
-            )));
-            None
-        }
-    };
+    let global_path = resolve_global_config_path_or_warn(ui);
     let profile = opts.profile.as_deref();
 
     let global_default =

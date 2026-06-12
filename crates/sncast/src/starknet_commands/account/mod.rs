@@ -229,7 +229,7 @@ pub async fn account(
 
             if run_interactive_prompt
                 && let Some(account_name) = result.as_ref().ok().map(|r| r.account_name.clone())
-                && let Err(err) = prompt_to_add_account_as_default(account_name.as_str())
+                && let Err(err) = prompt_to_add_account_as_default(account_name.as_str(), ui)
             {
                 // TODO(#3436)
                 ui.print_error(
@@ -312,6 +312,7 @@ pub async fn account(
                         .name
                         .as_ref()
                         .expect("Must be provided when using accounts file"),
+                    ui,
                 )
             {
                 // TODO(#3436)

@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Unknown keys in `snfoundry.toml` (`[sncast.<profile>]`, `[sncast.<profile>.networks]`, `wait-params`) now emit a warning and are ignored instead of causing a hard error, so configs can be shared across `sncast` versions. Read more in [configuration](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html).
-
+- `sncast account import/deploy` interactive "make default account" prompt now emits a warning when global `snfoundry.toml` cannot be accessed/created.
 
 ## [0.61.0] - 2026-05-26
 
