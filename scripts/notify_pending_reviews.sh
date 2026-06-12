@@ -44,6 +44,7 @@ query($owner: String!, $name: String!, $prFetchLimit: Int!) {
         title
         url
         number
+        isDraft
         additions
         deletions
         reviewRequests(first: 20) {
@@ -81,6 +82,7 @@ ROWS_JSON=$(gh api graphql -f query="$QUERY" \
       if .errors then error("GitHub API error: \(.errors | tostring)") else . end
       | [
         .data.repository.pullRequests.nodes[]
+        | select(.isDraft | not)
         | . as $pr
         | ($pr.reviewRequests.nodes
             | map(.requestedReviewer | (.login // .name))
