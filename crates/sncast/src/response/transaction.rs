@@ -24,6 +24,7 @@ impl SncastCommandMessage for TransactionResponse {
 /// Appends the fields of a single [`Transaction`] to the given [`OutputBuilder`].
 ///
 /// The caller is responsible for adding any header (e.g. via [`TransactionOutputBuilder::tx_header`]).
+#[must_use]
 pub fn append_transaction(builder: OutputBuilder, transaction: &Transaction) -> OutputBuilder {
     match transaction {
         Transaction::Invoke(tx) => match tx {
@@ -91,27 +92,49 @@ fn json_transaction_type(tx: &Transaction) -> &'static str {
 }
 
 pub trait TransactionOutputBuilder {
+    #[must_use]
     fn tx_header(self) -> Self;
+    #[must_use]
     fn tx_type(self, tx_type: &str) -> Self;
+    #[must_use]
     fn tx_version(self, version: &str) -> Self;
+    #[must_use]
     fn tx_hash(self, hash: &Felt) -> Self;
+    #[must_use]
     fn sender_address(self, addr: &Felt) -> Self;
+    #[must_use]
     fn contract_address(self, addr: &Felt) -> Self;
+    #[must_use]
     fn entry_point_selector(self, sel: &Felt) -> Self;
+    #[must_use]
     fn class_hash(self, hash: &Felt) -> Self;
+    #[must_use]
     fn compiled_class_hash(self, hash: &Felt) -> Self;
+    #[must_use]
     fn contract_address_salt(self, salt: &Felt) -> Self;
+    #[must_use]
     fn nonce(self, nonce: &Felt) -> Self;
+    #[must_use]
     fn calldata(self, calldata: &[Felt]) -> Self;
+    #[must_use]
     fn signature(self, sig: &[Felt]) -> Self;
+    #[must_use]
     fn paymaster_data(self, data: &[Felt]) -> Self;
+    #[must_use]
     fn account_deployment_data(self, data: &[Felt]) -> Self;
+    #[must_use]
     fn constructor_calldata(self, data: &[Felt]) -> Self;
+    #[must_use]
     fn resource_bounds(self, rb: &ResourceBoundsMapping) -> Self;
+    #[must_use]
     fn max_fee(self, fee: &Felt) -> Self;
+    #[must_use]
     fn tip(self, tip: u64) -> Self;
+    #[must_use]
     fn nonce_da_mode(self, mode: DataAvailabilityMode) -> Self;
+    #[must_use]
     fn fee_da_mode(self, mode: DataAvailabilityMode) -> Self;
+    #[must_use]
     fn proof_facts(self, proof_facts: Option<&[Felt]>) -> Self;
 }
 
