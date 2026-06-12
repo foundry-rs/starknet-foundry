@@ -56,6 +56,7 @@ impl ContractsData {
         let class_hashes: Vec<(ModulePath, ClassHash)> = parsed_contracts
             .par_iter()
             .map(|(module_path, sierra_class)| {
+                println!("Parsing contract at {module_path}");
                 Ok((module_path.clone(), get_class_hash(sierra_class)?))
             })
             .collect::<Result<_>>()?;
@@ -96,20 +97,18 @@ impl ContractsData {
         &self,
         contract_name: &str,
     ) -> Result<&ContractData, ContractResolutionError> {
-        let mut matches: Vec<(&ModulePath, &ContractData)> = self
+        let matches: Vec<(&ModulePath, &ContractData)> = self
             .contracts
             .iter()
             .filter(|(_, contract)| contract.name == contract_name)
             .collect();
 
-        match matches.len() {
-            0 => Err(ContractResolutionError::NameNotFound),
-            1 => Ok(matches.pop().unwrap().1),
+        match matches.as_slice() {
+            [] => Err(ContractResolutionError::NameNotFound),
+            [(_, contract)] => Ok(contract),
             _ => {
-                let mut module_paths: Vec<ModulePath> = matches
-                    .into_iter()
-                    .map(|(module_path, _)| module_path.clone())
-                    .collect();
+                let mut module_paths: Vec<ModulePath> =
+                    matches.iter().map(|(path, _)| (*path).clone()).collect();
                 module_paths.sort();
                 Err(ContractResolutionError::AmbiguousName(module_paths))
             }
