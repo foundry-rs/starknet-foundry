@@ -4,7 +4,7 @@
 
 ## Prerequisites
 
-`sncast` communicates with the [Starknet Ledger app](https://github.com/LedgerHQ/app-starknet) running on your device (currently supported version: 2.3.4). Make sure the Starknet app is installed and open before running any `sncast ledger` commands.
+`sncast` communicates with the [Starknet Ledger app](https://github.com/LedgerHQ/app-starknet) running on your device (currently supported version: {{starknet_ledger_app_version}}). Make sure the Starknet app is installed and open before running any `sncast ledger` commands.
 
 > 📝 **Note**
 >
@@ -29,7 +29,7 @@ $ sncast ledger app-version
 <summary>Output:</summary>
 
 ```shell
-App Version: 2.3.4
+App Version: {{starknet_ledger_app_version}}
 ```
 </details>
 <br>

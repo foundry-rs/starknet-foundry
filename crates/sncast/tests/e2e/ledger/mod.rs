@@ -1,7 +1,6 @@
 #![cfg(not(target_arch = "wasm32"))]
 
-use std::env;
-use std::{borrow::Cow, sync::Arc};
+use std::sync::Arc;
 
 use crate::helpers::constants::URL;
 use crate::helpers::fixtures::mint_token;
@@ -13,16 +12,16 @@ use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{
     BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH,
 };
-use sncast::helpers::ledger::{DerivationPathParser, create_ledger_app};
+use sncast::helpers::ledger::{DerivationPathParser, SncastLedgerTransport};
 use sncast::response::ui::UI;
-use speculos_client::{
-    AutomationAction, AutomationCondition, AutomationRule, Button, DeviceModel, SpeculosClient,
-};
+use speculos_client::SpeculosClient;
+pub(crate) use speculos_client::starknet_app::set_automation;
 use starknet_rust::accounts::{AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory};
 use starknet_rust::core::types::{BlockId, BlockTag};
 use starknet_rust::providers::Provider;
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet_rust::signers::LedgerSigner;
+use starknet_rust::signers::ledger::LedgerStarknetApp;
 use starknet_types_core::felt::Felt;
 use tempfile::TempDir;
 use url::Url;
@@ -38,8 +37,7 @@ pub(crate) const TEST_LEDGER_PATH: &str = OZ_LEDGER_PATH;
 
 pub(crate) const TEST_LEDGER_PATH_STORED: &str = "m/2645'/1195502025'/355113700'/0'/0'/0";
 
-// TODO(#4221): Update to latest version and build in workflow
-const APP_PATH: &str = "tests/data/ledger-app/nanox#strk#0.25.13.elf";
+const APP_PATH: &str = "tests/data/ledger-app/nanox.elf";
 
 pub(crate) const LEDGER_PUBLIC_KEY: &str =
     "0x51f3e99d539868d8f45ca705ad6f75e68229a6037a919b15216b4e92a4d6d8";
@@ -47,7 +45,7 @@ pub(crate) const LEDGER_PUBLIC_KEY: &str =
 pub(crate) const LEDGER_ACCOUNT_NAME: &str = "my_ledger";
 
 pub(crate) fn setup_speculos(port: u16) -> (Arc<SpeculosClient>, String) {
-    let client = Arc::new(SpeculosClient::new(DeviceModel::Nanox, port, APP_PATH).unwrap());
+    let client = Arc::new(SpeculosClient::new(port, APP_PATH).unwrap());
     let url = format!("http://127.0.0.1:{port}");
     (client, url)
 }
@@ -114,15 +112,8 @@ pub(crate) async fn deploy_ledger_account_of_type(
     parsed.print_warnings(&ui);
     let parsed_path = parsed.path;
 
-    // SAFETY: All tests share the same devnet instance, so even if a race condition causes
-    // `set_var` to race with another test using a different ledger emulator URL, the account
-    // deployment will still reach the correct devnet and remain accessible to the original test.
-    // The ledger emulator URL has no effect on account deployment when using the emulator.
-    unsafe {
-        env::set_var("LEDGER_EMULATOR_URL", speculos_url);
-    };
-
-    let app = create_ledger_app().await.unwrap();
+    let transport = SncastLedgerTransport::new(speculos_url.to_string()).unwrap();
+    let app = LedgerStarknetApp::from_transport(transport);
     let ledger_signer = LedgerSigner::new_with_app(parsed_path, app).unwrap();
     let chain_id = starknet_rust::core::chain_id::SEPOLIA;
 
@@ -163,225 +154,4 @@ pub(crate) async fn deploy_ledger_account_of_type(
             deploy_if_needed(factory, salt, &provider).await
         }
     }
-}
-
-pub(crate) mod automation {
-    use super::*;
-
-    pub(crate) const APPROVE_PUBLIC_KEY: AutomationRule<'static> = AutomationRule {
-        text: Some(Cow::Borrowed("Confirm Public Key")),
-        regexp: None,
-        x: None,
-        y: None,
-        conditions: &[],
-        actions: &[
-            // Press right
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Press right
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Press right
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Press both
-            AutomationAction::Button {
-                button: Button::Left,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Left,
-                pressed: false,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-        ],
-    };
-
-    pub(crate) const ENABLE_BLIND_SIGN: AutomationRule<'static> = AutomationRule {
-        text: None,
-        regexp: Some(Cow::Borrowed("^(S)?tarknet$")),
-        x: None,
-        y: None,
-        conditions: &[AutomationCondition {
-            varname: Cow::Borrowed("blind_enabled"),
-            value: false,
-        }],
-        actions: &[
-            // Right
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Right
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Both
-            AutomationAction::Button {
-                button: Button::Left,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Left,
-                pressed: false,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Both
-            AutomationAction::Button {
-                button: Button::Left,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Left,
-                pressed: false,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Left
-            AutomationAction::Button {
-                button: Button::Left,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Left,
-                pressed: false,
-            },
-            // Mark as done
-            AutomationAction::Setbool {
-                varname: Cow::Borrowed("blind_enabled"),
-                value: true,
-            },
-        ],
-    };
-
-    /// Must be used with [`ENABLE_BLIND_SIGN`].
-    pub(crate) const APPROVE_BLIND_SIGN_HASH: AutomationRule<'static> = AutomationRule {
-        text: None,
-        regexp: Some(Cow::Borrowed("^Cancel$")),
-        x: None,
-        y: None,
-        conditions: &[AutomationCondition {
-            varname: Cow::Borrowed("blind_enabled"),
-            value: true,
-        }],
-        actions: &[
-            // Right
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Both
-            AutomationAction::Button {
-                button: Button::Left,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Left,
-                pressed: false,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Right
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Right
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Right
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-            // Both
-            AutomationAction::Button {
-                button: Button::Left,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: true,
-            },
-            AutomationAction::Button {
-                button: Button::Left,
-                pressed: false,
-            },
-            AutomationAction::Button {
-                button: Button::Right,
-                pressed: false,
-            },
-        ],
-    };
 }
