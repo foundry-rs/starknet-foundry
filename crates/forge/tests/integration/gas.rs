@@ -31,7 +31,7 @@ fn declare_cost_is_omitted_cairo_steps() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -73,7 +73,7 @@ fn deploy_syscall_cost_cairo_steps() {
         "#
         ),
         Contract::from_code_path(
-            "GasConstructorChecker".to_string(),
+            "contract::GasConstructorChecker".to_string(),
             Path::new("tests/data/contracts/gas_constructor_checker.cairo"),
         )
         .unwrap()
@@ -114,7 +114,7 @@ fn snforge_std_deploy_cost_cairo_steps() {
         "#
         ),
         Contract::from_code_path(
-            "GasConstructorChecker".to_string(),
+            "contract::GasConstructorChecker".to_string(),
             Path::new("tests/data/contracts/gas_constructor_checker.cairo"),
         )
         .unwrap()
@@ -187,7 +187,7 @@ fn contract_keccak_cost_cairo_steps() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -259,7 +259,7 @@ fn contract_range_check_cost_cairo_steps() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -335,7 +335,7 @@ fn contract_bitwise_cost_cairo_steps() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -410,7 +410,7 @@ fn contract_pedersen_cost_cairo_steps() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -486,7 +486,7 @@ fn contract_poseidon_cost_cairo_steps() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -562,7 +562,7 @@ fn contract_ec_op_cost_cairo_steps() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -608,7 +608,7 @@ fn storage_write_cost_cairo_steps() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -702,7 +702,7 @@ fn multiple_storage_writes_cost_cairo_steps() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -756,7 +756,7 @@ fn l1_message_cost_cairo_steps() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -838,12 +838,12 @@ fn l1_message_cost_for_proxy_cairo_steps() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "GasCheckerProxy".to_string(),
+            "contract::GasCheckerProxy".to_string(),
             Path::new("tests/data/contracts/gas_checker_proxy.cairo"),
         )
         .unwrap()
@@ -890,7 +890,7 @@ fn l1_handler_cost_cairo_steps() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -985,7 +985,7 @@ fn events_contract_cost_cairo_steps() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker",
+            "contract::GasChecker",
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -1051,12 +1051,12 @@ fn nested_call_cost_cairo_steps() {
         "#
         ),
         Contract::from_code_path(
-            "HelloStarknet".to_string(),
+            "contract::HelloStarknet".to_string(),
             Path::new("tests/data/contracts/hello_starknet_for_nested_calls.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "GasCheckerProxy".to_string(),
+            "contract::GasCheckerProxy".to_string(),
             Path::new("tests/data/contracts/gas_checker_proxy.cairo"),
         )
         .unwrap()
@@ -1123,13 +1123,11 @@ fn nested_call_cost_in_forked_contract_cairo_steps() {
         "#,
             node_rpc_url()
         ).as_str(),
-        Contract::from_code_path(
-            "HelloStarknet".to_string(),
+        Contract::from_code_path("contract::HelloStarknet".to_string(),
             Path::new("tests/data/contracts/hello_starknet_for_nested_calls.cairo"),
         )
         .unwrap(),
-        Contract::from_code_path(
-            "GasCheckerProxy".to_string(),
+        Contract::from_code_path("contract::GasCheckerProxy".to_string(),
             Path::new("tests/data/contracts/gas_checker_proxy.cairo"),
         )
         .unwrap()
@@ -1190,7 +1188,7 @@ fn declare_cost_is_omitted_sierra_gas() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -1227,7 +1225,7 @@ fn deploy_syscall_cost_sierra_gas() {
         "#
         ),
         Contract::from_code_path(
-            "GasConstructorChecker".to_string(),
+            "contract::GasConstructorChecker".to_string(),
             Path::new("tests/data/contracts/gas_constructor_checker.cairo"),
         )
         .unwrap()
@@ -1273,7 +1271,7 @@ fn snforge_std_deploy_cost_sierra_gas() {
         "#
         ),
         Contract::from_code_path(
-            "GasConstructorChecker".to_string(),
+            "contract::GasConstructorChecker".to_string(),
             Path::new("tests/data/contracts/gas_constructor_checker.cairo"),
         )
         .unwrap()
@@ -1354,7 +1352,7 @@ fn contract_keccak_cost_sierra_gas() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -1403,7 +1401,7 @@ fn storage_write_cost_sierra_gas() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -1456,7 +1454,7 @@ fn multiple_storage_writes_cost_sierra_gas() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -1509,7 +1507,7 @@ fn l1_message_cost_sierra_gas() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -1573,12 +1571,12 @@ fn l1_message_cost_for_proxy_sierra_gas() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "GasCheckerProxy".to_string(),
+            "contract::GasCheckerProxy".to_string(),
             Path::new("tests/data/contracts/gas_checker_proxy.cairo"),
         )
         .unwrap()
@@ -1675,7 +1673,7 @@ fn events_contract_cost_sierra_gas() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker",
+            "contract::GasChecker",
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -1741,12 +1739,12 @@ fn nested_call_cost_sierra_gas() {
         "#
         ),
         Contract::from_code_path(
-            "HelloStarknet".to_string(),
+            "contract::HelloStarknet".to_string(),
             Path::new("tests/data/contracts/hello_starknet_for_nested_calls.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "GasCheckerProxy".to_string(),
+            "contract::GasCheckerProxy".to_string(),
             Path::new("tests/data/contracts/gas_checker_proxy.cairo"),
         )
         .unwrap()
@@ -1815,13 +1813,11 @@ fn nested_call_cost_in_forked_contract_sierra_gas() {
         "#,
         node_rpc_url()
         ).as_str(),
-        Contract::from_code_path(
-            "HelloStarknet".to_string(),
+        Contract::from_code_path("contract::HelloStarknet".to_string(),
             Path::new("tests/data/contracts/hello_starknet_for_nested_calls.cairo"),
         )
         .unwrap(),
-        Contract::from_code_path(
-            "GasCheckerProxy".to_string(),
+        Contract::from_code_path("contract::GasCheckerProxy".to_string(),
             Path::new("tests/data/contracts/gas_checker_proxy.cairo"),
         )
         .unwrap()

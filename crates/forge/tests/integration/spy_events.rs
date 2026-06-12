@@ -66,7 +66,7 @@ fn spy_events_simple() {
         "#
         ),
         Contract::from_code_path(
-            "SpyEventsChecker".to_string(),
+            "contract::SpyEventsChecker".to_string(),
             Path::new("tests/data/contracts/spy_events_checker.cairo"),
         )
         .unwrap()
@@ -135,7 +135,7 @@ fn assert_emitted_fails() {
         "#
         ),
         Contract::from_code_path(
-            "SpyEventsChecker".to_string(),
+            "contract::SpyEventsChecker".to_string(),
             Path::new("tests/data/contracts/spy_events_checker.cairo"),
         )
         .unwrap()
@@ -244,7 +244,7 @@ fn expect_three_events_while_two_emitted() {
         "#
         ),
         Contract::from_code_path(
-            "SpyEventsChecker".to_string(),
+            "contract::SpyEventsChecker".to_string(),
             Path::new("tests/data/contracts/spy_events_checker.cairo"),
         )
         .unwrap()
@@ -348,7 +348,7 @@ fn expect_two_events_while_three_emitted() {
         "#
         ),
         Contract::from_code_path(
-            "SpyEventsChecker".to_string(),
+            "contract::SpyEventsChecker".to_string(),
             Path::new("tests/data/contracts/spy_events_checker.cairo"),
         )
         .unwrap()
@@ -417,7 +417,7 @@ fn event_emitted_wrong_data_asserted() {
         "#
         ),
         Contract::from_code_path(
-            "SpyEventsChecker".to_string(),
+            "contract::SpyEventsChecker".to_string(),
             Path::new("tests/data/contracts/spy_events_checker.cairo"),
         )
         .unwrap()
@@ -477,7 +477,7 @@ fn emit_unnamed_event() {
         "#
         ),
         Contract::from_code_path(
-            "SpyEventsChecker".to_string(),
+            "contract::SpyEventsChecker".to_string(),
             Path::new("tests/data/contracts/spy_events_checker.cairo"),
         )
         .unwrap()
@@ -546,7 +546,7 @@ fn assert_not_emitted_pass() {
         "#
         ),
         Contract::from_code_path(
-            "SpyEventsChecker".to_string(),
+            "contract::SpyEventsChecker".to_string(),
             Path::new("tests/data/contracts/spy_events_checker.cairo"),
         )
         .unwrap()
@@ -615,7 +615,7 @@ fn assert_not_emitted_fails() {
         "#
         ),
         Contract::from_code_path(
-            "SpyEventsChecker".to_string(),
+            "contract::SpyEventsChecker".to_string(),
             Path::new("tests/data/contracts/spy_events_checker.cairo"),
         )
         .unwrap()
@@ -720,8 +720,7 @@ fn capture_cairo0_event() {
         "#,
             node_rpc_url()
         ).as_str(),
-        Contract::from_code_path(
-            "SpyEventsChecker".to_string(),
+        Contract::from_code_path("contract::SpyEventsChecker".to_string(),
             Path::new("tests/data/contracts/spy_events_checker.cairo"),
         )
         .unwrap()
@@ -802,7 +801,7 @@ fn test_filtering() {
         "#,
         ),
         Contract::from_code_path(
-            "SpyEventsChecker".to_string(),
+            "contract::SpyEventsChecker".to_string(),
             Path::new("tests/data/contracts/spy_events_checker.cairo"),
         )
         .unwrap()

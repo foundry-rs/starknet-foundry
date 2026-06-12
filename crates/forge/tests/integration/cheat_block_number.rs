@@ -125,7 +125,7 @@ fn cheat_block_number_basic() {
         "#
         ),
         Contract::from_code_path(
-            "CheatBlockNumberChecker".to_string(),
+            "contract::CheatBlockNumberChecker".to_string(),
             Path::new("tests/data/contracts/cheat_block_number_checker.cairo"),
         )
         .unwrap()
@@ -208,7 +208,7 @@ fn cheat_block_number_complex() {
         "#
         ),
         Contract::from_code_path(
-            "CheatBlockNumberChecker".to_string(),
+            "contract::CheatBlockNumberChecker".to_string(),
             Path::new("tests/data/contracts/cheat_block_number_checker.cairo"),
         )
         .unwrap()
@@ -305,7 +305,7 @@ fn cheat_block_number_with_span() {
         "#
         ),
         Contract::from_code_path(
-            "CheatBlockNumberChecker".to_string(),
+            "contract::CheatBlockNumberChecker".to_string(),
             Path::new("tests/data/contracts/cheat_block_number_checker.cairo"),
         )
         .unwrap()
