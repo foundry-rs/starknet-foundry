@@ -21,9 +21,7 @@ use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::forking::data::ForkData;
 use cheatnet::runtime_extensions::common::{get_syscalls_gas_consumed, sum_syscall_usage};
-use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::{
-    ContractData, ContractsData,
-};
+use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::trace_data::{CallTrace, CallTraceNode};
 use conversions::IntoConv;
 use conversions::string::TryFromHexStr;
@@ -37,6 +35,10 @@ use std::cell::RefCell;
 use std::fs;
 use std::path::PathBuf;
 use std::rc::Rc;
+use std::sync::LazyLock;
+
+static TEST_CONTRACT_CLASS_HASH_VALUE: LazyLock<ClassHash> =
+    LazyLock::new(|| TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap());
 
 pub const TRACE_DIR: &str = "snfoundry_trace";
 
@@ -117,11 +119,11 @@ fn get_source_sierra_path(
     contracts_data: &ContractsData,
     versioned_program_path: &Utf8Path,
 ) -> Option<Utf8PathBuf> {
-    if class_hash == Some(TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap()) {
+    if class_hash == Some(*TEST_CONTRACT_CLASS_HASH_VALUE) {
         Some(versioned_program_path.into())
     } else {
         class_hash
-            .and_then(|class_hash| get_contract(class_hash, contracts_data))
+            .and_then(|class_hash| contracts_data.get_contract_by_class_hash(&class_hash))
             .map(|contract| contract.source_sierra_path.clone())
     }
 }
@@ -230,18 +232,15 @@ fn get_contract_name(
     class_hash: Option<ClassHash>,
     contracts_data: &ContractsData,
 ) -> Option<String> {
-    if class_hash == Some(TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap()) {
+    if class_hash == Some(*TEST_CONTRACT_CLASS_HASH_VALUE) {
         Some(String::from(TEST_CODE_CONTRACT_NAME))
     } else {
         class_hash
-            .and_then(|class_hash| get_contract(class_hash, contracts_data))
+            .and_then(|class_hash| contracts_data.get_contract_by_class_hash(&class_hash))
             .map(|contract| contract.name.clone())
     }
 }
 
-fn get_contract(class_hash: ClassHash, contracts_data: &ContractsData) -> Option<&ContractData> {
-    contracts_data.get_contract_by_class_hash(&class_hash)
-}
 
 fn get_function_name(
     entry_point_selector: &EntryPointSelector,
