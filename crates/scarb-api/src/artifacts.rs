@@ -44,7 +44,7 @@ pub struct ContractData {
     pub sierra_path: Utf8PathBuf,
 }
 
-/// A mapping of module paths to their corresponding contract data.
+/// A mapping of absolute module tree paths to their corresponding contract data.
 pub type ContractsData = HashMap<String, ContractData>;
 
 #[derive(PartialEq, Debug)]
@@ -260,7 +260,7 @@ mod tests {
     #[test]
     fn test_load_contracts_artifacts_keeps_duplicate_names() {
         // A second `HelloStarknet` defined in `tests/` collides by name with the one in `src/`,
-        // but has a distinct fully qualified module_path, so both are kept as separate entries.
+        // but has a distinct fully qualified `module_path`, so both are kept as separate entries.
         let (_temp, artifacts_files) = setup_with_tests(indoc!(
             r"
                 #[starknet::contract]
