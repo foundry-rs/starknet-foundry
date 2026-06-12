@@ -1,8 +1,10 @@
 use crate::helpers::{
-    constants::CONTRACTS_DIR, fixtures::duplicate_contract_directory_with_salt, runner::runner,
+    constants::CONTRACTS_DIR,
+    fixtures::{copy_directory_to_tempdir, duplicate_contract_directory_with_salt},
+    runner::runner,
 };
 use indoc::indoc;
-use shared::test_utils::output_assert::assert_stdout_contains;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 
 #[test]
 fn test_happy_case_get_class_hash() {
@@ -19,4 +21,24 @@ fn test_happy_case_get_class_hash() {
     let output = snapbox.assert().success();
 
     assert_stdout_contains(output, indoc! {r"Class Hash: 0x0[..]"});
+}
+
+#[test]
+fn test_errors_on_ambiguous_contract_name() {
+    let contract_path =
+        copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/duplicate_contract_name");
+
+    let args = vec!["utils", "class-hash", "--contract-name", "HelloStarknet"];
+
+    let output = runner(&args)
+        .current_dir(contract_path.path())
+        .assert()
+        .failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r#"
+        Error: Found more than one contract named "HelloStarknet" in artifacts: duplicate_contract_name::first_contract::HelloStarknet, duplicate_contract_name::second_contract::HelloStarknet
+        "#},
+    );
 }

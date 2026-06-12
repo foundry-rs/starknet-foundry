@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unknown keys in `snfoundry.toml` (`[sncast.<profile>]`, `[sncast.<profile>.networks]`, `wait-params`) now emit a warning and are ignored instead of causing a hard error, so configs can be shared across `sncast` versions. Read more in [configuration](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html).
 - `sncast account import/deploy` interactive "make default account" prompt now emits a warning when global `snfoundry.toml` cannot be accessed/created.
 
+#### Fixed
+
+- Commands that use `--contract-name` now return an error when multiple contracts with the same name are found in the compiled artifacts, instead of non-deterministically selecting one of them.
+
 ## [0.61.0] - 2026-05-26
 
 ### Forge
