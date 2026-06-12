@@ -15,7 +15,7 @@ fn contract_name_from_module_path(module_path: &str) -> &str {
     module_path
         .rsplit("::")
         .next()
-        .expect("Module path should always contain at least one segment")
+        .expect("Absolute module tree path should always contain at least one segment")
 }
 
 pub fn resolve_contract_artifacts<'a, S: BuildHasher>(
