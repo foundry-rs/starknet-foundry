@@ -1,7 +1,7 @@
 use crate::helpers::constants::URL;
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 
 #[tokio::test]
 async fn test_happy_case() {
@@ -58,6 +58,36 @@ async fn test_happy_case_json() {
     snapbox.assert().success().stdout_eq(indoc! {r#"
         {"block_number":[..],"command":"get block","l1_da_mode":"[..]","l1_data_gas_price":{"price_in_fri":"0x[..]","price_in_wei":"0x[..]"},"l1_gas_price":{"price_in_fri":"0x[..]","price_in_wei":"0x[..]"},"l2_gas_price":{"price_in_fri":"0x[..]","price_in_wei":"0x[..]"},"sequencer_address":"0x[..]","starknet_version":"[..]","timestamp":[..],"transactions":[[..]],"type":"response"}
     "#});
+}
+
+#[tokio::test]
+async fn test_full_flag() {
+    let args = vec!["get", "block", "latest", "--full", "--url", URL];
+    let snapbox = runner(&args);
+    let output = snapbox.assert().success();
+
+    // With `--full`, transactions are rendered with their full details
+    // instead of being listed as a flat list of hashes.
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+            Transaction Count:[..]
+
+            Transaction #1
+            Type:[..]
+            [..]Transaction Hash:[..]0x[..]
+        "},
+    );
+}
+
+#[tokio::test]
+async fn test_full_flag_json() {
+    let args = vec!["--json", "get", "block", "latest", "--full", "--url", URL];
+    let snapbox = runner(&args);
+    let output = snapbox.assert().success();
+
+    // The transactions field holds full transaction objects, not just hashes.
+    assert_stdout_contains(output, r#"[..]"transactions":[{[..]}],"type":"response"}"#);
 }
 
 #[tokio::test]
