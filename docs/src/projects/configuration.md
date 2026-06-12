@@ -67,8 +67,8 @@ $ sncast --profile myprofile \
 ```shell
 Success: Call completed
 
-Response:     0x0
-Response Raw: [0x0]
+Response:     0x34bc
+Response Raw: [0x34bc]
 ```
 </details>
 <br>
@@ -105,8 +105,8 @@ $ sncast call \
 ```shell
 Success: Call completed
 
-Response:     0x0
-Response Raw: [0x0]
+Response:     0x34bc
+Response Raw: [0x34bc]
 ```
 </details>
 <br>
