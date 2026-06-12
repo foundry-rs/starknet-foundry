@@ -164,8 +164,8 @@ pub fn build_and_load_artifacts(
             CompilationOpts::default(),
         )
         .context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")?
-        .into_iter()
-        .map(|(name, (artifacts, _))| (name, CastStarknetContractArtifacts { sierra: artifacts.sierra, casm: serde_json::to_string(&artifacts.casm).expect("valid serialization") }))
+        .into_values()
+        .map(|contract| (contract.name, CastStarknetContractArtifacts { sierra: contract.artifacts.sierra, casm: serde_json::to_string(&contract.artifacts.casm).expect("valid serialization") }))
         .collect())
     } else {
         let profile = &config.profile;
@@ -179,8 +179,8 @@ pub fn build_and_load_artifacts(
             CompilationOpts::default(),
         )
         .context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")?
-        .into_iter()
-        .map(|(name, (artifacts, _))| (name, CastStarknetContractArtifacts { sierra: artifacts.sierra, casm: serde_json::to_string(&artifacts.casm).expect("valid serialization") }))
+        .into_values()
+        .map(|contract| (contract.name, CastStarknetContractArtifacts { sierra: contract.artifacts.sierra, casm: serde_json::to_string(&contract.artifacts.casm).expect("valid serialization") }))
         .collect())
     }
 }

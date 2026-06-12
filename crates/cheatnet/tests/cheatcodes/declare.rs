@@ -17,7 +17,10 @@ fn declare_simple() {
     let class_hash = declare(&mut cached_state, contract_name, &contracts_data)
         .unwrap()
         .unwrap_success();
-    let expected_class_hash = contracts_data.get_class_hash(contract_name).unwrap();
+    let expected_class_hash = &contracts_data
+        .resolve_by_name(contract_name)
+        .unwrap()
+        .class_hash;
 
     assert_eq!(class_hash, *expected_class_hash);
 }
@@ -34,7 +37,10 @@ fn declare_multiple() {
         let class_hash = declare(&mut cached_state, contract_name, &contracts_data)
             .unwrap()
             .unwrap_success();
-        let expected_class_hash = contracts_data.get_class_hash(contract_name).unwrap();
+        let expected_class_hash = &contracts_data
+            .resolve_by_name(contract_name)
+            .unwrap()
+            .class_hash;
         assert_eq!(class_hash, *expected_class_hash);
     }
 }
@@ -50,7 +56,10 @@ fn declare_same_contract() {
     let class_hash = declare(&mut cached_state, contract_name, &contracts_data)
         .unwrap()
         .unwrap_success();
-    let expected_class_hash = contracts_data.get_class_hash(contract_name).unwrap();
+    let expected_class_hash = &contracts_data
+        .resolve_by_name(contract_name)
+        .unwrap()
+        .class_hash;
     assert_eq!(class_hash, *expected_class_hash);
 
     let output = declare(&mut cached_state, contract_name, &contracts_data);
@@ -74,6 +83,39 @@ fn declare_non_existent() {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {
             let msg = msg.to_string();
             msg.contains("Failed") && msg.contains(contract_name)
+        }
+        _ => false,
+    });
+}
+
+#[test]
+fn declare_ambiguous_name() {
+    let contract_name = "HelloStarknet";
+    let duplicate_module_path = "duplicate::HelloStarknet".to_string();
+
+    let mut cached_state = create_cached_state();
+
+    // Introduce a second contract sharing the name `HelloStarknet` under a distinct module path,
+    // making the name ambiguous.
+    let mut contracts_data = get_contracts();
+    let existing = contracts_data
+        .contracts
+        .values()
+        .find(|contract| contract.name == contract_name)
+        .expect("HelloStarknet should be present in the test fixtures")
+        .clone();
+    contracts_data
+        .contracts
+        .insert(duplicate_module_path.clone(), existing);
+
+    let output = declare(&mut cached_state, contract_name, &contracts_data);
+
+    assert!(match output {
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {
+            let msg = msg.to_string();
+            msg.contains("Multiple contracts found")
+                && msg.contains(contract_name)
+                && msg.contains(&duplicate_module_path)
         }
         _ => false,
     });

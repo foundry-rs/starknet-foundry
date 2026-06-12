@@ -35,6 +35,10 @@ use std::cell::RefCell;
 use std::fs;
 use std::path::PathBuf;
 use std::rc::Rc;
+use std::sync::LazyLock;
+
+static TEST_CONTRACT_CLASS_HASH_VALUE: LazyLock<ClassHash> =
+    LazyLock::new(|| TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap());
 
 pub const TRACE_DIR: &str = "snfoundry_trace";
 
@@ -93,9 +97,11 @@ fn build_cairo_execution_info(
     contracts_data: &ContractsData,
     versioned_program_path: &Utf8Path,
 ) -> Option<CairoExecutionInfo> {
-    let contract_name = get_contract_name(entry_point.class_hash, contracts_data);
-    let source_sierra_path = contract_name
-        .and_then(|name| get_source_sierra_path(&name, contracts_data, versioned_program_path));
+    let source_sierra_path = get_source_sierra_path(
+        entry_point.class_hash,
+        contracts_data,
+        versioned_program_path,
+    );
 
     Some(CairoExecutionInfo {
         casm_level_info: CasmLevelInfo {
@@ -109,16 +115,16 @@ fn build_cairo_execution_info(
 }
 
 fn get_source_sierra_path(
-    contract_name: &str,
+    class_hash: Option<ClassHash>,
     contracts_data: &ContractsData,
     versioned_program_path: &Utf8Path,
 ) -> Option<Utf8PathBuf> {
-    if contract_name == TEST_CODE_CONTRACT_NAME {
+    if class_hash == Some(*TEST_CONTRACT_CLASS_HASH_VALUE) {
         Some(versioned_program_path.into())
     } else {
-        contracts_data
-            .get_source_sierra_path(contract_name)
-            .cloned()
+        class_hash
+            .and_then(|class_hash| contracts_data.get_contract_by_class_hash(&class_hash))
+            .map(|contract| contract.source_sierra_path.clone())
     }
 }
 
@@ -226,14 +232,15 @@ fn get_contract_name(
     class_hash: Option<ClassHash>,
     contracts_data: &ContractsData,
 ) -> Option<String> {
-    if class_hash == Some(TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap()) {
+    if class_hash == Some(*TEST_CONTRACT_CLASS_HASH_VALUE) {
         Some(String::from(TEST_CODE_CONTRACT_NAME))
     } else {
         class_hash
-            .and_then(|c| contracts_data.get_contract_name(&c))
-            .cloned()
+            .and_then(|class_hash| contracts_data.get_contract_by_class_hash(&class_hash))
+            .map(|contract| contract.name.clone())
     }
 }
+
 
 fn get_function_name(
     entry_point_selector: &EntryPointSelector,

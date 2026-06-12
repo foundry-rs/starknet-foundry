@@ -1,9 +1,9 @@
 use crate::constants::get_current_sierra_version;
 use crate::runtime_extensions::forge_runtime_extension::{
     cheatcodes::{CheatcodeError, EnhancedHintError},
-    contracts_data::ContractsData,
+    contracts_data::{ContractResolutionError, ContractsData},
 };
-use anyhow::{Context, Result};
+use anyhow::{Result, anyhow};
 use blockifier::execution::contract_class::{CompiledClassV1, RunnableCompiledClass};
 #[cfg(feature = "cairo-native")]
 use blockifier::execution::native::contract_class::NativeCompiledClassV1;
@@ -25,16 +25,32 @@ pub fn declare(
     contract_name: &str,
     contracts_data: &ContractsData,
 ) -> Result<DeclareResult, CheatcodeError> {
-    let contract_artifact = contracts_data
-        .get_artifacts(contract_name)
-        .with_context(|| format!("Failed to get contract artifact for name = {contract_name}."))
-        .map_err(EnhancedHintError::from)?;
+    let contract = match contracts_data.resolve_by_name(contract_name) {
+        Ok(contract) => contract,
+        Err(ContractResolutionError::NameNotFound) => {
+            return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
+                anyhow!("Failed to get contract artifact for name = {contract_name}."),
+            )));
+        }
+        Err(ContractResolutionError::AmbiguousName(module_paths)) => {
+            let paths = module_paths
+                .iter()
+                .map(|path| format!("    {path}"))
+                .collect::<Vec<_>>()
+                .join("\n");
+            return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
+                anyhow!(
+                    "Multiple contracts found with name = {contract_name}. \
+                    Found contracts at the following paths:\n{paths}\n\
+                    Rename one of the contracts so that the name is unique."
+                ),
+            )));
+        }
+    };
 
-    let contract_class = get_contract_class(contract_artifact);
+    let contract_class = get_contract_class(&contract.artifacts);
 
-    let class_hash = *contracts_data
-        .get_class_hash(contract_name)
-        .expect("Failed to get class hash");
+    let class_hash = contract.class_hash;
 
     match state.get_compiled_class(class_hash) {
         Err(StateError::UndeclaredClassHash(_)) => {

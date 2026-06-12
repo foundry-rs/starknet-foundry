@@ -21,13 +21,15 @@ impl StarknetArtifactsRepresentation {
         })
     }
 
-    pub fn artifacts(self) -> Vec<(String, Utf8PathBuf)> {
+    /// Returns `(contract_name, module_path, sierra_path)` for every contract in the representation.
+    pub fn artifacts(self) -> Vec<(String, String, Utf8PathBuf)> {
         self.artifacts
             .contracts
             .into_iter()
             .map(|contract| {
                 (
                     contract.contract_name,
+                    contract.module_path,
                     self.base_path.join(contract.artifacts.sierra.as_path()),
                 )
             })
