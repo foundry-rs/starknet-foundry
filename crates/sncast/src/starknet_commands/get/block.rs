@@ -18,7 +18,7 @@ pub struct Block {
     /// Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string)
     /// and block number (u64)
     #[arg(default_value = "latest")]
-    pub block_id: String,
+    pub id: String,
 
     /// Retrieve full transactions instead of only their hashes
     #[arg(long)]
@@ -31,7 +31,7 @@ pub struct Block {
 pub async fn block(block: Block, config: CastConfig, ui: &UI) -> Result<ExitCode> {
     let provider = block.rpc.get_provider(&config, ui).await?;
 
-    let result = get_block(&provider, &block.block_id, block.full)
+    let result = get_block(&provider, &block.id, block.full)
         .await
         .map_err(handle_starknet_command_error);
 
