@@ -52,7 +52,7 @@ fn get_contract_address_in_interact_with_state() {
             "#
         ),
         Contract::new(
-            "Empty",
+            "contract::Empty",
             indoc!(
                 r"
             #[starknet::interface]

@@ -46,12 +46,12 @@ fn check_meta_tx_v0_syscall_work_without_cheats() {
         "#
         ),
         Contract::from_code_path(
-            "SimpleCheckerMetaTxV0".to_string(),
+            "contract::SimpleCheckerMetaTxV0".to_string(),
             Path::new("tests/data/contracts/meta_tx_v0_checkers.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "MetaTxV0Test".to_string(),
+            "contract::MetaTxV0Test".to_string(),
             Path::new("tests/data/contracts/meta_tx_v0_test.cairo"),
         )
         .unwrap()
@@ -115,12 +115,12 @@ fn meta_tx_v0_with_cheat_caller_address() {
         "#
         ),
         Contract::from_code_path(
-            "CheatCallerAddressCheckerMetaTxV0".to_string(),
+            "contract::CheatCallerAddressCheckerMetaTxV0".to_string(),
             Path::new("tests/data/contracts/meta_tx_v0_checkers.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "MetaTxV0Test".to_string(),
+            "contract::MetaTxV0Test".to_string(),
             Path::new("tests/data/contracts/meta_tx_v0_test.cairo"),
         )
         .unwrap()
@@ -188,12 +188,12 @@ fn meta_tx_v0_with_cheat_block_hash() {
         "#
         ),
         Contract::from_code_path(
-            "CheatBlockHashCheckerMetaTxV0".to_string(),
+            "contract::CheatBlockHashCheckerMetaTxV0".to_string(),
             Path::new("tests/data/contracts/meta_tx_v0_checkers.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "MetaTxV0Test".to_string(),
+            "contract::MetaTxV0Test".to_string(),
             Path::new("tests/data/contracts/meta_tx_v0_test.cairo"),
         )
         .unwrap()
@@ -254,12 +254,12 @@ fn meta_tx_v0_verify_tx_context_modification() {
         "#
         ),
         Contract::from_code_path(
-            "TxInfoCheckerMetaTxV0".to_string(),
+            "contract::TxInfoCheckerMetaTxV0".to_string(),
             Path::new("tests/data/contracts/meta_tx_v0_checkers.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "MetaTxV0Test".to_string(),
+            "contract::MetaTxV0Test".to_string(),
             Path::new("tests/data/contracts/meta_tx_v0_test.cairo"),
         )
         .unwrap()

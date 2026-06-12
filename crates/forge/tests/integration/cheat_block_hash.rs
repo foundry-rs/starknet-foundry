@@ -125,7 +125,7 @@ fn cheat_block_hash_basic() {
         "#
         ),
         Contract::from_code_path(
-            "CheatBlockHashChecker".to_string(),
+            "contract::CheatBlockHashChecker".to_string(),
             Path::new("tests/data/contracts/cheat_block_hash_checker.cairo"),
         )
         .unwrap()
@@ -205,7 +205,7 @@ fn cheat_block_hash_complex() {
         "#
         ),
         Contract::from_code_path(
-            "CheatBlockHashChecker".to_string(),
+            "contract::CheatBlockHashChecker".to_string(),
             Path::new("tests/data/contracts/cheat_block_hash_checker.cairo"),
         )
         .unwrap()
@@ -297,7 +297,7 @@ fn cheat_block_hash_with_span() {
         "#
         ),
         Contract::from_code_path(
-            "CheatBlockHashChecker".to_string(),
+            "contract::CheatBlockHashChecker".to_string(),
             Path::new("tests/data/contracts/cheat_block_hash_checker.cairo"),
         )
         .unwrap()

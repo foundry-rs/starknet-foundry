@@ -43,7 +43,7 @@ fn test_set_balance_predefined_token(token: &str) {
         )
         .as_str(),
         Contract::from_code_path(
-            "HelloStarknet",
+            "contract::HelloStarknet",
             Path::new("tests/data/simple_package/src/hello_starknet.cairo"),
         )
         .unwrap()
@@ -103,7 +103,11 @@ fn test_set_balance_custom_token() {
             }
         "#
         ),
-        Contract::from_code_path("ERC20", Path::new("tests/data/contracts/erc20.cairo"),).unwrap()
+        Contract::from_code_path(
+            "contract::ERC20",
+            Path::new("tests/data/contracts/erc20.cairo"),
+        )
+        .unwrap()
     );
 
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
@@ -150,7 +154,7 @@ fn test_set_balance_big_amount(token: &str) {
         )
         .as_str(),
         Contract::from_code_path(
-            "HelloStarknet".to_string(),
+            "contract::HelloStarknet".to_string(),
             Path::new("tests/data/simple_package/src/hello_starknet.cairo"),
         )
         .unwrap()
@@ -201,8 +205,7 @@ fn test_set_balance_with_fork(token: &str, balance_before: [u128; 2]) {
             node_rpc_url(),
         )
         .as_str(),
-        Contract::from_code_path(
-            "HelloStarknet".to_string(),
+        Contract::from_code_path("contract::HelloStarknet".to_string(),
             Path::new("tests/data/simple_package/src/hello_starknet.cairo"),
         )
         .unwrap()
@@ -242,7 +245,7 @@ fn test_set_balance_with_disabled_predeployment(token: &str, contract_address: &
         )
         .as_str(),
         Contract::from_code_path(
-            "HelloStarknet".to_string(),
+            "contract::HelloStarknet".to_string(),
             Path::new("tests/data/simple_package/src/hello_starknet.cairo"),
         )
         .unwrap()
