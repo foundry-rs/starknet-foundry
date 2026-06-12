@@ -1,5 +1,6 @@
 use crate::{ErrorData, response::errors::StarknetCommandError};
 use conversions::byte_array::ByteArray;
+use itertools::Itertools;
 use std::{collections::HashMap, hash::BuildHasher};
 
 /// Contains compiled Starknet artifacts
@@ -11,7 +12,7 @@ pub struct CastStarknetContractArtifacts {
     pub casm: String,
 }
 
-fn contract_name_from_module_path(module_path: &str) -> &str {
+pub fn contract_name_from_module_path(module_path: &str) -> &str {
     module_path
         .rsplit("::")
         .next()
@@ -22,12 +23,16 @@ pub fn resolve_contract_artifacts<'a, S: BuildHasher>(
     contract_identifier: &str,
     artifacts: &'a HashMap<String, CastStarknetContractArtifacts, S>,
 ) -> Result<&'a CastStarknetContractArtifacts, StarknetCommandError> {
-    let mut matching_module_paths: Vec<&str> = artifacts
+    if let Some(contract_artifact) = artifacts.get(contract_identifier) {
+        return Ok(contract_artifact);
+    }
+
+    let matching_module_paths: Vec<&str> = artifacts
         .keys()
         .filter(|module_path| contract_name_from_module_path(module_path) == contract_identifier)
         .map(String::as_str)
+        .sorted()
         .collect();
-    matching_module_paths.sort_unstable();
 
     match matching_module_paths.as_slice() {
         [] => Err(StarknetCommandError::ContractArtifactsNotFound(ErrorData {
@@ -35,10 +40,10 @@ pub fn resolve_contract_artifacts<'a, S: BuildHasher>(
         })),
         [module_path] => Ok(artifacts
             .get(*module_path)
-            .expect("artifact should exist for resolved module path")),
+            .expect("artifacts should exist for resolved module path")),
         module_paths => {
             let message = format!(
-                "Found more than one contract named \"{contract_identifier}\" in artifacts: {}",
+                "Found more than one contract named \"{contract_identifier}\" in artifacts, pass one of the absolute module tree paths to `--contract-name`: {}",
                 module_paths.join(", ")
             );
             Err(StarknetCommandError::ContractResolutionError(ErrorData {
@@ -88,6 +93,15 @@ mod tests {
     }
 
     #[test]
+    fn resolves_contract_by_full_module_path() {
+        let artifacts = sample_artifacts();
+
+        let artifact = resolve_contract_artifacts("pkg::a::HelloStarknet", &artifacts).unwrap();
+
+        assert_eq!(artifact.sierra, "a");
+    }
+
+    #[test]
     fn errors_on_ambiguous_contract_name() {
         let artifacts = sample_artifacts();
 
@@ -95,7 +109,7 @@ mod tests {
 
         assert_eq!(
             error.to_string(),
-            "Found more than one contract named \"HelloStarknet\" in artifacts: pkg::a::HelloStarknet, pkg::b::HelloStarknet"
+            "Found more than one contract named \"HelloStarknet\" in artifacts, pass one of the absolute module tree paths to `--contract-name`: pkg::a::HelloStarknet, pkg::b::HelloStarknet"
         );
     }
 }

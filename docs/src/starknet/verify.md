@@ -90,3 +90,7 @@ SimpleBalance submitted for verification, you can query the status at: https://s
 
 > 📝 **Note**
 > Contract name is a part after the `mod` keyword in your contract file. It may differ from package name defined in `Scarb.toml` file.
+
+> 📝 **Note**
+> `--contract-name` also accepts an absolute module tree path such as `hello_sncast::HelloSncast`.
+> Use the full path when more than one contract in the package shares the same contract name.

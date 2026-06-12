@@ -49,6 +49,10 @@ sncast --account my_account deploy --class-hash 0x[..] --network sepolia
 > Contract name is a part after the `mod` keyword in your contract file. It may differ from package name defined in `Scarb.toml` file.
 
 > 📝 **Note**
+> `--contract-name` also accepts an absolute module tree path such as `hello_sncast::HelloSncast`.
+> Use the full path when more than one contract in the package shares the same contract name.
+
+> 📝 **Note**
 > In the above example we supply `sncast` with `--account` and `--network` flags. If `snfoundry.toml` is present, and has
 > the properties set, values provided using these flags will override values from `snfoundry.toml`. Learn more about `snfoundry.toml`
 > configuration [here](../projects/configuration.md#sncast).
@@ -109,5 +113,4 @@ Transaction Hash: 0x[..]
 ```
 </details>
 <br>
-
 
