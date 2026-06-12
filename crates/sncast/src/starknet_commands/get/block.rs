@@ -24,6 +24,10 @@ pub struct Block {
     #[arg(long)]
     pub full: bool,
 
+    /// Retrieve full transactions along with their receipts
+    #[arg(long, conflicts_with = "full")]
+    pub receipts: bool,
+
     #[command(flatten)]
     pub rpc: RpcArgs,
 }
@@ -31,7 +35,7 @@ pub struct Block {
 pub async fn block(block: Block, config: CastConfig, ui: &UI) -> Result<ExitCode> {
     let provider = block.rpc.get_provider(&config, ui).await?;
 
-    let result = get_block(&provider, &block.id, block.full)
+    let result = get_block(&provider, &block.id, block.full, block.receipts)
         .await
         .map_err(handle_starknet_command_error);
 
@@ -42,10 +46,16 @@ async fn get_block(
     provider: &JsonRpcClient<HttpTransport>,
     block_id: &str,
     full: bool,
+    receipts: bool,
 ) -> Result<BlockResponse, StarknetCommandError> {
     let block_id = get_block_id(block_id)?;
 
-    let block = if full {
+    let block = if receipts {
+        provider
+            .get_block_with_receipts(block_id, None)
+            .await
+            .map(BlockResponse::WithReceipts)
+    } else if full {
         provider
             .get_block_with_txs(block_id, None)
             .await

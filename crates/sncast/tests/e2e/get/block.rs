@@ -149,11 +149,58 @@ async fn test_full_flag_exact_values() {
             Transaction #4
               Type:[..]
               [..]Transaction Hash:[..]0x[..]
+            Transaction Count:[..]
+
+            Transaction #1
+            Type:[..]
+            [..]Transaction Hash:[..]0x[..]
+            Finality Status:[..]
         "},
     );
 }
 
 #[tokio::test]
+<<<<<<< HEAD
+=======
+async fn test_receipts_flag_json() {
+    let args = vec![
+        "--json",
+        "get",
+        "block",
+        "latest",
+        "--receipts",
+        "--url",
+        URL,
+    ];
+    let snapbox = runner(&args);
+    let output = snapbox.assert().success();
+
+    // Each transaction entry holds both the transaction and its receipt.
+    assert_stdout_contains(
+        output,
+        r#"[..]"transactions":[{[..]"receipt":[..]}],"type":"response"}"#,
+    );
+}
+
+#[tokio::test]
+async fn test_full_and_receipts_conflict() {
+    let args = vec![
+        "get",
+        "block",
+        "latest",
+        "--full",
+        "--receipts",
+        "--url",
+        URL,
+    ];
+    let snapbox = runner(&args);
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(output, "[..]cannot be used with[..]");
+}
+
+#[tokio::test]
+>>>>>>> 3d62b9166 (Add `--receipts` flagt to `get block`)
 async fn test_invalid_block_id() {
     let args = vec!["get", "block", "invalid_block", "--url", URL];
     let snapbox = runner(&args);

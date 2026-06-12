@@ -14,6 +14,11 @@ Optional.
 
 Retrieve full transactions instead of only their hashes.
 
+## `--receipts`
+Optional.
+
+Retrieve full transactions along with their receipts. Cannot be used together with `--full`.
+
 ## `--url, -u <RPC_URL>`
 Optional.
 
