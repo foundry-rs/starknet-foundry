@@ -2,7 +2,7 @@
 
 Get a block with transaction hashes.
 
-## `--block-id, -b <BLOCK_ID>`
+## `[BLOCK_ID]`
 Optional.
 
 Block identifier on which the block should be fetched.

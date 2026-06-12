@@ -30,7 +30,7 @@ async fn test_happy_case() {
 
 #[tokio::test]
 async fn test_happy_case_with_block_id() {
-    let args = vec!["get", "block", "--block-id", "latest", "--url", URL];
+    let args = vec!["get", "block", "latest", "--url", URL];
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r"
@@ -65,7 +65,7 @@ async fn test_happy_case_json() {
 
 #[tokio::test]
 async fn test_invalid_block_id() {
-    let args = vec!["get", "block", "--block-id", "invalid_block", "--url", URL];
+    let args = vec!["get", "block", "invalid_block", "--url", URL];
     let snapbox = runner(&args);
     let output = snapbox.assert().failure();
 
@@ -80,7 +80,7 @@ async fn test_invalid_block_id() {
 
 #[tokio::test]
 async fn test_nonexistent_block() {
-    let args = vec!["get", "block", "--block-id", "0x123", "--url", URL];
+    let args = vec!["get", "block", "0x123", "--url", URL];
     let snapbox = runner(&args);
     let output = snapbox.assert().failure();
 
