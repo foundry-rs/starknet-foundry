@@ -5,7 +5,7 @@ Calculate the class hash of a contract.
 Required.
 
 The name of the contract. The contract name is the part after the `mod` keyword in your contract file.
-This argument also accepts a full Cairo module path, for example `hello_sncast::HelloSncast`.
+This argument also accepts a absolute module tree path, for example `hello_sncast::HelloSncast`.
 
 ## General Example
 

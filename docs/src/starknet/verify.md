@@ -92,5 +92,5 @@ SimpleBalance submitted for verification, you can query the status at: https://s
 > Contract name is a part after the `mod` keyword in your contract file. It may differ from package name defined in `Scarb.toml` file.
 
 > 📝 **Note**
-> `--contract-name` also accepts a full Cairo module path such as `hello_sncast::HelloSncast`.
+> `--contract-name` also accepts a absolute module tree path such as `hello_sncast::HelloSncast`.
 > Use the full path when more than one contract in the package shares the same contract name.
