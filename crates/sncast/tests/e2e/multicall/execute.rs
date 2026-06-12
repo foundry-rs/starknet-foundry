@@ -494,7 +494,10 @@ async fn test_execute_invoke_with_unknown_alias_in_calldata() {
         "0x1 @unknown",
     ];
 
-    let output = runner(&args).current_dir(config_dir.path()).assert().failure();
+    let output = runner(&args)
+        .current_dir(config_dir.path())
+        .assert()
+        .failure();
 
     assert_stderr_contains(
         output,
@@ -529,7 +532,10 @@ async fn test_execute_deploy_with_unknown_alias_in_constructor_calldata() {
         "@unknown 0x1",
     ];
 
-    let output = runner(&args).current_dir(config_dir.path()).assert().failure();
+    let output = runner(&args)
+        .current_dir(config_dir.path())
+        .assert()
+        .failure();
 
     assert_stderr_contains(
         output,
