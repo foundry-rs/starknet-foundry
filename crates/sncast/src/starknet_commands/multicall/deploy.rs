@@ -1,7 +1,6 @@
-use crate::starknet_commands::utils::felt_or_id::{ClassHash, FeltOrId};
 use anyhow::{Context, Result};
 use clap::Args;
-use conversions::string::IntoHexStr;
+use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::UDC_ADDRESS;
 use sncast::{extract_or_generate_salt, udc_uniqueness};
 use starknet_rust::accounts::{Account, SingleOwnerAccount};
@@ -29,13 +28,16 @@ pub struct MulticallDeploy {
 }
 
 impl MulticallDeploy {
-    pub fn new_from_item(item: &DeployItem, contracts: &ContractRegistry) -> Result<Self> {
-        let constructor_calldata = parse_inputs(&item.inputs, contracts)?;
+    pub fn new_from_item(
+        item: &DeployItem,
+        contracts: &ContractRegistry,
+        config: &CastConfig,
+    ) -> Result<Self> {
+        let constructor_calldata = parse_inputs(&item.inputs, contracts, config)?;
         let deploy = MulticallDeploy {
             common: DeployCommonArgs {
                 contract_identifier: ContractIdentifier {
-                    // TODO: add full support for multicall id <> alias id resolution (will be done in next PR)
-                    class_hash: Some(ClassHash(FeltOrId::new(item.class_hash.into_hex_string()))),
+                    class_hash: Some(item.class_hash.clone()),
                     contract_name: None,
                 },
                 arguments: DeployArguments {
@@ -61,6 +63,7 @@ impl MulticallDeploy {
         &self,
         account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
         contract_registry: &mut ContractRegistry,
+        config: &CastConfig,
     ) -> Result<Call>
     where
         S: Signer + Sync + Send,
@@ -69,6 +72,7 @@ impl MulticallDeploy {
         let constructor_arguments = replaced_arguments(
             &Arguments::from(self.common.arguments.clone()),
             contract_registry,
+            config,
         )?;
 
         let constructor_selector = get_selector_from_name("constructor")?;
@@ -78,7 +82,7 @@ impl MulticallDeploy {
             .class_hash
             .as_ref()
             .context("Using deploy with multicall requires providing class hash")?
-            .try_into_felt()?;
+            .resolve_in_multicall(contract_registry, config)?;
         let constructor_calldata = if let Some(raw_calldata) = &constructor_arguments.calldata {
             calldata_to_felts(raw_calldata)?
         } else {

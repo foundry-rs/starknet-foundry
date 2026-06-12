@@ -10,3 +10,4 @@ example-class = "0x66802613e2cd02ea21430a56181d9ee83c54d4ccdc45efa497d41fe1dc55a
 data-transformer = "0x00351c816183324878714973f3da1a43c1a40d661b8dac5cb69294cc333342ed"
 data-transformer-class = "0x0786d1f010d66f838837290e472415186ba6a789fb446e7f92e444bed7b5d9c0"
 deployer-123 = "0x123"
+shadowed = "0xdead"

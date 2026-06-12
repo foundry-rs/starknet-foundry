@@ -9,11 +9,11 @@ unique = false
 call_type = "invoke"
 contract_address = "0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008"
 function = "put"
-inputs = ["0x123", "map_contract"]
+inputs = ["0x123", "@map_contract"]
 
 [[call]]
 call_type = "deploy"
 class_hash = "0x059426c817fb8103edebdbf1712fa084c6744b2829db9c62d1ea4dce14ee6ded"
-inputs = ["map_contract", "0x1", "0x1"]
+inputs = ["@map_contract", "0x1", "0x1"]
 id = "constructor-params"
 unique = false

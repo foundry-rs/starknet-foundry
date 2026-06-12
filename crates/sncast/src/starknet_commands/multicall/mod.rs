@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::{Args, Subcommand};
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -89,6 +89,7 @@ pub async fn multicall(
                     run.clone(),
                     account,
                     &provider,
+                    &config,
                     wait_config,
                     ui,
                 )
@@ -113,6 +114,7 @@ pub async fn multicall(
                     *execute.clone(),
                     account,
                     &provider,
+                    &config,
                     wait_config,
                     ui,
                 )
@@ -130,11 +132,17 @@ pub async fn multicall(
     }
 }
 
-/// Replaces arguments that reference user-defined ids with their corresponding values from the contract registry.
-// TODO: add full support for multicall id <> alias id resolution (will be done in next PR)
+/// Replaces arguments that reference `@ID`s with their corresponding felt values.
+///
+/// If `@ID`, attempt to resolve felt value from, in the following order:
+/// 1. [`ContractRegistry`]
+/// 2. Aliases from config
+///
+/// Non-`@` values are left unchanged.
 pub fn replaced_arguments(
     arguments: &Arguments,
     contracts: &ContractRegistry,
+    config: &CastConfig,
 ) -> Result<Arguments> {
     Ok(match (&arguments.calldata, &arguments.arguments) {
         (Some(calldata), None) => {
@@ -142,12 +150,9 @@ pub fn replaced_arguments(
                 .iter()
                 .map(|raw_input| {
                     let input = FeltOrId::new(raw_input.clone());
-                    if let Some(id) = input.as_id() {
-                        contracts
-                            .get_address_by_id(id)
-                            .with_context(|| {
-                                format!("Failed to find contract address for id: {id}")
-                            })
+                    if input.as_id().is_some() {
+                        input
+                            .resolve_for_multicall(contracts, config)
                             .map(|f| f.to_string())
                     } else {
                         Ok(raw_input.clone())

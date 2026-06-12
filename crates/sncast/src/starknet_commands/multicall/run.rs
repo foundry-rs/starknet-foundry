@@ -3,7 +3,7 @@ use crate::starknet_commands::invoke::execute_calls;
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::deploy::MulticallDeploy;
 use crate::starknet_commands::multicall::invoke::MulticallInvoke;
-use crate::starknet_commands::utils::felt_or_id::FeltOrId;
+use crate::starknet_commands::utils::felt_or_id::{ClassHash, FeltOrId, ID_PREFIX};
 use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
 use clap::Args;
@@ -11,6 +11,7 @@ use conversions::IntoConv;
 use serde::Deserialize;
 use serde_json::Number;
 use sncast::WaitForTx;
+use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::FeeArgs;
 use sncast::helpers::felt::felt_from_string;
@@ -70,8 +71,7 @@ struct MulticallFile {
 
 #[derive(Deserialize, Debug)]
 pub struct DeployItem {
-    // TODO: add full support for multicall id <> alias id resolution (will be done in next PR)
-    pub class_hash: Felt,
+    pub class_hash: ClassHash,
     pub inputs: Vec<Input>,
     pub unique: bool,
     pub salt: Option<Felt>,
@@ -89,6 +89,7 @@ pub async fn run<S>(
     run: Box<Run>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     provider: &JsonRpcClient<HttpTransport>,
+    config: &CastConfig,
     wait_config: WaitForTx,
     ui: &UI,
 ) -> Result<MulticallRunResponse>
@@ -109,14 +110,14 @@ where
     for call in multicall.calls {
         match call {
             CallItem::Deploy(item) => {
-                let call = MulticallDeploy::new_from_item(&item, &contracts)?
-                    .build_call(account, &mut contracts)
+                let call = MulticallDeploy::new_from_item(&item, &contracts, config)?
+                    .build_call(account, &mut contracts, config)
                     .await?;
                 parsed_calls.push(call);
             }
             CallItem::Invoke(item) => {
-                let call = MulticallInvoke::new_from_item(&item, &contracts)?
-                    .build_call(&mut contracts)
+                let call = MulticallInvoke::new_from_item(&item, &contracts, config)?
+                    .build_call(&mut contracts, config)
                     .await?;
                 parsed_calls.push(call);
             }
@@ -151,15 +152,25 @@ where
     .map_err(handle_starknet_command_error)
 }
 
-pub fn parse_inputs(inputs: &[Input], contract_registry: &ContractRegistry) -> Result<Vec<Felt>> {
+pub fn parse_inputs(
+    inputs: &[Input],
+    contract_registry: &ContractRegistry,
+    config: &CastConfig,
+) -> Result<Vec<Felt>> {
     let mut parsed_inputs = Vec::new();
+
     for input in inputs {
         let felt_value = match input {
-            Input::String(s) => contract_registry
-                .get_address_by_id(s)
-                .map_or_else(|| felt_from_string(s), Ok)?,
+            Input::String(s) => {
+                if s.starts_with(ID_PREFIX) {
+                    FeltOrId::new(s.clone()).resolve_for_multicall(contract_registry, config)?
+                } else {
+                    felt_from_string(s)?
+                }
+            }
             Input::Number(n) => felt_from_string(&n.to_string())?,
         };
+
         parsed_inputs.push(felt_value);
     }
 

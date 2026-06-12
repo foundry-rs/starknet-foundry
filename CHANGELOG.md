@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - Aliases in `snfoundry.toml`. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html#sncastprofile-namealiases).
-- `@alias` syntax for felt arguments in `sncast call`, `invoke`, `deploy`, `declare-from`, `account create`, `account import`, `get balance`, `get nonce`, `get class-hash-at`, `verify`, `utils serialize`, and `utils contract-address`. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/aliases.html).
+- `@alias` syntax for felt arguments in `sncast call`, `invoke`, `deploy`, `declare-from`, `account create`, `account import`, `get balance`, `get nonce`, `get class-hash-at`, `verify`, `utils serialize`, `utils contract-address`, `multicall execute`, and `multicall run`. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/aliases.html).
 - `sncast alias list` command for listing aliases. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/alias/list.html).
 - `sncast config-path` for printing the paths to the local and global `snfoundry.toml` config files. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/config_path.html).
 
@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Unknown keys in `snfoundry.toml` (`[sncast.<profile>]`, `[sncast.<profile>.networks]`, `wait-params`) now emit a warning and are ignored instead of causing a hard error, so configs can be shared across `sncast` versions. Read more in [configuration](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html).
 - `sncast account import/deploy` interactive "make default account" prompt now emits a warning when global `snfoundry.toml` cannot be accessed/created.
+- `sncast multicall run` TOML `inputs` now always require the `@` prefix for step id references. Bare step ids no longer resolve. Migration: update entries to new format (e.g. `"map"`->`"@map"`). Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/multicall.html#using-id-references).
 
 ## [0.61.0] - 2026-05-26
 
