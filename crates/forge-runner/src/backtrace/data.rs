@@ -1,4 +1,6 @@
-use crate::backtrace::display::{Backtrace, BacktraceKind, BacktraceStack, render_fork_backtrace};
+use crate::backtrace::display::{
+    Backtrace, BacktraceKind, BacktraceStack, render_fork_backtrace,
+};
 use anyhow::Context;
 use anyhow::Result;
 use cairo_annotations::annotations::TryFromDebugInfo;
