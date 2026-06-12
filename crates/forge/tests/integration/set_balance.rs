@@ -103,7 +103,11 @@ fn test_set_balance_custom_token() {
             }
         "#
         ),
-        Contract::from_code_path("ERC20", Path::new("tests/data/contracts/erc20.cairo"),).unwrap()
+        Contract::from_code_path(
+            "contract::ERC20",
+            Path::new("tests/data/contracts/erc20.cairo"),
+        )
+        .unwrap()
     );
 
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
