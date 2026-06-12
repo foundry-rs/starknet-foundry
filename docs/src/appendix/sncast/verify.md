@@ -21,7 +21,7 @@ The address of the contract that is to be verified. It can be either:
 Required.
 
 The name of the contract. The contract name is the part after the `mod` keyword in your contract file.
-This argument also accepts a absolute module tree path, for example `hello_sncast::HelloSncast`.
+This argument also accepts an absolute module tree path, for example `hello_sncast::HelloSncast`.
 
 ## `--verifier, -v <VERIFIER>`
 Required.
