@@ -23,7 +23,7 @@ use data_transformer::transform;
 use foundry_ui::components::warning::WarningMessage;
 use mimalloc::MiMalloc;
 use shared::auto_completions::{Completions, generate_completions};
-use sncast::helpers::artifacts::resolve_contract_artifact;
+use sncast::helpers::artifacts::resolve_contract_artifacts;
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::config::resolve_global_config_path_or_warn;
 use sncast::helpers::configuration::{
@@ -408,7 +408,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let deploy_command_message = if let Ok(response) = &result {
                 // TODO(#3785)
                 let contract_artifacts =
-                    resolve_contract_artifact(&declare.contract_name, &artifacts)
+                    resolve_contract_artifacts(&declare.contract_name, &artifacts)
                         .context("Failed to get contract artifacts")?;
                 let contract_definition: SierraClass =
                     serde_json::from_str(&contract_artifacts.sierra)
@@ -542,7 +542,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 )
                 .context("Failed to build contract")?;
 
-                let contract_artifacts = resolve_contract_artifact(&contract_name, &artifacts)?;
+                let contract_artifacts = resolve_contract_artifacts(&contract_name, &artifacts)?;
                 let contract_definition: SierraClass =
                     serde_json::from_str(&contract_artifacts.sierra)
                         .context("Failed to parse sierra artifact")?;

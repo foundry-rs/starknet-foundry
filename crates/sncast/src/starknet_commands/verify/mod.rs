@@ -3,7 +3,7 @@ use anyhow::{Context, Result, anyhow, bail};
 use clap::{Args, ValueEnum};
 use promptly::prompt;
 use scarb_metadata::PackageMetadata;
-use sncast::helpers::artifacts::resolve_contract_artifact;
+use sncast::helpers::artifacts::resolve_contract_artifacts;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::FreeProvider;
 use sncast::helpers::scarb_utils::{BuildConfig, build_and_load_artifacts};
@@ -139,7 +139,7 @@ fn build_and_validate_contract(
     )
     .context("Failed to build contract")?;
 
-    resolve_contract_artifact(contract_name, &artifacts).map_err(|error| match error {
+    resolve_contract_artifacts(contract_name, &artifacts).map_err(|error| match error {
         StarknetCommandError::ContractArtifactsNotFound(_) => {
             anyhow!("Contract named '{contract_name}' was not found")
         }
