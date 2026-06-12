@@ -16,25 +16,33 @@ pub struct TransactionResponse(pub Transaction);
 
 impl SncastCommandMessage for TransactionResponse {
     fn text(&self) -> String {
-        match &self.0 {
-            Transaction::Invoke(tx) => match tx {
-                InvokeTransaction::V0(tx) => build_invoke_v0_response(tx),
-                InvokeTransaction::V1(tx) => build_invoke_v1_response(tx),
-                InvokeTransaction::V3(tx) => build_invoke_v3_response(tx),
-            },
-            Transaction::Declare(tx) => match tx {
-                DeclareTransaction::V0(tx) => build_declare_v0_response(tx),
-                DeclareTransaction::V1(tx) => build_declare_v1_response(tx),
-                DeclareTransaction::V2(tx) => build_declare_v2_response(tx),
-                DeclareTransaction::V3(tx) => build_declare_v3_response(tx),
-            },
-            Transaction::Deploy(tx) => build_deploy_response(tx),
-            Transaction::DeployAccount(tx) => match tx {
-                DeployAccountTransaction::V1(tx) => build_deploy_account_v1_response(tx),
-                DeployAccountTransaction::V3(tx) => build_deploy_account_v3_response(tx),
-            },
-            Transaction::L1Handler(tx) => build_l1_handler_response(tx),
-        }
+        let builder = OutputBuilder::new().tx_header();
+        append_transaction(builder, &self.0).build()
+    }
+}
+
+/// Appends the fields of a single [`Transaction`] to the given [`OutputBuilder`].
+///
+/// The caller is responsible for adding any header (e.g. via [`TransactionOutputBuilder::tx_header`]).
+pub fn append_transaction(builder: OutputBuilder, transaction: &Transaction) -> OutputBuilder {
+    match transaction {
+        Transaction::Invoke(tx) => match tx {
+            InvokeTransaction::V0(tx) => build_invoke_v0_response(builder, tx),
+            InvokeTransaction::V1(tx) => build_invoke_v1_response(builder, tx),
+            InvokeTransaction::V3(tx) => build_invoke_v3_response(builder, tx),
+        },
+        Transaction::Declare(tx) => match tx {
+            DeclareTransaction::V0(tx) => build_declare_v0_response(builder, tx),
+            DeclareTransaction::V1(tx) => build_declare_v1_response(builder, tx),
+            DeclareTransaction::V2(tx) => build_declare_v2_response(builder, tx),
+            DeclareTransaction::V3(tx) => build_declare_v3_response(builder, tx),
+        },
+        Transaction::Deploy(tx) => build_deploy_response(builder, tx),
+        Transaction::DeployAccount(tx) => match tx {
+            DeployAccountTransaction::V1(tx) => build_deploy_account_v1_response(builder, tx),
+            DeployAccountTransaction::V3(tx) => build_deploy_account_v3_response(builder, tx),
+        },
+        Transaction::L1Handler(tx) => build_l1_handler_response(builder, tx),
     }
 }
 
@@ -82,7 +90,7 @@ fn json_transaction_type(tx: &Transaction) -> &'static str {
     }
 }
 
-trait TransactionOutputBuilder {
+pub trait TransactionOutputBuilder {
     fn tx_header(self) -> Self;
     fn tx_type(self, tx_type: &str) -> Self;
     fn tx_version(self, version: &str) -> Self;
@@ -218,7 +226,10 @@ impl TransactionOutputBuilder for OutputBuilder {
     }
 }
 
-fn build_invoke_v0_response(tx: &starknet_rust::core::types::InvokeTransactionV0) -> String {
+fn build_invoke_v0_response(
+    builder: OutputBuilder,
+    tx: &starknet_rust::core::types::InvokeTransactionV0,
+) -> OutputBuilder {
     let starknet_rust::core::types::InvokeTransactionV0 {
         transaction_hash,
         max_fee,
@@ -227,8 +238,7 @@ fn build_invoke_v0_response(tx: &starknet_rust::core::types::InvokeTransactionV0
         entry_point_selector,
         calldata,
     } = tx;
-    OutputBuilder::new()
-        .tx_header()
+    builder
         .tx_type("INVOKE")
         .tx_version("0")
         .tx_hash(transaction_hash)
@@ -237,10 +247,12 @@ fn build_invoke_v0_response(tx: &starknet_rust::core::types::InvokeTransactionV0
         .calldata(calldata)
         .max_fee(max_fee)
         .signature(signature)
-        .build()
 }
 
-fn build_invoke_v1_response(tx: &starknet_rust::core::types::InvokeTransactionV1) -> String {
+fn build_invoke_v1_response(
+    builder: OutputBuilder,
+    tx: &starknet_rust::core::types::InvokeTransactionV1,
+) -> OutputBuilder {
     let starknet_rust::core::types::InvokeTransactionV1 {
         transaction_hash,
         sender_address,
@@ -249,8 +261,7 @@ fn build_invoke_v1_response(tx: &starknet_rust::core::types::InvokeTransactionV1
         signature,
         nonce,
     } = tx;
-    OutputBuilder::new()
-        .tx_header()
+    builder
         .tx_type("INVOKE")
         .tx_version("1")
         .tx_hash(transaction_hash)
@@ -259,10 +270,12 @@ fn build_invoke_v1_response(tx: &starknet_rust::core::types::InvokeTransactionV1
         .calldata(calldata)
         .max_fee(max_fee)
         .signature(signature)
-        .build()
 }
 
-fn build_invoke_v3_response(tx: &starknet_rust::core::types::InvokeTransactionV3) -> String {
+fn build_invoke_v3_response(
+    builder: OutputBuilder,
+    tx: &starknet_rust::core::types::InvokeTransactionV3,
+) -> OutputBuilder {
     let starknet_rust::core::types::InvokeTransactionV3 {
         transaction_hash,
         sender_address,
@@ -277,8 +290,7 @@ fn build_invoke_v3_response(tx: &starknet_rust::core::types::InvokeTransactionV3
         fee_data_availability_mode,
         proof_facts,
     } = tx;
-    OutputBuilder::new()
-        .tx_header()
+    builder
         .tx_type("INVOKE")
         .tx_version("3")
         .tx_hash(transaction_hash)
@@ -293,10 +305,12 @@ fn build_invoke_v3_response(tx: &starknet_rust::core::types::InvokeTransactionV3
         .fee_da_mode(*fee_data_availability_mode)
         .signature(signature)
         .proof_facts(proof_facts.as_deref())
-        .build()
 }
 
-fn build_declare_v0_response(tx: &starknet_rust::core::types::DeclareTransactionV0) -> String {
+fn build_declare_v0_response(
+    builder: OutputBuilder,
+    tx: &starknet_rust::core::types::DeclareTransactionV0,
+) -> OutputBuilder {
     let starknet_rust::core::types::DeclareTransactionV0 {
         transaction_hash,
         sender_address,
@@ -304,8 +318,7 @@ fn build_declare_v0_response(tx: &starknet_rust::core::types::DeclareTransaction
         signature,
         class_hash,
     } = tx;
-    OutputBuilder::new()
-        .tx_header()
+    builder
         .tx_type("DECLARE")
         .tx_version("0")
         .tx_hash(transaction_hash)
@@ -313,10 +326,12 @@ fn build_declare_v0_response(tx: &starknet_rust::core::types::DeclareTransaction
         .class_hash(class_hash)
         .max_fee(max_fee)
         .signature(signature)
-        .build()
 }
 
-fn build_declare_v1_response(tx: &starknet_rust::core::types::DeclareTransactionV1) -> String {
+fn build_declare_v1_response(
+    builder: OutputBuilder,
+    tx: &starknet_rust::core::types::DeclareTransactionV1,
+) -> OutputBuilder {
     let starknet_rust::core::types::DeclareTransactionV1 {
         transaction_hash,
         sender_address,
@@ -325,8 +340,7 @@ fn build_declare_v1_response(tx: &starknet_rust::core::types::DeclareTransaction
         nonce,
         class_hash,
     } = tx;
-    OutputBuilder::new()
-        .tx_header()
+    builder
         .tx_type("DECLARE")
         .tx_version("1")
         .tx_hash(transaction_hash)
@@ -335,10 +349,12 @@ fn build_declare_v1_response(tx: &starknet_rust::core::types::DeclareTransaction
         .class_hash(class_hash)
         .max_fee(max_fee)
         .signature(signature)
-        .build()
 }
 
-fn build_declare_v2_response(tx: &starknet_rust::core::types::DeclareTransactionV2) -> String {
+fn build_declare_v2_response(
+    builder: OutputBuilder,
+    tx: &starknet_rust::core::types::DeclareTransactionV2,
+) -> OutputBuilder {
     let starknet_rust::core::types::DeclareTransactionV2 {
         transaction_hash,
         sender_address,
@@ -348,8 +364,7 @@ fn build_declare_v2_response(tx: &starknet_rust::core::types::DeclareTransaction
         nonce,
         class_hash,
     } = tx;
-    OutputBuilder::new()
-        .tx_header()
+    builder
         .tx_type("DECLARE")
         .tx_version("2")
         .tx_hash(transaction_hash)
@@ -359,10 +374,12 @@ fn build_declare_v2_response(tx: &starknet_rust::core::types::DeclareTransaction
         .compiled_class_hash(compiled_class_hash)
         .max_fee(max_fee)
         .signature(signature)
-        .build()
 }
 
-fn build_declare_v3_response(tx: &starknet_rust::core::types::DeclareTransactionV3) -> String {
+fn build_declare_v3_response(
+    builder: OutputBuilder,
+    tx: &starknet_rust::core::types::DeclareTransactionV3,
+) -> OutputBuilder {
     let starknet_rust::core::types::DeclareTransactionV3 {
         transaction_hash,
         sender_address,
@@ -377,8 +394,7 @@ fn build_declare_v3_response(tx: &starknet_rust::core::types::DeclareTransaction
         nonce_data_availability_mode,
         fee_data_availability_mode,
     } = tx;
-    OutputBuilder::new()
-        .tx_header()
+    builder
         .tx_type("DECLARE")
         .tx_version("3")
         .tx_hash(transaction_hash)
@@ -393,10 +409,12 @@ fn build_declare_v3_response(tx: &starknet_rust::core::types::DeclareTransaction
         .nonce_da_mode(*nonce_data_availability_mode)
         .fee_da_mode(*fee_data_availability_mode)
         .signature(signature)
-        .build()
 }
 
-fn build_deploy_response(tx: &starknet_rust::core::types::DeployTransaction) -> String {
+fn build_deploy_response(
+    builder: OutputBuilder,
+    tx: &starknet_rust::core::types::DeployTransaction,
+) -> OutputBuilder {
     let starknet_rust::core::types::DeployTransaction {
         transaction_hash,
         version,
@@ -404,20 +422,19 @@ fn build_deploy_response(tx: &starknet_rust::core::types::DeployTransaction) -> 
         constructor_calldata,
         class_hash,
     } = tx;
-    OutputBuilder::new()
-        .tx_header()
+    builder
         .tx_type("DEPLOY")
         .tx_version(&version.to_string())
         .tx_hash(transaction_hash)
         .class_hash(class_hash)
         .contract_address_salt(contract_address_salt)
         .constructor_calldata(constructor_calldata)
-        .build()
 }
 
 fn build_deploy_account_v1_response(
+    builder: OutputBuilder,
     tx: &starknet_rust::core::types::DeployAccountTransactionV1,
-) -> String {
+) -> OutputBuilder {
     let starknet_rust::core::types::DeployAccountTransactionV1 {
         transaction_hash,
         max_fee,
@@ -427,8 +444,7 @@ fn build_deploy_account_v1_response(
         constructor_calldata,
         class_hash,
     } = tx;
-    OutputBuilder::new()
-        .tx_header()
+    builder
         .tx_type("DEPLOY ACCOUNT")
         .tx_version("1")
         .tx_hash(transaction_hash)
@@ -438,12 +454,12 @@ fn build_deploy_account_v1_response(
         .constructor_calldata(constructor_calldata)
         .max_fee(max_fee)
         .signature(signature)
-        .build()
 }
 
 fn build_deploy_account_v3_response(
+    builder: OutputBuilder,
     tx: &starknet_rust::core::types::DeployAccountTransactionV3,
-) -> String {
+) -> OutputBuilder {
     let starknet_rust::core::types::DeployAccountTransactionV3 {
         transaction_hash,
         signature,
@@ -457,8 +473,7 @@ fn build_deploy_account_v3_response(
         nonce_data_availability_mode,
         fee_data_availability_mode,
     } = tx;
-    OutputBuilder::new()
-        .tx_header()
+    builder
         .tx_type("DEPLOY ACCOUNT")
         .tx_version("3")
         .tx_hash(transaction_hash)
@@ -472,10 +487,12 @@ fn build_deploy_account_v3_response(
         .nonce_da_mode(*nonce_data_availability_mode)
         .fee_da_mode(*fee_data_availability_mode)
         .signature(signature)
-        .build()
 }
 
-fn build_l1_handler_response(tx: &starknet_rust::core::types::L1HandlerTransaction) -> String {
+fn build_l1_handler_response(
+    builder: OutputBuilder,
+    tx: &starknet_rust::core::types::L1HandlerTransaction,
+) -> OutputBuilder {
     let starknet_rust::core::types::L1HandlerTransaction {
         transaction_hash,
         version,
@@ -484,8 +501,7 @@ fn build_l1_handler_response(tx: &starknet_rust::core::types::L1HandlerTransacti
         entry_point_selector,
         calldata,
     } = tx;
-    OutputBuilder::new()
-        .tx_header()
+    builder
         .tx_type("L1 HANDLER")
         .tx_version(&version.to_string())
         .tx_hash(transaction_hash)
@@ -493,7 +509,6 @@ fn build_l1_handler_response(tx: &starknet_rust::core::types::L1HandlerTransacti
         .nonce(&Felt::from(*nonce))
         .entry_point_selector(entry_point_selector)
         .calldata(calldata)
-        .build()
 }
 
 fn fmt_da(mode: DataAvailabilityMode) -> &'static str {
