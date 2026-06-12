@@ -56,7 +56,6 @@ impl ContractsData {
         let class_hashes: Vec<(ModulePath, ClassHash)> = parsed_contracts
             .par_iter()
             .map(|(module_path, sierra_class)| {
-                println!("Parsing contract at {module_path}");
                 Ok((module_path.clone(), get_class_hash(sierra_class)?))
             })
             .collect::<Result<_>>()?;
