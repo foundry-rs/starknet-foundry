@@ -23,9 +23,12 @@ use blockifier::{
         call_info::CallInfo,
         entry_point::{
             handle_empty_constructor, CallEntryPoint, CallType, ConstructorContext,
-            EntryPointExecutionContext, EntryPointExecutionResult, FAULTY_CLASS_HASH,
+            ConstructorEntryPointExecutionResult, EntryPointExecutionContext,
+            EntryPointExecutionResult, FAULTY_CLASS_HASH,
         },
-        errors::{EntryPointExecutionError, PreExecutionError},
+        errors::{
+            ConstructorEntryPointExecutionError, EntryPointExecutionError, PreExecutionError,
+        },
     },
     state::state_api::State,
 };
@@ -325,7 +328,7 @@ pub fn non_reverting_execute_call_entry_point(
     execution_result
 }
 
-// blockifier/src/execution/entry_point.rs (execute_constructor_entry_point)
+// blockifier/src/execution/entry_point.rs:533 (execute_constructor_entry_point)
 pub fn execute_constructor_entry_point(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
@@ -333,9 +336,13 @@ pub fn execute_constructor_entry_point(
     ctor_context: &ConstructorContext,
     calldata: Calldata,
     remaining_gas: &mut u64,
-) -> EntryPointExecutionResult<CallInfo> {
+) -> ConstructorEntryPointExecutionResult<CallInfo> {
     // Ensure the class is declared (by reading it).
-    let contract_class = state.get_compiled_class(ctor_context.class_hash)?;
+    let contract_class = state
+        .get_compiled_class(ctor_context.class_hash)
+        .map_err(|error| {
+            ConstructorEntryPointExecutionError::new(error.into(), ctor_context, None)
+        })?;
     let Some(constructor_selector) = contract_class.constructor_selector() else {
         // Contract has no constructor.
         cheatnet_state
@@ -347,7 +354,8 @@ pub fn execute_constructor_entry_point(
             ctor_context,
             calldata,
             *remaining_gas,
-        );
+        )
+        .map_err(|error| ConstructorEntryPointExecutionError::new(error, ctor_context, None));
     };
 
     let mut constructor_call = CallEntryPoint {
@@ -369,6 +377,9 @@ pub fn execute_constructor_entry_point(
         context,
         remaining_gas,
     )
+    .map_err(|error| {
+        ConstructorEntryPointExecutionError::new(error, ctor_context, Some(constructor_selector))
+    })
     // endregion
 }
 
