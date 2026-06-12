@@ -414,6 +414,45 @@ async fn test_run_alias_from_config_only() {
 }
 
 #[tokio::test]
+async fn test_run_with_unknown_alias_in_inputs() {
+    let account_dir = create_and_deploy_oz_account().await;
+    let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    join_tempdirs(&account_dir, &config_dir);
+
+    let path = project_root::get_project_root().expect("failed to get project root path");
+    let path = Path::new(&path)
+        .join(MULTICALL_CONFIGS_DIR)
+        .join("multicall_with_unknown_alias_in_inputs.toml");
+    let path = path.to_str().expect("failed converting path to str");
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "multicall",
+        "run",
+        "--url",
+        URL,
+        "--path",
+        path,
+    ];
+
+    let output = runner(&args)
+        .current_dir(config_dir.path())
+        .assert()
+        .failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+            Command: multicall run
+            Error: `@unknown`: not found as multicall step id or in [sncast.<profile>.aliases]
+        "},
+    );
+}
+
+#[tokio::test]
 async fn test_numeric_inputs() {
     let tempdir = create_and_deploy_oz_account().await;
 

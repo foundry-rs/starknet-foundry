@@ -7,6 +7,7 @@ use crate::starknet_commands::get::Get;
 use crate::starknet_commands::get::balance::Balance;
 use crate::starknet_commands::invoke::InvokeCommonArgs;
 use crate::starknet_commands::script::run_script_command;
+use crate::starknet_commands::utils::felt_or_id::resolve_calldata_to_felts;
 use crate::starknet_commands::utils::{self, Utils};
 use crate::starknet_commands::{
     account, account::Account as AccountCommand, alias::Alias, call::Call, config_path::ConfigPath,
@@ -29,7 +30,6 @@ use sncast::helpers::config::resolve_global_config_path_or_warn;
 use sncast::helpers::configuration::{
     CastConfig, CliConfigOpts, ConfigScope, MaybeConfig, PartialCastConfig, warn_unknown_keys,
 };
-use sncast::helpers::felt::felt_from_string;
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
@@ -238,17 +238,18 @@ fn abi_from_contract_class(contract_class: &ContractClass) -> Result<Vec<AbiEntr
 }
 
 impl Arguments {
-    fn try_into_calldata(self, abi: &[AbiEntry], selector: &Felt) -> Result<Vec<Felt>> {
+    fn try_into_calldata(
+        self,
+        abi: &[AbiEntry],
+        selector: &Felt,
+        config: &CastConfig,
+    ) -> Result<Vec<Felt>> {
         if let Some(calldata) = self.calldata {
-            return calldata_to_felts(&calldata);
+            return resolve_calldata_to_felts(&calldata, config);
         }
 
         transform(&self.arguments.unwrap_or_default(), abi, selector)
     }
-}
-
-pub fn calldata_to_felts(calldata: &[String]) -> Result<Vec<Felt>> {
-    calldata.iter().map(|data| felt_from_string(data)).collect()
 }
 
 impl From<DeployArguments> for Arguments {
@@ -620,7 +621,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 let contract_class = get_contract_class(class_hash, &provider).await?;
                 abi_from_contract_class(&contract_class)?
             };
-            let calldata = arguments.try_into_calldata(&abi, &selector)?;
+            let calldata = arguments.try_into_calldata(&abi, &selector, &config)?;
 
             let result = with_account!(&account, |account| {
                 starknet_commands::deploy::deploy(
@@ -678,8 +679,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let calldata = arguments
-                .try_into_calldata(&abi_from_contract_class(&contract_class)?, &selector)?;
+            let calldata = arguments.try_into_calldata(
+                &abi_from_contract_class(&contract_class)?,
+                &selector,
+                &config,
+            )?;
 
             let result = starknet_commands::call::call(
                 contract_address,
@@ -732,8 +736,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
-            let calldata = arguments
-                .try_into_calldata(&abi_from_contract_class(&contract_class)?, &selector)?;
+            let calldata = arguments.try_into_calldata(
+                &abi_from_contract_class(&contract_class)?,
+                &selector,
+                &config,
+            )?;
 
             let result = with_account!(&account, |account| {
                 starknet_commands::invoke::invoke(

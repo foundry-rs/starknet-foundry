@@ -99,6 +99,72 @@ async fn test_deploy_with_alias() {
 }
 
 #[tokio::test]
+async fn test_deploy_with_constructor_calldata_alias() {
+    let account_dir = create_and_deploy_oz_account().await;
+    let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    join_tempdirs(&account_dir, &config_dir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "deploy",
+        "--url",
+        URL,
+        "--class-hash",
+        CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--constructor-calldata",
+        "@one @one @zero",
+        "--salt",
+        "0x2",
+    ];
+
+    let output = runner(&args)
+        .current_dir(config_dir.path())
+        .assert()
+        .success();
+
+    assert_stdout_contains(output, "Success: Deployment completed");
+}
+
+#[tokio::test]
+async fn test_deploy_with_unknown_alias_in_constructor_calldata() {
+    let account_dir = create_and_deploy_oz_account().await;
+    let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    join_tempdirs(&account_dir, &config_dir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "deploy",
+        "--url",
+        URL,
+        "--class-hash",
+        CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--constructor-calldata",
+        "@one @unknown @zero",
+        "--salt",
+        "0x2",
+    ];
+
+    let output = runner(&args)
+        .current_dir(config_dir.path())
+        .assert()
+        .failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+            Command: deploy
+            Error: Alias `unknown` not found in config
+        "},
+    );
+}
+
+#[tokio::test]
 async fn test_deploy_with_unknown_alias() {
     let account_dir = create_and_deploy_oz_account().await;
     let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);

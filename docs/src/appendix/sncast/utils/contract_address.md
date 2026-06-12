@@ -20,7 +20,9 @@ The class hash is derived from the locally built artifact.
 Optional.
 Conflicts with: [`--arguments`](#--arguments)
 
-Constructor calldata as a series of felts.
+Constructor calldata as a series of felts. Each token may be:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../../starknet/aliases.md).
 
 Requires `--url` or `--network` to fetch the contract ABI when used together with `--class-hash`.
 
