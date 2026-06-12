@@ -26,7 +26,7 @@ fn simple_declare() {
         "#
         ),
         Contract::new(
-            "HelloStarknet",
+            "contract::HelloStarknet",
             indoc!(
                 r"
                 #[starknet::interface]
@@ -68,7 +68,7 @@ fn simple_declare() {
 #[test]
 fn declare_simple() {
     let contract = Contract::from_code_path(
-        "HelloStarknet".to_string(),
+        "contract::HelloStarknet".to_string(),
         Path::new("tests/data/contracts/hello_starknet.cairo"),
     )
     .unwrap();
@@ -102,7 +102,7 @@ fn declare_simple() {
 #[test]
 fn redeclare() {
     let contract = Contract::from_code_path(
-        "HelloStarknet".to_string(),
+        "contract::HelloStarknet".to_string(),
         Path::new("tests/data/contracts/hello_starknet.cairo"),
     )
     .unwrap();

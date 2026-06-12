@@ -114,7 +114,7 @@ fn l1_handler_execute() {
         "#
         ),
         Contract::from_code_path(
-            "l1_handler_executor".to_string(),
+            "contract::l1_handler_executor".to_string(),
             Path::new("tests/data/contracts/l1_handler_execute_checker.cairo"),
         )
         .unwrap()

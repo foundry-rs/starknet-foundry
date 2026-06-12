@@ -141,12 +141,12 @@ fn trace_deploy() {
         "#
         ),
         Contract::from_code_path(
-            "TraceInfoProxy".to_string(),
+            "contract::TraceInfoProxy".to_string(),
             Path::new("tests/data/contracts/trace_info_proxy.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "TraceInfoChecker".to_string(),
+            "contract::TraceInfoChecker".to_string(),
             Path::new("tests/data/contracts/trace_info_checker.cairo"),
         )
         .unwrap()
@@ -362,17 +362,17 @@ fn trace_call() {
         "#
         ),
         Contract::from_code_path(
-            "TraceInfoProxy".to_string(),
+            "contract::TraceInfoProxy".to_string(),
             Path::new("tests/data/contracts/trace_info_proxy.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "TraceInfoChecker".to_string(),
+            "contract::TraceInfoChecker".to_string(),
             Path::new("tests/data/contracts/trace_info_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "TraceDummy".to_string(),
+            "contract::TraceDummy".to_string(),
             Path::new("tests/data/contracts/trace_dummy.cairo"),
         )
         .unwrap()
@@ -515,12 +515,12 @@ fn trace_failed_call() {
         "#
         ),
         Contract::from_code_path(
-            "TraceInfoProxy".to_string(),
+            "contract::TraceInfoProxy".to_string(),
             Path::new("tests/data/contracts/trace_info_proxy.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "TraceInfoChecker".to_string(),
+            "contract::TraceInfoChecker".to_string(),
             Path::new("tests/data/contracts/trace_info_checker.cairo"),
         )
         .unwrap()
@@ -710,17 +710,17 @@ fn trace_library_call_from_test() {
         "#
         ),
         Contract::from_code_path(
-            "TraceInfoProxy".to_string(),
+            "contract::TraceInfoProxy".to_string(),
             Path::new("tests/data/contracts/trace_info_proxy.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "TraceInfoChecker".to_string(),
+            "contract::TraceInfoChecker".to_string(),
             Path::new("tests/data/contracts/trace_info_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "TraceDummy".to_string(),
+            "contract::TraceDummy".to_string(),
             Path::new("tests/data/contracts/trace_dummy.cairo"),
         )
         .unwrap()
@@ -863,12 +863,12 @@ fn trace_failed_library_call_from_test() {
         "#
         ),
         Contract::from_code_path(
-            "TraceInfoProxy".to_string(),
+            "contract::TraceInfoProxy".to_string(),
             Path::new("tests/data/contracts/trace_info_proxy.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "TraceInfoChecker".to_string(),
+            "contract::TraceInfoChecker".to_string(),
             Path::new("tests/data/contracts/trace_info_checker.cairo"),
         )
         .unwrap()
@@ -989,12 +989,12 @@ fn trace_l1_handler() {
         "#
         ),
         Contract::from_code_path(
-            "TraceInfoProxy".to_string(),
+            "contract::TraceInfoProxy".to_string(),
             Path::new("tests/data/contracts/trace_info_proxy.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "TraceInfoChecker".to_string(),
+            "contract::TraceInfoChecker".to_string(),
             Path::new("tests/data/contracts/trace_info_checker.cairo"),
         )
         .unwrap()

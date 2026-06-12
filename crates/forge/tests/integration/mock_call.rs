@@ -56,7 +56,7 @@ fn mock_call_simple() {
     "#
         ),
         Contract::from_code_path(
-            "MockChecker".to_string(),
+            "contract::MockChecker".to_string(),
             Path::new("tests/data/contracts/mock_checker.cairo"),
         )
         .unwrap()
@@ -131,7 +131,7 @@ fn mock_call_complex_types() {
     "#
         ),
         Contract::from_code_path(
-            "MockChecker".to_string(),
+            "contract::MockChecker".to_string(),
             Path::new("tests/data/contracts/mock_checker.cairo"),
         )
         .unwrap()
@@ -199,7 +199,7 @@ fn mock_calls() {
     "#
         ),
         Contract::from_code_path(
-            "MockChecker".to_string(),
+            "contract::MockChecker".to_string(),
             Path::new("tests/data/contracts/mock_checker.cairo"),
         )
         .unwrap()

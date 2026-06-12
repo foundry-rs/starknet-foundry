@@ -121,22 +121,22 @@ fn simple_syscalls() {
     "#
         ),
         Contract::from_code_path(
-            "CheatTxInfoChecker".to_string(),
+            "contract::CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/cheat_tx_info_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "CheatBlockNumberChecker".to_string(),
+            "contract::CheatBlockNumberChecker".to_string(),
             Path::new("tests/data/contracts/cheat_block_number_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "CheatBlockTimestampChecker".to_string(),
+            "contract::CheatBlockTimestampChecker".to_string(),
             Path::new("tests/data/contracts/cheat_block_timestamp_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "CheatSequencerAddressChecker".to_string(),
+            "contract::CheatSequencerAddressChecker".to_string(),
             Path::new("tests/data/contracts/cheat_sequencer_address_checker.cairo")
         )
         .unwrap()
@@ -180,7 +180,7 @@ fn get_block_hash_syscall_in_dispatcher() {
     "#
         ),
         Contract::from_code_path(
-            "BlockHashChecker".to_string(),
+            "contract::BlockHashChecker".to_string(),
             Path::new("tests/data/contracts/block_hash_checker.cairo"),
         )
         .unwrap()
@@ -226,7 +226,7 @@ fn library_calls() {
     "#
         ),
         Contract::new(
-            "LibraryContract",
+            "contract::LibraryContract",
             indoc!(
                 r"
                 #[starknet::interface]
@@ -294,7 +294,7 @@ fn disabled_syscalls() {
     "
         ),
         Contract::from_code_path(
-            "HelloStarknet".to_string(),
+            "contract::HelloStarknet".to_string(),
             Path::new("tests/data/contracts/hello_starknet.cairo"),
         )
         .unwrap()
@@ -356,7 +356,7 @@ fn cant_call_test_contract() {
     "#
         ),
         Contract::new(
-            "CallsBack",
+            "contract::CallsBack",
             indoc!(
                 r"
                 use starknet::ContractAddress;
@@ -742,12 +742,12 @@ fn caller_address_in_called_contract() {
     "#
         ),
         Contract::from_code_path(
-            "CheatCallerAddressChecker".to_string(),
+            "contract::CheatCallerAddressChecker".to_string(),
             Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
         )
         .unwrap(),
         Contract::new(
-            "ConstructorCheatCallerAddressChecker",
+            "contract::ConstructorCheatCallerAddressChecker",
             indoc!(
                 r"
             use starknet::ContractAddress;

@@ -43,7 +43,7 @@ fn simple_call_and_invoke() {
     "#
         ),
         Contract::from_code_path(
-            "HelloStarknet".to_string(),
+            "contract::HelloStarknet".to_string(),
             Path::new("tests/data/contracts/hello_starknet.cairo"),
         )
         .unwrap()
@@ -116,7 +116,7 @@ fn advanced_types() {
     "#
         ),
         Contract::from_code_path(
-            "ERC20".to_string(),
+            "contract::ERC20".to_string(),
             Path::new("tests/data/contracts/erc20.cairo"),
         )
         .unwrap()
@@ -202,7 +202,7 @@ fn handling_errors() {
     "#
         ),
         Contract::from_code_path(
-            "HelloStarknet".to_string(),
+            "contract::HelloStarknet".to_string(),
             Path::new("tests/data/contracts/hello_starknet.cairo"),
         )
         .unwrap()
@@ -254,7 +254,7 @@ fn handling_bytearray_based_errors() {
     "#
         ),
         Contract::from_code_path(
-            "HelloStarknet".to_string(),
+            "contract::HelloStarknet".to_string(),
             Path::new("tests/data/contracts/hello_starknet.cairo"),
         )
         .unwrap()
@@ -326,7 +326,7 @@ fn serding() {
     "#
         ),
         Contract::from_code_path(
-            "Serding".to_string(),
+            "contract::Serding".to_string(),
             Path::new("tests/data/contracts/serding.cairo"),
         )
         .unwrap()
@@ -405,7 +405,7 @@ fn proxy_storage() {
     "#
         ),
         Contract::new(
-            "Caller",
+            "contract::Caller",
             indoc!(
                 r"
             use starknet::ContractAddress;
@@ -461,7 +461,7 @@ fn proxy_storage() {
             )
         ),
         Contract::new(
-            "Executor",
+            "contract::Executor",
             indoc!(
                 r"
             #[derive(Drop, Serde, starknet::Store)]
@@ -549,7 +549,7 @@ fn proxy_dispatcher_panic() {
     "#
         ),
         Contract::new(
-            "Caller",
+            "contract::Caller",
             indoc!(
                 r"
             #[starknet::interface]
@@ -592,7 +592,7 @@ fn proxy_dispatcher_panic() {
             )
         ),
         Contract::new(
-            "Executor",
+            "contract::Executor",
             indoc!(
                 r"
             #[starknet::interface]
@@ -660,7 +660,7 @@ fn nonexistent_method_call() {
     "#
         ),
         Contract::new(
-            "Contract",
+            "contract::Contract",
             indoc!(
                 r"
             #[starknet::contract]
@@ -722,7 +722,7 @@ fn nonexistent_libcall_function() {
         "#
         ),
         Contract::new(
-            "LibCaller",
+            "contract::LibCaller",
             indoc!(
                 r"
                 use starknet::ClassHash;
@@ -759,7 +759,7 @@ fn nonexistent_libcall_function() {
             )
         ),
         Contract::new(
-            "Contract",
+            "contract::Contract",
             indoc!(
                 r"
             #[starknet::contract]
@@ -847,7 +847,7 @@ fn nonexistent_class_libcall() {
         "#
         ),
         Contract::new(
-            "LibCaller",
+            "contract::LibCaller",
             indoc!(
                 r"
                 #[starknet::interface]
@@ -885,7 +885,7 @@ fn nonexistent_class_libcall() {
             )
         ),
         Contract::new(
-            "Contract",
+            "contract::Contract",
             indoc!(
                 r"
             #[starknet::contract]
@@ -942,12 +942,12 @@ fn dispatcher_in_nested_call() {
         "#
         ),
         Contract::from_code_path(
-            "Top".to_string(),
+            "contract::Top".to_string(),
             Path::new("tests/data/contracts/catching_error.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "Nested".to_string(),
+            "contract::Nested".to_string(),
             Path::new("tests/data/contracts/catching_error.cairo"),
         )
         .unwrap()
