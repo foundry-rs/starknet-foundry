@@ -1,16 +1,19 @@
 use crate::response::cast_message::SncastCommandMessage;
 use crate::response::transaction::append_transaction;
+use crate::response::tx_receipt::append_receipt;
 use foundry_ui::styling::OutputBuilder;
 use serde::{Serialize, Serializer};
 use starknet_rust::core::types::{
-    BlockStatus, L1DataAvailabilityMode, MaybePreConfirmedBlockWithTxHashes,
-    MaybePreConfirmedBlockWithTxs, ResourcePrice, Transaction,
+    BlockStatus, L1DataAvailabilityMode, MaybePreConfirmedBlockWithReceipts,
+    MaybePreConfirmedBlockWithTxHashes, MaybePreConfirmedBlockWithTxs, ResourcePrice, Transaction,
+    TransactionWithReceipt,
 };
 
 #[derive(Clone)]
 pub enum BlockResponse {
     WithTxHashes(MaybePreConfirmedBlockWithTxHashes),
     WithTxs(MaybePreConfirmedBlockWithTxs),
+    WithReceipts(MaybePreConfirmedBlockWithReceipts),
 }
 
 impl Serialize for BlockResponse {
@@ -21,6 +24,7 @@ impl Serialize for BlockResponse {
         match self {
             BlockResponse::WithTxHashes(block) => block.serialize(serializer),
             BlockResponse::WithTxs(block) => block.serialize(serializer),
+            BlockResponse::WithReceipts(block) => block.serialize(serializer),
         }
     }
 }
@@ -95,6 +99,18 @@ impl SncastCommandMessage for BlockResponse {
                     &block.transactions,
                 )
             }
+            BlockResponse::WithReceipts(MaybePreConfirmedBlockWithReceipts::Block(block)) => {
+                append_receipts(
+                    append_confirmed_header!(builder, block),
+                    &block.transactions,
+                )
+            }
+            BlockResponse::WithReceipts(MaybePreConfirmedBlockWithReceipts::PreConfirmedBlock(
+                block,
+            )) => append_receipts(
+                append_pre_confirmed_header!(builder, block),
+                &block.transactions,
+            ),
         };
 
         builder.build()
@@ -111,6 +127,21 @@ fn append_full_transactions(
                 .blank_line()
                 .text_field(&format!("Transaction #{}", index + 1)),
             transaction,
+        );
+    }
+    builder
+}
+
+fn append_receipts(
+    mut builder: OutputBuilder,
+    transactions: &[TransactionWithReceipt],
+) -> OutputBuilder {
+    for (index, transaction) in transactions.iter().enumerate() {
+        builder = append_receipt(
+            builder
+                .blank_line()
+                .text_field(&format!("Transaction #{}", index + 1)),
+            &transaction.receipt,
         );
     }
     builder

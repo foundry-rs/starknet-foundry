@@ -28,15 +28,23 @@ impl SncastCommandMessage for TxReceiptResponse {
             .success_message("Transaction receipt retrieved")
             .blank_line();
 
-        let builder = match &self.0.receipt {
-            TransactionReceipt::Invoke(r) => append_invoke(builder, r),
-            TransactionReceipt::L1Handler(r) => append_l1_handler(builder, r),
-            TransactionReceipt::Declare(r) => append_declare(builder, r),
-            TransactionReceipt::Deploy(r) => append_deploy(builder, r),
-            TransactionReceipt::DeployAccount(r) => append_deploy_account(builder, r),
-        };
+        let builder = append_receipt(builder, &self.0.receipt);
 
         append_block(builder, &self.0.block).build()
+    }
+}
+
+/// Appends the fields of a single [`TransactionReceipt`] to the given [`OutputBuilder`].
+///
+/// The caller is responsible for adding any header and (optionally) block info via [`append_block`].
+#[must_use]
+pub fn append_receipt(builder: OutputBuilder, receipt: &TransactionReceipt) -> OutputBuilder {
+    match receipt {
+        TransactionReceipt::Invoke(r) => append_invoke(builder, r),
+        TransactionReceipt::L1Handler(r) => append_l1_handler(builder, r),
+        TransactionReceipt::Declare(r) => append_declare(builder, r),
+        TransactionReceipt::Deploy(r) => append_deploy(builder, r),
+        TransactionReceipt::DeployAccount(r) => append_deploy_account(builder, r),
     }
 }
 
