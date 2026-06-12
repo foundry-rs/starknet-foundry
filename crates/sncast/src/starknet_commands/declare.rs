@@ -2,7 +2,7 @@ use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use shared::rpc::get_starknet_version;
-use sncast::helpers::artifacts::{CastStarknetContractArtifacts, resolve_contract_artifact};
+use sncast::helpers::artifacts::{CastStarknetContractArtifacts, resolve_contract_artifacts};
 use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
@@ -82,7 +82,7 @@ pub async fn declare<S>(
 where
     S: Signer + Sync + Send,
 {
-    let contract_artifacts = resolve_contract_artifact(&contract_name, artifacts)?;
+    let contract_artifacts = resolve_contract_artifacts(&contract_name, artifacts)?;
 
     let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
         .context("Failed to parse sierra artifact")?;

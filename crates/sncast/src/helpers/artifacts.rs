@@ -18,7 +18,7 @@ fn contract_name_from_module_path(module_path: &str) -> &str {
         .expect("Module path should always contain at least one segment")
 }
 
-pub fn resolve_contract_artifact<'a, S: BuildHasher>(
+pub fn resolve_contract_artifacts<'a, S: BuildHasher>(
     contract_identifier: &str,
     artifacts: &'a HashMap<String, CastStarknetContractArtifacts, S>,
 ) -> Result<&'a CastStarknetContractArtifacts, StarknetCommandError> {
@@ -82,7 +82,7 @@ mod tests {
     fn resolves_unique_contract_by_name() {
         let artifacts = sample_artifacts();
 
-        let artifact = resolve_contract_artifact("ERC20", &artifacts).unwrap();
+        let artifact = resolve_contract_artifacts("ERC20", &artifacts).unwrap();
 
         assert_eq!(artifact.sierra, "erc20");
     }
@@ -91,7 +91,7 @@ mod tests {
     fn errors_on_ambiguous_contract_name() {
         let artifacts = sample_artifacts();
 
-        let error = resolve_contract_artifact("HelloStarknet", &artifacts).unwrap_err();
+        let error = resolve_contract_artifacts("HelloStarknet", &artifacts).unwrap_err();
 
         assert_eq!(
             error.to_string(),
