@@ -12,7 +12,7 @@ pub struct CastStarknetContractArtifacts {
     pub casm: String,
 }
 
-fn contract_name_from_module_path(module_path: &str) -> &str {
+pub fn contract_name_from_module_path(module_path: &str) -> &str {
     module_path
         .rsplit("::")
         .next()
