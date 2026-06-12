@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - Devnet accounts (`devnet-<i>`) no longer require the default accounts file to exist.
+- `sncast declare` now throws an error when a contract with the same name is found in multiple locations (e.g. `src/` and `tests/`), instead of non-deterministically selecting one of them.
 
 ## [0.61.0] - 2026-05-26
 
