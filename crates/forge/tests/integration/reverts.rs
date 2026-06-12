@@ -44,11 +44,8 @@ fn storage_is_reverted_in_test_call() {
         }
             "#
         },
-        Contract::from_code_path(
-            "contract::Contract",
-            "tests/data/contracts/reverts_contract.cairo"
-        )
-        .unwrap()
+        Contract::from_code_path("Contract", "tests/data/contracts/reverts_contract.cairo")
+            .unwrap()
     );
 
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
@@ -101,16 +98,9 @@ fn storage_is_reverted_in_proxy_call() {
         }
             "#
         },
-        Contract::from_code_path(
-            "contract::Proxy",
-            "tests/data/contracts/reverts_proxy.cairo"
-        )
-        .unwrap(),
-        Contract::from_code_path(
-            "contract::Contract",
-            "tests/data/contracts/reverts_contract.cairo"
-        )
-        .unwrap()
+        Contract::from_code_path("Proxy", "tests/data/contracts/reverts_proxy.cairo").unwrap(),
+        Contract::from_code_path("Contract", "tests/data/contracts/reverts_contract.cairo")
+            .unwrap()
     );
 
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
@@ -157,16 +147,9 @@ fn storage_is_reverted_in_safe_proxy_call() {
         }
             "#
         },
-        Contract::from_code_path(
-            "contract::Proxy",
-            "tests/data/contracts/reverts_proxy.cairo"
-        )
-        .unwrap(),
-        Contract::from_code_path(
-            "contract::Contract",
-            "tests/data/contracts/reverts_contract.cairo"
-        )
-        .unwrap()
+        Contract::from_code_path("Proxy", "tests/data/contracts/reverts_proxy.cairo").unwrap(),
+        Contract::from_code_path("Contract", "tests/data/contracts/reverts_contract.cairo")
+            .unwrap()
     );
 
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
@@ -201,16 +184,9 @@ fn storage_is_reverted_in_inner_call() {
         }
             "#
         },
-        Contract::from_code_path(
-            "contract::Caller",
-            "tests/data/contracts/reverts_caller.cairo"
-        )
-        .unwrap(),
-        Contract::from_code_path(
-            "contract::Contract",
-            "tests/data/contracts/reverts_contract.cairo"
-        )
-        .unwrap()
+        Contract::from_code_path("Caller", "tests/data/contracts/reverts_caller.cairo").unwrap(),
+        Contract::from_code_path("Contract", "tests/data/contracts/reverts_contract.cairo")
+            .unwrap()
     );
 
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
@@ -261,16 +237,9 @@ fn storage_is_reverted_in_library_call() {
         }
             "#
         },
-        Contract::from_code_path(
-            "contract::Contract",
-            "tests/data/contracts/reverts_contract.cairo"
-        )
-        .unwrap(),
-        Contract::from_code_path(
-            "contract::Proxy",
-            "tests/data/contracts/reverts_proxy.cairo"
-        )
-        .unwrap()
+        Contract::from_code_path("Contract", "tests/data/contracts/reverts_contract.cairo")
+            .unwrap(),
+        Contract::from_code_path("Proxy", "tests/data/contracts/reverts_proxy.cairo").unwrap()
     );
 
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);

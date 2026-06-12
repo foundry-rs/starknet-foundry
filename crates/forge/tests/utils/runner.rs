@@ -39,23 +39,23 @@ pub struct LinkedLibrary {
 
 #[derive(Debug, Clone)]
 pub struct Contract {
-    module_path: String,
+    name: String,
     code: String,
 }
 
 impl Contract {
     #[must_use]
-    pub fn new(module_path: impl Into<String>, code: impl Into<String>) -> Self {
+    pub fn new(name: impl Into<String>, code: impl Into<String>) -> Self {
         Self {
-            module_path: module_path.into(),
+            name: name.into(),
             code: code.into(),
         }
     }
 
-    pub fn from_code_path(module_path: impl Into<String>, path: impl AsRef<Path>) -> Result<Self> {
+    pub fn from_code_path(name: impl Into<String>, path: impl AsRef<Path>) -> Result<Self> {
         let code = fs::read_to_string(path)?;
         Ok(Self {
-            module_path: module_path.into(),
+            name: name.into(),
             code,
         })
     }
@@ -111,17 +111,10 @@ impl Contract {
             },
         )
         .unwrap()
-        .iter()
-        .find(|(module_path, _)| **module_path == self.module_path)
-        // .into_values()
-        // .find(|contract| contract. == self.name)
-        .ok_or(anyhow!(
-            "there is no contract with module path {}",
-            self.module_path
-        ))?
-        .1
-        .artifacts
-        .clone();
+        .into_values()
+        .find(|contract| contract.name == self.name)
+        .ok_or(anyhow!("there is no contract with name {}", self.name))?
+        .artifacts;
 
         Ok(artifacts)
     }
@@ -208,12 +201,11 @@ impl<'a> TestCase {
             .clone()
             .into_iter()
             .map(|contract| {
-                let module_path = contract.module_path.clone();
-                let name = contract_name_from_module_path(&module_path).to_string();
+                let name = contract.name.clone();
                 let artifacts = contract.generate_contract_artifacts(ui)?;
 
                 Ok((
-                    module_path,
+                    name.clone(),
                     ContractData {
                         name,
                         artifacts,
@@ -409,8 +401,4 @@ pub fn assert_builtin(
             },
         }
     }));
-}
-
-fn contract_name_from_module_path(module_path: &str) -> &str {
-    module_path.split("::").last().unwrap_or(module_path)
 }
