@@ -49,14 +49,16 @@ fn append_block(builder: OutputBuilder, block: &BlockWithTxHashes) -> OutputBuil
         l1_data_gas_price,
         l1_da_mode,
         starknet_version,
+        transactions,
+        transaction_count,
+        // Omit Merkle-Patricia tries and redundant information form the formatted output.
+        // They are still returned when using the `--json` flag.
         event_commitment: _,
         transaction_commitment: _,
         receipt_commitment: _,
         state_diff_commitment: _,
         event_count: _,
-        transaction_count,
         state_diff_length: _,
-        transactions,
     } = block;
     builder
         .field("Status", fmt_status(*status))
