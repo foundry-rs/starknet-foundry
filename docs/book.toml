@@ -20,7 +20,7 @@ exclude = [
 [output.html]
 git-repository-url = "https://github.com/foundry-rs/starknet-foundry/"
 edit-url-template = "https://github.com/foundry-rs/starknet-foundry/edit/master/docs/{path}"
-additional-js = ["count.js", "codeSnippets.js"]
+additional-js = ["codeSnippets.js"]
 
 [output.html.playground]
 runnable = false
