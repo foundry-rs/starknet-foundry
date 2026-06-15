@@ -1,5 +1,5 @@
 use crate::Arguments;
-use crate::starknet_commands::utils::felt_or_id::FeltOrId;
+use crate::starknet_commands::utils::felt_or_id::ContractAddress;
 use anyhow::Result;
 use clap::Args;
 use sncast::helpers::rpc::RpcArgs;
@@ -15,7 +15,7 @@ use starknet_types_core::felt::Felt;
 pub struct Call {
     /// Address of the called contract (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short = 'd', long)]
-    pub contract_address: FeltOrId,
+    pub contract_address: ContractAddress,
 
     /// Name of the contract function to be called
     #[arg(short, long)]

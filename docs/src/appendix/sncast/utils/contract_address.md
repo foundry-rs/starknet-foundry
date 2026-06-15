@@ -5,7 +5,9 @@ Calculate the address of a not yet deployed contract.
 Optional.
 Conflicts with: [`--contract-name`](#--contract-name)
 
-The class hash of the contract to deploy, in hex (prefixed with '0x') or decimal representation.
+The class hash of the contract to deploy. It can be either:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../../starknet/aliases.md).
 
 ## `--contract-name <CONTRACT_NAME>`
 Optional.
@@ -18,7 +20,9 @@ The class hash is derived from the locally built artifact.
 Optional.
 Conflicts with: [`--arguments`](#--arguments)
 
-Constructor calldata as a series of felts.
+Constructor calldata as a series of felts. Each token may be:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../../starknet/aliases.md).
 
 Requires `--url` or `--network` to fetch the contract ABI when used together with `--class-hash`.
 
@@ -46,7 +50,10 @@ If set, the salt is modified with the deployer account address, making the addre
 ## `--deployer-address <DEPLOYER_ADDRESS>`
 Optional.
 
-The deployer account address used to modify the salt when `--unique` is set.
+The deployer account address used to modify the salt when `--unique` is set. It can be either:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../../starknet/aliases.md).
+
 Defaults to zero.
 
 ## `--package <PACKAGE>`

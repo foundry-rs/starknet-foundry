@@ -1,3 +1,4 @@
+use crate::starknet_commands::utils::felt_or_id::{ClassHash, ContractAddress};
 use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
@@ -17,13 +18,13 @@ use starknet_types_core::felt::Felt;
 #[derive(Args, Clone, Debug)]
 #[group(required = true, multiple = false)]
 pub struct LocationArgs {
-    /// Class hash of contract which contains the function
+    /// Class hash of contract which contains the function (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short = 'c', long)]
-    pub class_hash: Option<Felt>,
+    pub class_hash: Option<ClassHash>,
 
-    /// Address of contract which contains the function
+    /// Address of contract which contains the function (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short = 'd', long)]
-    pub contract_address: Option<Felt>,
+    pub contract_address: Option<ContractAddress>,
 
     /// Path to the file containing ABI of the contract class
     #[arg(long)]
@@ -37,17 +38,15 @@ pub enum Location {
     ContractAddress(Felt),
 }
 
-impl TryFrom<LocationArgs> for Location {
-    type Error = anyhow::Error;
-
-    fn try_from(args: LocationArgs) -> Result<Self> {
-        match (args.class_hash, args.contract_address, args.abi_file) {
-            (Some(class_hash), None, None) => Ok(Location::ClassHash(class_hash)),
-            (None, Some(address), None) => Ok(Location::ContractAddress(address)),
-            (None, None, Some(path)) => Ok(Location::AbiFile(path)),
-            _ => bail!(
-                "Exactly one of --class-hash, --contract-address, or --abi-file must be provided"
-            ),
+fn location_from_args(args: LocationArgs, config: &CastConfig) -> Result<Location> {
+    match (args.class_hash, args.contract_address, args.abi_file) {
+        (Some(class_hash), None, None) => Ok(Location::ClassHash(class_hash.resolve(config)?)),
+        (None, Some(address), None) => Ok(Location::ContractAddress(address.resolve(config)?)),
+        (None, None, Some(path)) => Ok(Location::AbiFile(path)),
+        _ => {
+            bail!(
+                "Exactly one of `--class-hash`, `--contract-address`, or `--abi-file` must be provided"
+            )
         }
     }
 }
@@ -82,7 +81,7 @@ pub async fn serialize(
 ) -> Result<SerializeResponse, StarknetCommandError> {
     let selector = get_selector_from_name(&function)
         .context("Failed to convert entry point selector to FieldElement")?;
-    let location = Location::try_from(location_args)?;
+    let location = location_from_args(location_args, &config)?;
 
     let abi = resolve_abi(location, rpc_args, &config, ui).await?;
 

@@ -5,7 +5,10 @@ use crate::runtime_extensions::outer_call_runtime_extension::CheatnetState;
 use crate::runtime_extensions::outer_call_runtime_extension::execution::entry_point::execute_constructor_entry_point;
 use blockifier::context::TransactionContext;
 use blockifier::execution::common_hints::ExecutionMode;
-use blockifier::execution::errors::EntryPointExecutionError;
+use blockifier::execution::entry_point::EntryPointRevertInfo;
+use blockifier::execution::errors::{
+    ConstructorEntryPointExecutionError, EntryPointExecutionError,
+};
 use blockifier::execution::execution_utils::ReadOnlySegment;
 use blockifier::execution::syscalls::hint_processor::create_retdata_segment;
 use blockifier::execution::syscalls::hint_processor::{
@@ -26,7 +29,7 @@ use blockifier::transaction::objects::{
 };
 use blockifier::{
     execution::entry_point::{
-        CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
+        CallEntryPoint, CallType, ConstructorEntryPointExecutionResult, EntryPointExecutionContext,
     },
     state::state_api::State,
 };
@@ -90,7 +93,7 @@ fn convert_deploy_failure_to_revert(
     })
 }
 
-// blockifier/src/execution/syscalls/mod.rs:222 (deploy_syscall)
+// blockifier/src/execution/syscalls/syscall_base.rs:380 (deploy)
 pub fn deploy_syscall(
     request: DeployRequest,
     vm: &mut VirtualMachine,
@@ -148,16 +151,21 @@ pub fn deploy_syscall(
         remaining_gas,
     ) {
         Ok(info) => info,
-        Err(EntryPointExecutionError::ExecutionFailed { error_trace }) if from_cheatcode => {
-            let panic_data = error_trace.last_retdata.0.clone();
-            return convert_deploy_failure_to_revert(
-                syscall_handler,
-                revert_idx,
-                panic_data,
-                false,
-            );
+        Err(err) => {
+            if from_cheatcode
+                && let ConstructorEntryPointExecutionError::ExecutionError { error, .. } = &err
+                && let EntryPointExecutionError::ExecutionFailed { error_trace } = error.as_ref()
+            {
+                let panic_data = error_trace.last_retdata.0.clone();
+                return convert_deploy_failure_to_revert(
+                    syscall_handler,
+                    revert_idx,
+                    panic_data,
+                    false,
+                );
+            }
+            return Err(err.into());
         }
-        Err(err) => return Err(err.into()),
     };
     let failed = call_info.execution.failed;
     let raw_retdata = call_info.execution.retdata.0.clone();
@@ -177,7 +185,7 @@ pub fn deploy_syscall(
     })
 }
 
-// blockifier/src/execution/execution_utils.rs:217 (execute_deployment)
+// blockifier/src/execution/execution_utils.rs:303 (execute_deployment)
 pub fn execute_deployment(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
@@ -185,27 +193,44 @@ pub fn execute_deployment(
     ctor_context: &ConstructorContext,
     constructor_calldata: Calldata,
     remaining_gas: &mut u64,
-) -> EntryPointExecutionResult<CallInfo> {
+) -> ConstructorEntryPointExecutionResult<CallInfo> {
     // Address allocation in the state is done before calling the constructor, so that it is
     // visible from it.
     let deployed_contract_address = ctor_context.storage_address;
-    let current_class_hash = state.get_class_hash_at(deployed_contract_address)?;
+    let current_class_hash =
+        state
+            .get_class_hash_at(deployed_contract_address)
+            .map_err(|error| {
+                ConstructorEntryPointExecutionError::new(error.into(), ctor_context, None)
+            })?;
     if current_class_hash != ClassHash::default() {
-        return Err(StateError::UnavailableContractAddress(deployed_contract_address).into());
+        return Err(ConstructorEntryPointExecutionError::new(
+            StateError::UnavailableContractAddress(deployed_contract_address).into(),
+            ctor_context,
+            None,
+        ));
     }
 
-    state.set_class_hash_at(deployed_contract_address, ctor_context.class_hash)?;
+    context.revert_infos.0.push(EntryPointRevertInfo::new(
+        deployed_contract_address,
+        current_class_hash,
+        context.n_emitted_events,
+        context.n_sent_messages_to_l1,
+    ));
+    state
+        .set_class_hash_at(deployed_contract_address, ctor_context.class_hash)
+        .map_err(|error| {
+            ConstructorEntryPointExecutionError::new(error.into(), ctor_context, None)
+        })?;
 
-    let call_info = execute_constructor_entry_point(
+    execute_constructor_entry_point(
         state,
         cheatnet_state,
         context,
         ctor_context,
         constructor_calldata,
         remaining_gas,
-    )?;
-
-    Ok(call_info)
+    )
 }
 
 // blockifier/src/execution/syscalls/mod.rs:407 (library_call)

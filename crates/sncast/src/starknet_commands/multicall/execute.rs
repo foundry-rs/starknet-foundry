@@ -3,7 +3,7 @@ use clap::{Args, Command, FromArgMatches};
 use conversions::IntoConv;
 use sncast::{
     WaitForTx,
-    helpers::{dry_run::DryRunArgs, fee::FeeArgs, rpc::RpcArgs},
+    helpers::{configuration::CastConfig, dry_run::DryRunArgs, fee::FeeArgs, rpc::RpcArgs},
     response::{
         errors::handle_starknet_command_error,
         multicall::run::{MulticallRunResponse, MulticallRunTransactionResponse},
@@ -51,6 +51,8 @@ pub struct Execute {
     ///
     /// Additionally, `deploy` supports `--id <ID>` argument to name the deployed contract in this multicall.
     /// In subsequent calls, `@<ID>` can be referenced in `--contract-address` and `--calldata` flags to reference the deployed contract address.
+    /// `@<ID>` is also resolved against `[sncast.<profile>.aliases]` in `snfoundry.toml`;
+    /// Multicall-local `@<ID>` always wins over a config alias of the same name.
     ///
     /// For more, read the documentation: `<https://foundry-rs.github.io/starknet-foundry/starknet/multicall.html#multicall-with-cli-arguments>`
     #[arg(allow_hyphen_values = true, num_args = 1..)]
@@ -61,6 +63,7 @@ pub async fn execute<S>(
     execute: Execute,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     provider: &JsonRpcClient<HttpTransport>,
+    config: &CastConfig,
     wait_config: WaitForTx,
     ui: &UI,
 ) -> Result<MulticallRunResponse>
@@ -79,13 +82,13 @@ where
         match cmd_name.as_str() {
             "deploy" => {
                 let call = parse_args::<MulticallDeploy>(cmd_name, cmd_args)?
-                    .build_call(account, &mut contract_registry)
+                    .build_call(account, &mut contract_registry, config)
                     .await?;
                 calls.push(call);
             }
             "invoke" => {
                 let call = parse_args::<MulticallInvoke>(cmd_name, cmd_args)?
-                    .build_call(&mut contract_registry)
+                    .build_call(&mut contract_registry, config)
                     .await?;
                 calls.push(call);
             }

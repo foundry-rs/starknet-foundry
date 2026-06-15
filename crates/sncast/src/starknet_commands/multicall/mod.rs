@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::{Args, Subcommand};
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -11,10 +11,8 @@ pub mod invoke;
 pub mod new;
 pub mod run;
 
-use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
 use crate::starknet_commands::multicall::execute::Execute;
-use crate::starknet_commands::utils::felt_or_id::FeltOrId;
-use crate::{Arguments, process_command_result, starknet_commands};
+use crate::{process_command_result, starknet_commands};
 use foundry_ui::Message;
 use new::New;
 use run::Run;
@@ -89,6 +87,7 @@ pub async fn multicall(
                     run.clone(),
                     account,
                     &provider,
+                    &config,
                     wait_config,
                     ui,
                 )
@@ -113,6 +112,7 @@ pub async fn multicall(
                     *execute.clone(),
                     account,
                     &provider,
+                    &config,
                     wait_config,
                     ui,
                 )
@@ -128,40 +128,4 @@ pub async fn multicall(
             ))
         }
     }
-}
-
-/// Replaces arguments that reference user-defined ids with their corresponding values from the contract registry.
-pub fn replaced_arguments(
-    arguments: &Arguments,
-    contracts: &ContractRegistry,
-) -> Result<Arguments> {
-    Ok(match (&arguments.calldata, &arguments.arguments) {
-        (Some(calldata), None) => {
-            let replaced_calldata = calldata
-                .iter()
-                .map(|raw_input| {
-                    let input = FeltOrId::new(raw_input.clone());
-                    if let Some(id) = input.as_id() {
-                        contracts
-                            .get_address_by_id(id)
-                            .with_context(|| {
-                                format!("Failed to find contract address for id: {id}")
-                            })
-                            .map(|f| f.to_string())
-                    } else {
-                        Ok(raw_input.clone())
-                    }
-                })
-                .collect::<Result<Vec<String>>>()?;
-
-            Arguments {
-                calldata: Some(replaced_calldata),
-                arguments: None,
-            }
-        }
-        (None, _) => arguments.clone(),
-        (Some(_), Some(_)) => {
-            unreachable!("Only one of `calldata` or `arguments` can be provided, but both are set.")
-        }
-    })
 }

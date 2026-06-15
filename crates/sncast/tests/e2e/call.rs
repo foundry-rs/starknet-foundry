@@ -67,6 +67,59 @@ fn test_call_with_alias() {
 }
 
 #[test]
+fn test_call_with_calldata_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let args = vec![
+        "call",
+        "--function",
+        "get",
+        "--calldata",
+        "@zero",
+        "--block-id",
+        "latest",
+        "--contract-address",
+        "@map",
+    ];
+
+    runner(&args)
+        .current_dir(tempdir.path())
+        .assert()
+        .success()
+        .stdout_eq(indoc! {r"
+        Success: Call completed
+
+        Response:     0x0
+        Response Raw: [0x0]
+    "});
+}
+
+#[test]
+fn test_call_with_unknown_calldata_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let args = vec![
+        "call",
+        "--function",
+        "get",
+        "--calldata",
+        "@missing",
+        "--block-id",
+        "latest",
+        "--contract-address",
+        "@map",
+    ];
+
+    let output = runner(&args).current_dir(tempdir.path()).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+            Command: call
+            Error: Alias `missing` not found in config
+        "},
+    );
+}
+
+#[test]
 fn test_call_with_unknown_alias() {
     let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
     let args = vec![

@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use clap::Args;
+use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::UDC_ADDRESS;
 use sncast::{extract_or_generate_salt, udc_uniqueness};
 use starknet_rust::accounts::{Account, SingleOwnerAccount};
@@ -12,9 +13,9 @@ use starknet_types_core::felt::Felt;
 
 use crate::starknet_commands::deploy::{ContractIdentifier, DeployArguments, DeployCommonArgs};
 use crate::starknet_commands::multicall::contract_registry::ContractRegistry;
-use crate::starknet_commands::multicall::replaced_arguments;
 use crate::starknet_commands::multicall::run::{DeployItem, parse_inputs};
-use crate::{Arguments, abi_from_contract_class, calldata_to_felts};
+use crate::starknet_commands::utils::felt_or_id::resolve_multicall_calldata_to_felts;
+use crate::{Arguments, abi_from_contract_class};
 
 #[derive(Args)]
 pub struct MulticallDeploy {
@@ -27,12 +28,16 @@ pub struct MulticallDeploy {
 }
 
 impl MulticallDeploy {
-    pub fn new_from_item(item: &DeployItem, contracts: &ContractRegistry) -> Result<Self> {
-        let constructor_calldata = parse_inputs(&item.inputs, contracts)?;
+    pub fn new_from_item(
+        item: &DeployItem,
+        contracts: &ContractRegistry,
+        config: &CastConfig,
+    ) -> Result<Self> {
+        let constructor_calldata = parse_inputs(&item.inputs, contracts, config)?;
         let deploy = MulticallDeploy {
             common: DeployCommonArgs {
                 contract_identifier: ContractIdentifier {
-                    class_hash: Some(item.class_hash),
+                    class_hash: Some(item.class_hash.clone()),
                     contract_name: None,
                 },
                 arguments: DeployArguments {
@@ -58,24 +63,24 @@ impl MulticallDeploy {
         &self,
         account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
         contract_registry: &mut ContractRegistry,
+        config: &CastConfig,
     ) -> Result<Call>
     where
         S: Signer + Sync + Send,
     {
         let salt = extract_or_generate_salt(self.common.salt);
-        let constructor_arguments = replaced_arguments(
-            &Arguments::from(self.common.arguments.clone()),
-            contract_registry,
-        )?;
+        let constructor_arguments = Arguments::from(self.common.arguments.clone());
 
         let constructor_selector = get_selector_from_name("constructor")?;
         let class_hash = self
             .common
             .contract_identifier
             .class_hash
-            .context("Using deploy with multicall requires providing class hash")?;
+            .as_ref()
+            .context("Using deploy with multicall requires providing class hash")?
+            .resolve_in_multicall(contract_registry, config)?;
         let constructor_calldata = if let Some(raw_calldata) = &constructor_arguments.calldata {
-            calldata_to_felts(raw_calldata)?
+            resolve_multicall_calldata_to_felts(raw_calldata, config, contract_registry)?
         } else {
             let contract_class = contract_registry
                 .get_contract_class_by_class_hash(&class_hash)
@@ -83,6 +88,7 @@ impl MulticallDeploy {
             constructor_arguments.try_into_calldata(
                 &abi_from_contract_class(contract_class)?,
                 &constructor_selector,
+                config,
             )?
         };
 

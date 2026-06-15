@@ -1,9 +1,10 @@
 use crate::helpers::constants::{
     ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA,
 };
-use crate::helpers::fixtures::copy_directory_to_tempdir;
+use crate::helpers::fixtures::{copy_directory_to_tempdir, join_tempdirs};
 use crate::helpers::runner::runner;
-use indoc::formatdoc;
+use configuration::test_utils::copy_config_to_tempdir;
+use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -578,5 +579,187 @@ async fn test_test_files_flag_ignored_with_warning() {
         ",
             verifier_response
         ),
+    );
+}
+
+#[tokio::test]
+async fn test_happy_case_contract_address_with_alias() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+    let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    join_tempdirs(&config_dir, &contract_path);
+
+    let mock_server = MockServer::start().await;
+
+    let verifier_response = "Contract successfully verified";
+
+    Mock::given(method("POST"))
+        .and(path("/v1/sn_sepolia/verify"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .append_header("content-type", "text/plain")
+                .set_body_string(verifier_response),
+        )
+        .mount(&mock_server)
+        .await;
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--contract-address",
+        "@map",
+        "--contract-name",
+        "Map",
+        "--verifier",
+        "walnut",
+        "--network",
+        "sepolia",
+        "--confirm-verification",
+    ];
+
+    let output = runner(&args)
+        .env("VERIFIER_API_URL", mock_server.uri())
+        .current_dir(contract_path.path())
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        formatdoc!(
+            r"
+        Success: Verification completed
+
+        {}
+        ",
+            verifier_response
+        ),
+    );
+}
+
+#[tokio::test]
+async fn test_happy_case_class_hash_with_alias() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+    let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    join_tempdirs(&config_dir, &contract_path);
+
+    let mock_server = MockServer::start().await;
+
+    let verifier_response = "Contract successfully verified";
+
+    Mock::given(method("POST"))
+        .and(path("/v1/sn_sepolia/verify"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .append_header("content-type", "text/plain")
+                .set_body_string(verifier_response),
+        )
+        .mount(&mock_server)
+        .await;
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--class-hash",
+        "@map-class",
+        "--contract-name",
+        "Map",
+        "--verifier",
+        "walnut",
+        "--network",
+        "sepolia",
+        "--confirm-verification",
+    ];
+
+    let output = runner(&args)
+        .env("VERIFIER_API_URL", mock_server.uri())
+        .current_dir(contract_path.path())
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        formatdoc!(
+            r"
+        Success: Verification completed
+
+        {}
+        ",
+            verifier_response
+        ),
+    );
+}
+
+#[tokio::test]
+async fn test_unknown_alias_contract_address() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+    let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    join_tempdirs(&config_dir, &contract_path);
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--contract-address",
+        "@unknown",
+        "--contract-name",
+        "Map",
+        "--verifier",
+        "walnut",
+        "--network",
+        "sepolia",
+    ];
+
+    let output = runner(&args)
+        .current_dir(contract_path.path())
+        .assert()
+        .failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+            Command: verify
+            Error: Invalid contract address
+
+            Caused by:
+                Alias `unknown` not found in config
+        "},
+    );
+}
+
+#[tokio::test]
+async fn test_unknown_alias_class_hash() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+    let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    join_tempdirs(&config_dir, &contract_path);
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--class-hash",
+        "@unknown",
+        "--contract-name",
+        "Map",
+        "--verifier",
+        "walnut",
+        "--network",
+        "sepolia",
+    ];
+
+    let output = runner(&args)
+        .current_dir(contract_path.path())
+        .assert()
+        .failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+            Command: verify
+            Error: Invalid class hash
+
+            Caused by:
+                Alias `unknown` not found in config
+        "},
     );
 }

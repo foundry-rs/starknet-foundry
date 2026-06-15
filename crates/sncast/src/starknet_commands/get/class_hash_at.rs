@@ -1,3 +1,4 @@
+use crate::starknet_commands::utils::felt_or_id::ContractAddress;
 use clap::Args;
 use conversions::IntoConv;
 use sncast::get_block_id;
@@ -16,8 +17,8 @@ use std::process::ExitCode;
 #[derive(Debug, Args)]
 #[command(about = "Get the class hash of a contract deployed at a given address")]
 pub struct ClassHashAt {
-    /// Address of the contract
-    pub contract_address: Felt,
+    /// Address of the contract (hex, decimal, or @alias from snfoundry.toml)
+    pub contract_address: ContractAddress,
 
     /// Block identifier on which class hash should be fetched.
     /// Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string)
@@ -36,7 +37,9 @@ pub async fn class_hash_at(
 ) -> anyhow::Result<ExitCode> {
     let provider = args.rpc.get_provider(&config, ui).await?;
 
-    let result = get_class_hash_at(&provider, args.contract_address, &args.block_id)
+    let contract_address = args.contract_address.resolve(&config)?;
+
+    let result = get_class_hash_at(&provider, contract_address, &args.block_id)
         .await
         .map_err(handle_starknet_command_error);
 

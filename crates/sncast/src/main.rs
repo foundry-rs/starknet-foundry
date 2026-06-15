@@ -7,11 +7,12 @@ use crate::starknet_commands::get::Get;
 use crate::starknet_commands::get::balance::Balance;
 use crate::starknet_commands::invoke::InvokeCommonArgs;
 use crate::starknet_commands::script::run_script_command;
+use crate::starknet_commands::utils::felt_or_id::resolve_calldata_to_felts;
 use crate::starknet_commands::utils::{self, Utils};
 use crate::starknet_commands::{
-    account, account::Account as AccountCommand, alias::Alias, call::Call, declare::Declare,
-    deploy::Deploy, get::tx_status::TxStatus, invoke::Invoke, multicall::Multicall, script::Script,
-    show_config::ShowConfig,
+    account, account::Account as AccountCommand, alias::Alias, call::Call, config_path::ConfigPath,
+    declare::Declare, deploy::Deploy, get::tx_status::TxStatus, invoke::Invoke,
+    multicall::Multicall, script::Script, show_config::ShowConfig,
 };
 use crate::starknet_commands::{get, multicall};
 use anyhow::{Context, Result, bail};
@@ -25,11 +26,10 @@ use foundry_ui::components::warning::WarningMessage;
 use mimalloc::MiMalloc;
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::command::process_command_result;
-use sncast::helpers::config::get_or_create_global_config_path;
+use sncast::helpers::config::resolve_global_config_path_or_warn;
 use sncast::helpers::configuration::{
     CastConfig, CliConfigOpts, ConfigScope, MaybeConfig, PartialCastConfig, warn_unknown_keys,
 };
-use sncast::helpers::felt::felt_from_string;
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
@@ -191,6 +191,9 @@ enum Commands {
     /// Show current configuration being used
     ShowConfig(ShowConfig),
 
+    /// Show paths to the config files contributing to the effective configuration
+    ConfigPath(ConfigPath),
+
     /// Run or initialize a deployment script
     Script(Script),
 
@@ -235,17 +238,18 @@ fn abi_from_contract_class(contract_class: &ContractClass) -> Result<Vec<AbiEntr
 }
 
 impl Arguments {
-    fn try_into_calldata(self, abi: &[AbiEntry], selector: &Felt) -> Result<Vec<Felt>> {
+    fn try_into_calldata(
+        self,
+        abi: &[AbiEntry],
+        selector: &Felt,
+        config: &CastConfig,
+    ) -> Result<Vec<Felt>> {
         if let Some(calldata) = self.calldata {
-            return calldata_to_felts(&calldata);
+            return resolve_calldata_to_felts(&calldata, config);
         }
 
         transform(&self.arguments.unwrap_or_default(), abi, selector)
     }
-}
-
-pub fn calldata_to_felts(calldata: &[String]) -> Result<Vec<Felt>> {
-    calldata.iter().map(|data| felt_from_string(data)).collect()
 }
 
 impl From<DeployArguments> for Arguments {
@@ -333,6 +337,9 @@ fn run(cli: Cli, ui: &UI) -> Result<ExitCode> {
         generate_completions(completions.shell, &mut Cli::command())
     } else if let Commands::Script(script) = &cli.command {
         run_script_command(&cli, runtime, script, ui)
+    } else if let Commands::ConfigPath(_) = &cli.command {
+        let result = starknet_commands::config_path::config_path(ui);
+        Ok(process_command_result("config-path", result, ui, None))
     } else {
         let config = get_cast_config(&cli, ui)?;
         runtime.block_on(run_async_command(cli, config, ui))
@@ -442,7 +449,10 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             } else {
                 let source_provider = declare_from.source_rpc.get_provider(ui).await?;
                 let block_id = get_block_id(&declare_from.block_id)?;
-                let class_hash = declare_from.class_hash.expect("missing class_hash");
+                let class_hash = declare_from
+                    .class_hash
+                    .expect("missing class_hash")
+                    .resolve(&config)?;
 
                 ContractSource::Network {
                     source_provider,
@@ -517,6 +527,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let (class_hash, declare_response, local_abi) = if let Some(class_hash) =
                 identifier.class_hash
             {
+                let class_hash = class_hash.resolve(&config)?;
                 (class_hash, None, None)
             } else if let Some(contract_name) = identifier.contract_name {
                 let manifest_path = assert_manifest_path_exists()?;
@@ -610,7 +621,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 let contract_class = get_contract_class(class_hash, &provider).await?;
                 abi_from_contract_class(&contract_class)?
             };
-            let calldata = arguments.try_into_calldata(&abi, &selector)?;
+            let calldata = arguments.try_into_calldata(&abi, &selector, &config)?;
 
             let result = with_account!(&account, |account| {
                 starknet_commands::deploy::deploy(
@@ -659,9 +670,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
         }) => {
             let provider = rpc.get_provider(&config, ui).await?;
 
-            let contract_address = contract_address
-                .resolve_alias_or_felt(&config)
-                .context("Invalid contract address")?;
+            let contract_address = contract_address.resolve(&config)?;
 
             let block_id = get_block_id(&block_id)?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
@@ -670,8 +679,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let calldata = arguments
-                .try_into_calldata(&abi_from_contract_class(&contract_class)?, &selector)?;
+            let calldata = arguments.try_into_calldata(
+                &abi_from_contract_class(&contract_class)?,
+                &selector,
+                &config,
+            )?;
 
             let result = starknet_commands::call::call(
                 contract_address,
@@ -720,12 +732,15 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let contract_address = contract_address.resolve_alias_or_felt(&config)?;
+            let contract_address = contract_address.resolve(&config)?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
-            let calldata = arguments
-                .try_into_calldata(&abi_from_contract_class(&contract_class)?, &selector)?;
+            let calldata = arguments.try_into_calldata(
+                &abi_from_contract_class(&contract_class)?,
+                &selector,
+                &config,
+            )?;
 
             let result = with_account!(&account, |account| {
                 starknet_commands::invoke::invoke(
@@ -814,7 +829,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             Ok(process_command_result("ledger", result, ui, None))
         }
 
-        Commands::Completions(_) | Commands::Script(_) => {
+        Commands::Completions(_) | Commands::Script(_) | Commands::ConfigPath(_) => {
             unreachable!("should be handled before this function is called")
         }
     }
@@ -826,15 +841,7 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
     };
 
     let local_path = find_config_file().ok();
-    let global_path = match get_or_create_global_config_path() {
-        Ok(p) => Some(p),
-        Err(err) => {
-            ui.print_warning(WarningMessage::new(format!(
-                "Could not get or create global config file: {err:?}. Proceeding without global config."
-            )));
-            None
-        }
-    };
+    let global_path = resolve_global_config_path_or_warn(ui);
     let profile = opts.profile.as_deref();
 
     let global_default =

@@ -77,14 +77,24 @@ map-class: 0x2a09379665a749e609b4a8459c86fe954566a6beeaddd0950e43f6c700ed321
 
 ## `@alias` interaction with multicall `@id`
 
-<!-- TODO: explain @alias_id vs @id precedence -->
-TBD
+See [alias interaction with id](../starknet/multicall.md#alias-interaction-with-id).
 
 ## Supported commands
 
 Currently, aliases are supported for:
 
-- `sncast call --contract-address`
-- `sncast invoke --contract-address`
-
+- `sncast call`: `--contract-address`, `--calldata`
+- `sncast invoke`: `--contract-address`, `--calldata`
+- `sncast deploy`: `--class-hash`, `--constructor-calldata`
+- `sncast declare-from`: `--class-hash`
+- `sncast account create`: `--class-hash`
+- `sncast account import`: `--address`, `--class-hash`
+- `sncast get balance`: `--token-address`
+- `sncast get nonce`: `<CONTRACT_ADDRESS>`
+- `sncast get class-hash-at`: `<CONTRACT_ADDRESS>`
+- `sncast verify`: `--class-hash`, `--contract-address`
+- `sncast utils serialize`: `--class-hash`, `--contract-address`
+- `sncast utils contract-address`: `--class-hash`, `--deployer-address`, `--constructor-calldata`
+- `sncast multicall execute`: `--class-hash`, `--contract-address`, and `@<name>` in `--calldata` (see [multicall](../starknet/multicall.md#alias-interaction-with-id))
+- `sncast multicall run`: `class_hash`, `contract_address`, and `@<name>` in `inputs` (see [multicall](../starknet/multicall.md#alias-interaction-with-id))
 

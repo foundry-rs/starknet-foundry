@@ -3,11 +3,8 @@ use clap::Args;
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
 use sncast::response::spec_version::SpecVersionResponse;
 use sncast::response::ui::UI;
-use starknet_rust::providers::jsonrpc::HttpTransport;
-use starknet_rust::providers::{JsonRpcClient, Provider};
 use std::process::ExitCode;
 
 #[derive(Debug, Args)]
@@ -22,21 +19,17 @@ pub async fn spec_version(
     config: CastConfig,
     ui: &UI,
 ) -> Result<ExitCode> {
-    let provider = spec_version.rpc.get_provider(&config, ui).await?;
+    // Reuse the spec version fetched during the compatibility check instead of
+    // issuing a second `spec_version` request, so the reported value can't
+    // disagree with a possible incompatibility warning.
+    let (_provider, version) = spec_version
+        .rpc
+        .get_provider_with_spec_version(&config, ui)
+        .await?;
 
-    let result = get_spec_version(&provider)
-        .await
-        .map_err(handle_starknet_command_error);
+    let result = Ok(SpecVersionResponse {
+        spec_version: version.to_string(),
+    });
 
     Ok(process_command_result("get spec-version", result, ui, None))
-}
-
-pub async fn get_spec_version(
-    provider: &JsonRpcClient<HttpTransport>,
-) -> Result<SpecVersionResponse, StarknetCommandError> {
-    let spec_version = provider
-        .spec_version()
-        .await
-        .map_err(|err| StarknetCommandError::ProviderError(err.into()))?;
-    Ok(SpecVersionResponse { spec_version })
 }

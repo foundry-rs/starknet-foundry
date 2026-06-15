@@ -38,7 +38,7 @@ fn test_show_config_displays_aliases_count() {
 
     assert_stdout_contains(
         output,
-        "Alias Count:         2 (use `sncast alias list` to display)",
+        "Alias Count:         12 (use `sncast alias list` to display)",
     );
 }
 

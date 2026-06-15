@@ -21,8 +21,10 @@ The name of the function to call.
 Optional.
 Conflicts with: [`--arguments`](#--arguments)
 
-Inputs to the function, represented by a list of space-delimited values `0x1 2 0x3`.
-Calldata arguments may be either 0x hex or decimal felts.
+Inputs to the function, represented by a list of space-delimited values, e.g. `0x1 2 0x3`.
+Each token may be:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../starknet/aliases.md).
 
 ## `--arguments`
 Optional.

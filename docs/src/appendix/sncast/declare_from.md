@@ -21,7 +21,9 @@ Path to the compiled Sierra contract class file (e.g. `target/dev/MyContract_MyC
 ## `--class-hash, -g <CLASS_HASH>`
 Required in network mode.
 
-Class hash of contract declared on a different network.
+Class hash of contract declared on a different network. It can be either:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../starknet/aliases.md).
 
 ## `--url, -u <RPC_URL>`
 Optional.

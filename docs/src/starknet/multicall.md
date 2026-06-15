@@ -47,6 +47,44 @@ Similarly in both `sncast multicall execute` and `sncast multicall run`, you can
   - As the `contract address` in `invoke` calls
   - Inside `deploy`/`invoke` inputs (constructor calldata / calldata), to reference outputs of previous calls
 
+## `@alias` interaction with `@id`
+
+As other `sncast` commands, `sncast multicall` supports `snfoundry.toml` config aliases. See [Aliases](../starknet/aliases.md) for more details.
+
+Aliases can be used in both CLI-based (`sncast multicall execute`) and file-based (`sncast multicall run`) multicalls.
+
+> 📝 **Note**
+> 
+> Aliases and multicall step ids share the same `@<name>` syntax.
+> If a multicall step `id` and a config alias use the same name, the multicall step `id` takes precedence.
+
+
+Given `snfoundry.toml`:
+
+```toml
+[sncast.default.aliases]
+map = "0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008"
+```
+
+
+#### Example: Multicall with CLI
+
+<!-- { "ignored": true } -->
+```shell
+$ sncast multicall execute \
+    invoke --contract-address @map --function put --calldata 0x123 234
+```
+
+#### Example: Multicall with file 
+
+```toml
+[[call]]
+call_type = "invoke"
+contract_address = "@map"
+function = "put"
+inputs = ["0x123", 234]
+```
+
 ## Multicall with file
 
 You need to pass `--path` flag with a `.toml` file which contains desired operations that you want to execute.

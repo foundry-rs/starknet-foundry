@@ -213,6 +213,7 @@ pub async fn account(
     match account.command {
         Commands::Import(import) => {
             let provider = import.rpc.get_provider(&config, ui).await?;
+
             let result = starknet_commands::account::import::import(
                 import.name.clone(),
                 &config.accounts_file,
@@ -228,7 +229,7 @@ pub async fn account(
 
             if run_interactive_prompt
                 && let Some(account_name) = result.as_ref().ok().map(|r| r.account_name.clone())
-                && let Err(err) = prompt_to_add_account_as_default(account_name.as_str())
+                && let Err(err) = prompt_to_add_account_as_default(account_name.as_str(), ui)
             {
                 // TODO(#3436)
                 ui.print_error(
@@ -259,6 +260,7 @@ pub async fn account(
             } else {
                 config.account.clone()
             };
+
             let result = starknet_commands::account::create::create(
                 &account,
                 &config.accounts_file,
@@ -310,6 +312,7 @@ pub async fn account(
                         .name
                         .as_ref()
                         .expect("Must be provided when using accounts file"),
+                    ui,
                 )
             {
                 // TODO(#3436)

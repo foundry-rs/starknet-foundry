@@ -459,13 +459,14 @@ jobs:
           # TODO(#3970): Upgrade mdbook-variables after resolving issue
           tool: mdbook@0.4.52,mdbook-variables@0.3.0,mdbook-linkcheck
       - name: Build with mdBook
-        run: |
-          # TODO(#2781): Use `mdbook build`
-          ./scripts/build_docs.sh
-      - name: Install Forge
-        run: |
-          cargo build --profile ci -p forge --locked
-          cp target/ci/snforge ~/.cargo/bin/
-      - name: Verify Cairo listings
-        run: |
-          ./scripts/verify_cairo_listings.sh
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_on: error
+          command: |
+            # TODO(#2781): Use `mdbook build`
+            ./scripts/build_docs.sh
+            cargo build --profile ci -p forge --locked
+            cp target/ci/snforge ~/.cargo/bin/
+            ./scripts/verify_cairo_listings.sh
