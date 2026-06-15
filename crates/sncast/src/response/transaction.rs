@@ -28,22 +28,22 @@ impl SncastCommandMessage for TransactionResponse {
 pub fn append_transaction(builder: OutputBuilder, transaction: &Transaction) -> OutputBuilder {
     match transaction {
         Transaction::Invoke(tx) => match tx {
-            InvokeTransaction::V0(tx) => build_invoke_v0_response(builder, tx),
-            InvokeTransaction::V1(tx) => build_invoke_v1_response(builder, tx),
-            InvokeTransaction::V3(tx) => build_invoke_v3_response(builder, tx),
+            InvokeTransaction::V0(tx) => append_invoke_v0_response(builder, tx),
+            InvokeTransaction::V1(tx) => append_invoke_v1_response(builder, tx),
+            InvokeTransaction::V3(tx) => append_invoke_v3_response(builder, tx),
         },
         Transaction::Declare(tx) => match tx {
-            DeclareTransaction::V0(tx) => build_declare_v0_response(builder, tx),
-            DeclareTransaction::V1(tx) => build_declare_v1_response(builder, tx),
-            DeclareTransaction::V2(tx) => build_declare_v2_response(builder, tx),
-            DeclareTransaction::V3(tx) => build_declare_v3_response(builder, tx),
+            DeclareTransaction::V0(tx) => append_declare_v0_response(builder, tx),
+            DeclareTransaction::V1(tx) => append_declare_v1_response(builder, tx),
+            DeclareTransaction::V2(tx) => append_declare_v2_response(builder, tx),
+            DeclareTransaction::V3(tx) => append_declare_v3_response(builder, tx),
         },
-        Transaction::Deploy(tx) => build_deploy_response(builder, tx),
+        Transaction::Deploy(tx) => append_deploy_response(builder, tx),
         Transaction::DeployAccount(tx) => match tx {
-            DeployAccountTransaction::V1(tx) => build_deploy_account_v1_response(builder, tx),
-            DeployAccountTransaction::V3(tx) => build_deploy_account_v3_response(builder, tx),
+            DeployAccountTransaction::V1(tx) => append_deploy_account_v1_response(builder, tx),
+            DeployAccountTransaction::V3(tx) => append_deploy_account_v3_response(builder, tx),
         },
-        Transaction::L1Handler(tx) => build_l1_handler_response(builder, tx),
+        Transaction::L1Handler(tx) => append_l1_handler_response(builder, tx),
     }
 }
 
@@ -249,7 +249,7 @@ impl TransactionOutputBuilder for OutputBuilder {
     }
 }
 
-fn build_invoke_v0_response(
+fn append_invoke_v0_response(
     builder: OutputBuilder,
     tx: &starknet_rust::core::types::InvokeTransactionV0,
 ) -> OutputBuilder {
@@ -272,7 +272,7 @@ fn build_invoke_v0_response(
         .signature(signature)
 }
 
-fn build_invoke_v1_response(
+fn append_invoke_v1_response(
     builder: OutputBuilder,
     tx: &starknet_rust::core::types::InvokeTransactionV1,
 ) -> OutputBuilder {
@@ -295,7 +295,7 @@ fn build_invoke_v1_response(
         .signature(signature)
 }
 
-fn build_invoke_v3_response(
+fn append_invoke_v3_response(
     builder: OutputBuilder,
     tx: &starknet_rust::core::types::InvokeTransactionV3,
 ) -> OutputBuilder {
@@ -330,7 +330,7 @@ fn build_invoke_v3_response(
         .proof_facts(proof_facts.as_deref())
 }
 
-fn build_declare_v0_response(
+fn append_declare_v0_response(
     builder: OutputBuilder,
     tx: &starknet_rust::core::types::DeclareTransactionV0,
 ) -> OutputBuilder {
@@ -351,7 +351,7 @@ fn build_declare_v0_response(
         .signature(signature)
 }
 
-fn build_declare_v1_response(
+fn append_declare_v1_response(
     builder: OutputBuilder,
     tx: &starknet_rust::core::types::DeclareTransactionV1,
 ) -> OutputBuilder {
@@ -374,7 +374,7 @@ fn build_declare_v1_response(
         .signature(signature)
 }
 
-fn build_declare_v2_response(
+fn append_declare_v2_response(
     builder: OutputBuilder,
     tx: &starknet_rust::core::types::DeclareTransactionV2,
 ) -> OutputBuilder {
@@ -399,7 +399,7 @@ fn build_declare_v2_response(
         .signature(signature)
 }
 
-fn build_declare_v3_response(
+fn append_declare_v3_response(
     builder: OutputBuilder,
     tx: &starknet_rust::core::types::DeclareTransactionV3,
 ) -> OutputBuilder {
@@ -434,7 +434,7 @@ fn build_declare_v3_response(
         .signature(signature)
 }
 
-fn build_deploy_response(
+fn append_deploy_response(
     builder: OutputBuilder,
     tx: &starknet_rust::core::types::DeployTransaction,
 ) -> OutputBuilder {
@@ -454,7 +454,7 @@ fn build_deploy_response(
         .constructor_calldata(constructor_calldata)
 }
 
-fn build_deploy_account_v1_response(
+fn append_deploy_account_v1_response(
     builder: OutputBuilder,
     tx: &starknet_rust::core::types::DeployAccountTransactionV1,
 ) -> OutputBuilder {
@@ -479,7 +479,7 @@ fn build_deploy_account_v1_response(
         .signature(signature)
 }
 
-fn build_deploy_account_v3_response(
+fn append_deploy_account_v3_response(
     builder: OutputBuilder,
     tx: &starknet_rust::core::types::DeployAccountTransactionV3,
 ) -> OutputBuilder {
@@ -512,7 +512,7 @@ fn build_deploy_account_v3_response(
         .signature(signature)
 }
 
-fn build_l1_handler_response(
+fn append_l1_handler_response(
     builder: OutputBuilder,
     tx: &starknet_rust::core::types::L1HandlerTransaction,
 ) -> OutputBuilder {
