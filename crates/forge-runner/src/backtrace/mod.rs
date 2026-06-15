@@ -1,4 +1,4 @@
-use crate::backtrace::data::ContractBacktraceDataMapping;
+use crate::backtrace::data::{ContractBacktraceDataMapping, TestBacktraceData};
 use anyhow::Result;
 use camino::Utf8Path;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
@@ -89,13 +89,13 @@ pub fn get_test_backtrace(
     versioned_program_path: &Utf8Path,
     test_name: &str,
 ) -> String {
-    data::render_test_backtrace(
+    TestBacktraceData::new(
         test_name,
         test_backtrace.casm_start_offsets.clone(),
         versioned_program_path,
-        &test_backtrace.pcs,
     )
-    .unwrap_or_else(|err| format!("failed to create backtrace: {err}"))
+    .and_then(|data| data.render_backtrace(&test_backtrace.pcs))
+    .unwrap_or_else(|err| format!("failed to create test backtrace: {err}"))
 }
 
 #[must_use]
