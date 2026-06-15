@@ -17,7 +17,7 @@ Retrieve full transactions instead of only their hashes.
 ## `--receipts`
 Optional.
 
-Retrieve full transactions along with their receipts. Cannot be used together with `--full`.
+Retrieve transactions receipts instead of only their hashes. Use `--full` to retrieve transaction details instead.
 
 ## `--url, -u <RPC_URL>`
 Optional.
