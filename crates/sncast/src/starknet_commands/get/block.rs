@@ -24,7 +24,7 @@ pub struct Block {
     #[arg(long)]
     pub full: bool,
 
-    /// Retrieve full transactions along with their receipts
+    /// Retrieve transactions receipts instead of only their hashes
     #[arg(long, conflicts_with = "full")]
     pub receipts: bool,
 
