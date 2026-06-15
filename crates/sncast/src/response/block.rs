@@ -51,7 +51,7 @@ fn append_block(builder: OutputBuilder, block: &BlockWithTxHashes) -> OutputBuil
         starknet_version,
         transactions,
         transaction_count,
-        // Omit Merkle-Patricia tries and redundant information form the formatted output.
+        // Omit Merkle-Patricia tries and redundant information from the formatted output.
         // They are still returned when using the `--json` flag.
         event_commitment: _,
         transaction_commitment: _,
