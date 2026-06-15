@@ -11,11 +11,8 @@ async fn test_happy_case() {
     snapbox.assert().success().stdout_eq(indoc! {r"
         Success: Block retrieved
 
-        Status:[..]
-        Block Hash:[..]0x[..]
+        Status:[..]Pre confirmed
         Block Number:[..]
-        Parent Hash:[..]0x[..]
-        New Root:[..]0x[..]
         Timestamp:[..]
         Sequencer Address:[..]0x[..]
         L1 Gas Price:[..]price_in_fri=[..], price_in_wei=[..]
@@ -59,7 +56,7 @@ async fn test_happy_case_json() {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
-        {"block_hash":"0x[..]","block_number":[..],"command":"get block","event_commitment":"0x[..]","event_count":[..],"l1_da_mode":"[..]","l1_data_gas_price":{"price_in_fri":"0x[..]","price_in_wei":"0x[..]"},"l1_gas_price":{"price_in_fri":"0x[..]","price_in_wei":"0x[..]"},"l2_gas_price":{"price_in_fri":"0x[..]","price_in_wei":"0x[..]"},"new_root":"0x[..]","parent_hash":"0x[..]","receipt_commitment":"0x[..]","sequencer_address":"0x[..]","starknet_version":"[..]","state_diff_commitment":"0x[..]","state_diff_length":[..],"status":"[..]","timestamp":[..],"transaction_commitment":"0x[..]","transaction_count":[..],"transactions":[[..]],"type":"response"}
+        {"block_number":[..],"command":"get block","l1_da_mode":"[..]","l1_data_gas_price":{"price_in_fri":"0x[..]","price_in_wei":"0x[..]"},"l1_gas_price":{"price_in_fri":"0x[..]","price_in_wei":"0x[..]"},"l2_gas_price":{"price_in_fri":"0x[..]","price_in_wei":"0x[..]"},"sequencer_address":"0x[..]","starknet_version":"[..]","timestamp":[..],"transactions":[[..]],"type":"response"}
     "#});
 }
 

@@ -17,7 +17,7 @@ pub struct Block {
     /// Block identifier on which the block should be fetched.
     /// Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string)
     /// and block number (u64)
-    #[arg(default_value = "latest")]
+    #[arg(default_value = "pre_confirmed")]
     pub block_id: String,
 
     #[command(flatten)]

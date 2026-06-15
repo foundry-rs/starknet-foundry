@@ -7,7 +7,7 @@ Optional.
 
 Block identifier on which the block should be fetched.
 Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string), and block number (u64).
-`latest` is used as a default value.
+`pre_confirmed` is used as a default value.
 
 ## `--url, -u <RPC_URL>`
 Optional.
