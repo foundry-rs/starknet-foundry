@@ -4,9 +4,10 @@ use crate::response::tx_receipt::append_receipt;
 use foundry_ui::styling::OutputBuilder;
 use serde::{Serialize, Serializer};
 use starknet_rust::core::types::{
-    BlockStatus, L1DataAvailabilityMode, MaybePreConfirmedBlockWithReceipts,
-    MaybePreConfirmedBlockWithTxHashes, MaybePreConfirmedBlockWithTxs, ResourcePrice, Transaction,
-    TransactionWithReceipt,
+    BlockStatus, BlockWithReceipts, BlockWithTxHashes, BlockWithTxs, L1DataAvailabilityMode,
+    MaybePreConfirmedBlockWithReceipts, MaybePreConfirmedBlockWithTxHashes,
+    MaybePreConfirmedBlockWithTxs, PreConfirmedBlockWithReceipts, PreConfirmedBlockWithTxHashes,
+    PreConfirmedBlockWithTxs, ResourcePrice, Transaction, TransactionWithReceipt,
 };
 
 #[derive(Clone)]
@@ -139,14 +140,14 @@ impl SncastCommandMessage for BlockResponse {
             }
             BlockResponse::WithReceipts(MaybePreConfirmedBlockWithReceipts::Block(block)) => {
                 append_receipts(
-                    append_confirmed_header!(builder, block),
+                    append_confirmed_header!(builder, block, BlockWithReceipts),
                     &block.transactions,
                 )
             }
             BlockResponse::WithReceipts(MaybePreConfirmedBlockWithReceipts::PreConfirmedBlock(
                 block,
             )) => append_receipts(
-                append_pre_confirmed_header!(builder, block),
+                append_pre_confirmed_header!(builder, block, PreConfirmedBlockWithReceipts),
                 &block.transactions,
             ),
         };
