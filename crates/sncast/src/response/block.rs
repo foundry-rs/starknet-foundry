@@ -3,8 +3,9 @@ use crate::response::transaction::append_transaction;
 use foundry_ui::styling::OutputBuilder;
 use serde::{Serialize, Serializer};
 use starknet_rust::core::types::{
-    BlockStatus, L1DataAvailabilityMode, MaybePreConfirmedBlockWithTxHashes,
-    MaybePreConfirmedBlockWithTxs, ResourcePrice, Transaction,
+    BlockStatus, BlockWithTxHashes, BlockWithTxs, L1DataAvailabilityMode,
+    MaybePreConfirmedBlockWithTxHashes, MaybePreConfirmedBlockWithTxs,
+    PreConfirmedBlockWithTxHashes, PreConfirmedBlockWithTxs, ResourcePrice, Transaction,
 };
 
 #[derive(Clone)]
@@ -26,46 +27,81 @@ impl Serialize for BlockResponse {
 }
 
 /// Appends the header fields shared by every confirmed block variant.
+///
+/// Takes the concrete block type so the exhaustive destructure turns any
+/// field added upstream into a compile error instead of silently dropping it.
 macro_rules! append_confirmed_header {
-    ($builder:expr, $block:expr) => {
+    ($builder:expr, $block:expr, $ty:path) => {{
+        let $ty {
+            status,
+            block_hash,
+            parent_hash,
+            block_number,
+            new_root,
+            timestamp,
+            sequencer_address,
+            l1_gas_price,
+            l2_gas_price,
+            l1_data_gas_price,
+            l1_da_mode,
+            starknet_version,
+            transactions,
+            // Omit Merkle-Patricia tries and redundant information from the formatted output.
+            // They are still returned when using the `--json` flag.
+            event_commitment: _,
+            transaction_commitment: _,
+            receipt_commitment: _,
+            state_diff_commitment: _,
+            event_count: _,
+            transaction_count: _,
+            state_diff_length: _,
+        } = $block;
         $builder
-            .field("Status", fmt_status($block.status))
-            .padded_felt_field("Block Hash", &$block.block_hash)
-            .field("Block Number", &$block.block_number.to_string())
-            .padded_felt_field("Parent Hash", &$block.parent_hash)
-            .padded_felt_field("New Root", &$block.new_root)
-            .field("Timestamp", &$block.timestamp.to_string())
-            .padded_felt_field("Sequencer Address", &$block.sequencer_address)
-            .field("L1 Gas Price", &fmt_resource_price(&$block.l1_gas_price))
-            .field("L2 Gas Price", &fmt_resource_price(&$block.l2_gas_price))
-            .field(
-                "L1 Data Gas Price",
-                &fmt_resource_price(&$block.l1_data_gas_price),
-            )
-            .field("L1 DA Mode", fmt_da_mode($block.l1_da_mode))
-            .field("Starknet Version", &$block.starknet_version)
-            .field("Transaction Count", &$block.transactions.len().to_string())
-    };
+            .field("Status", fmt_status(*status))
+            .padded_felt_field("Block Hash", block_hash)
+            .field("Block Number", &block_number.to_string())
+            .padded_felt_field("Parent Hash", parent_hash)
+            .padded_felt_field("New Root", new_root)
+            .field("Timestamp", &timestamp.to_string())
+            .padded_felt_field("Sequencer Address", sequencer_address)
+            .field("L1 Gas Price", &fmt_resource_price(l1_gas_price))
+            .field("L2 Gas Price", &fmt_resource_price(l2_gas_price))
+            .field("L1 Data Gas Price", &fmt_resource_price(l1_data_gas_price))
+            .field("L1 DA Mode", fmt_da_mode(*l1_da_mode))
+            .field("Starknet Version", starknet_version)
+            .field("Transaction Count", &transactions.len().to_string())
+    }};
 }
 
 /// Appends the header fields shared by every pre-confirmed block variant.
+///
+/// Takes the concrete block type so the exhaustive destructure turns any
+/// field added upstream into a compile error instead of silently dropping it.
 macro_rules! append_pre_confirmed_header {
-    ($builder:expr, $block:expr) => {
+    ($builder:expr, $block:expr, $ty:path) => {{
+        let $ty {
+            block_number,
+            timestamp,
+            sequencer_address,
+            l1_gas_price,
+            l2_gas_price,
+            l1_data_gas_price,
+            l1_da_mode,
+            starknet_version,
+            transactions,
+        } = $block;
         $builder
             .field("Status", "Pre confirmed")
-            .field("Block Number", &$block.block_number.to_string())
-            .field("Timestamp", &$block.timestamp.to_string())
-            .padded_felt_field("Sequencer Address", &$block.sequencer_address)
-            .field("L1 Gas Price", &fmt_resource_price(&$block.l1_gas_price))
-            .field("L2 Gas Price", &fmt_resource_price(&$block.l2_gas_price))
-            .field(
-                "L1 Data Gas Price",
-                &fmt_resource_price(&$block.l1_data_gas_price),
-            )
-            .field("L1 DA Mode", fmt_da_mode($block.l1_da_mode))
-            .field("Starknet Version", &$block.starknet_version)
-            .field("Transaction Count", &$block.transactions.len().to_string())
-    };
+            .field("Block Number", &block_number.to_string())
+            .field("Timestamp", &timestamp.to_string())
+            .padded_felt_field("Sequencer Address", sequencer_address)
+            .field("L1 Gas Price", &fmt_resource_price(l1_gas_price))
+            .field("L2 Gas Price", &fmt_resource_price(l2_gas_price))
+            .field("L1 Data Gas Price", &fmt_resource_price(l1_data_gas_price))
+            .field("L1 DA Mode", fmt_da_mode(*l1_da_mode))
+            .field("Starknet Version", starknet_version)
+            .field("Transaction Count", &transactions.len().to_string())
+    }};
 }
 
 impl SncastCommandMessage for BlockResponse {
@@ -76,22 +112,22 @@ impl SncastCommandMessage for BlockResponse {
 
         let builder = match self {
             BlockResponse::WithTxHashes(MaybePreConfirmedBlockWithTxHashes::Block(block)) => {
-                append_confirmed_header!(builder, block)
+                append_confirmed_header!(builder, block, BlockWithTxHashes)
                     .felt_list_field("Transactions", &block.transactions)
             }
             BlockResponse::WithTxHashes(MaybePreConfirmedBlockWithTxHashes::PreConfirmedBlock(
                 block,
-            )) => append_pre_confirmed_header!(builder, block)
+            )) => append_pre_confirmed_header!(builder, block, PreConfirmedBlockWithTxHashes)
                 .felt_list_field("Transactions", &block.transactions),
             BlockResponse::WithTxs(MaybePreConfirmedBlockWithTxs::Block(block)) => {
                 append_full_transactions(
-                    append_confirmed_header!(builder, block),
+                    append_confirmed_header!(builder, block, BlockWithTxs),
                     &block.transactions,
                 )
             }
             BlockResponse::WithTxs(MaybePreConfirmedBlockWithTxs::PreConfirmedBlock(block)) => {
                 append_full_transactions(
-                    append_pre_confirmed_header!(builder, block),
+                    append_pre_confirmed_header!(builder, block, PreConfirmedBlockWithTxs),
                     &block.transactions,
                 )
             }
