@@ -180,9 +180,11 @@ fn append_receipts(
         builder = append_receipt(
             builder
                 .blank_line()
-                .text_field(&format!("Transaction #{}", index + 1)),
+                .text_field(&format!("Transaction #{}", index + 1))
+                .with_indent(2),
             &transaction.receipt,
-        );
+        )
+        .with_indent(0);
     }
     builder
 }

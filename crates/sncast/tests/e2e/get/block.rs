@@ -200,16 +200,16 @@ async fn test_receipts_flag() {
             Transaction Count:[..]
 
             Transaction #1
-            [..]Type:[..]
-            [..]Transaction Hash:[..]0x[..]
-            [..]Finality Status:[..]
-            [..]Execution Status:[..]
-            [..]Actual Fee:[..]
-            [..]L1 Gas Consumed:[..]
-            [..]L1 Data Gas Consumed:[..]
-            [..]L2 Gas Consumed:[..]
-            [..]Messages Sent:[..]
-            [..]Events:[..]
+              Type:[..]
+              Transaction Hash:[..]0x[..]
+              Finality Status:[..]
+              Execution Status:[..]
+              Actual Fee:[..]
+              L1 Gas Consumed:[..]
+              L1 Data Gas Consumed:[..]
+              L2 Gas Consumed:[..]
+              Messages Sent:[..]
+              Events:[..]
         "},
     );
 }
