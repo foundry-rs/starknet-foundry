@@ -180,9 +180,11 @@ fn append_full_transactions(
         builder = append_transaction(
             builder
                 .blank_line()
-                .text_field(&format!("Transaction #{}", index + 1)),
+                .text_field(&format!("Transaction #{}", index + 1))
+                .with_indent(2),
             transaction,
-        );
+        )
+        .with_indent(0);
     }
     builder
 }

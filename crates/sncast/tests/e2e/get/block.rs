@@ -74,8 +74,8 @@ async fn test_full_flag() {
             Transaction Count:[..]
 
             Transaction #1
-            Type:[..]
-            [..]Transaction Hash:[..]0x[..]
+              Type:[..]
+              [..]Transaction Hash:[..]0x[..]
         "},
     );
 }
