@@ -573,4 +573,25 @@ mod tests {
         let non_matching_pattern = vec![Felt::from(11_u8), Felt::from(22_u8)];
         assert!(!is_matching_should_panic_data(&data, &non_matching_pattern));
     }
+
+    #[test]
+    fn test_is_matching_should_panic_data_mixed_tuple() {
+        let byte_array = |s: &str| ByteArray::from(s).serialize_with_magic();
+
+        let mut data = byte_array("this_string_is_longer_than_31_bytes");
+        data.push(Felt::from(11_u8));
+        data.extend(byte_array("hello"));
+        data.push(Felt::from(5_u8));
+        data.push(Felt::from_bytes_be_slice(b"short_string"));
+
+        assert!(is_matching_should_panic_data(&data, &data));
+
+        let mut non_matching_pattern = byte_array("this_string_is_longer_than_31_bytes");
+        non_matching_pattern.push(Felt::from(11_u8));
+        non_matching_pattern.extend(byte_array("world"));
+        non_matching_pattern.push(Felt::from(5_u8));
+        non_matching_pattern.push(Felt::from_bytes_be_slice(b"short_string"));
+
+        assert!(!is_matching_should_panic_data(&data, &non_matching_pattern));
+    }
 }

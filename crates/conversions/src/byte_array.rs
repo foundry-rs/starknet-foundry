@@ -46,7 +46,17 @@ impl ByteArray {
     pub fn deserialize_with_magic(value: &[Felt]) -> BufferReadResult<ByteArray> {
         if value.first() == Some(&Felt::try_from_hex_str(&format!("0x{BYTE_ARRAY_MAGIC}")).unwrap())
         {
-            BufferReader::new(&value[1..]).read()
+            let mut reader = BufferReader::new(&value[1..]);
+            let byte_array = reader.read()?;
+
+            // A standalone byte array must consume the whole buffer. If any felts
+            // remain, this is not a single byte array (e.g. a tuple of mixed items),
+            // so we must not treat it as one.
+            if reader.into_remaining().is_empty() {
+                Ok(byte_array)
+            } else {
+                Err(BufferReadError::ParseFailed)
+            }
         } else {
             Err(BufferReadError::ParseFailed)
         }
