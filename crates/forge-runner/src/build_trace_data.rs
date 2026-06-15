@@ -241,7 +241,6 @@ fn get_contract_name(
     }
 }
 
-
 fn get_function_name(
     entry_point_selector: &EntryPointSelector,
     contracts_data: &ContractsData,
