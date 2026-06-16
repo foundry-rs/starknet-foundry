@@ -49,9 +49,6 @@ impl ByteArray {
             let mut reader = BufferReader::new(&value[1..]);
             let byte_array = reader.read()?;
 
-            // A standalone byte array must consume the whole buffer. If any felts
-            // remain, this is not a single byte array (e.g. a tuple of mixed items),
-            // so we must not treat it as one.
             if reader.into_remaining().is_empty() {
                 Ok(byte_array)
             } else {
