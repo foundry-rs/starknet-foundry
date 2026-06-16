@@ -46,6 +46,8 @@ async fn test_happy_case_with_block_id() {
         L1 DA Mode:[..]
         Starknet Version:[..]
         Transaction Count:[..]
+        Event Count:[..]
+        State Diff Length:[..]
         Transactions:[..]
     "});
 }
@@ -72,6 +74,8 @@ async fn test_full_flag() {
         output,
         indoc! {r"
             Transaction Count:[..]
+            Event Count:[..]
+            State Diff Length:[..]
 
             Transaction #1
               Type:[..]
@@ -114,6 +118,8 @@ async fn test_full_flag_exact_values() {
             L1 DA Mode:                    BLOB
             Starknet Version:              0.14.1
             Transaction Count:             4
+            Event Count:                   4
+            State Diff Length:             6
 
             Transaction #1
               Type:                        INVOKE

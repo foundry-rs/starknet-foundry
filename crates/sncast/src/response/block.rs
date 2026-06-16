@@ -45,16 +45,17 @@ macro_rules! append_confirmed_header {
             l1_data_gas_price,
             l1_da_mode,
             starknet_version,
-            transactions,
-            // Omit Merkle-Patricia tries and redundant information from the formatted output.
+            event_count,
+            transaction_count,
+            state_diff_length,
+            // Omit Merkle-Patricia tries in the formatted output.
             // They are still returned when using the `--json` flag.
+            // `transactions` is handled separately by the caller.
+            transactions: _,
             event_commitment: _,
             transaction_commitment: _,
             receipt_commitment: _,
             state_diff_commitment: _,
-            event_count: _,
-            transaction_count: _,
-            state_diff_length: _,
         } = $block;
         $builder
             .field("Status", fmt_status(*status))
@@ -69,7 +70,9 @@ macro_rules! append_confirmed_header {
             .field("L1 Data Gas Price", &fmt_resource_price(l1_data_gas_price))
             .field("L1 DA Mode", fmt_da_mode(*l1_da_mode))
             .field("Starknet Version", starknet_version)
-            .field("Transaction Count", &transactions.len().to_string())
+            .field("Transaction Count", &transaction_count.to_string())
+            .field("Event Count", &event_count.to_string())
+            .field("State Diff Length", &state_diff_length.to_string())
     }};
 }
 
