@@ -9,6 +9,7 @@ use starknet_rust::core::types::{
     MaybePreConfirmedBlockWithTxs, PreConfirmedBlockWithReceipts, PreConfirmedBlockWithTxHashes,
     PreConfirmedBlockWithTxs, ResourcePrice, Transaction, TransactionWithReceipt,
 };
+use starknet_types_core::felt::Felt;
 
 #[derive(Clone)]
 pub enum BlockResponse {
@@ -27,6 +28,92 @@ impl Serialize for BlockResponse {
             BlockResponse::WithTxs(block) => block.serialize(serializer),
             BlockResponse::WithReceipts(block) => block.serialize(serializer),
         }
+    }
+}
+
+trait BlockOutputBuilder {
+    #[must_use]
+    fn status(self, status: BlockStatus) -> Self;
+    #[must_use]
+    fn pre_confirmed_status(self) -> Self;
+    #[must_use]
+    fn block_hash(self, hash: &Felt) -> Self;
+    #[must_use]
+    fn block_number(self, number: u64) -> Self;
+    #[must_use]
+    fn parent_hash(self, hash: &Felt) -> Self;
+    #[must_use]
+    fn new_root(self, root: &Felt) -> Self;
+    #[must_use]
+    fn timestamp(self, timestamp: u64) -> Self;
+    #[must_use]
+    fn sequencer_address(self, addr: &Felt) -> Self;
+    #[must_use]
+    fn l1_gas_price(self, price: &ResourcePrice) -> Self;
+    #[must_use]
+    fn l2_gas_price(self, price: &ResourcePrice) -> Self;
+    #[must_use]
+    fn l1_data_gas_price(self, price: &ResourcePrice) -> Self;
+    #[must_use]
+    fn l1_da_mode(self, mode: L1DataAvailabilityMode) -> Self;
+    #[must_use]
+    fn starknet_version(self, version: &str) -> Self;
+    #[must_use]
+    fn transaction_count(self, count: u64) -> Self;
+    #[must_use]
+    fn event_count(self, count: u64) -> Self;
+    #[must_use]
+    fn state_diff_length(self, length: u64) -> Self;
+}
+
+impl BlockOutputBuilder for OutputBuilder {
+    fn status(self, status: BlockStatus) -> Self {
+        self.field("Status", fmt_status(status))
+    }
+    fn pre_confirmed_status(self) -> Self {
+        self.field("Status", "Pre confirmed")
+    }
+    fn block_hash(self, hash: &Felt) -> Self {
+        self.padded_felt_field("Block Hash", hash)
+    }
+    fn block_number(self, number: u64) -> Self {
+        self.field("Block Number", &number.to_string())
+    }
+    fn parent_hash(self, hash: &Felt) -> Self {
+        self.padded_felt_field("Parent Hash", hash)
+    }
+    fn new_root(self, root: &Felt) -> Self {
+        self.padded_felt_field("New Root", root)
+    }
+    fn timestamp(self, timestamp: u64) -> Self {
+        self.field("Timestamp", &timestamp.to_string())
+    }
+    fn sequencer_address(self, addr: &Felt) -> Self {
+        self.padded_felt_field("Sequencer Address", addr)
+    }
+    fn l1_gas_price(self, price: &ResourcePrice) -> Self {
+        self.field("L1 Gas Price", &fmt_resource_price(price))
+    }
+    fn l2_gas_price(self, price: &ResourcePrice) -> Self {
+        self.field("L2 Gas Price", &fmt_resource_price(price))
+    }
+    fn l1_data_gas_price(self, price: &ResourcePrice) -> Self {
+        self.field("L1 Data Gas Price", &fmt_resource_price(price))
+    }
+    fn l1_da_mode(self, mode: L1DataAvailabilityMode) -> Self {
+        self.field("L1 DA Mode", fmt_da_mode(mode))
+    }
+    fn starknet_version(self, version: &str) -> Self {
+        self.field("Starknet Version", version)
+    }
+    fn transaction_count(self, count: u64) -> Self {
+        self.field("Transaction Count", &count.to_string())
+    }
+    fn event_count(self, count: u64) -> Self {
+        self.field("Event Count", &count.to_string())
+    }
+    fn state_diff_length(self, length: u64) -> Self {
+        self.field("State Diff Length", &length.to_string())
     }
 }
 
@@ -62,21 +149,21 @@ macro_rules! append_confirmed_header {
             state_diff_commitment: _,
         } = $block;
         $builder
-            .field("Status", fmt_status(*status))
-            .padded_felt_field("Block Hash", block_hash)
-            .field("Block Number", &block_number.to_string())
-            .padded_felt_field("Parent Hash", parent_hash)
-            .padded_felt_field("New Root", new_root)
-            .field("Timestamp", &timestamp.to_string())
-            .padded_felt_field("Sequencer Address", sequencer_address)
-            .field("L1 Gas Price", &fmt_resource_price(l1_gas_price))
-            .field("L2 Gas Price", &fmt_resource_price(l2_gas_price))
-            .field("L1 Data Gas Price", &fmt_resource_price(l1_data_gas_price))
-            .field("L1 DA Mode", fmt_da_mode(*l1_da_mode))
-            .field("Starknet Version", starknet_version)
-            .field("Transaction Count", &transaction_count.to_string())
-            .field("Event Count", &event_count.to_string())
-            .field("State Diff Length", &state_diff_length.to_string())
+            .status(*status)
+            .block_hash(block_hash)
+            .block_number(*block_number)
+            .parent_hash(parent_hash)
+            .new_root(new_root)
+            .timestamp(*timestamp)
+            .sequencer_address(sequencer_address)
+            .l1_gas_price(l1_gas_price)
+            .l2_gas_price(l2_gas_price)
+            .l1_data_gas_price(l1_data_gas_price)
+            .l1_da_mode(*l1_da_mode)
+            .starknet_version(starknet_version)
+            .transaction_count(*transaction_count)
+            .event_count(*event_count)
+            .state_diff_length(*state_diff_length)
     }};
 }
 
@@ -98,16 +185,18 @@ macro_rules! append_pre_confirmed_header {
             transactions,
         } = $block;
         $builder
-            .field("Status", "Pre confirmed")
-            .field("Block Number", &block_number.to_string())
-            .field("Timestamp", &timestamp.to_string())
-            .padded_felt_field("Sequencer Address", sequencer_address)
-            .field("L1 Gas Price", &fmt_resource_price(l1_gas_price))
-            .field("L2 Gas Price", &fmt_resource_price(l2_gas_price))
-            .field("L1 Data Gas Price", &fmt_resource_price(l1_data_gas_price))
-            .field("L1 DA Mode", fmt_da_mode(*l1_da_mode))
-            .field("Starknet Version", starknet_version)
-            .field("Transaction Count", &transactions.len().to_string())
+            .pre_confirmed_status()
+            .block_number(*block_number)
+            .timestamp(*timestamp)
+            .sequencer_address(sequencer_address)
+            .l1_gas_price(l1_gas_price)
+            .l2_gas_price(l2_gas_price)
+            .l1_data_gas_price(l1_data_gas_price)
+            .l1_da_mode(*l1_da_mode)
+            .starknet_version(starknet_version)
+            .transaction_count(
+                u64::try_from(transactions.len()).expect("transaction count fits in u64"),
+            )
     }};
 }
 
