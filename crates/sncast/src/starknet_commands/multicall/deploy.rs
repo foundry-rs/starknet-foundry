@@ -1,4 +1,3 @@
-use crate::starknet_commands::utils::felt_or_id::{ClassHash, FeltOrId};
 use anyhow::{Context, Result};
 use clap::Args;
 use sncast::helpers::configuration::CastConfig;
