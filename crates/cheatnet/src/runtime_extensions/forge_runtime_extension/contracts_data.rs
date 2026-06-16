@@ -92,7 +92,7 @@ impl ContractsData {
 
     /// Resolves a user-provided identifier to a single contract.
     ///
-    /// The identifier can be either a contract name (e.g. `MyContract`) or an absolute 
+    /// The identifier can be either a contract name (e.g. `MyContract`) or an absolute
     /// module tree path (e.g. `my_package::module::MyContract`). A module path
     /// is matched first, which lets users disambiguate contracts that share a name.
     /// Returns an error if no contract or multiple contracts match the given identifier.
