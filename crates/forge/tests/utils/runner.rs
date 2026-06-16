@@ -100,7 +100,7 @@ impl Contract {
             .unwrap();
         let artifacts_dir = target_dir_for_workspace(&scarb_metadata).join("dev");
 
-        let artifacts = get_contracts_artifacts_and_source_sierra_paths(
+        let mut artifacts = get_contracts_artifacts_and_source_sierra_paths(
             &artifacts_dir,
             package,
             ui,
@@ -113,8 +113,7 @@ impl Contract {
         .unwrap();
 
         let artifacts = artifacts
-            .get(&self.module_path)
-            .cloned()
+            .remove(&self.module_path)
             .map(|contract| contract.artifacts)
             .ok_or(anyhow!(
                 "there is no contract with module path {}",
