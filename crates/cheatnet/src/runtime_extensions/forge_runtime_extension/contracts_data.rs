@@ -90,16 +90,25 @@ impl ContractsData {
         })
     }
 
-    /// Resolves a user-provided `contract_name` to a single contract.
-    /// Returns an error if no contract or multiple contracts are found with the given name.
-    pub fn resolve_by_name(
+    /// Resolves a user-provided identifier to a single contract.
+    ///
+    /// The identifier can be either a contract name (e.g. `MyContract`) or an absolute 
+    /// module tree path (e.g. `my_package::module::MyContract`). A module path
+    /// is matched first, which lets users disambiguate contracts that share a name.
+    /// Returns an error if no contract or multiple contracts match the given identifier.
+    pub fn resolve_contract(
         &self,
-        contract_name: &str,
+        contract_identifier: &str,
     ) -> Result<&ContractData, ContractResolutionError> {
+        // An exact module path uniquely identifies a contract, so try it first.
+        if let Some(contract) = self.contracts.get(contract_identifier) {
+            return Ok(contract);
+        }
+
         let matches: Vec<(&ModulePath, &ContractData)> = self
             .contracts
             .iter()
-            .filter(|(_, contract)| contract.name == contract_name)
+            .filter(|(_, contract)| contract.name == contract_identifier)
             .collect();
 
         match matches.as_slice() {

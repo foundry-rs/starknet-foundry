@@ -22,14 +22,14 @@ pub enum DeclareResult {
 
 pub fn declare(
     state: &mut dyn State,
-    contract_name: &str,
+    contract_identifier: &str,
     contracts_data: &ContractsData,
 ) -> Result<DeclareResult, CheatcodeError> {
-    let contract = match contracts_data.resolve_by_name(contract_name) {
+    let contract = match contracts_data.resolve_contract(contract_identifier) {
         Ok(contract) => contract,
         Err(ContractResolutionError::NameNotFound) => {
             return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
-                anyhow!("Failed to get contract artifact for name = {contract_name}."),
+                anyhow!("Failed to get contract artifact for name = {contract_identifier}."),
             )));
         }
         Err(ContractResolutionError::AmbiguousName(module_paths)) => {
@@ -40,9 +40,10 @@ pub fn declare(
                 .join("\n");
             return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
                 anyhow!(
-                    "Multiple contracts found with name = {contract_name}. \
+                    "Multiple contracts found with name = {contract_identifier}. \
                     Found contracts at the following paths:\n{paths}\n\
-                    Rename one of the contracts so that the name is unique."
+                    Use the full module path to disambiguate, \
+                    or rename one of the contracts so that the name is unique."
                 ),
             )));
         }
