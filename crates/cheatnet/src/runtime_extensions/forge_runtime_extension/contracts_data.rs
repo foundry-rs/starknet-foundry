@@ -26,7 +26,6 @@ pub struct ContractsData {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ContractData {
-    pub name: ContractName,
     pub artifacts: StarknetContractArtifacts,
     pub class_hash: ClassHash,
     pub source_sierra_path: Utf8PathBuf,
@@ -61,14 +60,13 @@ impl ContractsData {
             .collect::<Result<_>>()?;
         let class_hashes = BiMap::from_iter(class_hashes);
 
-        let contracts = contracts
+        let contracts: HashMap<ModulePath, ContractData> = contracts
             .into_iter()
             .map(|(module_path, contract)| {
                 let class_hash = *class_hashes.get_by_left(&module_path).unwrap();
                 (
                     module_path,
                     ContractData {
-                        name: contract.name,
                         artifacts: contract.artifacts,
                         class_hash,
                         source_sierra_path: contract.sierra_path,
@@ -108,7 +106,9 @@ impl ContractsData {
         let matches: Vec<(&ModulePath, &ContractData)> = self
             .contracts
             .iter()
-            .filter(|(_, contract)| contract.name == contract_identifier)
+            .filter(|(module_path, _)| {
+                contract_name_from_module_path(*module_path) == contract_identifier
+            })
             .collect();
 
         match matches.as_slice() {
@@ -130,9 +130,10 @@ impl ContractsData {
     }
 
     #[must_use]
-    pub fn get_contract_name(&self, class_hash: &ClassHash) -> Option<&ContractName> {
-        self.get_contract_by_class_hash(class_hash)
-            .map(|contract| &contract.name)
+    pub fn get_contract_name(&self, class_hash: &ClassHash) -> Option<ContractName> {
+        self.get_contract_by_class_hash(class_hash).map(|contract| {
+            contract_name_from_module_path(&contract.source_sierra_path.to_string())
+        })
     }
 
     #[must_use]
@@ -199,4 +200,14 @@ fn add_simple_abi_entry_to_mapping(
         }
         _ => {}
     }
+}
+
+/// Extracts the contract name from a module path by taking the last segment after `::`.
+#[must_use]
+pub fn contract_name_from_module_path(module_path: &ModulePath) -> ContractName {
+    module_path
+        .split("::")
+        .last()
+        .unwrap_or(module_path)
+        .to_string()
 }

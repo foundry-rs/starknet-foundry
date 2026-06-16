@@ -4,6 +4,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::Cheatcode
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::{
     DeclareResult, declare,
 };
+use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::contract_name_from_module_path;
 use runtime::EnhancedHintError;
 
 #[test]
@@ -100,7 +101,7 @@ fn declare_by_module_path() {
     let module_path = contracts_data
         .contracts
         .iter()
-        .find(|(_, contract)| contract.name == contract_name)
+        .find(|(module_path, _)| contract_name_from_module_path(*module_path) == contract_name)
         .map(|(module_path, _)| module_path.clone())
         .expect("HelloStarknet should be present in the test fixtures");
 
@@ -128,7 +129,7 @@ fn declare_ambiguous_name_resolved_by_module_path() {
     let (original_module_path, existing) = contracts_data
         .contracts
         .iter()
-        .find(|(_, contract)| contract.name == contract_name)
+        .find(|(module_path, _)| contract_name_from_module_path(module_path) == contract_name)
         .map(|(module_path, contract)| (module_path.clone(), contract.clone()))
         .expect("HelloStarknet should be present in the test fixtures");
     contracts_data
@@ -159,10 +160,10 @@ fn declare_ambiguous_name() {
     let mut contracts_data = get_contracts();
     let existing = contracts_data
         .contracts
-        .values()
-        .find(|contract| contract.name == contract_name)
-        .expect("HelloStarknet should be present in the test fixtures")
-        .clone();
+        .iter()
+        .find(|(module_path, _)| contract_name_from_module_path(module_path) == contract_name)
+        .map(|(_, contract)| contract.clone())
+        .expect("HelloStarknet should be present in the test fixtures");
     contracts_data
         .contracts
         .insert(duplicate_module_path.clone(), existing);
