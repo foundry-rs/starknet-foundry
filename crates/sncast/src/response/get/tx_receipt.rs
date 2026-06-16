@@ -1,5 +1,5 @@
 use crate::response::cast_message::SncastCommandMessage;
-use crate::response::transaction::TransactionOutputBuilder;
+use crate::response::get::transaction::TransactionOutputBuilder;
 use conversions::string::IntoDecStr;
 use foundry_ui::styling::OutputBuilder;
 use serde::{Serialize, Serializer};

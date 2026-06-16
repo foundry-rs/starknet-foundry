@@ -5,7 +5,7 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
-use sncast::response::transaction::TransactionResponse;
+use sncast::response::get::transaction::TransactionResponse;
 use sncast::response::ui::UI;
 use starknet_rust::core::types::TransactionResponseFlag;
 use starknet_rust::providers::jsonrpc::HttpTransport;
