@@ -131,9 +131,8 @@ impl ContractsData {
 
     #[must_use]
     pub fn get_contract_name(&self, class_hash: &ClassHash) -> Option<ContractName> {
-        self.get_contract_by_class_hash(class_hash).map(|contract| {
-            contract_name_from_module_path(&contract.source_sierra_path.to_string())
-        })
+        let module_path = self.class_hashes.get_by_right(class_hash)?;
+        Some(contract_name_from_module_path(module_path))
     }
 
     #[must_use]
