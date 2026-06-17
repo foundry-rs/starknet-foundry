@@ -3,7 +3,8 @@ use crate::helpers::constants::{
 };
 use crate::helpers::env::set_keystore_password_env;
 use crate::helpers::fixtures::{
-    copy_file, duplicate_contract_directory_with_salt, get_accounts_path, get_keystores_path,
+    copy_directory_to_tempdir, copy_file, duplicate_contract_directory_with_salt,
+    get_accounts_path, get_keystores_path,
 };
 use crate::helpers::runner::runner;
 use configuration::test_utils::copy_config_to_tempdir;

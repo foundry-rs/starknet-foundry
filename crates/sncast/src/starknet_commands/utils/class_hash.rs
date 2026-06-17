@@ -19,10 +19,10 @@ pub struct ClassHashArgs {
 
 #[expect(clippy::result_large_err)]
 pub fn sierra_class_from_artifacts(
-    contract_name: &str,
+    contract_identifier: &str,
     artifacts: &ContractArtifactsMap,
 ) -> Result<SierraClass, StarknetCommandError> {
-    let contract_artifacts = resolve_contract_artifacts(contract_name, artifacts)?;
+    let contract_artifacts = resolve_contract_artifacts(contract_identifier, artifacts)?;
 
     let sierra: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
         .context("Failed to parse sierra artifact")?;

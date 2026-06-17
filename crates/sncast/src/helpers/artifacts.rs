@@ -136,7 +136,7 @@ mod tests {
 
         assert_eq!(
             error.to_string(),
-            "Found more than one contract matching \"HelloStarknet\", pass a more specific module tree path to `--contract-name`: pkg::a::HelloStarknet, pkg::b::HelloStarknet"
+            "Found more than one contract matching \"HelloStarknet\". Pass a more specific module tree path to `--contract-name`:\n - pkg::a::HelloStarknet\n - pkg::b::HelloStarknet"
         );
     }
 
@@ -148,7 +148,7 @@ mod tests {
 
         assert_eq!(
             error.to_string(),
-            "Found more than one contract matching \"a::HelloStarknet\", pass a more specific module tree path to `--contract-name`: pkg::a::HelloStarknet, pkg::nested::a::HelloStarknet"
+            "Found more than one contract matching \"a::HelloStarknet\". Pass a more specific module tree path to `--contract-name`:\n - pkg::a::HelloStarknet\n - pkg::nested::a::HelloStarknet"
         );
     }
 
