@@ -93,7 +93,7 @@ impl StarknetArtifactsFiles {
     fn compile_artifacts(
         &self,
         artifacts: Vec<(String, String, Utf8PathBuf)>,
-    ) -> Result<HashMap<String, ContractData>> {
+    ) -> Result<ContractsData> {
         artifacts
             .into_par_iter()
             .map(|(name, module_path, sierra_path)| {
