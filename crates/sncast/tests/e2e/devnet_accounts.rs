@@ -6,22 +6,16 @@ use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_co
 use tempfile::tempdir;
 use test_case::test_case;
 
-#[test_case(1)]
+#[test_case(2)]
 #[test_case(20)]
 #[tokio::test]
 pub async fn happy_case(account_number: u8) {
-    // TODO(#4311): Remove temporary `--accounts-file` workaround for `devnet-<i>`.
-    let accounts_file = "empty_accounts.json";
+    // A devnet account should work even when the default accounts file does not exist,
+    // as long as `--accounts-file` is not passed explicitly.
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
-    copy_file(
-        "tests/data/accounts/empty_accounts.json",
-        temp_dir.path().join(accounts_file),
-    );
 
     let account = format!("devnet-{account_number}");
     let args = vec![
-        "--accounts-file",
-        accounts_file,
         "--account",
         &account,
         "invoke",
@@ -51,44 +45,6 @@ pub async fn happy_case(account_number: u8) {
 }
 
 #[tokio::test]
-pub async fn happy_case_default_accounts_file_missing() {
-    // A devnet account should work even when the default accounts file does not exist,
-    // as long as `--accounts-file` is not passed explicitly.
-    let temp_dir = tempdir().expect("Unable to create a temporary directory");
-
-    let args = vec![
-        "--account",
-        "devnet-1",
-        "invoke",
-        "--url",
-        URL,
-        "--contract-address",
-        MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--function",
-        "put",
-        "--calldata",
-        "0x1 0x2",
-    ];
-
-    let snapbox = runner(&args)
-        // We set `HOME` at empty temporary directory so the default accounts file is missing.
-        .env("HOME", temp_dir.path())
-        .current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
-
-    assert_stdout_contains(
-        output,
-        indoc! {
-            "
-            Success: Invoke completed
-
-            Transaction Hash: 0x0[..]
-            "
-        },
-    );
-}
-
-#[tokio::test]
 pub async fn explicit_nonexistent_accounts_file_errors() {
     // When `--accounts-file` is passed explicitly, its existence is still enforced even for devnet accounts.
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
@@ -97,7 +53,7 @@ pub async fn explicit_nonexistent_accounts_file_errors() {
         "--accounts-file",
         "nonexistent_accounts.json",
         "--account",
-        "devnet-1",
+        "devnet-3",
         "invoke",
         "--url",
         URL,
@@ -122,18 +78,10 @@ pub async fn explicit_nonexistent_accounts_file_errors() {
 #[test_case(21)]
 #[tokio::test]
 pub async fn account_number_out_of_range(account_number: u8) {
-    // TODO(#4311): Remove temporary `--accounts-file` workaround for `devnet-<i>`.
-    let accounts_file = "empty_accounts.json";
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
-    copy_file(
-        "tests/data/accounts/empty_accounts.json",
-        temp_dir.path().join(accounts_file),
-    );
 
     let account = format!("devnet-{account_number}");
     let args = vec![
-        "--accounts-file",
-        accounts_file,
         "--account",
         &account,
         "invoke",
@@ -205,19 +153,11 @@ pub async fn account_name_already_exists() {
 
 #[tokio::test]
 pub async fn use_devnet_account_with_network_not_being_devnet() {
-    // TODO(#4311): Remove temporary `--accounts-file` workaround for `devnet-<i>`.
-    let accounts_file = "empty_accounts.json";
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
-    copy_file(
-        "tests/data/accounts/empty_accounts.json",
-        temp_dir.path().join(accounts_file),
-    );
 
     let args = vec![
-        "--accounts-file",
-        accounts_file,
         "--account",
-        "devnet-1",
+        "devnet-6",
         "invoke",
         "--url",
         SEPOLIA_RPC_URL,
@@ -247,7 +187,7 @@ pub async fn use_devnet_account_with_network_flags(network: &str) {
 
     let args = vec![
         "--account",
-        "devnet-1",
+        "devnet-7",
         "invoke",
         "--network",
         network,
