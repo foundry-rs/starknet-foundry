@@ -75,18 +75,17 @@ struct ContractBacktraceData {
 
 impl ContractBacktraceData {
     fn new(class_hash: &ClassHash, contracts_data: &ContractsData) -> Result<Self> {
-        let contract = contracts_data
-            .get_contract_by_class_hash(class_hash)
-            .context(format!(
-                "failed to get contract data for class hash: {class_hash}"
-            ))?;
-
         let module_path = contracts_data
             .class_hashes
             .get_by_right(class_hash)
             .context(format!(
                 "module path not found for class hash: {class_hash}"
             ))?;
+        let contract = contracts_data
+            .contracts
+            .get(module_path)
+            .context(format!("contract not found for module path: {module_path}"))?;
+
         let contract_name = contract_name_from_module_path(module_path);
         let contract_artifacts = &contract.artifacts;
 
