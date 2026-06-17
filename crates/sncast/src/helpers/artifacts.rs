@@ -12,9 +12,13 @@ pub struct CastStarknetContractArtifacts {
     pub casm: String,
 }
 
+pub type ContractModulePath = String;
+pub type ContractArtifactsMap<S = std::collections::hash_map::RandomState> =
+    HashMap<ContractModulePath, CastStarknetContractArtifacts, S>;
+
 pub fn resolve_contract_artifacts<'a, S: BuildHasher>(
     contract_identifier: &str,
-    artifacts: &'a HashMap<String, CastStarknetContractArtifacts, S>,
+    artifacts: &'a ContractArtifactsMap<S>,
 ) -> Result<&'a CastStarknetContractArtifacts, StarknetCommandError> {
     let mut matches: Vec<(&str, &CastStarknetContractArtifacts)> = artifacts
         .iter()
@@ -50,7 +54,7 @@ pub fn resolve_contract_artifacts<'a, S: BuildHasher>(
 mod tests {
     use super::*;
 
-    fn sample_artifacts() -> HashMap<String, CastStarknetContractArtifacts> {
+    fn sample_artifacts() -> ContractArtifactsMap {
         HashMap::from([
             (
                 "pkg::a::HelloStarknet".to_string(),
@@ -76,8 +80,7 @@ mod tests {
         ])
     }
 
-    fn sample_artifacts_with_nested_module_paths() -> HashMap<String, CastStarknetContractArtifacts>
-    {
+    fn sample_artifacts_with_nested_module_paths() -> ContractArtifactsMap {
         let mut artifacts = sample_artifacts();
         artifacts.insert(
             "pkg::nested::a::HelloStarknet".to_string(),

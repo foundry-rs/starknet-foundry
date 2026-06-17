@@ -2,7 +2,7 @@ use anyhow::Context;
 use clap::Args;
 use conversions::IntoConv;
 use data_transformer::transform;
-use sncast::helpers::artifacts::CastStarknetContractArtifacts;
+use sncast::helpers::artifacts::ContractArtifactsMap;
 use sncast::{
     extract_or_generate_salt,
     helpers::{configuration::CastConfig, rpc::RpcArgs},
@@ -13,7 +13,6 @@ use sncast::{
 };
 use starknet_rust::core::types::contract::AbiEntry;
 use starknet_rust::core::utils::{get_selector_from_name, get_udc_deployed_address};
-use std::collections::HashMap;
 
 use crate::starknet_commands::deploy::DeployCommonArgs;
 use crate::starknet_commands::utils::class_hash::sierra_class_from_artifacts;
@@ -38,7 +37,7 @@ pub struct ContractAddressArgs {
 
 pub async fn get_contract_address(
     args: ContractAddressArgs,
-    artifacts: Option<HashMap<String, CastStarknetContractArtifacts>>,
+    artifacts: Option<ContractArtifactsMap>,
     config: CastConfig,
     ui: &UI,
 ) -> Result<ContractAddressResponse, StarknetCommandError> {
