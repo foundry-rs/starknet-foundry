@@ -353,7 +353,7 @@ pub fn run_test_case(
     // Mirrors the contract-level logic in `cairo1_execution.rs`,
     // Note: test target is not deployed contract, so the PCs are carried separately instead of `register_error`.
     let test_backtrace = {
-        let casm_start_offsets: Vec<usize> = casm_program
+        let casm_start_offsets = casm_program
             .debug_info
             .iter()
             .map(|(offset, _)| *offset)
