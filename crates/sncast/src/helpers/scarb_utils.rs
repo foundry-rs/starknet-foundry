@@ -4,7 +4,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use foundry_ui::{UI, components::warning::WarningMessage};
 use scarb_api::metadata::{MetadataError, MetadataOpts, metadata_for_dir, metadata_with_opts};
 use scarb_api::{
-    CompilationOpts, ScarbCommand, ScarbCommandError, ensure_scarb_available,
+    CompilationOpts, ContractsData, ScarbCommand, ScarbCommandError, ensure_scarb_available,
     get_contracts_artifacts_and_source_sierra_paths,
     metadata::{Metadata, PackageMetadata},
     target_dir_for_workspace,
@@ -142,6 +142,24 @@ pub fn build(
     cmd.run()
 }
 
+fn contracts_data_to_artifacts(
+    contracts: ContractsData,
+) -> HashMap<String, CastStarknetContractArtifacts> {
+    contracts
+        .into_iter()
+        .map(|(module_path, contract)| {
+            (
+                module_path,
+                CastStarknetContractArtifacts {
+                    sierra: contract.artifacts.sierra,
+                    casm: serde_json::to_string(&contract.artifacts.casm)
+                        .expect("valid serialization"),
+                },
+            )
+        })
+        .collect()
+}
+
 pub fn build_and_load_artifacts(
     package: &PackageMetadata,
     config: &BuildConfig,
@@ -163,19 +181,8 @@ pub fn build_and_load_artifacts(
             ui,
             CompilationOpts::default(),
         )
-        .context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")?
-        .into_iter()
-        .map(|(module_path, contract)| {
-            (
-                module_path,
-                CastStarknetContractArtifacts {
-                    sierra: contract.artifacts.sierra,
-                    casm: serde_json::to_string(&contract.artifacts.casm)
-                        .expect("valid serialization"),
-                },
-            )
-        })
-        .collect())
+        .context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")
+        .map(contracts_data_to_artifacts)?)
     } else {
         let profile = &config.profile;
         ui.println(&WarningMessage::new(&format!(
@@ -187,19 +194,8 @@ pub fn build_and_load_artifacts(
             ui,
             CompilationOpts::default(),
         )
-        .context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")?
-        .into_iter()
-        .map(|(module_path, contract)| {
-            (
-                module_path,
-                CastStarknetContractArtifacts {
-                    sierra: contract.artifacts.sierra,
-                    casm: serde_json::to_string(&contract.artifacts.casm)
-                        .expect("valid serialization"),
-                },
-            )
-        })
-        .collect())
+        .context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")
+        .map(contracts_data_to_artifacts)?)
     }
 }
 

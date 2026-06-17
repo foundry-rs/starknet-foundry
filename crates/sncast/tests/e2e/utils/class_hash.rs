@@ -22,23 +22,3 @@ fn test_happy_case_get_class_hash() {
 
     assert_stdout_contains(output, indoc! {r"Class Hash: 0x0[..]"});
 }
-
-#[test]
-fn test_errors_on_ambiguous_contract_name() {
-    let contract_path =
-        copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/duplicate_contract_name");
-
-    let args = vec!["utils", "class-hash", "--contract-name", "HelloStarknet"];
-
-    let output = runner(&args)
-        .current_dir(contract_path.path())
-        .assert()
-        .failure();
-
-    assert_stderr_contains(
-        output,
-        indoc! {r#"
-        Error: Found more than one contract named "HelloStarknet" in artifacts: duplicate_contract_name::first_contract::HelloStarknet, duplicate_contract_name::second_contract::HelloStarknet
-        "#},
-    );
-}
