@@ -154,6 +154,84 @@ async fn test_full_flag_exact_values() {
 }
 
 #[tokio::test]
+async fn test_receipts_flag_json() {
+    let args = vec![
+        "--json",
+        "get",
+        "block",
+        "latest",
+        "--receipts",
+        "--url",
+        URL,
+    ];
+    let snapbox = runner(&args);
+    let output = snapbox.assert().success();
+
+    // Each transaction entry holds both the transaction and its receipt.
+    assert_stdout_contains(
+        output,
+        r#"[..]"transactions":[{[..]"receipt":[..]}],"type":"response"}"#,
+    );
+}
+
+#[tokio::test]
+async fn test_receipts_flag() {
+    let args = vec!["get", "block", "latest", "--receipts", "--url", URL];
+    let snapbox = runner(&args);
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+            Success: Block retrieved
+
+            Status:[..]
+            Block Hash:[..]0x[..]
+            Block Number:[..]
+            Parent Hash:[..]0x[..]
+            New Root:[..]0x[..]
+            Timestamp:[..]
+            Sequencer Address:[..]0x[..]
+            L1 Gas Price:[..]price_in_fri=[..], price_in_wei=[..]
+            L2 Gas Price:[..]price_in_fri=[..], price_in_wei=[..]
+            L1 Data Gas Price:[..]price_in_fri=[..], price_in_wei=[..]
+            L1 DA Mode:[..]
+            Starknet Version:[..]
+            Transaction Count:[..]
+
+            Transaction #1
+              Type:[..]
+              Transaction Hash:[..]0x[..]
+              Finality Status:[..]
+              Execution Status:[..]
+              Actual Fee:[..]
+              L1 Gas Consumed:[..]
+              L1 Data Gas Consumed:[..]
+              L2 Gas Consumed:[..]
+              Messages Sent:[..]
+              Events:[..]
+        "},
+    );
+}
+
+#[tokio::test]
+async fn test_full_and_receipts_conflict() {
+    let args = vec![
+        "get",
+        "block",
+        "latest",
+        "--full",
+        "--receipts",
+        "--url",
+        URL,
+    ];
+    let snapbox = runner(&args);
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(output, "[..]cannot be used with[..]");
+}
+
+#[tokio::test]
 async fn test_invalid_block_id() {
     let args = vec!["get", "block", "invalid_block", "--url", URL];
     let snapbox = runner(&args);
