@@ -1,4 +1,6 @@
-use crate::backtrace::{add_test_backtrace_footer, get_backtrace, is_backtrace_enabled};
+use crate::backtrace::{
+    TestBacktrace, add_test_backtrace_footer, get_backtrace, is_backtrace_enabled,
+};
 use crate::build_trace_data::build_profiler_call_trace;
 use crate::debugging::{TraceArgs, build_contracts_data_store, build_debugging_trace};
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
@@ -13,13 +15,17 @@ use camino::Utf8Path;
 use cheatnet::forking::data::ForkData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
+use cheatnet::state::EncounteredErrors;
+use cheatnet::trace_data::CallTrace;
 use conversions::byte_array::ByteArray;
 use conversions::felt::ToShortString;
 use shared::utils::build_readable_text;
 use starknet_api::execution_resources::GasVector;
 use starknet_types_core::felt::Felt;
+use std::cell::RefCell;
 use std::fmt;
 use std::option::Option;
+use std::rc::Rc;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasFuzzingInfo {
@@ -282,6 +288,118 @@ fn check_if_matching_and_get_message(
     }
 }
 
+struct CompletedSummary<'a> {
+    name: String,
+    test_case: &'a TestCaseWithResolvedConfig,
+    contracts_data: &'a ContractsData,
+    versioned_program_path: &'a Utf8Path,
+    call_trace: Rc<RefCell<CallTrace>>,
+    used_resources: UsedResources,
+    encountered_errors: EncounteredErrors,
+    fuzzer_args: Vec<String>,
+    fork_data: Option<ForkData>,
+    gas_info: SingleTestGasInfo,
+    debugging_trace: Option<debugging::Trace>,
+    test_backtrace: Option<TestBacktrace>,
+}
+
+impl CompletedSummary<'_> {
+    fn passed(self, msg: Option<String>) -> TestCaseSummary<Single> {
+        let empty = ForkData::default();
+        let fork_data_ref = self.fork_data.as_ref().unwrap_or(&empty);
+        let trace_data = VersionedProfilerCallTrace::V1(build_profiler_call_trace(
+            &self.call_trace,
+            self.contracts_data,
+            fork_data_ref,
+            self.versioned_program_path,
+        ));
+        TestCaseSummary::Passed {
+            name: self.name,
+            msg,
+            test_statistics: (),
+            gas_info: self.gas_info,
+            used_resources: self.used_resources,
+            trace_data,
+            debugging_trace: self.debugging_trace,
+        }
+    }
+
+    fn with_backtrace_footer(&self, msg: Option<String>) -> Option<String> {
+        msg.map(|msg| {
+            add_test_backtrace_footer(
+                msg,
+                self.contracts_data,
+                &self.encountered_errors,
+                self.test_backtrace.as_ref(),
+                self.versioned_program_path,
+                &self.name,
+            )
+        })
+    }
+
+    fn failed_with_backtrace(self, msg: Option<String>) -> TestCaseSummary<Single> {
+        let msg = self.with_backtrace_footer(msg);
+        TestCaseSummary::Failed {
+            name: self.name,
+            msg,
+            fuzzer_args: self.fuzzer_args,
+            test_statistics: (),
+            debugging_trace: self.debugging_trace,
+        }
+    }
+
+    fn passed_should_panic_backtrace(&self) -> Option<String> {
+        is_backtrace_enabled()
+            .then(|| {
+                get_backtrace(
+                    self.contracts_data,
+                    &self.encountered_errors,
+                    self.test_backtrace.as_ref(),
+                    self.versioned_program_path,
+                    &self.name,
+                )
+            })
+            .flatten()
+    }
+
+    fn summarize_success(self, data: &[Felt]) -> TestCaseSummary<Single> {
+        let test_case = self.test_case;
+        match &test_case.config.expected_result {
+            ExpectedTestResult::Success => {
+                let available_gas = test_case.config.available_gas;
+                let summary = self.passed(build_readable_text(data));
+                check_available_gas(available_gas, summary)
+            }
+            ExpectedTestResult::Panics(expected_panic_value) => TestCaseSummary::Failed {
+                name: self.name.clone(),
+                msg: Some(build_expected_panic_message(expected_panic_value)),
+                fuzzer_args: self.fuzzer_args,
+                test_statistics: (),
+                debugging_trace: self.debugging_trace,
+            },
+        }
+    }
+
+    fn summarize_panic(self, value: &[Felt]) -> TestCaseSummary<Single> {
+        let test_case = self.test_case;
+        match &test_case.config.expected_result {
+            ExpectedTestResult::Success => {
+                self.failed_with_backtrace(build_readable_text(value))
+            }
+            ExpectedTestResult::Panics(expected_panic_value) => {
+                let (matching, msg) =
+                    check_if_matching_and_get_message(value, expected_panic_value);
+                if matching {
+                    let backtrace_msg = self.passed_should_panic_backtrace();
+                    self.passed(backtrace_msg)
+                } else {
+                    self.failed_with_backtrace(msg)
+                }
+            }
+        }
+    }
+}
+
 impl TestCaseSummary<Single> {
     #[allow(clippy::too_many_lines)]
     #[must_use]
@@ -309,8 +427,6 @@ impl TestCaseSummary<Single> {
             test_case.config.disable_predeployed_contracts,
         );
 
-        let empty = ForkData::default();
-        let fork_data_ref = fork_data.as_ref().unwrap_or(&empty);
         let gas_info = SingleTestGasInfo::new(gas_used);
         let gas_info = if gas_report_enabled {
             gas_info.get_with_report_data(&call_trace.borrow(), &contracts_data_store)
@@ -324,100 +440,24 @@ impl TestCaseSummary<Single> {
             contracts_data_store,
         );
 
-        match status {
-            RunStatus::Success(data) => match &test_case.config.expected_result {
-                ExpectedTestResult::Success => {
-                    let summary = TestCaseSummary::Passed {
-                        name,
-                        msg: build_readable_text(&data),
-                        test_statistics: (),
-                        gas_info,
-                        used_resources,
-                        trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
-                            &call_trace,
-                            contracts_data,
-                            fork_data_ref,
-                            versioned_program_path,
-                        )),
-                        debugging_trace,
-                    };
-                    check_available_gas(test_case.config.available_gas, summary)
-                }
-                ExpectedTestResult::Panics(expected_panic_value) => TestCaseSummary::Failed {
-                    name,
-                    msg: Some(build_expected_panic_message(expected_panic_value)),
-                    fuzzer_args,
-                    test_statistics: (),
-                    debugging_trace,
-                },
-            },
-            RunStatus::Panic(value) => match &test_case.config.expected_result {
-                ExpectedTestResult::Success => TestCaseSummary::Failed {
-                    name: name.clone(),
-                    msg: build_readable_text(&value).map(|msg| {
-                        add_test_backtrace_footer(
-                            msg,
-                            contracts_data,
-                            &encountered_errors,
-                            test_backtrace.as_ref(),
-                            versioned_program_path,
-                            &name,
-                        )
-                    }),
-                    fuzzer_args,
-                    test_statistics: (),
-                    debugging_trace,
-                },
-                ExpectedTestResult::Panics(expected_panic_value) => {
-                    let (matching, msg) =
-                        check_if_matching_and_get_message(&value, expected_panic_value);
-                    if matching {
-                        let backtrace_msg = is_backtrace_enabled()
-                            .then(|| {
-                                get_backtrace(
-                                    contracts_data,
-                                    &encountered_errors,
-                                    test_backtrace.as_ref(),
-                                    versioned_program_path,
-                                    &name,
-                                )
-                            })
-                            .flatten();
+        let summary = CompletedSummary {
+            name,
+            test_case,
+            contracts_data,
+            versioned_program_path,
+            call_trace,
+            used_resources,
+            encountered_errors,
+            fuzzer_args,
+            fork_data,
+            gas_info,
+            debugging_trace,
+            test_backtrace,
+        };
 
-                        TestCaseSummary::Passed {
-                            name,
-                            msg: backtrace_msg,
-                            test_statistics: (),
-                            gas_info,
-                            used_resources,
-                            trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
-                                &call_trace,
-                                contracts_data,
-                                fork_data_ref,
-                                versioned_program_path,
-                            )),
-                            debugging_trace,
-                        }
-                    } else {
-                        TestCaseSummary::Failed {
-                            name: name.clone(),
-                            msg: msg.map(|msg| {
-                                add_test_backtrace_footer(
-                                    msg,
-                                    contracts_data,
-                                    &encountered_errors,
-                                    test_backtrace.as_ref(),
-                                    versioned_program_path,
-                                    &name,
-                                )
-                            }),
-                            fuzzer_args,
-                            test_statistics: (),
-                            debugging_trace,
-                        }
-                    }
-                }
-            },
+        match status {
+            RunStatus::Success(data) => summary.summarize_success(&data),
+            RunStatus::Panic(value) => summary.summarize_panic(&value),
         }
     }
 }
