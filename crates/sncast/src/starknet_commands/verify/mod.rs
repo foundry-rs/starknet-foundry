@@ -31,7 +31,7 @@ pub struct Verify {
     #[command(flatten)]
     pub contract_identifier: ContractIdentifierArgs,
 
-    /// Name of the contract or absolute module tree path
+    /// Name of the contract or module tree path suffix
     #[arg(short, long)]
     pub contract_name: String,
 

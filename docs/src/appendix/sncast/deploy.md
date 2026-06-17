@@ -16,7 +16,7 @@ Class hash of contract to deploy. It can be either:
 Required if `--class-hash` is not provided.
 
 Name of the contract to deploy. Can be used instead of `--class-hash`. Requires `--package` if more than one package exists in a workspace.
-This argument also accepts an absolute module tree path, for example `hello_sncast::HelloSncast`.
+This argument also accepts an absolute/partial module tree path, for example `hello_sncast::contracts::HelloSncast` or `contracts::HelloSncast`., for example `hello_sncast::contracts::HelloSncast`.
 
 ## `--package <NAME>`
 Optional.

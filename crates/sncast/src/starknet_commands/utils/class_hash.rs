@@ -9,7 +9,7 @@ use std::collections::HashMap;
 #[derive(Args, Debug)]
 #[command(about = "Generate the class hash of a contract", long_about = None)]
 pub struct ClassHashArgs {
-    /// Contract name or absolute module tree path
+    /// Contract name or absolute/partial module tree path
     #[arg(short = 'c', long = "contract-name")]
     pub contract: String,
 

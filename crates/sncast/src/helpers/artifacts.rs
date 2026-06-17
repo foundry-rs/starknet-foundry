@@ -76,6 +76,19 @@ mod tests {
         ])
     }
 
+    fn sample_artifacts_with_nested_module_paths() -> HashMap<String, CastStarknetContractArtifacts>
+    {
+        let mut artifacts = sample_artifacts();
+        artifacts.insert(
+            "pkg::nested::a::HelloStarknet".to_string(),
+            CastStarknetContractArtifacts {
+                sierra: "nested-a".to_string(),
+                casm: "nested-a".to_string(),
+            },
+        );
+        artifacts
+    }
+
     #[test]
     fn resolves_unique_contract_by_name() {
         let artifacts = sample_artifacts();
@@ -83,6 +96,24 @@ mod tests {
         let artifact = resolve_contract_artifacts("ERC20", &artifacts).unwrap();
 
         assert_eq!(artifact.sierra, "erc20");
+    }
+
+    #[test]
+    fn resolves_contract_by_partial_module_path() {
+        let artifacts = sample_artifacts();
+
+        let artifact = resolve_contract_artifacts("a::HelloStarknet", &artifacts).unwrap();
+
+        assert_eq!(artifact.sierra, "a");
+    }
+
+    #[test]
+    fn resolves_contract_by_deeper_partial_module_path() {
+        let artifacts = sample_artifacts_with_nested_module_paths();
+
+        let artifact = resolve_contract_artifacts("nested::a::HelloStarknet", &artifacts).unwrap();
+
+        assert_eq!(artifact.sierra, "nested-a");
     }
 
     #[test]
@@ -102,7 +133,19 @@ mod tests {
 
         assert_eq!(
             error.to_string(),
-            "Found more than one contract named \"HelloStarknet\" at: pkg::a::HelloStarknet, pkg::b::HelloStarknet"
+            "Found more than one contract matching \"HelloStarknet\", pass a more specific module tree path to `--contract-name`: pkg::a::HelloStarknet, pkg::b::HelloStarknet"
+        );
+    }
+
+    #[test]
+    fn errors_on_ambiguous_partial_module_path() {
+        let artifacts = sample_artifacts_with_nested_module_paths();
+
+        let error = resolve_contract_artifacts("a::HelloStarknet", &artifacts).unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "Found more than one contract matching \"a::HelloStarknet\", pass a more specific module tree path to `--contract-name`: pkg::a::HelloStarknet, pkg::nested::a::HelloStarknet"
         );
     }
 
