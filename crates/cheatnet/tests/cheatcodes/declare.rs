@@ -101,7 +101,7 @@ fn declare_by_module_path() {
     let module_path = contracts_data
         .contracts
         .iter()
-        .find(|(module_path, _)| contract_name_from_module_path(*module_path) == contract_name)
+        .find(|(module_path, _)| contract_name_from_module_path(module_path) == contract_name)
         .map(|(module_path, _)| module_path.clone())
         .expect("HelloStarknet should be present in the test fixtures");
 
