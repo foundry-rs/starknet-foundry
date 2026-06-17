@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast account import/deploy` interactive "make default account" prompt now emits a warning when global `snfoundry.toml` cannot be accessed/created.
 - `sncast multicall run` TOML `inputs` now always require the `@` prefix for step id references. Bare step ids no longer resolve. Migration: update entries to new format (e.g. `"map"`->`"@map"`). Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/multicall.html#using-id-references).
 
+#### Fixed
+
+- Devnet accounts (`devnet-<i>`) no longer require the default accounts file to exist.
+
 ## [0.61.0] - 2026-05-26
 
 ### Forge

@@ -50,6 +50,74 @@ pub async fn happy_case(account_number: u8) {
     );
 }
 
+#[tokio::test]
+pub async fn happy_case_default_accounts_file_missing() {
+    // A devnet account should work even when the default accounts file does not exist,
+    // as long as `--accounts-file` is not passed explicitly.
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+
+    let args = vec![
+        "--account",
+        "devnet-1",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 0x2",
+    ];
+
+    let snapbox = runner(&args)
+        // We set `HOME` at empty temporary directory so the default accounts file is missing.
+        .env("HOME", temp_dir.path())
+        .current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Invoke completed
+
+            Transaction Hash: 0x0[..]
+            "
+        },
+    );
+}
+
+#[tokio::test]
+pub async fn explicit_nonexistent_accounts_file_errors() {
+    // When `--accounts-file` is passed explicitly, its existence is still enforced even for devnet accounts.
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+
+    let args = vec![
+        "--accounts-file",
+        "nonexistent_accounts.json",
+        "--account",
+        "devnet-1",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 0x2",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "Error: Accounts file = nonexistent_accounts.json does not exist! [..]",
+    );
+}
+
 #[test_case(0)]
 #[test_case(21)]
 #[tokio::test]
@@ -126,7 +194,7 @@ pub async fn account_name_already_exists() {
         indoc! {
             "
             [WARNING] Using account devnet-1 from accounts file accounts.json. To use an inbuilt devnet account, please rename your existing account or use an account with a different number.
-            
+
             Success: Invoke completed
 
             Transaction Hash: 0x0[..]

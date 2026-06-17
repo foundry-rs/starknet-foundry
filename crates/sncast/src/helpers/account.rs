@@ -75,6 +75,26 @@ pub fn check_account_exists(
         })
 }
 
+/// Checks whether an account exists in the accounts file, returning `false` instead of
+/// error when the accounts file (or the network entry) is missing.
+/// Used for devnet accounts, which don't require an accounts file to exist.
+pub fn account_exists_in_file(
+    account_name: &str,
+    network_name: &str,
+    accounts_file: &Utf8PathBuf,
+) -> Result<bool> {
+    if !accounts_file.exists() {
+        return Ok(false);
+    }
+
+    let accounts: HashMap<String, HashMap<String, AccountData>> =
+        read_and_parse_json_file(accounts_file)?;
+
+    Ok(accounts
+        .get(network_name)
+        .is_some_and(|network_accounts| network_accounts.contains_key(account_name)))
+}
+
 #[must_use]
 pub fn is_devnet_account(account: &str) -> bool {
     account.starts_with("devnet-")
