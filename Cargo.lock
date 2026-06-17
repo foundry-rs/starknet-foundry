@@ -7649,7 +7649,7 @@ dependencies = [
 [[package]]
 name = "speculos-client"
 version = "0.0.0"
-source = "git+https://github.com/software-mansion/starknet-rust#2ddf17ba28625453b8b554d02a3d8ebf4996f4f0"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=2ddf17ba28625453b8b554d02a3d8ebf4996f4f0#2ddf17ba28625453b8b554d02a3d8ebf4996f4f0"
 dependencies = [
  "hex",
  "reqwest",

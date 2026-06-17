@@ -46,7 +46,9 @@ async fn test_get_public_key_headless() {
 async fn test_get_public_key_with_confirmation() {
     let (client, url) = setup_speculos(4003);
 
-    client.automation(&[APPROVE_PUBLIC_KEY]).await.unwrap();
+    set_automation(&client, &[APPROVE_PUBLIC_KEY])
+        .await
+        .unwrap();
 
     let output = runner(&["ledger", "get-public-key", "--path", TEST_LEDGER_PATH])
         .env("LEDGER_EMULATOR_URL", &url)

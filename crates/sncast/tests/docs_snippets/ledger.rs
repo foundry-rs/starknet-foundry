@@ -98,7 +98,7 @@ async fn test_ledger_docs_snippets() -> Result<(), SpeculosError> {
             .env("LEDGER_EMULATOR_URL", &snippet_url)
             .current_dir(tempdir.path());
         let output = snapbox.assert().success();
-        snippet_client.automation(&[]).await.unwrap();
+        set_automation(&snippet_client, &[]).await.unwrap();
 
         if let Some(expected_stdout) = &snippet.output
             && !snippet.config.ignored_output

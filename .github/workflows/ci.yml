@@ -378,7 +378,7 @@ jobs:
   test-ledger:
     name: Test Ledger
     runs-on: ubuntu-latest
-    container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools
+    container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:5.3.14
 
     steps:
       - uses: actions/checkout@v6
@@ -391,15 +391,12 @@ jobs:
         with:
           tool: nextest@0.9.98
       - name: Clone app-starknet
-        run: |
-          git clone --depth 1 https://github.com/LedgerHQ/app-starknet.git /tmp/app-starknet
-          cd /tmp/app-starknet
-          git checkout a14a61e3061f8793188fa57cbdafc2cc0d96c8bd # v2.4.0
+        run: git clone --depth 1 --branch nanox_2.7.0_2.4.0_sdk_v26.0.2 https://github.com/LedgerHQ/app-starknet.git /tmp/app-starknet
       - name: Build Starknet Ledger App (Nano X)
         run: |
           cd /tmp/app-starknet/starknet
-          # RUST_NIGHTLY is set in the ledger-app-builder image
-          cargo +${RUST_NIGHTLY} ledger build nanox
+          # RUSTUP_TOOLCHAIN is set in the ledger-app-builder image
+          cargo +${RUSTUP_TOOLCHAIN} ledger build nanox
           mkdir -p ${GITHUB_WORKSPACE}/crates/sncast/tests/data/ledger-app
           cp target/nanox/release/starknet \
             ${GITHUB_WORKSPACE}/crates/sncast/tests/data/ledger-app/nanox.elf

@@ -8,8 +8,6 @@ use toml_edit::DocumentMut;
 
 const EXTENSION: Option<&str> = Some("md");
 
-static BOOK_VARIABLES: LazyLock<HashMap<String, String>> = LazyLock::new(load_book_variables);
-
 fn load_book_variables() -> HashMap<String, String> {
     let book_toml_path = get_nth_ancestor(2).join("docs/book.toml");
     let content = fs::read_to_string(&book_toml_path).expect("Failed to read book.toml");
@@ -37,9 +35,9 @@ fn load_book_variables() -> HashMap<String, String> {
         .collect()
 }
 
-fn substitute_book_variables(text: &str) -> String {
+fn substitute_book_variables(text: &str, variables: &HashMap<String, String>) -> String {
     let mut result = text.to_string();
-    for (key, value) in BOOK_VARIABLES.iter() {
+    for (key, value) in variables {
         result = result.replace(&format!("{{{{{key}}}}}"), value);
     }
     result
@@ -49,6 +47,7 @@ pub fn extract_snippets_from_file(
     file_path: &Path,
     snippet_type: &SnippetType,
 ) -> io::Result<Vec<Snippet>> {
+    let book_variables = load_book_variables();
     let content = fs::read_to_string(file_path)?;
     let file_path_str = file_path
         .to_str()
@@ -76,7 +75,7 @@ pub fn extract_snippets_from_file(
                 let output = EXECUTION_RESOURCES_RE
                     .replace_all(output.as_str(), "${1}: [..]")
                     .to_string();
-                substitute_book_variables(&output)
+                substitute_book_variables(&output, &book_variables)
             });
 
             let config = if config_str.is_empty() {

@@ -304,7 +304,9 @@ async fn test_import_ledger_account(
     let (client, url) = setup_speculos(port);
     let tempdir = tempdir().unwrap();
 
-    client.automation(&[APPROVE_PUBLIC_KEY]).await.unwrap();
+    set_automation(&client, &[APPROVE_PUBLIC_KEY])
+        .await
+        .unwrap();
 
     let output = runner(&[
         "--accounts-file",
@@ -364,7 +366,9 @@ async fn test_import_ledger_account_add_profile() {
     let (client, url) = setup_speculos(6012);
     let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
 
-    client.automation(&[APPROVE_PUBLIC_KEY]).await.unwrap();
+    set_automation(&client, &[APPROVE_PUBLIC_KEY])
+        .await
+        .unwrap();
 
     let oz_class_hash = OZ_CLASS_HASH.into_hex_string();
 
