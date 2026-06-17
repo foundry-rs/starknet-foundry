@@ -172,6 +172,7 @@
     * [completions](appendix/sncast/completions.md)
     * [get](appendix/sncast/get/get.md)
         * [balance](appendix/sncast/get/balance.md)
+        * [block](appendix/sncast/get/block.md)
         * [class-hash-at](appendix/sncast/get/class_hash_at.md)
         * [nonce](appendix/sncast/get/nonce.md)
         * [spec-version](appendix/sncast/get/spec-version.md)

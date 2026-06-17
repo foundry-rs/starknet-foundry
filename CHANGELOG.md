@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `@alias` syntax for felt arguments in `sncast call`, `invoke`, `deploy`, `declare-from`, `account create`, `account import`, `get balance`, `get nonce`, `get class-hash-at`, `verify`, `utils serialize`, `utils contract-address`, `multicall execute`, and `multicall run`. Read more [here](https://foundry-rs.github.io/starknet-foundry/starknet/aliases.html).
 - `sncast alias list` command for listing aliases. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/alias/list.html).
 - `sncast config-path` for printing the paths to the local and global `snfoundry.toml` config files. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/config_path.html).
+- `sncast get block` command for fetching a block with transactions
 
 #### Changed
 
