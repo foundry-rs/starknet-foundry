@@ -140,7 +140,7 @@ async fn test_happy_case_from_cli_with_sncast_config() {
 
     snapbox.assert().success().stdout_eq(indoc! {r"
         Success: Call completed
-        
+
         Response:     0x0
         Response Raw: [0x0]
     "});
@@ -169,7 +169,7 @@ async fn test_happy_case_mixed() {
 
     snapbox.assert().success().stdout_eq(indoc! {r"
         Success: Call completed
-        
+
         Response:     0x0
         Response Raw: [0x0]
     "});
@@ -347,19 +347,11 @@ async fn test_keystore_inexistent_account() {
 async fn test_keystore_undeployed_account() {
     let contract_path =
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "8");
-    // TODO(#4311): Remove temporary `--accounts-file` workaround for `devnet-<i>`.
-    let accounts_file = "empty_accounts.json";
-    copy_file(
-        "tests/data/accounts/empty_accounts.json",
-        contract_path.path().join(accounts_file),
-    );
     let my_key_path = get_keystores_path("tests/data/keystore/my_key.json");
     let my_account_undeployed_path =
         get_keystores_path("tests/data/keystore/my_account_undeployed.json");
 
     let args = vec![
-        "--accounts-file",
-        accounts_file,
         "--keystore",
         my_key_path.as_str(),
         "--account",
