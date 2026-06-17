@@ -1,10 +1,8 @@
 use crate::helpers::{
-    constants::CONTRACTS_DIR,
-    fixtures::{copy_directory_to_tempdir, duplicate_contract_directory_with_salt},
-    runner::runner,
+    constants::CONTRACTS_DIR, fixtures::duplicate_contract_directory_with_salt, runner::runner,
 };
 use indoc::indoc;
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[test]
 fn test_happy_case_get_class_hash() {
