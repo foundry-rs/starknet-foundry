@@ -107,7 +107,7 @@ impl ContractsData {
             .contracts
             .iter()
             .filter(|(module_path, _)| {
-                contract_name_from_module_path(*module_path) == contract_identifier
+                contract_name_from_module_path(module_path) == contract_identifier
             })
             .collect();
 

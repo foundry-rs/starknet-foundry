@@ -81,8 +81,13 @@ impl ContractBacktraceData {
                 "failed to get contract data for class hash: {class_hash}"
             ))?;
 
-        let contract_name =
-            contract_name_from_module_path(&contract.source_sierra_path.to_string());
+        let module_path = contracts_data
+            .class_hashes
+            .get_by_right(class_hash)
+            .context(format!(
+                "module path not found for class hash: {class_hash}"
+            ))?;
+        let contract_name = contract_name_from_module_path(module_path);
         let contract_artifacts = &contract.artifacts;
 
         let contract_class = serde_json::from_str::<ContractClass>(&contract_artifacts.sierra)?;
