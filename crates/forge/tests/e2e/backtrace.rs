@@ -244,6 +244,20 @@ fn snap_test_backtrace_test_level() {
 }
 
 #[test]
+fn snap_test_backtrace_test_level_without_inlines() {
+    let temp = setup_package("backtrace_test_panic");
+    without_inlines(&temp);
+
+    let output = test_runner(&temp)
+        .env("SNFORGE_BACKTRACE", "1")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
+        .assert()
+        .failure();
+
+    assert_cleaned_output!(output);
+}
+
+#[test]
 fn snap_test_backtrace_test_level_should_panic() {
     let temp = setup_package("backtrace_test_should_panic");
 
