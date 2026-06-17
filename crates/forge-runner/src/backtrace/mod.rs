@@ -9,11 +9,8 @@ mod data;
 mod display;
 const BACKTRACE_ENV: &str = "SNFORGE_BACKTRACE";
 
-pub struct TestBacktrace {
-    /// Program counters of the panic.
+pub struct TestBacktraceContext {
     pub pcs: Vec<usize>,
-
-    /// Sierra-statement -> CASM offset mapping
     pub casm_start_offsets: Vec<usize>,
 }
 
@@ -62,7 +59,7 @@ pub fn add_test_backtrace_footer(
     message: String,
     contracts_data: &ContractsData,
     encountered_errors: &EncounteredErrors,
-    test_backtrace: Option<&TestBacktrace>,
+    test_backtrace: Option<&TestBacktraceContext>,
     versioned_program_path: &Utf8Path,
     test_name: &str,
 ) -> String {
@@ -85,7 +82,7 @@ pub fn add_test_backtrace_footer(
 
 #[must_use]
 pub fn get_test_backtrace(
-    test_backtrace: &TestBacktrace,
+    test_backtrace: &TestBacktraceContext,
     versioned_program_path: &Utf8Path,
     test_name: &str,
 ) -> String {

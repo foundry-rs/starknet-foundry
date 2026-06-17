@@ -1,4 +1,4 @@
-use crate::backtrace::{TestBacktrace, add_test_backtrace_footer};
+use crate::backtrace::{TestBacktraceContext, add_test_backtrace_footer};
 use crate::forge_config::{ForgeConfig, RuntimeConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
@@ -150,7 +150,7 @@ pub struct RunCompleted {
     pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
     pub(crate) fork_data: Option<ForkData>,
-    pub(crate) test_backtrace: Option<TestBacktrace>,
+    pub(crate) test_backtrace: Option<TestBacktraceContext>,
 }
 
 pub struct RunError {
@@ -159,7 +159,7 @@ pub struct RunError {
     pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
     pub(crate) fork_data: Option<ForkData>,
-    pub(crate) test_backtrace: Option<TestBacktrace>,
+    pub(crate) test_backtrace: Option<TestBacktraceContext>,
 }
 
 pub enum RunResult {
@@ -368,12 +368,12 @@ pub fn run_test_case(
                     .panic_traceback
                     .clone()
                     .unwrap_or_else(|| runner.vm.get_reversed_pc_traceback());
-                Some(TestBacktrace {
+                Some(TestBacktraceContext {
                     pcs,
                     casm_start_offsets,
                 })
             }
-            Err(_) => Some(TestBacktrace {
+            Err(_) => Some(TestBacktraceContext {
                 pcs: runner.vm.get_reversed_pc_traceback(),
                 casm_start_offsets,
             }),
