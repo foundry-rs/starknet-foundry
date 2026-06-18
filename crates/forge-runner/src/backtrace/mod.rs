@@ -14,7 +14,6 @@ pub struct TestBacktraceContext {
     pub casm_start_offsets: Vec<usize>,
 }
 
-/// Appends a backtrace footer for a failure.
 #[must_use]
 pub fn add_test_backtrace_footer(
     message: String,
