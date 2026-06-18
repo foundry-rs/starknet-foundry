@@ -38,6 +38,7 @@ Class Hash: 0x0[..]
 
 ## Example with a Sierra file
 
+<!-- { "ignored": true } -->
 ```shell
 $ sncast utils \
   class-hash \
