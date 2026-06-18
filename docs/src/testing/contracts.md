@@ -22,13 +22,10 @@ Let's consider a simple smart contract with two methods.
 {{#include ../../listings/testing_smart_contracts_writing_tests/src/lib.cairo}}
 ```
 
-Note that the name after `mod` will be used as the contract name for testing purposes.
-
-> 📝 **Note**
->
-> If multiple contracts in your project share the same name, you can pass the full
-> module path (e.g. `my_package::module::SimpleContract`) to `declare` instead of the
-> bare name to unambiguously select the contract you want.
+Note that the name after `mod` will be used as the contract name for testing purposes. If multiple
+contracts in your project share the same name, you can pass the full module path (e.g.
+`my_package::module::SimpleContract`) to `declare` instead of the bare name to unambiguously
+select the contract you want.
 
 ## Writing Tests
 
