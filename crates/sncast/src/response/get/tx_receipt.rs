@@ -1,4 +1,5 @@
 use crate::response::cast_message::SncastCommandMessage;
+use crate::response::get::transaction::TransactionOutputBuilder;
 use conversions::string::IntoDecStr;
 use foundry_ui::styling::OutputBuilder;
 use serde::{Serialize, Serializer};
@@ -28,15 +29,23 @@ impl SncastCommandMessage for TxReceiptResponse {
             .success_message("Transaction receipt retrieved")
             .blank_line();
 
-        let builder = match &self.0.receipt {
-            TransactionReceipt::Invoke(r) => append_invoke(builder, r),
-            TransactionReceipt::L1Handler(r) => append_l1_handler(builder, r),
-            TransactionReceipt::Declare(r) => append_declare(builder, r),
-            TransactionReceipt::Deploy(r) => append_deploy(builder, r),
-            TransactionReceipt::DeployAccount(r) => append_deploy_account(builder, r),
-        };
+        let builder = append_receipt(builder, &self.0.receipt);
 
         append_block(builder, &self.0.block).build()
+    }
+}
+
+/// Appends the fields of a single [`TransactionReceipt`] to the given [`OutputBuilder`].
+///
+/// The caller is responsible for adding any header and (optionally) block info via [`append_block`].
+#[must_use]
+pub fn append_receipt(builder: OutputBuilder, receipt: &TransactionReceipt) -> OutputBuilder {
+    match receipt {
+        TransactionReceipt::Invoke(r) => append_invoke(builder, r),
+        TransactionReceipt::L1Handler(r) => append_l1_handler(builder, r),
+        TransactionReceipt::Declare(r) => append_declare(builder, r),
+        TransactionReceipt::Deploy(r) => append_deploy(builder, r),
+        TransactionReceipt::DeployAccount(r) => append_deploy_account(builder, r),
     }
 }
 
@@ -80,7 +89,7 @@ fn append_deploy(builder: OutputBuilder, r: &DeployTransactionReceipt) -> Output
         r.messages_sent.len(),
         r.events.len(),
     )
-    .padded_felt_field("Contract Address", &r.contract_address)
+    .contract_address(&r.contract_address)
 }
 
 fn append_deploy_account(
@@ -98,7 +107,7 @@ fn append_deploy_account(
         r.messages_sent.len(),
         r.events.len(),
     )
-    .padded_felt_field("Contract Address", &r.contract_address)
+    .contract_address(&r.contract_address)
 }
 
 fn append_l1_handler(builder: OutputBuilder, r: &L1HandlerTransactionReceipt) -> OutputBuilder {
@@ -129,8 +138,8 @@ fn append_common(
     events: usize,
 ) -> OutputBuilder {
     let builder = builder
-        .field("Type", tx_type)
-        .padded_felt_field("Transaction Hash", transaction_hash)
+        .tx_type(tx_type)
+        .tx_hash(transaction_hash)
         .field("Finality Status", fmt_finality(finality_status))
         .field("Execution Status", fmt_execution_status(execution_result));
 

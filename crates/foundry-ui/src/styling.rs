@@ -10,6 +10,7 @@ enum OutputEntry {
         label: String,
         value: String,
         extra: Option<String>,
+        indent: usize,
     },
     BlankLine,
     Text(String),
@@ -17,6 +18,7 @@ enum OutputEntry {
 
 pub struct OutputBuilder {
     entries: Vec<OutputEntry>,
+    current_indent: usize,
 }
 
 impl Default for OutputBuilder {
@@ -30,6 +32,7 @@ impl OutputBuilder {
     pub fn new() -> Self {
         Self {
             entries: Vec::new(),
+            current_indent: 0,
         }
     }
 
@@ -37,14 +40,21 @@ impl OutputBuilder {
         self.entries
             .iter()
             .filter_map(|entry| {
-                if let OutputEntry::Field { label, .. } = entry {
-                    Some(label.len() + 1)
+                if let OutputEntry::Field { label, indent, .. } = entry {
+                    Some(indent + label.len() + 1)
                 } else {
                     None
                 }
             })
             .max()
             .unwrap_or(0)
+    }
+
+    /// Sets the indentation (in spaces) applied to fields added afterwards.
+    #[must_use]
+    pub fn with_indent(mut self, indent: usize) -> Self {
+        self.current_indent = indent;
+        self
     }
 
     #[must_use]
@@ -67,6 +77,7 @@ impl OutputBuilder {
             label: label_text.to_string(),
             value: value.to_string(),
             extra: None,
+            indent: self.current_indent,
         });
         self
     }
@@ -138,6 +149,7 @@ impl OutputBuilder {
                     label,
                     value,
                     extra,
+                    indent,
                 } => {
                     let styled_value = style(&value).yellow();
                     let field_value = match extra {
@@ -147,7 +159,7 @@ impl OutputBuilder {
                     writeln!(
                         content,
                         "{:field_width$} {}",
-                        format!("{}:", label),
+                        format!("{}{}:", " ".repeat(indent), label),
                         field_value,
                     )
                     .unwrap();

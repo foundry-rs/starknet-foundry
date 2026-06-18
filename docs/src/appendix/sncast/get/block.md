@@ -9,6 +9,16 @@ Block identifier on which the block should be fetched.
 Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string), and block number (u64).
 `pre_confirmed` is used as a default value.
 
+## `--full`
+Optional.
+
+Retrieve full transactions instead of only their hashes.
+
+## `--receipts`
+Optional.
+
+Retrieve transactions receipts instead of only their hashes. Use `--full` to retrieve transaction details instead.
+
 ## `--url, -u <RPC_URL>`
 Optional.
 
