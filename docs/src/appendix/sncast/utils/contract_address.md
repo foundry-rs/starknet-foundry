@@ -15,7 +15,7 @@ Conflicts with: [`--class-hash`](#--class-hash)
 
 The name of the contract. The contract name is the part after the `mod` keyword in your contract file.
 The class hash is derived from the locally built artifact.
-This argument also accepts an absolute/partial module tree path, for example `hello_sncast::contracts::HelloSncast` or `contracts::HelloSncast`., for example `hello_sncast::contracts::HelloSncast`.
+This argument also accepts a module tree path, for example `hello_sncast::contracts::HelloSncast` or `contracts::HelloSncast`., for example `hello_sncast::contracts::HelloSncast`.
 
 ## `--constructor-calldata <CONSTRUCTOR_CALLDATA>`
 Optional.

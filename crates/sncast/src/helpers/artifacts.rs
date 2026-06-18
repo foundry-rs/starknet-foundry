@@ -36,12 +36,7 @@ pub fn resolve_contract_artifacts<'a, S: BuildHasher>(
         _ => {
             matches.sort_unstable_by_key(|(module_path, _)| *module_path);
             let message = format!(
-                "Found more than one contract named \"{contract_identifier}\" at: {}",
-                matches
-                    .iter()
-                    .map(|(module_path, _)| *module_path)
-                    .collect::<Vec<_>>()
-                    .join(", ")
+                "Found more than one contract matching \"{contract_identifier}\". Pass one of these module paths to `--contract-name`:\n{module_paths}",
             );
             Err(StarknetCommandError::ContractResolutionError(ErrorData {
                 data: ByteArray::from(message.as_str()),
@@ -136,7 +131,7 @@ mod tests {
 
         assert_eq!(
             error.to_string(),
-            "Found more than one contract matching \"HelloStarknet\". Pass a more specific module tree path to `--contract-name`:\n - pkg::a::HelloStarknet\n - pkg::b::HelloStarknet"
+            "Found more than one contract matching \"HelloStarknet\". Pass one of these module paths to `--contract-name`:\n - pkg::a::HelloStarknet\n - pkg::b::HelloStarknet"
         );
     }
 
@@ -148,7 +143,7 @@ mod tests {
 
         assert_eq!(
             error.to_string(),
-            "Found more than one contract matching \"a::HelloStarknet\". Pass a more specific module tree path to `--contract-name`:\n - pkg::a::HelloStarknet\n - pkg::nested::a::HelloStarknet"
+            "Found more than one contract matching \"a::HelloStarknet\". Pass one of these module paths to `--contract-name`:\n - pkg::a::HelloStarknet\n - pkg::nested::a::HelloStarknet"
         );
     }
 
