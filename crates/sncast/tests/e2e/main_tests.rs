@@ -444,7 +444,7 @@ fn test_errors_on_ambiguous_contract_name() {
     assert_stderr_contains(
         output,
         indoc! {r#"
-        Error: Found more than one contract named "HelloStarknet" in artifacts: duplicate_contract_name::first_contract::HelloStarknet, duplicate_contract_name::second_contract::HelloStarknet
+        Error: Found more than one contract named "HelloStarknet" at: duplicate_contract_name::first_contract::HelloStarknet, duplicate_contract_name::second_contract::HelloStarknet
         "#},
     );
 }

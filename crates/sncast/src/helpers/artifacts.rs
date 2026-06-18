@@ -15,7 +15,7 @@ fn contract_name_from_module_path(module_path: &str) -> &str {
     module_path
         .rsplit("::")
         .next()
-        .expect("Absolute module tree path should always contain at least one segment")
+        .expect("Module tree path should always contain at least one segment")
 }
 
 pub fn resolve_contract_artifacts<'a, S: BuildHasher>(
@@ -38,7 +38,7 @@ pub fn resolve_contract_artifacts<'a, S: BuildHasher>(
             .expect("artifact should exist for resolved module path")),
         module_paths => {
             let message = format!(
-                "Found more than one contract named \"{contract_identifier}\" in artifacts: {}",
+                "Found more than one contract named \"{contract_identifier}\" at: {}",
                 module_paths.join(", ")
             );
             Err(StarknetCommandError::ContractResolutionError(ErrorData {
@@ -95,7 +95,7 @@ mod tests {
 
         assert_eq!(
             error.to_string(),
-            "Found more than one contract named \"HelloStarknet\" in artifacts: pkg::a::HelloStarknet, pkg::b::HelloStarknet"
+            "Found more than one contract named \"HelloStarknet\" at: pkg::a::HelloStarknet, pkg::b::HelloStarknet"
         );
     }
 }
