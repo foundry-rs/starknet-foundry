@@ -3,7 +3,7 @@ use clap::Args;
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::spec_version::SpecVersionResponse;
+use sncast::response::get::spec_version::SpecVersionResponse;
 use sncast::response::ui::UI;
 use std::process::ExitCode;
 
