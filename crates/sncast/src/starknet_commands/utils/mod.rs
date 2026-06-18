@@ -67,23 +67,29 @@ pub async fn utils(
         }
 
         Commands::ClassHash(class_hash) => {
-            let manifest_path = assert_manifest_path_exists()?;
-            let package_metadata = get_package_metadata(&manifest_path, &class_hash.package)?;
+            let artifacts = if class_hash.sierra_file.is_none() {
+                let manifest_path = assert_manifest_path_exists()?;
+                let package_metadata = get_package_metadata(&manifest_path, &class_hash.package)?;
 
-            let artifacts = build_and_load_artifacts(
-                &package_metadata,
-                &BuildConfig {
-                    scarb_toml_path: manifest_path,
-                    json,
-                    profile: config.scarb_profile.clone(),
-                },
-                false,
-                // TODO(#3959) Remove `base_ui`
-                ui.base_ui(),
-            )
-            .expect("Failed to build contract");
+                Some(
+                    build_and_load_artifacts(
+                        &package_metadata,
+                        &BuildConfig {
+                            scarb_toml_path: manifest_path,
+                            json,
+                            profile: config.scarb_profile.clone(),
+                        },
+                        false,
+                        // TODO(#3959) Remove `base_ui`
+                        ui.base_ui(),
+                    )
+                    .context("Failed to build contract")?,
+                )
+            } else {
+                None
+            };
 
-            let result = class_hash::get_class_hash(&class_hash, &artifacts)
+            let result = class_hash::get_class_hash(&class_hash, artifacts.as_ref())
                 .map_err(handle_starknet_command_error);
 
             Ok(process_command_result("utils class-hash", result, ui, None))
