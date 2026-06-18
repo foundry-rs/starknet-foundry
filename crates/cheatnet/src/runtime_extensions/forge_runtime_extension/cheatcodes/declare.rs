@@ -35,7 +35,7 @@ pub fn declare(
         Err(ContractResolutionError::AmbiguousName(module_paths)) => {
             let paths = module_paths
                 .iter()
-                .map(|path| format!("    {path}"))
+                .map(|path| format!(" - {path}"))
                 .collect::<Vec<_>>()
                 .join("\n");
             return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(

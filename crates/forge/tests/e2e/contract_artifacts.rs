@@ -373,10 +373,37 @@ fn duplicate_contract_name_fails() {
         indoc! {r#"
         Failure data:
             "Multiple contracts found with name = HelloStarknet. Found contracts at the following paths:
-                duplicate_contract_name::HelloStarknet
-                duplicate_contract_name_integrationtest::test_duplicate::HelloStarknet
+             - duplicate_contract_name::HelloStarknet
+             - duplicate_contract_name_integrationtest::test_duplicate::HelloStarknet
             Use the full module path to disambiguate, or rename one of the contracts so that the name is unique."
         "#},
+    );
+}
+
+#[test]
+fn declare_by_module_path() {
+    let temp = setup_package("duplicate_contract_name");
+    let output = test_runner(&temp)
+        .args([
+            "--exact",
+            "duplicate_contract_name_integrationtest::test_duplicate::declare_by_module_path",
+        ])
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from duplicate_contract_name package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] duplicate_contract_name_integrationtest::test_duplicate::declare_by_module_path [..]
+        Tests: 1 passed, 0 failed, 0 ignored, 1 filtered out
+        "},
     );
 }
 
