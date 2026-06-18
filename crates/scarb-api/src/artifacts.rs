@@ -44,7 +44,7 @@ pub struct ContractData {
     pub sierra_path: Utf8PathBuf,
 }
 
-/// A mapping of absolute module tree paths to their corresponding contract data.
+/// A mapping of module tree paths to their corresponding contract data.
 pub type ContractsData = HashMap<String, ContractData>;
 
 #[derive(PartialEq, Debug)]

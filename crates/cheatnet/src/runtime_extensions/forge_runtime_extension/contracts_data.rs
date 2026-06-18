@@ -36,7 +36,7 @@ pub struct ContractData {
 pub enum ContractResolutionError {
     /// No contract with the given name was found.
     NameNotFound,
-    /// Several contracts share the same name. Carries their absolute module tree paths.
+    /// Several contracts share the same name. Carries their module tree paths.
     AmbiguousName(Vec<ModulePath>),
 }
 
