@@ -365,7 +365,7 @@ fn simple_package_no_starknet_contract_target() {
 
 #[test]
 fn duplicate_contract_name_fails() {
-    let temp = setup_package("duplicate_contract_name");
+    let temp = setup_package("declare_paths");
     let output = test_runner(&temp).assert().code(1);
 
     assert_stdout_contains(
@@ -373,8 +373,8 @@ fn duplicate_contract_name_fails() {
         indoc! {r#"
         Failure data:
             "Multiple contracts found with name = HelloStarknet. Found contracts at the following paths:
-             - duplicate_contract_name::HelloStarknet
-             - duplicate_contract_name_integrationtest::test_duplicate::HelloStarknet
+             - declare_paths::HelloStarknet
+             - declare_paths_integrationtest::test_duplicate::HelloStarknet
             Use the full module path to disambiguate, or rename one of the contracts so that the name is unique."
         "#},
     );
@@ -382,11 +382,11 @@ fn duplicate_contract_name_fails() {
 
 #[test]
 fn declare_by_module_path() {
-    let temp = setup_package("duplicate_contract_name");
+    let temp = setup_package("declare_paths");
     let output = test_runner(&temp)
         .args([
             "--exact",
-            "duplicate_contract_name_integrationtest::test_duplicate::declare_by_module_path",
+            "declare_paths_integrationtest::test_duplicate::declare_by_module_path",
         ])
         .assert()
         .success();
@@ -398,10 +398,10 @@ fn declare_by_module_path() {
         [..]Finished[..]
 
 
-        Collected 1 test(s) from duplicate_contract_name package
+        Collected 1 test(s) from declare_paths package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] duplicate_contract_name_integrationtest::test_duplicate::declare_by_module_path [..]
+        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_module_path [..]
         Tests: 1 passed, 0 failed, 0 ignored, 1 filtered out
         "},
     );
