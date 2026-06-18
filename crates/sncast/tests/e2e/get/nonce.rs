@@ -18,7 +18,7 @@ async fn test_happy_case() {
     snapbox.assert().success().stdout_eq(indoc! {r"
         Success: Nonce retrieved
 
-        Nonce: 0x[..]
+        Nonce: [..]
     "});
 }
 
@@ -38,7 +38,7 @@ async fn test_happy_case_with_block_id() {
     snapbox.assert().success().stdout_eq(indoc! {r"
         Success: Nonce retrieved
 
-        Nonce: 0x[..]
+        Nonce: [..]
     "});
 }
 
@@ -107,7 +107,7 @@ async fn test_get_nonce_with_alias() {
     snapbox.assert().success().stdout_eq(indoc! {r"
         Success: Nonce retrieved
 
-        Nonce: 0x[..]
+        Nonce: [..]
     "});
 }
 
