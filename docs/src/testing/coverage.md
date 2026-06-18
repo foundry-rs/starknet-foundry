@@ -10,15 +10,15 @@ To generate the necessary debug information, you need to have `Scarb.toml` file 
 
 ```toml
 [profile.dev.cairo]
-unstable-add-statements-code-locations-debug-info = true
-unstable-add-statements-functions-debug-info = true
+add-statements-code-locations-debug-info = true
+add-statements-functions-debug-info = true
 inlining-strategy = "avoid"
 ```
 
 > 📝 **Note**
 >
-> That `unstable-add-statements-code-locations-debug-info = true` and
-`unstable-add-statements-functions-debug-info = true` will slow down the compilation and cause it to use more system
+> That `add-statements-code-locations-debug-info = true` and
+`add-statements-functions-debug-info = true` will slow down the compilation and cause it to use more system
 > memory. It will also make the compilation artifacts larger. So it is only recommended to add these flags when you need
 > their functionality.
 

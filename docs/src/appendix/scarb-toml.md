@@ -111,19 +111,19 @@ Adjust Cairo compiler configuration parameters when compiling this package. Thes
 # ...
 ```
 
-#### `unstable-add-statements-code-locations-debug-info`
-See [`unstable-add-statements-code-locations-debug-info`](https://docs.swmansion.com/scarb/docs/reference/manifest.html#unstable-add-statements-code-locations-debug-info) in Scarb documentation.
+#### `add-statements-code-locations-debug-info`
+See [`add-statements-code-locations-debug-info`](https://docs.swmansion.com/scarb/docs/reference/manifest.html#add-statements-code-locations-debug-info) in Scarb documentation.
 
 ```toml
 [profile.dev.cairo]
-unstable-add-statements-code-locations-debug-info = true
+add-statements-code-locations-debug-info = true
 ```
 
-#### `unstable-add-statements-functions-debug-info`
-See [`unstable-add-statements-functions-debug-info`](https://docs.swmansion.com/scarb/docs/reference/manifest.html#unstable-add-statements-functions-debug-info) in Scarb documentation.
+#### `add-statements-functions-debug-info`
+See [`add-statements-functions-debug-info`](https://docs.swmansion.com/scarb/docs/reference/manifest.html#add-statements-functions-debug-info) in Scarb documentation.
 ```toml
 [profile.dev.cairo]
-unstable-add-statements-functions-debug-info = true
+add-statements-functions-debug-info = true
 ```
 
 #### `inlining-strategy`
@@ -149,8 +149,8 @@ enable-gas = true
 #### Example of configuration which allows [coverage](https://foundry-rs.github.io/starknet-foundry/testing/coverage.html) report generation
 ```toml
 [profile.dev.cairo]
-unstable-add-statements-code-locations-debug-info = true
-unstable-add-statements-functions-debug-info = true
+add-statements-code-locations-debug-info = true
+add-statements-functions-debug-info = true
 inlining-strategy = "avoid"
 ```
 
@@ -276,8 +276,8 @@ url = "http://your.third.rpc.url"
 block_id.hash = "0x123"
 
 [profile.dev.cairo]
-unstable-add-statements-code-locations-debug-info = true
-unstable-add-statements-functions-debug-info = true
+add-statements-code-locations-debug-info = true
+add-statements-functions-debug-info = true
 inlining-strategy = "avoid"
 
 [features]

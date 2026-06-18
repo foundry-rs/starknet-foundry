@@ -192,20 +192,20 @@ Here's what each tag in the trace represents:
 Backtrace feature relies on debug information provided by Scarb. To generate the necessary debug information, you need
 to have:
 
-1. [Scarb](https://github.com/software-mansion/scarb) version `2.12.0` or higher.
+1. [Scarb](https://github.com/software-mansion/scarb) version `2.15.0` or higher.
 2. `Scarb.toml` file with the following Cairo compiler configuration:
 
 ```toml
 [profile.dev.cairo]
-unstable-add-statements-code-locations-debug-info = true
-unstable-add-statements-functions-debug-info = true
+add-statements-code-locations-debug-info = true
+add-statements-functions-debug-info = true
 panic-backtrace = true
 ```
 
 > 📝 **Note**
 >
-> That `unstable-add-statements-code-locations-debug-info = true` and
-> `unstable-add-statements-functions-debug-info = true` will slow down the compilation and cause it to use more system
+> That `add-statements-code-locations-debug-info = true` and
+> `add-statements-functions-debug-info = true` will slow down the compilation and cause it to use more system
 > memory. It will also make the compilation artifacts larger. So it is only recommended to add these flags when you need
 > their functionality.
 
