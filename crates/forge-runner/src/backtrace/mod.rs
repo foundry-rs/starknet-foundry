@@ -14,6 +14,44 @@ pub struct TestBacktraceContext {
     pub casm_start_offsets: Vec<usize>,
 }
 
+/// Appends a backtrace footer for a failure.
+#[must_use]
+pub fn add_test_backtrace_footer(
+    message: String,
+    contracts_data: &ContractsData,
+    encountered_errors: &EncounteredErrors,
+    test_backtrace: Option<&TestBacktraceContext>,
+    versioned_program_path: &Utf8Path,
+    test_name: &str,
+) -> String {
+    let has_backtrace =
+        !encountered_errors.is_empty() || test_backtrace.is_some_and(|bt| !bt.pcs.is_empty());
+
+    if !has_backtrace {
+        return message;
+    }
+
+    let backtrace = if is_backtrace_enabled() {
+        get_backtrace(
+            contracts_data,
+            encountered_errors,
+            test_backtrace,
+            versioned_program_path,
+            test_name,
+        )
+    } else {
+        Some(format!(
+            "note: run with `{BACKTRACE_ENV}=1` environment variable to display a backtrace"
+        ))
+    };
+
+    if let Some(backtrace) = backtrace {
+        format!("{message}\n{backtrace}")
+    } else {
+        message
+    }
+}
+
 /// When any contract registered an error, prefers the contract-level backtrace.
 /// Otherwise, when the panic originates in the test body itself, renders a test-level backtrace.
 #[must_use]
@@ -53,44 +91,6 @@ pub fn get_backtrace(
     }
 
     None
-}
-
-/// Appends a backtrace footer for a failure.
-#[must_use]
-pub fn add_test_backtrace_footer(
-    message: String,
-    contracts_data: &ContractsData,
-    encountered_errors: &EncounteredErrors,
-    test_backtrace: Option<&TestBacktraceContext>,
-    versioned_program_path: &Utf8Path,
-    test_name: &str,
-) -> String {
-    let has_backtrace =
-        !encountered_errors.is_empty() || test_backtrace.is_some_and(|bt| !bt.pcs.is_empty());
-
-    if !has_backtrace {
-        return message;
-    }
-
-    let backtrace = if is_backtrace_enabled() {
-        get_backtrace(
-            contracts_data,
-            encountered_errors,
-            test_backtrace,
-            versioned_program_path,
-            test_name,
-        )
-    } else {
-        Some(format!(
-            "note: run with `{BACKTRACE_ENV}=1` environment variable to display a backtrace"
-        ))
-    };
-
-    if let Some(backtrace) = backtrace {
-        format!("{message}\n{backtrace}")
-    } else {
-        message
-    }
 }
 
 #[must_use]
