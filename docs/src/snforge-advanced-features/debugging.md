@@ -294,7 +294,7 @@ Learn more about this option in the [Scarb documentation](https://docs.swmansion
 
 #### Inlining
 
-The single optimization that matters most for backtraces is **inlining**, which is enabled by default.
+The single optimization that matters most for backtraces is inlining, which is enabled by default.
 Therefore, inlined backtrace frames either disappear or collapse into a single `(inlined)` entry. 
 
 If you want fuller backtraces **without turning off every optimization**, you can target inlining directly with the [`inlining-strategy`](https://docs.swmansion.com/scarb/docs/reference/manifest.html#inlining-strategy) field. 
@@ -305,9 +305,11 @@ Setting it to `"avoid"` makes the compiler inline only functions annotated with 
 inlining-strategy = "avoid"
 ```
 
-> 📝 **Note**
+> 📝 **Note:**
 > Setting `skip-optimizations = true` already implies `inlining-strategy = "avoid"`.
 
+
+#### Example
 <!-- TODO(#2713) -->
 
 <!-- { "ignored": true, "package_name": "backtrace_panic" } -->
@@ -362,5 +364,4 @@ stack backtrace:
 <!-- TODO(#4434) -->
 
 > ⚠️ **Note**:
-> Disabling inlining gives fuller backtraces, but `snforge` can currently sometime render an **incorrect frames** when inlining is disabled.
-> A frame can point to a wrong function or line.
+> Disabling inlining gives fuller backtraces, but `snforge` can currently sometime render [**wrong frames**](https://github.com/foundry-rs/starknet-foundry/issues/4434) when inlining is disabled.
