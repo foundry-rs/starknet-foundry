@@ -104,7 +104,7 @@ fn test_wrong_scarb_toml_configuration() {
 
 // `add-statements-code-locations-debug-info` is available from Scarb 2.15.0
 #[test]
-fn test_complex_scarb_toml_configuration_without_unstable() {
+fn test_complex_scarb_toml_configuration_debug_info_in_cairo_section() {
     let temp = setup_package("backtrace_vm_error");
 
     let manifest_path = temp.child("Scarb.toml");
@@ -138,7 +138,7 @@ fn test_complex_scarb_toml_configuration_without_unstable() {
 }
 
 #[test]
-fn test_complex_scarb_toml_configuration() {
+fn test_complex_scarb_toml_configuration_unstable_debug_info_in_cairo_section() {
     let temp = setup_package("backtrace_vm_error");
 
     let manifest_path = temp.child("Scarb.toml");
