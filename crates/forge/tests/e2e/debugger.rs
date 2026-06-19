@@ -24,8 +24,8 @@ fn test_fail_wrong_scarb_toml_configuration_for_launch_debugger() {
             "[ERROR] [..]/Scarb.toml must have the Cairo compiler configuration equivalent to the following one to launch the debugger:
 
             [profile.dev.cairo]
-            unstable-add-statements-code-locations-debug-info = true
-            unstable-add-statements-functions-debug-info = true
+            add-statements-code-locations-debug-info = true
+            add-statements-functions-debug-info = true
             add-functions-debug-info = true
             skip-optimizations = true
             ... other entries ...
@@ -46,8 +46,8 @@ fn test_launch_debugger_waits_for_connection() {
         .write_str(&formatdoc!(
             "{existing}
             [profile.dev.cairo]
-            unstable-add-statements-code-locations-debug-info = true
-            unstable-add-statements-functions-debug-info = true
+            add-statements-code-locations-debug-info = true
+            add-statements-functions-debug-info = true
             add-functions-debug-info = true
             skip-optimizations = true",
         ))
@@ -125,8 +125,8 @@ fn test_launch_debugger_fails_for_fuzzer_test() {
         .write_str(&formatdoc!(
             "{existing}
             [profile.dev.cairo]
-            unstable-add-statements-code-locations-debug-info = true
-            unstable-add-statements-functions-debug-info = true
+            add-statements-code-locations-debug-info = true
+            add-statements-functions-debug-info = true
             add-functions-debug-info = true
             skip-optimizations = true",
         ))

@@ -30,8 +30,8 @@ pub const SCARB_MANIFEST_TEMPLATE_CONTENT: &str = r#"
 # block_id.hash = "0x123"                                    # Block to fork from (block hash)
 
 # [profile.dev.cairo]                                        # Configure Cairo compiler
-# unstable-add-statements-code-locations-debug-info = true   # Should be used if you want to use coverage
-# unstable-add-statements-functions-debug-info = true        # Should be used if you want to use coverage/profiler
+# add-statements-code-locations-debug-info = true            # Should be used if you want to use coverage
+# add-statements-functions-debug-info = true                 # Should be used if you want to use coverage/profiler
 # inlining-strategy = "avoid"                                # Should be used if you want to use coverage
 
 # [features]                                                 # Used for conditional compilation

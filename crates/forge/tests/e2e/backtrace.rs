@@ -78,7 +78,7 @@ fn test_wrong_scarb_toml_configuration() {
         .parse::<DocumentMut>()
         .unwrap();
 
-    scarb_toml["profile"]["dev"]["cairo"]["unstable-add-statements-code-locations-debug-info"] =
+    scarb_toml["profile"]["dev"]["cairo"]["add-statements-code-locations-debug-info"] =
         value(false);
 
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
@@ -94,8 +94,8 @@ fn test_wrong_scarb_toml_configuration() {
            "[ERROR] [..]/Scarb.toml must have the Cairo compiler configuration equivalent to the following one to run backtrace:
 
             [profile.dev.cairo]
-            unstable-add-statements-functions-debug-info = true
-            unstable-add-statements-code-locations-debug-info = true
+            add-statements-functions-debug-info = true
+            add-statements-code-locations-debug-info = true
             panic-backtrace = true
             ... other entries ..."
         },
@@ -117,7 +117,7 @@ fn test_complex_scarb_toml_configuration_without_unstable() {
     scarb_toml["profile"]["dev"]["cairo"]
         .as_table_like_mut()
         .unwrap()
-        .remove("unstable-add-statements-code-locations-debug-info")
+        .remove("add-statements-code-locations-debug-info")
         .unwrap();
     scarb_toml["cairo"]["add-statements-code-locations-debug-info"] = value(true);
 
@@ -151,7 +151,7 @@ fn test_complex_scarb_toml_configuration() {
     scarb_toml["profile"]["dev"]["cairo"]
         .as_table_like_mut()
         .unwrap()
-        .remove("unstable-add-statements-code-locations-debug-info")
+        .remove("add-statements-code-locations-debug-info")
         .unwrap();
     scarb_toml["cairo"]["unstable-add-statements-code-locations-debug-info"] = value(true);
 

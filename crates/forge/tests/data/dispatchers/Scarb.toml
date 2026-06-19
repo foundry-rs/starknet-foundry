@@ -19,6 +19,6 @@ sierra = true
 test = "snforge test"
 
 [profile.dev.cairo]
-unstable-add-statements-functions-debug-info = true
-unstable-add-statements-code-locations-debug-info = true
+add-statements-functions-debug-info = true
+add-statements-code-locations-debug-info = true
 panic-backtrace = true

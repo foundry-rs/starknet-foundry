@@ -43,8 +43,8 @@ fn check_profile(
             "{workspace_manifest_path} must have the Cairo compiler configuration equivalent to the following one to run backtrace:
 
             [profile.{profile}.cairo]
-            unstable-add-statements-functions-debug-info = true
-            unstable-add-statements-code-locations-debug-info = true
+            add-statements-functions-debug-info = true
+            add-statements-code-locations-debug-info = true
             panic-backtrace = true
             ... other entries ...
             ",

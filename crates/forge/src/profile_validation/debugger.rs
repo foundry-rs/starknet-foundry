@@ -20,8 +20,8 @@ pub fn check_debugger_compatibility(
             "{workspace_manifest_path} must have the Cairo compiler configuration equivalent to the following one to launch the debugger:
 
             [profile.{profile}.cairo]
-            unstable-add-statements-code-locations-debug-info = true
-            unstable-add-statements-functions-debug-info = true
+            add-statements-code-locations-debug-info = true
+            add-statements-functions-debug-info = true
             add-functions-debug-info = true
             skip-optimizations = true
             ... other entries ...

@@ -107,7 +107,7 @@ fn test_fail_wrong_set_up() {
         .parse::<DocumentMut>()
         .unwrap();
 
-    scarb_toml["profile"]["dev"]["cairo"]["unstable-add-statements-code-locations-debug-info"] =
+    scarb_toml["profile"]["dev"]["cairo"]["add-statements-code-locations-debug-info"] =
         value(false);
 
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
@@ -120,8 +120,8 @@ fn test_fail_wrong_set_up() {
             "[ERROR] [..]/Scarb.toml must have the Cairo compiler configuration equivalent to the following one to run coverage:
 
             [profile.dev.cairo]
-            unstable-add-statements-functions-debug-info = true
-            unstable-add-statements-code-locations-debug-info = true
+            add-statements-functions-debug-info = true
+            add-statements-code-locations-debug-info = true
             inlining-strategy = \"avoid\"
             ... other entries ...
 
