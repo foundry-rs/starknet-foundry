@@ -237,10 +237,7 @@ fn get_contract_name(
     if class_hash == Some(*TEST_CONTRACT_CLASS_HASH_VALUE) {
         Some(String::from(TEST_CODE_CONTRACT_NAME))
     } else {
-        class_hash.and_then(|class_hash| {
-            let module_path = contracts_data.class_hashes.get_by_right(&class_hash)?;
-            Some(contract_name_from_module_path(module_path))
-        })
+        class_hash.and_then(|hash| contracts_data.get_contract_name(&hash))
     }
 }
 
