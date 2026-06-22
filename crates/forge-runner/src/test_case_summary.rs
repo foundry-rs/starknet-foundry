@@ -405,23 +405,34 @@ fn is_matching_should_panic_data(data: &[Felt], pattern: &[Felt]) -> bool {
     let data_str = convert_felts_to_byte_array_string(data);
     let pattern_str = convert_felts_to_byte_array_string(pattern);
 
-    if let (Some(data), Some(pattern)) = (data_str, pattern_str) {
-        data.contains(&pattern) // If both data and pattern are byte arrays, pattern should be a substring of data
+    if let (Some(data), Some(pattern)) = (&data_str, &pattern_str) {
+        data.contains(pattern.as_str()) // If both data and pattern are byte arrays, pattern should be a substring of data
     } else {
         // Compare logic depends on the presence of `ENTRYPOINT_FAILED_ERROR` in the expected data.
         if pattern.contains(&ENTRYPOINT_FAILED_ERROR_FELT) {
             // If data includes `ENTRYPOINT_FAILED_ERROR` compare as is.
             data == pattern
         } else {
-            // Otherwise, remove all generic errors and then compare.
-            let filtered: Vec<Felt> = data
-                .iter()
-                .copied()
-                .filter(|f| f != &ENTRYPOINT_FAILED_ERROR_FELT)
-                .collect();
-            filtered.as_slice() == pattern
+            // Otherwise, remove propagated generic errors and then compare.
+            let filtered = strip_trailing_entrypoint_failed(data);
+
+            if let (Some(data), Some(pattern)) = (
+                convert_felts_to_byte_array_string(filtered),
+                pattern_str.as_ref(),
+            ) {
+                return data.contains(pattern);
+            }
+
+            filtered == pattern
         }
     }
+}
+
+fn strip_trailing_entrypoint_failed(mut data: &[Felt]) -> &[Felt] {
+    while data.last() == Some(&ENTRYPOINT_FAILED_ERROR_FELT) {
+        data = &data[..data.len() - 1];
+    }
+    data
 }
 
 fn convert_felts_to_byte_array_string(data: &[Felt]) -> Option<String> {
@@ -575,6 +586,18 @@ mod tests {
     }
 
     #[test]
+    fn test_is_matching_should_panic_data_does_not_strip_entrypoint_failed_from_middle() {
+        let data = vec![
+            Felt::from(11_u8),
+            ENTRYPOINT_FAILED_ERROR_FELT,
+            Felt::from(22_u8),
+        ];
+        let pattern = vec![Felt::from(11_u8), Felt::from(22_u8)];
+
+        assert!(!is_matching_should_panic_data(&data, &pattern));
+    }
+
+    #[test]
     fn test_is_matching_should_panic_data_mixed_tuple() {
         let byte_array = |s: &str| ByteArray::from(s).serialize_with_magic();
 
@@ -593,5 +616,14 @@ mod tests {
         non_matching_pattern.push(Felt::from_bytes_be_slice(b"short_string"));
 
         assert!(!is_matching_should_panic_data(&data, &non_matching_pattern));
+    }
+
+    #[test]
+    fn test_is_matching_should_panic_data_propagated_byte_array_substring() {
+        let mut data = ByteArray::from("This will panic for sure").serialize_with_magic();
+        data.push(ENTRYPOINT_FAILED_ERROR_FELT);
+
+        let pattern = ByteArray::from("will panic").serialize_with_magic();
+        assert!(is_matching_should_panic_data(&data, &pattern));
     }
 }
