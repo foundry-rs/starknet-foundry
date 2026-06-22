@@ -409,7 +409,9 @@ fn is_matching_should_panic_data(data: &[Felt], pattern: &[Felt]) -> bool {
         data.contains(pattern.as_str()) // If both data and pattern are byte arrays, pattern should be a substring of data
     } else {
         // Compare logic depends on the presence of `ENTRYPOINT_FAILED_ERROR` in the expected data.
-        if pattern.contains(&ENTRYPOINT_FAILED_ERROR_FELT) {
+        // A ByteArray may contain the same felt value as `ENTRYPOINT_FAILED` in its payload,
+        // so only non-ByteArray patterns can opt into exact generic-error matching.
+        if pattern_str.is_none() && pattern.contains(&ENTRYPOINT_FAILED_ERROR_FELT) {
             // If data includes `ENTRYPOINT_FAILED_ERROR` compare as is.
             data == pattern
         } else {
@@ -624,6 +626,15 @@ mod tests {
         data.push(ENTRYPOINT_FAILED_ERROR_FELT);
 
         let pattern = ByteArray::from("will panic").serialize_with_magic();
+        assert!(is_matching_should_panic_data(&data, &pattern));
+    }
+
+    #[test]
+    fn test_is_matching_should_panic_data_propagated_entrypoint_failed_byte_array() {
+        let mut data = ByteArray::from("ENTRYPOINT_FAILED").serialize_with_magic();
+        data.push(ENTRYPOINT_FAILED_ERROR_FELT);
+
+        let pattern = ByteArray::from("ENTRYPOINT_FAILED").serialize_with_magic();
         assert!(is_matching_should_panic_data(&data, &pattern));
     }
 }
