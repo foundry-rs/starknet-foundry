@@ -1,53 +1,14 @@
 use crate::snippet::{Snippet, SnippetConfig, SnippetType};
-use crate::utils::get_nth_ancestor;
 use regex::Regex;
-use std::collections::HashMap;
 use std::sync::LazyLock;
 use std::{fs, io, path::Path};
-use toml_edit::DocumentMut;
 
 const EXTENSION: Option<&str> = Some("md");
-
-fn load_book_variables() -> HashMap<String, String> {
-    let book_toml_path = get_nth_ancestor(2).join("docs/book.toml");
-    let content = fs::read_to_string(&book_toml_path).expect("Failed to read book.toml");
-    let doc = content
-        .parse::<DocumentMut>()
-        .expect("Failed to parse book.toml");
-
-    let variables = doc
-        .get("preprocessor")
-        .and_then(|preprocessor| preprocessor.get("variables"))
-        .and_then(|variables| variables.get("variables"))
-        .and_then(|variables| variables.as_table());
-
-    let Some(variables) = variables else {
-        return HashMap::new();
-    };
-
-    variables
-        .iter()
-        .filter_map(|(key, value)| {
-            value
-                .as_str()
-                .map(|value| (key.to_string(), value.to_string()))
-        })
-        .collect()
-}
-
-fn substitute_book_variables(text: &str, variables: &HashMap<String, String>) -> String {
-    let mut result = text.to_string();
-    for (key, value) in variables {
-        result = result.replace(&format!("{{{{{key}}}}}"), value);
-    }
-    result
-}
 
 pub fn extract_snippets_from_file(
     file_path: &Path,
     snippet_type: &SnippetType,
 ) -> io::Result<Vec<Snippet>> {
-    let book_variables = load_book_variables();
     let content = fs::read_to_string(file_path)?;
     let file_path_str = file_path
         .to_str()
@@ -72,10 +33,9 @@ pub fn extract_snippets_from_file(
                 });
 
                 let output = GAS_RE.replace_all(m.as_str(), "gas: [..]").to_string();
-                let output = EXECUTION_RESOURCES_RE
+                EXECUTION_RESOURCES_RE
                     .replace_all(output.as_str(), "${1}: [..]")
-                    .to_string();
-                substitute_book_variables(&output, &book_variables)
+                    .to_string()
             });
 
             let config = if config_str.is_empty() {
