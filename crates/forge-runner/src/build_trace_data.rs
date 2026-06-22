@@ -21,9 +21,7 @@ use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::forking::data::ForkData;
 use cheatnet::runtime_extensions::common::{get_syscalls_gas_consumed, sum_syscall_usage};
-use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::{
-    ContractsData, contract_name_from_module_path,
-};
+use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::trace_data::{CallTrace, CallTraceNode};
 use conversions::IntoConv;
 use conversions::string::TryFromHexStr;
