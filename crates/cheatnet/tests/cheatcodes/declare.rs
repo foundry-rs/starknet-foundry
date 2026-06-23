@@ -4,8 +4,8 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::Cheatcode
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::{
     DeclareResult, declare,
 };
-use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::contract_name_from_module_path;
 use runtime::EnhancedHintError;
+use shared::utils::contract_name_from_module_path;
 
 #[test]
 fn declare_simple() {
