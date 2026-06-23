@@ -363,6 +363,23 @@ mod tests {
         assert_eq!(contract_name, "HelloStarknet");
     }
 
+    #[test]
+    fn resolves_contract_name_from_partial_module_path() {
+        let package = package_metadata_for_test_contract("duplicate_contract_name");
+        let ui = UI::default();
+
+        let contract_name = resolve_and_validate_contract_name(
+            &package,
+            false,
+            "release".to_string(),
+            "first_contract::HelloStarknet",
+            &ui,
+        )
+        .unwrap();
+
+        assert_eq!(contract_name, "HelloStarknet");
+    }
+
     #[tokio::test]
     async fn uses_cli_network_when_provided() {
         let provider = unused_provider();
