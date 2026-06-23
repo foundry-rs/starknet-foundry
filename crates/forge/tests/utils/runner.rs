@@ -9,6 +9,7 @@ use assert_fs::{
 use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, SyscallUsage};
 use cairo_vm::types::builtin_name::BuiltinName;
 use camino::Utf8PathBuf;
+use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::contract_name_from_module_path;
 use forge_runner::{
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
     test_target_summary::TestTargetSummary,
@@ -406,11 +407,4 @@ pub fn assert_builtin(
             },
         }
     }));
-}
-
-fn contract_name_from_module_path(module_path: &str) -> &str {
-    module_path
-        .rsplit("::")
-        .next()
-        .expect("module path should contain at least one segment")
 }
