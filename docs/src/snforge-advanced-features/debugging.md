@@ -295,7 +295,7 @@ Learn more about this option in the [Scarb documentation](https://docs.swmansion
 #### Inlining
 
 The single optimization that matters most for backtraces is inlining, which is enabled by default.
-Therefore, inlined backtrace frames either disappear or collapse into a single `(inlined)` entry. 
+Therefore, inlined backtrace frames either disappear or collapse into a single `(inlined)` entry.
 
 If you want fuller backtraces **without turning off every optimization**, you can target inlining directly with the [`inlining-strategy`](https://docs.swmansion.com/scarb/docs/reference/manifest.html#inlining-strategy) field. 
 Setting it to `"avoid"` makes the compiler inline only functions annotated with `#[inline(always)]`:
