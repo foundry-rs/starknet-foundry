@@ -409,8 +409,8 @@ pub fn run_test_case(
 }
 
 // Capture PCs for a panic that originates in the test body itself.
-// Mirrors the contract-level logic in `cairo1_execution.rs`,
-// Note: test target is not deployed contract, so the PCs are carried separately instead of `register_error`.
+// Mirrors the contract-level logic in `cairo1_execution.rs` (`execute_entry_point_call_cairo1`) and `entry_point.rs` (`extract_trace_and_register_errors`).
+// Note: the test target is not a deployed contract, so instead of `register_error` PCs are returned in a `TestBacktraceContext`.
 fn capture_test_backtrace(
     result: &Result<CallInfo, CairoRunError>,
     forge_runtime: &ForgeRuntime,
