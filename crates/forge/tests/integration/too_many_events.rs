@@ -61,7 +61,7 @@ fn ok_events() {
         "#
         ),
         Contract::from_code_path(
-            "TooManyEvents".to_string(),
+            "contract::TooManyEvents".to_string(),
             Path::new("tests/data/contracts/too_many_events.cairo"),
         )
         .unwrap()
@@ -129,7 +129,7 @@ fn too_many_events() {
         "#
         ),
         Contract::from_code_path(
-            "TooManyEvents".to_string(),
+            "contract::TooManyEvents".to_string(),
             Path::new("tests/data/contracts/too_many_events.cairo"),
         )
         .unwrap()

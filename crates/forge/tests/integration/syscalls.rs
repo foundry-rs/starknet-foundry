@@ -61,7 +61,7 @@ fn library_call_syscall_is_usable() {
         "#
         ),
         Contract::new(
-            "Caller",
+            "contract::Caller",
             indoc!(
                 r"
                 use starknet::ClassHash;
@@ -101,7 +101,7 @@ fn library_call_syscall_is_usable() {
             )
         ),
         Contract::new(
-            "Executor",
+            "contract::Executor",
             indoc!(
                 r"
                 #[starknet::interface]
@@ -275,7 +275,7 @@ fn keccak_syscall_in_contract() {
         "#
         ),
         Contract::from_code_path(
-            "HelloKeccak".to_string(),
+            "contract::HelloKeccak".to_string(),
             Path::new("tests/data/contracts/keccak_usage.cairo"),
         )
         .unwrap()
@@ -320,7 +320,7 @@ fn compare_keccak_from_contract_with_plain_keccak() {
         "#
         ),
         Contract::from_code_path(
-            "HelloKeccak".to_string(),
+            "contract::HelloKeccak".to_string(),
             Path::new("tests/data/contracts/keccak_usage.cairo"),
         )
         .unwrap()

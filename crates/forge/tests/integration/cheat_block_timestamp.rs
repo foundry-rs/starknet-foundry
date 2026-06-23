@@ -130,7 +130,7 @@ fn cheat_block_timestamp_basic() {
         "#
         ),
         Contract::from_code_path(
-            "CheatBlockTimestampChecker".to_string(),
+            "contract::CheatBlockTimestampChecker".to_string(),
             Path::new("tests/data/contracts/cheat_block_timestamp_checker.cairo"),
         )
         .unwrap()
@@ -216,7 +216,7 @@ fn cheat_block_timestamp_complex() {
         "#
         ),
         Contract::from_code_path(
-            "CheatBlockTimestampChecker".to_string(),
+            "contract::CheatBlockTimestampChecker".to_string(),
             Path::new("tests/data/contracts/cheat_block_timestamp_checker.cairo"),
         )
         .unwrap()
@@ -313,7 +313,7 @@ fn cheat_block_timestamp_with_span() {
         "#
         ),
         Contract::from_code_path(
-            "CheatBlockTimestampChecker".to_string(),
+            "contract::CheatBlockTimestampChecker".to_string(),
             Path::new("tests/data/contracts/cheat_block_timestamp_checker.cairo"),
         )
         .unwrap()

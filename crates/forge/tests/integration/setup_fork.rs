@@ -437,8 +437,7 @@ fn get_block_info_in_forked_block() {
         "#,
         node_rpc_url = node_rpc_url()
     ).as_str(),
-    Contract::from_code_path(
-        "BlockInfoChecker".to_string(),
+    Contract::from_code_path("contract::BlockInfoChecker".to_string(),
         Path::new("tests/data/contracts/block_info_checker.cairo"),
     ).unwrap());
 

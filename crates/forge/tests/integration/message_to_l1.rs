@@ -56,7 +56,7 @@ fn spy_messages_to_l1_simple() {
         "#
         ),
         Contract::from_code_path(
-            "MessageToL1Checker".to_string(),
+            "contract::MessageToL1Checker".to_string(),
             Path::new("tests/data/contracts/message_to_l1_checker.cairo"),
         )
         .unwrap()
@@ -183,7 +183,7 @@ fn expect_three_messages_while_two_sent() {
         "#
         ),
         Contract::from_code_path(
-            "MessageToL1Checker".to_string(),
+            "contract::MessageToL1Checker".to_string(),
             Path::new("tests/data/contracts/message_to_l1_checker.cairo"),
         )
         .unwrap()
@@ -269,7 +269,7 @@ fn expect_two_messages_while_three_sent() {
         "#
         ),
         Contract::from_code_path(
-            "MessageToL1Checker".to_string(),
+            "contract::MessageToL1Checker".to_string(),
             Path::new("tests/data/contracts/message_to_l1_checker.cairo"),
         )
         .unwrap()
@@ -330,7 +330,7 @@ fn message_sent_but_wrong_data_asserted() {
         "#
         ),
         Contract::from_code_path(
-            "MessageToL1Checker".to_string(),
+            "contract::MessageToL1Checker".to_string(),
             Path::new("tests/data/contracts/message_to_l1_checker.cairo"),
         )
         .unwrap()
@@ -381,7 +381,7 @@ fn assert_not_sent_pass() {
         "
         ),
         Contract::from_code_path(
-            "MessageToL1Checker".to_string(),
+            "contract::MessageToL1Checker".to_string(),
             Path::new("tests/data/contracts/message_to_l1_checker.cairo"),
         )
         .unwrap()
@@ -441,7 +441,7 @@ fn assert_not_sent_fails() {
         "#
         ),
         Contract::from_code_path(
-            "MessageToL1Checker".to_string(),
+            "contract::MessageToL1Checker".to_string(),
             Path::new("tests/data/contracts/message_to_l1_checker.cairo"),
         )
         .unwrap()
@@ -522,7 +522,7 @@ fn test_filtering() {
         "#,
         ),
         Contract::from_code_path(
-            "MessageToL1Checker".to_string(),
+            "contract::MessageToL1Checker".to_string(),
             Path::new("tests/data/contracts/message_to_l1_checker.cairo"),
         )
         .unwrap()

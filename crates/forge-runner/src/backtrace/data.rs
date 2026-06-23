@@ -12,10 +12,10 @@ use cairo_lang_sierra::program::StatementIdx;
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet_classes::contract_class::ContractClass;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::contract_name_from_module_path;
 use itertools::Itertools;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
+use shared::utils::contract_name_from_module_path;
 use starknet_api::core::ClassHash;
 use std::collections::{HashMap, HashSet};
 

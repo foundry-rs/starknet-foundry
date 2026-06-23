@@ -69,7 +69,7 @@ fn should_panic_unknown_entry_point() {
         "#
         ),
         Contract::from_code_path(
-            "HelloStarknet".to_string(),
+            "contract::HelloStarknet".to_string(),
             Path::new("tests/data/contracts/hello_starknet.cairo"),
         )
         .unwrap()

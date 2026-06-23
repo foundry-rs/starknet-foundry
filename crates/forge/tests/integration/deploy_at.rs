@@ -35,7 +35,7 @@ fn deploy_at_correct_address() {
     "#
         ),
         Contract::new(
-            "Proxy",
+            "contract::Proxy",
             indoc!(
                 r"
                 use starknet::ContractAddress;
@@ -68,7 +68,7 @@ fn deploy_at_correct_address() {
             )
         ),
         Contract::from_code_path(
-            "CheatCallerAddressChecker".to_string(),
+            "contract::CheatCallerAddressChecker".to_string(),
             Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
         )
         .unwrap()
@@ -99,7 +99,7 @@ fn deploy_two_at_the_same_address() {
     "#
         ),
         Contract::from_code_path(
-            "HelloStarknet".to_string(),
+            "contract::HelloStarknet".to_string(),
             Path::new("tests/data/contracts/hello_starknet.cairo"),
         )
         .unwrap()
@@ -130,7 +130,7 @@ fn fail_to_deploy_at_0() {
     "#
         ),
         Contract::from_code_path(
-            "HelloStarknet".to_string(),
+            "contract::HelloStarknet".to_string(),
             Path::new("tests/data/contracts/hello_starknet.cairo"),
         )
         .unwrap()
@@ -166,7 +166,7 @@ fn deploy_at_constructor_panic_catchable_via_should_panic() {
     "#
         ),
         Contract::from_code_path(
-            "DeployChecker".to_string(),
+            "contract::DeployChecker".to_string(),
             Path::new("tests/data/contracts/deploy_checker.cairo"),
         )
         .unwrap()

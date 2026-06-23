@@ -90,7 +90,7 @@ fn start_and_stop_cheat_transaction_hash_single_attribute() {
         "#
         ),
         Contract::from_code_path(
-            "CheatTxInfoChecker".to_string(),
+            "contract::CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/cheat_tx_info_checker.cairo"),
         )
         .unwrap()
@@ -224,7 +224,7 @@ fn start_cheat_execution_info_all_per_contract() {
         "#
         ),
         Contract::from_code_path(
-            "CheatTxInfoChecker".to_string(),
+            "contract::CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/cheat_tx_info_checker.cairo"),
         )
         .unwrap()
@@ -301,7 +301,7 @@ fn start_cheat_transaction_hash_cancel_mock_by_setting_attribute_to_none() {
         "#
         ),
         Contract::from_code_path(
-            "CheatTxInfoChecker".to_string(),
+            "contract::CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/cheat_tx_info_checker.cairo"),
         )
         .unwrap()
@@ -354,7 +354,7 @@ fn start_cheat_transaction_hash_multiple() {
         "#
         ),
         Contract::from_code_path(
-            "CheatTxInfoChecker".to_string(),
+            "contract::CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/cheat_tx_info_checker.cairo"),
         )
         .unwrap()
@@ -502,7 +502,7 @@ fn start_cheat_execution_info_all_global() {
         "#
         ),
         Contract::from_code_path(
-            "CheatTxInfoChecker".to_string(),
+            "contract::CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/cheat_tx_info_checker.cairo"),
         )
         .unwrap()
@@ -567,7 +567,7 @@ fn start_cheat_transaction_hash_complex() {
         "#
         ),
         Contract::from_code_path(
-            "CheatTxInfoChecker".to_string(),
+            "contract::CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/cheat_tx_info_checker.cairo"),
         )
         .unwrap()
@@ -679,7 +679,7 @@ fn cheat_transaction_hash_with_span() {
         "#
         ),
         Contract::from_code_path(
-            "CheatTxInfoChecker".to_string(),
+            "contract::CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/cheat_tx_info_checker.cairo"),
         )
         .unwrap()
@@ -802,22 +802,22 @@ fn cheat_execution_info_direct_library_call_from_test() {
             "#
         ),
         Contract::from_code_path(
-            "CheatBlockNumberChecker".to_string(),
+            "contract::CheatBlockNumberChecker".to_string(),
             Path::new("tests/data/contracts/cheat_block_number_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "CheatBlockTimestampChecker".to_string(),
+            "contract::CheatBlockTimestampChecker".to_string(),
             Path::new("tests/data/contracts/cheat_block_timestamp_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "CheatSequencerAddressChecker".to_string(),
+            "contract::CheatSequencerAddressChecker".to_string(),
             Path::new("tests/data/contracts/cheat_sequencer_address_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "CheatTxInfoChecker".to_string(),
+            "contract::CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/cheat_tx_info_checker.cairo"),
         )
         .unwrap()
@@ -942,27 +942,27 @@ fn cheat_execution_info_library_call_from_contract() {
             "#
         ),
         Contract::from_code_path(
-            "CheatBlockNumberChecker".to_string(),
+            "contract::CheatBlockNumberChecker".to_string(),
             Path::new("tests/data/contracts/cheat_block_number_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "CheatBlockTimestampChecker".to_string(),
+            "contract::CheatBlockTimestampChecker".to_string(),
             Path::new("tests/data/contracts/cheat_block_timestamp_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "CheatSequencerAddressChecker".to_string(),
+            "contract::CheatSequencerAddressChecker".to_string(),
             Path::new("tests/data/contracts/cheat_sequencer_address_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "CheatTxInfoChecker".to_string(),
+            "contract::CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/cheat_tx_info_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "CheatExecutionInfoLibraryCallChecker".to_string(),
+            "contract::CheatExecutionInfoLibraryCallChecker".to_string(),
             Path::new("tests/data/contracts/cheat_tx_info_checker.cairo"),
         )
         .unwrap()
