@@ -2812,6 +2812,7 @@ dependencies = [
  "ptree",
  "rayon",
  "serde_json",
+ "shared",
  "starknet-rust",
  "starknet-types-core 0.2.4",
  "starknet_api",

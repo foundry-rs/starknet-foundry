@@ -20,3 +20,4 @@ starknet-types-core.workspace = true
 starknet-rust.workspace = true
 starknet_api.workspace = true
 thiserror.workspace = true
+shared ={ path = "../shared" }
