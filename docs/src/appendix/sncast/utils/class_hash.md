@@ -38,7 +38,6 @@ Class Hash: 0x0[..]
 
 ## Example with a Sierra file
 
-<!-- { "ignored": true } -->
 ```shell
 $ sncast utils \
   class-hash \
@@ -49,7 +48,7 @@ $ sncast utils \
 <summary>Output:</summary>
 
 ```shell
-Class Hash: 0x0[..]
+Class Hash: 0x06134dac6883ac052bea8db10bc9ee8af6bad5eeab001cd61b8eaba6a03be103
 ```
 </details>
 <br>
