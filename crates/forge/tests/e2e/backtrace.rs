@@ -271,6 +271,19 @@ fn snap_test_backtrace_test_level_should_panic() {
 }
 
 #[test]
+fn snap_test_backtrace_test_level_should_panic_expected_mismatch() {
+    let temp = setup_package("backtrace_test_should_panic_mismatch");
+
+    let output = test_runner(&temp)
+        .env("SNFORGE_BACKTRACE", "1")
+        .env("SNFORGE_DETERMINISTIC_OUTPUT", "1")
+        .assert()
+        .failure();
+
+    assert_cleaned_output!(output);
+}
+
+#[test]
 fn snap_test_handled_error_not_display() {
     let temp = setup_package("dispatchers");
 
