@@ -1402,11 +1402,13 @@ fn exact_printing_fail() {
         Failure data:
             0x73696d706c6520636865636b ('simple check')
 
+        note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace
         [FAIL] deterministic_output::test::second_test_fail_y
 
         Failure data:
             0x73696d706c6520636865636b ('simple check')
 
+        note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace
         Tests: 0 passed, 2 failed, 0 ignored, 2 filtered out
 
         Failures:
@@ -1432,6 +1434,7 @@ fn exact_printing_mixed() {
         Failure data:
             0x73696d706c6520636865636b ('simple check')
 
+        note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace
         [PASS] deterministic_output::test::second_test_pass_x [..]
         Tests: 1 passed, 1 failed, 0 ignored, 2 filtered out
 
