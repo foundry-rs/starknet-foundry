@@ -271,7 +271,7 @@ fn snap_test_backtrace_test_level_should_panic() {
 }
 
 #[test]
-fn snap_test_backtrace_test_level_should_panic_expected_mismatch() {
+fn snap_test_backtrace_test_level_should_panic_mismatch() {
     let temp = setup_package("backtrace_test_should_panic_mismatch");
 
     let output = test_runner(&temp)
