@@ -51,8 +51,6 @@ pub fn add_test_backtrace_footer(
     }
 }
 
-/// When any contract registered an error, prefers the contract-level backtrace.
-/// Otherwise, when the panic originates in the test body itself, renders a test-level backtrace.
 #[must_use]
 pub fn get_backtrace(
     contracts_data: &ContractsData,

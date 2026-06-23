@@ -364,4 +364,4 @@ stack backtrace:
 <!-- TODO(#4434) -->
 
 > ⚠️ **Note**:
-> Disabling inlining gives fuller backtraces, but `snforge` can currently sometime render [**wrong frames**](https://github.com/foundry-rs/starknet-foundry/issues/4434) when inlining is disabled.
+> Disabling inlining gives fuller backtraces, but `snforge` can currently sometimes render [**wrong frames**](https://github.com/foundry-rs/starknet-foundry/issues/4434) when inlining is disabled.
