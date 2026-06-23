@@ -3,8 +3,7 @@ use crate::helpers::constants::{
 };
 use crate::helpers::env::set_keystore_password_env;
 use crate::helpers::fixtures::{
-    copy_directory_to_tempdir, copy_file, duplicate_contract_directory_with_salt,
-    get_accounts_path, get_keystores_path,
+    copy_file, duplicate_contract_directory_with_salt, get_accounts_path, get_keystores_path,
 };
 use crate::helpers::runner::runner;
 use configuration::test_utils::copy_config_to_tempdir;
@@ -427,24 +426,4 @@ async fn test_keystore_and_ledger_conflict() {
     let output = snapbox.assert().failure();
 
     assert_stderr_contains(output, "Error: keystore and ledger cannot be used together");
-}
-
-#[test]
-fn test_errors_on_ambiguous_contract_name() {
-    let contract_path =
-        copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/duplicate_contract_name");
-
-    let args = vec!["utils", "class-hash", "--contract-name", "HelloStarknet"];
-
-    let output = runner(&args)
-        .current_dir(contract_path.path())
-        .assert()
-        .failure();
-
-    assert_stderr_contains(
-        output,
-        indoc! {r#"
-        Error: Found more than one contract named "HelloStarknet" at: duplicate_contract_name::first_contract::HelloStarknet, duplicate_contract_name::second_contract::HelloStarknet
-        "#},
-    );
 }

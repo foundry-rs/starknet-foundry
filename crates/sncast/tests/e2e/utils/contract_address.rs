@@ -3,7 +3,10 @@ use crate::helpers::{
         CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA, CONTRACTS_DIR,
         MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
     },
-    fixtures::{create_and_deploy_oz_account, duplicate_contract_directory_with_salt},
+    fixtures::{
+        copy_directory_to_tempdir, create_and_deploy_oz_account,
+        duplicate_contract_directory_with_salt,
+    },
     runner::runner,
 };
 use configuration::test_utils::copy_config_to_tempdir;
@@ -476,4 +479,31 @@ fn test_contract_name_not_found_in_artifacts() {
         Command: utils contract-address
         Error: [..]NonExistentContract[..]
         "});
+}
+
+#[test]
+fn test_errors_on_ambiguous_contract_name() {
+    let contract_path =
+        copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/duplicate_contract_name");
+
+    let args = vec![
+        "utils",
+        "contract-address",
+        "--contract-name",
+        "HelloStarknet",
+        "--salt",
+        "0x1",
+    ];
+
+    let output = runner(&args)
+        .current_dir(contract_path.path())
+        .assert()
+        .failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r#"
+        Error: Found more than one contract named "HelloStarknet" at: duplicate_contract_name::first_contract::HelloStarknet, duplicate_contract_name::second_contract::HelloStarknet
+        "#},
+    );
 }
