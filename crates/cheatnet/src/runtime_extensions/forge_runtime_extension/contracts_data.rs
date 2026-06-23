@@ -90,24 +90,25 @@ impl ContractsData {
 
     /// Resolves a user-provided identifier to a single contract.
     ///
-    /// The identifier can be either a contract name (e.g. `MyContract`) or an absolute
-    /// module tree path (e.g. `my_package::module::MyContract`). A module path
-    /// is matched first, which lets users disambiguate contracts that share a name.
+    /// The identifier can be either a contract name (e.g. `MyContract`), an absolute
+    /// module tree path (e.g. `my_package::module::MyContract`) or a suffix of a module tree path
+    /// (e.g. `module::MyContract`). A module path suffix lets users disambiguate contracts
+    /// that share a name.
     /// Returns an error if no contract or multiple contracts match the given identifier.
     pub fn resolve_contract(
         &self,
         contract_identifier: &str,
     ) -> Result<&ContractData, ContractResolutionError> {
-        // An exact module path uniquely identifies a contract, so try it first.
-        if let Some(contract) = self.contracts.get(contract_identifier) {
-            return Ok(contract);
-        }
+        let contract_identifier = contract_identifier
+            .strip_prefix("::")
+            .unwrap_or(contract_identifier);
+        let module_path_suffix = format!("::{contract_identifier}");
 
         let matches: Vec<(&ModulePath, &ContractData)> = self
             .contracts
             .iter()
             .filter(|(module_path, _)| {
-                contract_name_from_module_path(module_path) == contract_identifier
+                *module_path == contract_identifier || module_path.ends_with(&module_path_suffix)
             })
             .collect();
 

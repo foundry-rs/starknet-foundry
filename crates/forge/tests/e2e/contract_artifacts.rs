@@ -371,23 +371,25 @@ fn duplicate_contract_name_fails() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        Collected 2 test(s) from declare_paths package
-        Running 2 test(s) from tests/
-        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_module_path (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~25450)
+        Collected 4 test(s) from declare_paths package
+        Running 4 test(s) from tests/
         [FAIL] declare_paths_integrationtest::test_duplicate::declare_ambiguous_contract
-        
-        
-        Running 0 test(s) from src/
-        Tests: 1 passed, 1 failed, 0 ignored, 0 filtered out
-        
-        Failures:
-            declare_paths_integrationtest::test_duplicate::declare_ambiguous_contract
 
         Failure data:
             "Multiple contracts found with name = HelloStarknet. Found contracts at the following paths:
              - declare_paths::HelloStarknet
              - declare_paths_integrationtest::test_duplicate::HelloStarknet
-            Use the full module path to disambiguate, or rename one of the contracts so that the name is unique."
+            Use a module path to disambiguate, or rename one of the contracts so that the name is unique."
+        
+        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_partial_module_path_with_leading_colons (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~27850)
+        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_partial_module_path (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~25450)
+        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_module_path (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~25450)
+        
+        Running 0 test(s) from src/
+        Tests: 3 passed, 1 failed, 0 ignored, 0 filtered out
+        
+        Failures:
+            declare_paths_integrationtest::test_duplicate::declare_ambiguous_contract
         "#},
     );
 }
@@ -414,7 +416,7 @@ fn declare_by_module_path() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] declare_paths_integrationtest::test_duplicate::declare_by_module_path [..]
-        Tests: 1 passed, 0 failed, 0 ignored, 1 filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 3 filtered out
         "},
     );
 }
