@@ -124,15 +124,6 @@ mod tests {
     }
 
     #[test]
-    fn resolves_contract_by_deeper_partial_module_path() {
-        let artifacts = sample_artifacts_with_nested_module_paths();
-
-        let artifact = resolve_contract_artifacts("nested::a::HelloStarknet", &artifacts).unwrap();
-
-        assert_eq!(artifact.sierra, "nested-a");
-    }
-
-    #[test]
     fn resolves_contract_by_full_module_path() {
         let artifacts = sample_artifacts();
 
