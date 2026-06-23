@@ -14,9 +14,9 @@ use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::state::cached_state::CachedState;
 use cairo_vm::Felt252;
 use cairo_vm::types::program::Program;
-use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
+use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::data::ForkData;
@@ -350,8 +350,7 @@ pub fn run_test_case(
         .encountered_errors
         .clone();
 
-    let test_backtrace =
-        capture_test_backtrace(&result, &forge_runtime, &runner, casm_program);
+    let test_backtrace = capture_test_backtrace(&result, &forge_runtime, &runner, casm_program);
 
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
 
