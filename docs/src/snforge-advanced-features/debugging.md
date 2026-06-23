@@ -251,25 +251,25 @@ Failure data:
     (0x417373657274206661696c6564 ('Assert failed'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
 
 stack backtrace:
-  in contract 'InnerContract':
-    0: core::panic_with_const_felt252
-       at [..]lib.cairo:360:5
-    1: core::panic_with_const_felt252
-       at [..]lib.cairo:360:5
-    2: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
-       at [..]lib.cairo:32:5
+   in contract 'InnerContract':
+      0: core::panic_with_const_felt252
+         at [..]lib.cairo:360:5
+      1: core::panic_with_const_felt252
+         at [..]lib.cairo:360:5
+      2: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
+         at [..]lib.cairo:32:5
 
-  in contract 'OuterContract':
-    0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
-       at [..]lib.cairo:13:5
+   in contract 'OuterContract':
+      0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+         at [..]lib.cairo:13:5
 
-  in test 'backtrace_panic::Test::test_contract_panics':
-    0: (inlined) backtrace_panic::IOuterContractDispatcherImpl::outer
-       at [..]lib.cairo:1:1
-    1: backtrace_panic::Test::test_contract_panics
-       at [..]lib.cairo:59:9
-    2: backtrace_panic::Test::test_contract_panics__snforge_internal_test_generated
-       at [..]lib.cairo:50:5
+   in test 'backtrace_panic::Test::test_contract_panics':
+      0: (inlined) backtrace_panic::IOuterContractDispatcherImpl::outer
+         at [..]lib.cairo:1:1
+      1: backtrace_panic::Test::test_contract_panics
+         at [..]lib.cairo:59:9
+      2: backtrace_panic::Test::test_contract_panics__snforge_internal_test_generated
+         at [..]lib.cairo:50:5
 ```
 </details>
 <br>
@@ -322,37 +322,37 @@ Failure data:
     (0x417373657274206661696c6564 ('Assert failed'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
 
 stack backtrace:
-  in contract 'InnerContract':
-    0: core::array_inline_macro
-       at [..]lib.cairo:346:11
-    1: core::assert
-       at [..]lib.cairo:373:9
-    2: backtrace_panic::InnerContract::inner_call
-       at [..]lib.cairo:40:9
-    3: backtrace_panic::InnerContract::unsafe_new_contract_state
-       at [..]lib.cairo:29:5
-    4: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
-       at [..]lib.cairo:32:5
+   in contract 'InnerContract':
+      0: core::array_inline_macro
+         at [..]lib.cairo:346:11
+      1: core::assert
+         at [..]lib.cairo:373:9
+      2: backtrace_panic::InnerContract::inner_call
+         at [..]lib.cairo:40:9
+      3: backtrace_panic::InnerContract::unsafe_new_contract_state
+         at [..]lib.cairo:29:5
+      4: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
+         at [..]lib.cairo:32:5
 
-  in contract 'OuterContract':
-    0: core::starknet::SyscallResultTraitImpl::unwrap_syscall
-       at [..]starknet.cairo:135:52
-    1: backtrace_panic::IInnerContractDispatcherImpl::inner
-       at [..]lib.cairo:22:1
-    2: backtrace_panic::OuterContract::OuterContract::outer
-       at [..]lib.cairo:17:13
-    3: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
-       at [..]lib.cairo:13:5
+   in contract 'OuterContract':
+      0: core::starknet::SyscallResultTraitImpl::unwrap_syscall
+         at [..]starknet.cairo:135:52
+      1: backtrace_panic::IInnerContractDispatcherImpl::inner
+         at [..]lib.cairo:22:1
+      2: backtrace_panic::OuterContract::OuterContract::outer
+         at [..]lib.cairo:17:13
+      3: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+         at [..]lib.cairo:13:5
 
-  in test 'backtrace_panic::Test::test_contract_panics':
-    0: core::starknet::SyscallResultTraitImpl::unwrap_syscall
-       at [..]starknet.cairo:135:52
-    1: backtrace_panic::IOuterContractDispatcherImpl::outer
-       at [..]lib.cairo:1:1
-    2: backtrace_panic::Test::test_contract_panics
-       at [..]lib.cairo:59:9
-    3: backtrace_panic::Test::test_contract_panics__snforge_internal_test_generated
-       at [..]lib.cairo:50:5
+   in test 'backtrace_panic::Test::test_contract_panics':
+      0: core::starknet::SyscallResultTraitImpl::unwrap_syscall
+         at [..]starknet.cairo:135:52
+      1: backtrace_panic::IOuterContractDispatcherImpl::outer
+         at [..]lib.cairo:1:1
+      2: backtrace_panic::Test::test_contract_panics
+         at [..]lib.cairo:59:9
+      3: backtrace_panic::Test::test_contract_panics__snforge_internal_test_generated
+         at [..]lib.cairo:50:5
 ```
 </details>
 <br>

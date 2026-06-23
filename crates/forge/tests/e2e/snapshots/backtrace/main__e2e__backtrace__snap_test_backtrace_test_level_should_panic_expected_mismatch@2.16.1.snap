@@ -12,15 +12,15 @@ Failure data:
     Expected:  [0x77726f6e67206d7367] (wrong msg)
 
 stack backtrace:
-  in test 'backtrace_test_should_panic_mismatch::tests::test_panics_in_test_body_with_should_panic_mismatch':
-    0: core::panic_with_const_felt252
-       at [..]lib.cairo:360:5
-    1: core::panic_with_const_felt252
-       at [..]lib.cairo:360:5
-    2: (inlined) backtrace_test_should_panic_mismatch::tests::test_panics_in_test_body_with_should_panic_mismatch
-       at [..]lib.cairo:14:5
-    3: backtrace_test_should_panic_mismatch::tests::test_panics_in_test_body_with_should_panic_mismatch__snforge_internal_test_generated
-       at [..]lib.cairo:14:5
+   in test 'backtrace_test_should_panic_mismatch::tests::test_panics_in_test_body_with_should_panic_mismatch':
+      0: core::panic_with_const_felt252
+         at [..]lib.cairo:360:5
+      1: core::panic_with_const_felt252
+         at [..]lib.cairo:360:5
+      2: (inlined) backtrace_test_should_panic_mismatch::tests::test_panics_in_test_body_with_should_panic_mismatch
+         at [..]lib.cairo:14:5
+      3: backtrace_test_should_panic_mismatch::tests::test_panics_in_test_body_with_should_panic_mismatch__snforge_internal_test_generated
+         at [..]lib.cairo:14:5
 
 
 Failures:
