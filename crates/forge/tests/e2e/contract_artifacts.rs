@@ -364,6 +364,62 @@ fn simple_package_no_starknet_contract_target() {
 }
 
 #[test]
+fn duplicate_contract_name_fails() {
+    let temp = setup_package("declare_paths");
+    let output = test_runner(&temp).assert().code(1);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r#"
+        Collected 2 test(s) from declare_paths package
+        Running 2 test(s) from tests/
+        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_module_path (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~25450)
+        [FAIL] declare_paths_integrationtest::test_duplicate::declare_ambiguous_contract
+        
+        
+        Running 0 test(s) from src/
+        Tests: 1 passed, 1 failed, 0 ignored, 0 filtered out
+        
+        Failures:
+            declare_paths_integrationtest::test_duplicate::declare_ambiguous_contract
+
+        Failure data:
+            "Multiple contracts found with name = HelloStarknet. Found contracts at the following paths:
+             - declare_paths::HelloStarknet
+             - declare_paths_integrationtest::test_duplicate::HelloStarknet
+            Use the full module path to disambiguate, or rename one of the contracts so that the name is unique."
+        "#},
+    );
+}
+
+#[test]
+fn declare_by_module_path() {
+    let temp = setup_package("declare_paths");
+    let output = test_runner(&temp)
+        .args([
+            "--exact",
+            "declare_paths_integrationtest::test_duplicate::declare_by_module_path",
+        ])
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from declare_paths package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_module_path [..]
+        Tests: 1 passed, 0 failed, 0 ignored, 1 filtered out
+        "},
+    );
+}
+
+#[test]
 fn no_optimization_flag() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)
