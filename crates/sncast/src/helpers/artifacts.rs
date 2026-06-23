@@ -96,4 +96,16 @@ mod tests {
             "Found more than one contract named \"HelloStarknet\" at: pkg::a::HelloStarknet, pkg::b::HelloStarknet"
         );
     }
+
+    #[test]
+    fn errors_when_contract_artifacts_not_found() {
+        let artifacts = sample_artifacts();
+
+        let error = resolve_contract_artifacts("MissingContract", &artifacts).unwrap_err();
+
+        assert!(matches!(
+            error,
+            StarknetCommandError::ContractArtifactsNotFound(_)
+        ));
+    }
 }
