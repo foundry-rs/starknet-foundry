@@ -1,5 +1,6 @@
 use crate::{ErrorData, response::errors::StarknetCommandError};
 use conversions::byte_array::ByteArray;
+use shared::utils::contract_name_from_module_path;
 use std::{collections::HashMap, hash::BuildHasher};
 
 /// Contains compiled Starknet artifacts
@@ -9,13 +10,6 @@ pub struct CastStarknetContractArtifacts {
     pub sierra: String,
     /// Compiled casm code
     pub casm: String,
-}
-
-fn contract_name_from_module_path(module_path: &str) -> &str {
-    module_path
-        .rsplit("::")
-        .next()
-        .expect("Module tree path should always contain at least one segment")
 }
 
 pub fn resolve_contract_artifacts<'a, S: BuildHasher>(
