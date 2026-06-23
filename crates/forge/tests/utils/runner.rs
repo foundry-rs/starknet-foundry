@@ -9,7 +9,6 @@ use assert_fs::{
 use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, SyscallUsage};
 use cairo_vm::types::builtin_name::BuiltinName;
 use camino::Utf8PathBuf;
-use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::contract_name_from_module_path;
 use forge_runner::{
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
     test_target_summary::TestTargetSummary,
@@ -21,7 +20,7 @@ use scarb_api::{
     CompilationOpts, ContractData, ContractsData, StarknetContractArtifacts,
     get_contracts_artifacts_and_source_sierra_paths, target_dir_for_workspace,
 };
-use shared::command::CommandExt;
+use shared::{command::CommandExt, utils::contract_name_from_module_path};
 use starknet_api::execution_resources::{GasAmount, GasVector};
 use std::{
     collections::HashMap,
