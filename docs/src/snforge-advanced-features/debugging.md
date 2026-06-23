@@ -234,7 +234,7 @@ note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace
 
 To enable backtrace, simply set the `SNFORGE_BACKTRACE=1` environment variable and rerun the operation.
 
-When enabled, the backtrace will display the call tree of the execution, including the specific line numbers in test code and contracts where the errors occurred. 
+When enabled, the backtrace will display the call tree of the execution, including the specific line numbers in test code and contracts where the errors occurred.
 Here's an example of what you might see:
 
 <!-- TODO(#2713) -->
