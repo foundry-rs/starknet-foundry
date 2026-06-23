@@ -1,6 +1,5 @@
 use crate::{ErrorData, response::errors::StarknetCommandError};
 use conversions::byte_array::ByteArray;
-use shared::utils::contract_name_from_module_path;
 use std::{collections::HashMap, hash::BuildHasher};
 
 /// Contains compiled Starknet artifacts
@@ -20,10 +19,15 @@ pub fn resolve_contract_artifacts<'a, S: BuildHasher>(
     contract_identifier: &str,
     artifacts: &'a ContractArtifactsMap<S>,
 ) -> Result<&'a CastStarknetContractArtifacts, StarknetCommandError> {
+    let contract_identifier = contract_identifier
+        .strip_prefix("::")
+        .unwrap_or(contract_identifier);
+    let module_path_suffix = format!("::{contract_identifier}");
+
     let mut matches: Vec<(&str, &CastStarknetContractArtifacts)> = artifacts
         .iter()
         .filter(|(module_path, _)| {
-            contract_name_from_module_path(module_path) == contract_identifier
+            *module_path == contract_identifier || module_path.ends_with(&module_path_suffix)
         })
         .map(|(module_path, artifact)| (module_path.as_str(), artifact))
         .collect();
@@ -35,6 +39,11 @@ pub fn resolve_contract_artifacts<'a, S: BuildHasher>(
         [(_, artifact)] => Ok(artifact),
         _ => {
             matches.sort_unstable_by_key(|(module_path, _)| *module_path);
+            let module_paths = matches
+                .iter()
+                .map(|(module_path, _)| format!(" - {module_path}"))
+                .collect::<Vec<_>>()
+                .join("\n");
             let message = format!(
                 "Found more than one contract matching \"{contract_identifier}\". Pass one of these module paths to `--contract-name`:\n{module_paths}",
             );
@@ -101,6 +110,15 @@ mod tests {
         let artifacts = sample_artifacts();
 
         let artifact = resolve_contract_artifacts("a::HelloStarknet", &artifacts).unwrap();
+
+        assert_eq!(artifact.sierra, "a");
+    }
+
+    #[test]
+    fn resolves_contract_by_partial_module_path_with_leading_colons() {
+        let artifacts = sample_artifacts();
+
+        let artifact = resolve_contract_artifacts("::a::HelloStarknet", &artifacts).unwrap();
 
         assert_eq!(artifact.sierra, "a");
     }
