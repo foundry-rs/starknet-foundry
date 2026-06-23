@@ -427,7 +427,7 @@ fn capture_test_backtrace(
     if !panicked {
         return TestBacktraceOutcome::Success;
     }
-    
+
     let context = is_backtrace_enabled().then(|| {
         let casm_start_offsets = casm_program
             .debug_info
@@ -444,7 +444,7 @@ fn capture_test_backtrace(
                 .unwrap_or_else(|| runner.vm.get_reversed_pc_traceback()),
             Err(_) => runner.vm.get_reversed_pc_traceback(),
         };
-        
+
         TestBacktraceContext {
             pcs,
             casm_start_offsets,
