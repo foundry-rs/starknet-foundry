@@ -22,24 +22,28 @@ pub fn resolve_contract_artifacts<'a, S: BuildHasher>(
     contract_identifier: &str,
     artifacts: &'a HashMap<String, CastStarknetContractArtifacts, S>,
 ) -> Result<&'a CastStarknetContractArtifacts, StarknetCommandError> {
-    let mut matching_module_paths: Vec<&str> = artifacts
-        .keys()
-        .filter(|module_path| contract_name_from_module_path(module_path) == contract_identifier)
-        .map(String::as_str)
+    let mut matches: Vec<(&str, &CastStarknetContractArtifacts)> = artifacts
+        .iter()
+        .filter(|(module_path, _)| {
+            contract_name_from_module_path(module_path) == contract_identifier
+        })
+        .map(|(module_path, artifact)| (module_path.as_str(), artifact))
         .collect();
-    matching_module_paths.sort_unstable();
 
-    match matching_module_paths.as_slice() {
+    match matches.as_slice() {
         [] => Err(StarknetCommandError::ContractArtifactsNotFound(ErrorData {
             data: ByteArray::from(contract_identifier),
         })),
-        [module_path] => Ok(artifacts
-            .get(*module_path)
-            .expect("artifact should exist for resolved module path")),
-        module_paths => {
+        [(_, artifact)] => Ok(artifact),
+        _ => {
+            matches.sort_unstable_by_key(|(module_path, _)| *module_path);
             let message = format!(
                 "Found more than one contract named \"{contract_identifier}\" at: {}",
-                module_paths.join(", ")
+                matches
+                    .iter()
+                    .map(|(module_path, _)| *module_path)
+                    .collect::<Vec<_>>()
+                    .join(", ")
             );
             Err(StarknetCommandError::ContractResolutionError(ErrorData {
                 data: ByteArray::from(message.as_str()),
