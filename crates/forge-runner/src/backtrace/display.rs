@@ -43,10 +43,9 @@ impl Display for BacktraceStack<'_> {
             BacktraceKind::Contract => "contract",
             BacktraceKind::Test => "test",
         };
-        writeln!(f, "error occurred in {kind} '{}'", self.name)?;
-        writeln!(f, "stack backtrace:")?;
+        writeln!(f, "  in {kind} '{}':", self.name)?;
         for (i, backtrace) in self.stack.iter().enumerate() {
-            writeln!(f, "   {i}: {backtrace}")?;
+            writeln!(f, "    {i}: {backtrace}")?;
         }
         Ok(())
     }
@@ -54,7 +53,7 @@ impl Display for BacktraceStack<'_> {
 
 pub fn render_fork_backtrace(contract_class_hash: &ClassHash) -> String {
     format!(
-        "error occurred in forked contract with class hash: {:#x}\n",
+        "  in forked contract with class hash: {:#x}\n",
         contract_class_hash.0
     )
 }
