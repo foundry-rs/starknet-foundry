@@ -57,16 +57,16 @@ pub fn load_accounts(accounts_file: &Utf8PathBuf) -> Result<Value> {
     Ok(accounts)
 }
 
-/// When `required` is `true`, a missing accounts file or network entry is an error.
+/// When `accounts_file_should_exist` is `true`, a missing accounts file or network entry is an error.
 /// It is set to `false` only for devnet accounts, which don't require the default accounts file to exist.
 pub fn check_account_exists(
     account_name: &str,
     network_name: &str,
     accounts_file: &Utf8PathBuf,
-    required: bool,
+    accounts_file_should_exist: bool,
 ) -> Result<bool> {
     if !accounts_file.exists() {
-        if required {
+        if accounts_file_should_exist {
             check_account_file_exists(accounts_file)?;
         }
         return Ok(false);
@@ -77,7 +77,7 @@ pub fn check_account_exists(
 
     match accounts.get(network_name) {
         Some(network_accounts) => Ok(network_accounts.contains_key(account_name)),
-        None if required => Err(anyhow::anyhow!(
+        None if accounts_file_should_exist => Err(anyhow::anyhow!(
             "Network with name {network_name} does not exist in accounts file"
         )),
         None => Ok(false),
