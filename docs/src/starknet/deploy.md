@@ -98,7 +98,7 @@ contract from a Scarb project by providing the `--contract-name` flag.
 Under the hood, if the passed contract was never declared to starknet, it will run the [declare](../starknet/declare.md)
 command first and then execute the contract deployment.
 
-`--contract-name` also accepts an absolute module tree path such as `hello_sncast::contracts::HelloSncast`.
+`--contract-name` also accepts module tree path such as `hello_sncast::contracts::HelloSncast` or `contracts::HelloSncast`.
 Use the full path when more than one contract in the package shares the same contract name.
 
 > 📝 **Note**
