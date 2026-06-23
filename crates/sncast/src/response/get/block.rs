@@ -1,6 +1,6 @@
 use crate::response::cast_message::SncastCommandMessage;
-use crate::response::transaction::append_transaction;
-use crate::response::tx_receipt::append_receipt;
+use crate::response::get::transaction::append_transaction;
+use crate::response::get::tx_receipt::append_receipt;
 use foundry_ui::styling::OutputBuilder;
 use serde::{Serialize, Serializer};
 use starknet_rust::core::types::{

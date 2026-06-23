@@ -4,6 +4,7 @@ use cairo_lang_starknet_classes::contract_class::ContractClass;
 use cheatnet::forking::data::ForkData;
 use cheatnet::predeployment::abi::ContractsDebuggingData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
+use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::contract_name_from_module_path;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use starknet_api::core::{ClassHash, EntryPointSelector};
@@ -24,9 +25,14 @@ impl ContractsDataStore {
     #[must_use]
     pub fn new(contracts_data: &ContractsData, fork_data: &ForkData) -> Self {
         let contract_names = contracts_data
-            .class_hashes
-            .iter()
-            .map(|(name, class_hash)| (*class_hash, ContractName(name.clone())))
+            .contracts
+            .par_iter()
+            .map(|(module_path, contract_data)| {
+                (
+                    contract_data.class_hash,
+                    ContractName(contract_name_from_module_path(module_path).to_string()),
+                )
+            })
             .collect();
 
         let selectors = contracts_data

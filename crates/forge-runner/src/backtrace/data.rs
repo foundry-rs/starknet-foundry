@@ -12,6 +12,7 @@ use cairo_lang_sierra::program::StatementIdx;
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet_classes::contract_class::ContractClass;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
+use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::contract_name_from_module_path;
 use itertools::Itertools;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
@@ -74,18 +75,18 @@ struct ContractBacktraceData {
 
 impl ContractBacktraceData {
     fn new(class_hash: &ClassHash, contracts_data: &ContractsData) -> Result<Self> {
-        let contract_name = contracts_data
-            .get_contract_name(class_hash)
+        let module_path = contracts_data
+            .class_hashes
+            .get_by_right(class_hash)
             .context(format!(
-                "failed to get contract name for class hash: {class_hash}"
-            ))?
-            .clone();
-
-        let contract_artifacts = contracts_data
-            .get_artifacts(&contract_name)
-            .context(format!(
-                "failed to get artifacts for contract name: {contract_name}"
+                "module path not found for class hash: {class_hash}"
             ))?;
+        let contract = contracts_data
+            .contracts
+            .get(module_path)
+            .context(format!("contract not found for module path: {module_path}"))?;
+
+        let contract_artifacts = &contract.artifacts;
 
         let contract_class = serde_json::from_str::<ContractClass>(&contract_artifacts.sierra)?;
 
@@ -119,7 +120,7 @@ impl ContractBacktraceData {
             .collect();
 
         Ok(Self {
-            contract_name,
+            contract_name: contract_name_from_module_path(module_path).to_string(),
             casm_debug_info_start_offsets,
             coverage_annotations,
             profiler_annotations,

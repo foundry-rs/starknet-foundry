@@ -16,7 +16,7 @@ pub mod manifest;
 pub mod metadata;
 pub mod version;
 
-pub use crate::artifacts::StarknetContractArtifacts;
+pub use crate::artifacts::{ContractData, ContractsData, StarknetContractArtifacts};
 
 const INTEGRATION_TEST_TYPE: &str = "integration";
 
@@ -115,7 +115,7 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
         #[cfg(feature = "cairo-native")]
         run_native,
     }: CompilationOpts,
-) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
+) -> Result<ContractsData> {
     let starknet_artifact_files = if use_test_target_contracts {
         let test_targets = test_targets_by_name(package);
         get_starknet_artifacts_paths_from_test_targets(artifacts_dir, &test_targets)
@@ -135,7 +135,7 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
         let starknet_artifact_files = starknet_artifact_files.compile_native(run_native);
         starknet_artifact_files.load_contracts_artifacts()
     } else {
-        Ok(HashMap::default())
+        Ok(ContractsData::default())
     }
 }
 
@@ -597,22 +597,26 @@ mod tests {
         )
         .unwrap();
 
-        assert!(contracts.contains_key("ERC20"));
-        assert!(contracts.contains_key("HelloStarknet"));
+        let find = |contract_name: &str| {
+            contracts
+                .values()
+                .find(|contract| contract.name == contract_name)
+                .unwrap()
+        };
 
         let sierra_contents_erc20 =
             fs::read_to_string(temp.join("target/dev/basic_package_ERC20.contract_class.json"))
                 .unwrap();
+        assert_eq!(&sierra_contents_erc20, &find("ERC20").artifacts.sierra);
 
-        let contract = contracts.get("ERC20").unwrap();
-        assert_eq!(&sierra_contents_erc20, &contract.0.sierra);
-
-        let sierra_contents_erc20 = fs::read_to_string(
+        let sierra_contents_hello_starknet = fs::read_to_string(
             temp.join("target/dev/basic_package_HelloStarknet.contract_class.json"),
         )
         .unwrap();
-        let contract = contracts.get("HelloStarknet").unwrap();
-        assert_eq!(&sierra_contents_erc20, &contract.0.sierra);
+        assert_eq!(
+            &sierra_contents_hello_starknet,
+            &find("HelloStarknet").artifacts.sierra
+        );
     }
 
     #[test]

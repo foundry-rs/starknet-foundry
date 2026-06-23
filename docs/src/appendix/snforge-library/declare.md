@@ -18,6 +18,10 @@ fn declare(contract: ByteArray) -> Result<DeclareResult, Array<felt252>>
 
 Declares a contract for later deployment.
 
+The `contract` argument accepts either a contract name (e.g. `MyContract`) or an absolute
+module tree path (e.g. `my_package::module::MyContract`). Use the full module path
+to disambiguate when multiple contracts share the same name.
+
 Returns the `DeclareResult` that encapsulated possible outcomes in the enum:
  - `Success`: Contains the successfully declared `ContractClass`.
  - `AlreadyDeclared`: Contains `ContractClass` and signals that the contract has already been declared.
