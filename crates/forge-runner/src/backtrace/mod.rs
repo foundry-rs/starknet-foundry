@@ -20,11 +20,11 @@ pub fn add_test_backtrace_footer(
     contracts_data: &ContractsData,
     encountered_errors: &EncounteredErrors,
     test_backtrace: Option<&TestBacktraceContext>,
+    test_panicked: bool,
     versioned_program_path: &Utf8Path,
     test_name: &str,
 ) -> String {
-    let has_backtrace =
-        !encountered_errors.is_empty() || test_backtrace.is_some_and(|bt| !bt.pcs.is_empty());
+    let has_backtrace = !encountered_errors.is_empty() || test_panicked;
 
     if !has_backtrace {
         return message;

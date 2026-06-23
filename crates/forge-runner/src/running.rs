@@ -1,4 +1,4 @@
-use crate::backtrace::{TestBacktraceContext, add_test_backtrace_footer};
+use crate::backtrace::{TestBacktraceContext, add_test_backtrace_footer, is_backtrace_enabled};
 use crate::forge_config::{ForgeConfig, RuntimeConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
@@ -152,6 +152,7 @@ pub struct RunCompleted {
     pub(crate) fuzzer_args: Vec<String>,
     pub(crate) fork_data: Option<ForkData>,
     pub(crate) test_backtrace: Option<TestBacktraceContext>,
+    pub(crate) test_panicked: bool,
 }
 
 pub struct RunError {
@@ -161,6 +162,7 @@ pub struct RunError {
     pub(crate) fuzzer_args: Vec<String>,
     pub(crate) fork_data: Option<ForkData>,
     pub(crate) test_backtrace: Option<TestBacktraceContext>,
+    pub(crate) test_panicked: bool,
 }
 
 pub enum RunResult {
@@ -350,7 +352,12 @@ pub fn run_test_case(
         .encountered_errors
         .clone();
 
-    let test_backtrace = capture_test_backtrace(&result, &forge_runtime, &runner, casm_program);
+    let test_panicked = matches!(&result, Err(_))
+        || matches!(&result, Ok(call_info) if call_info.execution.failed);
+
+    let test_backtrace = is_backtrace_enabled()
+        .then(|| capture_test_backtrace(&result, &forge_runtime, &runner, casm_program))
+        .flatten();
 
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
 
@@ -394,6 +401,7 @@ pub fn run_test_case(
                 fuzzer_args,
                 fork_data,
                 test_backtrace,
+                test_panicked,
             }))
         }
         Err(error) => RunResult::Error(Box::new(RunError {
@@ -403,6 +411,7 @@ pub fn run_test_case(
             fuzzer_args,
             fork_data,
             test_backtrace,
+            test_panicked,
         })),
     })
 }
@@ -485,6 +494,7 @@ fn extract_test_case_summary(
                             contracts_data,
                             &run_error.encountered_errors,
                             run_error.test_backtrace.as_ref(),
+                            run_error.test_panicked,
                             versioned_program_path,
                             &case.name,
                         )

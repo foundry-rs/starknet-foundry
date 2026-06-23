@@ -295,6 +295,7 @@ impl TestCaseSummary<Single> {
             fuzzer_args,
             fork_data,
             test_backtrace,
+            test_panicked,
         }: RunCompleted,
         test_case: &TestCaseWithResolvedConfig,
         contracts_data: &ContractsData,
@@ -360,6 +361,7 @@ impl TestCaseSummary<Single> {
                             contracts_data,
                             &encountered_errors,
                             test_backtrace.as_ref(),
+                            test_panicked,
                             versioned_program_path,
                             &name,
                         )
@@ -407,6 +409,7 @@ impl TestCaseSummary<Single> {
                                     contracts_data,
                                     &encountered_errors,
                                     test_backtrace.as_ref(),
+                                    test_panicked,
                                     versioned_program_path,
                                     &name,
                                 )
