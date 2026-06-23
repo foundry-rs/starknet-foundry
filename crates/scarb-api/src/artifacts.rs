@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use crate::artifacts::representation::StarknetArtifactsRepresentation;
+use crate::artifacts::representation::{ContractArtifact, StarknetArtifactsRepresentation};
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 #[cfg(feature = "cairo-native")]
 use cairo_native::executor::AotContractExecutor;
@@ -73,12 +73,12 @@ impl StarknetArtifactsFiles {
 
     #[tracing::instrument(skip_all, level = "debug")]
     pub(crate) fn load_contracts_artifacts(self) -> Result<ContractsData> {
-        // Gather `(name, module_path, sierra_path)` across the base and all other
-        // representations. The same contract may be emitted into both test targets
-        // (unittest and integrationtest) under the same `module_path`, so we collapse
-        // identical module paths here. Distinct module paths sharing a `name` are
-        // genuine duplicates and are all kept.
-        let mut all_artifacts: Vec<(String, String, Utf8PathBuf)> =
+        // Gather contract artifacts across the base and all other representations.
+        // The same contract may be emitted into both test targets (unittest and
+        // integrationtest) under the same `module_path`, so we collapse identical
+        // module paths here. Distinct module paths sharing a `name` are genuine
+        // duplicates and are all kept.
+        let mut all_artifacts: Vec<ContractArtifact> =
             StarknetArtifactsRepresentation::try_from_path(self.base.as_path())?.artifacts();
 
         for path in &self.other {
@@ -90,13 +90,15 @@ impl StarknetArtifactsFiles {
     }
 
     #[tracing::instrument(skip_all, level = "debug")]
-    fn compile_artifacts(
-        &self,
-        artifacts: Vec<(String, String, Utf8PathBuf)>,
-    ) -> Result<ContractsData> {
+    fn compile_artifacts(&self, artifacts: Vec<ContractArtifact>) -> Result<ContractsData> {
         artifacts
             .into_par_iter()
-            .map(|(name, module_path, sierra_path)| {
+            .map(|artifact| {
+                let ContractArtifact {
+                    name,
+                    module_path,
+                    sierra_path,
+                } = artifact;
                 let artifacts = self.compile_artifact_at_path(&sierra_path)?;
                 Ok((
                     module_path,
@@ -141,11 +143,9 @@ impl StarknetArtifactsFiles {
     }
 }
 
-fn deduplicate_by_module_path(
-    mut artifacts: Vec<(String, String, Utf8PathBuf)>,
-) -> Vec<(String, String, Utf8PathBuf)> {
-    artifacts.sort_by(|(_, a, _), (_, b, _)| a.cmp(b));
-    artifacts.dedup_by(|(_, a, _), (_, b, _)| a == b);
+fn deduplicate_by_module_path(mut artifacts: Vec<ContractArtifact>) -> Vec<ContractArtifact> {
+    artifacts.sort_by(|a, b| a.module_path.cmp(&b.module_path));
+    artifacts.dedup_by(|a, b| a.module_path == b.module_path);
     artifacts
 }
 
@@ -163,26 +163,33 @@ mod tests {
     #[test]
     fn test_deduplicate_by_module_path() {
         let artifacts = vec![
-            (
-                "HelloStarknet".to_string(),
-                "pkg::HelloStarknet".to_string(),
-                Utf8PathBuf::from("pkg_unittest_HelloStarknet.test.contract_class.json"),
-            ),
-            (
-                "HelloStarknet".to_string(),
-                "pkg::HelloStarknet".to_string(),
-                Utf8PathBuf::from("pkg_integrationtest_HelloStarknet.test.contract_class.json"),
-            ),
-            (
-                "ERC20".to_string(),
-                "pkg::ERC20".to_string(),
-                Utf8PathBuf::from("pkg_unittest_ERC20.test.contract_class.json"),
-            ),
+            ContractArtifact {
+                name: "HelloStarknet".to_string(),
+                module_path: "pkg::HelloStarknet".to_string(),
+                sierra_path: Utf8PathBuf::from(
+                    "pkg_unittest_HelloStarknet.test.contract_class.json",
+                ),
+            },
+            ContractArtifact {
+                name: "HelloStarknet".to_string(),
+                module_path: "pkg::HelloStarknet".to_string(),
+                sierra_path: Utf8PathBuf::from(
+                    "pkg_integrationtest_HelloStarknet.test.contract_class.json",
+                ),
+            },
+            ContractArtifact {
+                name: "ERC20".to_string(),
+                module_path: "pkg::ERC20".to_string(),
+                sierra_path: Utf8PathBuf::from("pkg_unittest_ERC20.test.contract_class.json"),
+            },
         ];
 
         let result = deduplicate_by_module_path(artifacts);
 
-        let module_paths: Vec<&str> = result.iter().map(|(_, path, _)| path.as_str()).collect();
+        let module_paths: Vec<&str> = result
+            .iter()
+            .map(|artifact| artifact.module_path.as_str())
+            .collect();
         assert_eq!(module_paths, vec!["pkg::ERC20", "pkg::HelloStarknet",]);
     }
 

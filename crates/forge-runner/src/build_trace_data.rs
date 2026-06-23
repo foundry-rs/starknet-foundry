@@ -123,7 +123,7 @@ fn get_source_sierra_path(
         Some(versioned_program_path.into())
     } else {
         class_hash
-            .and_then(|class_hash| contracts_data.get_contract_by_class_hash(&class_hash))
+            .and_then(|hash| contracts_data.get_contract_by_class_hash(&hash))
             .map(|contract| contract.source_sierra_path.clone())
     }
 }

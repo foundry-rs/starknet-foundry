@@ -31,7 +31,6 @@ pub struct ContractData {
     pub source_sierra_path: Utf8PathBuf,
 }
 
-/// Outcome of resolving a contract name to a single contract.
 #[derive(Debug)]
 pub enum ContractResolutionError {
     /// No contract with the given name was found.
@@ -132,7 +131,7 @@ impl ContractsData {
     #[must_use]
     pub fn get_contract_name(&self, class_hash: &ClassHash) -> Option<ContractName> {
         let module_path = self.class_hashes.get_by_right(class_hash)?;
-        Some(contract_name_from_module_path(module_path))
+        Some(contract_name_from_module_path(module_path).to_string())
     }
 
     #[must_use]
@@ -203,10 +202,6 @@ fn add_simple_abi_entry_to_mapping(
 
 /// Extracts the contract name from a module path by taking the last segment after `::`.
 #[must_use]
-pub fn contract_name_from_module_path(module_path: &ModulePath) -> ContractName {
-    module_path
-        .split("::")
-        .last()
-        .unwrap_or(module_path)
-        .to_string()
+pub fn contract_name_from_module_path(module_path: &str) -> &str {
+    module_path.rsplit("::").next().unwrap_or(module_path)
 }

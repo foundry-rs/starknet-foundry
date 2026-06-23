@@ -86,7 +86,6 @@ impl ContractBacktraceData {
             .get(module_path)
             .context(format!("contract not found for module path: {module_path}"))?;
 
-        let contract_name = contract_name_from_module_path(module_path);
         let contract_artifacts = &contract.artifacts;
 
         let contract_class = serde_json::from_str::<ContractClass>(&contract_artifacts.sierra)?;
@@ -121,7 +120,7 @@ impl ContractBacktraceData {
             .collect();
 
         Ok(Self {
-            contract_name,
+            contract_name: contract_name_from_module_path(module_path).to_string(),
             casm_debug_info_start_offsets,
             coverage_annotations,
             profiler_annotations,

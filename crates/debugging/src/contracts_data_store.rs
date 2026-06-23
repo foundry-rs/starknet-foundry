@@ -30,7 +30,7 @@ impl ContractsDataStore {
             .map(|(module_path, contract_data)| {
                 (
                     contract_data.class_hash,
-                    ContractName(contract_name_from_module_path(module_path)),
+                    ContractName(contract_name_from_module_path(module_path).to_string()),
                 )
             })
             .collect();

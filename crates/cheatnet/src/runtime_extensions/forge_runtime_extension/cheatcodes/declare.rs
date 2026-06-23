@@ -10,6 +10,7 @@ use blockifier::execution::native::contract_class::NativeCompiledClassV1;
 use blockifier::state::{errors::StateError, state_api::State};
 use conversions::IntoConv;
 use conversions::serde::serialize::CairoSerialize;
+use indoc::formatdoc;
 use scarb_api::StarknetContractArtifacts;
 use starknet_api::core::{ClassHash, CompiledClassHash};
 use starknet_rust::core::types::contract::SierraClass;
@@ -39,12 +40,11 @@ pub fn declare(
                 .collect::<Vec<_>>()
                 .join("\n");
             return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
-                anyhow!(
-                    "Multiple contracts found with name = {contract_identifier}. \
-                    Found contracts at the following paths:\n{paths}\n\
-                    Use the full module path to disambiguate, \
-                    or rename one of the contracts so that the name is unique."
-                ),
+                anyhow!(formatdoc! { r"
+                    Multiple contracts found with name = {contract_identifier}. Found contracts at the following paths:
+                    {paths}
+                    Use the full module path to disambiguate, or rename one of the contracts so that the name is unique."
+                }),
             )));
         }
     };

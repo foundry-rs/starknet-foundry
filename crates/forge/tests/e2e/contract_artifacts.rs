@@ -371,11 +371,13 @@ fn duplicate_contract_name_fails() {
     assert_stdout_contains(
         output,
         indoc! {r#"
+        s
         Failure data:
             "Multiple contracts found with name = HelloStarknet. Found contracts at the following paths:
              - declare_paths::HelloStarknet
              - declare_paths_integrationtest::test_duplicate::HelloStarknet
             Use the full module path to disambiguate, or rename one of the contracts so that the name is unique."
+            s
         "#},
     );
 }

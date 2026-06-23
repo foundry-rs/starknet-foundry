@@ -162,7 +162,7 @@ fn declare_ambiguous_name() {
         .contracts
         .iter()
         .find(|(module_path, _)| contract_name_from_module_path(module_path) == contract_name)
-        .map(|(_, contract)| contract.clone())
+        .map(|(_module_path, contract)| contract.clone())
         .expect("HelloStarknet should be present in the test fixtures");
     contracts_data
         .contracts
