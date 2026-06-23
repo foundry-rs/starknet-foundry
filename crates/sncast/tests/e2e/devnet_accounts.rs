@@ -47,6 +47,10 @@ pub async fn happy_case(account_number: u8) {
 #[tokio::test]
 pub async fn explicit_nonexistent_accounts_file_errors() {
     // When `--accounts-file` is passed explicitly, its existence is still enforced even for devnet accounts.
+    // Note: this is determined by comparing the resolved path against the default accounts file path,
+    // not by whether `--accounts-file` was actually passed. As a result, explicitly passing the default
+    // path is treated the same as not passing it at all and its existence is NOT enforced then.
+    // This inconsistency is intentional and harmless in practice.
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
     let args = vec![
