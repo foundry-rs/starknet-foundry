@@ -70,10 +70,10 @@ pub fn get_class_hash(
         let contract_name = class_hash
             .contract
             .as_ref()
-            .expect("`--contract-name` must be provided when `--sierra-file` is not used");
+            .context("`--contract-name` must be provided when `--sierra-file` is not used")?;
         sierra_class_from_artifacts(
             contract_name,
-            artifacts.expect("artifacts must be provided when `--contract-name` is used"),
+            artifacts.context("artifacts must be provided when `--contract-name` is used")?,
         )?
     };
 
