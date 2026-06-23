@@ -283,7 +283,7 @@ fn check_if_matching_and_get_message(
 }
 
 impl TestCaseSummary<Single> {
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines)]
     #[must_use]
     pub(crate) fn from_run_completed(
         RunCompleted {

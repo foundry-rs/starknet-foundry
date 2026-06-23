@@ -14,6 +14,7 @@ use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::state::cached_state::CachedState;
 use cairo_vm::Felt252;
 use cairo_vm::types::program::Program;
+use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use camino::{Utf8Path, Utf8PathBuf};
@@ -349,37 +350,8 @@ pub fn run_test_case(
         .encountered_errors
         .clone();
 
-    // Capture PCs for a panic that originates in the test body itself.
-    // Mirrors the contract-level logic in `cairo1_execution.rs`,
-    // Note: test target is not deployed contract, so the PCs are carried separately instead of `register_error`.
-    let test_backtrace = {
-        let casm_start_offsets = casm_program
-            .debug_info
-            .iter()
-            .map(|(offset, _)| *offset)
-            .collect();
-
-        match &result {
-            Ok(call_info) if call_info.execution.failed => {
-                let pcs = forge_runtime
-                    .extended_runtime
-                    .extended_runtime
-                    .extended_runtime
-                    .panic_traceback
-                    .clone()
-                    .unwrap_or_else(|| runner.vm.get_reversed_pc_traceback());
-                Some(TestBacktraceContext {
-                    pcs,
-                    casm_start_offsets,
-                })
-            }
-            Err(_) => Some(TestBacktraceContext {
-                pcs: runner.vm.get_reversed_pc_traceback(),
-                casm_start_offsets,
-            }),
-            Ok(_) => None,
-        }
-    };
+    let test_backtrace =
+        capture_test_backtrace(&result, &forge_runtime, &runner, casm_program);
 
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
 
@@ -434,6 +406,43 @@ pub fn run_test_case(
             test_backtrace,
         })),
     })
+}
+
+// Capture PCs for a panic that originates in the test body itself.
+// Mirrors the contract-level logic in `cairo1_execution.rs`,
+// Note: test target is not deployed contract, so the PCs are carried separately instead of `register_error`.
+fn capture_test_backtrace(
+    result: &Result<CallInfo, CairoRunError>,
+    forge_runtime: &ForgeRuntime,
+    runner: &CairoRunner,
+    casm_program: &RawCasmProgram,
+) -> Option<TestBacktraceContext> {
+    let casm_start_offsets = casm_program
+        .debug_info
+        .iter()
+        .map(|(offset, _)| *offset)
+        .collect();
+
+    match result {
+        Ok(call_info) if call_info.execution.failed => {
+            let pcs = forge_runtime
+                .extended_runtime
+                .extended_runtime
+                .extended_runtime
+                .panic_traceback
+                .clone()
+                .unwrap_or_else(|| runner.vm.get_reversed_pc_traceback());
+            Some(TestBacktraceContext {
+                pcs,
+                casm_start_offsets,
+            })
+        }
+        Err(_) => Some(TestBacktraceContext {
+            pcs: runner.vm.get_reversed_pc_traceback(),
+            casm_start_offsets,
+        }),
+        Ok(_) => None,
+    }
 }
 
 fn extract_test_case_summary(

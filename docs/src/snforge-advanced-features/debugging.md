@@ -211,7 +211,7 @@ panic-backtrace = true
 
 ### Usage
 
-If your test or contract fails and a backtrace can be generated, `snforge` will prompt you to run the operation again with the
+If your test or contract call fails and a backtrace can be generated, `snforge` will prompt you to run the operation again with the
 `SNFORGE_BACKTRACE=1` environment variable (if it’s not already configured). For example, you may see failure data like
 this:
 
