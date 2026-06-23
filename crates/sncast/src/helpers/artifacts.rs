@@ -1,7 +1,7 @@
 use crate::{ErrorData, response::errors::StarknetCommandError};
 use conversions::byte_array::ByteArray;
 use shared::utils::contract_name_from_module_path;
-use std::collections::HashMap;
+use std::{collections::HashMap, hash::BuildHasher};
 
 /// Contains compiled Starknet artifacts
 #[derive(Debug, Clone)]
@@ -12,9 +12,9 @@ pub struct CastStarknetContractArtifacts {
     pub casm: String,
 }
 
-pub fn resolve_contract_artifacts<'a>(
+pub fn resolve_contract_artifacts<'a, S: BuildHasher>(
     contract_identifier: &str,
-    artifacts: &'a HashMap<String, CastStarknetContractArtifacts>,
+    artifacts: &'a HashMap<String, CastStarknetContractArtifacts, S>,
 ) -> Result<&'a CastStarknetContractArtifacts, StarknetCommandError> {
     let mut matches: Vec<(&str, &CastStarknetContractArtifacts)> = artifacts
         .iter()
