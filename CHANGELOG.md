@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - Debugging trace is now correctly displayed for predeployed contracts (STRK, ETH) in non-fork tests.
-- `snforge_std::declare` now fails with a clear, deterministic error when a contract name resolves to multiple contracts, instead of non-deterministically selecting one of them. The full module path (e.g. `my_package::module::MyContract`) can now be passed to `declare` to disambiguate contracts that share a name.
+- `snforge_std::declare` now fails with a clear, deterministic error when a contract name resolves to multiple contracts, instead of non-deterministically selecting one of them. The module tree path (e.g. `my_package::module::MyContract` or `module::MyContract`) can now be passed to `declare` to disambiguate contracts that share a name.
 
 ### Cast 
 
