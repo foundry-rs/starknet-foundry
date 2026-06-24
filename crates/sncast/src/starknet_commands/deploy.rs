@@ -26,7 +26,7 @@ pub struct ContractIdentifier {
     #[arg(short = 'g', long, conflicts_with = "package")]
     pub class_hash: Option<ClassHash>,
 
-    /// Contract name or absolute/partial module tree path
+    /// Contract name or module tree path
     #[arg(long)]
     pub contract_name: Option<String>,
 }

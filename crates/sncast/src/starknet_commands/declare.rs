@@ -48,7 +48,7 @@ pub struct DeclareCommonArgs {
 #[derive(Args)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
 pub struct Declare {
-    /// Contract name or absolute/partial module tree path
+    /// Contract name or module tree path
     #[arg(short = 'c', long)]
     pub contract_name: String,
 

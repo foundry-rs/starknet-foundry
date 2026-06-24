@@ -8,7 +8,7 @@ use starknet_rust::core::types::contract::SierraClass;
 #[derive(Args, Debug)]
 #[command(about = "Generate the class hash of a contract", long_about = None)]
 pub struct ClassHashArgs {
-    /// Contract name or absolute/partial module tree path
+    /// Contract name or module tree path
     #[arg(short = 'c', long = "contract-name")]
     pub contract: String,
 
