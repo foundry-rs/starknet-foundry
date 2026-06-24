@@ -65,7 +65,7 @@ Failures:
 </details>
 <br>
 
-When a test or contract fails, you can get backtrace information by setting the `SNFORGE_BACKTRACE=1` environment variable. Read more about it [here](../snforge-advanced-features/debugging.md).
+When a test or contract call fails, you can get backtrace information by setting the `SNFORGE_BACKTRACE=1` environment variable. Read more about it [here](../snforge-advanced-features/debugging.md).
 
 ## Expected Failures
 
