@@ -383,7 +383,7 @@ fn duplicate_contract_name_fails() {
         
         [PASS] declare_paths_integrationtest::test_duplicate::declare_by_partial_module_path_with_leading_colons (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~27850)
         [PASS] declare_paths_integrationtest::test_duplicate::declare_by_partial_module_path (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~25450)
-        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_module_path (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~25450)
+        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_absolute_module_path (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~25450)
         
         Running 0 test(s) from src/
         Tests: 3 passed, 1 failed, 0 ignored, 0 filtered out
@@ -395,12 +395,12 @@ fn duplicate_contract_name_fails() {
 }
 
 #[test]
-fn declare_by_module_path() {
+fn declare_by_absolute_module_path() {
     let temp = setup_package("declare_paths");
     let output = test_runner(&temp)
         .args([
             "--exact",
-            "declare_paths_integrationtest::test_duplicate::declare_by_module_path",
+            "declare_paths_integrationtest::test_duplicate::declare_by_absolute_module_path",
         ])
         .assert()
         .success();
@@ -415,7 +415,61 @@ fn declare_by_module_path() {
         Collected 1 test(s) from declare_paths package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_module_path [..]
+        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_absolute_module_path [..]
+        Tests: 1 passed, 0 failed, 0 ignored, 3 filtered out
+        "},
+    );
+}
+
+#[test]
+fn declare_by_partial_module_path() {
+    let temp = setup_package("declare_paths");
+    let output = test_runner(&temp)
+        .args([
+            "--exact",
+            "declare_paths_integrationtest::test_duplicate::declare_by_partial_module_path",
+        ])
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from declare_paths package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_partial_module_path [..]
+        Tests: 1 passed, 0 failed, 0 ignored, 3 filtered out
+        "},
+    );
+}
+
+#[test]
+fn declare_by_partial_module_path_with_leading_colons() {
+    let temp = setup_package("declare_paths");
+    let output = test_runner(&temp)
+        .args([
+            "--exact",
+            "declare_paths_integrationtest::test_duplicate::declare_by_partial_module_path_with_leading_colons",
+        ])
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from declare_paths package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_partial_module_path_with_leading_colons [..]
         Tests: 1 passed, 0 failed, 0 ignored, 3 filtered out
         "},
     );

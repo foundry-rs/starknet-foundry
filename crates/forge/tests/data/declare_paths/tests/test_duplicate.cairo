@@ -17,7 +17,7 @@ fn declare_ambiguous_contract() {
 }
 
 #[test]
-fn declare_by_module_path() {
+fn declare_by_absolute_module_path() {
     let _ = declare("declare_paths::HelloStarknet").unwrap().contract_class();
 }
 
