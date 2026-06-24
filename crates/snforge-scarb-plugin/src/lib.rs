@@ -10,9 +10,10 @@ use attributes::{
     test_case::test_case,
 };
 use cairo_lang_macro::{
-    ProcMacroResult, TokenStream, attribute_macro, derive_macro, executable_attribute,
+    attribute_macro, derive_macro, executable_attribute, inline_macro, ProcMacroResult, TokenStream,
 };
 use derives::fuzzable::fuzzable_derive;
+use inline_macros::declare::declare as declare_inline_macro;
 
 mod args;
 mod asserts;
@@ -22,6 +23,7 @@ mod common;
 mod config_statement;
 pub mod derives;
 mod external_inputs;
+pub mod inline_macros;
 mod parse;
 mod types;
 mod utils;
@@ -89,4 +91,9 @@ fn disable_predeployed_contracts(args: TokenStream, item: TokenStream) -> ProcMa
 #[expect(clippy::needless_pass_by_value)]
 fn fuzzable(item: TokenStream) -> ProcMacroResult {
     fuzzable_derive(&item)
+}
+
+#[inline_macro]
+fn declare(args: TokenStream) -> ProcMacroResult {
+    declare_inline_macro(args)
 }

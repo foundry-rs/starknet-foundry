@@ -10,7 +10,8 @@ pub use cheatcodes::block_hash::{
 
 pub use cheatcodes::contract_class::declare;
 pub use cheatcodes::contract_class::{
-    ContractClass, ContractClassTrait, DeclareResult, DeclareResultTrait, get_class_hash,
+    ContractClass, ContractClassTrait, DeclareResult, DeclareResultTrait,
+    get_class_hash,
 };
 
 pub use cheatcodes::erc20::set_balance;
@@ -140,4 +141,6 @@ pub mod _internals {
     use super::cheatcode;
 
     pub use super::config_types;
+
+    pub fn assert_path_type<T>() {}
 }

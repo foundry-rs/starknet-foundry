@@ -138,6 +138,31 @@ impl ContractsData {
         Some(contract_name_from_module_path(module_path).to_string())
     }
 
+    pub fn get_artifacts_by_module_path(
+        &self,
+        module_path: &str,
+    ) -> Option<&StarknetContractArtifacts> {
+        self.contracts
+            .iter()
+            .find(|(path, _)| path == &module_path)
+            .map(|(_, contract)| &contract.artifacts)
+    }
+
+    #[must_use]
+    pub fn get_class_hash_by_module_path(&self, module_path: &str) -> Option<&ClassHash> {
+        self.contracts
+            .iter()
+            .find(|(path, _)| path == &module_path)
+            .map(|(_, contract)| &contract.class_hash)
+    }
+
+    #[must_use]
+    pub fn get_source_sierra_path(&self, contract_name: &str) -> Option<&Utf8PathBuf> {
+        self.contracts
+            .get(contract_name)
+            .map(|contract| &contract.source_sierra_path)
+    }
+
     #[must_use]
     pub fn get_function_name(
         &self,
