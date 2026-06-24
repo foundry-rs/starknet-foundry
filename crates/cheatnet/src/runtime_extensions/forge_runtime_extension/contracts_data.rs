@@ -91,9 +91,8 @@ impl ContractsData {
     /// Resolves a user-provided identifier to a single contract.
     ///
     /// The identifier can be either a contract name (e.g. `MyContract`), an absolute
-    /// module tree path (e.g. `my_package::module::MyContract`) or a suffix of a module tree path
-    /// (e.g. `module::MyContract`). A module path suffix lets users disambiguate contracts
-    /// that share a name.
+    /// module tree path (e.g. `my_package::module::MyContract`) or a partial module tree path
+    /// (e.g. `module::MyContract`).
     /// Returns an error if no contract or multiple contracts match the given identifier.
     pub fn resolve_contract(
         &self,
