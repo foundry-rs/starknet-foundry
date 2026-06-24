@@ -334,6 +334,40 @@ async fn test_wrong_contract_name_passed() {
 }
 
 #[tokio::test]
+async fn test_errors_on_ambiguous_contract_name() {
+    let contract_path =
+        copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/duplicate_contract_name");
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--contract-name",
+        "HelloStarknet",
+        "--verifier",
+        "walnut",
+        "--network",
+        "sepolia",
+    ];
+
+    let output = runner(&args)
+        .current_dir(contract_path.path())
+        .stdin("Y")
+        .assert()
+        .failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r#"
+        Command: verify
+        Error: Found more than one contract named "HelloStarknet" at: duplicate_contract_name::first_contract::HelloStarknet, duplicate_contract_name::second_contract::HelloStarknet
+        "#},
+    );
+}
+
+#[tokio::test]
 async fn test_happy_case_with_confirm_verification_flag() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
