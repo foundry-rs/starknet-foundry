@@ -101,14 +101,17 @@ impl ContractsData {
         let contract_identifier = contract_identifier
             .strip_prefix("::")
             .unwrap_or(contract_identifier);
+
+        if let Some(contract) = self.contracts.get(contract_identifier) {
+            return Ok(contract);
+        }
+
         let module_path_suffix = format!("::{contract_identifier}");
 
         let matches: Vec<(&ModulePath, &ContractData)> = self
             .contracts
             .iter()
-            .filter(|(module_path, _)| {
-                *module_path == contract_identifier || module_path.ends_with(&module_path_suffix)
-            })
+            .filter(|(module_path, _)| module_path.ends_with(&module_path_suffix))
             .collect();
 
         match matches.as_slice() {
