@@ -335,7 +335,8 @@ pub async fn get_account<'a>(
     // When accounts file is set explicitly, it is still required to exist then.
     let uses_default_accounts_file =
         accounts_file == &Utf8PathBuf::from(shellexpand::tilde(DEFAULT_ACCOUNTS_FILE).to_string());
-    let accounts_file_required = !(is_devnet_account && uses_default_accounts_file);
+    let accounts_file_required =
+        config.keystore.is_none() && !(is_devnet_account && uses_default_accounts_file);
     let exists_in_accounts_file = check_account_exists(
         account,
         &network_name,
