@@ -128,7 +128,7 @@ fn test_complex_scarb_toml_configuration_without_unstable() {
         .assert()
         .failure();
 
-    assert_stdout_contains(output, "in contract 'OuterContract':");
+    assert_stdout_contains(output, "   in contract 'OuterContract':");
 }
 
 #[test]
@@ -156,7 +156,7 @@ fn test_complex_scarb_toml_configuration() {
         .assert()
         .failure();
 
-    assert_stdout_contains(output, "in contract 'OuterContract':");
+    assert_stdout_contains(output, "   in contract 'OuterContract':");
 }
 
 #[test]
