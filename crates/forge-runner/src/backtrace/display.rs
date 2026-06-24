@@ -53,7 +53,7 @@ impl Display for BacktraceStack<'_> {
 
 pub fn render_fork_backtrace(contract_class_hash: &ClassHash) -> String {
     format!(
-        "   in forked contract with class hash: {:#x}\n",
+        "   in forked contract with class hash: {:#x}\n   note: backtrace is not available for forked contracts\n",
         contract_class_hash.0
     )
 }

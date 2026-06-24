@@ -38,6 +38,7 @@ Failure data:
 
 stack backtrace:
    in forked contract with class hash: 0x554cb276fb5eb0788344f5431b9a166e2f445d8a91c7aef79d8c77e7eede956
+   note: backtrace is not available for forked contracts
 
    in contract 'OuterContract':
       0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer

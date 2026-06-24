@@ -15,6 +15,7 @@ Got an exception while executing a hint: Requested contract address 0x0000000000
 
 stack backtrace:
    in forked contract with class hash: 0x1a92e0ec431585e5c19b98679e582ebc07d43681ba1cc9c55dcb5ba0ce721a1
+   note: backtrace is not available for forked contracts
 
    in contract 'OuterContract':
       0: (inlined) backtrace_vm_error::IInnerContractDispatcherImpl::inner
