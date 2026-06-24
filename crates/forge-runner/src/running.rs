@@ -1,4 +1,4 @@
-use crate::backtrace::add_backtrace_footer;
+use crate::backtrace::{TestBacktraceContext, add_test_backtrace_footer};
 use crate::forge_config::{ForgeConfig, RuntimeConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
@@ -16,6 +16,7 @@ use cairo_vm::Felt252;
 use cairo_vm::types::program::Program;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
+use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::data::ForkData;
@@ -36,6 +37,7 @@ use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use scarb_oracle_hint_service::OracleHintService;
+use shared::vm::VirtualMachineExt;
 use starknet_api::execution_resources::GasVector;
 use std::cell::RefCell;
 use std::default::Default;
@@ -149,6 +151,7 @@ pub struct RunCompleted {
     pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
     pub(crate) fork_data: Option<ForkData>,
+    pub(crate) test_backtrace: Option<TestBacktraceContext>,
 }
 
 pub struct RunError {
@@ -157,11 +160,12 @@ pub struct RunError {
     pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
     pub(crate) fork_data: Option<ForkData>,
+    pub(crate) test_backtrace: Option<TestBacktraceContext>,
 }
 
 pub enum RunResult {
     Completed(Box<RunCompleted>),
-    Error(RunError),
+    Error(Box<RunError>),
 }
 
 #[expect(clippy::too_many_lines)]
@@ -346,6 +350,8 @@ pub fn run_test_case(
         .encountered_errors
         .clone();
 
+    let test_backtrace = capture_test_backtrace(&result, &forge_runtime, &runner, casm_program);
+
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
 
     update_top_call_resources(&mut forge_runtime, tracked_resource);
@@ -387,16 +393,55 @@ pub fn run_test_case(
                 encountered_errors,
                 fuzzer_args,
                 fork_data,
+                test_backtrace,
             }))
         }
-        Err(error) => RunResult::Error(RunError {
+        Err(error) => RunResult::Error(Box::new(RunError {
             error: Box::new(error),
             call_trace: call_trace_ref,
             encountered_errors,
             fuzzer_args,
             fork_data,
-        }),
+            test_backtrace,
+        })),
     })
+}
+
+// Capture PCs for a panic that originates in the test body itself.
+// Mirrors the contract-level logic in `cairo1_execution.rs` (`execute_entry_point_call_cairo1`) and `entry_point.rs` (`extract_trace_and_register_errors`).
+// Note: the test target is not a deployed contract, so instead of `register_error` PCs are returned in a `TestBacktraceContext`.
+fn capture_test_backtrace(
+    result: &Result<CallInfo, CairoRunError>,
+    forge_runtime: &ForgeRuntime,
+    runner: &CairoRunner,
+    casm_program: &RawCasmProgram,
+) -> Option<TestBacktraceContext> {
+    let casm_start_offsets = casm_program
+        .debug_info
+        .iter()
+        .map(|(offset, _)| *offset)
+        .collect();
+
+    match result {
+        Ok(call_info) if call_info.execution.failed => {
+            let pcs = forge_runtime
+                .extended_runtime
+                .extended_runtime
+                .extended_runtime
+                .panic_traceback
+                .clone()
+                .unwrap_or_else(|| runner.vm.get_reversed_pc_traceback());
+            Some(TestBacktraceContext {
+                pcs,
+                casm_start_offsets,
+            })
+        }
+        Err(_) => Some(TestBacktraceContext {
+            pcs: runner.vm.get_reversed_pc_traceback(),
+            casm_start_offsets,
+        }),
+        Ok(_) => None,
+    }
 }
 
 fn extract_test_case_summary(
@@ -435,7 +480,14 @@ fn extract_test_case_summary(
                 TestCaseSummary::Failed {
                     name: case.name.clone(),
                     msg: Some(message).map(|msg| {
-                        add_backtrace_footer(msg, contracts_data, &run_error.encountered_errors)
+                        add_test_backtrace_footer(
+                            msg,
+                            contracts_data,
+                            &run_error.encountered_errors,
+                            run_error.test_backtrace.as_ref(),
+                            versioned_program_path,
+                            &case.name,
+                        )
                     }),
                     fuzzer_args: run_error.fuzzer_args,
                     test_statistics: (),

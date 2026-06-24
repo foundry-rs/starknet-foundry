@@ -211,7 +211,7 @@ panic-backtrace = true
 
 ### Usage
 
-If your contract fails and a backtrace can be generated, `snforge` will prompt you to run the operation again with the
+If your test or contract call fails and a backtrace can be generated, `snforge` will prompt you to run the operation again with the
 `SNFORGE_BACKTRACE=1` environment variable (if it’s not already configured). For example, you may see failure data like
 this:
 
@@ -234,8 +234,8 @@ note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace
 
 To enable backtrace, simply set the `SNFORGE_BACKTRACE=1` environment variable and rerun the operation.
 
-When enabled, the backtrace will display the call tree of the execution, including the specific line numbers in the
-contracts where the errors occurred. Here's an example of what you might see:
+When enabled, the backtrace will display the call tree of the execution, including the specific line numbers in test
+code or contracts where the errors occurred. Here's an example of what you might see:
 
 <!-- TODO(#2713) -->
 

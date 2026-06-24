@@ -10,8 +10,15 @@ pub struct Backtrace<'a> {
     pub inlined: bool,
 }
 
+#[derive(Clone, Copy)]
+pub enum BacktraceKind {
+    Contract,
+    Test,
+}
+
 pub struct BacktraceStack<'a> {
-    pub contract_name: &'a str,
+    pub kind: BacktraceKind,
+    pub name: &'a str,
     pub stack: Vec<Backtrace<'a>>,
 }
 
@@ -32,7 +39,11 @@ impl Display for Backtrace<'_> {
 
 impl Display for BacktraceStack<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "error occurred in contract '{}'", self.contract_name)?;
+        let kind = match self.kind {
+            BacktraceKind::Contract => "contract",
+            BacktraceKind::Test => "test",
+        };
+        writeln!(f, "error occurred in {kind} '{}'", self.name)?;
         writeln!(f, "stack backtrace:")?;
         for (i, backtrace) in self.stack.iter().enumerate() {
             writeln!(f, "   {i}: {backtrace}")?;

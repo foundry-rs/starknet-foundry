@@ -1,4 +1,4 @@
-use crate::backtrace::display::{Backtrace, BacktraceStack, render_fork_backtrace};
+use crate::backtrace::display::{Backtrace, BacktraceKind, BacktraceStack, render_fork_backtrace};
 use anyhow::Context;
 use anyhow::Result;
 use cairo_annotations::annotations::TryFromDebugInfo;
@@ -8,9 +8,12 @@ use cairo_annotations::annotations::coverage::{
 use cairo_annotations::annotations::profiler::{
     ProfilerAnnotationsV1, VersionedProfilerAnnotations,
 };
+use cairo_lang_sierra::debug_info::DebugInfo;
 use cairo_lang_sierra::program::StatementIdx;
+use cairo_lang_sierra::program::VersionedProgram;
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet_classes::contract_class::ContractClass;
+use camino::Utf8Path;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use itertools::Itertools;
 use rayon::iter::IntoParallelIterator;
@@ -18,6 +21,7 @@ use rayon::iter::ParallelIterator;
 use shared::utils::contract_name_from_module_path;
 use starknet_api::core::ClassHash;
 use std::collections::{HashMap, HashSet};
+use std::fs;
 
 pub struct ContractBacktraceDataMapping(HashMap<ClassHash, ContractOrigin>);
 
@@ -66,61 +70,29 @@ impl ContractOrigin {
     }
 }
 
-struct ContractBacktraceData {
-    contract_name: String,
+struct BacktraceSourceData {
+    kind: BacktraceKind,
+    name: String,
     casm_debug_info_start_offsets: Vec<usize>,
     coverage_annotations: CoverageAnnotationsV1,
     profiler_annotations: ProfilerAnnotationsV1,
 }
 
-impl ContractBacktraceData {
-    fn new(class_hash: &ClassHash, contracts_data: &ContractsData) -> Result<Self> {
-        let module_path = contracts_data
-            .class_hashes
-            .get_by_right(class_hash)
-            .context(format!(
-                "module path not found for class hash: {class_hash}"
-            ))?;
-        let contract = contracts_data
-            .contracts
-            .get(module_path)
-            .context(format!("contract not found for module path: {module_path}"))?;
-
-        let contract_artifacts = &contract.artifacts;
-
-        let contract_class = serde_json::from_str::<ContractClass>(&contract_artifacts.sierra)?;
-
-        let sierra_debug_info = contract_class
-            .sierra_program_debug_info
-            .as_ref()
-            .context("debug info not found")?;
-
+impl BacktraceSourceData {
+    fn from_debug_info(
+        kind: BacktraceKind,
+        name: String,
+        casm_debug_info_start_offsets: Vec<usize>,
+        sierra_debug_info: &DebugInfo,
+    ) -> Result<Self> {
         let VersionedCoverageAnnotations::V1(coverage_annotations) =
-            VersionedCoverageAnnotations::try_from_debug_info(sierra_debug_info)
-                .expect("this should not fail, as we are doing validation in the `can_backtrace_be_generated` function");
-
+            VersionedCoverageAnnotations::try_from_debug_info(sierra_debug_info)?;
         let VersionedProfilerAnnotations::V1(profiler_annotations) =
-            VersionedProfilerAnnotations::try_from_debug_info(sierra_debug_info).expect("this should not fail, as we are doing validation in the `can_backtrace_be_generated` function");
-
-        let extracted_sierra = contract_class
-            .extract_sierra_program(false)
-            .expect("extraction should succeed");
-        // FIXME(https://github.com/software-mansion/universal-sierra-compiler/issues/98): Use CASM debug info from USC once it provides it.
-        let (_, debug_info) = CasmContractClass::from_contract_class_with_debug_info(
-            contract_class,
-            extracted_sierra,
-            true,
-            usize::MAX,
-        )?;
-
-        let casm_debug_info_start_offsets = debug_info
-            .sierra_statement_info
-            .iter()
-            .map(|statement_debug_info| statement_debug_info.start_offset)
-            .collect();
+            VersionedProfilerAnnotations::try_from_debug_info(sierra_debug_info)?;
 
         Ok(Self {
-            contract_name: contract_name_from_module_path(module_path).to_string(),
+            kind,
+            name,
             casm_debug_info_start_offsets,
             coverage_annotations,
             profiler_annotations,
@@ -180,13 +152,102 @@ impl ContractBacktraceData {
             .flatten_ok()
             .collect::<Result<Vec<_>>>()?;
 
-        let contract_name = &self.contract_name;
-
         let backtrace_stack = BacktraceStack {
-            contract_name,
+            kind: self.kind,
+            name: &self.name,
             stack,
         };
 
         Ok(backtrace_stack.to_string())
+    }
+}
+
+struct ContractBacktraceData(BacktraceSourceData);
+
+impl ContractBacktraceData {
+    fn new(class_hash: &ClassHash, contracts_data: &ContractsData) -> Result<Self> {
+        let module_path = contracts_data
+            .class_hashes
+            .get_by_right(class_hash)
+            .context(format!(
+                "module path not found for class hash: {class_hash}"
+            ))?;
+        let contract = contracts_data
+            .contracts
+            .get(module_path)
+            .context(format!("contract not found for module path: {module_path}"))?;
+
+        let contract_artifacts = &contract.artifacts;
+
+        let contract_class = serde_json::from_str::<ContractClass>(&contract_artifacts.sierra)?;
+
+        let sierra_debug_info = contract_class
+            .sierra_program_debug_info
+            .clone()
+            .context("debug info not found")?;
+
+        let extracted_sierra = contract_class
+            .extract_sierra_program(false)
+            .expect("extraction should succeed");
+
+        // FIXME(https://github.com/software-mansion/universal-sierra-compiler/issues/98): Use CASM debug info from USC once it provides it.
+        let (_, debug_info) = CasmContractClass::from_contract_class_with_debug_info(
+            contract_class,
+            extracted_sierra,
+            true,
+            usize::MAX,
+        )?;
+
+        let casm_debug_info_start_offsets = debug_info
+            .sierra_statement_info
+            .iter()
+            .map(|statement_debug_info| statement_debug_info.start_offset)
+            .collect();
+
+        Ok(Self(BacktraceSourceData::from_debug_info(
+            BacktraceKind::Contract,
+            contract_name_from_module_path(module_path).to_string(),
+            casm_debug_info_start_offsets,
+            &sierra_debug_info,
+        )?))
+    }
+
+    fn render_backtrace(&self, pcs: &[usize]) -> Result<String> {
+        self.0.render_backtrace(pcs)
+    }
+}
+
+pub struct TestBacktraceData(BacktraceSourceData);
+
+impl TestBacktraceData {
+    pub fn new(
+        test_name: &str,
+        casm_start_offsets: Vec<usize>,
+        versioned_program_path: &Utf8Path,
+    ) -> Result<Self> {
+        let raw = fs::read_to_string(versioned_program_path).with_context(|| {
+            format!("failed to read test sierra program at: {versioned_program_path}")
+        })?;
+        let program_artifact = match serde_json::from_str::<VersionedProgram>(&raw)? {
+            VersionedProgram::V1 { program, .. } => program,
+        };
+
+        let sierra_debug_info = program_artifact
+            .debug_info
+            .as_ref()
+            .context("debug info not found")?;
+
+        let source = BacktraceSourceData::from_debug_info(
+            BacktraceKind::Test,
+            test_name.to_string(),
+            casm_start_offsets,
+            sierra_debug_info,
+        )?;
+
+        Ok(Self(source))
+    }
+
+    pub fn render_backtrace(&self, pcs: &[usize]) -> Result<String> {
+        self.0.render_backtrace(pcs)
     }
 }
