@@ -1,4 +1,6 @@
-use crate::backtrace::{TestBacktraceContext, add_test_backtrace_footer};
+use crate::backtrace::{
+    TestBacktraceContext, TestBacktraceOutcome, add_test_backtrace_footer, is_backtrace_enabled,
+};
 use crate::forge_config::{ForgeConfig, RuntimeConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
@@ -151,7 +153,7 @@ pub struct RunCompleted {
     pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
     pub(crate) fork_data: Option<ForkData>,
-    pub(crate) test_backtrace: Option<TestBacktraceContext>,
+    pub(crate) test_backtrace: TestBacktraceOutcome,
 }
 
 pub struct RunError {
@@ -160,7 +162,7 @@ pub struct RunError {
     pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
     pub(crate) fork_data: Option<ForkData>,
-    pub(crate) test_backtrace: Option<TestBacktraceContext>,
+    pub(crate) test_backtrace: TestBacktraceOutcome,
 }
 
 pub enum RunResult {
@@ -407,41 +409,49 @@ pub fn run_test_case(
     })
 }
 
-// Capture PCs for a panic that originates in the test body itself.
-// Mirrors the contract-level logic in `cairo1_execution.rs` (`execute_entry_point_call_cairo1`) and `entry_point.rs` (`extract_trace_and_register_errors`).
-// Note: the test target is not a deployed contract, so instead of `register_error` PCs are returned in a `TestBacktraceContext`.
+/// Capture PCs for a panic that originates in the test body itself.
+/// Captures backtrace only if **test panics** and **backtrace is enabled**.
+/// Mirrors the contract-level logic in `cairo1_execution.rs` (`execute_entry_point_call_cairo1`) and `entry_point.rs` (`extract_trace_and_register_errors`).
+/// Note: the test target is not a deployed contract, so instead of `register_error` PCs are returned in a `TestBacktraceContext`.
+#[must_use]
 fn capture_test_backtrace(
     result: &Result<CallInfo, CairoRunError>,
     forge_runtime: &ForgeRuntime,
     runner: &CairoRunner,
     casm_program: &RawCasmProgram,
-) -> Option<TestBacktraceContext> {
-    let casm_start_offsets = casm_program
-        .debug_info
-        .iter()
-        .map(|(offset, _)| *offset)
-        .collect();
+) -> TestBacktraceOutcome {
+    let panicked = match result {
+        Ok(call_info) => call_info.execution.failed,
+        Err(_) => true,
+    };
+    if !panicked {
+        return TestBacktraceOutcome::Success;
+    }
 
-    match result {
-        Ok(call_info) if call_info.execution.failed => {
-            let pcs = forge_runtime
+    let context = is_backtrace_enabled().then(|| {
+        let casm_start_offsets = casm_program
+            .debug_info
+            .iter()
+            .map(|(offset, _)| *offset)
+            .collect();
+        let pcs = match result {
+            Ok(_) => forge_runtime
                 .extended_runtime
                 .extended_runtime
                 .extended_runtime
                 .panic_traceback
                 .clone()
-                .unwrap_or_else(|| runner.vm.get_reversed_pc_traceback());
-            Some(TestBacktraceContext {
-                pcs,
-                casm_start_offsets,
-            })
-        }
-        Err(_) => Some(TestBacktraceContext {
-            pcs: runner.vm.get_reversed_pc_traceback(),
+                .unwrap_or_else(|| runner.vm.get_reversed_pc_traceback()),
+            Err(_) => runner.vm.get_reversed_pc_traceback(),
+        };
+
+        TestBacktraceContext {
+            pcs,
             casm_start_offsets,
-        }),
-        Ok(_) => None,
-    }
+        }
+    });
+
+    TestBacktraceOutcome::Panic(context)
 }
 
 fn extract_test_case_summary(
@@ -484,7 +494,7 @@ fn extract_test_case_summary(
                             msg,
                             contracts_data,
                             &run_error.encountered_errors,
-                            run_error.test_backtrace.as_ref(),
+                            &run_error.test_backtrace,
                             versioned_program_path,
                             &case.name,
                         )

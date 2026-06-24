@@ -359,7 +359,7 @@ impl TestCaseSummary<Single> {
                             msg,
                             contracts_data,
                             &encountered_errors,
-                            test_backtrace.as_ref(),
+                            &test_backtrace,
                             versioned_program_path,
                             &name,
                         )
@@ -377,7 +377,7 @@ impl TestCaseSummary<Single> {
                                 get_backtrace(
                                     contracts_data,
                                     &encountered_errors,
-                                    test_backtrace.as_ref(),
+                                    test_backtrace.context(),
                                     versioned_program_path,
                                     &name,
                                 )
@@ -406,7 +406,7 @@ impl TestCaseSummary<Single> {
                                     msg,
                                     contracts_data,
                                     &encountered_errors,
-                                    test_backtrace.as_ref(),
+                                    &test_backtrace,
                                     versioned_program_path,
                                     &name,
                                 )

@@ -14,17 +14,43 @@ pub struct TestBacktraceContext {
     pub casm_start_offsets: Vec<usize>,
 }
 
+/// Backtraces-scoped outcome of a test run.
+///
+/// This mirrors the VM-run outcome, not the test verdict.
+/// E.g. `#[should_panic]` test case that panics as expected is still `Panic` here.
+pub enum TestBacktraceOutcome {
+    /// No panic occurred, so there's no backtrace.
+    Success,
+    /// Panic occurred, backtrace is captured if enabled.
+    Panic(Option<TestBacktraceContext>),
+}
+
+impl TestBacktraceOutcome {
+    #[must_use]
+    pub fn is_panic(&self) -> bool {
+        matches!(self, Self::Panic(_))
+    }
+
+    #[must_use]
+    pub fn context(&self) -> Option<&TestBacktraceContext> {
+        match self {
+            Self::Panic(ctx) => ctx.as_ref(),
+            Self::Success => None,
+        }
+    }
+}
+
 #[must_use]
 pub fn add_test_backtrace_footer(
     message: String,
     contracts_data: &ContractsData,
     encountered_errors: &EncounteredErrors,
-    test_backtrace: Option<&TestBacktraceContext>,
+    test_backtrace: &TestBacktraceOutcome,
     versioned_program_path: &Utf8Path,
     test_name: &str,
 ) -> String {
-    let has_backtrace =
-        !encountered_errors.is_empty() || test_backtrace.is_some_and(|bt| !bt.pcs.is_empty());
+    // Include hint even if backtrace capture was skipped (due to backtrace being disabled).
+    let has_backtrace = test_backtrace.is_panic() || !encountered_errors.is_empty();
 
     if !has_backtrace {
         return message;
@@ -34,7 +60,7 @@ pub fn add_test_backtrace_footer(
         get_backtrace(
             contracts_data,
             encountered_errors,
-            test_backtrace,
+            test_backtrace.context(),
             versioned_program_path,
             test_name,
         )
