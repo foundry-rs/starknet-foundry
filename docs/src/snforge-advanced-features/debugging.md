@@ -234,12 +234,12 @@ note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace
 
 To enable backtrace, simply set the `SNFORGE_BACKTRACE=1` environment variable and rerun the operation.
 
-When enabled, the backtrace will display the call tree of the execution, including the specific line numbers in test
-code or contracts where the errors occurred. Here's an example of what you might see:
+When enabled, the backtrace will display the call tree of the execution, including the specific line numbers in test code and contracts where the errors occurred.
+Here's an example of what you might see:
 
 <!-- TODO(#2713) -->
 
-<!-- { "ignored": true, "package_name": "backtrace_vm_error" } -->
+<!-- { "ignored": true, "package_name": "backtrace_panic" } -->
 ```shell
 $ SNFORGE_BACKTRACE=1 snforge test
 ```
@@ -247,31 +247,31 @@ $ SNFORGE_BACKTRACE=1 snforge test
 <summary>Output:</summary>
 
 ```shell
-"Failure data:
+Failure data:
     (0x417373657274206661696c6564 ('Assert failed'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
+
 error occurred in contract 'InnerContract'
 stack backtrace:
-   0: (inlined) core::array::ArrayImpl::append
-       at [..]array.cairo:135:9
-   1: core::array_inline_macro
-       at [..]lib.cairo:364:11
-   2: (inlined) core::Felt252PartialEq::eq
-       at [..]lib.cairo:231:9
-   3: (inlined) backtrace_panic::InnerContract::inner_call
-       at [..]traits.cairo:442:10
-   4: (inlined) backtrace_panic::InnerContract::InnerContract::inner
-       at [..]lib.cairo:40:16
-   5: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
-       at [..]lib.cairo:35:13
+   0: core::panic_with_const_felt252
+       at [..]lib.cairo:360:5
+   1: core::panic_with_const_felt252
+       at [..]lib.cairo:360:5
+   2: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
+       at [..]lib.cairo:32:5
 
 error occurred in contract 'OuterContract'
 stack backtrace:
-   0: (inlined) backtrace_panic::IInnerContractDispatcherImpl::inner
-       at [..]lib.cairo:22:1
-   1: (inlined) backtrace_panic::OuterContract::OuterContract::outer
-       at [..]lib.cairo:17:13
-   2: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
-       at [..]lib.cairo:15:9"
+   0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+       at [..]lib.cairo:13:5
+
+error occurred in test 'backtrace_panic::Test::test_contract_panics'
+stack backtrace:
+   0: (inlined) backtrace_panic::IOuterContractDispatcherImpl::outer
+       at [..]lib.cairo:1:1
+   1: backtrace_panic::Test::test_contract_panics
+       at [..]lib.cairo:59:9
+   2: backtrace_panic::Test::test_contract_panics__snforge_internal_test_generated
+       at [..]lib.cairo:50:5
 ```
 </details>
 <br>
@@ -291,3 +291,77 @@ Learn more about this option in the [Scarb documentation](https://docs.swmansion
 > ⚠️ **Warning**: Setting `skip-optimizations = true` may result in faster compilation, but **much** slower execution
 > of the compiled code. If you need to deploy your contracts on Starknet, you should **never** compile them with this
 > field set to `true`.
+
+#### Inlining
+
+The single optimization that matters most for backtraces is inlining, which is enabled by default.
+Therefore, inlined backtrace frames either disappear or collapse into a single `(inlined)` entry.
+
+If you want fuller backtraces **without turning off every optimization**, you can target inlining directly with the [`inlining-strategy`](https://docs.swmansion.com/scarb/docs/reference/manifest.html#inlining-strategy) field. 
+Setting it to `"avoid"` makes the compiler inline only functions annotated with `#[inline(always)]`:
+
+```toml
+[profile.dev.cairo]
+inlining-strategy = "avoid"
+```
+
+> 📝 **Note:**
+> Setting `skip-optimizations = true` already implies `inlining-strategy = "avoid"`.
+
+
+#### Example
+<!-- TODO(#2713) -->
+
+<!-- { "ignored": true, "package_name": "backtrace_panic" } -->
+```shell
+$ SNFORGE_BACKTRACE=1 snforge test
+```
+<details>
+<summary>Output:</summary>
+
+```shell
+Failure data:
+    (0x417373657274206661696c6564 ('Assert failed'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
+
+error occurred in contract 'InnerContract'
+stack backtrace:
+   0: core::array_inline_macro
+       at [..]lib.cairo:346:11
+   1: core::assert
+       at [..]lib.cairo:373:9
+   2: backtrace_panic::InnerContract::inner_call
+       at [..]lib.cairo:40:9
+   3: backtrace_panic::InnerContract::unsafe_new_contract_state
+       at [..]lib.cairo:29:5
+   4: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
+       at [..]lib.cairo:32:5
+
+error occurred in contract 'OuterContract'
+stack backtrace:
+   0: core::starknet::SyscallResultTraitImpl::unwrap_syscall
+       at [..]starknet.cairo:135:52
+   1: backtrace_panic::IInnerContractDispatcherImpl::inner
+       at [..]lib.cairo:22:1
+   2: backtrace_panic::OuterContract::OuterContract::outer
+       at [..]lib.cairo:17:13
+   3: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+       at [..]lib.cairo:13:5
+
+error occurred in test 'backtrace_panic::Test::test_contract_panics'
+stack backtrace:
+   0: core::starknet::SyscallResultTraitImpl::unwrap_syscall
+       at [..]starknet.cairo:135:52
+   1: backtrace_panic::IOuterContractDispatcherImpl::outer
+       at [..]lib.cairo:1:1
+   2: backtrace_panic::Test::test_contract_panics
+       at [..]lib.cairo:59:9
+   3: backtrace_panic::Test::test_contract_panics__snforge_internal_test_generated
+       at [..]lib.cairo:50:5
+```
+</details>
+<br>
+
+<!-- TODO(#4434) -->
+
+> ⚠️ **Note**:
+> Disabling inlining gives fuller backtraces, but `snforge` can currently sometimes render [**wrong frames**](https://github.com/foundry-rs/starknet-foundry/issues/4434) when inlining is disabled.
