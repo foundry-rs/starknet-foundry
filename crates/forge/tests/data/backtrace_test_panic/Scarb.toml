@@ -10,7 +10,6 @@ starknet = "2.16.0"
 snforge_std = { path = "../../../../../snforge_std" }
 
 [[target.starknet-contract]]
-sierra = true
 
 [scripts]
 test = "snforge test"
