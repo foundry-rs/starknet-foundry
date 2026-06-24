@@ -153,7 +153,7 @@ fn contracts_data_to_artifacts(
                 CastStarknetContractArtifacts {
                     sierra: contract.artifacts.sierra,
                     casm: serde_json::to_string(&contract.artifacts.casm)
-                        .expect("valid serialization"),
+                        .expect("serialization on valid Casm cannot fail"),
                 },
             )
         })
