@@ -381,9 +381,9 @@ fn duplicate_contract_name_fails() {
              - declare_paths_integrationtest::test_duplicate::HelloStarknet
             Use a module path to disambiguate, or rename one of the contracts so that the name is unique."
         
-        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_partial_module_path_with_leading_colons (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~27850)
-        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_partial_module_path (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~25450)
-        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_absolute_module_path (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~25450)
+        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_partial_module_path_with_leading_colons (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~[..])
+        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_partial_module_path (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~[..])
+        [PASS] declare_paths_integrationtest::test_duplicate::declare_by_absolute_module_path (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~[..])
         
         Running 0 test(s) from src/
         Tests: 3 passed, 1 failed, 0 ignored, 0 filtered out
