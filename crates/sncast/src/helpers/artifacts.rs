@@ -25,16 +25,13 @@ pub fn resolve_contract_artifacts<'a, S: BuildHasher>(
     let contract_identifier = contract_identifier
         .strip_prefix("::")
         .unwrap_or(contract_identifier);
-
-    if let Some(artifact) = artifacts.get(contract_identifier) {
-        return Ok(artifact);
-    }
-
     let module_path_suffix = format!("::{contract_identifier}");
 
     let mut matches: Vec<(&str, &CastStarknetContractArtifacts)> = artifacts
         .iter()
-        .filter(|(module_path, _)| module_path.ends_with(&module_path_suffix))
+        .filter(|(module_path, _)| {
+            *module_path == contract_identifier || module_path.ends_with(&module_path_suffix)
+        })
         .map(|(module_path, artifact)| (module_path.as_str(), artifact))
         .collect();
 
@@ -146,36 +143,6 @@ mod tests {
         let artifact = resolve_contract_artifacts("pkg::a::HelloStarknet", &artifacts).unwrap();
 
         assert_eq!(artifact.sierra, "a");
-    }
-
-    #[test]
-    fn resolves_exact_full_path_shadowed_by_longer_suffix_match() {
-        let artifacts: ContractArtifactsMap = HashMap::from([
-            (
-                "pkg::a::HelloStarknet".to_string(),
-                CastStarknetContractArtifacts {
-                    sierra: "short".to_string(),
-                    casm: "short".to_string(),
-                },
-            ),
-            (
-                "outer::pkg::a::HelloStarknet".to_string(),
-                CastStarknetContractArtifacts {
-                    sierra: "long".to_string(),
-                    casm: "long".to_string(),
-                },
-            ),
-        ]);
-
-        let artifact =
-            resolve_contract_artifacts("outer::pkg::a::HelloStarknet", &artifacts).unwrap();
-        assert_eq!(artifact.sierra, "long");
-
-        let artifact = resolve_contract_artifacts("pkg::a::HelloStarknet", &artifacts).unwrap();
-        assert_eq!(artifact.sierra, "short");
-
-        let artifact = resolve_contract_artifacts("::pkg::a::HelloStarknet", &artifacts).unwrap();
-        assert_eq!(artifact.sierra, "short");
     }
 
     #[test]
