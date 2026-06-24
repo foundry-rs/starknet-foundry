@@ -324,6 +324,58 @@ fn inline_macros() {
 }
 
 #[test]
+fn declare_module_path_invalid() {
+    let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/declare_module_path_invalid"));
+    let output = SnapboxCommand::from_std(
+        ScarbCommand::new()
+            .current_dir(temp.path())
+            .args(["build", "--test"])
+            .command(),
+    )
+    .assert()
+    .failure();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        error[E0006]: Identifier not found.
+         --> [..]/tests/contract.cairo:6:21
+            let _contract = declare!(declare_invalid::hello_starknet::MissingContract)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        note: this error originates in the attribute macro: `test`
+
+        error: could not compile `declare_invalid_integrationtest` due to 1 previous error
+    "},
+    );
+}
+
+#[test]
+fn declare_invalid_contract_name() {
+    let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/declare_short_path_invalid"));
+    let output = SnapboxCommand::from_std(
+        ScarbCommand::new()
+            .current_dir(temp.path())
+            .args(["build", "--test"])
+            .command(),
+    )
+    .assert()
+    .failure();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        error[E0006]: Identifier not found.
+         --> [..]/tests/contract.cairo:6:21
+            let _contract = declare!(MissingContract).unwrap().contract_class();
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+        note: this error originates in the attribute macro: `test`
+
+        error: could not compile `declare_short_path_invalid_integrationtest` due to 1 previous error
+    "},
+    );
+}
+
+#[test]
 fn different_attributes() {
     fn generate_attributes() -> impl Iterator<Item = String> {
         let attributes = vec![
