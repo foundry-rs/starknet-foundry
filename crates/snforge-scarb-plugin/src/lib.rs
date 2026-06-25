@@ -10,7 +10,7 @@ use attributes::{
     test_case::test_case,
 };
 use cairo_lang_macro::{
-    ProcMacroResult, TokenStream, attribute_macro, derive_macro, executable_attribute, inline_macro,
+    attribute_macro, derive_macro, executable_attribute, inline_macro, ProcMacroResult, TokenStream,
 };
 use derives::fuzzable::fuzzable_derive;
 use inline_macros::declare::declare as declare_inline_macro;
@@ -95,5 +95,5 @@ fn fuzzable(item: TokenStream) -> ProcMacroResult {
 
 #[inline_macro]
 fn declare(args: TokenStream) -> ProcMacroResult {
-    declare_inline_macro(args)
+    declare_inline_macro(&args)
 }
