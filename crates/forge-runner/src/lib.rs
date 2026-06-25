@@ -135,7 +135,7 @@ pub fn run_for_test_case(
     casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
-    test_annotations: Option<Arc<BacktraceAnnotations>>,
+    test_annotations: Option<Result<Arc<BacktraceAnnotations>, String>>,
     contract_backtrace_mapping: Arc<LazyContractBacktraceDataMapping>,
     send: Sender<()>,
 ) -> JoinHandle<Result<AnyTestCaseSummary>> {
@@ -179,7 +179,7 @@ fn run_with_fuzzing(
     casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
-    test_annotations: Option<Arc<BacktraceAnnotations>>,
+    test_annotations: Option<Result<Arc<BacktraceAnnotations>, String>>,
     contract_backtrace_mapping: Arc<LazyContractBacktraceDataMapping>,
     send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary<Fuzzing>>> {

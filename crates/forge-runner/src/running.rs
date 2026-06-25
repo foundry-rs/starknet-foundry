@@ -73,7 +73,7 @@ pub fn run_test(
     casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
-    test_annotations: Option<Arc<BacktraceAnnotations>>,
+    test_annotations: Option<Result<Arc<BacktraceAnnotations>, String>>,
     contract_backtrace_mapping: Arc<LazyContractBacktraceDataMapping>,
     send: Sender<()>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
@@ -119,7 +119,7 @@ pub(crate) fn run_fuzz_test(
     casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
-    test_annotations: Option<Arc<BacktraceAnnotations>>,
+    test_annotations: Option<Result<Arc<BacktraceAnnotations>, String>>,
     contract_backtrace_mapping: Arc<LazyContractBacktraceDataMapping>,
     send: Sender<()>,
     fuzzing_send: Sender<()>,
@@ -478,7 +478,7 @@ fn extract_test_case_summary(
     case: &TestCaseWithResolvedConfig,
     forge_config: &ForgeConfig,
     versioned_program_path: &Utf8Path,
-    test_annotations: Option<&Arc<BacktraceAnnotations>>,
+    test_annotations: Option<&Result<Arc<BacktraceAnnotations>, String>>,
     contract_backtrace_mapping: &LazyContractBacktraceDataMapping,
 ) -> TestCaseSummary<Single> {
     let contracts_data = &forge_config.test_runner_config.contracts_data;

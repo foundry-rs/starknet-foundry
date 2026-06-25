@@ -65,12 +65,17 @@ pub async fn run_for_test_target(
 ) -> Result<TestTargetRunResult> {
     let casm_program = tests.casm_program.clone();
 
-    // Propagate backtrace annotations from debug info so failing test cases can avoid reparsing these.
-    let test_annotations = is_backtrace_enabled()
-        .then_some(tests.sierra_program.debug_info.as_ref())
-        .flatten()
-        .and_then(|d| BacktraceAnnotations::from_debug_info(d).ok().map(Arc::new));
+    // Propagate backtrace annotations, so failing test cases can avoid reparsing these.
+    let test_annotations =
+        is_backtrace_enabled().then(|| match tests.sierra_program.debug_info.as_ref() {
+            Some(debug_info) => BacktraceAnnotations::from_debug_info(debug_info)
+                .map(Arc::new)
+                .map_err(|err| err.to_string()),
+            // In practice, this should never happen as debug info is prerequisite checked by `check_backtrace_compatibility`
+            None => Err("debug info not found".to_string()),
+        });
 
+    // Shared across all test case tasks, so each contract's backtrace data is built once and reused.
     let contract_backtrace_mapping = Arc::new(LazyContractBacktraceDataMapping::new());
 
     let mut tasks = FuturesUnordered::new();

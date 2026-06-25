@@ -304,7 +304,7 @@ impl TestCaseSummary<Single> {
         test_case: &TestCaseWithResolvedConfig,
         contracts_data: &ContractsData,
         versioned_program_path: &Utf8Path,
-        test_annotations: Option<&Arc<BacktraceAnnotations>>,
+        test_annotations: Option<&Result<Arc<BacktraceAnnotations>, String>>,
         contract_backtrace_mapping: &LazyContractBacktraceDataMapping,
         trace_args: &TraceArgs,
         gas_report_enabled: bool,

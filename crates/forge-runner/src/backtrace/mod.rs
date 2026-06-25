@@ -48,7 +48,7 @@ pub fn add_test_backtrace_footer(
     contracts_data: &ContractsData,
     encountered_errors: &EncounteredErrors,
     test_backtrace: &TestBacktraceOutcome,
-    test_annotations: Option<&Arc<BacktraceAnnotations>>,
+    test_annotations: Option<&Result<Arc<BacktraceAnnotations>, String>>,
     contract_backtrace_mapping: &LazyContractBacktraceDataMapping,
     test_name: &str,
 ) -> String {
@@ -86,7 +86,7 @@ pub fn get_backtrace(
     contracts_data: &ContractsData,
     encountered_errors: &EncounteredErrors,
     test_backtrace: Option<&TestBacktraceContext>,
-    test_annotations: Option<&Arc<BacktraceAnnotations>>,
+    test_annotations: Option<&Result<Arc<BacktraceAnnotations>, String>>,
     contract_backtrace_mapping: &LazyContractBacktraceDataMapping,
     test_name: &str,
 ) -> Option<String> {
@@ -107,16 +107,18 @@ pub fn get_backtrace(
         backtrace_parts.push(contract_part);
     }
 
-    if let Some(bt) = test_backtrace.filter(|bt| !bt.pcs.is_empty()) {
+   if let Some(bt) = test_backtrace.filter(|bt| !bt.pcs.is_empty())
+        && let Some(test_annotations) = test_annotations
+    {
         let test_part = match test_annotations {
-            Some(annotations) => TestBacktraceData::new(
+            Ok(annotations) => TestBacktraceData::new(
                 test_name.to_owned(),
                 annotations,
                 bt.casm_start_offsets.clone(),
             )
             .render_backtrace(&bt.pcs)
             .unwrap_or_else(|err| format!("failed to create test backtrace: {err}")),
-            None => "failed to create test backtrace: debug info not found".to_string(),
+            Err(err) => format!("failed to create test backtrace: {err}"),
         };
 
         backtrace_parts.push(test_part);
