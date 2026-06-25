@@ -10,7 +10,7 @@ use attributes::{
     test_case::test_case,
 };
 use cairo_lang_macro::{
-    attribute_macro, derive_macro, executable_attribute, inline_macro, ProcMacroResult, TokenStream,
+    ProcMacroResult, TokenStream, attribute_macro, derive_macro, executable_attribute, inline_macro,
 };
 use derives::fuzzable::fuzzable_derive;
 use inline_macros::declare::declare as declare_inline_macro;
