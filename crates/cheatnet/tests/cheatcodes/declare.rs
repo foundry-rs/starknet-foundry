@@ -216,7 +216,7 @@ fn declare_exact_module_path_takes_precedence_over_suffix_match() {
     let contract_name = "HelloStarknet";
     let partial_module_path = "pkg::a::HelloStarknet".to_string();
     let full_module_path = "outer::pkg::a::HelloStarknet".to_string();
-    let short_class_hash = ClassHash(Felt::from(123));
+    let partial_class_hash = ClassHash(Felt::from(123));
     let long_class_hash = ClassHash(Felt::from(456));
 
     let mut cached_state = create_cached_state();
@@ -230,7 +230,7 @@ fn declare_exact_module_path_takes_precedence_over_suffix_match() {
         .expect("HelloStarknet should be present in the test fixtures");
 
     let mut partial_contract = existing.clone();
-    partial_contract.class_hash = short_class_hash;
+    partial_contract.class_hash = partial_class_hash;
     let mut full_contract = existing;
     full_contract.class_hash = long_class_hash;
 
@@ -244,14 +244,12 @@ fn declare_exact_module_path_takes_precedence_over_suffix_match() {
     let class_hash = declare(&mut cached_state, &full_module_path, &contracts_data)
         .unwrap()
         .unwrap_success();
-
     assert_eq!(class_hash, long_class_hash);
 
     let class_hash = declare(&mut cached_state, &partial_module_path, &contracts_data)
         .unwrap()
         .unwrap_success();
-
-    assert_eq!(class_hash, short_class_hash);
+    assert_eq!(class_hash, partial_class_hash);
 
     let output = declare(
         &mut cached_state,
@@ -259,9 +257,8 @@ fn declare_exact_module_path_takes_precedence_over_suffix_match() {
         &contracts_data,
     )
     .unwrap();
-
     assert!(
-        matches!(output, DeclareResult::AlreadyDeclared(class_hash) if class_hash == short_class_hash)
+        matches!(output, DeclareResult::AlreadyDeclared(class_hash) if class_hash == partial_class_hash)
     );
 }
 
