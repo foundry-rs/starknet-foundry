@@ -3,7 +3,7 @@ use cairo_lang_macro::{Diagnostic, ProcMacroResult, TextSpan, TokenStream, quote
 
 #[must_use]
 pub fn declare(args: &TokenStream) -> ProcMacroResult {
-    match expand(&args) {
+    match expand(args) {
         Ok(token_stream) => ProcMacroResult::new(token_stream),
         Err(diagnostic) => {
             ProcMacroResult::new(TokenStream::empty()).with_diagnostics(vec![diagnostic].into())

@@ -94,6 +94,7 @@ fn fuzzable(item: TokenStream) -> ProcMacroResult {
 }
 
 #[inline_macro]
+#[expect(clippy::needless_pass_by_value)]
 fn declare(args: TokenStream) -> ProcMacroResult {
     declare_inline_macro(&args)
 }
