@@ -1,11 +1,13 @@
 use anyhow::Context;
 use clap::{ArgGroup, Args};
 use conversions::IntoConv;
-use sncast::helpers::artifacts::{CastStarknetContractArtifacts, resolve_contract_artifacts};
+use sncast::helpers::artifacts::{
+    CastStarknetContractArtifacts, resolve_contract_artifacts, sierra_class_from_file,
+};
 use sncast::response::{errors::StarknetCommandError, utils::class_hash::ClassHashResponse};
 use starknet_rust::core::types::contract::SierraClass;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 #[derive(Args, Debug)]
 #[command(
@@ -36,17 +38,6 @@ pub fn sierra_class_from_artifacts(
 
     let sierra: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
         .context("Failed to parse sierra artifact")?;
-
-    Ok(sierra)
-}
-
-#[expect(clippy::result_large_err)]
-pub fn sierra_class_from_file(sierra_path: &Path) -> Result<SierraClass, StarknetCommandError> {
-    let sierra_json = std::fs::read_to_string(sierra_path)
-        .with_context(|| format!("Failed to read sierra file at {}", sierra_path.display()))?;
-
-    let sierra: SierraClass =
-        serde_json::from_str(&sierra_json).context("Failed to parse sierra file")?;
 
     Ok(sierra)
 }

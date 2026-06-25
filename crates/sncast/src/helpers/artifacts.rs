@@ -1,6 +1,9 @@
 use crate::{ErrorData, response::errors::StarknetCommandError};
+use anyhow::Context;
 use conversions::byte_array::ByteArray;
 use shared::utils::contract_name_from_module_path;
+use starknet_rust::core::types::contract::SierraClass;
+use std::path::Path;
 use std::{collections::HashMap, hash::BuildHasher};
 
 /// Contains compiled Starknet artifacts
@@ -44,6 +47,16 @@ pub fn resolve_contract_artifacts<'a, S: BuildHasher>(
             }))
         }
     }
+}
+
+pub fn sierra_class_from_file(sierra_path: &Path) -> Result<SierraClass, StarknetCommandError> {
+    let sierra_json = std::fs::read_to_string(sierra_path)
+        .with_context(|| format!("Failed to read sierra file at {}", sierra_path.display()))?;
+
+    let sierra: SierraClass =
+        serde_json::from_str(&sierra_json).context("Failed to parse sierra file")?;
+
+    Ok(sierra)
 }
 
 #[cfg(test)]
