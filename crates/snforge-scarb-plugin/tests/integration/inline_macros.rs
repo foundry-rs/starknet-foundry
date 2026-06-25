@@ -1,4 +1,4 @@
-use cairo_lang_macro::{quote, Severity};
+use cairo_lang_macro::{Severity, quote};
 use snforge_scarb_plugin::inline_macros::declare::declare;
 
 #[test]
