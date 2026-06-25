@@ -115,7 +115,10 @@ pub fn get_backtrace(
         backtrace_parts.push(test_part);
     }
 
-    (!backtrace_parts.is_empty()).then(|| backtrace_parts.join("\n"))
+    (!backtrace_parts.is_empty()).then(|| {
+        let body = backtrace_parts.join("\n");
+        format!("stack backtrace:\n{body}")
+    })
 }
 
 #[must_use]
