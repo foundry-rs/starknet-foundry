@@ -10,38 +10,56 @@ use cairo_annotations::annotations::profiler::{
 };
 use cairo_lang_sierra::debug_info::DebugInfo;
 use cairo_lang_sierra::program::StatementIdx;
-use cairo_lang_sierra::program::VersionedProgram;
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet_classes::contract_class::ContractClass;
-use camino::Utf8Path;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use itertools::Itertools;
-use rayon::iter::IntoParallelIterator;
-use rayon::iter::ParallelIterator;
 use shared::utils::contract_name_from_module_path;
 use starknet_api::core::ClassHash;
-use std::collections::{HashMap, HashSet};
-use std::fs;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 
-pub struct ContractBacktraceDataMapping(HashMap<ClassHash, ContractOrigin>);
+#[derive(Default)]
+pub struct LazyContractBacktraceDataMapping(Mutex<HashMap<ClassHash, Arc<ContractOrigin>>>);
 
-impl ContractBacktraceDataMapping {
-    pub fn new(contracts_data: &ContractsData, class_hashes: HashSet<ClassHash>) -> Result<Self> {
-        Ok(Self(
-            class_hashes
-                .into_par_iter()
-                .map(|class_hash| {
-                    ContractOrigin::new(&class_hash, contracts_data)
-                        .map(|contract_data| (class_hash, contract_data))
-                })
-                .collect::<Result<_>>()?,
-        ))
+impl LazyContractBacktraceDataMapping {
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
     }
 
-    pub fn render_backtrace(&self, pcs: &[usize], class_hash: &ClassHash) -> Result<String> {
+    fn get_or_build(
+        &self,
+        class_hash: &ClassHash,
+        contracts_data: &ContractsData,
+    ) -> Result<Arc<ContractOrigin>> {
+        if let Some(existing) = self.lock().get(class_hash) {
+            return Ok(existing.clone());
+        }
+
+        // Build outside the lock so a slow CASM build doesn't block other threads;
+        // On a race both build, and the first insert wins.
+        let contract_origin = Arc::new(ContractOrigin::new(class_hash, contracts_data)?);
+        Ok(self
+            .lock()
+            .entry(*class_hash)
+            .or_insert(contract_origin)
+            .clone())
+    }
+
+    fn lock(&self) -> std::sync::MutexGuard<'_, HashMap<ClassHash, Arc<ContractOrigin>>> {
         self.0
-            .get(class_hash)
-            .expect("class hash should be present in the data mapping")
+            .lock()
+            .expect("contract backtrace mapping mutex poisoned")
+    }
+
+    pub fn render_backtrace(
+        &self,
+        class_hash: &ClassHash,
+        pcs: &[usize],
+        contracts_data: &ContractsData,
+    ) -> Result<String> {
+        self.get_or_build(class_hash, contracts_data)?
             .render_backtrace(pcs)
     }
 }
@@ -70,12 +88,27 @@ impl ContractOrigin {
     }
 }
 
+pub struct BacktraceAnnotations {
+    coverage: CoverageAnnotationsV1,
+    profiler: ProfilerAnnotationsV1,
+}
+
+impl BacktraceAnnotations {
+    pub fn from_debug_info(sierra_debug_info: &DebugInfo) -> Result<Self> {
+        let VersionedCoverageAnnotations::V1(coverage) =
+            VersionedCoverageAnnotations::try_from_debug_info(sierra_debug_info)?;
+        let VersionedProfilerAnnotations::V1(profiler) =
+            VersionedProfilerAnnotations::try_from_debug_info(sierra_debug_info)?;
+
+        Ok(Self { coverage, profiler })
+    }
+}
+
 struct BacktraceSourceData {
     kind: BacktraceKind,
     name: String,
     casm_debug_info_start_offsets: Vec<usize>,
-    coverage_annotations: CoverageAnnotationsV1,
-    profiler_annotations: ProfilerAnnotationsV1,
+    annotations: Arc<BacktraceAnnotations>,
 }
 
 impl BacktraceSourceData {
@@ -85,17 +118,11 @@ impl BacktraceSourceData {
         casm_debug_info_start_offsets: Vec<usize>,
         sierra_debug_info: &DebugInfo,
     ) -> Result<Self> {
-        let VersionedCoverageAnnotations::V1(coverage_annotations) =
-            VersionedCoverageAnnotations::try_from_debug_info(sierra_debug_info)?;
-        let VersionedProfilerAnnotations::V1(profiler_annotations) =
-            VersionedProfilerAnnotations::try_from_debug_info(sierra_debug_info)?;
-
         Ok(Self {
             kind,
             name,
             casm_debug_info_start_offsets,
-            coverage_annotations,
-            profiler_annotations,
+            annotations: Arc::new(BacktraceAnnotations::from_debug_info(sierra_debug_info)?),
         })
     }
 
@@ -107,7 +134,8 @@ impl BacktraceSourceData {
         );
 
         let code_locations = self
-            .coverage_annotations
+            .annotations
+            .coverage
             .statements_code_locations
             .get(&sierra_statement_idx)
             .with_context(|| {
@@ -115,7 +143,8 @@ impl BacktraceSourceData {
             })?;
 
         let function_names = self
-            .profiler_annotations
+            .annotations
+            .profiler
             .statements_functions
             .get(&sierra_statement_idx)
             .with_context(|| {
@@ -221,30 +250,16 @@ pub struct TestBacktraceData(BacktraceSourceData);
 
 impl TestBacktraceData {
     pub fn new(
-        test_name: &str,
+        test_name: String,
+        annotations: &Arc<BacktraceAnnotations>,
         casm_start_offsets: Vec<usize>,
-        versioned_program_path: &Utf8Path,
-    ) -> Result<Self> {
-        let raw = fs::read_to_string(versioned_program_path).with_context(|| {
-            format!("failed to read test sierra program at: {versioned_program_path}")
-        })?;
-        let program_artifact = match serde_json::from_str::<VersionedProgram>(&raw)? {
-            VersionedProgram::V1 { program, .. } => program,
-        };
-
-        let sierra_debug_info = program_artifact
-            .debug_info
-            .as_ref()
-            .context("debug info not found")?;
-
-        let source = BacktraceSourceData::from_debug_info(
-            BacktraceKind::Test,
-            test_name.to_string(),
-            casm_start_offsets,
-            sierra_debug_info,
-        )?;
-
-        Ok(Self(source))
+    ) -> Self {
+        Self(BacktraceSourceData {
+            kind: BacktraceKind::Test,
+            name: test_name,
+            casm_debug_info_start_offsets: casm_start_offsets,
+            annotations: Arc::clone(annotations),
+        })
     }
 
     pub fn render_backtrace(&self, pcs: &[usize]) -> Result<String> {

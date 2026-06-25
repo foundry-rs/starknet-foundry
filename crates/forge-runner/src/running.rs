@@ -1,5 +1,6 @@
 use crate::backtrace::{
-    TestBacktraceContext, TestBacktraceOutcome, add_test_backtrace_footer, is_backtrace_enabled,
+    BacktraceAnnotations, LazyContractBacktraceDataMapping, TestBacktraceContext,
+    TestBacktraceOutcome, add_test_backtrace_footer, is_backtrace_enabled,
 };
 use crate::forge_config::{ForgeConfig, RuntimeConfig};
 use crate::gas::calculate_used_gas;
@@ -72,6 +73,8 @@ pub fn run_test(
     casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
+    test_annotations: Option<Arc<BacktraceAnnotations>>,
+    contract_backtrace_mapping: Arc<LazyContractBacktraceDataMapping>,
     send: Sender<()>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
@@ -97,7 +100,14 @@ pub fn run_test(
             return TestCaseSummary::Interrupted {};
         }
 
-        extract_test_case_summary(run_result, &case, &forge_config, &versioned_program_path)
+        extract_test_case_summary(
+            run_result,
+            &case,
+            &forge_config,
+            &versioned_program_path,
+            test_annotations.as_ref(),
+            &contract_backtrace_mapping,
+        )
     })
 }
 
@@ -109,6 +119,8 @@ pub(crate) fn run_fuzz_test(
     casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
+    test_annotations: Option<Arc<BacktraceAnnotations>>,
+    contract_backtrace_mapping: Arc<LazyContractBacktraceDataMapping>,
     send: Sender<()>,
     fuzzing_send: Sender<()>,
     rng: Arc<Mutex<StdRng>>,
@@ -136,7 +148,14 @@ pub(crate) fn run_fuzz_test(
             return TestCaseSummary::Interrupted {};
         }
 
-        extract_test_case_summary(run_result, &case, &forge_config, &versioned_program_path)
+        extract_test_case_summary(
+            run_result,
+            &case,
+            &forge_config,
+            &versioned_program_path,
+            test_annotations.as_ref(),
+            &contract_backtrace_mapping,
+        )
     })
 }
 
@@ -459,6 +478,8 @@ fn extract_test_case_summary(
     case: &TestCaseWithResolvedConfig,
     forge_config: &ForgeConfig,
     versioned_program_path: &Utf8Path,
+    test_annotations: Option<&Arc<BacktraceAnnotations>>,
+    contract_backtrace_mapping: &LazyContractBacktraceDataMapping,
 ) -> TestCaseSummary<Single> {
     let contracts_data = &forge_config.test_runner_config.contracts_data;
     let trace_args = &forge_config.output_config.trace_args;
@@ -469,6 +490,8 @@ fn extract_test_case_summary(
                 case,
                 contracts_data,
                 versioned_program_path,
+                test_annotations,
+                contract_backtrace_mapping,
                 trace_args,
                 forge_config.output_config.gas_report,
             ),
@@ -495,7 +518,8 @@ fn extract_test_case_summary(
                             contracts_data,
                             &run_error.encountered_errors,
                             &run_error.test_backtrace,
-                            versioned_program_path,
+                            test_annotations,
+                            contract_backtrace_mapping,
                             &case.name,
                         )
                     }),

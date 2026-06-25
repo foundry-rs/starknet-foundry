@@ -1,4 +1,7 @@
-use crate::backtrace::{add_test_backtrace_footer, get_backtrace, is_backtrace_enabled};
+use crate::backtrace::{
+    BacktraceAnnotations, LazyContractBacktraceDataMapping, add_test_backtrace_footer,
+    get_backtrace, is_backtrace_enabled,
+};
 use crate::build_trace_data::build_profiler_call_trace;
 use crate::debugging::{TraceArgs, build_contracts_data_store, build_debugging_trace};
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
@@ -20,6 +23,7 @@ use starknet_api::execution_resources::GasVector;
 use starknet_types_core::felt::Felt;
 use std::fmt;
 use std::option::Option;
+use std::sync::Arc;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasFuzzingInfo {
@@ -284,6 +288,7 @@ fn check_if_matching_and_get_message(
 
 impl TestCaseSummary<Single> {
     #[expect(clippy::too_many_lines)]
+    #[expect(clippy::too_many_arguments)]
     #[must_use]
     pub(crate) fn from_run_completed(
         RunCompleted {
@@ -299,6 +304,8 @@ impl TestCaseSummary<Single> {
         test_case: &TestCaseWithResolvedConfig,
         contracts_data: &ContractsData,
         versioned_program_path: &Utf8Path,
+        test_annotations: Option<&Arc<BacktraceAnnotations>>,
+        contract_backtrace_mapping: &LazyContractBacktraceDataMapping,
         trace_args: &TraceArgs,
         gas_report_enabled: bool,
     ) -> Self {
@@ -360,7 +367,8 @@ impl TestCaseSummary<Single> {
                             contracts_data,
                             &encountered_errors,
                             &test_backtrace,
-                            versioned_program_path,
+                            test_annotations,
+                            contract_backtrace_mapping,
                             &name,
                         )
                     }),
@@ -378,7 +386,8 @@ impl TestCaseSummary<Single> {
                                     contracts_data,
                                     &encountered_errors,
                                     test_backtrace.context(),
-                                    versioned_program_path,
+                                    test_annotations,
+                                    contract_backtrace_mapping,
                                     &name,
                                 )
                             })
@@ -407,7 +416,8 @@ impl TestCaseSummary<Single> {
                                     contracts_data,
                                     &encountered_errors,
                                     &test_backtrace,
-                                    versioned_program_path,
+                                    test_annotations,
+                                    contract_backtrace_mapping,
                                     &name,
                                 )
                             }),
