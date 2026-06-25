@@ -10,6 +10,7 @@ mod devnet_accounts;
 mod fee;
 mod get;
 mod invoke;
+#[cfg(feature = "ledger-emulator")]
 pub(crate) mod ledger;
 mod main_tests;
 mod multicall;

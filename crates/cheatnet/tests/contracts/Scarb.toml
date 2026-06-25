@@ -3,7 +3,6 @@ name = "cheatnet_testing_contracts"
 version = "0.1.0"
 # TODO(#4091): Add edition once Scarb version in .tool-versions is at least 2.17
 
-# See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest
 [[target.starknet-contract]]
 
 [dependencies]

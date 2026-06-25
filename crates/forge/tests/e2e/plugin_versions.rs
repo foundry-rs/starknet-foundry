@@ -4,7 +4,6 @@ use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 use scarb_api::ScarbCommand;
 use shared::test_utils::output_assert::assert_stdout_contains;
-use snapbox::cmd::Command;
 use toml_edit::Document;
 
 #[test]
@@ -32,6 +31,8 @@ fn new_with_new_scarb() {
 #[cfg(feature = "scarb_2_13_1")]
 #[test]
 fn new_with_minimal_scarb() {
+    use snapbox::cmd::Command;
+
     let temp = tempdir_with_tool_versions().unwrap();
     Command::new("asdf")
         .current_dir(&temp)

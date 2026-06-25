@@ -1,5 +1,6 @@
-use crate::backtrace::data::ContractBacktraceDataMapping;
+use crate::backtrace::data::{ContractBacktraceDataMapping, TestBacktraceData};
 use anyhow::Result;
+use camino::Utf8Path;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::EncounteredErrors;
 use std::env;
@@ -8,41 +9,113 @@ mod data;
 mod display;
 const BACKTRACE_ENV: &str = "SNFORGE_BACKTRACE";
 
+pub struct TestBacktraceContext {
+    pub pcs: Vec<usize>,
+    pub casm_start_offsets: Vec<usize>,
+}
+
+/// Backtraces-scoped outcome of a test run.
+///
+/// This mirrors the VM-run outcome, not the test verdict.
+/// E.g. `#[should_panic]` test case that panics as expected is still `Panic` here.
+pub enum TestBacktraceOutcome {
+    /// No panic occurred, so there's no backtrace.
+    Success,
+    /// Panic occurred, backtrace is captured if enabled.
+    Panic(Option<TestBacktraceContext>),
+}
+
+impl TestBacktraceOutcome {
+    #[must_use]
+    pub fn is_panic(&self) -> bool {
+        matches!(self, Self::Panic(_))
+    }
+
+    #[must_use]
+    pub fn context(&self) -> Option<&TestBacktraceContext> {
+        match self {
+            Self::Panic(ctx) => ctx.as_ref(),
+            Self::Success => None,
+        }
+    }
+}
+
 #[must_use]
-pub fn add_backtrace_footer(
+pub fn add_test_backtrace_footer(
     message: String,
     contracts_data: &ContractsData,
     encountered_errors: &EncounteredErrors,
+    test_backtrace: &TestBacktraceOutcome,
+    versioned_program_path: &Utf8Path,
+    test_name: &str,
 ) -> String {
-    if encountered_errors.is_empty() {
+    // Include hint even if backtrace capture was skipped (due to backtrace being disabled).
+    let has_backtrace = test_backtrace.is_panic() || !encountered_errors.is_empty();
+
+    if !has_backtrace {
         return message;
     }
 
     let backtrace = if is_backtrace_enabled() {
-        get_backtrace(contracts_data, encountered_errors)
+        get_backtrace(
+            contracts_data,
+            encountered_errors,
+            test_backtrace.context(),
+            versioned_program_path,
+            test_name,
+        )
     } else {
-        format!("note: run with `{BACKTRACE_ENV}=1` environment variable to display a backtrace")
+        Some(format!(
+            "note: run with `{BACKTRACE_ENV}=1` environment variable to display a backtrace"
+        ))
     };
 
-    format!("{message}\n{backtrace}")
+    if let Some(backtrace) = backtrace {
+        format!("{message}\n{backtrace}")
+    } else {
+        message
+    }
 }
 
 #[must_use]
 pub fn get_backtrace(
     contracts_data: &ContractsData,
     encountered_errors: &EncounteredErrors,
-) -> String {
-    let class_hashes = encountered_errors.keys().copied().collect();
+    test_backtrace: Option<&TestBacktraceContext>,
+    versioned_program_path: &Utf8Path,
+    test_name: &str,
+) -> Option<String> {
+    let mut backtrace_parts = Vec::new();
 
-    ContractBacktraceDataMapping::new(contracts_data, class_hashes)
-        .and_then(|data_mapping| {
-            encountered_errors
-                .iter()
-                .map(|(class_hash, pcs)| data_mapping.render_backtrace(pcs, class_hash))
-                .collect::<Result<Vec<_>>>()
-                .map(|backtrace| backtrace.join("\n"))
-        })
-        .unwrap_or_else(|err| format!("failed to create backtrace: {err}"))
+    if !encountered_errors.is_empty() {
+        let class_hashes = encountered_errors.keys().copied().collect();
+
+        let contract_part = ContractBacktraceDataMapping::new(contracts_data, class_hashes)
+            .and_then(|data_mapping| {
+                encountered_errors
+                    .iter()
+                    .map(|(class_hash, pcs)| data_mapping.render_backtrace(pcs, class_hash))
+                    .collect::<Result<Vec<_>>>()
+                    .map(|backtrace| backtrace.join("\n"))
+            })
+            .unwrap_or_else(|err| format!("failed to create backtrace: {err}"));
+
+        backtrace_parts.push(contract_part);
+    }
+
+    if let Some(bt) = test_backtrace.filter(|bt| !bt.pcs.is_empty()) {
+        let test_part = TestBacktraceData::new(
+            test_name,
+            bt.casm_start_offsets.clone(),
+            versioned_program_path,
+        )
+        .and_then(|data| data.render_backtrace(&bt.pcs))
+        .unwrap_or_else(|err| format!("failed to create test backtrace: {err}"));
+
+        backtrace_parts.push(test_part);
+    }
+
+    (!backtrace_parts.is_empty()).then(|| backtrace_parts.join("\n"))
 }
 
 #[must_use]

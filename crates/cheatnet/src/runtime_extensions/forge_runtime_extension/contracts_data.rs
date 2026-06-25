@@ -6,6 +6,7 @@ use conversions::IntoConv;
 use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use scarb_api::{ContractsData as ScarbContractsData, StarknetContractArtifacts};
+use shared::utils::contract_name_from_module_path;
 use starknet_api::core::{ClassHash, EntryPointSelector};
 use starknet_rust::core::types::contract::{AbiEntry, SierraClass};
 use starknet_rust::core::utils::get_selector_from_name;
@@ -198,10 +199,4 @@ fn add_simple_abi_entry_to_mapping(
         }
         _ => {}
     }
-}
-
-/// Extracts the contract name from a module path by taking the last segment after `::`.
-#[must_use]
-pub fn contract_name_from_module_path(module_path: &str) -> &str {
-    module_path.rsplit("::").next().unwrap_or(module_path)
 }

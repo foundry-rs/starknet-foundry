@@ -563,6 +563,36 @@ async fn test_wrong_contract_name_passed() {
     );
 }
 
+#[tokio::test]
+async fn test_errors_on_ambiguous_contract_name() {
+    let contract_path =
+        copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/duplicate_contract_name");
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "HelloStarknet",
+    ];
+
+    let output = runner(&args).current_dir(tempdir.path()).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r#"
+        Command: declare
+        Error: Found more than one contract named "HelloStarknet" at: duplicate_contract_name::first_contract::HelloStarknet, duplicate_contract_name::second_contract::HelloStarknet
+        "#},
+    );
+}
+
 #[test]
 fn test_scarb_build_fails_when_wrong_cairo_path() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/build_fails");

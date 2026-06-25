@@ -584,6 +584,39 @@ async fn test_contract_name_not_found() {
 }
 
 #[tokio::test]
+async fn test_errors_on_ambiguous_contract_name() {
+    let contract_path =
+        copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/duplicate_contract_name");
+
+    let args = vec![
+        "verify",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--contract-name",
+        "HelloStarknet",
+        "--verifier",
+        "voyager",
+        "--network",
+        "sepolia",
+        "--url",
+        "http://127.0.0.1:1/rpc",
+    ];
+
+    let output = runner(&args)
+        .current_dir(contract_path.path())
+        .assert()
+        .failure();
+
+    assert_stderr_contains(
+        output,
+        indoc::indoc! {r#"
+        Command: verify
+        Error: Found more than one contract named "HelloStarknet" at: duplicate_contract_name::first_contract::HelloStarknet, duplicate_contract_name::second_contract::HelloStarknet
+        "#},
+    );
+}
+
+#[tokio::test]
 async fn test_error_when_neither_network_nor_url_provided() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 

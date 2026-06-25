@@ -1,5 +1,7 @@
 use crate::helpers::{
-    constants::CONTRACTS_DIR, fixtures::duplicate_contract_directory_with_salt, runner::runner,
+    constants::CONTRACTS_DIR,
+    fixtures::{copy_directory_to_tempdir, duplicate_contract_directory_with_salt},
+    runner::runner,
 };
 use indoc::indoc;
 use scarb_api::ScarbCommand;
@@ -143,5 +145,25 @@ fn test_class_hash_sierra_file_invalid_json() {
         Command: utils class-hash
         Error: Failed to parse sierra file
         "},
+    );
+}
+
+#[test]
+fn test_errors_on_ambiguous_contract_name() {
+    let contract_path =
+        copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/duplicate_contract_name");
+
+    let args = vec!["utils", "class-hash", "--contract-name", "HelloStarknet"];
+
+    let output = runner(&args)
+        .current_dir(contract_path.path())
+        .assert()
+        .failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r#"
+        Error: Found more than one contract named "HelloStarknet" at: duplicate_contract_name::first_contract::HelloStarknet, duplicate_contract_name::second_contract::HelloStarknet
+        "#},
     );
 }

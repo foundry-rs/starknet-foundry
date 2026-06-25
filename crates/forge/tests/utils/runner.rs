@@ -20,7 +20,7 @@ use scarb_api::{
     CompilationOpts, ContractData, ContractsData, StarknetContractArtifacts,
     get_contracts_artifacts_and_source_sierra_paths, target_dir_for_workspace,
 };
-use shared::command::CommandExt;
+use shared::{command::CommandExt, utils::contract_name_from_module_path};
 use starknet_api::execution_resources::{GasAmount, GasVector};
 use std::{
     collections::HashMap,
@@ -39,23 +39,23 @@ pub struct LinkedLibrary {
 
 #[derive(Debug, Clone)]
 pub struct Contract {
-    name: String,
+    module_path: String,
     code: String,
 }
 
 impl Contract {
     #[must_use]
-    pub fn new(name: impl Into<String>, code: impl Into<String>) -> Self {
+    pub fn new(module_path: impl Into<String>, code: impl Into<String>) -> Self {
         Self {
-            name: name.into(),
+            module_path: module_path.into(),
             code: code.into(),
         }
     }
 
-    pub fn from_code_path(name: impl Into<String>, path: impl AsRef<Path>) -> Result<Self> {
+    pub fn from_code_path(module_path: impl Into<String>, path: impl AsRef<Path>) -> Result<Self> {
         let code = fs::read_to_string(path)?;
         Ok(Self {
-            name: name.into(),
+            module_path: module_path.into(),
             code,
         })
     }
@@ -100,7 +100,7 @@ impl Contract {
             .unwrap();
         let artifacts_dir = target_dir_for_workspace(&scarb_metadata).join("dev");
 
-        let artifacts = get_contracts_artifacts_and_source_sierra_paths(
+        let mut artifacts = get_contracts_artifacts_and_source_sierra_paths(
             &artifacts_dir,
             package,
             ui,
@@ -110,11 +110,15 @@ impl Contract {
                 run_native: true,
             },
         )
-        .unwrap()
-        .into_values()
-        .find(|contract| contract.name == self.name)
-        .ok_or(anyhow!("there is no contract with name {}", self.name))?
-        .artifacts;
+        .unwrap();
+
+        let artifacts = artifacts
+            .remove(&self.module_path)
+            .map(|contract| contract.artifacts)
+            .ok_or(anyhow!(
+                "there is no contract with module path {}",
+                self.module_path
+            ))?;
 
         Ok(artifacts)
     }
@@ -201,11 +205,12 @@ impl<'a> TestCase {
             .clone()
             .into_iter()
             .map(|contract| {
-                let name = contract.name.clone();
+                let module_path = contract.module_path.clone();
+                let name = contract_name_from_module_path(&module_path).to_string();
                 let artifacts = contract.generate_contract_artifacts(ui)?;
 
                 Ok((
-                    name.clone(),
+                    module_path,
                     ContractData {
                         name,
                         artifacts,
