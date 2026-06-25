@@ -43,16 +43,6 @@ fn normalize_path(raw_path: &str) -> String {
     normalized
 }
 
-fn trim_wrapping_delimiters(path: &str) -> &str {
-    let mut trimmed = path;
-
-    while has_wrapping_delimiters(trimmed) {
-        trimmed = &trimmed[1..trimmed.len() - 1];
-    }
-
-    trimmed
-}
-
 fn has_wrapping_delimiters(path: &str) -> bool {
     matches!(
         (path.as_bytes().first(), path.as_bytes().last()),
@@ -77,23 +67,42 @@ fn is_valid_contract_path(path: &str) -> bool {
 }
 
 #[cfg(test)]
+fn trim_wrapping_delimiters(path: &str) -> &str {
+    let mut trimmed = path;
+
+    while has_wrapping_delimiters(trimmed) {
+        trimmed = &trimmed[1..trimmed.len() - 1];
+    }
+
+    trimmed
+}
+
+#[cfg(test)]
 mod tests {
     use super::{is_valid_contract_path, normalize_path, trim_wrapping_delimiters};
 
-    #[test_case("HelloStarknet"; "contract name")]
-    #[test_case("my_package::hello_starknet::HelloStarknet"; "full module path")]
-    #[test_case("alias::HelloStarknet"; "partial module path")]
-    fn valid_contract_path(path: &str) {
-        assert!(is_valid_contract_path(path));
+    #[test]
+    fn valid_contract_path() {
+        for path in [
+            "HelloStarknet",
+            "my_package::hello_starknet::HelloStarknet",
+            "alias::HelloStarknet",
+        ] {
+            assert!(is_valid_contract_path(path));
+        }
     }
 
-    #[test_case("\"HelloStarknet\""; "non-path argument")]
-    #[test_case("my-package::HelloStarknet"; "invalid module path")]
-    #[test_case("1_Contract"; "identifier starting with digit")]
-    #[test_case("hello_starknet::1_Contract"; "path segment starting with digit")]
-    #[test_case(""; "empty string")]
-    fn invalid_contract_path(path: &str) {
-        assert!(!is_valid_contract_path(path));
+    #[test]
+    fn invalid_contract_path() {
+        for path in [
+            "\"HelloStarknet\"",
+            "my-package::HelloStarknet",
+            "1_Contract",
+            "hello_starknet::1_Contract",
+            "",
+        ] {
+            assert!(!is_valid_contract_path(path));
+        }
     }
 
     #[test]
