@@ -9,20 +9,20 @@ expression: stdout
 Failure data:
     0x417373657274206661696c6564 ('Assert failed')
 
-error occurred in test 'backtrace_test_panic::tests::test_panics_in_test_body'
 stack backtrace:
-   0: core::array_inline_macro
-       at [..]lib.cairo:346:11
-   1: core::assert
-       at [..]lib.cairo:373:9
-   2: backtrace_test_panic::fail_deep
-       at [..]lib.cairo:2:5
-   3: snforge_std::cheatcode::is_config_run
-       at [..]cheatcode.cairo:31:5
-   4: backtrace_test_panic::tests::test_panics_in_test_body
-       at [..]lib.cairo:13:5
-   5: backtrace_test_panic::tests::test_panics_in_test_body__snforge_internal_test_generated
-       at [..]lib.cairo:13:5
+   in test 'backtrace_test_panic::tests::test_panics_in_test_body':
+      0: core::array_inline_macro
+         at [..]lib.cairo:346:11
+      1: core::assert
+         at [..]lib.cairo:373:9
+      2: backtrace_test_panic::fail_deep
+         at [..]lib.cairo:2:5
+      3: snforge_std::cheatcode::is_config_run
+         at [..]cheatcode.cairo:31:5
+      4: backtrace_test_panic::tests::test_panics_in_test_body
+         at [..]lib.cairo:13:5
+      5: backtrace_test_panic::tests::test_panics_in_test_body__snforge_internal_test_generated
+         at [..]lib.cairo:13:5
 
 
 Failures:

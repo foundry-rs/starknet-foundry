@@ -128,13 +128,7 @@ fn test_complex_scarb_toml_configuration_without_unstable() {
         .assert()
         .failure();
 
-    assert_stdout_contains(
-        output,
-        indoc! {r#"
-            error occurred in contract 'OuterContract'
-            stack backtrace:
-        "#},
-    );
+    assert_stdout_contains(output, "   in contract 'OuterContract':");
 }
 
 #[test]
@@ -162,13 +156,7 @@ fn test_complex_scarb_toml_configuration() {
         .assert()
         .failure();
 
-    assert_stdout_contains(
-        output,
-        indoc! {r#"
-            error occurred in contract 'OuterContract'
-            stack backtrace:
-        "#},
-    );
+    assert_stdout_contains(output, "   in contract 'OuterContract':");
 }
 
 #[test]
@@ -298,7 +286,7 @@ fn snap_test_handled_error_not_display() {
     assert!(
         !output
             .as_stdout()
-            .contains("error occurred in contract 'FailableContract'")
+            .contains("in contract 'FailableContract':")
     );
 
     assert_cleaned_output!(output);
