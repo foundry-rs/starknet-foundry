@@ -1011,9 +1011,9 @@ fn should_panic() {
     assert_stdout_contains(
         output,
         indoc! { r"
-        Collected 15 test(s) from should_panic_test package
+        Collected 16 test(s) from should_panic_test package
         Running 0 test(s) from src/
-        Running 15 test(s) from tests/
+        Running 16 test(s) from tests/
         [FAIL] should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
 
         Failure data:
@@ -1055,6 +1055,7 @@ fn should_panic() {
             Expected:  [0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x0, 0x77696c6c2070616e696363, 0xb] (will panicc)
 
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_match_suffix (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_propagated_byte_array_substring (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_felt_matching (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_felt_with_byte_array
 
@@ -1078,7 +1079,7 @@ fn should_panic() {
             Actual:    [0x6661696c696e6720636865636b] (failing check)
             Expected:  [0x0] ()
 
-        Tests: 6 passed, 9 failed, 0 ignored, 0 filtered out
+        Tests: 7 passed, 9 failed, 0 ignored, 0 filtered out
 
         Failures:
             should_panic_test_integrationtest::should_panic_test::didnt_expect_panic

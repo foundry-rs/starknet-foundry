@@ -1,6 +1,8 @@
 use core::array::ArrayTrait;
 use core::byte_array::BYTE_ARRAY_MAGIC;
 use core::panic_with_felt252;
+use should_panic_test::{IPanickingDispatcher, IPanickingDispatcherTrait};
+use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 
 #[test]
 #[should_panic]
@@ -87,6 +89,15 @@ fn should_panic_match_suffix() {
     panic!("This will panic");
 }
 
+#[test]
+#[should_panic(expected: "will panic")]
+fn should_panic_propagated_byte_array_substring() {
+    let contract = declare("PanickingContract").unwrap().contract_class();
+    let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+
+    let dispatcher = IPanickingDispatcher { contract_address };
+    dispatcher.panic_with_byte_array();
+}
 
 #[test]
 #[should_panic(expected: ('This will panic',))]
