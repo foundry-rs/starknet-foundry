@@ -1,7 +1,8 @@
 use crate::utils::create_single_token;
-use cairo_lang_macro::{Diagnostic, ProcMacroResult, TextSpan, TokenStream, quote};
+use cairo_lang_macro::{quote, Diagnostic, ProcMacroResult, TextSpan, TokenStream};
 
-pub fn declare(args: TokenStream) -> ProcMacroResult {
+#[must_use]
+pub fn declare(args: &TokenStream) -> ProcMacroResult {
     match expand(&args) {
         Ok(token_stream) => ProcMacroResult::new(token_stream),
         Err(diagnostic) => {
