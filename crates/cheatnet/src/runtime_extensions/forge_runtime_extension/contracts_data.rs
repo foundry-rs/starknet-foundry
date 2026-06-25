@@ -138,6 +138,7 @@ impl ContractsData {
         Some(contract_name_from_module_path(module_path).to_string())
     }
 
+    #[must_use]
     pub fn get_artifacts_by_module_path(
         &self,
         module_path: &str,
