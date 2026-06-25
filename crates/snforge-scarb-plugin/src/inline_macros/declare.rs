@@ -24,8 +24,7 @@ fn expand(args: &TokenStream) -> Result<TokenStream, Diagnostic> {
 
     let contract_path_literal =
         TokenStream::new(vec![create_single_token(format!(r#""{contract_path}""#))]);
-    let type_check_path = type_check_path(&contract_path);
-    let path_tokens = TokenStream::new(vec![create_single_token(&type_check_path)]);
+    let path_tokens = TokenStream::new(vec![create_single_token(&contract_path)]);
 
     Ok(quote! {{
         snforge_std::_internals::assert_path_type::<#path_tokens::ContractState>();
@@ -77,31 +76,9 @@ fn is_valid_contract_path(path: &str) -> bool {
     true
 }
 
-fn type_check_path(path: &str) -> String {
-    let mut segments = path.split("::");
-    let Some(first_segment) = segments.next() else {
-        return path.to_string();
-    };
-    let Some(second_segment) = segments.next() else {
-        return first_segment.to_string();
-    };
-
-    // A two-segment path can be a partial module path like `module::Contract`.
-    // In Cairo tests the contract type is commonly imported as `Contract`, so use
-    // the last segment for the compile-time type check while preserving the full
-    // string for runtime resolution.
-    if segments.next().is_none() {
-        second_segment.to_string()
-    } else {
-        path.to_string()
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{
-        is_valid_contract_path, normalize_path, trim_wrapping_delimiters, type_check_path,
-    };
+    use super::{is_valid_contract_path, normalize_path, trim_wrapping_delimiters};
 
     #[test_case("HelloStarknet"; "contract name")]
     #[test_case("my_package::hello_starknet::HelloStarknet"; "full module path")]
@@ -131,22 +108,6 @@ mod tests {
     fn trims_nested_wrapping_parentheses() {
         assert_eq!(
             trim_wrapping_delimiters("((my_package::hello_starknet::HelloStarknet))"),
-            "my_package::hello_starknet::HelloStarknet"
-        );
-    }
-
-    #[test]
-    fn uses_contract_name_for_two_segment_type_check_path() {
-        assert_eq!(
-            type_check_path("hello_starknet::HelloStarknet"),
-            "HelloStarknet"
-        );
-    }
-
-    #[test]
-    fn uses_full_path_for_longer_type_check_path() {
-        assert_eq!(
-            type_check_path("my_package::hello_starknet::HelloStarknet"),
             "my_package::hello_starknet::HelloStarknet"
         );
     }
