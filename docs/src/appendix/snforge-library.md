@@ -3,7 +3,7 @@
 > ℹ️ **Info**
 > Full documentation for the `snforge` library can be found [here](https://foundry-rs.github.io/starknet-foundry/snforge_std/).
 
-* [`declare`](snforge-library/declare.md) - declares a contract and returns
+* [`declare` and `declare!`](snforge-library/declare.md) - declares a contract and returns
   a [`ContractClass`](snforge-library/contract_class.md) which can be interacted with later
 * [`get_call_trace`](snforge-library/get_call_trace.md) - gets current test call trace (with contracts interactions
   included)
