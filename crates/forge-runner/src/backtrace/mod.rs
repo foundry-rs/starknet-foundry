@@ -53,6 +53,8 @@ pub fn add_test_backtrace_footer(
     test_name: &str,
 ) -> String {
     // Include hint even if backtrace capture was skipped (due to backtrace being disabled).
+    // Note: `is_panic()` is treated as equivalent to non-empty backtrace (>= 1 pc), 
+    // since `get_reversed_pc_traceback` always injects the current pc.
     let has_backtrace = test_backtrace.is_panic() || !encountered_errors.is_empty();
 
     if !has_backtrace {
