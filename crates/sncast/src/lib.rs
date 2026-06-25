@@ -2,7 +2,9 @@ use std::num::{NonZeroU8, NonZeroU16};
 
 use crate::helpers::account::{check_account_exists, get_account_from_devnet, is_devnet_account};
 use crate::helpers::configuration::CastConfig;
-use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
+use crate::helpers::constants::{
+    DEFAULT_ACCOUNTS_FILE, DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT,
+};
 use crate::helpers::rpc::RpcArgs;
 use crate::response::errors::SNCastProviderError;
 use anyhow::{Context, Error, Result, anyhow, bail, ensure};
@@ -328,7 +330,19 @@ pub async fn get_account<'a>(
     }
 
     let accounts_file = &config.accounts_file;
-    let exists_in_accounts_file = check_account_exists(account, &network_name, accounts_file)?;
+    // Devnet accounts don't require an accounts file.
+    // When the default accounts file is used, we don't enforce its existence.
+    // When accounts file is set explicitly, it is still required to exist then.
+    let uses_default_accounts_file =
+        accounts_file == &Utf8PathBuf::from(shellexpand::tilde(DEFAULT_ACCOUNTS_FILE).to_string());
+    let accounts_file_required =
+        config.keystore.is_none() && !(is_devnet_account && uses_default_accounts_file);
+    let exists_in_accounts_file = check_account_exists(
+        account,
+        &network_name,
+        accounts_file,
+        accounts_file_required,
+    )?;
 
     match (is_devnet_account, exists_in_accounts_file) {
         (true, true) => {

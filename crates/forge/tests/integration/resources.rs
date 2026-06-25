@@ -136,7 +136,7 @@ fn syscalls_count() {
         "#
         ),
         Contract::from_code_path(
-            "HelloStarknet".to_string(),
+            "contract::HelloStarknet".to_string(),
             Path::new("tests/data/contracts/hello_starknet.cairo"),
         )
         .unwrap()
@@ -211,7 +211,7 @@ fn accumulate_syscalls() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "contract::GasChecker".to_string(),
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
@@ -286,7 +286,7 @@ fn deploy_with_constructor_calldata() {
         "#
         ),
         Contract::from_code_path(
-            "DeployChecker".to_string(),
+            "contract::DeployChecker".to_string(),
             Path::new("tests/data/contracts/deploy_checker.cairo"),
         )
         .unwrap()

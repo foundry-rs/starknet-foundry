@@ -67,6 +67,8 @@ pub enum StarknetCommandError {
     WaitForTransactionError(#[from] WaitForTransactionError),
     #[error(transparent)]
     ProviderError(#[from] SNCastProviderError),
+    #[error("{}", .0.data)]
+    ContractResolutionError(ErrorData),
 }
 
 #[must_use]

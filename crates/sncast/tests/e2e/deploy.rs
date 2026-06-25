@@ -3,9 +3,9 @@ use crate::helpers::constants::{
     DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
 };
 use crate::helpers::fixtures::{
-    create_and_deploy_account, create_and_deploy_oz_account, create_test_provider,
-    duplicate_contract_directory_with_salt, get_transaction_by_hash, get_transaction_hash,
-    get_transaction_receipt, join_tempdirs,
+    copy_directory_to_tempdir, create_and_deploy_account, create_and_deploy_oz_account,
+    create_test_provider, duplicate_contract_directory_with_salt, get_transaction_by_hash,
+    get_transaction_hash, get_transaction_receipt, join_tempdirs,
 };
 use crate::helpers::output::get_declared_class_hash_from_json_output;
 use crate::helpers::runner::{runner, sncast_test_bin_path};
@@ -615,6 +615,38 @@ async fn test_happy_case_with_declare() {
             declare transaction: [..]
             "
         },
+    );
+}
+
+#[tokio::test]
+async fn test_errors_on_ambiguous_contract_name() {
+    let contract_path =
+        copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/duplicate_contract_name");
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "deploy",
+        "--url",
+        URL,
+        "--contract-name",
+        "HelloStarknet",
+    ];
+
+    let output = runner(&args).current_dir(tempdir.path()).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r#"
+        Command: deploy
+        Error: Found more than one contract matching "HelloStarknet". Pass one of these module paths to `--contract-name`:
+         - duplicate_contract_name::first_contract::HelloStarknet
+         - duplicate_contract_name::second_contract::HelloStarknet
+        "#},
     );
 }
 

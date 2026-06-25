@@ -42,7 +42,7 @@ license-file = "LICENSE"
 blockifier = { version = "0.18.0-rc.1", features = ["testing", "tracing", "node_api"] }
 starknet_api = "0.18.0-rc.1"
 bigdecimal = "0.4.10"
-cairo-debugger = { git = "https://github.com/software-mansion-labs/cairo-debugger", rev = "90fa679cd7572fedc5e17dadf15ec44a97b9ce11" }
+cairo-debugger = { git = "https://github.com/software-mansion-labs/cairo-debugger", rev = "788dc4ab8f16509334b36a84c43ee884574975d6" }
 cairo-native = "0.9.0-rc.5"
 cairo-lang-casm = { version = "=2.17.0", features = ["serde"] }
 cairo-lang-sierra = "=2.17.0"
@@ -123,7 +123,7 @@ serde_path_to_error = "0.1.20"
 serde_with = "3.20.0"
 wiremock = "0.6.3"
 coins-ledger = "0.13.0"
-speculos-client = "0.1.2"
+speculos-client = { git = "https://github.com/software-mansion/starknet-rust", rev = "2ddf17ba28625453b8b554d02a3d8ebf4996f4f0" }
 const-hex = "1.19.0"
 indicatif = "0.18.3"
 shell-words = "1.1.0"

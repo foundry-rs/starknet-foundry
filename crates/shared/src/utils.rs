@@ -27,8 +27,16 @@ fn indent_string(string: &str) -> String {
     }
 }
 
+/// Extracts the contract name from a module path by taking the last segment after `::`.
+#[must_use]
+pub fn contract_name_from_module_path(module_path: &str) -> &str {
+    module_path.rsplit("::").next().unwrap_or(module_path)
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::utils::contract_name_from_module_path;
+
     use super::indent_string;
 
     #[test]
@@ -41,5 +49,14 @@ mod tests {
 
         let s = indent_string("\nabc\nd");
         assert_eq!(s, "\n    abc\n    d");
+    }
+
+    #[test]
+    fn test_contract_name_from_module_path() {
+        let name = contract_name_from_module_path("contract::HelloStarknet");
+        assert_eq!(name, "HelloStarknet");
+
+        let name = contract_name_from_module_path("HelloStarknet");
+        assert_eq!(name, "HelloStarknet");
     }
 }

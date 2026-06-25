@@ -2,6 +2,13 @@ use crate::artifacts::deserialized::{StarknetArtifacts, artifacts_for_package};
 use anyhow::anyhow;
 use camino::{Utf8Path, Utf8PathBuf};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ContractArtifact {
+    pub name: String,
+    pub module_path: String,
+    pub sierra_path: Utf8PathBuf,
+}
+
 pub struct StarknetArtifactsRepresentation {
     pub(crate) base_path: Utf8PathBuf,
     pub(crate) artifacts: StarknetArtifacts,
@@ -21,15 +28,15 @@ impl StarknetArtifactsRepresentation {
         })
     }
 
-    pub fn artifacts(self) -> Vec<(String, Utf8PathBuf)> {
+    /// Returns every contract artifact in the representation.
+    pub fn artifacts(self) -> Vec<ContractArtifact> {
         self.artifacts
             .contracts
             .into_iter()
-            .map(|contract| {
-                (
-                    contract.contract_name,
-                    self.base_path.join(contract.artifacts.sierra.as_path()),
-                )
+            .map(|contract| ContractArtifact {
+                name: contract.contract_name,
+                module_path: contract.module_path,
+                sierra_path: self.base_path.join(contract.artifacts.sierra.as_path()),
             })
             .collect()
     }

@@ -34,12 +34,12 @@ fn override_entrypoint() {
         "#
         ),
         Contract::from_code_path(
-            "ReplaceBytecodeA",
+            "contract::ReplaceBytecodeA",
             Path::new("tests/data/contracts/two_implementations.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "ReplaceBytecodeB",
+            "contract::ReplaceBytecodeB",
             Path::new("tests/data/contracts/two_implementations.cairo"),
         )
         .unwrap()
@@ -85,17 +85,17 @@ fn libcall_in_cheated() {
         "#
         ),
         Contract::from_code_path(
-            "Lib",
+            "contract::Lib",
             Path::new("tests/data/contracts/two_implementations.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "ReplaceBytecodeA",
+            "contract::ReplaceBytecodeA",
             Path::new("tests/data/contracts/two_implementations.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "ReplaceBytecodeB",
+            "contract::ReplaceBytecodeB",
             Path::new("tests/data/contracts/two_implementations.cairo"),
         )
         .unwrap()
@@ -132,7 +132,7 @@ fn contract_not_deployed() {
         "#
         ),
         Contract::from_code_path(
-            "ReplaceBytecodeA",
+            "contract::ReplaceBytecodeA",
             Path::new("tests/data/contracts/two_implementations.cairo"),
         )
         .unwrap()
@@ -169,7 +169,7 @@ fn class_hash_not_declared() {
         "#
         ),
         Contract::from_code_path(
-            "ReplaceBytecodeA",
+            "contract::ReplaceBytecodeA",
             Path::new("tests/data/contracts/two_implementations.cairo"),
         )
         .unwrap()

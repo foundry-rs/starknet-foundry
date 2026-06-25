@@ -155,7 +155,7 @@ dependencies = [
  "rlimit",
  "serde",
  "serde_json",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "tempfile",
  "thiserror 1.0.69",
@@ -262,7 +262,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "96b3080899396e91925dd0eff941108e2880cd6983d748573f9de1d725b5163b"
 dependencies = [
  "apollo_sizeof_macros",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
 ]
 
 [[package]]
@@ -815,7 +815,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.9",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "strum 0.27.2",
  "thiserror 1.0.69",
@@ -833,7 +833,7 @@ dependencies = [
  "digest 0.10.7",
  "serde_json",
  "sha2 0.10.9",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "strum 0.27.2",
  "tempfile",
@@ -959,7 +959,25 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
+ "strum 0.28.0",
+ "strum_macros 0.28.0",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "cairo-annotations"
+version = "0.8.0"
+source = "git+https://github.com/software-mansion/cairo-annotations?rev=ff307d9f0ab4c6514b90698e3ce29d91f8e0ce56#ff307d9f0ab4c6514b90698e3ce29d91f8e0ce56"
+dependencies = [
+ "cairo-lang-sierra",
+ "cairo-lang-sierra-to-casm",
+ "cairo-lang-sierra-type-size",
+ "camino",
+ "derive_more",
+ "serde",
+ "serde_json",
+ "starknet-types-core 1.0.0",
  "strum 0.28.0",
  "strum_macros 0.28.0",
  "thiserror 2.0.18",
@@ -968,10 +986,10 @@ dependencies = [
 [[package]]
 name = "cairo-debugger"
 version = "0.1.0"
-source = "git+https://github.com/software-mansion-labs/cairo-debugger?rev=90fa679cd7572fedc5e17dadf15ec44a97b9ce11#90fa679cd7572fedc5e17dadf15ec44a97b9ce11"
+source = "git+https://github.com/software-mansion-labs/cairo-debugger?rev=788dc4ab8f16509334b36a84c43ee884574975d6#788dc4ab8f16509334b36a84c43ee884574975d6"
 dependencies = [
  "anyhow",
- "cairo-annotations",
+ "cairo-annotations 0.8.0 (git+https://github.com/software-mansion/cairo-annotations?rev=ff307d9f0ab4c6514b90698e3ce29d91f8e0ce56)",
  "cairo-lang-casm",
  "cairo-lang-sierra",
  "cairo-lang-sierra-to-casm",
@@ -981,7 +999,7 @@ dependencies = [
  "indexmap 2.14.0",
  "scarb-metadata",
  "serde_json",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "tracing",
 ]
 
@@ -1145,7 +1163,7 @@ dependencies = [
  "postcard",
  "salsa",
  "serde",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.18",
  "tracing",
 ]
@@ -1265,7 +1283,7 @@ dependencies = [
  "salsa",
  "serde",
  "sha2 0.10.9",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.18",
 ]
 
@@ -1294,7 +1312,7 @@ dependencies = [
  "salsa",
  "serde",
  "sha3 0.10.9",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "toml 0.9.12+spec-1.1.0",
  "tracing",
 ]
@@ -1321,7 +1339,7 @@ dependencies = [
  "serde_json",
  "sha3 0.10.9",
  "smol_str",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.18",
 ]
 
@@ -1399,7 +1417,7 @@ dependencies = [
  "itertools 0.14.0",
  "num-bigint",
  "num-traits",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.18",
 ]
 
@@ -1441,7 +1459,7 @@ dependencies = [
  "salsa",
  "serde",
  "serde_json",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.18",
  "typetag",
 ]
@@ -1466,7 +1484,7 @@ dependencies = [
  "serde_json",
  "sha3 0.10.9",
  "smol_str",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.18",
 ]
 
@@ -1525,7 +1543,7 @@ dependencies = [
  "num-traits",
  "salsa",
  "serde",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
 ]
 
 [[package]]
@@ -1604,7 +1622,7 @@ dependencies = [
  "serde_json",
  "sha2 0.10.9",
  "starknet-curve",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "tempfile",
  "thiserror 2.0.18",
  "tracing",
@@ -1645,7 +1663,7 @@ dependencies = [
  "sha2 0.10.9",
  "sha3 0.10.9",
  "starknet-crypto",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "thiserror 2.0.18",
  "tracing",
  "zip",
@@ -1787,7 +1805,7 @@ dependencies = [
  "anyhow",
  "bimap",
  "blockifier",
- "cairo-annotations",
+ "cairo-annotations 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cairo-lang-casm",
  "cairo-lang-starknet-classes",
  "cairo-lang-utils",
@@ -1818,7 +1836,7 @@ dependencies = [
  "serde_json",
  "shared",
  "starknet-rust",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "tempfile",
  "test-case",
@@ -2024,7 +2042,7 @@ version = "3.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "faf9468729b8cbcea668e36183cb69d317348c2e08e994829fb56ebfdfbaac34"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2204,7 +2222,7 @@ dependencies = [
  "serde",
  "serde_json",
  "starknet-rust",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "test-case",
  "thiserror 2.0.18",
@@ -2753,7 +2771,7 @@ dependencies = [
  "serde_json",
  "shared",
  "starknet-rust",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "test-case",
  "thiserror 2.0.18",
  "tokio",
@@ -2783,7 +2801,7 @@ name = "debugging"
 version = "1.0.0"
 dependencies = [
  "blockifier",
- "cairo-annotations",
+ "cairo-annotations 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cairo-lang-sierra",
  "cairo-lang-sierra-to-casm",
  "cairo-lang-starknet-classes",
@@ -2794,8 +2812,9 @@ dependencies = [
  "ptree",
  "rayon",
  "serde_json",
+ "shared",
  "starknet-rust",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "thiserror 2.0.18",
 ]
@@ -3052,7 +3071,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users 0.5.2",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -3303,7 +3322,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -3518,7 +3537,7 @@ dependencies = [
  "assert_fs",
  "axum",
  "blockifier",
- "cairo-annotations",
+ "cairo-annotations 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cairo-lang-sierra",
  "cairo-lang-starknet-classes",
  "cairo-vm",
@@ -3560,7 +3579,7 @@ dependencies = [
  "shared",
  "snapbox",
  "starknet-rust",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "tempfile",
  "test-case",
@@ -3580,7 +3599,7 @@ version = "0.61.0"
 dependencies = [
  "anyhow",
  "blockifier",
- "cairo-annotations",
+ "cairo-annotations 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cairo-debugger",
  "cairo-lang-casm",
  "cairo-lang-sierra",
@@ -3610,7 +3629,7 @@ dependencies = [
  "serde_json",
  "shared",
  "starknet-rust",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "strum 0.28.0",
  "strum_macros 0.28.0",
@@ -3639,7 +3658,7 @@ dependencies = [
  "console 0.16.3",
  "serde",
  "serde_json",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
 ]
 
 [[package]]
@@ -4070,9 +4089,6 @@ name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
-dependencies = [
- "serde",
-]
 
 [[package]]
 name = "hidapi-rusb"
@@ -4791,7 +4807,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8cfc352a66ba903c23239ef51e809508b6fc2b0f90e3476ac7a9ff47e863ae95"
 dependencies = [
  "scopeguard",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -5390,7 +5406,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -6245,7 +6261,7 @@ dependencies = [
  "once_cell",
  "socket2 0.6.3",
  "tracing",
- "windows-sys 0.60.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -6496,38 +6512,6 @@ checksum = "ba39f3699c378cd8970968dcbff9c43159ea4cfbd88d43c00b22f2ef10a435d2"
 
 [[package]]
 name = "reqwest"
-version = "0.12.28"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eddd3ca559203180a307f12d114c268abf583f59b03cb906fd0b3ff8646c1147"
-dependencies = [
- "base64 0.22.1",
- "bytes",
- "futures-core",
- "http",
- "http-body",
- "http-body-util",
- "hyper",
- "hyper-util",
- "js-sys",
- "log",
- "percent-encoding",
- "pin-project-lite",
- "serde",
- "serde_json",
- "serde_urlencoded",
- "sync_wrapper",
- "tokio",
- "tower",
- "tower-http",
- "tower-service",
- "url",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "reqwest"
 version = "0.13.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "219c5811de6525e5416c7d5d53bb656d3afdbc6c5af816e0802bcfa42dbdc1c3"
@@ -6712,7 +6696,7 @@ dependencies = [
  "serde_json",
  "shared",
  "starknet-rust",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "thiserror 2.0.18",
 ]
@@ -6797,7 +6781,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -6864,7 +6848,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -7415,7 +7399,7 @@ dependencies = [
  "semver",
  "snapbox",
  "starknet-rust",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "starknet_api",
  "thiserror 2.0.18",
  "url",
@@ -7604,7 +7588,7 @@ dependencies = [
  "promptly",
  "rand 0.8.6",
  "regex",
- "reqwest 0.13.4",
+ "reqwest",
  "rpassword",
  "runtime",
  "scarb-api",
@@ -7623,7 +7607,7 @@ dependencies = [
  "speculos-client",
  "starknet-rust",
  "starknet-rust-crypto",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "strum 0.28.0",
  "strum_macros 0.28.0",
  "tempfile",
@@ -7664,13 +7648,14 @@ dependencies = [
 
 [[package]]
 name = "speculos-client"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aab48e66d675276b5970b3243e9638053a9ff8d693d4a0f9c2514e83dbbc8cab"
+version = "0.0.0"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=2ddf17ba28625453b8b554d02a3d8ebf4996f4f0#2ddf17ba28625453b8b554d02a3d8ebf4996f4f0"
 dependencies = [
  "hex",
- "reqwest 0.12.28",
+ "reqwest",
  "serde",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]
@@ -7736,7 +7721,7 @@ dependencies = [
  "sha3 0.10.9",
  "starknet-core-derive",
  "starknet-crypto",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
 ]
 
 [[package]]
@@ -7765,7 +7750,7 @@ dependencies = [
  "rfc6979",
  "sha2 0.10.9",
  "starknet-curve",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "zeroize",
 ]
 
@@ -7775,7 +7760,7 @@ version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "22c898ae81b6409532374cf237f1bd752d068b96c6ad500af9ebbd0d9bb712f6"
 dependencies = [
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
 ]
 
 [[package]]
@@ -7841,7 +7826,7 @@ dependencies = [
  "sha3 0.10.9",
  "starknet-rust-core-derive",
  "starknet-rust-crypto",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
 ]
 
 [[package]]
@@ -7872,7 +7857,7 @@ dependencies = [
  "rfc6979",
  "sha2 0.10.9",
  "starknet-rust-curve",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "zeroize",
 ]
 
@@ -7882,7 +7867,7 @@ version = "0.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bf807adc0b881c58efa7cbdec303da1308250691a3969fb46b5eb47dfb125eca"
 dependencies = [
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
 ]
 
 [[package]]
@@ -7907,7 +7892,7 @@ dependencies = [
  "flate2",
  "getrandom 0.2.17",
  "log",
- "reqwest 0.13.4",
+ "reqwest",
  "serde",
  "serde_json",
  "serde_with",
@@ -7959,6 +7944,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "starknet-types-core"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a12690813e587969cb4a9e7d8ebdb069d4bb7ec8d03275c5f719310c8e1f07c"
+dependencies = [
+ "generic-array",
+ "lambdaworks-crypto",
+ "lambdaworks-math",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "rand 0.9.4",
+ "serde",
+ "zeroize",
+]
+
+[[package]]
 name = "starknet_api"
 version = "0.18.0-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7990,7 +7992,7 @@ dependencies = [
  "sha3 0.10.9",
  "starknet-core",
  "starknet-crypto",
- "starknet-types-core",
+ "starknet-types-core 0.2.4",
  "strum 0.27.2",
  "thiserror 1.0.69",
  "time",
@@ -8214,7 +8216,7 @@ dependencies = [
  "getrandom 0.4.2",
  "once_cell",
  "rustix 1.1.4",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -8223,7 +8225,7 @@ version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8c27177b12a6399ffc08b98f76f7c9a1f4fe9fc967c784c5a071fa8d93cf7e1"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -8996,7 +8998,7 @@ dependencies = [
  "lazy_static 1.5.0",
  "log",
  "regex",
- "reqwest 0.13.4",
+ "reqwest",
  "scarb-metadata",
  "semver",
  "serde",
@@ -9639,7 +9641,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

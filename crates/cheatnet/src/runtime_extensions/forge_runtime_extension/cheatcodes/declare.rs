@@ -1,15 +1,16 @@
 use crate::constants::get_current_sierra_version;
 use crate::runtime_extensions::forge_runtime_extension::{
     cheatcodes::{CheatcodeError, EnhancedHintError},
-    contracts_data::ContractsData,
+    contracts_data::{ContractResolutionError, ContractsData},
 };
-use anyhow::{Context, Result};
+use anyhow::{Result, anyhow};
 use blockifier::execution::contract_class::{CompiledClassV1, RunnableCompiledClass};
 #[cfg(feature = "cairo-native")]
 use blockifier::execution::native::contract_class::NativeCompiledClassV1;
 use blockifier::state::{errors::StateError, state_api::State};
 use conversions::IntoConv;
 use conversions::serde::serialize::CairoSerialize;
+use indoc::formatdoc;
 use scarb_api::StarknetContractArtifacts;
 use starknet_api::core::{ClassHash, CompiledClassHash};
 use starknet_rust::core::types::contract::SierraClass;
@@ -22,19 +23,35 @@ pub enum DeclareResult {
 
 pub fn declare(
     state: &mut dyn State,
-    contract_name: &str,
+    contract_identifier: &str,
     contracts_data: &ContractsData,
 ) -> Result<DeclareResult, CheatcodeError> {
-    let contract_artifact = contracts_data
-        .get_artifacts(contract_name)
-        .with_context(|| format!("Failed to get contract artifact for name = {contract_name}."))
-        .map_err(EnhancedHintError::from)?;
+    let contract = match contracts_data.resolve_contract(contract_identifier) {
+        Ok(contract) => contract,
+        Err(ContractResolutionError::NameNotFound) => {
+            return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
+                anyhow!("Failed to get contract artifact for name = {contract_identifier}."),
+            )));
+        }
+        Err(ContractResolutionError::AmbiguousName(module_paths)) => {
+            let paths = module_paths
+                .iter()
+                .map(|path| format!(" - {path}"))
+                .collect::<Vec<_>>()
+                .join("\n");
+            return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
+                anyhow!(formatdoc! { r"
+                    Multiple contracts found with name = {contract_identifier}. Found contracts at the following paths:
+                    {paths}
+                    Use a module path to disambiguate, or rename one of the contracts so that the name is unique."
+                }),
+            )));
+        }
+    };
 
-    let contract_class = get_contract_class(contract_artifact);
+    let contract_class = get_contract_class(&contract.artifacts);
 
-    let class_hash = *contracts_data
-        .get_class_hash(contract_name)
-        .expect("Failed to get class hash");
+    let class_hash = contract.class_hash;
 
     match state.get_compiled_class(class_hash) {
         Err(StateError::UndeclaredClassHash(_)) => {

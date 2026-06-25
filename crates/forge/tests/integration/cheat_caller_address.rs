@@ -126,7 +126,7 @@ fn cheat_caller_address() {
         "#
         ),
         Contract::from_code_path(
-            "CheatCallerAddressChecker".to_string(),
+            "contract::CheatCallerAddressChecker".to_string(),
             Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
         )
         .unwrap()
@@ -215,7 +215,7 @@ fn cheat_caller_address_with_span() {
         "#
         ),
         Contract::from_code_path(
-            "CheatCallerAddressChecker".to_string(),
+            "contract::CheatCallerAddressChecker".to_string(),
             Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
         )
         .unwrap()
@@ -266,7 +266,7 @@ fn cheat_caller_address_direct_library_call_from_test() {
             "#
         ),
         Contract::from_code_path(
-            "CheatCallerAddressChecker".to_string(),
+            "contract::CheatCallerAddressChecker".to_string(),
             Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
         )
         .unwrap()
@@ -316,7 +316,7 @@ fn cheat_caller_address_global_direct_library_call_from_test() {
             "#
         ),
         Contract::from_code_path(
-            "CheatCallerAddressChecker".to_string(),
+            "contract::CheatCallerAddressChecker".to_string(),
             Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
         )
         .unwrap()
@@ -367,7 +367,7 @@ fn cheat_caller_address_via_syscall_from_test() {
             "#
         ),
         Contract::from_code_path(
-            "CheatCallerAddressChecker".to_string(),
+            "contract::CheatCallerAddressChecker".to_string(),
             Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
         )
         .unwrap()
@@ -418,7 +418,7 @@ fn cheat_caller_address_via_safe_dispatcher_from_test() {
             "#
         ),
         Contract::from_code_path(
-            "CheatCallerAddressChecker".to_string(),
+            "contract::CheatCallerAddressChecker".to_string(),
             Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
         )
         .unwrap()
@@ -473,12 +473,12 @@ fn cheat_caller_address_library_call_from_contract() {
             "#
         ),
         Contract::from_code_path(
-            "CheatCallerAddressChecker".to_string(),
+            "contract::CheatCallerAddressChecker".to_string(),
             Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "CheatCallerAddressLibraryCallChecker".to_string(),
+            "contract::CheatCallerAddressLibraryCallChecker".to_string(),
             Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
         )
         .unwrap()

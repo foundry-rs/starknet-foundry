@@ -3,9 +3,12 @@ use anyhow::{Context, Result, anyhow, bail};
 use clap::{Args, ValueEnum};
 use promptly::prompt;
 use scarb_metadata::PackageMetadata;
+use shared::utils::contract_name_from_module_path;
+use sncast::helpers::artifacts::resolve_contract_artifacts;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::FreeProvider;
 use sncast::helpers::scarb_utils::{BuildConfig, build_and_load_artifacts};
+use sncast::response::errors::StarknetCommandError;
 use sncast::response::ui::UI;
 use sncast::{Network, response::verify::VerifyResponse};
 use sncast::{get_chain_id, get_provider};
@@ -29,7 +32,7 @@ pub struct Verify {
     #[command(flatten)]
     pub contract_identifier: ContractIdentifierArgs,
 
-    /// Name of the contract that is being verified
+    /// Name of the contract or module tree path suffix
     #[arg(short, long)]
     pub contract_name: String,
 
@@ -117,13 +120,13 @@ async fn resolve_verification_network(
         })
 }
 
-fn build_and_validate_contract(
+fn resolve_and_validate_contract_name(
     package: &PackageMetadata,
     scarb_json: bool,
     profile: String,
     contract_name: &str,
     ui: &UI,
-) -> Result<()> {
+) -> Result<String> {
     let artifacts = build_and_load_artifacts(
         package,
         &BuildConfig {
@@ -137,11 +140,14 @@ fn build_and_validate_contract(
     )
     .context("Failed to build contract")?;
 
-    if !artifacts.contains_key(contract_name) {
-        bail!("Contract named '{contract_name}' was not found");
-    }
+    resolve_contract_artifacts(contract_name, &artifacts).map_err(|error| match error {
+        StarknetCommandError::ContractArtifactsNotFound(_) => {
+            anyhow!("Contract named '{contract_name}' was not found")
+        }
+        other => other.into(),
+    })?;
 
-    Ok(())
+    Ok(contract_name_from_module_path(contract_name).to_string())
 }
 
 fn display_files_and_confirm(
@@ -216,7 +222,7 @@ pub async fn verify(
     let network =
         resolve_verification_network(network, config.network_params.network(), &provider).await?;
 
-    build_and_validate_contract(
+    let resolved_contract_name = resolve_and_validate_contract_name(
         package,
         json,
         config.scarb_profile.clone(),
@@ -251,7 +257,13 @@ pub async fn verify(
 
             // Perform verification
             walnut
-                .verify(contract_identifier, contract_name, scarb_package, false, ui)
+                .verify(
+                    contract_identifier,
+                    resolved_contract_name,
+                    scarb_package,
+                    false,
+                    ui,
+                )
                 .await
         }
         Verifier::Voyager => {
@@ -269,7 +281,7 @@ pub async fn verify(
             voyager
                 .verify(
                     contract_identifier,
-                    contract_name,
+                    resolved_contract_name,
                     scarb_package,
                     test_files,
                     ui,
@@ -281,10 +293,14 @@ pub async fn verify(
 
 #[cfg(test)]
 mod tests {
-    use super::resolve_verification_network;
+    use super::{resolve_and_validate_contract_name, resolve_verification_network};
+    use camino::Utf8PathBuf;
+    use scarb_metadata::PackageMetadata;
     use serde_json::json;
     use sncast::Network;
     use sncast::get_provider;
+    use sncast::helpers::scarb_utils::get_package_metadata;
+    use sncast::response::ui::UI;
     use starknet_types_core::felt::Felt;
     use url::Url;
     use wiremock::matchers::{body_partial_json, method};
@@ -294,6 +310,15 @@ mod tests {
         starknet_rust::providers::jsonrpc::HttpTransport,
     > {
         get_provider(&Url::parse("http://127.0.0.1:1").unwrap()).unwrap()
+    }
+
+    fn package_metadata_for_test_contract(contract_dir: &str) -> PackageMetadata {
+        let manifest_path = Utf8PathBuf::from(format!(
+            "{}/tests/data/contracts/{contract_dir}/Scarb.toml",
+            env!("CARGO_MANIFEST_DIR")
+        ));
+
+        get_package_metadata(&manifest_path, &None).unwrap()
     }
 
     async fn mock_provider_for_chain_id(
@@ -320,6 +345,40 @@ mod tests {
             get_provider(&Url::parse(&mock_rpc.uri()).unwrap()).unwrap(),
             mock_rpc,
         )
+    }
+
+    #[test]
+    fn resolves_contract_name_from_full_module_path() {
+        let package = package_metadata_for_test_contract("duplicate_contract_name");
+        let ui = UI::default();
+
+        let contract_name = resolve_and_validate_contract_name(
+            &package,
+            false,
+            "release".to_string(),
+            "duplicate_contract_name::first_contract::HelloStarknet",
+            &ui,
+        )
+        .unwrap();
+
+        assert_eq!(contract_name, "HelloStarknet");
+    }
+
+    #[test]
+    fn resolves_contract_name_from_partial_module_path() {
+        let package = package_metadata_for_test_contract("duplicate_contract_name");
+        let ui = UI::default();
+
+        let contract_name = resolve_and_validate_contract_name(
+            &package,
+            false,
+            "release".to_string(),
+            "first_contract::HelloStarknet",
+            &ui,
+        )
+        .unwrap();
+
+        assert_eq!(contract_name, "HelloStarknet");
     }
 
     #[tokio::test]
