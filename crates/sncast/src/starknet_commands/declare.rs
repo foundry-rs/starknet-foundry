@@ -2,7 +2,7 @@ use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use shared::rpc::get_starknet_version;
-use sncast::helpers::artifacts::{CastStarknetContractArtifacts, resolve_contract_artifacts};
+use sncast::helpers::artifacts::{ContractArtifactsMap, resolve_contract_artifacts};
 use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
@@ -25,7 +25,6 @@ use starknet_rust::{
     signers::Signer,
 };
 use starknet_types_core::felt::Felt;
-use std::collections::HashMap;
 use std::sync::Arc;
 use universal_sierra_compiler_api::compile_contract_sierra;
 
@@ -49,7 +48,7 @@ pub struct DeclareCommonArgs {
 #[derive(Args)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
 pub struct Declare {
-    /// Contract name
+    /// Contract name or module tree path
     #[arg(short = 'c', long)]
     pub contract_name: String,
 
@@ -74,7 +73,7 @@ pub async fn declare<S>(
     nonce: Option<Felt>,
     no_abi: bool,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
-    artifacts: &HashMap<String, CastStarknetContractArtifacts>,
+    artifacts: &ContractArtifactsMap,
     wait_config: WaitForTx,
     skip_on_already_declared: bool,
     ui: &UI,

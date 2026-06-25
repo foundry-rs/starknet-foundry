@@ -2,11 +2,10 @@ use anyhow::Context;
 use clap::{ArgGroup, Args};
 use conversions::IntoConv;
 use sncast::helpers::artifacts::{
-    CastStarknetContractArtifacts, resolve_contract_artifacts, sierra_class_from_file,
+    ContractArtifactsMap, resolve_contract_artifacts, sierra_class_from_file,
 };
 use sncast::response::{errors::StarknetCommandError, utils::class_hash::ClassHashResponse};
 use starknet_rust::core::types::contract::SierraClass;
-use std::collections::HashMap;
 use std::path::PathBuf;
 
 #[derive(Args, Debug)]
@@ -31,10 +30,10 @@ pub struct ClassHashArgs {
 
 #[expect(clippy::result_large_err)]
 pub fn sierra_class_from_artifacts(
-    contract_name: &str,
-    artifacts: &HashMap<String, CastStarknetContractArtifacts>,
+    contract_identifier: &str,
+    artifacts: &ContractArtifactsMap,
 ) -> Result<SierraClass, StarknetCommandError> {
-    let contract_artifacts = resolve_contract_artifacts(contract_name, artifacts)?;
+    let contract_artifacts = resolve_contract_artifacts(contract_identifier, artifacts)?;
 
     let sierra: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
         .context("Failed to parse sierra artifact")?;
@@ -45,7 +44,7 @@ pub fn sierra_class_from_artifacts(
 #[expect(clippy::result_large_err)]
 pub fn get_class_hash(
     class_hash: &ClassHashArgs,
-    artifacts: Option<&HashMap<String, CastStarknetContractArtifacts>>,
+    artifacts: Option<&ContractArtifactsMap>,
 ) -> Result<ClassHashResponse, StarknetCommandError> {
     let sierra = if let Some(sierra_file) = &class_hash.sierra_file {
         sierra_class_from_file(sierra_file)?

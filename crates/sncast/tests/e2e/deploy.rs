@@ -643,7 +643,9 @@ async fn test_errors_on_ambiguous_contract_name() {
         output,
         indoc! {r#"
         Command: deploy
-        Error: Found more than one contract named "HelloStarknet" at: duplicate_contract_name::first_contract::HelloStarknet, duplicate_contract_name::second_contract::HelloStarknet
+        Error: Found more than one contract matching "HelloStarknet". Pass one of these module paths to `--contract-name`:
+         - duplicate_contract_name::first_contract::HelloStarknet
+         - duplicate_contract_name::second_contract::HelloStarknet
         "#},
     );
 }

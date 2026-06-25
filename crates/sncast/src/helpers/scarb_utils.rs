@@ -1,4 +1,4 @@
-use crate::helpers::artifacts::CastStarknetContractArtifacts;
+use crate::helpers::artifacts::{CastStarknetContractArtifacts, ContractArtifactsMap};
 use anyhow::{Context, Result, anyhow};
 use camino::{Utf8Path, Utf8PathBuf};
 use foundry_ui::{UI, components::warning::WarningMessage};
@@ -11,7 +11,6 @@ use scarb_api::{
 };
 use scarb_ui::args::PackagesFilter;
 use shared::command::CommandExt;
-use std::collections::HashMap;
 use std::str::FromStr;
 
 pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
@@ -142,9 +141,7 @@ pub fn build(
     cmd.run()
 }
 
-fn contracts_data_to_artifacts(
-    contracts: ContractsData,
-) -> HashMap<String, CastStarknetContractArtifacts> {
+fn contracts_data_to_artifacts(contracts: ContractsData) -> ContractArtifactsMap {
     contracts
         .into_iter()
         .map(|(module_path, contract)| {
@@ -165,7 +162,7 @@ pub fn build_and_load_artifacts(
     config: &BuildConfig,
     build_for_script: bool,
     ui: &UI,
-) -> Result<HashMap<String, CastStarknetContractArtifacts>> {
+) -> Result<ContractArtifactsMap> {
     // TODO (#2042): Remove this logic, always use release as default
     let default_profile = if build_for_script { "dev" } else { "release" };
     build(package, config, default_profile)
