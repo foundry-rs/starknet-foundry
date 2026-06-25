@@ -6,6 +6,8 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::
 };
 use runtime::EnhancedHintError;
 use shared::utils::contract_name_from_module_path;
+use starknet_api::core::ClassHash;
+use starknet_types_core::felt::Felt;
 
 #[test]
 fn declare_simple() {
@@ -149,6 +151,118 @@ fn declare_ambiguous_name_resolved_by_module_path() {
 }
 
 #[test]
+fn declare_ambiguous_name_resolved_by_partial_module_path() {
+    let contract_name = "HelloStarknet";
+    let nested_module_path = "pkg::nested::a::HelloStarknet".to_string();
+    let other_module_path = "pkg::a::HelloStarknet".to_string();
+
+    let mut cached_state = create_cached_state();
+
+    let mut contracts_data = get_contracts();
+    let existing = contracts_data
+        .contracts
+        .iter()
+        .find(|(module_path, _)| contract_name_from_module_path(module_path) == contract_name)
+        .map(|(_module_path, contract)| contract.clone())
+        .expect("HelloStarknet should be present in the test fixtures");
+    contracts_data
+        .contracts
+        .insert(nested_module_path.clone(), existing.clone());
+    contracts_data.contracts.insert(other_module_path, existing);
+
+    let partial_module_path = "nested::a::HelloStarknet";
+    let class_hash = declare(&mut cached_state, partial_module_path, &contracts_data)
+        .unwrap()
+        .unwrap_success();
+    let expected_class_hash = &contracts_data
+        .resolve_contract(&nested_module_path)
+        .unwrap()
+        .class_hash;
+
+    assert_eq!(class_hash, *expected_class_hash);
+}
+
+#[test]
+fn declare_ambiguous_name_resolved_by_partial_module_path_with_leading_colons() {
+    let contract_name = "HelloStarknet";
+    let module_path = "pkg::a::HelloStarknet".to_string();
+
+    let mut cached_state = create_cached_state();
+
+    let mut contracts_data = get_contracts();
+    let existing = contracts_data
+        .contracts
+        .iter()
+        .find(|(module_path, _)| contract_name_from_module_path(module_path) == contract_name)
+        .map(|(_module_path, contract)| contract.clone())
+        .expect("HelloStarknet should be present in the test fixtures");
+    contracts_data
+        .contracts
+        .insert(module_path.clone(), existing);
+
+    let class_hash = declare(&mut cached_state, "::a::HelloStarknet", &contracts_data)
+        .unwrap()
+        .unwrap_success();
+    let expected_class_hash = &contracts_data
+        .resolve_contract(&module_path)
+        .unwrap()
+        .class_hash;
+
+    assert_eq!(class_hash, *expected_class_hash);
+}
+
+#[test]
+fn declare_exact_module_path_takes_precedence_over_suffix_match() {
+    let contract_name = "HelloStarknet";
+    let partial_module_path = "pkg::a::HelloStarknet".to_string();
+    let full_module_path = "outer::pkg::a::HelloStarknet".to_string();
+    let partial_class_hash = ClassHash(Felt::from(123));
+    let long_class_hash = ClassHash(Felt::from(456));
+
+    let mut cached_state = create_cached_state();
+
+    let mut contracts_data = get_contracts();
+    let existing = contracts_data
+        .contracts
+        .iter()
+        .find(|(module_path, _)| contract_name_from_module_path(module_path) == contract_name)
+        .map(|(_module_path, contract)| contract.clone())
+        .expect("HelloStarknet should be present in the test fixtures");
+
+    let mut partial_contract = existing.clone();
+    partial_contract.class_hash = partial_class_hash;
+    let mut full_contract = existing;
+    full_contract.class_hash = long_class_hash;
+
+    contracts_data
+        .contracts
+        .insert(partial_module_path.clone(), partial_contract);
+    contracts_data
+        .contracts
+        .insert(full_module_path.clone(), full_contract);
+
+    let class_hash = declare(&mut cached_state, &full_module_path, &contracts_data)
+        .unwrap()
+        .unwrap_success();
+    assert_eq!(class_hash, long_class_hash);
+
+    let class_hash = declare(&mut cached_state, &partial_module_path, &contracts_data)
+        .unwrap()
+        .unwrap_success();
+    assert_eq!(class_hash, partial_class_hash);
+
+    let output = declare(
+        &mut cached_state,
+        &format!("::{partial_module_path}"),
+        &contracts_data,
+    )
+    .unwrap();
+    assert!(
+        matches!(output, DeclareResult::AlreadyDeclared(class_hash) if class_hash == partial_class_hash)
+    );
+}
+
+#[test]
 fn declare_ambiguous_name() {
     let contract_name = "HelloStarknet";
     let duplicate_module_path = "duplicate::HelloStarknet".to_string();
@@ -176,6 +290,42 @@ fn declare_ambiguous_name() {
             msg.contains("Multiple contracts found")
                 && msg.contains(contract_name)
                 && msg.contains(&duplicate_module_path)
+        }
+        _ => false,
+    });
+}
+
+#[test]
+fn declare_ambiguous_partial_module_path() {
+    let contract_name = "HelloStarknet";
+    let nested_module_path = "pkg::nested::a::HelloStarknet".to_string();
+    let other_module_path = "pkg::a::HelloStarknet".to_string();
+
+    let mut cached_state = create_cached_state();
+
+    let mut contracts_data = get_contracts();
+    let existing = contracts_data
+        .contracts
+        .iter()
+        .find(|(module_path, _)| contract_name_from_module_path(module_path) == contract_name)
+        .map(|(_module_path, contract)| contract.clone())
+        .expect("HelloStarknet should be present in the test fixtures");
+    contracts_data
+        .contracts
+        .insert(nested_module_path.clone(), existing.clone());
+    contracts_data
+        .contracts
+        .insert(other_module_path.clone(), existing);
+
+    let output = declare(&mut cached_state, "a::HelloStarknet", &contracts_data);
+
+    assert!(match output {
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {
+            let msg = msg.to_string();
+            msg.contains("Multiple contracts found")
+                && msg.contains("a::HelloStarknet")
+                && msg.contains(&nested_module_path)
+                && msg.contains(&other_module_path)
         }
         _ => false,
     });
