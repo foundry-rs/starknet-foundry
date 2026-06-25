@@ -16,11 +16,11 @@ fn declare_type_safe() {
 
 
         Collected 3 test(s) from declare_type_safe package
-        Running 3 test(s) from tests/
-        [PASS] declare_type_safe_integrationtest::contract::declare_contract_name [..]
-        [PASS] declare_type_safe_integrationtest::contract::declare_with_full_module_path [..]
-        [PASS] declare_type_safe_integrationtest::contract::declare_with_partial_module_path [..]
         Running 0 test(s) from src/
+        Running 3 test(s) from tests/
+        [PASS] declare_type_safe_integrationtest::tests::declare_with_contract_name [..]
+        [PASS] declare_type_safe_integrationtest::tests::declare_with_full_module_path [..]
+        [PASS] declare_type_safe_integrationtest::tests::declare_with_partial_module_path [..]
         Tests: 3 passed, 0 failed, 0 ignored, 0 filtered out
         "},
     );

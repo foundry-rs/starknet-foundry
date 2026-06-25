@@ -1,5 +1,5 @@
 use crate::utils::create_single_token;
-use cairo_lang_macro::{quote, Diagnostic, ProcMacroResult, TextSpan, TokenStream};
+use cairo_lang_macro::{Diagnostic, ProcMacroResult, TextSpan, TokenStream, quote};
 
 pub fn declare(args: TokenStream) -> ProcMacroResult {
     match expand(&args) {
@@ -23,7 +23,8 @@ fn expand(args: &TokenStream) -> Result<TokenStream, Diagnostic> {
 
     let contract_path_literal =
         TokenStream::new(vec![create_single_token(format!(r#""{contract_path}""#))]);
-    let path_tokens = TokenStream::new(vec![create_single_token(&contract_path)]);
+    let type_check_path = type_check_path(&contract_path);
+    let path_tokens = TokenStream::new(vec![create_single_token(&type_check_path)]);
 
     Ok(quote! {{
         snforge_std::_internals::assert_path_type::<#path_tokens::ContractState>();
@@ -63,9 +64,27 @@ fn is_valid_contract_path(path: &str) -> bool {
     count >= 1
 }
 
+fn type_check_path(path: &str) -> String {
+    let mut segments = path.split("::");
+    let Some(first_segment) = segments.next() else {
+        return path.to_string();
+    };
+    let Some(second_segment) = segments.next() else {
+        return first_segment.to_string();
+    };
+
+    if segments.next().is_none() {
+        second_segment.to_string()
+    } else {
+        path.to_string()
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{is_valid_contract_path, normalize_path, trim_wrapping_delimiters};
+    use super::{
+        is_valid_contract_path, normalize_path, trim_wrapping_delimiters, type_check_path,
+    };
 
     #[test]
     fn valid_contract_path() {
@@ -95,6 +114,22 @@ mod tests {
     fn trims_wrapping_parentheses() {
         assert_eq!(
             trim_wrapping_delimiters("(my_package::hello_starknet::HelloStarknet)"),
+            "my_package::hello_starknet::HelloStarknet"
+        );
+    }
+
+    #[test]
+    fn uses_contract_name_for_two_segment_type_check_path() {
+        assert_eq!(
+            type_check_path("hello_starknet::HelloStarknet"),
+            "HelloStarknet"
+        );
+    }
+
+    #[test]
+    fn uses_full_path_for_longer_type_check_path() {
+        assert_eq!(
+            type_check_path("my_package::hello_starknet::HelloStarknet"),
             "my_package::hello_starknet::HelloStarknet"
         );
     }
