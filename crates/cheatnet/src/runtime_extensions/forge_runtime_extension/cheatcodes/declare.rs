@@ -43,7 +43,7 @@ pub fn declare(
                 anyhow!(formatdoc! { r"
                     Multiple contracts found with name = {contract_identifier}. Found contracts at the following paths:
                     {paths}
-                    Use the full module path to disambiguate, or rename one of the contracts so that the name is unique."
+                    Use a module path to disambiguate, or rename one of the contracts so that the name is unique."
                 }),
             )));
         }
