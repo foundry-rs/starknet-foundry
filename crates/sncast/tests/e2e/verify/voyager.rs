@@ -144,6 +144,64 @@ async fn test_happy_case_class_hash() {
 }
 
 #[tokio::test]
+async fn test_accepts_full_module_path_contract_name() {
+    let contract_path =
+        copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/duplicate_contract_name");
+
+    let mock_server = MockServer::start().await;
+    let mock_rpc = MockServer::start().await;
+    let mock_rpc_uri = mock_rpc.uri().clone();
+
+    let job_id = "full-module-path-job-id";
+    let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
+
+    Mock::given(method("POST"))
+        .and(path(format!("class-verify/{class_hash:#066x}")))
+        .and(body_partial_json(json!({
+            "name": "HelloStarknet",
+            "package_name": "duplicate_contract_name"
+        })))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--contract-name",
+        "duplicate_contract_name::first_contract::HelloStarknet",
+        "--verifier",
+        "voyager",
+        "--network",
+        "sepolia",
+        "--confirm-verification",
+        "--url",
+        &mock_rpc_uri,
+    ];
+
+    let output = runner(&args)
+        .env("VERIFIER_API_URL", mock_server.uri())
+        .current_dir(contract_path.path())
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        formatdoc! {"
+        Success: Verification completed
+
+        HelloStarknet submitted for verification, you can query the status at: {}/class-verify/job/{job_id}
+        ",
+        mock_server.uri(),
+        },
+    );
+}
+
+#[tokio::test]
 async fn test_happy_case_with_confirm_verification_flag() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
@@ -611,7 +669,9 @@ async fn test_errors_on_ambiguous_contract_name() {
         output,
         indoc::indoc! {r#"
         Command: verify
-        Error: Found more than one contract named "HelloStarknet" at: duplicate_contract_name::first_contract::HelloStarknet, duplicate_contract_name::second_contract::HelloStarknet
+        Error: Found more than one contract matching "HelloStarknet". Pass one of these module paths to `--contract-name`:
+         - duplicate_contract_name::first_contract::HelloStarknet
+         - duplicate_contract_name::second_contract::HelloStarknet
         "#},
     );
 }

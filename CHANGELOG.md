@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast alias list` command for listing aliases. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/alias/list.html).
 - `sncast config-path` for printing the paths to the local and global `snfoundry.toml` config files. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/config_path.html).
 - `sncast get block` command for fetching a block with transactions
+- `--contract-name` flag now accepts absolute/partial module tree paths (e.g. `hello_sncast::contracts::HelloSncast` or `contracts::HelloSncast`).
 
 #### Changed
 

@@ -5,6 +5,7 @@ Calculate the class hash of a contract.
 Required.
 
 The name of the contract. The contract name is the part after the `mod` keyword in your contract file.
+This argument also accepts a module tree path, for example `hello_sncast::contracts::HelloSncast` or `contracts::HelloSncast`.
 
 ## General Example
 
