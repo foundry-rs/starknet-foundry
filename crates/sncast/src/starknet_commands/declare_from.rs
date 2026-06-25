@@ -5,6 +5,7 @@ use crate::starknet_commands::utils::felt_or_id::ClassHash;
 use anyhow::{Context, Result};
 use clap::{ArgGroup, Args};
 use shared::verify_and_warn_if_incompatible_rpc_version;
+use sncast::helpers::artifacts::sierra_class_from_file;
 use sncast::helpers::rpc::FreeProvider;
 use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::{SNCastProviderError, StarknetCommandError};
@@ -118,13 +119,7 @@ where
     S: Signer + Sync + Send,
 {
     let sierra = match &contract_source {
-        ContractSource::LocalFile { sierra_path } => {
-            let sierra_json = std::fs::read_to_string(sierra_path).with_context(|| {
-                format!("Failed to read sierra file at {}", sierra_path.display())
-            })?;
-            serde_json::from_str(&sierra_json)
-                .with_context(|| "Failed to parse sierra file".to_string())?
-        }
+        ContractSource::LocalFile { sierra_path } => sierra_class_from_file(sierra_path)?,
         ContractSource::Network {
             source_provider,
             class_hash,
