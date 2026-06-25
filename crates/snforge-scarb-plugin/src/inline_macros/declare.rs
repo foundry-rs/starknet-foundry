@@ -80,29 +80,22 @@ fn trim_wrapping_delimiters(path: &str) -> &str {
 #[cfg(test)]
 mod tests {
     use super::{is_valid_contract_path, normalize_path, trim_wrapping_delimiters};
+    use test_case::test_case;
 
-    #[test]
-    fn valid_contract_path() {
-        for path in [
-            "HelloStarknet",
-            "my_package::hello_starknet::HelloStarknet",
-            "alias::HelloStarknet",
-        ] {
-            assert!(is_valid_contract_path(path));
-        }
+    #[test_case("HelloStarknet"; "contract name")]
+    #[test_case("my_package::hello_starknet::HelloStarknet"; "full module path")]
+    #[test_case("alias::HelloStarknet"; "partial module path")]
+    fn valid_contract_path(path: &str) {
+        assert!(is_valid_contract_path(path));
     }
 
-    #[test]
-    fn invalid_contract_path() {
-        for path in [
-            "\"HelloStarknet\"",
-            "my-package::HelloStarknet",
-            "1_Contract",
-            "hello_starknet::1_Contract",
-            "",
-        ] {
-            assert!(!is_valid_contract_path(path));
-        }
+    #[test_case("\"HelloStarknet\""; "non-path argument")]
+    #[test_case("my-package::HelloStarknet"; "invalid module path")]
+    #[test_case("1_Contract"; "identifier starting with digit")]
+    #[test_case("hello_starknet::1_Contract"; "path segment starting with digit")]
+    #[test_case(""; "empty string")]
+    fn invalid_contract_path(path: &str) {
+        assert!(!is_valid_contract_path(path));
     }
 
     #[test]
