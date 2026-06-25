@@ -41,6 +41,6 @@ fn declare_rejects_non_path_argument() {
     assert_eq!(result.diagnostics[0].severity(), Severity::Error);
     assert_eq!(
         result.diagnostics[0].message(),
-        "`declare!` expects a contract module path like `HelloStarknet` or `my_package::my_module::MyContract`"
+        "`declare!` expects either a contract name (e.g. `MyContract`), an absolute module tree path (e.g. `my_package::module::MyContract`) or a partial module tree path (e.g. `module::MyContract`)",
     );
 }

@@ -18,7 +18,7 @@ fn expand(args: &TokenStream) -> Result<TokenStream, Diagnostic> {
     if !is_valid_contract_path(&contract_path) {
         return Err(Diagnostic::span_error(
             TextSpan::call_site(),
-            "`declare!` expects a contract module path like `HelloStarknet` or `my_package::my_module::MyContract`",
+            "`declare!` expects either a contract name (e.g. `MyContract`), an absolute module tree path (e.g. `my_package::module::MyContract`) or a partial module tree path (e.g. `module::MyContract`)",
         ));
     }
 
@@ -34,35 +34,47 @@ fn expand(args: &TokenStream) -> Result<TokenStream, Diagnostic> {
 }
 
 fn normalize_path(raw_path: &str) -> String {
-    let normalized: String = raw_path.chars().filter(|c| !c.is_whitespace()).collect();
+    let mut normalized: String = raw_path.chars().filter(|c| !c.is_whitespace()).collect();
 
-    trim_wrapping_delimiters(&normalized).to_string()
+    while has_wrapping_delimiters(&normalized) {
+        normalized.pop();
+        normalized.remove(0);
+    }
+
+    normalized
 }
 
 fn trim_wrapping_delimiters(path: &str) -> &str {
-    match (
-        path.as_bytes().first().copied(),
-        path.as_bytes().last().copied(),
-    ) {
-        (Some(b'('), Some(b')')) | (Some(b'['), Some(b']')) | (Some(b'{'), Some(b'}')) => {
-            &path[1..path.len() - 1]
-        }
-        _ => path,
+    let mut trimmed = path;
+
+    while has_wrapping_delimiters(trimmed) {
+        trimmed = &trimmed[1..trimmed.len() - 1];
     }
+
+    trimmed
+}
+
+fn has_wrapping_delimiters(path: &str) -> bool {
+    matches!(
+        (path.as_bytes().first(), path.as_bytes().last()),
+        (Some(b'('), Some(b')')) | (Some(b'['), Some(b']')) | (Some(b'{'), Some(b'}'))
+    )
 }
 
 fn is_valid_contract_path(path: &str) -> bool {
-    let mut parts = path.split("::");
-    let mut count = 0usize;
-
-    for part in &mut parts {
-        if part.is_empty() || !part.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+    for part in path.split("::") {
+        let mut chars = part.chars();
+        let Some(first_char) = chars.next() else {
+            return false;
+        };
+        if !(first_char.is_ascii_alphabetic() || first_char == '_')
+            || !chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
+        {
             return false;
         }
-        count += 1;
     }
 
-    count >= 1
+    true
 }
 
 fn type_check_path(path: &str) -> String {
@@ -74,6 +86,10 @@ fn type_check_path(path: &str) -> String {
         return first_segment.to_string();
     };
 
+    // A two-segment path can be a partial module path like `module::Contract`.
+    // In Cairo tests the contract type is commonly imported as `Contract`, so use
+    // the last segment for the compile-time type check while preserving the full
+    // string for runtime resolution.
     if segments.next().is_none() {
         second_segment.to_string()
     } else {
@@ -87,34 +103,34 @@ mod tests {
         is_valid_contract_path, normalize_path, trim_wrapping_delimiters, type_check_path,
     };
 
-    #[test]
-    fn valid_contract_path() {
-        assert!(is_valid_contract_path(
-            "my_package::hello_starknet::HelloStarknet"
-        ));
-        assert!(is_valid_contract_path("HelloStarknet"));
-        assert!(is_valid_contract_path("alias::HelloStarknet"));
+    #[test_case("HelloStarknet"; "contract name")]
+    #[test_case("my_package::hello_starknet::HelloStarknet"; "full module path")]
+    #[test_case("alias::HelloStarknet"; "partial module path")]
+    fn valid_contract_path(path: &str) {
+        assert!(is_valid_contract_path(path));
+    }
+
+    #[test_case("\"HelloStarknet\""; "non-path argument")]
+    #[test_case("my-package::HelloStarknet"; "invalid module path")]
+    #[test_case("1_Contract"; "identifier starting with digit")]
+    #[test_case("hello_starknet::1_Contract"; "path segment starting with digit")]
+    #[test_case(""; "empty string")]
+    fn invalid_contract_path(path: &str) {
+        assert!(!is_valid_contract_path(path));
     }
 
     #[test]
-    fn invalid_contract_path() {
-        assert!(!is_valid_contract_path("\"HelloStarknet\""));
-        assert!(!is_valid_contract_path("my-package::HelloStarknet"));
-        assert!(!is_valid_contract_path(""));
-    }
-
-    #[test]
-    fn normalizes_whitespace() {
+    fn normalizes_whitespace_and_nested_delimiters() {
         assert_eq!(
-            normalize_path("my_package :: hello_starknet :: HelloStarknet"),
+            normalize_path("(( my_package :: hello_starknet :: HelloStarknet ))"),
             "my_package::hello_starknet::HelloStarknet"
         );
     }
 
     #[test]
-    fn trims_wrapping_parentheses() {
+    fn trims_nested_wrapping_parentheses() {
         assert_eq!(
-            trim_wrapping_delimiters("(my_package::hello_starknet::HelloStarknet)"),
+            trim_wrapping_delimiters("((my_package::hello_starknet::HelloStarknet))"),
             "my_package::hello_starknet::HelloStarknet"
         );
     }
