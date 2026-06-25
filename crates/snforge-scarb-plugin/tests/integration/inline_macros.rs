@@ -1,4 +1,4 @@
-use cairo_lang_macro::{Severity, quote};
+use cairo_lang_macro::{quote, Severity};
 use snforge_scarb_plugin::inline_macros::declare::declare;
 
 #[test]
@@ -23,7 +23,7 @@ fn declare_accepts_full_module_path() {
 
 #[test]
 fn declare_accepts_partial_module_path() {
-    let args = quote!(alias::HelloStarknet);
+    let args = quote!(hello_starknet::HelloStarknet);
 
     let result = declare(&args);
 
