@@ -36,7 +36,6 @@ Class Hash: 0x0[..]
 ```
 </details>
 <br>
-<<<<<<< HEAD
 
 ## Example with a Sierra file
 
@@ -54,5 +53,3 @@ Class Hash: 0x06134dac6883ac052bea8db10bc9ee8af6bad5eeab001cd61b8eaba6a03be103
 ```
 </details>
 <br>
-=======
->>>>>>> origin/master
