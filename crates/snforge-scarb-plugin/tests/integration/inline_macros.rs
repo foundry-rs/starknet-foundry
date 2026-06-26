@@ -37,7 +37,7 @@ fn declare_rejects_non_path_argument() {
 
     let result = declare(&args);
 
-    assert_declare_path_diagnostic(result);
+    assert_declare_path_diagnostic(&result);
 }
 
 #[test]
@@ -46,7 +46,7 @@ fn declare_rejects_whitespace_between_identifiers() {
 
     let result = declare(&args);
 
-    assert_declare_path_diagnostic(result);
+    assert_declare_path_diagnostic(&result);
 }
 
 #[test]
@@ -54,11 +54,15 @@ fn declare_rejects_wrapped_path() {
     let args = TokenStream::new(vec![create_single_token("((HelloStarknet))")]);
 
     let result = declare(&args);
+
+    assert_declare_path_diagnostic(&result);
+}
+
+fn assert_declare_path_diagnostic(result: &cairo_lang_macro::ProcMacroResult) {
     assert_eq!(result.diagnostics.len(), 1);
     assert_eq!(result.diagnostics[0].severity(), Severity::Error);
     assert_eq!(
         result.diagnostics[0].message(),
         "`declare!` expects either a contract name (e.g. `MyContract`), an absolute module tree path (e.g. `my_package::module::MyContract`) or a partial module tree path (e.g. `module::MyContract`)",
     );
-    assert_declare_path_diagnostic(result);
 }
