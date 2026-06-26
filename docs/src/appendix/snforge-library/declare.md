@@ -64,3 +64,21 @@ fn declare_by_partial_path() {
     let contract = declare!(module::MyContract).unwrap().contract_class();
 }
 ```
+
+Currently, `declare!` does not resolve Cairo aliases. The path passed to the macro is also passed to the runtime
+contract resolver. This means that such code will **not work**:
+
+```rust
+use my_package::module::MyContract as Alias;
+use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
+
+#[test]
+fn declare_by_alias() {
+    let contract = declare!(Alias).unwrap().contract_class();
+}
+```
+
+For contract names, the compile-time check uses the name visible in scope, but
+runtime artifact resolution still uses the name string. If multiple contracts
+share the same name, `declare!(MyContract)` can still fail due to am ambiguity. Use a
+module path in that case.

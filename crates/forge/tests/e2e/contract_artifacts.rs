@@ -376,7 +376,7 @@ fn duplicate_contract_name_fails() {
         [FAIL] declare_paths_integrationtest::test_duplicate::declare_ambiguous_contract
 
         Failure data:
-            "Multiple contracts found with name = HelloStarknet. Found contracts at the following paths:
+            "Multiple contracts found with identifier = HelloStarknet. Found contracts at the following paths:
              - declare_paths::HelloStarknet
              - declare_paths_integrationtest::test_duplicate::HelloStarknet
             Use a module path to disambiguate, or rename one of the contracts so that the name is unique."

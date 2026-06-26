@@ -1,5 +1,5 @@
-use cairo_lang_macro::{Severity, quote};
-use snforge_scarb_plugin::inline_macros::declare::declare;
+use cairo_lang_macro::{quote, Severity, TokenStream};
+use snforge_scarb_plugin::{create_single_token, inline_macros::declare::declare};
 
 #[test]
 fn declare_accepts_contract_name() {
@@ -37,10 +37,28 @@ fn declare_rejects_non_path_argument() {
 
     let result = declare(&args);
 
+    assert_declare_path_diagnostic(result);
+}
+
+#[test]
+fn declare_rejects_whitespace_between_identifiers() {
+    let args = quote!(Hello Starknet);
+
+    let result = declare(&args);
+
+    assert_declare_path_diagnostic(result);
+}
+
+#[test]
+fn declare_rejects_wrapped_path() {
+    let args = TokenStream::new(vec![create_single_token("((HelloStarknet))")]);
+
+    let result = declare(&args);
     assert_eq!(result.diagnostics.len(), 1);
     assert_eq!(result.diagnostics[0].severity(), Severity::Error);
     assert_eq!(
         result.diagnostics[0].message(),
         "`declare!` expects either a contract name (e.g. `MyContract`), an absolute module tree path (e.g. `my_package::module::MyContract`) or a partial module tree path (e.g. `module::MyContract`)",
     );
+    assert_declare_path_diagnostic(result);
 }

@@ -13,14 +13,12 @@ pub fn declare(args: &TokenStream) -> ProcMacroResult {
 
 fn expand(args: &TokenStream) -> Result<TokenStream, Diagnostic> {
     let raw_path = args.to_string();
-    let contract_path = normalize_path(&raw_path);
-
-    if !is_valid_contract_path(&contract_path) {
+    let Some(contract_path) = normalize_path(&raw_path) else {
         return Err(Diagnostic::span_error(
             TextSpan::call_site(),
             "`declare!` expects either a contract name (e.g. `MyContract`), an absolute module tree path (e.g. `my_package::module::MyContract`) or a partial module tree path (e.g. `module::MyContract`)",
         ));
-    }
+    };
 
     let contract_path_literal =
         TokenStream::new(vec![create_single_token(format!(r#""{contract_path}""#))]);
@@ -32,15 +30,43 @@ fn expand(args: &TokenStream) -> Result<TokenStream, Diagnostic> {
     }})
 }
 
-fn normalize_path(raw_path: &str) -> String {
-    let mut normalized: String = raw_path.chars().filter(|c| !c.is_whitespace()).collect();
+fn normalize_path(raw_path: &str) -> Option<String> {
+    let normalized = normalize_path_separators(strip_macro_arg_delimiters(raw_path.trim()))?;
 
-    while has_wrapping_delimiters(&normalized) {
-        normalized.pop();
-        normalized.remove(0);
+    is_valid_contract_path(&normalized).then_some(normalized)
+}
+
+fn strip_macro_arg_delimiters(path: &str) -> &str {
+    if has_wrapping_delimiters(path) {
+        path[1..path.len() - 1].trim()
+    } else {
+        path
+    }
+}
+
+fn normalize_path_separators(path: &str) -> Option<String> {
+    let mut normalized = String::with_capacity(path.len());
+    let mut chars = path.char_indices().peekable();
+
+    while let Some((_, c)) = chars.next() {
+        if c.is_whitespace() {
+            let previous_allows_whitespace = normalized.ends_with(':');
+            let next_non_whitespace = chars
+                .clone()
+                .find(|(_, next)| !next.is_whitespace())
+                .map(|(_, next)| next);
+
+            if previous_allows_whitespace || next_non_whitespace == Some(':') {
+                continue;
+            }
+
+            return None;
+        }
+
+        normalized.push(c);
     }
 
-    normalized
+    Some(normalized)
 }
 
 fn has_wrapping_delimiters(path: &str) -> bool {
@@ -67,19 +93,8 @@ fn is_valid_contract_path(path: &str) -> bool {
 }
 
 #[cfg(test)]
-fn trim_wrapping_delimiters(path: &str) -> &str {
-    let mut trimmed = path;
-
-    while has_wrapping_delimiters(trimmed) {
-        trimmed = &trimmed[1..trimmed.len() - 1];
-    }
-
-    trimmed
-}
-
-#[cfg(test)]
 mod tests {
-    use super::{is_valid_contract_path, normalize_path, trim_wrapping_delimiters};
+    use super::{is_valid_contract_path, normalize_path, strip_macro_arg_delimiters};
     use test_case::test_case;
 
     #[test_case("HelloStarknet"; "contract name")]
@@ -99,18 +114,31 @@ mod tests {
     }
 
     #[test]
-    fn normalizes_whitespace_and_nested_delimiters() {
+    fn normalizes_whitespace_around_path_separators() {
         assert_eq!(
-            normalize_path("(( my_package :: hello_starknet :: HelloStarknet ))"),
-            "my_package::hello_starknet::HelloStarknet"
+            normalize_path("(my_package :: hello_starknet :: HelloStarknet)"),
+            Some("my_package::hello_starknet::HelloStarknet".to_string())
         );
     }
 
+    #[test_case("Hello Starknet"; "two identifiers separated by whitespace")]
+    #[test_case("my_package::hello_starknet::Hello Starknet"; "path segment with whitespace")]
+    fn rejects_whitespace_between_identifiers(path: &str) {
+        assert!(normalize_path(path).is_none());
+    }
+
+    #[test_case("((HelloStarknet))"; "parentheses")]
+    #[test_case("([HelloStarknet])"; "brackets")]
+    #[test_case("({HelloStarknet})"; "braces")]
+    fn rejects_wrapped_paths(path: &str) {
+        assert!(normalize_path(path).is_none());
+    }
+
     #[test]
-    fn trims_nested_wrapping_parentheses() {
+    fn strips_only_single_macro_arg_delimiter_layer() {
         assert_eq!(
-            trim_wrapping_delimiters("((my_package::hello_starknet::HelloStarknet))"),
-            "my_package::hello_starknet::HelloStarknet"
+            strip_macro_arg_delimiters("((HelloStarknet))"),
+            "(HelloStarknet)"
         );
     }
 }
