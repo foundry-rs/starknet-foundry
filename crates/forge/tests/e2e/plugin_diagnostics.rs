@@ -416,7 +416,7 @@ fn declare_macro_invalid_module_path() {
         output,
         indoc! {r"
         error[E0006]: Identifier not found.
-         --> [..]/tests/contract.cairo:6:21
+         --> [..]/tests/contract.cairo:5:5
             declare!(nonexistent::MissingContract).unwrap();
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         note: this error originates in the attribute macro: `test`
