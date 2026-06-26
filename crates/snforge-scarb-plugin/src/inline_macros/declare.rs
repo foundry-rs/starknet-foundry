@@ -1,5 +1,12 @@
 use crate::utils::create_single_token;
 use cairo_lang_macro::{Diagnostic, ProcMacroResult, TextSpan, TokenStream, quote};
+use regex::Regex;
+use std::sync::LazyLock;
+
+static CONTRACT_PATH_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*$")
+        .expect("contract path regex should be valid")
+});
 
 #[must_use]
 pub fn declare(args: &TokenStream) -> ProcMacroResult {
@@ -31,19 +38,19 @@ fn expand(args: &TokenStream) -> Result<TokenStream, Diagnostic> {
 }
 
 fn normalize_path(raw_path: &str) -> Option<String> {
-    let normalized = normalize_path_separators(strip_macro_arg_delimiters(raw_path.trim()))?;
+    let normalized = normalize_path_separators(strip_macro_arg_parentheses(raw_path.trim())?)?;
 
     is_valid_contract_path(&normalized).then_some(normalized)
 }
 
-fn strip_macro_arg_delimiters(path: &str) -> &str {
-    if has_wrapping_delimiters(path) {
-        path[1..path.len() - 1].trim()
-    } else {
-        path
-    }
+fn strip_macro_arg_parentheses(path: &str) -> Option<&str> {
+    path.strip_prefix('(')?.strip_suffix(')').map(str::trim)
 }
 
+/// Normalizes whitespace around `::` separators in a path, but rejects whitespace that
+/// would split a path segment into multiple identifiers.
+/// For example, `my_package :: hello_starknet :: HelloStarknet` is normalized
+/// to `my_package::hello_starknet::HelloStarknet`, but `Hello Starknet` is rejected.
 fn normalize_path_separators(path: &str) -> Option<String> {
     let mut normalized = String::with_capacity(path.len());
     let mut chars = path.char_indices().peekable();
@@ -69,32 +76,21 @@ fn normalize_path_separators(path: &str) -> Option<String> {
     Some(normalized)
 }
 
-fn has_wrapping_delimiters(path: &str) -> bool {
-    matches!(
-        (path.as_bytes().first(), path.as_bytes().last()),
-        (Some(b'('), Some(b')')) | (Some(b'['), Some(b']')) | (Some(b'{'), Some(b'}'))
-    )
-}
-
+/// Validates that the given path is a valid contract path, which can be either:
+/// - a contract name (e.g. `MyContract`)
+/// - an absolute module tree path (e.g. `my_package::module::MyContract`)
+/// - a partial module tree path (e.g. `module::MyContract`).
+///
+/// Expects whitespace around `::` separators to be normalized away before validation.
+/// Rejects empty paths, empty segments, segments starting with digits, non-identifier
+/// characters and whitespace inside path segments.
 fn is_valid_contract_path(path: &str) -> bool {
-    for part in path.split("::") {
-        let mut chars = part.chars();
-        let Some(first_char) = chars.next() else {
-            return false;
-        };
-        if !(first_char.is_ascii_alphabetic() || first_char == '_')
-            || !chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
-        {
-            return false;
-        }
-    }
-
-    true
+    CONTRACT_PATH_REGEX.is_match(path)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{is_valid_contract_path, normalize_path, strip_macro_arg_delimiters};
+    use super::{is_valid_contract_path, normalize_path, strip_macro_arg_parentheses};
     use test_case::test_case;
 
     #[test_case("HelloStarknet"; "contract name")]
@@ -108,6 +104,9 @@ mod tests {
     #[test_case("my-package::HelloStarknet"; "invalid module path")]
     #[test_case("1_Contract"; "identifier starting with digit")]
     #[test_case("hello_starknet::1_Contract"; "path segment starting with digit")]
+    #[test_case("::HelloStarknet"; "leading empty segment")]
+    #[test_case("hello_starknet::"; "trailing empty segment")]
+    #[test_case("hello_starknet::::HelloStarknet"; "empty middle segment")]
     #[test_case(""; "empty string")]
     fn invalid_contract_path(path: &str) {
         assert!(!is_valid_contract_path(path));
@@ -121,24 +120,22 @@ mod tests {
         );
     }
 
+    #[test]
+    fn rejects_path_without_macro_arg_parentheses() {
+        assert!(normalize_path("HelloStarknet").is_none());
+    }
+
     #[test_case("Hello Starknet"; "two identifiers separated by whitespace")]
     #[test_case("my_package::hello_starknet::Hello Starknet"; "path segment with whitespace")]
     fn rejects_whitespace_between_identifiers(path: &str) {
-        assert!(normalize_path(path).is_none());
-    }
-
-    #[test_case("((HelloStarknet))"; "parentheses")]
-    #[test_case("([HelloStarknet])"; "brackets")]
-    #[test_case("({HelloStarknet})"; "braces")]
-    fn rejects_wrapped_paths(path: &str) {
-        assert!(normalize_path(path).is_none());
+        assert!(normalize_path(&format!("({path})")).is_none());
     }
 
     #[test]
-    fn strips_only_single_macro_arg_delimiter_layer() {
+    fn strips_macro_arg_parentheses() {
         assert_eq!(
-            strip_macro_arg_delimiters("((HelloStarknet))"),
-            "(HelloStarknet)"
+            strip_macro_arg_parentheses("(HelloStarknet)"),
+            Some("HelloStarknet")
         );
     }
 }
