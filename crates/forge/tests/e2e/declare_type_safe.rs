@@ -15,13 +15,15 @@ fn declare_type_safe() {
         [..]Finished[..]
 
 
-        Collected 3 test(s) from declare_type_safe package
+        Collected 5 test(s) from declare_type_safe package
         Running 0 test(s) from src/
-        Running 3 test(s) from tests/
+        Running 5 test(s) from tests/
         [PASS] declare_type_safe_integrationtest::tests::declare_with_full_path [..]
         [PASS] declare_type_safe_integrationtest::tests::declare_with_partial_path [..]
+        [PASS] declare_type_safe_integrationtest::tests::declare_with_module_alias_is_not_resolved_as_canonical_path [..]
         [PASS] declare_type_safe_integrationtest::tests::declare_with_contract_name [..]
-        Tests: 3 passed, 0 failed, 0 ignored, 0 filtered out
+        [PASS] declare_type_safe_integrationtest::tests::declare_with_contract_alias_is_not_resolved_as_canonical_path [..]
+        Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
         "},
     );
 }
