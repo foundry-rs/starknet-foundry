@@ -17,10 +17,10 @@ use cheatnet::runtime_extensions::outer_call_runtime_extension::execution::cheat
 use cheatnet::runtime_extensions::outer_call_runtime_extension::execution::entry_point::{
     ExecuteCallEntryPointExtraOptions, execute_call_entry_point,
 };
-use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::{
-    AddressOrClassHash, CallSuccess, call_entry_point,
-};
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::{CallFailure, CallResult};
+use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::{
+    CallSuccess, call_entry_point,
+};
 use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
 use conversions::string::TryFromHexStr;
@@ -227,13 +227,7 @@ pub fn call_contract(
         initial_gas: i64::MAX as u64,
     };
 
-    call_entry_point_extended_result(
-        state,
-        cheatnet_state,
-        entry_point,
-        &AddressOrClassHash::ContractAddress(*contract_address),
-    )
-    .call_result
+    call_entry_point_extended_result(state, cheatnet_state, entry_point).call_result
 }
 
 // This executes a library call as from a test contract.
@@ -259,13 +253,7 @@ pub fn library_call_contract(
         initial_gas: i64::MAX as u64,
     };
 
-    call_entry_point_extended_result(
-        state,
-        cheatnet_state,
-        entry_point,
-        &AddressOrClassHash::ClassHash(*class_hash),
-    )
-    .call_result
+    call_entry_point_extended_result(state, cheatnet_state, entry_point).call_result
 }
 
 pub fn call_contract_extended_result(
@@ -289,19 +277,13 @@ pub fn call_contract_extended_result(
         initial_gas: i64::MAX as u64,
     };
 
-    call_entry_point_extended_result(
-        state,
-        cheatnet_state,
-        entry_point,
-        &AddressOrClassHash::ContractAddress(*contract_address),
-    )
+    call_entry_point_extended_result(state, cheatnet_state, entry_point)
 }
 
 fn call_entry_point_extended_result(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
     entry_point: CallEntryPoint,
-    address_or_class_hash: &AddressOrClassHash,
 ) -> CallResultExtended {
     let mut entry_point_execution_context = build_context(
         &cheatnet_state.block_info,
@@ -321,7 +303,6 @@ fn call_entry_point_extended_result(
         &mut syscall_hint_processor,
         cheatnet_state,
         entry_point,
-        address_or_class_hash,
         &mut (i64::MAX as u64),
     );
     let call_info = syscall_hint_processor.base.inner_calls.first().cloned();

@@ -227,7 +227,7 @@ pub fn execute_call_entry_point(
                         Cairo1RevertHeader::Execution,
                     ),
                 };
-                exit_error_call(&err, cheatnet_state, &entry_point);
+                exit_error_call(&err, cheatnet_state);
                 return Err(err.annotated(res.call_info.tracked_resource, strip_vm_frames));
             }
             update_remaining_gas(remaining_gas, &res.call_info);
@@ -279,7 +279,7 @@ pub fn execute_call_entry_point(
             Ok(call_info)
         }
         Err(err) => {
-            exit_error_call(&err, cheatnet_state, &entry_point);
+            exit_error_call(&err, cheatnet_state);
             Err(err.annotated(current_tracked_resource, strip_vm_frames))
         }
     }
@@ -330,13 +330,7 @@ pub fn non_reverting_execute_call_entry_point(
                 ),
             };
             // Note: Class hash in the entry point below does not matter, as `exit_error_call` does not update it in the trace.
-            exit_error_call(
-                &err,
-                cheatnet_state,
-                &entry_point
-                    .clone()
-                    .into_executable(entry_point.class_hash.unwrap_or_default()),
-            );
+            exit_error_call(&err, cheatnet_state);
             return Err(err.annotated(call_info.tracked_resource, strip_vm_frames));
         }
         cheatnet_state.trace_data.exit_nested_call();
