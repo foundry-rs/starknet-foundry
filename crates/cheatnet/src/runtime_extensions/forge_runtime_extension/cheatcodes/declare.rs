@@ -14,6 +14,8 @@ use indoc::formatdoc;
 use scarb_api::StarknetContractArtifacts;
 use starknet_api::core::{ClassHash, CompiledClassHash};
 use starknet_rust::core::types::contract::SierraClass;
+use std::path::Path;
+use universal_sierra_compiler_api::compile_contract_sierra_at_path;
 
 #[derive(CairoSerialize)]
 pub enum DeclareResult {
@@ -49,10 +51,58 @@ pub fn declare(
         }
     };
 
-    let contract_class = get_contract_class(&contract.artifacts);
+    declare_contract_class(
+        state,
+        contract.class_hash,
+        get_contract_class(&contract.artifacts),
+    )
+}
 
-    let class_hash = contract.class_hash;
+pub fn declare_from_path(
+    state: &mut dyn State,
+    sierra_path: &Path,
+) -> Result<DeclareResult, CheatcodeError> {
+    let sierra = std::fs::read_to_string(sierra_path).map_err(|error| {
+        CheatcodeError::Unrecoverable(EnhancedHintError::from(anyhow!(
+            "Failed to read Sierra file at {}: {error}",
+            sierra_path.display()
+        )))
+    })?;
+    let sierra_class: SierraClass = serde_json::from_str(&sierra).map_err(|error| {
+        CheatcodeError::Unrecoverable(EnhancedHintError::from(anyhow!(
+            "Failed to parse Sierra contract class JSON at {}: {error}",
+            sierra_path.display()
+        )))
+    })?;
+    let class_hash = get_class_hash(&sierra_class).map_err(|error| {
+        CheatcodeError::Unrecoverable(EnhancedHintError::from(anyhow!(
+            "Failed to calculate class hash for Sierra file at {}: {error}",
+            sierra_path.display()
+        )))
+    })?;
+    let casm = compile_contract_sierra_at_path(sierra_path).map_err(|error| {
+        CheatcodeError::Unrecoverable(EnhancedHintError::from(anyhow!(
+            "Failed to compile Sierra file at {}: {error}",
+            sierra_path.display()
+        )))
+    })?;
+    let contract_class = RunnableCompiledClass::V1(
+        CompiledClassV1::try_from((casm, get_current_sierra_version())).map_err(|error| {
+            CheatcodeError::Unrecoverable(EnhancedHintError::from(anyhow!(
+                "Failed to build runnable contract class from Sierra file at {}: {error}",
+                sierra_path.display()
+            )))
+        })?,
+    );
 
+    declare_contract_class(state, class_hash, contract_class)
+}
+
+fn declare_contract_class(
+    state: &mut dyn State,
+    class_hash: ClassHash,
+    contract_class: RunnableCompiledClass,
+) -> Result<DeclareResult, CheatcodeError> {
     match state.get_compiled_class(class_hash) {
         Err(StateError::UndeclaredClassHash(_)) => {
             // Class is undeclared; declare it.
