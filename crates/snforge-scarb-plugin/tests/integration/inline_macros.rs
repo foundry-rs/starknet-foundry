@@ -1,9 +1,9 @@
-use cairo_lang_macro::{Severity, TokenStream, quote};
+use cairo_lang_macro::{Severity, TokenStream};
 use snforge_scarb_plugin::{create_single_token, inline_macros::declare::declare};
 
 #[test]
 fn declare_accepts_contract_name() {
-    let args = quote!(HelloStarknet);
+    let args = macro_args("HelloStarknet");
 
     let result = declare(&args);
 
@@ -13,7 +13,7 @@ fn declare_accepts_contract_name() {
 
 #[test]
 fn declare_accepts_full_module_path() {
-    let args = quote!(my_package::hello_starknet::HelloStarknet);
+    let args = macro_args("my_package::hello_starknet::HelloStarknet");
 
     let result = declare(&args);
 
@@ -23,7 +23,7 @@ fn declare_accepts_full_module_path() {
 
 #[test]
 fn declare_accepts_partial_module_path() {
-    let args = quote!(hello_starknet::HelloStarknet);
+    let args = macro_args("hello_starknet::HelloStarknet");
 
     let result = declare(&args);
 
@@ -33,7 +33,7 @@ fn declare_accepts_partial_module_path() {
 
 #[test]
 fn declare_rejects_non_path_argument() {
-    let args = quote!("HelloStarknet");
+    let args = macro_args("\"HelloStarknet\"");
 
     let result = declare(&args);
 
@@ -42,7 +42,7 @@ fn declare_rejects_non_path_argument() {
 
 #[test]
 fn declare_rejects_whitespace_between_identifiers() {
-    let args = quote!(Hello Starknet);
+    let args = macro_args("Hello Starknet");
 
     let result = declare(&args);
 
@@ -51,11 +51,15 @@ fn declare_rejects_whitespace_between_identifiers() {
 
 #[test]
 fn declare_rejects_wrapped_path() {
-    let args = TokenStream::new(vec![create_single_token("((HelloStarknet))")]);
+    let args = macro_args("(HelloStarknet)");
 
     let result = declare(&args);
 
     assert_declare_path_diagnostic(&result);
+}
+
+fn macro_args(path: &str) -> TokenStream {
+    TokenStream::new(vec![create_single_token(format!("({path})"))])
 }
 
 fn assert_declare_path_diagnostic(result: &cairo_lang_macro::ProcMacroResult) {
