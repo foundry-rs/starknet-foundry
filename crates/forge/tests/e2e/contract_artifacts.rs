@@ -379,7 +379,7 @@ fn duplicate_contract_name_fails() {
             "Multiple contracts found with identifier = HelloStarknet. Found contracts at the following paths:
              - declare_paths::HelloStarknet
              - declare_paths_integrationtest::test_duplicate::HelloStarknet
-            Use a module path to disambiguate, or rename one of the contracts so that the name is unique."
+            Use a module path to disambiguate, or rename one of the contracts so that the identifier is unique."
         
         [PASS] declare_paths_integrationtest::test_duplicate::declare_by_partial_module_path_with_leading_colons (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~[..])
         [PASS] declare_paths_integrationtest::test_duplicate::declare_by_partial_module_path (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~[..])
