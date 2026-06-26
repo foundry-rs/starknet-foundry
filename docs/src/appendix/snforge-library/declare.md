@@ -65,6 +65,8 @@ fn declare_by_partial_path() {
 }
 ```
 
+### Limitations
+
 Currently, `declare!` does not resolve Cairo aliases. The path passed to the macro is also passed to the runtime
 contract resolver. This means that such code will **not work**:
 
