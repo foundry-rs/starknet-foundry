@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- Type-safe `declare!` macro for declaring contracts using Cairo paths.
+
 ## [0.62.0] - 2026-06-25
 
 ### Forge
@@ -18,7 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 You may still use other Scarb versions but names of structs, enums, their fields and variants will not be available.
 
 - Backtrace support for panics that originate directly in a test function body, not only inside called contracts. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#backtrace).
-- Type-safe `declare!` macro for declaring contracts using Cairo paths.
 
 #### Changed
 
