@@ -1,4 +1,4 @@
-use cairo_lang_macro::{quote, Severity, TokenStream};
+use cairo_lang_macro::{Severity, TokenStream, quote};
 use snforge_scarb_plugin::{create_single_token, inline_macros::declare::declare};
 
 #[test]
