@@ -48,7 +48,7 @@ impl From<CallFailure> for SyscallExecutionError {
 
 /// Result of a contract call as returned by [`call_entry_point`] / [`call_l1_handler`].
 ///
-/// Unlike [`CallTraceResult`](crate::trace_data::CallTraceResult), this keeps the original
+/// Unlike [`crate::trace_data::TraceDataCallResult`], this keeps the original
 /// [`EntryPointExecutionError`] for the unrecoverable case, so it can be propagated without being
 /// reduced to a string.
 pub type CallEntryPointResult = Result<CallSuccess, CallFailure>;
