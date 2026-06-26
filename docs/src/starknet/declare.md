@@ -97,7 +97,7 @@ To declare it on another network, e.g. local devnet, run:
 ```shell
 $ sncast --account my_account \
     declare-from \
-    --class-hash 0x283a4f96ee7de15894d9205a93db7cec648562cfe90db14cb018c039e895e78 \
+    --class-hash 0xaf50866d04d9cf46f474deb90eecf0dd3e5ad4477b96d25c1dadb7205c9218 \
     --source-network sepolia \
     --url http://127.0.0.1:5055/rpc
 ```
@@ -108,9 +108,8 @@ $ sncast --account my_account \
 ```shell
 Success: Declaration completed
 
-Class Hash:       0x283a4f96ee7de15894d9205a93db7cec648562cfe90db14cb018c039e895e78
+Class Hash:       0xaf50866d04d9cf46f474deb90eecf0dd3e5ad4477b96d25c1dadb7205c9218
 Transaction Hash: 0x[..]
 ```
 </details>
 <br>
-
