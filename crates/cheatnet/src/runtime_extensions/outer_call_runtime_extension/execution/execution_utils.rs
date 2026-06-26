@@ -2,11 +2,11 @@ use crate::runtime_extensions::common::sum_syscall_usage;
 use crate::runtime_extensions::forge_runtime_extension::{
     get_nested_calls_syscalls_sierra_gas, get_nested_calls_syscalls_vm_resources,
 };
-use crate::runtime_extensions::outer_call_runtime_extension::rpc::{from_error, from_non_error};
 use crate::state::{CheatedData, CheatnetState};
+use crate::trace_data::{from_error, from_non_error};
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use blockifier::execution::errors::EntryPointExecutionError;
+use blockifier::execution::errors::AnnotatedEntryPointExecutionError;
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
 
 pub(crate) fn resolve_cheated_data_for_call(
@@ -89,7 +89,7 @@ pub(crate) fn clear_events_and_messages_from_reverted_call(reverted_call: &mut C
 }
 
 pub(crate) fn exit_error_call(
-    error: &EntryPointExecutionError,
+    error: &AnnotatedEntryPointExecutionError,
     cheatnet_state: &mut CheatnetState,
 ) {
     let trace_data = &mut cheatnet_state.trace_data;

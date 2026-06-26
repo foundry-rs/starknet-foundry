@@ -1,5 +1,6 @@
 use crate::vm::{cell_ref_to_relocatable, extract_relocatable, get_val, vm_get_range};
 use anyhow::Result;
+use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallSelector;
 use blockifier::state::errors::StateError;
@@ -470,6 +471,8 @@ pub enum EnhancedHintError {
     Anyhow(#[from] anyhow::Error),
     #[error(transparent)]
     State(#[from] StateError),
+    #[error(transparent)]
+    EntryPointExecution(#[from] EntryPointExecutionError),
     #[error(transparent)]
     SerdeJson(#[from] serde_json::Error),
     #[error(transparent)]
