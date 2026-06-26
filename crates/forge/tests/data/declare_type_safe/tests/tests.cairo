@@ -2,23 +2,20 @@ use core::array::ArrayTrait;
 use core::result::ResultTrait;
 use declare_type_safe::hello_starknet::{HelloStarknet, HelloStarknet as HelloStarknetAlias};
 use declare_type_safe::{hello_starknet, hello_starknet as hello_starknet_alias};
-use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 
 #[test]
 fn declare_with_full_path() {
-    let _contract = declare!(declare_type_safe::hello_starknet::HelloStarknet)
-        .unwrap()
-        .contract_class();
+    declare!(declare_type_safe::hello_starknet::HelloStarknet).unwrap();
 }
 
 #[test]
 fn declare_with_partial_path() {
-    let _contract = declare!(hello_starknet::HelloStarknet).unwrap().contract_class();
+    declare!(hello_starknet::HelloStarknet).unwrap();
 }
 
 #[test]
 fn declare_with_contract_name() {
-    let _contract = declare!(HelloStarknet).unwrap().contract_class();
+    declare!(HelloStarknet).unwrap();
 }
 
 #[test]
