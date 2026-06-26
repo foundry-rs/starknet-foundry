@@ -337,6 +337,12 @@ fn build_profiler_deprecated_syscall_selector(
         DeprecatedSyscallSelector::Sha256ProcessBlock => {
             ProfilerDeprecatedSyscallSelector::Sha256ProcessBlock
         }
+        // `cairo-annotations` has no dedicated `Sha512ProcessBlock` profiler variant in a version
+        // compatible with `starknet-types-core` 0.2.x (0.9.0 requires 1.0). Fall back to the sibling
+        // SHA process-block selector so profiling stays functional for this rarely-used cairo0 syscall.
+        DeprecatedSyscallSelector::Sha512ProcessBlock => {
+            ProfilerDeprecatedSyscallSelector::Sha256ProcessBlock
+        }
         DeprecatedSyscallSelector::GetClassHashAt => {
             ProfilerDeprecatedSyscallSelector::GetClassHashAt
         }

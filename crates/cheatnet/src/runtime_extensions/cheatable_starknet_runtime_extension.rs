@@ -121,6 +121,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
             | SyscallSelector::Keccak
             | SyscallSelector::KeccakRound
             | SyscallSelector::Sha256ProcessBlock
+            | SyscallSelector::Sha512ProcessBlock
             | SyscallSelector::LibraryCallL1Handler
             | SyscallSelector::ReplaceClass
             | SyscallSelector::Secp256k1Add

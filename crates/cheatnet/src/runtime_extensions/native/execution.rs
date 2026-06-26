@@ -9,7 +9,7 @@ use blockifier::execution::call_info::{
 };
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::{
-    EntryPointExecutionContext, EntryPointExecutionResult, ExecutableCallEntryPoint,
+    EntryPointExecutionContext, ExecutableCallEntryPoint,
 };
 use blockifier::execution::errors::{
     EntryPointExecutionError, PostExecutionError, PreExecutionError,
@@ -57,7 +57,7 @@ fn execute_entry_point_call(
     // region: Modified blockifier code
     syscall_handler: &mut CheatableNativeSyscallHandler,
     // endregion
-) -> EntryPointExecutionResult<CallInfo> {
+) -> Result<CallInfo, EntryPointExecutionError> {
     let entry_point = compiled_class.get_entry_point(&call.type_and_selector())?;
 
     let gas_costs = &syscall_handler

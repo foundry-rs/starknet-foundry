@@ -224,7 +224,7 @@ pub fn call_entry_point(
             trace_data_handled_by_revert_call: false,
         },
     )
-    .map_err(|err| CallFailure::from_execution_error(&err, starknet_identifier));
+    .map_err(|err| CallFailure::from_execution_error(err.unannotated(), starknet_identifier));
 
     let call_info = match result {
         Ok(call_info) => call_info,

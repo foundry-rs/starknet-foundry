@@ -86,6 +86,7 @@ impl<'a> ExtensionLogic for OuterCallExtension<'a> {
             | SyscallSelector::Keccak
             | SyscallSelector::KeccakRound
             | SyscallSelector::Sha256ProcessBlock
+            | SyscallSelector::Sha512ProcessBlock
             | SyscallSelector::LibraryCallL1Handler
             | SyscallSelector::MetaTxV0
             | SyscallSelector::ReplaceClass

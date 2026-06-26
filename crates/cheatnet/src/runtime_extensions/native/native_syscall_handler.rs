@@ -146,9 +146,15 @@ impl CheatableNativeSyscallHandler<'_> {
         // creating multiple wraps around the same error. This function is meant to prevent that.
         fn unwrap_native_error(error: SyscallExecutionError) -> SyscallExecutionError {
             match error {
-                SyscallExecutionError::EntryPointExecutionError(
-                    EntryPointExecutionError::NativeUnrecoverableError(e),
-                ) => *e,
+                SyscallExecutionError::EntryPointExecutionError(annotated) => {
+                    let (inner, tracked_resource, strip) = annotated.into_parts();
+                    match inner {
+                        EntryPointExecutionError::NativeUnrecoverableError(e) => *e,
+                        other => SyscallExecutionError::EntryPointExecutionError(
+                            other.annotated(tracked_resource, strip),
+                        ),
+                    }
+                }
                 _ => error,
             }
         }
@@ -833,6 +839,16 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
     ) -> SyscallResult<()> {
         self.native_syscall_handler
             .sha256_process_block(state, block, remaining_gas)
+    }
+
+    fn sha512_process_block(
+        &mut self,
+        state: &mut [u64; 8],
+        block: &[u64; 16],
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<()> {
+        self.native_syscall_handler
+            .sha512_process_block(state, block, remaining_gas)
     }
 
     fn get_class_hash_at(
