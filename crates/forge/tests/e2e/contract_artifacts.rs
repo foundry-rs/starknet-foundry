@@ -154,13 +154,13 @@ fn with_features_fails_without_flag() {
     [FAIL] with_features_integrationtest::tests::declare_and_call_contract_from_lib
 
     Failure data:
-        "Failed to get contract artifact for name = HelloStarknet."
+        "Failed to get contract artifact for identifier = HelloStarknet."
 
     Running 1 test(s) from src/
     [FAIL] with_features::tests::declare_contract_from_lib
 
     Failure data:
-        "Failed to get contract artifact for name = HelloStarknet."
+        "Failed to get contract artifact for identifier = HelloStarknet."
 
     Tests: 0 passed, 2 failed, 0 ignored, 0 filtered out
 
@@ -280,7 +280,7 @@ fn custom_target_only_integration_without_external() {
     [FAIL] custom_first::tests::declare_and_call_contract_from_lib
 
     Failure data:
-        "Failed to get contract artifact for name = HelloStarknet."
+        "Failed to get contract artifact for identifier = HelloStarknet."
 
     Tests: 0 passed, 1 failed, 0 ignored, 0 filtered out
     "#},
