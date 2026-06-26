@@ -417,8 +417,8 @@ fn declare_macro_invalid_module_path() {
         indoc! {r"
         error[E0006]: Identifier not found.
          --> [..]/tests/contract.cairo:6:21
-            let _contract = declare!(nonexistent::MissingContract).unwrap().contract_class();
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            declare!(nonexistent::MissingContract).unwrap();
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         note: this error originates in the attribute macro: `test`
 
         error: could not compile `declare_invalid_integrationtest` due to 1 previous error
