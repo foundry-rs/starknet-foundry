@@ -6,8 +6,8 @@ use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::helpers::token::Token;
-use sncast::response::balance::BalanceResponse;
 use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
+use sncast::response::get::balance::BalanceResponse;
 use sncast::response::ui::UI;
 use sncast::{get_account, get_block_id};
 use starknet_rust::{

@@ -195,6 +195,45 @@ async fn test_contract_with_constructor_params() {
 }
 
 #[tokio::test]
+async fn test_happy_case_with_full_module_path_contract_name() {
+    let contract_path =
+        copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/duplicate_contract_name");
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "duplicate_contract_name::first_contract::HelloStarknet",
+    ];
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        Success: Declaration completed
+
+        Class Hash:       0x[..]
+        Transaction Hash: 0x[..]
+
+        To see declaration details, visit:
+        class: https://[..]
+        transaction: https://[..]
+    "},
+    );
+}
+
+#[tokio::test]
 async fn test_contract_with_constructor_params_no_abi() {
     let contract_path = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/contract_with_constructor_params",
@@ -560,6 +599,38 @@ async fn test_wrong_contract_name_passed() {
         Command: declare
         Error: Failed to find nonexistent artifact in starknet_artifacts.json file[..]
         "},
+    );
+}
+
+#[tokio::test]
+async fn test_errors_on_ambiguous_contract_name() {
+    let contract_path =
+        copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/duplicate_contract_name");
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "HelloStarknet",
+    ];
+
+    let output = runner(&args).current_dir(tempdir.path()).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r#"
+        Command: declare
+        Error: Found more than one contract matching "HelloStarknet". Pass one of these module paths to `--contract-name`:
+         - duplicate_contract_name::first_contract::HelloStarknet
+         - duplicate_contract_name::second_contract::HelloStarknet
+        "#},
     );
 }
 

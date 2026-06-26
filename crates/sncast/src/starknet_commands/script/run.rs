@@ -37,7 +37,7 @@ use semver::{Comparator, Op, Version, VersionReq};
 use shared::utils::build_readable_text;
 use sncast::AccountVariant;
 use sncast::get_nonce;
-use sncast::helpers::artifacts::CastStarknetContractArtifacts;
+use sncast::helpers::artifacts::{CastStarknetContractArtifacts, ContractArtifactsMap};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::helpers::dry_run::DryRunArgs;
@@ -88,7 +88,7 @@ pub struct CastScriptExtension<'a> {
     pub account: Option<&'a SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>>,
     pub tokio_runtime: Runtime,
     pub config: &'a CastConfig,
-    pub artifacts: &'a HashMap<String, CastStarknetContractArtifacts>,
+    pub artifacts: &'a ContractArtifactsMap,
     pub state: StateManager,
     pub ui: &'a UI,
 }
@@ -305,7 +305,7 @@ pub fn run(
     module_name: &str,
     metadata: &Metadata,
     package_metadata: &PackageMetadata,
-    artifacts: &mut HashMap<String, CastStarknetContractArtifacts>,
+    artifacts: &mut ContractArtifactsMap,
     provider: &JsonRpcClient<HttpTransport>,
     url: &Url,
     tokio_runtime: Runtime,
@@ -473,8 +473,8 @@ fn warn_if_sncast_std_not_compatible(scarb_metadata: &Metadata, ui: &UI) -> Resu
 fn inject_lib_artifact(
     metadata: &Metadata,
     package_metadata: &PackageMetadata,
-    artifacts: &mut HashMap<String, CastStarknetContractArtifacts>,
-) -> Result<HashMap<String, CastStarknetContractArtifacts>> {
+    artifacts: &mut ContractArtifactsMap,
+) -> Result<ContractArtifactsMap> {
     let sierra_filename = format!("{}.sierra.json", package_metadata.name);
 
     let target_dir = &metadata

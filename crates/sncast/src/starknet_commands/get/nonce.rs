@@ -6,7 +6,7 @@ use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
-use sncast::response::nonce::NonceResponse;
+use sncast::response::get::nonce::NonceResponse;
 use sncast::response::ui::UI;
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, Provider};

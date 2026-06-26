@@ -42,7 +42,7 @@ fn using_dict() {
         "#
         ),
         Contract::from_code_path(
-            "DictUsingContract".to_string(),
+            "contract::DictUsingContract".to_string(),
             Path::new("tests/data/contracts/dict_using_contract.cairo"),
         )
         .unwrap()

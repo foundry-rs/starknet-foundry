@@ -46,7 +46,7 @@ fn store_load_simple() {
         "#
         ),
         Contract::from_code_path(
-            "HelloStarknet".to_string(),
+            "contract::HelloStarknet".to_string(),
             Path::new("tests/data/contracts/hello_starknet.cairo"),
         )
         .unwrap()
@@ -96,7 +96,7 @@ fn store_load_wrong_selector() {
         "#
         ),
         Contract::from_code_path(
-            "HelloStarknet".to_string(),
+            "contract::HelloStarknet".to_string(),
             Path::new("tests/data/contracts/hello_starknet.cairo"),
         )
         .unwrap()
@@ -143,7 +143,7 @@ fn store_load_wrong_data_length() {
         "#
         ),
         Contract::from_code_path(
-            "HelloStarknet".to_string(),
+            "contract::HelloStarknet".to_string(),
             Path::new("tests/data/contracts/hello_starknet.cairo"),
         )
         .unwrap()
@@ -218,7 +218,7 @@ fn store_load_max_boundaries_input() {
         "#
         ),
         Contract::from_code_path(
-            "HelloStarknet".to_string(),
+            "contract::HelloStarknet".to_string(),
             Path::new("tests/data/contracts/hello_starknet.cairo"),
         )
         .unwrap()
@@ -323,7 +323,7 @@ fn store_load_structure() {
         "#
         ),
         Contract::from_code_path(
-            "StorageTester".to_string(),
+            "contract::StorageTester".to_string(),
             Path::new("tests/data/contracts/storage_tester.cairo"),
         )
         .unwrap()
@@ -412,7 +412,7 @@ fn store_load_felt_to_structure() {
         "#
         ),
         Contract::from_code_path(
-            "StorageTester".to_string(),
+            "contract::StorageTester".to_string(),
             Path::new("tests/data/contracts/storage_tester.cairo"),
         )
         .unwrap()
@@ -492,7 +492,7 @@ fn store_load_structure_to_felt() {
         "#
         ),
         Contract::from_code_path(
-            "StorageTester".to_string(),
+            "contract::StorageTester".to_string(),
             Path::new("tests/data/contracts/storage_tester.cairo"),
         )
         .unwrap()
@@ -551,7 +551,7 @@ fn store_load_felt_to_felt() {
         "#
         ),
         Contract::from_code_path(
-            "StorageTester".to_string(),
+            "contract::StorageTester".to_string(),
             Path::new("tests/data/contracts/storage_tester.cairo"),
         )
         .unwrap()

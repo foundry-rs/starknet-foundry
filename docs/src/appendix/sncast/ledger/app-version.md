@@ -15,7 +15,7 @@ $ sncast ledger app-version
 <summary>Output:</summary>
 
 ```shell
-App Version: 2.3.4
+App Version: 2.4.0
 ```
 </details>
 <br>

@@ -1,6 +1,5 @@
 use crate::response::cast_message::SncastCommandMessage;
 use conversions::serde::serialize::CairoSerialize;
-use conversions::string::IntoHexStr;
 use foundry_ui::styling;
 use serde::Serialize;
 use starknet_types_core::felt::Felt;
@@ -15,7 +14,7 @@ impl SncastCommandMessage for NonceResponse {
         styling::OutputBuilder::new()
             .success_message("Nonce retrieved")
             .blank_line()
-            .field("Nonce", &self.nonce.into_hex_string())
+            .field("Nonce", &self.nonce.to_string())
             .build()
     }
 }

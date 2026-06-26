@@ -39,7 +39,7 @@ fn deploy_syscall_check() {
     "#
         ),
         Contract::from_code_path(
-            "DeployChecker".to_string(),
+            "contract::DeployChecker".to_string(),
             Path::new("tests/data/contracts/deploy_checker.cairo"),
         )
         .unwrap()
@@ -69,7 +69,7 @@ fn constructor_retdata_span() {
     "#
         ),
         Contract::new(
-            "ConstructorRetdata",
+            "contract::ConstructorRetdata",
             indoc!(
                 r"
                 #[starknet::contract]
@@ -113,7 +113,7 @@ fn constructor_retdata_felt() {
     "#
         ),
         Contract::new(
-            "ConstructorRetdata",
+            "contract::ConstructorRetdata",
             indoc!(
                 r"
                 #[starknet::contract]
@@ -157,7 +157,7 @@ fn constructor_retdata_struct() {
     "#
         ),
         Contract::new(
-            "ConstructorRetdata",
+            "contract::ConstructorRetdata",
             indoc!(
                 r"
                 #[starknet::contract]
@@ -215,7 +215,7 @@ fn deploy_twice() {
     "#
         ),
         Contract::from_code_path(
-            "DeployChecker".to_string(),
+            "contract::DeployChecker".to_string(),
             Path::new("tests/data/contracts/deploy_checker.cairo"),
         )
         .unwrap()
@@ -247,7 +247,7 @@ fn verify_precalculate_address() {
     "#
         ),
         Contract::from_code_path(
-            "DeployChecker".to_string(),
+            "contract::DeployChecker".to_string(),
             Path::new("tests/data/contracts/deploy_checker.cairo"),
         )
         .unwrap()
@@ -282,7 +282,7 @@ fn deploy_constructor_panic_catchable() {
     "#
         ),
         Contract::from_code_path(
-            "DeployChecker".to_string(),
+            "contract::DeployChecker".to_string(),
             Path::new("tests/data/contracts/deploy_checker.cairo"),
         )
         .unwrap()
@@ -311,7 +311,7 @@ fn deploy_constructor_panic_catchable_via_should_panic() {
     "#
         ),
         Contract::from_code_path(
-            "DeployChecker".to_string(),
+            "contract::DeployChecker".to_string(),
             Path::new("tests/data/contracts/deploy_checker.cairo"),
         )
         .unwrap()

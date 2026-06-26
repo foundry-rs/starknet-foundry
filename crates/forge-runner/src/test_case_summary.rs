@@ -1,4 +1,4 @@
-use crate::backtrace::{add_backtrace_footer, get_backtrace, is_backtrace_enabled};
+use crate::backtrace::{add_test_backtrace_footer, get_backtrace, is_backtrace_enabled};
 use crate::build_trace_data::build_profiler_call_trace;
 use crate::debugging::{TraceArgs, build_contracts_data_store, build_debugging_trace};
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
@@ -283,6 +283,7 @@ fn check_if_matching_and_get_message(
 }
 
 impl TestCaseSummary<Single> {
+    #[expect(clippy::too_many_lines)]
     #[must_use]
     pub(crate) fn from_run_completed(
         RunCompleted {
@@ -293,6 +294,7 @@ impl TestCaseSummary<Single> {
             encountered_errors,
             fuzzer_args,
             fork_data,
+            test_backtrace,
         }: RunCompleted,
         test_case: &TestCaseWithResolvedConfig,
         contracts_data: &ContractsData,
@@ -351,9 +353,17 @@ impl TestCaseSummary<Single> {
             },
             RunStatus::Panic(value) => match &test_case.config.expected_result {
                 ExpectedTestResult::Success => TestCaseSummary::Failed {
-                    name,
-                    msg: build_readable_text(&value)
-                        .map(|msg| add_backtrace_footer(msg, contracts_data, &encountered_errors)),
+                    name: name.clone(),
+                    msg: build_readable_text(&value).map(|msg| {
+                        add_test_backtrace_footer(
+                            msg,
+                            contracts_data,
+                            &encountered_errors,
+                            &test_backtrace,
+                            versioned_program_path,
+                            &name,
+                        )
+                    }),
                     fuzzer_args,
                     test_statistics: (),
                     debugging_trace,
@@ -362,10 +372,21 @@ impl TestCaseSummary<Single> {
                     let (matching, msg) =
                         check_if_matching_and_get_message(&value, expected_panic_value);
                     if matching {
+                        let backtrace_msg = is_backtrace_enabled()
+                            .then(|| {
+                                get_backtrace(
+                                    contracts_data,
+                                    &encountered_errors,
+                                    test_backtrace.context(),
+                                    versioned_program_path,
+                                    &name,
+                                )
+                            })
+                            .flatten();
+
                         TestCaseSummary::Passed {
                             name,
-                            msg: is_backtrace_enabled()
-                                .then(|| get_backtrace(contracts_data, &encountered_errors)),
+                            msg: backtrace_msg,
                             test_statistics: (),
                             gas_info,
                             used_resources,
@@ -379,9 +400,16 @@ impl TestCaseSummary<Single> {
                         }
                     } else {
                         TestCaseSummary::Failed {
-                            name,
+                            name: name.clone(),
                             msg: msg.map(|msg| {
-                                add_backtrace_footer(msg, contracts_data, &encountered_errors)
+                                add_test_backtrace_footer(
+                                    msg,
+                                    contracts_data,
+                                    &encountered_errors,
+                                    &test_backtrace,
+                                    versioned_program_path,
+                                    &name,
+                                )
                             }),
                             fuzzer_args,
                             test_statistics: (),
@@ -405,24 +433,38 @@ fn is_matching_should_panic_data(data: &[Felt], pattern: &[Felt]) -> bool {
     let data_str = convert_felts_to_byte_array_string(data);
     let pattern_str = convert_felts_to_byte_array_string(pattern);
 
-    if let (Some(data), Some(pattern)) = (data_str, pattern_str) {
-        data.contains(&pattern) // If both data and pattern are byte arrays, pattern should be a substring of data
+    if let (Some(data), Some(pattern)) = (&data_str, &pattern_str) {
+        data.contains(pattern.as_str()) // If both data and pattern are byte arrays, pattern should be a substring of data
     } else {
         // Compare logic depends on the presence of `ENTRYPOINT_FAILED_ERROR` in the expected data.
-        if pattern.contains(&ENTRYPOINT_FAILED_ERROR_FELT) {
+        // A ByteArray may contain the same felt value as `ENTRYPOINT_FAILED` in its payload,
+        // so only non-ByteArray patterns can opt into exact generic-error matching.
+        if pattern_str.is_none() && pattern.contains(&ENTRYPOINT_FAILED_ERROR_FELT) {
             // If data includes `ENTRYPOINT_FAILED_ERROR` compare as is.
             data == pattern
         } else {
-            // Otherwise, remove all generic errors and then compare.
-            let filtered: Vec<Felt> = data
-                .iter()
-                .copied()
-                .filter(|f| f != &ENTRYPOINT_FAILED_ERROR_FELT)
-                .collect();
-            filtered.as_slice() == pattern
+            // Otherwise, remove propagated generic errors and then compare.
+            let filtered = strip_trailing_entrypoint_failed(data);
+
+            if let (Some(data), Some(pattern)) = (
+                convert_felts_to_byte_array_string(filtered),
+                pattern_str.as_ref(),
+            ) {
+                return data.contains(pattern);
+            }
+
+            filtered == pattern
         }
     }
 }
+
+fn strip_trailing_entrypoint_failed(mut data: &[Felt]) -> &[Felt] {
+    while data.last() == Some(&ENTRYPOINT_FAILED_ERROR_FELT) {
+        data = &data[..data.len() - 1];
+    }
+    data
+}
+
 fn convert_felts_to_byte_array_string(data: &[Felt]) -> Option<String> {
     ByteArray::deserialize_with_magic(data)
         .map(|byte_array| byte_array.to_string())
@@ -571,5 +613,56 @@ mod tests {
 
         let non_matching_pattern = vec![Felt::from(11_u8), Felt::from(22_u8)];
         assert!(!is_matching_should_panic_data(&data, &non_matching_pattern));
+    }
+
+    #[test]
+    fn test_is_matching_should_panic_data_does_not_strip_entrypoint_failed_from_middle() {
+        let data = vec![
+            Felt::from(11_u8),
+            ENTRYPOINT_FAILED_ERROR_FELT,
+            Felt::from(22_u8),
+        ];
+        let pattern = vec![Felt::from(11_u8), Felt::from(22_u8)];
+
+        assert!(!is_matching_should_panic_data(&data, &pattern));
+    }
+
+    #[test]
+    fn test_is_matching_should_panic_data_mixed_tuple() {
+        let byte_array = |s: &str| ByteArray::from(s).serialize_with_magic();
+
+        let mut data = byte_array("this_string_is_longer_than_31_bytes");
+        data.push(Felt::from(11_u8));
+        data.extend(byte_array("hello"));
+        data.push(Felt::from(5_u8));
+        data.push(Felt::from_bytes_be_slice(b"short_string"));
+
+        assert!(is_matching_should_panic_data(&data, &data));
+
+        let mut non_matching_pattern = byte_array("this_string_is_longer_than_31_bytes");
+        non_matching_pattern.push(Felt::from(11_u8));
+        non_matching_pattern.extend(byte_array("world"));
+        non_matching_pattern.push(Felt::from(5_u8));
+        non_matching_pattern.push(Felt::from_bytes_be_slice(b"short_string"));
+
+        assert!(!is_matching_should_panic_data(&data, &non_matching_pattern));
+    }
+
+    #[test]
+    fn test_is_matching_should_panic_data_propagated_byte_array_substring() {
+        let mut data = ByteArray::from("This will panic for sure").serialize_with_magic();
+        data.push(ENTRYPOINT_FAILED_ERROR_FELT);
+
+        let pattern = ByteArray::from("will panic").serialize_with_magic();
+        assert!(is_matching_should_panic_data(&data, &pattern));
+    }
+
+    #[test]
+    fn test_is_matching_should_panic_data_propagated_entrypoint_failed_byte_array() {
+        let mut data = ByteArray::from("ENTRYPOINT_FAILED").serialize_with_magic();
+        data.push(ENTRYPOINT_FAILED_ERROR_FELT);
+
+        let pattern = ByteArray::from("ENTRYPOINT_FAILED").serialize_with_magic();
+        assert!(is_matching_should_panic_data(&data, &pattern));
     }
 }
