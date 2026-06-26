@@ -5,8 +5,8 @@ use crate::trace::types::{
 };
 use crate::{Context, Trace};
 use blockifier::execution::call_info::OrderedEvent;
-use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::{CallFailure, CallSuccess};
-use cheatnet::trace_data::{CallTrace, CallTraceNode};
+use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::CallSuccess;
+use cheatnet::trace_data::{CallTrace, CallTraceNode, TraceDataCallFailure};
 use data_transformer::{
     ReverseTransformError, ReverseTransformEventError, reverse_transform_event,
     reverse_transform_input, reverse_transform_output,
@@ -133,10 +133,10 @@ impl<'a> Collector<'a> {
                 format_result_message("success", &ret_data_str)
             }
             Err(failure) => match failure {
-                CallFailure::Recoverable { panic_data } => {
+                TraceDataCallFailure::Recoverable { panic_data } => {
                     format_result_message("panic", &format_panic_data(panic_data))
                 }
-                CallFailure::Unrecoverable { msg } => {
+                TraceDataCallFailure::Unrecoverable { msg } => {
                     format_result_message("error", &msg.to_string())
                 }
             },

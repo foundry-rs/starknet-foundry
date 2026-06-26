@@ -17,7 +17,9 @@ use cheatnet::runtime_extensions::outer_call_runtime_extension::execution::cheat
 use cheatnet::runtime_extensions::outer_call_runtime_extension::execution::entry_point::{
     ExecuteCallEntryPointExtraOptions, execute_call_entry_point,
 };
-use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::{CallFailure, CallResult};
+use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::{
+    CallEntryPointResult, CallFailure,
+};
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::{
     CallSuccess, call_entry_point,
 };
@@ -45,7 +47,7 @@ pub mod state;
 
 // Helper struct to return both: our custom call result wrapper and actual call info (unless unrecoverable error), allowing tests to check both
 pub struct CallResultExtended {
-    pub call_result: CallResult,
+    pub call_result: CallEntryPointResult,
     pub call_info: Option<CallInfo>,
 }
 
@@ -70,12 +72,12 @@ fn build_syscall_hint_processor<'a>(
         ReadOnlySegments::default(),
     )
 }
-pub fn recover_data(output: CallResult) -> Vec<Felt> {
+pub fn recover_data(output: CallEntryPointResult) -> Vec<Felt> {
     match output {
         Ok(CallSuccess { ret_data, .. }) => ret_data,
         Err(failure_type) => match failure_type {
             CallFailure::Recoverable { panic_data, .. } => panic_data,
-            CallFailure::Unrecoverable { msg, .. } => panic!("Call failed with message: {msg}"),
+            CallFailure::Unrecoverable(error) => panic!("Call failed with message: {error}"),
         },
     }
 }
@@ -212,7 +214,7 @@ pub fn call_contract(
     contract_address: &ContractAddress,
     entry_point_selector: EntryPointSelector,
     calldata: &[Felt],
-) -> CallResult {
+) -> CallEntryPointResult {
     let calldata = create_execute_calldata(calldata);
 
     let entry_point = CallEntryPoint {
@@ -239,7 +241,7 @@ pub fn library_call_contract(
     class_hash: &ClassHash,
     entry_point_selector: EntryPointSelector,
     calldata: &[Felt],
-) -> CallResult {
+) -> CallEntryPointResult {
     let calldata = create_execute_calldata(calldata);
     let entry_point = CallEntryPoint {
         class_hash: Some(*class_hash),

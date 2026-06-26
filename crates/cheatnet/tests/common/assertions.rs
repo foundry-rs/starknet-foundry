@@ -1,13 +1,13 @@
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::DeclareResult;
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::{
-    CallFailure, CallResult, CallSuccess,
+    CallEntryPointResult, CallFailure, CallSuccess,
 };
 use conversions::byte_array::ByteArray;
 use starknet_api::core::ClassHash;
 use starknet_types_core::felt::Felt;
 
 #[inline]
-pub fn assert_success(call_contract_output: CallResult, expected_data: &[Felt]) {
+pub fn assert_success(call_contract_output: CallEntryPointResult, expected_data: &[Felt]) {
     assert!(matches!(
         call_contract_output,
         Ok(CallSuccess { ret_data, .. })
@@ -16,7 +16,7 @@ pub fn assert_success(call_contract_output: CallResult, expected_data: &[Felt]) 
 }
 
 #[inline]
-pub fn assert_panic(call_contract_output: CallResult, expected_data: &[Felt]) {
+pub fn assert_panic(call_contract_output: CallEntryPointResult, expected_data: &[Felt]) {
     assert!(matches!(
         call_contract_output,
         Err(
@@ -27,13 +27,16 @@ pub fn assert_panic(call_contract_output: CallResult, expected_data: &[Felt]) {
 }
 
 #[inline]
-pub fn assert_error(call_contract_output: CallResult, expected_data: impl Into<ByteArray>) {
+pub fn assert_error(
+    call_contract_output: CallEntryPointResult,
+    expected_data: impl Into<ByteArray>,
+) {
     assert!(matches!(
         call_contract_output,
         Err(
-            CallFailure::Unrecoverable { msg, .. }
+            CallFailure::Unrecoverable(error)
         )
-        if msg == expected_data.into(),
+        if ByteArray::from(error.to_string().as_str()) == expected_data.into(),
     ));
 }
 

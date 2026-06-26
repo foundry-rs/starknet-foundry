@@ -1,14 +1,18 @@
 use crate::runtime_extensions::common::sum_syscall_usage;
-use crate::runtime_extensions::outer_call_runtime_extension::rpc::{CallResult, CallSuccess};
+use crate::runtime_extensions::outer_call_runtime_extension::rpc::{
+    CallSuccess, recoverable_panic_data,
+};
 use crate::state::CheatedData;
 use blockifier::blockifier_versioned_constants::VersionedConstants;
 use blockifier::execution::call_info::{
-    ExecutionSummary, ExtendedExecutionResources, OrderedEvent, OrderedL2ToL1Message,
+    CallInfo, ExecutionSummary, ExtendedExecutionResources, OrderedEvent, OrderedL2ToL1Message,
 };
 use blockifier::execution::entry_point::CallEntryPoint;
+use blockifier::execution::errors::AnnotatedEntryPointExecutionError;
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
 use cairo_annotations::trace_data::L1Resources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
+use conversions::byte_array::ByteArray;
 use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use starknet_api::core::ClassHash;
 use starknet_api::execution_resources::GasVector;
@@ -17,6 +21,52 @@ use starknet_api::versioned_constants_logic::VersionedConstantsTrait;
 use starknet_types_core::felt::Felt;
 use std::cell::{OnceCell, Ref, RefCell};
 use std::rc::Rc;
+
+/// Serializable result stored in [`CallTrace`], where the failure is flattened to a [`ByteArray`]
+/// so it can be serialized into the cairo-visible trace.
+pub type TraceDataCallResult = Result<CallSuccess, TraceDataCallFailure>;
+
+/// An enum similar to `outer_call_runtime_extension::rpc::CallFailure`.
+/// `EntryPointExecutionError` does not derive `Clone`, hence it is kept as a string here.
+///
+/// `Recoverable` - Meant to be caught by the user.
+/// `Unrecoverable` - Equivalent of `panic!` in rust.
+#[derive(Debug, Clone, CairoSerialize)]
+pub enum TraceDataCallFailure {
+    Recoverable { panic_data: Vec<Felt> },
+    Unrecoverable { msg: ByteArray },
+}
+
+impl TraceDataCallFailure {
+    /// Maps a blockifier error to its serializable trace representation.
+    #[must_use]
+    pub fn from_execution_error(err: &AnnotatedEntryPointExecutionError) -> Self {
+        match recoverable_panic_data(err) {
+            Some(panic_data) => TraceDataCallFailure::Recoverable { panic_data },
+            None => TraceDataCallFailure::Unrecoverable {
+                msg: ByteArray::from(err.to_string().as_str()),
+            },
+        }
+    }
+}
+
+pub fn from_non_error(call_info: &CallInfo) -> TraceDataCallResult {
+    let return_data = &call_info.execution.retdata.0;
+
+    if call_info.execution.failed {
+        return Err(TraceDataCallFailure::Recoverable {
+            panic_data: return_data.clone(),
+        });
+    }
+
+    Ok(CallSuccess {
+        ret_data: return_data.clone(),
+    })
+}
+
+pub fn from_error(err: &AnnotatedEntryPointExecutionError) -> TraceDataCallResult {
+    Err(TraceDataCallFailure::from_execution_error(err))
+}
 
 #[derive(Debug)]
 pub struct TraceData {
@@ -39,7 +89,7 @@ pub struct CallTrace {
     // only these are serialized
     pub entry_point: CallEntryPoint,
     pub nested_calls: Vec<CallTraceNode>,
-    pub result: CallResult,
+    pub result: TraceDataCallResult,
     // serialize end
 
     // These also include resources used by internal calls
@@ -95,7 +145,7 @@ impl TraceData {
         current_call.borrow_mut().vm_trace = Some(vm_trace);
     }
 
-    pub fn update_current_call_result(&mut self, result: CallResult) {
+    pub fn update_current_call_result(&mut self, result: TraceDataCallResult) {
         let current_call = self.current_call_stack.top();
         current_call.borrow_mut().result = result;
     }
@@ -117,7 +167,7 @@ impl TraceData {
         gas_consumed: u64,
         used_syscalls_vm_resources: SyscallUsageMap,
         used_syscalls_sierra_gas: SyscallUsageMap,
-        result: CallResult,
+        result: TraceDataCallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
         signature: Vec<Felt>,
         events: Vec<OrderedEvent>,
