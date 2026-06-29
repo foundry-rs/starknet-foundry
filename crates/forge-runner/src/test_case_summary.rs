@@ -1,6 +1,6 @@
 use crate::backtrace::{
-    BacktraceAnnotations, LazyContractBacktraceDataMapping, add_test_backtrace_footer,
-    get_backtrace, is_backtrace_enabled,
+    LazyContractBacktraceDataMapping, TestAnnotations, add_test_backtrace_footer, get_backtrace,
+    is_backtrace_enabled,
 };
 use crate::build_trace_data::build_profiler_call_trace;
 use crate::debugging::{TraceArgs, build_contracts_data_store, build_debugging_trace};
@@ -23,7 +23,6 @@ use starknet_api::execution_resources::GasVector;
 use starknet_types_core::felt::Felt;
 use std::fmt;
 use std::option::Option;
-use std::sync::Arc;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasFuzzingInfo {
@@ -304,7 +303,7 @@ impl TestCaseSummary<Single> {
         test_case: &TestCaseWithResolvedConfig,
         contracts_data: &ContractsData,
         versioned_program_path: &Utf8Path,
-        test_annotations: Option<&Result<Arc<BacktraceAnnotations>, String>>,
+        test_annotations: &TestAnnotations,
         contract_backtrace_mapping: &LazyContractBacktraceDataMapping,
         trace_args: &TraceArgs,
         gas_report_enabled: bool,

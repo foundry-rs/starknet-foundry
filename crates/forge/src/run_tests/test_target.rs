@@ -1,6 +1,6 @@
 use anyhow::Result;
 use forge_runner::backtrace::{
-    BacktraceAnnotations, LazyContractBacktraceDataMapping, is_backtrace_enabled,
+    LazyContractBacktraceDataMapping, TestAnnotations, is_backtrace_enabled,
 };
 use forge_runner::filtering::{ExcludeReason, FilterResult, TestCaseFilter};
 use forge_runner::messages::TestResultMessage;
@@ -65,15 +65,12 @@ pub async fn run_for_test_target(
 ) -> Result<TestTargetRunResult> {
     let casm_program = tests.casm_program.clone();
 
-    // Propagate backtrace annotations, so failing test cases can avoid reparsing these.
-    let test_annotations =
-        is_backtrace_enabled().then(|| match tests.sierra_program.debug_info.as_ref() {
-            Some(debug_info) => BacktraceAnnotations::from_debug_info(debug_info)
-                .map(Arc::new)
-                .map_err(|err| err.to_string()),
-            // In practice, this should never happen as debug info is prerequisite checked by `check_backtrace_compatibility`
-            None => Err("debug info not found".to_string()),
-        });
+    // Built once per target and shared across all test case tasks, so failing test cases can avoid reparsing.
+    let test_annotations = TestAnnotations::from_debug_info(
+        is_backtrace_enabled()
+            .then_some(tests.sierra_program.debug_info.as_ref())
+            .flatten(),
+    );
 
     // Shared across all test case tasks, so each contract's backtrace data is built once and reused.
     let contract_backtrace_mapping = Arc::new(LazyContractBacktraceDataMapping::new());

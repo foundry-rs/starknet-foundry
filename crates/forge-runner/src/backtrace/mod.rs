@@ -2,10 +2,9 @@ use anyhow::Result;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::EncounteredErrors;
 use std::env;
-use std::sync::Arc;
 
 use data::TestBacktraceData;
-pub use data::{BacktraceAnnotations, LazyContractBacktraceDataMapping};
+pub use data::{BacktraceAnnotations, LazyContractBacktraceDataMapping, TestAnnotations};
 
 mod data;
 mod display;
@@ -48,7 +47,7 @@ pub fn add_test_backtrace_footer(
     contracts_data: &ContractsData,
     encountered_errors: &EncounteredErrors,
     test_backtrace: &TestBacktraceOutcome,
-    test_annotations: Option<&Result<Arc<BacktraceAnnotations>, String>>,
+    test_annotations: &TestAnnotations,
     contract_backtrace_mapping: &LazyContractBacktraceDataMapping,
     test_name: &str,
 ) -> String {
@@ -88,7 +87,7 @@ pub fn get_backtrace(
     contracts_data: &ContractsData,
     encountered_errors: &EncounteredErrors,
     test_backtrace: Option<&TestBacktraceContext>,
-    test_annotations: Option<&Result<Arc<BacktraceAnnotations>, String>>,
+    test_annotations: &TestAnnotations,
     contract_backtrace_mapping: &LazyContractBacktraceDataMapping,
     test_name: &str,
 ) -> Option<String> {
@@ -109,18 +108,20 @@ pub fn get_backtrace(
         backtrace_parts.push(contract_part);
     }
 
-    if let Some(bt) = test_backtrace.filter(|bt| !bt.pcs.is_empty())
-        && let Some(test_annotations) = test_annotations
-    {
+    if let Some(bt) = test_backtrace.filter(|bt| !bt.pcs.is_empty()) {
         let test_part = match test_annotations {
-            Ok(annotations) => TestBacktraceData::new(
+            TestAnnotations::Parsed(annotations) => TestBacktraceData::new(
                 test_name.to_owned(),
                 annotations,
                 bt.casm_start_offsets.clone(),
             )
             .render_backtrace(&bt.pcs)
             .unwrap_or_else(|err| format!("failed to create test backtrace: {err}")),
-            Err(err) => format!("failed to create test backtrace: {err}"),
+            TestAnnotations::Failed(err) => format!("failed to create test backtrace: {err}"),
+            // In practice, this should never happen as debug info is prerequisite checked by `check_backtrace_compatibility`
+            TestAnnotations::Missing => {
+                "failed to create test backtrace: debug info not found".to_string()
+            }
         };
 
         backtrace_parts.push(test_part);

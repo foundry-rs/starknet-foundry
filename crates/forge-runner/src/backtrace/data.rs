@@ -266,3 +266,26 @@ impl TestBacktraceData {
         self.0.render_backtrace(pcs)
     }
 }
+
+/// Test-target backtrace annotations.
+#[derive(Clone)]
+pub enum TestAnnotations {
+    Parsed(Arc<BacktraceAnnotations>),
+    /// No backtrace can be produced: Backtrace is disabled, or the target has no sierra debug info.
+    Missing,
+    // Debug info present; Failed to parse.
+    Failed(String),
+}
+
+impl TestAnnotations {
+    #[must_use]
+    pub fn from_debug_info(sierra_debug_info: Option<&DebugInfo>) -> Self {
+        match sierra_debug_info {
+            None => Self::Missing,
+            Some(debug_info) => match BacktraceAnnotations::from_debug_info(debug_info) {
+                Ok(annotations) => Self::Parsed(Arc::new(annotations)),
+                Err(err) => Self::Failed(err.to_string()),
+            },
+        }
+    }
+}
