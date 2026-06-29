@@ -7,11 +7,11 @@ pub use cheatcodes::block_hash::{
     start_cheat_block_hash, start_cheat_block_hash_global, stop_cheat_block_hash,
     stop_cheat_block_hash_global,
 };
-
-pub use cheatcodes::contract_class::{declare, declare_from_file};
 pub use cheatcodes::contract_class::{
     ContractClass, ContractClassTrait, DeclareResult, DeclareResultTrait, get_class_hash,
 };
+
+pub use cheatcodes::contract_class::{declare, declare_from_file};
 
 pub use cheatcodes::erc20::set_balance;
 pub use cheatcodes::erc20::{CustomToken, Token, TokenImpl, TokenTrait};
