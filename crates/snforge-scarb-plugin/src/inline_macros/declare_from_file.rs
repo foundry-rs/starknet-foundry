@@ -1,7 +1,7 @@
-use crate::utils::create_single_token;
+use crate::{external_inputs::ExternalInput, utils::create_single_token};
 use cairo_lang_macro::{Diagnostic, ProcMacroResult, TextSpan, TokenStream, quote};
 use serde_json::Value;
-use std::{fs, path::Path};
+use std::path::Path;
 
 #[must_use]
 pub fn declare_from_file(args: &TokenStream) -> ProcMacroResult {
@@ -41,7 +41,7 @@ fn parse_path_literal(raw_path: &str) -> Option<String> {
 
 fn validate_sierra_file(path: &str) -> Result<(), Diagnostic> {
     let path = Path::new(path);
-    let sierra = fs::read_to_string(path).map_err(|error| {
+    let sierra = ExternalInput::read_to_string(path).map_err(|error| {
         Diagnostic::span_error(
             TextSpan::call_site(),
             format!("Failed to read Sierra file at {}: {error}", path.display()),
