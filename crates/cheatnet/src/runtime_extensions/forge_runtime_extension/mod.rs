@@ -193,7 +193,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .base
                     .state;
 
-                let sierra_path: String = input_reader.read::<ByteArray>()?.to_string();
+                let sierra_path = input_reader.read::<ByteArray>()?.to_string();
 
                 handle_declare_result(declare_from_file(
                     *state,
