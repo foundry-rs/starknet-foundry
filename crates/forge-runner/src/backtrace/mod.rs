@@ -26,6 +26,11 @@ pub enum TestBacktraceOutcome {
     Panic(Option<TestBacktraceContext>),
 }
 
+pub struct BacktraceSources<'a> {
+    pub test_annotations: &'a TestAnnotations,
+    pub contract_backtrace_mapping: &'a LazyContractBacktraceDataMapping,
+}
+
 impl TestBacktraceOutcome {
     #[must_use]
     pub fn is_panic(&self) -> bool {
@@ -47,9 +52,8 @@ pub fn add_test_backtrace_footer(
     contracts_data: &ContractsData,
     encountered_errors: &EncounteredErrors,
     test_backtrace: &TestBacktraceOutcome,
-    test_annotations: &TestAnnotations,
-    contract_backtrace_mapping: &LazyContractBacktraceDataMapping,
     test_name: &str,
+    sources: &BacktraceSources,
 ) -> String {
     // Include hint even if backtrace capture was skipped (due to backtrace being disabled).
     // Note: `is_panic()` is treated as equivalent to non-empty backtrace (>= 1 pc),
@@ -65,9 +69,8 @@ pub fn add_test_backtrace_footer(
             contracts_data,
             encountered_errors,
             test_backtrace.context(),
-            test_annotations,
-            contract_backtrace_mapping,
             test_name,
+            sources,
         )
     } else {
         Some(format!(
@@ -87,10 +90,14 @@ pub fn get_backtrace(
     contracts_data: &ContractsData,
     encountered_errors: &EncounteredErrors,
     test_backtrace: Option<&TestBacktraceContext>,
-    test_annotations: &TestAnnotations,
-    contract_backtrace_mapping: &LazyContractBacktraceDataMapping,
     test_name: &str,
+    sources: &BacktraceSources,
 ) -> Option<String> {
+    let BacktraceSources {
+        test_annotations,
+        contract_backtrace_mapping,
+    } = *sources;
+
     let mut backtrace_parts = Vec::new();
 
     if !encountered_errors.is_empty() {

@@ -1,6 +1,6 @@
 use crate::backtrace::{
-    LazyContractBacktraceDataMapping, TestAnnotations, TestBacktraceContext, TestBacktraceOutcome,
-    add_test_backtrace_footer, is_backtrace_enabled,
+    BacktraceSources, LazyContractBacktraceDataMapping, TestAnnotations, TestBacktraceContext,
+    TestBacktraceOutcome, add_test_backtrace_footer, is_backtrace_enabled,
 };
 use crate::forge_config::{ForgeConfig, RuntimeConfig};
 use crate::gas::calculate_used_gas;
@@ -483,6 +483,10 @@ fn extract_test_case_summary(
 ) -> TestCaseSummary<Single> {
     let contracts_data = &forge_config.test_runner_config.contracts_data;
     let trace_args = &forge_config.output_config.trace_args;
+    let backtrace_sources = BacktraceSources {
+        test_annotations,
+        contract_backtrace_mapping,
+    };
     match run_result {
         Ok(run_result) => match run_result {
             RunResult::Completed(run_completed) => TestCaseSummary::from_run_completed(
@@ -490,8 +494,7 @@ fn extract_test_case_summary(
                 case,
                 contracts_data,
                 versioned_program_path,
-                test_annotations,
-                contract_backtrace_mapping,
+                &backtrace_sources,
                 trace_args,
                 forge_config.output_config.gas_report,
             ),
@@ -518,9 +521,8 @@ fn extract_test_case_summary(
                             contracts_data,
                             &run_error.encountered_errors,
                             &run_error.test_backtrace,
-                            test_annotations,
-                            contract_backtrace_mapping,
                             &case.name,
+                            &backtrace_sources,
                         )
                     }),
                     fuzzer_args: run_error.fuzzer_args,
