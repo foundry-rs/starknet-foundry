@@ -35,6 +35,7 @@ fn expand(args: &TokenStream) -> Result<TokenStream, Diagnostic> {
 
 fn parse_path_literal(raw_path: &str) -> Option<String> {
     let literal = raw_path.trim().strip_prefix('(')?.strip_suffix(')')?.trim();
+    let literal = literal.strip_suffix(',').unwrap_or(literal).trim();
 
     serde_json::from_str(literal).ok()
 }
@@ -109,6 +110,14 @@ mod tests {
     fn parses_string_literal_path() {
         assert_eq!(
             parse_path_literal(r#"("target/dev/hello.contract_class.json")"#),
+            Some("target/dev/hello.contract_class.json".to_string())
+        );
+    }
+
+    #[test]
+    fn parses_string_literal_path_with_trailing_comma() {
+        assert_eq!(
+            parse_path_literal(r#"("target/dev/hello.contract_class.json",)"#),
             Some("target/dev/hello.contract_class.json".to_string())
         );
     }

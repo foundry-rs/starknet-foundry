@@ -13,6 +13,19 @@ fn accepts_sierra_file_path() {
 }
 
 #[test]
+fn accepts_sierra_file_path_with_trailing_comma() {
+    let args = macro_args("\"tests/data/minimal.contract_class.json\",");
+
+    let result = declare_from_file(&args);
+
+    assert!(result.diagnostics.is_empty());
+    assert_eq!(
+        result.token_stream.to_string(),
+        "snforge_std::declare_from_file(\"tests/data/minimal.contract_class.json\")"
+    );
+}
+
+#[test]
 fn rejects_non_string_literal() {
     let args = macro_args("tests::data");
 
