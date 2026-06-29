@@ -129,11 +129,12 @@ crates/sncast/tests/data/ledger-app/nanox.elf
 Build it from the [app-starknet repository](https://github.com/LedgerHQ/app-starknet):
 
 ```shell
-$ git clone https://github.com/LedgerHQ/app-starknet
+$ git clone --depth 1 --branch nanox_2.7.0_2.4.0_sdk_v26.0.2 https://github.com/LedgerHQ/app-starknet
 $ docker run --rm \
     -v "$(pwd)/app-starknet:/app-starknet" \
-    ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:latest \
+    ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:5.3.14 \
     bash -c "cd /app-starknet/starknet && cargo ledger build nanox"
+$ mkdir -p crates/sncast/tests/data/ledger-app
 $ cp app-starknet/starknet/target/nanox/release/starknet \
     crates/sncast/tests/data/ledger-app/nanox.elf
 ```
@@ -144,10 +145,6 @@ Tests run inside the `ledger-app-dev-tools` Docker image, which provides Speculo
 
 ```shell
 $ docker run --rm -it \
-    -p 4001-4005:4001-4005 \
-    -p 5001-5007:5001-5007 \
-    -p 6001-6012:6001-6012 \
-    -p 5055:5055 \
     -v "$(pwd):/workspace" \
     -v ledger_build_cache:/workspace/target \
     -v "$HOME/.cargo/registry:/root/.cargo/registry" \
@@ -155,7 +152,7 @@ $ docker run --rm -it \
     -v ledger_local_cache:/root/.local \
     -w /workspace \
     -e CARGO_TARGET_DIR=/workspace/target \
-    ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:latest \
+    ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:5.3.14 \
     bash -c '
         [ -f /opt/.cargo/env ] && source /opt/.cargo/env
         if ! [ -x "$HOME/.asdf/shims/scarb" ]; then
@@ -164,14 +161,16 @@ $ docker run --rm -it \
         export PATH="$HOME/.asdf/shims:$HOME/.asdf/bin:$HOME/.local/bin:$PATH"
         [ -f "$HOME/.asdf/asdf.sh" ] && source "$HOME/.asdf/asdf.sh"
         SCARB_VERSION=$(grep "scarb " /workspace/.tool-versions | cut -d " " -f 2)
+        DEVNET_VERSION=$(grep "starknet-devnet " /workspace/.tool-versions | cut -d " " -f 2)
         asdf set -u scarb "$SCARB_VERSION"
+        asdf set -u starknet-devnet "$DEVNET_VERSION"
         cargo test -p sncast --features ledger-emulator --test main ledger -- --nocapture --ignored
     '
 ```
 
 > ❗️ **Note**
 >
-> The first run compiles all dependencies and installs the Scarb toolchain via starkup, which can take around 30 minutes. Subsequent runs reuse the cached volumes and finish in a couple of minutes.
+> The first run compiles the workspace and installs the Scarb toolchain via starkup. Expect it to take a while. Later runs reuse the Docker cache volumes and usually finish in a few minutes.
 >
 > Pasting the multi-line `docker run` directly into the terminal may break due to quoting or bracketed-paste behavior. If you hit problems, save the command to a file (e.g. `run_ledger_tests.sh`).
 
