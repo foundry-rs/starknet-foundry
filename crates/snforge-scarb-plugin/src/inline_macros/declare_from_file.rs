@@ -35,6 +35,7 @@ fn expand(args: &TokenStream) -> Result<TokenStream, Diagnostic> {
 
 fn parse_path_literal(raw_path: &str) -> Option<String> {
     let literal = raw_path.trim().strip_prefix('(')?.strip_suffix(')')?.trim();
+    // `scarb fmt` adds a trailing comma for multiline macro calls.
     let literal = literal.strip_suffix(',').unwrap_or(literal).trim();
 
     serde_json::from_str(literal).ok()
