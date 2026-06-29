@@ -19,8 +19,10 @@ use starknet_api::core::ClassHash;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
+type ContractBacktraceCache = HashMap<ClassHash, Arc<ContractOrigin>>;
+
 #[derive(Default)]
-pub struct LazyContractBacktraceDataMapping(Mutex<HashMap<ClassHash, Arc<ContractOrigin>>>);
+pub struct LazyContractBacktraceDataMapping(Mutex<ContractBacktraceCache>);
 
 impl LazyContractBacktraceDataMapping {
     #[must_use]
@@ -47,7 +49,7 @@ impl LazyContractBacktraceDataMapping {
             .clone())
     }
 
-    fn lock(&self) -> std::sync::MutexGuard<'_, HashMap<ClassHash, Arc<ContractOrigin>>> {
+    fn lock(&self) -> std::sync::MutexGuard<'_, ContractBacktraceCache> {
         self.0
             .lock()
             .expect("contract backtrace mapping mutex poisoned")
