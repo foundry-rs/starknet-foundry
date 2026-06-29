@@ -58,7 +58,7 @@ pub fn declare(
     )
 }
 
-pub fn declare_from_path(
+pub fn declare_from_file(
     state: &mut dyn State,
     sierra_path: &Path,
 ) -> Result<DeclareResult, CheatcodeError> {

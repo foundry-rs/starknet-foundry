@@ -8,7 +8,7 @@ pub use cheatcodes::block_hash::{
     stop_cheat_block_hash_global,
 };
 
-pub use cheatcodes::contract_class::declare;
+pub use cheatcodes::contract_class::{declare, declare_from_file};
 pub use cheatcodes::contract_class::{
     ContractClass, ContractClassTrait, DeclareResult, DeclareResultTrait, get_class_hash,
 };

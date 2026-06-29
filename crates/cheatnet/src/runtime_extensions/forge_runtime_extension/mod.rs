@@ -6,7 +6,7 @@ use crate::runtime_extensions::{
     common::get_relocated_vm_trace,
     forge_runtime_extension::cheatcodes::{
         CheatcodeError,
-        declare::{declare, declare_from_path},
+        declare::{declare, declare_from_file},
         generate_random_felt::generate_random_felt,
         get_class_hash::get_class_hash,
         l1_handler_execute::l1_handler_execute,
@@ -185,7 +185,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 handle_declare_result(declare(*state, &contract_identifier, self.contracts_data))
             }
-            "declare_from_path" => {
+            "declare_from_file" => {
                 let state = &mut extended_runtime
                     .extended_runtime
                     .extended_runtime
@@ -195,7 +195,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 let sierra_path: String = input_reader.read::<ByteArray>()?.to_string();
 
-                handle_declare_result(declare_from_path(
+                handle_declare_result(declare_from_file(
                     *state,
                     std::path::Path::new(&sierra_path),
                 ))
