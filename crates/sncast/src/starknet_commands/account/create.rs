@@ -1,5 +1,6 @@
 use crate::starknet_commands::account::{
-    generate_add_profile_message, prepare_account_json, write_account_to_accounts_file,
+    generate_add_profile_message, get_private_key_from_file, prepare_account_json,
+    write_account_to_accounts_file,
 };
 use crate::starknet_commands::utils::felt_or_id::ClassHash;
 use anyhow::{Context, Result, anyhow, bail};
@@ -57,6 +58,22 @@ pub struct Create {
     #[arg(short, long, requires = "account_type")]
     pub class_hash: Option<ClassHash>,
 
+    /// Account private key. If omitted, a random private key is generated
+    #[arg(
+        long,
+        group = "private_key_input",
+        conflicts_with = "ledger_key_locator_account"
+    )]
+    pub private_key: Option<Felt>,
+
+    /// Path to the file holding account private key. If omitted, a random private key is generated
+    #[arg(
+        long = "private-key-file",
+        group = "private_key_input",
+        conflicts_with = "ledger_key_locator_account"
+    )]
+    pub private_key_file_path: Option<Utf8PathBuf>,
+
     #[command(flatten)]
     pub rpc: RpcArgs,
 
@@ -91,12 +108,22 @@ pub async fn create(
         });
     check_class_hash_exists(provider, class_hash).await?;
 
+    let private_key = match (&create.private_key, &create.private_key_file_path) {
+        (Some(key), _) => Some(*key),
+        (None, Some(path)) => Some(
+            get_private_key_from_file(path)
+                .with_context(|| format!("Failed to obtain private key from the file {path}"))?,
+        ),
+        (None, None) => None,
+    };
+
     let (account_json, estimated_fee) = generate_account(
         provider,
         salt,
         class_hash,
         create.account_type,
         signer_source,
+        private_key,
         chain_id,
         ui,
     )
@@ -174,12 +201,14 @@ pub async fn create(
     })
 }
 
+#[expect(clippy::too_many_arguments)]
 async fn generate_account(
     provider: &JsonRpcClient<HttpTransport>,
     salt: Felt,
     class_hash: Felt,
     account_type: AccountType,
     signer_source: &SignerSource,
+    private_key: Option<Felt>,
     chain_id: Felt,
     ui: &UI,
 ) -> Result<(serde_json::Value, u128)> {
@@ -200,7 +229,8 @@ async fn generate_account(
         )
         .await
     } else {
-        let private_key = SigningKey::from_random();
+        let private_key =
+            private_key.map_or_else(SigningKey::from_random, SigningKey::from_secret_scalar);
         let signer = LocalWallet::from_signing_key(private_key.clone());
         let signer_type = SignerType::Local {
             private_key: private_key.secret_scalar(),

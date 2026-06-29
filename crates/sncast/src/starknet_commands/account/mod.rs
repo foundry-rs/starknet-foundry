@@ -94,6 +94,11 @@ pub fn prepare_account_json(
     account_json
 }
 
+fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<Felt> {
+    let private_key_string = std::fs::read_to_string(file_path.clone())?;
+    Ok(private_key_string.parse()?)
+}
+
 pub fn write_account_to_accounts_file(
     account: &str,
     accounts_file: &Utf8PathBuf,
