@@ -1,6 +1,6 @@
 use crate::starknet_commands::account::{
-    generate_add_profile_message, get_private_key_from_file, prepare_account_json,
-    validate_private_key, write_account_to_accounts_file,
+    PrivateKeyArgs, generate_add_profile_message, prepare_account_json, validate_private_key,
+    write_account_to_accounts_file,
 };
 use crate::starknet_commands::utils::felt_or_id::ClassHash;
 use anyhow::{Context, Result, anyhow, bail};
@@ -58,21 +58,8 @@ pub struct Create {
     #[arg(short, long, requires = "account_type")]
     pub class_hash: Option<ClassHash>,
 
-    /// Account private key. If omitted, a random private key is generated
-    #[arg(
-        long,
-        group = "private_key_input",
-        conflicts_with = "ledger_key_locator_account"
-    )]
-    pub private_key: Option<Felt>,
-
-    /// Path to the file holding account private key. If omitted, a random private key is generated
-    #[arg(
-        long = "private-key-file",
-        group = "private_key_input",
-        conflicts_with = "ledger_key_locator_account"
-    )]
-    pub private_key_file_path: Option<Utf8PathBuf>,
+    #[command(flatten)]
+    pub private_key_args: PrivateKeyArgs,
 
     #[command(flatten)]
     pub rpc: RpcArgs,
@@ -107,17 +94,11 @@ pub async fn create(
             AccountType::Braavos => BRAAVOS_CLASS_HASH,
         });
 
-    let private_key = match (&create.private_key, &create.private_key_file_path) {
-        (Some(key), _) => Some(*key),
-        (None, Some(path)) => Some(
-            get_private_key_from_file(path)
-                .with_context(|| format!("Failed to obtain private key from the file {path}"))?,
-        ),
-        (None, None) => None,
-    }
-    .map(validate_private_key)
-    .transpose()?;
-
+    let private_key = create
+        .private_key_args
+        .resolve_optional()?
+        .map(validate_private_key)
+        .transpose()?;
     check_class_hash_exists(provider, class_hash).await?;
 
     let (account_json, estimated_fee) = generate_account(

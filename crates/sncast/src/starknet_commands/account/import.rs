@@ -1,14 +1,13 @@
 use std::str::FromStr;
 
 use crate::starknet_commands::account::{
-    compute_account_address, generate_add_profile_message, get_private_key_from_file,
-    prepare_account_json, validate_private_key, write_account_to_accounts_file,
+    PrivateKeyArgs, compute_account_address, generate_add_profile_message, prepare_account_json,
+    validate_private_key, write_account_to_accounts_file,
 };
 use crate::starknet_commands::utils::felt_or_id::{ClassHash, ContractAddress};
-use anyhow::{Context, Result, bail, ensure};
+use anyhow::{Result, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::Args;
-use conversions::string::{TryFromDecStr, TryFromHexStr};
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
 use sncast::helpers::configuration::CastConfig;
@@ -43,21 +42,8 @@ pub struct Import {
     #[arg(short, long)]
     pub class_hash: Option<ClassHash>,
 
-    /// Account private key
-    #[arg(
-        long,
-        group = "private_key_input",
-        conflicts_with = "ledger_key_locator_account"
-    )]
-    pub private_key: Option<Felt>,
-
-    /// Path to the file holding account private key
-    #[arg(
-        long = "private-key-file",
-        group = "private_key_input",
-        conflicts_with = "ledger_key_locator_account"
-    )]
-    pub private_key_file_path: Option<Utf8PathBuf>,
+    #[command(flatten)]
+    pub private_key_args: PrivateKeyArgs,
 
     /// Salt for the address
     #[arg(short, long)]
@@ -105,12 +91,7 @@ pub async fn import(
         let public_key = ledger::get_ledger_public_key(&ledger_path, ui).await?;
         (SignerType::Ledger { ledger_path }, public_key)
     } else {
-        let key_felt = match (&import.private_key, &import.private_key_file_path) {
-            (Some(key), _) => *key,
-            (None, Some(path)) => get_private_key_from_file(path)
-                .with_context(|| format!("Failed to obtain private key from the file {path}"))?,
-            (None, None) => get_private_key_from_input()?,
-        };
+        let key_felt = import.private_key_args.resolve_or_prompt()?;
         let key_felt = validate_private_key(key_felt)?;
 
         let signing_key = SigningKey::from_secret_scalar(key_felt);
@@ -205,21 +186,9 @@ pub async fn import(
     })
 }
 
-fn parse_input_to_felt(input: &str) -> Result<Felt> {
-    Felt::try_from_hex_str(input)
-        .or_else(|_| Felt::try_from_dec_str(input))
-        .with_context(|| format!("Failed to parse the value {input} as a felt"))
-}
-
-fn get_private_key_from_input() -> Result<Felt> {
-    let input = rpassword::prompt_password("Type in your private key and press enter: ")
-        .expect("Failed to read private key from input");
-    parse_input_to_felt(&input)
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::starknet_commands::account::import::parse_input_to_felt;
+    use crate::starknet_commands::account::parse_input_to_felt;
     use conversions::string::TryFromHexStr;
     use starknet_types_core::felt::Felt;
 
