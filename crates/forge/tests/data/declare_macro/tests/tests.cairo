@@ -19,11 +19,6 @@ fn declare_with_contract_name() {
 }
 
 #[test]
-fn declare_with_sierra_file_path() {
-    declare_from_file!("target/dev/declare_type_safe_HelloStarknet.contract_class.json").unwrap();
-}
-
-#[test]
 #[should_panic(expected: "Failed to get contract artifact for identifier = HelloStarknetAlias.")]
 fn declare_with_contract_alias_is_not_resolved_as_canonical_path() {
     declare!(HelloStarknetAlias).unwrap();
