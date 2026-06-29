@@ -1,4 +1,4 @@
-use cairo_lang_macro::{Severity, TokenStream};
+use cairo_lang_macro::{Severity, TextSpan, Token, TokenStream, TokenTree};
 use snforge_scarb_plugin::{create_single_token, inline_macros::declare::declare};
 
 #[test]
@@ -56,6 +56,19 @@ fn declare_rejects_wrapped_path() {
     let result = declare(&args);
 
     assert_declare_path_diagnostic(&result);
+}
+
+#[test]
+fn declare_invalid_argument_diagnostic_points_to_argument() {
+    let args = TokenStream::new(vec![TokenTree::Ident(Token::new(
+        "(\"HelloStarknet\")",
+        TextSpan::new(10, 28),
+    ))]);
+
+    let result = declare(&args);
+
+    assert_declare_path_diagnostic(&result);
+    assert_eq!(result.diagnostics[0].span(), Some(TextSpan::new(10, 28)));
 }
 
 fn macro_args(path: &str) -> TokenStream {
