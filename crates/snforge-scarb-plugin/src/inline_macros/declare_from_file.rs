@@ -1,5 +1,5 @@
 use crate::utils::create_single_token;
-use cairo_lang_macro::{quote, Diagnostic, ProcMacroResult, TextSpan, TokenStream};
+use cairo_lang_macro::{Diagnostic, ProcMacroResult, TextSpan, TokenStream, quote};
 use serde_json::Value;
 use std::{fs, path::Path};
 

@@ -1,6 +1,6 @@
 ---
-source: tests/integration/inline_macros.rs
-assertion_line: 71
+source: tests/integration/inline_macros/declare_from_file.rs
+assertion_line: 12
 expression: result.token_stream.to_string()
 ---
 snforge_std::declare_from_file("tests/data/minimal.contract_class.json")
