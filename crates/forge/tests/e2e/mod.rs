@@ -18,7 +18,7 @@ mod coverage;
 mod debugger;
 #[cfg(not(feature = "cairo-native"))]
 mod debugging;
-mod declare_type_safe;
+mod declare_macro;
 mod docs_snippets_validation;
 mod enable_gas_validation;
 mod env;

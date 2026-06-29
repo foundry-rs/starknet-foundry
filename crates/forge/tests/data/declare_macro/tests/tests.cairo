@@ -1,11 +1,11 @@
 use core::array::ArrayTrait;
 use core::result::ResultTrait;
-use declare_type_safe::hello_starknet::{HelloStarknet, HelloStarknet as HelloStarknetAlias};
-use declare_type_safe::{hello_starknet, hello_starknet as hello_starknet_alias};
+use declare_macro::hello_starknet::{HelloStarknet, HelloStarknet as HelloStarknetAlias};
+use declare_macro::{hello_starknet, hello_starknet as hello_starknet_alias};
 
 #[test]
 fn declare_with_full_path() {
-    declare!(declare_type_safe::hello_starknet::HelloStarknet).unwrap();
+    declare!(declare_macro::hello_starknet::HelloStarknet).unwrap();
 }
 
 #[test]
