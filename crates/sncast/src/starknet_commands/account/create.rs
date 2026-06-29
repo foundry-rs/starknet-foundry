@@ -120,17 +120,16 @@ pub async fn create(
 
     check_class_hash_exists(provider, class_hash).await?;
 
-    let (account_json, estimated_fee) = generate_account(
-        provider,
+    let generation_params = AccountGenerationParams {
         salt,
         class_hash,
-        create.account_type,
-        signer_source,
+        account_type: create.account_type,
         private_key,
         chain_id,
-        ui,
-    )
-    .await?;
+    };
+
+    let (account_json, estimated_fee) =
+        generate_account(provider, signer_source, ui, generation_params).await?;
 
     let address: Felt = account_json["address"]
         .as_str()
@@ -204,16 +203,19 @@ pub async fn create(
     })
 }
 
-#[expect(clippy::too_many_arguments)]
-async fn generate_account(
-    provider: &JsonRpcClient<HttpTransport>,
+struct AccountGenerationParams {
     salt: Felt,
     class_hash: Felt,
     account_type: AccountType,
-    signer_source: &SignerSource,
     private_key: Option<Felt>,
     chain_id: Felt,
+}
+
+async fn generate_account(
+    provider: &JsonRpcClient<HttpTransport>,
+    signer_source: &SignerSource,
     ui: &UI,
+    params: AccountGenerationParams,
 ) -> Result<(serde_json::Value, u128)> {
     if let SignerSource::Ledger(ledger_path) = signer_source {
         let signer = ledger::create_ledger_signer(ledger_path, ui, false).await?;
@@ -225,15 +227,16 @@ async fn generate_account(
             provider,
             signer,
             signer_type,
-            salt,
-            class_hash,
-            account_type,
-            chain_id,
+            params.salt,
+            params.class_hash,
+            params.account_type,
+            params.chain_id,
         )
         .await
     } else {
-        let private_key =
-            private_key.map_or_else(SigningKey::from_random, SigningKey::from_secret_scalar);
+        let private_key = params
+            .private_key
+            .map_or_else(SigningKey::from_random, SigningKey::from_secret_scalar);
         let signer = LocalWallet::from_signing_key(private_key.clone());
         let signer_type = SignerType::Local {
             private_key: private_key.secret_scalar(),
@@ -243,10 +246,10 @@ async fn generate_account(
             provider,
             signer,
             signer_type,
-            salt,
-            class_hash,
-            account_type,
-            chain_id,
+            params.salt,
+            params.class_hash,
+            params.account_type,
+            params.chain_id,
         )
         .await
     }
