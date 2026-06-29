@@ -1,0 +1,16 @@
+{
+  "sierra_program": [],
+  "sierra_program_debug_info": {
+    "type_names": [],
+    "libfunc_names": [],
+    "user_func_names": [],
+    "annotations": {}
+  },
+  "contract_class_version": "0.1.0",
+  "entry_points_by_type": {
+    "CONSTRUCTOR": [],
+    "EXTERNAL": [],
+    "L1_HANDLER": []
+  },
+  "abi": []
+}

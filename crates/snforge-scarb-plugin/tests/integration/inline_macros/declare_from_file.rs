@@ -26,6 +26,19 @@ fn accepts_sierra_file_path_with_trailing_comma() {
 }
 
 #[test]
+fn accepts_sierra_file_with_debug_info_annotations() {
+    let args = macro_args("\"tests/data/minimal_with_annotations.contract_class.json\"");
+
+    let result = declare_from_file(&args);
+
+    assert!(result.diagnostics.is_empty());
+    assert_eq!(
+        result.token_stream.to_string(),
+        "snforge_std::declare_from_file(\"tests/data/minimal_with_annotations.contract_class.json\")"
+    );
+}
+
+#[test]
 fn rejects_non_string_literal() {
     let args = macro_args("tests::data");
 
@@ -69,7 +82,7 @@ fn rejects_non_sierra_contract_class_json() {
 
     assert_declare_from_file_diagnostic(
         &result,
-        "File tests/data/invalid_contract_class.json is not a valid Sierra contract class JSON",
+        "Failed to parse Sierra contract class JSON at tests/data/invalid_contract_class.json:",
     );
 }
 

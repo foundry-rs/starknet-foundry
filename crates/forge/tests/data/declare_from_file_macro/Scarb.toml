@@ -10,3 +10,7 @@ starknet = "2.16.0"
 snforge_std = { path = "../../../../../snforge_std" }
 
 [[target.starknet-contract]]
+
+[profile.dev.cairo]
+unstable-add-statements-code-locations-debug-info = true
+unstable-add-statements-functions-debug-info = true

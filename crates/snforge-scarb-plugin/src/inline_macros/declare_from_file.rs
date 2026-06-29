@@ -1,6 +1,6 @@
 use crate::{external_inputs::ExternalInput, utils::create_single_token};
 use cairo_lang_macro::{Diagnostic, ProcMacroResult, TextSpan, TokenStream, quote};
-use serde_json::Value;
+use starknet_rust_core::types::contract::SierraClass;
 use std::path::Path;
 
 #[must_use]
@@ -50,7 +50,7 @@ fn validate_sierra_file(path: &str) -> Result<(), Diagnostic> {
         )
     })?;
 
-    let sierra = serde_json::from_str::<Value>(&sierra).map_err(|error| {
+    serde_json::from_str::<SierraClass>(&sierra).map_err(|error| {
         Diagnostic::span_error(
             TextSpan::call_site(),
             format!(
@@ -60,47 +60,7 @@ fn validate_sierra_file(path: &str) -> Result<(), Diagnostic> {
         )
     })?;
 
-    if is_sierra_contract_class_json(&sierra) {
-        Ok(())
-    } else {
-        Err(Diagnostic::span_error(
-            TextSpan::call_site(),
-            format!(
-                "File {} is not a valid Sierra contract class JSON",
-                path.display()
-            ),
-        ))
-    }
-}
-
-fn is_sierra_contract_class_json(value: &Value) -> bool {
-    let Some(object) = value.as_object() else {
-        return false;
-    };
-    let Some(entry_points_by_type) = object
-        .get("entry_points_by_type")
-        .and_then(Value::as_object)
-    else {
-        return false;
-    };
-    let Some(debug_info) = object
-        .get("sierra_program_debug_info")
-        .and_then(Value::as_object)
-    else {
-        return false;
-    };
-
-    object
-        .get("contract_class_version")
-        .is_some_and(Value::is_string)
-        && object.get("sierra_program").is_some_and(Value::is_array)
-        && object.get("abi").is_some_and(Value::is_array)
-        && ["CONSTRUCTOR", "EXTERNAL", "L1_HANDLER"]
-            .iter()
-            .all(|key| entry_points_by_type.get(*key).is_some_and(Value::is_array))
-        && ["type_names", "libfunc_names", "user_func_names"]
-            .iter()
-            .all(|key| debug_info.get(*key).is_some_and(Value::is_array))
+    Ok(())
 }
 
 #[cfg(test)]
