@@ -1,5 +1,5 @@
 use crate::utils::create_single_token;
-use cairo_lang_macro::{Diagnostic, ProcMacroResult, TextSpan, TokenStream, quote};
+use cairo_lang_macro::{Diagnostic, ProcMacroResult, TextSpan, TokenStream, TokenTree, quote};
 use regex::Regex;
 use std::sync::LazyLock;
 
@@ -22,7 +22,7 @@ fn expand(args: &TokenStream) -> Result<TokenStream, Diagnostic> {
     let raw_path = args.to_string();
     let Some(contract_path) = normalize_path(&raw_path) else {
         return Err(Diagnostic::span_error(
-            TextSpan::call_site(),
+            args_span(args),
             "`declare!` expects either a contract name (e.g. `MyContract`), an absolute module tree path (e.g. `my_package::module::MyContract`) or a partial module tree path (e.g. `module::MyContract`)",
         ));
     };
@@ -41,6 +41,23 @@ fn normalize_path(raw_path: &str) -> Option<String> {
     let normalized = normalize_path_separators(strip_macro_arg_parentheses(raw_path.trim())?)?;
 
     is_valid_contract_path(&normalized).then_some(normalized)
+}
+
+fn args_span(args: &TokenStream) -> TextSpan {
+    let mut spans = args.tokens.iter().map(|token| match token {
+        TokenTree::Ident(token) => &token.span,
+    });
+    let Some(first) = spans.next() else {
+        return TextSpan::call_site();
+    };
+
+    let (mut start, mut end) = (first.start, first.end);
+    for span in spans {
+        start = start.min(span.start);
+        end = end.max(span.end);
+    }
+
+    TextSpan::new(start, end)
 }
 
 fn strip_macro_arg_parentheses(path: &str) -> Option<&str> {

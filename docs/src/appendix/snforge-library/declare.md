@@ -45,7 +45,7 @@ Contract names require the contract to be in scope, either by being defined in t
 
 ```rust
 use my_package::module::MyContract;
-use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
+use snforge_std::{ContractClassTrait, DeclareResultTrait};
 
 #[test]
 fn declare_imported_contract() {
@@ -57,7 +57,7 @@ Partial module tree paths require their first segment to be in scope:
 
 ```rust
 use my_package::module;
-use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
+use snforge_std::{ContractClassTrait, DeclareResultTrait};
 
 #[test]
 fn declare_by_partial_path() {
@@ -72,7 +72,7 @@ contract resolver. This means that such code will **not work**:
 
 ```rust
 use my_package::module::MyContract as Alias;
-use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
+use snforge_std::{ContractClassTrait, DeclareResultTrait};
 
 #[test]
 fn declare_by_alias() {
@@ -82,5 +82,5 @@ fn declare_by_alias() {
 
 For contract names, the compile-time check uses the name visible in scope, but
 runtime artifact resolution still uses the name string. If multiple contracts
-share the same name, `declare!(MyContract)` can still fail due to am ambiguity. Use a
+share the same name, `declare!(MyContract)` can still fail due to ambiguity. Use a
 module path in that case.
