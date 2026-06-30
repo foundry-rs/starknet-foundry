@@ -125,6 +125,8 @@
 * [`snforge` Library Reference](appendix/snforge-library.md)
     * [byte_array](appendix/snforge-library/byte_array.md)
     * [declare](appendix/snforge-library/declare.md)
+    * [declare!](appendix/snforge-library/declare_macro.md)
+    * [declare_result](appendix/snforge-library/declare_result.md)
     * [contract_class](appendix/snforge-library/contract_class.md)
     * [get_call_trace](appendix/snforge-library/get_call_trace.md)
     * [fs](appendix/snforge-library/fs.md)
