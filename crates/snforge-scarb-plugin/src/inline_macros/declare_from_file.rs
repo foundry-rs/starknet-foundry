@@ -1,5 +1,5 @@
 use crate::{external_inputs::ExternalInput, utils::create_single_token};
-use cairo_lang_macro::{quote, Diagnostic, ProcMacroResult, TextSpan, TokenStream};
+use cairo_lang_macro::{Diagnostic, ProcMacroResult, TextSpan, TokenStream, quote};
 use starknet_rust_core::types::contract::SierraClass;
 use std::path::Path;
 
