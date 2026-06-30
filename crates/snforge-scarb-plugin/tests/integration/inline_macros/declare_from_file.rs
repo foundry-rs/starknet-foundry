@@ -51,38 +51,41 @@ fn rejects_non_string_literal() {
 }
 
 #[test]
-fn rejects_missing_sierra_file() {
+fn accepts_missing_sierra_file_path() {
     let args = macro_args("\"tests/data/missing.contract_class.json\"");
 
     let result = declare_from_file(&args);
 
-    assert_declare_from_file_diagnostic(
-        &result,
-        "Failed to read Sierra file at tests/data/missing.contract_class.json:",
+    assert!(result.diagnostics.is_empty());
+    assert_eq!(
+        result.token_stream.to_string(),
+        "snforge_std::declare_from_file(\"tests/data/missing.contract_class.json\")"
     );
 }
 
 #[test]
-fn rejects_invalid_json_file() {
+fn accepts_invalid_json_file_path() {
     let args = macro_args("\"tests/integration/inline_macros.rs\"");
 
     let result = declare_from_file(&args);
 
-    assert_declare_from_file_diagnostic(
-        &result,
-        "Failed to parse Sierra contract class JSON at tests/integration/inline_macros.rs:",
+    assert!(result.diagnostics.is_empty());
+    assert_eq!(
+        result.token_stream.to_string(),
+        "snforge_std::declare_from_file(\"tests/integration/inline_macros.rs\")"
     );
 }
 
 #[test]
-fn rejects_non_sierra_contract_class_json() {
+fn accepts_non_sierra_contract_class_json_path() {
     let args = macro_args("\"tests/data/invalid_contract_class.json\"");
 
     let result = declare_from_file(&args);
 
-    assert_declare_from_file_diagnostic(
-        &result,
-        "Failed to parse Sierra contract class JSON at tests/data/invalid_contract_class.json:",
+    assert!(result.diagnostics.is_empty());
+    assert_eq!(
+        result.token_stream.to_string(),
+        "snforge_std::declare_from_file(\"tests/data/invalid_contract_class.json\")"
     );
 }
 

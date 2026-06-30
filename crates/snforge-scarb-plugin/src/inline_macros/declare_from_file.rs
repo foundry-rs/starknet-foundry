@@ -1,7 +1,5 @@
-use crate::{external_inputs::ExternalInput, utils::create_single_token};
+use crate::utils::create_single_token;
 use cairo_lang_macro::{Diagnostic, ProcMacroResult, TextSpan, TokenStream, quote};
-use starknet_rust_core::types::contract::SierraClass;
-use std::path::Path;
 
 #[must_use]
 pub fn declare_from_file(args: &TokenStream) -> ProcMacroResult {
@@ -22,8 +20,6 @@ fn expand(args: &TokenStream) -> Result<TokenStream, Diagnostic> {
         ));
     };
 
-    validate_sierra_file(&path)?;
-
     let path_literal = TokenStream::new(vec![create_single_token(
         serde_json::to_string(&path).expect("path literal serialization should not fail"),
     )]);
@@ -43,29 +39,6 @@ fn parse_path_literal(raw_path: &str) -> Option<String> {
     let literal = literal.strip_suffix(',').unwrap_or(literal).trim();
 
     serde_json::from_str(literal).ok()
-}
-
-/// Validates that the file exists and can be deserialized as a Sierra contract class.
-fn validate_sierra_file(path: &str) -> Result<(), Diagnostic> {
-    let path = Path::new(path);
-    let sierra = ExternalInput::read_to_string(path).map_err(|error| {
-        Diagnostic::span_error(
-            TextSpan::call_site(),
-            format!("Failed to read Sierra file at {}: {error}", path.display()),
-        )
-    })?;
-
-    serde_json::from_str::<SierraClass>(&sierra).map_err(|error| {
-        Diagnostic::span_error(
-            TextSpan::call_site(),
-            format!(
-                "Failed to parse Sierra contract class JSON at {}: {error}",
-                path.display()
-            ),
-        )
-    })?;
-
-    Ok(())
 }
 
 #[cfg(test)]
