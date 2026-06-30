@@ -5,5 +5,5 @@
 ## Example
 
 ```rust
-{{#include ../../listings/declare_examples/tests/test_declare_from_file_macro.cairo}}
+{{#include ../../../listings/declare_examples/tests/test_declare_from_file_macro.cairo}}
 ```

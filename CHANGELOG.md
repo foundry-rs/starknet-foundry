@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `declare!` macro for declaring contracts using Cairo paths. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library/declare_macro.html).
+- `declare_from_file` function and `declare_from_file!` macro for declaring contracts from Sierra contract class JSON files. For more details, see the documentation for [function](https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library/declare_from_file.html) and [macro](https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library/declare_from_file_macro.html).
 
 ## [0.62.0] - 2026-06-25
 
