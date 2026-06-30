@@ -12,25 +12,13 @@ Accepted paths are:
 Contract names require the contract to be in scope, either by being defined in the same module or imported.
 
 ```rust
-use my_package::module::MyContract;
-use snforge_std::{ContractClassTrait, DeclareResultTrait};
-
-#[test]
-fn declare_imported_contract() {
-    let contract = declare!(MyContract).unwrap().contract_class();
-}
+{{#include ../../listings/declare_examples/tests/test_declare_macro.cairo}}
 ```
 
 Partial module tree paths require their first segment to be in scope:
 
 ```rust
-use my_package::module;
-use snforge_std::{ContractClassTrait, DeclareResultTrait};
-
-#[test]
-fn declare_by_partial_path() {
-    let contract = declare!(module::MyContract).unwrap().contract_class();
-}
+{{#include ../../listings/declare_examples/tests/test_declare_macro_partial_path.cairo}}
 ```
 
 ### Limitations
