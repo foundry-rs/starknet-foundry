@@ -20,8 +20,11 @@ use conversions::serde::deserialize::BufferReader;
 use shared::utils::build_readable_text;
 use starknet_api::execution_resources::GasVector;
 use starknet_types_core::felt::Felt;
-use std::fmt;
-use std::option::Option;
+use std::{fmt, option::Option, sync::LazyLock};
+
+static BYTE_ARRAY_MAGIC_FELT: LazyLock<Felt> = LazyLock::new(|| {
+    Felt::from_hex(&format!("0x{BYTE_ARRAY_MAGIC}")).expect("BYTE_ARRAY_MAGIC should be a felt")
+});
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasFuzzingInfo {
@@ -431,7 +434,9 @@ fn format_panic_data_items(data: &[Felt]) -> String {
     let mut items = vec![];
 
     while let Some((felt, tail)) = rest.split_first() {
-        if *felt == byte_array_magic_felt()
+        // `should_panic` tuple data is untyped here, so `BYTE_ARRAY_MAGIC` is the only signal
+        // that the next felts should be shown as one ByteArray item.
+        if felt == byte_array_magic_felt()
             && let Some((byte_array, consumed)) = read_byte_array_item(rest)
         {
             items.push(byte_array.to_string());
@@ -466,8 +471,8 @@ fn is_readable_short_string(value: &str) -> bool {
             .all(|char| char == ' ' || char.is_ascii_graphic())
 }
 
-fn byte_array_magic_felt() -> Felt {
-    Felt::from_hex(&format!("0x{BYTE_ARRAY_MAGIC}")).expect("BYTE_ARRAY_MAGIC should be a felt")
+fn byte_array_magic_felt() -> &'static Felt {
+    &BYTE_ARRAY_MAGIC_FELT
 }
 
 fn is_matching_should_panic_data(data: &[Felt], pattern: &[Felt]) -> bool {
@@ -703,6 +708,30 @@ mod tests {
             format_readable_panic_data(&data),
             "this_string_is_longer_than_31_bytes, 0xb, hello, 0x5, short_string"
         );
+    }
+
+    #[test]
+    fn test_format_readable_panic_data_byte_array() {
+        let data = ByteArray::from("This will panic").serialize_with_magic();
+
+        assert_eq!(format_readable_panic_data(&data), "This will panic");
+    }
+
+    #[test]
+    fn test_format_readable_panic_data_malformed_byte_array_magic() {
+        let data = vec![byte_array_magic_felt().to_owned(), Felt::from(1_u8)];
+
+        assert_eq!(
+            format_readable_panic_data(&data),
+            format!("{:?}, 0x1", byte_array_magic_felt())
+        );
+    }
+
+    #[test]
+    fn test_format_readable_panic_data_zero_felt() {
+        let data = vec![Felt::ZERO];
+
+        assert_eq!(format_readable_panic_data(&data), "0x0");
     }
 
     #[test]
