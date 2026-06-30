@@ -1333,6 +1333,40 @@ fn keccak_cost_sierra_gas() {
 }
 
 #[test]
+fn sha512_cost_sierra_gas() {
+    let test = test_case!(indoc!(
+        r"
+            #[test]
+            fn sha512_cost() {
+                // SHA-512 of a single 1024-bit block triggers one sha512_process_block syscall.
+                core::sha512::compute_sha512_u64_array(array![0x48656c6c6f20776f], 0x726c64, 3);
+            }
+        "
+    ));
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+    // 2_413_810 = sierra-gas cost of 1 sha512_process_block syscall = 4737 * 100 + 3320 * 583 + 65 * 70,
+    // derived from blockifier 0.19.0-rc.2 versioned constants:
+    //   - os_resources `Sha512ProcessBlock` (n_steps = 4737, bitwise_builtin = 3320, range_check_builtin = 65):
+    //     https://github.com/starkware-libs/sequencer/blob/773c57afc7c450a1122a57c914b10f74df2492ea/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L473-L480
+    //   - per-resource sierra-gas costs (step_gas_cost = 100, bitwise = 583, range_check = 70):
+    //     https://github.com/starkware-libs/sequencer/blob/773c57afc7c450a1122a57c914b10f74df2492ea/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L165-L178
+    //
+    // l2 gas > 2_413_810 (the remainder is the surrounding `compute_sha512_u64_array`)
+    assert_gas(
+        &result,
+        "sha512_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(0),
+            l2_gas: GasAmount(2_436_110),
+        },
+    );
+}
+
+#[test]
 fn contract_keccak_cost_sierra_gas() {
     let test = test_case!(
         indoc!(
