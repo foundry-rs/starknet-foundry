@@ -12,13 +12,13 @@ Accepted paths are:
 Contract names require the contract to be in scope, either by being defined in the same module or imported.
 
 ```rust
-{{#include ../../listings/declare_examples/tests/test_declare_macro.cairo}}
+{{#include ../../../listings/declare_examples/tests/test_declare_macro.cairo}}
 ```
 
 Partial module tree paths require their first segment to be in scope:
 
 ```rust
-{{#include ../../listings/declare_examples/tests/test_declare_macro_partial_path.cairo}}
+{{#include ../../../listings/declare_examples/tests/test_declare_macro_partial_path.cairo}}
 ```
 
 ### Limitations
