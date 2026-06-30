@@ -134,6 +134,29 @@ pub async fn happy_case_with_block_id() {
 }
 
 #[tokio::test]
+pub async fn undeployed_account() {
+    let tempdir = tempdir().unwrap();
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "oz",
+        "get",
+        "balance",
+        "--url",
+        URL,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().stdout_eq(indoc! {r"
+        Balance: [..] fri
+    "});
+}
+
+#[tokio::test]
 pub async fn invalid_token() {
     let tempdir = tempdir().unwrap();
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
