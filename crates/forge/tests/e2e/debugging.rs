@@ -192,12 +192,12 @@ fn debugging_trace_predeployed_contracts_fork() {
         formatdoc! {r"
             [PASS] debugging_predeployed_contract_integrationtest::test_trace_fork::test_balance_of_eth ([..])
             └─ [selector] balance_of
-               ├─ [contract name] forked contract
+               ├─ [contract name] forked contract (class hash: 0x[..])
                ├─ [calldata] ContractAddress(0x1234)
                └─ [call result] success: [..]_u256
             [PASS] debugging_predeployed_contract_integrationtest::test_trace_fork::test_balance_of_strk ([..])
             └─ [selector] balance_of
-               ├─ [contract name] forked contract
+               ├─ [contract name] forked contract (class hash: 0x[..])
                ├─ [calldata] ContractAddress(0x1234)
                └─ [call result] success: [..]_u256
             "},
@@ -366,7 +366,7 @@ fn detailed_debugging_trace_message_fork(test_name: &str, package_name: &str) ->
     formatdoc! {r"
         [test name] {package_name}_integrationtest::test_trace::test_debugging_trace_{test_name}
         ├─ [selector] execute_calls
-        │  ├─ [contract name] forked contract
+        │  ├─ [contract name] forked contract (class hash: 0x[..])
         │  ├─ [entry point type] External
         │  ├─ [calldata] array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
         │  ├─ [contract address] [..]
@@ -375,7 +375,7 @@ fn detailed_debugging_trace_message_fork(test_name: &str, package_name: &str) ->
         │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
         │  ├─ [L2 gas] [..]
         │  ├─ [selector] execute_calls
-        │  │  ├─ [contract name] forked contract
+        │  │  ├─ [contract name] forked contract (class hash: 0x[..])
         │  │  ├─ [entry point type] External
         │  │  ├─ [calldata] array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
         │  │  ├─ [contract address] [..]
@@ -384,7 +384,7 @@ fn detailed_debugging_trace_message_fork(test_name: &str, package_name: &str) ->
         │  │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
         │  │  ├─ [L2 gas] [..]
         │  │  ├─ [selector] execute_calls
-        │  │  │  ├─ [contract name] forked contract
+        │  │  │  ├─ [contract name] forked contract (class hash: 0x[..])
         │  │  │  ├─ [entry point type] External
         │  │  │  ├─ [calldata] array![]
         │  │  │  ├─ [contract address] [..]
@@ -393,7 +393,7 @@ fn detailed_debugging_trace_message_fork(test_name: &str, package_name: &str) ->
         │  │  │  ├─ [call result] success: array![]
         │  │  │  └─ [L2 gas] [..]
         │  │  └─ [selector] execute_calls
-        │  │     ├─ [contract name] forked contract
+        │  │     ├─ [contract name] forked contract (class hash: 0x[..])
         │  │     ├─ [entry point type] External
         │  │     ├─ [calldata] array![]
         │  │     ├─ [contract address] [..]
@@ -402,7 +402,7 @@ fn detailed_debugging_trace_message_fork(test_name: &str, package_name: &str) ->
         │  │     ├─ [call result] success: array![]
         │  │     └─ [L2 gas] [..]
         │  └─ [selector] execute_calls
-        │     ├─ [contract name] forked contract
+        │     ├─ [contract name] forked contract (class hash: 0x[..])
         │     ├─ [entry point type] External
         │     ├─ [calldata] array![]
         │     ├─ [contract address] [..]
@@ -411,7 +411,7 @@ fn detailed_debugging_trace_message_fork(test_name: &str, package_name: &str) ->
         │     ├─ [call result] success: array![]
         │     └─ [L2 gas] [..]
         └─ [selector] fail
-           ├─ [contract name] forked contract
+           ├─ [contract name] forked contract (class hash: 0x[..])
            ├─ [entry point type] External
            ├─ [calldata] array![0x1, 0x2, 0x3, 0x4, 0x5]
            ├─ [contract address] [..]
@@ -456,27 +456,27 @@ fn standard_debugging_trace_message_fork(test_name: &str, package_name: &str) ->
     formatdoc! {r"
         [test name] {package_name}_integrationtest::test_trace::test_debugging_trace_{test_name}
         ├─ [selector] execute_calls
-        │  ├─ [contract name] forked contract
+        │  ├─ [contract name] forked contract (class hash: 0x[..])
         │  ├─ [calldata] array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
         │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
         │  ├─ [selector] execute_calls
-        │  │  ├─ [contract name] forked contract
+        │  │  ├─ [contract name] forked contract (class hash: 0x[..])
         │  │  ├─ [calldata] array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
         │  │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
         │  │  ├─ [selector] execute_calls
-        │  │  │  ├─ [contract name] forked contract
+        │  │  │  ├─ [contract name] forked contract (class hash: 0x[..])
         │  │  │  ├─ [calldata] array![]
         │  │  │  └─ [call result] success: array![]
         │  │  └─ [selector] execute_calls
-        │  │     ├─ [contract name] forked contract
+        │  │     ├─ [contract name] forked contract (class hash: 0x[..])
         │  │     ├─ [calldata] array![]
         │  │     └─ [call result] success: array![]
         │  └─ [selector] execute_calls
-        │     ├─ [contract name] forked contract
+        │     ├─ [contract name] forked contract (class hash: 0x[..])
         │     ├─ [calldata] array![]
         │     └─ [call result] success: array![]
         └─ [selector] fail
-           ├─ [contract name] forked contract
+           ├─ [contract name] forked contract (class hash: 0x[..])
            ├─ [calldata] array![0x1, 0x2, 0x3, 0x4, 0x5]
            └─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
         "}
@@ -504,17 +504,17 @@ fn minimal_debugging_trace_message_fork(test_name: &str, package_name: &str) -> 
     formatdoc! {r"
         [test name] {package_name}_integrationtest::test_trace::test_debugging_trace_{test_name}
         ├─ [selector] execute_calls
-        │  ├─ [contract name] forked contract
+        │  ├─ [contract name] forked contract (class hash: 0x[..])
         │  ├─ [selector] execute_calls
-        │  │  ├─ [contract name] forked contract
+        │  │  ├─ [contract name] forked contract (class hash: 0x[..])
         │  │  ├─ [selector] execute_calls
-        │  │  │  └─ [contract name] forked contract
+        │  │  │  └─ [contract name] forked contract (class hash: 0x[..])
         │  │  └─ [selector] execute_calls
-        │  │     └─ [contract name] forked contract
+        │  │     └─ [contract name] forked contract (class hash: 0x[..])
         │  └─ [selector] execute_calls
-        │     └─ [contract name] forked contract
+        │     └─ [contract name] forked contract (class hash: 0x[..])
         └─ [selector] fail
-           └─ [contract name] forked contract
+           └─ [contract name] forked contract (class hash: 0x[..])
         "}
 }
 
