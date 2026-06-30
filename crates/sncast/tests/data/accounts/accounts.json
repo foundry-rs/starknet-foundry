@@ -150,7 +150,16 @@
             "private_key": "0x1",
             "public_key": "0x1",
             "address": "0x0585Dd8cAb667CA8415FaC8bEad99c78947079AA72d9120140549a6f2EDc4128"
+        },
+        "undeployed": {
+          "address": "0x1cd60b396882122646ff81250569ed3f068c8096d08f0fd700069f678587091",
+          "class_hash": "0x5b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564",
+          "deployed": false,
+          "legacy": false,
+          "private_key": "0x348939956e36219cc10dd4695596d78c222747d5d312133446eb831b92a1864",
+          "public_key": "0x2a5308372ea6517547dc539183c9eaa8fb502dbbb66693a82779a38acc3174f",
+          "salt": "0x9a713850ade02bc2",
+          "type": "open_zeppelin"
         }
     }
 }
-

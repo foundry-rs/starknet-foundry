@@ -142,7 +142,7 @@ pub async fn undeployed_account() {
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
-        "oz",
+        "undeployed",
         "get",
         "balance",
         "--url",
