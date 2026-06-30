@@ -1,8 +1,8 @@
 # `declare!`
 
-`declare!` is a type-safe variant of [`declare`](./declare.md). It accepts a Cairo path instead
-of a string literal and expands to a regular `declare(...)` call with an
-additional compile-time check that `ContractState` exists under the given path.
+`declare!` is a compile-time checked variant of [`declare`](./declare.md). It accepts a Cairo path instead
+of a string literal and adds a compile-time check that `ContractState` exists under the given path.
+The macro expands to a regular `declare(...)` call, so contract artifact resolution still happens at runtime.
 
 Accepted paths are:
 - full module tree paths (e.g. `my_package::module::MyContract`)
