@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Fixed
+
+- Fixed formatting of `#[should_panic(expected: (...))]` mismatch output for panic data containing byte array values inside tuples.
+
 ## [0.62.0] - 2026-06-25
 
 ### Forge
