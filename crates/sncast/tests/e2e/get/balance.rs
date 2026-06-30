@@ -1,4 +1,4 @@
-use crate::helpers::constants::URL;
+use crate::helpers::constants::{MAP_CONTRACT_ADDRESS_SEPOLIA, URL};
 use crate::helpers::fixtures::get_accounts_path;
 use crate::helpers::runner::runner;
 use configuration::test_utils::copy_config_to_tempdir;
@@ -154,6 +154,53 @@ pub async fn undeployed_account() {
     snapbox.assert().stdout_eq(indoc! {r"
         Balance: 0 fri
     "});
+}
+
+#[tokio::test]
+pub async fn happy_case_with_contract_address() {
+    let tempdir = tempdir().unwrap();
+
+    let args = vec![
+        "get",
+        "balance",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--url",
+        URL,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().stdout_eq(indoc! {r"
+        Balance: 0 fri
+    "});
+}
+
+#[tokio::test]
+pub async fn account_and_contract_address_error() {
+    let tempdir = tempdir().unwrap();
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user1",
+        "get",
+        "balance",
+        "--contract-address",
+        "0x123",
+        "--url",
+        URL,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "Error: `--account` and `--contract-address` cannot be used together",
+    );
 }
 
 #[tokio::test]
