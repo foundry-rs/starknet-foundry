@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `declare!` macro for declaring contracts using Cairo paths. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library/declare.html#type-safe-declare-macro).
+- `declare!` macro for declaring contracts using Cairo paths. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library/declare_macro.html).
 
 ## [0.62.0] - 2026-06-25
 
