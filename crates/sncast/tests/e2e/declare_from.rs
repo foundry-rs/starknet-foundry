@@ -17,7 +17,7 @@ use std::process::Stdio;
 use tempfile::tempdir;
 
 const EXAMPLE_CONTRACT_CLASS_HASH_SEPOLIA: &str =
-    "0x66802613e2cd02ea21430a56181d9ee83c54d4ccdc45efa497d41fe1dc55a0e";
+    "0x2234766d7693f0f081e1804ac121348eaaa35ed9e268bd334744142b83afde4";
 
 #[tokio::test]
 async fn test_happy_case() {
@@ -45,16 +45,16 @@ async fn test_happy_case() {
 
     assert_stdout_contains(
         output,
-        indoc! {r"
+        indoc::formatdoc! {r"
         Success: Declaration completed
 
-        Class Hash:       0x66802613e2cd02ea21430a56181d9ee83c54d4ccdc45efa497d41fe1dc55a0e
+        Class Hash:       {}
         Transaction Hash: 0x[..]
 
         To see declaration details, visit:
         class: https://[..]
         transaction: https://[..]
-    " },
+    ", EXAMPLE_CONTRACT_CLASS_HASH_SEPOLIA },
     );
 }
 
@@ -64,7 +64,7 @@ async fn test_happy_case_with_block_id() {
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let example_b_contract_class_hash_sepolia =
-        "0x3de1a95e27b385c882c79355ca415915989e71f67c0f6f8ce146d4bcee7163c";
+        "0x056c86d7cb232aacd0218e3879577814cddb91527d8898fb4355dd221099a276";
 
     let args = vec![
         "--accounts-file",
@@ -92,7 +92,7 @@ async fn test_happy_case_with_block_id() {
         indoc! {r"
         Success: Declaration completed
 
-        Class Hash:       0x3de1a95e27b385c882c79355ca415915989e71f67c0f6f8ce146d4bcee7163c
+        Class Hash:       0x56c86d7cb232aacd0218e3879577814cddb91527d8898fb4355dd221099a276
         Transaction Hash: 0x[..]
 
         To see declaration details, visit:
@@ -107,9 +107,6 @@ async fn test_dry_run() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
-    let example_contract_class_hash_sepolia =
-        "0x66802613e2cd02ea21430a56181d9ee83c54d4ccdc45efa497d41fe1dc55a0e";
-
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -117,7 +114,7 @@ async fn test_dry_run() {
         "user1",
         "declare-from",
         "--class-hash",
-        example_contract_class_hash_sepolia,
+        EXAMPLE_CONTRACT_CLASS_HASH_SEPOLIA,
         "--source-url",
         SEPOLIA_RPC_URL,
         "--url",
@@ -145,9 +142,6 @@ async fn test_dry_run_detailed() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
-    let example_contract_class_hash_sepolia =
-        "0x66802613e2cd02ea21430a56181d9ee83c54d4ccdc45efa497d41fe1dc55a0e";
-
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -155,7 +149,7 @@ async fn test_dry_run_detailed() {
         "user1",
         "declare-from",
         "--class-hash",
-        example_contract_class_hash_sepolia,
+        EXAMPLE_CONTRACT_CLASS_HASH_SEPOLIA,
         "--source-url",
         SEPOLIA_RPC_URL,
         "--url",
