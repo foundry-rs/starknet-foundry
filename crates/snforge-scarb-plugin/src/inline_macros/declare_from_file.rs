@@ -1,5 +1,5 @@
 use crate::{external_inputs::ExternalInput, utils::create_single_token};
-use cairo_lang_macro::{Diagnostic, ProcMacroResult, TextSpan, TokenStream, quote};
+use cairo_lang_macro::{quote, Diagnostic, ProcMacroResult, TextSpan, TokenStream};
 use starknet_rust_core::types::contract::SierraClass;
 use std::path::Path;
 
@@ -33,6 +33,10 @@ fn expand(args: &TokenStream) -> Result<TokenStream, Diagnostic> {
     })
 }
 
+/// Parses a single string literal path from the raw inline macro argument token stream.
+///
+/// The token stream is wrapped in call parentheses. A trailing comma is also accepted because
+/// `scarb fmt` inserts it for multiline macro calls.
 fn parse_path_literal(raw_path: &str) -> Option<String> {
     let literal = raw_path.trim().strip_prefix('(')?.strip_suffix(')')?.trim();
     // `scarb fmt` adds a trailing comma for multiline macro calls.
@@ -41,6 +45,7 @@ fn parse_path_literal(raw_path: &str) -> Option<String> {
     serde_json::from_str(literal).ok()
 }
 
+/// Validates that the file exists and can be deserialized as a Sierra contract class.
 fn validate_sierra_file(path: &str) -> Result<(), Diagnostic> {
     let path = Path::new(path);
     let sierra = ExternalInput::read_to_string(path).map_err(|error| {
