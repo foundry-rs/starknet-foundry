@@ -9,12 +9,14 @@ use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use crate::running::{RunCompleted, RunStatus};
 use blockifier::execution::syscalls::hint_processor::ENTRYPOINT_FAILED_ERROR_FELT;
 use cairo_annotations::trace_data::VersionedCallTrace as VersionedProfilerCallTrace;
+use cairo_lang_utils::byte_array::BYTE_ARRAY_MAGIC;
 use camino::Utf8Path;
 use cheatnet::forking::data::ForkData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
 use conversions::byte_array::ByteArray;
 use conversions::felt::ToShortString;
+use conversions::serde::deserialize::BufferReader;
 use shared::utils::build_readable_text;
 use starknet_api::execution_resources::GasVector;
 use starknet_types_core::felt::Felt;
@@ -243,7 +245,7 @@ fn build_expected_panic_message(expected_panic_value: &ExpectedPanicValue) -> St
     match expected_panic_value {
         ExpectedPanicValue::Any => "\n    Expected to panic, but no panic occurred\n".into(),
         ExpectedPanicValue::Exact(panic_data) => {
-            let panic_string = join_short_strings(panic_data);
+            let panic_string = format_readable_panic_data(panic_data);
 
             format!(
                 "\n    Expected to panic, but no panic occurred\n    Expected panic data:  {panic_data:?} ({panic_string})\n"
@@ -266,10 +268,8 @@ fn check_if_matching_and_get_message(
             (true, None)
         }
         Some(expected) => {
-            let panic_string = convert_felts_to_byte_array_string(actual_panic_value)
-                .unwrap_or_else(|| join_short_strings(actual_panic_value));
-            let expected_string = convert_felts_to_byte_array_string(expected)
-                .unwrap_or_else(|| join_short_strings(expected));
+            let panic_string = format_readable_panic_data(actual_panic_value);
+            let expected_string = format_readable_panic_data(expected);
 
             let message = Some(format!(
                 "\n    Incorrect panic data\n    {}\n    {}\n",
@@ -422,11 +422,52 @@ impl TestCaseSummary<Single> {
     }
 }
 
-fn join_short_strings(data: &[Felt]) -> String {
-    data.iter()
-        .map(|felt| felt.to_short_string().unwrap_or_default())
-        .collect::<Vec<String>>()
-        .join(", ")
+fn format_readable_panic_data(data: &[Felt]) -> String {
+    convert_felts_to_byte_array_string(data).unwrap_or_else(|| format_panic_data_items(data))
+}
+
+fn format_panic_data_items(data: &[Felt]) -> String {
+    let mut rest = data;
+    let mut items = vec![];
+
+    while let Some((felt, tail)) = rest.split_first() {
+        if *felt == byte_array_magic_felt()
+            && let Some((byte_array, consumed)) = read_byte_array_item(rest)
+        {
+            items.push(byte_array.to_string());
+            rest = &rest[consumed..];
+        } else {
+            items.push(format_felt(felt));
+            rest = tail;
+        }
+    }
+
+    items.join(", ")
+}
+
+fn read_byte_array_item(data: &[Felt]) -> Option<(ByteArray, usize)> {
+    let mut reader = BufferReader::new(&data[1..]);
+    let byte_array = reader.read().ok()?;
+    let remaining = reader.into_remaining();
+    Some((byte_array, data.len() - remaining.len()))
+}
+
+fn format_felt(felt: &Felt) -> String {
+    felt.to_short_string()
+        .ok()
+        .filter(|value| is_readable_short_string(value))
+        .unwrap_or_else(|| format!("{felt:?}"))
+}
+
+fn is_readable_short_string(value: &str) -> bool {
+    !value.is_empty()
+        && value
+            .chars()
+            .all(|char| char == ' ' || char.is_ascii_graphic())
+}
+
+fn byte_array_magic_felt() -> Felt {
+    Felt::from_hex(&format!("0x{BYTE_ARRAY_MAGIC}")).expect("BYTE_ARRAY_MAGIC should be a felt")
 }
 
 fn is_matching_should_panic_data(data: &[Felt], pattern: &[Felt]) -> bool {
@@ -646,6 +687,22 @@ mod tests {
         non_matching_pattern.push(Felt::from_bytes_be_slice(b"short_string"));
 
         assert!(!is_matching_should_panic_data(&data, &non_matching_pattern));
+    }
+
+    #[test]
+    fn test_format_readable_panic_data_mixed_tuple() {
+        let byte_array = |s: &str| ByteArray::from(s).serialize_with_magic();
+
+        let mut data = byte_array("this_string_is_longer_than_31_bytes");
+        data.push(Felt::from(11_u8));
+        data.extend(byte_array("hello"));
+        data.push(Felt::from(5_u8));
+        data.push(Felt::from_bytes_be_slice(b"short_string"));
+
+        assert_eq!(
+            format_readable_panic_data(&data),
+            "this_string_is_longer_than_31_bytes, 0xb, hello, 0x5, short_string"
+        );
     }
 
     #[test]

@@ -1011,9 +1011,9 @@ fn should_panic() {
     assert_stdout_contains(
         output,
         indoc! { r"
-        Collected 16 test(s) from should_panic_test package
+        Collected 17 test(s) from should_panic_test package
         Running 0 test(s) from src/
-        Running 16 test(s) from tests/
+        Running 17 test(s) from tests/
         [FAIL] should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
 
         Failure data:
@@ -1067,6 +1067,12 @@ fn should_panic() {
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_multiple_messages (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_mixed_tuple (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+        [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_mixed_tuple_with_non_matching_data
+
+        Failure data:
+            Incorrect panic data
+            Actual:    [0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x1, 0x746869735f737472696e675f69735f6c6f6e6765725f7468616e5f33315f62, 0x79746573, 0x4, 0xb, 0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x0, 0x68656c6c6f, 0x5, 0x5, 0x73686f72745f737472696e67] (this_string_is_longer_than_31_bytes, 0xb, hello, 0x5, short_string)
+            Expected:  [0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x1, 0x746869735f737472696e675f69735f6c6f6e6765725f7468616e5f33315f62, 0x79746573, 0x4, 0xb, 0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x0, 0x68656c6c6f6f, 0x6, 0x5, 0x73686f72745f737472696e67] (this_string_is_longer_than_31_bytes, 0xb, helloo, 0x5, short_string)
 
         Failure data:
             Expected to panic, but no panic occurred
@@ -1077,9 +1083,9 @@ fn should_panic() {
         Failure data:
             Incorrect panic data
             Actual:    [0x6661696c696e6720636865636b] (failing check)
-            Expected:  [0x0] ()
+            Expected:  [0x0] (0x0)
 
-        Tests: 7 passed, 9 failed, 0 ignored, 0 filtered out
+        Tests: 7 passed, 10 failed, 0 ignored, 0 filtered out
 
         Failures:
             should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
@@ -1090,6 +1096,7 @@ fn should_panic() {
             should_panic_test_integrationtest::should_panic_test::should_panic_not_matching_suffix
             should_panic_test_integrationtest::should_panic_test::should_panic_felt_with_byte_array
             should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
+            should_panic_test_integrationtest::should_panic_test::should_panic_mixed_tuple_with_non_matching_data
             should_panic_test_integrationtest::should_panic_test::should_panic_with_non_matching_data
         "},
     );
