@@ -5,7 +5,7 @@ use cairo_annotations::trace_data::{
     CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
     DeprecatedSyscallSelector::{
         CallContract, Deploy, EmitEvent, GetBlockHash, GetExecutionInfo, Keccak, LibraryCall,
-        SendMessageToL1, StorageRead, StorageWrite,
+        SendMessageToL1, Sha256ProcessBlock, Sha512ProcessBlock, StorageRead, StorageWrite,
     },
     ExecutionResources as ProfilerExecutionResources, SyscallUsage,
     VersionedCallTrace as VersionedProfilerCallTrace,
@@ -31,6 +31,38 @@ fn trace_resources_l1_handler() {
 #[test]
 fn trace_resources_lib_call() {
     assert_vm_resources_for_test("test_lib_call", check_libcall);
+}
+
+#[test]
+fn trace_resources_sha() {
+    let temp = setup_package("trace_resources");
+
+    test_runner(&temp)
+        .arg("test_sha")
+        .arg("--save-trace-data")
+        .arg("--tracked-resource")
+        .arg("cairo-steps")
+        .assert()
+        .success();
+
+    let VersionedProfilerCallTrace::V1(call_trace) = deserialize_call_trace("test_sha", &temp);
+
+    let syscalls = call_trace
+        .cumulative_resources
+        .syscall_counter
+        .clone()
+        .expect("trace should contain a syscall counter");
+
+    assert_eq!(
+        syscalls.get(&Sha256ProcessBlock).map(|usage| usage.call_count),
+        Some(1),
+        "expected exactly one Sha256ProcessBlock syscall, got: {syscalls:?}"
+    );
+    assert_eq!(
+        syscalls.get(&Sha512ProcessBlock).map(|usage| usage.call_count),
+        Some(1),
+        "expected exactly one Sha512ProcessBlock syscall, got: {syscalls:?}"
+    );
 }
 
 #[test]

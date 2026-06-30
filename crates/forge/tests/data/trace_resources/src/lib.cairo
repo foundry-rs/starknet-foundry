@@ -1,4 +1,5 @@
 pub mod empty;
+pub mod sha_checker;
 pub mod trace_dummy;
 pub mod trace_info_checker;
 pub mod trace_info_proxy;
