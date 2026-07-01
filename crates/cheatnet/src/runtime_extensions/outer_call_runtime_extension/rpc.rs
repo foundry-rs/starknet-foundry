@@ -16,7 +16,9 @@ use blockifier::execution::syscalls::vm_syscall_utils::SyscallExecutorBaseError;
 use blockifier::execution::{
     call_info::CallInfo,
     entry_point::CallType,
-    errors::{EntryPointExecutionError, PreExecutionError},
+    errors::{
+        AnnotatedEntryPointExecutionError, EntryPointExecutionError, PreExecutionError,
+    },
     syscalls::hint_processor::SyscallHintProcessor,
 };
 use blockifier::execution::{
@@ -82,6 +84,13 @@ impl CallFailure {
     /// Maps blockifier-type error, to one that can be put into memory as panic-data (or re-raised)
     #[must_use]
     pub fn from_execution_error(
+        err: &AnnotatedEntryPointExecutionError,
+        starknet_identifier: &AddressOrClassHash,
+    ) -> Self {
+        Self::from_unannotated_execution_error(err.unannotated(), starknet_identifier)
+    }
+
+    fn from_unannotated_execution_error(
         err: &EntryPointExecutionError,
         starknet_identifier: &AddressOrClassHash,
     ) -> Self {
@@ -173,7 +182,10 @@ pub fn from_error(
     err: &EntryPointExecutionError,
     starknet_identifier: &AddressOrClassHash,
 ) -> Result<CallSuccess, CallFailure> {
-    Err(CallFailure::from_execution_error(err, starknet_identifier))
+    Err(CallFailure::from_unannotated_execution_error(
+        err,
+        starknet_identifier,
+    ))
 }
 
 pub fn call_l1_handler(
@@ -224,7 +236,7 @@ pub fn call_entry_point(
             trace_data_handled_by_revert_call: false,
         },
     )
-    .map_err(|err| CallFailure::from_execution_error(err.unannotated(), starknet_identifier));
+    .map_err(|err| CallFailure::from_execution_error(&err, starknet_identifier));
 
     let call_info = match result {
         Ok(call_info) => call_info,
