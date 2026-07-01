@@ -14,3 +14,4 @@ snforge_std = { path = "../../../../../snforge_std" }
 [profile.dev.cairo]
 unstable-add-statements-code-locations-debug-info = true
 unstable-add-statements-functions-debug-info = true
+panic-backtrace = true
