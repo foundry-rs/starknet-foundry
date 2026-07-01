@@ -152,7 +152,7 @@ pub async fn undeployed_account() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_eq(indoc! {r"
-        Balance: [..] fri
+        Balance: 0 fri
     "});
 }
 
