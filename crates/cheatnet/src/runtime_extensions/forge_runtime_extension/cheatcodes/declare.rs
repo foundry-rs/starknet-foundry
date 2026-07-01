@@ -15,7 +15,7 @@ use scarb_api::StarknetContractArtifacts;
 use starknet_api::core::{ClassHash, CompiledClassHash};
 use starknet_rust::core::types::contract::SierraClass;
 use std::path::Path;
-use universal_sierra_compiler_api::compile_contract_sierra_at_path;
+use universal_sierra_compiler_api::compile_contract_sierra;
 
 #[derive(CairoSerialize)]
 pub enum DeclareResult {
@@ -68,19 +68,26 @@ pub fn declare_from_file(
             sierra_path.display()
         )))
     })?;
-    let sierra_class: SierraClass = serde_json::from_str(&sierra).map_err(|error| {
+    let sierra_json: serde_json::Value = serde_json::from_str(&sierra).map_err(|error| {
         CheatcodeError::Unrecoverable(EnhancedHintError::from(anyhow!(
             "Failed to parse Sierra contract class JSON at {}: {error}",
             sierra_path.display()
         )))
     })?;
+    let sierra_class: SierraClass =
+        serde_json::from_value(sierra_json.clone()).map_err(|error| {
+            CheatcodeError::Unrecoverable(EnhancedHintError::from(anyhow!(
+                "Failed to parse Sierra contract class JSON at {}: {error}",
+                sierra_path.display()
+            )))
+        })?;
     let class_hash = get_class_hash(&sierra_class).map_err(|error| {
         CheatcodeError::Unrecoverable(EnhancedHintError::from(anyhow!(
             "Failed to calculate class hash for Sierra file at {}: {error}",
             sierra_path.display()
         )))
     })?;
-    let casm = compile_contract_sierra_at_path(sierra_path).map_err(|error| {
+    let casm = compile_contract_sierra(&sierra_json).map_err(|error| {
         CheatcodeError::Unrecoverable(EnhancedHintError::from(anyhow!(
             "Failed to compile Sierra file at {}: {error}",
             sierra_path.display()
