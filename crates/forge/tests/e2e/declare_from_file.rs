@@ -29,7 +29,7 @@ fn simple() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] declare_from_file_integrationtest::tests::simple [..]
-        Tests: 1 passed, 0 failed, 0 ignored, 1 filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 3 filtered out
         "},
     );
 }
@@ -62,21 +62,21 @@ fn already_declared() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] declare_from_file_integrationtest::tests::already_declared [..]
-        Tests: 1 passed, 0 failed, 0 ignored, 1 filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 3 filtered out
         "},
     );
 }
 
 #[test]
 fn missing_file() {
-    let temp = setup_package("declare_from_file_failures");
+    let temp = setup_package("declare_from_file");
 
     let output = test_runner(&temp).arg("missing_file").assert().code(1);
 
     assert_stdout_contains(
         output,
         indoc! {r#"
-        [FAIL] declare_from_file_failures_integrationtest::tests::missing_file
+        [FAIL] declare_from_file_integrationtest::tests::missing_file
 
         Failure data:
             "Failed to read Sierra file at data/missing.contract_class.json: [..]"
@@ -86,14 +86,14 @@ fn missing_file() {
 
 #[test]
 fn invalid_json() {
-    let temp = setup_package("declare_from_file_failures");
+    let temp = setup_package("declare_from_file");
 
     let output = test_runner(&temp).arg("invalid_json").assert().code(1);
 
     assert_stdout_contains(
         output,
         indoc! {r#"
-        [FAIL] declare_from_file_failures_integrationtest::tests::invalid_json
+        [FAIL] declare_from_file_integrationtest::tests::invalid_json
 
         Failure data:
             "Failed to parse Sierra contract class JSON at data/invalid_contract_class.json: [..]"
