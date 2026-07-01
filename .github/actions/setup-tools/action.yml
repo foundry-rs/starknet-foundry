@@ -35,6 +35,8 @@ runs:
   using: "composite"
   steps:
     - uses: dtolnay/rust-toolchain@1.94.0
+      with:
+        components: clippy, rustfmt
 
     - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       if: ${{ inputs.setup-rust-cache == 'true' }}
