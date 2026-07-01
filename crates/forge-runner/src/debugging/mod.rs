@@ -31,11 +31,10 @@ pub fn build_contracts_data_store(
 #[must_use]
 pub fn build_debugging_trace(
     call_trace: &CallTrace,
-    trace_args: &TraceArgs,
+    components: debugging::Components,
     test_name: String,
     contracts_data_store: ContractsDataStore,
-) -> Option<debugging::Trace> {
-    let components = trace_args.to_components()?;
+) -> debugging::Trace {
     let context = debugging::Context::new(contracts_data_store, components);
-    Some(debugging::Trace::new(call_trace, &context, test_name))
+    debugging::Trace::new(call_trace, &context, test_name)
 }

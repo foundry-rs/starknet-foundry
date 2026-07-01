@@ -501,16 +501,18 @@ fn extract_test_case_summary(
                     }),
                     fuzzer_args: run_error.fuzzer_args,
                     test_statistics: (),
-                    debugging_trace: build_debugging_trace(
-                        &run_error.call_trace.borrow(),
-                        trace_args,
-                        case.name.clone(),
-                        build_contracts_data_store(
-                            contracts_data,
-                            run_error.fork_data.as_ref(),
-                            case.config.disable_predeployed_contracts,
-                        ),
-                    ),
+                    debugging_trace: trace_args.to_components().map(|components| {
+                        build_debugging_trace(
+                            &run_error.call_trace.borrow(),
+                            components,
+                            case.name.clone(),
+                            build_contracts_data_store(
+                                contracts_data,
+                                run_error.fork_data.as_ref(),
+                                case.config.disable_predeployed_contracts,
+                            ),
+                        )
+                    }),
                 }
             }
         },
