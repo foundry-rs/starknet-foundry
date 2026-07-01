@@ -2,12 +2,13 @@ use crate::common::assertions::ClassHashAssert;
 use crate::common::{get_contracts, state::create_cached_state};
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::{
-    DeclareResult, declare,
+    DeclareResult, declare, declare_from_file,
 };
 use runtime::EnhancedHintError;
 use shared::utils::contract_name_from_module_path;
 use starknet_api::core::ClassHash;
 use starknet_types_core::felt::Felt;
+use std::path::Path;
 
 #[test]
 fn declare_simple() {
@@ -26,6 +27,70 @@ fn declare_simple() {
         .class_hash;
 
     assert_eq!(class_hash, *expected_class_hash);
+}
+
+#[test]
+fn declare_from_file_simple() {
+    let contract_name = "HelloStarknet";
+    let sierra_path = Path::new(
+        "tests/contracts/target/dev/cheatnet_testing_contracts_HelloStarknet.contract_class.json",
+    );
+
+    let mut cached_state = create_cached_state();
+
+    let contracts_data = get_contracts();
+
+    let class_hash = declare_from_file(&mut cached_state, sierra_path)
+        .unwrap()
+        .unwrap_success();
+    let expected_class_hash = &contracts_data
+        .resolve_contract(contract_name)
+        .unwrap()
+        .class_hash;
+
+    assert_eq!(class_hash, *expected_class_hash);
+
+    let output = declare_from_file(&mut cached_state, sierra_path);
+
+    assert!(
+        matches!(output, Ok(DeclareResult::AlreadyDeclared(class_hash)) if class_hash == *expected_class_hash)
+    );
+}
+
+#[test]
+fn declare_from_file_nonexistent_path() {
+    let sierra_path = Path::new("non_existent.contract_class.json");
+
+    let mut cached_state = create_cached_state();
+
+    let output = declare_from_file(&mut cached_state, sierra_path);
+
+    assert!(match output {
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {
+            let msg = msg.to_string();
+            msg.contains("Failed to read Sierra file")
+                && msg.contains(sierra_path.to_str().unwrap())
+        }
+        _ => false,
+    });
+}
+
+#[test]
+fn declare_from_file_invalid_file() {
+    let sierra_path = Path::new("tests/data/invalid_contract_class.json");
+
+    let mut cached_state = create_cached_state();
+
+    let output = declare_from_file(&mut cached_state, sierra_path);
+
+    assert!(match output {
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {
+            let msg = msg.to_string();
+            msg.contains("Failed to parse Sierra contract class JSON")
+                && msg.contains(sierra_path.to_str().unwrap())
+        }
+        _ => false,
+    });
 }
 
 #[test]
