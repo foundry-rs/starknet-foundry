@@ -137,7 +137,7 @@ impl CheatableNativeSyscallHandler<'_> {
         Ok(Retdata(raw_data))
     }
 
-    // Copied from https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/syscall_handler.rs#L124
+    // Copied from https://github.com/starkware-libs/sequencer/blob/blockifier-v0.19.0-rc.2/crates/blockifier/src/execution/native/syscall_handler.rs#L134
     fn handle_error(&mut self, remaining_gas: &mut u64, error: SyscallExecutionError) -> Vec<Felt> {
         // In case of more than one inner call and because each inner call has their own
         // syscall handler, if there is an unrecoverable error at call `n` it will create a
