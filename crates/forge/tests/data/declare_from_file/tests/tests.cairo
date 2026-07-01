@@ -24,3 +24,13 @@ fn already_declared() {
         _ => panic!("expected AlreadyDeclared"),
     }
 }
+
+#[test]
+fn missing_file() {
+    declare_from_file("data/missing.contract_class.json").unwrap();
+}
+
+#[test]
+fn invalid_json() {
+    declare_from_file("data/invalid_contract_class.json").unwrap();
+}
