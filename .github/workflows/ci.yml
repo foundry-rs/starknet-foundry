@@ -399,8 +399,9 @@ jobs:
         with:
           cache-key: 'cast-ledger'
           save-cache: 'true'
+      # Ledger image sets RUSTUP_TOOLCHAIN to its nightly; workspace uses stable from setup-tools.
       - name: Set workspace Rust toolchain
-        run: echo "RUSTUP_TOOLCHAIN=1.94.0" >> $GITHUB_ENV
+        run: echo "RUSTUP_TOOLCHAIN=stable" >> $GITHUB_ENV
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest@0.9.98
