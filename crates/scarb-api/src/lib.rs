@@ -170,7 +170,7 @@ fn matches_version_with_special_rules(
     package_version: &Version,
     version_req: &VersionReq,
 ) -> bool {
-    if package_name == "snforge_std" {
+    if matches!(package_name, "snforge_std" | "starknet") {
         let normalized_version = Version {
             major: package_version.major,
             minor: package_version.minor,

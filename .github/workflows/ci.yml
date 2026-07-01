@@ -378,10 +378,12 @@ jobs:
   test-ledger:
     name: Test Ledger
     runs-on: ubuntu-latest
-    container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:5.3.14
+    container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:5.3.16
 
     steps:
       - uses: actions/checkout@v6
+      - name: Save ledger builder Rust toolchain
+        run: echo "LEDGER_RUST_TOOLCHAIN=${RUSTUP_TOOLCHAIN}" >> $GITHUB_ENV
       - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
       - uses: ./.github/actions/setup-tools
         with:
@@ -395,8 +397,9 @@ jobs:
       - name: Build Starknet Ledger App (Nano X)
         run: |
           cd /tmp/app-starknet/starknet
-          # RUSTUP_TOOLCHAIN is set in the ledger-app-builder image
-          cargo +${RUSTUP_TOOLCHAIN} ledger build nanox
+          # RUSTUP_TOOLCHAIN is set in the ledger-app-builder image: Use the image toolchain for the Ledger app; 
+          # Workspace uses rustc from setup-tools.
+          cargo +${LEDGER_RUST_TOOLCHAIN} ledger build nanox
           mkdir -p ${GITHUB_WORKSPACE}/crates/sncast/tests/data/ledger-app
           cp target/nanox/release/starknet \
             ${GITHUB_WORKSPACE}/crates/sncast/tests/data/ledger-app/nanox.elf

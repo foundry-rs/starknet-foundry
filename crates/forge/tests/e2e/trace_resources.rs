@@ -54,12 +54,16 @@ fn trace_resources_sha() {
         .expect("trace should contain a syscall counter");
 
     assert_eq!(
-        syscalls.get(&Sha256ProcessBlock).map(|usage| usage.call_count),
+        syscalls
+            .get(&Sha256ProcessBlock)
+            .map(|usage| usage.call_count),
         Some(1),
         "expected exactly one Sha256ProcessBlock syscall, got: {syscalls:?}"
     );
     assert_eq!(
-        syscalls.get(&Sha512ProcessBlock).map(|usage| usage.call_count),
+        syscalls
+            .get(&Sha512ProcessBlock)
+            .map(|usage| usage.call_count),
         Some(1),
         "expected exactly one Sha512ProcessBlock syscall, got: {syscalls:?}"
     );

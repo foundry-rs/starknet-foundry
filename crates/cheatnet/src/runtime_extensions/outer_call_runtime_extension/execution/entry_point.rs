@@ -114,9 +114,12 @@ pub fn execute_call_entry_point(
 
     // Validate contract is deployed.
     let strip_vm_frames = context.versioned_constants().strip_vm_frames_in_sierra_gas;
-    let storage_class_hash = state.get_class_hash_at(entry_point.storage_address).map_err(|e| {
-        EntryPointExecutionError::from(e).annotated(TrackedResource::CairoSteps, strip_vm_frames)
-    })?;
+    let storage_class_hash = state
+        .get_class_hash_at(entry_point.storage_address)
+        .map_err(|e| {
+            EntryPointExecutionError::from(e)
+                .annotated(TrackedResource::CairoSteps, strip_vm_frames)
+        })?;
     if storage_class_hash == ClassHash::default() {
         return Err(EntryPointExecutionError::from(
             PreExecutionError::UninitializedStorageAddress(entry_point.storage_address),
@@ -151,8 +154,10 @@ pub fn execute_call_entry_point(
         && class_hash
             == ClassHash(Felt::from_hex(FAULTY_CLASS_HASH).expect("A class hash must be a felt."))
     {
-        return Err(EntryPointExecutionError::from(PreExecutionError::FraudAttempt)
-            .annotated(TrackedResource::CairoSteps, strip_vm_frames));
+        return Err(
+            EntryPointExecutionError::from(PreExecutionError::FraudAttempt)
+                .annotated(TrackedResource::CairoSteps, strip_vm_frames),
+        );
     }
 
     let contract_class = state.get_compiled_class(class_hash).map_err(|e| {

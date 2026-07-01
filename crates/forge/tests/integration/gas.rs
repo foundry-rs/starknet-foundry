@@ -13,9 +13,14 @@ use std::path::Path;
 // 1 cairo step = 0.0025 L1 gas = 100 L2 gas
 // 1 sierra gas = 1 l2 gas
 // Costs of syscalls (if provided) are taken from versioned_constants (blockifier)
+// blockifier 0.19.0-rc.2 uses `versioned_constants` 0.14.3.
+// https://github.com/starkware-libs/sequencer/blob/blockifier-v0.19.0-rc.2/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json
+
 // In Sierra gas tests, only the most significant costs are considered
 // Asserted values should be slightly greater than the computed values,
 // but must remain within a reasonable range
+//
+// Sierra syscall l2 gas: `n_steps * step_gas_cost + sum(builtin_count * builtin_gas_cost)`
 
 #[test]
 fn declare_cost_is_omitted_cairo_steps() {
@@ -721,14 +726,14 @@ fn multiple_storage_writes_cost_cairo_steps() {
     // l(1) * 32 = 32
     // storage updates from zero value(1) * 32 = 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
     // allocation cost: 402_000 l2 gas
-    // 0 l1_gas + (64 + 64 + 32 + 32) l1_data_gas + 11 * (100 / 0.0025) + 402_000 l2 gas
+    // 0 l1_gas + (64 + 64 + 32 + 32) l1_data_gas + 12 * (100 / 0.0025) + 402_000 l2 gas
     assert_gas(
         &result,
         "multiple_storage_writes_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(842_000),
+            l2_gas: GasAmount(882_000),
         },
     );
 }
@@ -1170,7 +1175,7 @@ fn empty_test_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(13_840),
+            l2_gas: GasAmount(13_620),
         },
     );
 }
@@ -1204,7 +1209,7 @@ fn declare_cost_is_omitted_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(25_350),
+            l2_gas: GasAmount(25_130),
         },
     );
 }
@@ -1251,7 +1256,7 @@ fn deploy_syscall_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(183_590),
+            l2_gas: GasAmount(183_710),
         },
     );
 }
@@ -1284,14 +1289,13 @@ fn snforge_std_deploy_cost_sierra_gas() {
     // 151_970 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
     //
     // 96 l1_data_gas
-    // l2 gas > 151_970
     assert_gas(
         &result,
         "deploy_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(190_030),
+            l2_gas: GasAmount(190_350),
         },
     );
 }
@@ -1327,7 +1331,7 @@ fn keccak_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(226_727),
+            l2_gas: GasAmount(226_407),
         },
     );
 }
@@ -1410,7 +1414,7 @@ fn contract_keccak_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(1_352_255),
+            l2_gas: GasAmount(1_352_655),
         },
     );
 }
@@ -1462,7 +1466,7 @@ fn storage_write_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(725_550),
+            l2_gas: GasAmount(740_950),
         },
     );
 }
@@ -1516,7 +1520,7 @@ fn multiple_storage_writes_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(867_190),
+            l2_gas: GasAmount(897_590),
         },
     );
 }
@@ -1564,6 +1568,7 @@ fn l1_message_cost_sierra_gas() {
     // 14_470 = cost of 1 SendMessageToL1 syscall (because 1 * 144 * 100 + 1 * 70 )
     //      -> 1 storage write syscall costs 144 cairo steps and 1 range check builtin
     //      -> 1 range check costs 70
+    // 186_680 = snforge_std declare+deploy bundle (292_710 − 91_560 − 14_470)
     //
     // 29_524 l1_gas
     // 96 l1_data_gas
@@ -1574,7 +1579,7 @@ fn l1_message_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(29_524),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(292_410),
+            l2_gas: GasAmount(292_710),
         },
     );
 }
@@ -1630,14 +1635,14 @@ fn l1_message_cost_for_proxy_sierra_gas() {
     //
     // 29_524 l1_gas
     // (128 + 64 =) 192 l1_data_gas
-    // l2 gas > 491_830 (= 294_240 + 183_120 + 14_470)
+    // l2 gas > 556_020 (= 358_430 + 183_120 + 14_470)
     assert_gas(
         &result,
         "l1_message_cost_for_proxy",
         GasVector {
             l1_gas: GasAmount(29_524),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(555_720),
+            l2_gas: GasAmount(556_020),
         },
     );
 }
@@ -1683,7 +1688,7 @@ fn events_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(205_510),
+            l2_gas: GasAmount(205_190),
         },
     );
 }
@@ -1731,7 +1736,7 @@ fn events_contract_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(470_320),
+            l2_gas: GasAmount(470_720),
         },
     );
 }
@@ -1804,7 +1809,7 @@ fn nested_call_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(288),
-            l2_gas: GasAmount(1_937_982),
+            l2_gas: GasAmount(1_938_482),
         },
     );
 }
@@ -1877,7 +1882,7 @@ fn nested_call_cost_in_forked_contract_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(1_810_512),
+            l2_gas: GasAmount(1_810_912),
         },
     );
 }

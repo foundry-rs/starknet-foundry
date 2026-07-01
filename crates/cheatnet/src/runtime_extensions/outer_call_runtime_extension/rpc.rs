@@ -16,9 +16,7 @@ use blockifier::execution::syscalls::vm_syscall_utils::SyscallExecutorBaseError;
 use blockifier::execution::{
     call_info::CallInfo,
     entry_point::CallType,
-    errors::{
-        AnnotatedEntryPointExecutionError, EntryPointExecutionError, PreExecutionError,
-    },
+    errors::{AnnotatedEntryPointExecutionError, EntryPointExecutionError, PreExecutionError},
     syscalls::hint_processor::SyscallHintProcessor,
 };
 use blockifier::execution::{

@@ -29,10 +29,19 @@ fn test_get_available_gas() {
 
                 let gas_diff = gas_before - gas_after;
 
-                // call_contract syscall: 91_560 gas
-                // storage_write syscall: 44_970 gas
-                // storage_read syscall: 18_070 gas
-                let min_expected_gas = 91_560 + 44_970 + 18_070;
+                // call_contract syscall: 91_560 gas (because 1 * 903 * 100 + 18 * 70)
+                //      -> 1 call contract syscall costs 903 cairo steps and 18 range check builtins
+                //      -> CallContract os_resources:
+                //      https://github.com/starkware-libs/sequencer/blob/blockifier-v0.19.0-rc.2/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L229-L234
+                // storage_write syscall: 59_970 gas (because 1 * 599 * 100 + 1 * 70)
+                //      -> 1 storage write syscall costs 599 cairo steps and 1 range check builtin
+                //      -> StorageWrite os_resources:
+                //      https://github.com/starkware-libs/sequencer/blob/blockifier-v0.19.0-rc.2/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L488-L494
+                // storage_read syscall: 24_070 gas (because 1 * 240 * 100 + 1 * 70)
+                //      -> 1 storage read syscall costs 240 cairo steps and 1 range check builtin
+                //      -> StorageRead os_resources:
+                //      https://github.com/starkware-libs/sequencer/blob/blockifier-v0.19.0-rc.2/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L481-L486
+                let min_expected_gas = 91_560 + 59_970 + 24_070;
 
                 // Check that gas used is above the expected minimum
                 assert(gas_diff > min_expected_gas, 'Incorrect gas');

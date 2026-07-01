@@ -8,9 +8,7 @@ use blockifier::execution::call_info::{
     cairo_primitive_counter_map,
 };
 use blockifier::execution::contract_class::TrackedResource;
-use blockifier::execution::entry_point::{
-    EntryPointExecutionContext, ExecutableCallEntryPoint,
-};
+use blockifier::execution::entry_point::{EntryPointExecutionContext, ExecutableCallEntryPoint};
 use blockifier::execution::errors::{
     EntryPointExecutionError, PostExecutionError, PreExecutionError,
 };
