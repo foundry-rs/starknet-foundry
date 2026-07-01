@@ -143,8 +143,3 @@ create-output-dir = "1.0.0"
 insta = { version = "1.46.0", features = ["filters"] }
 plotters = { version = "0.3", default-features = false, features = ["all_series", "all_elements", "svg_backend", "bitmap_backend", "bitmap_encoder", "full_palette", "colormaps", "ab_glyph"] }
 mimalloc = "0.1"
-
-# TODO: switch to the published `cairo-annotations` 0.10.0 once it is released,
-# then drop this patch.
-[patch.crates-io]
-cairo-annotations = { git = "https://github.com/software-mansion/cairo-annotations", branch = "zdobnikau/prepare-0.10.0" }
