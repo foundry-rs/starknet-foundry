@@ -19,6 +19,7 @@ mod debugger;
 #[cfg(not(feature = "cairo-native"))]
 mod debugging;
 mod declare_from_file;
+mod declare_from_file_macro;
 mod declare_macro;
 mod docs_snippets_validation;
 mod enable_gas_validation;
