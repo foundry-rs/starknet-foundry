@@ -14,6 +14,7 @@ use cairo_lang_macro::{
 };
 use derives::fuzzable::fuzzable_derive;
 use inline_macros::declare::declare as declare_inline_macro;
+use inline_macros::declare_from_file::declare_from_file as declare_from_file_inline_macro;
 
 mod args;
 mod asserts;
@@ -97,4 +98,10 @@ fn fuzzable(item: TokenStream) -> ProcMacroResult {
 #[expect(clippy::needless_pass_by_value)]
 fn declare(args: TokenStream) -> ProcMacroResult {
     declare_inline_macro(&args)
+}
+
+#[inline_macro]
+#[expect(clippy::needless_pass_by_value)]
+fn declare_from_file(args: TokenStream) -> ProcMacroResult {
+    declare_from_file_inline_macro(&args)
 }

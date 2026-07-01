@@ -1,6 +1,8 @@
 use cairo_lang_macro::fingerprint;
 use std::env;
 use std::hash::{Hash, Hasher};
+use std::io;
+use std::path::Path;
 use xxhash_rust::xxh3::Xxh3;
 
 /// All external inputs that influence the compilation should be added here.
@@ -15,6 +17,10 @@ impl ExternalInput {
         Self {
             forge_test_filter: env::var("SNFORGE_TEST_FILTER").ok(),
         }
+    }
+
+    pub fn read_to_string(path: impl AsRef<Path>) -> io::Result<String> {
+        std::fs::read_to_string(path)
     }
 }
 
