@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- support for `sha512_process_block` syscall
+
 ## [0.62.0] - 2026-06-25
 
 ### Forge
