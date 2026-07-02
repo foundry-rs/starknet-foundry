@@ -1209,7 +1209,7 @@ fn declare_cost_is_omitted_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(25_130),
+            l2_gas: GasAmount(25_350),
         },
     );
 }
@@ -1298,7 +1298,7 @@ fn snforge_std_deploy_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(190_350),
+            l2_gas: GasAmount(190_030),
         },
     );
 }
@@ -1530,7 +1530,7 @@ fn multiple_storage_writes_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(897_590),
+            l2_gas: GasAmount(897_190),
         },
     );
 }
@@ -1581,18 +1581,18 @@ fn l1_message_cost_sierra_gas() {
     //      -> SendMessageToL1 os_resources:
     //         https://github.com/starkware-libs/sequencer/blob/blockifier-v0.19.0-rc.2/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L458-L463
     //      -> 1 range check costs 70
-    // 186_680 = snforge_std declare+deploy bundle (292_710 − 91_560 − 14_470)
+    // 186_380 = snforge_std declare+deploy bundle (292_410 − 91_560 − 14_470)
     //
     // 29_524 l1_gas
     // 96 l1_data_gas
-    // l2 gas > 292_710 (= 186_680 + 91_560 + 14_470)
+    // l2 gas > 292_410 (= 186_380 + 91_560 + 14_470)
     assert_gas(
         &result,
         "l1_message_cost",
         GasVector {
             l1_gas: GasAmount(29_524),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(292_710),
+            l2_gas: GasAmount(292_410),
         },
     );
 }
@@ -1751,7 +1751,7 @@ fn events_contract_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(470_720),
+            l2_gas: GasAmount(470_320),
         },
     );
 }
@@ -1897,7 +1897,7 @@ fn nested_call_cost_in_forked_contract_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(1_810_912),
+            l2_gas: GasAmount(1_810_512),
         },
     );
 }
