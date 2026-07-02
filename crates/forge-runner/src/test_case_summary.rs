@@ -14,9 +14,9 @@ use cheatnet::forking::data::ForkData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
 use conversions::byte_array::ByteArray;
-use conversions::felt::ToShortString;
 use shared::utils::build_readable_text;
 use starknet_api::execution_resources::GasVector;
+use starknet_api::execution_utils::format_panic_data;
 use starknet_types_core::felt::Felt;
 use std::fmt;
 use std::option::Option;
@@ -243,10 +243,9 @@ fn build_expected_panic_message(expected_panic_value: &ExpectedPanicValue) -> St
     match expected_panic_value {
         ExpectedPanicValue::Any => "\n    Expected to panic, but no panic occurred\n".into(),
         ExpectedPanicValue::Exact(panic_data) => {
-            let panic_string = join_short_strings(panic_data);
-
             format!(
-                "\n    Expected to panic, but no panic occurred\n    Expected panic data:  {panic_data:?} ({panic_string})\n"
+                "\n    Expected to panic, but no panic occurred\n    Expected panic data:  {}\n",
+                format_panic_data(panic_data)
             )
         }
     }
@@ -266,15 +265,10 @@ fn check_if_matching_and_get_message(
             (true, None)
         }
         Some(expected) => {
-            let panic_string = convert_felts_to_byte_array_string(actual_panic_value)
-                .unwrap_or_else(|| join_short_strings(actual_panic_value));
-            let expected_string = convert_felts_to_byte_array_string(expected)
-                .unwrap_or_else(|| join_short_strings(expected));
-
             let message = Some(format!(
                 "\n    Incorrect panic data\n    {}\n    {}\n",
-                format_args!("Actual:    {actual_panic_value:?} ({panic_string})"),
-                format_args!("Expected:  {expected:?} ({expected_string})")
+                format_args!("Actual:    {}", format_panic_data(actual_panic_value)),
+                format_args!("Expected:  {}", format_panic_data(expected))
             ));
             (false, message)
         }
@@ -433,13 +427,6 @@ impl TestCaseSummary<Single> {
             },
         }
     }
-}
-
-fn join_short_strings(data: &[Felt]) -> String {
-    data.iter()
-        .map(|felt| felt.to_short_string().unwrap_or_default())
-        .collect::<Vec<String>>()
-        .join(", ")
 }
 
 fn is_matching_should_panic_data(data: &[Felt], pattern: &[Felt]) -> bool {
@@ -659,6 +646,59 @@ mod tests {
         non_matching_pattern.push(Felt::from_bytes_be_slice(b"short_string"));
 
         assert!(!is_matching_should_panic_data(&data, &non_matching_pattern));
+    }
+
+    #[test]
+    fn test_incorrect_panic_data_message_mixed_tuple() {
+        let byte_array = |s: &str| ByteArray::from(s).serialize_with_magic();
+
+        let mut actual = byte_array("this_string_is_longer_than_31_bytes");
+        actual.push(Felt::from(11_u8));
+        actual.extend(byte_array("hello"));
+        actual.push(Felt::from(5_u8));
+        actual.push(Felt::from_bytes_be_slice(b"short_string"));
+
+        let mut expected = byte_array("this_string_is_longer_than_31_bytes");
+        expected.push(Felt::from(11_u8));
+        expected.extend(byte_array("helloo"));
+        expected.push(Felt::from(5_u8));
+        expected.push(Felt::from_bytes_be_slice(b"short_string"));
+
+        let (matching, message) =
+            check_if_matching_and_get_message(&actual, &ExpectedPanicValue::Exact(expected));
+
+        assert!(!matching);
+        assert_eq!(
+            message.unwrap(),
+            "\n    Incorrect panic data\
+             \n    Actual:    (\"this_string_is_longer_than_31_bytes\", 0xb, \"hello\", 0x5, 0x73686f72745f737472696e67 ('short_string'))\
+             \n    Expected:  (\"this_string_is_longer_than_31_bytes\", 0xb, \"helloo\", 0x5, 0x73686f72745f737472696e67 ('short_string'))\n"
+        );
+    }
+
+    #[test]
+    fn test_incorrect_panic_data_message_malformed_byte_array() {
+        // Magic followed by data that is not a valid `ByteArray` serialization
+        // must not crash and should fall back to felt-by-felt formatting.
+        let magic = ByteArray::from("").serialize_with_magic()[0];
+        let actual = vec![
+            magic,
+            Felt::from(0_u8),
+            Felt::from_bytes_be_slice(b"x"),
+            Felt::from(100_u8),
+        ];
+        let expected = vec![Felt::from_bytes_be_slice(b"panic message")];
+
+        let (matching, message) =
+            check_if_matching_and_get_message(&actual, &ExpectedPanicValue::Exact(expected));
+
+        assert!(!matching);
+        assert_eq!(
+            message.unwrap(),
+            "\n    Incorrect panic data\
+             \n    Actual:    (0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x0 (''), 0x78 ('x'), 0x64 ('d'))\
+             \n    Expected:  0x70616e6963206d657373616765 ('panic message')\n"
+        );
     }
 
     #[test]

@@ -47,9 +47,9 @@ impl ByteArray {
         if value.first() == Some(&Felt::try_from_hex_str(&format!("0x{BYTE_ARRAY_MAGIC}")).unwrap())
         {
             let mut reader = BufferReader::new(&value[1..]);
-            let byte_array = reader.read()?;
+            let byte_array: ByteArray = reader.read()?;
 
-            if reader.into_remaining().is_empty() {
+            if reader.into_remaining().is_empty() && byte_array.is_valid() {
                 Ok(byte_array)
             } else {
                 Err(BufferReadError::ParseFailed)
@@ -57,6 +57,17 @@ impl ByteArray {
         } else {
             Err(BufferReadError::ParseFailed)
         }
+    }
+
+    /// Checks that deserialized data forms a valid `ByteArray`:
+    /// each full word must fit in 31 bytes, the pending word must be shorter
+    /// than a full word and must fit in `pending_word_len` bytes.
+    fn is_valid(&self) -> bool {
+        self.pending_word_len < BYTES_IN_WORD
+            && self.words.iter().all(|word| word.to_bytes_be()[0] == 0)
+            && self.pending_word.to_bytes_be()[..32 - self.pending_word_len]
+                .iter()
+                .all(|&byte| byte == 0)
     }
 }
 
@@ -101,6 +112,45 @@ impl fmt::Display for ByteArray {
 mod tests {
     use super::*;
     use test_case::test_case;
+
+    #[test]
+    fn test_deserialize_with_magic_roundtrip() {
+        let array = ByteArray::from("this_string_is_longer_than_31_bytes");
+        let serialized = array.serialize_with_magic();
+
+        assert_eq!(
+            ByteArray::deserialize_with_magic(&serialized).unwrap(),
+            array
+        );
+    }
+
+    #[test]
+    fn test_deserialize_with_magic_pending_word_len_too_large() {
+        // [magic, num_full_words, pending_word, pending_word_len]
+        let mut data = ByteArray::from("x").serialize_with_magic();
+        *data.last_mut().unwrap() = Felt::from(100_u8);
+
+        assert!(ByteArray::deserialize_with_magic(&data).is_err());
+    }
+
+    #[test]
+    fn test_deserialize_with_magic_pending_word_exceeding_declared_len() {
+        // Pending word contains 3 bytes, but `pending_word_len` claims 1.
+        let mut data = ByteArray::from("abc").serialize_with_magic();
+        *data.last_mut().unwrap() = Felt::from(1_u8);
+
+        assert!(ByteArray::deserialize_with_magic(&data).is_err());
+    }
+
+    #[test]
+    fn test_deserialize_with_magic_full_word_not_fitting_31_bytes() {
+        let mut data =
+            ByteArray::from("this_string_is_longer_than_31_bytes").serialize_with_magic();
+        // Overwrite the single full word with a felt larger than 31 bytes.
+        data[2] = Felt::MAX;
+
+        assert!(ByteArray::deserialize_with_magic(&data).is_err());
+    }
 
     #[test]
     fn test_fmt_empty() {

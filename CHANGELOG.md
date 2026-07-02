@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- `Actual` and `Expected` panic data in the `#[should_panic]` mismatch message is now formatted the same way as regular failure data: byte arrays are displayed as quoted strings and felts as hex values with short string representation, instead of a raw felt array with a naive per-felt decoding.
+
+#### Fixed
+
+- Malformed byte array panic data (e.g. an invalid `pending_word_len`) no longer causes a crash when matching `#[should_panic]` expected data.
+
 ## [0.62.0] - 2026-06-25
 
 ### Forge
