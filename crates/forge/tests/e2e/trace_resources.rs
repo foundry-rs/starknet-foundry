@@ -5,7 +5,7 @@ use cairo_annotations::trace_data::{
     CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
     DeprecatedSyscallSelector::{
         CallContract, Deploy, EmitEvent, GetBlockHash, GetExecutionInfo, Keccak, LibraryCall,
-        SendMessageToL1, Sha256ProcessBlock, Sha512ProcessBlock, StorageRead, StorageWrite,
+        SendMessageToL1, StorageRead, StorageWrite,
     },
     ExecutionResources as ProfilerExecutionResources, SyscallUsage,
     VersionedCallTrace as VersionedProfilerCallTrace,
@@ -13,25 +13,21 @@ use cairo_annotations::trace_data::{
 use forge_runner::build_trace_data::TRACE_DIR;
 use std::{collections::HashMap, fs};
 
-#[cfg(feature = "scarb_since_2_19_0")]
 #[test]
 fn trace_resources_call() {
     assert_vm_resources_for_test("test_call", check_call);
 }
 
-#[cfg(feature = "scarb_since_2_19_0")]
 #[test]
 fn trace_resources_deploy() {
     assert_vm_resources_for_test("test_deploy", check_deploy);
 }
 
-#[cfg(feature = "scarb_since_2_19_0")]
 #[test]
 fn trace_resources_l1_handler() {
     assert_vm_resources_for_test("test_l1_handler", check_l1_handler);
 }
 
-#[cfg(feature = "scarb_since_2_19_0")]
 #[test]
 fn trace_resources_lib_call() {
     assert_vm_resources_for_test("test_lib_call", check_libcall);
@@ -40,9 +36,14 @@ fn trace_resources_lib_call() {
 #[cfg(feature = "scarb_since_2_19_0")]
 #[test]
 fn trace_resources_sha() {
+    use cairo_annotations::trace_data::DeprecatedSyscallSelector::{
+        Sha256ProcessBlock, Sha512ProcessBlock,
+    };
+
     let temp = setup_package("trace_resources");
 
     test_runner(&temp)
+        .args(["--features", "sha512"])
         .arg("test_sha")
         .arg("--save-trace-data")
         .arg("--tracked-resource")
