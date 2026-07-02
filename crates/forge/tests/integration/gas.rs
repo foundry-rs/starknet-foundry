@@ -1341,6 +1341,7 @@ fn keccak_cost_sierra_gas() {
     );
 }
 
+#[cfg(feature = "scarb_since_2_19_0")]
 #[test]
 fn sha512_cost_sierra_gas() {
     let test = test_case!(indoc!(
