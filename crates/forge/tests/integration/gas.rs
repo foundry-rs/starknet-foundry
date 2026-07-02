@@ -1175,7 +1175,7 @@ fn empty_test_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(13_620),
+            l2_gas: GasAmount(13_840),
         },
     );
 }
@@ -1258,7 +1258,7 @@ fn deploy_syscall_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(183_710),
+            l2_gas: GasAmount(183_590),
         },
     );
 }
@@ -1336,7 +1336,7 @@ fn keccak_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(226_407),
+            l2_gas: GasAmount(226_727),
         },
     );
 }
@@ -1422,7 +1422,7 @@ fn contract_keccak_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(1_352_655),
+            l2_gas: GasAmount(1_352_255),
         },
     );
 }
@@ -1476,7 +1476,7 @@ fn storage_write_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(740_950),
+            l2_gas: GasAmount(740_550),
         },
     );
 }
@@ -1644,19 +1644,19 @@ fn l1_message_cost_for_proxy_sierra_gas() {
     //      -> n = unique contracts updated
     // 183_120 = 2 * 91_560 call_contract (test → proxy → gas_checker)
     // 14_470 = cost of 1 SendMessageToL1 syscall (see `l1_message_cost_sierra_gas` test)
-    // 358_430 = 2 * 179_215 snforge_std declare+deploy per contract
-    //      -> 179_215 = (556_020 − 183_120 − 14_470) / 2
+    // 358_130 = 2 * 179_065 snforge_std declare+deploy per contract
+    //      -> 179_065 = (555_720 − 183_120 − 14_470) / 2
     //
     // 29_524 l1_gas
     // (128 + 64 =) 192 l1_data_gas
-    // l2 gas > 556_020 (= 358_430 + 183_120 + 14_470)
+    // l2 gas > 555_720 (= 358_130 + 183_120 + 14_470)
     assert_gas(
         &result,
         "l1_message_cost_for_proxy",
         GasVector {
             l1_gas: GasAmount(29_524),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(556_020),
+            l2_gas: GasAmount(555_720),
         },
     );
 }
@@ -1704,7 +1704,7 @@ fn events_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(205_190),
+            l2_gas: GasAmount(205_510),
         },
     );
 }
@@ -1824,7 +1824,7 @@ fn nested_call_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(288),
-            l2_gas: GasAmount(1_938_482),
+            l2_gas: GasAmount(1_937_982),
         },
     );
 }
