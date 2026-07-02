@@ -1174,7 +1174,7 @@ fn empty_test_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(13_840),
+            l2_gas: GasAmount(13_620),
         },
     );
 }
@@ -1208,7 +1208,7 @@ fn declare_cost_is_omitted_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(25_350),
+            l2_gas: GasAmount(25_130),
         },
     );
 }
@@ -1257,7 +1257,7 @@ fn deploy_syscall_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(183_590),
+            l2_gas: GasAmount(183_710),
         },
     );
 }
@@ -1297,7 +1297,7 @@ fn snforge_std_deploy_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(190_030),
+            l2_gas: GasAmount(190_350),
         },
     );
 }
@@ -1335,7 +1335,7 @@ fn keccak_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(226_727),
+            l2_gas: GasAmount(226_407),
         },
     );
 }
@@ -1421,7 +1421,7 @@ fn contract_keccak_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(1_352_255),
+            l2_gas: GasAmount(1_352_655),
         },
     );
 }
@@ -1475,7 +1475,7 @@ fn storage_write_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(740_550),
+            l2_gas: GasAmount(740_950),
         },
     );
 }
@@ -1529,7 +1529,7 @@ fn multiple_storage_writes_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(897_190),
+            l2_gas: GasAmount(897_590),
         },
     );
 }
@@ -1591,7 +1591,7 @@ fn l1_message_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(29_524),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(292_410),
+            l2_gas: GasAmount(292_710),
         },
     );
 }
@@ -1655,7 +1655,7 @@ fn l1_message_cost_for_proxy_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(29_524),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(555_720),
+            l2_gas: GasAmount(556_020),
         },
     );
 }
@@ -1703,7 +1703,7 @@ fn events_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(205_510),
+            l2_gas: GasAmount(205_190),
         },
     );
 }
@@ -1750,7 +1750,7 @@ fn events_contract_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(470_320),
+            l2_gas: GasAmount(470_720),
         },
     );
 }
@@ -1823,7 +1823,7 @@ fn nested_call_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(288),
-            l2_gas: GasAmount(1_937_982),
+            l2_gas: GasAmount(1_938_482),
         },
     );
 }
@@ -1896,7 +1896,7 @@ fn nested_call_cost_in_forked_contract_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(1_810_512),
+            l2_gas: GasAmount(1_810_912),
         },
     );
 }

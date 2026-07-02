@@ -274,10 +274,10 @@ fn generic() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        error[E2311]: Trait has no implementation in context: core::traits::PartialOrd::<generic_integrationtest::contract::MyStruct>.
-         --> [..]/tests/contract.cairo:29:13
-            let s = smallest_element(@list);
-                    ^^^^^^^^^^^^^^^^
+        error[E2315]: Mismatched types. The type `generic_integrationtest::contract::MyStruct` cannot be created from a numeric literal.
+         --> [..]/tests/contract.cairo:30:18
+            assert!(s == 3);
+                         ^
         note: this error originates in the attribute macro: `test`
         note: this error originates in the attribute macro: `fuzzer`
         note: this error originates in the attribute macro: `__fuzzer_config`
