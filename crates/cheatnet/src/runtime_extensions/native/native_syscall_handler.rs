@@ -39,7 +39,7 @@ impl CheatableNativeSyscallHandler<'_> {
         self.native_syscall_handler.unrecoverable_error.take()
     }
 
-    // Copied from https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/syscall_handler.rs#L80
+    // Copied from (blockifier 0.14.0) https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/syscall_handler.rs#L80
     /// Handles all gas-related logics, syscall usage counting and perform additional checks. In
     /// native, we need to explicitly call this method at the beginning of each syscall.
     fn pre_execute_syscall(
@@ -99,7 +99,7 @@ impl CheatableNativeSyscallHandler<'_> {
         Ok(())
     }
 
-    // Based on https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/syscall_handler.rs#L153
+    // Based on (blockifier 0.14.0) https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/syscall_handler.rs#L153
     fn execute_inner_call(
         &mut self,
         entry_point: &mut CallEntryPoint,
@@ -137,7 +137,7 @@ impl CheatableNativeSyscallHandler<'_> {
         Ok(Retdata(raw_data))
     }
 
-    // Copied from https://github.com/starkware-libs/sequencer/blob/blockifier-v0.19.0-rc.2/crates/blockifier/src/execution/native/syscall_handler.rs#L134
+    // Copied from (blockifier 0.19.0-rc.2) https://github.com/starkware-libs/sequencer/blob/773c57afc7c450a1122a57c914b10f74df2492ea/crates/blockifier/src/execution/native/syscall_handler.rs#L134
     fn handle_error(&mut self, remaining_gas: &mut u64, error: SyscallExecutionError) -> Vec<Felt> {
         // In case of more than one inner call and because each inner call has their own
         // syscall handler, if there is an unrecoverable error at call `n` it will create a
@@ -469,7 +469,7 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
         })
     }
 
-    // Based on https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/syscall_handler.rs#L322
+    // Based on (blockifier 0.14.0) https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/syscall_handler.rs#L322
     fn deploy(
         &mut self,
         class_hash: Felt,
@@ -513,7 +513,7 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
             .replace_class(class_hash, remaining_gas)
     }
 
-    // Based on from https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/syscall_handler.rs#L399
+    // Based on (blockifier 0.14.0) https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/syscall_handler.rs#L399
     fn library_call(
         &mut self,
         class_hash: Felt,
@@ -568,7 +568,7 @@ impl StarknetSyscallHandler for &mut CheatableNativeSyscallHandler<'_> {
             .0)
     }
 
-    // Based on https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/syscall_handler.rs#L444
+    // Based on (blockifier 0.14.0) https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/syscall_handler.rs#L444
     fn call_contract(
         &mut self,
         address: Felt,

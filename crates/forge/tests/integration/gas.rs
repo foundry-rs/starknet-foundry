@@ -12,9 +12,8 @@ use std::path::Path;
 // important info from this link regarding gas calculations:
 // 1 cairo step = 0.0025 L1 gas = 100 L2 gas
 // 1 sierra gas = 1 l2 gas
-// Costs of syscalls (if provided) are taken from versioned_constants (blockifier)
-// blockifier 0.19.0-rc.2 uses `versioned_constants` 0.14.3.
-// https://github.com/starkware-libs/sequencer/blob/blockifier-v0.19.0-rc.2/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json
+// Costs of syscalls (if provided) are taken from versioned_constants (blockifier).
+// (blockifier 0.19.0-rc.2, versioned_constants 0.14.3) https://github.com/starkware-libs/sequencer/blob/773c57afc7c450a1122a57c914b10f74df2492ea/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json
 
 // In Sierra gas tests, only the most significant costs are considered
 // Asserted values should be slightly greater than the computed values,
@@ -907,7 +906,7 @@ fn l1_handler_cost_cairo_steps() {
     // int(5.12 * 4) = 21 = keccak cost from l1 handler
     // in this test, l1_handler_payload_size = 6
     // 15923 = 12251 (gas used for processing L1<>L2 messages on L1) + 3672 (SHARP gas, 6 * 612)
-    // https://github.com/starkware-libs/sequencer/blob/028db0341378147037b5e7236d8e136e4ca7c30d/crates/blockifier/src/fee/resources.rs#L338-L340
+    // (blockifier 0.15.0-rc.3) https://github.com/starkware-libs/sequencer/blob/028db0341378147037b5e7236d8e136e4ca7c30d/crates/blockifier/src/fee/resources.rs#L338-L340
     // 12251 = 3072 (6 * 512, 512 is gas per memory word) +
     //         + 4179 (cost of `ConsumedMessageToL2` event for payload with length 6:
     //              -> 375 const opcode cost
@@ -1247,7 +1246,7 @@ fn deploy_syscall_cost_sierra_gas() {
     //      -> 1 deploy syscall costs 1181 = (1173 + 8) cairo steps, 8 pedersen and 21 range check builtins (1 calldata felt)
     //      -> 1 calldata element costs 8 cairo steps and 1 pedersen
     //      -> Deploy os_resources:
-    //         https://github.com/starkware-libs/sequencer/blob/blockifier-v0.19.0-rc.2/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L250-L265
+    //         (blockifier 0.19.0-rc.2) https://github.com/starkware-libs/sequencer/blob/773c57afc7c450a1122a57c914b10f74df2492ea/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L250-L265
     //      -> 1 pedersen costs 4050, 1 range check costs 70
     //
     // 96 l1_data_gas
@@ -1318,7 +1317,7 @@ fn keccak_cost_sierra_gas() {
 
     assert_passed(&result);
     // Note: To calculate the gas cost of the keccak syscall, we need to include the cost of keccak round
-    // https://github.com/starkware-libs/sequencer/blob/028db0341378147037b5e7236d8e136e4ca7c30d/crates/blockifier/src/execution/syscalls/syscall_executor.rs#L190
+    // (blockifier 0.15.0-rc.3) https://github.com/starkware-libs/sequencer/blob/028db0341378147037b5e7236d8e136e4ca7c30d/crates/blockifier/src/execution/syscalls/syscall_executor.rs#L190
     // 10_000 = cost of 1 keccak syscall (1 * 100 * 100)
     //      -> 1 keccak syscall costs 100 cairo steps
     // 171_707 = cost of 1 keccak round syscall (136_189 + 3498 + 3920 + 28_100)
@@ -1327,7 +1326,7 @@ fn keccak_cost_sierra_gas() {
     //      -> 56 range check builtins cost 56 * 70 = 3920
     //      -> 281 steps cost 281 * 100 = 28_100
     //      -> KeccakRound os_resources:
-    //         https://github.com/starkware-libs/sequencer/blob/blockifier-v0.19.0-rc.2/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L341-L348
+    //         (blockifier 0.19.0-rc.2) https://github.com/starkware-libs/sequencer/blob/773c57afc7c450a1122a57c914b10f74df2492ea/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L341-L348
     //
     // l2 gas > 181_707
     assert_gas(
@@ -1358,11 +1357,11 @@ fn sha512_cost_sierra_gas() {
 
     assert_passed(&result);
     // 2_413_810 = sierra-gas cost of 1 sha512_process_block syscall = 4737 * 100 + 3320 * 583 + 65 * 70,
-    // derived from blockifier 0.19.0-rc.2 versioned constants:
+    // derived from versioned constants:
     //   - os_resources `Sha512ProcessBlock` (n_steps = 4737, bitwise_builtin = 3320, range_check_builtin = 65):
-    //     https://github.com/starkware-libs/sequencer/blob/773c57afc7c450a1122a57c914b10f74df2492ea/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L473-L480
+    //     (blockifier 0.19.0-rc.2) https://github.com/starkware-libs/sequencer/blob/773c57afc7c450a1122a57c914b10f74df2492ea/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L473-L480
     //   - per-resource sierra-gas costs (step_gas_cost = 100, bitwise = 583, range_check = 70):
-    //     https://github.com/starkware-libs/sequencer/blob/773c57afc7c450a1122a57c914b10f74df2492ea/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L165-L178
+    //     (blockifier 0.19.0-rc.2) https://github.com/starkware-libs/sequencer/blob/773c57afc7c450a1122a57c914b10f74df2492ea/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L165-L178
     //
     // l2 gas > 2_413_810 (the remainder is the surrounding `compute_sha512_u64_array`)
     assert_gas(
@@ -1411,7 +1410,7 @@ fn contract_keccak_cost_sierra_gas() {
     // 91_560 = cost of 1 call contract syscall (because 1 * 903 * 100 + 18 * 70)
     //      -> 1 call contract syscall costs 903 cairo steps and 18 range check builtins
     //      -> CallContract os_resources:
-    //         https://github.com/starkware-libs/sequencer/blob/blockifier-v0.19.0-rc.2/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L229-L234
+    //         (blockifier 0.19.0-rc.2) https://github.com/starkware-libs/sequencer/blob/773c57afc7c450a1122a57c914b10f74df2492ea/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L229-L234
     //      -> 1 range check costs 70
     //
     // 96 l1_data_gas
@@ -1465,7 +1464,7 @@ fn storage_write_cost_sierra_gas() {
     // 59_970 = cost of 1 storage_write syscall (because 1 * 599 * 100 + 1 * 70)
     //      -> 1 storage write syscall costs 599 cairo steps and 1 range check builtin
     //      -> StorageWrite os_resources:
-    //         https://github.com/starkware-libs/sequencer/blob/blockifier-v0.19.0-rc.2/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L488-L494
+    //         (blockifier 0.19.0-rc.2) https://github.com/starkware-libs/sequencer/blob/773c57afc7c450a1122a57c914b10f74df2492ea/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L488-L494
     //      -> 1 range check costs 70
     //
     // (96 + 64 + 32 =) 192 l1_data_gas
@@ -1566,7 +1565,7 @@ fn l1_message_cost_sierra_gas() {
     assert_passed(&result);
     // 29_524 = gas cost of l2 -> l1 message (payload length 3)
     // The calculation below covers L1 costs related to the state updates and emitting the event `LogMessageToL1`.
-    // https://github.com/starkware-libs/sequencer/blob/028db0341378147037b5e7236d8e136e4ca7c30d/crates/blockifier/src/fee/resources.rs#L338-L340
+    // (blockifier 0.15.0-rc.3) https://github.com/starkware-libs/sequencer/blob/028db0341378147037b5e7236d8e136e4ca7c30d/crates/blockifier/src/fee/resources.rs#L338-L340
     //      -> (3 + 3) * 1124 = state update costs
     //      -> 375 const opcode cost
     //      -> 3 * 375 = 1125 topics cost of `LogMessageToL1` event (fromAddress, toAddress and 1 default)
@@ -1579,7 +1578,7 @@ fn l1_message_cost_sierra_gas() {
     // 14_470 = cost of 1 SendMessageToL1 syscall (because 1 * 144 * 100 + 1 * 70)
     //      -> 1 SendMessageToL1 syscall costs 144 cairo steps and 1 range check builtin
     //      -> SendMessageToL1 os_resources:
-    //         https://github.com/starkware-libs/sequencer/blob/blockifier-v0.19.0-rc.2/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L458-L463
+    //         (blockifier 0.19.0-rc.2) https://github.com/starkware-libs/sequencer/blob/773c57afc7c450a1122a57c914b10f74df2492ea/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L458-L463
     //      -> 1 range check costs 70
     // 186_380 = snforge_std declare+deploy bundle (292_410 − 91_560 − 14_470)
     //
@@ -1693,7 +1692,7 @@ fn events_cost_sierra_gas() {
     // 10_000 = cost of 1 emit_event syscall (because 1 * 61 * 100 + 1 * 70 = 6170)
     //      -> 1 emit event syscall costs 61 cairo steps and 1 range check builtin
     //      -> EmitEvent os_resources:
-    //         https://github.com/starkware-libs/sequencer/blob/blockifier-v0.19.0-rc.2/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L267-L272
+    //         (blockifier 0.19.0-rc.2) https://github.com/starkware-libs/sequencer/blob/773c57afc7c450a1122a57c914b10f74df2492ea/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L267-L272
     //      -> 1 range check costs 70
     //      -> the minimum total cost is `syscall_base_gas_cost`, which is pre-charged by the compiler (atm it is 100 * 100)
     //

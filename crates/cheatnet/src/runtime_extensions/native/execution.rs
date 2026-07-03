@@ -48,7 +48,7 @@ pub(crate) fn execute_entry_point_call_native(
     })
 }
 
-// Based on https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/entry_point_execution.rs#L20
+// Based on (blockifier 0.14.0) https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/entry_point_execution.rs#L20
 fn execute_entry_point_call(
     call: &ExecutableCallEntryPoint,
     compiled_class: &NativeCompiledClassV1,
@@ -120,7 +120,7 @@ fn execute_entry_point_call(
     create_callinfo(call_result, syscall_handler)
 }
 
-// Copied from https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/entry_point_execution.rs#L73
+// Copied from (blockifier 0.14.0) https://github.com/software-mansion-labs/sequencer/blob/b6d1c0b354d84225ab9c47f8ff28663d22e84d19/crates/blockifier/src/execution/native/entry_point_execution.rs#L73
 fn create_callinfo(
     call_result: ContractExecutionResult,
     syscall_handler: &mut CheatableNativeSyscallHandler<'_>,
@@ -205,7 +205,7 @@ fn create_callinfo(
     })
 }
 
-// Copied from https://github.com/starkware-libs/sequencer/blob/blockifier-v0.18.0-rc.1/crates/blockifier/src/execution/native/entry_point_execution.rs#L130
+// Copied from (blockifier 0.18.0-rc.1) https://github.com/starkware-libs/sequencer/blob/8b090b27bca8a8366c63ae864507f59c78c8bdc5/crates/blockifier/src/execution/native/entry_point_execution.rs#L130
 fn builtin_stats_to_primitive_counters(stats: BuiltinStats) -> CairoPrimitiveCounterMap {
     let builtins = [
         (BuiltinName::range_check, stats.range_check),
