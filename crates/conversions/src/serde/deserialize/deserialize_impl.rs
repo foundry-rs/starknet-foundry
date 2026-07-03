@@ -27,7 +27,10 @@ where
         let length: Felt = reader.read()?;
         let length = length.to_usize().ok_or(BufferReadError::ParseFailed)?;
 
-        let mut result = Vec::with_capacity(length);
+        // Each element consumes at least one felt from the buffer, so a valid `length`
+        // can never exceed the remaining buffer size. Cap the pre-allocation so an
+        // untrusted declared length cannot cause a huge allocation.
+        let mut result = Vec::with_capacity(length.min(reader.remaining_len()));
 
         for _ in 0..length {
             result.push(reader.read()?);

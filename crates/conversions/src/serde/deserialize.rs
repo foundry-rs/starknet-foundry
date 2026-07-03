@@ -42,6 +42,11 @@ impl<'a> BufferReader<'a> {
         self.buffer
     }
 
+    #[must_use]
+    pub fn remaining_len(&self) -> usize {
+        self.buffer.len()
+    }
+
     pub fn read<T>(&mut self) -> BufferReadResult<T>
     where
         T: CairoDeserialize,

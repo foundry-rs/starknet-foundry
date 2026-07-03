@@ -143,6 +143,15 @@ mod tests {
     }
 
     #[test]
+    fn test_deserialize_with_magic_declared_full_words_exceeds_buffer() {
+        // The declared full word count must be checked before allocating `words`.
+        let mut data = ByteArray::from("").serialize_with_magic();
+        data[1] = Felt::from(usize::MAX);
+
+        assert!(ByteArray::deserialize_with_magic(&data).is_err());
+    }
+
+    #[test]
     fn test_deserialize_with_magic_full_word_not_fitting_31_bytes() {
         let mut data =
             ByteArray::from("this_string_is_longer_than_31_bytes").serialize_with_magic();
