@@ -38,6 +38,8 @@ add-functions-debug-info = true
 skip-optimizations = true
 ```
 
+<!-- TODO(#4476): Update docs once `add-types-debug-info` requirement is re-introduced -->
+
 ### Debugging in VSCode
 
 1. Open your Cairo project in VSCode.

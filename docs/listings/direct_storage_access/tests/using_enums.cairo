@@ -38,4 +38,3 @@ fn test_store_and_read() {
 
     assert_eq!(read_value, value);
 }
-

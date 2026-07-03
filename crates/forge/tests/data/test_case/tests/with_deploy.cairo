@@ -26,4 +26,3 @@ fn with_fuzzer_and_contract_deploy(value: u128) {
     dispatcher.set_value(value);
     assert!(dispatcher.get_value() == value, "FAIL");
 }
-

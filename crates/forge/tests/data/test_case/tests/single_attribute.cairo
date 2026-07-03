@@ -17,4 +17,3 @@ fn addition_with_name_arg(a: felt252, b: felt252, expected: felt252) {
     let result = add(a, b);
     assert!(result == expected);
 }
-

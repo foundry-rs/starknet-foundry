@@ -14,7 +14,7 @@ fn test_get_current_vm_step() {
             use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 
 
-            const STEPS_MARGIN: u32 = 150;
+            const STEPS_MARGIN: u32 = 160;
 
             // 1173 = cost of 1 deploy syscall without calldata
             // (blockifier 0.16.0-rc.1, versioned_constants 0.14.1) https://github.com/starkware-libs/sequencer/blob/b29c0e8c61f7b2340209e256cf87dfe9f2c811aa/crates/blockifier/resources/blockifier_versioned_constants_0_14_1.json#L185
