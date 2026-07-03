@@ -1321,10 +1321,10 @@ fn keccak_cost_sierra_gas() {
     // https://github.com/starkware-libs/sequencer/blob/028db0341378147037b5e7236d8e136e4ca7c30d/crates/blockifier/src/execution/syscalls/syscall_executor.rs#L190
     // 10_000 = cost of 1 keccak syscall (1 * 100 * 100)
     //      -> 1 keccak syscall costs 100 cairo steps
-    // 171_707 = cost of 1 keccak round syscall (136_189 + 3498 + 3980 + 28_100)
+    // 171_707 = cost of 1 keccak round syscall (136_189 + 3498 + 3920 + 28_100)
     //      -> 1 keccak builtin costs 136_189
     //      -> 6 bitwise builtin cost 6 * 583 = 3498
-    //      -> 56 range check builtins cost 56 * 70 = 3980
+    //      -> 56 range check builtins cost 56 * 70 = 3920
     //      -> 281 steps cost 281 * 100 = 28_100
     //      -> KeccakRound os_resources:
     //         https://github.com/starkware-libs/sequencer/blob/blockifier-v0.19.0-rc.2/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L341-L348
@@ -1569,7 +1569,7 @@ fn l1_message_cost_sierra_gas() {
     // https://github.com/starkware-libs/sequencer/blob/028db0341378147037b5e7236d8e136e4ca7c30d/crates/blockifier/src/fee/resources.rs#L338-L340
     //      -> (3 + 3) * 1124 = state update costs
     //      -> 375 const opcode cost
-    //      -> 3 * 375 = 1225 topics cost of `LogMessageToL1` event (fromAddress, toAddress and 1 default)
+    //      -> 3 * 375 = 1125 topics cost of `LogMessageToL1` event (fromAddress, toAddress and 1 default)
     //      -> 5 * 256 = 1280 data array cost (payload length + 2 required solidity params for array)
     //      -> 20_000 l1 storage write cost
     // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
@@ -1685,10 +1685,10 @@ fn events_cost_sierra_gas() {
 
     assert_passed(&result);
     // 102_400 = 10 * 10_240
-    //      -> we emit 50 keys, each taking up 1 felt of space
+    //      -> we emit 10 keys, each taking up 1 felt of space
     //      -> L2 gas cost for event key is 10240 gas/felt
     // 51_200 = 10 * 5120
-    //      -> we emit 50 keys, each having 1 felt of data
+    //      -> we emit 10 values, each having 1 felt of data
     //      -> L2 gas cost for event data is 5120 gas/felt
     // 10_000 = cost of 1 emit_event syscall (because 1 * 61 * 100 + 1 * 70 = 6170)
     //      -> 1 emit event syscall costs 61 cairo steps and 1 range check builtin
