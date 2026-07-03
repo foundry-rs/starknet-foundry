@@ -20,7 +20,7 @@ jobs:
     outputs:
       versions: ${{ steps.get_versions.outputs.versions }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47
       - run: |
           asdf plugin add scarb
@@ -42,7 +42,7 @@ jobs:
     name: Workspace Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-tools
         with:
           save-cache: 'true'
@@ -53,7 +53,7 @@ jobs:
     name: Build Nextest Archive (Forge)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-tools
         with:
           setup-scarb: 'false'
@@ -75,7 +75,7 @@ jobs:
     name: Build Nextest Archive (Forge Native)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-tools
         with:
           install-llvm: 'true'
@@ -104,7 +104,7 @@ jobs:
       matrix:
         partition: [ 1, 2, 3 ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-tools
         with:
           setup-rust-cache: 'false'
@@ -126,7 +126,7 @@ jobs:
       matrix:
         partition: [ 1, 2, 3 ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-tools
         with:
           setup-rust-cache: 'false'
@@ -179,7 +179,7 @@ jobs:
           curl -sSL --fail --retry 5 --retry-all-errors --connect-timeout 10 -H "Authorization: Bearer ${{ github.token }}" https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
           cairo-coverage --version
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
       - uses: ./.github/actions/setup-tools
         with:
@@ -233,7 +233,7 @@ jobs:
           curl -sSL --fail --retry 5 --retry-all-errors --connect-timeout 10 -H "Authorization: Bearer ${{ github.token }}" https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
           cairo-coverage --version
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
       - uses: ./.github/actions/setup-tools
         with:
@@ -289,7 +289,7 @@ jobs:
           curl -sSL --fail --retry 5 --retry-all-errors --connect-timeout 10 -H "Authorization: Bearer ${{ github.token }}" https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
           cairo-coverage --version
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-tools
         with:
           scarb-version: ${{ matrix.version }}
@@ -300,7 +300,7 @@ jobs:
     name: Test special conditions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-tools
         # Scarb is installed manually below to control the version
         with:
@@ -321,7 +321,7 @@ jobs:
     name: Test Forge Scarb Plugin
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-tools
         with:
           setup-rust-cache: 'false'
@@ -333,7 +333,7 @@ jobs:
     name: Build Nextest Archive (Cast)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
       - uses: ./.github/actions/setup-tools
         with:
@@ -361,7 +361,7 @@ jobs:
       matrix:
         partition: [ 1, 2, 3 ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
       - uses: ./.github/actions/setup-tools
         with:
@@ -381,7 +381,7 @@ jobs:
     container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:5.3.16
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Save ledger builder Rust toolchain
         run: echo "LEDGER_RUST_TOOLCHAIN=${RUSTUP_TOOLCHAIN}" >> $GITHUB_ENV
       - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
@@ -415,7 +415,7 @@ jobs:
       # Make sure CI fails on all warnings - including Clippy lints.
       RUSTFLAGS: "-Dwarnings"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-tools
         with:
           install-llvm: 'true'
@@ -449,13 +449,13 @@ jobs:
           exit 0
 
       - name: Check typos
-        uses: crate-ci/typos@v1.47.0
+        uses: crate-ci/typos@v1.48.0
 
   build-docs:
     name: Test Building Docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-tools
       - uses: taiki-e/install-action@055f5df8c3f65ea01cd41e9dc855becd88953486 # 2.75.18
         with:
