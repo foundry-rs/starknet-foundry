@@ -9163,9 +9163,9 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "voyager-verifier"
-version = "2.3.1"
+version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "941eaf02b4327288d6fb215a47fa434c3e7e8f37e22c7434c15f589f51c6f8b7"
+checksum = "7f858012003028984422a9f491ee85771a2747ba028b039241d540f316a17534"
 dependencies = [
  "anyhow",
  "backon",
