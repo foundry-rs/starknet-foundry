@@ -122,7 +122,7 @@ version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40c48f72fd53cd289104fc64099abca73db4166ad86ea0b4341abe65af83dadc"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -133,14 +133,14 @@ checksum = "291e6a250ff86cd4a820112fb8898808a366d8f9f58ce16d1f538353ad55747d"
 dependencies = [
  "anstyle",
  "once_cell_polyfill",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
 name = "anyhow"
-version = "1.0.102"
+version = "1.0.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
+checksum = "2a4385e2e34eb35d6b3efe798b9eb88096925d87726c0798709bf56d9ed84af3"
 
 [[package]]
 name = "apollo_compilation_utils"
@@ -1812,9 +1812,9 @@ dependencies = [
 
 [[package]]
 name = "camino"
-version = "1.2.3"
+version = "1.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4ce8d3bd5823c7504d3f579f13e7b2f3da252fcb938c594d5680ee508bf846f"
+checksum = "5f2d30e4173c4026932d51d31d6b0613b1fd3014bf3f9f8943d4ba139c437ba0"
 dependencies = [
  "serde_core",
 ]
@@ -2057,9 +2057,9 @@ dependencies = [
 
 [[package]]
 name = "clap_complete"
-version = "4.6.5"
+version = "4.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0a7a9bfdb35811f9e59832f0f05975114d2251b415fb534108e6f34060fd772"
+checksum = "db8b397918185f0161ff3d6fcaa9e4bfc09b8367caf6e1d4a2848e5477ed027b"
 dependencies = [
  "clap",
 ]
@@ -2194,7 +2194,7 @@ version = "3.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "faf9468729b8cbcea668e36183cb69d317348c2e08e994829fb56ebfdfbaac34"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2279,9 +2279,9 @@ dependencies = [
 
 [[package]]
 name = "console"
-version = "0.16.3"
+version = "0.16.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d64e8af5551369d19cf50138de61f1c42074ab970f74e99be916646777f8fc87"
+checksum = "4fe5f465a4f6fee88fad41b85d990f84c835335e85b5d9e6e63e0d06d28cba7c"
 dependencies = [
  "encode_unicode",
  "libc",
@@ -2369,7 +2369,7 @@ dependencies = [
  "cairo-lang-utils",
  "cairo-serde-macros",
  "cairo-vm",
- "itertools 0.14.0",
+ "itertools 0.15.0",
  "num-traits",
  "serde",
  "serde_json",
@@ -2916,7 +2916,7 @@ dependencies = [
  "cairo-serde-macros",
  "conversions",
  "indoc",
- "itertools 0.14.0",
+ "itertools 0.15.0",
  "num-bigint",
  "primitive-types 0.14.0",
  "serde",
@@ -2958,7 +2958,7 @@ dependencies = [
  "cairo-lang-sierra-to-casm",
  "cairo-lang-starknet-classes",
  "cheatnet",
- "console 0.16.3",
+ "console 0.16.4",
  "data-transformer",
  "paste",
  "ptree",
@@ -3112,7 +3112,7 @@ version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "25f104b501bf2364e78d0d3974cbc774f738f5865306ed128e1e0d7499c0ad96"
 dependencies = [
- "console 0.16.3",
+ "console 0.16.4",
  "shell-words",
  "tempfile",
  "zeroize",
@@ -3222,7 +3222,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users 0.5.2",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3473,7 +3473,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3699,7 +3699,7 @@ dependencies = [
  "clap_complete",
  "comfy-table",
  "configuration",
- "console 0.16.3",
+ "console 0.16.4",
  "conversions",
  "create-output-dir",
  "derive_more",
@@ -3711,7 +3711,7 @@ dependencies = [
  "include_dir",
  "indoc",
  "insta",
- "itertools 0.14.0",
+ "itertools 0.15.0",
  "mimalloc",
  "num-bigint",
  "openssl",
@@ -3762,13 +3762,13 @@ dependencies = [
  "cheatnet",
  "clap",
  "comfy-table",
- "console 0.16.3",
+ "console 0.16.4",
  "conversions",
  "debugging",
  "foundry-ui",
  "futures",
  "indoc",
- "itertools 0.14.0",
+ "itertools 0.15.0",
  "num-traits",
  "rand 0.8.6",
  "rayon",
@@ -3806,7 +3806,7 @@ name = "foundry-ui"
 version = "0.62.0"
 dependencies = [
  "anyhow",
- "console 0.16.3",
+ "console 0.16.4",
  "serde",
  "serde_json",
  "starknet-types-core 0.2.4",
@@ -4670,11 +4670,11 @@ dependencies = [
 
 [[package]]
 name = "indicatif"
-version = "0.18.4"
+version = "0.18.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25470f23803092da7d239834776d653104d551bc4d7eacaf31e6837854b8e9eb"
+checksum = "9433806cd6b4ec1aba79c021c7e4c58fb4c3b9977c085062e611ac929998fb0c"
 dependencies = [
- "console 0.16.3",
+ "console 0.16.4",
  "portable-atomic",
  "unicode-width 0.2.2",
  "unit-prefix",
@@ -4705,7 +4705,7 @@ version = "1.48.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "86f0f8fee8c926415c58d6ae43a08523a26faccb2323f5e6b644fe7dd4ef6b82"
 dependencies = [
- "console 0.16.3",
+ "console 0.16.4",
  "once_cell",
  "regex",
  "similar 2.7.0",
@@ -4800,6 +4800,15 @@ name = "itertools"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b4baf93f58d4425749ca49a51c50ebab072c5df6994d08fed93541c331481dc"
 dependencies = [
  "either",
 ]
@@ -4946,7 +4955,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8cfc352a66ba903c23239ef51e809508b6fc2b0f90e3476ac7a9ff47e863ae95"
 dependencies = [
  "scopeguard",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5544,14 +5553,14 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
 name = "num-bigint"
-version = "0.4.6"
+version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5e44f723f1133c9deac646763579fdb3ac745e418f2a7af9cd0c431da1f20b9"
+checksum = "c863e9ab5e7bf9c99ba75e1050f1e4d624ae87ed3532d6238ffbdc7b585dbbe6"
 dependencies = [
  "num-integer",
  "num-traits",
@@ -6946,7 +6955,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7013,7 +7022,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7152,7 +7161,7 @@ dependencies = [
  "camino",
  "foundry-ui",
  "indoc",
- "itertools 0.14.0",
+ "itertools 0.15.0",
  "native-api",
  "num-bigint",
  "rayon",
@@ -7556,9 +7565,9 @@ dependencies = [
  "cairo-vm",
  "clap",
  "clap_complete",
- "console 0.16.3",
+ "console 0.16.4",
  "foundry-ui",
- "indicatif 0.18.4",
+ "indicatif 0.18.6",
  "num-traits",
  "regex",
  "semver",
@@ -7737,7 +7746,7 @@ dependencies = [
  "clap_complete",
  "coins-ledger",
  "configuration",
- "console 0.16.3",
+ "console 0.16.4",
  "const-hex",
  "conversions",
  "ctor",
@@ -7750,7 +7759,7 @@ dependencies = [
  "foundry-ui",
  "fs_extra",
  "indoc",
- "itertools 0.14.0",
+ "itertools 0.15.0",
  "mimalloc",
  "num-traits",
  "packages_validation",
@@ -7814,7 +7823,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52d1cfed4120b4d927bf7c0f86d2087a4a7d6027c906d9f9d525a80573b9be51"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8397,7 +8406,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix 1.1.4",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8406,7 +8415,7 @@ version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8c27177b12a6399ffc08b98f76f7c9a1f4fe9fc967c784c5a071fa8d93cf7e1"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -9162,9 +9171,9 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "voyager-verifier"
-version = "2.3.0"
+version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f858012003028984422a9f491ee85771a2747ba028b039241d540f316a17534"
+checksum = "941eaf02b4327288d6fb215a47fa434c3e7e8f37e22c7434c15f589f51c6f8b7"
 dependencies = [
  "anyhow",
  "backon",
@@ -9783,7 +9792,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
