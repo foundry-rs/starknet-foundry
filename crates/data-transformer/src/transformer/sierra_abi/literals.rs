@@ -17,9 +17,7 @@ impl SupportedCalldataKind for TerminalLiteralNumber<'_> {
         _abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArgument> {
-        let (value, suffix) = self
-            .numeric_value_and_suffix(db)
-            .with_context(|| format!("Couldn't parse value: {}", self.text(db).to_string(db)))?;
+        let (value, suffix) = self.numeric_value_and_suffix(db);
 
         let proper_param_type = match suffix {
             None => expected_type,
@@ -40,16 +38,9 @@ impl SupportedCalldataKind for ExprUnary<'_> {
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArgument> {
         let (value, suffix) = match self.expr(db) {
-            Expr::Literal(literal_number) => literal_number
-                .numeric_value_and_suffix(db)
-                .with_context(|| {
-                    format!(
-                        "Couldn't parse value: {}",
-                        literal_number.text(db).to_string(db)
-                    )
-                }),
+            Expr::Literal(literal_number) => literal_number.numeric_value_and_suffix(db),
             _ => bail!("Invalid expression with unary operator, only numbers allowed"),
-        }?;
+        };
 
         let proper_param_type = match suffix {
             None => expected_type,

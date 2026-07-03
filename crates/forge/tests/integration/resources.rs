@@ -297,6 +297,6 @@ fn deploy_with_constructor_calldata() {
 
     assert_syscall(&result, "deploy_with_syscall", SyscallSelector::Deploy, 1);
     // As of Starknet v0.13.5, deploy syscall uses constant 7 pedersen builtins + 1 additional as calldata factor in this case
-    // https://github.com/starkware-libs/sequencer/blob/b9d99e118ad23664cda984505414d49c3cb6b19f/crates/blockifier/resources/blockifier_versioned_constants_0_13_5.json#L166
+    // (blockifier 0.13.5, versioned_constants 0.13.5) https://github.com/starkware-libs/sequencer/blob/b9d99e118ad23664cda984505414d49c3cb6b19f/crates/blockifier/resources/blockifier_versioned_constants_0_13_5.json#L166
     assert_builtin(&result, "deploy_with_syscall", BuiltinName::pedersen, 8);
 }
