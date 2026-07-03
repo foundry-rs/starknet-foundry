@@ -260,6 +260,7 @@ fn multiple() {
 }
 
 #[test]
+#[cfg(feature = "scarb_since_2_19_0")]
 fn generic() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/generic"));
     let output = SnapboxCommand::from_std(
@@ -278,6 +279,39 @@ fn generic() {
          --> [..]/tests/contract.cairo:30:18
             assert!(s == 3);
                          ^
+        note: this error originates in the attribute macro: `test`
+        note: this error originates in the attribute macro: `fuzzer`
+        note: this error originates in the attribute macro: `__fuzzer_config`
+        note: this error originates in the attribute macro: `__fuzzer_wrapper`
+        note: this error originates in the attribute macro: `fork`
+        note: this error originates in the attribute macro: `ignore`
+        note: this error originates in the attribute macro: `__internal_config_statement`
+        
+        error: could not compile `generic_integrationtest` due to 1 previous error and 1 warning
+    "},
+    );
+}
+
+#[test]
+#[cfg(not(feature = "scarb_since_2_19_0"))]
+fn generic_old_scarb() {
+    let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/generic"));
+    let output = SnapboxCommand::from_std(
+        ScarbCommand::new()
+            .current_dir(temp.path())
+            .args(["build", "--test"])
+            .command(),
+    )
+    .assert()
+    .failure();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        error[E2311]: Trait has no implementation in context: core::traits::PartialOrd::<generic_integrationtest::contract::MyStruct>.
+         --> [..]/tests/contract.cairo:29:13
+            let s = smallest_element(@list);
+                    ^^^^^^^^^^^^^^^^
         note: this error originates in the attribute macro: `test`
         note: this error originates in the attribute macro: `fuzzer`
         note: this error originates in the attribute macro: `__fuzzer_config`
