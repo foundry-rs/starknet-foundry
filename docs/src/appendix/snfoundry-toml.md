@@ -104,6 +104,7 @@ The `block-explorer` field specifies the block explorer service used to display 
 | Value     | URL                                    |
 |-----------|----------------------------------------|
 | Voyager   | `https://voyager.online`               |
+| StarkScan | `https://starkscan.co`                 |
 | ViewBlock | `https://viewblock.io/starknet`        |
 | OkLink    | `https://www.oklink.com/starknet`      |
 

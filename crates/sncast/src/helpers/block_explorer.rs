@@ -3,6 +3,7 @@ use conversions::padded_felt::PaddedFelt;
 use serde::{Deserialize, Serialize};
 
 const VOYAGER: &str = "voyager.online";
+const STARKSCAN: &str = "starkscan.co";
 const VIEWBLOCK: &str = "https://viewblock.io/starknet";
 const OKLINK: &str = "https://www.oklink.com/starknet";
 
@@ -16,18 +17,9 @@ pub enum Service {
 }
 
 impl Service {
-    pub fn validate_for_config(block_explorer: Option<Self>) -> anyhow::Result<()> {
-        if block_explorer.unwrap_or_default() == Self::StarkScan {
-            anyhow::bail!(
-                "starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice."
-            );
-        }
-        Ok(())
-    }
-
     pub fn as_provider(&self, network: Network) -> Result<Box<dyn LinkProvider>, ExplorerError> {
         match (self, network) {
-            (Service::StarkScan, _) => unreachable!("Should be caught by config validation"),
+            (Service::StarkScan, Network::Mainnet) => Ok(Box::new(StarkScan)),
             (Service::Voyager, _) => Ok(Box::new(Voyager { network })),
             (Service::ViewBlock, Network::Mainnet) => Ok(Box::new(ViewBlock)),
             (Service::OkLink, Network::Mainnet) => Ok(Box::new(OkLink)),
@@ -74,6 +66,22 @@ impl LinkProvider for Voyager {
             "https://{}{VOYAGER}/contract/{address:#x}",
             network_subdomain(self.network)
         )
+    }
+}
+
+pub struct StarkScan;
+
+impl LinkProvider for StarkScan {
+    fn transaction(&self, hash: PaddedFelt) -> String {
+        format!("https://{STARKSCAN}/tx/{hash:#x}")
+    }
+
+    fn class(&self, hash: PaddedFelt) -> String {
+        format!("https://{STARKSCAN}/class/{hash:#x}")
+    }
+
+    fn contract(&self, address: PaddedFelt) -> String {
+        format!("https://{STARKSCAN}/contract/{address:#x}")
     }
 }
 
@@ -168,6 +176,16 @@ mod tests {
         assert_valid_links(&result).await;
     }
 
+    #[tokio::test]
+    async fn test_happy_case_starkscan() {
+        let result = MAINNET_RESPONSE.format_links(
+            Service::StarkScan
+                .as_provider(Network::Mainnet)
+                .unwrap(),
+        );
+        assert_valid_links(&result).await;
+    }
+
     #[test_case(Service::ViewBlock; "viewblock")]
     #[test_case(Service::OkLink; "oklink")]
     #[tokio::test]
@@ -176,6 +194,7 @@ mod tests {
         assert_valid_links(&result).await;
     }
 
+    #[test_case(Service::StarkScan; "starkscan")]
     #[test_case(Service::ViewBlock; "viewblock")]
     #[test_case(Service::OkLink; "oklink")]
     #[tokio::test]
