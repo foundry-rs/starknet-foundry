@@ -225,7 +225,7 @@ fn debugging_double_flags() {
 }
 
 #[test]
-fn debugging_trace_events_component_only() {
+fn snap_debugging_trace_events_component_only() {
     let temp = setup_package("debugging_events");
 
     let output = test_runner(&temp)
@@ -240,7 +240,7 @@ fn debugging_trace_events_component_only() {
 }
 
 #[test]
-fn debugging_trace_multiple_events_component() {
+fn snap_debugging_trace_multiple_events_component() {
     let temp = setup_package("debugging_events");
 
     let output = test_runner(&temp)
@@ -255,7 +255,7 @@ fn debugging_trace_multiple_events_component() {
 }
 
 #[test]
-fn debugging_trace_events_component_empty_list() {
+fn snap_debugging_trace_events_component_empty_list() {
     let temp = setup_package("debugging_events");
 
     let output = test_runner(&temp)
