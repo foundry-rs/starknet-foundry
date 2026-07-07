@@ -220,6 +220,42 @@ async fn test_show_config_cli_url_overrides_config_network() {
 }
 
 #[tokio::test]
+async fn test_show_config_displays_networks() {
+    let t = tempdir().unwrap();
+    fs::write(
+        t.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            network = "sepolia"
+            account = "user1"
+
+            [sncast.default.networks]
+            mainnet = "https://mainnet.example.com"
+            sepolia = "https://sepolia.example.com"
+        "#},
+    )
+    .unwrap();
+    let args = vec!["show-config", "--url", URL];
+
+    let snapbox = runner(&args).current_dir(t.path());
+
+    snapbox.assert().success().stdout_eq(formatdoc! {r"
+        Chain ID:            alpha-sepolia
+        RPC URL:             {}
+        Account:             user1
+        Accounts File Path:  [..]/.starknet_accounts/starknet_open_zeppelin_accounts.json
+        Wait Timeout:        300s
+        Wait Retry Interval: 5s
+        Show Explorer Links: true
+        Block Explorer:      Voyager
+        Scarb Profile:       release
+        Alias Count:         0
+        Mainnet URL:         https://mainnet.example.com/
+        Sepolia URL:         https://sepolia.example.com/
+    ", URL});
+}
+
+#[tokio::test]
 async fn test_show_config_displays_networks_json() {
     let t = tempdir().unwrap();
     fs::write(
