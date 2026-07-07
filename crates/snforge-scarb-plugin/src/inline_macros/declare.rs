@@ -48,6 +48,8 @@ fn normalize_path(raw_path: &str) -> Option<String> {
     })
 }
 
+/// Returns a span covering all macro argument tokens for diagnostics.
+/// Falls back to the call site when the macro is invoked without arguments.
 fn args_span(args: &TokenStream) -> TextSpan {
     let mut spans = args.tokens.iter().map(|token| match token {
         TokenTree::Ident(token) => &token.span,
