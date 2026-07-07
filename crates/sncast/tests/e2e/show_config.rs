@@ -29,6 +29,18 @@ async fn test_show_config_from_snfoundry_toml() {
     ", URL});
 }
 
+#[tokio::test]
+async fn test_show_config_json() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
+    let args = vec!["--json", "show-config"];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_eq(indoc! {r#"
+        {"account":"user1","accounts_file_path":"../account-file","alias_count":0,"block_explorer":"Voyager","chain_id":"alpha-sepolia","command":"show-config","keystore":null,"network":null,"networks":{"devnet":null,"mainnet":null,"sepolia":null},"profile":null,"rpc_url":"http://127.0.0.1:5055/rpc","scarb_profile":"release","show_explorer_links":true,"type":"response","wait_retry_interval":5,"wait_timeout":300}
+    "#});
+}
+
 #[test]
 fn test_show_config_displays_aliases_count() {
     let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
