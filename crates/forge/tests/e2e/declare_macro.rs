@@ -133,7 +133,7 @@ fn non_contract_fails_at_runtime() {
 
     assert_stdout_contains(
         output,
-        indoc! {r"
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -143,10 +143,10 @@ fn non_contract_fails_at_runtime() {
         [FAIL] declare_macro_integrationtest::tests::declare_non_contract_fails_at_runtime
 
         Failure data:
-            Failed to get contract artifact for identifier = declare_macro::not_a_contract::NotAContract.
+            "Failed to get contract artifact for identifier = declare_macro::not_a_contract::NotAContract."
 
         Tests: 0 passed, 1 failed, 0 ignored, 7 filtered out
-        "},
+        "#},
     );
 }
 
