@@ -7,4 +7,3 @@ fn test_declare_full_path() {
         .contract_class();
     // ...
 }
-

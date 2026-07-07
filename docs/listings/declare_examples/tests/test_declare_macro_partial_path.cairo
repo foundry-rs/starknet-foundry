@@ -6,4 +6,3 @@ fn test_declare_partial_path() {
     let contract = declare!(hello_starknet::HelloStarknet).unwrap().contract_class();
     // ...
 }
-

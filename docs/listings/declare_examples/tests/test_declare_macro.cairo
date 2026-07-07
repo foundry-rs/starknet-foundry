@@ -6,4 +6,3 @@ fn test_declare() {
     let contract = declare!(HelloStarknet).unwrap().contract_class();
     // ...
 }
-
