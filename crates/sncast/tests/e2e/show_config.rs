@@ -193,6 +193,7 @@ async fn test_show_config_with_network() {
         Block Explorer:      Voyager
         Scarb Profile:       release
         Alias Count:         0
+        Sepolia URL:         http://127.0.0.1:5055/rpc
     "});
 }
 
@@ -214,7 +215,35 @@ async fn test_show_config_cli_url_overrides_config_network() {
         Block Explorer:      Voyager
         Scarb Profile:       release
         Alias Count:         0
+        Sepolia URL:         http://127.0.0.1:5055/rpc
     ", URL});
+}
+
+#[tokio::test]
+async fn test_show_config_displays_networks_json() {
+    let t = tempdir().unwrap();
+    fs::write(
+        t.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            url = "http://127.0.0.1:1/rpc"
+            account = "user1"
+
+            [sncast.default.networks]
+            sepolia = "https://sepolia.example.com/rpc"
+        "#},
+    )
+    .unwrap();
+    let args = vec!["--json", "show-config"];
+
+    let snapbox = runner(&args).current_dir(t.path());
+
+    assert_stdout_contains(
+        snapbox.assert().success(),
+        indoc! {r#"
+            [..]"networks":{"devnet":null,"mainnet":null,"sepolia":"https://sepolia.example.com/rpc"}[..]
+        "#},
+    );
 }
 
 #[tokio::test]

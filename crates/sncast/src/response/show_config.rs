@@ -1,10 +1,28 @@
 use crate::Network;
 use crate::helpers::block_explorer;
+use crate::helpers::configuration::NetworksConfig;
 use crate::response::cast_message::SncastCommandMessage;
 use camino::Utf8PathBuf;
 use foundry_ui::styling;
 use serde::Serialize;
 use url::Url;
+
+#[derive(Serialize, Clone)]
+pub struct ShowConfigNetworks {
+    pub mainnet: Option<Url>,
+    pub sepolia: Option<Url>,
+    pub devnet: Option<Url>,
+}
+
+impl From<&NetworksConfig> for ShowConfigNetworks {
+    fn from(networks: &NetworksConfig) -> Self {
+        Self {
+            mainnet: networks.mainnet.clone(),
+            sepolia: networks.sepolia.clone(),
+            devnet: networks.devnet.clone(),
+        }
+    }
+}
 
 #[derive(Serialize, Clone)]
 pub struct ShowConfigResponse {
@@ -21,6 +39,7 @@ pub struct ShowConfigResponse {
     pub block_explorer: Option<block_explorer::Service>,
     pub scarb_profile: String,
     pub alias_count: usize,
+    pub networks: ShowConfigNetworks,
 }
 
 impl SncastCommandMessage for ShowConfigResponse {
@@ -63,6 +82,16 @@ impl SncastCommandMessage for ShowConfigResponse {
         let mut builder = builder.field("Alias Count", &alias_count);
         if self.alias_count != 0 {
             builder = builder.extra("(use `sncast alias list` to display)");
+        }
+
+        if let Some(url) = &self.networks.mainnet {
+            builder = builder.field("Mainnet URL", url.as_ref());
+        }
+        if let Some(url) = &self.networks.sepolia {
+            builder = builder.field("Sepolia URL", url.as_ref());
+        }
+        if let Some(url) = &self.networks.devnet {
+            builder = builder.field("Devnet URL", url.as_ref());
         }
 
         builder.build()
