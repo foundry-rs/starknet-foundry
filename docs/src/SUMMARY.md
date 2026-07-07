@@ -134,7 +134,7 @@
         * [file format rules](appendix/snforge-library/fs/file_format_rules.md)
         * [`File`](appendix/snforge-library/fs/file.md)
         * [`FileParser`](appendix/snforge-library/fs/file_parser.md)
-        * [`read_txt`](appendix/snforge-library/fs/read_txt.md)fix 
+        * [`read_txt`](appendix/snforge-library/fs/read_txt.md) 
         * [`read_json`](appendix/snforge-library/fs/read_json.md)
     * [env](appendix/snforge-library/env.md)
     * [signature](appendix/snforge-library/signature.md)
