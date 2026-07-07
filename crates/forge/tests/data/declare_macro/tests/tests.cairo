@@ -29,6 +29,11 @@ fn declare_with_contract_name() {
 }
 
 #[test]
+fn declare_non_contract_fails_at_runtime() {
+    declare!(declare_macro::not_a_contract::NotAContract).unwrap();
+}
+
+#[test]
 #[should_panic(expected: "Failed to get contract artifact for identifier = HelloStarknetAlias.")]
 fn declare_with_contract_alias_is_not_resolved_as_canonical_path() {
     declare!(HelloStarknetAlias).unwrap();
