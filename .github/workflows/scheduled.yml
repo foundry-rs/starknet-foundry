@@ -51,7 +51,16 @@ jobs:
       - uses: software-mansion/setup-universal-sierra-compiler@v1
 
       - run: cargo test --profile ci --lib -p forge
-      - run: cargo test --profile ci -p forge integration --features non_exact_gas_assertions
+      - name: Determine test features
+        id: test_features
+        run: |
+          SCARB_VERSION="${{ matrix.version }}"
+          FEATURES="non_exact_gas_assertions"
+          if [ "$(printf '%s\n' "2.19.0" "$SCARB_VERSION" | sort -V | head -n1)" = "2.19.0" ]; then
+            FEATURES="${FEATURES},scarb_since_2_19_0"
+          fi
+          echo "features=$FEATURES" >> "$GITHUB_OUTPUT"
+      - run: cargo test --profile ci -p forge integration --features "${{ steps.test_features.outputs.features }}"
 
   test-forge-e2e:
     if: github.event.repository.fork == false
@@ -96,7 +105,19 @@ jobs:
           curl -sSL --fail --retry 5 --retry-all-errors --connect-timeout 10 -H "Authorization: Bearer ${{ github.token }}" https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
           cairo-coverage --version
 
-      - run: cargo test --profile ci -p forge --features scheduled_latest_scarb_only e2e
+      - name: Determine test features
+        id: test_features
+        run: |
+          SCARB_VERSION="${{ matrix.version }}"
+
+          if [ "$(printf '%s\n' "2.19.0" "$SCARB_VERSION" | sort -V | head -n1)" = "2.19.0" ]; then
+            FEATURES="scheduled_latest_scarb_only,scarb_since_2_19_0"
+          else
+            FEATURES="scheduled_latest_scarb_only"
+          fi
+          echo "features=$FEATURES" >> "$GITHUB_OUTPUT"
+
+      - run: cargo test --profile ci -p forge --features "${{ steps.test_features.outputs.features }}" e2e
 
   test-cast:
     if: github.event.repository.fork == false

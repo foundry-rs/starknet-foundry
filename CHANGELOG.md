@@ -7,12 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.62.1] - 2026-07-03
+
 ### Forge
 
 #### Added
 
 - Full support for Starknet v0.14.3
 - Support for `sha512_process_block` syscall
+
+#### Changed
+
+- Minimal recommended `Scarb` version is now `2.17.0` (updated from `2.16.1`)
+- Temporarily disabled the `add-types-debug-info = true` requirement for `--launch-debugger` on Scarb `>= 2.19.0` due to compile errors.
+
+#### Fixed
+
+- Fixed a performance regression from the previous version that could cause slowdowns during tests execution with debugging trace or gas report enabled
 
 ## [0.62.0] - 2026-06-25
 

@@ -12,4 +12,3 @@ fn test_l() {
 fn test_m() {
     assert!(1 + 1 == 2);
 }
-
