@@ -4,6 +4,10 @@
 of a string literal and adds a compile-time check that `ContractState` exists under the given path.
 The macro expands to a regular `declare(...)` call, so contract artifact resolution still happens at runtime.
 
+> 📝 **Note**
+> This compile-time check only verifies that the contract path exists as a Cairo type path.
+> It does not validate the contract contents, ABI, entrypoints, or that the resolved artifact has the shape expected by the test.
+
 Accepted paths are:
 - full module tree paths (e.g. `my_package::module::MyContract`)
 - partial module tree paths (e.g. `module::MyContract`)
@@ -22,6 +26,9 @@ Partial module tree paths require their first segment to be in scope:
 ```
 
 ### Limitations
+
+`declare!` is type-safe only from the contract path existence perspective. It should not be treated as a
+compile-time guarantee about the contract contents.
 
 Currently, `declare!` does not resolve Cairo aliases. The path passed to the macro is also passed to the runtime
 contract resolver. This means that such code will **not work**:
