@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
+- Full support for Starknet v0.14.3
+- Support for `sha512_process_block` syscall
+
 #### Changed
 
 - Minimal recommended `Scarb` version is now `2.17.0` (updated from `2.16.1`)
@@ -29,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed a performance regression from the previous version that could cause slowdowns during tests execution with debugging trace or gas report enabled
 
 ## [0.62.0] - 2026-06-25
+
 ### Forge
 
 #### Added
