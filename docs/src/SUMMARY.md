@@ -124,8 +124,9 @@
     * [interact_with_state](appendix/cheatcodes/interact_with_state.md)
 * [`snforge` Library Reference](appendix/snforge-library.md)
     * [byte_array](appendix/snforge-library/byte_array.md)
-    * [declare](appendix/snforge-library/declare.md)
-    * [declare!](appendix/snforge-library/declare_macro.md)
+    * [declare](appendix/snforge-library/declare.md) - declares a contract using its name and returns
+  a [`ContractClass`](appendix/snforge-library/contract_class.md) which can be interacted with later
+    * [declare!](appendix/snforge-library/declare_macro.md) - declares a contract using a module path and returns a [`ContractClass`](appendix/snforge-library/contract_class.md) which can be interacted with later
     * [declare_result](appendix/snforge-library/declare_result.md)
     * [contract_class](appendix/snforge-library/contract_class.md)
     * [get_call_trace](appendix/snforge-library/get_call_trace.md)
@@ -133,7 +134,7 @@
         * [file format rules](appendix/snforge-library/fs/file_format_rules.md)
         * [`File`](appendix/snforge-library/fs/file.md)
         * [`FileParser`](appendix/snforge-library/fs/file_parser.md)
-        * [`read_txt`](appendix/snforge-library/fs/read_txt.md)
+        * [`read_txt`](appendix/snforge-library/fs/read_txt.md)fix 
         * [`read_json`](appendix/snforge-library/fs/read_json.md)
     * [env](appendix/snforge-library/env.md)
     * [signature](appendix/snforge-library/signature.md)
