@@ -121,6 +121,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
             | SyscallSelector::Keccak
             | SyscallSelector::KeccakRound
             | SyscallSelector::Sha256ProcessBlock
+            | SyscallSelector::Sha512ProcessBlock
             | SyscallSelector::LibraryCallL1Handler
             | SyscallSelector::ReplaceClass
             | SyscallSelector::Secp256k1Add
@@ -219,7 +220,7 @@ impl CheatableStarknetRuntimeExtension<'_> {
         );
 
         // Refund `SYSCALL_BASE_GAS_COST` as it was pre-charged.
-        // Note: It is pre-charged by the compiler: https://github.com/starkware-libs/sequencer/blob/v0.15.0-rc.2/crates/blockifier/src/blockifier_versioned_constants.rs#L1057
+        // Note: It is pre-charged by the compiler (blockifier 0.15.0-rc.2): https://github.com/starkware-libs/sequencer/blob/27e6e36d4f4a35341635a571f36317582d4b00d0/crates/blockifier/src/blockifier_versioned_constants.rs#L1057
         let required_gas = syscall_gas_cost - syscall_base_cost;
 
         if gas_counter < required_gas {

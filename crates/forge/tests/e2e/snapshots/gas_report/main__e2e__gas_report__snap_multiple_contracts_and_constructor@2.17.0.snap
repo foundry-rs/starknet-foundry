@@ -5,7 +5,7 @@ expression: stdout
 
 
 
-[PASS] simple_package_with_cheats_integrationtest::contract::call_and_invoke_proxy (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~1334740)
+[PASS] simple_package_with_cheats_integrationtest::contract::call_and_invoke_proxy (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~1361740)
 ╭------------------------+-------+-------+-------+---------+---------╮
 | HelloStarknet Contract |       |       |       |         |         |
 +====================================================================+
@@ -19,7 +19,7 @@ expression: stdout
 +============================================================================+
 | Function Name               | Min    | Max    | Avg    | Std Dev | # Calls |
 |-----------------------------+--------+--------+--------+---------+---------|
-| constructor                 | 49620  | 49620  | 49620  | 0       | 1       |
+| constructor                 | 64620  | 64620  | 64620  | 0       | 1       |
 |-----------------------------+--------+--------+--------+---------+---------|
-| get_block_number            | 133350 | 133350 | 133350 | 0       | 2       |
+| get_block_number            | 139350 | 139350 | 139350 | 0       | 2       |
 ╰-----------------------------+--------+--------+--------+---------+---------╯

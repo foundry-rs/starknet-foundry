@@ -14,4 +14,3 @@ fn main() {
         .unwrap_err();
     println!("{:?}", invoke_result);
 }
-

@@ -17,4 +17,3 @@ fn main() {
 
     assert(deploy_result.transaction_hash != 0, deploy_result.transaction_hash);
 }
-

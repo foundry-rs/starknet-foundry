@@ -17,7 +17,7 @@ use starknet_api::deprecated_contract_class::EntryPointOffset;
 use std::collections::HashMap;
 use universal_sierra_compiler_api::representation::RawCasmProgram;
 
-// Based on structure from https://github.com/starkware-libs/sequencer/blob/e417a9e7d50cbd78065d357763df2fbc2ad41f7c/crates/blockifier/src/execution/entry_point_execution.rs#L39
+// Based on structure from (blockifier 0.13.5) https://github.com/starkware-libs/sequencer/blob/e417a9e7d50cbd78065d357763df2fbc2ad41f7c/crates/blockifier/src/execution/entry_point_execution.rs#L39
 // Logic of `initialize_execution_context` had to be modified so this struct ended up modified as well.
 // Probably won't be possible to upstream it.
 pub struct VmExecutionContext<'a> {
@@ -28,7 +28,7 @@ pub struct VmExecutionContext<'a> {
     pub program_extra_data_length: usize,
 }
 
-// Based on code from https://github.com/starkware-libs/sequencer/blob/e417a9e7d50cbd78065d357763df2fbc2ad41f7c/crates/blockifier/src/execution/entry_point_execution.rs#L122
+// Based on code from (blockifier 0.13.5) https://github.com/starkware-libs/sequencer/blob/e417a9e7d50cbd78065d357763df2fbc2ad41f7c/crates/blockifier/src/execution/entry_point_execution.rs#L122
 // Enough of the logic of this had to be changed that probably it won't be possible to upstream it
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn initialize_execution_context<'a>(

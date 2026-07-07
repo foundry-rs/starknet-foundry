@@ -5,4 +5,3 @@ fn main() {
     let declare_result = declare("Mapaaaa", fee_settings, Option::None).unwrap_err();
     println!("{:?}", declare_result);
 }
-

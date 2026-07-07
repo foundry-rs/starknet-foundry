@@ -2,6 +2,8 @@ use super::common::runner::{setup_package, test_runner};
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
+// TODO(#4474): Re-enable once cairo-native variant is fixed
+#[cfg_attr(feature = "cairo-native", ignore = "TODO(#4474)")]
 #[test]
 fn trace_info_print() {
     let temp = setup_package("trace");

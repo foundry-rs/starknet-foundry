@@ -113,11 +113,18 @@ pub fn execute_call_entry_point(
     // endregion
 
     // Validate contract is deployed.
-    let storage_class_hash = state.get_class_hash_at(entry_point.storage_address)?;
+    let strip_vm_frames = context.versioned_constants().strip_vm_frames_in_sierra_gas;
+    let storage_class_hash = state
+        .get_class_hash_at(entry_point.storage_address)
+        .map_err(|e| {
+            EntryPointExecutionError::from(e)
+                .annotated(TrackedResource::CairoSteps, strip_vm_frames)
+        })?;
     if storage_class_hash == ClassHash::default() {
-        return Err(
-            PreExecutionError::UninitializedStorageAddress(entry_point.storage_address).into(),
-        );
+        return Err(EntryPointExecutionError::from(
+            PreExecutionError::UninitializedStorageAddress(entry_point.storage_address),
+        )
+        .annotated(TrackedResource::CairoSteps, strip_vm_frames));
     }
 
     // region: Modified blockifier code
@@ -131,7 +138,9 @@ pub fn execute_call_entry_point(
         .unwrap_or(storage_class_hash); // If not given, take the storage contract class hash.
     // endregion
 
-    let compiled_class = state.get_compiled_class(class_hash)?;
+    let compiled_class = state.get_compiled_class(class_hash).map_err(|e| {
+        EntryPointExecutionError::from(e).annotated(TrackedResource::CairoSteps, strip_vm_frames)
+    })?;
     let current_tracked_resource = compiled_class.get_current_tracked_resource(context);
 
     // region: Modified blockifier code
@@ -145,10 +154,15 @@ pub fn execute_call_entry_point(
         && class_hash
             == ClassHash(Felt::from_hex(FAULTY_CLASS_HASH).expect("A class hash must be a felt."))
     {
-        return Err(PreExecutionError::FraudAttempt.into());
+        return Err(
+            EntryPointExecutionError::from(PreExecutionError::FraudAttempt)
+                .annotated(TrackedResource::CairoSteps, strip_vm_frames),
+        );
     }
 
-    let contract_class = state.get_compiled_class(class_hash)?;
+    let contract_class = state.get_compiled_class(class_hash).map_err(|e| {
+        EntryPointExecutionError::from(e).annotated(TrackedResource::CairoSteps, strip_vm_frames)
+    })?;
 
     context.revert_infos.0.push(EntryPointRevertInfo::new(
         entry_point.storage_address,
@@ -214,7 +228,7 @@ pub fn execute_call_entry_point(
                     ),
                 };
                 exit_error_call(&err, cheatnet_state, &entry_point);
-                return Err(err);
+                return Err(err.annotated(res.call_info.tracked_resource, strip_vm_frames));
             }
             update_remaining_gas(remaining_gas, &res.call_info);
             update_trace_data(
@@ -237,7 +251,10 @@ pub fn execute_call_entry_point(
                 PreExecutionError::EntryPointNotFound(_)
                 | PreExecutionError::NoEntryPointOfTypeFound(_) => ENTRYPOINT_NOT_FOUND_ERROR,
                 PreExecutionError::InsufficientEntryPointGas => OUT_OF_GAS_ERROR,
-                _ => return Err(err.into()),
+                _ => {
+                    return Err(EntryPointExecutionError::from(err)
+                        .annotated(current_tracked_resource, strip_vm_frames));
+                }
             };
             let call_info = CallInfo {
                 call: entry_point.into(),
@@ -263,7 +280,7 @@ pub fn execute_call_entry_point(
         }
         Err(err) => {
             exit_error_call(&err, cheatnet_state, &entry_point);
-            Err(err)
+            Err(err.annotated(current_tracked_resource, strip_vm_frames))
         }
     }
     // endregion
@@ -305,6 +322,7 @@ pub fn non_reverting_execute_call_entry_point(
         if call_info.execution.failed {
             // Region: Modified blockifier code
             clear_handled_errors(call_info, cheatnet_state);
+            let strip_vm_frames = context.versioned_constants().strip_vm_frames_in_sierra_gas;
             let err = EntryPointExecutionError::ExecutionFailed {
                 error_trace: extract_trailing_cairo1_revert_trace(
                     call_info,
@@ -319,7 +337,7 @@ pub fn non_reverting_execute_call_entry_point(
                     .clone()
                     .into_executable(entry_point.class_hash.unwrap_or_default()),
             );
-            return Err(err);
+            return Err(err.annotated(call_info.tracked_resource, strip_vm_frames));
         }
         cheatnet_state.trace_data.exit_nested_call();
         // endregion
@@ -338,10 +356,16 @@ pub fn execute_constructor_entry_point(
     remaining_gas: &mut u64,
 ) -> ConstructorEntryPointExecutionResult<CallInfo> {
     // Ensure the class is declared (by reading it).
+    let strip_vm_frames = context.versioned_constants().strip_vm_frames_in_sierra_gas;
     let contract_class = state
         .get_compiled_class(ctor_context.class_hash)
         .map_err(|error| {
-            ConstructorEntryPointExecutionError::new(error.into(), ctor_context, None)
+            ConstructorEntryPointExecutionError::new(
+                EntryPointExecutionError::from(error)
+                    .annotated(TrackedResource::CairoSteps, strip_vm_frames),
+                ctor_context,
+                None,
+            )
         })?;
     let Some(constructor_selector) = contract_class.constructor_selector() else {
         // Contract has no constructor.

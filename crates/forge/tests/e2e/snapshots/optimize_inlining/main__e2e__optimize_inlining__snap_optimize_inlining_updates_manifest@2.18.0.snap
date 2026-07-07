@@ -1,5 +1,6 @@
 ---
 source: crates/forge/tests/e2e/optimize_inlining.rs
+assertion_line: 84
 expression: stdout
 ---
 Starting inlining strategy optimization...
@@ -10,31 +11,31 @@ Search range: 0 to 10, step: 10, max contract size: 4089446 bytes, max felts: 81
 
 
 
-[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~1006820)
+[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~1039820)
 
 
-  ✓ Tests passed, gas: 1006820, max contract size: 51134 bytes, contract bytecode L2 gas: 47513600
+  ✓ Tests passed, gas: 1039820, max contract size: 51134 bytes, contract bytecode L2 gas: 47513600
 
 [2/2] Testing threshold 10...
 
 
 
-[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~982680)
+[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~1015680)
 
 
-  ✓ Tests passed, gas: 982680, max contract size: 28382 bytes, contract bytecode L2 gas: 32686080
+  ✓ Tests passed, gas: 1015680, max contract size: 28382 bytes, contract bytecode L2 gas: 32686080
 
 Optimization Results:
 ╭───────────┬───────────┬───────────────┬──────────────────────────┬────────╮
 │ Threshold ┆ Total Gas ┆ Contract Size ┆ Contract Bytecode L2 Gas ┆ Status │
 ╞═══════════╪═══════════╪═══════════════╪══════════════════════════╪════════╡
-│ 0         ┆ 1006820   ┆ 51134         ┆ 47513600                 ┆ ✓      │
+│ 0         ┆ 1039820   ┆ 51134         ┆ 47513600                 ┆ ✓      │
 ├╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ 10        ┆ 982680    ┆ 28382         ┆ 32686080                 ┆ ✓      │
+│ 10        ┆ 1015680   ┆ 28382         ┆ 32686080                 ┆ ✓      │
 ╰───────────┴───────────┴───────────────┴──────────────────────────┴────────╯
 
-Lowest runtime gas cost: threshold=10, gas=982680, contract bytecode L2 gas=32686080
-Lowest contract size cost: threshold=10, gas=982680, contract bytecode L2 gas=32686080
+Lowest runtime gas cost: threshold=10, gas=1015680, contract bytecode L2 gas=32686080
+Lowest contract size cost: threshold=10, gas=1015680, contract bytecode L2 gas=32686080
 
 Graph saved to: [..]
 Updated Scarb.toml with inlining-strategy = 10

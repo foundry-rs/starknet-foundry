@@ -8,6 +8,7 @@ edition.workspace = true
 [features]
 # This should match `MINIMAL_SCARB_VERSION`
 scarb_2_13_1 = []
+scarb_since_2_19_0 = []
 no_scarb_installed = []
 non_exact_gas_assertions = []
 scheduled_latest_scarb_only = []
