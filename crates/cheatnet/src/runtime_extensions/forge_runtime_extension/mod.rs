@@ -198,6 +198,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 handle_declare_result(declare_from_file(
                     *state,
                     std::path::Path::new(&sierra_path),
+                    self.contracts_data,
                 ))
             }
             // Internal cheatcode used to pass a contract address when calling `deploy_at`.

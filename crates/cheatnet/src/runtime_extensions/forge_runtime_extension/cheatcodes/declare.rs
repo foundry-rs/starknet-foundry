@@ -61,7 +61,16 @@ pub fn declare(
 pub fn declare_from_file(
     state: &mut dyn State,
     sierra_path: &Path,
+    contracts_data: &ContractsData,
 ) -> Result<DeclareResult, CheatcodeError> {
+    if let Some(contract) = contracts_data.find_by_sierra_path(sierra_path) {
+        return declare_contract_class(
+            state,
+            contract.class_hash,
+            get_contract_class(&contract.artifacts),
+        );
+    }
+
     let sierra = std::fs::read_to_string(sierra_path).map_err(|error| {
         CheatcodeError::Unrecoverable(EnhancedHintError::from(anyhow!(
             "Failed to read Sierra file at {}: {error}",

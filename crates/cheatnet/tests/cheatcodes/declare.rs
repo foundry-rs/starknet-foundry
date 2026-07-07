@@ -4,6 +4,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::Cheatcode
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::{
     DeclareResult, declare, declare_from_file,
 };
+use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use runtime::EnhancedHintError;
 use shared::utils::contract_name_from_module_path;
 use starknet_api::core::ClassHash;
@@ -343,7 +344,7 @@ fn declare_from_file_simple() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare_from_file(&mut cached_state, sierra_path)
+    let class_hash = declare_from_file(&mut cached_state, sierra_path, &contracts_data)
         .unwrap()
         .unwrap_success();
     let expected_class_hash = &contracts_data
@@ -353,7 +354,7 @@ fn declare_from_file_simple() {
 
     assert_eq!(class_hash, *expected_class_hash);
 
-    let output = declare_from_file(&mut cached_state, sierra_path);
+    let output = declare_from_file(&mut cached_state, sierra_path, &contracts_data);
 
     assert!(
         matches!(output, Ok(DeclareResult::AlreadyDeclared(class_hash)) if class_hash == *expected_class_hash)
@@ -366,7 +367,7 @@ fn declare_from_file_nonexistent_path() {
 
     let mut cached_state = create_cached_state();
 
-    let output = declare_from_file(&mut cached_state, sierra_path);
+    let output = declare_from_file(&mut cached_state, sierra_path, &ContractsData::default());
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {
@@ -384,7 +385,7 @@ fn declare_from_file_invalid_file() {
 
     let mut cached_state = create_cached_state();
 
-    let output = declare_from_file(&mut cached_state, sierra_path);
+    let output = declare_from_file(&mut cached_state, sierra_path, &ContractsData::default());
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {
