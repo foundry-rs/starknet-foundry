@@ -1,10 +1,10 @@
 use crate::utils::create_single_token;
-use cairo_lang_macro::{Diagnostic, ProcMacroResult, TextSpan, TokenStream, TokenTree, quote};
+use cairo_lang_macro::{quote, Diagnostic, ProcMacroResult, TextSpan, TokenStream, TokenTree};
 use regex::Regex;
 use std::sync::LazyLock;
 
 static CONTRACT_PATH_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*$")
+    Regex::new(r"^(::)?[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*$")
         .expect("contract path regex should be valid")
 });
 
@@ -40,7 +40,12 @@ fn expand(args: &TokenStream) -> Result<TokenStream, Diagnostic> {
 fn normalize_path(raw_path: &str) -> Option<String> {
     let normalized = normalize_path_separators(strip_macro_arg_parentheses(raw_path.trim())?)?;
 
-    is_valid_contract_path(&normalized).then_some(normalized)
+    is_valid_contract_path(&normalized).then(|| {
+        normalized
+            .strip_prefix("::")
+            .unwrap_or(&normalized)
+            .to_string()
+    })
 }
 
 fn args_span(args: &TokenStream) -> TextSpan {
@@ -112,7 +117,9 @@ mod tests {
 
     #[test_case("HelloStarknet"; "contract name")]
     #[test_case("my_package::hello_starknet::HelloStarknet"; "full module path")]
+    #[test_case("::my_package::hello_starknet::HelloStarknet"; "full module path with leading colons")]
     #[test_case("alias::HelloStarknet"; "partial module path")]
+    #[test_case("::alias::HelloStarknet"; "partial module path with leading colons")]
     fn valid_contract_path(path: &str) {
         assert!(is_valid_contract_path(path));
     }
@@ -121,9 +128,9 @@ mod tests {
     #[test_case("my-package::HelloStarknet"; "invalid module path")]
     #[test_case("1_Contract"; "identifier starting with digit")]
     #[test_case("hello_starknet::1_Contract"; "path segment starting with digit")]
-    #[test_case("::HelloStarknet"; "leading empty segment")]
     #[test_case("hello_starknet::"; "trailing empty segment")]
     #[test_case("hello_starknet::::HelloStarknet"; "empty middle segment")]
+    #[test_case("::::HelloStarknet"; "multiple leading separators")]
     #[test_case(""; "empty string")]
     fn invalid_contract_path(path: &str) {
         assert!(!is_valid_contract_path(path));
@@ -133,6 +140,14 @@ mod tests {
     fn normalizes_whitespace_around_path_separators() {
         assert_eq!(
             normalize_path("(my_package :: hello_starknet :: HelloStarknet)"),
+            Some("my_package::hello_starknet::HelloStarknet".to_string())
+        );
+    }
+
+    #[test]
+    fn normalizes_leading_colons() {
+        assert_eq!(
+            normalize_path("(::my_package::hello_starknet::HelloStarknet)"),
             Some("my_package::hello_starknet::HelloStarknet".to_string())
         );
     }

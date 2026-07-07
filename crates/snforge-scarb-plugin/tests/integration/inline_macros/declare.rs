@@ -23,8 +23,28 @@ fn accepts_full_module_path() {
 }
 
 #[test]
+fn accepts_full_module_path_with_leading_colons() {
+    let args = macro_args("::my_package::hello_starknet::HelloStarknet");
+
+    let result = declare(&args);
+
+    assert!(result.diagnostics.is_empty());
+    insta::assert_snapshot!(result.token_stream.to_string());
+}
+
+#[test]
 fn accepts_partial_module_path() {
     let args = macro_args("hello_starknet::HelloStarknet");
+
+    let result = declare(&args);
+
+    assert!(result.diagnostics.is_empty());
+    insta::assert_snapshot!(result.token_stream.to_string());
+}
+
+#[test]
+fn accepts_partial_module_path_with_leading_colons() {
+    let args = macro_args("::hello_starknet::HelloStarknet");
 
     let result = declare(&args);
 

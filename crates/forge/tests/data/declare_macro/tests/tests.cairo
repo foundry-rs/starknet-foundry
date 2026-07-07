@@ -9,8 +9,18 @@ fn declare_with_full_path() {
 }
 
 #[test]
+fn declare_with_leading_colons_full_path() {
+    declare!(::declare_macro::hello_starknet::HelloStarknet).unwrap();
+}
+
+#[test]
 fn declare_with_partial_path() {
     declare!(hello_starknet::HelloStarknet).unwrap();
+}
+
+#[test]
+fn declare_with_leading_colons_partial_path() {
+    declare!(::hello_starknet::HelloStarknet).unwrap();
 }
 
 #[test]

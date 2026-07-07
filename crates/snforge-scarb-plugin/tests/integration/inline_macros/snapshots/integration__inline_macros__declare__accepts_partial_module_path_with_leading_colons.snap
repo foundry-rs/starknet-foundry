@@ -1,0 +1,5 @@
+---
+source: tests/integration/inline_macros/declare.rs
+expression: result.token_stream.to_string()
+---
+{snforge_std::_internals::assert_path_type::<hello_starknet::HelloStarknet::ContractState>();snforge_std::declare("hello_starknet::HelloStarknet")}
