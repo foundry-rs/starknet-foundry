@@ -9,4 +9,3 @@ fn test_declare_from_file() {
         .contract_class();
     // ...
 }
-
