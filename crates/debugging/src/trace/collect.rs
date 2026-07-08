@@ -89,7 +89,7 @@ impl<'a> Collector<'a> {
         self.contracts_data_store()
             .get_contract_name(self.class_hash())
             .cloned()
-            .unwrap_or_else(|| ContractName("forked contract".to_string()))
+            .unwrap_or_else(|| format_forked_contract_name(self.class_hash()))
     }
 
     fn collect_selector(&self) -> Selector {
@@ -182,6 +182,10 @@ fn format_result_message(tag: &str, message: &str) -> String {
     } else {
         format!("{tag}: {message}")
     }
+}
+
+fn format_forked_contract_name(class_hash: &ClassHash) -> ContractName {
+    ContractName(format!("forked contract (class hash: {:#x})", class_hash.0))
 }
 
 fn format_raw_felts(felts: &[Felt]) -> String {
@@ -300,6 +304,19 @@ mod tests {
             "expected hex fallback, got: {}",
             result.0
         );
+    }
+
+    #[test]
+    fn collect_contract_name_displays_class_hash_for_forked_contract() {
+        let class_hash = ClassHash(Felt::from_hex_unchecked("0x1234"));
+        let selector = EntryPointSelector(Felt::from_hex_unchecked("0x5678"));
+
+        let trace = make_call_trace(class_hash, selector);
+        let context = make_context(class_hash, vec![]);
+        let collector = Collector::new(&trace, &context);
+
+        let result = collector.collect_contract_name();
+        assert_eq!(result.0, "forked contract (class hash: 0x1234)");
     }
 
     #[test]
