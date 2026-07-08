@@ -1,5 +1,5 @@
 use crate::utils::create_single_token;
-use cairo_lang_macro::{Diagnostic, ProcMacroResult, TextSpan, TokenStream, TokenTree, quote};
+use cairo_lang_macro::{quote, Diagnostic, ProcMacroResult, TextSpan, TokenStream, TokenTree};
 use regex::Regex;
 use std::sync::LazyLock;
 
