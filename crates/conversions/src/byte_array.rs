@@ -128,7 +128,7 @@ mod tests {
     fn test_deserialize_with_magic_pending_word_len_too_large() {
         // [magic, num_full_words, pending_word, pending_word_len]
         let mut data = ByteArray::from("x").serialize_with_magic();
-        *data.last_mut().unwrap() = Felt::from(100_u8);
+        *data.last_mut().unwrap() = Felt::from(32_u8);
 
         assert!(ByteArray::deserialize_with_magic(&data).is_err());
     }
