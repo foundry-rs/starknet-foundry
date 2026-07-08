@@ -154,13 +154,13 @@ fn with_features_fails_without_flag() {
     [FAIL] with_features_integrationtest::tests::declare_and_call_contract_from_lib
 
     Failure data:
-        "Failed to get contract artifact for name = HelloStarknet."
+        "Failed to get contract artifact for identifier = HelloStarknet."
 
     Running 1 test(s) from src/
     [FAIL] with_features::tests::declare_contract_from_lib
 
     Failure data:
-        "Failed to get contract artifact for name = HelloStarknet."
+        "Failed to get contract artifact for identifier = HelloStarknet."
 
     Tests: 0 passed, 2 failed, 0 ignored, 0 filtered out
 
@@ -280,7 +280,7 @@ fn custom_target_only_integration_without_external() {
     [FAIL] custom_first::tests::declare_and_call_contract_from_lib
 
     Failure data:
-        "Failed to get contract artifact for name = HelloStarknet."
+        "Failed to get contract artifact for identifier = HelloStarknet."
 
     Tests: 0 passed, 1 failed, 0 ignored, 0 filtered out
     "#},
@@ -376,10 +376,10 @@ fn duplicate_contract_name_fails() {
         [FAIL] declare_paths_integrationtest::test_duplicate::declare_ambiguous_contract
 
         Failure data:
-            "Multiple contracts found with name = HelloStarknet. Found contracts at the following paths:
+            "Multiple contracts found with identifier = HelloStarknet. Found contracts at the following paths:
              - declare_paths::HelloStarknet
              - declare_paths_integrationtest::test_duplicate::HelloStarknet
-            Use a module path to disambiguate, or rename one of the contracts so that the name is unique."
+            Use a module path to disambiguate, or rename one of the contracts so that the identifier is unique."
         
         [PASS] declare_paths_integrationtest::test_duplicate::declare_by_partial_module_path_with_leading_colons (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~[..])
         [PASS] declare_paths_integrationtest::test_duplicate::declare_by_partial_module_path (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~[..])

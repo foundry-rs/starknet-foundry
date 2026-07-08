@@ -433,3 +433,29 @@ fn test_case() {
     "},
     );
 }
+
+#[test]
+fn declare_macro_invalid_module_path() {
+    let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/declare_invalid"));
+    let output = SnapboxCommand::from_std(
+        ScarbCommand::new()
+            .current_dir(temp.path())
+            .args(["build", "--test"])
+            .command(),
+    )
+    .assert()
+    .failure();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        error[E0006]: Identifier not found.
+         --> [..]/tests/contract.cairo:5:5
+            declare!(nonexistent::MissingContract).unwrap();
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        note: this error originates in the attribute macro: `test`
+
+        error: could not compile `declare_invalid_integrationtest` due to 1 previous error
+    "},
+    );
+}
