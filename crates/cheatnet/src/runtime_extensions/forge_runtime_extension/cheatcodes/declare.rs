@@ -30,7 +30,7 @@ pub fn declare(
         Ok(contract) => contract,
         Err(ContractResolutionError::NameNotFound) => {
             return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
-                anyhow!("Failed to get contract artifact for name = {contract_identifier}."),
+                anyhow!("Failed to get contract artifact for identifier = {contract_identifier}."),
             )));
         }
         Err(ContractResolutionError::AmbiguousName(module_paths)) => {
@@ -41,9 +41,9 @@ pub fn declare(
                 .join("\n");
             return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
                 anyhow!(formatdoc! { r"
-                    Multiple contracts found with name = {contract_identifier}. Found contracts at the following paths:
+                    Multiple contracts found with identifier = {contract_identifier}. Found contracts at the following paths:
                     {paths}
-                    Use a module path to disambiguate, or rename one of the contracts so that the name is unique."
+                    Use a module path to disambiguate, or rename one of the contracts so that the identifier is unique."
                 }),
             )));
         }
