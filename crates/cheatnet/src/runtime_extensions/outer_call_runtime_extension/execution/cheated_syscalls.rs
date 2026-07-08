@@ -5,6 +5,7 @@ use crate::runtime_extensions::outer_call_runtime_extension::CheatnetState;
 use crate::runtime_extensions::outer_call_runtime_extension::execution::entry_point::execute_constructor_entry_point;
 use blockifier::context::TransactionContext;
 use blockifier::execution::common_hints::ExecutionMode;
+use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::EntryPointRevertInfo;
 use blockifier::execution::errors::{
     ConstructorEntryPointExecutionError, EntryPointExecutionError,
@@ -154,7 +155,8 @@ pub fn deploy_syscall(
         Err(err) => {
             if from_cheatcode
                 && let ConstructorEntryPointExecutionError::ExecutionError { error, .. } = &err
-                && let EntryPointExecutionError::ExecutionFailed { error_trace } = error.as_ref()
+                && let EntryPointExecutionError::ExecutionFailed { error_trace } =
+                    error.as_ref().unannotated()
             {
                 let panic_data = error_trace.last_retdata.0.clone();
                 return convert_deploy_failure_to_revert(
@@ -196,16 +198,25 @@ pub fn execute_deployment(
 ) -> ConstructorEntryPointExecutionResult<CallInfo> {
     // Address allocation in the state is done before calling the constructor, so that it is
     // visible from it.
+    let strip_vm_frames = context.versioned_constants().strip_vm_frames_in_sierra_gas;
     let deployed_contract_address = ctor_context.storage_address;
     let current_class_hash =
         state
             .get_class_hash_at(deployed_contract_address)
             .map_err(|error| {
-                ConstructorEntryPointExecutionError::new(error.into(), ctor_context, None)
+                ConstructorEntryPointExecutionError::new(
+                    EntryPointExecutionError::from(error)
+                        .annotated(TrackedResource::CairoSteps, strip_vm_frames),
+                    ctor_context,
+                    None,
+                )
             })?;
     if current_class_hash != ClassHash::default() {
         return Err(ConstructorEntryPointExecutionError::new(
-            StateError::UnavailableContractAddress(deployed_contract_address).into(),
+            EntryPointExecutionError::from(StateError::UnavailableContractAddress(
+                deployed_contract_address,
+            ))
+            .annotated(TrackedResource::CairoSteps, strip_vm_frames),
             ctor_context,
             None,
         ));
@@ -220,7 +231,12 @@ pub fn execute_deployment(
     state
         .set_class_hash_at(deployed_contract_address, ctor_context.class_hash)
         .map_err(|error| {
-            ConstructorEntryPointExecutionError::new(error.into(), ctor_context, None)
+            ConstructorEntryPointExecutionError::new(
+                EntryPointExecutionError::from(error)
+                    .annotated(TrackedResource::CairoSteps, strip_vm_frames),
+                ctor_context,
+                None,
+            )
         })?;
 
     execute_constructor_entry_point(

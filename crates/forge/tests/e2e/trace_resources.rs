@@ -33,6 +33,48 @@ fn trace_resources_lib_call() {
     assert_vm_resources_for_test("test_lib_call", check_libcall);
 }
 
+#[cfg(feature = "scarb_since_2_19_0")]
+#[test]
+fn trace_resources_sha() {
+    use cairo_annotations::trace_data::DeprecatedSyscallSelector::{
+        Sha256ProcessBlock, Sha512ProcessBlock,
+    };
+
+    let temp = setup_package("trace_resources");
+
+    test_runner(&temp)
+        .args(["--features", "sha512"])
+        .arg("test_sha")
+        .arg("--save-trace-data")
+        .arg("--tracked-resource")
+        .arg("cairo-steps")
+        .assert()
+        .success();
+
+    let VersionedProfilerCallTrace::V1(call_trace) = deserialize_call_trace("test_sha", &temp);
+
+    let syscalls = call_trace
+        .cumulative_resources
+        .syscall_counter
+        .clone()
+        .expect("trace should contain a syscall counter");
+
+    assert_eq!(
+        syscalls
+            .get(&Sha256ProcessBlock)
+            .map(|usage| usage.call_count),
+        Some(1),
+        "expected exactly one Sha256ProcessBlock syscall, got: {syscalls:?}"
+    );
+    assert_eq!(
+        syscalls
+            .get(&Sha512ProcessBlock)
+            .map(|usage| usage.call_count),
+        Some(1),
+        "expected exactly one Sha512ProcessBlock syscall, got: {syscalls:?}"
+    );
+}
+
 #[test]
 #[ignore = "TODO(#1657)"]
 fn trace_resources_failed_call() {

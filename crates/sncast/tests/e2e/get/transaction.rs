@@ -33,7 +33,7 @@ async fn test_get_invoke_transaction() {
         Nonce DA Mode:               L1
         Fee DA Mode:                 L1
         Signature:                   [0x1e45e75e772a8f21592cac2cb7d662ee53af236155621ae580bd02bbfa13bbc, 0x3528f5508bd323fa3301ca59823c0b35f17bc29a9a70d919be2ecd6f941d3db]
-        
+
         To see transaction details, visit:
         transaction: https://sepolia.voyager.online/tx/0x07d2067cd7675f88493a9d773b456c8d941457ecc2f6201d2fe6b0607daadfd1
     "});
@@ -115,7 +115,7 @@ async fn test_deploy_account_transaction() {
             Constructor Calldata:        [0x[..]]
             Resource Bounds L1 Gas:      max_amount=0, max_price_per_unit=1500000000
             Resource Bounds L1 Data Gas: max_amount=672, max_price_per_unit=1500000000
-            Resource Bounds L2 Gas:      max_amount=3302760, max_price_per_unit=1500000000
+            Resource Bounds L2 Gas:      max_amount=3362760, max_price_per_unit=1500000000
             Tip:                         0
             Paymaster Data:              []
             Nonce DA Mode:               L1

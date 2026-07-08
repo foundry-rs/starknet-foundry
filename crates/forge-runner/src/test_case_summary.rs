@@ -303,26 +303,39 @@ impl TestCaseSummary<Single> {
         gas_report_enabled: bool,
     ) -> Self {
         let name = test_case.name.clone();
-        let contracts_data_store = build_contracts_data_store(
-            contracts_data,
-            fork_data.as_ref(),
-            test_case.config.disable_predeployed_contracts,
-        );
+        let trace_components = trace_args.to_components();
+        // `ContractsDataStore` is expensive to build and is needed only by gas report and debugging trace.
+        // Keep this lazy so normal test runs do not parse and extract contract artifacts for every test case.
+        let contracts_data_store = (gas_report_enabled || trace_components.is_some()).then(|| {
+            build_contracts_data_store(
+                contracts_data,
+                fork_data.as_ref(),
+                test_case.config.disable_predeployed_contracts,
+            )
+        });
 
         let empty = ForkData::default();
         let fork_data_ref = fork_data.as_ref().unwrap_or(&empty);
         let gas_info = SingleTestGasInfo::new(gas_used);
         let gas_info = if gas_report_enabled {
-            gas_info.get_with_report_data(&call_trace.borrow(), &contracts_data_store)
+            gas_info.get_with_report_data(
+                &call_trace.borrow(),
+                contracts_data_store
+                    .as_ref()
+                    .expect("contracts data store must be initialized for gas report"),
+            )
         } else {
             gas_info
         };
-        let debugging_trace = build_debugging_trace(
-            &call_trace.borrow(),
-            trace_args,
-            name.clone(),
-            contracts_data_store,
-        );
+        let debugging_trace = trace_components.map(|components| {
+            build_debugging_trace(
+                &call_trace.borrow(),
+                components,
+                name.clone(),
+                contracts_data_store
+                    .expect("contracts data store must be initialized for debugging trace"),
+            )
+        });
 
         match status {
             RunStatus::Success(data) => match &test_case.config.expected_result {

@@ -19,4 +19,3 @@ fn set_balance_strk() {
 
     assert(balance == array![1_000_000, 0].span(), 'Invalid balance');
 }
-

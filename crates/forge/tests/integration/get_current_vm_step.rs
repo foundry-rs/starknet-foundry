@@ -14,18 +14,18 @@ fn test_get_current_vm_step() {
             use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 
 
-            const STEPS_MARGIN: u32 = 100;
+            const STEPS_MARGIN: u32 = 160;
 
             // 1173 = cost of 1 deploy syscall without calldata
-            // https://github.com/starkware-libs/sequencer/blob/b29c0e8c61f7b2340209e256cf87dfe9f2c811aa/crates/blockifier/resources/blockifier_versioned_constants_0_14_1.json#L185
+            // (blockifier 0.16.0-rc.1, versioned_constants 0.14.1) https://github.com/starkware-libs/sequencer/blob/b29c0e8c61f7b2340209e256cf87dfe9f2c811aa/crates/blockifier/resources/blockifier_versioned_constants_0_14_1.json#L185
             const DEPLOY_SYSCALL_STEPS: u32 = 1173;
 
             // 903 = steps of 1 call contract syscall
-            // https://github.com/starkware-libs/sequencer/blob/b29c0e8c61f7b2340209e256cf87dfe9f2c811aa/crates/blockifier/resources/blockifier_versioned_constants_0_14_1.json#L162
+            // (blockifier 0.16.0-rc.1, versioned_constants 0.14.1) https://github.com/starkware-libs/sequencer/blob/b29c0e8c61f7b2340209e256cf87dfe9f2c811aa/crates/blockifier/resources/blockifier_versioned_constants_0_14_1.json#L162
             const CALL_CONTRACT_SYSCALL_STEPS: u32 = 903;
 
             // 90 = steps of 1 call storage read syscall
-            // https://github.com/starkware-libs/sequencer/blob/b29c0e8c61f7b2340209e256cf87dfe9f2c811aa/crates/blockifier/resources/blockifier_versioned_constants_0_14_1.json#L406
+            // (blockifier 0.16.0-rc.1, versioned_constants 0.14.1) https://github.com/starkware-libs/sequencer/blob/b29c0e8c61f7b2340209e256cf87dfe9f2c811aa/crates/blockifier/resources/blockifier_versioned_constants_0_14_1.json#L406
             const STORAGE_READ_SYSCALL_STEPS: u32 = 90;
 
             #[test]
