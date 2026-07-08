@@ -27,8 +27,7 @@ Partial module tree paths require their first segment to be in scope:
 
 ### Limitations
 
-`declare!` is type-safe only from the contract path existence perspective. It should not be treated as a
-compile-time guarantee about the contract contents.
+`declare!` is type-safe only from the contract path existence perspective. IIt should not be treated as a compile-time guarantee that the contract is valid, or that compilation/declaration will succeed.
 
 Currently, `declare!` does not resolve Cairo aliases. The path passed to the macro is also passed to the runtime
 contract resolver. This means that such code will **not work**:
