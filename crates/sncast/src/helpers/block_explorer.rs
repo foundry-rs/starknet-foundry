@@ -178,11 +178,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_happy_case_starkscan() {
-        let result = MAINNET_RESPONSE.format_links(
-            Service::StarkScan
-                .as_provider(Network::Mainnet)
-                .unwrap(),
-        );
+        let result = MAINNET_RESPONSE
+            .format_links(Service::StarkScan.as_provider(Network::Mainnet).unwrap());
         assert_valid_links(&result).await;
     }
 
