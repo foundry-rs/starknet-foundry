@@ -275,7 +275,7 @@ pub enum TestAnnotations {
     Parsed(Arc<BacktraceAnnotations>),
     /// No backtrace can be produced: Backtrace is disabled, or the target has no sierra debug info.
     Missing,
-    // Debug info present; Failed to parse.
+    /// Debug info present; Failed to parse.
     Failed(String),
 }
 
