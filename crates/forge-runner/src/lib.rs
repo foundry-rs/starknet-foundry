@@ -1,3 +1,4 @@
+use crate::backtrace::{LazyContractBacktraceDataMapping, TestAnnotations};
 use crate::coverage_api::run_coverage;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig};
 use crate::running::{run_fuzz_test, run_test};
@@ -134,6 +135,8 @@ pub fn run_for_test_case(
     casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
+    test_annotations: TestAnnotations,
+    contract_backtrace_mapping: Arc<LazyContractBacktraceDataMapping>,
     send: Sender<()>,
 ) -> JoinHandle<Result<AnyTestCaseSummary>> {
     if case.config.fuzzer_config.is_none() {
@@ -143,6 +146,8 @@ pub fn run_for_test_case(
                 casm_program,
                 forge_config,
                 versioned_program_path,
+                test_annotations,
+                contract_backtrace_mapping,
                 send,
             )
             .await?;
@@ -158,6 +163,8 @@ pub fn run_for_test_case(
                 casm_program,
                 forge_config.clone(),
                 versioned_program_path,
+                test_annotations,
+                contract_backtrace_mapping,
                 send,
             )
             .await??;
@@ -172,6 +179,8 @@ fn run_with_fuzzing(
     casm_program: Arc<RawCasmProgram>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
+    test_annotations: TestAnnotations,
+    contract_backtrace_mapping: Arc<LazyContractBacktraceDataMapping>,
     send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary<Fuzzing>>> {
     tokio::task::spawn(async move {
@@ -206,6 +215,8 @@ fn run_with_fuzzing(
                 casm_program.clone(),
                 forge_config.clone(),
                 versioned_program_path.clone(),
+                test_annotations.clone(),
+                contract_backtrace_mapping.clone(),
                 send.clone(),
                 fuzzing_send.clone(),
                 rng.clone(),

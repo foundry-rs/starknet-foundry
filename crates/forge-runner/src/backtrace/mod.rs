@@ -1,9 +1,10 @@
-use crate::backtrace::data::{ContractBacktraceDataMapping, TestBacktraceData};
 use anyhow::Result;
-use camino::Utf8Path;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::EncounteredErrors;
 use std::env;
+
+use data::TestBacktraceData;
+pub use data::{BacktraceAnnotations, LazyContractBacktraceDataMapping, TestAnnotations};
 
 mod data;
 mod display;
@@ -23,6 +24,11 @@ pub enum TestBacktraceOutcome {
     Success,
     /// Panic occurred, backtrace is captured if enabled.
     Panic(Option<TestBacktraceContext>),
+}
+
+pub struct BacktraceSources<'a> {
+    pub test_annotations: &'a TestAnnotations,
+    pub contract_backtrace_mapping: &'a LazyContractBacktraceDataMapping,
 }
 
 impl TestBacktraceOutcome {
@@ -46,10 +52,12 @@ pub fn add_test_backtrace_footer(
     contracts_data: &ContractsData,
     encountered_errors: &EncounteredErrors,
     test_backtrace: &TestBacktraceOutcome,
-    versioned_program_path: &Utf8Path,
     test_name: &str,
+    sources: &BacktraceSources,
 ) -> String {
     // Include hint even if backtrace capture was skipped (due to backtrace being disabled).
+    // Note: `is_panic()` is treated as equivalent to non-empty backtrace (>= 1 pc),
+    // since `get_reversed_pc_traceback` always injects the current pc.
     let has_backtrace = test_backtrace.is_panic() || !encountered_errors.is_empty();
 
     if !has_backtrace {
@@ -61,8 +69,8 @@ pub fn add_test_backtrace_footer(
             contracts_data,
             encountered_errors,
             test_backtrace.context(),
-            versioned_program_path,
             test_name,
+            sources,
         )
     } else {
         Some(format!(
@@ -82,35 +90,46 @@ pub fn get_backtrace(
     contracts_data: &ContractsData,
     encountered_errors: &EncounteredErrors,
     test_backtrace: Option<&TestBacktraceContext>,
-    versioned_program_path: &Utf8Path,
     test_name: &str,
+    sources: &BacktraceSources,
 ) -> Option<String> {
+    let BacktraceSources {
+        test_annotations,
+        contract_backtrace_mapping,
+    } = *sources;
+
     let mut backtrace_parts = Vec::new();
 
     if !encountered_errors.is_empty() {
-        let class_hashes = encountered_errors.keys().copied().collect();
-
-        let contract_part = ContractBacktraceDataMapping::new(contracts_data, class_hashes)
-            .and_then(|data_mapping| {
-                encountered_errors
-                    .iter()
-                    .map(|(class_hash, pcs)| data_mapping.render_backtrace(pcs, class_hash))
-                    .collect::<Result<Vec<_>>>()
-                    .map(|backtrace| backtrace.join("\n"))
+        let contract_part = encountered_errors
+            .iter()
+            .map(|(class_hash, pcs)| {
+                contract_backtrace_mapping.render_backtrace(class_hash, pcs, contracts_data)
             })
-            .unwrap_or_else(|err| format!("failed to create backtrace: {err}"));
+            .collect::<Result<Vec<_>>>()
+            .map_or_else(
+                |err| format!("failed to create contract backtrace: {err}"),
+                |backtrace| backtrace.join("\n"),
+            );
 
         backtrace_parts.push(contract_part);
     }
 
     if let Some(bt) = test_backtrace.filter(|bt| !bt.pcs.is_empty()) {
-        let test_part = TestBacktraceData::new(
-            test_name,
-            bt.casm_start_offsets.clone(),
-            versioned_program_path,
-        )
-        .and_then(|data| data.render_backtrace(&bt.pcs))
-        .unwrap_or_else(|err| format!("failed to create test backtrace: {err}"));
+        let test_part = match test_annotations {
+            TestAnnotations::Parsed(annotations) => TestBacktraceData::new(
+                test_name.to_owned(),
+                annotations,
+                bt.casm_start_offsets.clone(),
+            )
+            .render_backtrace(&bt.pcs)
+            .unwrap_or_else(|err| format!("failed to create test backtrace: {err}")),
+            TestAnnotations::Failed(err) => format!("failed to create test backtrace: {err}"),
+            // In practice, this should never happen as debug info is prerequisite checked by `check_backtrace_compatibility`
+            TestAnnotations::Missing => {
+                "failed to create test backtrace: debug info not found".to_string()
+            }
+        };
 
         backtrace_parts.push(test_part);
     }

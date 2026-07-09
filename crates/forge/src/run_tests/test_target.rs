@@ -1,4 +1,7 @@
 use anyhow::Result;
+use forge_runner::backtrace::{
+    LazyContractBacktraceDataMapping, TestAnnotations, is_backtrace_enabled,
+};
 use forge_runner::filtering::{ExcludeReason, FilterResult, TestCaseFilter};
 use forge_runner::messages::TestResultMessage;
 use forge_runner::{
@@ -62,6 +65,16 @@ pub async fn run_for_test_target(
 ) -> Result<TestTargetRunResult> {
     let casm_program = tests.casm_program.clone();
 
+    // Built once per target and shared across all test case tasks, so failing test cases can avoid reparsing.
+    let test_annotations = TestAnnotations::from_debug_info(
+        is_backtrace_enabled()
+            .then_some(tests.sierra_program.debug_info.as_ref())
+            .flatten(),
+    );
+
+    // Shared across all test case tasks, so each contract's backtrace data is built once and reused.
+    let contract_backtrace_mapping = Arc::new(LazyContractBacktraceDataMapping::new());
+
     let mut tasks = FuturesUnordered::new();
 
     for case in tests.test_cases {
@@ -91,6 +104,8 @@ pub async fn run_for_test_target(
                     casm_program.clone(),
                     forge_config.clone(),
                     tests.sierra_program_path.clone(),
+                    test_annotations.clone(),
+                    contract_backtrace_mapping.clone(),
                     exit_first_channel.sender(),
                 ));
             }
