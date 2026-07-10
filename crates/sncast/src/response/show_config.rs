@@ -8,23 +8,6 @@ use serde::Serialize;
 use url::Url;
 
 #[derive(Serialize, Clone)]
-pub struct ShowConfigNetworks {
-    pub mainnet: Option<Url>,
-    pub sepolia: Option<Url>,
-    pub devnet: Option<Url>,
-}
-
-impl From<&NetworksConfig> for ShowConfigNetworks {
-    fn from(networks: &NetworksConfig) -> Self {
-        Self {
-            mainnet: networks.mainnet.clone(),
-            sepolia: networks.sepolia.clone(),
-            devnet: networks.devnet.clone(),
-        }
-    }
-}
-
-#[derive(Serialize, Clone)]
 pub struct ShowConfigResponse {
     pub profile: Option<String>,
     pub chain_id: Option<String>,
@@ -39,7 +22,7 @@ pub struct ShowConfigResponse {
     pub block_explorer: Option<block_explorer::Service>,
     pub scarb_profile: String,
     pub alias_count: usize,
-    pub networks: ShowConfigNetworks,
+    pub networks: NetworksConfig,
 }
 
 impl SncastCommandMessage for ShowConfigResponse {
