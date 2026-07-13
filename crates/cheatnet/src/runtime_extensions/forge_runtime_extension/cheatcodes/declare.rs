@@ -83,13 +83,12 @@ pub fn declare_from_file(
             sierra_path.display()
         )))
     })?;
-    let sierra_class: SierraClass =
-        serde_json::from_value(sierra_json.clone()).map_err(|error| {
-            CheatcodeError::Unrecoverable(EnhancedHintError::from(anyhow!(
-                "Failed to parse Sierra contract class JSON at {}: {error}",
-                sierra_path.display()
-            )))
-        })?;
+    let sierra_class: SierraClass = serde_json::from_str(&sierra).map_err(|error| {
+        CheatcodeError::Unrecoverable(EnhancedHintError::from(anyhow!(
+            "Failed to parse Sierra contract class JSON at {}: {error}",
+            sierra_path.display()
+        )))
+    })?;
     let class_hash = get_class_hash(&sierra_class).map_err(|error| {
         CheatcodeError::Unrecoverable(EnhancedHintError::from(anyhow!(
             "Failed to calculate class hash for Sierra file at {}: {error}",
