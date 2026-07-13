@@ -23,7 +23,10 @@ async fn test_get_predeployed_accounts() {
         .await
         .expect("Failed to get predeployed accounts");
 
-    assert_eq!(predeployed_accounts.len().to_u8().unwrap(), DEVNET_ACCOUNTS_NUMBER);
+    assert_eq!(
+        predeployed_accounts.len().to_u8().unwrap(),
+        DEVNET_ACCOUNTS_NUMBER
+    );
 }
 
 #[tokio::test]
