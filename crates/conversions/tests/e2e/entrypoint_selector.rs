@@ -124,8 +124,9 @@ mod tests_entrypoint_selector {
 
     #[test]
     fn test_entrypoint_selector_conversions_out_of_range() {
-        assert!(
-            EntryPointSelector::try_from_hex_str(PRIME_STR).unwrap() == Felt::from(0_u8).into_()
+        assert_eq!(
+            EntryPointSelector::try_from_hex_str(PRIME_STR).unwrap(),
+            Felt::from(0_u8).into_()
         );
     }
 }

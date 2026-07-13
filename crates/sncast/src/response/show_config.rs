@@ -48,10 +48,10 @@ impl SncastCommandMessage for ShowConfigResponse {
                 b.field("Keystore", keystore.as_ref())
             })
             .if_some(self.wait_timeout.as_ref(), |b, timeout| {
-                b.field("Wait Timeout", format!("{}s", &timeout).as_ref())
+                b.field("Wait Timeout", format!("{timeout}s").as_ref())
             })
             .if_some(self.wait_retry_interval.as_ref(), |b, interval| {
-                b.field("Wait Retry Interval", format!("{}s", &interval).as_ref())
+                b.field("Wait Retry Interval", format!("{interval}s").as_ref())
             })
             .field("Show Explorer Links", &self.show_explorer_links.to_string())
             .if_some(self.block_explorer.as_ref(), |b, explorer| {

@@ -11,7 +11,7 @@ pub struct SerializeResponse {
 
 impl SncastCommandMessage for SerializeResponse {
     fn text(&self) -> String {
-        let calldata = format!("{:?}", &self.calldata);
+        let calldata = format!("{:?}", self.calldata);
 
         styling::OutputBuilder::new()
             .field("Calldata", &calldata)

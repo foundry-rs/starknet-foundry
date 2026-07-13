@@ -72,7 +72,7 @@ mod tests_felt {
 
     #[test]
     fn test_felt_try_from_string_out_of_range() {
-        assert!(Felt::try_from_hex_str(PRIME_STR).unwrap() == Felt::from(0_u8));
+        assert_eq!(Felt::try_from_hex_str(PRIME_STR).unwrap(), Felt::from(0_u8));
     }
 
     #[test]

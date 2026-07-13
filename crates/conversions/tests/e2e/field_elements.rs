@@ -49,6 +49,9 @@ mod tests_field_elements {
 
     #[test]
     fn test_field_element_conversions_out_of_range() {
-        assert!(Felt::try_from_hex_str(PRIME_STR).unwrap() == Felt::from(0_u8).into_());
+        assert_eq!(
+            Felt::try_from_hex_str(PRIME_STR).unwrap(),
+            Felt::from(0_u8).into_()
+        );
     }
 }
