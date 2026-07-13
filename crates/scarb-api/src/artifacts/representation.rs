@@ -19,7 +19,7 @@ impl StarknetArtifactsRepresentation {
         let artifacts = artifacts_for_package(artifacts_path)?;
         let path = artifacts_path
             .parent()
-            .ok_or_else(|| anyhow!("Failed to get parent for path = {}", &artifacts_path))?
+            .ok_or_else(|| anyhow!("Failed to get parent for path = {}", artifacts_path))?
             .to_path_buf();
 
         Ok(Self {
