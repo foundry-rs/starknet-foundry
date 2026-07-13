@@ -71,6 +71,9 @@ mod tests_class_hash {
 
     #[test]
     fn test_class_hash_conversions_out_of_range() {
-        assert!(ClassHash::try_from_hex_str(PRIME_STR).unwrap() == Felt::from(0_u8).into_());
+        assert_eq!(
+            ClassHash::try_from_hex_str(PRIME_STR).unwrap(),
+            Felt::from(0_u8).into_()
+        );
     }
 }
