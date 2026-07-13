@@ -3,7 +3,7 @@ use crate::common::{get_contracts, state::create_cached_state};
 #[cfg(feature = "cairo-native")]
 use blockifier::execution::contract_class::RunnableCompiledClass;
 #[cfg(feature = "cairo-native")]
-use blockifier::state::state_api::State;
+use blockifier::state::state_api::StateReader;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::{
     DeclareResult, declare, declare_from_file,
