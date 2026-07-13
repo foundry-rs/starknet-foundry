@@ -1,5 +1,9 @@
 use crate::common::assertions::ClassHashAssert;
 use crate::common::{get_contracts, state::create_cached_state};
+#[cfg(feature = "cairo-native")]
+use blockifier::execution::contract_class::RunnableCompiledClass;
+#[cfg(feature = "cairo-native")]
+use blockifier::state::state_api::State;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::{
     DeclareResult, declare, declare_from_file,
@@ -9,7 +13,9 @@ use runtime::EnhancedHintError;
 use shared::utils::contract_name_from_module_path;
 use starknet_api::core::ClassHash;
 use starknet_types_core::felt::Felt;
+use std::fs;
 use std::path::Path;
+use tempfile::TempDir;
 
 #[test]
 fn declare_simple() {
@@ -359,6 +365,35 @@ fn declare_from_file_simple() {
     assert!(
         matches!(output, Ok(DeclareResult::AlreadyDeclared(class_hash)) if class_hash == *expected_class_hash)
     );
+}
+
+#[test]
+fn declare_from_file_uses_loaded_artifact_when_class_hash_matches() {
+    let contract_name = "HelloStarknet";
+    let contracts_data = get_contracts();
+    let contract = contracts_data.resolve_contract(contract_name).unwrap();
+    let expected_class_hash = contract.class_hash;
+
+    let temp_dir = TempDir::new().unwrap();
+    let copied_sierra_path = temp_dir.path().join("copied.contract_class.json");
+    fs::copy(
+        contract.source_sierra_path.as_std_path(),
+        &copied_sierra_path,
+    )
+    .unwrap();
+
+    let mut cached_state = create_cached_state();
+    let class_hash = declare_from_file(&mut cached_state, &copied_sierra_path, &contracts_data)
+        .unwrap()
+        .unwrap_success();
+
+    assert_eq!(class_hash, expected_class_hash);
+
+    #[cfg(feature = "cairo-native")]
+    assert!(matches!(
+        cached_state.get_compiled_class(class_hash).unwrap(),
+        RunnableCompiledClass::V1Native(_)
+    ));
 }
 
 #[test]
