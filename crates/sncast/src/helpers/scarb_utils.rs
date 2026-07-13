@@ -82,8 +82,7 @@ fn get_package_metadata_by_name<'a>(
         .iter()
         .find(|package| package.name == package_name)
         .ok_or(anyhow!(
-            "Package {} not found in scarb metadata",
-            &package_name
+            "Package {package_name} not found in scarb metadata"
         ))
 }
 

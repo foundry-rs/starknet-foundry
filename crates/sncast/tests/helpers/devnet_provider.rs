@@ -10,9 +10,9 @@ async fn test_get_config() {
         .await
         .expect("Failed to get config");
 
-    assert!(config.account_contract_class_hash == OZ_CLASS_HASH);
-    assert!(config.seed == DEVNET_SEED);
-    assert!(config.total_accounts == DEVNET_ACCOUNTS_NUMBER);
+    assert_eq!(config.account_contract_class_hash, OZ_CLASS_HASH);
+    assert_eq!(config.seed, DEVNET_SEED);
+    assert_eq!(config.total_accounts, DEVNET_ACCOUNTS_NUMBER);
 }
 
 #[tokio::test]
@@ -23,7 +23,7 @@ async fn test_get_predeployed_accounts() {
         .await
         .expect("Failed to get predeployed accounts");
 
-    assert!(predeployed_accounts.len().to_u8().unwrap() == DEVNET_ACCOUNTS_NUMBER);
+    assert_eq!(predeployed_accounts.len().to_u8().unwrap(), DEVNET_ACCOUNTS_NUMBER);
 }
 
 #[tokio::test]
