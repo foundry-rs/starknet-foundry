@@ -12,4 +12,3 @@ fn test_failing() {
 fn test_xyz() {
     assert(1 == 1, 1);
 }
-

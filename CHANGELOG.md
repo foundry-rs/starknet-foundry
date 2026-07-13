@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- `declare!` macro for declaring contracts using Cairo paths. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library/declare_macro.html).
+- Debugging traces now display the class hash for forked contracts.
+
 #### Changed
 
 - `Actual` and `Expected` panic data in the `#[should_panic]` mismatch message is now formatted the same way as regular failure data: byte arrays are displayed as quoted strings and felts as hex values with short string representation, instead of a raw felt array with a per-felt decoding.
@@ -16,6 +21,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - Malformed byte array panic data (e.g. an invalid `pending_word_len`) no longer causes a crash when matching `#[should_panic]` expected data.
+
+## [0.62.1] - 2026-07-03
+
+### Forge
+
+#### Added
+
+- Full support for Starknet v0.14.3
+- Support for `sha512_process_block` syscall
+
+#### Changed
+
+- Minimal recommended `Scarb` version is now `2.17.0` (updated from `2.16.1`)
+- Temporarily disabled the `add-types-debug-info = true` requirement for `--launch-debugger` on Scarb `>= 2.19.0` due to compile errors.
+
+#### Fixed
+
+- Fixed a performance regression from the previous version that could cause slowdowns during tests execution with debugging trace or gas report enabled
 
 ## [0.62.0] - 2026-06-25
 

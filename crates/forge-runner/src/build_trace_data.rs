@@ -337,6 +337,9 @@ fn build_profiler_deprecated_syscall_selector(
         DeprecatedSyscallSelector::Sha256ProcessBlock => {
             ProfilerDeprecatedSyscallSelector::Sha256ProcessBlock
         }
+        DeprecatedSyscallSelector::Sha512ProcessBlock => {
+            ProfilerDeprecatedSyscallSelector::Sha512ProcessBlock
+        }
         DeprecatedSyscallSelector::GetClassHashAt => {
             ProfilerDeprecatedSyscallSelector::GetClassHashAt
         }

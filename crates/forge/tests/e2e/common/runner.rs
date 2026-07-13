@@ -117,7 +117,6 @@ pub(crate) fn setup_package_with_file_patterns(
     scarb_toml["dependencies"]["starknet"] = value("2.4.0");
     scarb_toml["dependencies"]["assert_macros"] =
         value(get_assert_macros_version().unwrap().to_string());
-    scarb_toml["target.starknet-contract"]["sierra"] = value(true);
 
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 

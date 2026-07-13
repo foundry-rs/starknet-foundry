@@ -32,31 +32,31 @@ incremental = false
 debug = "line-tables-only"
 
 [workspace.package]
-version = "0.62.0"
+version = "0.62.1"
 edition = "2024"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
 license-file = "LICENSE"
 
 [workspace.dependencies]
-blockifier = { version = "0.18.0-rc.1", features = ["testing", "tracing", "node_api"] }
-starknet_api = "0.18.0-rc.1"
+blockifier = { version = "0.19.0-rc.2", features = ["testing", "tracing", "node_api"] }
+starknet_api = "0.19.0-rc.2"
 bigdecimal = "0.4.10"
 cairo-debugger = { git = "https://github.com/software-mansion-labs/cairo-debugger", rev = "788dc4ab8f16509334b36a84c43ee884574975d6" }
-cairo-native = "0.9.0-rc.5"
-cairo-lang-casm = { version = "=2.17.0", features = ["serde"] }
-cairo-lang-sierra = "=2.17.0"
-cairo-lang-utils = "=2.17.0"
-cairo-lang-starknet = "=2.17.0"
-cairo-lang-filesystem = "=2.17.0"
-cairo-lang-diagnostics = "=2.17.0"
-cairo-lang-syntax = "=2.17.0"
-cairo-lang-test-plugin = "=2.17.0"
-cairo-lang-starknet-classes = "=2.17.0"
-cairo-lang-parser = "=2.17.0"
-cairo-lang-sierra-to-casm = "=2.17.0"
+cairo-native = "0.9.0-rc.7"
+cairo-lang-casm = { version = "=2.19.0", features = ["serde"] }
+cairo-lang-sierra = "=2.19.0"
+cairo-lang-utils = "=2.19.0"
+cairo-lang-starknet = "=2.19.0"
+cairo-lang-filesystem = "=2.19.0"
+cairo-lang-diagnostics = "=2.19.0"
+cairo-lang-syntax = "=2.19.0"
+cairo-lang-test-plugin = "=2.19.0"
+cairo-lang-starknet-classes = "=2.19.0"
+cairo-lang-parser = "=2.19.0"
+cairo-lang-sierra-to-casm = "=2.19.0"
 cairo-vm = { version = "=3.2.0", features = ["test_utils"] }
-cairo-annotations = { version = "0.8.0", features = ["cairo-lang"] }
+cairo-annotations = { version = "0.10.0", features = ["cairo-lang"] }
 dirs = "6.0.0"
 dialoguer = "0.12.0"
 starknet-types-core = { version = "0.2.4", features = ["hash", "prime-bigint"] }
