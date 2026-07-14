@@ -4,7 +4,7 @@ expression: stdout
 ---
 
 
-[PASS] backtrace_test_should_panic::tests::test_panics_in_test_body_with_should_panic (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~14440)
+[PASS] backtrace_test_should_panic::tests::test_panics_in_test_body_with_should_panic (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~14620)
 
 stack backtrace:
    in test 'backtrace_test_should_panic::tests::test_panics_in_test_body_with_should_panic':
