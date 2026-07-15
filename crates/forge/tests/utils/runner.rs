@@ -25,6 +25,7 @@ use starknet_api::execution_resources::{GasAmount, GasVector};
 use std::{
     collections::HashMap,
     fs,
+    panic::Location,
     path::{Path, PathBuf},
     process::{Command, Stdio},
     str::FromStr,
@@ -34,6 +35,9 @@ use std::{
 const MARGIN_L1_GAS: u64 = 10;
 const MARGIN_L1_DATA_GAS: u64 = 10;
 const MARGIN_L2_GAS: u64 = 200_000;
+const GAS_EXPECTATIONS_ENV: &str = "SNFORGE_GAS_EXPECTATIONS";
+const GAS_EXPECTATIONS_RECORD_MODE: &str = "record";
+const GAS_EXPECTATION_RECORD_PREFIX: &str = "SNFORGE_GAS_EXPECTATION";
 
 /// Represents a dependency of a Cairo project
 #[derive(Debug, Clone)]
@@ -271,6 +275,7 @@ pub fn assert_failed(result: &[TestTargetSummary]) {
     );
 }
 
+#[track_caller]
 pub fn assert_case_output_contains(
     result: &[TestTargetSummary],
     test_case_name: &str,
@@ -292,6 +297,7 @@ pub fn assert_case_output_contains(
     }));
 }
 
+#[track_caller]
 pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_gas: GasVector) {
     let test_name_suffix = format!("::{test_case_name}");
 
@@ -331,6 +337,17 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
             {
                 let actual_gas = gas.gas_used;
 
+                emit_gas_expectation_record(
+                    Location::caller(),
+                    &[
+                        ("kind", "gas".to_string()),
+                        ("test", test_case_name.to_string()),
+                        ("l1_gas", actual_gas.l1_gas.0.to_string()),
+                        ("l1_data_gas", actual_gas.l1_data_gas.0.to_string()),
+                        ("l2_gas", actual_gas.l2_gas.0.to_string()),
+                    ],
+                );
+
                 if !assert_gas_with_margin(actual_gas, asserted_gas) {
                     let diff = gas_vector_abs_diff(&actual_gas, &asserted_gas);
                     panic!(
@@ -350,6 +367,71 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
                 );
             }
         }
+    }
+}
+
+#[track_caller]
+pub fn assert_available_gas_exceeded(
+    result: &[TestTargetSummary],
+    test_case_name: &str,
+    asserted_gas: GasVector,
+) {
+    let test_name_suffix = format!("::{test_case_name}");
+    let result = TestCase::find_test_result(result);
+
+    let any_case = result
+        .test_case_summaries
+        .iter()
+        .find(|any_case| {
+            any_case
+                .name()
+                .is_some_and(|name| name.ends_with(test_name_suffix.as_str()))
+        })
+        .unwrap_or_else(|| {
+            let available_test_cases = result
+                .test_case_summaries
+                .iter()
+                .filter_map(AnyTestCaseSummary::name)
+                .collect::<Vec<_>>()
+                .join(", ");
+
+            panic!(
+                "Available gas assertion failed: test case `{test_case_name}` was not found. Available test cases: {available_test_cases}"
+            )
+        });
+
+    let Some(message) = any_case.msg() else {
+        let name = any_case.name().expect("matched test case must have a name");
+        panic!("Available gas assertion failed for test case `{name}`: no failure message found");
+    };
+
+    let actual_gas = parse_available_gas_exceeded_message(message).unwrap_or_else(|| {
+        let name = any_case.name().expect("matched test case must have a name");
+        panic!(
+            "Available gas assertion failed for test case `{name}`: could not parse consumed gas from message:\n{message}"
+        );
+    });
+
+    emit_gas_expectation_record(
+        Location::caller(),
+        &[
+            ("kind", "available_gas".to_string()),
+            ("test", test_case_name.to_string()),
+            ("l1_gas", actual_gas.l1_gas.0.to_string()),
+            ("l1_data_gas", actual_gas.l1_data_gas.0.to_string()),
+            ("l2_gas", actual_gas.l2_gas.0.to_string()),
+        ],
+    );
+
+    if actual_gas != asserted_gas {
+        let name = any_case.name().expect("matched test case must have a name");
+        let diff = gas_vector_abs_diff(&actual_gas, &asserted_gas);
+        panic!(
+            "Available gas assertion failed for test case `{name}`.\nexpected: {}\nactual:   {}\ndiff:     {}",
+            format_gas_vector(&asserted_gas),
+            format_gas_vector(&actual_gas),
+            format_gas_vector(&diff),
+        );
     }
 }
 
@@ -392,6 +474,53 @@ fn gas_assertion_margin_message() -> String {
     }
 }
 
+fn parse_available_gas_exceeded_message(message: &str) -> Option<GasVector> {
+    let consumed = message
+        .split("Test cost exceeded the available gas. Consumed ")
+        .nth(1)?;
+
+    Some(GasVector {
+        l1_gas: GasAmount(parse_named_gas_value(consumed, "l1_gas")?),
+        l1_data_gas: GasAmount(parse_named_gas_value(consumed, "l1_data_gas")?),
+        l2_gas: GasAmount(parse_named_gas_value(consumed, "l2_gas")?),
+    })
+}
+
+fn parse_named_gas_value(message: &str, key: &str) -> Option<u64> {
+    let value_start = message.split(&format!("{key}: ~")).nth(1)?;
+    value_start
+        .split(|c: char| !c.is_ascii_digit())
+        .next()
+        .filter(|value| !value.is_empty())?
+        .parse()
+        .ok()
+}
+
+fn gas_expectation_recording_enabled() -> bool {
+    std::env::var(GAS_EXPECTATIONS_ENV).is_ok_and(|value| value == GAS_EXPECTATIONS_RECORD_MODE)
+}
+
+fn emit_gas_expectation_record(location: &Location<'_>, fields: &[(&str, String)]) {
+    if !gas_expectation_recording_enabled() {
+        return;
+    }
+
+    let mut record = format!(
+        "{GAS_EXPECTATION_RECORD_PREFIX}|file={}|line={}",
+        location.file(),
+        location.line()
+    );
+
+    for (key, value) in fields {
+        record.push('|');
+        record.push_str(key);
+        record.push('=');
+        record.push_str(value);
+    }
+
+    eprintln!("{record}");
+}
+
 fn test_case_status(case: &TestCaseSummary<Single>) -> &'static str {
     match case {
         TestCaseSummary::Passed { .. } => "passed",
@@ -402,6 +531,7 @@ fn test_case_status(case: &TestCaseSummary<Single>) -> &'static str {
     }
 }
 
+#[track_caller]
 pub fn assert_syscall(
     result: &[TestTargetSummary],
     test_case_name: &str,
@@ -419,16 +549,29 @@ pub fn assert_syscall(
             }
             AnyTestCaseSummary::Single(case) => match case {
                 TestCaseSummary::Passed { used_resources, .. } => {
-                    used_resources
+                    let actual_count = used_resources
                         .syscall_usage
                         .get(&syscall)
                         .unwrap_or(&SyscallUsage::new(0, 0))
-                        .call_count
-                        == expected_count
-                        && any_case
-                            .name()
-                            .unwrap()
-                            .ends_with(test_name_suffix.as_str())
+                        .call_count;
+                    let matches_test_name = any_case
+                        .name()
+                        .unwrap()
+                        .ends_with(test_name_suffix.as_str());
+
+                    if matches_test_name {
+                        emit_gas_expectation_record(
+                            Location::caller(),
+                            &[
+                                ("kind", "syscall".to_string()),
+                                ("test", test_case_name.to_string()),
+                                ("syscall", format!("{syscall:?}")),
+                                ("count", actual_count.to_string()),
+                            ],
+                        );
+                    }
+
+                    actual_count == expected_count && matches_test_name
                 }
                 _ => false,
             },
@@ -436,6 +579,7 @@ pub fn assert_syscall(
     }));
 }
 
+#[track_caller]
 pub fn assert_builtin(
     result: &[TestTargetSummary],
     test_case_name: &str,
@@ -459,19 +603,37 @@ pub fn assert_builtin(
             }
             AnyTestCaseSummary::Single(case) => match case {
                 TestCaseSummary::Passed { used_resources, .. } => {
-                    used_resources
+                    let actual_count = *used_resources
                         .execution_summary
                         .charged_resources
                         .extended_vm_resources
                         .vm_resources
                         .builtin_instance_counter
                         .get(&builtin)
-                        .unwrap_or(&0)
-                        == &expected_count
-                        && any_case
-                            .name()
-                            .unwrap()
-                            .ends_with(test_name_suffix.as_str())
+                        .unwrap_or(&0);
+                    let source_count = if builtin == BuiltinName::range_check {
+                        actual_count + 1
+                    } else {
+                        actual_count
+                    };
+                    let matches_test_name = any_case
+                        .name()
+                        .unwrap()
+                        .ends_with(test_name_suffix.as_str());
+
+                    if matches_test_name {
+                        emit_gas_expectation_record(
+                            Location::caller(),
+                            &[
+                                ("kind", "builtin".to_string()),
+                                ("test", test_case_name.to_string()),
+                                ("builtin", format!("{builtin:?}")),
+                                ("count", source_count.to_string()),
+                            ],
+                        );
+                    }
+
+                    actual_count == expected_count && matches_test_name
                 }
                 _ => false,
             },

@@ -1,7 +1,8 @@
-use crate::utils::runner::{assert_case_output_contains, assert_failed, assert_passed};
+use crate::utils::runner::{assert_available_gas_exceeded, assert_failed, assert_passed};
 use crate::utils::running_tests::run_test_case;
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
+use starknet_api::execution_resources::{GasAmount, GasVector};
 
 #[test]
 fn correct_available_gas() {
@@ -35,10 +36,14 @@ fn available_gas_exceeded() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
-    assert_case_output_contains(
+    assert_available_gas_exceeded(
         &result,
         "keccak_cost",
-        "Test cost exceeded the available gas. Consumed l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~240000",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(0),
+            l2_gas: GasAmount(240_000),
+        },
     );
 }
 
