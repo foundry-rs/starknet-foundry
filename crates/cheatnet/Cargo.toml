@@ -5,7 +5,7 @@ edition.workspace = true
 
 [features]
 testing = []
-cairo-native = ["dep:cairo-native", "blockifier/cairo_native"]
+cairo-native = ["dep:cairo-native", "blockifier/cairo_native", "scarb-api/cairo-native"]
 
 [dependencies]
 anyhow.workspace = true
