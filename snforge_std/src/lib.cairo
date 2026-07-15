@@ -140,4 +140,6 @@ pub mod _internals {
     use super::cheatcode;
 
     pub use super::config_types;
+
+    pub fn assert_path_type<T>() {}
 }

@@ -70,6 +70,9 @@ mod tests_nonce {
 
     #[test]
     fn test_nonce_conversions_out_of_range() {
-        assert!(Nonce::try_from_hex_str(PRIME_STR).unwrap() == Felt::from(0_u8).into_());
+        assert_eq!(
+            Nonce::try_from_hex_str(PRIME_STR).unwrap(),
+            Felt::from(0_u8).into_()
+        );
     }
 }

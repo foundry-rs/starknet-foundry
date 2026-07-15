@@ -1,5 +1,6 @@
 use crate::Network;
 use crate::helpers::block_explorer;
+use crate::helpers::configuration::NetworksConfig;
 use crate::response::cast_message::SncastCommandMessage;
 use camino::Utf8PathBuf;
 use foundry_ui::styling;
@@ -21,6 +22,7 @@ pub struct ShowConfigResponse {
     pub block_explorer: Option<block_explorer::Service>,
     pub scarb_profile: String,
     pub alias_count: usize,
+    pub networks: NetworksConfig,
 }
 
 impl SncastCommandMessage for ShowConfigResponse {
@@ -48,10 +50,10 @@ impl SncastCommandMessage for ShowConfigResponse {
                 b.field("Keystore", keystore.as_ref())
             })
             .if_some(self.wait_timeout.as_ref(), |b, timeout| {
-                b.field("Wait Timeout", format!("{}s", &timeout).as_ref())
+                b.field("Wait Timeout", format!("{timeout}s").as_ref())
             })
             .if_some(self.wait_retry_interval.as_ref(), |b, interval| {
-                b.field("Wait Retry Interval", format!("{}s", &interval).as_ref())
+                b.field("Wait Retry Interval", format!("{interval}s").as_ref())
             })
             .field("Show Explorer Links", &self.show_explorer_links.to_string())
             .if_some(self.block_explorer.as_ref(), |b, explorer| {
@@ -63,6 +65,16 @@ impl SncastCommandMessage for ShowConfigResponse {
         let mut builder = builder.field("Alias Count", &alias_count);
         if self.alias_count != 0 {
             builder = builder.extra("(use `sncast alias list` to display)");
+        }
+
+        if let Some(url) = &self.networks.mainnet {
+            builder = builder.field("Mainnet URL", url.as_ref());
+        }
+        if let Some(url) = &self.networks.sepolia {
+            builder = builder.field("Sepolia URL", url.as_ref());
+        }
+        if let Some(url) = &self.networks.devnet {
+            builder = builder.field("Devnet URL", url.as_ref());
         }
 
         builder.build()

@@ -1,18 +1,6 @@
 # `declare`
+
 ```rust
-#[derive(Drop, Serde, Clone)]
-pub enum DeclareResult {
-    Success: ContractClass,
-    AlreadyDeclared: ContractClass,
-}
-
-pub trait DeclareResultTrait {
-    /// Gets inner `ContractClass`
-    /// `self` - an instance of the struct `DeclareResult` which is obtained by calling `declare`
-    // Returns the `@ContractClass`
-    fn contract_class(self: @DeclareResult) -> @ContractClass;
-}
-
 fn declare(contract: ByteArray) -> Result<DeclareResult, Array<felt252>>
 ```
 
@@ -23,9 +11,4 @@ an absolute module tree path (e.g. `my_package::module::MyContract`) or
 a partial module tree path (e.g. `module::MyContract`).
 Use the full module path to disambiguate when multiple contracts share the same name.
 
-Returns the `DeclareResult` that encapsulated possible outcomes in the enum:
- - `Success`: Contains the successfully declared `ContractClass`.
- - `AlreadyDeclared`: Contains `ContractClass` and signals that the contract has already been declared.
-
-
-See [docs of `ContractClass`](./contract_class.md) for more info about the resulting struct.
+Returns the [`DeclareResult`](./declare_result.md).
