@@ -4,6 +4,7 @@ use crate::common::{get_contracts, state::create_cached_state};
 use blockifier::execution::contract_class::RunnableCompiledClass;
 #[cfg(feature = "cairo-native")]
 use blockifier::state::state_api::StateReader;
+use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::{
     DeclareResult, declare, declare_from_file,
@@ -368,7 +369,40 @@ fn declare_from_file_simple() {
 }
 
 #[test]
-fn declare_from_file_uses_loaded_artifact_when_class_hash_matches() {
+fn declare_from_file_reuses_loaded_artifact_when_sierra_path_matches() {
+    let contract_name = "HelloStarknet";
+    let mut contracts_data = get_contracts();
+    let expected_class_hash = contracts_data
+        .resolve_contract(contract_name)
+        .unwrap()
+        .class_hash;
+
+    let temp_dir = TempDir::new().unwrap();
+    let loaded_sierra_path = temp_dir.path().join("loaded.contract_class.json");
+    fs::write(&loaded_sierra_path, "not valid JSON").unwrap();
+    let loaded_sierra_path = Utf8PathBuf::from_path_buf(loaded_sierra_path).unwrap();
+
+    contracts_data
+        .contracts
+        .values_mut()
+        .find(|contract| contract.class_hash == expected_class_hash)
+        .unwrap()
+        .source_sierra_path = loaded_sierra_path.clone();
+
+    let mut cached_state = create_cached_state();
+    let class_hash = declare_from_file(
+        &mut cached_state,
+        loaded_sierra_path.as_std_path(),
+        &contracts_data,
+    )
+    .unwrap()
+    .unwrap_success();
+
+    assert_eq!(class_hash, expected_class_hash);
+}
+
+#[test]
+fn declare_from_file_reuses_loaded_artifact_when_class_hash_matches_different_path() {
     let contract_name = "HelloStarknet";
     let contracts_data = get_contracts();
     let contract = contracts_data.resolve_contract(contract_name).unwrap();

@@ -123,6 +123,8 @@ pub fn declare(contract: ByteArray) -> Result<DeclareResult, Array<felt252>> {
 
 /// Declares a contract from a Sierra contract class JSON file
 /// `path` - path to a Sierra contract class JSON file
+/// If the file's class hash matches a package contract already loaded by `snforge`, the loaded compiled
+/// artifact is reused instead of compiling the Sierra file again.
 /// Returns the `DeclareResult` that encapsulated possible outcomes in the enum:
 /// - `Success`: Contains the successfully declared `ContractClass`.
 /// - `AlreadyDeclared`: Contains `ContractClass` and signals that the contract has already been
