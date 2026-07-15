@@ -2,16 +2,26 @@
 source: crates/forge/tests/e2e/backtrace.rs
 expression: stdout
 ---
-error: failed to unpack package `triomphe v0.1.16`
-  failed to open `/Users/maks/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/triomphe-0.1.16/.cargo-ok`
-  File exists (os error 17)
-error: process did not exit successfully: exit status: 101
-[ERROR] `scarb metadata` exited with error
 
-stdout:
-error: failed to unpack package `triomphe v0.1.16`
-  failed to open `/Users/maks/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/triomphe-0.1.16/.cargo-ok`
-  File exists (os error 17)
-error: process did not exit successfully: exit status: 101
 
-stderr:
+[FAIL] backtrace_test_should_panic_mismatch::tests::test_panics_in_test_body_with_should_panic_mismatch
+
+Failure data:
+    Incorrect panic data
+    Actual:    [0x417373657274206661696c6564] (Assert failed)
+    Expected:  [0x77726f6e67206d7367] (wrong msg)
+
+stack backtrace:
+   in test 'backtrace_test_should_panic_mismatch::tests::test_panics_in_test_body_with_should_panic_mismatch':
+      0: core::panic_with_const_felt252
+         at [..]lib.cairo:360:5
+      1: core::panic_with_const_felt252
+         at [..]lib.cairo:360:5
+      2: (inlined) backtrace_test_should_panic_mismatch::tests::test_panics_in_test_body_with_should_panic_mismatch
+         at [..]lib.cairo:14:5
+      3: backtrace_test_should_panic_mismatch::tests::test_panics_in_test_body_with_should_panic_mismatch__snforge_internal_test_generated
+         at [..]lib.cairo:14:5
+
+
+Failures:
+    backtrace_test_should_panic_mismatch::tests::test_panics_in_test_body_with_should_panic_mismatch
