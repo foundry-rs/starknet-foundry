@@ -10,7 +10,7 @@ use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, Syscall
 use cairo_vm::types::builtin_name::BuiltinName;
 use camino::Utf8PathBuf;
 use forge_runner::{
-    test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
+    test_case_summary::{AnyTestCaseSummary, Single, TestCaseSummary},
     test_target_summary::TestTargetSummary,
 };
 use foundry_ui::UI;
@@ -29,6 +29,11 @@ use std::{
     process::{Command, Stdio},
     str::FromStr,
 };
+
+// Allowed absolute gas differences when `non_exact_gas_assertions` is enabled.
+const MARGIN_L1_GAS: u64 = 10;
+const MARGIN_L1_DATA_GAS: u64 = 10;
+const MARGIN_L2_GAS: u64 = 200_000;
 
 /// Represents a dependency of a Cairo project
 #[derive(Debug, Clone)]
@@ -292,23 +297,60 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
 
     let result = TestCase::find_test_result(result);
 
-    assert!(result.test_case_summaries.iter().any(|any_case| {
-        match any_case {
-            AnyTestCaseSummary::Fuzzing(_) => {
-                panic!("Cannot use assert_gas! for fuzzing tests")
-            }
-            AnyTestCaseSummary::Single(case) => match case {
-                TestCaseSummary::Passed { gas_info: gas, .. } => {
-                    assert_gas_with_margin(gas.gas_used, asserted_gas)
-                        && any_case
-                            .name()
-                            .unwrap()
-                            .ends_with(test_name_suffix.as_str())
-                }
-                _ => false,
-            },
+    let any_case = result
+        .test_case_summaries
+        .iter()
+        .find(|any_case| {
+            any_case
+                .name()
+                .is_some_and(|name| name.ends_with(test_name_suffix.as_str()))
+        })
+        .unwrap_or_else(|| {
+            let available_test_cases = result
+                .test_case_summaries
+                .iter()
+                .filter_map(AnyTestCaseSummary::name)
+                .collect::<Vec<_>>()
+                .join(", ");
+
+            panic!(
+                "Gas assertion failed: test case `{test_case_name}` was not found. Available test cases: {available_test_cases}"
+            )
+        });
+
+    match any_case {
+        AnyTestCaseSummary::Fuzzing(_) => {
+            panic!("Cannot use assert_gas! for fuzzing tests")
         }
-    }));
+        AnyTestCaseSummary::Single(case) => match case {
+            TestCaseSummary::Passed {
+                name,
+                gas_info: gas,
+                ..
+            } => {
+                let actual_gas = gas.gas_used;
+
+                if !assert_gas_with_margin(actual_gas, asserted_gas) {
+                    let diff = gas_vector_abs_diff(&actual_gas, &asserted_gas);
+                    panic!(
+                        "Gas assertion failed for test case `{name}`.\nexpected: {}\nactual:   {}\ndiff:     {}{}",
+                        format_gas_vector(&asserted_gas),
+                        format_gas_vector(&actual_gas),
+                        format_gas_vector(&diff),
+                        gas_assertion_margin_message(),
+                    );
+                }
+            }
+            _ => {
+                // The case was located by matching on its name, so `name()` is always `Some`.
+                let name = any_case.name().expect("matched test case must have a name");
+                panic!(
+                    "Gas assertion failed for test case `{name}`: expected passed test case with gas information, but test case was {}",
+                    test_case_status(case)
+                );
+            }
+        },
+    }
 }
 
 // This logic is used to assert exact gas values in CI for the minimal supported Scarb version
@@ -317,7 +359,9 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
 fn assert_gas_with_margin(gas: GasVector, asserted_gas: GasVector) -> bool {
     if cfg!(feature = "non_exact_gas_assertions") {
         let diff = gas_vector_abs_diff(&gas, &asserted_gas);
-        diff.l1_gas.0 <= 10 && diff.l1_data_gas.0 <= 10 && diff.l2_gas.0 <= 200_000
+        diff.l1_gas.0 <= MARGIN_L1_GAS
+            && diff.l1_data_gas.0 <= MARGIN_L1_DATA_GAS
+            && diff.l2_gas.0 <= MARGIN_L2_GAS
     } else {
         gas == asserted_gas
     }
@@ -328,6 +372,33 @@ fn gas_vector_abs_diff(a: &GasVector, b: &GasVector) -> GasVector {
         l1_gas: GasAmount(a.l1_gas.0.abs_diff(b.l1_gas.0)),
         l1_data_gas: GasAmount(a.l1_data_gas.0.abs_diff(b.l1_data_gas.0)),
         l2_gas: GasAmount(a.l2_gas.0.abs_diff(b.l2_gas.0)),
+    }
+}
+
+fn format_gas_vector(gas: &GasVector) -> String {
+    format!(
+        "l1_gas: {}, l1_data_gas: {}, l2_gas: {}",
+        gas.l1_gas.0, gas.l1_data_gas.0, gas.l2_gas.0
+    )
+}
+
+fn gas_assertion_margin_message() -> String {
+    if cfg!(feature = "non_exact_gas_assertions") {
+        format!(
+            "\nallowed diff: l1_gas <= {MARGIN_L1_GAS}, l1_data_gas <= {MARGIN_L1_DATA_GAS}, l2_gas <= {MARGIN_L2_GAS}"
+        )
+    } else {
+        String::new()
+    }
+}
+
+fn test_case_status(case: &TestCaseSummary<Single>) -> &'static str {
+    match case {
+        TestCaseSummary::Passed { .. } => "passed",
+        TestCaseSummary::Failed { .. } => "failed",
+        TestCaseSummary::Ignored { .. } => "ignored",
+        TestCaseSummary::Interrupted { .. } => "interrupted",
+        TestCaseSummary::ExcludedFromPartition { .. } => "excluded from partition",
     }
 }
 
