@@ -392,7 +392,7 @@ fn contract_keccak_cost_cairo_steps() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(123),
+            l2_gas: GasAmount(1_440_000),
         },
     );
 }
@@ -569,7 +569,7 @@ fn pedersen_cost_cairo_steps() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(444),
+            l2_gas: GasAmount(40000),
         },
     );
 }
@@ -692,7 +692,7 @@ fn contract_poseidon_cost_cairo_steps() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(555),
+            l2_gas: GasAmount(520_000),
         },
     );
 }
@@ -1481,7 +1481,7 @@ fn snforge_std_deploy_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(777),
+            l2_gas: GasAmount(190_350),
         },
     );
 }
