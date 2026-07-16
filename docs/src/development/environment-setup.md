@@ -132,7 +132,7 @@ Build it from the [app-starknet repository](https://github.com/LedgerHQ/app-star
 $ git clone --depth 1 --branch nanox_2.7.0_2.4.0_sdk_v26.0.2 https://github.com/LedgerHQ/app-starknet
 $ docker run --rm \
     -v "$(pwd)/app-starknet:/app-starknet" \
-    ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:5.3.14 \
+    ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:5.3.16 \
     bash -c "cd /app-starknet/starknet && cargo ledger build nanox"
 $ mkdir -p crates/sncast/tests/data/ledger-app
 $ cp app-starknet/starknet/target/nanox/release/starknet \
