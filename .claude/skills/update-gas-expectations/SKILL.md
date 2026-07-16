@@ -12,13 +12,13 @@ description: >-
 
 # Update gas expectations
 
-## What this does and why
+## Objective
 
-Many Forge integration tests assert on **exact** gas usage and resource counts. Every Scarb or
-blockifier bump changes the underlying gas model, so dozens of hardcoded numbers go stale at once.
+Many Forge integration tests assert on exact gas usage and resource counts. Every Scarb or
+blockifier bump can change the underlying gas model, so the expected values in the tests can go stale.
 Updating them by hand is slow and error-prone.
 
-This skill automates that: run the relevant tests, read the *actual* value each failing assertion
+This skill automates that: run the relevant tests, read the actual value each failing assertion
 reports, and rewrite the matching expectation in the source. The assertion helpers are written to
 print `expected:` and `actual:` on failure (see `crates/forge/tests/utils/runner.rs`), so the actual
 value is always available in the panic message — you rewrite the source to match it, then re-run
@@ -28,24 +28,64 @@ The loop converges because each run surfaces the actual values of the assertions
 them and re-running surfaces the next batch (a single test function has several assertions, and only
 the first failing one panics per run).
 
-## Scope — only touch these files
+## Scope
 
-Edit **only** expectation literals in:
+Edit only expectation literals in:
 
 - `crates/forge/tests/integration/gas.rs` — `assert_gas` calls (`GasVector { l1_gas, l1_data_gas, l2_gas }`)
 - `crates/forge/tests/integration/resources.rs` — `assert_syscall` / `assert_builtin` counts
 - `crates/forge/tests/integration/available_gas.rs` — the `l2_gas: ~NNNNNN` number inside the expected error string
 
-Never change assertion *logic*, test bodies (the Cairo source inside `test_case!`), production code, or
-files outside this list. You are only updating numeric expectations.
+Do not modify:
+- assertion logic;
+- test bodies (the Cairo source inside `test_case!`);
+- production code;
+- files outside this list.
+
+You are only updating numeric expectations.
+
+## Repository and instruction precedence
+
+When instructions conflict, use the following precedence:
+
+1. explicit user requirements;
+2. repository-level instructions such as `AGENTS.md`;
+3. instructions located closest to the modified file;
+4. existing conventions in the target package;
+5. this skill's defaults.
 
 ## Prerequisites
 
 - `scarb` must be installed at the version pinned in `.tool-versions` (run `asdf install` if `asdf` is
   used). Without it the tests fail on `scarb --version` before any gas assertion runs — that is an
-  environment problem, not a stale expectation. If you see `Command scarb failed`, stop and tell the
-  user to install scarb; do not edit anything.
+  environment problem, not a stale expectation. If you see `Command scarb failed`, inspect the error;
+  do not edit anything.
 - Run from the repo root.
+
+### Existing working-tree changes
+
+Before editing, inspect existing changes in the target files:
+
+```sh
+git status --short -- \
+  crates/forge/tests/integration/gas.rs \
+  crates/forge/tests/integration/resources.rs \
+  crates/forge/tests/integration/available_gas.rs
+
+git diff -- \
+  crates/forge/tests/integration/gas.rs \
+  crates/forge/tests/integration/resources.rs \
+  crates/forge/tests/integration/available_gas.rs
+```
+
+Preserve all pre-existing user changes.
+
+Never:
+
+- revert unrelated changes;
+- replace an entire file when a narrow edit is sufficient;
+- format or rewrite surrounding code unnecessarily;
+- assume that every existing change was produced by this skill.
 
 ## Workflow
 
@@ -53,7 +93,7 @@ Work one target file at a time (`gas.rs`, then `resources.rs`, then `available_g
 
 ### 1. Run the tests with EXACT assertions
 
-Do **not** pass the `non_exact_gas_assertions` feature — the margin mode hides small diffs, and you
+Do not pass the `non_exact_gas_assertions` feature — the margin mode hides small diffs, and you
 want precise target values.
 
 ```sh
@@ -68,7 +108,7 @@ If nothing fails, that file's expectations are already up to date — move on.
 
 The panic messages look like this:
 
-**`assert_gas`:**
+`assert_gas`:
 ```
 Gas assertion failed for test case `some_test`.
 expected: l1_gas: 0, l1_data_gas: 0, l2_gas: 40000
@@ -76,7 +116,7 @@ actual:   l1_gas: 0, l1_data_gas: 0, l2_gas: 42000
 diff:     l1_gas: 0, l1_data_gas: 0, l2_gas: 2000
 ```
 
-**`assert_syscall` / `assert_builtin`:**
+`assert_syscall` / `assert_builtin`:
 ```
 Syscall assertion failed for test case `keccak` (syscall `Keccak`).
 expected: 1
@@ -84,7 +124,7 @@ actual:   2
 ```
 ```
 Builtin assertion failed for test case `range_check` (builtin `RangeCheck`).
-expected: 4
+expected: 3
 actual:   4
 ```
 
@@ -93,14 +133,14 @@ The `actual:` line is already normalized to the value the source should hold —
 
 ### 3. Rewrite the matching expectation
 
-Locate the assertion by the **test case name** from the message (it is the string argument to the
+Locate the assertion by the test case name from the message (it is the string argument to the
 helper), then replace the numbers with the `actual:` values.
 
 - `assert_gas`: update the three `GasAmount(...)` values in the `GasVector { .. }` literal.
 - `assert_syscall` / `assert_builtin`: update the last numeric argument.
 - `available_gas.rs`: update the number after `l2_gas: ~` inside the expected error string.
 
-**Example — `assert_gas`:**
+Example — `assert_gas`:
 ```rust
 // before (from the message above: test case `some_test`, actual l2_gas: 42000)
 assert_gas(
@@ -114,7 +154,7 @@ assert_gas(
 );
 ```
 
-**Example — `assert_syscall`:**
+Example — `assert_syscall`:
 ```rust
 assert_syscall(&result, "keccak", SyscallSelector::Keccak, 1);   // <- 2
 ```
@@ -124,23 +164,23 @@ assert_syscall(&result, "keccak", SyscallSelector::Keccak, 1);   // <- 2
 Re-run the same test command. Each pass fixes the assertions that panicked; keep looping until the
 file is fully green, then move to the next target file.
 
-### 5. Finalize
+### 5. Final validation
 
-After all three files pass:
+After all three filtered suites pass, run:
 
 ```sh
-cargo fmt
-cargo test -p forge --test main integration::gas
-cargo test -p forge --test main integration::resources
-cargo test -p forge --test main integration::available_gas
+cargo fmt --check
+
+cargo test -p forge --test main integration::gas -- --test-threads=1
+cargo test -p forge --test main integration::resources -- --test-threads=1
+cargo test -p forge --test main integration::available_gas -- --test-threads=1
 ```
 
-Then show the user `git diff` of the three files so they can review before committing (typically the
-diff is committed together with the Scarb/blockifier bump).
+Then show the user `git diff` of the three files so they can review before committing.
 
 ## Do NOT touch the diagnostics tests
 
-Some tests deliberately assert on **wrong** values to verify the failure output itself. Never "fix"
+Some tests deliberately assert on wrong values to verify the failure output itself. Never "fix"
 these — they are supposed to fail-then-be-caught internally:
 
 - In `gas.rs`: `assert_gas_failure_shows_gas_diff_and_test_case_name`,
@@ -153,7 +193,7 @@ message, leave it alone.
 
 ## Guardrails
 
-- If a test fails for any reason **other** than an expected-vs-actual value mismatch (compile error,
+- If a test fails for any reason other than an expected-vs-actual value mismatch (compile error,
   contract deploy failure, `scarb` missing, a genuine logic panic), stop and report it. Do not paper
   over real breakage by editing numbers.
 - Only change numeric literals / the error-string number. If an expectation is written in a shape you
