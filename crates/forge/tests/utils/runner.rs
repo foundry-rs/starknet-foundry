@@ -322,12 +322,13 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
         AnyTestCaseSummary::Fuzzing(_) => {
             panic!("Cannot use assert_gas! for fuzzing tests")
         }
-        AnyTestCaseSummary::Single(case) => match case {
-            TestCaseSummary::Passed {
+        AnyTestCaseSummary::Single(case) => {
+            if let TestCaseSummary::Passed {
                 name,
                 gas_info: gas,
                 ..
-            } => {
+            } = case
+            {
                 let actual_gas = gas.gas_used;
 
                 if !assert_gas_with_margin(actual_gas, asserted_gas) {
@@ -340,8 +341,7 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
                         gas_assertion_margin_message(),
                     );
                 }
-            }
-            _ => {
+            } else {
                 // The case was located by matching on its name, so `name()` is always `Some`.
                 let name = any_case.name().expect("matched test case must have a name");
                 panic!(
@@ -349,7 +349,7 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
                     test_case_status(case)
                 );
             }
-        },
+        }
     }
 }
 
