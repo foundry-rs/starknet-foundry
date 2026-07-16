@@ -130,7 +130,7 @@ fn capture_assert_gas_panic(
     let payload = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         assert_gas(result, test_case_name, asserted_gas);
     }))
-    .expect_err("assert_gas should panic when the gas assertion cannot be satisfied");
+    .expect_err("`assert_gas` should panic when the gas assertion cannot be satisfied");
 
     if let Some(message) = payload.downcast_ref::<String>() {
         message.clone()
