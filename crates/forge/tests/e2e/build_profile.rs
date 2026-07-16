@@ -2,7 +2,6 @@ use super::common::runner::{setup_package, test_runner};
 use forge_runner::profiler_api::PROFILE_DIR;
 
 #[test]
-#[ignore = "TODO(#4477): Re-enable after cairo-profiler Scarb 2.19 support"]
 fn simple_package_build_profile() {
     let temp = setup_package("simple_package");
 
@@ -36,7 +35,6 @@ fn simple_package_build_profile() {
 }
 
 #[test]
-#[ignore = "TODO(#4477): Re-enable after cairo-profiler Scarb 2.19 support"]
 fn simple_package_build_profile_and_pass_args() {
     let temp = setup_package("simple_package");
 
