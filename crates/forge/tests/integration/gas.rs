@@ -76,8 +76,7 @@ fn assert_gas_failure_shows_expected_actual_and_test_case_name() {
 fn assert_gas_reports_when_test_case_is_missing() {
     let summaries = summaries(vec![single_ignored("pkg::module::some_other_test")]);
 
-    let panic_message =
-        capture_assert_gas_panic(&summaries, "missing_test", GasVector::default());
+    let panic_message = capture_assert_gas_panic(&summaries, "missing_test", GasVector::default());
 
     assert!(
         panic_message.contains("test case `missing_test` was not found"),
