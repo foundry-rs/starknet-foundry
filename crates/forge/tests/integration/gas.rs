@@ -273,8 +273,8 @@ fn deploy_syscall_cost_cairo_steps() {
         "deploy_syscall_cost",
         GasVector {
             l1_gas: GasAmount(0),
-            l1_data_gas: GasAmount(123),
-            l2_gas: GasAmount(456),
+            l1_data_gas: GasAmount(96),
+            l2_gas: GasAmount(440_000),
         },
     );
 }
