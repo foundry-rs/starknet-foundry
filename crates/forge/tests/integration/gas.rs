@@ -24,7 +24,7 @@ use std::path::Path;
 // Sierra syscall l2 gas: `n_steps * step_gas_cost + sum(builtin_count * builtin_gas_cost)`
 
 #[test]
-fn assert_gas_failure_shows_expected_actual_and_test_case_name() {
+fn assert_gas_failure_shows_gas_diff_and_test_case_name() {
     let test = test_case!(indoc!(
         r#"
             #[test]
@@ -132,18 +132,12 @@ fn capture_assert_gas_panic(
     }))
     .expect_err("assert_gas should panic when the gas assertion cannot be satisfied");
 
-    panic_payload_to_string(payload)
-}
-
-fn panic_payload_to_string(payload: Box<dyn std::any::Any + Send>) -> String {
     if let Some(message) = payload.downcast_ref::<String>() {
         message.clone()
     } else if let Some(message) = payload.downcast_ref::<&str>() {
         (*message).to_string()
     } else {
-        // Fail loudly instead of returning a silent fallback so a broken payload type
-        // surfaces the real problem in `assert_gas` rather than a confusing mismatch later.
-        panic!("Unexpected panic payload type. Expected `String` or `&str` from assert_gas.");
+        panic!("Unexpected panic payload type. Expected `String` or `&str` from `assert_gas`.");
     }
 }
 
