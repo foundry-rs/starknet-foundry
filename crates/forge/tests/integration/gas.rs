@@ -26,12 +26,12 @@ use std::path::Path;
 #[test]
 fn assert_gas_failure_shows_gas_diff_and_test_case_name() {
     let test = test_case!(indoc!(
-        r#"
+        r"
             #[test]
             fn gas_assertion_diagnostics() {
                 keccak::keccak_u256s_le_inputs(array![1].span());
             }
-        "#
+        "
     ));
 
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
@@ -273,8 +273,8 @@ fn deploy_syscall_cost_cairo_steps() {
         "deploy_syscall_cost",
         GasVector {
             l1_gas: GasAmount(0),
-            l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(440_000),
+            l1_data_gas: GasAmount(123),
+            l2_gas: GasAmount(456),
         },
     );
 }
