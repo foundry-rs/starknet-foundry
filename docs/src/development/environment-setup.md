@@ -184,7 +184,7 @@ $ docker run --rm -it \
 
 > 💡 **Tip: Linux users**
 >
-> On Linux, [Speculos](https://github.com/LedgerHQ/speculos) can be installed natively. In that case, tests can be run directly with:
+> On Linux, [Speculos](https://speculos.ledger.com/installation/build.html) can be installed natively. In that case, tests can be run directly with:
 >
 > ```shell
 > $ cargo test -p sncast --features ledger-emulator --test main ledger -- --nocapture --ignored
