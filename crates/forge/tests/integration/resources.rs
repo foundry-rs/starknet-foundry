@@ -53,8 +53,8 @@ fn builtins_count() {
     // No ECDSA and Keccak builtins
     assert_builtin(&result, "empty", BuiltinName::range_check, 4);
     assert_builtin(&result, "range_check", BuiltinName::range_check, 4);
-    assert_builtin(&result, "bitwise", BuiltinName::bitwise, 1);
-    assert_builtin(&result, "pedersen", BuiltinName::pedersen, 1);
+    assert_builtin(&result, "bitwise", BuiltinName::bitwise, 2);
+    assert_builtin(&result, "pedersen", BuiltinName::pedersen, 555);
     assert_builtin(&result, "poseidon", BuiltinName::poseidon, 1);
     assert_builtin(&result, "ec_op", BuiltinName::ec_op, 1);
 }
@@ -150,7 +150,12 @@ fn syscalls_count() {
     assert_syscall(&result, "deploy", SyscallSelector::Deploy, 1);
     assert_syscall(&result, "storage_read", SyscallSelector::StorageRead, 1);
     assert_syscall(&result, "storage_write", SyscallSelector::StorageWrite, 1);
-    assert_syscall(&result, "get_block_hash", SyscallSelector::GetBlockHash, 1);
+    assert_syscall(
+        &result,
+        "get_block_hash",
+        SyscallSelector::GetBlockHash,
+        999,
+    );
     assert_syscall(
         &result,
         "get_execution_info",

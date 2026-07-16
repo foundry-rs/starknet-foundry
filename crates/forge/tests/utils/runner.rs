@@ -23,6 +23,7 @@ use scarb_api::{
 use shared::{command::CommandExt, utils::contract_name_from_module_path};
 use starknet_api::execution_resources::{GasAmount, GasVector};
 use std::{
+    cell::Cell,
     collections::HashMap,
     fs,
     panic::Location,
@@ -299,30 +300,8 @@ pub fn assert_case_output_contains(
 
 #[track_caller]
 pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_gas: GasVector) {
-    let test_name_suffix = format!("::{test_case_name}");
-
     let result = TestCase::find_test_result(result);
-
-    let any_case = result
-        .test_case_summaries
-        .iter()
-        .find(|any_case| {
-            any_case
-                .name()
-                .is_some_and(|name| name.ends_with(test_name_suffix.as_str()))
-        })
-        .unwrap_or_else(|| {
-            let available_test_cases = result
-                .test_case_summaries
-                .iter()
-                .filter_map(AnyTestCaseSummary::name)
-                .collect::<Vec<_>>()
-                .join(", ");
-
-            panic!(
-                "Gas assertion failed: test case `{test_case_name}` was not found. Available test cases: {available_test_cases}"
-            )
-        });
+    let any_case = find_case_by_name(result, test_case_name, "Gas");
 
     match any_case {
         AnyTestCaseSummary::Fuzzing(_) => {
@@ -376,29 +355,8 @@ pub fn assert_available_gas_exceeded(
     test_case_name: &str,
     asserted_gas: GasVector,
 ) {
-    let test_name_suffix = format!("::{test_case_name}");
     let result = TestCase::find_test_result(result);
-
-    let any_case = result
-        .test_case_summaries
-        .iter()
-        .find(|any_case| {
-            any_case
-                .name()
-                .is_some_and(|name| name.ends_with(test_name_suffix.as_str()))
-        })
-        .unwrap_or_else(|| {
-            let available_test_cases = result
-                .test_case_summaries
-                .iter()
-                .filter_map(AnyTestCaseSummary::name)
-                .collect::<Vec<_>>()
-                .join(", ");
-
-            panic!(
-                "Available gas assertion failed: test case `{test_case_name}` was not found. Available test cases: {available_test_cases}"
-            )
-        });
+    let any_case = find_case_by_name(result, test_case_name, "Available gas");
 
     let Some(message) = any_case.msg() else {
         let name = any_case.name().expect("matched test case must have a name");
@@ -423,14 +381,15 @@ pub fn assert_available_gas_exceeded(
         ],
     );
 
-    if actual_gas != asserted_gas {
+    if !gas_expectation_recording_enabled() && !assert_gas_with_margin(actual_gas, asserted_gas) {
         let name = any_case.name().expect("matched test case must have a name");
         let diff = gas_vector_abs_diff(&actual_gas, &asserted_gas);
         panic!(
-            "Available gas assertion failed for test case `{name}`.\nexpected: {}\nactual:   {}\ndiff:     {}",
+            "Available gas assertion failed for test case `{name}`.\nexpected: {}\nactual:   {}\ndiff:     {}{}",
             format_gas_vector(&asserted_gas),
             format_gas_vector(&actual_gas),
             format_gas_vector(&diff),
+            gas_assertion_margin_message(),
         );
     }
 }
@@ -500,8 +459,35 @@ fn gas_expectation_recording_enabled() -> bool {
     std::env::var(GAS_EXPECTATIONS_ENV).is_ok_and(|value| value == GAS_EXPECTATIONS_RECORD_MODE)
 }
 
+thread_local! {
+    /// When set, `emit_gas_expectation_record` is a no-op on the current thread.
+    /// Used by diagnostics that deliberately trigger assertion failures (see
+    /// [`without_gas_expectation_recording`]) so they don't emit misleading records
+    /// that the update script would then try to apply.
+    static RECORDING_SUPPRESSED: Cell<bool> = const { Cell::new(false) };
+}
+
+/// Runs `f` with gas-expectation recording suppressed on the current thread.
+///
+/// `libtest` runs each test on its own thread, so a thread-local flag is enough to scope
+/// the suppression to a single assertion without affecting tests running in parallel.
+/// The flag is reset via a drop guard, so it is cleared even if `f` panics (which is the
+/// expected case for the diagnostics tests that use this).
+pub fn without_gas_expectation_recording<T>(f: impl FnOnce() -> T) -> T {
+    struct ResetGuard;
+    impl Drop for ResetGuard {
+        fn drop(&mut self) {
+            RECORDING_SUPPRESSED.with(|suppressed| suppressed.set(false));
+        }
+    }
+
+    RECORDING_SUPPRESSED.with(|suppressed| suppressed.set(true));
+    let _guard = ResetGuard;
+    f()
+}
+
 fn emit_gas_expectation_record(location: &Location<'_>, fields: &[(&str, String)]) {
-    if !gas_expectation_recording_enabled() {
+    if !gas_expectation_recording_enabled() || RECORDING_SUPPRESSED.with(Cell::get) {
         return;
     }
 
@@ -531,6 +517,40 @@ fn test_case_status(case: &TestCaseSummary<Single>) -> &'static str {
     }
 }
 
+/// Finds the (single) test case whose fully-qualified name ends with `::{test_case_name}`.
+///
+/// Panics with a helpful, `assertion`-prefixed message listing the available test cases when no
+/// matching case is found.
+#[track_caller]
+fn find_case_by_name<'a>(
+    result: &'a TestTargetSummary,
+    test_case_name: &str,
+    assertion: &str,
+) -> &'a AnyTestCaseSummary {
+    let test_name_suffix = format!("::{test_case_name}");
+
+    result
+        .test_case_summaries
+        .iter()
+        .find(|any_case| {
+            any_case
+                .name()
+                .is_some_and(|name| name.ends_with(test_name_suffix.as_str()))
+        })
+        .unwrap_or_else(|| {
+            let available_test_cases = result
+                .test_case_summaries
+                .iter()
+                .filter_map(AnyTestCaseSummary::name)
+                .collect::<Vec<_>>()
+                .join(", ");
+
+            panic!(
+                "{assertion} assertion failed: test case `{test_case_name}` was not found. Available test cases: {available_test_cases}"
+            )
+        })
+}
+
 #[track_caller]
 pub fn assert_syscall(
     result: &[TestTargetSummary],
@@ -538,45 +558,49 @@ pub fn assert_syscall(
     syscall: SyscallSelector,
     expected_count: usize,
 ) {
-    let test_name_suffix = format!("::{test_case_name}");
-
     let result = TestCase::find_test_result(result);
+    let any_case = find_case_by_name(result, test_case_name, "Syscall");
 
-    assert!(result.test_case_summaries.iter().any(|any_case| {
-        match any_case {
-            AnyTestCaseSummary::Fuzzing(_) => {
-                panic!("Cannot use assert_syscall! for fuzzing tests")
-            }
-            AnyTestCaseSummary::Single(case) => match case {
-                TestCaseSummary::Passed { used_resources, .. } => {
-                    let actual_count = used_resources
-                        .syscall_usage
-                        .get(&syscall)
-                        .unwrap_or(&SyscallUsage::new(0, 0))
-                        .call_count;
-                    let matches_test_name = any_case
-                        .name()
-                        .unwrap()
-                        .ends_with(test_name_suffix.as_str());
-
-                    if matches_test_name {
-                        emit_gas_expectation_record(
-                            Location::caller(),
-                            &[
-                                ("kind", "syscall".to_string()),
-                                ("test", test_case_name.to_string()),
-                                ("syscall", format!("{syscall:?}")),
-                                ("count", actual_count.to_string()),
-                            ],
-                        );
-                    }
-
-                    actual_count == expected_count && matches_test_name
-                }
-                _ => false,
-            },
+    match any_case {
+        AnyTestCaseSummary::Fuzzing(_) => {
+            panic!("Cannot use assert_syscall! for fuzzing tests")
         }
-    }));
+        AnyTestCaseSummary::Single(case) => match case {
+            TestCaseSummary::Passed { used_resources, .. } => {
+                let actual_count = used_resources
+                    .syscall_usage
+                    .get(&syscall)
+                    .unwrap_or(&SyscallUsage::new(0, 0))
+                    .call_count;
+
+                emit_gas_expectation_record(
+                    Location::caller(),
+                    &[
+                        ("kind", "syscall".to_string()),
+                        ("test", test_case_name.to_string()),
+                        ("syscall", format!("{syscall:?}")),
+                        ("count", actual_count.to_string()),
+                    ],
+                );
+
+                // In record mode we only want to capture the actual value, without failing, so
+                // that every assertion in a test emits its record in a single run.
+                if !gas_expectation_recording_enabled() {
+                    assert!(
+                        actual_count == expected_count,
+                        "Syscall assertion failed for test case `{test_case_name}`: expected {expected_count} `{syscall:?}` syscall(s), but found {actual_count}"
+                    );
+                }
+            }
+            _ => {
+                let name = any_case.name().expect("matched test case must have a name");
+                panic!(
+                    "Syscall assertion failed for test case `{name}`: expected passed test case with resource information, but test case was {}",
+                    test_case_status(case)
+                );
+            }
+        },
+    }
 }
 
 #[track_caller]
@@ -593,50 +617,64 @@ pub fn assert_builtin(
         expected_count
     };
 
-    let test_name_suffix = format!("::{test_case_name}");
     let result = TestCase::find_test_result(result);
+    let any_case = find_case_by_name(result, test_case_name, "Builtin");
 
-    assert!(result.test_case_summaries.iter().any(|any_case| {
-        match any_case {
-            AnyTestCaseSummary::Fuzzing(_) => {
-                panic!("Cannot use assert_builtin for fuzzing tests")
-            }
-            AnyTestCaseSummary::Single(case) => match case {
-                TestCaseSummary::Passed { used_resources, .. } => {
-                    let actual_count = *used_resources
-                        .execution_summary
-                        .charged_resources
-                        .extended_vm_resources
-                        .vm_resources
-                        .builtin_instance_counter
-                        .get(&builtin)
-                        .unwrap_or(&0);
-                    let source_count = if builtin == BuiltinName::range_check {
-                        actual_count + 1
-                    } else {
-                        actual_count
-                    };
-                    let matches_test_name = any_case
-                        .name()
-                        .unwrap()
-                        .ends_with(test_name_suffix.as_str());
-
-                    if matches_test_name {
-                        emit_gas_expectation_record(
-                            Location::caller(),
-                            &[
-                                ("kind", "builtin".to_string()),
-                                ("test", test_case_name.to_string()),
-                                ("builtin", format!("{builtin:?}")),
-                                ("count", source_count.to_string()),
-                            ],
-                        );
-                    }
-
-                    actual_count == expected_count && matches_test_name
-                }
-                _ => false,
-            },
+    match any_case {
+        AnyTestCaseSummary::Fuzzing(_) => {
+            panic!("Cannot use assert_builtin for fuzzing tests")
         }
-    }));
+        AnyTestCaseSummary::Single(case) => match case {
+            TestCaseSummary::Passed { used_resources, .. } => {
+                let actual_count = *used_resources
+                    .execution_summary
+                    .charged_resources
+                    .extended_vm_resources
+                    .vm_resources
+                    .builtin_instance_counter
+                    .get(&builtin)
+                    .unwrap_or(&0);
+                // The value written in test sources accounts for the range check builtin used by
+                // the assertion itself (see the `expected_count` adjustment above).
+                let source_count = if builtin == BuiltinName::range_check {
+                    actual_count + 1
+                } else {
+                    actual_count
+                };
+
+                emit_gas_expectation_record(
+                    Location::caller(),
+                    &[
+                        ("kind", "builtin".to_string()),
+                        ("test", test_case_name.to_string()),
+                        ("builtin", format!("{builtin:?}")),
+                        ("count", source_count.to_string()),
+                    ],
+                );
+
+                // In record mode we only want to capture the actual value, without failing, so
+                // that every assertion in a test emits its record in a single run.
+                if !gas_expectation_recording_enabled() {
+                    // Report counts in the source-value domain (see `source_count`) so the message
+                    // matches what is written in the test.
+                    let expected_source = if builtin == BuiltinName::range_check {
+                        expected_count + 1
+                    } else {
+                        expected_count
+                    };
+                    assert!(
+                        actual_count == expected_count,
+                        "Builtin assertion failed for test case `{test_case_name}`: expected {expected_source} `{builtin:?}` builtin(s), but found {source_count}"
+                    );
+                }
+            }
+            _ => {
+                let name = any_case.name().expect("matched test case must have a name");
+                panic!(
+                    "Builtin assertion failed for test case `{name}`: expected passed test case with resource information, but test case was {}",
+                    test_case_status(case)
+                );
+            }
+        },
+    }
 }

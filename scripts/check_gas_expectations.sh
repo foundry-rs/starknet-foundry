@@ -89,17 +89,36 @@ main() {
   collect_records
   apply_records "$WORK_ROOT"
 
+  # Records were emitted but none matched a target file. This almost always means the emitted
+  # `file=` paths don't line up with TARGET_FILES (e.g. a path-format change), which would otherwise
+  # silently look like "up to date" while expectations are actually stale. Fail loudly instead.
+  if [ "$APPLIED_COUNT" -eq 0 ]; then
+    tail_output
+    err "collected gas expectation records, but none matched the target files (see TARGET_FILES)"
+  fi
+
+  if [ -n "$APPLY_FAILURES" ]; then
+    warn "some records could not be applied:"
+    printf '%b\n' "$APPLY_FAILURES" >&2
+  fi
+
   if has_changes; then
     if [ "$FIX" = "1" ]; then
+      # Persist the updates we could apply before reporting any failures, so progress is never lost.
       copy_updated_files_back
       info "Updated gas expectations"
       ensure cargo fmt
+      if [ -n "$APPLY_FAILURES" ]; then
+        err "applied available updates, but some records could not be applied (see above); re-run to finish"
+      fi
       run_verify_tests
       info "${GREEN}gas expectations updated and verified${RESET}"
     else
       print_changes
       err "gas expectations are stale; run with --fix to update them"
     fi
+  elif [ -n "$APPLY_FAILURES" ]; then
+    err "no expectation values changed, but some records could not be applied (see above)"
   elif [ "${RECORD_TESTS_FAILED:-0}" = "1" ]; then
     tail_output
     err "record tests failed, but no gas expectation updates were produced"
@@ -116,6 +135,13 @@ copy_target_files() {
   done
 }
 
+# Runs the target test suites with recording enabled (`SNFORGE_GAS_EXPECTATIONS=record`), appending
+# all output to `$OUTPUT_FILE`. `--nocapture` is required so the records printed by the assertions
+# reach the log instead of being swallowed by libtest.
+#
+# Test failures are tolerated on purpose: when expectations are stale the assertions still fail, but
+# the actual values are emitted before that happens, so we want to keep the output and carry on.
+# `RECORD_TESTS_FAILED` merely notes that a failure occurred, for `main` to interpret later.
 run_record_tests() {
   : > "$OUTPUT_FILE"
   RECORD_TESTS_FAILED=0
@@ -135,8 +161,12 @@ run_record_tests() {
   done
 }
 
+# Extracts the machine-readable records emitted during recording out of the raw cargo output into
+# `$RECORDS_FILE`, and fails if none were found (which would mean recording is broken).
 collect_records() {
-  grep "^$RECORD_PREFIX|" "$OUTPUT_FILE" > "$RECORDS_FILE" || true
+  # Extract from the prefix to end-of-line rather than anchoring with `^`, so a record still gets
+  # picked up if another (parallel) test happens to print onto the same line before it.
+  grep -o "$RECORD_PREFIX|.*" "$OUTPUT_FILE" > "$RECORDS_FILE" || true
 
   if [ ! -s "$RECORDS_FILE" ]; then
     tail_output
@@ -144,51 +174,50 @@ collect_records() {
   fi
 }
 
+# Applies every collected record to the copies under `$root`. Records are keyed by file:line from
+# the original sources, and each update is line-preserving (in-place `sub`, no lines added/removed),
+# so line numbers stay valid across multiple records touching the same file.
+#
+# Sets two globals inspected by `main`:
+#   APPLIED_COUNT   - number of records that matched a target file (whether or not the value changed)
+#   APPLY_FAILURES  - newline-separated list of records that matched a target but could not be applied
 apply_records() {
   local root="$1"
+  APPLIED_COUNT=0
+  APPLY_FAILURES=""
 
   while IFS= read -r record; do
-    local kind file line test_name
+    local kind file line target
     kind="$(record_field "$record" "kind")"
-    file="$(normalize_record_file "$(record_field "$record" "file")")"
+    file="$(record_field "$record" "file")"
     line="$(record_field "$record" "line")"
-    test_name="$(record_field "$record" "test")"
 
-    # This helper diagnostic test intentionally uses wrong gas and should not be auto-updated.
-    if [ "$test_name" = "gas_assertion_diagnostics" ]; then
+    # Skip records emitted from files we don't manage (matched by path suffix, so the exact path
+    # format emitted by `Location::caller()` doesn't matter).
+    if ! target="$(resolve_target_file "$file")"; then
       continue
     fi
 
-    if ! is_target_file "$file"; then
-      continue
-    fi
+    APPLIED_COUNT=$((APPLIED_COUNT + 1))
 
     case "$kind" in
       gas|available_gas)
-        local l1_gas l1_data_gas l2_gas
-        l1_gas="$(record_field "$record" "l1_gas")"
-        l1_data_gas="$(record_field "$record" "l1_data_gas")"
-        l2_gas="$(record_field "$record" "l2_gas")"
-
-        update_gas_vector \
-          "$root/$file" \
+        if ! update_gas_vector \
+          "$root/$target" \
           "$line" \
-          "$l1_gas" \
-          "$(format_rust_u64 "$l1_gas")" \
-          "$l1_data_gas" \
-          "$(format_rust_u64 "$l1_data_gas")" \
-          "$l2_gas" \
-          "$(format_rust_u64 "$l2_gas")"
+          "$(format_rust_u64 "$(record_field "$record" "l1_gas")")" \
+          "$(format_rust_u64 "$(record_field "$record" "l1_data_gas")")" \
+          "$(format_rust_u64 "$(record_field "$record" "l2_gas")")"; then
+          record_apply_failure "GasVector near $target:$line"
+        fi
         ;;
       syscall|builtin)
-        local count
-        count="$(record_field "$record" "count")"
-
-        update_assertion_count \
-          "$root/$file" \
+        if ! update_assertion_count \
+          "$root/$target" \
           "$line" \
-          "$count" \
-          "$(format_rust_u64 "$count")"
+          "$(format_rust_u64 "$(record_field "$record" "count")")"; then
+          record_apply_failure "$kind count near $target:$line"
+        fi
         ;;
       *)
         err "unknown gas expectation record kind: $kind"
@@ -197,25 +226,32 @@ apply_records() {
   done < "$RECORDS_FILE"
 }
 
+record_apply_failure() {
+  APPLY_FAILURES="${APPLY_FAILURES}${APPLY_FAILURES:+
+}  - $1"
+}
+
+# Rewrites the `GasVector { .. }` literal that starts at (or just below) `$file:$line` so its
+# `l1_gas` / `l1_data_gas` / `l2_gas` amounts match the recorded values.
+#
+# Values are already Rust-formatted (e.g. `440_000`); comparison ignores `_` separators, so an
+# amount is only rewritten when it actually differs (no spurious diffs). Returns non-zero if the
+# literal can't be located.
+#
+# Args: file line l1_gas l1_data_gas l2_gas
 update_gas_vector() {
   local file="$1"
   local line="$2"
-  local l1_gas_raw="$3"
-  local l1_gas="$4"
-  local l1_data_gas_raw="$5"
-  local l1_data_gas="$6"
-  local l2_gas_raw="$7"
-  local l2_gas="$8"
+  local l1_gas="$3"
+  local l1_data_gas="$4"
+  local l2_gas="$5"
   local tmp
   tmp="$(mktemp)"
 
   awk \
     -v start="$line" \
-    -v l1_gas_raw="$l1_gas_raw" \
     -v l1_gas="$l1_gas" \
-    -v l1_data_gas_raw="$l1_data_gas_raw" \
     -v l1_data_gas="$l1_data_gas" \
-    -v l2_gas_raw="$l2_gas_raw" \
     -v l2_gas="$l2_gas" \
     '
       function normalize(value, normalized) {
@@ -224,7 +260,7 @@ update_gas_vector() {
         return normalized
       }
 
-      function replace_amount(text, key, raw_value, formatted_value, pattern, token, current_value) {
+      function replace_amount(text, key, value, pattern, token, current_value) {
         pattern = key ": GasAmount[(][0-9_]+[)]"
 
         if (match(text, pattern)) {
@@ -233,8 +269,8 @@ update_gas_vector() {
           sub(/^.*GasAmount[(]/, "", current_value)
           sub(/[)].*$/, "", current_value)
 
-          if (normalize(current_value) != normalize(raw_value)) {
-            sub(pattern, key ": GasAmount(" formatted_value ")", text)
+          if (normalize(current_value) != normalize(value)) {
+            sub(pattern, key ": GasAmount(" value ")", text)
           }
         }
 
@@ -247,11 +283,13 @@ update_gas_vector() {
         }
 
         if (in_vector) {
-          $0 = replace_amount($0, "l1_gas", l1_gas_raw, l1_gas)
-          $0 = replace_amount($0, "l1_data_gas", l1_data_gas_raw, l1_data_gas)
-          $0 = replace_amount($0, "l2_gas", l2_gas_raw, l2_gas)
+          $0 = replace_amount($0, "l1_gas", l1_gas)
+          $0 = replace_amount($0, "l1_data_gas", l1_data_gas)
+          $0 = replace_amount($0, "l2_gas", l2_gas)
 
-          if ($0 ~ /^[[:space:]]*}[,)]?/) {
+          # Match a closing brace anywhere on the line, so both multi-line literals (`}` on its own
+          # line) and single-line literals (`GasVector { ... }`) terminate the block.
+          if ($0 ~ /}/) {
             done = 1
             in_vector = 0
           }
@@ -265,22 +303,28 @@ update_gas_vector() {
           exit 42
         }
       }
-    ' "$file" > "$tmp" || err "failed to update GasVector near $file:$line"
+    ' "$file" > "$tmp" || { rm -f "$tmp"; return 1; }
 
   mv "$tmp" "$file"
 }
 
+# Rewrites the expected count of an `assert_syscall` / `assert_builtin` call located at (or just
+# below) `$file:$line` to the recorded value. Handles both the single-line form (`assert_syscall(.., N);`)
+# and the multi-line form (the count sits on its own line as `N,`).
+#
+# The count is already Rust-formatted; comparison ignores `_` separators so it is only rewritten
+# when it actually differs, and it returns non-zero if the call can't be located.
+#
+# Args: file line count
 update_assertion_count() {
   local file="$1"
   local line="$2"
-  local count_raw="$3"
-  local count="$4"
+  local count="$3"
   local tmp
   tmp="$(mktemp)"
 
   awk \
     -v start="$line" \
-    -v count_raw="$count_raw" \
     -v count="$count" \
     '
       function normalize(value, normalized) {
@@ -289,7 +333,7 @@ update_assertion_count() {
         return normalized
       }
 
-      function replace_inline_count(text, raw_value, formatted_value, pattern, token, current_value) {
+      function replace_inline_count(text, value, pattern, token, current_value) {
         pattern = ",[[:space:]]*[0-9_]+[[:space:]]*[)][;]"
 
         if (match(text, pattern)) {
@@ -297,20 +341,20 @@ update_assertion_count() {
           current_value = token
           gsub(/[^0-9_]/, "", current_value)
 
-          if (normalize(current_value) != normalize(raw_value)) {
-            sub(pattern, ", " formatted_value ");", text)
+          if (normalize(current_value) != normalize(value)) {
+            sub(pattern, ", " value ");", text)
           }
         }
 
         return text
       }
 
-      function replace_line_count(text, raw_value, formatted_value, current_value) {
+      function replace_line_count(text, value, current_value) {
         current_value = text
         gsub(/[^0-9_]/, "", current_value)
 
-        if (normalize(current_value) != normalize(raw_value)) {
-          sub(/[0-9_]+/, formatted_value, text)
+        if (normalize(current_value) != normalize(value)) {
+          sub(/[0-9_]+/, value, text)
         }
 
         return text
@@ -318,10 +362,10 @@ update_assertion_count() {
 
       NR >= start && !done {
         if ($0 ~ /assert_(syscall|builtin)[(]/ && $0 ~ /[)][;]/) {
-          $0 = replace_inline_count($0, count_raw, count)
+          $0 = replace_inline_count($0, count)
           done = 1
         } else if ($0 ~ /^[[:space:]]*[0-9_]+[[:space:]]*,[[:space:]]*$/) {
-          $0 = replace_line_count($0, count_raw, count)
+          $0 = replace_line_count($0, count)
           done = 1
         }
       }
@@ -333,7 +377,7 @@ update_assertion_count() {
           exit 42
         }
       }
-    ' "$file" > "$tmp" || err "failed to update assertion count near $file:$line"
+    ' "$file" > "$tmp" || { rm -f "$tmp"; return 1; }
 
   mv "$tmp" "$file"
 }
@@ -377,34 +421,38 @@ record_field() {
     | tail -n 1
 }
 
-normalize_record_file() {
+# Resolves a record's file path to the matching entry in TARGET_FILES and prints it, or returns 1.
+# Matches on path suffix in either direction, so it works regardless of whether
+# `Location::caller()` emits a workspace-relative, package-relative or absolute path.
+resolve_target_file() {
   local file="$1"
-
-  case "$file" in
-    "$REPO_ROOT"/*)
-      printf '%s\n' "${file#"$REPO_ROOT"/}"
-      ;;
-    ./*)
-      printf '%s\n' "${file#./}"
-      ;;
-    *)
-      printf '%s\n' "$file"
-      ;;
-  esac
-}
-
-is_target_file() {
-  local file="$1"
+  local target
 
   for target in "${TARGET_FILES[@]}"; do
     if [ "$file" = "$target" ]; then
+      printf '%s\n' "$target"
       return 0
     fi
+    case "$file" in
+      */"$target")
+        printf '%s\n' "$target"
+        return 0
+        ;;
+    esac
+    case "$target" in
+      */"$file")
+        printf '%s\n' "$target"
+        return 0
+        ;;
+    esac
   done
 
   return 1
 }
 
+# Formats a numeric literal the way it is written in the sources: digits grouped in threes with `_`
+# separators (e.g. 440000 -> 440_000). Values with 5 or fewer digits are left as-is, matching the
+# existing convention in the test files (e.g. 40000 stays 40000).
 format_rust_u64() {
   local value="$1"
   local rest="$value"

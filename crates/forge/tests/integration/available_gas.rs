@@ -42,7 +42,7 @@ fn available_gas_exceeded() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(240_000),
+            l2_gas: GasAmount(888),
         },
     );
 }

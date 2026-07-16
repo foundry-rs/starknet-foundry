@@ -1,4 +1,6 @@
-use crate::utils::runner::{Contract, assert_gas, assert_passed};
+use crate::utils::runner::{
+    Contract, assert_gas, assert_passed, without_gas_expectation_recording,
+};
 use crate::utils::running_tests::run_test_case;
 use crate::utils::test_case;
 use forge_runner::forge_config::ForgeTrackedResource;
@@ -128,7 +130,12 @@ fn capture_assert_gas_panic(
     asserted_gas: GasVector,
 ) -> String {
     let payload = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        assert_gas(result, test_case_name, asserted_gas);
+        // This helper deliberately triggers a failing assertion, so it must not emit a gas
+        // expectation record (the recorded value would be the intentionally-wrong one, and the
+        // update script would try to "fix" it).
+        without_gas_expectation_recording(|| {
+            assert_gas(result, test_case_name, asserted_gas);
+        });
     }))
     .expect_err("`assert_gas` should panic when the gas assertion cannot be satisfied");
 
@@ -385,7 +392,7 @@ fn contract_keccak_cost_cairo_steps() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(1_440_000),
+            l2_gas: GasAmount(123),
         },
     );
 }
@@ -562,7 +569,7 @@ fn pedersen_cost_cairo_steps() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(40000),
+            l2_gas: GasAmount(444),
         },
     );
 }
@@ -685,7 +692,7 @@ fn contract_poseidon_cost_cairo_steps() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(520_000),
+            l2_gas: GasAmount(555),
         },
     );
 }
@@ -1474,7 +1481,7 @@ fn snforge_std_deploy_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(190_350),
+            l2_gas: GasAmount(777),
         },
     );
 }
