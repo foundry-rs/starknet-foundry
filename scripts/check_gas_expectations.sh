@@ -41,7 +41,7 @@ TEST_FILTERS=(
 
 usage() {
   cat <<EOF
-Checks forge integration gas expectations.
+Checks snforge integration gas expectations.
 
 Usage: $0 [OPTIONS]
 
