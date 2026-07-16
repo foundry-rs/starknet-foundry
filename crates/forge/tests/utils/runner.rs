@@ -349,51 +349,6 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
     }
 }
 
-#[track_caller]
-pub fn assert_available_gas_exceeded(
-    result: &[TestTargetSummary],
-    test_case_name: &str,
-    asserted_gas: GasVector,
-) {
-    let result = TestCase::find_test_result(result);
-    let any_case = find_case_by_name(result, test_case_name, "Available gas");
-
-    let Some(message) = any_case.msg() else {
-        let name = any_case.name().expect("matched test case must have a name");
-        panic!("Available gas assertion failed for test case `{name}`: no failure message found");
-    };
-
-    let actual_gas = parse_available_gas_exceeded_message(message).unwrap_or_else(|| {
-        let name = any_case.name().expect("matched test case must have a name");
-        panic!(
-            "Available gas assertion failed for test case `{name}`: could not parse consumed gas from message:\n{message}"
-        );
-    });
-
-    emit_gas_expectation_record(
-        Location::caller(),
-        &[
-            ("kind", "available_gas".to_string()),
-            ("test", test_case_name.to_string()),
-            ("l1_gas", actual_gas.l1_gas.0.to_string()),
-            ("l1_data_gas", actual_gas.l1_data_gas.0.to_string()),
-            ("l2_gas", actual_gas.l2_gas.0.to_string()),
-        ],
-    );
-
-    if !gas_expectation_recording_enabled() && !assert_gas_with_margin(actual_gas, asserted_gas) {
-        let name = any_case.name().expect("matched test case must have a name");
-        let diff = gas_vector_abs_diff(&actual_gas, &asserted_gas);
-        panic!(
-            "Available gas assertion failed for test case `{name}`.\nexpected: {}\nactual:   {}\ndiff:     {}{}",
-            format_gas_vector(&asserted_gas),
-            format_gas_vector(&actual_gas),
-            format_gas_vector(&diff),
-            gas_assertion_margin_message(),
-        );
-    }
-}
-
 // This logic is used to assert exact gas values in CI for the minimal supported Scarb version
 // and to assert gas values with a margin in scheduled tests, as values can vary for different Scarb versions
 // FOR LOCAL DEVELOPMENT ALWAYS USE EXACT CALCULATIONS
@@ -431,28 +386,6 @@ fn gas_assertion_margin_message() -> String {
     } else {
         String::new()
     }
-}
-
-fn parse_available_gas_exceeded_message(message: &str) -> Option<GasVector> {
-    let consumed = message
-        .split("Test cost exceeded the available gas. Consumed ")
-        .nth(1)?;
-
-    Some(GasVector {
-        l1_gas: GasAmount(parse_named_gas_value(consumed, "l1_gas")?),
-        l1_data_gas: GasAmount(parse_named_gas_value(consumed, "l1_data_gas")?),
-        l2_gas: GasAmount(parse_named_gas_value(consumed, "l2_gas")?),
-    })
-}
-
-fn parse_named_gas_value(message: &str, key: &str) -> Option<u64> {
-    let value_start = message.split(&format!("{key}: ~")).nth(1)?;
-    value_start
-        .split(|c: char| !c.is_ascii_digit())
-        .next()
-        .filter(|value| !value.is_empty())?
-        .parse()
-        .ok()
 }
 
 fn gas_expectation_recording_enabled() -> bool {
