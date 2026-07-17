@@ -299,16 +299,27 @@ pub fn assert_case_output_contains(
 
     let result = TestCase::find_test_result(result);
 
-    assert!(result.test_case_summaries.iter().any(|any_case| {
-        if any_case.is_passed() || any_case.is_failed() {
-            return any_case.msg().unwrap().contains(asserted_msg)
+    let any_case = result
+        .test_case_summaries
+        .iter()
+        .find(|any_case| {
+            (any_case.is_passed() || any_case.is_failed())
                 && any_case
                     .name()
-                    .unwrap()
-                    .ends_with(test_name_suffix.as_str());
-        }
-        false
-    }));
+                    .is_some_and(|name| name.ends_with(test_name_suffix.as_str()))
+        })
+        .unwrap_or_else(|| {
+            panic!(
+                "Output assertion failed: passed or failed test case `{test_case_name}` was not found"
+            )
+        });
+
+    let actual_msg = any_case.msg().unwrap_or_default();
+
+    assert!(
+        actual_msg.contains(asserted_msg),
+        "Output assertion failed for test case `{test_case_name}`.\nexpected output to contain: {asserted_msg}\nactual:                     {actual_msg}"
+    );
 }
 
 pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_gas: GasVector) {
@@ -432,28 +443,42 @@ pub fn assert_syscall(
 
     let result = TestCase::find_test_result(result);
 
-    assert!(result.test_case_summaries.iter().any(|any_case| {
-        match any_case {
-            AnyTestCaseSummary::Fuzzing(_) => {
-                panic!("Cannot use assert_syscall! for fuzzing tests")
-            }
-            AnyTestCaseSummary::Single(case) => match case {
-                TestCaseSummary::Passed { used_resources, .. } => {
-                    used_resources
-                        .syscall_usage
-                        .get(&syscall)
-                        .unwrap_or(&SyscallUsage::new(0, 0))
-                        .call_count
-                        == expected_count
-                        && any_case
-                            .name()
-                            .unwrap()
-                            .ends_with(test_name_suffix.as_str())
-                }
-                _ => false,
-            },
+    let any_case = result
+        .test_case_summaries
+        .iter()
+        .find(|any_case| {
+            any_case
+                .name()
+                .is_some_and(|name| name.ends_with(test_name_suffix.as_str()))
+        })
+        .unwrap_or_else(|| {
+            panic!("Syscall assertion failed: test case `{test_case_name}` was not found")
+        });
+
+    match any_case {
+        AnyTestCaseSummary::Fuzzing(_) => {
+            panic!("Cannot use assert_syscall! for fuzzing tests")
         }
-    }));
+        AnyTestCaseSummary::Single(case) => {
+            if let TestCaseSummary::Passed { used_resources, .. } = case {
+                let actual_count = used_resources
+                    .syscall_usage
+                    .get(&syscall)
+                    .unwrap_or(&SyscallUsage::new(0, 0))
+                    .call_count;
+
+                assert!(
+                    actual_count == expected_count,
+                    "Syscall assertion failed for test case `{test_case_name}` (syscall `{syscall:?}`).\nexpected: {expected_count}\nactual:   {actual_count}"
+                );
+            } else {
+                panic!(
+                    "Syscall assertion failed for test case `{test_case_name}`: expected passed test case, but test case was {}",
+                    test_case_status(case)
+                );
+            }
+        }
+    }
 }
 
 pub fn assert_builtin(
@@ -462,41 +487,55 @@ pub fn assert_builtin(
     builtin: BuiltinName,
     expected_count: usize,
 ) {
-    // TODO(#2806)
-    let expected_count = if builtin == BuiltinName::range_check {
-        expected_count - 1
-    } else {
-        expected_count
-    };
+    // TODO(#2806): the `range_check` builtin is reported one lower than the value the source
+    // should hold, so normalize the observed count back into source space before comparing and
+    // reporting. This way the printed `actual` is exactly what the expectation should be set to.
+    let range_check_offset = usize::from(builtin == BuiltinName::range_check);
 
     let test_name_suffix = format!("::{test_case_name}");
     let result = TestCase::find_test_result(result);
 
-    assert!(result.test_case_summaries.iter().any(|any_case| {
-        match any_case {
-            AnyTestCaseSummary::Fuzzing(_) => {
-                panic!("Cannot use assert_builtin for fuzzing tests")
-            }
-            AnyTestCaseSummary::Single(case) => match case {
-                TestCaseSummary::Passed { used_resources, .. } => {
-                    used_resources
-                        .execution_summary
-                        .charged_resources
-                        .extended_vm_resources
-                        .vm_resources
-                        .builtin_instance_counter
-                        .get(&builtin)
-                        .unwrap_or(&0)
-                        == &expected_count
-                        && any_case
-                            .name()
-                            .unwrap()
-                            .ends_with(test_name_suffix.as_str())
-                }
-                _ => false,
-            },
+    let any_case = result
+        .test_case_summaries
+        .iter()
+        .find(|any_case| {
+            any_case
+                .name()
+                .is_some_and(|name| name.ends_with(test_name_suffix.as_str()))
+        })
+        .unwrap_or_else(|| {
+            panic!("Builtin assertion failed: test case `{test_case_name}` was not found")
+        });
+
+    match any_case {
+        AnyTestCaseSummary::Fuzzing(_) => {
+            panic!("Cannot use assert_builtin for fuzzing tests")
         }
-    }));
+        AnyTestCaseSummary::Single(case) => {
+            if let TestCaseSummary::Passed { used_resources, .. } = case {
+                let actual_count = used_resources
+                    .execution_summary
+                    .charged_resources
+                    .extended_vm_resources
+                    .vm_resources
+                    .builtin_instance_counter
+                    .get(&builtin)
+                    .copied()
+                    .unwrap_or(0)
+                    + range_check_offset;
+
+                assert!(
+                    actual_count == expected_count,
+                    "Builtin assertion failed for test case `{test_case_name}` (builtin `{builtin:?}`).\nexpected: {expected_count}\nactual:   {actual_count}"
+                );
+            } else {
+                panic!(
+                    "Builtin assertion failed for test case `{test_case_name}`: expected passed test case, but test case was {}",
+                    test_case_status(case)
+                );
+            }
+        }
+    }
 }
 
 #[cfg(test)]
