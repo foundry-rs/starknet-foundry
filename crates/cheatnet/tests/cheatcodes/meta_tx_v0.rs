@@ -6,10 +6,9 @@ use starknet_types_core::felt::Felt;
 use super::test_environment::TestEnvironment;
 
 #[test]
-// TODO(#3790)
 #[cfg_attr(
     feature = "cairo-native",
-    ignore = "Cheating meta_tx_v0 is not yet supported with cairo-native (see #3790)"
+    ignore = "TODO(#3790): Cheating meta_tx_v0 is not yet supported with cairo-native (see #3790)"
 )]
 fn meta_tx_v0_with_cheat_caller_address() {
     let mut test_env = TestEnvironment::new();
@@ -37,10 +36,9 @@ fn meta_tx_v0_with_cheat_caller_address() {
 }
 
 #[test]
-// TODO(#3790)
 #[cfg_attr(
     feature = "cairo-native",
-    ignore = "Cheating meta_tx_v0 is not yet supported with cairo-native (see #3790)"
+    ignore = "TODO(#3790): Cheating meta_tx_v0 is not yet supported with cairo-native"
 )]
 fn meta_tx_v0_with_cheat_block_number() {
     let mut test_env = TestEnvironment::new();
@@ -68,10 +66,9 @@ fn meta_tx_v0_with_cheat_block_number() {
 }
 
 #[test]
-// TODO(#3790)
 #[cfg_attr(
     feature = "cairo-native",
-    ignore = "Cheating meta_tx_v0 is not yet supported with cairo-native (see #3790)"
+    ignore = "TODO(#3790): Cheating meta_tx_v0 is not yet supported with cairo-native"
 )]
 fn meta_tx_v0_with_cheat_block_timestamp() {
     let mut test_env = TestEnvironment::new();
@@ -99,10 +96,9 @@ fn meta_tx_v0_with_cheat_block_timestamp() {
 }
 
 #[test]
-// TODO(#3790)
 #[cfg_attr(
     feature = "cairo-native",
-    ignore = "Cheating meta_tx_v0 is not yet supported with cairo-native (see #3790)"
+    ignore = "TODO(#3790): Cheating meta_tx_v0 is not yet supported with cairo-native"
 )]
 fn meta_tx_v0_with_cheat_sequencer_address() {
     let mut test_env = TestEnvironment::new();
@@ -130,10 +126,9 @@ fn meta_tx_v0_with_cheat_sequencer_address() {
 }
 
 #[test]
-// TODO(#3790)
 #[cfg_attr(
     feature = "cairo-native",
-    ignore = "Cheating meta_tx_v0 is not yet supported with cairo-native (see #3790)"
+    ignore = "TODO(#3790): Cheating meta_tx_v0 is not yet supported with cairo-native"
 )]
 fn meta_tx_v0_with_cheat_block_hash() {
     let mut test_env = TestEnvironment::new();
