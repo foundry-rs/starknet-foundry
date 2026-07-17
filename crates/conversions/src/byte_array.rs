@@ -134,6 +134,14 @@ mod tests {
     }
 
     #[test]
+    fn test_deserialize_with_magic_pending_word_len_equal_to_full_word_len() {
+        let mut data = ByteArray::from("x").serialize_with_magic();
+        *data.last_mut().unwrap() = Felt::from(BYTES_IN_WORD);
+
+        assert!(ByteArray::deserialize_with_magic(&data).is_err());
+    }
+
+    #[test]
     fn test_deserialize_with_magic_pending_word_exceeding_declared_len() {
         // Pending word contains 3 bytes, but `pending_word_len` claims 1.
         let mut data = ByteArray::from("abc").serialize_with_magic();

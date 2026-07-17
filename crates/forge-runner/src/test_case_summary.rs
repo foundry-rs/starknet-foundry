@@ -758,6 +758,23 @@ mod tests {
     }
 
     #[test]
+    fn test_incorrect_panic_data_message_treats_valid_magic_sequence_as_byte_array() {
+        let actual = ByteArray::from("hello").serialize_with_magic();
+        let expected = vec![Felt::from_bytes_be_slice(b"world")];
+
+        let (matching, message) =
+            check_if_matching_and_get_message(&actual, &ExpectedPanicValue::Exact(expected));
+
+        assert!(!matching);
+        assert_eq!(
+            message.unwrap(),
+            "\n    Incorrect panic data\
+             \n    Actual:    ByteArray(\"hello\")\
+             \n    Expected:  felt252 0x776f726c64 ('world')\n"
+        );
+    }
+
+    #[test]
     fn test_is_matching_should_panic_data_propagated_byte_array_substring() {
         let mut data = ByteArray::from("This will panic for sure").serialize_with_magic();
         data.push(ENTRYPOINT_FAILED_ERROR_FELT);
