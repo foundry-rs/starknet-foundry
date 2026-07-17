@@ -22,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Malformed byte array panic data (e.g. an invalid `pending_word_len`) no longer causes a crash when matching `#[should_panic]` expected data.
 
+### Cast
+
+#### Changed
+
+- `sncast show-config` now displays network URL overrides specified under `[sncast.<profile>.networks]`.
+
 ## [0.62.1] - 2026-07-03
 
 ### Forge

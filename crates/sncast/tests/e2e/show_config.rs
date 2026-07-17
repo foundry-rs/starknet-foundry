@@ -29,6 +29,18 @@ async fn test_show_config_from_snfoundry_toml() {
     ", URL});
 }
 
+#[tokio::test]
+async fn test_show_config_json() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
+    let args = vec!["--json", "show-config"];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_eq(indoc! {r#"
+        {"account":"user1","accounts_file_path":"../account-file","alias_count":0,"block_explorer":"Voyager","chain_id":"alpha-sepolia","command":"show-config","keystore":null,"network":null,"networks":{"devnet":null,"mainnet":null,"sepolia":null},"profile":null,"rpc_url":"http://127.0.0.1:5055/rpc","scarb_profile":"release","show_explorer_links":true,"type":"response","wait_retry_interval":5,"wait_timeout":300}
+    "#});
+}
+
 #[test]
 fn test_show_config_displays_aliases_count() {
     let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
@@ -181,6 +193,7 @@ async fn test_show_config_with_network() {
         Block Explorer:      Voyager
         Scarb Profile:       release
         Alias Count:         0
+        Sepolia URL:         http://127.0.0.1:5055/rpc
     "});
 }
 
@@ -202,7 +215,71 @@ async fn test_show_config_cli_url_overrides_config_network() {
         Block Explorer:      Voyager
         Scarb Profile:       release
         Alias Count:         0
+        Sepolia URL:         http://127.0.0.1:5055/rpc
     ", URL});
+}
+
+#[tokio::test]
+async fn test_show_config_displays_networks() {
+    let t = tempdir().unwrap();
+    fs::write(
+        t.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            network = "sepolia"
+            account = "user1"
+
+            [sncast.default.networks]
+            mainnet = "https://mainnet.example.com"
+            sepolia = "https://sepolia.example.com"
+        "#},
+    )
+    .unwrap();
+    let args = vec!["show-config", "--url", URL];
+
+    let snapbox = runner(&args).current_dir(t.path());
+
+    snapbox.assert().success().stdout_eq(formatdoc! {r"
+        Chain ID:            alpha-sepolia
+        RPC URL:             {}
+        Account:             user1
+        Accounts File Path:  [..]/.starknet_accounts/starknet_open_zeppelin_accounts.json
+        Wait Timeout:        300s
+        Wait Retry Interval: 5s
+        Show Explorer Links: true
+        Block Explorer:      Voyager
+        Scarb Profile:       release
+        Alias Count:         0
+        Mainnet URL:         https://mainnet.example.com/
+        Sepolia URL:         https://sepolia.example.com/
+    ", URL});
+}
+
+#[tokio::test]
+async fn test_show_config_displays_networks_json() {
+    let t = tempdir().unwrap();
+    fs::write(
+        t.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            url = "http://127.0.0.1:1/rpc"
+            account = "user1"
+
+            [sncast.default.networks]
+            sepolia = "https://sepolia.example.com/rpc"
+        "#},
+    )
+    .unwrap();
+    let args = vec!["--json", "show-config"];
+
+    let snapbox = runner(&args).current_dir(t.path());
+
+    assert_stdout_contains(
+        snapbox.assert().success(),
+        indoc! {r#"
+            [..]"networks":{"devnet":null,"mainnet":null,"sepolia":"https://sepolia.example.com/rpc"}[..]
+        "#},
+    );
 }
 
 #[tokio::test]
