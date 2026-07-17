@@ -1023,15 +1023,15 @@ fn should_panic() {
 
         Failure data:
             Incorrect panic data
-            Actual:    "will"
-            Expected:  "This will panic"
+            Actual:    ByteArray("will")
+            Expected:  ByteArray("This will panic")
 
         [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_byte_array_with_felt
 
         Failure data:
             Incorrect panic data
-            Actual:    "This will panic"
-            Expected:  0x546869732077696c6c2070616e6963 ('This will panic')
+            Actual:    ByteArray("This will panic")
+            Expected:  felt252 0x546869732077696c6c2070616e6963 ('This will panic')
 
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected_multiple
 
@@ -1051,8 +1051,8 @@ fn should_panic() {
 
         Failure data:
             Incorrect panic data
-            Actual:    "This will panic"
-            Expected:  "will panicc"
+            Actual:    ByteArray("This will panic")
+            Expected:  ByteArray("will panicc")
 
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_match_suffix (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_propagated_byte_array_substring (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
@@ -1061,8 +1061,8 @@ fn should_panic() {
 
         Failure data:
             Incorrect panic data
-            Actual:    0x546869732077696c6c2070616e6963 ('This will panic')
-            Expected:  "This will panic"
+            Actual:    felt252 0x546869732077696c6c2070616e6963 ('This will panic')
+            Expected:  ByteArray("This will panic")
 
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_multiple_messages (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
@@ -1076,15 +1076,15 @@ fn should_panic() {
 
         Failure data:
             Incorrect panic data
-            Actual:    ("this_string_is_longer_than_31_bytes", 0xb, "hello", 0x5, 0x73686f72745f737472696e67 ('short_string'))
-            Expected:  ("this_string_is_longer_than_31_bytes", 0xb, "world", 0x5, 0x73686f72745f737472696e67 ('short_string'))
+            Actual:    (ByteArray("this_string_is_longer_than_31_bytes"), felt252 0xb, ByteArray("hello"), felt252 0x5, felt252 0x73686f72745f737472696e67 ('short_string'))
+            Expected:  (ByteArray("this_string_is_longer_than_31_bytes"), felt252 0xb, ByteArray("world"), felt252 0x5, felt252 0x73686f72745f737472696e67 ('short_string'))
 
         [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_with_non_matching_data
 
         Failure data:
             Incorrect panic data
-            Actual:    0x6661696c696e6720636865636b ('failing check')
-            Expected:  0x0 ('')
+            Actual:    felt252 0x6661696c696e6720636865636b ('failing check')
+            Expected:  felt252 0x0 ('')
 
         Tests: 7 passed, 10 failed, 0 ignored, 0 filtered out
 

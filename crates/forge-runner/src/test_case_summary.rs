@@ -11,17 +11,25 @@ use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use crate::running::{RunCompleted, RunStatus};
 use blockifier::execution::syscalls::hint_processor::ENTRYPOINT_FAILED_ERROR_FELT;
 use cairo_annotations::trace_data::VersionedCallTrace as VersionedProfilerCallTrace;
+use cairo_lang_utils::byte_array::BYTE_ARRAY_MAGIC;
 use camino::Utf8Path;
 use cheatnet::forking::data::ForkData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
 use conversions::byte_array::ByteArray;
+use conversions::string::TryFromHexStr;
+use num_traits::ToPrimitive;
 use shared::utils::build_readable_text;
 use starknet_api::execution_resources::GasVector;
 use starknet_api::execution_utils::format_panic_data;
 use starknet_types_core::felt::Felt;
 use std::fmt;
 use std::option::Option;
+use std::sync::LazyLock;
+
+static BYTE_ARRAY_MAGIC_FELT: LazyLock<Felt> =
+    LazyLock::new(|| TryFromHexStr::try_from_hex_str(&format!("0x{BYTE_ARRAY_MAGIC}")).unwrap());
+const BYTE_ARRAY_FIXED_PART_LEN: usize = 4;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasFuzzingInfo {
@@ -269,13 +277,58 @@ fn check_if_matching_and_get_message(
         Some(expected) => {
             let message = Some(format!(
                 "\n    Incorrect panic data\n    {}\n    {}\n",
-                format_args!("Actual:    {}", format_panic_data(actual_panic_value)),
-                format_args!("Expected:  {}", format_panic_data(expected))
+                format_args!(
+                    "Actual:    {}",
+                    format_panic_data_with_types(actual_panic_value)
+                ),
+                format_args!("Expected:  {}", format_panic_data_with_types(expected))
             ));
             (false, message)
         }
         None => (true, None),
     }
+}
+
+fn format_panic_data_with_types(data: &[Felt]) -> String {
+    let mut formatted_values = Vec::with_capacity(data.len());
+    let mut remaining = data;
+
+    while !remaining.is_empty() {
+        if let Some(byte_array_data) = take_byte_array(remaining) {
+            let consumed = byte_array_data.len();
+            formatted_values.push(format!("ByteArray({})", format_panic_data(byte_array_data)));
+            remaining = &remaining[consumed..];
+        } else {
+            let (felt, rest) = remaining
+                .split_first()
+                .expect("remaining panic data is not empty");
+            formatted_values.push(format!(
+                "felt252 {}",
+                format_panic_data(std::slice::from_ref(felt))
+            ));
+            remaining = rest;
+        }
+    }
+
+    if let [single_value] = formatted_values.as_slice() {
+        single_value.clone()
+    } else {
+        format!("({})", formatted_values.join(", "))
+    }
+}
+
+fn take_byte_array(data: &[Felt]) -> Option<&[Felt]> {
+    if data.first() != Some(&BYTE_ARRAY_MAGIC_FELT) {
+        return None;
+    }
+
+    let words_len = data.get(1)?.to_usize()?;
+    let byte_array_len = words_len.checked_add(BYTE_ARRAY_FIXED_PART_LEN)?;
+    let byte_array_data = data.get(..byte_array_len)?;
+
+    ByteArray::deserialize_with_magic(byte_array_data).ok()?;
+
+    Some(byte_array_data)
 }
 
 impl TestCaseSummary<Single> {
@@ -674,8 +727,8 @@ mod tests {
         assert_eq!(
             message.unwrap(),
             "\n    Incorrect panic data\
-             \n    Actual:    (\"this_string_is_longer_than_31_bytes\", 0xb, \"hello\", 0x5, 0x73686f72745f737472696e67 ('short_string'))\
-             \n    Expected:  (\"this_string_is_longer_than_31_bytes\", 0xb, \"helloo\", 0x5, 0x73686f72745f737472696e67 ('short_string'))\n"
+             \n    Actual:    (ByteArray(\"this_string_is_longer_than_31_bytes\"), felt252 0xb, ByteArray(\"hello\"), felt252 0x5, felt252 0x73686f72745f737472696e67 ('short_string'))\
+             \n    Expected:  (ByteArray(\"this_string_is_longer_than_31_bytes\"), felt252 0xb, ByteArray(\"helloo\"), felt252 0x5, felt252 0x73686f72745f737472696e67 ('short_string'))\n"
         );
     }
 
@@ -699,8 +752,8 @@ mod tests {
         assert_eq!(
             message.unwrap(),
             "\n    Incorrect panic data\
-             \n    Actual:    (0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x0 (''), 0x78 ('x'), 0x64 ('d'))\
-             \n    Expected:  0x70616e6963206d657373616765 ('panic message')\n"
+             \n    Actual:    (felt252 0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, felt252 0x0 (''), felt252 0x78 ('x'), felt252 0x64 ('d'))\
+             \n    Expected:  felt252 0x70616e6963206d657373616765 ('panic message')\n"
         );
     }
 
