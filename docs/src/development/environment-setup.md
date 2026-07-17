@@ -118,7 +118,7 @@ Ledger tests use [Speculos](https://github.com/LedgerHQ/speculos), a Ledger devi
 
 ### Setup
 
-**1. Get the Ledger app binary**
+**Get the Ledger app binary**
 
 The test suite expects a pre-built Nano X ELF binary at:
 
