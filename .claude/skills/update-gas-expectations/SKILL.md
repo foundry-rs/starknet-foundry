@@ -123,7 +123,7 @@ expected: 1
 actual:   2
 ```
 ```
-Builtin assertion failed for test case `range_check` (builtin `RangeCheck`).
+Builtin assertion failed for test case `range_check` (builtin `range_check`).
 expected: 3
 actual:   4
 ```
