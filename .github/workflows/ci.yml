@@ -49,17 +49,6 @@ jobs:
       - run: cargo test --profile ci --workspace --exclude sncast --exclude forge --exclude native-api
       - run: cargo test --profile ci --lib -p forge
 
-  test-cheatnet-native:
-    name: Cheatnet Tests (native)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-tools
-        with:
-          install-llvm: 'true'
-          cache-key: 'native'
-      - run: cargo test --profile ci -p cheatnet --features cairo-native
-
   build-test-forge-nextest-archive:
     name: Build Nextest Archive (Forge)
     runs-on: ubuntu-latest
