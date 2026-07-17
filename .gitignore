@@ -17,3 +17,4 @@ coverage/
 **/.forge_e2e_cache/
 *.snap.new
 crates/sncast/tests/data/ledger-app/nanox.elf
+app-starknet
