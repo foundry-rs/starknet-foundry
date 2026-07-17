@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- `Actual` and `Expected` panic data in the `#[should_panic]` mismatch message is now formatted the same way as regular failure data: byte arrays are displayed as quoted strings and felts as hex values with short string representation, instead of a raw felt array with a per-felt decoding.
+- `Actual` and `Expected` panic data in the `#[should_panic]` mismatch message now labels rendered values inline, making it clear whether each value is a `ByteArray` or a `felt252`.
 
 #### Fixed
 
