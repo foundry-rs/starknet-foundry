@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- Malformed byte array panic data (e.g. an invalid `pending_word_len`) no longer causes a crash when matching `#[should_panic]` expected data.
+- Malformed byte array panic data (e.g. an untrusted words length) no longer causes a crash when matching `#[should_panic]` expected data. Additionally, invalid byte array serializations (e.g. bad `pending_word_len`) are now rejected instead of rendered as a corrupted string.
 
 ### Cast
 
