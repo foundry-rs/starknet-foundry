@@ -349,7 +349,7 @@ pub async fn account(
 
         Commands::List(options) => {
             ui.print_message(
-                "account delete",
+                "account list",
                 AccountsListMessage::new(config.accounts_file, options.display_private_keys)?,
             );
             Ok(ExitCode::SUCCESS)

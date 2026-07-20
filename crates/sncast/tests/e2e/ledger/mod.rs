@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use crate::helpers::constants::URL;
+pub(crate) use crate::helpers::constants::{LEDGER_PUBLIC_KEY, TEST_LEDGER_PATH_STORED};
 use crate::helpers::fixtures::mint_token;
 use clap::Command;
 use clap::builder::TypedValueParser;
@@ -35,12 +36,7 @@ pub(crate) const READY_LEDGER_PATH: &str = "m//starknet'/sncast'/0'/1'/0";
 pub(crate) const BRAAVOS_LEDGER_PATH: &str = "m//starknet'/sncast'/0'/2'/0";
 pub(crate) const TEST_LEDGER_PATH: &str = OZ_LEDGER_PATH;
 
-pub(crate) const TEST_LEDGER_PATH_STORED: &str = "m/2645'/1195502025'/355113700'/0'/0'/0";
-
 const APP_PATH: &str = "tests/data/ledger-app/nanox.elf";
-
-pub(crate) const LEDGER_PUBLIC_KEY: &str =
-    "0x51f3e99d539868d8f45ca705ad6f75e68229a6037a919b15216b4e92a4d6d8";
 
 pub(crate) const LEDGER_ACCOUNT_NAME: &str = "my_ledger";
 

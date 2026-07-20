@@ -48,3 +48,9 @@ pub const DATA_TRANSFORMER_CONTRACT_ABI_PATH: &str =
     "tests/data/files/data_transformer_contract_abi.json";
 pub const DATA_TRANSFORMER_CONTRACT_DIR: &str =
     "../../crates/data-transformer/tests/data/data_transformer";
+
+/// Canonical numeric form of `m//starknet'/sncast'/0'/0'/0`.
+pub const TEST_LEDGER_PATH_STORED: &str = "m/2645'/1195502025'/355113700'/0'/0'/0";
+
+pub const LEDGER_PUBLIC_KEY: &str =
+    "0x51f3e99d539868d8f45ca705ad6f75e68229a6037a919b15216b4e92a4d6d8";

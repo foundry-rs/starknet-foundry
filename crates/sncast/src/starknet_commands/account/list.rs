@@ -51,33 +51,45 @@ pub struct AccountDataRepresentationMessage {
 
 /// Display-only signer representation.
 #[derive(Clone, Debug)]
-enum SignerDisplay {
-    HiddenLocal,
-    Visible(SignerType),
-    Ambiguous,
+struct SignerDisplay {
+    signer_type: SignerType,
+    hide_private_key: bool,
+}
+
+impl SignerDisplay {
+    fn type_label(&self) -> &'static str {
+        match &self.signer_type {
+            SignerType::Local { .. } => "private_key",
+            SignerType::Ledger { .. } => "ledger",
+            SignerType::Ambiguous => "ambiguous",
+        }
+    }
 }
 
 impl Serialize for SignerDisplay {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        match self {
-            SignerDisplay::HiddenLocal => serializer.serialize_map(Some(0))?.end(),
-            SignerDisplay::Visible(signer_type) => signer_type.serialize(serializer),
-            SignerDisplay::Ambiguous => {
-                let mut map = serializer.serialize_map(Some(1))?;
-                map.serialize_entry("signer", "ambiguous")?;
-                map.end()
+        let mut map = serializer.serialize_map(None)?;
+        map.serialize_entry("signer_type", self.type_label())?;
+
+        match &self.signer_type {
+            SignerType::Local { private_key } if !self.hide_private_key => {
+                map.serialize_entry("private_key", &private_key.into_hex_string())?;
             }
+            SignerType::Ledger { ledger_path } => {
+                map.serialize_entry("ledger_path", &ledger_path.derivation_string())?;
+            }
+            SignerType::Local { .. } | SignerType::Ambiguous => {}
         }
+        map.end()
     }
 }
 
 impl AccountDataRepresentationMessage {
     fn new(account: &AccountData, display_private_key: bool) -> Self {
         Self {
-            signer: match &account.signer_type {
-                SignerType::Local { .. } if !display_private_key => SignerDisplay::HiddenLocal,
-                SignerType::Ambiguous => SignerDisplay::Ambiguous,
-                other => SignerDisplay::Visible(other.clone()),
+            signer: SignerDisplay {
+                signer_type: account.signer_type.clone(),
+                hide_private_key: !display_private_key,
             },
             public_key: account.public_key.into_hex_string(),
             network: None,
@@ -124,23 +136,27 @@ impl Message for AccountDataRepresentationMessage {
 
         let _ = writeln!(result, "  public key: {}", self.public_key);
 
-        match &self.signer {
-            SignerDisplay::Visible(SignerType::Local { private_key }) => {
-                let _ = writeln!(result, "  private key: {}", private_key.into_hex_string());
-            }
-            SignerDisplay::Visible(SignerType::Ledger { ledger_path }) => {
-                let _ = writeln!(result, "  ledger path: {}", ledger_path.derivation_string());
-            }
-            SignerDisplay::Visible(SignerType::Ambiguous) => {
-                unreachable!("ambiguous signer is represented by SignerDisplay::Ambiguous");
-            }
-            SignerDisplay::Ambiguous => {
+        match &self.signer.signer_type {
+            SignerType::Ambiguous => {
                 let _ = writeln!(
                     result,
-                    "  signer: ambiguous (only one of `private_key`, `ledger_path` may be specified)"
+                    "  signer type: {} (only one of `private_key`, `ledger_path` may be specified)",
+                    self.signer.type_label()
                 );
             }
-            SignerDisplay::HiddenLocal => {}
+            _ => {
+                let _ = writeln!(result, "  signer type: {}", self.signer.type_label());
+            }
+        }
+
+        match &self.signer.signer_type {
+            SignerType::Local { private_key } if !self.signer.hide_private_key => {
+                let _ = writeln!(result, "  private key: {}", private_key.into_hex_string());
+            }
+            SignerType::Ledger { ledger_path } => {
+                let _ = writeln!(result, "  ledger path: {}", ledger_path.derivation_string());
+            }
+            SignerType::Local { .. } | SignerType::Ambiguous => {}
         }
         if let Some(ref address) = self.address {
             let _ = writeln!(result, "  address: {address}");
