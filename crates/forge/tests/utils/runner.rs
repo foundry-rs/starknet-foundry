@@ -310,11 +310,12 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
                 .test_case_summaries
                 .iter()
                 .filter_map(AnyTestCaseSummary::name)
+                .map(|name| format!(" - {name}"))
                 .collect::<Vec<_>>()
-                .join(", ");
+                .join("\n");
 
             panic!(
-                "Gas assertion failed: test case `{test_case_name}` was not found. Available test cases: {available_test_cases}"
+                "Gas assertion failed: test case `{test_case_name}` was not found. Available test cases:\n{available_test_cases}"
             )
         });
 
