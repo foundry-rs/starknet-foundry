@@ -36,7 +36,7 @@ fn assert_syscall_reports_available_test_cases_when_test_case_is_missing() {
 #[test]
 fn assert_syscall_failure_shows_expected_and_actual() {
     let test = test_case!(indoc!(
-        r#"
+        r"
             use starknet::syscalls::keccak_syscall;
             use starknet::SyscallResultTrait;
 
@@ -45,7 +45,7 @@ fn assert_syscall_failure_shows_expected_and_actual() {
                 let input = array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
                 keccak_syscall(input.span()).unwrap_syscall();
             }
-        "#
+        "
     ));
 
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
