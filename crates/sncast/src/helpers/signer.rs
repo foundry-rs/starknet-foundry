@@ -171,3 +171,45 @@ impl SignerSource {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::AccountData;
+
+    #[test]
+    fn unknown_fields_captured_on_account_data() {
+        let data: AccountData = serde_json::from_str(
+            r#"{
+                "public_key": "0x1",
+                "address": "0x2",
+                "private_key": "0x3",
+                "typo_field": 1
+            }"#,
+        )
+        .unwrap();
+        assert!(data.unknown_fields.contains_key("typo_field"));
+    }
+
+    #[tokio::test]
+    async fn build_signer_rejects_ambiguous() {
+        let ui = UI::default();
+        let err = build_signer(&SignerType::Ambiguous, &ui, false)
+            .await
+            .unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "only one of `private_key`, `ledger_path` may be specified"
+        );
+    }
+
+    #[test]
+    fn serialize_ambiguous_hard_fails() {
+        let err = serde_json::to_string(&SignerType::Ambiguous).unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("cannot serialize ambiguous signer"),
+            "unexpected error: {err}"
+        );
+    }
+}
