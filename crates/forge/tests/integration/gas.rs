@@ -74,7 +74,10 @@ fn assert_gas_failure_shows_gas_diff_and_test_case_name() {
 
 #[test]
 fn assert_gas_reports_when_test_case_is_missing() {
-    let summaries = summaries(vec![single_ignored("pkg::module::some_other_test")]);
+    let summaries = summaries(vec![
+        single_ignored("pkg::module::some_other_test"),
+        single_ignored("pkg::module::another_test"),
+    ]);
 
     let panic_message = capture_assert_gas_panic(&summaries, "missing_test", GasVector::default());
 
@@ -83,7 +86,9 @@ fn assert_gas_reports_when_test_case_is_missing() {
         "message was: {panic_message}"
     );
     assert!(
-        panic_message.contains("pkg::module::some_other_test"),
+        panic_message.contains(
+            "Available test cases:\n - pkg::module::some_other_test\n - pkg::module::another_test"
+        ),
         "message was: {panic_message}"
     );
 }
