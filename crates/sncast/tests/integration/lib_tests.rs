@@ -137,7 +137,7 @@ async fn test_get_account_failed_to_convert_field_elements() {
     let err = account1.unwrap_err();
 
     assert!(err.to_string().contains(
-        "Failed to parse field `alpha-sepolia.with_invalid_private_key` in file 'tests/data/accounts/faulty_accounts_invalid_felt.json': data did not match any variant of untagged enum SignerType at line 9 column 9"
+        "Failed to parse field `alpha-sepolia.with_invalid_private_key` in file 'tests/data/accounts/faulty_accounts_invalid_felt.json': expected hex string to be prefixed by '0x' at line 9 column 9"
     ));
 }
 
