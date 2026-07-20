@@ -1,4 +1,4 @@
-use crate::utils::runner::{Contract, assert_gas, assert_passed};
+use crate::utils::runner::{Contract, assert_gas, assert_passed, capture_assertion_panic};
 use crate::utils::running_tests::run_test_case;
 use crate::utils::test_case;
 use forge_runner::forge_config::ForgeTrackedResource;
@@ -39,15 +39,17 @@ fn assert_gas_failure_shows_gas_diff_and_test_case_name() {
     assert_passed(&result);
 
     // Intentionally wrong expectation so that `assert_gas` fails and we can inspect the diagnostics.
-    let panic_message = capture_assert_gas_panic(
-        &result,
-        "gas_assertion_diagnostics",
-        GasVector {
-            l1_gas: GasAmount(1),
-            l1_data_gas: GasAmount(2),
-            l2_gas: GasAmount(3),
-        },
-    );
+    let panic_message = capture_assertion_panic(|| {
+        assert_gas(
+            &result,
+            "gas_assertion_diagnostics",
+            GasVector {
+                l1_gas: GasAmount(1),
+                l1_data_gas: GasAmount(2),
+                l2_gas: GasAmount(3),
+            },
+        );
+    });
 
     // The name reported by the runner is fully qualified (e.g. `..::gas_assertion_diagnostics`),
     // so we only assert on the suffix here.
@@ -79,7 +81,9 @@ fn assert_gas_reports_when_test_case_is_missing() {
         single_ignored("pkg::module::another_test"),
     ]);
 
-    let panic_message = capture_assert_gas_panic(&summaries, "missing_test", GasVector::default());
+    let panic_message = capture_assertion_panic(|| {
+        assert_gas(&summaries, "missing_test", GasVector::default());
+    });
 
     assert!(
         panic_message.contains("test case `missing_test` was not found"),
@@ -97,7 +101,9 @@ fn assert_gas_reports_when_test_case_is_missing() {
 fn assert_gas_rejects_fuzzing_test_case() {
     let summaries = summaries(vec![fuzzing_ignored("pkg::module::fuzzed")]);
 
-    let panic_message = capture_assert_gas_panic(&summaries, "fuzzed", GasVector::default());
+    let panic_message = capture_assertion_panic(|| {
+        assert_gas(&summaries, "fuzzed", GasVector::default());
+    });
 
     assert!(
         panic_message.contains("Cannot use assert_gas! for fuzzing tests"),
@@ -109,7 +115,9 @@ fn assert_gas_rejects_fuzzing_test_case() {
 fn assert_gas_reports_non_passed_test_case() {
     let summaries = summaries(vec![single_failed("pkg::module::failing")]);
 
-    let panic_message = capture_assert_gas_panic(&summaries, "failing", GasVector::default());
+    let panic_message = capture_assertion_panic(|| {
+        assert_gas(&summaries, "failing", GasVector::default());
+    });
 
     assert!(
         panic_message.contains("test case `pkg::module::failing`"),
@@ -119,31 +127,6 @@ fn assert_gas_reports_non_passed_test_case() {
         panic_message.contains("but test case was failed"),
         "message was: {panic_message}"
     );
-}
-
-/// Runs `assert_gas`, expects it to panic, and returns the panic message.
-///
-/// Note: we deliberately do *not* silence the global panic hook here. Integration tests run in
-/// parallel and `std::panic::set_hook`/`take_hook` are process-global, so swapping them could
-/// suppress (or leak past) unrelated failures. The panic backtrace printed to stderr is only
-/// cosmetic noise for these passing tests.
-fn capture_assert_gas_panic(
-    result: &[TestTargetSummary],
-    test_case_name: &str,
-    asserted_gas: GasVector,
-) -> String {
-    let payload = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        assert_gas(result, test_case_name, asserted_gas);
-    }))
-    .expect_err("`assert_gas` should panic when the gas assertion cannot be satisfied");
-
-    if let Some(message) = payload.downcast_ref::<String>() {
-        message.clone()
-    } else if let Some(message) = payload.downcast_ref::<&str>() {
-        (*message).to_string()
-    } else {
-        panic!("Unexpected panic payload type. Expected `String` or `&str` from `assert_gas`.");
-    }
 }
 
 /// Parses a `l1_gas: <n>, l1_data_gas: <n>, l2_gas: <n>` line labelled with `label`

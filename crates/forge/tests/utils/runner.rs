@@ -271,6 +271,25 @@ pub fn assert_failed(result: &[TestTargetSummary]) {
     );
 }
 
+/// Runs an assertion, expects it to panic, and returns the panic message.
+///
+/// This deliberately does not silence the global panic hook. Integration tests run in parallel and
+/// `std::panic::set_hook`/`take_hook` are process-global, so swapping them could suppress or leak
+/// past unrelated failures. The panic backtrace printed to stderr is only cosmetic noise for these
+/// passing tests.
+pub fn capture_assertion_panic(assertion: impl FnOnce()) -> String {
+    let payload = std::panic::catch_unwind(std::panic::AssertUnwindSafe(assertion))
+        .expect_err("assertion should panic");
+
+    if let Some(message) = payload.downcast_ref::<String>() {
+        message.clone()
+    } else if let Some(message) = payload.downcast_ref::<&str>() {
+        (*message).to_string()
+    } else {
+        panic!("Unexpected panic payload type. Expected `String` or `&str`.");
+    }
+}
+
 pub fn assert_case_output_contains(
     result: &[TestTargetSummary],
     test_case_name: &str,
