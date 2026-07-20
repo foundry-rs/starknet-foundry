@@ -24,6 +24,8 @@ pub struct ContractsData {
     pub contracts: HashMap<ModulePath, ContractData>,
     pub class_hashes: BiMap<ModulePath, ClassHash>,
     pub selectors: HashMap<EntryPointSelector, FunctionName>,
+    #[cfg(feature = "cairo-native")]
+    pub run_native: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -43,6 +45,11 @@ pub enum ContractResolutionError {
 
 impl ContractsData {
     pub fn try_from(contracts: ScarbContractsData) -> Result<Self> {
+        #[cfg(feature = "cairo-native")]
+        let run_native = contracts
+            .values()
+            .any(|contract| contract.artifacts.executor.is_some());
+
         let parsed_contracts: HashMap<ModulePath, SierraClass> = contracts
             .par_iter()
             .map(|(module_path, contract)| {
@@ -86,7 +93,27 @@ impl ContractsData {
             contracts,
             class_hashes,
             selectors,
+            #[cfg(feature = "cairo-native")]
+            run_native,
         })
+    }
+
+    #[cfg(feature = "cairo-native")]
+    pub fn try_from_with_run_native(
+        contracts: ScarbContractsData,
+        run_native: bool,
+    ) -> Result<Self> {
+        let mut contracts_data = Self::try_from(contracts)?;
+        contracts_data.run_native = run_native;
+        Ok(contracts_data)
+    }
+
+    #[cfg(not(feature = "cairo-native"))]
+    pub fn try_from_with_run_native(
+        contracts: ScarbContractsData,
+        _run_native: bool,
+    ) -> Result<Self> {
+        Self::try_from(contracts)
     }
 
     /// Resolves a user-provided identifier to a single contract.

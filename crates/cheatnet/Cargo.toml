@@ -5,7 +5,12 @@ edition.workspace = true
 
 [features]
 testing = []
-cairo-native = ["dep:cairo-native", "blockifier/cairo_native", "scarb-api/cairo-native"]
+cairo-native = [
+    "dep:cairo-native",
+    "dep:native-api",
+    "blockifier/cairo_native",
+    "scarb-api/cairo-native",
+]
 
 [dependencies]
 anyhow.workspace = true
@@ -46,6 +51,7 @@ rand.workspace = true
 foundry-ui = { path = "../foundry-ui" }
 scarb-oracle-hint-service.workspace = true
 cairo-native = { workspace = true, optional = true }
+native-api = { path = "../native-api", optional = true }
 
 [dev-dependencies]
 ctor.workspace = true

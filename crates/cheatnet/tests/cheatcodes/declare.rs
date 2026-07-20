@@ -430,6 +430,59 @@ fn declare_from_file_reuses_loaded_artifact_when_class_hash_matches_different_pa
     ));
 }
 
+#[cfg(feature = "cairo-native")]
+#[test]
+fn declare_from_file_when_run_native_is_enabled() {
+    let sierra_path = get_contracts()
+        .resolve_contract("HelloStarknet")
+        .unwrap()
+        .source_sierra_path
+        .clone();
+    let contracts_data = ContractsData {
+        run_native: true,
+        ..ContractsData::default()
+    };
+
+    let mut cached_state = create_cached_state();
+    let class_hash = declare_from_file(
+        &mut cached_state,
+        sierra_path.as_std_path(),
+        &contracts_data,
+    )
+    .unwrap()
+    .unwrap_success();
+
+    assert!(matches!(
+        cached_state.get_compiled_class(class_hash).unwrap(),
+        RunnableCompiledClass::V1Native(_)
+    ));
+}
+
+#[cfg(feature = "cairo-native")]
+#[test]
+fn declare_from_file_when_run_native_is_disabled() {
+    let sierra_path = get_contracts()
+        .resolve_contract("HelloStarknet")
+        .unwrap()
+        .source_sierra_path
+        .clone();
+    let contracts_data = ContractsData::default();
+
+    let mut cached_state = create_cached_state();
+    let class_hash = declare_from_file(
+        &mut cached_state,
+        sierra_path.as_std_path(),
+        &contracts_data,
+    )
+    .unwrap()
+    .unwrap_success();
+
+    assert!(matches!(
+        cached_state.get_compiled_class(class_hash).unwrap(),
+        RunnableCompiledClass::V1(_)
+    ));
+}
+
 #[test]
 fn declare_from_file_nonexistent_path() {
     let sierra_path = Path::new("non_existent.contract_class.json");

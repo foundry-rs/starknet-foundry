@@ -8,6 +8,8 @@ use blockifier::execution::contract_class::{CompiledClassV1, RunnableCompiledCla
 #[cfg(feature = "cairo-native")]
 use blockifier::execution::native::contract_class::NativeCompiledClassV1;
 use blockifier::state::{errors::StateError, state_api::State};
+#[cfg(feature = "cairo-native")]
+use cairo_lang_starknet_classes::contract_class::ContractClass as CairoContractClass;
 use conversions::IntoConv;
 use conversions::serde::serialize::CairoSerialize;
 use indoc::formatdoc;
@@ -110,14 +112,31 @@ pub fn declare_from_file(
             sierra_path.display()
         )))
     })?;
-    let contract_class = RunnableCompiledClass::V1(
+    let contract_class =
         CompiledClassV1::try_from((casm, get_current_sierra_version())).map_err(|error| {
             CheatcodeError::Unrecoverable(EnhancedHintError::from(anyhow!(
                 "Failed to build runnable contract class from Sierra file at {}: {error}",
                 sierra_path.display()
             )))
-        })?,
-    );
+        })?;
+    #[cfg(feature = "cairo-native")]
+    let contract_class = if contracts_data.run_native {
+        let sierra_class: CairoContractClass = serde_json::from_str(&sierra).map_err(|error| {
+            CheatcodeError::Unrecoverable(EnhancedHintError::from(anyhow!(
+                "Failed to parse Sierra contract class JSON for native execution at {}: {error}",
+                sierra_path.display()
+            )))
+        })?;
+
+        RunnableCompiledClass::V1Native(NativeCompiledClassV1::new(
+            native_api::compile_contract_class(&sierra_class),
+            contract_class,
+        ))
+    } else {
+        RunnableCompiledClass::V1(contract_class)
+    };
+    #[cfg(not(feature = "cairo-native"))]
+    let contract_class = RunnableCompiledClass::V1(contract_class);
 
     declare_contract_class(state, class_hash, contract_class)
 }
