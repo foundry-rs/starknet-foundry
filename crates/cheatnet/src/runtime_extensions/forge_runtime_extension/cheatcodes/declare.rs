@@ -9,7 +9,7 @@ use blockifier::execution::contract_class::{CompiledClassV1, RunnableCompiledCla
 use blockifier::execution::native::contract_class::NativeCompiledClassV1;
 use blockifier::state::{errors::StateError, state_api::State};
 #[cfg(feature = "cairo-native")]
-use cairo_lang_starknet_classes::contract_class::ContractClass as CairoContractClass;
+use cairo_lang_starknet_classes::contract_class::ContractClass;
 use conversions::IntoConv;
 use conversions::serde::serialize::CairoSerialize;
 use indoc::formatdoc;
@@ -121,7 +121,7 @@ pub fn declare_from_file(
         })?;
     #[cfg(feature = "cairo-native")]
     let contract_class = if contracts_data.run_native {
-        let sierra_class: CairoContractClass = serde_json::from_str(&sierra).map_err(|error| {
+        let sierra_class: ContractClass = serde_json::from_str(&sierra).map_err(|error| {
             CheatcodeError::Unrecoverable(EnhancedHintError::from(anyhow!(
                 "Failed to parse Sierra contract class JSON for native execution at {}: {error}",
                 sierra_path.display()
