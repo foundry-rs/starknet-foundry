@@ -43,6 +43,23 @@ fn should_panic_mixed_tuple() {
 }
 
 #[test]
+#[should_panic(expected: ("this_string_is_longer_than_31_bytes", 11, "world", 5, 'short_string'))]
+fn should_panic_not_matching_mixed_tuple() {
+    let mut arr = ArrayTrait::new();
+    let first = "this_string_is_longer_than_31_bytes";
+    let second = "hello";
+
+    arr.append(BYTE_ARRAY_MAGIC);
+    Serde::<ByteArray>::serialize(@first, ref arr);
+    arr.append(11);
+    arr.append(BYTE_ARRAY_MAGIC);
+    Serde::<ByteArray>::serialize(@second, ref arr);
+    arr.append(5);
+    arr.append('short_string');
+    panic(arr);
+}
+
+#[test]
 #[should_panic(expected: (0,))]
 fn should_panic_with_non_matching_data() {
     panic_with_felt252('failing check');
@@ -115,4 +132,15 @@ fn should_panic_felt_with_byte_array() {
 #[should_panic(expected: "This will panic")]
 fn should_panic_expected_contains_error() {
     panic!("will");
+}
+
+#[test]
+#[should_panic(expected: 'panic message')]
+fn should_panic_malformed_byte_array() {
+    let mut arr = ArrayTrait::new();
+    arr.append(BYTE_ARRAY_MAGIC);
+    arr.append(0);
+    arr.append('x');
+    arr.append(100);
+    panic(arr);
 }

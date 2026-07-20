@@ -1010,10 +1010,10 @@ fn should_panic() {
 
     assert_stdout_contains(
         output,
-        indoc! { r"
-        Collected 16 test(s) from should_panic_test package
+        indoc! { r#"
+        Collected 18 test(s) from should_panic_test package
         Running 0 test(s) from src/
-        Running 16 test(s) from tests/
+        Running 18 test(s) from tests/
         [FAIL] should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
 
         Failure data:
@@ -1023,21 +1023,29 @@ fn should_panic() {
 
         Failure data:
             Incorrect panic data
-            Actual:    [0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x0, 0x77696c6c, 0x4] (will)
-            Expected:  [0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x0, 0x546869732077696c6c2070616e6963, 0xf] (This will panic)
+            Actual:    ByteArray("will")
+            Expected:  ByteArray("This will panic")
 
         [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_byte_array_with_felt
 
         Failure data:
             Incorrect panic data
-            Actual:    [0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x0, 0x546869732077696c6c2070616e6963, 0xf] (This will panic)
-            Expected:  [0x546869732077696c6c2070616e6963] (This will panic)
+            Actual:    ByteArray("This will panic")
+            Expected:  felt252 0x546869732077696c6c2070616e6963 ('This will panic')
+
+        [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_malformed_byte_array
+
+        Failure data:
+            Incorrect panic data
+            Actual:    (felt252 0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, felt252 0x0 (''), felt252 0x78 ('x'), felt252 0x64 ('d'))
+            Expected:  felt252 0x70616e6963206d657373616765 ('panic message')
+            Note: actual panic data starts with ByteArray magic, but is not a valid ByteArray serialization
 
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected_multiple
 
         Failure data:
             Expected to panic, but no panic occurred
-            Expected panic data:  [0x70616e6963206d657373616765, 0x7365636f6e64206d657373616765] (panic message, second message)
+            Expected panic data:  (0x70616e6963206d657373616765 ('panic message'), 0x7365636f6e64206d657373616765 ('second message'))
 
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt
 
@@ -1051,8 +1059,8 @@ fn should_panic() {
 
         Failure data:
             Incorrect panic data
-            Actual:    [0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x0, 0x546869732077696c6c2070616e6963, 0xf] (This will panic)
-            Expected:  [0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x0, 0x77696c6c2070616e696363, 0xb] (will panicc)
+            Actual:    ByteArray("This will panic")
+            Expected:  ByteArray("will panicc")
 
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_match_suffix (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_propagated_byte_array_substring (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
@@ -1061,8 +1069,8 @@ fn should_panic() {
 
         Failure data:
             Incorrect panic data
-            Actual:    [0x546869732077696c6c2070616e6963] (This will panic)
-            Expected:  [0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x0, 0x546869732077696c6c2070616e6963, 0xf] (This will panic)
+            Actual:    felt252 0x546869732077696c6c2070616e6963 ('This will panic')
+            Expected:  ByteArray("This will panic")
 
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_multiple_messages (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
@@ -1070,28 +1078,37 @@ fn should_panic() {
 
         Failure data:
             Expected to panic, but no panic occurred
-            Expected panic data:  [0x70616e6963206d657373616765] (panic message)
+            Expected panic data:  0x70616e6963206d657373616765 ('panic message')
+
+        [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_not_matching_mixed_tuple
+
+        Failure data:
+            Incorrect panic data
+            Actual:    (ByteArray("this_string_is_longer_than_31_bytes"), felt252 0xb, ByteArray("hello"), felt252 0x5, felt252 0x73686f72745f737472696e67 ('short_string'))
+            Expected:  (ByteArray("this_string_is_longer_than_31_bytes"), felt252 0xb, ByteArray("world"), felt252 0x5, felt252 0x73686f72745f737472696e67 ('short_string'))
 
         [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_with_non_matching_data
 
         Failure data:
             Incorrect panic data
-            Actual:    [0x6661696c696e6720636865636b] (failing check)
-            Expected:  [0x0] ()
+            Actual:    felt252 0x6661696c696e6720636865636b ('failing check')
+            Expected:  felt252 0x0 ('')
 
-        Tests: 7 passed, 9 failed, 0 ignored, 0 filtered out
+        Tests: 7 passed, 11 failed, 0 ignored, 0 filtered out
 
         Failures:
             should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
             should_panic_test_integrationtest::should_panic_test::should_panic_expected_contains_error
             should_panic_test_integrationtest::should_panic_test::should_panic_byte_array_with_felt
+            should_panic_test_integrationtest::should_panic_test::should_panic_malformed_byte_array
             should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected_multiple
             should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt
             should_panic_test_integrationtest::should_panic_test::should_panic_not_matching_suffix
             should_panic_test_integrationtest::should_panic_test::should_panic_felt_with_byte_array
             should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
+            should_panic_test_integrationtest::should_panic_test::should_panic_not_matching_mixed_tuple
             should_panic_test_integrationtest::should_panic_test::should_panic_with_non_matching_data
-        "},
+        "#},
     );
 }
 

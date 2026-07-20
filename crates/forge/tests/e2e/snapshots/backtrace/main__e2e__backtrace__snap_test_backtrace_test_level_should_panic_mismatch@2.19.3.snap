@@ -8,8 +8,8 @@ expression: stdout
 
 Failure data:
     Incorrect panic data
-    Actual:    [0x417373657274206661696c6564] (Assert failed)
-    Expected:  [0x77726f6e67206d7367] (wrong msg)
+    Actual:    felt252 0x417373657274206661696c6564 ('Assert failed')
+    Expected:  felt252 0x77726f6e67206d7367 ('wrong msg')
 
 stack backtrace:
    in test 'backtrace_test_should_panic_mismatch::tests::test_panics_in_test_body_with_should_panic_mismatch':

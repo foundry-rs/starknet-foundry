@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `declare!` macro for declaring contracts using Cairo paths. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library/declare_macro.html).
 - Debugging traces now display the class hash for forked contracts.
 
+#### Changed
+
+- `Actual` and `Expected` panic data in the `#[should_panic]` mismatch message now labels rendered values inline, making it clear whether each value is a `ByteArray` or a `felt252`.
+
+#### Fixed
+
+- Malformed byte array panic data (e.g. an untrusted words length) no longer causes a crash when matching `#[should_panic]` expected data. Additionally, invalid byte array serializations (e.g. bad `pending_word_len`) are now rejected instead of rendered as a corrupted string.
+
 ### Cast
 
 #### Changed
