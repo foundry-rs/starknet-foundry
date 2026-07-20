@@ -6,6 +6,7 @@ use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_target_summary::TestTargetSummary;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::node_url::node_rpc_url;
+use shared::test_utils::output_assert::assert_stdout_contains;
 use starknet_api::execution_resources::{GasAmount, GasVector};
 use std::path::Path;
 
@@ -51,19 +52,14 @@ fn assert_gas_failure_shows_gas_diff_and_test_case_name() {
         );
     });
 
-    // The name reported by the runner is fully qualified (e.g. `..::gas_assertion_diagnostics`),
-    // so we only assert on the suffix here.
-    assert!(
-        panic_message.contains("Gas assertion failed for test case `"),
-        "message was: {panic_message}"
-    );
-    assert!(
-        panic_message.contains("gas_assertion_diagnostics`"),
-        "message was: {panic_message}"
-    );
-    assert!(
-        panic_message.contains("expected: l1_gas: 1, l1_data_gas: 2, l2_gas: 3"),
-        "message was: {panic_message}"
+    assert_stdout_contains(
+        panic_message.clone(),
+        indoc! {r"
+        Gas assertion failed for test case `[..]gas_assertion_diagnostics`.
+        expected: l1_gas: 1, l1_data_gas: 2, l2_gas: 3
+        actual:   l1_gas: [..], l1_data_gas: [..], l2_gas: [..]
+        diff:     l1_gas: [..], l1_data_gas: [..], l2_gas: [..]
+        "},
     );
 
     // `diff` must equal the absolute difference between `expected` and `actual`.
@@ -85,15 +81,13 @@ fn assert_gas_reports_when_test_case_is_missing() {
         assert_gas(&summaries, "missing_test", GasVector::default());
     });
 
-    assert!(
-        panic_message.contains("test case `missing_test` was not found"),
-        "message was: {panic_message}"
-    );
-    assert!(
-        panic_message.contains(
-            "Available test cases:\n - pkg::module::some_other_test\n - pkg::module::another_test"
-        ),
-        "message was: {panic_message}"
+    assert_stdout_contains(
+        panic_message,
+        indoc! {r"
+        Gas assertion failed: test case `missing_test` was not found. Available test cases:
+         - pkg::module::some_other_test
+         - pkg::module::another_test
+        "},
     );
 }
 
@@ -105,10 +99,7 @@ fn assert_gas_rejects_fuzzing_test_case() {
         assert_gas(&summaries, "fuzzed", GasVector::default());
     });
 
-    assert!(
-        panic_message.contains("Cannot use assert_gas! for fuzzing tests"),
-        "message was: {panic_message}"
-    );
+    assert_eq!(panic_message, "Cannot use assert_gas! for fuzzing tests");
 }
 
 #[test]
@@ -119,13 +110,9 @@ fn assert_gas_reports_non_passed_test_case() {
         assert_gas(&summaries, "failing", GasVector::default());
     });
 
-    assert!(
-        panic_message.contains("test case `pkg::module::failing`"),
-        "message was: {panic_message}"
-    );
-    assert!(
-        panic_message.contains("but test case was failed"),
-        "message was: {panic_message}"
+    assert_eq!(
+        panic_message,
+        "Gas assertion failed for test case `pkg::module::failing`: expected passed test case with gas information, but test case was failed"
     );
 }
 
