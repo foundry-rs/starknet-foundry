@@ -1,11 +1,73 @@
-use crate::utils::runner::{Contract, assert_builtin, assert_passed, assert_syscall};
+use crate::utils::runner::{
+    Contract, assert_builtin, assert_passed, assert_syscall, capture_assertion_panic,
+};
 use crate::utils::running_tests::run_test_case;
 use crate::utils::test_case;
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallSelector;
 use cairo_vm::types::builtin_name::BuiltinName;
 use forge_runner::forge_config::ForgeTrackedResource;
+use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
+use forge_runner::test_target_summary::TestTargetSummary;
 use indoc::indoc;
 use std::path::Path;
+
+#[test]
+fn assert_syscall_reports_available_test_cases_when_test_case_is_missing() {
+    let summaries = summaries(vec![
+        single_ignored("pkg::module::some_other_test"),
+        single_ignored("pkg::module::another_test"),
+    ]);
+
+    let panic_message = capture_assertion_panic(|| {
+        assert_syscall(&summaries, "missing_test", SyscallSelector::Keccak, 1);
+    });
+
+    assert!(
+        panic_message.contains("test case `missing_test` was not found"),
+        "message was: {panic_message}"
+    );
+    assert!(
+        panic_message.contains(
+            "Available test cases:\n - pkg::module::some_other_test\n - pkg::module::another_test"
+        ),
+        "message was: {panic_message}"
+    );
+}
+
+#[test]
+fn assert_builtin_reports_available_test_cases_when_test_case_is_missing() {
+    let summaries = summaries(vec![
+        single_ignored("pkg::module::some_other_test"),
+        single_ignored("pkg::module::another_test"),
+    ]);
+
+    let panic_message = capture_assertion_panic(|| {
+        assert_builtin(&summaries, "missing_test", BuiltinName::range_check, 1);
+    });
+
+    assert!(
+        panic_message.contains("test case `missing_test` was not found"),
+        "message was: {panic_message}"
+    );
+    assert!(
+        panic_message.contains(
+            "Available test cases:\n - pkg::module::some_other_test\n - pkg::module::another_test"
+        ),
+        "message was: {panic_message}"
+    );
+}
+
+fn summaries(cases: Vec<AnyTestCaseSummary>) -> Vec<TestTargetSummary> {
+    vec![TestTargetSummary {
+        test_case_summaries: cases,
+    }]
+}
+
+fn single_ignored(name: &str) -> AnyTestCaseSummary {
+    AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
+        name: name.to_string(),
+    })
+}
 
 #[test]
 fn builtins_count() {
