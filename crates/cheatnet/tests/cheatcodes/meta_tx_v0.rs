@@ -8,7 +8,7 @@ use super::test_environment::TestEnvironment;
 #[test]
 #[cfg_attr(
     feature = "cairo-native",
-    ignore = "TODO(#3790): Cheating meta_tx_v0 is not yet supported with cairo-native (see #3790)"
+    ignore = "TODO(#3790): Cheating meta_tx_v0 is not yet supported with cairo-native"
 )]
 fn meta_tx_v0_with_cheat_caller_address() {
     let mut test_env = TestEnvironment::new();
