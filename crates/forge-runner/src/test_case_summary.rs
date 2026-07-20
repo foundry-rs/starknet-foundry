@@ -275,18 +275,46 @@ fn check_if_matching_and_get_message(
             (true, None)
         }
         Some(expected) => {
+            let byte_array_note = malformed_byte_array_note(actual_panic_value, expected);
             let message = Some(format!(
-                "\n    Incorrect panic data\n    {}\n    {}\n",
+                "\n    Incorrect panic data\n    {}\n    {}{}\n",
                 format_args!(
                     "Actual:    {}",
                     format_panic_data_with_types(actual_panic_value)
                 ),
-                format_args!("Expected:  {}", format_panic_data_with_types(expected))
+                format_args!("Expected:  {}", format_panic_data_with_types(expected)),
+                byte_array_note
             ));
             (false, message)
         }
         None => (true, None),
     }
+}
+
+fn malformed_byte_array_note(actual: &[Felt], expected: &[Felt]) -> String {
+    let mut notes = Vec::new();
+
+    if starts_with_malformed_byte_array(actual) {
+        notes.push(
+            "actual panic data starts with ByteArray magic, but is not a valid ByteArray serialization",
+        );
+    }
+
+    if starts_with_malformed_byte_array(expected) {
+        notes.push(
+            "expected panic data starts with ByteArray magic, but is not a valid ByteArray serialization",
+        );
+    }
+
+    if notes.is_empty() {
+        String::new()
+    } else {
+        format!("\n    Note: {}", notes.join("\n    Note: "))
+    }
+}
+
+fn starts_with_malformed_byte_array(data: &[Felt]) -> bool {
+    data.first() == Some(&BYTE_ARRAY_MAGIC_FELT) && take_byte_array(data).is_none()
 }
 
 fn format_panic_data_with_types(data: &[Felt]) -> String {
@@ -753,7 +781,8 @@ mod tests {
             message.unwrap(),
             "\n    Incorrect panic data\
              \n    Actual:    (felt252 0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, felt252 0x0 (''), felt252 0x78 ('x'), felt252 0x64 ('d'))\
-             \n    Expected:  felt252 0x70616e6963206d657373616765 ('panic message')\n"
+             \n    Expected:  felt252 0x70616e6963206d657373616765 ('panic message')\
+             \n    Note: actual panic data starts with ByteArray magic, but is not a valid ByteArray serialization\n"
         );
     }
 
