@@ -9,6 +9,7 @@ use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_target_summary::TestTargetSummary;
 use indoc::indoc;
+use shared::test_utils::output_assert::assert_stdout_contains;
 use std::path::Path;
 
 #[test]
@@ -22,15 +23,13 @@ fn assert_syscall_reports_available_test_cases_when_test_case_is_missing() {
         assert_syscall(&summaries, "missing_test", SyscallSelector::Keccak, 1);
     });
 
-    assert!(
-        panic_message.contains("test case `missing_test` was not found"),
-        "message was: {panic_message}"
-    );
-    assert!(
-        panic_message.contains(
-            "Available test cases:\n - pkg::module::some_other_test\n - pkg::module::another_test"
-        ),
-        "message was: {panic_message}"
+    assert_stdout_contains(
+        panic_message,
+        indoc! {r"
+        Syscall assertion failed: test case `missing_test` was not found. Available test cases:
+         - pkg::module::some_other_test
+         - pkg::module::another_test
+        "},
     );
 }
 
@@ -45,15 +44,13 @@ fn assert_builtin_reports_available_test_cases_when_test_case_is_missing() {
         assert_builtin(&summaries, "missing_test", BuiltinName::range_check, 1);
     });
 
-    assert!(
-        panic_message.contains("test case `missing_test` was not found"),
-        "message was: {panic_message}"
-    );
-    assert!(
-        panic_message.contains(
-            "Available test cases:\n - pkg::module::some_other_test\n - pkg::module::another_test"
-        ),
-        "message was: {panic_message}"
+    assert_stdout_contains(
+        panic_message,
+        indoc! {r"
+        Builtin assertion failed: test case `missing_test` was not found. Available test cases:
+         - pkg::module::some_other_test
+         - pkg::module::another_test
+        "},
     );
 }
 
