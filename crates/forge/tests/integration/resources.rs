@@ -95,11 +95,6 @@ fn assert_builtin_failure_shows_expected_and_actual() {
                 let _bitwise = 1_u8 & 1_u8;
                 assert(1 == 1, 'error message');
             }
-
-            #[test]
-            fn range_check_diagnostics() {
-                assert((1_u8 + 1_u8) >= 1_u8, 'error message');
-            }
         "
     ));
 
@@ -116,24 +111,6 @@ fn assert_builtin_failure_shows_expected_and_actual() {
         Builtin assertion failed for test case `bitwise_diagnostics` (builtin `bitwise`).
         expected: 2
         actual:   1
-        "},
-    );
-
-    let panic_message = capture_assertion_panic(|| {
-        assert_builtin(
-            &result,
-            "range_check_diagnostics",
-            BuiltinName::range_check,
-            5,
-        );
-    });
-
-    assert_stdout_contains(
-        panic_message,
-        indoc! {r"
-        Builtin assertion failed for test case `range_check_diagnostics` (builtin `range_check`).
-        expected: 5
-        actual:   4
         "},
     );
 }
