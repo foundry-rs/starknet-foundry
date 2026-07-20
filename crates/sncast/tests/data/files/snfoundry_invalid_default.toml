@@ -1,5 +1,6 @@
 [sncast.default]
-url = "http://127.0.0.1:5055/rpc"
-account = "user1"
+# Note: `url` and `network` together should cause validation error
 # Note: Any validation error should work here
-block-explorer = "StarkScan"
+url = "http://127.0.0.1:5055/rpc"
+network = "sepolia"
+account = "user1"

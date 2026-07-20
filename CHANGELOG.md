@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `sncast show-config` now displays network URL overrides specified under `[sncast.<profile>.networks]`.
 
+#### Fixed
+
+- Re-enabled `StarkScan` as a supported `block-explorer` option (currently available only for `mainnet`).
+
 ## [0.62.1] - 2026-07-03
 
 ### Forge
