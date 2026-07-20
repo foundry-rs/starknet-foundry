@@ -133,3 +133,14 @@ fn should_panic_felt_with_byte_array() {
 fn should_panic_expected_contains_error() {
     panic!("will");
 }
+
+#[test]
+#[should_panic(expected: 'panic message')]
+fn should_panic_malformed_byte_array() {
+    let mut arr = ArrayTrait::new();
+    arr.append(BYTE_ARRAY_MAGIC);
+    arr.append(0);
+    arr.append('x');
+    arr.append(100);
+    panic(arr);
+}
