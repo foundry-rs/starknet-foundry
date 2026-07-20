@@ -6,7 +6,6 @@ on:
       - scripts/get_scarb_versions.sh
       - .github/workflows/scheduled.yml
   schedule:
-    # Two schedules needed so we can distinguish between nightly and non-nightly runs
     - cron: '0 0 * * 0'
     - cron: '0 0 * * 3'
   workflow_dispatch:
@@ -219,8 +218,8 @@ jobs:
 
   create-nightly-release:
     # Creating a nightly release will trigger a Maat experiment for it as well
-    # Publish nightly only on Sundays
-    if: ${{ (github.event_name == 'schedule') && (github.event.schedule == '0 0 * * 0') }}
+    # Publish nightly on every scheduled run
+    if: ${{ github.event_name == 'schedule' }}
     needs: [ test-binary ]
     secrets: inherit
     uses:
