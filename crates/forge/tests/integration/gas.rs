@@ -55,7 +55,7 @@ fn assert_gas_failure_shows_gas_diff_and_test_case_name() {
     assert_stdout_contains(
         panic_message.clone(),
         indoc! {r"
-        Gas assertion failed for test case `[..]gas_assertion_diagnostics`.
+        Gas assertion failed for test case `test_package_integrationtest::test_case::gas_assertion_diagnostics`.
         expected: l1_gas: 1, l1_data_gas: 2, l2_gas: 3
         actual:   l1_gas: [..], l1_data_gas: [..], l2_gas: [..]
         diff:     l1_gas: [..], l1_data_gas: [..], l2_gas: [..]
