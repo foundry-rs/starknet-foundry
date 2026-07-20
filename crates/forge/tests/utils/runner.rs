@@ -309,9 +309,7 @@ pub fn assert_case_output_contains(
                     .is_some_and(|name| name.ends_with(test_name_suffix.as_str()))
         })
         .unwrap_or_else(|| {
-            panic!(
-                "Output assertion failed: passed or failed test case `{test_case_name}` was not found"
-            )
+            panic!("Output assertion failed: test case `{test_case_name}` was not found")
         });
 
     let actual_msg = any_case.msg().unwrap_or_default();
@@ -336,16 +334,9 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
                 .is_some_and(|name| name.ends_with(test_name_suffix.as_str()))
         })
         .unwrap_or_else(|| {
-            let available_test_cases = result
-                .test_case_summaries
-                .iter()
-                .filter_map(AnyTestCaseSummary::name)
-                .map(|name| format!(" - {name}"))
-                .collect::<Vec<_>>()
-                .join("\n");
-
             panic!(
-                "Gas assertion failed: test case `{test_case_name}` was not found. Available test cases:\n{available_test_cases}"
+                "Gas assertion failed: test case `{test_case_name}` was not found. Available test cases:\n{}",
+                format_available_test_cases(&result.test_case_summaries)
             )
         });
 
@@ -452,7 +443,7 @@ pub fn assert_syscall(
                 .is_some_and(|name| name.ends_with(test_name_suffix.as_str()))
         })
         .unwrap_or_else(|| {
-            panic!("Syscall assertion failed: test case `{test_case_name}` was not found")
+            panic!("Syscall assertion failed: test case `{test_case_name}` was not found. Available test cases:\n{}", format_available_test_cases(&result.test_case_summaries))
         });
 
     match any_case {
@@ -504,7 +495,7 @@ pub fn assert_builtin(
                 .is_some_and(|name| name.ends_with(test_name_suffix.as_str()))
         })
         .unwrap_or_else(|| {
-            panic!("Builtin assertion failed: test case `{test_case_name}` was not found")
+            panic!("Builtin assertion failed: test case `{test_case_name}` was not found. Available test cases:\n{}", format_available_test_cases(&result.test_case_summaries))
         });
 
     match any_case {
@@ -536,6 +527,15 @@ pub fn assert_builtin(
             }
         }
     }
+}
+
+fn format_available_test_cases(result: &[AnyTestCaseSummary]) -> String {
+    result
+        .iter()
+        .filter_map(AnyTestCaseSummary::name)
+        .map(|name| format!(" - {name}"))
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 #[cfg(test)]
