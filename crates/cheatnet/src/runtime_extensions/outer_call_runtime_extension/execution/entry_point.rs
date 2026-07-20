@@ -329,7 +329,6 @@ pub fn non_reverting_execute_call_entry_point(
                     Cairo1RevertHeader::Execution,
                 ),
             };
-            // Note: Class hash in the entry point below does not matter, as `exit_error_call` does not update it in the trace.
             exit_error_call(&err, cheatnet_state);
             return Err(err.annotated(call_info.tracked_resource, strip_vm_frames));
         }
