@@ -34,6 +34,38 @@ fn assert_syscall_reports_available_test_cases_when_test_case_is_missing() {
 }
 
 #[test]
+fn assert_syscall_failure_shows_expected_and_actual() {
+    let test = test_case!(indoc!(
+        r#"
+            use starknet::syscalls::keccak_syscall;
+            use starknet::SyscallResultTrait;
+
+            #[test]
+            fn keccak_diagnostics() {
+                let input = array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+                keccak_syscall(input.span()).unwrap_syscall();
+            }
+        "#
+    ));
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    assert_passed(&result);
+
+    let panic_message = capture_assertion_panic(|| {
+        assert_syscall(&result, "keccak_diagnostics", SyscallSelector::Keccak, 2);
+    });
+
+    assert_stdout_contains(
+        panic_message,
+        indoc! {r"
+        Syscall assertion failed for test case `keccak_diagnostics` (syscall `Keccak`).
+        expected: 2
+        actual:   1
+        "},
+    );
+}
+
+#[test]
 fn assert_builtin_reports_available_test_cases_when_test_case_is_missing() {
     let summaries = summaries(vec![
         single_ignored("pkg::module::some_other_test"),
@@ -50,6 +82,58 @@ fn assert_builtin_reports_available_test_cases_when_test_case_is_missing() {
         Builtin assertion failed: test case `missing_test` was not found. Available test cases:
          - pkg::module::some_other_test
          - pkg::module::another_test
+        "},
+    );
+}
+
+#[test]
+fn assert_builtin_failure_shows_expected_and_actual() {
+    let test = test_case!(indoc!(
+        r"
+            #[test]
+            fn bitwise_diagnostics() {
+                let _bitwise = 1_u8 & 1_u8;
+                assert(1 == 1, 'error message');
+            }
+
+            #[test]
+            fn range_check_diagnostics() {
+                assert((1_u8 + 1_u8) >= 1_u8, 'error message');
+            }
+        "
+    ));
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    assert_passed(&result);
+
+    let panic_message = capture_assertion_panic(|| {
+        assert_builtin(&result, "bitwise_diagnostics", BuiltinName::bitwise, 2);
+    });
+
+    assert_stdout_contains(
+        panic_message,
+        indoc! {r"
+        Builtin assertion failed for test case `bitwise_diagnostics` (builtin `bitwise`).
+        expected: 2
+        actual:   1
+        "},
+    );
+
+    let panic_message = capture_assertion_panic(|| {
+        assert_builtin(
+            &result,
+            "range_check_diagnostics",
+            BuiltinName::range_check,
+            5,
+        );
+    });
+
+    assert_stdout_contains(
+        panic_message,
+        indoc! {r"
+        Builtin assertion failed for test case `range_check_diagnostics` (builtin `range_check`).
+        expected: 5
+        actual:   4
         "},
     );
 }
