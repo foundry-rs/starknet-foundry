@@ -478,10 +478,12 @@ pub fn assert_builtin(
     builtin: BuiltinName,
     expected_count: usize,
 ) {
-    // TODO(#2806): the `range_check` builtin is reported one lower than the value the source
-    // should hold, so normalize the observed count back into source space before comparing and
-    // reporting. This way the printed `actual` is exactly what the expectation should be set to.
-    let range_check_offset = usize::from(builtin == BuiltinName::range_check);
+    // TODO(#2806)
+    let expected_count = if builtin == BuiltinName::range_check {
+        expected_count - 1
+    } else {
+        expected_count
+    };
 
     let test_name_suffix = format!("::{test_case_name}");
     let result = TestCase::find_test_result(result);
@@ -512,8 +514,7 @@ pub fn assert_builtin(
                     .builtin_instance_counter
                     .get(&builtin)
                     .copied()
-                    .unwrap_or(0)
-                    + range_check_offset;
+                    .unwrap_or(0);
 
                 assert!(
                     actual_count == expected_count,
