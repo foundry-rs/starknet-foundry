@@ -4,8 +4,8 @@ use clap::Args;
 use conversions::string::IntoHexStr;
 use foundry_ui::Message;
 use itertools::Itertools;
-use serde::Deserialize;
-use serde::Serialize;
+use serde::ser::SerializeMap;
+use serde::{Serialize, Serializer};
 use serde_json::Value;
 use serde_json::json;
 use sncast::AccountType;
@@ -27,11 +27,11 @@ pub struct List {
     pub display_private_keys: bool,
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug)]
+#[derive(Serialize, Clone, Debug)]
 pub struct AccountDataRepresentationMessage {
     pub public_key: String,
-    #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub signer_type: Option<SignerType>,
+    #[serde(flatten)]
+    signer: SignerDisplay,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub network: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -49,12 +49,35 @@ pub struct AccountDataRepresentationMessage {
     pub account_type: Option<AccountType>,
 }
 
+/// Display-only signer representation.
+#[derive(Clone, Debug)]
+enum SignerDisplay {
+    HiddenLocal,
+    Visible(SignerType),
+    Ambiguous,
+}
+
+impl Serialize for SignerDisplay {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        match self {
+            SignerDisplay::HiddenLocal => serializer.serialize_map(Some(0))?.end(),
+            SignerDisplay::Visible(signer_type) => signer_type.serialize(serializer),
+            SignerDisplay::Ambiguous => {
+                let mut map = serializer.serialize_map(Some(1))?;
+                map.serialize_entry("signer", "ambiguous")?;
+                map.end()
+            }
+        }
+    }
+}
+
 impl AccountDataRepresentationMessage {
     fn new(account: &AccountData, display_private_key: bool) -> Self {
         Self {
-            signer_type: match &account.signer_type {
-                SignerType::Local { .. } if !display_private_key => None,
-                other => Some(other.clone()),
+            signer: match &account.signer_type {
+                SignerType::Local { .. } if !display_private_key => SignerDisplay::HiddenLocal,
+                SignerType::Ambiguous => SignerDisplay::Ambiguous,
+                other => SignerDisplay::Visible(other.clone()),
             },
             public_key: account.public_key.into_hex_string(),
             network: None,
@@ -101,14 +124,23 @@ impl Message for AccountDataRepresentationMessage {
 
         let _ = writeln!(result, "  public key: {}", self.public_key);
 
-        match &self.signer_type {
-            Some(SignerType::Local { private_key }) => {
+        match &self.signer {
+            SignerDisplay::Visible(SignerType::Local { private_key }) => {
                 let _ = writeln!(result, "  private key: {}", private_key.into_hex_string());
             }
-            Some(SignerType::Ledger { ledger_path }) => {
+            SignerDisplay::Visible(SignerType::Ledger { ledger_path }) => {
                 let _ = writeln!(result, "  ledger path: {}", ledger_path.derivation_string());
             }
-            None => {}
+            SignerDisplay::Visible(SignerType::Ambiguous) => {
+                unreachable!("ambiguous signer is represented by SignerDisplay::Ambiguous");
+            }
+            SignerDisplay::Ambiguous => {
+                let _ = writeln!(
+                    result,
+                    "  signer: ambiguous (only one of `private_key`, `ledger_path` may be specified)"
+                );
+            }
+            SignerDisplay::HiddenLocal => {}
         }
         if let Some(ref address) = self.address {
             let _ = writeln!(result, "  address: {address}");

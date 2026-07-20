@@ -17,7 +17,6 @@ use sncast::helpers::configuration::{
 };
 use sncast::helpers::constants::BRAAVOS_BASE_ACCOUNT_CLASS_HASH;
 use sncast::helpers::interactive::prompt_to_add_account_as_default;
-use sncast::helpers::ledger;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::ui::UI;
@@ -26,7 +25,6 @@ use sncast::{SignerSource, SignerType, WaitForTx, get_chain_id};
 use starknet_rust::accounts::{AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory};
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, Provider};
-use starknet_rust::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
 use std::collections::BTreeMap;
 use std::io::{self, IsTerminal};
@@ -81,6 +79,9 @@ pub fn prepare_account_json(
         SignerType::Ledger { ledger_path } => {
             account_json["ledger_path"] =
                 serde_json::Value::String(ledger_path.derivation_string());
+        }
+        SignerType::Ambiguous => {
+            unreachable!("ambiguous signer must not be written to accounts file");
         }
     }
 
@@ -365,20 +366,16 @@ pub async fn compute_account_address(
     provider: &JsonRpcClient<HttpTransport>,
     ui: &UI,
 ) -> Result<Felt> {
-    let address = match signer_type {
-        SignerType::Local { private_key } => {
-            let signer =
-                LocalWallet::from_signing_key(SigningKey::from_secret_scalar(*private_key));
+    match sncast::build_signer(signer_type, ui, false).await? {
+        sncast::SignerBackend::Local(signer) => {
             compute_address_with_signer(salt, class_hash, account_type, chain_id, signer, provider)
-                .await?
+                .await
         }
-        SignerType::Ledger { ledger_path } => {
-            let signer = ledger::create_ledger_signer(ledger_path, ui, false).await?;
+        sncast::SignerBackend::Ledger(signer) => {
             compute_address_with_signer(salt, class_hash, account_type, chain_id, signer, provider)
-                .await?
+                .await
         }
-    };
-    Ok(address)
+    }
 }
 
 async fn compute_address_with_signer<S>(
