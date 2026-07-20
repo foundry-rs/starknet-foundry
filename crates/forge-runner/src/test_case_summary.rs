@@ -29,6 +29,10 @@ use std::sync::LazyLock;
 
 static BYTE_ARRAY_MAGIC_FELT: LazyLock<Felt> =
     LazyLock::new(|| TryFromHexStr::try_from_hex_str(&format!("0x{BYTE_ARRAY_MAGIC}")).unwrap());
+
+// The number of felts in a serialized `ByteArray` that don't belong to the
+// variable-length `words` array: the magic felt, `words_len`, `pending_word`
+// and `pending_word_len`. The total length is thus `words_len` + this constant.
 const BYTE_ARRAY_FIXED_PART_LEN: usize = 4;
 
 #[derive(Debug, PartialEq, Clone, Default)]
