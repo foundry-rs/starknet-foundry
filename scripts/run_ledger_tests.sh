@@ -30,6 +30,7 @@ docker run --rm -it \
         fi
         export PATH="$HOME/.asdf/shims:$HOME/.asdf/bin:$HOME/.local/bin:$PATH"
         [ -f "$HOME/.asdf/asdf.sh" ] && source "$HOME/.asdf/asdf.sh"
+        export RUSTUP_TOOLCHAIN=stable
         SCARB_VERSION=$(grep "scarb " /workspace/.tool-versions | cut -d " " -f 2)
         DEVNET_VERSION=$(grep "starknet-devnet " /workspace/.tool-versions | cut -d " " -f 2)
         asdf set -u scarb "$SCARB_VERSION"
