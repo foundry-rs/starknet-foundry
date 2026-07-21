@@ -1,5 +1,5 @@
-use crate::starknet_commands::utils::felt_or_id::TokenAddress;
-use anyhow::{Context, Error, Result};
+use crate::starknet_commands::utils::felt_or_id::{ContractAddress, TokenAddress};
+use anyhow::{Context, Error, Result, bail};
 use clap::Args;
 use primitive_types::U256;
 use sncast::helpers::command::process_command_result;
@@ -63,6 +63,10 @@ pub struct Balance {
     #[command(flatten)]
     pub token_identifier: TokenIdentifier,
 
+    /// Contract address to check balance for (hex, decimal, or @alias from snfoundry.toml).
+    #[arg(long)]
+    pub contract_address: Option<ContractAddress>,
+
     /// Block identifier on which balance should be fetched.
     /// Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string)
     /// and block number (u64)
@@ -74,8 +78,15 @@ pub struct Balance {
 }
 
 pub async fn balance(balance: Balance, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCode> {
+    if balance.contract_address.is_some() && !config.account.is_empty() {
+        bail!("`--account` and `--contract-address` cannot be used together");
+    }
+
     let provider = balance.rpc.get_provider(&config, ui).await?;
-    let account_address = get_account_address(&config, &provider, &balance.rpc, ui).await?;
+    let account_address = match &balance.contract_address {
+        Some(contract_address) => contract_address.resolve(&config)?,
+        None => get_account_address(&config, &provider, &balance.rpc, ui).await?,
+    };
 
     let result = get_balance(account_address, &provider, &balance, &config)
         .await

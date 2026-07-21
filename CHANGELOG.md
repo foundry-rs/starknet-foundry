@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Added
+
+- `--contract-address` flag to `get balance` command, allowing to check balance for any contract, not only accounts
+
 #### Changed
 
 - `sncast show-config` now displays network URL overrides specified under `[sncast.<profile>.networks]`.
