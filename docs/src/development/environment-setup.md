@@ -141,38 +141,15 @@ $ cp app-starknet/starknet/target/nanox/release/starknet \
 
 ### Running Ledger Tests
 
-Tests run inside the `ledger-app-dev-tools` Docker image, which provides Speculos and all required tooling.
+Tests run inside the `ledger-app-dev-tools` Docker image, which provides Speculos and all required tooling. Run them with the helper script:
 
 ```shell
-$ docker run --rm -it \
-    -v "$(pwd):/workspace" \
-    -v ledger_build_cache:/workspace/target \
-    -v "$HOME/.cargo/registry:/root/.cargo/registry" \
-    -v ledger_asdf_cache:/root/.asdf \
-    -v ledger_local_cache:/root/.local \
-    -w /workspace \
-    -e CARGO_TARGET_DIR=/workspace/target \
-    ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:5.3.14 \
-    bash -c '
-        [ -f /opt/.cargo/env ] && source /opt/.cargo/env
-        if ! [ -x "$HOME/.asdf/shims/scarb" ]; then
-            curl --proto "=https" --tlsv1.2 -sSf https://sh.starkup.sh | sh -s -- --yes
-        fi
-        export PATH="$HOME/.asdf/shims:$HOME/.asdf/bin:$HOME/.local/bin:$PATH"
-        [ -f "$HOME/.asdf/asdf.sh" ] && source "$HOME/.asdf/asdf.sh"
-        SCARB_VERSION=$(grep "scarb " /workspace/.tool-versions | cut -d " " -f 2)
-        DEVNET_VERSION=$(grep "starknet-devnet " /workspace/.tool-versions | cut -d " " -f 2)
-        asdf set -u scarb "$SCARB_VERSION"
-        asdf set -u starknet-devnet "$DEVNET_VERSION"
-        cargo test -p sncast --features ledger-emulator --test main ledger -- --nocapture --ignored
-    '
+$ ./scripts/run_ledger_tests.sh
 ```
 
 > ❗️ **Note**
 >
 > The first run compiles the workspace and installs the Scarb toolchain via starkup. Expect it to take a while. Later runs reuse the Docker cache volumes and usually finish in a few minutes.
->
-> Pasting the multi-line `docker run` directly into the terminal may break due to quoting or bracketed-paste behavior. If you hit problems, save the command to a file (e.g. `run_ledger_tests.sh`).
 
 > 💡 **Tip: Clearing the cache**
 >
