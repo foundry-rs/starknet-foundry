@@ -209,6 +209,7 @@ fn fork_aliased_decorator() {
     assert_passed(&result);
 }
 
+#[allow(clippy::too_many_lines)]
 #[test]
 fn fork_aliased_decorator_overriding() {
     let test = test_case!(indoc!(
