@@ -107,7 +107,7 @@ impl RunForPackageArgs {
         let run_native = args.run_native;
         #[cfg(not(feature = "cairo-native"))]
         let run_native = false;
-        let contracts_data = ContractsData::try_from_with_run_native(contracts, run_native)?;
+        let contracts_data = ContractsData::try_from(contracts, run_native)?;
 
         let forge_config_from_scarb =
             load_package_config::<ForgeConfigFromScarb>(scarb_metadata, &package.id)?;

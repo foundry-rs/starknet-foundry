@@ -175,8 +175,11 @@ fn fork_aliased_decorator() {
                             cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
                                 .unwrap()
                                 .join(DEFAULT_CACHE_DIR),
-                            contracts_data: ContractsData::try_from(test.contracts(&ui).unwrap())
-                                .unwrap(),
+                            contracts_data: ContractsData::try_from(
+                                test.contracts(&ui).unwrap(),
+                                cfg!(feature = "cairo-native"),
+                            )
+                            .unwrap(),
                             tracked_resource: ForgeTrackedResource::CairoSteps,
                             environment_variables: test.env().clone(),
                             launch_debugger: false,
@@ -286,8 +289,11 @@ fn fork_aliased_decorator_overriding() {
                             cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
                                 .unwrap()
                                 .join(DEFAULT_CACHE_DIR),
-                            contracts_data: ContractsData::try_from(test.contracts(&ui).unwrap())
-                                .unwrap(),
+                            contracts_data: ContractsData::try_from(
+                                test.contracts(&ui).unwrap(),
+                                cfg!(feature = "cairo-native"),
+                            )
+                            .unwrap(),
                             tracked_resource: ForgeTrackedResource::CairoSteps,
                             environment_variables: test.env().clone(),
                             launch_debugger: false,
