@@ -201,6 +201,10 @@ fn cheat_transaction_hash_simple() {
 }
 
 #[test]
+#[cfg_attr(
+    feature = "cairo-native",
+    ignore = "TODO(#3790): Cheating tx_info.proof_facts is not yet supported with cairo-native"
+)]
 fn start_cheat_execution_info_multiple_times() {
     fn operation_start<T>(contract_address: ContractAddress, value: T) -> Operation<T> {
         Operation::Start(CheatArguments {
