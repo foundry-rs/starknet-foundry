@@ -6,7 +6,7 @@ use assert_fs::{
     TempDir,
     fixture::{FileTouch, FileWriteStr, PathChild},
 };
-use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, SyscallUsage};
+use blockifier::execution::syscalls::vm_syscall_utils::SyscallSelector;
 use cairo_vm::types::builtin_name::BuiltinName;
 use camino::Utf8PathBuf;
 use forge_runner::test_case_summary::Single;
@@ -455,8 +455,7 @@ pub fn assert_syscall(
                 let actual_count = used_resources
                     .syscall_usage
                     .get(&syscall)
-                    .unwrap_or(&SyscallUsage::new(0, 0))
-                    .call_count;
+                    .map_or(0, |usage| usage.call_count);
 
                 assert!(
                     actual_count == expected_count,
@@ -530,8 +529,8 @@ pub fn assert_builtin(
     }
 }
 
-fn format_available_test_cases(result: &[AnyTestCaseSummary]) -> String {
-    result
+fn format_available_test_cases(summaries: &[AnyTestCaseSummary]) -> String {
+    summaries
         .iter()
         .filter_map(AnyTestCaseSummary::name)
         .map(|name| format!(" - {name}"))
