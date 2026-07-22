@@ -6,13 +6,12 @@ use crate::starknet_commands::deploy::{DeployArguments, DeployCommonArgs};
 use crate::starknet_commands::get::Get;
 use crate::starknet_commands::get::balance::Balance;
 use crate::starknet_commands::invoke::InvokeCommonArgs;
-use crate::starknet_commands::script::run_script_command;
 use crate::starknet_commands::utils::felt_or_id::resolve_calldata_to_felts;
 use crate::starknet_commands::utils::{self, Utils};
 use crate::starknet_commands::{
     account, account::Account as AccountCommand, alias::Alias, call::Call, config_path::ConfigPath,
     declare::Declare, deploy::Deploy, get::tx_status::TxStatus, invoke::Invoke,
-    multicall::Multicall, script::Script, show_config::ShowConfig,
+    multicall::Multicall, show_config::ShowConfig,
 };
 use crate::starknet_commands::{get, multicall};
 use anyhow::{Context, Result, bail};
@@ -192,9 +191,6 @@ enum Commands {
     /// Show paths to the config files contributing to the effective configuration
     ConfigPath(ConfigPath),
 
-    /// Run or initialize a deployment script
-    Script(Script),
-
     /// Get the status of a transaction
     TxStatus(TxStatus),
 
@@ -333,8 +329,6 @@ fn run(cli: Cli, ui: &UI) -> Result<ExitCode> {
 
     if let Commands::Completions(completions) = &cli.command {
         generate_completions(completions.shell, &mut Cli::command())
-    } else if let Commands::Script(script) = &cli.command {
-        run_script_command(&cli, runtime, script, ui)
     } else if let Commands::ConfigPath(_) = &cli.command {
         let result = starknet_commands::config_path::config_path(ui);
         Ok(process_command_result("config-path", result, ui, None))
@@ -368,7 +362,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                     json: cli.json,
                     profile: config.scarb_profile.clone(),
                 },
-                false,
                 // TODO(#3959) Remove `base_ui`
                 ui.base_ui(),
             )
@@ -537,7 +530,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                         json: cli.json,
                         profile: config.scarb_profile.clone(),
                     },
-                    false,
                     // TODO(#3959) Remove `base_ui`
                     ui.base_ui(),
                 )
@@ -823,7 +815,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             Ok(process_command_result("ledger", result, ui, None))
         }
 
-        Commands::Completions(_) | Commands::Script(_) | Commands::ConfigPath(_) => {
+        Commands::Completions(_) | Commands::ConfigPath(_) => {
             unreachable!("should be handled before this function is called")
         }
     }

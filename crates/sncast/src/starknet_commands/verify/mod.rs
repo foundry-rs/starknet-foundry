@@ -134,7 +134,6 @@ fn resolve_and_validate_contract_name(
             json: scarb_json,
             profile,
         },
-        false,
         // TODO(#3959) Remove `base_ui`
         ui.base_ui(),
     )

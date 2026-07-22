@@ -47,11 +47,3 @@ pub const DEFAULT_ACCOUNTS_FILE: &str = "~/.starknet_accounts/starknet_open_zepp
 
 pub const KEYSTORE_PASSWORD_ENV_VAR: &str = "KEYSTORE_PASSWORD";
 pub const CREATE_KEYSTORE_PASSWORD_ENV_VAR: &str = "CREATE_KEYSTORE_PASSWORD";
-
-pub const SCRIPT_LIB_ARTIFACT_NAME: &str = "__sncast_script_lib";
-
-pub const STATE_FILE_VERSION: u8 = 1;
-
-pub const INIT_SCRIPTS_DIR: &str = "scripts";
-
-pub const DEFAULT_STATE_FILE_SUFFIX: &str = "state.json";
