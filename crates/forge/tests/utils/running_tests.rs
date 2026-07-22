@@ -91,8 +91,11 @@ pub fn run_test_case(
                         cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
                             .unwrap()
                             .join(DEFAULT_CACHE_DIR),
-                        contracts_data: ContractsData::try_from(test.contracts(&ui).unwrap())
-                            .unwrap(),
+                        contracts_data: ContractsData::try_from(
+                            test.contracts(&ui).unwrap(),
+                            cfg!(feature = "cairo-native"),
+                        )
+                        .unwrap(),
                         tracked_resource,
                         environment_variables: test.env().clone(),
                         launch_debugger: false,

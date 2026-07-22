@@ -1976,6 +1976,7 @@ dependencies = [
  "indexmap 2.14.0",
  "indoc",
  "k256",
+ "native-api",
  "num-bigint",
  "num-traits",
  "p256",

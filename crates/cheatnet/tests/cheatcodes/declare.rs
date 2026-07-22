@@ -1,13 +1,22 @@
 use crate::common::assertions::ClassHashAssert;
 use crate::common::{get_contracts, state::create_cached_state};
+#[cfg(feature = "cairo-native")]
+use blockifier::execution::contract_class::RunnableCompiledClass;
+#[cfg(feature = "cairo-native")]
+use blockifier::state::state_api::StateReader;
+use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::{
-    DeclareResult, declare,
+    DeclareResult, declare, declare_from_file,
 };
+use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use runtime::EnhancedHintError;
 use shared::utils::contract_name_from_module_path;
 use starknet_api::core::ClassHash;
 use starknet_types_core::felt::Felt;
+use std::fs;
+use std::path::Path;
+use tempfile::TempDir;
 
 #[test]
 fn declare_simple() {
@@ -326,6 +335,185 @@ fn declare_ambiguous_partial_module_path() {
                 && msg.contains("a::HelloStarknet")
                 && msg.contains(&nested_module_path)
                 && msg.contains(&other_module_path)
+        }
+        _ => false,
+    });
+}
+
+#[test]
+fn declare_from_file_simple() {
+    let contract_name = "HelloStarknet";
+    let sierra_path = Path::new(
+        "tests/contracts/target/dev/cheatnet_testing_contracts_HelloStarknet.contract_class.json",
+    );
+
+    let mut cached_state = create_cached_state();
+
+    let contracts_data = get_contracts();
+
+    let class_hash = declare_from_file(&mut cached_state, sierra_path, &contracts_data)
+        .unwrap()
+        .unwrap_success();
+    let expected_class_hash = &contracts_data
+        .resolve_contract(contract_name)
+        .unwrap()
+        .class_hash;
+
+    assert_eq!(class_hash, *expected_class_hash);
+
+    let output = declare_from_file(&mut cached_state, sierra_path, &contracts_data);
+
+    assert!(
+        matches!(output, Ok(DeclareResult::AlreadyDeclared(class_hash)) if class_hash == *expected_class_hash)
+    );
+}
+
+#[test]
+fn declare_from_file_reuses_loaded_artifact_when_sierra_path_matches() {
+    let contract_name = "HelloStarknet";
+    let mut contracts_data = get_contracts();
+    let expected_class_hash = contracts_data
+        .resolve_contract(contract_name)
+        .unwrap()
+        .class_hash;
+
+    let temp_dir = TempDir::new().unwrap();
+    let loaded_sierra_path = temp_dir.path().join("loaded.contract_class.json");
+    fs::write(&loaded_sierra_path, "not valid JSON").unwrap();
+    let loaded_sierra_path = Utf8PathBuf::from_path_buf(loaded_sierra_path).unwrap();
+
+    contracts_data
+        .contracts
+        .values_mut()
+        .find(|contract| contract.class_hash == expected_class_hash)
+        .unwrap()
+        .source_sierra_path = loaded_sierra_path.clone();
+
+    let mut cached_state = create_cached_state();
+    let class_hash = declare_from_file(
+        &mut cached_state,
+        loaded_sierra_path.as_std_path(),
+        &contracts_data,
+    )
+    .unwrap()
+    .unwrap_success();
+
+    assert_eq!(class_hash, expected_class_hash);
+}
+
+#[test]
+fn declare_from_file_reuses_loaded_artifact_when_class_hash_matches_different_path() {
+    let contract_name = "HelloStarknet";
+    let contracts_data = get_contracts();
+    let contract = contracts_data.resolve_contract(contract_name).unwrap();
+    let expected_class_hash = contract.class_hash;
+
+    let temp_dir = TempDir::new().unwrap();
+    let copied_sierra_path = temp_dir.path().join("copied.contract_class.json");
+    fs::copy(
+        contract.source_sierra_path.as_std_path(),
+        &copied_sierra_path,
+    )
+    .unwrap();
+
+    let mut cached_state = create_cached_state();
+    let class_hash = declare_from_file(&mut cached_state, &copied_sierra_path, &contracts_data)
+        .unwrap()
+        .unwrap_success();
+
+    assert_eq!(class_hash, expected_class_hash);
+
+    #[cfg(feature = "cairo-native")]
+    assert!(matches!(
+        cached_state.get_compiled_class(class_hash).unwrap(),
+        RunnableCompiledClass::V1Native(_)
+    ));
+}
+
+#[cfg(feature = "cairo-native")]
+#[test]
+fn declare_from_file_when_run_native_is_enabled() {
+    let sierra_path = get_contracts()
+        .resolve_contract("HelloStarknet")
+        .unwrap()
+        .source_sierra_path
+        .clone();
+    let contracts_data = ContractsData {
+        run_native: true,
+        ..ContractsData::default()
+    };
+
+    let mut cached_state = create_cached_state();
+    let class_hash = declare_from_file(
+        &mut cached_state,
+        sierra_path.as_std_path(),
+        &contracts_data,
+    )
+    .unwrap()
+    .unwrap_success();
+
+    assert!(matches!(
+        cached_state.get_compiled_class(class_hash).unwrap(),
+        RunnableCompiledClass::V1Native(_)
+    ));
+}
+
+#[cfg(feature = "cairo-native")]
+#[test]
+fn declare_from_file_when_run_native_is_disabled() {
+    let sierra_path = get_contracts()
+        .resolve_contract("HelloStarknet")
+        .unwrap()
+        .source_sierra_path
+        .clone();
+    let contracts_data = ContractsData::default();
+
+    let mut cached_state = create_cached_state();
+    let class_hash = declare_from_file(
+        &mut cached_state,
+        sierra_path.as_std_path(),
+        &contracts_data,
+    )
+    .unwrap()
+    .unwrap_success();
+
+    assert!(matches!(
+        cached_state.get_compiled_class(class_hash).unwrap(),
+        RunnableCompiledClass::V1(_)
+    ));
+}
+
+#[test]
+fn declare_from_file_nonexistent_path() {
+    let sierra_path = Path::new("non_existent.contract_class.json");
+
+    let mut cached_state = create_cached_state();
+
+    let output = declare_from_file(&mut cached_state, sierra_path, &ContractsData::default());
+
+    assert!(match output {
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {
+            let msg = msg.to_string();
+            msg.contains("Failed to read Sierra file")
+                && msg.contains(sierra_path.to_str().unwrap())
+        }
+        _ => false,
+    });
+}
+
+#[test]
+fn declare_from_file_invalid_file() {
+    let sierra_path = Path::new("tests/data/invalid_contract_class.json");
+
+    let mut cached_state = create_cached_state();
+
+    let output = declare_from_file(&mut cached_state, sierra_path, &ContractsData::default());
+
+    assert!(match output {
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {
+            let msg = msg.to_string();
+            msg.contains("Failed to parse Sierra contract class JSON")
+                && msg.contains(sierra_path.to_str().unwrap())
         }
         _ => false,
     });

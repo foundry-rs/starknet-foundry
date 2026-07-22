@@ -98,7 +98,7 @@ pub fn get_contracts() -> ContractsData {
         },
     )
     .unwrap();
-    ContractsData::try_from(contracts).unwrap()
+    ContractsData::try_from(contracts, cfg!(feature = "cairo-native")).unwrap()
 }
 
 pub fn deploy_contract(
