@@ -2371,7 +2371,7 @@ dependencies = [
  "cairo-lang-utils",
  "cairo-serde-macros",
  "cairo-vm",
- "itertools 0.14.0",
+ "itertools 0.15.0",
  "num-traits",
  "serde",
  "serde_json",
@@ -2918,7 +2918,7 @@ dependencies = [
  "cairo-serde-macros",
  "conversions",
  "indoc",
- "itertools 0.14.0",
+ "itertools 0.15.0",
  "num-bigint",
  "primitive-types 0.14.0",
  "serde",
@@ -3713,7 +3713,7 @@ dependencies = [
  "include_dir",
  "indoc",
  "insta",
- "itertools 0.14.0",
+ "itertools 0.15.0",
  "mimalloc",
  "num-bigint",
  "openssl",
@@ -3770,7 +3770,7 @@ dependencies = [
  "foundry-ui",
  "futures",
  "indoc",
- "itertools 0.14.0",
+ "itertools 0.15.0",
  "num-traits",
  "rand 0.8.6",
  "rayon",
@@ -4802,6 +4802,15 @@ name = "itertools"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b4baf93f58d4425749ca49a51c50ebab072c5df6994d08fed93541c331481dc"
 dependencies = [
  "either",
 ]
@@ -7154,7 +7163,7 @@ dependencies = [
  "camino",
  "foundry-ui",
  "indoc",
- "itertools 0.14.0",
+ "itertools 0.15.0",
  "native-api",
  "num-bigint",
  "rayon",
@@ -7752,7 +7761,7 @@ dependencies = [
  "foundry-ui",
  "fs_extra",
  "indoc",
- "itertools 0.14.0",
+ "itertools 0.15.0",
  "mimalloc",
  "num-traits",
  "packages_validation",
@@ -9164,9 +9173,9 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "voyager-verifier"
-version = "2.3.0"
+version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f858012003028984422a9f491ee85771a2747ba028b039241d540f316a17534"
+checksum = "941eaf02b4327288d6fb215a47fa434c3e7e8f37e22c7434c15f589f51c6f8b7"
 dependencies = [
  "anyhow",
  "backon",
