@@ -542,9 +542,13 @@ fn format_available_test_cases(result: &[AnyTestCaseSummary]) -> String {
 #[cfg(test)]
 mod tests {
     use crate::utils::{
-        runner::{assert_gas, assert_passed, capture_assertion_panic},
+        runner::{
+            assert_builtin, assert_gas, assert_passed, assert_syscall, capture_assertion_panic,
+        },
         running_tests::run_test_case,
     };
+    use blockifier::execution::syscalls::vm_syscall_utils::SyscallSelector;
+    use cairo_vm::types::builtin_name::BuiltinName;
     use forge_runner::{
         forge_config::ForgeTrackedResource,
         test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
@@ -701,5 +705,108 @@ mod tests {
             l1_data_gas: GasAmount(value("l1_data_gas")),
             l2_gas: GasAmount(value("l2_gas")),
         }
+    }
+
+    #[test]
+    fn assert_syscall_reports_available_test_cases_when_test_case_is_missing() {
+        let summaries = summaries(vec![
+            single_ignored("pkg::module::some_other_test"),
+            single_ignored("pkg::module::another_test"),
+        ]);
+
+        let panic_message = capture_assertion_panic(|| {
+            assert_syscall(&summaries, "missing_test", SyscallSelector::Keccak, 1);
+        });
+
+        assert_stdout_contains(
+            panic_message,
+            indoc! {r"
+        Syscall assertion failed: test case `missing_test` was not found. Available test cases:
+         - pkg::module::some_other_test
+         - pkg::module::another_test
+        "},
+        );
+    }
+
+    #[test]
+    fn assert_syscall_failure_shows_expected_and_actual() {
+        let test = test_case!(indoc!(
+            r"
+            use starknet::syscalls::keccak_syscall;
+            use starknet::SyscallResultTrait;
+
+            #[test]
+            fn keccak_diagnostics() {
+                let input = array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+                keccak_syscall(input.span()).unwrap_syscall();
+            }
+        "
+        ));
+
+        let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+        assert_passed(&result);
+
+        let panic_message = capture_assertion_panic(|| {
+            assert_syscall(&result, "keccak_diagnostics", SyscallSelector::Keccak, 2);
+        });
+
+        assert_stdout_contains(
+            panic_message,
+            indoc! {r"
+        Syscall assertion failed for test case `keccak_diagnostics` (syscall `Keccak`).
+        expected: 2
+        actual:   1
+        "},
+        );
+    }
+
+    #[test]
+    fn assert_builtin_reports_available_test_cases_when_test_case_is_missing() {
+        let summaries = summaries(vec![
+            single_ignored("pkg::module::some_other_test"),
+            single_ignored("pkg::module::another_test"),
+        ]);
+
+        let panic_message = capture_assertion_panic(|| {
+            assert_builtin(&summaries, "missing_test", BuiltinName::range_check, 1);
+        });
+
+        assert_stdout_contains(
+            panic_message,
+            indoc! {r"
+        Builtin assertion failed: test case `missing_test` was not found. Available test cases:
+         - pkg::module::some_other_test
+         - pkg::module::another_test
+        "},
+        );
+    }
+
+    #[test]
+    fn assert_builtin_failure_shows_expected_and_actual() {
+        let test = test_case!(indoc!(
+            r"
+            #[test]
+            fn bitwise_diagnostics() {
+                let _bitwise = 1_u8 & 1_u8;
+                assert(1 == 1, 'error message');
+            }
+        "
+        ));
+
+        let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+        assert_passed(&result);
+
+        let panic_message = capture_assertion_panic(|| {
+            assert_builtin(&result, "bitwise_diagnostics", BuiltinName::bitwise, 2);
+        });
+
+        assert_stdout_contains(
+            panic_message,
+            indoc! {r"
+        Builtin assertion failed for test case `bitwise_diagnostics` (builtin `bitwise`).
+        expected: 2
+        actual:   1
+        "},
+        );
     }
 }
