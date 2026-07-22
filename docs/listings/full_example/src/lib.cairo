@@ -1,1 +1,0 @@
-mod full_example;

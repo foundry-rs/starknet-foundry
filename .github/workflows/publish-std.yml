@@ -1,4 +1,4 @@
-name: Publish snforge_std and sncast_std
+name: Publish snforge_std
 
 on:
   workflow_call:
@@ -32,11 +32,10 @@ on:
 
 jobs:
   check-uploaded:
-    name: Check stds uploaded
+    name: Check std uploaded
     runs-on: ubuntu-latest
     outputs:
       snforge_std_uploaded: ${{ steps.check-uploaded.outputs.snforge_std_uploaded }}
-      sncast_std_uploaded: ${{ steps.check-uploaded.outputs.sncast_std_uploaded }}
     steps:
       - uses: actions/checkout@v7
       - name: Check version
@@ -47,15 +46,12 @@ jobs:
           source scripts/handle_version.sh
           
           snforge_std_version=$(get_version "${{ inputs.override_std_version }}" "snforge_std")
-          sncast_std_version=$(get_version "${{ inputs.override_std_version }}" "sncast_std")
           
           registry_url=${{ inputs.prod_registry == true && 'https://scarbs.xyz' || 'https://scarbs.dev' }}
           
           snforge_std_uploaded=$(curl -s ${registry_url}/api/v1/index/sn/fo/snforge_std.json | jq --arg version "$snforge_std_version" '[.[] | select(.v == $version)] | length > 0')
-          sncast_std_uploaded=$(curl -s ${registry_url}/api/v1/index/sn/ca/sncast_std.json | jq --arg version "$sncast_std_version" '[.[] | select(.v == $version)] | length > 0')
           
           echo "snforge_std_uploaded=$snforge_std_uploaded" >> $GITHUB_OUTPUT
-          echo "sncast_std_uploaded=$sncast_std_uploaded" >> $GITHUB_OUTPUT
   publish-to-registry:
     name: Publish packages to the registry
     runs-on: ubuntu-latest
@@ -70,16 +66,6 @@ jobs:
           toolchain: stable
 
       - uses: software-mansion/setup-scarb@v1
-
-      - name: Publish sncast_std
-        if: needs.check-uploaded.outputs.sncast_std_uploaded == 'false'
-        working-directory: sncast_std
-        run: |
-          source ../scripts/handle_version.sh
-          
-          update_version_in_file "Scarb.toml" "${{ inputs.override_std_version }}"
-          
-          scarb publish --allow-dirty ${{ inputs.prod_registry == true && ' ' || '--index https://scarbs.dev/' }}
 
       - name: Publish snforge_std
         if: needs.check-uploaded.outputs.snforge_std_uploaded == 'false'

@@ -159,11 +159,9 @@ fn contracts_data_to_artifacts(contracts: ContractsData) -> ContractArtifactsMap
 pub fn build_and_load_artifacts(
     package: &PackageMetadata,
     config: &BuildConfig,
-    build_for_script: bool,
     ui: &UI,
 ) -> Result<ContractArtifactsMap> {
-    // TODO (#2042): Remove this logic, always use release as default
-    let default_profile = if build_for_script { "dev" } else { "release" };
+    let default_profile = "release";
     build(package, config, default_profile)
         .map_err(|e| anyhow!(format!("Failed to build using scarb; {e}")))?;
 

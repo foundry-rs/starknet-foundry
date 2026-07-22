@@ -15,7 +15,6 @@ pub(crate) mod ledger;
 mod main_tests;
 mod multicall;
 mod proof;
-mod script;
 mod selector;
 mod show_config;
 mod utils;

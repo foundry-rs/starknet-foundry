@@ -47,7 +47,6 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 - [x] Fuzz testing
 - [x] Parallel tests execution
 - [x] Performance improvements
-- [x] Deployment scripts written in Cairo
 - [ ] Transactions profiling 🏗️
 - [ ] Debugging utilities 🏗️
 - [ ] Test coverage reports (check out [cairo-coverage](https://github.com/software-mansion/cairo-coverage)) 🏗️

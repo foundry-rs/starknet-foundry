@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Removed
+
+- Cairo deployment scripts (`sncast script` command and `sncast_std` library).
+
 #### Added
 
 - `--contract-address` flag to `get balance` command, allowing to check balance for any contract, not only accounts

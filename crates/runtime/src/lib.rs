@@ -152,9 +152,9 @@ impl HintProcessorLogic for StarknetRuntime<'_> {
                     let error = format!(
                         "Function `{selector}` is not supported in this runtime\n{}",
                         if is_cairo_test_fn {
-                            "Check if functions are imported from `snforge_std`/`sncast_std` NOT from `starknet::testing`"
+                            "Check if functions are imported from `snforge_std` NOT from `starknet::testing`"
                         } else {
-                            "Check if used library (`snforge_std` or `sncast_std`) is compatible with used binary, probably one of them is not updated"
+                            "Check if used library (`snforge_std`) is compatible with used binary, probably it is not updated"
                         }
                     );
 
@@ -487,7 +487,7 @@ impl From<BufferReadError> for EnhancedHintError {
                     .context(
                         indoc!(r"
                         Reading from buffer failed, this can be caused by calling starknet::testing::cheatcode with invalid arguments.
-                        Probably `snforge_std`/`sncast_std` version is incompatible, check above for incompatibility warning.
+                        Probably `snforge_std` version is incompatible, check above for incompatibility warning.
                     ")
                     )
             )
