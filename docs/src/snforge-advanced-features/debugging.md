@@ -32,13 +32,12 @@ to have:
 
 ```toml
 [profile.dev.cairo]
+skip-optimizations = true
 add-statements-code-locations-debug-info = true
 add-statements-functions-debug-info = true
 add-functions-debug-info = true
-skip-optimizations = true
+add-types-debug-info = true
 ```
-
-<!-- TODO(#4476): Update docs once `add-types-debug-info` requirement is re-introduced -->
 
 ### Debugging in VSCode
 
