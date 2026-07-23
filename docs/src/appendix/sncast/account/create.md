@@ -60,14 +60,16 @@ Class hash of a custom openzeppelin account contract declared to the network. It
 ## `--private-key <PRIVATE_KEY>`
 Optional. If neither `--private-key` nor `--private-key-file` is passed, a random private key will be generated.
 
-Account private key.
+> ⚠️ **Security Warning**
+> 1. Passing the key via `--private-key` exposes it in your shell history and in the process list. Prefer `--private-key-file` for keys you want to keep secret.
+> 2. `sncast` only checks that the value is a valid curve scalar, it does not assess how secure it is. A supplied key that is small, guessable, or otherwise low-entropy results in an account anyone can take over. Only pass keys you trust, and for anything other than development omit the flag so a cryptographically random key is generated for you.
 
 Conflicts with: [`--ledger-path`](#--ledger-path-hd_path), [`--ledger-account-id`](#--ledger-account-id-account_id)
 
 ## `--private-key-file <PRIVATE_KEY_FILE_PATH>`
 Optional. If neither `--private-key` nor `--private-key-file` is passed, a random private key will be generated.
 
-Path to the file holding account private key.
+Path to the file holding account private key. The key must satisfy the same constraints as [`--private-key`](#--private-key-private_key).
 
 Conflicts with: [`--private-key`](#--private-key-private_key), [`--ledger-path`](#--ledger-path-hd_path), [`--ledger-account-id`](#--ledger-account-id-account_id)
 

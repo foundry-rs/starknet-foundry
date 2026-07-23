@@ -1,6 +1,6 @@
 use crate::starknet_commands::account::{
     generate_add_profile_message, get_private_key_from_file, prepare_account_json,
-    write_account_to_accounts_file,
+    validate_private_key, write_account_to_accounts_file,
 };
 use crate::starknet_commands::utils::felt_or_id::ClassHash;
 use anyhow::{Context, Result, anyhow, bail};
@@ -106,7 +106,6 @@ pub async fn create(
             AccountType::Ready => READY_CLASS_HASH,
             AccountType::Braavos => BRAAVOS_CLASS_HASH,
         });
-    check_class_hash_exists(provider, class_hash).await?;
 
     let private_key = match (&create.private_key, &create.private_key_file_path) {
         (Some(key), _) => Some(*key),
@@ -115,7 +114,11 @@ pub async fn create(
                 .with_context(|| format!("Failed to obtain private key from the file {path}"))?,
         ),
         (None, None) => None,
-    };
+    }
+    .map(validate_private_key)
+    .transpose()?;
+
+    check_class_hash_exists(provider, class_hash).await?;
 
     let (account_json, estimated_fee) = generate_account(
         provider,
