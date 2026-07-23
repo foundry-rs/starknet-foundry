@@ -233,3 +233,15 @@ impl From<GasPrices> for SerializableGasPrices {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{VersionedConstants, VersionedConstantsTrait};
+
+    // Some parts of `snforge` logic relies on the fact that `enable_reverts` is always true.
+    // This is a sanity check to make sure that it's not changed at any point.
+    #[test]
+    fn snforge_assumes_enable_reverts() {
+        assert!(VersionedConstants::latest_constants().enable_reverts);
+    }
+}
