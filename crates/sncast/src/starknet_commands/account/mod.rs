@@ -9,6 +9,7 @@ use camino::Utf8PathBuf;
 use clap::{Args, Subcommand};
 use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
+use conversions::string::{TryFromDecStr, TryFromHexStr};
 use serde_json::json;
 use sncast::helpers::account::{generate_account_name, load_accounts};
 use sncast::helpers::braavos::BraavosAccountFactory;
@@ -54,6 +55,42 @@ pub enum Commands {
     Deploy(Deploy),
     Delete(Delete),
     List(List),
+}
+
+#[derive(Args, Debug)]
+pub struct PrivateKeyArgs {
+    /// Account private key
+    #[arg(
+        long,
+        group = "private_key_input",
+        conflicts_with = "ledger_key_locator_account"
+    )]
+    pub private_key: Option<Felt>,
+
+    /// Path to the file holding account private key
+    #[arg(
+        long = "private-key-file",
+        group = "private_key_input",
+        conflicts_with = "ledger_key_locator_account"
+    )]
+    pub private_key_file_path: Option<Utf8PathBuf>,
+}
+
+impl PrivateKeyArgs {
+    fn resolve_optional(&self) -> Result<Option<Felt>> {
+        match (&self.private_key, &self.private_key_file_path) {
+            (Some(key), _) => Ok(Some(*key)),
+            (None, Some(path)) => get_private_key_from_file(path)
+                .with_context(|| format!("Failed to obtain private key from the file {path}"))
+                .map(Some),
+            (None, None) => Ok(None),
+        }
+    }
+
+    fn resolve_or_prompt(&self) -> Result<Felt> {
+        self.resolve_optional()?
+            .map_or_else(get_private_key_from_input, Ok)
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -112,6 +149,18 @@ fn validate_private_key(private_key: Felt) -> Result<Felt> {
         "Invalid private key: the private key must be smaller than the STARK curve order ({EC_ORDER:#x})"
     );
     Ok(private_key)
+}
+
+fn parse_input_to_felt(input: &str) -> Result<Felt> {
+    Felt::try_from_hex_str(input)
+        .or_else(|_| Felt::try_from_dec_str(input))
+        .with_context(|| format!("Failed to parse the value {input} as a felt"))
+}
+
+fn get_private_key_from_input() -> Result<Felt> {
+    let input = rpassword::prompt_password("Type in your private key and press enter: ")
+        .expect("Failed to read private key from input");
+    parse_input_to_felt(&input)
 }
 
 pub fn write_account_to_accounts_file(
