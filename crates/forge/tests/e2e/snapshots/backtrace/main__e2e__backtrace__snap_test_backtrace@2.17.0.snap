@@ -7,7 +7,7 @@ expression: stdout
 [FAIL] backtrace_vm_error::Test::test_fork_unwrapped_call_contract_syscall
 
 Failure data:
-    Got an exception while executing a hint: Hint Error: Error at pc=0:86:
+    Got an exception while executing a hint: Error at pc=0:86:
 Got an exception while executing a hint: Error at pc=0:86:
 Got an exception while executing a hint: Requested contract address 0x0000000000000000000000000000000000000000000000000000000000000123 is not deployed.
 
@@ -36,7 +36,7 @@ stack backtrace:
 [FAIL] backtrace_vm_error::Test::test_unwrapped_call_contract_syscall
 
 Failure data:
-    Got an exception while executing a hint: Hint Error: Error at pc=0:86:
+    Got an exception while executing a hint: Error at pc=0:86:
 Got an exception while executing a hint: Error at pc=0:57:
 Got an exception while executing a hint: Requested contract address 0x0000000000000000000000000000000000000000000000000000000000000123 is not deployed.
 

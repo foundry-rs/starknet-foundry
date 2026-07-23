@@ -226,9 +226,10 @@ pub fn execute_call_entry_point(
                         &res.call_info,
                         Cairo1RevertHeader::Execution,
                     ),
-                };
+                }
+                .annotated(res.call_info.tracked_resource, strip_vm_frames);
                 exit_error_call(&err, cheatnet_state);
-                return Err(err.annotated(res.call_info.tracked_resource, strip_vm_frames));
+                return Err(err);
             }
             update_remaining_gas(remaining_gas, &res.call_info);
             update_trace_data(
@@ -279,8 +280,9 @@ pub fn execute_call_entry_point(
             Ok(call_info)
         }
         Err(err) => {
+            let err = err.annotated(current_tracked_resource, strip_vm_frames);
             exit_error_call(&err, cheatnet_state);
-            Err(err.annotated(current_tracked_resource, strip_vm_frames))
+            Err(err)
         }
     }
     // endregion
@@ -328,9 +330,10 @@ pub fn non_reverting_execute_call_entry_point(
                     call_info,
                     Cairo1RevertHeader::Execution,
                 ),
-            };
+            }
+            .annotated(call_info.tracked_resource, strip_vm_frames);
             exit_error_call(&err, cheatnet_state);
-            return Err(err.annotated(call_info.tracked_resource, strip_vm_frames));
+            return Err(err);
         }
         cheatnet_state.trace_data.exit_nested_call();
         // endregion

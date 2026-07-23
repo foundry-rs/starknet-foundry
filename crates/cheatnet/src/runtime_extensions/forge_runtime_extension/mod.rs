@@ -290,9 +290,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     Err(CallFailure::Recoverable { panic_data }) => Ok(
                         CheatcodeHandlingResult::from_serializable(Err::<(), _>(panic_data)),
                     ),
-                    Err(CallFailure::Unrecoverable { msg }) => Err(EnhancedHintError::from(
-                        HintError::CustomHint(Box::from(msg.to_string())),
-                    )),
+                    Err(CallFailure::Unrecoverable(error)) => {
+                        Err(EnhancedHintError::from(error.into_unannotated()))
+                    }
                 }
             }
             "read_txt" => {
