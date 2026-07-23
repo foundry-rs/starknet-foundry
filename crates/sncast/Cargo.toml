@@ -34,6 +34,9 @@ configuration = { path = "../configuration" }
 shared = { path = "../shared" }
 itertools.workspace = true
 starknet-types-core.workspace = true
+starknet-curve.workspace = true
+cairo-vm.workspace = true
+blockifier.workspace = true
 semver.workspace = true
 sha2.workspace = true
 starknet-rust-crypto.workspace = true
