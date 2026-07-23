@@ -15,14 +15,16 @@ use sncast::helpers::constants::{
     BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, CREATE_KEYSTORE_PASSWORD_ENV_VAR,
     OZ_CLASS_HASH, READY_CLASS_HASH,
 };
+use sncast::helpers::keystore_locator::RegistryKeystoreLocator;
 use sncast::helpers::ledger;
 use sncast::helpers::ledger::LedgerKeyLocatorAccount;
 use sncast::helpers::rpc::{RpcArgs, generate_network_flag};
 use sncast::response::account::create::AccountCreateResponse;
 use sncast::response::ui::UI;
 use sncast::{
-    AccountType, SignerSource, SignerType, check_class_hash_exists, check_if_legacy_contract,
-    extract_or_generate_salt, get_keystore_password, handle_account_factory_error,
+    AccountType, CreateSignerStrategy, SignerType, check_class_hash_exists,
+    check_if_legacy_contract, extract_or_generate_salt, get_keystore_password,
+    handle_account_factory_error,
 };
 use starknet_rust::accounts::{
     AccountDeploymentV3, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
@@ -30,7 +32,7 @@ use starknet_rust::accounts::{
 use starknet_rust::core::types::FeeEstimate;
 use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
-use starknet_rust::signers::{LocalWallet, Signer, SigningKey};
+use starknet_rust::signers::{DerivationPath, LocalWallet, Signer, SigningKey};
 use starknet_types_core::felt::Felt;
 use std::str::FromStr;
 
@@ -61,6 +63,9 @@ pub struct Create {
     pub rpc: RpcArgs,
 
     #[command(flatten)]
+    pub keystore_locator: RegistryKeystoreLocator,
+
+    #[command(flatten)]
     pub ledger_key_locator: LedgerKeyLocatorAccount,
 }
 
@@ -78,7 +83,7 @@ pub async fn create(
     chain_id: Felt,
     create: &Create,
     config: &CastConfig,
-    signer_source: &SignerSource,
+    signer_strategy: &CreateSignerStrategy,
     ui: &UI,
 ) -> Result<AccountCreateResponse> {
     let salt = extract_or_generate_salt(create.salt);
@@ -96,7 +101,7 @@ pub async fn create(
         salt,
         class_hash,
         create.account_type,
-        signer_source,
+        signer_strategy,
         chain_id,
         ui,
     )
@@ -113,8 +118,9 @@ pub async fn create(
         style(estimated_fee_strk).magenta()
     );
 
-    match signer_source {
-        SignerSource::Keystore(keystore) => {
+    match signer_strategy {
+        // TODO: remove legacy global keystore logic
+        CreateSignerStrategy::LegacyKeystore(keystore) => {
             let account_path = Utf8PathBuf::from(&account);
             if account_path == Utf8PathBuf::default() {
                 bail!("Argument `--account` must be passed and be a path when using `--keystore`");
@@ -142,7 +148,9 @@ pub async fn create(
                 generate_deploy_command_with_keystore(account, keystore, &create.rpc, config);
             message.push_str(&deploy_command);
         }
-        SignerSource::Ledger(_) | SignerSource::AccountsFile => {
+        CreateSignerStrategy::RegistryKeystore(_)
+        | CreateSignerStrategy::Ledger(_)
+        | CreateSignerStrategy::PrivateKey => {
             write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
             let deploy_command =
                 generate_deploy_command(accounts_file, &create.rpc, config, account);
@@ -155,8 +163,9 @@ pub async fn create(
         &create.rpc,
         account,
         accounts_file,
-        match signer_source {
-            SignerSource::Keystore(path) => Some(path.clone()),
+        match signer_strategy {
+            // TODO: remove legacy global keystore logic
+            CreateSignerStrategy::LegacyKeystore(path) => Some(path.clone()),
             _ => None,
         },
         config,
@@ -174,102 +183,158 @@ pub async fn create(
     })
 }
 
+struct AccountGenerationContext<'a> {
+    provider: &'a JsonRpcClient<HttpTransport>,
+    salt: Felt,
+    class_hash: Felt,
+    account_type: AccountType,
+    chain_id: Felt,
+}
+
+struct SignerWithKind<S> {
+    signer: S,
+    kind: SignerType,
+}
+
 async fn generate_account(
     provider: &JsonRpcClient<HttpTransport>,
     salt: Felt,
     class_hash: Felt,
     account_type: AccountType,
-    signer_source: &SignerSource,
+    signer_strategy: &CreateSignerStrategy,
     chain_id: Felt,
     ui: &UI,
 ) -> Result<(serde_json::Value, u128)> {
-    if let SignerSource::Ledger(ledger_path) = signer_source {
-        let signer = ledger::create_ledger_signer(ledger_path, ui, false).await?;
-        let signer_type = SignerType::Ledger {
-            ledger_path: ledger_path.clone(),
-        };
+    let ctx = AccountGenerationContext {
+        provider,
+        salt,
+        class_hash,
+        account_type,
+        chain_id,
+    };
 
-        finalize_account_generation(
-            provider,
-            signer,
-            signer_type,
-            salt,
-            class_hash,
-            account_type,
-            chain_id,
-        )
-        .await
-    } else {
-        let private_key = SigningKey::from_random();
-        let signer = LocalWallet::from_signing_key(private_key.clone());
-        let signer_type = SignerType::Local {
-            private_key: private_key.secret_scalar(),
-        };
-
-        finalize_account_generation(
-            provider,
-            signer,
-            signer_type,
-            salt,
-            class_hash,
-            account_type,
-            chain_id,
-        )
-        .await
+    match signer_strategy {
+        CreateSignerStrategy::Ledger(ledger_path) => {
+            generate_ledger_account(&ctx, ledger_path, ui).await
+        }
+        CreateSignerStrategy::RegistryKeystore(keystore_path) => {
+            generate_keystore_account(&ctx, keystore_path).await
+        }
+        // TODO: remove legacy global keystore logic
+        CreateSignerStrategy::LegacyKeystore(_) | CreateSignerStrategy::PrivateKey => {
+            generate_pk_account(&ctx).await
+        }
     }
 }
 
-#[allow(clippy::too_many_arguments)]
+async fn generate_ledger_account(
+    ctx: &AccountGenerationContext<'_>,
+    ledger_path: &DerivationPath,
+    ui: &UI,
+) -> Result<(serde_json::Value, u128)> {
+    let signer_with_kind = SignerWithKind {
+        signer: ledger::create_ledger_signer(ledger_path, ui, false).await?,
+        kind: SignerType::Ledger {
+            ledger_path: ledger_path.clone(),
+        },
+    };
+    finalize_account_generation(ctx, signer_with_kind).await
+}
+
+async fn generate_keystore_account(
+    ctx: &AccountGenerationContext<'_>,
+    keystore_path: &Utf8PathBuf,
+) -> Result<(serde_json::Value, u128)> {
+    if keystore_path.exists() {
+        bail!("Keystore file {keystore_path} already exists");
+    }
+    if let Some(parent) = keystore_path.parent()
+        && !parent.as_str().is_empty()
+    {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("Failed to create keystore directory {parent}"))?;
+    }
+
+    let private_key = SigningKey::from_random();
+    let password = get_keystore_password(CREATE_KEYSTORE_PASSWORD_ENV_VAR)?;
+    private_key.save_as_keystore(keystore_path, &password)?;
+
+    let signer_with_kind = SignerWithKind {
+        signer: LocalWallet::from_signing_key(private_key),
+        kind: SignerType::Keystore {
+            keystore_path: keystore_path.clone(),
+        },
+    };
+    finalize_account_generation(ctx, signer_with_kind).await
+}
+
+async fn generate_pk_account(
+    ctx: &AccountGenerationContext<'_>,
+) -> Result<(serde_json::Value, u128)> {
+    let private_key = SigningKey::from_random();
+    let signer_with_kind = SignerWithKind {
+        signer: LocalWallet::from_signing_key(private_key.clone()),
+        kind: SignerType::PrivateKey {
+            private_key: private_key.secret_scalar(),
+        },
+    };
+    finalize_account_generation(ctx, signer_with_kind).await
+}
+
 async fn finalize_account_generation<S>(
-    provider: &JsonRpcClient<HttpTransport>,
-    signer: S,
-    signer_type: SignerType,
-    salt: Felt,
-    class_hash: Felt,
-    account_type: AccountType,
-    chain_id: Felt,
+    ctx: &AccountGenerationContext<'_>,
+    signer_with_kind: SignerWithKind<S>,
 ) -> Result<(serde_json::Value, u128)>
 where
     S: Signer + Send + Sync,
     <S as Signer>::GetPublicKeyError: 'static,
 {
+    let SignerWithKind { signer, kind } = signer_with_kind;
+    let AccountGenerationContext {
+        provider,
+        salt,
+        class_hash,
+        account_type,
+        chain_id,
+    } = ctx;
+
     let public_key = signer.get_public_key().await?.scalar();
 
     let (address, estimated_fee) = match account_type {
         AccountType::OpenZeppelin => {
             let factory =
-                OpenZeppelinAccountFactory::new(class_hash, chain_id, signer, provider).await?;
-            get_address_and_deployment_fee(factory, salt).await
+                OpenZeppelinAccountFactory::new(*class_hash, *chain_id, signer, provider).await?;
+            get_address_and_deployment_fee(factory, *salt).await
         }
         AccountType::Ready => {
             let factory =
-                ArgentAccountFactory::new(class_hash, chain_id, None, signer, provider).await?;
-            get_address_and_deployment_fee(factory, salt).await
+                ArgentAccountFactory::new(*class_hash, *chain_id, None, signer, provider).await?;
+            get_address_and_deployment_fee(factory, *salt).await
         }
         AccountType::Braavos => {
             let factory = BraavosAccountFactory::new(
-                class_hash,
+                *class_hash,
                 BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
-                chain_id,
+                *chain_id,
                 signer,
                 provider,
             )
             .await?;
-            get_address_and_deployment_fee(factory, salt).await
+            get_address_and_deployment_fee(factory, *salt).await
         }
     }?;
 
-    let legacy = check_if_legacy_contract(Some(class_hash), address, provider).await?;
+    let legacy = check_if_legacy_contract(Some(*class_hash), address, provider).await?;
 
     let account_json = prepare_account_json(
-        &signer_type,
+        &kind,
         public_key,
         address,
         false,
         legacy,
-        account_type,
-        Some(class_hash),
-        Some(salt),
+        *account_type,
+        Some(*class_hash),
+        Some(*salt),
     );
 
     Ok((account_json, estimated_fee.overall_fee))

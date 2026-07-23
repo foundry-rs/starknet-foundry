@@ -1,6 +1,8 @@
+use crate::get_keystore_password;
+use crate::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use crate::helpers::ledger;
 use crate::response::ui::UI;
-use anyhow::{Result, bail};
+use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use serde::ser::Error as SerError;
 use serde::{Deserialize, Serialize, Serializer};
@@ -20,6 +22,7 @@ use starknet_types_core::felt::Felt;
 struct SignerTypeParams {
     private_key: Option<Felt>,
     ledger_path: Option<DerivationPath>,
+    keystore_path: Option<Utf8PathBuf>,
 }
 
 /// Internal representation of a signer type.
@@ -27,16 +30,18 @@ struct SignerTypeParams {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(from = "SignerTypeParams")]
 pub enum SignerType {
-    Local { private_key: Felt },
+    PrivateKey { private_key: Felt },
     Ledger { ledger_path: DerivationPath },
+    Keystore { keystore_path: Utf8PathBuf },
     Ambiguous,
 }
 
 impl From<SignerTypeParams> for SignerType {
     fn from(params: SignerTypeParams) -> Self {
-        match (params.private_key, params.ledger_path) {
-            (Some(private_key), None) => Self::Local { private_key },
-            (None, Some(ledger_path)) => Self::Ledger { ledger_path },
+        match (params.private_key, params.ledger_path, params.keystore_path) {
+            (Some(private_key), None, None) => Self::PrivateKey { private_key },
+            (None, Some(ledger_path), None) => Self::Ledger { ledger_path },
+            (None, None, Some(keystore_path)) => Self::Keystore { keystore_path },
             _ => Self::Ambiguous,
         }
     }
@@ -45,12 +50,16 @@ impl From<SignerTypeParams> for SignerType {
 impl Serialize for SignerType {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let raw = match self {
-            SignerType::Local { private_key } => SignerTypeParams {
+            SignerType::PrivateKey { private_key } => SignerTypeParams {
                 private_key: Some(*private_key),
                 ..Default::default()
             },
             SignerType::Ledger { ledger_path } => SignerTypeParams {
                 ledger_path: Some(ledger_path.clone()),
+                ..Default::default()
+            },
+            SignerType::Keystore { keystore_path } => SignerTypeParams {
+                keystore_path: Some(keystore_path.clone()),
                 ..Default::default()
             },
             SignerType::Ambiguous => {
@@ -65,8 +74,8 @@ impl SignerType {
     #[must_use]
     pub fn private_key(&self) -> Option<Felt> {
         match self {
-            SignerType::Local { private_key } => Some(*private_key),
-            SignerType::Ledger { .. } | SignerType::Ambiguous => None,
+            SignerType::PrivateKey { private_key } => Some(*private_key),
+            SignerType::Ledger { .. } | SignerType::Keystore { .. } | SignerType::Ambiguous => None,
         }
     }
 
@@ -74,7 +83,19 @@ impl SignerType {
     pub fn ledger_path(&self) -> Option<&DerivationPath> {
         match self {
             SignerType::Ledger { ledger_path } => Some(ledger_path),
-            SignerType::Local { .. } | SignerType::Ambiguous => None,
+            SignerType::PrivateKey { .. } | SignerType::Keystore { .. } | SignerType::Ambiguous => {
+                None
+            }
+        }
+    }
+
+    #[must_use]
+    pub fn keystore_path(&self) -> Option<&Utf8PathBuf> {
+        match self {
+            SignerType::Keystore { keystore_path } => Some(keystore_path),
+            SignerType::PrivateKey { .. } | SignerType::Ledger { .. } | SignerType::Ambiguous => {
+                None
+            }
         }
     }
 }
@@ -92,15 +113,23 @@ pub async fn build_signer(
     print_ledger_message: bool,
 ) -> Result<SignerBackend> {
     match signer_type {
-        SignerType::Local { private_key } => Ok(SignerBackend::Local(LocalWallet::from(
+        SignerType::PrivateKey { private_key } => Ok(SignerBackend::Local(LocalWallet::from(
             SigningKey::from_secret_scalar(*private_key),
         ))),
+        SignerType::Keystore { keystore_path } => {
+            let password = get_keystore_password(KEYSTORE_PASSWORD_ENV_VAR)?;
+            let key = SigningKey::from_keystore(keystore_path, password.as_str())
+                .with_context(|| format!("Failed to decrypt keystore at {keystore_path}"))?;
+            Ok(SignerBackend::Local(LocalWallet::from(key)))
+        }
         SignerType::Ledger { ledger_path } => {
             let signer =
                 ledger::create_ledger_signer(ledger_path, ui, print_ledger_message).await?;
             Ok(SignerBackend::Ledger(signer))
         }
-        SignerType::Ambiguous => bail!("only one of `private_key`, `ledger_path` may be specified"),
+        SignerType::Ambiguous => {
+            bail!("only one of `private_key`, `ledger_path`, `keystore_path` may be specified")
+        }
     }
 }
 
@@ -146,26 +175,41 @@ macro_rules! with_account {
     };
 }
 
-/// Represents the source of the signer for account operations
+/// Create-time strategy for the new account's signer:
+/// Where the secret comes from and how it will be persisted.
+/// This is a `account create`-only concept. [`SignerType`] is used otherwise.
 #[derive(Debug, Clone, Default)]
-pub enum SignerSource {
+pub enum CreateSignerStrategy {
+    /// Use a keystore file at the given path (legacy format)
+    // TODO: remove legacy global keystore logic
+    LegacyKeystore(Utf8PathBuf),
     /// Use a keystore file at the given path
-    Keystore(Utf8PathBuf),
+    RegistryKeystore(Utf8PathBuf),
     /// Use a Ledger device with the given derivation path
     Ledger(DerivationPath),
-    /// Use the accounts file (default)
+    /// Use the private key stored in the accounts file (default)
+    // TODO: make non-default and deprecate this option
     #[default]
-    AccountsFile,
+    PrivateKey,
 }
 
-impl SignerSource {
-    pub fn new(keystore: Option<Utf8PathBuf>, signer_type: Option<&SignerType>) -> Result<Self> {
-        let ledger_path = signer_type.and_then(SignerType::ledger_path);
-        match (keystore, ledger_path) {
-            (Some(path), None) => Ok(SignerSource::Keystore(path)),
-            (None, Some(path)) => Ok(SignerSource::Ledger(path.clone())),
-            (None, None) => Ok(SignerSource::AccountsFile),
-            (Some(_), Some(_)) => {
+impl CreateSignerStrategy {
+    // TODO: remove legacy global keystore logic
+    pub fn new(
+        keystore: Option<Utf8PathBuf>,
+        ledger_path: Option<DerivationPath>,
+        legacy_keystore: Option<Utf8PathBuf>,
+    ) -> Result<Self> {
+        match (keystore, ledger_path, legacy_keystore) {
+            // TODO: remove legacy global keystore logic
+            (Some(_), _, Some(_)) => bail!(
+                "`account create --keystore` / `--keystore-path` cannot be used together with global `--keystore`"
+            ),
+            (Some(path), None, None) => Ok(Self::RegistryKeystore(path)),
+            (None, None, Some(path)) => Ok(Self::LegacyKeystore(path)),
+            (None, Some(path), None) => Ok(Self::Ledger(path)),
+            (None, None, None) => Ok(Self::PrivateKey),
+            (Some(_), Some(_), None) | (_, Some(_), Some(_)) => {
                 bail!("keystore and ledger cannot be used together")
             }
         }
