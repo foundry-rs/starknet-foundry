@@ -4,7 +4,7 @@ use crate::starknet_commands::account::deploy::Deploy;
 use crate::starknet_commands::account::import::Import;
 use crate::starknet_commands::account::list::{AccountsListMessage, List};
 use crate::{process_command_result, starknet_commands};
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::{Args, Subcommand};
 use configuration::resolve_config_file;
@@ -23,6 +23,7 @@ use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::ui::UI;
 use sncast::{AccountType, chain_id_to_network_name, decode_chain_id};
 use sncast::{SignerSource, SignerType, WaitForTx, get_chain_id};
+use starknet_curve::curve_params::EC_ORDER;
 use starknet_rust::accounts::{AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory};
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, Provider};
@@ -97,6 +98,20 @@ pub fn prepare_account_json(
 fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<Felt> {
     let private_key_string = std::fs::read_to_string(file_path.clone())?;
     Ok(private_key_string.parse()?)
+}
+
+/// Validates that `private_key` is a valid secret scalar of the STARK curve,
+/// i.e. it is non-zero and strictly smaller than the curve order.
+fn validate_private_key(private_key: Felt) -> Result<Felt> {
+    ensure!(
+        private_key != Felt::ZERO,
+        "Invalid private key: the private key cannot be 0"
+    );
+    ensure!(
+        private_key < EC_ORDER,
+        "Invalid private key: the private key must be smaller than the STARK curve order ({EC_ORDER:#x})"
+    );
+    Ok(private_key)
 }
 
 pub fn write_account_to_accounts_file(

@@ -242,6 +242,57 @@ pub async fn test_create_invalid_private_key_file_path() {
 }
 
 #[tokio::test]
+pub async fn test_create_with_zero_private_key() {
+    let args = vec![
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--private-key",
+        "0x0",
+    ];
+
+    let output = runner(&args).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Command: account create
+        Error: Invalid private key: the private key cannot be 0
+        "},
+    );
+}
+
+#[tokio::test]
+pub async fn test_create_with_private_key_exceeding_curve_order() {
+    // Equal to the STARK curve order, which is the first invalid value.
+    let curve_order = "0x0800000000000010ffffffffffffffffb781126dcae7b2321e66a241adc64d2f";
+
+    let args = vec![
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--private-key",
+        curve_order,
+    ];
+
+    let output = runner(&args).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Command: account create
+        Error: Invalid private key: the private key must be smaller than the STARK curve order [..]
+        "},
+    );
+}
+
+#[tokio::test]
 pub async fn test_create_with_class_hash_alias() {
     let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
     let accounts_file = "accounts.json";

@@ -41,6 +41,7 @@ cairo-lang-sierra.workspace = true
 cairo-lang-casm.workspace = true
 itertools.workspace = true
 starknet-types-core.workspace = true
+starknet-curve.workspace = true
 cairo-vm.workspace = true
 blockifier.workspace = true
 semver.workspace = true
