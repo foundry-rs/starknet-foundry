@@ -65,6 +65,9 @@ Account private key. It must be a valid STARK curve secret scalar, i.e. a non-ze
 > 💡 **Note**
 > Passing the key via `--private-key` exposes it in your shell history and in the process list. Prefer `--private-key-file` for keys you want to keep secret.
 
+> ⚠️ **Security Warning**
+> `sncast` only checks that the value is a valid curve scalar — it does not assess how secure it is. A supplied key that is small, guessable, or otherwise low-entropy results in an account anyone can take over. Only pass keys you trust, and for anything other than development omit the flag so a cryptographically random key is generated for you.
+
 Conflicts with: [`--ledger-path`](#--ledger-path-hd_path), [`--ledger-account-id`](#--ledger-account-id-account_id)
 
 ## `--private-key-file <PRIVATE_KEY_FILE_PATH>`
