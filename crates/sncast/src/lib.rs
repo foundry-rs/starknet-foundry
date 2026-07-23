@@ -56,7 +56,9 @@ pub mod state;
 use crate::response::ui::UI;
 use conversions::byte_array::ByteArray;
 use foundry_ui::components::warning::WarningMessage;
-pub use helpers::signer::{AccountVariant, SignerBackend, SignerSource, SignerType, build_signer};
+pub use helpers::signer::{
+    AccountVariant, CreateSignerStrategy, SignerBackend, SignerType, build_signer,
+};
 
 pub type NestedMap<T> = HashMap<String, HashMap<String, T>>;
 
@@ -313,7 +315,7 @@ pub async fn get_nonce(
 }
 
 pub async fn get_account<'a>(
-    config: &'a CastConfig,
+    config: &CastConfig,
     provider: &'a JsonRpcClient<HttpTransport>,
     rpc_args: &RpcArgs,
     ui: &UI,
@@ -399,19 +401,22 @@ pub async fn get_account_from_accounts_file<'a>(
     };
 
     // Reject keystore + ledger conflict early.
-    let _ = SignerSource::new(keystore.cloned(), Some(&account_data.signer_type))?;
+    // TODO: remove legacy global keystore logic
+    if keystore.is_some() && account_data.signer_type.ledger_path().is_some() {
+        bail!("keystore and ledger cannot be used together");
+    }
 
     let signer = build_signer(&account_data.signer_type, ui, true).await?;
 
     build_account_variant(signer, account_data, chain_id, provider).await
 }
 
-pub(crate) async fn build_account_variant<'a>(
+pub(crate) async fn build_account_variant(
     signer: SignerBackend,
     account_data: AccountData,
     chain_id: Felt,
-    provider: &'a JsonRpcClient<HttpTransport>,
-) -> Result<AccountVariant<'a>> {
+    provider: &JsonRpcClient<HttpTransport>,
+) -> Result<AccountVariant<'_>> {
     let address = account_data
         .address
         .context("Failed to get account address")?;
@@ -521,46 +526,73 @@ pub fn get_account_data_from_keystore(
     .secret_scalar();
 
     let account_info: Value = read_and_parse_json_file(&path_to_account)?;
+    let identity = parse_starkli_account_json(&account_info)?;
 
+    Ok(AccountData {
+        public_key: identity.public_key,
+        address: identity.address,
+        salt: identity.salt,
+        deployed: identity.deployed,
+        class_hash: identity.class_hash,
+        legacy: identity.legacy,
+        account_type: Some(identity.account_type),
+        signer_type: SignerType::PrivateKey { private_key },
+        unknown_fields: HashMap::new(),
+    })
+}
+
+/// Identity fields parsed from a starkli account JSON.
+#[derive(Debug, Clone)]
+pub struct StarkliAccountIdentity {
+    pub public_key: Felt,
+    pub address: Option<Felt>,
+    pub class_hash: Option<Felt>,
+    pub salt: Option<Felt>,
+    pub deployed: Option<bool>,
+    pub legacy: Option<bool>,
+    pub account_type: AccountType,
+}
+
+pub fn parse_starkli_account_json(account_info: &Value) -> Result<StarkliAccountIdentity> {
     let parse_to_felt = |pointer: &str| -> Option<Felt> {
-        get_string_value_from_json(&account_info, pointer).and_then(|value| value.parse().ok())
+        get_string_value_from_json(account_info, pointer).and_then(|value| value.parse().ok())
     };
 
     let address = parse_to_felt("/deployment/address");
     let class_hash = parse_to_felt("/deployment/class_hash");
     let salt = parse_to_felt("/deployment/salt");
-    let deployed = get_string_value_from_json(&account_info, "/deployment/status")
+    let deployed = get_string_value_from_json(account_info, "/deployment/status")
         .map(|status| status == "deployed");
     let legacy = account_info
         .pointer("/variant/legacy")
         .and_then(Value::as_bool);
-    let account_type = get_string_value_from_json(&account_info, "/variant/type")
+    let account_type = get_string_value_from_json(account_info, "/variant/type")
         // "argent" was renamed to "ready"; map for backward compat with old account files
         .map(|t| match t.as_str() {
             "argent" => "ready".to_string(),
             _ => t,
         })
-        .and_then(|account_type| account_type.parse().ok());
+        .and_then(|account_type| account_type.parse().ok())
+        .context("Failed to get type key")?;
 
-    let public_key = match account_type.context("Failed to get type key")? {
+    let public_key = match account_type {
         AccountType::Ready => parse_to_felt("/variant/owner"),
         AccountType::OpenZeppelin => parse_to_felt("/variant/public_key"),
-        AccountType::Braavos => get_braavos_account_public_key(&account_info)?,
+        AccountType::Braavos => get_braavos_account_public_key(account_info)?,
     }
     .context("Failed to get public key from account JSON file")?;
 
-    Ok(AccountData {
+    Ok(StarkliAccountIdentity {
         public_key,
         address,
+        class_hash,
         salt,
         deployed,
-        class_hash,
         legacy,
         account_type,
-        signer_type: SignerType::Local { private_key },
-        unknown_fields: HashMap::new(),
     })
 }
+
 fn get_braavos_account_public_key(account_info: &Value) -> Result<Option<Felt>> {
     get_string_value_from_json(account_info, "/variant/multisig/status")
         .filter(|status| status == "off")

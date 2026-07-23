@@ -21,7 +21,7 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::ui::UI;
 use sncast::{AccountType, chain_id_to_network_name, decode_chain_id};
-use sncast::{SignerSource, SignerType, WaitForTx, get_chain_id};
+use sncast::{CreateSignerStrategy, SignerType, WaitForTx, get_chain_id};
 use starknet_rust::accounts::{AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory};
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, Provider};
@@ -73,12 +73,15 @@ pub fn prepare_account_json(
     });
 
     match signer_type {
-        SignerType::Local { private_key } => {
+        SignerType::PrivateKey { private_key } => {
             account_json["private_key"] = serde_json::Value::String(format!("{private_key:#x}"));
         }
         SignerType::Ledger { ledger_path } => {
             account_json["ledger_path"] =
                 serde_json::Value::String(ledger_path.derivation_string());
+        }
+        SignerType::Keystore { keystore_path } => {
+            account_json["keystore_path"] = serde_json::Value::String(keystore_path.to_string());
         }
         SignerType::Ambiguous => {
             unreachable!("ambiguous signer must not be written to accounts file");
@@ -246,14 +249,12 @@ pub async fn account(
 
             let chain_id = get_chain_id(&provider).await?;
 
-            let signer_type = create
-                .ledger_key_locator
-                .resolve(ui)
-                .map(|ledger_path| SignerType::Ledger { ledger_path });
+            let ledger_path = create.ledger_key_locator.resolve(ui);
 
-            let signer_source = SignerSource::new(config.keystore.clone(), signer_type.as_ref())?;
-
-            let account = if config.keystore.is_none() {
+            // Registry create (and default) uses a name in the accounts file.
+            // Legacy global `--keystore` create uses `--account` as a starkli JSON path.
+            // TODO: remove legacy global keystore logic — drop the `else` and always use name.
+            let account = if create.keystore_locator.is_set() || config.keystore.is_none() {
                 create
                     .name
                     .clone()
@@ -261,6 +262,12 @@ pub async fn account(
             } else {
                 config.account.clone()
             };
+            let legacy_keystore = config.keystore.clone();
+            let keystore = create
+                .keystore_locator
+                .resolve(&config.accounts_file, &account);
+            let signer_strategy =
+                CreateSignerStrategy::new(keystore, ledger_path, legacy_keystore)?;
 
             let result = starknet_commands::account::create::create(
                 &account,
@@ -269,7 +276,7 @@ pub async fn account(
                 chain_id,
                 &create,
                 &config,
-                &signer_source,
+                &signer_strategy,
                 ui,
             )
             .await;

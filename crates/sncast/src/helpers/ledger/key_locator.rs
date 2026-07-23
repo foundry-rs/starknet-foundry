@@ -21,11 +21,15 @@ pub struct LedgerKeyLocator {
 #[group(id = "ledger_key_locator_account", multiple = false)]
 pub struct LedgerKeyLocatorAccount {
     /// Ledger derivation path in EIP-2645 format
-    #[arg(long = "ledger-path", value_parser = DerivationPathParser)]
+    #[arg(
+        long = "ledger-path",
+        value_parser = DerivationPathParser,
+        conflicts_with = "keystore"
+    )]
     pub path: Option<ParsedDerivationPath>,
 
     /// Account index, expands to "m//starknet'/sncast'/0'/<account-id>'/0"
-    #[arg(long = "ledger-account-id")]
+    #[arg(long = "ledger-account-id", conflicts_with = "keystore")]
     pub account_id: Option<u32>,
 }
 
