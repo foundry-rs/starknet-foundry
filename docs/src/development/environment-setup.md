@@ -57,15 +57,6 @@ $ cargo test
 
 `cargo test` is the primary way to run tests locally.
 
-When testing against a Scarb pre-release, set Scarb's Cairo version override explicitly:
-
-```shell
-$ SCARB_IGNORE_CAIRO_VERSION=true cargo test ...
-```
-
-Use this only for local validation of Scarb pre-release bumps. It disables Scarb's `cairo-version`
-compatibility check for the invoked command.
-
 > ❗️ **Warning**
 >
 > `cargo nextest run` may leave an orphan `starknet-devnet` process in some scenarios.
