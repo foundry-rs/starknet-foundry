@@ -30,6 +30,7 @@ use std::{
 };
 
 // Allowed absolute gas differences when `non_exact_gas_assertions` is enabled.
+// TODO(#4516): Investigate and potentially tighten these gas assertion margins
 const MARGIN_L1_GAS: u64 = 10;
 const MARGIN_L1_DATA_GAS: u64 = 10;
 const MARGIN_L2_GAS: u64 = 200_000;
