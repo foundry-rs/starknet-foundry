@@ -5,14 +5,6 @@ expression: stdout
 
 
 
-
-warn[E2100]: Unused import: `simple_package_with_cheats::HelloStarknet::ArrayTrait`
- --> /private/var/folders/gh/rktbm6d931j650kdszdb536c0000gn/T/.tmpTFhIiL/src/lib.cairo:94:22
-    use core::array::ArrayTrait;
-                     ^^^^^^^^^^
-
-
-
 [PASS] simple_package_with_cheats_integrationtest::contract::call_and_invoke_proxy (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~1358190)
 ╭------------------------+-------+-------+-------+---------+---------╮
 | HelloStarknet Contract |       |       |       |         |         |
