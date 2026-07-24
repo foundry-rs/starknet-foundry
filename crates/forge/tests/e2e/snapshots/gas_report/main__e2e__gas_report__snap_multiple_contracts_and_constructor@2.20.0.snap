@@ -5,13 +5,21 @@ expression: stdout
 
 
 
-[PASS] simple_package_with_cheats_integrationtest::contract::call_and_invoke_proxy (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~1361740)
+
+warn[E2100]: Unused import: `simple_package_with_cheats::HelloStarknet::ArrayTrait`
+ --> /private/var/folders/gh/rktbm6d931j650kdszdb536c0000gn/T/.tmpTFhIiL/src/lib.cairo:94:22
+    use core::array::ArrayTrait;
+                     ^^^^^^^^^^
+
+
+
+[PASS] simple_package_with_cheats_integrationtest::contract::call_and_invoke_proxy (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~1358190)
 ╭------------------------+-------+-------+-------+---------+---------╮
 | HelloStarknet Contract |       |       |       |         |         |
 +====================================================================+
 | Function Name          | Min   | Max   | Avg   | Std Dev | # Calls |
 |------------------------+-------+-------+-------+---------+---------|
-| get_block_number       | 15780 | 15780 | 15780 | 0       | 2       |
+| get_block_number       | 15010 | 15010 | 15010 | 0       | 2       |
 ╰------------------------+-------+-------+-------+---------+---------╯
 
 ╭-----------------------------+--------+--------+--------+---------+---------╮
@@ -19,7 +27,7 @@ expression: stdout
 +============================================================================+
 | Function Name               | Min    | Max    | Avg    | Std Dev | # Calls |
 |-----------------------------+--------+--------+--------+---------+---------|
-| constructor                 | 64620  | 64620  | 64620  | 0       | 1       |
+| constructor                 | 63850  | 63850  | 63850  | 0       | 1       |
 |-----------------------------+--------+--------+--------+---------+---------|
-| get_block_number            | 139350 | 139350 | 139350 | 0       | 2       |
+| get_block_number            | 137810 | 137810 | 137810 | 0       | 2       |
 ╰-----------------------------+--------+--------+--------+---------+---------╯
