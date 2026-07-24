@@ -1,9 +1,0 @@
-[package]
-name = "deploy_test_scripts"
-version = "0.1.0"
-edition = "2024_07"
-
-[dependencies]
-starknet = ">=2.4.0"
-sncast_std = { path = "../../../../../../sncast_std" }
-

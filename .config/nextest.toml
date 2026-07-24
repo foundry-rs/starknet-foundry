@@ -11,7 +11,7 @@ filter = 'package(sncast) and (test(/^e2e::/) | test(/^integration::/) | test(/^
 test-group = "devnet-sequential"
 
 [[profile.default.overrides]]
-filter = 'package(sncast) and (test(/^e2e::devnet_accounts::/) | test(/^e2e::script::init::/))'
+filter = 'package(sncast) and test(/^e2e::devnet_accounts::/)'
 retries = 1
 
 [[profile.default.overrides]]
@@ -24,10 +24,6 @@ filter = 'package(sncast) and test(=e2e::devnet_accounts::use_devnet_account_wit
 retries = { backoff = "exponential", count = 3, delay = "5s" }
 
 [[profile.default.overrides]]
-filter = 'package(sncast) and test(=e2e::script::general::test_incompatible_sncast_std_version)'
-retries = { backoff = "exponential", count = 3, delay = "5s" }
-
-[[profile.default.overrides]]
 filter = 'package(sncast) and test(=e2e::tx_status::test_incorrect_transaction_hash)'
 retries = 2
 
@@ -37,10 +33,6 @@ retries = 2
 
 [[profile.default.overrides]]
 filter = 'package(sncast) and test(=e2e::main_tests::test_happy_case_predefined_network)'
-retries = { backoff = "exponential", count = 3, delay = "5s" }
-
-[[profile.default.overrides]]
-filter = 'package(sncast) and test(=e2e::script::tx_status::test_tx_status_incorrect_transaction_hash)'
 retries = { backoff = "exponential", count = 3, delay = "5s" }
 
 [[profile.default.overrides]]

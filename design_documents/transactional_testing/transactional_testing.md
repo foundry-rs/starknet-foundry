@@ -1,5 +1,7 @@
 # Transactional testing proposal
 
+> **Note:** Cairo deployment scripts (`sncast script`) were removed. References to `cast script` in this document describe the former feature.
+
 ## Context
 
 Some flows are not currently intuitively testable via standard testing methods, 
