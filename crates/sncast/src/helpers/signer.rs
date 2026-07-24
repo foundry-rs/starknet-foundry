@@ -1,23 +1,64 @@
 use crate::helpers::ledger;
+use crate::response::ui::UI;
 use anyhow::{Result, bail};
 use camino::Utf8PathBuf;
-use serde::{Deserialize, Serialize};
+use serde::ser::Error as SerError;
+use serde::{Deserialize, Serialize, Serializer};
+use serde_with::skip_serializing_none;
 use starknet_rust::{
     accounts::SingleOwnerAccount,
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
-    signers::{DerivationPath, LedgerSigner, LocalWallet},
+    signers::{DerivationPath, LedgerSigner, LocalWallet, SigningKey},
 };
 use starknet_types_core::felt::Felt;
 
-/// Represents the type of signer stored in the accounts file
-// Uses `untagged` + `flatten` for backward compatibility with the existing accounts file format.
-// Downside: deserialization errors are less descriptive than with tagged variants,
-// and field name collisions across variants would silently misbehave.
-#[derive(Deserialize, Serialize, Clone, Debug)]
-#[serde(untagged)]
+/// Signer type representation used in the accounts file.
+/// For internal purposes, it should be converted to [`SignerType`].
+#[skip_serializing_none]
+#[derive(Deserialize, Serialize, Debug, Default)]
+#[serde(default)]
+struct SignerTypeParams {
+    private_key: Option<Felt>,
+    ledger_path: Option<DerivationPath>,
+}
+
+/// Internal representation of a signer type.
+/// [`SignerType::Ambiguous`] corresponds to zero or more than one signer types being specified.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(from = "SignerTypeParams")]
 pub enum SignerType {
     Local { private_key: Felt },
     Ledger { ledger_path: DerivationPath },
+    Ambiguous,
+}
+
+impl From<SignerTypeParams> for SignerType {
+    fn from(params: SignerTypeParams) -> Self {
+        match (params.private_key, params.ledger_path) {
+            (Some(private_key), None) => Self::Local { private_key },
+            (None, Some(ledger_path)) => Self::Ledger { ledger_path },
+            _ => Self::Ambiguous,
+        }
+    }
+}
+
+impl Serialize for SignerType {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let raw = match self {
+            SignerType::Local { private_key } => SignerTypeParams {
+                private_key: Some(*private_key),
+                ..Default::default()
+            },
+            SignerType::Ledger { ledger_path } => SignerTypeParams {
+                ledger_path: Some(ledger_path.clone()),
+                ..Default::default()
+            },
+            SignerType::Ambiguous => {
+                return Err(S::Error::custom("cannot serialize ambiguous signer"));
+            }
+        };
+        raw.serialize(serializer)
+    }
 }
 
 impl SignerType {
@@ -25,7 +66,7 @@ impl SignerType {
     pub fn private_key(&self) -> Option<Felt> {
         match self {
             SignerType::Local { private_key } => Some(*private_key),
-            SignerType::Ledger { .. } => None,
+            SignerType::Ledger { .. } | SignerType::Ambiguous => None,
         }
     }
 
@@ -33,8 +74,33 @@ impl SignerType {
     pub fn ledger_path(&self) -> Option<&DerivationPath> {
         match self {
             SignerType::Ledger { ledger_path } => Some(ledger_path),
-            SignerType::Local { .. } => None,
+            SignerType::Local { .. } | SignerType::Ambiguous => None,
         }
+    }
+}
+
+#[derive(Debug)]
+pub enum SignerBackend {
+    Local(LocalWallet),
+    Ledger(LedgerSigner<ledger::SncastLedgerTransport>),
+}
+
+pub async fn build_signer(
+    signer_type: &SignerType,
+    ui: &UI,
+    // TODO: unused in non-ledger context, consider refactor
+    print_ledger_message: bool,
+) -> Result<SignerBackend> {
+    match signer_type {
+        SignerType::Local { private_key } => Ok(SignerBackend::Local(LocalWallet::from(
+            SigningKey::from_secret_scalar(*private_key),
+        ))),
+        SignerType::Ledger { ledger_path } => {
+            let signer =
+                ledger::create_ledger_signer(ledger_path, ui, print_ledger_message).await?;
+            Ok(SignerBackend::Ledger(signer))
+        }
+        SignerType::Ambiguous => bail!("only one of `private_key`, `ledger_path` may be specified"),
     }
 }
 
@@ -103,5 +169,47 @@ impl SignerSource {
                 bail!("keystore and ledger cannot be used together")
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::AccountData;
+
+    #[test]
+    fn unknown_fields_captured_on_account_data() {
+        let data: AccountData = serde_json::from_str(
+            r#"{
+                "public_key": "0x1",
+                "address": "0x2",
+                "private_key": "0x3",
+                "typo_field": 1
+            }"#,
+        )
+        .unwrap();
+        assert!(data.unknown_fields.contains_key("typo_field"));
+    }
+
+    #[tokio::test]
+    async fn build_signer_rejects_ambiguous() {
+        let ui = UI::default();
+        let err = build_signer(&SignerType::Ambiguous, &ui, false)
+            .await
+            .unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "only one of `private_key`, `ledger_path` may be specified"
+        );
+    }
+
+    #[test]
+    fn serialize_ambiguous_hard_fails() {
+        let err = serde_json::to_string(&SignerType::Ambiguous).unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("cannot serialize ambiguous signer"),
+            "unexpected error: {err}"
+        );
     }
 }
