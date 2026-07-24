@@ -6,7 +6,7 @@ use assert_fs::{
     TempDir,
     fixture::{FileTouch, FileWriteStr, PathChild},
 };
-use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, SyscallUsage};
+use blockifier::execution::syscalls::vm_syscall_utils::SyscallSelector;
 use cairo_vm::types::builtin_name::BuiltinName;
 use camino::Utf8PathBuf;
 use forge_runner::test_case_summary::Single;
@@ -299,16 +299,25 @@ pub fn assert_case_output_contains(
 
     let result = TestCase::find_test_result(result);
 
-    assert!(result.test_case_summaries.iter().any(|any_case| {
-        if any_case.is_passed() || any_case.is_failed() {
-            return any_case.msg().unwrap().contains(asserted_msg)
+    let any_case = result
+        .test_case_summaries
+        .iter()
+        .find(|any_case| {
+            (any_case.is_passed() || any_case.is_failed())
                 && any_case
                     .name()
-                    .unwrap()
-                    .ends_with(test_name_suffix.as_str());
-        }
-        false
-    }));
+                    .is_some_and(|name| name.ends_with(test_name_suffix.as_str()))
+        })
+        .unwrap_or_else(|| {
+            panic!("Output assertion failed: test case `{test_case_name}` was not found")
+        });
+
+    let actual_msg = any_case.msg().unwrap_or_default();
+
+    assert!(
+        actual_msg.contains(asserted_msg),
+        "Output assertion failed for test case `{test_case_name}`.\nexpected output to contain: {asserted_msg}\nactual:                     {actual_msg}"
+    );
 }
 
 pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_gas: GasVector) {
@@ -325,16 +334,9 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
                 .is_some_and(|name| name.ends_with(test_name_suffix.as_str()))
         })
         .unwrap_or_else(|| {
-            let available_test_cases = result
-                .test_case_summaries
-                .iter()
-                .filter_map(AnyTestCaseSummary::name)
-                .map(|name| format!(" - {name}"))
-                .collect::<Vec<_>>()
-                .join("\n");
-
             panic!(
-                "Gas assertion failed: test case `{test_case_name}` was not found. Available test cases:\n{available_test_cases}"
+                "Gas assertion failed: test case `{test_case_name}` was not found. Available test cases:\n{}",
+                format_available_test_cases(&result.test_case_summaries)
             )
         });
 
@@ -432,28 +434,41 @@ pub fn assert_syscall(
 
     let result = TestCase::find_test_result(result);
 
-    assert!(result.test_case_summaries.iter().any(|any_case| {
-        match any_case {
-            AnyTestCaseSummary::Fuzzing(_) => {
-                panic!("Cannot use assert_syscall! for fuzzing tests")
-            }
-            AnyTestCaseSummary::Single(case) => match case {
-                TestCaseSummary::Passed { used_resources, .. } => {
-                    used_resources
-                        .syscall_usage
-                        .get(&syscall)
-                        .unwrap_or(&SyscallUsage::new(0, 0))
-                        .call_count
-                        == expected_count
-                        && any_case
-                            .name()
-                            .unwrap()
-                            .ends_with(test_name_suffix.as_str())
-                }
-                _ => false,
-            },
+    let any_case = result
+        .test_case_summaries
+        .iter()
+        .find(|any_case| {
+            any_case
+                .name()
+                .is_some_and(|name| name.ends_with(test_name_suffix.as_str()))
+        })
+        .unwrap_or_else(|| {
+            panic!("Syscall assertion failed: test case `{test_case_name}` was not found. Available test cases:\n{}", format_available_test_cases(&result.test_case_summaries))
+        });
+
+    match any_case {
+        AnyTestCaseSummary::Fuzzing(_) => {
+            panic!("Cannot use assert_syscall! for fuzzing tests")
         }
-    }));
+        AnyTestCaseSummary::Single(case) => {
+            if let TestCaseSummary::Passed { used_resources, .. } = case {
+                let actual_count = used_resources
+                    .syscall_usage
+                    .get(&syscall)
+                    .map_or(0, |usage| usage.call_count);
+
+                assert!(
+                    actual_count == expected_count,
+                    "Syscall assertion failed for test case `{test_case_name}` (syscall `{syscall:?}`).\nexpected: {expected_count}\nactual:   {actual_count}"
+                );
+            } else {
+                panic!(
+                    "Syscall assertion failed for test case `{test_case_name}`: expected passed test case, but test case was {}",
+                    test_case_status(case)
+                );
+            }
+        }
+    }
 }
 
 pub fn assert_builtin(
@@ -472,39 +487,67 @@ pub fn assert_builtin(
     let test_name_suffix = format!("::{test_case_name}");
     let result = TestCase::find_test_result(result);
 
-    assert!(result.test_case_summaries.iter().any(|any_case| {
-        match any_case {
-            AnyTestCaseSummary::Fuzzing(_) => {
-                panic!("Cannot use assert_builtin for fuzzing tests")
-            }
-            AnyTestCaseSummary::Single(case) => match case {
-                TestCaseSummary::Passed { used_resources, .. } => {
-                    used_resources
-                        .execution_summary
-                        .charged_resources
-                        .extended_vm_resources
-                        .vm_resources
-                        .builtin_instance_counter
-                        .get(&builtin)
-                        .unwrap_or(&0)
-                        == &expected_count
-                        && any_case
-                            .name()
-                            .unwrap()
-                            .ends_with(test_name_suffix.as_str())
-                }
-                _ => false,
-            },
+    let any_case = result
+        .test_case_summaries
+        .iter()
+        .find(|any_case| {
+            any_case
+                .name()
+                .is_some_and(|name| name.ends_with(test_name_suffix.as_str()))
+        })
+        .unwrap_or_else(|| {
+            panic!("Builtin assertion failed: test case `{test_case_name}` was not found. Available test cases:\n{}", format_available_test_cases(&result.test_case_summaries))
+        });
+
+    match any_case {
+        AnyTestCaseSummary::Fuzzing(_) => {
+            panic!("Cannot use assert_builtin for fuzzing tests")
         }
-    }));
+        AnyTestCaseSummary::Single(case) => {
+            if let TestCaseSummary::Passed { used_resources, .. } = case {
+                let actual_count = used_resources
+                    .execution_summary
+                    .charged_resources
+                    .extended_vm_resources
+                    .vm_resources
+                    .builtin_instance_counter
+                    .get(&builtin)
+                    .copied()
+                    .unwrap_or(0);
+
+                assert!(
+                    actual_count == expected_count,
+                    "Builtin assertion failed for test case `{test_case_name}` (builtin `{builtin:?}`).\nexpected: {expected_count}\nactual:   {actual_count}"
+                );
+            } else {
+                panic!(
+                    "Builtin assertion failed for test case `{test_case_name}`: expected passed test case, but test case was {}",
+                    test_case_status(case)
+                );
+            }
+        }
+    }
+}
+
+fn format_available_test_cases(summaries: &[AnyTestCaseSummary]) -> String {
+    summaries
+        .iter()
+        .filter_map(AnyTestCaseSummary::name)
+        .map(|name| format!(" - {name}"))
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 #[cfg(test)]
 mod tests {
     use crate::utils::{
-        runner::{assert_gas, assert_passed, capture_assertion_panic},
+        runner::{
+            assert_builtin, assert_gas, assert_passed, assert_syscall, capture_assertion_panic,
+        },
         running_tests::run_test_case,
     };
+    use blockifier::execution::syscalls::vm_syscall_utils::SyscallSelector;
+    use cairo_vm::types::builtin_name::BuiltinName;
     use forge_runner::{
         forge_config::ForgeTrackedResource,
         test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
@@ -661,5 +704,108 @@ mod tests {
             l1_data_gas: GasAmount(value("l1_data_gas")),
             l2_gas: GasAmount(value("l2_gas")),
         }
+    }
+
+    #[test]
+    fn assert_syscall_reports_available_test_cases_when_test_case_is_missing() {
+        let summaries = summaries(vec![
+            single_ignored("pkg::module::some_other_test"),
+            single_ignored("pkg::module::another_test"),
+        ]);
+
+        let panic_message = capture_assertion_panic(|| {
+            assert_syscall(&summaries, "missing_test", SyscallSelector::Keccak, 1);
+        });
+
+        assert_stdout_contains(
+            panic_message,
+            indoc! {r"
+        Syscall assertion failed: test case `missing_test` was not found. Available test cases:
+         - pkg::module::some_other_test
+         - pkg::module::another_test
+        "},
+        );
+    }
+
+    #[test]
+    fn assert_syscall_failure_shows_expected_and_actual() {
+        let test = test_case!(indoc!(
+            r"
+            use starknet::syscalls::keccak_syscall;
+            use starknet::SyscallResultTrait;
+
+            #[test]
+            fn keccak_diagnostics() {
+                let input = array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+                keccak_syscall(input.span()).unwrap_syscall();
+            }
+        "
+        ));
+
+        let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+        assert_passed(&result);
+
+        let panic_message = capture_assertion_panic(|| {
+            assert_syscall(&result, "keccak_diagnostics", SyscallSelector::Keccak, 2);
+        });
+
+        assert_stdout_contains(
+            panic_message,
+            indoc! {r"
+        Syscall assertion failed for test case `keccak_diagnostics` (syscall `Keccak`).
+        expected: 2
+        actual:   1
+        "},
+        );
+    }
+
+    #[test]
+    fn assert_builtin_reports_available_test_cases_when_test_case_is_missing() {
+        let summaries = summaries(vec![
+            single_ignored("pkg::module::some_other_test"),
+            single_ignored("pkg::module::another_test"),
+        ]);
+
+        let panic_message = capture_assertion_panic(|| {
+            assert_builtin(&summaries, "missing_test", BuiltinName::range_check, 1);
+        });
+
+        assert_stdout_contains(
+            panic_message,
+            indoc! {r"
+        Builtin assertion failed: test case `missing_test` was not found. Available test cases:
+         - pkg::module::some_other_test
+         - pkg::module::another_test
+        "},
+        );
+    }
+
+    #[test]
+    fn assert_builtin_failure_shows_expected_and_actual() {
+        let test = test_case!(indoc!(
+            r"
+            #[test]
+            fn bitwise_diagnostics() {
+                let _bitwise = 1_u8 & 1_u8;
+                assert(1 == 1, 'error message');
+            }
+        "
+        ));
+
+        let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+        assert_passed(&result);
+
+        let panic_message = capture_assertion_panic(|| {
+            assert_builtin(&result, "bitwise_diagnostics", BuiltinName::bitwise, 2);
+        });
+
+        assert_stdout_contains(
+            panic_message,
+            indoc! {r"
+        Builtin assertion failed for test case `bitwise_diagnostics` (builtin `bitwise`).
+        expected: 2
+        actual:   1
+        "},
+        );
     }
 }
