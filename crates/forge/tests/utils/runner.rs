@@ -9,10 +9,9 @@ use assert_fs::{
 use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, SyscallUsage};
 use cairo_vm::types::builtin_name::BuiltinName;
 use camino::Utf8PathBuf;
-use forge_runner::{
-    test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
-    test_target_summary::TestTargetSummary,
-};
+use forge_runner::test_case_summary::Single;
+use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
+use forge_runner::test_target_summary::TestTargetSummary;
 use foundry_ui::UI;
 use indoc::formatdoc;
 use scarb_api::metadata::metadata_for_dir;
@@ -29,6 +28,12 @@ use std::{
     process::{Command, Stdio},
     str::FromStr,
 };
+
+// Allowed absolute gas differences when `non_exact_gas_assertions` is enabled.
+// TODO(#4516): Investigate and potentially tighten these gas assertion margins
+const MARGIN_L1_GAS: u64 = 10;
+const MARGIN_L1_DATA_GAS: u64 = 10;
+const MARGIN_L2_GAS: u64 = 200_000;
 
 /// Represents a dependency of a Cairo project
 #[derive(Debug, Clone)]
@@ -266,6 +271,25 @@ pub fn assert_failed(result: &[TestTargetSummary]) {
     );
 }
 
+/// Runs an assertion, expects it to panic, and returns the panic message.
+///
+/// This deliberately does not silence the global panic hook. Integration tests run in parallel and
+/// `std::panic::set_hook`/`take_hook` are process-global, so swapping them could suppress or leak
+/// past unrelated failures. The panic backtrace printed to stderr is only cosmetic noise for these
+/// passing tests.
+pub fn capture_assertion_panic(assertion: impl FnOnce()) -> String {
+    let payload = std::panic::catch_unwind(std::panic::AssertUnwindSafe(assertion))
+        .expect_err("assertion should panic");
+
+    if let Some(message) = payload.downcast_ref::<String>() {
+        message.clone()
+    } else if let Some(message) = payload.downcast_ref::<&str>() {
+        (*message).to_string()
+    } else {
+        panic!("Unexpected panic payload type. Expected `String` or `&str`.");
+    }
+}
+
 pub fn assert_case_output_contains(
     result: &[TestTargetSummary],
     test_case_name: &str,
@@ -292,23 +316,61 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
 
     let result = TestCase::find_test_result(result);
 
-    assert!(result.test_case_summaries.iter().any(|any_case| {
-        match any_case {
-            AnyTestCaseSummary::Fuzzing(_) => {
-                panic!("Cannot use assert_gas! for fuzzing tests")
-            }
-            AnyTestCaseSummary::Single(case) => match case {
-                TestCaseSummary::Passed { gas_info: gas, .. } => {
-                    assert_gas_with_margin(gas.gas_used, asserted_gas)
-                        && any_case
-                            .name()
-                            .unwrap()
-                            .ends_with(test_name_suffix.as_str())
-                }
-                _ => false,
-            },
+    let any_case = result
+        .test_case_summaries
+        .iter()
+        .find(|any_case| {
+            any_case
+                .name()
+                .is_some_and(|name| name.ends_with(test_name_suffix.as_str()))
+        })
+        .unwrap_or_else(|| {
+            let available_test_cases = result
+                .test_case_summaries
+                .iter()
+                .filter_map(AnyTestCaseSummary::name)
+                .map(|name| format!(" - {name}"))
+                .collect::<Vec<_>>()
+                .join("\n");
+
+            panic!(
+                "Gas assertion failed: test case `{test_case_name}` was not found. Available test cases:\n{available_test_cases}"
+            )
+        });
+
+    match any_case {
+        AnyTestCaseSummary::Fuzzing(_) => {
+            panic!("Cannot use assert_gas! for fuzzing tests")
         }
-    }));
+        AnyTestCaseSummary::Single(case) => {
+            if let TestCaseSummary::Passed {
+                name,
+                gas_info: gas,
+                ..
+            } = case
+            {
+                let actual_gas = gas.gas_used;
+
+                if !assert_gas_with_margin(actual_gas, asserted_gas) {
+                    let diff = gas_vector_abs_diff(&actual_gas, &asserted_gas);
+                    panic!(
+                        "Gas assertion failed for test case `{name}`.\nexpected: {}\nactual:   {}\ndiff:     {}{}",
+                        format_gas_vector(&asserted_gas),
+                        format_gas_vector(&actual_gas),
+                        format_gas_vector(&diff),
+                        gas_assertion_margin_message(),
+                    );
+                }
+            } else {
+                // The case was located by matching on its name, so `name()` is always `Some`.
+                let name = any_case.name().expect("matched test case must have a name");
+                panic!(
+                    "Gas assertion failed for test case `{name}`: expected passed test case with gas information, but test case was {}",
+                    test_case_status(case)
+                );
+            }
+        }
+    }
 }
 
 // This logic is used to assert exact gas values in CI for the minimal supported Scarb version
@@ -317,7 +379,9 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
 fn assert_gas_with_margin(gas: GasVector, asserted_gas: GasVector) -> bool {
     if cfg!(feature = "non_exact_gas_assertions") {
         let diff = gas_vector_abs_diff(&gas, &asserted_gas);
-        diff.l1_gas.0 <= 10 && diff.l1_data_gas.0 <= 10 && diff.l2_gas.0 <= 200_000
+        diff.l1_gas.0 <= MARGIN_L1_GAS
+            && diff.l1_data_gas.0 <= MARGIN_L1_DATA_GAS
+            && diff.l2_gas.0 <= MARGIN_L2_GAS
     } else {
         gas == asserted_gas
     }
@@ -328,6 +392,33 @@ fn gas_vector_abs_diff(a: &GasVector, b: &GasVector) -> GasVector {
         l1_gas: GasAmount(a.l1_gas.0.abs_diff(b.l1_gas.0)),
         l1_data_gas: GasAmount(a.l1_data_gas.0.abs_diff(b.l1_data_gas.0)),
         l2_gas: GasAmount(a.l2_gas.0.abs_diff(b.l2_gas.0)),
+    }
+}
+
+fn format_gas_vector(gas: &GasVector) -> String {
+    format!(
+        "l1_gas: {}, l1_data_gas: {}, l2_gas: {}",
+        gas.l1_gas.0, gas.l1_data_gas.0, gas.l2_gas.0
+    )
+}
+
+fn gas_assertion_margin_message() -> String {
+    if cfg!(feature = "non_exact_gas_assertions") {
+        format!(
+            "\nallowed diff: l1_gas <= {MARGIN_L1_GAS}, l1_data_gas <= {MARGIN_L1_DATA_GAS}, l2_gas <= {MARGIN_L2_GAS}"
+        )
+    } else {
+        String::new()
+    }
+}
+
+fn test_case_status(case: &TestCaseSummary<Single>) -> &'static str {
+    match case {
+        TestCaseSummary::Passed { .. } => "passed",
+        TestCaseSummary::Failed { .. } => "failed",
+        TestCaseSummary::Ignored { .. } => "ignored",
+        TestCaseSummary::Interrupted { .. } => "interrupted",
+        TestCaseSummary::ExcludedFromPartition { .. } => "excluded from partition",
     }
 }
 
@@ -406,4 +497,169 @@ pub fn assert_builtin(
             },
         }
     }));
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::utils::{
+        runner::{assert_gas, assert_passed, capture_assertion_panic},
+        running_tests::run_test_case,
+    };
+    use forge_runner::{
+        forge_config::ForgeTrackedResource,
+        test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
+        test_target_summary::TestTargetSummary,
+    };
+    use indoc::indoc;
+    use shared::test_utils::output_assert::assert_stdout_contains;
+    use starknet_api::execution_resources::{GasAmount, GasVector};
+
+    #[test]
+    fn assert_gas_failure_shows_gas_diff_and_test_case_name() {
+        let test = test_case!(indoc!(
+            r"
+            #[test]
+            fn gas_assertion_diagnostics() {
+                keccak::keccak_u256s_le_inputs(array![1].span());
+            }
+        "
+        ));
+
+        let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+
+        assert_passed(&result);
+
+        // Intentionally wrong expectation so that `assert_gas` fails and we can inspect the diagnostics.
+        let panic_message = capture_assertion_panic(|| {
+            assert_gas(
+                &result,
+                "gas_assertion_diagnostics",
+                GasVector {
+                    l1_gas: GasAmount(1),
+                    l1_data_gas: GasAmount(2),
+                    l2_gas: GasAmount(3),
+                },
+            );
+        });
+
+        assert_stdout_contains(
+            panic_message.clone(),
+            indoc! {r"
+        Gas assertion failed for test case `test_package_integrationtest::test_case::gas_assertion_diagnostics`.
+        expected: l1_gas: 1, l1_data_gas: 2, l2_gas: 3
+        actual:   l1_gas: [..], l1_data_gas: [..], l2_gas: [..]
+        diff:     l1_gas: [..], l1_data_gas: [..], l2_gas: [..]
+        "},
+        );
+
+        // `diff` must equal the absolute difference between `expected` and `actual`.
+        let actual = parse_gas_line(&panic_message, "actual:");
+        let diff = parse_gas_line(&panic_message, "diff:");
+        assert_eq!(diff.l1_gas.0, actual.l1_gas.0.abs_diff(1));
+        assert_eq!(diff.l1_data_gas.0, actual.l1_data_gas.0.abs_diff(2));
+        assert_eq!(diff.l2_gas.0, actual.l2_gas.0.abs_diff(3));
+    }
+
+    #[test]
+    fn assert_gas_reports_when_test_case_is_missing() {
+        let summaries = summaries(vec![
+            single_ignored("pkg::module::some_other_test"),
+            single_ignored("pkg::module::another_test"),
+        ]);
+
+        let panic_message = capture_assertion_panic(|| {
+            assert_gas(&summaries, "missing_test", GasVector::default());
+        });
+
+        assert_stdout_contains(
+            panic_message,
+            indoc! {r"
+        Gas assertion failed: test case `missing_test` was not found. Available test cases:
+         - pkg::module::some_other_test
+         - pkg::module::another_test
+        "},
+        );
+    }
+
+    #[test]
+    fn assert_gas_rejects_fuzzing_test_case() {
+        let summaries = summaries(vec![fuzzing_ignored("pkg::module::fuzzed")]);
+
+        let panic_message = capture_assertion_panic(|| {
+            assert_gas(&summaries, "fuzzed", GasVector::default());
+        });
+
+        assert_eq!(panic_message, "Cannot use assert_gas! for fuzzing tests");
+    }
+
+    #[test]
+    fn assert_gas_reports_non_passed_test_case() {
+        let summaries = summaries(vec![single_failed("pkg::module::failing")]);
+
+        let panic_message = capture_assertion_panic(|| {
+            assert_gas(&summaries, "failing", GasVector::default());
+        });
+
+        assert_eq!(
+            panic_message,
+            "Gas assertion failed for test case `pkg::module::failing`: expected passed test case with gas information, but test case was failed"
+        );
+    }
+
+    fn summaries(cases: Vec<AnyTestCaseSummary>) -> Vec<TestTargetSummary> {
+        vec![TestTargetSummary {
+            test_case_summaries: cases,
+        }]
+    }
+
+    fn single_failed(name: &str) -> AnyTestCaseSummary {
+        AnyTestCaseSummary::Single(TestCaseSummary::Failed {
+            name: name.to_string(),
+            msg: None,
+            debugging_trace: None,
+            fuzzer_args: Vec::new(),
+            test_statistics: (),
+        })
+    }
+
+    fn single_ignored(name: &str) -> AnyTestCaseSummary {
+        AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
+            name: name.to_string(),
+        })
+    }
+
+    fn fuzzing_ignored(name: &str) -> AnyTestCaseSummary {
+        AnyTestCaseSummary::Fuzzing(TestCaseSummary::Ignored {
+            name: name.to_string(),
+        })
+    }
+
+    /// Parses a `l1_gas: <n>, l1_data_gas: <n>, l2_gas: <n>` line labelled with `label`
+    /// out of an `assert_gas` diagnostic message.
+    fn parse_gas_line(message: &str, label: &str) -> GasVector {
+        let line = message
+            .lines()
+            .find(|line| line.trim_start().starts_with(label))
+            .unwrap_or_else(|| panic!("no `{label}` line found in message:\n{message}"));
+
+        let value = |key: &str| -> u64 {
+            let after = line
+                .split(&format!("{key}: "))
+                .nth(1)
+                .unwrap_or_else(|| panic!("`{key}` not found in line: {line}"));
+            after
+                .split(|c: char| !c.is_ascii_digit())
+                .next()
+                .filter(|s| !s.is_empty())
+                .unwrap_or_else(|| panic!("no number after `{key}` in line: {line}"))
+                .parse()
+                .unwrap()
+        };
+
+        GasVector {
+            l1_gas: GasAmount(value("l1_gas")),
+            l1_data_gas: GasAmount(value("l1_data_gas")),
+            l2_gas: GasAmount(value("l2_gas")),
+        }
+    }
 }
