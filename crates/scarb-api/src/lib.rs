@@ -464,7 +464,7 @@ mod tests {
             !package_matches_version_requirement(
                 &scarb_metadata,
                 "starknet",
-                &VersionReq::parse("2.20").unwrap(),
+                &VersionReq::parse("2.100").unwrap(),
             )
             .unwrap()
         );

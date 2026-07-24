@@ -91,7 +91,6 @@ pub mod HelloStarknetProxy {
 
 #[starknet::contract]
 pub mod HelloStarknet {
-    use core::array::ArrayTrait;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use starknet::syscalls::get_block_hash_syscall;
     use starknet::{SyscallResultTrait, get_block_number};
