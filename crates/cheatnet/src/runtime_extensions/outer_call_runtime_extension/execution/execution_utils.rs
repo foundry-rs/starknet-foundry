@@ -2,12 +2,10 @@ use crate::runtime_extensions::common::sum_syscall_usage;
 use crate::runtime_extensions::forge_runtime_extension::{
     get_nested_calls_syscalls_sierra_gas, get_nested_calls_syscalls_vm_resources,
 };
-use crate::runtime_extensions::outer_call_runtime_extension::rpc::{
-    AddressOrClassHash, from_error, from_non_error,
-};
+use crate::runtime_extensions::outer_call_runtime_extension::rpc::{from_error, from_non_error};
 use crate::state::{CheatedData, CheatnetState};
 use blockifier::execution::call_info::CallInfo;
-use blockifier::execution::entry_point::{CallEntryPoint, CallType, ExecutableCallEntryPoint};
+use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
 
@@ -93,17 +91,12 @@ pub(crate) fn clear_events_and_messages_from_reverted_call(reverted_call: &mut C
 pub(crate) fn exit_error_call(
     error: &EntryPointExecutionError,
     cheatnet_state: &mut CheatnetState,
-    entry_point: &ExecutableCallEntryPoint,
 ) {
-    let identifier = match entry_point.call_type {
-        CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
-        CallType::Delegate => AddressOrClassHash::ClassHash(entry_point.class_hash),
-    };
     let trace_data = &mut cheatnet_state.trace_data;
 
     // In case of a revert, clear all events and messages emitted by the current call.
     trace_data.clear_current_call_events_and_messages();
 
-    trace_data.update_current_call_result(from_error(error, &identifier));
+    trace_data.update_current_call_result(from_error(error));
     trace_data.exit_nested_call();
 }

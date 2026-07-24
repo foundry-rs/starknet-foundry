@@ -23,9 +23,7 @@ use starknet_api::core::ContractAddress;
 use starknet_api::execution_resources::GasAmount;
 use starknet_types_core::felt::Felt;
 
-use crate::runtime_extensions::outer_call_runtime_extension::rpc::{
-    AddressOrClassHash, call_entry_point,
-};
+use crate::runtime_extensions::outer_call_runtime_extension::rpc::call_entry_point;
 
 use super::cheatable_starknet_runtime_extension::{
     CheatableStarknetRuntime, CheatableStarknetRuntimeError,
@@ -34,7 +32,6 @@ use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::TEST_ADDRESS;
 
 pub mod execution;
-pub mod panic_parser;
 pub mod rpc;
 
 pub struct OuterCallExtension<'a> {
@@ -128,13 +125,7 @@ fn call_contract_syscall(
         initial_gas: *remaining_gas,
     };
 
-    let res = call_entry_point(
-        syscall_handler,
-        cheatnet_state,
-        entry_point,
-        &AddressOrClassHash::ContractAddress(contract_address),
-        remaining_gas,
-    )?;
+    let res = call_entry_point(syscall_handler, cheatnet_state, entry_point, remaining_gas)?;
 
     let segment = create_retdata_segment(vm, syscall_handler, &res.ret_data)?;
     Ok(CallContractResponse { segment })
@@ -161,13 +152,7 @@ fn library_call_syscall(
         initial_gas: *remaining_gas,
     };
 
-    let res = call_entry_point(
-        syscall_handler,
-        cheatnet_state,
-        entry_point,
-        &AddressOrClassHash::ClassHash(class_hash),
-        remaining_gas,
-    )?;
+    let res = call_entry_point(syscall_handler, cheatnet_state, entry_point, remaining_gas)?;
 
     let segment = create_retdata_segment(vm, syscall_handler, &res.ret_data)?;
     Ok(LibraryCallResponse { segment })
