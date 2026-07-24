@@ -47,7 +47,10 @@ pub(crate) fn test_runner<T: AsRef<Path>>(temp_dir: T) -> SnapboxCommand {
 /// This is useful for testing behavior that occurs only when the `--run-native` flag is passed.
 /// If the behavior is not specific to native execution, use `test_runner` instead.
 pub(crate) fn test_runner_native<T: AsRef<Path>>(temp_dir: T) -> SnapboxCommand {
-    runner(temp_dir).arg("test").arg("--run-native")
+    runner(temp_dir)
+        .arg("test")
+        .arg("--run-native")
+        .env("SCARB_IGNORE_CAIRO_VERSION", "true")
 }
 
 /// Returns a command that runs `snforge test` in the given temporary directory.
@@ -55,7 +58,9 @@ pub(crate) fn test_runner_native<T: AsRef<Path>>(temp_dir: T) -> SnapboxCommand 
 /// This is useful for testing behavior that occurs only in the VM execution.
 /// If the behavior is not specific to VM execution, use `test_runner` instead.
 pub(crate) fn test_runner_vm<T: AsRef<Path>>(temp_dir: T) -> SnapboxCommand {
-    runner(temp_dir).arg("test")
+    runner(temp_dir)
+        .arg("test")
+        .env("SCARB_IGNORE_CAIRO_VERSION", "true")
 }
 
 pub(crate) static BASE_FILE_PATTERNS: &[&str] =
