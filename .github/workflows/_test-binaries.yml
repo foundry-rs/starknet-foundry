@@ -16,8 +16,8 @@ jobs:
   test-binary:
     name: Test binary
     runs-on: ${{ matrix.os }}
-    env:
-      SCARB_IGNORE_CAIRO_VERSION: "true"
+    # env:
+    #   SCARB_IGNORE_CAIRO_VERSION: "true"
 
     strategy:
       fail-fast: true

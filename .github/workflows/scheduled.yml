@@ -36,8 +36,8 @@ jobs:
     if: github.event.repository.fork == false
     runs-on: ubuntu-latest
     needs: get-scarb-versions
-    env:
-      SCARB_IGNORE_CAIRO_VERSION: "true"
+    # env:
+    #   SCARB_IGNORE_CAIRO_VERSION: "true"
     strategy:
       fail-fast: false
       matrix:
@@ -67,8 +67,8 @@ jobs:
     if: github.event.repository.fork == false
     runs-on: ubuntu-latest
     needs: get-scarb-versions
-    env:
-      SCARB_IGNORE_CAIRO_VERSION: "true"
+    # env:
+    #   SCARB_IGNORE_CAIRO_VERSION: "true"
     strategy:
       fail-fast: false
       matrix:
@@ -126,8 +126,8 @@ jobs:
     if: github.event.repository.fork == false
     runs-on: ubuntu-latest
     needs: get-scarb-versions
-    env:
-      SCARB_IGNORE_CAIRO_VERSION: "true"
+    # env:
+    #   SCARB_IGNORE_CAIRO_VERSION: "true"
     strategy:
       fail-fast: false
       matrix:

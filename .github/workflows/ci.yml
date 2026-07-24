@@ -41,8 +41,8 @@ jobs:
     # `native-api` is also excluded as there are no tests and it requires extra setup to compile.
     name: Workspace Tests
     runs-on: ubuntu-latest
-    env:
-      SCARB_IGNORE_CAIRO_VERSION: "true"
+    # env:
+    #   SCARB_IGNORE_CAIRO_VERSION: "true"
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-tools
@@ -127,8 +127,8 @@ jobs:
     name: Test Forge / Integration Tests
     runs-on: [ ubuntu-latest ]
     needs: [ build-test-forge-nextest-archive ]
-    env:
-      SCARB_IGNORE_CAIRO_VERSION: "true"
+    # env:
+    #   SCARB_IGNORE_CAIRO_VERSION: "true"
     strategy:
       fail-fast: false
       matrix:
@@ -151,8 +151,8 @@ jobs:
     name: Test Forge / Integration Tests (native)
     runs-on: [ ubuntu-latest ]
     needs: [ build-test-forge-nextest-archive-native ]
-    env:
-      SCARB_IGNORE_CAIRO_VERSION: "true"
+    # env:
+    #   SCARB_IGNORE_CAIRO_VERSION: "true"
     strategy:
       fail-fast: false
       matrix:
@@ -175,8 +175,8 @@ jobs:
     name: Test Forge / E2E Tests
     runs-on: ubuntu-latest
     needs: [ build-test-forge-nextest-archive ]
-    env:
-      SCARB_IGNORE_CAIRO_VERSION: "true"
+    # env:
+    #   SCARB_IGNORE_CAIRO_VERSION: "true"
     strategy:
       fail-fast: false
       matrix:
@@ -231,8 +231,8 @@ jobs:
     name: Test Forge / E2E Tests (native)
     runs-on: ubuntu-latest
     needs: [ build-test-forge-nextest-archive-native ]
-    env:
-      SCARB_IGNORE_CAIRO_VERSION: "true"
+    # env:
+    #   SCARB_IGNORE_CAIRO_VERSION: "true"
     strategy:
       fail-fast: false
       matrix:
@@ -288,8 +288,8 @@ jobs:
     name: Test Forge / E2E Snap (Scarb ${{ matrix.version }})
     runs-on: ubuntu-latest
     needs: get-scarb-versions
-    env:
-      SCARB_IGNORE_CAIRO_VERSION: "true"
+    # env:
+    #   SCARB_IGNORE_CAIRO_VERSION: "true"
     strategy:
       fail-fast: false
       matrix:
@@ -358,8 +358,8 @@ jobs:
   test-forge-scarb-plugin:
     name: Test Forge Scarb Plugin
     runs-on: ubuntu-latest
-    env:
-      SCARB_IGNORE_CAIRO_VERSION: "true"
+    # env:
+    #   SCARB_IGNORE_CAIRO_VERSION: "true"
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-tools
@@ -396,8 +396,8 @@ jobs:
     name: Test Cast
     runs-on: ubuntu-latest
     needs: [ build-test-cast-nextest-archive ]
-    env:
-      SCARB_IGNORE_CAIRO_VERSION: "true"
+    # env:
+    #   SCARB_IGNORE_CAIRO_VERSION: "true"
     strategy:
       fail-fast: false
       matrix:
@@ -421,8 +421,8 @@ jobs:
     name: Test Ledger
     runs-on: ubuntu-latest
     container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:5.3.16
-    env:
-      SCARB_IGNORE_CAIRO_VERSION: "true"
+    # env:
+    #   SCARB_IGNORE_CAIRO_VERSION: "true"
 
     steps:
       - uses: actions/checkout@v7
@@ -498,8 +498,8 @@ jobs:
   build-docs:
     name: Test Building Docs
     runs-on: ubuntu-latest
-    env:
-      SCARB_IGNORE_CAIRO_VERSION: "true"
+    # env:
+    #   SCARB_IGNORE_CAIRO_VERSION: "true"
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-tools
