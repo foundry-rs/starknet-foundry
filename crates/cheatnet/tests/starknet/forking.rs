@@ -651,6 +651,6 @@ fn test_calling_nonexistent_url() {
 
     assert_error(
         output,
-        "Unable to reach the node. Check your internet connection and node url",
+        "Failed to read from state: Unable to reach the node. Check your internet connection and node url.",
     );
 }
