@@ -1,9 +1,8 @@
 use crate::response::cast_message::SncastCommandMessage;
-use conversions::serde::serialize::CairoSerialize;
 use foundry_ui::styling;
 use serde::Serialize;
 
-#[derive(Serialize, CairoSerialize, Clone)]
+#[derive(Serialize, Clone)]
 pub enum FinalityStatus {
     Received,
     Candidate,
@@ -12,13 +11,13 @@ pub enum FinalityStatus {
     AcceptedOnL1,
 }
 
-#[derive(Serialize, CairoSerialize, Clone)]
+#[derive(Serialize, Clone)]
 pub enum ExecutionStatus {
     Succeeded,
     Reverted,
 }
 
-#[derive(Serialize, CairoSerialize, Clone)]
+#[derive(Serialize, Clone)]
 pub struct TransactionStatusResponse {
     pub finality_status: FinalityStatus,
     pub execution_status: Option<ExecutionStatus>,

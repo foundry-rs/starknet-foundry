@@ -5,7 +5,7 @@ use crate::response::dry_run::DryRunResponse;
 use anyhow::Error;
 use camino::Utf8PathBuf;
 use conversions::string::IntoHexStr;
-use conversions::{IntoConv, padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
+use conversions::{IntoConv, padded_felt::PaddedFelt};
 use foundry_ui::{Message, styling};
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize};
@@ -14,7 +14,7 @@ use starknet_rust::core::types::contract::{AbiConstructor, AbiEntry};
 use starknet_types_core::felt::Felt;
 use std::fmt::Write;
 
-#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct DeclareTransactionResponse {
     pub class_hash: PaddedFelt,
     pub transaction_hash: PaddedFelt,
@@ -31,12 +31,12 @@ impl SncastCommandMessage for DeclareTransactionResponse {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct AlreadyDeclaredResponse {
     pub class_hash: PaddedFelt,
 }
 
-#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 #[serde(tag = "status")]
 pub enum DeclareResponse {
     AlreadyDeclared(AlreadyDeclaredResponse),

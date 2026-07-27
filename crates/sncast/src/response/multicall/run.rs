@@ -3,18 +3,18 @@ use crate::{
     helpers::block_explorer::LinkProvider,
     response::{dry_run::DryRunResponse, explorer_link::OutputLink, invoke::InvokeResponse},
 };
+use conversions::padded_felt::PaddedFelt;
 use conversions::string::IntoHexStr;
-use conversions::{padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
 use foundry_ui::styling;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum MulticallRunResponse {
     Transaction(MulticallRunTransactionResponse),
     DryRun(DryRunResponse),
 }
 
-#[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct MulticallRunTransactionResponse {
     pub transaction_hash: PaddedFelt,
 }

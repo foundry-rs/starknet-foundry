@@ -9,7 +9,6 @@ use anyhow::{Context, Error, Result, anyhow, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use configuration::Override;
-use conversions::serde::serialize::CairoSerialize;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::RngCore;
 use rand::rngs::OsRng;
@@ -732,18 +731,18 @@ pub fn get_block_id(value: &str) -> Result<BlockId> {
     }
 }
 
-#[derive(Debug, CairoSerialize)]
+#[derive(Debug)]
 pub struct ErrorData {
     pub data: ByteArray,
 }
 
-#[derive(Error, Debug, CairoSerialize)]
+#[derive(Error, Debug)]
 pub enum TransactionError {
     #[error("Transaction has been reverted = {}", .0.data)]
     Reverted(ErrorData),
 }
 
-#[derive(Error, Debug, CairoSerialize)]
+#[derive(Error, Debug)]
 pub enum WaitForTransactionError {
     #[error(transparent)]
     TransactionError(TransactionError),
