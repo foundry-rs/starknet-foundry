@@ -89,20 +89,6 @@ impl CallFailure {
     }
 }
 
-pub fn from_non_error(call_info: &CallInfo) -> Result<CallSuccess, CallFailure> {
-    let return_data = &call_info.execution.retdata.0;
-
-    if call_info.execution.failed {
-        return Err(CallFailure::Recoverable {
-            panic_data: return_data.clone(),
-        });
-    }
-
-    Ok(CallSuccess {
-        ret_data: return_data.clone(),
-    })
-}
-
 pub fn call_l1_handler(
     syscall_handler: &mut SyscallHintProcessor,
     cheatnet_state: &mut CheatnetState,
