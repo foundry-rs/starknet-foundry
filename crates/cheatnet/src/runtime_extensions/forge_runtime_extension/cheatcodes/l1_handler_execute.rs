@@ -1,5 +1,7 @@
 use crate::{
-    runtime_extensions::outer_call_runtime_extension::rpc::{CallResult, call_l1_handler},
+    runtime_extensions::outer_call_runtime_extension::rpc::{
+        CallEntryPointResult, call_l1_handler,
+    },
     state::CheatnetState,
 };
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
@@ -13,7 +15,7 @@ pub fn l1_handler_execute(
     function_selector: EntryPointSelector,
     from_address: Felt,
     payload: &[Felt],
-) -> CallResult {
+) -> CallEntryPointResult {
     let mut calldata = vec![from_address];
     calldata.extend_from_slice(payload);
 
