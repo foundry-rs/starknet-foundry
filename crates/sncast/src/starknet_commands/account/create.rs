@@ -109,12 +109,15 @@ pub async fn create(
     check_class_hash_exists(provider, class_hash).await?;
 
     let private_key = match (&create.private_key, &create.private_key_file_path) {
-        (Some(key), _) => Some(*key),
+        (Some(key), None) => Some(*key),
         (None, Some(path)) => Some(
             get_private_key_from_file(path)
                 .with_context(|| format!("Failed to obtain private key from the file {path}"))?,
         ),
         (None, None) => None,
+        (Some(_), Some(_)) => {
+            unreachable!("`--private-key` and `--private-key-file` are mutually exclusive")
+        }
     };
 
     let (account_json, estimated_fee) = generate_account(
