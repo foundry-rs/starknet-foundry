@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
+- Re-enabled `StarkScan` as a supported `block-explorer` option (currently available only for `mainnet`).
 - `get balance` command for undeployed accounts
 
 ## [0.62.1] - 2026-07-03
