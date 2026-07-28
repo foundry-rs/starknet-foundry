@@ -110,7 +110,7 @@ The panic messages look like this:
 
 `assert_gas`:
 ```
-Gas assertion failed for test case `some_test`.
+Gas assertion failed for test case `test_package_integrationtest::test_case::some_test`.
 expected: l1_gas: 0, l1_data_gas: 0, l2_gas: 40000
 actual:   l1_gas: 0, l1_data_gas: 0, l2_gas: 42000
 diff:     l1_gas: 0, l1_data_gas: 0, l2_gas: 2000
@@ -118,12 +118,12 @@ diff:     l1_gas: 0, l1_data_gas: 0, l2_gas: 2000
 
 `assert_syscall` / `assert_builtin`:
 ```
-Syscall assertion failed for test case `keccak` (syscall `Keccak`).
+Syscall assertion failed for test case `test_package_integrationtest::test_case::keccak` (syscall `Keccak`).
 expected: 1
 actual:   2
 ```
 ```
-Builtin assertion failed for test case `range_check` (builtin `range_check`).
+Builtin assertion failed for test case `test_package_integrationtest::test_case::range_check` (builtin `range_check`).
 expected: 3
 actual:   4
 ```
@@ -133,7 +133,7 @@ The `actual:` line is already normalized to the value the source should hold —
 
 ### 3. Rewrite the matching expectation
 
-Locate the assertion by the test case name from the message (it is the string argument to the
+Locate the assertion by the full test case path from the message (it is the string argument to the
 helper), then replace the numbers with the `actual:` values.
 
 - `assert_gas`: update the three `GasAmount(...)` values in the `GasVector { .. }` literal.
@@ -142,7 +142,8 @@ helper), then replace the numbers with the `actual:` values.
 
 Example — `assert_gas`:
 ```rust
-// before (from the message above: test case `some_test`, actual l2_gas: 42000)
+// before (from the message above: test case `test_package_integrationtest::test_case::some_test`,
+// actual l2_gas: 42000)
 assert_gas(
     &result,
     "some_test",
