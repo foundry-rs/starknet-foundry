@@ -30,7 +30,7 @@ the first failing one panics per run).
 
 ## Scope
 
-Edit only expectation literals in:
+Edit only expectation literals and directly related calculation comments in:
 
 - `crates/forge/tests/integration/gas.rs` — `assert_gas` calls (`GasVector { l1_gas, l1_data_gas, l2_gas }`)
 - `crates/forge/tests/integration/resources.rs` — `assert_syscall` / `assert_builtin` counts
@@ -42,7 +42,7 @@ Do not modify:
 - production code;
 - files outside this list.
 
-You are only updating numeric expectations.
+You are only updating numeric expectations and comments that explain those exact expectations.
 
 ## Repository and instruction precedence
 
@@ -133,12 +133,24 @@ The `actual:` line is already normalized to the value the source should hold —
 
 ### 3. Rewrite the matching expectation
 
-Locate the assertion by the full test case path from the message (it is the string argument to the
-helper), then replace the numbers with the `actual:` values.
+Use the full test case path from the message to identify the exact Cairo test function and matching
+Rust assertion. Helper calls may still pass only the final path segment, such as `"some_test"`; use
+that short argument only after the full path has disambiguated the case. Then replace the numbers
+with the `actual:` values.
 
 - `assert_gas`: update the three `GasAmount(...)` values in the `GasVector { .. }` literal.
 - `assert_syscall` / `assert_builtin`: update the last numeric argument.
 - `available_gas.rs`: update the number after `l2_gas: ~` inside the expected error string.
+
+If nearby comments explain the expected value, update them in the same pass. This is especially
+important for comments that derive syscall or builtin gas from Blockifier versioned constants, for
+example `n_steps * step_gas_cost + sum(builtin_count * builtin_gas_cost)`. Use the versioned
+constants file referenced by the test comments, or the current Blockifier version from `Cargo.lock`
+when the comments are stale after a dependency bump. Update the formula inputs, computed totals,
+Blockifier/versioned-constants version labels, and source links so the comments justify the new
+expectation. If the expectation can be updated from `actual:` but the matching calculation is not
+clear from versioned constants, update the expectation and flag the stale/unclear comment instead of
+inventing a formula.
 
 Example — `assert_gas`:
 ```rust
