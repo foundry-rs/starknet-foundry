@@ -1,5 +1,14 @@
 # `get balance`
-Fetch balance of the account for specified token.
+Fetch balance of the account or contract for specified token.
+
+## `--contract-address <CONTRACT_ADDRESS>`
+Optional.
+
+Contract address to check the balance for. 
+Cannot be used together with `--account` or an account from `snfoundry.toml`.
+It can be either:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../../starknet/aliases.md).
 
 ## `--token, -t <TOKEN>`
 Optional.

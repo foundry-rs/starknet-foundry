@@ -1,5 +1,5 @@
-use crate::starknet_commands::utils::felt_or_id::TokenAddress;
-use anyhow::{Error, Result};
+use crate::starknet_commands::utils::felt_or_id::{ContractAddress, TokenAddress};
+use anyhow::{Context, Error, Result, bail};
 use clap::Args;
 use primitive_types::U256;
 use sncast::helpers::command::process_command_result;
@@ -9,7 +9,7 @@ use sncast::helpers::token::Token;
 use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
 use sncast::response::get::balance::BalanceResponse;
 use sncast::response::ui::UI;
-use sncast::{get_account, get_block_id};
+use sncast::{get_account, get_account_data_from_accounts_file, get_block_id, get_chain_id};
 use starknet_rust::{
     core::{types::FunctionCall, utils::get_selector_from_name},
     providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport},
@@ -63,6 +63,10 @@ pub struct Balance {
     #[command(flatten)]
     pub token_identifier: TokenIdentifier,
 
+    /// Contract address to check balance for (hex, decimal, or @alias from snfoundry.toml).
+    #[arg(long)]
+    pub contract_address: Option<ContractAddress>,
+
     /// Block identifier on which balance should be fetched.
     /// Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string)
     /// and block number (u64)
@@ -74,14 +78,40 @@ pub struct Balance {
 }
 
 pub async fn balance(balance: Balance, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCode> {
-    let provider = balance.rpc.get_provider(&config, ui).await?;
-    let account = get_account(&config, &provider, &balance.rpc, ui).await?;
+    if balance.contract_address.is_some() && !config.account.is_empty() {
+        bail!("`--account` and `--contract-address` cannot be used together");
+    }
 
-    let result = get_balance(account.address(), &provider, &balance, &config)
+    let provider = balance.rpc.get_provider(&config, ui).await?;
+    let account_address = match &balance.contract_address {
+        Some(contract_address) => contract_address.resolve(&config)?,
+        None => get_account_address(&config, &provider, &balance.rpc, ui).await?,
+    };
+
+    let result = get_balance(account_address, &provider, &balance, &config)
         .await
         .map_err(handle_starknet_command_error);
 
     Ok(process_command_result("get balance", result, ui, None))
+}
+
+async fn get_account_address(
+    config: &CastConfig,
+    provider: &JsonRpcClient<HttpTransport>,
+    rpc_args: &RpcArgs,
+    ui: &UI,
+) -> anyhow::Result<Felt> {
+    if config.keystore.is_some() || sncast::helpers::account::is_devnet_account(&config.account) {
+        return Ok(get_account(config, provider, rpc_args, ui).await?.address());
+    }
+
+    let chain_id = get_chain_id(provider).await?;
+    let account_data =
+        get_account_data_from_accounts_file(&config.account, chain_id, &config.accounts_file)?;
+
+    account_data
+        .address
+        .context("Failed to get account address")
 }
 
 pub async fn get_balance(

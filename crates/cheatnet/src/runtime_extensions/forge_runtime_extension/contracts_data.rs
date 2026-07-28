@@ -13,6 +13,7 @@ use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::hash::BuildHasher;
+use std::path::Path;
 
 type ContractName = String;
 type ModulePath = String;
@@ -23,6 +24,8 @@ pub struct ContractsData {
     pub contracts: HashMap<ModulePath, ContractData>,
     pub class_hashes: BiMap<ModulePath, ClassHash>,
     pub selectors: HashMap<EntryPointSelector, FunctionName>,
+    #[cfg(feature = "cairo-native")]
+    pub run_native: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -41,7 +44,8 @@ pub enum ContractResolutionError {
 }
 
 impl ContractsData {
-    pub fn try_from(contracts: ScarbContractsData) -> Result<Self> {
+    #[cfg_attr(not(feature = "cairo-native"), expect(unused_variables))]
+    pub fn try_from(contracts: ScarbContractsData, run_native: bool) -> Result<Self> {
         let parsed_contracts: HashMap<ModulePath, SierraClass> = contracts
             .par_iter()
             .map(|(module_path, contract)| {
@@ -85,6 +89,8 @@ impl ContractsData {
             contracts,
             class_hashes,
             selectors,
+            #[cfg(feature = "cairo-native")]
+            run_native,
         })
     }
 
@@ -136,6 +142,23 @@ impl ContractsData {
     pub fn get_contract_name(&self, class_hash: &ClassHash) -> Option<ContractName> {
         let module_path = self.class_hashes.get_by_right(class_hash)?;
         Some(contract_name_from_module_path(module_path).to_string())
+    }
+
+    /// Finds an already loaded package contract by its Sierra artifact path.
+    ///
+    /// Returns `None` if the user-provided path cannot be resolved, so callers can
+    /// fall back to their usual file handling and preserve existing error messages.
+    #[must_use]
+    pub fn find_by_sierra_path(&self, sierra_path: &Path) -> Option<&ContractData> {
+        let sierra_path = sierra_path.canonicalize().ok()?;
+
+        self.contracts.values().find(|contract| {
+            contract
+                .source_sierra_path
+                .as_std_path()
+                .canonicalize()
+                .is_ok_and(|path| path == sierra_path)
+        })
     }
 
     #[must_use]

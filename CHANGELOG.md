@@ -13,8 +13,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `declare!` macro for declaring contracts using Cairo paths. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library/declare_macro.html).
 - Debugging traces now display the class hash for forked contracts.
+- `declare_from_file` function for declaring contracts from Sierra contract class JSON files. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library/declare_from_file.html).
+
+#### Changed
+
+- `Actual` and `Expected` panic data in the `#[should_panic]` mismatch message now labels rendered values inline, making it clear whether each value is a `ByteArray` or a `felt252`.
+- Minimal recommended `Scarb` version is now `2.18.0` (updated from `2.17.0`)
+- Re-enabled the `add-types-debug-info = true` requirement for `--launch-debugger` on Scarb `>= 2.20.0`
+
+#### Fixed
+
+- Malformed byte array panic data (e.g. an untrusted words length) no longer causes a crash when matching `#[should_panic]` expected data. Additionally, invalid byte array serializations (e.g. bad `pending_word_len`) are now rejected instead of rendered as a corrupted string.
 
 ### Cast
+
+#### Added
+
+- `--contract-address` flag to `get balance` command, allowing to check balance for any contract, not only accounts
 
 #### Changed
 
@@ -23,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - Re-enabled `StarkScan` as a supported `block-explorer` option (currently available only for `mainnet`).
+- `get balance` command for undeployed accounts
 
 ## [0.62.1] - 2026-07-03
 
