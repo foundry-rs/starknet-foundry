@@ -178,12 +178,12 @@ cargo test -p forge --test main integration::available_gas -- --test-threads=1
 
 Then show the user `git diff` of the three files so they can review before committing.
 
-## Do NOT touch the diagnostics tests
+## Do NOT touch the assertion-helper diagnostics tests
 
-Some tests deliberately assert on wrong values to verify the failure output itself. Never "fix"
-these — they are supposed to fail-then-be-caught internally:
+Some assertion-helper tests deliberately assert on wrong values to verify the failure output itself.
+Never "fix" these — they are supposed to fail-then-be-caught internally:
 
-- In `gas.rs`: `assert_gas_failure_shows_gas_diff_and_test_case_name`,
+- In `crates/forge/tests/utils/runner.rs`: `assert_gas_failure_shows_gas_diff_and_test_case_name`,
   `assert_gas_reports_when_test_case_is_missing`, `assert_gas_rejects_fuzzing_test_case`,
   `assert_gas_reports_non_passed_test_case`.
 
