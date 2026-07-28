@@ -36,19 +36,17 @@ pub enum DevnetDetectionError {
 }
 
 pub async fn detect_devnet_url() -> Result<Url, DevnetDetectionError> {
-    detect_devnet_from_processes().await
+    detect_devnet_from_processes(find_devnet_process_info(), is_devnet_url_reachable).await
 }
 
 #[must_use]
 pub async fn is_devnet_running() -> bool {
-    detect_devnet_from_processes().await.is_ok()
+    detect_devnet_from_processes(find_devnet_process_info(), is_devnet_url_reachable)
+        .await
+        .is_ok()
 }
 
-async fn detect_devnet_from_processes() -> Result<Url, DevnetDetectionError> {
-    detect_devnet_url_from_process_info(find_devnet_process_info(), is_devnet_url_reachable).await
-}
-
-async fn detect_devnet_url_from_process_info<F, Fut>(
+async fn detect_devnet_from_processes<F, Fut>(
     process_info: Result<ProcessInfo, DevnetDetectionError>,
     is_devnet_url_reachable: F,
 ) -> Result<Url, DevnetDetectionError>
@@ -122,7 +120,7 @@ mod tests {
 
     #[tokio::test]
     async fn detects_reachable_process() {
-        let result = detect_devnet_url_from_process_info(
+        let result = detect_devnet_from_processes(
             Ok(ProcessInfo {
                 host: "127.0.0.1".to_string(),
                 port: 5051,
@@ -139,7 +137,7 @@ mod tests {
 
     #[tokio::test]
     async fn returns_process_not_reachable_for_unreachable_process() {
-        let result = detect_devnet_url_from_process_info(
+        let result = detect_devnet_from_processes(
             Ok(ProcessInfo {
                 host: "127.0.0.1".to_string(),
                 port: 5051,
@@ -156,11 +154,11 @@ mod tests {
 
     #[tokio::test]
     async fn falls_back_to_default_url_when_no_process_is_found() {
-        let result = detect_devnet_url_from_process_info(
-            Err(DevnetDetectionError::NoInstance),
-            |_, _| async { true },
-        )
-        .await;
+        let result =
+            detect_devnet_from_processes(Err(DevnetDetectionError::NoInstance), |_, _| async {
+                true
+            })
+            .await;
 
         assert_eq!(
             result.unwrap(),
@@ -170,11 +168,11 @@ mod tests {
 
     #[tokio::test]
     async fn falls_back_to_default_url_when_process_detection_command_fails() {
-        let result = detect_devnet_url_from_process_info(
-            Err(DevnetDetectionError::CommandFailed),
-            |_, _| async { true },
-        )
-        .await;
+        let result =
+            detect_devnet_from_processes(Err(DevnetDetectionError::CommandFailed), |_, _| async {
+                true
+            })
+            .await;
 
         assert_eq!(
             result.unwrap(),
@@ -184,11 +182,11 @@ mod tests {
 
     #[tokio::test]
     async fn returns_no_instance_when_no_process_and_default_url_is_unreachable() {
-        let result = detect_devnet_url_from_process_info(
-            Err(DevnetDetectionError::NoInstance),
-            |_, _| async { false },
-        )
-        .await;
+        let result =
+            detect_devnet_from_processes(Err(DevnetDetectionError::NoInstance), |_, _| async {
+                false
+            })
+            .await;
 
         assert!(matches!(
             result.unwrap_err(),
@@ -198,7 +196,7 @@ mod tests {
 
     #[tokio::test]
     async fn preserves_multiple_instances_error() {
-        let result = detect_devnet_url_from_process_info(
+        let result = detect_devnet_from_processes(
             Err(DevnetDetectionError::MultipleInstances),
             |_, _| async { true },
         )
