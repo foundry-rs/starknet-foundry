@@ -304,22 +304,32 @@ async fn test_only_one_from_url_and_network_allowed() {
 
 #[tokio::test]
 async fn test_stark_scan_as_block_explorer() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_invalid.toml", None);
-    let args = vec!["--profile", "profile_with_stark_scan", "show-config"];
+    let t = tempdir().unwrap();
+    fs::write(
+        t.path().join("snfoundry.toml"),
+        indoc! {r#"
+            [sncast.default]
+            account = "user1"
+            accounts-file = "/path/to/account.json"
+            block-explorer = "StarkScan"
+        "#},
+    )
+    .unwrap();
+    let args = vec!["show-config", "--network", "mainnet"];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().failure();
-
-    assert_stderr_contains(
-        output,
-        indoc! { r"
-            Command: show-config
-            Error: Failed to load local config at [..]snfoundry.toml
-
-            Caused by:
-                starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice.
-        " },
-    );
+    let snapbox = runner(&args).current_dir(t.path());
+    snapbox.assert().success().stdout_eq(indoc! {r"
+        Chain ID:            alpha-mainnet
+        Network:             mainnet
+        Account:             user1
+        Accounts File Path:  /path/to/account.json
+        Wait Timeout:        300s
+        Wait Retry Interval: 5s
+        Show Explorer Links: true
+        Block Explorer:      StarkScan
+        Scarb Profile:       release
+        Alias Count:         0
+    "});
 }
 
 #[tokio::test]
@@ -586,7 +596,7 @@ async fn test_default_global_profile_with_invalid_values() {
             Error: Failed to load global config at [..]snfoundry.toml
 
             Caused by:
-                starkscan.co was terminated and `'StarkScan'` is no longer available. Please set `block-explorer` to `'Voyager'` or other explorer of your choice.
+                Only one of `url` or `network` may be specified
         " },
     );
 }
