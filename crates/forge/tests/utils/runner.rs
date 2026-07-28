@@ -290,6 +290,10 @@ pub fn capture_assertion_panic(assertion: impl FnOnce()) -> String {
     }
 }
 
+fn matched_test_case_name(any_case: &AnyTestCaseSummary) -> &str {
+    any_case.name().expect("matched test case must have a name")
+}
+
 pub fn assert_case_output_contains(
     result: &[TestTargetSummary],
     test_case_name: &str,
@@ -313,10 +317,11 @@ pub fn assert_case_output_contains(
         });
 
     let actual_msg = any_case.msg().unwrap_or_default();
+    let name = matched_test_case_name(any_case);
 
     assert!(
         actual_msg.contains(asserted_msg),
-        "Output assertion failed for test case `{test_case_name}`.\nexpected output to contain: {asserted_msg}\nactual:                     {actual_msg}"
+        "Output assertion failed for test case `{name}`.\nexpected output to contain: {asserted_msg}\nactual:                     {actual_msg}"
     );
 }
 
@@ -340,9 +345,11 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
             )
         });
 
+    let name = matched_test_case_name(any_case);
+
     match any_case {
         AnyTestCaseSummary::Fuzzing(_) => {
-            panic!("Cannot use assert_gas! for fuzzing tests")
+            panic!("Cannot use assert_gas! for fuzzing test case `{name}`")
         }
         AnyTestCaseSummary::Single(case) => {
             if let TestCaseSummary::Passed {
@@ -364,8 +371,6 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
                     );
                 }
             } else {
-                // The case was located by matching on its name, so `name()` is always `Some`.
-                let name = any_case.name().expect("matched test case must have a name");
                 panic!(
                     "Gas assertion failed for test case `{name}`: expected passed test case with gas information, but test case was {}",
                     test_case_status(case)
@@ -446,9 +451,11 @@ pub fn assert_syscall(
             panic!("Syscall assertion failed: test case `{test_case_name}` was not found. Available test cases:\n{}", format_available_test_cases(&result.test_case_summaries))
         });
 
+    let name = matched_test_case_name(any_case);
+
     match any_case {
         AnyTestCaseSummary::Fuzzing(_) => {
-            panic!("Cannot use assert_syscall! for fuzzing tests")
+            panic!("Cannot use assert_syscall! for fuzzing test case `{name}`")
         }
         AnyTestCaseSummary::Single(case) => {
             if let TestCaseSummary::Passed { used_resources, .. } = case {
@@ -459,11 +466,11 @@ pub fn assert_syscall(
 
                 assert!(
                     actual_count == expected_count,
-                    "Syscall assertion failed for test case `{test_case_name}` (syscall `{syscall:?}`).\nexpected: {expected_count}\nactual:   {actual_count}"
+                    "Syscall assertion failed for test case `{name}` (syscall `{syscall:?}`).\nexpected: {expected_count}\nactual:   {actual_count}"
                 );
             } else {
                 panic!(
-                    "Syscall assertion failed for test case `{test_case_name}`: expected passed test case, but test case was {}",
+                    "Syscall assertion failed for test case `{name}`: expected passed test case, but test case was {}",
                     test_case_status(case)
                 );
             }
@@ -499,9 +506,11 @@ pub fn assert_builtin(
             panic!("Builtin assertion failed: test case `{test_case_name}` was not found. Available test cases:\n{}", format_available_test_cases(&result.test_case_summaries))
         });
 
+    let name = matched_test_case_name(any_case);
+
     match any_case {
         AnyTestCaseSummary::Fuzzing(_) => {
-            panic!("Cannot use assert_builtin for fuzzing tests")
+            panic!("Cannot use assert_builtin for fuzzing test case `{name}`")
         }
         AnyTestCaseSummary::Single(case) => {
             if let TestCaseSummary::Passed { used_resources, .. } = case {
@@ -517,11 +526,11 @@ pub fn assert_builtin(
 
                 assert!(
                     actual_count == expected_count,
-                    "Builtin assertion failed for test case `{test_case_name}` (builtin `{builtin:?}`).\nexpected: {expected_count}\nactual:   {actual_count}"
+                    "Builtin assertion failed for test case `{name}` (builtin `{builtin:?}`).\nexpected: {expected_count}\nactual:   {actual_count}"
                 );
             } else {
                 panic!(
-                    "Builtin assertion failed for test case `{test_case_name}`: expected passed test case, but test case was {}",
+                    "Builtin assertion failed for test case `{name}`: expected passed test case, but test case was {}",
                     test_case_status(case)
                 );
             }
@@ -632,7 +641,10 @@ mod tests {
             assert_gas(&summaries, "fuzzed", GasVector::default());
         });
 
-        assert_eq!(panic_message, "Cannot use assert_gas! for fuzzing tests");
+        assert_eq!(
+            panic_message,
+            "Cannot use assert_gas! for fuzzing test case `pkg::module::fuzzed`"
+        );
     }
 
     #[test]
@@ -752,7 +764,7 @@ mod tests {
         assert_stdout_contains(
             panic_message,
             indoc! {r"
-        Syscall assertion failed for test case `keccak_diagnostics` (syscall `Keccak`).
+        Syscall assertion failed for test case `test_package_integrationtest::test_case::keccak_diagnostics` (syscall `Keccak`).
         expected: 2
         actual:   1
         "},
@@ -802,7 +814,7 @@ mod tests {
         assert_stdout_contains(
             panic_message,
             indoc! {r"
-        Builtin assertion failed for test case `bitwise_diagnostics` (builtin `bitwise`).
+        Builtin assertion failed for test case `test_package_integrationtest::test_case::bitwise_diagnostics` (builtin `bitwise`).
         expected: 2
         actual:   1
         "},
