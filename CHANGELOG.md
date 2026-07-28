@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `--contract-address` flag to `get balance` command, allowing to check balance for any contract, not only accounts
+- `get state-update` command that fetches the state update for a given block
 
 #### Changed
 
