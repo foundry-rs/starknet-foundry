@@ -49,7 +49,9 @@ fn test_launch_debugger_waits_for_connection() {
             unstable-add-statements-code-locations-debug-info = true
             unstable-add-statements-functions-debug-info = true
             add-functions-debug-info = true
-            skip-optimizations = true",
+            skip-optimizations = true
+            add-types-debug-info = true
+            ",
         ))
         .unwrap();
 
@@ -73,6 +75,7 @@ fn test_launch_debugger_waits_for_connection_with_complex_config() {
             [cairo]
             skip-optimizations = true
             unstable-add-statements-code-locations-debug-info = true
+            add-types-debug-info = true
             ",
         ))
         .unwrap();
@@ -128,7 +131,9 @@ fn test_launch_debugger_fails_for_fuzzer_test() {
             unstable-add-statements-code-locations-debug-info = true
             unstable-add-statements-functions-debug-info = true
             add-functions-debug-info = true
-            skip-optimizations = true",
+            skip-optimizations = true
+            add-types-debug-info = true
+            ",
         ))
         .unwrap();
 

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Actual` and `Expected` panic data in the `#[should_panic]` mismatch message now labels rendered values inline, making it clear whether each value is a `ByteArray` or a `felt252`.
 - Minimal recommended `Scarb` version is now `2.18.0` (updated from `2.17.0`)
+- Re-enabled the `add-types-debug-info = true` requirement for `--launch-debugger` on Scarb `>= 2.20.0`
 
 #### Fixed
 
