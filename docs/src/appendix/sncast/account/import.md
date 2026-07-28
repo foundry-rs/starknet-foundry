@@ -51,6 +51,9 @@ Account private key.
 
 Conflicts with: [`--private-key-file`](#--private-key-file-private_key_file_path), [`--ledger-path`](#--ledger-path-hd_path), [`--ledger-account-id`](#--ledger-account-id-account_id)
 
+> ⚠️ **Security Warning**
+> Passing the key via `--private-key` exposes it in your shell history and in the process list. Prefer `--private-key-file` for keys you want to keep secret.
+
 ## `--ledger-path <HD_PATH>`
 Optional.
 
