@@ -62,7 +62,7 @@ Optional. If neither `--private-key` nor `--private-key-file` is passed, a rando
 
 Account private key.
 
-Conflicts with: [`--ledger-path`](#--ledger-path-hd_path), [`--ledger-account-id`](#--ledger-account-id-account_id)
+Conflicts with: [`--private-key-file`](#--private-key-file-private_key_file_path), [`--ledger-path`](#--ledger-path-hd_path), [`--ledger-account-id`](#--ledger-account-id-account_id)
 
 ## `--private-key-file <PRIVATE_KEY_FILE_PATH>`
 Optional. If neither `--private-key` nor `--private-key-file` is passed, a random private key will be generated.
