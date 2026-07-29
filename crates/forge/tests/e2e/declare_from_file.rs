@@ -1,6 +1,6 @@
 use crate::e2e::common::runner::{setup_package, test_runner};
+use crate::utils::scarb::scarb;
 use indoc::indoc;
-use scarb_api::ScarbCommand;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::cmd::Command as SnapboxCommand;
 
@@ -8,14 +8,9 @@ use snapbox::cmd::Command as SnapboxCommand;
 fn simple() {
     let temp = setup_package("declare_from_file");
 
-    SnapboxCommand::from_std(
-        ScarbCommand::new()
-            .current_dir(temp.path())
-            .arg("build")
-            .command(),
-    )
-    .assert()
-    .success();
+    SnapboxCommand::from_std(scarb().current_dir(temp.path()).arg("build").command())
+        .assert()
+        .success();
 
     let output = test_runner(&temp).arg("simple").assert().success();
 
@@ -38,14 +33,9 @@ fn simple() {
 fn already_declared() {
     let temp = setup_package("declare_from_file");
 
-    SnapboxCommand::from_std(
-        ScarbCommand::new()
-            .current_dir(temp.path())
-            .arg("build")
-            .command(),
-    )
-    .assert()
-    .success();
+    SnapboxCommand::from_std(scarb().current_dir(temp.path()).arg("build").command())
+        .assert()
+        .success();
 
     let output = test_runner(&temp)
         .arg("already_declared")

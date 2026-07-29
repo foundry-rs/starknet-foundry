@@ -1,4 +1,4 @@
-use scarb_api::ScarbCommand;
+use crate::common::scarb::scarb;
 
 mod builtins;
 mod cheatcodes;
@@ -12,7 +12,7 @@ fn init() {
     use camino::Utf8PathBuf;
     let contracts_path = Utf8PathBuf::from("tests").join("contracts");
 
-    let output = ScarbCommand::new()
+    let output = scarb()
         .current_dir(contracts_path)
         .arg("build")
         .command()
