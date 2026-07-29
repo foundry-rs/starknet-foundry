@@ -119,7 +119,8 @@ fn replace_file_contents(path: &Path, from: &str, to: &str) {
     assert_eq!(
         contents.matches(from).count(),
         1,
-        "{from} should occur exactly once in {path:?}",
+        "{from} should occur exactly once in {}",
+        path.display()
     );
     let updated_contents = contents.replace(from, to);
     fs::write(path, updated_contents).unwrap();
