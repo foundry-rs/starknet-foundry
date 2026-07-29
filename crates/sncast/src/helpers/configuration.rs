@@ -148,7 +148,6 @@ pub struct CastConfig {
 
 impl CastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
-        block_explorer::Service::validate_for_config(self.block_explorer)?;
         self.wait_params.validate()?;
         self.network_params.validate()?;
         Ok(())
@@ -253,7 +252,6 @@ impl Config for PartialCastConfig {
 
 impl PartialCastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
-        block_explorer::Service::validate_for_config(self.block_explorer)?;
         if let Some(ref wp) = self.wait_params {
             wp.validate()?;
         }
