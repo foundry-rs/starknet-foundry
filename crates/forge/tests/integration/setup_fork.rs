@@ -17,7 +17,6 @@ use tokio::runtime::Runtime;
 
 use crate::utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
 use crate::utils::running_tests::run_test_case;
-use crate::utils::scarb::scarb_with_stdio;
 use crate::utils::test_case;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::run_tests::package::RunForPackageArgs;
@@ -31,6 +30,7 @@ use forge_runner::forge_config::{
 };
 use forge_runner::running::target::prepare_test_target;
 use forge_runner::scarb::load_test_artifacts;
+use scarb_api::ScarbCommand;
 use scarb_api::metadata::metadata_for_dir;
 use shared::test_utils::node_url::node_rpc_url;
 
@@ -115,7 +115,7 @@ fn fork_aliased_decorator() {
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
 
-    scarb_with_stdio()
+    ScarbCommand::new_with_stdio()
         .current_dir(test.path().unwrap())
         .arg("build")
         .arg("--test")
@@ -230,7 +230,7 @@ fn fork_aliased_decorator_overriding() {
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
 
-    scarb_with_stdio()
+    ScarbCommand::new_with_stdio()
         .current_dir(test.path().unwrap())
         .arg("build")
         .arg("--test")

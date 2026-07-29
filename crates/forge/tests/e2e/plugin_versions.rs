@@ -1,8 +1,8 @@
 use crate::e2e::common::runner::{runner, test_runner};
-use crate::utils::scarb::scarb;
 use crate::utils::tempdir_with_tool_versions;
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
+use scarb_api::ScarbCommand;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use toml_edit::Document;
 
@@ -69,7 +69,7 @@ fn new_scarb_new_macros() {
     let snforge_std = Utf8PathBuf::from("../../snforge_std")
         .canonicalize_utf8()
         .unwrap();
-    scarb()
+    ScarbCommand::new()
         .current_dir(temp.path().join("abc"))
         .args(["add", "snforge_std", "--path", snforge_std.as_str()])
         .command()
@@ -102,7 +102,7 @@ fn new_scarb_old_macros() {
         .args(["new", "abc"])
         .assert()
         .success();
-    scarb()
+    ScarbCommand::new()
         .current_dir(temp.path().join("abc"))
         .args(["add", "snforge_std@0.44.0"])
         .command()
