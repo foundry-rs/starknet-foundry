@@ -5,6 +5,8 @@
 //! # Note:
 //! To allow more flexibility when changing internals, please make public as few items as possible.
 
+pub use crate::cache::CASM_CACHE_DIR;
+use crate::cache::compile_sierra_at_path_with_cache;
 use crate::command::{USCError, USCInternalCommand};
 use crate::compile::{CompilationError, SierraType, compile_sierra, compile_sierra_at_path};
 use crate::representation::RawCasmProgram;
@@ -13,6 +15,7 @@ use serde_json::Value;
 use std::path::Path;
 use std::process::Command;
 
+mod cache;
 mod command;
 mod compile;
 pub mod representation;
@@ -31,6 +34,15 @@ pub fn compile_contract_sierra_at_path(
     serde_json::from_str(&json).map_err(CompilationError::Deserialization)
 }
 
+/// Compiles Sierra JSON file at the given path of a contract into [`CasmContractClass`],
+/// reusing cached CASM when possible.
+pub fn compile_contract_sierra_at_path_with_cache(
+    sierra_file_path: &Path,
+    cache_dir: &Path,
+) -> Result<CasmContractClass, CompilationError> {
+    compile_sierra_at_path_with_cache(sierra_file_path, SierraType::Contract, cache_dir)
+}
+
 /// Compiles Sierra JSON of a raw program into [`RawCasmProgram`].
 pub fn compile_raw_sierra(sierra_json: &Value) -> Result<RawCasmProgram, CompilationError> {
     let json = compile_sierra(sierra_json, SierraType::Raw)?;
@@ -43,6 +55,15 @@ pub fn compile_raw_sierra_at_path(
 ) -> Result<RawCasmProgram, CompilationError> {
     let json = compile_sierra_at_path(sierra_file_path, SierraType::Raw)?;
     serde_json::from_str(&json).map_err(CompilationError::Deserialization)
+}
+
+/// Compiles Sierra JSON file at the given path of a raw program into [`RawCasmProgram`],
+/// reusing cached CASM when possible.
+pub fn compile_raw_sierra_at_path_with_cache(
+    sierra_file_path: &Path,
+    cache_dir: &Path,
+) -> Result<RawCasmProgram, CompilationError> {
+    compile_sierra_at_path_with_cache(sierra_file_path, SierraType::Raw, cache_dir)
 }
 
 /// Creates a `universal-sierra-compiler --version` command.
