@@ -249,6 +249,6 @@ runner 2686 0.0 0.1 100000 20000 ? Sl 13:00 0:00 starknet-devnet --host 127.0.0.
     async fn test_detect_devnet_url() {
         // Do not check the result, just ensure that the function runs without panicking
         // as sanity check.
-        detect_devnet_url().await
+        let _ = detect_devnet_url().await;
     }
 }
