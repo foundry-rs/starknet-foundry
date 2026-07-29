@@ -1,5 +1,4 @@
 use super::common::runner::{runner, snforge_test_bin_path, test_runner};
-use crate::utils::scarb::scarb;
 use crate::utils::tempdir_with_tool_versions;
 use assert_fs::TempDir;
 use assert_fs::fixture::{FileTouch, PathChild};
@@ -8,6 +7,7 @@ use forge::Template;
 use forge::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use indoc::{formatdoc, indoc};
 use regex::Regex;
+use scarb_api::ScarbCommand;
 use shared::consts::FREE_RPC_PROVIDER_URL;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::assert_data_eq;
@@ -89,7 +89,7 @@ fn init_new_project_from_scarb() {
     let temp = tempdir_with_tool_versions().unwrap();
 
     SnapboxCommand::from_std(
-        scarb()
+        ScarbCommand::new()
             .current_dir(temp.path())
             .args(["new", "test_name"])
             .env("SCARB_INIT_TEST_RUNNER", "starknet-foundry")

@@ -2,9 +2,9 @@ use crate::helpers::{
     constants::CONTRACTS_DIR,
     fixtures::{copy_directory_to_tempdir, duplicate_contract_directory_with_salt},
     runner::runner,
-    scarb::scarb,
 };
 use indoc::indoc;
+use scarb_api::ScarbCommand;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use std::fs;
 use std::process::Stdio;
@@ -35,7 +35,7 @@ fn test_happy_case_get_class_hash_from_sierra_file() {
         "class_hash_from_sierra_file",
     );
 
-    let build_output = scarb()
+    let build_output = ScarbCommand::new()
         .arg("build")
         .current_dir(contract_path.path())
         .command()

@@ -1,4 +1,3 @@
-use crate::utils::scarb::scarb_with_stdio;
 use crate::utils::{
     get_assert_macros_version, get_std_name, get_std_path, tempdir_with_tool_versions,
 };
@@ -26,6 +25,7 @@ use std::{
     collections::HashMap,
     fs,
     path::{Path, PathBuf},
+    process::{Command, Stdio},
     str::FromStr,
 };
 
@@ -89,10 +89,11 @@ impl Contract {
             ))
             .unwrap();
 
-        scarb_with_stdio()
-            .current_dir(dir.path())
+        Command::new("scarb")
+            .current_dir(&dir)
             .arg("build")
-            .command()
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
             .output_checked()
             .context("Failed to build contracts with Scarb")?;
 
