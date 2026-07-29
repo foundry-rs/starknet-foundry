@@ -79,7 +79,6 @@ pub async fn utils(
                             json,
                             profile: config.scarb_profile.clone(),
                         },
-                        false,
                         // TODO(#3959) Remove `base_ui`
                         ui.base_ui(),
                     )
@@ -114,7 +113,6 @@ pub async fn utils(
                             json,
                             profile: config.scarb_profile.clone(),
                         },
-                        false,
                         // TODO(#3959) Remove `base_ui`
                         ui.base_ui(),
                     )

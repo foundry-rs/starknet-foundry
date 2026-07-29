@@ -2,16 +2,13 @@ use std::num::{NonZeroU8, NonZeroU16};
 
 use crate::helpers::account::{check_account_exists, get_account_from_devnet, is_devnet_account};
 use crate::helpers::configuration::CastConfig;
-use crate::helpers::constants::{
-    DEFAULT_ACCOUNTS_FILE, DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT,
-};
+use crate::helpers::constants::{DEFAULT_ACCOUNTS_FILE, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::helpers::rpc::RpcArgs;
 use crate::response::errors::SNCastProviderError;
 use anyhow::{Context, Error, Result, anyhow, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use configuration::Override;
-use conversions::serde::serialize::CairoSerialize;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::RngCore;
 use rand::rngs::OsRng;
@@ -51,7 +48,6 @@ use url::Url;
 
 pub mod helpers;
 pub mod response;
-pub mod state;
 
 use crate::helpers::ledger;
 use crate::response::ui::UI;
@@ -735,18 +731,18 @@ pub fn get_block_id(value: &str) -> Result<BlockId> {
     }
 }
 
-#[derive(Debug, CairoSerialize)]
+#[derive(Debug)]
 pub struct ErrorData {
     pub data: ByteArray,
 }
 
-#[derive(Error, Debug, CairoSerialize)]
+#[derive(Error, Debug)]
 pub enum TransactionError {
     #[error("Transaction has been reverted = {}", .0.data)]
     Reverted(ErrorData),
 }
 
-#[derive(Error, Debug, CairoSerialize)]
+#[derive(Error, Debug)]
 pub enum WaitForTransactionError {
     #[error(transparent)]
     TransactionError(TransactionError),
@@ -939,11 +935,6 @@ macro_rules! apply_optional_fields {
             value
         }
     };
-}
-
-#[must_use]
-pub fn get_default_state_file_name(script_name: &str, chain_id: &str) -> String {
-    format!("{script_name}_{chain_id}_{DEFAULT_STATE_FILE_SUFFIX}")
 }
 
 #[cfg(test)]

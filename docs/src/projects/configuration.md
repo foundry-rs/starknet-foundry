@@ -47,7 +47,7 @@ defined in the profile.
 > The Scarb profile is set with `--scarb-profile` or the `scarb-profile` field under `[sncast.<profile>]` (defaults to value `release`). 
 > See [common flags](../appendix/sncast/common.md)). 
 > If that Scarb profile does not exist in `Scarb.toml`, `sncast` falls back with a warning.
-> (Applies to subcommands using Scarb - namely `declare`, `verify`, `script`, and `utils class-hash`.)
+> (Applies to subcommands using Scarb - namely `declare`, `verify`, and `utils class-hash`.)
 
 > 💡 **Info**
 > Not all parameters have to be present in the configuration - you can choose to include only some of them and supply

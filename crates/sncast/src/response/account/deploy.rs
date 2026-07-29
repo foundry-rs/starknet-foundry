@@ -4,12 +4,11 @@ use crate::{
     helpers::block_explorer::LinkProvider,
     response::{dry_run::DryRunResponse, explorer_link::OutputLink, invoke::InvokeResponse},
 };
-use conversions::serde::serialize::CairoSerialize;
 use conversions::string::IntoHexStr;
 use foundry_ui::styling;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum AccountDeployResponse {
     Transaction(InvokeTransactionResponse),
     DryRun(DryRunResponse),

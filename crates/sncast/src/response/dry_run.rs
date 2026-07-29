@@ -1,12 +1,11 @@
 use bigdecimal::BigDecimal;
-use conversions::serde::serialize::CairoSerialize;
 use foundry_ui::styling;
 use serde::{Deserialize, Serialize};
 use starknet_rust::core::types::FeeEstimate;
 
 use crate::response::cast_message::SncastCommandMessage;
 
-#[derive(Serialize, Deserialize, Debug, Clone, CairoSerialize, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct DryRunResponse {
     pub l1_gas_consumed: u64,
     pub l1_gas_price: u128,

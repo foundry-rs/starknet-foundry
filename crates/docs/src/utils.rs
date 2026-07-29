@@ -61,7 +61,6 @@ fn get_canonical_path(relative_path: &str) -> Result<String> {
 
 pub fn update_scarb_toml_dependencies(temp: &TempDir) -> Result<(), Box<dyn std::error::Error>> {
     let snforge_std_path = get_canonical_path("../../snforge_std")?;
-    let sncast_std_path = get_canonical_path("../../sncast_std")?;
     let scarb_toml_path = temp.path().join("Scarb.toml");
 
     let mut scarb_toml = fs::read_to_string(&scarb_toml_path)
@@ -69,7 +68,6 @@ pub fn update_scarb_toml_dependencies(temp: &TempDir) -> Result<(), Box<dyn std:
         .parse::<DocumentMut>()
         .unwrap();
 
-    scarb_toml["dependencies"]["sncast_std"]["path"] = value(&sncast_std_path);
     scarb_toml["dev-dependencies"]["snforge_std"]["path"] = value(&snforge_std_path);
 
     fs::write(&scarb_toml_path, scarb_toml.to_string())?;
