@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `declare!` macro for declaring contracts using Cairo paths. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library/declare_macro.html).
 - Debugging traces now display the class hash for forked contracts.
 - `declare_from_file` function for declaring contracts from Sierra contract class JSON files. Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library/declare_from_file.html).
-- CASM compilation results are now cached in `.snfoundry_cache`, speeding up repeated `snforge test` runs when Sierra artifacts and the Universal Sierra Compiler version are unchanged.
+- CASM artifacts are now cached in `.snfoundry_cache/casm` directory.
 
 #### Changed
 
