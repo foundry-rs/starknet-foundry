@@ -1,7 +1,7 @@
 use crate::e2e::common::runner::{get_current_branch, get_remote_url, setup_package};
+use crate::utils::scarb::scarb;
 use assert_fs::fixture::{FileWriteStr, PathChild};
 use indoc::formatdoc;
-use scarb_api::ScarbCommand;
 use shared::test_utils::output_assert::AsOutput;
 use snapbox::cmd::Command as SnapboxCommand;
 
@@ -39,7 +39,7 @@ fn no_warnings_are_produced() {
         .unwrap();
 
     let output = SnapboxCommand::from(
-        ScarbCommand::new()
+        scarb()
             .current_dir(temp.path())
             .args(["build", "--test"])
             .command(),
