@@ -12,6 +12,8 @@ use tempfile::Builder;
 
 pub const CASM_CACHE_DIR: &str = "casm";
 
+// Bump when the cache key inputs or cached CASM JSON format/semantics change in a way that could
+// make old entries deserialize successfully but no longer be valid for the current implementation.
 const CACHE_SCHEMA_VERSION: &str = "v1";
 
 static USC_VERSION: OnceLock<String> = OnceLock::new();
@@ -307,6 +309,26 @@ mod tests {
         .unwrap();
 
         assert_eq!(result, raw_casm(vec![(3, 4)]));
+    }
+
+    #[test]
+    fn separates_cache_entries_for_versions_with_same_sanitized_path_segment() {
+        let temp = tempfile::tempdir().unwrap();
+        let cache_dir = temp.path().join("cache");
+        let sierra_bytes = br#"{"program":"same"}"#;
+        let version_a = "universal-sierra-compiler 1.2.3";
+        let version_b = "universal-sierra-compiler-1/2/3";
+
+        assert_eq!(
+            sanitize_path_segment(version_a),
+            sanitize_path_segment(version_b)
+        );
+
+        let cache_file_a = cache_file_path(&cache_dir, SierraType::Raw, version_a, sierra_bytes);
+        let cache_file_b = cache_file_path(&cache_dir, SierraType::Raw, version_b, sierra_bytes);
+
+        assert_eq!(cache_file_a.parent(), cache_file_b.parent());
+        assert_ne!(cache_file_a.file_name(), cache_file_b.file_name());
     }
 
     #[test]
