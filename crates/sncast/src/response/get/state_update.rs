@@ -79,8 +79,9 @@ fn append_state_diff(builder: OutputBuilder, state_diff: &StateDiff) -> OutputBu
         builder,
         migrated_compiled_classes.as_deref().unwrap_or_default(),
     );
-    let builder =
-        builder.felt_list_field("Deprecated Declared Classes", deprecated_declared_classes);
+    let builder = builder
+        .blank_line()
+        .felt_list_field("Deprecated Declared Classes", deprecated_declared_classes);
     append_replaced_classes(builder, replaced_classes)
 }
 
