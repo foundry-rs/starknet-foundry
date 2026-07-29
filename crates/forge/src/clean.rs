@@ -9,6 +9,7 @@ use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use semver::Version;
 use std::fs;
 use std::sync::OnceLock;
+use universal_sierra_compiler_api::CASM_CACHE_DIR;
 
 const COVERAGE_DIR: &str = "coverage";
 const PROFILE_DIR: &str = "profile";
@@ -87,7 +88,11 @@ pub fn clean_cache_dir(path: &Utf8Path, ui: &UI) -> Result<()> {
         let entry = entry.with_context(|| format!("Failed to read cache directory: {path}"))?;
         let entry_path = entry.path();
 
-        if is_snfoundry_cache_file(entry_path) {
+        if entry_path.is_dir() && entry_path.file_name() == Some(CASM_CACHE_DIR) {
+            fs::remove_dir_all(entry_path)
+                .with_context(|| format!("Failed to remove cache directory: {entry_path}"))?;
+            ui.println(&format!("Removed directory: {entry_path}"));
+        } else if is_snfoundry_cache_file(entry_path) {
             fs::remove_file(entry_path)
                 .with_context(|| format!("Failed to remove cache file: {entry_path}"))?;
             ui.println(&format!("Removed file: {entry_path}"));

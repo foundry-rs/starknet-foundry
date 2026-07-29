@@ -15,10 +15,11 @@ use cairo_lang_sierra::{
     ids::{ConcreteTypeId, FunctionId},
     program::{GenFunction, StatementIdx, TypeDeclaration},
 };
+use camino::Utf8Path;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 use std::{collections::HashMap, sync::Arc};
-use universal_sierra_compiler_api::compile_raw_sierra_at_path;
+use universal_sierra_compiler_api::compile_raw_sierra_at_path_with_cache;
 use universal_sierra_compiler_api::representation::RawCasmProgram;
 
 pub struct PrepareTestTargetResult {
@@ -40,6 +41,7 @@ pub fn prepare_test_target(
     tracked_resource: &ForgeTrackedResource,
     name_filter: &NameFilter,
     partition_config: &PartitionConfig,
+    cache_dir: &Utf8Path,
 ) -> Result<PrepareTestTargetResult> {
     let tests_location = test_target_raw.tests_location;
     let default_executables = vec![];
@@ -77,8 +79,9 @@ pub fn prepare_test_target(
     let funcs = by_id!(funcs);
     let type_declarations = by_id!(type_declarations);
 
-    let casm_program = Arc::new(compile_raw_sierra_at_path(
+    let casm_program = Arc::new(compile_raw_sierra_at_path_with_cache(
         test_target_raw.sierra_program_path.as_std_path(),
+        cache_dir.as_std_path(),
     )?);
 
     let test_cases = matched_cases
