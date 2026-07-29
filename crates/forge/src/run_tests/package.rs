@@ -103,7 +103,6 @@ impl RunForPackageArgs {
                 #[cfg(feature = "cairo-native")]
                 run_native: args.run_native,
             },
-            cache_dir,
         )?;
         #[cfg(feature = "cairo-native")]
         let run_native = args.run_native;
