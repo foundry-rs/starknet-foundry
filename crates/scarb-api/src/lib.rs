@@ -111,12 +111,47 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
     artifacts_dir: &Utf8Path,
     package: &PackageMetadata,
     ui: &UI,
+    compilation_opts: CompilationOpts,
+) -> Result<ContractsData> {
+    get_contracts_artifacts_and_source_sierra_paths_impl(
+        artifacts_dir,
+        package,
+        ui,
+        compilation_opts,
+        None,
+    )
+}
+
+/// Get the map with `StarknetContractArtifacts` for the given package,
+/// reusing cached CASM when possible.
+#[tracing::instrument(skip_all, level = "debug")]
+pub fn get_contracts_artifacts_and_source_sierra_paths_with_cache(
+    artifacts_dir: &Utf8Path,
+    package: &PackageMetadata,
+    ui: &UI,
+    compilation_opts: CompilationOpts,
+    casm_cache_dir: &Utf8Path,
+) -> Result<ContractsData> {
+    get_contracts_artifacts_and_source_sierra_paths_impl(
+        artifacts_dir,
+        package,
+        ui,
+        compilation_opts,
+        Some(casm_cache_dir.to_path_buf()),
+    )
+}
+
+fn get_contracts_artifacts_and_source_sierra_paths_impl(
+    artifacts_dir: &Utf8Path,
+    package: &PackageMetadata,
+    ui: &UI,
     CompilationOpts {
         use_test_target_contracts,
         casm_cache_dir,
         #[cfg(feature = "cairo-native")]
         run_native,
     }: CompilationOpts,
+    casm_cache_dir: Option<Utf8PathBuf>,
 ) -> Result<ContractsData> {
     let starknet_artifact_files = if use_test_target_contracts {
         let test_targets = test_targets_by_name(package);

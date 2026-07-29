@@ -42,10 +42,19 @@ pub fn compile_sierra(
     sierra_json: &Value,
     sierra_type: SierraType,
 ) -> Result<String, CompilationError> {
+    let json_bytes = serde_json::to_vec(sierra_json).map_err(CompilationError::Serialization)?;
+    compile_sierra_bytes(&json_bytes, sierra_type)
+}
+
+/// Compiles the given Sierra JSON bytes into the specified type using the `universal-sierra-compiler`.
+pub(crate) fn compile_sierra_bytes(
+    sierra_bytes: &[u8],
+    sierra_type: SierraType,
+) -> Result<String, CompilationError> {
     let mut temp_sierra_file = Builder::new().tempfile()?;
 
-    let json_bytes = serde_json::to_vec(sierra_json).map_err(CompilationError::Serialization)?;
-    temp_sierra_file.write_all(&json_bytes)?;
+    temp_sierra_file.write_all(sierra_bytes)?;
+    temp_sierra_file.flush()?;
 
     compile_sierra_at_path(temp_sierra_file.path(), sierra_type)
 }

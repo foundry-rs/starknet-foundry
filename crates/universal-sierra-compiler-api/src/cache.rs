@@ -1,5 +1,5 @@
 use crate::command::{USCError, USCInternalCommand};
-use crate::compile::{CompilationError, SierraType, compile_sierra_at_path};
+use crate::compile::{CompilationError, SierraType, compile_sierra_bytes};
 use regex::Regex;
 use serde::{Serialize, de::DeserializeOwned};
 use sha2::{Digest, Sha256};
@@ -27,23 +27,41 @@ pub fn compile_sierra_at_path_with_cache<T>(
 where
     T: DeserializeOwned + Serialize,
 {
+    let sierra_bytes =
+        fs::read(sierra_file_path).map_err(|source| CompilationError::SierraFileRead {
+            path: sierra_file_path.to_path_buf(),
+            source,
+        })?;
+
+    compile_sierra_bytes_with_cache(&sierra_bytes, sierra_type, cache_dir)
+}
+
+pub fn compile_sierra_bytes_with_cache<T>(
+    sierra_bytes: &[u8],
+    sierra_type: SierraType,
+    cache_dir: &Path,
+) -> Result<T, CompilationError>
+where
+    T: DeserializeOwned + Serialize,
+{
     let compiler_version = compiler_version()?;
 
-    compile_sierra_at_path_with_cache_using_version(
-        sierra_file_path,
+    compile_sierra_bytes_with_cache_using_version(
+        sierra_bytes,
         sierra_type,
         cache_dir,
         compiler_version,
-        || compile_sierra_at_path(sierra_file_path, sierra_type),
+        |sierra_bytes| compile_sierra_bytes(sierra_bytes, sierra_type),
     )
 }
 
+#[cfg(test)]
 fn compile_sierra_at_path_with_cache_using_version<T>(
     sierra_file_path: &Path,
     sierra_type: SierraType,
     cache_dir: &Path,
     compiler_version: &str,
-    compile: impl FnOnce() -> Result<String, CompilationError>,
+    compile: impl FnOnce(&[u8]) -> Result<String, CompilationError>,
 ) -> Result<T, CompilationError>
 where
     T: DeserializeOwned + Serialize,
@@ -53,13 +71,33 @@ where
             path: sierra_file_path.to_path_buf(),
             source,
         })?;
-    let cache_file_path = cache_file_path(cache_dir, sierra_type, compiler_version, &sierra_bytes);
+
+    compile_sierra_bytes_with_cache_using_version(
+        &sierra_bytes,
+        sierra_type,
+        cache_dir,
+        compiler_version,
+        compile,
+    )
+}
+
+fn compile_sierra_bytes_with_cache_using_version<T>(
+    sierra_bytes: &[u8],
+    sierra_type: SierraType,
+    cache_dir: &Path,
+    compiler_version: &str,
+    compile: impl FnOnce(&[u8]) -> Result<String, CompilationError>,
+) -> Result<T, CompilationError>
+where
+    T: DeserializeOwned + Serialize,
+{
+    let cache_file_path = cache_file_path(cache_dir, sierra_type, compiler_version, sierra_bytes);
 
     if let Some(casm) = read_cache_entry(&cache_file_path) {
         return Ok(casm);
     }
 
-    let json = compile()?;
+    let json = compile(sierra_bytes)?;
     let casm = serde_json::from_str(&json).map_err(CompilationError::Deserialization)?;
 
     if let Err(error) = write_cache_entry(&cache_file_path, &casm) {
@@ -228,7 +266,7 @@ mod tests {
             SierraType::Raw,
             &cache_dir,
             "universal-sierra-compiler 1.2.3",
-            || Ok(raw_casm_json(vec![(1, 2)])),
+            |_| Ok(raw_casm_json(vec![(1, 2)])),
         )
         .unwrap();
         let second = compile_sierra_at_path_with_cache_using_version::<RawCasmProgram>(
@@ -236,7 +274,7 @@ mod tests {
             SierraType::Raw,
             &cache_dir,
             "universal-sierra-compiler 1.2.3",
-            || panic!("cache hit should not compile again"),
+            |_| panic!("cache hit should not compile again"),
         )
         .unwrap();
 
@@ -256,7 +294,7 @@ mod tests {
             SierraType::Raw,
             &cache_dir,
             "universal-sierra-compiler 1.2.3",
-            || Ok(raw_casm_json(vec![(1, 2)])),
+            |_| Ok(raw_casm_json(vec![(1, 2)])),
         )
         .unwrap();
         let result = compile_sierra_at_path_with_cache_using_version::<RawCasmProgram>(
@@ -264,7 +302,7 @@ mod tests {
             SierraType::Raw,
             &cache_dir,
             "universal-sierra-compiler 1.2.4",
-            || Ok(raw_casm_json(vec![(3, 4)])),
+            |_| Ok(raw_casm_json(vec![(3, 4)])),
         )
         .unwrap();
 
@@ -293,7 +331,7 @@ mod tests {
             SierraType::Raw,
             &cache_dir,
             "universal-sierra-compiler 1.2.3",
-            || Ok(raw_casm_json(vec![(5, 6)])),
+            |_| Ok(raw_casm_json(vec![(5, 6)])),
         )
         .unwrap();
         let cached: RawCasmProgram =
@@ -301,6 +339,69 @@ mod tests {
 
         assert_eq!(result, raw_casm(vec![(5, 6)]));
         assert_eq!(cached, raw_casm(vec![(5, 6)]));
+    }
+
+    #[test]
+    fn compiles_snapshot_bytes_when_source_path_changes() {
+        let temp = tempfile::tempdir().unwrap();
+        let sierra_path = temp.path().join("program.json");
+        let old_sierra = br#"{"program":"old"}"#;
+        let new_sierra = br#"{"program":"new"}"#;
+        fs::write(&sierra_path, old_sierra).unwrap();
+
+        let cache_dir = temp.path().join("cache");
+        let result = compile_sierra_at_path_with_cache_using_version::<RawCasmProgram>(
+            &sierra_path,
+            SierraType::Raw,
+            &cache_dir,
+            "universal-sierra-compiler 1.2.3",
+            |sierra_bytes| {
+                fs::write(&sierra_path, new_sierra).unwrap();
+                assert_eq!(sierra_bytes, old_sierra);
+                Ok(raw_casm_json(vec![(7, 8)]))
+            },
+        )
+        .unwrap();
+
+        let old_cache_file = cache_file_path(
+            &cache_dir,
+            SierraType::Raw,
+            "universal-sierra-compiler 1.2.3",
+            old_sierra,
+        );
+        let new_cache_file = cache_file_path(
+            &cache_dir,
+            SierraType::Raw,
+            "universal-sierra-compiler 1.2.3",
+            new_sierra,
+        );
+
+        assert_eq!(result, raw_casm(vec![(7, 8)]));
+        assert!(old_cache_file.exists());
+        assert!(!new_cache_file.exists());
+    }
+
+    #[test]
+    fn returns_compiled_result_when_cache_entry_cannot_be_written() {
+        let temp = tempfile::tempdir().unwrap();
+        let sierra_path = temp.path().join("program.json");
+        fs::write(&sierra_path, br#"{"program":"same"}"#).unwrap();
+
+        let cache_dir = temp.path().join("cache");
+        fs::create_dir(&cache_dir).unwrap();
+        fs::write(cache_dir.join(CASM_CACHE_DIR), "not a directory").unwrap();
+
+        let result = compile_sierra_at_path_with_cache_using_version::<RawCasmProgram>(
+            &sierra_path,
+            SierraType::Raw,
+            &cache_dir,
+            "universal-sierra-compiler 1.2.3",
+            |_| Ok(raw_casm_json(vec![(9, 10)])),
+        )
+        .unwrap();
+
+        assert_eq!(result, raw_casm(vec![(9, 10)]));
+        assert!(cache_dir.join(CASM_CACHE_DIR).is_file());
     }
 
     #[test]

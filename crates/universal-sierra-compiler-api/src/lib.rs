@@ -6,7 +6,7 @@
 //! To allow more flexibility when changing internals, please make public as few items as possible.
 
 pub use crate::cache::CASM_CACHE_DIR;
-use crate::cache::compile_sierra_at_path_with_cache;
+use crate::cache::{compile_sierra_at_path_with_cache, compile_sierra_bytes_with_cache};
 use crate::command::{USCError, USCInternalCommand};
 use crate::compile::{CompilationError, SierraType, compile_sierra, compile_sierra_at_path};
 use crate::representation::RawCasmProgram;
@@ -41,6 +41,15 @@ pub fn compile_contract_sierra_at_path_with_cache(
     cache_dir: &Path,
 ) -> Result<CasmContractClass, CompilationError> {
     compile_sierra_at_path_with_cache(sierra_file_path, SierraType::Contract, cache_dir)
+}
+
+/// Compiles Sierra JSON bytes of a contract into [`CasmContractClass`],
+/// reusing cached CASM when possible.
+pub fn compile_contract_sierra_bytes_with_cache(
+    sierra_bytes: &[u8],
+    cache_dir: &Path,
+) -> Result<CasmContractClass, CompilationError> {
+    compile_sierra_bytes_with_cache(sierra_bytes, SierraType::Contract, cache_dir)
 }
 
 /// Compiles Sierra JSON of a raw program into [`RawCasmProgram`].
