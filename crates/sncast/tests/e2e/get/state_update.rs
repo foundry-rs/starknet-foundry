@@ -13,16 +13,8 @@ async fn test_happy_case() {
         output,
         indoc! {r"
             Success: State update retrieved
-            [..]
-            Storage Diffs
-            [..]
-            Nonces
-            [..]
-            Deployed Contracts
-            [..]
-            Declared Classes
-            [..]
-            Replaced Classes
+
+            Old Root: 0x[..]
         "},
     );
 }

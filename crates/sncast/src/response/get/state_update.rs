@@ -79,9 +79,13 @@ fn append_state_diff(builder: OutputBuilder, state_diff: &StateDiff) -> OutputBu
         builder,
         migrated_compiled_classes.as_deref().unwrap_or_default(),
     );
-    let builder = builder
-        .blank_line()
-        .felt_list_field("Deprecated Declared Classes", deprecated_declared_classes);
+    let builder = if deprecated_declared_classes.is_empty() {
+        builder
+    } else {
+        builder
+            .blank_line()
+            .felt_list_field("Deprecated Declared Classes", deprecated_declared_classes)
+    };
     append_replaced_classes(builder, replaced_classes)
 }
 
@@ -89,6 +93,9 @@ fn append_storage_diffs(
     mut builder: OutputBuilder,
     storage_diffs: &[ContractStorageDiffItem],
 ) -> OutputBuilder {
+    if storage_diffs.is_empty() {
+        return builder;
+    }
     builder = builder.blank_line().text_field("Storage Diffs");
     for ContractStorageDiffItem {
         address,
@@ -109,6 +116,9 @@ fn append_storage_diffs(
 }
 
 fn append_nonces(mut builder: OutputBuilder, nonces: &[NonceUpdate]) -> OutputBuilder {
+    if nonces.is_empty() {
+        return builder;
+    }
     builder = builder.blank_line().text_field("Nonces");
     for NonceUpdate {
         contract_address,
@@ -127,6 +137,9 @@ fn append_deployed_contracts(
     mut builder: OutputBuilder,
     deployed_contracts: &[DeployedContractItem],
 ) -> OutputBuilder {
+    if deployed_contracts.is_empty() {
+        return builder;
+    }
     builder = builder.blank_line().text_field("Deployed Contracts");
     for DeployedContractItem {
         address,
@@ -145,6 +158,9 @@ fn append_declared_classes(
     mut builder: OutputBuilder,
     declared_classes: &[DeclaredClassItem],
 ) -> OutputBuilder {
+    if declared_classes.is_empty() {
+        return builder;
+    }
     builder = builder.blank_line().text_field("Declared Classes");
     for DeclaredClassItem {
         class_hash,
@@ -163,6 +179,9 @@ fn append_migrated_compiled_classes(
     mut builder: OutputBuilder,
     migrated_compiled_classes: &[MigratedCompiledClassItem],
 ) -> OutputBuilder {
+    if migrated_compiled_classes.is_empty() {
+        return builder;
+    }
     builder = builder.blank_line().text_field("Migrated Compiled Classes");
     for MigratedCompiledClassItem {
         class_hash,
@@ -181,6 +200,9 @@ fn append_replaced_classes(
     mut builder: OutputBuilder,
     replaced_classes: &[ReplacedClassItem],
 ) -> OutputBuilder {
+    if replaced_classes.is_empty() {
+        return builder;
+    }
     builder = builder.blank_line().text_field("Replaced Classes");
     for ReplacedClassItem {
         contract_address,
