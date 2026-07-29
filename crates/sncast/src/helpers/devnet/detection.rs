@@ -247,6 +247,8 @@ runner 2686 0.0 0.1 100000 20000 ? Sl 13:00 0:00 starknet-devnet --host 127.0.0.
 
     #[tokio::test]
     async fn test_detect_devnet_url() {
+        // Uses the real runner state, so valid outcomes can vary.
+        // Operational failures should still fail the test.
         let result = detect_devnet_url().await;
         assert!(matches!(
             result,
