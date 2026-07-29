@@ -7,9 +7,9 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::output::get_declared_class_hash_from_json_output;
 use crate::helpers::runner::runner;
+use crate::helpers::scarb::scarb;
 use configuration::test_utils::copy_config_to_tempdir;
 use indoc::indoc;
-use scarb_api::ScarbCommand;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use starknet_rust::core::types::contract::SierraClass;
 use std::fs;
@@ -309,7 +309,7 @@ async fn test_declare_from_sierra_happy_case() {
     let tempdir = create_and_deploy_oz_account().await;
     join_tempdirs(&contract_path, &tempdir);
 
-    let build_output = ScarbCommand::new()
+    let build_output = scarb()
         .arg("build")
         .current_dir(tempdir.path())
         .command()
@@ -371,7 +371,7 @@ async fn test_declare_from_sierra_happy_case_no_abi() {
     let tempdir = create_and_deploy_oz_account().await;
     join_tempdirs(&contract_path, &tempdir);
 
-    let build_output = ScarbCommand::new()
+    let build_output = scarb()
         .arg("build")
         .current_dir(tempdir.path())
         .command()
@@ -503,7 +503,7 @@ async fn test_declare_from_sierra_already_declared() {
     let tempdir = create_and_deploy_oz_account().await;
     join_tempdirs(&contract_path, &tempdir);
 
-    let build_output = ScarbCommand::new()
+    let build_output = scarb()
         .arg("build")
         .current_dir(tempdir.path())
         .command()

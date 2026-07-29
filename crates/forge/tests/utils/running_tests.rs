@@ -19,19 +19,20 @@ use forge_runner::running::target::prepare_test_target;
 use forge_runner::scarb::load_test_artifacts;
 use forge_runner::test_target_summary::TestTargetSummary;
 use foundry_ui::UI;
-use scarb_api::ScarbCommand;
 use scarb_api::metadata::metadata_for_dir;
 use std::num::NonZeroU32;
 use std::sync::Arc;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
+use crate::utils::scarb::scarb_with_stdio;
+
 #[must_use]
 pub fn run_test_case(
     test: &TestCase,
     tracked_resource: ForgeTrackedResource,
 ) -> Vec<TestTargetSummary> {
-    ScarbCommand::new_with_stdio()
+    scarb_with_stdio()
         .current_dir(test.path().unwrap())
         .arg("build")
         .arg("--test")

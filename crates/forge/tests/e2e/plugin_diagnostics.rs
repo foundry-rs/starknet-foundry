@@ -1,7 +1,7 @@
 use crate::e2e::common::runner::setup_package_at_path;
+use crate::utils::scarb::scarb;
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
-use scarb_api::ScarbCommand;
 use shared::test_utils::output_assert::{assert_stdout_contains, case_assert_stdout_contains};
 use snapbox::cmd::Command as SnapboxCommand;
 use std::fs;
@@ -15,7 +15,7 @@ use std::fs;
 fn syntax() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/syntax"));
     let output = SnapboxCommand::from_std(
-        ScarbCommand::new()
+        scarb()
             .current_dir(temp.path())
             .args(["build", "--test"])
             .command(),
@@ -103,7 +103,7 @@ fn syntax() {
 fn semantic() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/semantic"));
     let output = SnapboxCommand::from_std(
-        ScarbCommand::new()
+        scarb()
             .current_dir(temp.path())
             .args(["build", "--test"])
             .command(),
@@ -147,7 +147,7 @@ fn semantic() {
 fn parameters() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/parameters"));
     let output = SnapboxCommand::from_std(
-        ScarbCommand::new()
+        scarb()
             .current_dir(temp.path())
             .args(["build", "--test"])
             .command(),
@@ -189,7 +189,7 @@ fn parameters() {
 fn multiple() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/multiple"));
     let output = SnapboxCommand::from_std(
-        ScarbCommand::new()
+        scarb()
             .current_dir(temp.path())
             .args(["build", "--test"])
             .command(),
@@ -264,7 +264,7 @@ fn multiple() {
 fn generic() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/generic"));
     let output = SnapboxCommand::from_std(
-        ScarbCommand::new()
+        scarb()
             .current_dir(temp.path())
             .args(["build", "--test"])
             .command(),
@@ -297,7 +297,7 @@ fn generic() {
 fn generic_old_scarb() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/generic"));
     let output = SnapboxCommand::from_std(
-        ScarbCommand::new()
+        scarb()
             .current_dir(temp.path())
             .args(["build", "--test"])
             .command(),
@@ -329,7 +329,7 @@ fn generic_old_scarb() {
 fn inline_macros() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/inline_macros"));
     let output = SnapboxCommand::from_std(
-        ScarbCommand::new()
+        scarb()
             .current_dir(temp.path())
             .args(["build", "--test"])
             .command(),
@@ -378,11 +378,14 @@ fn different_attributes() {
         let test_file_contents = test_file_contents.replace("@attrs@", &attribute);
         fs::write(&test_file, test_file_contents).unwrap();
 
-        let output = SnapboxCommand::new("scarb")
-            .current_dir(&temp)
-            .args(["build", "--test"])
-            .assert()
-            .failure();
+        let output = SnapboxCommand::from_std(
+            scarb()
+                .current_dir(temp.path())
+                .args(["build", "--test"])
+                .command(),
+        )
+        .assert()
+        .failure();
 
         case_assert_stdout_contains(
             attribute.clone(),
@@ -402,7 +405,7 @@ fn different_attributes() {
 fn test_case() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/test_case_attr"));
     let output = SnapboxCommand::from_std(
-        ScarbCommand::new()
+        scarb()
             .current_dir(temp.path())
             .args(["build", "--test"])
             .command(),
@@ -438,7 +441,7 @@ fn test_case() {
 fn declare_macro_invalid_module_path() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/declare_invalid"));
     let output = SnapboxCommand::from_std(
-        ScarbCommand::new()
+        scarb()
             .current_dir(temp.path())
             .args(["build", "--test"])
             .command(),
