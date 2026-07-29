@@ -6,6 +6,7 @@ use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use shared::test_utils::output_assert::assert_stdout_contains;
 use std::fs;
 use std::path::Path;
+use universal_sierra_compiler_api::representation::{AssembledCairoProgram, RawCasmProgram};
 
 const COVERAGE_DIR: &str = "coverage";
 const PROFILE_DIR: &str = "profile";
@@ -174,12 +175,9 @@ fn test_clean_cache_with_custom_cache_dir_preserves_unrelated_files() {
         "{}",
     )
     .unwrap();
-    fs::create_dir_all(custom_cache_dir.join("casm/raw/compiler")).unwrap();
-    fs::write(
-        custom_cache_dir.join("casm/raw/compiler/cache-entry.json"),
-        "{}",
-    )
-    .unwrap();
+    write_raw_casm_cache_entry(
+        &custom_cache_dir.join("casm/raw/universal-sierra-compiler-2.9.1/cache-entry.json"),
+    );
     fs::write(custom_cache_dir.join("keep.txt"), "keep").unwrap();
 
     runner(&temp_dir)
@@ -198,6 +196,21 @@ fn test_clean_cache_with_custom_cache_dir_preserves_unrelated_files() {
     );
     assert!(!custom_cache_dir.join("casm").exists());
     assert!(custom_cache_dir.join("keep.txt").exists());
+}
+
+fn write_raw_casm_cache_entry(path: &Path) {
+    let parent = path.parent().unwrap();
+    fs::create_dir_all(parent).unwrap();
+
+    let casm = RawCasmProgram {
+        assembled_cairo_program: AssembledCairoProgram {
+            bytecode: vec![],
+            hints: vec![],
+        },
+        debug_info: vec![(0, 0)],
+    };
+
+    fs::write(path, serde_json::to_string(&casm).unwrap()).unwrap();
 }
 
 #[test]
