@@ -9,7 +9,8 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::collections::HashMap;
 use std::fs;
 use universal_sierra_compiler_api::{
-    compile_contract_sierra_at_path, compile_contract_sierra_bytes_with_cache,
+    compile_contract_sierra_at_path, compile_contract_sierra_bytes_with_cache_key,
+    contract_sierra_content_hash,
 };
 
 pub mod deserialized;
@@ -127,7 +128,12 @@ impl StarknetArtifactsFiles {
         let sierra = fs::read_to_string(path)?;
 
         let casm = if let Some(cache_dir) = &self.casm_cache_dir {
-            compile_contract_sierra_bytes_with_cache(sierra.as_bytes(), cache_dir.as_std_path())?
+            let sierra_content_hash = contract_sierra_content_hash(sierra.as_bytes());
+            compile_contract_sierra_bytes_with_cache_key(
+                sierra.as_bytes(),
+                cache_dir.as_std_path(),
+                &sierra_content_hash,
+            )?
         } else {
             compile_contract_sierra_at_path(path.as_std_path())?
         };

@@ -19,7 +19,7 @@ use camino::Utf8Path;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 use std::{collections::HashMap, sync::Arc};
-use universal_sierra_compiler_api::compile_raw_sierra_at_path_with_cache;
+use universal_sierra_compiler_api::compile_raw_sierra_at_path_with_cache_key;
 use universal_sierra_compiler_api::representation::RawCasmProgram;
 
 pub struct PrepareTestTargetResult {
@@ -79,9 +79,10 @@ pub fn prepare_test_target(
     let funcs = by_id!(funcs);
     let type_declarations = by_id!(type_declarations);
 
-    let casm_program = Arc::new(compile_raw_sierra_at_path_with_cache(
+    let casm_program = Arc::new(compile_raw_sierra_at_path_with_cache_key(
         test_target_raw.sierra_program_path.as_std_path(),
         cache_dir.as_std_path(),
+        &test_target_raw.sierra_program_hash,
     )?);
 
     let test_cases = matched_cases

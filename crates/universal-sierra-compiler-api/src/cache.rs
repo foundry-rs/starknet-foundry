@@ -1,59 +1,81 @@
 use crate::command::{USCError, USCInternalCommand};
-use crate::compile::{CompilationError, SierraType, compile_sierra_bytes};
+use crate::compile::{CompilationError, SierraType, compile_sierra_at_path, compile_sierra_bytes};
 use regex::Regex;
 use serde::{Serialize, de::DeserializeOwned};
+#[cfg(test)]
+use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::fmt::Write as _;
 use std::fs;
-use std::io::{self, Write as _};
+use std::io::{self, BufReader, BufWriter, Write as _};
 use std::path::{Path, PathBuf};
-use std::sync::{LazyLock, OnceLock};
+use std::sync::{LazyLock, Mutex, OnceLock};
 use tempfile::Builder;
 
 pub const CASM_CACHE_DIR: &str = "casm";
 
 // Bump when the cache key inputs or cached CASM JSON format/semantics change in a way that could
 // make old entries deserialize successfully but no longer be valid for the current implementation.
-const CACHE_SCHEMA_VERSION: &str = "v1";
+const CACHE_SCHEMA_VERSION: &str = "v3";
 
 static USC_VERSION: OnceLock<String> = OnceLock::new();
+static USC_VERSION_LOCK: Mutex<()> = Mutex::new(());
 static PATH_SEGMENT_WHITESPACE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\s+").unwrap());
 static PATH_SEGMENT_UNSAFE_CHARS: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"[^A-Za-z0-9-]+").unwrap());
 
-pub fn compile_sierra_at_path_with_cache<T>(
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SierraProgramHash(String);
+
+#[tracing::instrument(skip_all, level = "debug")]
+pub fn raw_sierra_program_content_hash(sierra_program: &impl Serialize) -> SierraProgramHash {
+    let mut hasher = Sha256::new();
+    write_serializable_to_hash(&mut hasher, sierra_program);
+    SierraProgramHash(hex_encode(hasher.finalize()))
+}
+
+#[tracing::instrument(skip_all, level = "debug")]
+pub fn contract_sierra_content_hash(sierra_bytes: &[u8]) -> SierraProgramHash {
+    let mut hasher = Sha256::new();
+    hasher.update(sierra_bytes);
+    SierraProgramHash(hex_encode(hasher.finalize()))
+}
+
+pub(crate) fn compile_sierra_at_path_with_content_hash<T>(
     sierra_file_path: &Path,
     sierra_type: SierraType,
     cache_dir: &Path,
+    sierra_content_hash: &SierraProgramHash,
 ) -> Result<T, CompilationError>
 where
     T: DeserializeOwned + Serialize,
 {
-    let sierra_bytes =
-        fs::read(sierra_file_path).map_err(|source| CompilationError::SierraFileRead {
-            path: sierra_file_path.to_path_buf(),
-            source,
-        })?;
-
-    compile_sierra_bytes_with_cache(&sierra_bytes, sierra_type, cache_dir)
+    compile_sierra_with_content_hash_using_version(
+        sierra_type,
+        cache_dir,
+        compiler_version()?,
+        sierra_content_hash,
+        || compile_sierra_at_path(sierra_file_path, sierra_type),
+    )
 }
 
-pub fn compile_sierra_bytes_with_cache<T>(
+pub(crate) fn compile_sierra_bytes_with_content_hash<T>(
     sierra_bytes: &[u8],
     sierra_type: SierraType,
     cache_dir: &Path,
+    sierra_content_hash: &SierraProgramHash,
 ) -> Result<T, CompilationError>
 where
     T: DeserializeOwned + Serialize,
 {
     let compiler_version = compiler_version()?;
 
-    compile_sierra_bytes_with_cache_using_version(
-        sierra_bytes,
+    compile_sierra_with_content_hash_using_version(
         sierra_type,
         cache_dir,
         compiler_version,
-        |sierra_bytes| compile_sierra_bytes(sierra_bytes, sierra_type),
+        sierra_content_hash,
+        || compile_sierra_bytes(sierra_bytes, sierra_type),
     )
 }
 
@@ -73,33 +95,39 @@ where
             path: sierra_file_path.to_path_buf(),
             source,
         })?;
+    let sierra_content_hash = sierra_content_hash(sierra_type, &sierra_bytes);
 
-    compile_sierra_bytes_with_cache_using_version(
-        &sierra_bytes,
+    compile_sierra_with_content_hash_using_version(
         sierra_type,
         cache_dir,
         compiler_version,
-        compile,
+        &sierra_content_hash,
+        || compile(&sierra_bytes),
     )
 }
 
-fn compile_sierra_bytes_with_cache_using_version<T>(
-    sierra_bytes: &[u8],
+fn compile_sierra_with_content_hash_using_version<T>(
     sierra_type: SierraType,
     cache_dir: &Path,
     compiler_version: &str,
-    compile: impl FnOnce(&[u8]) -> Result<String, CompilationError>,
+    sierra_content_hash: &SierraProgramHash,
+    compile: impl FnOnce() -> Result<String, CompilationError>,
 ) -> Result<T, CompilationError>
 where
     T: DeserializeOwned + Serialize,
 {
-    let cache_file_path = cache_file_path(cache_dir, sierra_type, compiler_version, sierra_bytes);
+    let cache_file_path = cache_file_path_for_content_hash(
+        cache_dir,
+        sierra_type,
+        compiler_version,
+        sierra_content_hash,
+    );
 
     if let Some(casm) = read_cache_entry(&cache_file_path) {
         return Ok(casm);
     }
 
-    let json = compile(sierra_bytes)?;
+    let json = compile()?;
     let casm = serde_json::from_str(&json).map_err(CompilationError::Deserialization)?;
 
     if let Err(error) = write_cache_entry(&cache_file_path, &casm) {
@@ -118,20 +146,40 @@ fn compiler_version() -> Result<&'static str, USCError> {
         return Ok(version);
     }
 
+    let _guard = USC_VERSION_LOCK
+        .lock()
+        .expect("USC version lock should not be poisoned");
+    if let Some(version) = USC_VERSION.get() {
+        return Ok(version);
+    }
+
     let output = USCInternalCommand::new()?.arg("--version").run()?;
     let version = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    let _ = USC_VERSION.set(version);
 
-    Ok(USC_VERSION
-        .get()
-        .expect("USC version should be initialized"))
+    Ok(USC_VERSION.get_or_init(|| version))
 }
 
+#[cfg(test)]
 fn cache_file_path(
     cache_dir: &Path,
     sierra_type: SierraType,
     compiler_version: &str,
     sierra_bytes: &[u8],
+) -> PathBuf {
+    let sierra_content_hash = sierra_content_hash(sierra_type, sierra_bytes);
+    cache_file_path_for_content_hash(
+        cache_dir,
+        sierra_type,
+        compiler_version,
+        &sierra_content_hash,
+    )
+}
+
+fn cache_file_path_for_content_hash(
+    cache_dir: &Path,
+    sierra_type: SierraType,
+    compiler_version: &str,
+    sierra_content_hash: &SierraProgramHash,
 ) -> PathBuf {
     cache_dir
         .join(CASM_CACHE_DIR)
@@ -139,11 +187,16 @@ fn cache_file_path(
         .join(sanitize_path_segment(compiler_version))
         .join(format!(
             "{}.json",
-            cache_key(sierra_type, compiler_version, sierra_bytes)
+            cache_key(sierra_type, compiler_version, sierra_content_hash)
         ))
 }
 
-fn cache_key(sierra_type: SierraType, compiler_version: &str, sierra_bytes: &[u8]) -> String {
+#[tracing::instrument(skip_all, level = "debug")]
+fn cache_key(
+    sierra_type: SierraType,
+    compiler_version: &str,
+    sierra_content_hash: &SierraProgramHash,
+) -> String {
     let mut hasher = Sha256::new();
     hasher.update(CACHE_SCHEMA_VERSION.as_bytes());
     hasher.update([0]);
@@ -151,11 +204,53 @@ fn cache_key(sierra_type: SierraType, compiler_version: &str, sierra_bytes: &[u8
     hasher.update([0]);
     hasher.update(compiler_version.as_bytes());
     hasher.update([0]);
-    hasher.update(sierra_bytes);
+    hasher.update(sierra_content_hash.0.as_bytes());
 
     hex_encode(hasher.finalize())
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
+#[cfg(test)]
+fn sierra_content_hash(sierra_type: SierraType, sierra_bytes: &[u8]) -> SierraProgramHash {
+    let mut hasher = Sha256::new();
+
+    if sierra_type == SierraType::Contract {
+        hasher.update(sierra_bytes);
+        return SierraProgramHash(hex_encode(hasher.finalize()));
+    }
+
+    match serde_json::from_slice::<Value>(sierra_bytes) {
+        Ok(sierra) => write_json_to_hash(&mut hasher, &sierra),
+        Err(_) => hasher.update(sierra_bytes),
+    }
+
+    SierraProgramHash(hex_encode(hasher.finalize()))
+}
+
+#[cfg(test)]
+fn write_json_to_hash(hasher: &mut Sha256, json: &Value) {
+    write_serializable_to_hash(hasher, json);
+}
+
+fn write_serializable_to_hash(hasher: &mut Sha256, value: &impl Serialize) {
+    serde_json::to_writer(HashWriter(hasher), value)
+        .expect("writing JSON to a hasher should not fail");
+}
+
+struct HashWriter<'a>(&'a mut Sha256);
+
+impl io::Write for HashWriter<'_> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.0.update(buf);
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
+#[tracing::instrument(skip_all, level = "debug")]
 fn read_cache_entry<T>(path: &Path) -> Option<T>
 where
     T: DeserializeOwned,
@@ -173,7 +268,7 @@ where
         }
     };
 
-    match serde_json::from_reader(file) {
+    match serde_json::from_reader(BufReader::new(file)) {
         Ok(casm) => Some(casm),
         Err(error) => {
             tracing::debug!(
@@ -186,6 +281,7 @@ where
     }
 }
 
+#[tracing::instrument(skip_all, level = "debug")]
 fn write_cache_entry<T>(path: &Path, casm: &T) -> io::Result<()>
 where
     T: Serialize,
@@ -199,7 +295,13 @@ where
         .prefix(".casm-cache-")
         .suffix(".json")
         .tempfile_in(parent)?;
-    serde_json::to_writer(&mut temp_file, casm).map_err(io::Error::other)?;
+
+    {
+        let mut writer = BufWriter::new(&mut temp_file);
+        serde_json::to_writer(&mut writer, casm).map_err(io::Error::other)?;
+        writer.flush()?;
+    }
+
     temp_file.flush()?;
     temp_file.persist(path).map_err(|error| error.error)?;
 
@@ -277,6 +379,106 @@ mod tests {
             &cache_dir,
             "universal-sierra-compiler 1.2.3",
             |_| panic!("cache hit should not compile again"),
+        )
+        .unwrap();
+
+        assert_eq!(first, raw_casm(vec![(1, 2)]));
+        assert_eq!(second, raw_casm(vec![(1, 2)]));
+    }
+
+    #[test]
+    fn reuses_cache_for_equivalent_sierra_json_with_different_field_order() {
+        let temp = tempfile::tempdir().unwrap();
+        let sierra_a = temp.path().join("first.json");
+        let sierra_b = temp.path().join("second.json");
+        fs::write(
+            &sierra_a,
+            br#"{"program":"same","debug_info":{"b":2,"a":1}}"#,
+        )
+        .unwrap();
+        fs::write(
+            &sierra_b,
+            br#"{"debug_info":{"a":1,"b":2},"program":"same"}"#,
+        )
+        .unwrap();
+
+        let cache_dir = temp.path().join("cache");
+        let first = compile_sierra_at_path_with_cache_using_version::<RawCasmProgram>(
+            &sierra_a,
+            SierraType::Raw,
+            &cache_dir,
+            "universal-sierra-compiler 1.2.3",
+            |_| Ok(raw_casm_json(vec![(1, 2)])),
+        )
+        .unwrap();
+        let second = compile_sierra_at_path_with_cache_using_version::<RawCasmProgram>(
+            &sierra_b,
+            SierraType::Raw,
+            &cache_dir,
+            "universal-sierra-compiler 1.2.3",
+            |_| panic!("equivalent sierra json should reuse cache"),
+        )
+        .unwrap();
+
+        assert_eq!(first, raw_casm(vec![(1, 2)]));
+        assert_eq!(second, raw_casm(vec![(1, 2)]));
+    }
+
+    #[test]
+    fn reuses_raw_cache_for_same_program_with_different_debug_info() {
+        let temp = tempfile::tempdir().unwrap();
+        let sierra_a = temp.path().join("first.json");
+        let sierra_b = temp.path().join("second.json");
+        fs::write(&sierra_a, br#"{"program":"same","debug_info":{"a":1}}"#).unwrap();
+        fs::write(&sierra_b, br#"{"program":"same","debug_info":{"b":2}}"#).unwrap();
+
+        let cache_dir = temp.path().join("cache");
+        let content_hash = raw_sierra_program_content_hash(&serde_json::json!({
+            "program": "same"
+        }));
+        let first = compile_sierra_with_content_hash_using_version::<RawCasmProgram>(
+            SierraType::Raw,
+            &cache_dir,
+            "universal-sierra-compiler 1.2.3",
+            &content_hash,
+            || Ok(raw_casm_json(vec![(1, 2)])),
+        )
+        .unwrap();
+        let second = compile_sierra_with_content_hash_using_version::<RawCasmProgram>(
+            SierraType::Raw,
+            &cache_dir,
+            "universal-sierra-compiler 1.2.3",
+            &content_hash,
+            || panic!("debug info differences should not invalidate raw CASM cache"),
+        )
+        .unwrap();
+
+        assert_eq!(first, raw_casm(vec![(1, 2)]));
+        assert_eq!(second, raw_casm(vec![(1, 2)]));
+    }
+
+    #[test]
+    fn reuses_contract_cache_with_precomputed_content_hash() {
+        let temp = tempfile::tempdir().unwrap();
+        let cache_dir = temp.path().join("cache");
+        let sierra_bytes = br#"{"contract":"same"}"#;
+        let content_hash = contract_sierra_content_hash(sierra_bytes);
+
+        let first = compile_sierra_with_content_hash_using_version::<RawCasmProgram>(
+            SierraType::Contract,
+            &cache_dir,
+            "universal-sierra-compiler 1.2.3",
+            &content_hash,
+            || Ok(raw_casm_json(vec![(1, 2)])),
+        )
+        .unwrap();
+
+        let second = compile_sierra_with_content_hash_using_version::<RawCasmProgram>(
+            SierraType::Contract,
+            &cache_dir,
+            "universal-sierra-compiler 1.2.3",
+            &content_hash,
+            || panic!("same contract Sierra content hash should reuse cache"),
         )
         .unwrap();
 
