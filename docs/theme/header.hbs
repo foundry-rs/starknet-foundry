@@ -1,18 +1,29 @@
-<div class="blake-banner">
+{{!--
+  Site-wide announcement banner, shown above the menu bar on every page.
+  Hidden by default. To show a banner:
+    1. In the <style> below, delete the `.page { margin-block-start: 0 }` line
+       and the `display: none` from `.announcement-banner`.
+    2. Put your message inside the <p> below.
+--}}
+<div class="announcement-banner">
   <p>
+    <!-- Example:
     <strong>Important:</strong>
     If you're encountering any problem declaring contracts, please read the
-    <a href="{{path_to_root}}getting-started/blake-hash-support.html">
-      Blake Hash Support</a>
-    information.
+    <a href="{{path_to_root}}appendix/blake-hash-support.html">Blake Hash Support</a>
+    information. -->
   </p>
 </div>
 
 <style>
-  .blake-banner { position: relative; z-index: 100; background-color: #f8d7da;
+  /* Only needed while the banner is hidden: the banner normally offsets `.page`'s
+     negative top margin, so without it the page top gets clipped. Delete when
+     showing a banner (see instructions at the top of this file). */
+  .page { margin-block-start: 0; }
+  .announcement-banner { display: none; position: relative; z-index: 100; background-color: #f8d7da;
   color: #721c24; border: 0.0625rem solid #f5c6cb; border-radius: 0; text-align:
   center; padding: 5rem 1rem 0 1rem; width: calc(100% + 8px +
   var(--page-padding)); margin-left: calc((8px + var(--page-padding)) * -1); }
-  .blake-banner a { color: #721c24; font-weight: bold; text-decoration:
+  .announcement-banner a { color: #721c24; font-weight: bold; text-decoration:
   underline; }
 </style>
