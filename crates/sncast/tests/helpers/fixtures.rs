@@ -1,6 +1,5 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use crate::helpers::runner::runner;
-use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
 use conversions::string::IntoHexStr;
 use core::str;
@@ -15,11 +14,7 @@ use sncast::helpers::constants::{
 };
 use sncast::helpers::fee::FeeSettings;
 use sncast::helpers::rpc::RpcArgs;
-use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::response::ui::UI;
-use sncast::state::state_file::{
-    ScriptTransactionEntry, ScriptTransactionOutput, ScriptTransactionStatus,
-};
 use sncast::{AccountType, apply_optional_fields, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider};
 use starknet_rust::accounts::{
@@ -32,16 +27,11 @@ use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
-use std::collections::HashMap;
 use std::env;
 use std::fs;
-use std::fs::File;
-use std::io::{BufRead, Write};
+use std::io::BufRead;
 use tempfile::{TempDir, tempdir};
-use toml::Table;
 use url::Url;
-
-const SCRIPT_ORIGIN_TIMESTAMP: u64 = 1_709_853_748;
 
 pub async fn deploy_keystore_account() {
     let keystore_path = "tests/data/keystore/predeployed_key.json";
@@ -433,108 +423,6 @@ pub fn copy_directory_to_tempdir(src_dir: impl AsRef<Utf8Path>) -> TempDir {
     temp_dir
 }
 
-fn copy_script_directory(
-    src_dir: impl AsRef<Utf8Path>,
-    dest_dir: impl AsRef<Utf8Path>,
-    deps: Vec<impl AsRef<std::path::Path>>,
-) {
-    let src_dir = Utf8PathBuf::from(src_dir.as_ref());
-    let dest_dir = Utf8PathBuf::from(dest_dir.as_ref());
-    let mut deps = get_deps_map_from_paths(deps);
-
-    let manifest_path = dest_dir.join("Scarb.toml");
-    let contents = fs::read_to_string(&manifest_path).unwrap();
-    let mut parsed_toml: Table = toml::from_str(&contents)
-        .with_context(|| format!("Failed to parse {manifest_path}"))
-        .unwrap();
-
-    let deps_toml = parsed_toml
-        .get_mut("dependencies")
-        .unwrap()
-        .as_table_mut()
-        .unwrap();
-
-    let sncast_std = deps_toml
-        .get_mut("sncast_std")
-        .expect("sncast_std not found");
-
-    let sncast_std_path = sncast_std.get_mut("path").expect("No path to sncast_std");
-    let sncast_std_path =
-        Utf8PathBuf::from(sncast_std_path.as_str().expect("Failed to extract string"));
-
-    let sncast_std_path = src_dir.join(sncast_std_path);
-    let sncast_std_path_absolute = sncast_std_path
-        .canonicalize_utf8()
-        .expect("Failed to canonicalize sncast_std path");
-    deps.insert(String::from("sncast_std"), sncast_std_path_absolute);
-
-    for (key, value) in deps {
-        let pkg = deps_toml.get_mut(&key).unwrap().as_table_mut().unwrap();
-        pkg.insert("path".to_string(), toml::Value::String(value.to_string()));
-    }
-
-    let modified_toml = toml::to_string(&parsed_toml).expect("Failed to serialize TOML");
-
-    let mut file = File::create(manifest_path).expect("Failed to create file");
-    file.write_all(modified_toml.as_bytes())
-        .expect("Failed to write to file");
-}
-
-pub fn copy_script_directory_to_tempdir(
-    src_dir: impl AsRef<Utf8Path>,
-    deps: Vec<impl AsRef<std::path::Path>>,
-) -> TempDir {
-    let temp_dir = copy_directory_to_tempdir(&src_dir);
-
-    let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
-        .expect("Failed to create Utf8PathBuf from PathBuf");
-
-    copy_script_directory(&src_dir, dest_dir, deps);
-
-    temp_dir
-}
-
-pub fn copy_workspace_directory_to_tempdir(
-    src_dir: impl AsRef<Utf8Path>,
-    relative_member_paths: Vec<impl AsRef<std::path::Path>>,
-    deps: &[impl AsRef<std::path::Path> + Clone],
-) -> TempDir {
-    let src_dir = Utf8PathBuf::from(src_dir.as_ref());
-
-    let temp_dir = copy_directory_to_tempdir(&src_dir);
-
-    let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
-        .expect("Failed to create Utf8PathBuf from PathBuf");
-
-    for member in relative_member_paths {
-        let member = member.as_ref().to_str().unwrap();
-        let src_member_path = src_dir.join(member);
-        let dest_member_path = dest_dir.join(member);
-        fs::create_dir_all(&dest_member_path).expect("Failed to create directories in temp dir");
-        copy_script_directory(&src_member_path, dest_member_path, deps.to_vec());
-    }
-
-    temp_dir
-}
-
-#[must_use]
-pub fn get_deps_map_from_paths(
-    paths: Vec<impl AsRef<std::path::Path>>,
-) -> HashMap<String, Utf8PathBuf> {
-    let mut deps = HashMap::<String, Utf8PathBuf>::new();
-
-    for path in paths {
-        let path = Utf8PathBuf::from_path_buf(path.as_ref().to_path_buf())
-            .expect("Failed to create Utf8PathBuf from PathBuf");
-        let manifest_path = path.join("Scarb.toml");
-        let package =
-            get_package_metadata(&manifest_path, &None).expect("Failed to get package metadata");
-        deps.insert(package.name.clone(), path);
-    }
-
-    deps
-}
-
 pub fn get_address_from_keystore(
     keystore_path: impl AsRef<std::path::Path>,
     account_path: impl AsRef<std::path::Path>,
@@ -600,40 +488,6 @@ pub fn get_keystores_path(relative_path_from_cargo_toml: &str) -> String {
         .to_str()
         .expect("Failed to convert path to string")
         .to_string()
-}
-
-pub fn assert_tx_entry_failed(
-    tx_entry: &ScriptTransactionEntry,
-    name: &str,
-    status: ScriptTransactionStatus,
-    msg_contains: Vec<&str>,
-) {
-    assert_eq!(tx_entry.name, name);
-    assert_eq!(tx_entry.status, status);
-
-    let ScriptTransactionOutput::ErrorResponse(response) = &tx_entry.output else {
-        panic!("Wrong response")
-    };
-    for msg in msg_contains {
-        assert!(response.message.contains(msg));
-    }
-
-    assert!(tx_entry.timestamp > SCRIPT_ORIGIN_TIMESTAMP);
-}
-
-pub fn assert_tx_entry_success(tx_entry: &ScriptTransactionEntry, name: &str) {
-    assert_eq!(tx_entry.name, name);
-    assert_eq!(tx_entry.status, ScriptTransactionStatus::Success);
-
-    let expected_selector = match tx_entry.output {
-        ScriptTransactionOutput::DeployResponse(_) => "deploy",
-        ScriptTransactionOutput::DeclareResponse(_) => "declare",
-        ScriptTransactionOutput::InvokeResponse(_) => "invoke",
-        ScriptTransactionOutput::ErrorResponse(_) => panic!("Error response received"),
-    };
-    assert_eq!(expected_selector, name);
-
-    assert!(tx_entry.timestamp > SCRIPT_ORIGIN_TIMESTAMP);
 }
 
 pub async fn create_and_deploy_oz_account() -> TempDir {

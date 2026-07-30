@@ -3,13 +3,13 @@ use crate::response::cast_message::SncastCommandMessage;
 use crate::response::declare::DeclareTransactionResponse;
 use crate::response::dry_run::DryRunResponse;
 use crate::response::explorer_link::OutputLink;
+use conversions::padded_felt::PaddedFelt;
 use conversions::string::IntoPaddedHexStr;
-use conversions::{padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
 use foundry_ui::styling;
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 #[serde(untagged)]
 pub enum DeployResponse {
     Standard(StandardDeployResponse),
@@ -83,13 +83,13 @@ impl OutputLink for DeployResponse {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub enum StandardDeployResponse {
     Transaction(StandardDeployTransactionResponse),
     DryRun(DryRunResponse),
 }
 
-#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct StandardDeployTransactionResponse {
     pub contract_address: PaddedFelt,
     pub transaction_hash: PaddedFelt,
@@ -115,7 +115,7 @@ impl StandardDeployResponse {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct DeployResponseWithDeclare {
     contract_address: PaddedFelt,
     class_hash: PaddedFelt,

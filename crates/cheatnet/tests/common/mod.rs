@@ -18,9 +18,11 @@ use cheatnet::runtime_extensions::outer_call_runtime_extension::execution::entry
     ExecuteCallEntryPointExtraOptions, execute_call_entry_point,
 };
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::{
-    AddressOrClassHash, CallSuccess, call_entry_point,
+    CallEntryPointResult, CallFailure,
 };
-use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::{CallFailure, CallResult};
+use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::{
+    CallSuccess, call_entry_point,
+};
 use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
 use conversions::string::TryFromHexStr;
@@ -45,7 +47,7 @@ pub mod state;
 
 // Helper struct to return both: our custom call result wrapper and actual call info (unless unrecoverable error), allowing tests to check both
 pub struct CallResultExtended {
-    pub call_result: CallResult,
+    pub call_result: CallEntryPointResult,
     pub call_info: Option<CallInfo>,
 }
 
@@ -70,12 +72,12 @@ fn build_syscall_hint_processor<'a>(
         ReadOnlySegments::default(),
     )
 }
-pub fn recover_data(output: CallResult) -> Vec<Felt> {
+pub fn recover_data(output: CallEntryPointResult) -> Vec<Felt> {
     match output {
         Ok(CallSuccess { ret_data, .. }) => ret_data,
         Err(failure_type) => match failure_type {
             CallFailure::Recoverable { panic_data, .. } => panic_data,
-            CallFailure::Unrecoverable { msg, .. } => panic!("Call failed with message: {msg}"),
+            CallFailure::Unrecoverable(error) => panic!("Call failed with message: {error}"),
         },
     }
 }
@@ -212,7 +214,7 @@ pub fn call_contract(
     contract_address: &ContractAddress,
     entry_point_selector: EntryPointSelector,
     calldata: &[Felt],
-) -> CallResult {
+) -> CallEntryPointResult {
     let calldata = create_execute_calldata(calldata);
 
     let entry_point = CallEntryPoint {
@@ -227,13 +229,7 @@ pub fn call_contract(
         initial_gas: i64::MAX as u64,
     };
 
-    call_entry_point_extended_result(
-        state,
-        cheatnet_state,
-        entry_point,
-        &AddressOrClassHash::ContractAddress(*contract_address),
-    )
-    .call_result
+    call_entry_point_extended_result(state, cheatnet_state, entry_point).call_result
 }
 
 // This executes a library call as from a test contract.
@@ -245,7 +241,7 @@ pub fn library_call_contract(
     class_hash: &ClassHash,
     entry_point_selector: EntryPointSelector,
     calldata: &[Felt],
-) -> CallResult {
+) -> CallEntryPointResult {
     let calldata = create_execute_calldata(calldata);
     let entry_point = CallEntryPoint {
         class_hash: Some(*class_hash),
@@ -259,13 +255,7 @@ pub fn library_call_contract(
         initial_gas: i64::MAX as u64,
     };
 
-    call_entry_point_extended_result(
-        state,
-        cheatnet_state,
-        entry_point,
-        &AddressOrClassHash::ClassHash(*class_hash),
-    )
-    .call_result
+    call_entry_point_extended_result(state, cheatnet_state, entry_point).call_result
 }
 
 pub fn call_contract_extended_result(
@@ -289,19 +279,13 @@ pub fn call_contract_extended_result(
         initial_gas: i64::MAX as u64,
     };
 
-    call_entry_point_extended_result(
-        state,
-        cheatnet_state,
-        entry_point,
-        &AddressOrClassHash::ContractAddress(*contract_address),
-    )
+    call_entry_point_extended_result(state, cheatnet_state, entry_point)
 }
 
 fn call_entry_point_extended_result(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
     entry_point: CallEntryPoint,
-    address_or_class_hash: &AddressOrClassHash,
 ) -> CallResultExtended {
     let mut entry_point_execution_context = build_context(
         &cheatnet_state.block_info,
@@ -321,7 +305,6 @@ fn call_entry_point_extended_result(
         &mut syscall_hint_processor,
         cheatnet_state,
         entry_point,
-        address_or_class_hash,
         &mut (i64::MAX as u64),
     );
     let call_info = syscall_hint_processor.base.inner_calls.first().cloned();

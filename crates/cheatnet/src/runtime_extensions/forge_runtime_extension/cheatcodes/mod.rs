@@ -1,5 +1,3 @@
-use crate::runtime_extensions::outer_call_runtime_extension::rpc::CallFailure;
-use cairo_vm::vm::errors::hint_errors::HintError;
 use runtime::EnhancedHintError;
 use starknet_types_core::felt::Felt;
 
@@ -31,16 +29,5 @@ pub enum CheatcodeError {
 impl From<EnhancedHintError> for CheatcodeError {
     fn from(error: EnhancedHintError) -> Self {
         CheatcodeError::Unrecoverable(error)
-    }
-}
-
-impl From<CallFailure> for CheatcodeError {
-    fn from(value: CallFailure) -> Self {
-        match value {
-            CallFailure::Recoverable { panic_data } => CheatcodeError::Recoverable(panic_data),
-            CallFailure::Unrecoverable { msg } => CheatcodeError::Unrecoverable(
-                HintError::CustomHint(Box::from(msg.to_string())).into(),
-            ),
-        }
     }
 }

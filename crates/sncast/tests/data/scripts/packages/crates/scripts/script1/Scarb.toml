@@ -1,8 +1,0 @@
-[package]
-name = "script1"
-version = "0.1.0"
-edition = "2024_07"
-
-[dependencies]
-starknet = ">=2.3.0"
-sncast_std = { path = "../../../../../../../../../sncast_std" }

@@ -19,12 +19,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Actual` and `Expected` panic data in the `#[should_panic]` mismatch message now labels rendered values inline, making it clear whether each value is a `ByteArray` or a `felt252`.
 - Minimal recommended `Scarb` version is now `2.18.0` (updated from `2.17.0`)
+- Re-enabled the `add-types-debug-info = true` requirement for `--launch-debugger` on Scarb `>= 2.20.0`
 
 #### Fixed
 
 - Malformed byte array panic data (e.g. an untrusted words length) no longer causes a crash when matching `#[should_panic]` expected data. Additionally, invalid byte array serializations (e.g. bad `pending_word_len`) are now rejected instead of rendered as a corrupted string.
 
 ### Cast
+
+#### Removed
+
+- Cairo deployment scripts (`sncast script` command and `sncast_std` library).
 
 #### Added
 
@@ -36,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
+- Re-enabled `StarkScan` as a supported `block-explorer` option (currently available only for `mainnet`).
 - `get balance` command for undeployed accounts
 
 ## [0.62.1] - 2026-07-03

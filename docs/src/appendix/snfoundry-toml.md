@@ -104,6 +104,7 @@ The `block-explorer` field specifies the block explorer service used to display 
 | Value     | URL                                    |
 |-----------|----------------------------------------|
 | Voyager   | `https://voyager.online`               |
+| StarkScan | `https://starkscan.co`                 |
 | ViewBlock | `https://viewblock.io/starknet`        |
 | OkLink    | `https://www.oklink.com/starknet`      |
 
@@ -114,7 +115,7 @@ block-explorer = "Voyager"
 
 #### `scarb-profile`
 
-The `scarb-profile` field sets which [Scarb profile](https://docs.swmansion.com/scarb/docs/reference/profiles.html) `sncast` uses when it runs `scarb` commands (e.g. `scarb build` when declaring contracts or running scripts).
+The `scarb-profile` field sets which [Scarb profile](https://docs.swmansion.com/scarb/docs/reference/profiles.html) `sncast` uses when it runs `scarb` commands (e.g. `scarb build` when declaring contracts).
 
 Defaults to `release`.
 

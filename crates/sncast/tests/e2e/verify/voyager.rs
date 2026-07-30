@@ -798,8 +798,8 @@ async fn test_test_files_flag_includes_test_files() {
                 && let Some(files_obj) = files.as_object()
             {
                 // Verify that test files ARE present
-                return files_obj.contains_key("src/test_helpers.cairo")
-                    && files_obj.contains_key("src/tests.cairo");
+                return files_obj.contains_key("src/tests/test_helpers.cairo")
+                    && files_obj.contains_key("src/tests/tests.cairo");
             }
             false
         })
@@ -874,8 +874,8 @@ async fn test_without_test_files_flag_excludes_test_files() {
                 && let Some(files_obj) = files.as_object()
             {
                 // Verify that test files are NOT present
-                return !files_obj.contains_key("src/test_helpers.cairo")
-                    && !files_obj.contains_key("src/tests.cairo");
+                return !files_obj.contains_key("src/tests/test_helpers.cairo")
+                    && !files_obj.contains_key("src/tests/tests.cairo");
             }
             false
         })

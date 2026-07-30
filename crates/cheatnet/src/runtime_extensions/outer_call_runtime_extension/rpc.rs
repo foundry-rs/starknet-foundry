@@ -1,18 +1,14 @@
 use super::CheatnetState;
+use crate::runtime_extensions::common::create_execute_calldata;
 use crate::runtime_extensions::outer_call_runtime_extension::execution::entry_point::{
     ExecuteCallEntryPointExtraOptions, clear_handled_errors, execute_call_entry_point,
 };
 use crate::runtime_extensions::outer_call_runtime_extension::execution::execution_utils::clear_events_and_messages_from_reverted_call;
-use crate::runtime_extensions::{
-    common::create_execute_calldata,
-    outer_call_runtime_extension::panic_parser::try_extract_panic_data,
-};
 use blockifier::execution::call_info::{CallExecution, ExecutionSummary, Retdata};
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::syscalls::hint_processor::{
     ENTRYPOINT_FAILED_ERROR_FELT, SyscallExecutionError,
 };
-use blockifier::execution::syscalls::vm_syscall_utils::SyscallExecutorBaseError;
 use blockifier::execution::{
     call_info::CallInfo,
     entry_point::CallType,
@@ -22,15 +18,9 @@ use blockifier::execution::{
 use blockifier::execution::{
     entry_point::CallEntryPoint, syscalls::vm_syscall_utils::SyscallUsageMap,
 };
-use blockifier::state::errors::StateError;
-use cairo_vm::vm::errors::hint_errors::HintError;
 use conversions::{byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr};
-use shared::utils::build_readable_text;
 use starknet_api::core::EntryPointSelector;
-use starknet_api::{
-    contract_class::EntryPointType,
-    core::{ClassHash, ContractAddress},
-};
+use starknet_api::{contract_class::EntryPointType, core::ContractAddress};
 use starknet_types_core::felt::Felt;
 
 #[derive(Clone, Debug, Default)]
@@ -51,139 +41,52 @@ impl From<CallFailure> for SyscallExecutionError {
             CallFailure::Recoverable { panic_data } => Self::Revert {
                 error_data: panic_data,
             },
-            // TODO(#3307):
-            // `SyscallExecutorBaseError::Hint` is chosen arbitrary to enable conversion by `try_extract_revert`
-            // in `execute_syscall` function.
-            // Ideally, we should pass the actual received error instead of a string.
-            CallFailure::Unrecoverable { msg } => Self::SyscallExecutorBase(
-                SyscallExecutorBaseError::Hint(HintError::CustomHint(Box::from(msg.to_string()))),
-            ),
+            CallFailure::Unrecoverable(error) => error.into(),
         }
     }
 }
 
-pub type CallResult = Result<CallSuccess, CallFailure>;
+/// Result of a contract call as returned by [`call_entry_point`] / [`call_l1_handler`].
+///
+/// Unlike [`crate::trace_data::TraceDataCallResult`], this keeps the original
+/// [`EntryPointExecutionError`] for the unrecoverable case, so it can be propagated without being
+/// reduced to a string.
+pub type CallEntryPointResult = Result<CallSuccess, CallFailure>;
 
-/// Enum representing a possible call failure and its type.
+/// Call failure returned by [`call_entry_point`] / [`call_l1_handler`].
 /// `Recoverable` - Meant to be caught by the user.
 /// `Unrecoverable` - Equivalent of `panic!` in rust.
-#[derive(Debug, Clone, CairoSerialize)]
+#[derive(Debug)]
 pub enum CallFailure {
     Recoverable { panic_data: Vec<Felt> },
-    Unrecoverable { msg: ByteArray },
+    Unrecoverable(AnnotatedEntryPointExecutionError),
 }
 
-pub enum AddressOrClassHash {
-    ContractAddress(ContractAddress),
-    ClassHash(ClassHash),
+/// Classifies a blockifier error as recoverable (catchable by the user), returning the panic
+/// data to put into memory, or `None` if the error is unrecoverable.
+pub(crate) fn recoverable_panic_data(err: &AnnotatedEntryPointExecutionError) -> Option<Vec<Felt>> {
+    match err.unannotated() {
+        EntryPointExecutionError::PreExecutionError(
+            PreExecutionError::UninitializedStorageAddress(contract_address),
+        ) => {
+            let address_str = contract_address.into_hex_string();
+            let msg = format!("Contract not deployed at address: {address_str}");
+
+            Some(ByteArray::from(msg.as_str()).serialize_with_magic())
+        }
+        _ => None,
+    }
 }
 
 impl CallFailure {
-    /// Maps blockifier-type error, to one that can be put into memory as panic-data (or re-raised)
+    /// Maps a blockifier error to a call failure, keeping the original error when unrecoverable.
     #[must_use]
-    pub fn from_execution_error(
-        err: &AnnotatedEntryPointExecutionError,
-        starknet_identifier: &AddressOrClassHash,
-    ) -> Self {
-        Self::from_unannotated_execution_error(err.unannotated(), starknet_identifier)
-    }
-
-    fn from_unannotated_execution_error(
-        err: &EntryPointExecutionError,
-        starknet_identifier: &AddressOrClassHash,
-    ) -> Self {
-        match err {
-            EntryPointExecutionError::ExecutionFailed { error_trace } => {
-                let err_data = error_trace.last_retdata.clone().0;
-
-                let err_data_str = build_readable_text(err_data.as_slice()).unwrap_or_default();
-
-                if err_data_str.contains("Failed to deserialize param #")
-                    || err_data_str.contains("Input too long for arguments")
-                {
-                    CallFailure::Unrecoverable {
-                        msg: ByteArray::from(err_data_str.as_str()),
-                    }
-                } else {
-                    CallFailure::Recoverable {
-                        panic_data: err_data,
-                    }
-                }
-            }
-            EntryPointExecutionError::PreExecutionError(PreExecutionError::EntryPointNotFound(
-                selector,
-            )) => {
-                let selector_hash = selector.into_hex_string();
-                let msg = match starknet_identifier {
-                    AddressOrClassHash::ContractAddress(address) => format!(
-                        "Entry point selector {selector_hash} not found in contract {}",
-                        address.into_hex_string()
-                    ),
-                    AddressOrClassHash::ClassHash(class_hash) => format!(
-                        "Entry point selector {selector_hash} not found for class hash {}",
-                        class_hash.into_hex_string()
-                    ),
-                };
-
-                let panic_data_felts = ByteArray::from(msg.as_str()).serialize_with_magic();
-
-                CallFailure::Recoverable {
-                    panic_data: panic_data_felts,
-                }
-            }
-            EntryPointExecutionError::PreExecutionError(
-                PreExecutionError::UninitializedStorageAddress(contract_address),
-            ) => {
-                let address_str = contract_address.into_hex_string();
-                let msg = format!("Contract not deployed at address: {address_str}");
-
-                let panic_data_felts = ByteArray::from(msg.as_str()).serialize_with_magic();
-
-                CallFailure::Recoverable {
-                    panic_data: panic_data_felts,
-                }
-            }
-            EntryPointExecutionError::StateError(StateError::StateReadError(msg)) => {
-                CallFailure::Unrecoverable {
-                    msg: ByteArray::from(msg.as_str()),
-                }
-            }
-            error => {
-                let error_string = error.to_string();
-                if let Some(panic_data) = try_extract_panic_data(&error_string) {
-                    CallFailure::Recoverable { panic_data }
-                } else {
-                    CallFailure::Unrecoverable {
-                        msg: ByteArray::from(error_string.as_str()),
-                    }
-                }
-            }
+    pub fn from_execution_error(err: AnnotatedEntryPointExecutionError) -> Self {
+        match recoverable_panic_data(&err) {
+            Some(panic_data) => CallFailure::Recoverable { panic_data },
+            None => CallFailure::Unrecoverable(err),
         }
     }
-}
-
-pub fn from_non_error(call_info: &CallInfo) -> Result<CallSuccess, CallFailure> {
-    let return_data = &call_info.execution.retdata.0;
-
-    if call_info.execution.failed {
-        return Err(CallFailure::Recoverable {
-            panic_data: return_data.clone(),
-        });
-    }
-
-    Ok(CallSuccess {
-        ret_data: return_data.clone(),
-    })
-}
-
-pub fn from_error(
-    err: &EntryPointExecutionError,
-    starknet_identifier: &AddressOrClassHash,
-) -> Result<CallSuccess, CallFailure> {
-    Err(CallFailure::from_unannotated_execution_error(
-        err,
-        starknet_identifier,
-    ))
 }
 
 pub fn call_l1_handler(
@@ -192,7 +95,7 @@ pub fn call_l1_handler(
     contract_address: &ContractAddress,
     entry_point_selector: EntryPointSelector,
     calldata: &[Felt],
-) -> Result<CallSuccess, CallFailure> {
+) -> CallEntryPointResult {
     let calldata = create_execute_calldata(calldata);
     let mut remaining_gas = i64::MAX as u64;
     let entry_point = CallEntryPoint {
@@ -211,7 +114,6 @@ pub fn call_l1_handler(
         syscall_handler,
         cheatnet_state,
         entry_point,
-        &AddressOrClassHash::ContractAddress(*contract_address),
         &mut remaining_gas,
     )
 }
@@ -220,9 +122,8 @@ pub fn call_entry_point(
     syscall_handler: &mut SyscallHintProcessor,
     cheatnet_state: &mut CheatnetState,
     mut entry_point: CallEntryPoint,
-    starknet_identifier: &AddressOrClassHash,
     remaining_gas: &mut u64,
-) -> Result<CallSuccess, CallFailure> {
+) -> CallEntryPointResult {
     let revert_idx = syscall_handler.base.context.revert_infos.0.len();
     let result = execute_call_entry_point(
         &mut entry_point,
@@ -234,7 +135,7 @@ pub fn call_entry_point(
             trace_data_handled_by_revert_call: false,
         },
     )
-    .map_err(|err| CallFailure::from_execution_error(&err, starknet_identifier));
+    .map_err(CallFailure::from_execution_error);
 
     let call_info = match result {
         Ok(call_info) => call_info,

@@ -5,7 +5,7 @@ use blockifier::state::cached_state::CachedState;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::selector_from_name;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::CallResult;
+use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::CallEntryPointResult;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use starknet_api::core::ClassHash;
 use starknet_api::core::ContractAddress;
@@ -55,7 +55,7 @@ impl TestEnvironment {
         contract_address: &ContractAddress,
         selector: &str,
         calldata: &[Felt],
-    ) -> CallResult {
+    ) -> CallEntryPointResult {
         call_contract(
             &mut self.cached_state,
             &mut self.cheatnet_state,
@@ -70,7 +70,7 @@ impl TestEnvironment {
         class_hash: &ClassHash,
         selector: &str,
         calldata: &[Felt],
-    ) -> CallResult {
+    ) -> CallEntryPointResult {
         library_call_contract(
             &mut self.cached_state,
             &mut self.cheatnet_state,

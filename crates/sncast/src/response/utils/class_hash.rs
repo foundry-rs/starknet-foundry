@@ -1,10 +1,10 @@
 use crate::response::cast_message::SncastCommandMessage;
 use conversions::padded_felt::PaddedFelt;
-use conversions::{serde::serialize::CairoSerialize, string::IntoPaddedHexStr};
+use conversions::string::IntoPaddedHexStr;
 use foundry_ui::styling;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct ClassHashResponse {
     pub class_hash: PaddedFelt,
 }

@@ -1,5 +1,7 @@
 # sncast interface overhaul
 
+> **Note:** Cairo deployment scripts (`sncast script`) were removed. Script-related proposals in this document are obsolete.
+
 ## Context
 In light of needed changes on how the scripts and contract declaration work (ie adding support for scarb workspaces and various directory layouts),
 we need to re-think how we call the respective subcommands, and try to improve it. This design doc covers only a portion
