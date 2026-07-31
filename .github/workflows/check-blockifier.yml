@@ -16,13 +16,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           since=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)
-          count=$(gh api \
+          changed=$(gh api \
             "repos/starkware-libs/sequencer/commits?path=scripts/merge_paths.json&since=$since" \
-            --jq 'length')
-          echo "count=$count" >> "$GITHUB_OUTPUT"
+            --jq 'length > 0')
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
 
       - name: Notify on Slack
-        if: steps.check.outputs.count != '0'
+        if: steps.check.outputs.changed == 'true'
         uses: slackapi/slack-github-action@v3.0.3
         with:
           webhook: ${{ secrets.SLACK_BLOCKIFIER_NOTIFY_WEBHOOK_URL }}
