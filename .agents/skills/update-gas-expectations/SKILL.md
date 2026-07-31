@@ -128,18 +128,22 @@ expected: 3
 actual:   4
 ```
 
-The `actual:` line is already normalized to the value the source should hold — including the
-`range_check` off-by-one adjustment — so you write it verbatim, no arithmetic.
+The `actual:` line is the value compared by the assertion helper after any helper-side
+normalization. For `assert_syscall` and non-`range_check` `assert_builtin` calls, write it verbatim.
+For `assert_builtin(..., BuiltinName::range_check, N)`, the helper subtracts 1 before comparing, so
+write `actual + 1` in the source.
 
 ### 3. Rewrite the matching expectation
 
 Use the full test case path from the message to identify the exact Cairo test function and matching
 Rust assertion. Helper calls may still pass only the final path segment, such as `"some_test"`; use
 that short argument only after the full path has disambiguated the case. Then replace the numbers
-with the `actual:` values.
+according to the assertion type:
 
 - `assert_gas`: update the three `GasAmount(...)` values in the `GasVector { .. }` literal.
-- `assert_syscall` / `assert_builtin`: update the last numeric argument.
+- `assert_syscall` and non-`range_check` `assert_builtin`: update the last numeric argument to
+  `actual`.
+- `assert_builtin` with `BuiltinName::range_check`: update the last numeric argument to `actual + 1`.
 - `available_gas.rs`: update the number after `l2_gas: ~` inside the expected error string.
 
 If nearby comments explain the expected value, update them in the same pass. This is especially
