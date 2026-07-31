@@ -1,7 +1,4 @@
 # Gas expectations
-> 💡 **Info**
-> This tutorial is only relevant if you wish to contribute to Starknet Foundry.
-> If you plan to only use it as a tool for your project, you can skip this part.
 
 Some Forge integration tests assert on exact gas usage and resource counts, for example:
 
