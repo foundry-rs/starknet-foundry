@@ -128,10 +128,22 @@ expected: 3
 actual:   4
 ```
 
-The `actual:` line is the value compared by the assertion helper after any helper-side
-normalization. For `assert_syscall` and non-`range_check` `assert_builtin` calls, write it verbatim.
-For `assert_builtin(..., BuiltinName::range_check, N)`, the helper subtracts 1 before comparing, so
-write `actual + 1` in the source.
+For `assert_syscall` and `assert_builtin`, the `actual:` line is the value compared by the assertion
+helper after any helper-side normalization. For `assert_syscall` and non-`range_check`
+`assert_builtin` calls, write it verbatim. For
+`assert_builtin(..., BuiltinName::range_check, N)`, the helper subtracts 1 before comparing, so write
+`actual + 1` in the source.
+
+`available_gas.rs`:
+```
+Output assertion failed for test case `test_package_integrationtest::test_case::keccak_cost`.
+expected output to contain: Test cost exceeded the available gas. Consumed l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~230000
+actual:
+    Test cost exceeded the available gas. Consumed l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~240000
+```
+
+For `available_gas.rs`, use only the `l2_gas: ~...` number from the actual test output when updating
+the expected error string.
 
 ### 3. Rewrite the matching expectation
 
