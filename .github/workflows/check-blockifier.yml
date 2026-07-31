@@ -1,3 +1,5 @@
+# This workflow monitors whether there are new development branches in the
+# Sequencer repository for the newest Starknet version.
 name: 'Check new development branches in the Sequencer repository'
 
 on:
@@ -28,4 +30,4 @@ jobs:
           webhook: ${{ secrets.SLACK_BLOCKIFIER_NOTIFY_WEBHOOK_URL }}
           webhook-type: webhook-trigger
           payload: |
-            text: "New branch for Starknet version created in the Sequencer repo in the last 7 days, check https://github.com/starkware-libs/sequencer/blob/main/scripts/merge_paths.json"
+            text: ":fireball: New Starknet development branch detected in the Sequencer repo :fireball:\nscripts/merge_paths.json changed in the last 7 days, which means a new branch was created for an upcoming Starknet version.\nSee the changes: https://github.com/starkware-libs/sequencer/blob/main/scripts/merge_paths.json"
