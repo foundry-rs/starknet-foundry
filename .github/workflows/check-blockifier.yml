@@ -1,0 +1,31 @@
+name: 'Check new development branches in the Sequencer repository'
+
+on:
+  schedule:
+    # Every Monday at 06:00 UTC.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for recent commits
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          since=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          count=$(gh api \
+            "repos/starkware-libs/sequencer/commits?path=scripts/merge_paths.json&since=$since" \
+            --jq 'length')
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+
+      - name: Notify on Slack
+        if: steps.check.outputs.count != '0'
+        uses: slackapi/slack-github-action@v3.0.3
+        with:
+          webhook: ${{ secrets.SLACK_BLOCKIFIER_NOTIFY_WEBHOOK_URL }}
+          webhook-type: webhook-trigger
+          payload: |
+            text: "New branch for Starknet version created in the Sequencer repo in the last 7 days, check https://github.com/starkware-libs/sequencer/blob/main/scripts/merge_paths.json"
