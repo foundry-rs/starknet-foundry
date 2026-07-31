@@ -73,6 +73,7 @@
 * [Shell snippets](development/shell-snippets.md)
 * [Snapshot tests](development/snapshot-tests.md)
 * [Predeployed contracts](development/predeployed-contracts.md)
+* [Gas expectations](development/gas-expectations.md)
 
 ---
 
