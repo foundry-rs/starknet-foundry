@@ -18,8 +18,7 @@ The affected files are:
 
 ## The `update-gas-expectations` skill
 
-We ship a [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) skill,
-`update-gas-expectations`, that automates the refresh. It lives at `.claude/skills/update-gas-expectations/SKILL.md`.
+We ship `update-gas-expectations` skill, that automates the refresh. It lives at `.claude/skills/update-gas-expectations/SKILL.md`.
 
 The assertion helpers print both `expected:` and `actual:` on failure, so the actual value is always
 available in the panic message. The skill drives the relevant tests, reads the reported `actual:`
