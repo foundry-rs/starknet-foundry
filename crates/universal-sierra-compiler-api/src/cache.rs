@@ -1,5 +1,6 @@
 use crate::command::{USCError, USCInternalCommand};
 use crate::compile::{CompilationError, SierraType, compile_sierra_at_path, compile_sierra_bytes};
+use cairo_lang_sierra::program::Program;
 use regex::Regex;
 use serde::{Serialize, de::DeserializeOwned};
 #[cfg(test)]
@@ -31,7 +32,7 @@ pub struct SierraProgramHash(String);
 // cache. See the Cairo Sierra -> CASM compiler API:
 // https://github.com/starkware-libs/cairo/blob/eea264fa54fac04a1a5745ad533a0c0ab3106ab3/crates/cairo-lang-sierra-to-casm/src/compiler.rs#L441
 #[tracing::instrument(skip_all, level = "debug")]
-pub fn raw_sierra_program_content_hash(sierra_program: &impl Serialize) -> SierraProgramHash {
+pub fn raw_sierra_program_content_hash(sierra_program: &Program) -> SierraProgramHash {
     let mut hasher = Sha256::new();
     write_serializable_to_hash(&mut hasher, sierra_program);
     SierraProgramHash(hex_encode(hasher.finalize()))
@@ -357,6 +358,15 @@ mod tests {
         serde_json::to_string(&raw_casm(debug_info)).unwrap()
     }
 
+    fn empty_sierra_program() -> Program {
+        Program {
+            type_declarations: vec![],
+            libfunc_declarations: vec![],
+            statements: vec![],
+            funcs: vec![],
+        }
+    }
+
     #[test]
     fn reuses_cache_for_equal_sierra_bytes_at_different_paths() {
         let temp = tempfile::tempdir().unwrap();
@@ -436,9 +446,7 @@ mod tests {
         fs::write(&sierra_b, br#"{"program":"same","debug_info":{"b":2}}"#).unwrap();
 
         let cache_dir = temp.path().join("cache");
-        let content_hash = raw_sierra_program_content_hash(&serde_json::json!({
-            "program": "same"
-        }));
+        let content_hash = raw_sierra_program_content_hash(&empty_sierra_program());
         let first = compile_sierra_with_content_hash_using_version::<RawCasmProgram>(
             SierraType::Raw,
             &cache_dir,

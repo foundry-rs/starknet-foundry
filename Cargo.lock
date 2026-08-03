@@ -9024,6 +9024,7 @@ name = "universal-sierra-compiler-api"
 version = "1.0.0"
 dependencies = [
  "cairo-lang-casm",
+ "cairo-lang-sierra",
  "cairo-lang-starknet-classes",
  "num-bigint",
  "regex",
