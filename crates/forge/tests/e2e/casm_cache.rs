@@ -3,7 +3,6 @@ use forge_runner::DEFAULT_CACHE_DIR;
 use std::fs;
 use std::path::{Path, PathBuf};
 use universal_sierra_compiler_api::CASM_CACHE_DIR;
-#[cfg(unix)]
 use universal_sierra_compiler_api::version_command;
 
 #[test]
@@ -18,7 +17,6 @@ fn creates_raw_and_contract_casm_cache_entries() {
     assert_cache_entries_created(&json_files(&casm_cache_dir.join("contract")), "contract");
 }
 
-#[cfg(unix)]
 #[test]
 fn reuses_cached_casm_without_invoking_compiler() {
     let temp = setup_package("targets/unit_and_integration");
@@ -152,7 +150,6 @@ fn collect_json_files(path: &Path, files: &mut Vec<PathBuf>) {
     }
 }
 
-#[cfg(unix)]
 fn fake_compiler_that_fails_on_compile(temp_dir: &Path) -> PathBuf {
     use std::os::unix::fs::PermissionsExt as _;
 
@@ -178,7 +175,6 @@ exit 99
     compiler
 }
 
-#[cfg(unix)]
 fn compiler_version() -> Vec<u8> {
     let output = version_command().unwrap().output().unwrap();
     assert!(output.status.success());
