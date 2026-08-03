@@ -27,6 +27,9 @@ static PATH_SEGMENT_UNSAFE_CHARS: LazyLock<Regex> =
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SierraProgramHash(String);
 
+// `debug_info` is not an input to Sierra -> CASM codegen, so it must not invalidate the raw CASM
+// cache. See the Cairo Sierra -> CASM compiler API:
+// https://github.com/starkware-libs/cairo/blob/eea264fa54fac04a1a5745ad533a0c0ab3106ab3/crates/cairo-lang-sierra-to-casm/src/compiler.rs#L441
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn raw_sierra_program_content_hash(sierra_program: &impl Serialize) -> SierraProgramHash {
     let mut hasher = Sha256::new();
