@@ -39,7 +39,7 @@ use forge_runner::{
     test_target_summary::TestTargetSummary,
 };
 use foundry_ui::{UI, components::labeled::LabeledMessage};
-use scarb_api::{CompilationOpts, get_contracts_artifacts_and_source_sierra_paths_with_cache};
+use scarb_api::{CompilationOpts, get_contracts_artifacts_and_source_sierra_paths};
 use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
 use tokio::task::JoinHandle;
@@ -93,7 +93,7 @@ impl RunForPackageArgs {
     ) -> Result<RunForPackageArgs> {
         let mut raw_test_targets = load_test_artifacts(artifacts_dir, &package)?;
 
-        let contracts = get_contracts_artifacts_and_source_sierra_paths_with_cache(
+        let contracts = get_contracts_artifacts_and_source_sierra_paths(
             artifacts_dir,
             &package,
             ui,

@@ -15,9 +15,14 @@ use tempfile::Builder;
 
 pub const CASM_CACHE_DIR: &str = "casm";
 
-// Bump when the cache key inputs or cached CASM JSON format/semantics change in a way that could
-// make old entries deserialize successfully but no longer be valid for the current implementation.
-const CACHE_SCHEMA_VERSION: &str = "v3";
+// snforge's release version, keyed into every cache entry so upgrading snforge starts from a fresh
+// cache namespace (the same approach as the fork cache's `cache_version`). This crate is
+// workspace-versioned, so `CARGO_PKG_VERSION` bumps on every release; any change that could alter the
+// cached CASM ships in a release and therefore moves this version: a `cairo-lang-*` bump that changes
+// the serialized representation (`CasmContractClass` / the `cairo-lang-casm` types in
+// `RawCasmProgram`), or an in-repo change to `RawCasmProgram` itself. Sierra -> CASM codegen changes
+// come from the separately installed USC binary and are covered by its version in `cache_key`.
+const SNFORGE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 static USC_VERSION: OnceLock<String> = OnceLock::new();
 static USC_VERSION_LOCK: Mutex<()> = Mutex::new(());
@@ -188,6 +193,7 @@ fn cache_file_path_for_content_hash(
     cache_dir
         .join(CASM_CACHE_DIR)
         .join(sierra_type.to_string())
+        .join(sanitize_path_segment(SNFORGE_VERSION))
         .join(sanitize_path_segment(compiler_version))
         .join(format!(
             "{}.json",
@@ -202,7 +208,7 @@ fn cache_key(
     sierra_content_hash: &SierraProgramHash,
 ) -> String {
     let mut hasher = Sha256::new();
-    hasher.update(CACHE_SCHEMA_VERSION.as_bytes());
+    hasher.update(SNFORGE_VERSION.as_bytes());
     hasher.update([0]);
     hasher.update(sierra_type.to_string().as_bytes());
     hasher.update([0]);
