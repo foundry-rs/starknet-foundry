@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Removed
 
 - Cairo deployment scripts (`sncast script` command and `sncast_std` library).
+- Deprecated top-level `sncast tx-status` and `sncast balance` commands. Use `sncast get tx-status` and `sncast get balance` instead.
 
 #### Added
 

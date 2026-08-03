@@ -32,30 +32,6 @@ pub async fn happy_case() {
 }
 
 #[tokio::test]
-pub async fn happy_case_old_command() {
-    let tempdir = tempdir().unwrap();
-    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
-
-    let args = vec![
-        "--accounts-file",
-        accounts_json_path.as_str(),
-        "--account",
-        "balance-test",
-        "balance",
-        "--url",
-        URL,
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-
-    snapbox.assert().stdout_eq(indoc! {r"
-        [WARNING] `sncast balance` has moved to `sncast get balance`. `sncast balance` will be removed in the next version.
-
-        Balance: 180111953813089213265 fri
-    "});
-}
-
-#[tokio::test]
 pub async fn happy_case_json() {
     let tempdir = tempdir().unwrap();
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
@@ -321,38 +297,6 @@ pub async fn unknown_token_address_alias() {
         "--account",
         "user1",
         "get",
-        "balance",
-        "--token-address",
-        "@unknown",
-        "--url",
-        URL,
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().failure();
-
-    assert_stderr_contains(
-        output,
-        indoc! {r"
-        Command: get balance
-        Error: Invalid token address
-
-        Caused by:
-            Alias `unknown` not found in config
-        "},
-    );
-}
-
-#[tokio::test]
-pub async fn unknown_token_address_alias_old_command() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
-    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
-
-    let args = vec![
-        "--accounts-file",
-        accounts_json_path.as_str(),
-        "--account",
-        "user1",
         "balance",
         "--token-address",
         "@unknown",
