@@ -105,40 +105,12 @@ pub struct CompilationOpts {
     pub run_native: bool,
 }
 
-/// Get the map with `StarknetContractArtifacts` for the given package
+/// Get the map with `StarknetContractArtifacts` for the given package.
+///
+/// When [`CompilationOpts::casm_cache_dir`] is set, compiled CASM is read from and written to that
+/// cache, so unchanged contracts are not recompiled on subsequent runs.
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn get_contracts_artifacts_and_source_sierra_paths(
-    artifacts_dir: &Utf8Path,
-    package: &PackageMetadata,
-    ui: &UI,
-    compilation_opts: CompilationOpts,
-) -> Result<ContractsData> {
-    get_contracts_artifacts_and_source_sierra_paths_impl(
-        artifacts_dir,
-        package,
-        ui,
-        compilation_opts,
-    )
-}
-
-/// Get the map with `StarknetContractArtifacts` for the given package,
-/// reusing cached CASM when possible.
-#[tracing::instrument(skip_all, level = "debug")]
-pub fn get_contracts_artifacts_and_source_sierra_paths_with_cache(
-    artifacts_dir: &Utf8Path,
-    package: &PackageMetadata,
-    ui: &UI,
-    compilation_opts: CompilationOpts,
-) -> Result<ContractsData> {
-    get_contracts_artifacts_and_source_sierra_paths_impl(
-        artifacts_dir,
-        package,
-        ui,
-        compilation_opts,
-    )
-}
-
-fn get_contracts_artifacts_and_source_sierra_paths_impl(
     artifacts_dir: &Utf8Path,
     package: &PackageMetadata,
     ui: &UI,
