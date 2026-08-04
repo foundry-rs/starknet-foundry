@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use crate::starknet_commands::account::{
     compute_account_address, generate_add_profile_message, get_private_key_from_file,
-    prepare_account_json, write_account_to_accounts_file,
+    prepare_account_json, validate_private_key, write_account_to_accounts_file,
 };
 use crate::starknet_commands::utils::felt_or_id::{ClassHash, ContractAddress};
 use anyhow::{Context, Result, bail, ensure};
@@ -111,6 +111,7 @@ pub async fn import(
                 .with_context(|| format!("Failed to obtain private key from the file {path}"))?,
             (None, None) => get_private_key_from_input()?,
         };
+        let key_felt = validate_private_key(key_felt)?;
 
         let signing_key = SigningKey::from_secret_scalar(key_felt);
         let public_key = signing_key.verifying_key().scalar();

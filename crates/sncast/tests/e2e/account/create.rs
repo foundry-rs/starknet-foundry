@@ -16,6 +16,7 @@ use sncast::AccountType;
 use sncast::helpers::constants::{
     BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH,
 };
+use starknet_curve::curve_params::EC_ORDER;
 use std::fs;
 use tempfile::tempdir;
 use test_case::test_case;
@@ -237,6 +238,57 @@ pub async fn test_create_invalid_private_key_file_path() {
 
         Caused by:
             No such file or directory [..]
+        "},
+    );
+}
+
+#[tokio::test]
+pub async fn test_create_with_zero_private_key() {
+    let args = vec![
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--private-key",
+        "0x0",
+    ];
+
+    let output = runner(&args).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Command: account create
+        Error: Invalid private key: the private key cannot be 0
+        "},
+    );
+}
+
+#[tokio::test]
+pub async fn test_create_with_private_key_exceeding_curve_order() {
+    // Equal to the STARK curve order, which is the first invalid value.
+    let curve_order = EC_ORDER.into_hex_string();
+
+    let args = vec![
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--private-key",
+        curve_order.as_str(),
+    ];
+
+    let output = runner(&args).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Command: account create
+        Error: Invalid private key: the private key must be smaller than the STARK curve order [..]
         "},
     );
 }

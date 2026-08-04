@@ -7760,6 +7760,7 @@ dependencies = [
  "shellexpand",
  "snapbox",
  "speculos-client",
+ "starknet-curve",
  "starknet-rust",
  "starknet-rust-crypto",
  "starknet-types-core 0.2.4",
