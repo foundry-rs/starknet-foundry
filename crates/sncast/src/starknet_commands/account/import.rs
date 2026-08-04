@@ -1,8 +1,8 @@
 use std::str::FromStr;
 
 use crate::starknet_commands::account::{
-    compute_account_address, generate_add_profile_message, prepare_account_json,
-    write_account_to_accounts_file,
+    compute_account_address, generate_add_profile_message, get_private_key_from_file,
+    prepare_account_json, write_account_to_accounts_file,
 };
 use crate::starknet_commands::utils::felt_or_id::{ClassHash, ContractAddress};
 use anyhow::{Context, Result, bail, ensure};
@@ -202,11 +202,6 @@ pub async fn import(
         add_profile: add_profile_message,
         account_name,
     })
-}
-
-fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<Felt> {
-    let private_key_string = std::fs::read_to_string(file_path.clone())?;
-    Ok(private_key_string.parse()?)
 }
 
 fn parse_input_to_felt(input: &str) -> Result<Felt> {
