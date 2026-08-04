@@ -1,19 +1,16 @@
+use crate::response::ui::UI;
 use crate::{
-    NestedMap, build_account, check_account_file_exists, helpers::devnet::provider::DevnetProvider,
+    AccountVariant, NestedMap, build_account_variant, build_signer, check_account_file_exists,
+    helpers::devnet::provider::DevnetProvider,
 };
-use anyhow::{Result, ensure};
+use anyhow::{Context, Result, ensure};
 use camino::Utf8PathBuf;
-use starknet_rust::{
-    accounts::SingleOwnerAccount,
-    providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport},
-    signers::LocalWallet,
-};
+use starknet_rust::providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport};
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use url::Url;
 
 use crate::{AccountData, read_and_parse_json_file};
-use anyhow::Context;
 use serde_json::{Value, json};
 
 pub fn generate_account_name(accounts_file: &Utf8PathBuf) -> Result<String> {
@@ -93,7 +90,8 @@ pub async fn get_account_from_devnet<'a>(
     account: &str,
     provider: &'a JsonRpcClient<HttpTransport>,
     url: &Url,
-) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
+    ui: &UI,
+) -> Result<AccountVariant<'a>> {
     let account_number: u8 = account
         .strip_prefix("devnet-")
         .map(|s| s.parse::<u8>().expect("Invalid devnet account number"))
@@ -124,5 +122,6 @@ pub async fn get_account_from_devnet<'a>(
 
     let account_data = AccountData::from(predeployed_account);
     let chain_id = provider.chain_id().await?;
-    build_account(account_data, chain_id, provider).await
+    let signer = build_signer(&account_data.signer_type, ui, false).await?;
+    build_account_variant(signer, account_data, chain_id, provider).await
 }

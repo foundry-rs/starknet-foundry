@@ -129,6 +129,7 @@ impl From<&PredeployedAccount> for AccountData {
             signer_type: SignerType::Local {
                 private_key: predeployed_account.private_key,
             },
+            unknown_fields: std::collections::HashMap::new(),
         }
     }
 }
