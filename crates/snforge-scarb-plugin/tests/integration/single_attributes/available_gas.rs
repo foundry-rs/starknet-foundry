@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, empty_function, format_output};
-use cairo_lang_macro::{quote, Diagnostic};
+use cairo_lang_macro::{Diagnostic, quote};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::available_gas::available_gas;
 
