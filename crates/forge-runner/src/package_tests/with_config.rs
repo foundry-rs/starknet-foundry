@@ -4,7 +4,7 @@ use crate::{
     filtering::TestCaseIsIgnored,
 };
 use cheatnet::runtime_extensions::forge_config_extension::config::{
-    Expected, ExpectedTupleItem, RawAvailableResourceBoundsConfig, RawForgeConfig, RawForkConfig,
+    Expected, ExpectedTupleItem, RawAvailableGasConfig, RawForgeConfig, RawForkConfig,
     RawFuzzerConfig, RawShouldPanicConfig,
 };
 use conversions::serde::serialize::SerializeToFeltVec;
@@ -18,7 +18,7 @@ pub type TestCaseWithConfig = TestCase<TestCaseConfig>;
 /// see [`super::with_config_resolved::TestCaseResolvedConfig`] for more info
 #[derive(Debug, Clone)]
 pub struct TestCaseConfig {
-    pub available_gas: Option<RawAvailableResourceBoundsConfig>,
+    pub available_gas: Option<RawAvailableGasConfig>,
     pub ignored: bool,
     pub expected_result: ExpectedTestResult,
     pub fork_config: Option<RawForkConfig>,

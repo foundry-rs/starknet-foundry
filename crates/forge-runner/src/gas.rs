@@ -5,7 +5,9 @@ use blockifier::fee::resources::{StarknetResources, StateResources, TransactionR
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
 use blockifier::transaction::objects::HasRelatedFeeType;
-use cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableResourceBoundsConfig;
+use cheatnet::runtime_extensions::forge_config_extension::config::{
+    RawAvailableGasConfig, RawAvailableResourceBoundsConfig,
+};
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
 use cheatnet::state::ExtendedStateReader;
 use starknet_api::execution_resources::GasVector;
@@ -68,35 +70,88 @@ fn get_state_resources(
 }
 
 pub fn check_available_gas(
-    available_gas: Option<RawAvailableResourceBoundsConfig>,
+    available_gas: Option<RawAvailableGasConfig>,
     summary: TestCaseSummary<Single>,
 ) -> TestCaseSummary<Single> {
     match summary {
         TestCaseSummary::Passed {
             name,
+            msg,
             gas_info,
+            used_resources,
+            test_statistics,
             debugging_trace,
-            ..
-        } if available_gas.is_some_and(|available_gas| {
-            let av_gas = available_gas.to_gas_vector();
-            gas_info.gas_used.l1_gas > av_gas.l1_gas
-                || gas_info.gas_used.l1_data_gas > av_gas.l1_data_gas
-                || gas_info.gas_used.l2_gas > av_gas.l2_gas
-        }) =>
-        {
-            TestCaseSummary::Failed {
-                name,
-                msg: Some(format!(
-                    "\n\tTest cost exceeded the available gas. Consumed l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{}",
-                    gas_info.gas_used.l1_gas,
-                    gas_info.gas_used.l1_data_gas,
-                    gas_info.gas_used.l2_gas
-                )),
-                fuzzer_args: Vec::default(),
-                test_statistics: (),
-                debugging_trace,
+            trace_data,
+        } => {
+            let failure_message = available_gas.and_then(|available_gas| {
+                check_available_gas_limit(available_gas, gas_info.gas_used, &used_resources)
+            });
+
+            if let Some(failure_message) = failure_message {
+                TestCaseSummary::Failed {
+                    name,
+                    msg: Some(failure_message),
+                    fuzzer_args: Vec::default(),
+                    test_statistics: (),
+                    debugging_trace,
+                }
+            } else {
+                TestCaseSummary::Passed {
+                    name,
+                    msg,
+                    debugging_trace,
+                    gas_info,
+                    used_resources,
+                    test_statistics,
+                    trace_data,
+                }
             }
         }
         _ => summary,
     }
+}
+
+fn check_available_gas_limit(
+    available_gas: RawAvailableGasConfig,
+    gas_used: GasVector,
+    used_resources: &UsedResources,
+) -> Option<String> {
+    match available_gas {
+        RawAvailableGasConfig::MaxSierraGas(max_gas) => {
+            check_sierra_gas_limit(max_gas, used_resources)
+        }
+        RawAvailableGasConfig::MaxResourceBounds(available_resource_bounds) => {
+            check_resource_bounds(&available_resource_bounds, gas_used).or_else(|| {
+                check_sierra_gas_limit(available_resource_bounds.sierra_gas, used_resources)
+            })
+        }
+    }
+}
+
+fn check_sierra_gas_limit(max_gas: usize, used_resources: &UsedResources) -> Option<String> {
+    let gas_consumed = used_resources
+        .execution_summary
+        .charged_resources
+        .gas_consumed
+        .0;
+
+    (gas_consumed > max_gas as u64)
+        .then(|| format!("\n\tTest cost exceeded the available gas. Consumed gas: ~{gas_consumed}"))
+}
+
+fn check_resource_bounds(
+    available_resource_bounds: &RawAvailableResourceBoundsConfig,
+    gas_used: GasVector,
+) -> Option<String> {
+    let av_gas = available_resource_bounds.to_gas_vector();
+
+    (gas_used.l1_gas > av_gas.l1_gas
+        || gas_used.l1_data_gas > av_gas.l1_data_gas
+        || gas_used.l2_gas > av_gas.l2_gas)
+        .then(|| {
+            format!(
+                "\n\tTest cost exceeded the available gas. Consumed l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{}",
+                gas_used.l1_gas, gas_used.l1_data_gas, gas_used.l2_gas
+            )
+        })
 }

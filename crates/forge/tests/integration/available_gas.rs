@@ -21,6 +21,23 @@ fn correct_available_gas() {
 }
 
 #[test]
+fn correct_corelib_available_gas() {
+    let test = crate::utils::test_case!(indoc!(
+        r"
+            #[test]
+            #[available_gas(30000)]
+            fn simple() {
+                assert(2 == 2, '2 == 2');
+            }
+        "
+    ));
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+}
+
+#[test]
 fn available_gas_exceeded() {
     let test = crate::utils::test_case!(indoc!(
         r"
@@ -39,6 +56,72 @@ fn available_gas_exceeded() {
         &result,
         "keccak_cost",
         "Test cost exceeded the available gas. Consumed l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~240000",
+    );
+}
+
+#[test]
+fn corelib_available_gas_exceeded() {
+    let test = crate::utils::test_case!(indoc!(
+        r"
+            #[test]
+            #[available_gas(1)]
+            fn simple() {
+                assert(2 == 2, '2 == 2');
+            }
+        "
+    ));
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
+        "simple",
+        "Test cost exceeded the available gas. Consumed gas: ~",
+    );
+}
+
+#[test]
+fn named_sierra_gas_exceeded() {
+    let test = crate::utils::test_case!(indoc!(
+        r"
+            #[test]
+            #[available_gas(sierra_gas: 1)]
+            fn simple() {
+                assert(2 == 2, '2 == 2');
+            }
+        "
+    ));
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
+        "simple",
+        "Test cost exceeded the available gas. Consumed gas: ~",
+    );
+}
+
+#[test]
+fn named_sierra_gas_with_resource_bounds_exceeded() {
+    let test = crate::utils::test_case!(indoc!(
+        r"
+            #[test]
+            #[available_gas(l1_gas: 1000000, l1_data_gas: 1000000, l2_gas: 1000000, sierra_gas: 1)]
+            fn simple() {
+                assert(2 == 2, '2 == 2');
+            }
+        "
+    ));
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
+        "simple",
+        "Test cost exceeded the available gas. Consumed gas: ~",
     );
 }
 

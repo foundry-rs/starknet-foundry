@@ -15,6 +15,7 @@ pub struct RawAvailableResourceBoundsConfig {
     pub l1_gas: usize,
     pub l1_data_gas: usize,
     pub l2_gas: usize,
+    pub sierra_gas: usize,
 }
 
 impl RawAvailableResourceBoundsConfig {
@@ -29,8 +30,14 @@ impl RawAvailableResourceBoundsConfig {
 
     #[must_use]
     pub fn is_zero(&self) -> bool {
-        self.to_gas_vector() == GasVector::ZERO
+        self.to_gas_vector() == GasVector::ZERO && self.sierra_gas == 0
     }
+}
+
+#[derive(Debug, Clone, Copy, CairoDeserialize, PartialEq)]
+pub enum RawAvailableGasConfig {
+    MaxSierraGas(usize),
+    MaxResourceBounds(RawAvailableResourceBoundsConfig),
 }
 
 // fork
@@ -172,7 +179,7 @@ pub struct RawPredeployedContractsConfig {
 #[derive(Debug, Default, Clone)]
 pub struct RawForgeConfig {
     pub fork: Option<RawForkConfig>,
-    pub available_gas: Option<RawAvailableResourceBoundsConfig>,
+    pub available_gas: Option<RawAvailableGasConfig>,
     pub ignore: Option<RawIgnoreConfig>,
     pub should_panic: Option<RawShouldPanicConfig>,
     pub fuzzer: Option<RawFuzzerConfig>,

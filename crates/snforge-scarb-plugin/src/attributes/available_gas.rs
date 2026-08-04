@@ -24,16 +24,37 @@ impl AttributeCollector for AvailableGasCollector {
         args: Arguments,
         _warns: &mut Vec<Diagnostic>,
     ) -> Result<TokenStream, Diagnostics> {
-        Ok(from_resource_bounds(db, &args)?)
+        if args.is_empty() || args.unnamed_only::<AvailableGasCollector>().is_err() {
+            Ok(from_resource_bounds(db, &args)?)
+        } else {
+            Ok(from_gas_limit(db, &args)?)
+        }
     }
+}
+
+fn from_gas_limit(db: &SimpleParserDatabase, args: &Arguments) -> Result<TokenStream, Diagnostic> {
+    let &[arg] = args
+        .unnamed_only::<AvailableGasCollector>()?
+        .of_length::<1, AvailableGasCollector>()?;
+
+    let gas = Number::parse_from_expr::<AvailableGasCollector>(db, arg.1, "gas")?;
+    gas.validate_in_gas_range::<AvailableGasCollector>("gas")?;
+
+    let gas_expr = gas.as_cairo_expression();
+
+    Ok(quote!(
+        snforge_std::_internals::config_types::AvailableGasConfig::MaxSierraGas(#gas_expr)
+    ))
 }
 
 fn from_resource_bounds(
     db: &SimpleParserDatabase,
     args: &Arguments,
 ) -> Result<TokenStream, Diagnostic> {
-    let named_args =
-        args.named_only::<AvailableGasCollector>(db, &["l1_gas", "l1_data_gas", "l2_gas"])?;
+    let named_args = args.named_only::<AvailableGasCollector>(
+        db,
+        &["l1_gas", "l1_data_gas", "l2_gas", "sierra_gas"],
+    )?;
 
     let max = u64::MAX;
     let l1_gas = named_args
@@ -54,20 +75,31 @@ fn from_resource_bounds(
         .transpose()?
         .unwrap_or(Number(max.into()));
 
+    let sierra_gas = named_args
+        .as_once_optional("sierra_gas")?
+        .map(|arg| Number::parse_from_expr::<AvailableGasCollector>(db, arg, "sierra_gas"))
+        .transpose()?
+        .unwrap_or(Number(max.into()));
+
     l1_gas.validate_in_gas_range::<AvailableGasCollector>("l1_gas")?;
     l1_data_gas.validate_in_gas_range::<AvailableGasCollector>("l1_data_gas")?;
     l2_gas.validate_in_gas_range::<AvailableGasCollector>("l2_gas")?;
+    sierra_gas.validate_in_gas_range::<AvailableGasCollector>("sierra_gas")?;
 
     let l1_gas_expr = l1_gas.as_cairo_expression();
     let l1_data_gas_expr = l1_data_gas.as_cairo_expression();
     let l2_gas_expr = l2_gas.as_cairo_expression();
+    let sierra_gas_expr = sierra_gas.as_cairo_expression();
 
     Ok(quote!(
-        snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
-            l1_gas: #l1_gas_expr,
-            l1_data_gas: #l1_data_gas_expr,
-            l2_gas: #l2_gas_expr,
-        }
+        snforge_std::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
+            snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
+                l1_gas: #l1_gas_expr,
+                l1_data_gas: #l1_data_gas_expr,
+                l2_gas: #l2_gas_expr,
+                sierra_gas: #sierra_gas_expr,
+            }
+        )
     ))
 }
 

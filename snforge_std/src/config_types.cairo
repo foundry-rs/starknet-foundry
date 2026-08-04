@@ -3,11 +3,12 @@ pub struct AvailableResourceBoundsConfig {
     pub l1_gas: felt252,
     pub l1_data_gas: felt252,
     pub l2_gas: felt252,
+    pub sierra_gas: felt252,
 }
 
 #[derive(Drop, Serde)]
 pub enum AvailableGasConfig {
-    MaxGas: felt252,
+    MaxSierraGas: felt252,
     MaxResourceBounds: AvailableResourceBoundsConfig,
 }
 

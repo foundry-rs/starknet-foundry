@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, empty_function, format_output};
-use cairo_lang_macro::{Diagnostic, quote};
+use cairo_lang_macro::{quote, Diagnostic};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::available_gas::available_gas;
 
@@ -56,6 +56,28 @@ fn work_with_number_all_set() {
 }
 
 #[test]
+fn work_with_named_resource_bounds_and_sierra_gas() {
+    let args = quote!((l1_gas: 1, l1_data_gas: 2, l2_gas: 3, sierra_gas: 4));
+
+    let result = available_gas(args, empty_function());
+
+    assert_diagnostics(&result, &[]);
+
+    insta::assert_snapshot!(format_output(&result));
+}
+
+#[test]
+fn work_with_named_sierra_gas() {
+    let args = quote!((sierra_gas: 4));
+
+    let result = available_gas(args, empty_function());
+
+    assert_diagnostics(&result, &[]);
+
+    insta::assert_snapshot!(format_output(&result));
+}
+
+#[test]
 fn is_used_once() {
     let args = quote!((l2_gas: 1, l2_gas: 3));
 
@@ -70,15 +92,54 @@ fn is_used_once() {
 }
 
 #[test]
-fn does_not_work_with_unnamed_arg() {
+fn works_with_unnamed_arg() {
     let args = quote!((3));
+
+    let result = available_gas(args, empty_function());
+
+    assert_diagnostics(&result, &[]);
+
+    insta::assert_snapshot!(format_output(&result));
+}
+
+#[test]
+fn fails_with_mixed_unnamed_and_named_args() {
+    let args = quote!((3, l2_gas: 4));
 
     let result = available_gas(args, empty_function());
 
     assert_diagnostics(
         &result,
         &[Diagnostic::error(formatdoc!(
-            "#[available_gas] can be used with named arguments only [possible values: l1_gas, l1_data_gas, l2_gas]. invalid arguments found: 3"
+            "#[available_gas] can be used with named arguments only [possible values: l1_gas, l1_data_gas, l2_gas, sierra_gas]. invalid arguments found: 3"
+        ))],
+    );
+}
+
+#[test]
+fn fails_with_too_many_unnamed_args() {
+    let args = quote!((3, 4));
+
+    let result = available_gas(args, empty_function());
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(formatdoc!(
+            "#[available_gas] expected arguments: 1, got: 2"
+        ))],
+    );
+}
+
+#[test]
+fn fails_with_non_number_unnamed_arg() {
+    let args = quote!(("123"));
+
+    let result = available_gas(args, empty_function());
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(formatdoc!(
+            "#[available_gas] <gas> should be number literal"
         ))],
     );
 }
@@ -134,6 +195,20 @@ fn handles_number_overflow_l2() {
         &result,
         &[Diagnostic::error(formatdoc!(
             "#[available_gas] l2_gas it too large (max permissible value is 18446744073709551615)"
+        ))],
+    );
+}
+
+#[test]
+fn handles_number_overflow_sierra() {
+    let args = quote!((sierra_gas: 18446744073709551616));
+
+    let result = available_gas(args, empty_function());
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(formatdoc!(
+            "#[available_gas] sierra_gas it too large (max permissible value is 18446744073709551615)"
         ))],
     );
 }
