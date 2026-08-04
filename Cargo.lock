@@ -7720,8 +7720,6 @@ dependencies = [
  "anyhow",
  "async-trait",
  "bigdecimal",
- "blockifier",
- "cairo-vm",
  "camino",
  "clap",
  "clap_complete",
