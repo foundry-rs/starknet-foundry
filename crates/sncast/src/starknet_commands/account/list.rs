@@ -59,8 +59,9 @@ struct SignerDisplay {
 impl SignerDisplay {
     fn type_label(&self) -> &'static str {
         match &self.signer_type {
-            SignerType::Local { .. } => "private_key",
+            SignerType::PrivateKey { .. } => "private_key",
             SignerType::Ledger { .. } => "ledger",
+            SignerType::Keystore { .. } => "keystore",
             SignerType::Ambiguous => "ambiguous",
         }
     }
@@ -72,13 +73,17 @@ impl Serialize for SignerDisplay {
         map.serialize_entry("signer_type", self.type_label())?;
 
         match &self.signer_type {
-            SignerType::Local { private_key } if !self.hide_private_key => {
+            SignerType::PrivateKey { private_key } if !self.hide_private_key => {
                 map.serialize_entry("private_key", &private_key.into_hex_string())?;
             }
             SignerType::Ledger { ledger_path } => {
                 map.serialize_entry("ledger_path", &ledger_path.derivation_string())?;
             }
-            SignerType::Local { .. } | SignerType::Ambiguous => {}
+            // TODO: research whether keystore_path should be treated as secret
+            SignerType::Keystore { keystore_path } => {
+                map.serialize_entry("keystore_path", &keystore_path.to_string())?;
+            }
+            SignerType::PrivateKey { .. } | SignerType::Ambiguous => {}
         }
         map.end()
     }
@@ -140,7 +145,7 @@ impl Message for AccountDataRepresentationMessage {
             SignerType::Ambiguous => {
                 let _ = writeln!(
                     result,
-                    "  signer type: {} (only one of `private_key`, `ledger_path` may be specified)",
+                    "  signer type: {} (only one of `private_key`, `ledger_path`, `keystore_path` may be specified)",
                     self.signer.type_label()
                 );
             }
@@ -150,13 +155,17 @@ impl Message for AccountDataRepresentationMessage {
         }
 
         match &self.signer.signer_type {
-            SignerType::Local { private_key } if !self.signer.hide_private_key => {
+            SignerType::PrivateKey { private_key } if !self.signer.hide_private_key => {
                 let _ = writeln!(result, "  private key: {}", private_key.into_hex_string());
             }
             SignerType::Ledger { ledger_path } => {
                 let _ = writeln!(result, "  ledger path: {}", ledger_path.derivation_string());
             }
-            SignerType::Local { .. } | SignerType::Ambiguous => {}
+            // TODO: research whether keystore_path should be treated as secret
+            SignerType::Keystore { keystore_path } => {
+                let _ = writeln!(result, "  keystore path: {keystore_path}");
+            }
+            SignerType::PrivateKey { .. } | SignerType::Ambiguous => {}
         }
         if let Some(ref address) = self.address {
             let _ = writeln!(result, "  address: {address}");
