@@ -14,9 +14,9 @@ use sncast::response::account::deploy::AccountDeployResponse;
 use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
 use sncast::response::ui::UI;
 use sncast::{
-    AccountData, AccountType, SignerType, WaitForTx, apply_optional_fields,
-    chain_id_to_network_name, check_account_file_exists, get_account_data_from_accounts_file,
-    get_account_data_from_keystore, handle_rpc_error, handle_wait_for_tx,
+    AccountData, AccountType, WaitForTx, apply_optional_fields, chain_id_to_network_name,
+    check_account_file_exists, get_account_data_from_accounts_file, get_account_data_from_keystore,
+    handle_rpc_error, handle_wait_for_tx,
 };
 use starknet_rust::accounts::{AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory};
 use starknet_rust::accounts::{AccountFactoryError, ArgentAccountFactory};
@@ -166,10 +166,10 @@ async fn deploy_from_accounts_file(
     let account_data = get_account_data_from_accounts_file(&name, chain_id, accounts_file)?;
     let (account_type, class_hash, salt) = extract_deployment_fields(&account_data)?;
 
-    let (_, result) = match &account_data.signer_type {
-        SignerType::Ledger { ledger_path } => {
-            let signer = ledger::create_ledger_signer(ledger_path, ui, true).await?;
+    let signer = sncast::build_signer(&account_data.signer_type, ui, true).await?;
 
+    let (_, result) = match signer {
+        sncast::SignerBackend::Ledger(signer) => {
             ledger::verify_ledger_public_key(
                 signer.get_public_key().await?.scalar(),
                 account_data.public_key,
@@ -189,10 +189,7 @@ async fn deploy_from_accounts_file(
             )
             .await?
         }
-        SignerType::Local { private_key } => {
-            let signer =
-                LocalWallet::from_signing_key(SigningKey::from_secret_scalar(*private_key));
-
+        sncast::SignerBackend::Local(signer) => {
             create_factory_and_deploy(
                 provider,
                 account_type,
