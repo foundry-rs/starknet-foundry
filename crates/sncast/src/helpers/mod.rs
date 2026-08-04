@@ -11,6 +11,7 @@ pub mod dry_run;
 pub mod fee;
 pub mod felt;
 pub mod interactive;
+pub mod keystore_locator;
 pub mod ledger;
 pub mod output_format;
 pub mod proof;
