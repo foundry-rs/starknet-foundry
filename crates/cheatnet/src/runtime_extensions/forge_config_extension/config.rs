@@ -15,7 +15,6 @@ pub struct RawAvailableResourceBoundsConfig {
     pub l1_gas: usize,
     pub l1_data_gas: usize,
     pub l2_gas: usize,
-    pub sierra_gas: usize,
 }
 
 impl RawAvailableResourceBoundsConfig {
@@ -30,7 +29,7 @@ impl RawAvailableResourceBoundsConfig {
 
     #[must_use]
     pub fn is_zero(&self) -> bool {
-        self.to_gas_vector() == GasVector::ZERO && self.sierra_gas == 0
+        self.to_gas_vector() == GasVector::ZERO
     }
 }
 

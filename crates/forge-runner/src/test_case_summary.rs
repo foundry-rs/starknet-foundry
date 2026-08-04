@@ -4,6 +4,7 @@ use crate::backtrace::{
 use crate::build_trace_data::build_profiler_call_trace;
 use crate::debugging::{TraceArgs, build_contracts_data_store, build_debugging_trace};
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
+use crate::forge_config::ForgeTrackedResource;
 use crate::gas::check_available_gas;
 use crate::gas::report::SingleTestGasInfo;
 use crate::gas::stats::GasStats;
@@ -365,6 +366,7 @@ fn take_byte_array(data: &[Felt]) -> Option<&[Felt]> {
 
 impl TestCaseSummary<Single> {
     #[expect(clippy::too_many_lines)]
+    #[expect(clippy::too_many_arguments)]
     #[must_use]
     pub(crate) fn from_run_completed(
         RunCompleted {
@@ -383,6 +385,7 @@ impl TestCaseSummary<Single> {
         backtrace_sources: &BacktraceSources,
         trace_args: &TraceArgs,
         gas_report_enabled: bool,
+        tracked_resource: ForgeTrackedResource,
     ) -> Self {
         let name = test_case.name.clone();
         let trace_components = trace_args.to_components();
@@ -436,7 +439,7 @@ impl TestCaseSummary<Single> {
                         )),
                         debugging_trace,
                     };
-                    check_available_gas(test_case.config.available_gas, summary)
+                    check_available_gas(test_case.config.available_gas, summary, tracked_resource)
                 }
                 ExpectedTestResult::Panics(expected_panic_value) => TestCaseSummary::Failed {
                     name,

@@ -77,7 +77,7 @@ fn corelib_available_gas_exceeded() {
     assert_case_output_contains(
         &result,
         "simple",
-        "Test cost exceeded the available gas. Consumed gas: ~",
+        "Test cost exceeded the available sierra gas. Consumed sierra_gas: ~",
     );
 }
 
@@ -99,29 +99,51 @@ fn named_sierra_gas_exceeded() {
     assert_case_output_contains(
         &result,
         "simple",
-        "Test cost exceeded the available gas. Consumed gas: ~",
+        "Test cost exceeded the available sierra gas. Consumed sierra_gas: ~",
     );
 }
 
 #[test]
-fn named_sierra_gas_with_resource_bounds_exceeded() {
+fn sierra_gas_with_cairo_steps_tracking_fails() {
     let test = crate::utils::test_case!(indoc!(
         r"
             #[test]
-            #[available_gas(l1_gas: 1000000, l1_data_gas: 1000000, l2_gas: 1000000, sierra_gas: 1)]
+            #[available_gas(100)]
             fn simple() {
                 assert(2 == 2, '2 == 2');
             }
         "
     ));
 
-    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
     assert_case_output_contains(
         &result,
         "simple",
-        "Test cost exceeded the available gas. Consumed gas: ~",
+        "Setting a Sierra gas limit via `#[available_gas]` requires running the test with Sierra gas tracking",
+    );
+}
+
+#[test]
+fn named_sierra_gas_with_cairo_steps_tracking_fails() {
+    let test = crate::utils::test_case!(indoc!(
+        r"
+            #[test]
+            #[available_gas(sierra_gas: 100)]
+            fn simple() {
+                assert(2 == 2, '2 == 2');
+            }
+        "
+    ));
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
+        "simple",
+        "Setting a Sierra gas limit via `#[available_gas]` requires running the test with Sierra gas tracking",
     );
 }
 

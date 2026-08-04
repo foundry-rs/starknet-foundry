@@ -1,3 +1,4 @@
+use crate::forge_config::ForgeTrackedResource;
 use crate::gas::resources::GasCalculationResources;
 use crate::test_case_summary::{Single, TestCaseSummary};
 use blockifier::context::TransactionContext;
@@ -72,6 +73,7 @@ fn get_state_resources(
 pub fn check_available_gas(
     available_gas: Option<RawAvailableGasConfig>,
     summary: TestCaseSummary<Single>,
+    tracked_resource: ForgeTrackedResource,
 ) -> TestCaseSummary<Single> {
     match summary {
         TestCaseSummary::Passed {
@@ -84,7 +86,12 @@ pub fn check_available_gas(
             trace_data,
         } => {
             let failure_message = available_gas.and_then(|available_gas| {
-                check_available_gas_limit(available_gas, gas_info.gas_used, &used_resources)
+                check_available_gas_limit(
+                    available_gas,
+                    gas_info.gas_used,
+                    &used_resources,
+                    tracked_resource,
+                )
             });
 
             if let Some(failure_message) = failure_message {
@@ -115,15 +122,24 @@ fn check_available_gas_limit(
     available_gas: RawAvailableGasConfig,
     gas_used: GasVector,
     used_resources: &UsedResources,
+    tracked_resource: ForgeTrackedResource,
 ) -> Option<String> {
     match available_gas {
+        // A Sierra gas limit can only be enforced when the test is run with Sierra gas tracking,
+        // as Cairo steps tracking does not measure consumed Sierra gas.
+        RawAvailableGasConfig::MaxSierraGas(_) if tracked_resource == ForgeTrackedResource::CairoSteps => {
+            Some(
+                "\n\tSetting a Sierra gas limit via `#[available_gas]` requires running the test with \
+                 Sierra gas tracking, but it is run with Cairo steps tracking. Use resource bounds \
+                 (`l1_gas`, `l1_data_gas`, `l2_gas`) instead, or run with Sierra gas tracking."
+                    .to_string(),
+            )
+        }
         RawAvailableGasConfig::MaxSierraGas(max_gas) => {
             check_sierra_gas_limit(max_gas, used_resources)
         }
         RawAvailableGasConfig::MaxResourceBounds(available_resource_bounds) => {
-            check_resource_bounds(&available_resource_bounds, gas_used).or_else(|| {
-                check_sierra_gas_limit(available_resource_bounds.sierra_gas, used_resources)
-            })
+            check_resource_bounds(&available_resource_bounds, gas_used)
         }
     }
 }
@@ -135,8 +151,11 @@ fn check_sierra_gas_limit(max_gas: usize, used_resources: &UsedResources) -> Opt
         .gas_consumed
         .0;
 
-    (gas_consumed > max_gas as u64)
-        .then(|| format!("\n\tTest cost exceeded the available gas. Consumed gas: ~{gas_consumed}"))
+    (gas_consumed > max_gas as u64).then(|| {
+        format!(
+            "\n\tTest cost exceeded the available sierra gas. Consumed sierra_gas: ~{gas_consumed}, available: {max_gas}"
+        )
+    })
 }
 
 fn check_resource_bounds(

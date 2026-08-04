@@ -56,14 +56,31 @@ fn work_with_number_all_set() {
 }
 
 #[test]
-fn work_with_named_resource_bounds_and_sierra_gas() {
+fn fails_with_sierra_gas_combined_with_resource_bounds() {
     let args = quote!((l1_gas: 1, l1_data_gas: 2, l2_gas: 3, sierra_gas: 4));
 
     let result = available_gas(args, empty_function());
 
-    assert_diagnostics(&result, &[]);
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(
+            "#[available_gas] `sierra_gas` cannot be combined with resource bounds `l1_gas`, `l1_data_gas`, `l2_gas`",
+        )],
+    );
+}
 
-    insta::assert_snapshot!(format_output(&result));
+#[test]
+fn fails_with_sierra_gas_combined_with_single_resource_bound() {
+    let args = quote!((l2_gas: 3, sierra_gas: 4));
+
+    let result = available_gas(args, empty_function());
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(
+            "#[available_gas] `sierra_gas` cannot be combined with resource bounds `l1_gas`, `l1_data_gas`, `l2_gas`",
+        )],
+    );
 }
 
 #[test]

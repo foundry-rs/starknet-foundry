@@ -117,6 +117,10 @@ or with unnamed argument
 #[available_gas(100)]
 ```
 
+> 📝 **Note**
+>
+> Gas triplet arguments (`l1_gas`, `l1_data_gas`, `l2_gas`) and `sierra_gas` argument are mutually exclusive.
+
 ### `#[fork]`
 
 Enables state forking for the given test case.

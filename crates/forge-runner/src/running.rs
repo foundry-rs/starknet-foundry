@@ -497,6 +497,7 @@ fn extract_test_case_summary(
                 &backtrace_sources,
                 trace_args,
                 forge_config.output_config.gas_report,
+                forge_config.test_runner_config.tracked_resource,
             ),
             RunResult::Error(run_error) => {
                 let mut message = format!(
