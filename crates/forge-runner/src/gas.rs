@@ -125,13 +125,12 @@ fn check_available_gas_limit(
     tracked_resource: ForgeTrackedResource,
 ) -> Option<String> {
     match available_gas {
-        // A Sierra gas limit can only be enforced when the test is run with Sierra gas tracking,
-        // as Cairo steps tracking does not measure consumed Sierra gas.
-        RawAvailableGasConfig::MaxSierraGas(_) if tracked_resource == ForgeTrackedResource::CairoSteps => {
+        // Sierra gas limit cannot be used when tracked resource is Cairo steps.
+        RawAvailableGasConfig::MaxSierraGas(_)
+            if tracked_resource == ForgeTrackedResource::CairoSteps =>
+        {
             Some(
-                "\n\tSetting a Sierra gas limit via `#[available_gas]` requires running the test with \
-                 Sierra gas tracking, but it is run with Cairo steps tracking. Use resource bounds \
-                 (`l1_gas`, `l1_data_gas`, `l2_gas`) instead, or run with Sierra gas tracking."
+                "\n\tSetting a Sierra gas limit via `#[available_gas]` requires running the test with Sierra gas tracking, but it is run with Cairo steps tracking. Use resource bounds (`l1_gas`, `l1_data_gas`, `l2_gas`) instead, or run with Sierra gas tracking."
                     .to_string(),
             )
         }

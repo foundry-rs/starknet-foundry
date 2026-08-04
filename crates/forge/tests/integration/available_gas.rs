@@ -121,7 +121,7 @@ fn sierra_gas_with_cairo_steps_tracking_fails() {
     assert_case_output_contains(
         &result,
         "simple",
-        "Setting a Sierra gas limit via `#[available_gas]` requires running the test with Sierra gas tracking",
+        "Setting a Sierra gas limit via `#[available_gas]` requires running the test with Sierra gas tracking, but it is run with Cairo steps tracking. Use resource bounds (`l1_gas`, `l1_data_gas`, `l2_gas`) instead, or run with Sierra gas tracking.",
     );
 }
 
@@ -143,7 +143,7 @@ fn named_sierra_gas_with_cairo_steps_tracking_fails() {
     assert_case_output_contains(
         &result,
         "simple",
-        "Setting a Sierra gas limit via `#[available_gas]` requires running the test with Sierra gas tracking",
+        "Setting a Sierra gas limit via `#[available_gas]` requires running the test with Sierra gas tracking, but it is run with Cairo steps tracking. Use resource bounds (`l1_gas`, `l1_data_gas`, `l2_gas`) instead, or run with Sierra gas tracking.",
     );
 }
 
