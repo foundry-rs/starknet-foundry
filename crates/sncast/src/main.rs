@@ -510,6 +510,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             } = deploy;
 
             let provider = rpc.get_provider(&config, ui).await?;
+
             let account = get_account(&config, &provider, &rpc, ui).await?;
 
             let (class_hash, declare_response, local_abi) = if let Some(class_hash) =
@@ -720,6 +721,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
+
             let contract_address = contract_address.resolve(&config)?;
             let Arguments {
                 calldata,
