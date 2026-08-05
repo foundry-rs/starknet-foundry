@@ -8,6 +8,7 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
 use sncast::response::get::nonce::NonceResponse;
 use sncast::response::ui::UI;
+use starknet_rust::core::types::BlockId;
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, Provider};
 use starknet_types_core::felt::Felt;
@@ -30,11 +31,12 @@ pub struct Nonce {
 }
 
 pub async fn nonce(nonce: Nonce, config: CastConfig, ui: &UI) -> Result<ExitCode> {
+    let contract_address = nonce.contract_address.resolve(&config)?;
+    let block_id = get_block_id(&nonce.block_id)?;
+
     let provider = nonce.rpc.get_provider(&config, ui).await?;
 
-    let contract_address = nonce.contract_address.resolve(&config)?;
-
-    let result = get_nonce(&provider, contract_address, &nonce.block_id)
+    let result = get_nonce(&provider, contract_address, block_id)
         .await
         .map_err(handle_starknet_command_error);
 
@@ -44,9 +46,8 @@ pub async fn nonce(nonce: Nonce, config: CastConfig, ui: &UI) -> Result<ExitCode
 pub async fn get_nonce(
     provider: &JsonRpcClient<HttpTransport>,
     contract_address: Felt,
-    block_id: &str,
+    block_id: BlockId,
 ) -> Result<NonceResponse, StarknetCommandError> {
-    let block_id = get_block_id(block_id)?;
     let nonce = provider
         .get_nonce(block_id, contract_address)
         .await
