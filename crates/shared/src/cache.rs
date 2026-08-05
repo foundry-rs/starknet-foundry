@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result};
 use std::fs;
 use std::io::ErrorKind;
 use std::path::Path;
@@ -20,16 +20,7 @@ pub fn prepare_cache_dir(cache_dir: impl AsRef<Path>) -> Result<()> {
     let tag_path = cache_dir.join(CACHEDIR_TAG_FILENAME);
 
     match fs::symlink_metadata(&tag_path) {
-        Ok(metadata) => {
-            if !metadata.file_type().is_file() {
-                bail!(
-                    "Cache directory tag path is not a regular file: {}",
-                    tag_path.display()
-                );
-            }
-
-            return Ok(());
-        }
+        Ok(_) => return Ok(()),
         Err(err) if err.kind() == ErrorKind::NotFound => {}
         Err(err) => {
             return Err(err).with_context(|| {
