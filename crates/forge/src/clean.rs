@@ -7,6 +7,7 @@ use foundry_ui::UI;
 use regex::Regex;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use semver::Version;
+use shared::cache::CACHEDIR_TAG_FILENAME;
 use std::fs;
 use std::sync::OnceLock;
 
@@ -14,7 +15,7 @@ const COVERAGE_DIR: &str = "coverage";
 const PROFILE_DIR: &str = "profile";
 const TRACE_DIR: &str = "snfoundry_trace";
 
-fn snfoundry_cache_file_regex() -> &'static Regex {
+fn fork_cache_file_regex() -> &'static Regex {
     static REGEX: OnceLock<Regex> = OnceLock::new();
     REGEX.get_or_init(|| {
         Regex::new(r"^[a-zA-Z0-9_]+_\d+_v(?<version>[A-Za-z0-9_.+-]+)\.json$").unwrap()
@@ -113,7 +114,11 @@ fn is_snfoundry_cache_file(path: &Utf8Path) -> bool {
         return true;
     }
 
-    let Some(captures) = snfoundry_cache_file_regex().captures(file_name) else {
+    if file_name == CACHEDIR_TAG_FILENAME {
+        return true;
+    }
+
+    let Some(captures) = fork_cache_file_regex().captures(file_name) else {
         return false;
     };
 
@@ -125,10 +130,18 @@ fn is_snfoundry_cache_file(path: &Utf8Path) -> bool {
 mod tests {
     use super::is_snfoundry_cache_file;
     use camino::Utf8Path;
+    use shared::cache::CACHEDIR_TAG_FILENAME;
 
     #[test]
     fn recognizes_prev_failed_tests_file() {
         assert!(is_snfoundry_cache_file(Utf8Path::new(".prev_tests_failed")));
+    }
+
+    #[test]
+    fn recognizes_cachedir_tag() {
+        assert!(is_snfoundry_cache_file(Utf8Path::new(
+            CACHEDIR_TAG_FILENAME
+        )));
     }
 
     #[test]

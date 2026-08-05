@@ -9,6 +9,7 @@ use starknet_rust::providers::jsonrpc::HttpTransport;
 use std::fmt::Display;
 
 pub mod auto_completions;
+pub mod cache;
 pub mod command;
 pub mod consts;
 pub mod rpc;
