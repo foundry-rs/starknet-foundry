@@ -99,6 +99,7 @@ impl RunForPackageArgs {
             ui,
             CompilationOpts {
                 use_test_target_contracts: !args.no_optimization,
+                casm_cache_dir: Some(cache_dir.clone()),
                 #[cfg(feature = "cairo-native")]
                 run_native: args.run_native,
             },
@@ -143,6 +144,7 @@ impl RunForPackageArgs {
                     tracked_resource,
                     tests_filter.name_filter.clone(),
                     tests_filter.partitioning_config.clone(),
+                    cache_dir.clone(),
                 )
             })
             .collect();
@@ -163,6 +165,7 @@ fn spawn_prepare_test_target(
     tracked_resource: ForgeTrackedResource,
     name_filter: NameFilter,
     partitioning_config: PartitionConfig,
+    cache_dir: Utf8PathBuf,
 ) -> PrepareTargetHandle {
     tokio::task::spawn_blocking(move || {
         prepare_test_target(
@@ -170,6 +173,7 @@ fn spawn_prepare_test_target(
             &tracked_resource,
             &name_filter,
             &partitioning_config,
+            &cache_dir,
         )
     })
 }

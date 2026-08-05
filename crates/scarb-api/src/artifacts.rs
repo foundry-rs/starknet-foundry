@@ -8,7 +8,10 @@ use camino::{Utf8Path, Utf8PathBuf};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::collections::HashMap;
 use std::fs;
-use universal_sierra_compiler_api::compile_contract_sierra_at_path;
+use universal_sierra_compiler_api::{
+    compile_contract_sierra_at_path, compile_contract_sierra_bytes_with_cache_key,
+    contract_sierra_content_hash,
+};
 
 pub mod deserialized;
 mod representation;
@@ -51,6 +54,7 @@ pub type ContractsData = HashMap<String, ContractData>;
 pub(crate) struct StarknetArtifactsFiles {
     base: Utf8PathBuf,
     other: Vec<Utf8PathBuf>,
+    casm_cache_dir: Option<Utf8PathBuf>,
     #[cfg(feature = "cairo-native")]
     compile_native: bool,
 }
@@ -60,9 +64,15 @@ impl StarknetArtifactsFiles {
         Self {
             base: base_file,
             other: other_files,
+            casm_cache_dir: None,
             #[cfg(feature = "cairo-native")]
             compile_native: false,
         }
+    }
+
+    pub(crate) fn casm_cache_dir(mut self, casm_cache_dir: Option<Utf8PathBuf>) -> Self {
+        self.casm_cache_dir = casm_cache_dir;
+        self
     }
 
     #[cfg(feature = "cairo-native")]
@@ -117,7 +127,16 @@ impl StarknetArtifactsFiles {
     fn compile_artifact_at_path(&self, path: &Utf8Path) -> Result<StarknetContractArtifacts> {
         let sierra = fs::read_to_string(path)?;
 
-        let casm = compile_contract_sierra_at_path(path.as_std_path())?;
+        let casm = if let Some(cache_dir) = &self.casm_cache_dir {
+            let sierra_content_hash = contract_sierra_content_hash(sierra.as_bytes());
+            compile_contract_sierra_bytes_with_cache_key(
+                sierra.as_bytes(),
+                cache_dir.as_std_path(),
+                &sierra_content_hash,
+            )?
+        } else {
+            compile_contract_sierra_at_path(path.as_std_path())?
+        };
 
         #[cfg(feature = "cairo-native")]
         let executor = self.compile_to_native(&sierra)?;

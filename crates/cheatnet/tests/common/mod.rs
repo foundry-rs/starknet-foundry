@@ -95,6 +95,7 @@ pub fn get_contracts() -> ContractsData {
         &ui,
         CompilationOpts {
             use_test_target_contracts: false,
+            casm_cache_dir: None,
             #[cfg(feature = "cairo-native")]
             run_native: true,
         },

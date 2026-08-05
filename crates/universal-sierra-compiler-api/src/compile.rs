@@ -2,7 +2,7 @@ use crate::command::{USCError, USCInternalCommand};
 use serde_json::Value;
 use std::io;
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use strum_macros::Display;
 use tempfile::Builder;
 use thiserror::Error;
@@ -12,6 +12,13 @@ use thiserror::Error;
 pub enum CompilationError {
     #[error("Failed to write Sierra JSON to temp file: {0}")]
     TempFileWrite(#[from] io::Error),
+
+    #[error("Failed to read Sierra JSON file at {path}: {source}")]
+    SierraFileRead {
+        path: PathBuf,
+        #[source]
+        source: io::Error,
+    },
 
     #[error("Could not serialize Sierra JSON: {0}")]
     Serialization(serde_json::Error),
@@ -23,7 +30,7 @@ pub enum CompilationError {
     Deserialization(serde_json::Error),
 }
 
-#[derive(Debug, Display, Copy, Clone)]
+#[derive(Debug, Display, Copy, Clone, PartialEq, Eq)]
 #[strum(serialize_all = "lowercase")]
 pub enum SierraType {
     Contract,
@@ -35,10 +42,19 @@ pub fn compile_sierra(
     sierra_json: &Value,
     sierra_type: SierraType,
 ) -> Result<String, CompilationError> {
+    let json_bytes = serde_json::to_vec(sierra_json).map_err(CompilationError::Serialization)?;
+    compile_sierra_bytes(&json_bytes, sierra_type)
+}
+
+/// Compiles the given Sierra JSON bytes into the specified type using the `universal-sierra-compiler`.
+pub(crate) fn compile_sierra_bytes(
+    sierra_bytes: &[u8],
+    sierra_type: SierraType,
+) -> Result<String, CompilationError> {
     let mut temp_sierra_file = Builder::new().tempfile()?;
 
-    let json_bytes = serde_json::to_vec(sierra_json).map_err(CompilationError::Serialization)?;
-    temp_sierra_file.write_all(&json_bytes)?;
+    temp_sierra_file.write_all(sierra_bytes)?;
+    temp_sierra_file.flush()?;
 
     compile_sierra_at_path(temp_sierra_file.path(), sierra_type)
 }
