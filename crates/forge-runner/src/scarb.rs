@@ -3,7 +3,7 @@ use cairo_lang_sierra::program::VersionedProgram;
 use camino::Utf8Path;
 use scarb_api::{metadata::PackageMetadata, test_targets_by_name};
 use std::{fs, io::ErrorKind};
-use universal_sierra_compiler_api::raw_sierra_program_content_hash;
+use universal_sierra_compiler_api::raw_sierra_program_hash;
 
 use crate::package_tests::{TestTargetLocation, raw::TestTargetRaw};
 
@@ -34,7 +34,7 @@ pub fn load_test_artifacts(
                 let sierra_program = match versioned_program {
                     VersionedProgram::V1 { program, .. } => program,
                 };
-                let sierra_program_hash = raw_sierra_program_content_hash(&sierra_program.program);
+                let sierra_program_hash = raw_sierra_program_hash(&sierra_program.program);
 
                 let test_target = TestTargetRaw {
                     sierra_program,

@@ -35,7 +35,7 @@ pub struct SierraProgramHash(String);
 // cache. See the Cairo Sierra -> CASM compiler API:
 // https://github.com/starkware-libs/cairo/blob/eea264fa54fac04a1a5745ad533a0c0ab3106ab3/crates/cairo-lang-sierra-to-casm/src/compiler.rs#L441
 #[must_use]
-pub fn raw_sierra_program_content_hash(sierra_program: &Program) -> SierraProgramHash {
+pub fn raw_sierra_program_hash(sierra_program: &Program) -> SierraProgramHash {
     let mut hasher = Sha256::new();
     write_serializable_to_hash(&mut hasher, sierra_program);
     SierraProgramHash(hex_encode(hasher.finalize()))
@@ -336,8 +336,8 @@ mod tests {
         .unwrap();
 
         assert_eq!(
-            raw_sierra_program_content_hash(&program_a),
-            raw_sierra_program_content_hash(&program_b),
+            raw_sierra_program_hash(&program_a),
+            raw_sierra_program_hash(&program_b),
         );
     }
 
@@ -347,7 +347,7 @@ mod tests {
     fn reuses_raw_cache_on_matching_content_hash() {
         let temp = tempfile::tempdir().unwrap();
         let cache_dir = temp.path().join("cache");
-        let content_hash = raw_sierra_program_content_hash(&empty_sierra_program());
+        let content_hash = raw_sierra_program_hash(&empty_sierra_program());
         let first = compile_sierra_with_content_hash_using_version::<RawCasmProgram>(
             SierraType::Raw,
             &cache_dir,
@@ -402,7 +402,7 @@ mod tests {
     fn separates_cache_entries_by_compiler_version() {
         let temp = tempfile::tempdir().unwrap();
         let cache_dir = temp.path().join("cache");
-        let content_hash = raw_sierra_program_content_hash(&empty_sierra_program());
+        let content_hash = raw_sierra_program_hash(&empty_sierra_program());
 
         compile_sierra_with_content_hash_using_version::<RawCasmProgram>(
             SierraType::Raw,
@@ -437,7 +437,7 @@ mod tests {
             sanitize_path_segment(version_b)
         );
 
-        let content_hash = raw_sierra_program_content_hash(&empty_sierra_program());
+        let content_hash = raw_sierra_program_hash(&empty_sierra_program());
         let cache_file_a =
             cache_file_path_for_content_hash(&cache_dir, SierraType::Raw, version_a, &content_hash)
                 .unwrap();
@@ -454,7 +454,7 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let cache_dir = temp.path().join("cache");
         let version = "universal-sierra-compiler 1.2.3";
-        let content_hash = raw_sierra_program_content_hash(&empty_sierra_program());
+        let content_hash = raw_sierra_program_hash(&empty_sierra_program());
 
         // The same content hash under different Sierra types must never collide onto one entry.
         let raw =
@@ -475,7 +475,7 @@ mod tests {
     fn skips_cache_when_compiler_version_has_no_valid_path_segment() {
         let temp = tempfile::tempdir().unwrap();
         let cache_dir = temp.path().join("cache");
-        let content_hash = raw_sierra_program_content_hash(&empty_sierra_program());
+        let content_hash = raw_sierra_program_hash(&empty_sierra_program());
 
         // A version string that sanitizes to empty cannot form a cache path, so the compiler runs
         // and nothing is cached...
@@ -507,7 +507,7 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let cache_dir = temp.path().join("cache");
         let version = "universal-sierra-compiler 1.2.3";
-        let content_hash = raw_sierra_program_content_hash(&empty_sierra_program());
+        let content_hash = raw_sierra_program_hash(&empty_sierra_program());
 
         let cache_file =
             cache_file_path_for_content_hash(&cache_dir, SierraType::Raw, version, &content_hash)
@@ -541,7 +541,7 @@ mod tests {
             SierraType::Raw,
             &cache_dir,
             "universal-sierra-compiler 1.2.3",
-            &raw_sierra_program_content_hash(&empty_sierra_program()),
+            &raw_sierra_program_hash(&empty_sierra_program()),
             || Ok(raw_casm_json(vec![(9, 10)])),
         )
         .unwrap();
@@ -564,13 +564,13 @@ mod tests {
     fn raw_program_content_hash_is_stable_and_content_sensitive() {
         // Same program -> same hash, so an unchanged program reuses its entry across runs.
         assert_eq!(
-            raw_sierra_program_content_hash(&empty_sierra_program()),
-            raw_sierra_program_content_hash(&empty_sierra_program()),
+            raw_sierra_program_hash(&empty_sierra_program()),
+            raw_sierra_program_hash(&empty_sierra_program()),
         );
         // Different program -> different hash, so a real code change gets a fresh entry.
         assert_ne!(
-            raw_sierra_program_content_hash(&empty_sierra_program()),
-            raw_sierra_program_content_hash(&sierra_program_with_return()),
+            raw_sierra_program_hash(&empty_sierra_program()),
+            raw_sierra_program_hash(&sierra_program_with_return()),
         );
     }
 
@@ -584,7 +584,7 @@ mod tests {
             SierraType::Raw,
             &cache_dir,
             version,
-            &raw_sierra_program_content_hash(&empty_sierra_program()),
+            &raw_sierra_program_hash(&empty_sierra_program()),
             || Ok(raw_casm_json(vec![(1, 2)])),
         )
         .unwrap();
@@ -594,7 +594,7 @@ mod tests {
             SierraType::Raw,
             &cache_dir,
             version,
-            &raw_sierra_program_content_hash(&sierra_program_with_return()),
+            &raw_sierra_program_hash(&sierra_program_with_return()),
             || Ok(raw_casm_json(vec![(3, 4)])),
         )
         .unwrap();

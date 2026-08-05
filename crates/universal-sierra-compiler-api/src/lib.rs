@@ -6,8 +6,7 @@
 //! To allow more flexibility when changing internals, please make public as few items as possible.
 
 pub use crate::cache::{
-    CASM_CACHE_DIR, SierraProgramHash, contract_sierra_content_hash,
-    raw_sierra_program_content_hash,
+    CASM_CACHE_DIR, SierraProgramHash, contract_sierra_content_hash, raw_sierra_program_hash,
 };
 use crate::cache::{
     compile_sierra_at_path_with_content_hash, compile_sierra_bytes_with_content_hash,
