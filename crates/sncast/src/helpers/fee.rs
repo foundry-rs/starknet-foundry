@@ -1,7 +1,6 @@
 use super::felt::felt_from_string;
 use anyhow::{Result, ensure};
 use clap::Args;
-use conversions::serde::deserialize::CairoDeserialize;
 use starknet_rust::core::types::FeeEstimate;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 
@@ -45,31 +44,6 @@ pub struct FeeArgs {
     pub estimate_tip: bool,
 }
 
-impl From<ScriptFeeSettings> for FeeArgs {
-    fn from(script_fee_settings: ScriptFeeSettings) -> Self {
-        let ScriptFeeSettings {
-            max_fee,
-            l1_gas,
-            l1_gas_price,
-            l2_gas,
-            l2_gas_price,
-            l1_data_gas,
-            l1_data_gas_price,
-        } = script_fee_settings;
-        Self {
-            max_fee,
-            l1_gas,
-            l1_gas_price,
-            l2_gas,
-            l2_gas_price,
-            l1_data_gas,
-            l1_data_gas_price,
-            tip: Some(0),
-            estimate_tip: false,
-        }
-    }
-}
-
 impl FeeArgs {
     pub fn try_into_fee_settings(&self, fee_estimate: Option<&FeeEstimate>) -> Result<FeeSettings> {
         // If some resource bounds values are lacking, starknet-rs will estimate them automatically
@@ -96,19 +70,6 @@ impl FeeArgs {
             Ok(fee_settings)
         }
     }
-}
-
-/// Struct used in `sncast script` for deserializing from cairo, `FeeSettings` can't be
-/// used as it missing `max_fee`
-#[derive(Debug, PartialEq, CairoDeserialize)]
-pub struct ScriptFeeSettings {
-    max_fee: Option<NonZeroFelt>,
-    l1_gas: Option<u64>,
-    l1_gas_price: Option<u128>,
-    l2_gas: Option<u64>,
-    l2_gas_price: Option<u128>,
-    l1_data_gas: Option<u64>,
-    l1_data_gas_price: Option<u128>,
 }
 
 #[derive(Debug, PartialEq)]

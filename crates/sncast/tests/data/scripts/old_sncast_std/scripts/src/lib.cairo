@@ -1,1 +1,0 @@
-mod map_script;

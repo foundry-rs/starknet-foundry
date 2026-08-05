@@ -2,18 +2,18 @@ use super::explorer_link::OutputLink;
 use crate::helpers::block_explorer::LinkProvider;
 use crate::response::cast_message::SncastCommandMessage;
 use crate::response::dry_run::DryRunResponse;
+use conversions::padded_felt::PaddedFelt;
 use conversions::string::IntoPaddedHexStr;
-use conversions::{padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
 use foundry_ui::styling;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum InvokeResponse {
     Transaction(InvokeTransactionResponse),
     DryRun(DryRunResponse),
 }
 
-#[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct InvokeTransactionResponse {
     pub transaction_hash: PaddedFelt,
 }

@@ -2,7 +2,6 @@ use crate::{ErrorData, WaitForTransactionError, handle_rpc_error};
 use anyhow::anyhow;
 use console::style;
 use conversions::padded_felt::PaddedFelt;
-use conversions::serde::serialize::CairoSerialize;
 
 use conversions::byte_array::ByteArray;
 
@@ -57,7 +56,7 @@ impl Message for ResponseError {
     }
 }
 
-#[derive(Error, Debug, CairoSerialize)]
+#[derive(Error, Debug)]
 pub enum StarknetCommandError {
     #[error(transparent)]
     UnknownError(#[from] anyhow::Error),
@@ -79,7 +78,7 @@ pub fn handle_starknet_command_error(error: StarknetCommandError) -> anyhow::Err
     }
 }
 
-#[derive(Debug, Error, CairoSerialize)]
+#[derive(Debug, Error)]
 pub enum SNCastProviderError {
     #[error(transparent)]
     StarknetError(SNCastStarknetError),
@@ -102,7 +101,7 @@ impl From<ProviderError> for SNCastProviderError {
     }
 }
 
-#[derive(Debug, Error, CairoSerialize)]
+#[derive(Debug, Error)]
 pub enum SNCastStarknetError {
     #[error("Node failed to receive transaction")]
     FailedToReceiveTransaction,

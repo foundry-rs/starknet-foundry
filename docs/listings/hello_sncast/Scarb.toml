@@ -7,7 +7,6 @@ edition = "2024_07"
 
 [dependencies]
 starknet = "2.8.5"
-sncast_std = { path = "../../../sncast_std" }
 
 [dev-dependencies]
 snforge_std = { path = "../../../snforge_std" }

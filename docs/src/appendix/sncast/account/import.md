@@ -49,6 +49,11 @@ Optional.
 
 Account private key.
 
+Conflicts with: [`--private-key-file`](#--private-key-file-private_key_file_path), [`--ledger-path`](#--ledger-path-hd_path), [`--ledger-account-id`](#--ledger-account-id-account_id)
+
+> ⚠️ **Security Warning**
+> Passing the key via `--private-key` exposes it in your shell history and in the process list. Prefer `--private-key-file` for keys you want to keep secret.
+
 ## `--ledger-path <HD_PATH>`
 Optional.
 
@@ -73,6 +78,8 @@ See [Ledger Hardware Wallet](../../../starknet/ledger.md) for details.
 Optional. If neither `--private-key` nor `--private-key-file` is passed, the user will be prompted to enter the account private key.
 
 Path to the file holding account private key.
+
+Conflicts with: [`--private-key`](#--private-key-private_key), [`--ledger-path`](#--ledger-path-hd_path), [`--ledger-account-id`](#--ledger-account-id-account_id)
 
 ## `--salt, -s <SALT>`
 Optional.

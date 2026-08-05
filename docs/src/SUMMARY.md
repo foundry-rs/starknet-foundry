@@ -8,7 +8,6 @@
 * [First Steps with Starknet Foundry](getting-started/first-steps.md)
 * [Scarb](getting-started/scarb.md)
 * [Project Configuration](projects/configuration.md)
-* [Blake Hash Support](getting-started/blake-hash-support.md)
 
 ---
 
@@ -57,7 +56,6 @@
 * [Calling Contracts](starknet/call.md)
 * [Performing Multicall](starknet/multicall.md)
 * [Aliases](starknet/aliases.md)
-* [Cairo Deployment Scripts](starknet/script.md)
 * [Inspecting Transactions](starknet/tx-status.md)
 * [Verifying Contracts](starknet/verify.md)
 * [Calldata Transformation](starknet/calldata-transformation.md)
@@ -75,6 +73,7 @@
 * [Shell snippets](development/shell-snippets.md)
 * [Snapshot tests](development/snapshot-tests.md)
 * [Predeployed contracts](development/predeployed-contracts.md)
+* [Gas expectations](development/gas-expectations.md)
 
 ---
 
@@ -164,9 +163,6 @@
           * [invoke](appendix/sncast/multicall/execute/invoke.md)
     * [show-config](appendix/sncast/show_config.md)
     * [config-path](appendix/sncast/config_path.md)
-    * [script](appendix/sncast/script/script.md)
-        * [init](appendix/sncast/script/init.md)
-        * [run](appendix/sncast/script/run.md)
     * [verify](appendix/sncast/verify.md)
     * [ledger](appendix/sncast/ledger/ledger.md)
         * [app-version](appendix/sncast/ledger/app-version.md)
@@ -188,17 +184,9 @@
         * [class-hash](appendix/sncast/utils/class_hash.md)
         * [contract-address](appendix/sncast/utils/contract_address.md)
         * [selector](appendix/sncast/utils/selector.md)
-* [`sncast` Library Reference](appendix/sncast-library.md)
-    * [declare](appendix/sncast-library/declare.md)
-    * [deploy](appendix/sncast-library/deploy.md)
-    * [invoke](appendix/sncast-library/invoke.md)
-    * [call](appendix/sncast-library/call.md)
-    * [get_nonce](appendix/sncast-library/get_nonce.md)
-    * [tx_status](appendix/sncast-library/tx_status.md)
-    * [errors](appendix/sncast-library/errors.md)
-    * [`FeeSettingsTrait`](appendix/sncast-library/fee_settings_trait.md)
 * [`snfoundry.toml` Reference](appendix/snfoundry-toml.md)
 * [`Scarb.toml` Reference](appendix/scarb-toml.md)
 * [Inlining Optimizer](appendix/inlining-optimizer.md)
 * [Starknet Foundry Github Action](appendix/starknet-foundry-github-action.md)
 * [`snforge` 0.56.0 Migration Guide](appendix/0-56-0-migration-guide.md)
+* [Blake Hash Support](appendix/blake-hash-support.md)

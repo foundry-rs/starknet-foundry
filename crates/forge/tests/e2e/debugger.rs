@@ -2,10 +2,21 @@ use crate::e2e::common::runner::{setup_package, snforge_test_bin_path, test_runn
 use assert_fs::TempDir;
 use assert_fs::fixture::{FileWriteStr, PathChild};
 use indoc::{formatdoc, indoc};
+use scarb_api::version::scarb_version;
+use semver::Version;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use std::fs;
 use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
+
+// TODO(#4522): Remove this conditional when minimal Scarb version is bumped to 2.20.0
+fn types_debug_info_entry() -> &'static str {
+    if scarb_version().is_ok_and(|v| v.scarb >= Version::new(2, 20, 0)) {
+        "\nadd-types-debug-info = true"
+    } else {
+        ""
+    }
+}
 
 #[test]
 fn test_fail_wrong_scarb_toml_configuration_for_launch_debugger() {
@@ -49,9 +60,8 @@ fn test_launch_debugger_waits_for_connection() {
             unstable-add-statements-code-locations-debug-info = true
             unstable-add-statements-functions-debug-info = true
             add-functions-debug-info = true
-            skip-optimizations = true
-            add-types-debug-info = true
-            ",
+            skip-optimizations = true{}",
+            types_debug_info_entry(),
         ))
         .unwrap();
 
@@ -74,9 +84,9 @@ fn test_launch_debugger_waits_for_connection_with_complex_config() {
 
             [cairo]
             skip-optimizations = true
-            unstable-add-statements-code-locations-debug-info = true
-            add-types-debug-info = true
+            unstable-add-statements-code-locations-debug-info = true{}
             ",
+            types_debug_info_entry(),
         ))
         .unwrap();
 
@@ -131,9 +141,8 @@ fn test_launch_debugger_fails_for_fuzzer_test() {
             unstable-add-statements-code-locations-debug-info = true
             unstable-add-statements-functions-debug-info = true
             add-functions-debug-info = true
-            skip-optimizations = true
-            add-types-debug-info = true
-            ",
+            skip-optimizations = true{}",
+            types_debug_info_entry(),
         ))
         .unwrap();
 

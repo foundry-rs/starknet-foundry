@@ -12,7 +12,6 @@ follow-web-links = true
 traverse-parent-directories = false
 exclude = [
     "foundry-rs.github.io/starknet-foundry/snforge_std",
-    "foundry-rs.github.io/starknet-foundry/sncast_std",
     "starknet-faucet.vercel.app",
     "marketplace.visualstudio.com"
 ]

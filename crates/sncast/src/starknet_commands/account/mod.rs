@@ -4,11 +4,12 @@ use crate::starknet_commands::account::deploy::Deploy;
 use crate::starknet_commands::account::import::Import;
 use crate::starknet_commands::account::list::{AccountsListMessage, List};
 use crate::{process_command_result, starknet_commands};
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::{Args, Subcommand};
 use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
+use conversions::string::{TryFromDecStr, TryFromHexStr};
 use serde_json::json;
 use sncast::helpers::account::{generate_account_name, load_accounts};
 use sncast::helpers::braavos::BraavosAccountFactory;
@@ -23,6 +24,7 @@ use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::ui::UI;
 use sncast::{AccountType, chain_id_to_network_name, decode_chain_id};
 use sncast::{SignerSource, SignerType, WaitForTx, get_chain_id};
+use starknet_curve::curve_params::EC_ORDER;
 use starknet_rust::accounts::{AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory};
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, Provider};
@@ -53,6 +55,45 @@ pub enum Commands {
     Deploy(Deploy),
     Delete(Delete),
     List(List),
+}
+
+#[derive(Args, Debug)]
+pub struct PrivateKeyArgs {
+    /// Account private key
+    #[arg(
+        long,
+        group = "private_key_input",
+        conflicts_with = "ledger_key_locator_account"
+    )]
+    pub private_key: Option<Felt>,
+
+    /// Path to the file holding account private key
+    #[arg(
+        long = "private-key-file",
+        group = "private_key_input",
+        conflicts_with = "ledger_key_locator_account"
+    )]
+    pub private_key_file_path: Option<Utf8PathBuf>,
+}
+
+impl PrivateKeyArgs {
+    fn resolve_optional(&self) -> Result<Option<Felt>> {
+        match (&self.private_key, &self.private_key_file_path) {
+            (Some(key), None) => Ok(Some(*key)),
+            (None, Some(path)) => get_private_key_from_file(path)
+                .with_context(|| format!("Failed to obtain private key from the file {path}"))
+                .map(Some),
+            (None, None) => Ok(None),
+            (Some(_), Some(_)) => {
+                unreachable!("`--private-key` and `--private-key-file` are mutually exclusive")
+            }
+        }
+    }
+
+    fn resolve_or_prompt(&self) -> Result<Felt> {
+        self.resolve_optional()?
+            .map_or_else(get_private_key_from_input, Ok)
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -92,6 +133,37 @@ pub fn prepare_account_json(
     }
 
     account_json
+}
+
+fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<Felt> {
+    let private_key_string = std::fs::read_to_string(file_path.clone())?;
+    Ok(private_key_string.parse()?)
+}
+
+/// Validates that `private_key` is a valid secret scalar of the STARK curve,
+/// i.e. it is non-zero and strictly smaller than the curve order.
+fn validate_private_key(private_key: Felt) -> Result<Felt> {
+    ensure!(
+        private_key != Felt::ZERO,
+        "Invalid private key: the private key cannot be 0"
+    );
+    ensure!(
+        private_key < EC_ORDER,
+        "Invalid private key: the private key must be smaller than the STARK curve order ({EC_ORDER:#x})"
+    );
+    Ok(private_key)
+}
+
+fn parse_input_to_felt(input: &str) -> Result<Felt> {
+    Felt::try_from_hex_str(input)
+        .or_else(|_| Felt::try_from_dec_str(input))
+        .with_context(|| format!("Failed to parse the value {input} as a felt"))
+}
+
+fn get_private_key_from_input() -> Result<Felt> {
+    let input = rpassword::prompt_password("Type in your private key and press enter: ")
+        .expect("Failed to read private key from input");
+    parse_input_to_felt(&input)
 }
 
 pub fn write_account_to_accounts_file(

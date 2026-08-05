@@ -15,7 +15,6 @@ pub const DEVNET_ACCOUNTS_NUMBER: u8 = 20;
 pub const DEVNET_FORK_BLOCK_NUMBER: u32 = 7_776_133;
 
 pub const CONTRACTS_DIR: &str = "tests/data/contracts";
-pub const SCRIPTS_DIR: &str = "tests/data/scripts";
 pub const MULTICALL_CONFIGS_DIR: &str = "crates/sncast/tests/data/multicall_configs";
 
 pub const DEVNET_OZ_CLASS_HASH_CAIRO_0: &str =

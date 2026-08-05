@@ -1,11 +1,10 @@
 use crate::response::cast_message::SncastCommandMessage;
-use conversions::serde::serialize::CairoSerialize;
 use conversions::string::IntoHexStr;
 use foundry_ui::styling;
 use serde::Serialize;
 use starknet_types_core::felt::Felt;
 
-#[derive(Serialize, CairoSerialize, Clone)]
+#[derive(Serialize, Clone)]
 pub struct CallResponse {
     pub response: Vec<Felt>,
 }
