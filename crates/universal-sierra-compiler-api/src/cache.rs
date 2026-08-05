@@ -34,14 +34,12 @@ pub struct SierraProgramHash(String);
 // `debug_info` is not an input to Sierra -> CASM codegen, so it must not invalidate the raw CASM
 // cache. See the Cairo Sierra -> CASM compiler API:
 // https://github.com/starkware-libs/cairo/blob/eea264fa54fac04a1a5745ad533a0c0ab3106ab3/crates/cairo-lang-sierra-to-casm/src/compiler.rs#L441
-#[tracing::instrument(skip_all, level = "debug")]
 pub fn raw_sierra_program_content_hash(sierra_program: &Program) -> SierraProgramHash {
     let mut hasher = Sha256::new();
     write_serializable_to_hash(&mut hasher, sierra_program);
     SierraProgramHash(hex_encode(hasher.finalize()))
 }
 
-#[tracing::instrument(skip_all, level = "debug")]
 pub fn contract_sierra_content_hash(sierra_bytes: &[u8]) -> SierraProgramHash {
     let mut hasher = Sha256::new();
     hasher.update(sierra_bytes);
@@ -103,19 +101,31 @@ where
         sierra_content_hash,
     );
 
-    if let Some(casm) = read_cache_entry(&cache_file_path) {
-        return Ok(casm);
+    if let Some(cache_file_path) = &cache_file_path {
+        if let Some(casm) = read_cache_entry(cache_file_path) {
+            return Ok(casm);
+        }
     }
 
     let json = compile()?;
     let casm = serde_json::from_str(&json).map_err(CompilationError::Deserialization)?;
 
-    if let Err(error) = write_cache_entry(&cache_file_path, &casm) {
-        tracing::debug!(
-            path = %cache_file_path.display(),
-            %error,
-            "failed to write CASM cache entry"
-        );
+    match &cache_file_path {
+        Some(cache_file_path) => {
+            if let Err(error) = write_cache_entry(cache_file_path, &casm) {
+                tracing::debug!(
+                    path = %cache_file_path.display(),
+                    %error,
+                    "failed to write CASM cache entry"
+                );
+            }
+        }
+        None => {
+            tracing::debug!(
+                compiler_version,
+                "skipping CASM cache: compiler version has no valid path segment"
+            );
+        }
     }
 
     Ok(casm)
@@ -144,19 +154,20 @@ fn cache_file_path_for_content_hash(
     sierra_type: SierraType,
     compiler_version: &str,
     sierra_content_hash: &SierraProgramHash,
-) -> PathBuf {
-    cache_dir
-        .join(CASM_CACHE_DIR)
-        .join(sierra_type.to_string())
-        .join(sanitize_path_segment(SNFORGE_VERSION))
-        .join(sanitize_path_segment(compiler_version))
-        .join(format!(
-            "{}.json",
-            cache_key(sierra_type, compiler_version, sierra_content_hash)
-        ))
+) -> Option<PathBuf> {
+    Some(
+        cache_dir
+            .join(CASM_CACHE_DIR)
+            .join(sierra_type.to_string())
+            .join(sanitize_path_segment(SNFORGE_VERSION)?)
+            .join(sanitize_path_segment(compiler_version)?)
+            .join(format!(
+                "{}.json",
+                cache_key(sierra_type, compiler_version, sierra_content_hash)
+            )),
+    )
 }
 
-#[tracing::instrument(skip_all, level = "debug")]
 fn cache_key(
     sierra_type: SierraType,
     compiler_version: &str,
@@ -250,21 +261,20 @@ where
     Ok(())
 }
 
-fn sanitize_path_segment(value: &str) -> String {
+/// Turns a version string into a human-readable, filesystem-safe directory segment.
+///
+/// Returns `None` when the value sanitizes to an empty string (e.g. it consists only of
+/// separators or whitespace). The caller then skips caching instead of inventing a name.
+fn sanitize_path_segment(value: &str) -> Option<String> {
     let sanitized = PATH_SEGMENT_WHITESPACE.replace_all(value, "-");
     let sanitized = PATH_SEGMENT_UNSAFE_CHARS.replace_all(&sanitized, "_");
     let sanitized = sanitized.trim_matches(['_', '-']).to_string();
 
     if sanitized.is_empty() {
-        fallback_path_segment(value)
+        None
     } else {
-        sanitized
+        Some(sanitized)
     }
-}
-
-fn fallback_path_segment(value: &str) -> String {
-    let digest = hex_encode(Sha256::digest(value.as_bytes()));
-    format!("hash-{}", &digest[..12])
 }
 
 fn hex_encode(bytes: impl AsRef<[u8]>) -> String {
@@ -329,8 +339,10 @@ mod tests {
         );
     }
 
+    // Raw hashing is computed over the typed `Program`, which carries no debug info, so builds that
+    // differ only in debug info hash the same and reuse this entry.
     #[test]
-    fn reuses_raw_cache_for_same_program_with_different_debug_info() {
+    fn reuses_raw_cache_on_matching_content_hash() {
         let temp = tempfile::tempdir().unwrap();
         let cache_dir = temp.path().join("cache");
         let content_hash = raw_sierra_program_content_hash(&empty_sierra_program());
@@ -347,7 +359,7 @@ mod tests {
             &cache_dir,
             "universal-sierra-compiler 1.2.3",
             &content_hash,
-            || panic!("debug info differences should not invalidate raw CASM cache"),
+            || panic!("a matching content hash should reuse the cached CASM entry"),
         )
         .unwrap();
 
@@ -425,12 +437,63 @@ mod tests {
 
         let content_hash = raw_sierra_program_content_hash(&empty_sierra_program());
         let cache_file_a =
-            cache_file_path_for_content_hash(&cache_dir, SierraType::Raw, version_a, &content_hash);
+            cache_file_path_for_content_hash(&cache_dir, SierraType::Raw, version_a, &content_hash)
+                .unwrap();
         let cache_file_b =
-            cache_file_path_for_content_hash(&cache_dir, SierraType::Raw, version_b, &content_hash);
+            cache_file_path_for_content_hash(&cache_dir, SierraType::Raw, version_b, &content_hash)
+                .unwrap();
 
         assert_eq!(cache_file_a.parent(), cache_file_b.parent());
         assert_ne!(cache_file_a.file_name(), cache_file_b.file_name());
+    }
+
+    #[test]
+    fn separates_cache_entries_by_sierra_type() {
+        let temp = tempfile::tempdir().unwrap();
+        let cache_dir = temp.path().join("cache");
+        let version = "universal-sierra-compiler 1.2.3";
+        let content_hash = raw_sierra_program_content_hash(&empty_sierra_program());
+
+        // The same content hash under different Sierra types must never collide onto one entry.
+        let raw =
+            cache_file_path_for_content_hash(&cache_dir, SierraType::Raw, version, &content_hash)
+                .unwrap();
+        let contract =
+            cache_file_path_for_content_hash(&cache_dir, SierraType::Contract, version, &content_hash)
+                .unwrap();
+
+        assert_ne!(raw, contract);
+    }
+
+    #[test]
+    fn skips_cache_when_compiler_version_has_no_valid_path_segment() {
+        let temp = tempfile::tempdir().unwrap();
+        let cache_dir = temp.path().join("cache");
+        let content_hash = raw_sierra_program_content_hash(&empty_sierra_program());
+
+        // A version string that sanitizes to empty cannot form a cache path, so the compiler runs
+        // and nothing is cached...
+        let first = compile_sierra_with_content_hash_using_version::<RawCasmProgram>(
+            SierraType::Raw,
+            &cache_dir,
+            "../",
+            &content_hash,
+            || Ok(raw_casm_json(vec![(1, 2)])),
+        )
+        .unwrap();
+        // ...so a second call must compile again instead of reusing an entry.
+        let second = compile_sierra_with_content_hash_using_version::<RawCasmProgram>(
+            SierraType::Raw,
+            &cache_dir,
+            "../",
+            &content_hash,
+            || Ok(raw_casm_json(vec![(3, 4)])),
+        )
+        .unwrap();
+
+        assert_eq!(first, raw_casm(vec![(1, 2)]));
+        assert_eq!(second, raw_casm(vec![(3, 4)]));
+        assert!(!cache_dir.join(CASM_CACHE_DIR).exists());
     }
 
     #[test]
@@ -441,7 +504,8 @@ mod tests {
         let content_hash = raw_sierra_program_content_hash(&empty_sierra_program());
 
         let cache_file =
-            cache_file_path_for_content_hash(&cache_dir, SierraType::Raw, version, &content_hash);
+            cache_file_path_for_content_hash(&cache_dir, SierraType::Raw, version, &content_hash)
+                .unwrap();
         fs::create_dir_all(cache_file.parent().unwrap()).unwrap();
         fs::write(&cache_file, "not valid json").unwrap();
 
@@ -483,10 +547,11 @@ mod tests {
     #[test]
     fn sanitizes_compiler_version_for_directory_name() {
         assert_eq!(
-            sanitize_path_segment("universal-sierra-compiler 2.9.0"),
-            "universal-sierra-compiler-2_9_0"
+            sanitize_path_segment("universal-sierra-compiler 2.9.0").as_deref(),
+            Some("universal-sierra-compiler-2_9_0")
         );
-        assert_eq!(sanitize_path_segment("../"), "hash-fa08499e14d0");
+        // A version made only of separators sanitizes to nothing, so it has no valid path segment.
+        assert_eq!(sanitize_path_segment("../"), None);
     }
 
     #[test]

@@ -2,7 +2,7 @@ use crate::command::{USCError, USCInternalCommand};
 use serde_json::Value;
 use std::io;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use strum_macros::Display;
 use tempfile::Builder;
 use thiserror::Error;
@@ -12,13 +12,6 @@ use thiserror::Error;
 pub enum CompilationError {
     #[error("Failed to write Sierra JSON to temp file: {0}")]
     TempFileWrite(#[from] io::Error),
-
-    #[error("Failed to read Sierra JSON file at {path}: {source}")]
-    SierraFileRead {
-        path: PathBuf,
-        #[source]
-        source: io::Error,
-    },
 
     #[error("Could not serialize Sierra JSON: {0}")]
     Serialization(serde_json::Error),
@@ -30,7 +23,7 @@ pub enum CompilationError {
     Deserialization(serde_json::Error),
 }
 
-#[derive(Debug, Display, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Display, Copy, Clone)]
 #[strum(serialize_all = "lowercase")]
 pub enum SierraType {
     Contract,
