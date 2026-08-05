@@ -9022,13 +9022,16 @@ checksum = "81e544489bf3d8ef66c953931f56617f423cd4b5494be343d9b9d3dda037b9a3"
 
 [[package]]
 name = "universal-sierra-compiler-api"
-version = "1.0.0"
+version = "0.62.1"
 dependencies = [
  "cairo-lang-casm",
+ "cairo-lang-sierra",
  "cairo-lang-starknet-classes",
  "num-bigint",
+ "regex",
  "serde",
  "serde_json",
+ "sha2 0.11.0",
  "shared",
  "strum_macros 0.28.0",
  "tempfile",
