@@ -34,12 +34,14 @@ pub struct SierraProgramHash(String);
 // `debug_info` is not an input to Sierra -> CASM codegen, so it must not invalidate the raw CASM
 // cache. See the Cairo Sierra -> CASM compiler API:
 // https://github.com/starkware-libs/cairo/blob/eea264fa54fac04a1a5745ad533a0c0ab3106ab3/crates/cairo-lang-sierra-to-casm/src/compiler.rs#L441
+#[must_use]
 pub fn raw_sierra_program_content_hash(sierra_program: &Program) -> SierraProgramHash {
     let mut hasher = Sha256::new();
     write_serializable_to_hash(&mut hasher, sierra_program);
     SierraProgramHash(hex_encode(hasher.finalize()))
 }
 
+#[must_use]
 pub fn contract_sierra_content_hash(sierra_bytes: &[u8]) -> SierraProgramHash {
     let mut hasher = Sha256::new();
     hasher.update(sierra_bytes);
@@ -101,10 +103,10 @@ where
         sierra_content_hash,
     );
 
-    if let Some(cache_file_path) = &cache_file_path {
-        if let Some(casm) = read_cache_entry(cache_file_path) {
-            return Ok(casm);
-        }
+    if let Some(cache_file_path) = &cache_file_path
+        && let Some(casm) = read_cache_entry(cache_file_path)
+    {
+        return Ok(casm);
     }
 
     let json = compile()?;
@@ -458,9 +460,13 @@ mod tests {
         let raw =
             cache_file_path_for_content_hash(&cache_dir, SierraType::Raw, version, &content_hash)
                 .unwrap();
-        let contract =
-            cache_file_path_for_content_hash(&cache_dir, SierraType::Contract, version, &content_hash)
-                .unwrap();
+        let contract = cache_file_path_for_content_hash(
+            &cache_dir,
+            SierraType::Contract,
+            version,
+            &content_hash,
+        )
+        .unwrap();
 
         assert_ne!(raw, contract);
     }
