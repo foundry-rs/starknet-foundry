@@ -57,6 +57,24 @@ Class hash of a custom openzeppelin account contract declared to the network. It
 - Felt in hex (prefixed with `0x`) or decimal representation.
 - `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../../starknet/aliases.md).
 
+## `--private-key <PRIVATE_KEY>`
+Optional. If neither `--private-key` nor `--private-key-file` is passed, a random private key will be generated.
+
+Account private key. It must be a valid STARK curve secret scalar, i.e. a non-zero value smaller than the curve order `0x800000000000010ffffffffffffffffb781126dcae7b2321e66a241adc64d2f`.
+
+Conflicts with: [`--private-key-file`](#--private-key-file-private_key_file_path), [`--ledger-path`](#--ledger-path-hd_path), [`--ledger-account-id`](#--ledger-account-id-account_id)
+
+> ⚠️ **Security Warning**
+> 1. Passing the key via `--private-key` exposes it in your shell history and in the process list. Prefer `--private-key-file` for keys you want to keep secret.
+> 2. `sncast` only checks that the value is a valid curve scalar, it does not assess how secure it is. A supplied key that is small, guessable, or otherwise low-entropy results in an account anyone can take over. Only pass keys you trust, and for anything other than development omit the flag so a cryptographically random key is generated for you.
+
+## `--private-key-file <PRIVATE_KEY_FILE_PATH>`
+Optional. If neither `--private-key` nor `--private-key-file` is passed, a random private key will be generated.
+
+Path to the file holding account private key. The key must satisfy the same constraints as [`--private-key`](#--private-key-private_key).
+
+Conflicts with: [`--private-key`](#--private-key-private_key), [`--ledger-path`](#--ledger-path-hd_path), [`--ledger-account-id`](#--ledger-account-id-account_id)
+
 ## `--ledger-path <HD_PATH>`
 Optional.
 
@@ -64,7 +82,7 @@ Optional.
 
 When provided, the public key is read from the Ledger device.
 
-Conflicts with: [`--ledger-account-id`](#--ledger-account-id-account_id)
+Conflicts with: [`--private-key`](#--private-key-private_key), [`--private-key-file`](#--private-key-file-private_key_file_path), [`--ledger-account-id`](#--ledger-account-id-account_id)
 
 See [Ledger Hardware Wallet](../../../starknet/ledger.md) for details.
 
@@ -73,6 +91,6 @@ Optional.
 
 Shorthand for `--ledger-path`. The account ID is used to derive the path `m//starknet'/sncast'/0'/<account-id>'/0`.
 
-Conflicts with: [`--ledger-path`](#--ledger-path-hd_path)
+Conflicts with: [`--ledger-path`](#--ledger-path-hd_path), [`--private-key`](#--private-key-private_key), [`--private-key-file`](#--private-key-file-private_key_file_path)
 
 See [Ledger Hardware Wallet](../../../starknet/ledger.md) for details.

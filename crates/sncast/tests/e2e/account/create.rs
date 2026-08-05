@@ -1,4 +1,6 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
+use crate::helpers::constants::{
+    ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_OZ_CLASS_HASH_CAIRO_1, URL,
+};
 use crate::helpers::fixtures::copy_file;
 use crate::helpers::runner::runner;
 use configuration::test_utils::copy_config_to_tempdir;
@@ -14,6 +16,7 @@ use sncast::AccountType;
 use sncast::helpers::constants::{
     BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH,
 };
+use starknet_curve::curve_params::EC_ORDER;
 use std::fs;
 use tempfile::tempdir;
 use test_case::test_case;
@@ -84,6 +87,210 @@ pub async fn test_happy_case(account_type: &str) {
     );
 
     assert_data_eq!(contents, to_string_pretty(&expected).unwrap());
+}
+
+#[tokio::test]
+pub async fn test_create_with_private_key() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+    let class_hash = DEVNET_OZ_CLASS_HASH_CAIRO_1.into_hex_string();
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--salt",
+        "0x1",
+        "--type",
+        "oz",
+        "--class-hash",
+        &class_hash,
+        "--private-key",
+        "0x456",
+    ];
+
+    runner(&args)
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
+        .expect("Unable to read created file");
+
+    let expected = json!(
+        {
+            "alpha-sepolia": {
+                "my_account": {
+                    "address": "0x[..]",
+                    "class_hash": &class_hash,
+                    "deployed": false,
+                    "legacy": false,
+                    "private_key": "0x456",
+                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
+                    "salt": "0x1",
+                    "type": "open_zeppelin"
+                }
+            }
+        }
+    );
+
+    assert_data_eq!(contents, to_string_pretty(&expected).unwrap());
+}
+
+#[tokio::test]
+pub async fn test_create_with_private_key_from_file() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+    let private_key_file = "my_private_key";
+    let class_hash = DEVNET_OZ_CLASS_HASH_CAIRO_1.into_hex_string();
+
+    fs::write(temp_dir.path().join(private_key_file), "0x456").unwrap();
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--salt",
+        "0x1",
+        "--type",
+        "oz",
+        "--class-hash",
+        &class_hash,
+        "--private-key-file",
+        private_key_file,
+    ];
+
+    runner(&args)
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
+        .expect("Unable to read created file");
+
+    let expected = json!(
+        {
+            "alpha-sepolia": {
+                "my_account": {
+                    "address": "0x[..]",
+                    "class_hash": &class_hash,
+                    "deployed": false,
+                    "legacy": false,
+                    "private_key": "0x456",
+                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
+                    "salt": "0x1",
+                    "type": "open_zeppelin"
+                }
+            }
+        }
+    );
+
+    assert_data_eq!(contents, to_string_pretty(&expected).unwrap());
+}
+
+#[tokio::test]
+pub async fn test_create_accept_only_one_private_key() {
+    let args = vec![
+        "account",
+        "create",
+        "--private-key",
+        "0x456",
+        "--private-key-file",
+        "my_private_key",
+    ];
+
+    let output = runner(&args).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "error: the argument '--private-key <PRIVATE_KEY>' cannot be used with '--private-key-file <PRIVATE_KEY_FILE_PATH>'",
+    );
+}
+
+#[tokio::test]
+pub async fn test_create_invalid_private_key_file_path() {
+    let args = vec![
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--private-key-file",
+        "my_private_key",
+    ];
+
+    let output = runner(&args).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        formatdoc! {r"
+        Command: account create
+        Error: Failed to obtain private key from the file my_private_key
+
+        Caused by:
+            No such file or directory [..]
+        "},
+    );
+}
+
+#[tokio::test]
+pub async fn test_create_with_zero_private_key() {
+    let args = vec![
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--private-key",
+        "0x0",
+    ];
+
+    let output = runner(&args).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Command: account create
+        Error: Invalid private key: the private key cannot be 0
+        "},
+    );
+}
+
+#[tokio::test]
+pub async fn test_create_with_private_key_exceeding_curve_order() {
+    // Equal to the STARK curve order, which is the first invalid value.
+    let curve_order = EC_ORDER.into_hex_string();
+
+    let args = vec![
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--private-key",
+        curve_order.as_str(),
+    ];
+
+    let output = runner(&args).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Command: account create
+        Error: Invalid private key: the private key must be smaller than the STARK curve order [..]
+        "},
+    );
 }
 
 #[tokio::test]

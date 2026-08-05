@@ -8,7 +8,6 @@
 * [First Steps with Starknet Foundry](getting-started/first-steps.md)
 * [Scarb](getting-started/scarb.md)
 * [Project Configuration](projects/configuration.md)
-* [Blake Hash Support](getting-started/blake-hash-support.md)
 
 ---
 
@@ -74,6 +73,7 @@
 * [Shell snippets](development/shell-snippets.md)
 * [Snapshot tests](development/snapshot-tests.md)
 * [Predeployed contracts](development/predeployed-contracts.md)
+* [Gas expectations](development/gas-expectations.md)
 
 ---
 
@@ -188,3 +188,4 @@
 * [Inlining Optimizer](appendix/inlining-optimizer.md)
 * [Starknet Foundry Github Action](appendix/starknet-foundry-github-action.md)
 * [`snforge` 0.56.0 Migration Guide](appendix/0-56-0-migration-guide.md)
+* [Blake Hash Support](appendix/blake-hash-support.md)

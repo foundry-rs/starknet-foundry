@@ -31,10 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Removed
 
 - Cairo deployment scripts (`sncast script` command and `sncast_std` library).
+- Deprecated top-level `sncast tx-status` and `sncast balance` commands. Use `sncast get tx-status` and `sncast get balance` instead.
 
 #### Added
 
 - `--contract-address` flag to `get balance` command, allowing to check balance for any contract, not only accounts
+- Optional `--private-key` and `--private-key-file` in `account create` command to allow specifying a private key for the newly created account
 
 #### Changed
 
