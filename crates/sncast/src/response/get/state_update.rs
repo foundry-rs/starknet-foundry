@@ -1,23 +1,14 @@
 use crate::response::cast_message::SncastCommandMessage;
 use foundry_ui::styling::OutputBuilder;
-use serde::{Serialize, Serializer};
+use serde::Serialize;
 use starknet_rust::core::types::{
     ContractStorageDiffItem, DeclaredClassItem, DeployedContractItem, MaybePreConfirmedStateUpdate,
     MigratedCompiledClassItem, NonceUpdate, PreConfirmedStateUpdate, ReplacedClassItem, StateDiff,
     StateUpdate,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub struct StateUpdateResponse(pub MaybePreConfirmedStateUpdate);
-
-impl Serialize for StateUpdateResponse {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        self.0.serialize(serializer)
-    }
-}
 
 impl SncastCommandMessage for StateUpdateResponse {
     fn text(&self) -> String {
