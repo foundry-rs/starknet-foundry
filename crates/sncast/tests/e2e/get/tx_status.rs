@@ -19,21 +19,6 @@ async fn test_incorrect_transaction_hash() {
 }
 
 #[tokio::test]
-async fn test_succeeded_old_command() {
-    let args = vec!["tx-status", SUCCEEDED_TX_HASH, "--url", URL];
-    let snapbox = runner(&args);
-
-    snapbox.assert().success().stdout_eq(indoc! {r"
-        [WARNING] `sncast tx-status` has moved to `sncast get tx-status`. `sncast tx-status` will be removed in the next version.
-
-        Success: Transaction status retrieved
-        
-        Finality Status:  Accepted on L1
-        Execution Status: Succeeded
-    "});
-}
-
-#[tokio::test]
 async fn test_succeeded() {
     let args = vec!["get", "tx-status", SUCCEEDED_TX_HASH, "--url", URL];
     let snapbox = runner(&args);

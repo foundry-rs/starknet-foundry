@@ -4,14 +4,13 @@ use crate::starknet_commands::declare::declare_with_artifacts;
 use crate::starknet_commands::declare_from::{ContractSource, DeclareFrom};
 use crate::starknet_commands::deploy::{DeployArguments, DeployCommonArgs};
 use crate::starknet_commands::get::Get;
-use crate::starknet_commands::get::balance::Balance;
 use crate::starknet_commands::invoke::InvokeCommonArgs;
 use crate::starknet_commands::utils::felt_or_id::resolve_calldata_to_felts;
 use crate::starknet_commands::utils::{self, Utils};
 use crate::starknet_commands::{
     account, account::Account as AccountCommand, alias::Alias, call::Call, config_path::ConfigPath,
-    declare::Declare, deploy::Deploy, get::tx_status::TxStatus, invoke::Invoke,
-    multicall::Multicall, show_config::ShowConfig,
+    declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
+    show_config::ShowConfig,
 };
 use crate::starknet_commands::{get, multicall};
 use anyhow::{Context, Result, bail};
@@ -20,7 +19,6 @@ use clap::{ArgMatches, CommandFactory, FromArgMatches, Parser, Subcommand};
 use configuration::{Override, find_config_file};
 use conversions::IntoConv;
 use data_transformer::transform;
-use foundry_ui::components::warning::WarningMessage;
 use mimalloc::MiMalloc;
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::artifacts::resolve_contract_artifacts;
@@ -191,9 +189,6 @@ enum Commands {
     /// Show paths to the config files contributing to the effective configuration
     ConfigPath(ConfigPath),
 
-    /// Get the status of a transaction
-    TxStatus(TxStatus),
-
     /// Verify a contract
     Verify(Verify),
 
@@ -202,9 +197,6 @@ enum Commands {
 
     /// Utility commands
     Utils(Utils),
-
-    /// Fetch balance of the account for specified token
-    Balance(Balance),
 
     /// Interact with Ledger hardware wallet
     Ledger(Ledger),
@@ -788,12 +780,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             Ok(process_command_result("show-config", result, ui, None))
         }
 
-        // TODO(#4214): Remove moved sncast commands
-        Commands::TxStatus(tx_status) => {
-            print_cmd_move_warning("tx-status", "get tx-status", ui);
-            get::tx_status::tx_status(tx_status, config, ui).await
-        }
-
         Commands::Verify(verify) => {
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &verify.package)?;
@@ -802,12 +788,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                     .await;
 
             Ok(process_command_result("verify", result, ui, None))
-        }
-
-        // TODO(#4214): Remove moved sncast commands
-        Commands::Balance(balance) => {
-            print_cmd_move_warning("balance", "get balance", ui);
-            get::balance::balance(balance, config, ui).await
         }
 
         Commands::Ledger(ledger) => {
@@ -904,11 +884,4 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
             global = global_path.as_ref().map_or("missing", |p| p.as_str()),
         }
     })
-}
-
-fn print_cmd_move_warning(command_name: &str, new_command_name: &str, ui: &UI) {
-    ui.print_warning(WarningMessage::new(format!(
-        "`sncast {command_name}` has moved to `sncast {new_command_name}`. `sncast {command_name}` will be removed in the next version."
-    )));
-    ui.print_blank_line();
 }
