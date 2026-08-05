@@ -8,6 +8,7 @@ pub mod block;
 pub mod class_hash_at;
 pub mod nonce;
 pub mod spec_version;
+pub mod state_update;
 pub mod transaction;
 pub mod tx_receipt;
 pub mod tx_status;
@@ -47,6 +48,9 @@ pub enum GetCommands {
 
     /// Get a block with transaction hashes
     Block(block::Block),
+
+    /// Get the state update for the given block
+    StateUpdate(state_update::StateUpdate),
 }
 
 pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCode> {
@@ -66,5 +70,7 @@ pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCo
         GetCommands::SpecVersion(args) => spec_version::spec_version(args, config, ui).await,
 
         GetCommands::Block(args) => block::block(args, config, ui).await,
+
+        GetCommands::StateUpdate(args) => state_update::state_update(args, config, ui).await,
     }
 }

@@ -26,6 +26,7 @@
     * [class-hash-at](./sncast/get/class_hash_at.md)
     * [nonce](./sncast/get/nonce.md)
     * [spec-version](./sncast/get/spec-version.md)
+    * [state-update](./sncast/get/state-update.md)
     * [tx](./sncast/get/tx.md)
     * [tx-status](./sncast/get/tx-status.md)
 * [ledger](./sncast/ledger/ledger.md)
