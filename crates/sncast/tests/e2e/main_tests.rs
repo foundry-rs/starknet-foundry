@@ -204,9 +204,15 @@ async fn test_nonexistent_account_address() {
 
 #[tokio::test]
 async fn test_missing_account_flag() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "dummy",
+        "missing_account_flag",
+    );
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
     let args = vec![
         "--accounts-file",
-        ACCOUNT_FILE_PATH,
+        accounts_json_path.as_str(),
         "declare",
         "--url",
         URL,
@@ -214,7 +220,7 @@ async fn test_missing_account_flag() {
         "whatever",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(contract_path.path());
     let output = snapbox.assert().failure();
 
     assert_stderr_contains(
@@ -225,10 +231,16 @@ async fn test_missing_account_flag() {
 
 #[tokio::test]
 async fn test_missing_account_flag_json() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "dummy",
+        "missing_account_flag_json",
+    );
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
     let args = vec![
         "--json",
         "--accounts-file",
-        ACCOUNT_FILE_PATH,
+        accounts_json_path.as_str(),
         "declare",
         "--url",
         URL,
@@ -236,7 +248,7 @@ async fn test_missing_account_flag_json() {
         "whatever",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(contract_path.path());
     let output = snapbox.assert().failure();
 
     assert_stderr_contains(
@@ -248,10 +260,14 @@ async fn test_missing_account_flag_json() {
 #[tokio::test]
 async fn test_inexistent_keystore() {
     let accounts_file = "empty_accounts.json";
-    let temp_dir = tempfile::tempdir().expect("Unable to create a temporary directory");
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "dummy",
+        "inexistent_keystore",
+    );
     copy_file(
         "tests/data/accounts/empty_accounts.json",
-        temp_dir.path().join(accounts_file),
+        contract_path.path().join(accounts_file),
     );
 
     let args = vec![
@@ -266,7 +282,7 @@ async fn test_inexistent_keystore() {
         "my_contract",
     ];
 
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let snapbox = runner(&args).current_dir(contract_path.path());
 
     let output = snapbox.assert().failure();
     assert_stderr_contains(output, "Error: Failed to find keystore file");
@@ -276,14 +292,18 @@ async fn test_inexistent_keystore() {
 async fn test_keystore_account_required() {
     let accounts_file = "empty_accounts.json";
     let keystore_file = "my_key.json";
-    let temp_dir = tempfile::tempdir().expect("Unable to create a temporary directory");
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "dummy",
+        "keystore_account_required",
+    );
     copy_file(
         "tests/data/accounts/empty_accounts.json",
-        temp_dir.path().join(accounts_file),
+        contract_path.path().join(accounts_file),
     );
     copy_file(
         "tests/data/keystore/my_key.json",
-        temp_dir.path().join(keystore_file),
+        contract_path.path().join(keystore_file),
     );
 
     let args = vec![
@@ -298,7 +318,7 @@ async fn test_keystore_account_required() {
         "my_contract",
     ];
 
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let snapbox = runner(&args).current_dir(contract_path.path());
     let output = snapbox.assert().failure();
 
     assert_stderr_contains(
@@ -311,14 +331,18 @@ async fn test_keystore_account_required() {
 async fn test_keystore_inexistent_account() {
     let accounts_file = "empty_accounts.json";
     let keystore_file = "my_key.json";
-    let temp_dir = tempfile::tempdir().expect("Unable to create a temporary directory");
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "dummy",
+        "keystore_inexistent_account",
+    );
     copy_file(
         "tests/data/accounts/empty_accounts.json",
-        temp_dir.path().join(accounts_file),
+        contract_path.path().join(accounts_file),
     );
     copy_file(
         "tests/data/keystore/my_key.json",
-        temp_dir.path().join(keystore_file),
+        contract_path.path().join(keystore_file),
     );
 
     let args = vec![
@@ -335,7 +359,7 @@ async fn test_keystore_inexistent_account() {
         "my_contract",
     ];
 
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let snapbox = runner(&args).current_dir(contract_path.path());
     let output = snapbox.assert().failure();
 
     assert_stderr_contains(
