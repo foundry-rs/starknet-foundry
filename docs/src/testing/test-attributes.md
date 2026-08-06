@@ -105,21 +105,11 @@ Asserts that the test does not use more than 5 units of l1 gas, l1 data gas and 
 #[available_gas(l1_gas: 5, l1_data_gas: 5, l2_gas: 5)]
 ```
 
-Asserts that the test does not use more than 100 units of Sierra gas:
+`l2_gas` limit can also be set via unnamed argument, which is equivalent to `#[available_gas(l2_gas: ...)]`:
 
 ```rust
-#[available_gas(sierra_gas: 100)]
+#[available_gas(5)]
 ```
-
-or with unnamed argument
-
-```rust
-#[available_gas(100)]
-```
-
-> 📝 **Note**
->
-> Gas triplet arguments (`l1_gas`, `l1_data_gas`, `l2_gas`) and `sierra_gas` argument are mutually exclusive.
 
 ### `#[fork]`
 

@@ -56,42 +56,17 @@ fn work_with_number_all_set() {
 }
 
 #[test]
-fn fails_with_sierra_gas_combined_with_resource_bounds() {
-    let args = quote!((l1_gas: 1, l1_data_gas: 2, l2_gas: 3, sierra_gas: 4));
-
-    let result = available_gas(args, empty_function());
-
-    assert_diagnostics(
-        &result,
-        &[Diagnostic::error(
-            "#[available_gas] `sierra_gas` cannot be combined with resource bounds `l1_gas`, `l1_data_gas`, `l2_gas`",
-        )],
-    );
-}
-
-#[test]
-fn fails_with_sierra_gas_combined_with_single_resource_bound() {
-    let args = quote!((l2_gas: 3, sierra_gas: 4));
-
-    let result = available_gas(args, empty_function());
-
-    assert_diagnostics(
-        &result,
-        &[Diagnostic::error(
-            "#[available_gas] `sierra_gas` cannot be combined with resource bounds `l1_gas`, `l1_data_gas`, `l2_gas`",
-        )],
-    );
-}
-
-#[test]
-fn work_with_named_sierra_gas() {
+fn fails_with_sierra_gas_arg() {
     let args = quote!((sierra_gas: 4));
 
     let result = available_gas(args, empty_function());
 
-    assert_diagnostics(&result, &[]);
-
-    insta::assert_snapshot!(format_output(&result));
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(formatdoc!(
+            "#[available_gas] unexpected argument(s): <sierra_gas>"
+        ))],
+    );
 }
 
 #[test]
@@ -128,7 +103,7 @@ fn fails_with_mixed_unnamed_and_named_args() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(formatdoc!(
-            "#[available_gas] can be used with named arguments only [possible values: l1_gas, l1_data_gas, l2_gas, sierra_gas]. invalid arguments found: 3"
+            "#[available_gas] can be used with named arguments only [possible values: l1_gas, l1_data_gas, l2_gas]. invalid arguments found: 3"
         ))],
     );
 }
@@ -156,7 +131,7 @@ fn fails_with_non_number_unnamed_arg() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(formatdoc!(
-            "#[available_gas] <gas> should be number literal"
+            "#[available_gas] <l2_gas> should be number literal"
         ))],
     );
 }
@@ -212,20 +187,6 @@ fn handles_number_overflow_l2() {
         &result,
         &[Diagnostic::error(formatdoc!(
             "#[available_gas] l2_gas it too large (max permissible value is 18446744073709551615)"
-        ))],
-    );
-}
-
-#[test]
-fn handles_number_overflow_sierra() {
-    let args = quote!((sierra_gas: 18446744073709551616));
-
-    let result = available_gas(args, empty_function());
-
-    assert_diagnostics(
-        &result,
-        &[Diagnostic::error(formatdoc!(
-            "#[available_gas] sierra_gas it too large (max permissible value is 18446744073709551615)"
         ))],
     );
 }
