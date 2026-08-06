@@ -246,6 +246,14 @@ where
                 ))
             }
         }
+        Err(Provider(ProviderError::StarknetError(error))) => Err(
+            StarknetCommandError::ProviderError(SNCastProviderError::StarknetError(
+                SNCastStarknetError::from_starknet_error_with_account(
+                    error,
+                    account.address().into_(),
+                ),
+            )),
+        ),
         Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
         Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
     }

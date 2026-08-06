@@ -7,7 +7,7 @@ use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::proof::ProofArgs;
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::errors::StarknetCommandError;
+use sncast::response::errors::{SNCastProviderError, SNCastStarknetError, StarknetCommandError};
 use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
 use sncast::response::ui::UI;
 use sncast::{WaitForTx, apply_optional_fields, handle_wait_for_tx};
@@ -15,6 +15,7 @@ use starknet_rust::accounts::AccountError::Provider;
 use starknet_rust::accounts::{Account, ConnectedAccount, ExecutionV3, SingleOwnerAccount};
 use starknet_rust::core::types::{Call, InvokeTransactionResult};
 use starknet_rust::providers::JsonRpcClient;
+use starknet_rust::providers::ProviderError;
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::signers::Signer;
 use starknet_types_core::felt::Felt;
@@ -172,6 +173,14 @@ where
         )
         .await
         .map_err(StarknetCommandError::from),
+        Err(Provider(ProviderError::StarknetError(error))) => Err(
+            StarknetCommandError::ProviderError(SNCastProviderError::StarknetError(
+                SNCastStarknetError::from_starknet_error_with_account(
+                    error,
+                    account.address().into_(),
+                ),
+            )),
+        ),
         Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
         Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
     }
