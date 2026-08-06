@@ -474,6 +474,50 @@ fn test_too_low_gas() {
     );
 }
 
+#[test]
+fn test_insufficient_account_balance() {
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        "user11",
+        "--wait",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1",
+        "0x2",
+        "--l1-gas",
+        "100000",
+        "--l1-gas-price",
+        "1000000000000",
+        "--l2-gas",
+        "450000000",
+        "--l2-gas-price",
+        "100000000000000000000000",
+        "--l1-data-gas",
+        "100000",
+        "--l1-data-gas-price",
+        "1000000000000",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Command: invoke
+        Error: Account 0x04ce45bd95d2ec35e3dd4490e28f896367958b966673789fef253626133ed37d balance is too small to cover transaction fee
+        "},
+    );
+}
+
 #[tokio::test]
 async fn test_happy_case_cairo_expression_calldata() {
     let tempdir = create_and_deploy_oz_account().await;
