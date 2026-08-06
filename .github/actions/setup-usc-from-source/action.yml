@@ -1,0 +1,20 @@
+name: Setup USC from source
+description: Builds universal-sierra-compiler from source for CI
+
+runs:
+  using: composite
+  steps:
+    # TODO: Delete this action and use software-mansion/setup-universal-sierra-compiler again once USC PR #133 lands and is released.
+    - name: Checkout universal-sierra-compiler
+      shell: bash
+      run: |
+        git clone --depth 1 --branch fix/export-function-gas-cost https://github.com/software-mansion/universal-sierra-compiler.git "$RUNNER_TEMP/universal-sierra-compiler"
+        git -C "$RUNNER_TEMP/universal-sierra-compiler" checkout 0b93c997b8f93136c669a9ddb21573e157ecea3d
+
+    - name: Build universal-sierra-compiler
+      shell: bash
+      run: cargo build --manifest-path "$RUNNER_TEMP/universal-sierra-compiler/Cargo.toml" --release --target-dir target/universal-sierra-compiler
+
+    - name: Add universal-sierra-compiler to PATH
+      shell: bash
+      run: echo "$GITHUB_WORKSPACE/target/universal-sierra-compiler/release" >> "$GITHUB_PATH"

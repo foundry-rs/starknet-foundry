@@ -49,7 +49,7 @@ runs:
       with:
         scarb-version: ${{ inputs.scarb-version }}
 
-    - uses: software-mansion/setup-universal-sierra-compiler@v1
+    - uses: ./.github/actions/setup-usc-from-source
       if: ${{ inputs.setup-usc == 'true' }}
 
     - name: Add LLVM APT repository

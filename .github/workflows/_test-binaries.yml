@@ -63,7 +63,7 @@ jobs:
           tar xzvf ${{ env.ARTIFACTS_PATH }}
 
       - name: Install universal-sierra-compiler
-        uses: software-mansion/setup-universal-sierra-compiler@v1
+        uses: ./.github/actions/setup-usc-from-source
 
       - name: Smoke test
         shell: bash

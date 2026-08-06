@@ -47,7 +47,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - uses: ./.github/actions/setup-usc-from-source
 
       - run: cargo test --profile ci --lib -p forge
       - name: Determine test features
@@ -92,7 +92,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - uses: ./.github/actions/setup-usc-from-source
       - name: Install cairo-profiler
         run: |
           set -euo pipefail
@@ -133,7 +133,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - uses: ./.github/actions/setup-usc-from-source
       - name: Get Devnet version from .tool-versions
         id: get-devnet-version
         run: |
