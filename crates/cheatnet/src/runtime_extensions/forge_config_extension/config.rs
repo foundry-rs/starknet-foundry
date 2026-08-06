@@ -33,6 +33,12 @@ impl RawAvailableResourceBoundsConfig {
     }
 }
 
+#[derive(Debug, Clone, Copy, CairoDeserialize, PartialEq)]
+pub enum RawAvailableGasConfig {
+    MaxL2Gas(usize),
+    MaxResourceBounds(RawAvailableResourceBoundsConfig),
+}
+
 // fork
 
 #[derive(Debug, Clone, CairoDeserialize, PartialEq)]
@@ -172,7 +178,7 @@ pub struct RawPredeployedContractsConfig {
 #[derive(Debug, Default, Clone)]
 pub struct RawForgeConfig {
     pub fork: Option<RawForkConfig>,
-    pub available_gas: Option<RawAvailableResourceBoundsConfig>,
+    pub available_gas: Option<RawAvailableGasConfig>,
     pub ignore: Option<RawIgnoreConfig>,
     pub should_panic: Option<RawShouldPanicConfig>,
     pub fuzzer: Option<RawFuzzerConfig>,

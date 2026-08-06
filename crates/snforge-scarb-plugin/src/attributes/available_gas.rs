@@ -32,6 +32,10 @@ fn from_resource_bounds(
     db: &SimpleParserDatabase,
     args: &Arguments,
 ) -> Result<TokenStream, Diagnostic> {
+    if !args.unnamed().is_empty() {
+        return from_unnamed_l2_gas(db, args);
+    }
+
     let named_args =
         args.named_only::<AvailableGasCollector>(db, &["l1_gas", "l1_data_gas", "l2_gas"])?;
 
@@ -58,17 +62,50 @@ fn from_resource_bounds(
     l1_data_gas.validate_in_gas_range::<AvailableGasCollector>("l1_data_gas")?;
     l2_gas.validate_in_gas_range::<AvailableGasCollector>("l2_gas")?;
 
+    let resource_bounds = resource_bounds_config_expression(l1_gas, l1_data_gas, l2_gas);
+
+    Ok(quote!(
+        snforge_std::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
+            #resource_bounds
+        )
+    ))
+}
+
+fn from_unnamed_l2_gas(
+    db: &SimpleParserDatabase,
+    args: &Arguments,
+) -> Result<TokenStream, Diagnostic> {
+    let &[(_, l2_gas)] = args
+        .unnamed_only::<AvailableGasCollector>()?
+        .of_length::<1, AvailableGasCollector>()?;
+
+    let l2_gas = Number::parse_from_expr::<AvailableGasCollector>(db, l2_gas, "l2_gas")?;
+
+    l2_gas.validate_in_gas_range::<AvailableGasCollector>("l2_gas")?;
+
+    let l2_gas = l2_gas.as_cairo_expression();
+
+    Ok(quote!(
+        snforge_std::_internals::config_types::AvailableGasConfig::MaxGas(#l2_gas)
+    ))
+}
+
+fn resource_bounds_config_expression(
+    l1_gas: Number,
+    l1_data_gas: Number,
+    l2_gas: Number,
+) -> TokenStream {
     let l1_gas_expr = l1_gas.as_cairo_expression();
     let l1_data_gas_expr = l1_data_gas.as_cairo_expression();
     let l2_gas_expr = l2_gas.as_cairo_expression();
 
-    Ok(quote!(
+    quote!(
         snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
             l1_gas: #l1_gas_expr,
             l1_data_gas: #l1_data_gas_expr,
             l2_gas: #l2_gas_expr,
         }
-    ))
+    )
 }
 
 #[must_use]
