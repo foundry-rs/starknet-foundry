@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Possibility to set an L2 gas limit via unnamed argument `#[available_gas(...)]`, equivalent to `#[available_gas(l2_gas: ...)]`.
 - `CACHEDIR.TAG` file is now created in the cache directory.
 
+#### Fixed
+
+- Raw Sierra tests now use compiler-inferred function costs as their initial gas budget, allowing correct gas refunds beyond the contract entry-point precharge.
+
 ## [0.63.0] - 2026-08-05
 
 ### Forge

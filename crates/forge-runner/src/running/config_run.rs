@@ -1,8 +1,8 @@
 use super::hints::hints_by_representation;
 use crate::running::execution::finalize_execution;
 use crate::running::setup::{
-    VmExecutionContext, build_test_call_and_entry_point, entry_point_initial_budget,
-    initialize_execution_context,
+    VmExecutionContext, build_test_call_and_entry_point, initialize_execution_context,
+    raw_function_initial_budget,
 };
 use crate::{forge_config::ForgeTrackedResource, package_tests::TestDetails};
 use anyhow::Result;
@@ -115,8 +115,17 @@ pub fn run_config_pass(
     };
 
     let tracked_resource = TrackedResource::from(tracked_resource);
-    let entry_point_initial_budget =
-        entry_point_initial_budget(&forge_config_runtime.extended_runtime.hint_handler);
+    let raw_function_initial_budget = raw_function_initial_budget(
+        test_details,
+        casm_program,
+        &forge_config_runtime
+            .extended_runtime
+            .hint_handler
+            .base
+            .context
+            .gas_costs()
+            .builtins,
+    )?;
     let args = prepare_call_arguments(
         &forge_config_runtime.extended_runtime.hint_handler.base.call,
         &mut runner,
@@ -126,7 +135,7 @@ pub fn run_config_pass(
             .hint_handler
             .read_only_segments,
         &entry_point,
-        entry_point_initial_budget,
+        raw_function_initial_budget,
     )?;
     let n_total_args = args.len();
 
