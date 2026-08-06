@@ -1,4 +1,6 @@
 use crate::package_tests::TestDetails;
+use anyhow::{Context, anyhow};
+use blockifier::blockifier_versioned_constants::BuiltinGasCosts;
 use blockifier::execution::contract_class::EntryPointV1;
 use blockifier::execution::entry_point::{EntryPointExecutionContext, ExecutableCallEntryPoint};
 use blockifier::execution::entry_point_execution::prepare_program_extra_data;
@@ -15,7 +17,9 @@ use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cheatnet::constants::build_test_entry_point;
 use starknet_api::deprecated_contract_class::EntryPointOffset;
 use std::collections::HashMap;
-use universal_sierra_compiler_api::representation::RawCasmProgram;
+use universal_sierra_compiler_api::representation::{
+    RawCasmProgram, RawCostTokenType, RawFunctionCost,
+};
 
 // Based on structure from (blockifier 0.13.5) https://github.com/starkware-libs/sequencer/blob/e417a9e7d50cbd78065d357763df2fbc2ad41f7c/crates/blockifier/src/execution/entry_point_execution.rs#L39
 // Logic of `initialize_execution_context` had to be modified so this struct ended up modified as well.
@@ -85,13 +89,55 @@ fn builtins_from_program(program: &Program) -> Vec<BuiltinName> {
     program.iter_builtins().copied().collect::<Vec<_>>()
 }
 
-pub fn entry_point_initial_budget(syscall_hint_processor: &SyscallHintProcessor) -> u64 {
-    syscall_hint_processor
-        .base
-        .context
-        .gas_costs()
-        .base
-        .entry_point_initial_budget
+/// Returns the compiler-inferred initial gas budget for a raw Sierra function.
+pub fn raw_program_initial_budget(
+    test_details: &TestDetails,
+    casm_program: &RawCasmProgram,
+    syscall_hint_processor: &SyscallHintProcessor,
+) -> anyhow::Result<u64> {
+    let function_cost = casm_program
+        .function_costs
+        .iter()
+        .find(|cost| cost.sierra_entry_point == test_details.sierra_entry_point_statement_idx)
+        .ok_or_else(|| {
+            anyhow!(
+                "Raw CASM does not contain the cost of Sierra function at statement index {}",
+                test_details.sierra_entry_point_statement_idx
+            )
+        })?;
+    let builtin_gas_costs = &syscall_hint_processor.base.context.gas_costs().builtins;
+
+    raw_function_cost_to_gas(function_cost, builtin_gas_costs)
+}
+
+fn raw_function_cost_to_gas(
+    function_cost: &RawFunctionCost,
+    builtin_gas_costs: &BuiltinGasCosts,
+) -> anyhow::Result<u64> {
+    function_cost
+        .costs
+        .iter()
+        .try_fold(0_u64, |total, (token_type, count)| {
+            let count = u64::try_from(*count)
+                .with_context(|| format!("Negative raw Sierra function cost for {token_type:?}"))?;
+            let token_gas_cost = match token_type {
+                RawCostTokenType::Const => 1,
+                RawCostTokenType::Pedersen => builtin_gas_costs.pedersen,
+                RawCostTokenType::Poseidon => builtin_gas_costs.poseidon,
+                RawCostTokenType::Bitwise => builtin_gas_costs.bitwise,
+                RawCostTokenType::EcOp => builtin_gas_costs.ecop,
+                RawCostTokenType::AddMod => builtin_gas_costs.add_mod,
+                RawCostTokenType::MulMod => builtin_gas_costs.mul_mod,
+                RawCostTokenType::Blake => builtin_gas_costs.blake,
+            };
+            let token_cost = count
+                .checked_mul(token_gas_cost)
+                .ok_or_else(|| anyhow!("Raw Sierra function cost overflow for {token_type:?}"))?;
+
+            total
+                .checked_add(token_cost)
+                .ok_or_else(|| anyhow!("Raw Sierra function cost overflow"))
+        })
 }
 
 pub fn build_test_call_and_entry_point(
@@ -109,4 +155,57 @@ pub fn build_test_call_and_entry_point(
         builtins: builtins_from_program(program),
     };
     (call, entry_point)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::BTreeMap;
+
+    #[test]
+    fn converts_raw_function_cost_tokens_to_gas() {
+        let function_cost = RawFunctionCost {
+            sierra_entry_point: 0,
+            costs: BTreeMap::from([
+                (RawCostTokenType::Const, 1),
+                (RawCostTokenType::Pedersen, 2),
+                (RawCostTokenType::Poseidon, 3),
+                (RawCostTokenType::Bitwise, 4),
+                (RawCostTokenType::EcOp, 5),
+                (RawCostTokenType::AddMod, 6),
+                (RawCostTokenType::MulMod, 7),
+                (RawCostTokenType::Blake, 8),
+            ]),
+        };
+        let builtin_gas_costs = BuiltinGasCosts {
+            pedersen: 2,
+            poseidon: 3,
+            bitwise: 5,
+            ecop: 7,
+            add_mod: 11,
+            mul_mod: 13,
+            blake: 17,
+            ..Default::default()
+        };
+
+        assert_eq!(
+            raw_function_cost_to_gas(&function_cost, &builtin_gas_costs).unwrap(),
+            1 + 2 * 2 + 3 * 3 + 4 * 5 + 5 * 7 + 6 * 11 + 7 * 13 + 8 * 17
+        );
+    }
+
+    #[test]
+    fn rejects_negative_raw_function_cost() {
+        let function_cost = RawFunctionCost {
+            sierra_entry_point: 0,
+            costs: BTreeMap::from([(RawCostTokenType::Const, -1)]),
+        };
+
+        assert!(
+            raw_function_cost_to_gas(&function_cost, &BuiltinGasCosts::default())
+                .unwrap_err()
+                .to_string()
+                .contains("Negative raw Sierra function cost")
+        );
+    }
 }
