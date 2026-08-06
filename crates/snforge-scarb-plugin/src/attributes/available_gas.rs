@@ -5,7 +5,7 @@ use crate::{
     config_statement::extend_with_config_cheatcodes,
     types::{Number, ParseFromExpr},
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
+use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 
 pub struct AvailableGasCollector;
@@ -91,9 +91,9 @@ fn from_unnamed_l2_gas(
 }
 
 fn resource_bounds_config_expression(
-    l1_gas: Number,
-    l1_data_gas: Number,
-    l2_gas: Number,
+    l1_gas: &Number,
+    l1_data_gas: &Number,
+    l2_gas: &Number,
 ) -> TokenStream {
     let l1_gas_expr = l1_gas.as_cairo_expression();
     let l1_data_gas_expr = l1_data_gas.as_cairo_expression();
