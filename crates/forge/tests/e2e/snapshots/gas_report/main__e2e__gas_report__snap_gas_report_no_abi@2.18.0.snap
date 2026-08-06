@@ -5,7 +5,7 @@ expression: stdout
 
 
 
-[PASS] debugging_no_abi_integrationtest::test_trace::test_nested_safe_call_no_abi (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~383870)
+[PASS] debugging_no_abi_integrationtest::test_trace::test_nested_safe_call_no_abi (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~376040)
 ╭-------------------------------------------------------------------+--------+--------+--------+---------+---------╮
 | CallerContract Contract                                           |        |        |        |         |         |
 +==================================================================================================================+

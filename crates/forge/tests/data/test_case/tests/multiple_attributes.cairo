@@ -9,7 +9,7 @@ fn with_available_gas(a: felt252, b: felt252, expected: felt252) {
     assert!(result == expected);
 }
 
-#[available_gas(l2_gas: 10000)]
+#[available_gas(l2_gas: 5000)]
 #[test_case(1, 2, 3)]
 #[test_case(3, 4, 7)]
 #[test]

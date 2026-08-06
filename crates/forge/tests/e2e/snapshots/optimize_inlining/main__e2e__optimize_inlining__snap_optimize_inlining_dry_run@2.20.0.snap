@@ -10,42 +10,42 @@ Search range: 0 to 100, step: 50, max contract size: 4089446 bytes, max felts: 8
 
 
 
-[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~1040020)
+[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~1032190)
 
 
-  ✓ Tests passed, gas: 1040020, max contract size: 51134 bytes, contract bytecode L2 gas: 47513600
+  ✓ Tests passed, gas: 1032190, max contract size: 51134 bytes, contract bytecode L2 gas: 47513600
 
 [2/3] Testing threshold 50...
 
 
 
-[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~1006580)
+[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~998750)
 
 
-  ✓ Tests passed, gas: 1006580, max contract size: 20604 bytes, contract bytecode L2 gas: 24903680
+  ✓ Tests passed, gas: 998750, max contract size: 20604 bytes, contract bytecode L2 gas: 24903680
 
 [3/3] Testing threshold 100...
 
 
 
-[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~1005580)
+[PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~997750)
 
 
-  ✓ Tests passed, gas: 1005580, max contract size: 18581 bytes, contract bytecode L2 gas: 23347200
+  ✓ Tests passed, gas: 997750, max contract size: 18581 bytes, contract bytecode L2 gas: 23347200
 
 Optimization Results:
 ╭───────────┬───────────┬───────────────┬──────────────────────────┬────────╮
 │ Threshold ┆ Total Gas ┆ Contract Size ┆ Contract Bytecode L2 Gas ┆ Status │
 ╞═══════════╪═══════════╪═══════════════╪══════════════════════════╪════════╡
-│ 0         ┆ 1040020   ┆ 51134         ┆ 47513600                 ┆ ✓      │
+│ 0         ┆ 1032190   ┆ 51134         ┆ 47513600                 ┆ ✓      │
 ├╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ 50        ┆ 1006580   ┆ 20604         ┆ 24903680                 ┆ ✓      │
+│ 50        ┆ 998750    ┆ 20604         ┆ 24903680                 ┆ ✓      │
 ├╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ 100       ┆ 1005580   ┆ 18581         ┆ 23347200                 ┆ ✓      │
+│ 100       ┆ 997750    ┆ 18581         ┆ 23347200                 ┆ ✓      │
 ╰───────────┴───────────┴───────────────┴──────────────────────────┴────────╯
 
-Lowest runtime gas cost: threshold=100, gas=1005580, contract bytecode L2 gas=23347200
-Lowest contract size cost: threshold=100, gas=1005580, contract bytecode L2 gas=23347200
+Lowest runtime gas cost: threshold=100, gas=997750, contract bytecode L2 gas=23347200
+Lowest contract size cost: threshold=100, gas=997750, contract bytecode L2 gas=23347200
 
 Graph saved to: [..]
 Scarb.toml not modified. Use --gas or --size to apply a threshold.
