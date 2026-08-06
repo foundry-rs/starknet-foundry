@@ -45,10 +45,8 @@ fn from_unnamed_l2_gas(
 }
 
 fn from_named_args(db: &SimpleParserDatabase, args: &Arguments) -> Result<TokenStream, Diagnostic> {
-    let named_args = args.named_only::<AvailableGasCollector>(
-        db,
-        &["l1_gas", "l1_data_gas", "l2_gas"],
-    )?;
+    let named_args =
+        args.named_only::<AvailableGasCollector>(db, &["l1_gas", "l1_data_gas", "l2_gas"])?;
 
     let l1_gas = named_args.as_once_optional("l1_gas")?;
     let l1_data_gas = named_args.as_once_optional("l1_data_gas")?;
