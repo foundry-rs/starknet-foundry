@@ -325,7 +325,7 @@ mod tests {
     }
 
     #[test]
-    fn raw_content_hash_ignores_sierra_json_field_order() {
+    fn raw_hash_ignores_json_field_order() {
         let program_a: Program = serde_json::from_str(
             r#"{"type_declarations":[],"libfunc_declarations":[],"statements":[],"funcs":[]}"#,
         )
@@ -344,7 +344,7 @@ mod tests {
     // Raw hashing is computed over the typed `Program`, which carries no debug info, so builds that
     // differ only in debug info hash the same and reuse this entry.
     #[test]
-    fn reuses_raw_cache_on_matching_content_hash() {
+    fn reuses_raw_cache_on_same_hash() {
         let temp = tempfile::tempdir().unwrap();
         let cache_dir = temp.path().join("cache");
         let content_hash = raw_sierra_program_hash(&empty_sierra_program());
@@ -370,7 +370,7 @@ mod tests {
     }
 
     #[test]
-    fn reuses_contract_cache_with_precomputed_content_hash() {
+    fn reuses_contract_cache_on_same_hash() {
         let temp = tempfile::tempdir().unwrap();
         let cache_dir = temp.path().join("cache");
         let sierra_bytes = br#"{"contract":"same"}"#;
@@ -426,7 +426,7 @@ mod tests {
     }
 
     #[test]
-    fn separates_cache_entries_for_versions_with_same_sanitized_path_segment() {
+    fn versions_with_same_dir_name_get_distinct_files() {
         let temp = tempfile::tempdir().unwrap();
         let cache_dir = temp.path().join("cache");
         let version_a = "universal-sierra-compiler 1.2.3";
@@ -472,7 +472,7 @@ mod tests {
     }
 
     #[test]
-    fn skips_cache_when_compiler_version_has_no_valid_path_segment() {
+    fn skips_cache_for_unsanitizable_version() {
         let temp = tempfile::tempdir().unwrap();
         let cache_dir = temp.path().join("cache");
         let content_hash = raw_sierra_program_hash(&empty_sierra_program());
@@ -531,7 +531,7 @@ mod tests {
     }
 
     #[test]
-    fn returns_compiled_result_when_cache_entry_cannot_be_written() {
+    fn still_compiles_when_cache_not_writable() {
         let temp = tempfile::tempdir().unwrap();
         let cache_dir = temp.path().join("cache");
         fs::create_dir(&cache_dir).unwrap();
@@ -551,7 +551,7 @@ mod tests {
     }
 
     #[test]
-    fn sanitizes_compiler_version_for_directory_name() {
+    fn sanitizes_version_for_dir_name() {
         assert_eq!(
             sanitize_path_segment("universal-sierra-compiler 2.9.0").as_deref(),
             Some("universal-sierra-compiler-2_9_0")
@@ -561,7 +561,7 @@ mod tests {
     }
 
     #[test]
-    fn raw_program_content_hash_is_stable_and_content_sensitive() {
+    fn raw_hash_is_stable_and_sensitive() {
         // Same program -> same hash, so an unchanged program reuses its entry across runs.
         assert_eq!(
             raw_sierra_program_hash(&empty_sierra_program()),
@@ -575,7 +575,7 @@ mod tests {
     }
 
     #[test]
-    fn different_raw_programs_do_not_share_cache_entry() {
+    fn different_programs_dont_share_cache() {
         let temp = tempfile::tempdir().unwrap();
         let cache_dir = temp.path().join("cache");
         let version = "universal-sierra-compiler 1.2.3";
@@ -606,7 +606,7 @@ mod tests {
     // Same for the production contract cache key, which comes from `contract_sierra_content_hash`
     // (called in `scarb-api`).
     #[test]
-    fn contract_content_hash_is_stable_and_byte_sensitive() {
+    fn contract_hash_is_stable_and_sensitive() {
         let bytes = br#"{"sierra_program":["0x1"],"abi":"a"}"#;
         // Same bytes -> same hash.
         assert_eq!(
@@ -621,12 +621,11 @@ mod tests {
     }
 
     #[test]
-    fn contract_content_hash_covers_debug_info_unlike_raw() {
+    fn contract_hash_includes_debug_info() {
         // Contracts are hashed over the whole artifact bytes (not the typed program), so even a
         // difference confined to debug info - which does not affect codegen - yields a different key.
         // This is intentionally conservative: it can only cause an extra recompile, never a stale
-        // hit. Raw programs strip debug info instead (see
-        // `reuses_raw_cache_for_same_program_with_different_debug_info`).
+        // hit. Raw programs strip debug info instead (see `reuses_raw_cache_on_same_hash`).
         assert_ne!(
             contract_sierra_content_hash(br#"{"sierra_program":["0x1"],"debug_info":{"a":1}}"#),
             contract_sierra_content_hash(br#"{"sierra_program":["0x1"],"debug_info":{"a":2}}"#),
