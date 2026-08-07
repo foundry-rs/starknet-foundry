@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- Possibility to set an L2 gas limit via unnamed argument `#[available_gas(...)]`, equivalent to `#[available_gas(l2_gas: ...)]`. Read more [here](https://foundry-rs.github.io/starknet-foundry/testing/test-attributes.html#available_gas).
+
 ## [0.63.0] - 2026-08-05
 
 ### Forge

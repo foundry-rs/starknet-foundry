@@ -70,15 +70,54 @@ fn is_used_once() {
 }
 
 #[test]
-fn does_not_work_with_unnamed_arg() {
+fn works_with_unnamed_l2_gas_arg() {
     let args = quote!((3));
+
+    let result = available_gas(args, empty_function());
+
+    assert_diagnostics(&result, &[]);
+
+    insta::assert_snapshot!(format_output(&result));
+}
+
+#[test]
+fn fails_with_too_many_unnamed_args() {
+    let args = quote!((3, 4));
 
     let result = available_gas(args, empty_function());
 
     assert_diagnostics(
         &result,
         &[Diagnostic::error(formatdoc!(
-            "#[available_gas] can be used with named arguments only [possible values: l1_gas, l1_data_gas, l2_gas]. invalid arguments found: 3"
+            "#[available_gas] expected arguments: 1, got: 2"
+        ))],
+    );
+}
+
+#[test]
+fn fails_with_mixed_args() {
+    let args = quote!((3, l1_gas: 1));
+
+    let result = available_gas(args, empty_function());
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(formatdoc!(
+            "#[available_gas] can be used with unnamed arguments only"
+        ))],
+    );
+}
+
+#[test]
+fn fails_with_non_number_literal_unnamed_arg() {
+    let args = quote!(("123"));
+
+    let result = available_gas(args, empty_function());
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(formatdoc!(
+            "#[available_gas] <l2_gas> should be number literal"
         ))],
     );
 }
