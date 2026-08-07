@@ -260,14 +260,14 @@ async fn test_missing_account_flag_json() {
 #[tokio::test]
 async fn test_inexistent_keystore() {
     let accounts_file = "empty_accounts.json";
-    let tempdir = duplicate_contract_directory_with_salt(
+    let temp_dir = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "dummy",
         "inexistent_keystore",
     );
     copy_file(
         "tests/data/accounts/empty_accounts.json",
-        tempdir.path().join(accounts_file),
+        temp_dir.path().join(accounts_file),
     );
 
     let args = vec![
@@ -282,7 +282,7 @@ async fn test_inexistent_keystore() {
         "my_contract",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args).current_dir(temp_dir.path());
 
     let output = snapbox.assert().failure();
     assert_stderr_contains(output, "Error: Failed to find keystore file");
@@ -292,18 +292,18 @@ async fn test_inexistent_keystore() {
 async fn test_keystore_account_required() {
     let accounts_file = "empty_accounts.json";
     let keystore_file = "my_key.json";
-    let tempdir = duplicate_contract_directory_with_salt(
+    let temp_dir = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "dummy",
         "keystore_account_required",
     );
     copy_file(
         "tests/data/accounts/empty_accounts.json",
-        tempdir.path().join(accounts_file),
+        temp_dir.path().join(accounts_file),
     );
     copy_file(
         "tests/data/keystore/my_key.json",
-        tempdir.path().join(keystore_file),
+        temp_dir.path().join(keystore_file),
     );
 
     let args = vec![
@@ -318,7 +318,7 @@ async fn test_keystore_account_required() {
         "my_contract",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().failure();
 
     assert_stderr_contains(
@@ -331,18 +331,18 @@ async fn test_keystore_account_required() {
 async fn test_keystore_inexistent_account() {
     let accounts_file = "empty_accounts.json";
     let keystore_file = "my_key.json";
-    let tempdir = duplicate_contract_directory_with_salt(
+    let temp_dir = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "dummy",
         "keystore_inexistent_account",
     );
     copy_file(
         "tests/data/accounts/empty_accounts.json",
-        tempdir.path().join(accounts_file),
+        temp_dir.path().join(accounts_file),
     );
     copy_file(
         "tests/data/keystore/my_key.json",
-        tempdir.path().join(keystore_file),
+        temp_dir.path().join(keystore_file),
     );
 
     let args = vec![
@@ -359,7 +359,7 @@ async fn test_keystore_inexistent_account() {
         "my_contract",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().failure();
 
     assert_stderr_contains(
@@ -370,7 +370,7 @@ async fn test_keystore_inexistent_account() {
 
 #[tokio::test]
 async fn test_keystore_undeployed_account() {
-    let tempdir =
+    let temp_dir =
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "8");
     let my_key_path = get_keystores_path("tests/data/keystore/my_key.json");
     let my_account_undeployed_path =
@@ -389,7 +389,7 @@ async fn test_keystore_undeployed_account() {
     ];
 
     set_keystore_password_env();
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().failure();
 
     assert_stderr_contains(output, "Error: Failed to get account address");
@@ -397,12 +397,12 @@ async fn test_keystore_undeployed_account() {
 
 #[tokio::test]
 async fn test_keystore_declare() {
-    let tempdir =
+    let temp_dir =
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "999");
     let accounts_file = "empty_accounts.json";
     copy_file(
         "tests/data/accounts/empty_accounts.json",
-        tempdir.path().join(accounts_file),
+        temp_dir.path().join(accounts_file),
     );
     let my_key_path = get_keystores_path("tests/data/keystore/predeployed_key.json");
     let my_account_path = get_keystores_path("tests/data/keystore/predeployed_account.json");
@@ -421,7 +421,7 @@ async fn test_keystore_declare() {
     ];
 
     set_keystore_password_env();
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args).current_dir(temp_dir.path());
 
     let output = snapbox.assert().success();
     assert!(output.get_output().stderr.is_empty());
