@@ -35,10 +35,10 @@ jobs:
       MDBOOK_VARIABLES_VERSION: 0.3.0
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88
+      - uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c
         with:
           toolchain: stable
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
       - name: Install sitemap CLI
         run: |
           npm i -g static-sitemap-cli
