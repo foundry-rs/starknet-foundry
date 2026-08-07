@@ -5,7 +5,7 @@ use crate::{
     config_statement::extend_with_config_cheatcodes,
     types::{Number, ParseFromExpr},
 };
-use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 
 pub struct AvailableGasCollector;
