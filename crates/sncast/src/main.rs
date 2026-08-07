@@ -732,6 +732,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
 
             let provider = rpc.get_provider(&config, ui).await?;
 
+            let account = get_account(&config, &provider, &rpc, ui).await?;
+
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let calldata = if let Some(calldata) = calldata {
                 calldata
@@ -743,8 +745,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                     &selector,
                 )?
             };
-
-            let account = get_account(&config, &provider, &rpc, ui).await?;
 
             let result = with_account!(&account, |account| {
                 starknet_commands::invoke::invoke(
