@@ -348,6 +348,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
 
     match cli.command {
         Commands::Declare(declare) => {
+            let provider = declare.common.rpc.get_provider(&config, ui).await?;
+
+            let account = get_account(&config, &provider, &declare.common.rpc, ui).await?;
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &declare.package)?;
             let artifacts = build_and_load_artifacts(
@@ -361,9 +364,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 ui.base_ui(),
             )
             .context("Failed to build contract")?;
-
-            let provider = declare.common.rpc.get_provider(&config, ui).await?;
-            let account = get_account(&config, &provider, &declare.common.rpc, ui).await?;
 
             let result = with_account!(&account, |account| {
                 starknet_commands::declare::declare(
@@ -405,8 +405,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 let contract_definition: SierraClass =
                     serde_json::from_str(&contract_artifacts.sierra)
                         .context("Failed to parse sierra artifact")?;
-                let rpc = declare.common.rpc.clone();
-                let network_flag = generate_network_flag(&rpc, &config);
+                let network_flag = generate_network_flag(&declare.common.rpc, &config);
                 Some(DeployCommandMessage::new(
                     &contract_definition.abi,
                     declare.no_abi,
