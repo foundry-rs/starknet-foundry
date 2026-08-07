@@ -4,6 +4,7 @@ mod backtrace;
 mod build_profile;
 #[cfg(not(feature = "cairo-native"))]
 mod build_trace_data;
+mod casm_cache;
 mod clean;
 mod code_quality;
 mod collection;

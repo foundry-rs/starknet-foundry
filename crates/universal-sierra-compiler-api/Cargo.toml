@@ -1,16 +1,21 @@
 [package]
 name = "universal-sierra-compiler-api"
-version = "1.0.0"
+# Versioned with the workspace so `CARGO_PKG_VERSION` is the snforge release version, which the CASM
+# cache uses as a key input (see `cache.rs`). Keep this workspace-versioned.
+version.workspace = true
 edition.workspace = true
 
 [dependencies]
 shared.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
+regex.workspace = true
 which.workspace = true
 tempfile.workspace = true
 num-bigint.workspace = true
 cairo-lang-casm.workspace = true
+cairo-lang-sierra.workspace = true
 cairo-lang-starknet-classes.workspace = true
 tracing.workspace = true
 strum_macros.workspace = true

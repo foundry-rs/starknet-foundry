@@ -100,11 +100,15 @@ fn get_starknet_artifacts_path(
 #[derive(Default)]
 pub struct CompilationOpts {
     pub use_test_target_contracts: bool,
+    pub casm_cache_dir: Option<Utf8PathBuf>,
     #[cfg(feature = "cairo-native")]
     pub run_native: bool,
 }
 
-/// Get the map with `StarknetContractArtifacts` for the given package
+/// Get the map with `StarknetContractArtifacts` for the given package.
+///
+/// When [`CompilationOpts::casm_cache_dir`] is set, compiled CASM is read from and written to that
+/// cache, so unchanged contracts are not recompiled on subsequent runs.
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn get_contracts_artifacts_and_source_sierra_paths(
     artifacts_dir: &Utf8Path,
@@ -112,6 +116,7 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
     ui: &UI,
     CompilationOpts {
         use_test_target_contracts,
+        casm_cache_dir,
         #[cfg(feature = "cairo-native")]
         run_native,
     }: CompilationOpts,
@@ -131,6 +136,7 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
     };
 
     if let Some(starknet_artifact_files) = starknet_artifact_files {
+        let starknet_artifact_files = starknet_artifact_files.casm_cache_dir(casm_cache_dir);
         #[cfg(feature = "cairo-native")]
         let starknet_artifact_files = starknet_artifact_files.compile_native(run_native);
         starknet_artifact_files.load_contracts_artifacts()
@@ -591,6 +597,7 @@ mod tests {
             &ui,
             CompilationOpts {
                 use_test_target_contracts: false,
+                casm_cache_dir: None,
                 #[cfg(feature = "cairo-native")]
                 run_native: true,
             },

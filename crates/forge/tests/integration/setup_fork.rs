@@ -134,17 +134,22 @@ fn fork_aliased_decorator() {
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
     let ui = Arc::new(UI::default());
+    let cache_dir = Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
+        .unwrap()
+        .join(DEFAULT_CACHE_DIR);
     let result = rt
         .block_on(async {
             let target_handles = raw_test_targets
                 .into_iter()
                 .map(|t| {
+                    let cache_dir = cache_dir.clone();
                     tokio::task::spawn_blocking(move || {
                         prepare_test_target(
                             t,
                             &ForgeTrackedResource::CairoSteps,
                             &NameFilter::All,
                             &PartitionConfig::default(),
+                            &cache_dir,
                         )
                     })
                 })
@@ -172,9 +177,7 @@ fn fork_aliased_decorator() {
                             fuzzer_seed: 12345,
                             max_n_steps: None,
                             is_vm_trace_needed: false,
-                            cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
-                                .unwrap()
-                                .join(DEFAULT_CACHE_DIR),
+                            cache_dir: cache_dir.clone(),
                             contracts_data: ContractsData::try_from(
                                 test.contracts(&ui).unwrap(),
                                 cfg!(feature = "cairo-native"),
@@ -249,17 +252,22 @@ fn fork_aliased_decorator_overriding() {
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
     let ui = Arc::new(UI::default());
+    let cache_dir = Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
+        .unwrap()
+        .join(DEFAULT_CACHE_DIR);
     let result = rt
         .block_on(async {
             let target_handles = raw_test_targets
                 .into_iter()
                 .map(|t| {
+                    let cache_dir = cache_dir.clone();
                     tokio::task::spawn_blocking(move || {
                         prepare_test_target(
                             t,
                             &ForgeTrackedResource::CairoSteps,
                             &NameFilter::All,
                             &PartitionConfig::default(),
+                            &cache_dir,
                         )
                     })
                 })
@@ -287,9 +295,7 @@ fn fork_aliased_decorator_overriding() {
                             fuzzer_seed: 12345,
                             max_n_steps: None,
                             is_vm_trace_needed: false,
-                            cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
-                                .unwrap()
-                                .join(DEFAULT_CACHE_DIR),
+                            cache_dir: cache_dir.clone(),
                             contracts_data: ContractsData::try_from(
                                 test.contracts(&ui).unwrap(),
                                 cfg!(feature = "cairo-native"),
