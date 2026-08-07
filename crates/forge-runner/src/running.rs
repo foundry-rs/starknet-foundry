@@ -281,13 +281,15 @@ pub fn run_test_case(
         extended_runtime: outer_call_runtime,
     };
 
-    let entry_point_initial_budget = setup::entry_point_initial_budget(
+    let raw_program_initial_budget = setup::raw_program_initial_budget(
+        &case.test_details,
+        casm_program,
         &forge_runtime
             .extended_runtime
             .extended_runtime
             .extended_runtime
             .hint_handler,
-    );
+    )?;
     let args = prepare_call_arguments(
         &forge_runtime
             .extended_runtime
@@ -306,7 +308,7 @@ pub fn run_test_case(
             .hint_handler
             .read_only_segments,
         &entry_point,
-        entry_point_initial_budget,
+        raw_program_initial_budget,
     )?;
 
     let n_total_args = args.len();

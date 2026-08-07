@@ -1,6 +1,7 @@
 use cairo_lang_casm::hints::Hint;
 use num_bigint::BigInt;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 pub type CasmCodeOffset = usize;
 pub type CasmInstructionIdx = usize;
@@ -16,6 +17,28 @@ pub struct RawCasmProgram {
     ///
     /// Those 2 values are usually not equal since the instruction sizes in CASM may vary
     pub debug_info: Vec<(CasmCodeOffset, CasmInstructionIdx)>,
+    /// Compiler-inferred costs of raw Sierra functions, keyed by their Sierra entry-point
+    /// statement index.
+    pub function_costs: Vec<RawFunctionCost>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct RawFunctionCost {
+    pub sierra_entry_point: usize,
+    pub costs: BTreeMap<RawCostTokenType, i64>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum RawCostTokenType {
+    Const,
+    Pedersen,
+    Poseidon,
+    Bitwise,
+    EcOp,
+    AddMod,
+    MulMod,
+    Blake,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]

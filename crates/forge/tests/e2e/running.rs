@@ -54,6 +54,50 @@ fn simple_package() {
     );
 }
 
+// Contract entrypoints have a gas pre-charge that limits the maximal amount of gas that can be refunded when executing them.
+// Check if a Forge test (which isn't a contract obviously) doesn't have that limitation.
+#[test]
+fn raw_test_gas_refund_can_exceed_contract_entry_point_precharge() {
+    let temp = setup_package("empty");
+    temp.child("src/lib.cairo")
+        .write_str(indoc! {
+            r"
+            use core::dict::Felt252Dict;
+
+            #[test]
+            fn test_dict_variables() {
+                let mut balances: Felt252Dict<felt252> = Default::default();
+                balances.insert(0, 0);
+                balances.insert(0, 0);
+                balances.insert(0, 0);
+                balances.insert(0, 0);
+                balances.insert(0, 0);
+                balances.insert(0, 0);
+            }
+            "
+        })
+        .unwrap();
+
+    let manifest_path = temp.child("Scarb.toml");
+    let mut scarb_toml = fs::read_to_string(&manifest_path)
+        .unwrap()
+        .parse::<DocumentMut>()
+        .unwrap();
+    scarb_toml["cairo"]["skip-optimizations"] = value(true);
+    manifest_path.write_str(&scarb_toml.to_string()).unwrap();
+
+    let output = test_runner_vm(&temp).assert().success();
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        Collected 1 test(s) from empty package
+        Running 1 test(s) from src/
+        [PASS] empty::test_dict_variables [..]
+        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
+        "},
+    );
+}
+
 #[cfg_attr(
     not(feature = "cairo-native"),
     ignore = "Requires cairo-native feature"
@@ -386,7 +430,7 @@ fn with_skip_filter_matching_full_module_path() {
         [..]Compiling[..]
         [..]Finished[..]
 
-        
+
         Collected 12 test(s) from simple_package package
         Running 10 test(s) from tests/
         [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
@@ -395,23 +439,23 @@ fn with_skip_filter_matching_full_module_path() {
         [PASS] simple_package_integrationtest::test_simple::test_simple2 [..]
         [PASS] simple_package_integrationtest::test_simple::test_two [..]
         [FAIL] simple_package_integrationtest::test_simple::test_another_failing
-        
+
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
-        
+
         [PASS] simple_package_integrationtest::ext_function_test::test_my_test [..]
         [FAIL] simple_package_integrationtest::test_simple::test_failing
-        
+
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
-        
+
         [PASS] simple_package_integrationtest::test_simple::test_simple [..]
         [PASS] simple_package_integrationtest::contract::call_and_invoke [..]
         Running 2 test(s) from src/
         [IGNORE] simple_package::tests::ignored_test
         [PASS] simple_package::tests::test_fib [..]
         Tests: 8 passed, 2 failed, 2 ignored, 1 filtered out
-        
+
         Failures:
             simple_package_integrationtest::test_simple::test_another_failing
             simple_package_integrationtest::test_simple::test_failing
@@ -1275,8 +1319,8 @@ fn detailed_resources_cli_overrides_scarb_tracked_resource() {
         indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
-        
-        
+
+
         Collected 1 test(s) from erc20_package package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
