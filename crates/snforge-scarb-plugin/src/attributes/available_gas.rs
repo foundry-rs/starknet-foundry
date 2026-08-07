@@ -62,7 +62,7 @@ fn from_resource_bounds(
     l1_data_gas.validate_in_gas_range::<AvailableGasCollector>("l1_data_gas")?;
     l2_gas.validate_in_gas_range::<AvailableGasCollector>("l2_gas")?;
 
-    let resource_bounds = resource_bounds_config_expression(l1_gas, l1_data_gas, l2_gas);
+    let resource_bounds = resource_bounds_config_expression(&l1_gas, &l1_data_gas, &l2_gas);
 
     Ok(quote!(
         snforge_std::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
