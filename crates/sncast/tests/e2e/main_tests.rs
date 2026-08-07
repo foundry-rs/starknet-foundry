@@ -204,7 +204,7 @@ async fn test_nonexistent_account_address() {
 
 #[tokio::test]
 async fn test_missing_account_flag() {
-    let contract_path = duplicate_contract_directory_with_salt(
+    let tempdir = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "dummy",
         "missing_account_flag",
@@ -220,7 +220,7 @@ async fn test_missing_account_flag() {
         "whatever",
     ];
 
-    let snapbox = runner(&args).current_dir(contract_path.path());
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().failure();
 
     assert_stderr_contains(
@@ -231,7 +231,7 @@ async fn test_missing_account_flag() {
 
 #[tokio::test]
 async fn test_missing_account_flag_json() {
-    let contract_path = duplicate_contract_directory_with_salt(
+    let tempdir = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "dummy",
         "missing_account_flag_json",
@@ -248,7 +248,7 @@ async fn test_missing_account_flag_json() {
         "whatever",
     ];
 
-    let snapbox = runner(&args).current_dir(contract_path.path());
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().failure();
 
     assert_stderr_contains(
@@ -260,14 +260,14 @@ async fn test_missing_account_flag_json() {
 #[tokio::test]
 async fn test_inexistent_keystore() {
     let accounts_file = "empty_accounts.json";
-    let contract_path = duplicate_contract_directory_with_salt(
+    let tempdir = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "dummy",
         "inexistent_keystore",
     );
     copy_file(
         "tests/data/accounts/empty_accounts.json",
-        contract_path.path().join(accounts_file),
+        tempdir.path().join(accounts_file),
     );
 
     let args = vec![
@@ -282,7 +282,7 @@ async fn test_inexistent_keystore() {
         "my_contract",
     ];
 
-    let snapbox = runner(&args).current_dir(contract_path.path());
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     let output = snapbox.assert().failure();
     assert_stderr_contains(output, "Error: Failed to find keystore file");
@@ -292,18 +292,18 @@ async fn test_inexistent_keystore() {
 async fn test_keystore_account_required() {
     let accounts_file = "empty_accounts.json";
     let keystore_file = "my_key.json";
-    let contract_path = duplicate_contract_directory_with_salt(
+    let tempdir = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "dummy",
         "keystore_account_required",
     );
     copy_file(
         "tests/data/accounts/empty_accounts.json",
-        contract_path.path().join(accounts_file),
+        tempdir.path().join(accounts_file),
     );
     copy_file(
         "tests/data/keystore/my_key.json",
-        contract_path.path().join(keystore_file),
+        tempdir.path().join(keystore_file),
     );
 
     let args = vec![
@@ -318,7 +318,7 @@ async fn test_keystore_account_required() {
         "my_contract",
     ];
 
-    let snapbox = runner(&args).current_dir(contract_path.path());
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().failure();
 
     assert_stderr_contains(
@@ -331,18 +331,18 @@ async fn test_keystore_account_required() {
 async fn test_keystore_inexistent_account() {
     let accounts_file = "empty_accounts.json";
     let keystore_file = "my_key.json";
-    let contract_path = duplicate_contract_directory_with_salt(
+    let tempdir = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "dummy",
         "keystore_inexistent_account",
     );
     copy_file(
         "tests/data/accounts/empty_accounts.json",
-        contract_path.path().join(accounts_file),
+        tempdir.path().join(accounts_file),
     );
     copy_file(
         "tests/data/keystore/my_key.json",
-        contract_path.path().join(keystore_file),
+        tempdir.path().join(keystore_file),
     );
 
     let args = vec![
@@ -359,7 +359,7 @@ async fn test_keystore_inexistent_account() {
         "my_contract",
     ];
 
-    let snapbox = runner(&args).current_dir(contract_path.path());
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().failure();
 
     assert_stderr_contains(
@@ -370,7 +370,7 @@ async fn test_keystore_inexistent_account() {
 
 #[tokio::test]
 async fn test_keystore_undeployed_account() {
-    let contract_path =
+    let tempdir =
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "8");
     let my_key_path = get_keystores_path("tests/data/keystore/my_key.json");
     let my_account_undeployed_path =
@@ -389,7 +389,7 @@ async fn test_keystore_undeployed_account() {
     ];
 
     set_keystore_password_env();
-    let snapbox = runner(&args).current_dir(contract_path.path());
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().failure();
 
     assert_stderr_contains(output, "Error: Failed to get account address");
@@ -397,12 +397,12 @@ async fn test_keystore_undeployed_account() {
 
 #[tokio::test]
 async fn test_keystore_declare() {
-    let contract_path =
+    let tempdir =
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "999");
     let accounts_file = "empty_accounts.json";
     copy_file(
         "tests/data/accounts/empty_accounts.json",
-        contract_path.path().join(accounts_file),
+        tempdir.path().join(accounts_file),
     );
     let my_key_path = get_keystores_path("tests/data/keystore/predeployed_key.json");
     let my_account_path = get_keystores_path("tests/data/keystore/predeployed_account.json");
@@ -421,7 +421,7 @@ async fn test_keystore_declare() {
     ];
 
     set_keystore_password_env();
-    let snapbox = runner(&args).current_dir(contract_path.path());
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     let output = snapbox.assert().success();
     assert!(output.get_output().stderr.is_empty());
