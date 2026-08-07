@@ -1,6 +1,7 @@
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
+use shared::cache::prepare_cache_dir;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, ErrorKind, Write};
 
@@ -33,7 +34,7 @@ impl FailedTestsCache {
     }
 
     pub fn save_failed_tests(&self, all_failed_tests: &[&AnyTestCaseSummary]) -> Result<()> {
-        std::fs::create_dir_all(self.cache_file.parent().unwrap())?;
+        prepare_cache_dir(self.cache_file.parent().unwrap())?;
 
         let file = File::create(&self.cache_file)?;
 

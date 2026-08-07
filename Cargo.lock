@@ -7559,6 +7559,7 @@ dependencies = [
  "starknet-rust",
  "starknet-types-core 0.2.4",
  "starknet_api",
+ "tempfile",
  "thiserror 2.0.19",
  "url",
 ]

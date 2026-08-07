@@ -4,13 +4,13 @@ use fs2::FileExt;
 use regex::Regex;
 use runtime::starknet::context::SerializableBlockInfo;
 use serde::{Deserialize, Serialize};
+use shared::cache::prepare_cache_dir;
 use starknet_api::block::{BlockInfo, BlockNumber};
 use starknet_api::core::{ClassHash, ContractAddress, Nonce};
 use starknet_api::state::StorageKey;
 use starknet_rust::core::types::ContractClass;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
-use std::fs;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Seek, Write};
 use std::string::ToString;
@@ -279,7 +279,7 @@ fn cache_file_path_from_fork_config(
         cache_version()
     ));
 
-    fs::create_dir_all(cache_file_path.parent().unwrap())
+    prepare_cache_dir(cache_file_path.parent().unwrap())
         .context("Fork cache directory could not be created")?;
 
     Ok(cache_file_path)
