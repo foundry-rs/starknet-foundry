@@ -370,7 +370,7 @@ async fn test_keystore_inexistent_account() {
 
 #[tokio::test]
 async fn test_keystore_undeployed_account() {
-    let temp_dir =
+    let contract_path =
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "8");
     let my_key_path = get_keystores_path("tests/data/keystore/my_key.json");
     let my_account_undeployed_path =
@@ -389,7 +389,7 @@ async fn test_keystore_undeployed_account() {
     ];
 
     set_keystore_password_env();
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let snapbox = runner(&args).current_dir(contract_path.path());
     let output = snapbox.assert().failure();
 
     assert_stderr_contains(output, "Error: Failed to get account address");
@@ -397,12 +397,12 @@ async fn test_keystore_undeployed_account() {
 
 #[tokio::test]
 async fn test_keystore_declare() {
-    let temp_dir =
+    let contract_path =
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "999");
     let accounts_file = "empty_accounts.json";
     copy_file(
         "tests/data/accounts/empty_accounts.json",
-        temp_dir.path().join(accounts_file),
+        contract_path.path().join(accounts_file),
     );
     let my_key_path = get_keystores_path("tests/data/keystore/predeployed_key.json");
     let my_account_path = get_keystores_path("tests/data/keystore/predeployed_account.json");
@@ -421,7 +421,7 @@ async fn test_keystore_declare() {
     ];
 
     set_keystore_password_env();
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let snapbox = runner(&args).current_dir(contract_path.path());
 
     let output = snapbox.assert().success();
     assert!(output.get_output().stderr.is_empty());
