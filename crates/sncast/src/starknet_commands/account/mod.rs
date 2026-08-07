@@ -313,10 +313,6 @@ pub async fn account(
             Ok(process_command_result("account import", result, ui, None))
         }
         Commands::Create(create) => {
-            let provider = create.rpc.get_provider(&config, ui).await?;
-
-            let chain_id = get_chain_id(&provider).await?;
-
             let signer_type = create
                 .ledger_key_locator
                 .resolve(ui)
@@ -332,6 +328,10 @@ pub async fn account(
             } else {
                 config.account.clone()
             };
+
+            let provider = create.rpc.get_provider(&config, ui).await?;
+
+            let chain_id = get_chain_id(&provider).await?;
 
             let result = starknet_commands::account::create::create(
                 &account,

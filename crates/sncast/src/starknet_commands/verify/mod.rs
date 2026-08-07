@@ -209,7 +209,6 @@ pub async fn verify(
             }
         }
     };
-    let provider = get_provider(&rpc_url)?;
 
     let workspace_dir = package
         .manifest_path
@@ -218,6 +217,7 @@ pub async fn verify(
 
     let contract_identifier = contract_identifier.get_identifier(config)?;
 
+    let provider = get_provider(&rpc_url)?;
     let network =
         resolve_verification_network(network, config.network_params.network(), &provider).await?;
 
