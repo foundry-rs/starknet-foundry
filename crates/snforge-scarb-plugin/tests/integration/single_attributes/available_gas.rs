@@ -103,7 +103,7 @@ fn fails_with_mixed_args() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(formatdoc!(
-            "#[available_gas] can be used with unnamed arguments only"
+            "#[available_gas] named and unnamed arguments cannot be mixed"
         ))],
     );
 }

@@ -1,6 +1,6 @@
 use crate::{
     args::Arguments,
-    attributes::{AttributeCollector, AttributeInfo, AttributeTypeData},
+    attributes::{AttributeCollector, AttributeInfo, AttributeTypeData, ErrorExt},
     cairo_expression::CairoExpression,
     config_statement::extend_with_config_cheatcodes,
     types::{Number, ParseFromExpr},
@@ -74,7 +74,8 @@ fn from_unnamed_l2_gas(
     args: &Arguments,
 ) -> Result<TokenStream, Diagnostic> {
     let &[(_, l2_gas)] = args
-        .unnamed_only::<AvailableGasCollector>()?
+        .unnamed_only::<AvailableGasCollector>()
+        .map_err(|_| AvailableGasCollector::error("named and unnamed arguments cannot be mixed"))?
         .of_length::<1, AvailableGasCollector>()?;
 
     let l2_gas = Number::parse_from_expr::<AvailableGasCollector>(db, l2_gas, "l2_gas")?;
