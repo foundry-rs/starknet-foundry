@@ -8,10 +8,7 @@ use shared::test_utils::nextest::is_nextest;
 
 #[must_use]
 pub fn runner(args: &[&str]) -> CastCommand {
-    Cast::new()
-        .command()
-        .args(args)
-        .env("SCARB_IGNORE_CAIRO_VERSION", "true")
+    Cast::new().command().args(args)
 }
 
 struct CastState {

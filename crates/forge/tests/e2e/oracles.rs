@@ -12,6 +12,8 @@ fn wasm() {
     );
 
     let output = test_runner(&temp)
+        // This fixture targets stable Cairo, while CI also runs these tests with Scarb prereleases.
+        .env("SCARB_IGNORE_CAIRO_VERSION", "true")
         // Output of oracle is different depending on the env, and Intellij sets it automatically
         .env_remove("RUST_BACKTRACE")
         .assert()

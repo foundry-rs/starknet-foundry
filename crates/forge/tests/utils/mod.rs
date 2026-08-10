@@ -1,6 +1,5 @@
 pub mod runner;
 pub mod running_tests;
-pub mod scarb;
 
 pub use crate::test_case;
 

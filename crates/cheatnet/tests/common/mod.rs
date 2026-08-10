@@ -43,7 +43,6 @@ use std::sync::Arc;
 
 pub mod assertions;
 pub mod cache;
-pub mod scarb;
 pub mod state;
 
 // Helper struct to return both: our custom call result wrapper and actual call info (unless unrecoverable error), allowing tests to check both

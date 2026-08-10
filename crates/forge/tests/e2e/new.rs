@@ -1,5 +1,4 @@
 use super::common::runner::{runner, snforge_test_bin_path, test_runner};
-use crate::utils::scarb::scarb;
 use crate::utils::tempdir_with_tool_versions;
 use assert_fs::TempDir;
 use assert_fs::fixture::{FileTouch, PathChild};
@@ -8,6 +7,7 @@ use forge::Template;
 use forge::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use indoc::{formatdoc, indoc};
 use regex::Regex;
+use scarb_api::ScarbCommand;
 use shared::consts::FREE_RPC_PROVIDER_URL;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::assert_data_eq;
@@ -89,7 +89,7 @@ fn init_new_project_from_scarb() {
     let temp = tempdir_with_tool_versions().unwrap();
 
     SnapboxCommand::from_std(
-        scarb()
+        ScarbCommand::new()
             .current_dir(temp.path())
             .args(["new", "test_name"])
             .env("SCARB_INIT_TEST_RUNNER", "starknet-foundry")
@@ -142,10 +142,15 @@ fn validate_init(project_path: &PathBuf, validate_snforge_std: bool, template: &
 
     fs::write(manifest_path, scarb_toml.to_string()).unwrap();
 
-    let output = test_runner(TempDir::new().unwrap())
-        .current_dir(project_path)
-        .assert()
-        .success();
+    let test_runner = test_runner(TempDir::new().unwrap()).current_dir(project_path);
+    // The ERC20 template's OpenZeppelin dependencies target stable Cairo versions, while CI also
+    // validates Starknet Foundry against Scarb prereleases.
+    let test_runner = if matches!(template, Template::Erc20Contract) {
+        test_runner.env("SCARB_IGNORE_CAIRO_VERSION", "true")
+    } else {
+        test_runner
+    };
+    let output = test_runner.assert().success();
 
     let expected = get_expected_output(template);
     assert_stdout_contains(output, expected);
