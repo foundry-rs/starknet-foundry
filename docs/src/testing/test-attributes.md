@@ -99,6 +99,13 @@ Asserts that the test does not use more than 5 units of l2 gas:
 #[available_gas(l2_gas: 5)]
 ```
 
+or with unnamed argument:
+
+```rust
+#[available_gas(5)]
+```
+
+
 Asserts that the test does not use more than 5 units of l1 gas, l1 data gas and l2 gas each:
 
 ```rust
