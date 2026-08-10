@@ -3,12 +3,12 @@ use scarb_api::ScarbCommand;
 use std::process::Stdio;
 
 pub fn check_and_lint(package_path: &Utf8PathBuf) {
-    check_and_lint_with_scarb_env(package_path, &[]);
+    check_and_lint_with_envs(package_path, &[]);
 }
 
-pub fn check_and_lint_with_scarb_env(package_path: &Utf8PathBuf, scarb_env: &[(&str, &str)]) {
+pub fn check_and_lint_with_envs(package_path: &Utf8PathBuf, envs: &[(&str, &str)]) {
     let mut check_command = ScarbCommand::new();
-    check_command.envs(scarb_env.iter().copied());
+    check_command.envs(envs.iter().copied());
     let check_output = check_command
         .current_dir(package_path)
         .arg("check")
@@ -23,7 +23,7 @@ pub fn check_and_lint_with_scarb_env(package_path: &Utf8PathBuf, scarb_env: &[(&
     );
 
     let mut lint_command = ScarbCommand::new();
-    lint_command.envs(scarb_env.iter().copied());
+    lint_command.envs(envs.iter().copied());
     let lint_output = lint_command
         .current_dir(package_path)
         .arg("lint")

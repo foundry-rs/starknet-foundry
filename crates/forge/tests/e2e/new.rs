@@ -144,12 +144,12 @@ fn validate_init(project_path: &PathBuf, validate_snforge_std: bool, template: &
 
     let test_runner = test_runner(TempDir::new().unwrap()).current_dir(project_path);
     // Cairo version is ignored on purpose. Without it, the test would fail with pre-release scarb.
-    let test_runner = if matches!(template, Template::Erc20Contract) {
-        test_runner.env("SCARB_IGNORE_CAIRO_VERSION", "true")
+    let envs = if matches!(template, Template::Erc20Contract) {
+        vec![("SCARB_IGNORE_CAIRO_VERSION", "true")]
     } else {
-        test_runner
+        vec![]
     };
-    let output = test_runner.assert().success();
+    let output = test_runner.envs(envs).assert().success();
 
     let expected = get_expected_output(template);
     assert_stdout_contains(output, expected);
