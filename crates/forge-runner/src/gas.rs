@@ -5,7 +5,7 @@ use blockifier::fee::resources::{StarknetResources, StateResources, TransactionR
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
 use blockifier::transaction::objects::HasRelatedFeeType;
-use cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableGasConfig;
+use cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableResourceBoundsConfig;
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
 use cheatnet::state::ExtendedStateReader;
 use starknet_api::execution_resources::GasVector;
@@ -68,7 +68,7 @@ fn get_state_resources(
 }
 
 pub fn check_available_gas(
-    available_gas: Option<RawAvailableGasConfig>,
+    available_gas: Option<RawAvailableResourceBoundsConfig>,
     summary: TestCaseSummary<Single>,
 ) -> TestCaseSummary<Single> {
     match summary {
@@ -77,14 +77,11 @@ pub fn check_available_gas(
             gas_info,
             debugging_trace,
             ..
-        } if available_gas.is_some_and(|available_gas| match available_gas {
-            RawAvailableGasConfig::MaxL2Gas(l2_gas) => gas_info.gas_used.l2_gas.0 > l2_gas as u64,
-            RawAvailableGasConfig::MaxResourceBounds(available_gas) => {
-                let av_gas = available_gas.to_gas_vector();
-                gas_info.gas_used.l1_gas > av_gas.l1_gas
-                    || gas_info.gas_used.l1_data_gas > av_gas.l1_data_gas
-                    || gas_info.gas_used.l2_gas > av_gas.l2_gas
-            }
+        } if available_gas.is_some_and(|available_gas| {
+            let av_gas = available_gas.to_gas_vector();
+            gas_info.gas_used.l1_gas > av_gas.l1_gas
+                || gas_info.gas_used.l1_data_gas > av_gas.l1_data_gas
+                || gas_info.gas_used.l2_gas > av_gas.l2_gas
         }) =>
         {
             TestCaseSummary::Failed {

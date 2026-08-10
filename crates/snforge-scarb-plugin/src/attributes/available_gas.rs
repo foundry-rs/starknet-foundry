@@ -62,12 +62,10 @@ fn from_resource_bounds(
     l1_data_gas.validate_in_gas_range::<AvailableGasCollector>("l1_data_gas")?;
     l2_gas.validate_in_gas_range::<AvailableGasCollector>("l2_gas")?;
 
-    let resource_bounds = resource_bounds_config_expression(&l1_gas, &l1_data_gas, &l2_gas);
-
-    Ok(quote!(
-        snforge_std::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
-            #resource_bounds
-        )
+    Ok(resource_bounds_config_expression(
+        &l1_gas,
+        &l1_data_gas,
+        &l2_gas,
     ))
 }
 
@@ -83,11 +81,9 @@ fn from_unnamed_l2_gas(
 
     l2_gas.validate_in_gas_range::<AvailableGasCollector>("l2_gas")?;
 
-    let l2_gas = l2_gas.as_cairo_expression();
+    let max = Number(u64::MAX.into());
 
-    Ok(quote!(
-        snforge_std::_internals::config_types::AvailableGasConfig::MaxGas(#l2_gas)
-    ))
+    Ok(resource_bounds_config_expression(&max, &max, &l2_gas))
 }
 
 fn resource_bounds_config_expression(

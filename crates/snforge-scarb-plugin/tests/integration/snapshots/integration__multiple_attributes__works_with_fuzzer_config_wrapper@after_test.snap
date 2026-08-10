@@ -31,11 +31,9 @@ fn empty_fn__snforge_internal_test_generated(mut _data: Span<felt252>) -> Span<f
 fn empty_fn(f: felt252) {
     if snforge_std::_internals::is_config_run() {
         let mut data = array![];
-        snforge_std::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
-            snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
-                l1_gas: 0xffffffffffffffff, l1_data_gas: 0xffffffffffffffff, l2_gas: 0x3e7,
-            },
-        )
+        snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
+            l1_gas: 0xffffffffffffffff, l1_data_gas: 0xffffffffffffffff, l2_gas: 0x3e7,
+        }
             .serialize(ref data);
         starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
         return Default::default();
