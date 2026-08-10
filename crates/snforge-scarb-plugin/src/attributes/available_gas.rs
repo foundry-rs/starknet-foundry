@@ -24,6 +24,10 @@ impl AttributeCollector for AvailableGasCollector {
         args: Arguments,
         _warns: &mut Vec<Diagnostic>,
     ) -> Result<TokenStream, Diagnostics> {
+        if !args.unnamed().is_empty() {
+            return Ok(from_unnamed_l2_gas(db, &args)?);
+        }
+
         Ok(from_resource_bounds(db, &args)?)
     }
 }
@@ -32,10 +36,6 @@ fn from_resource_bounds(
     db: &SimpleParserDatabase,
     args: &Arguments,
 ) -> Result<TokenStream, Diagnostic> {
-    if !args.unnamed().is_empty() {
-        return from_unnamed_l2_gas(db, args);
-    }
-
     let named_args =
         args.named_only::<AvailableGasCollector>(db, &["l1_gas", "l1_data_gas", "l2_gas"])?;
 
