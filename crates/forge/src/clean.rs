@@ -2,7 +2,7 @@ use crate::shared_cache::FILE_WITH_PREV_TESTS_FAILED;
 use crate::{CleanArgs, CleanComponent};
 use anyhow::{Context, Result, ensure};
 use camino::{Utf8Path, Utf8PathBuf};
-use forge_runner::resolve_cache_dir;
+use forge_runner::{USC_CACHE_DIR, resolve_cache_dir};
 use foundry_ui::UI;
 use regex::Regex;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
@@ -88,7 +88,11 @@ pub fn clean_cache_dir(path: &Utf8Path, ui: &UI) -> Result<()> {
         let entry = entry.with_context(|| format!("Failed to read cache directory: {path}"))?;
         let entry_path = entry.path();
 
-        if is_snfoundry_cache_file(entry_path) {
+        if entry_path.is_dir() && entry_path.file_name() == Some(USC_CACHE_DIR) {
+            fs::remove_dir_all(entry_path)
+                .with_context(|| format!("Failed to remove cache directory: {entry_path}"))?;
+            ui.println(&format!("Removed directory: {entry_path}"));
+        } else if is_snfoundry_cache_file(entry_path) {
             fs::remove_file(entry_path)
                 .with_context(|| format!("Failed to remove cache file: {entry_path}"))?;
             ui.println(&format!("Removed file: {entry_path}"));

@@ -49,11 +49,27 @@ pub fn compile_sierra_at_path(
     sierra_file_path: &Path,
     sierra_type: SierraType,
 ) -> Result<String, CompilationError> {
-    let usc_output = USCInternalCommand::new()?
+    compile_sierra_at_path_with_cache_dir(sierra_file_path, sierra_type, None)
+}
+
+/// Compiles the Sierra file at the given path into the specified type using the
+/// `universal-sierra-compiler`, reusing cache when `cache_dir` is provided.
+#[tracing::instrument(skip_all, level = "debug")]
+pub fn compile_sierra_at_path_with_cache_dir(
+    sierra_file_path: &Path,
+    sierra_type: SierraType,
+    cache_dir: Option<&Path>,
+) -> Result<String, CompilationError> {
+    let mut command = USCInternalCommand::new()?
         .arg(format!("compile-{sierra_type}"))
         .arg("--sierra-path")
-        .arg(sierra_file_path)
-        .run()?;
+        .arg(sierra_file_path);
+
+    if let Some(cache_dir) = cache_dir {
+        command = command.arg("--cache-dir").arg(cache_dir);
+    }
+
+    let usc_output = command.run()?;
 
     Ok(String::from_utf8(usc_output.stdout).expect("valid UTF-8 from universal-sierra-compiler"))
 }

@@ -1,6 +1,7 @@
 use super::package::RunForPackageArgs;
 use crate::profile_validation::check_compiler_config_compatibility;
 use crate::profile_validation::enable_gas::check_enable_gas;
+use crate::run_tests::cache::CacheConfig;
 use crate::run_tests::messages::latest_blocks_numbers::LatestBlocksNumbersMessage;
 use crate::run_tests::messages::overall_summary::OverallSummaryMessage;
 use crate::run_tests::messages::partition::{PartitionFinishedMessage, PartitionStartedMessage};
@@ -15,9 +16,9 @@ use crate::{
 };
 use anyhow::Result;
 use forge_runner::partition::PartitionConfig;
-use forge_runner::resolve_cache_dir;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::test_target_summary::TestTargetSummary;
+use forge_runner::{USC_CACHE_DIR, resolve_cache_dir};
 use foundry_ui::UI;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use scarb_api::{
@@ -25,6 +26,7 @@ use scarb_api::{
     packages_from_filter, target_dir_for_workspace,
 };
 use scarb_ui::args::PackagesFilter;
+use shared::cache::prepare_cache_dir;
 use shared::consts::SNFORGE_TEST_FILTER;
 use std::env;
 use std::sync::Arc;
@@ -106,6 +108,12 @@ pub async fn execute_workspace(
     let mut exit_first_channel = ExitFirstChannel::new();
 
     let cache_dir = resolve_cache_dir(&scarb_metadata.workspace.root)?;
+    prepare_cache_dir(&cache_dir)?;
+    let usc_cache_dir = if universal_sierra_compiler_api::supports_cache_dir()? {
+        Some(cache_dir.join(USC_CACHE_DIR))
+    } else {
+        None
+    };
     let packages_len = packages.len();
 
     let partitioning_config = get_partitioning_config(args, &ui, &packages, &artifacts_dir_path)?;
@@ -120,7 +128,10 @@ pub async fn execute_workspace(
             pkg,
             scarb_metadata,
             args,
-            &cache_dir,
+            &CacheConfig {
+                cache_dir: cache_dir.clone(),
+                usc_cache_dir: usc_cache_dir.clone(),
+            },
             &artifacts_dir_path,
             partitioning_config.clone(),
             &ui,

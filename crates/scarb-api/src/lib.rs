@@ -100,6 +100,7 @@ fn get_starknet_artifacts_path(
 #[derive(Default)]
 pub struct CompilationOpts {
     pub use_test_target_contracts: bool,
+    pub usc_cache_dir: Option<Utf8PathBuf>,
     #[cfg(feature = "cairo-native")]
     pub run_native: bool,
 }
@@ -112,6 +113,7 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
     ui: &UI,
     CompilationOpts {
         use_test_target_contracts,
+        usc_cache_dir,
         #[cfg(feature = "cairo-native")]
         run_native,
     }: CompilationOpts,
@@ -131,6 +133,7 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
     };
 
     if let Some(starknet_artifact_files) = starknet_artifact_files {
+        let starknet_artifact_files = starknet_artifact_files.casm_cache_dir(usc_cache_dir);
         #[cfg(feature = "cairo-native")]
         let starknet_artifact_files = starknet_artifact_files.compile_native(run_native);
         starknet_artifact_files.load_contracts_artifacts()
@@ -591,6 +594,7 @@ mod tests {
             &ui,
             CompilationOpts {
                 use_test_target_contracts: false,
+                usc_cache_dir: None,
                 #[cfg(feature = "cairo-native")]
                 run_native: true,
             },

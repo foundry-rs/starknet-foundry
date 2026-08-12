@@ -2,10 +2,6 @@ use super::{
     resolve_config::resolve_config,
     test_target::{ExitFirstChannel, TestTargetRunResult, run_for_test_target},
 };
-use crate::scarb::{
-    config::{ForgeConfigFromScarb, ForkTarget},
-    load_package_config,
-};
 use crate::{
     TestArgs,
     block_number_map::BlockNumberMap,
@@ -17,6 +13,13 @@ use crate::{
     shared_cache::FailedTestsCache,
     test_filter::TestsFilter,
     warn::warn_if_incompatible_rpc_version,
+};
+use crate::{
+    run_tests::cache::CacheConfig,
+    scarb::{
+        config::{ForgeConfigFromScarb, ForkTarget},
+        load_package_config,
+    },
 };
 use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};
@@ -86,7 +89,7 @@ impl RunForPackageArgs {
         package: PackageMetadata,
         scarb_metadata: &Metadata,
         args: &TestArgs,
-        cache_dir: &Utf8PathBuf,
+        cache_config: &CacheConfig,
         artifacts_dir: &Utf8Path,
         partitioning_config: PartitionConfig,
         ui: &UI,
@@ -99,6 +102,7 @@ impl RunForPackageArgs {
             ui,
             CompilationOpts {
                 use_test_target_contracts: !args.no_optimization,
+                usc_cache_dir: cache_config.usc_cache_dir.clone(),
                 #[cfg(feature = "cairo-native")]
                 run_native: args.run_native,
             },
@@ -114,7 +118,7 @@ impl RunForPackageArgs {
         let forge_config = Arc::new(combine_configs(
             args,
             contracts_data,
-            cache_dir.clone(),
+            cache_config.cache_dir.clone(),
             &forge_config_from_scarb,
         ));
 
@@ -125,7 +129,7 @@ impl RunForPackageArgs {
             args.only_ignored,
             args.include_ignored,
             args.rerun_failed,
-            FailedTestsCache::new(cache_dir),
+            FailedTestsCache::new(&cache_config.cache_dir.clone()),
             partitioning_config,
         );
 
@@ -143,6 +147,7 @@ impl RunForPackageArgs {
                     tracked_resource,
                     tests_filter.name_filter.clone(),
                     tests_filter.partitioning_config.clone(),
+                    cache_config.usc_cache_dir.clone(),
                 )
             })
             .collect();
@@ -163,6 +168,7 @@ fn spawn_prepare_test_target(
     tracked_resource: ForgeTrackedResource,
     name_filter: NameFilter,
     partitioning_config: PartitionConfig,
+    casm_cache_dir: Option<Utf8PathBuf>,
 ) -> PrepareTargetHandle {
     tokio::task::spawn_blocking(move || {
         prepare_test_target(
@@ -170,6 +176,7 @@ fn spawn_prepare_test_target(
             &tracked_resource,
             &name_filter,
             &partitioning_config,
+            casm_cache_dir.as_deref(),
         )
     })
 }
