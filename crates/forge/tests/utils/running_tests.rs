@@ -49,21 +49,19 @@ pub fn run_test_case(
     let rt = Runtime::new().expect("Could not instantiate Runtime");
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
-    let casm_cache_dir = Utf8PathBuf::from_path_buf(tempdir().unwrap().keep()).unwrap();
 
     let ui = Arc::new(UI::default());
     rt.block_on(async {
         let target_handles = raw_test_targets
             .into_iter()
             .map(|t| {
-                let casm_cache_dir = casm_cache_dir.clone();
                 tokio::task::spawn_blocking(move || {
                     prepare_test_target(
                         t,
                         &tracked_resource,
                         &NameFilter::All,
                         &PartitionConfig::default(),
-                        Some(casm_cache_dir.as_path()),
+                        None,
                     )
                 })
             })

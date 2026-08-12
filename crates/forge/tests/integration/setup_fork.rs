@@ -132,7 +132,6 @@ fn fork_aliased_decorator() {
 
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
-    let casm_cache_dir = Utf8PathBuf::from_path_buf(tempdir().unwrap().keep()).unwrap();
 
     let ui = Arc::new(UI::default());
     let result = rt
@@ -140,14 +139,13 @@ fn fork_aliased_decorator() {
             let target_handles = raw_test_targets
                 .into_iter()
                 .map(|t| {
-                    let casm_cache_dir = casm_cache_dir.clone();
                     tokio::task::spawn_blocking(move || {
                         prepare_test_target(
                             t,
                             &ForgeTrackedResource::CairoSteps,
                             &NameFilter::All,
                             &PartitionConfig::default(),
-                            Some(casm_cache_dir.as_path()),
+                            None,
                         )
                     })
                 })
@@ -252,20 +250,18 @@ fn fork_aliased_decorator_overriding() {
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
     let ui = Arc::new(UI::default());
-    let casm_cache_dir = Utf8PathBuf::from_path_buf(tempdir().unwrap().keep()).unwrap();
     let result = rt
         .block_on(async {
             let target_handles = raw_test_targets
                 .into_iter()
                 .map(|t| {
-                    let casm_cache_dir = casm_cache_dir.clone();
                     tokio::task::spawn_blocking(move || {
                         prepare_test_target(
                             t,
                             &ForgeTrackedResource::CairoSteps,
                             &NameFilter::All,
                             &PartitionConfig::default(),
-                            Some(casm_cache_dir.as_path()),
+                            None,
                         )
                     })
                 })
