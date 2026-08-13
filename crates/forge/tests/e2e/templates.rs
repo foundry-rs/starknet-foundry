@@ -37,9 +37,9 @@ fn validate_templates(template: &Template) {
 
     // Cairo version is ignored on purpose. Without it, the test would fail with pre-release scarb.
     let envs = if matches!(template, Template::Erc20Contract) {
-        &[("SCARB_IGNORE_CAIRO_VERSION", "true")][..]
+        vec![("SCARB_IGNORE_CAIRO_VERSION", "true")]
     } else {
-        &[]
+        vec![]
     };
 
     let mut scarb_add = ScarbCommand::new();
@@ -71,5 +71,5 @@ fn validate_templates(template: &Template) {
     scarb_toml["cairo"]["allow-warnings"] = toml_edit::value(false);
     fs::write(&scarb_toml_path, scarb_toml.to_string()).expect("Failed to write to Scarb.toml");
 
-    check_and_lint_with_envs(&package_path, envs);
+    check_and_lint_with_envs(&package_path, &envs);
 }
