@@ -75,7 +75,11 @@ fn from_unnamed_l2_gas(
 ) -> Result<TokenStream, Diagnostic> {
     let &[(_, l2_gas)] = args
         .unnamed_only::<AvailableGasCollector>()
-        .map_err(|_| AvailableGasCollector::error("named and unnamed arguments cannot be mixed"))?
+        .map_err(|_| {
+            AvailableGasCollector::error(
+                "named and unnamed arguments cannot be mixed. The unnamed argument is a shorthand for l2_gas [possible values: l1_gas, l1_data_gas, l2_gas]",
+            )
+        })?
         .of_length::<1, AvailableGasCollector>()?;
 
     let l2_gas = Number::parse_from_expr::<AvailableGasCollector>(db, l2_gas, "l2_gas")?;
