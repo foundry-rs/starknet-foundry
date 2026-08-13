@@ -79,10 +79,9 @@ fn from_unnamed_l2_gas(
         .of_length::<1, AvailableGasCollector>()?;
 
     let l2_gas = Number::parse_from_expr::<AvailableGasCollector>(db, l2_gas, "l2_gas")?;
-
     l2_gas.validate_in_gas_range::<AvailableGasCollector>("l2_gas")?;
 
-    let max = Number(u64::MAX.into());
+    let max = Number::max_gas();
 
     Ok(resource_bounds_config_expression(&max, &max, &l2_gas))
 }
