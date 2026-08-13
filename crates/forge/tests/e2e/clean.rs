@@ -3,7 +3,7 @@ use assert_fs::TempDir;
 use camino::Utf8PathBuf;
 use forge_runner::DEFAULT_CACHE_DIR;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
-use shared::cache::CACHEDIR_TAG_FILENAME;
+use shared::cache::{CACHEDIR_TAG_CONTENTS, CACHEDIR_TAG_FILENAME};
 use shared::test_utils::output_assert::assert_stdout_contains;
 use std::fs;
 use std::path::Path;
@@ -169,7 +169,11 @@ fn test_clean_cache_with_custom_cache_dir_preserves_unrelated_files() {
 
     let custom_cache_dir = temp_dir.path().join("custom_cache");
     fs::create_dir(&custom_cache_dir).unwrap();
-    fs::write(custom_cache_dir.join(CACHEDIR_TAG_FILENAME), "invalid").unwrap();
+    fs::write(
+        custom_cache_dir.join(CACHEDIR_TAG_FILENAME),
+        CACHEDIR_TAG_CONTENTS,
+    )
+    .unwrap();
     fs::write(custom_cache_dir.join(".prev_tests_failed"), "failed_test").unwrap();
     fs::write(
         custom_cache_dir.join("http___rpc_example_54060_v0_60_0.json"),

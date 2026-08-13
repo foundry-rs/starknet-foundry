@@ -1,11 +1,11 @@
 use anyhow::{Context, Result};
-use std::fs;
-use std::io::ErrorKind;
+use std::fs::{self, File};
+use std::io::{ErrorKind, Write};
 use std::path::Path;
 
 pub const CACHEDIR_TAG_FILENAME: &str = "CACHEDIR.TAG";
 
-const CACHEDIR_TAG_CONTENTS: &str = "\
+pub const CACHEDIR_TAG_CONTENTS: &str = "\
 Signature: 8a477f597d28d172789f06886806bc55
 # This file is a cache directory tag created by Starknet Foundry.
 # For information about cache directory tags, see:
@@ -19,25 +19,23 @@ pub fn prepare_cache_dir(cache_dir: impl AsRef<Path>) -> Result<()> {
 
     let tag_path = cache_dir.join(CACHEDIR_TAG_FILENAME);
 
-    match fs::symlink_metadata(&tag_path) {
-        Ok(_) => return Ok(()),
-        Err(err) if err.kind() == ErrorKind::NotFound => {}
-        Err(err) => {
-            return Err(err).with_context(|| {
+    match File::create_new(&tag_path) {
+        Ok(mut file) => file
+            .write_all(CACHEDIR_TAG_CONTENTS.as_bytes())
+            .with_context(|| {
                 format!(
-                    "Failed to read cache directory tag metadata: {}",
+                    "Failed to write cache directory tag: {}",
                     tag_path.display()
                 )
-            });
-        }
-    }
-
-    fs::write(&tag_path, CACHEDIR_TAG_CONTENTS).with_context(|| {
-        format!(
-            "Failed to write cache directory tag: {}",
-            tag_path.display()
-        )
-    })?;
+            }),
+        Err(err) if err.kind() == ErrorKind::AlreadyExists => Ok(()),
+        Err(err) => Err(err).with_context(|| {
+            format!(
+                "Failed to create cache directory tag: {}",
+                tag_path.display()
+            )
+        }),
+    }?;
 
     Ok(())
 }
