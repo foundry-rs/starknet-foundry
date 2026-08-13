@@ -24,7 +24,7 @@ impl AttributeCollector for AvailableGasCollector {
         args: Arguments,
         _warns: &mut Vec<Diagnostic>,
     ) -> Result<TokenStream, Diagnostics> {
-        if !args.unnamed().is_empty() {
+        if args.has_unnamed() {
             return Ok(from_unnamed_l2_gas(db, &args)?);
         }
 
