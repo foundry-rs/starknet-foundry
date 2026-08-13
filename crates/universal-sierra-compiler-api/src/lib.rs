@@ -63,7 +63,7 @@ pub fn compile_raw_sierra_at_path(
 
 /// Compiles Sierra JSON file at the given path of a raw program into [`RawCasmProgram`],
 /// reusing the compiler-managed cache when `cache_dir` is provided.
-pub fn compile_raw_sierra_at_path_with_cache(
+pub fn compile_raw_sierra_at_path_with_cache_dir(
     sierra_file_path: &Path,
     cache_dir: Option<&Path>,
 ) -> Result<RawCasmProgram, CompilationError> {

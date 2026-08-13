@@ -133,7 +133,7 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
     };
 
     if let Some(starknet_artifact_files) = starknet_artifact_files {
-        let starknet_artifact_files = starknet_artifact_files.casm_cache_dir(usc_cache_dir);
+        let starknet_artifact_files = starknet_artifact_files.usc_cache_dir(usc_cache_dir);
         #[cfg(feature = "cairo-native")]
         let starknet_artifact_files = starknet_artifact_files.compile_native(run_native);
         starknet_artifact_files.load_contracts_artifacts()

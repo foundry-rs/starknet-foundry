@@ -51,7 +51,7 @@ pub type ContractsData = HashMap<String, ContractData>;
 pub(crate) struct StarknetArtifactsFiles {
     base: Utf8PathBuf,
     other: Vec<Utf8PathBuf>,
-    casm_cache_dir: Option<Utf8PathBuf>,
+    usc_cache_dir: Option<Utf8PathBuf>,
     #[cfg(feature = "cairo-native")]
     compile_native: bool,
 }
@@ -61,14 +61,14 @@ impl StarknetArtifactsFiles {
         Self {
             base: base_file,
             other: other_files,
-            casm_cache_dir: None,
+            usc_cache_dir: None,
             #[cfg(feature = "cairo-native")]
             compile_native: false,
         }
     }
 
-    pub(crate) fn casm_cache_dir(mut self, casm_cache_dir: Option<Utf8PathBuf>) -> Self {
-        self.casm_cache_dir = casm_cache_dir;
+    pub(crate) fn usc_cache_dir(mut self, usc_cache_dir: Option<Utf8PathBuf>) -> Self {
+        self.usc_cache_dir = usc_cache_dir;
         self
     }
 
@@ -126,7 +126,7 @@ impl StarknetArtifactsFiles {
 
         let casm = compile_contract_sierra_at_path_with_cache_dir(
             path.as_std_path(),
-            self.casm_cache_dir.as_deref().map(Utf8Path::as_std_path),
+            self.usc_cache_dir.as_deref().map(Utf8Path::as_std_path),
         )?;
 
         #[cfg(feature = "cairo-native")]

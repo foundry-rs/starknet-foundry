@@ -1,7 +1,7 @@
 use super::package::RunForPackageArgs;
 use crate::profile_validation::check_compiler_config_compatibility;
 use crate::profile_validation::enable_gas::check_enable_gas;
-use crate::run_tests::cache::CacheConfig;
+use crate::run_tests::cache::{CacheConfig, USC_CACHE_DIR};
 use crate::run_tests::messages::latest_blocks_numbers::LatestBlocksNumbersMessage;
 use crate::run_tests::messages::overall_summary::OverallSummaryMessage;
 use crate::run_tests::messages::partition::{PartitionFinishedMessage, PartitionStartedMessage};
@@ -16,9 +16,9 @@ use crate::{
 };
 use anyhow::Result;
 use forge_runner::partition::PartitionConfig;
+use forge_runner::resolve_cache_dir;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::test_target_summary::TestTargetSummary;
-use forge_runner::{USC_CACHE_DIR, resolve_cache_dir};
 use foundry_ui::UI;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use scarb_api::{
@@ -109,10 +109,13 @@ pub async fn execute_workspace(
 
     let cache_dir = resolve_cache_dir(&scarb_metadata.workspace.root)?;
     prepare_cache_dir(&cache_dir)?;
-    let usc_cache_dir = if universal_sierra_compiler_api::supports_cache_dir()? {
-        Some(cache_dir.join(USC_CACHE_DIR))
-    } else {
-        None
+    let cache_config = CacheConfig {
+        usc_cache_dir: if universal_sierra_compiler_api::supports_cache_dir()? {
+            Some(cache_dir.join(USC_CACHE_DIR))
+        } else {
+            None
+        },
+        cache_dir,
     };
     let packages_len = packages.len();
 
@@ -128,10 +131,7 @@ pub async fn execute_workspace(
             pkg,
             scarb_metadata,
             args,
-            &CacheConfig {
-                cache_dir: cache_dir.clone(),
-                usc_cache_dir: usc_cache_dir.clone(),
-            },
+            &cache_config,
             &artifacts_dir_path,
             partitioning_config.clone(),
             &ui,
@@ -163,7 +163,7 @@ pub async fn execute_workspace(
         all_failed_tests.sort_by(|a, b| a.name().unwrap_or("").cmp(b.name().unwrap_or("")));
     }
 
-    FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
+    FailedTestsCache::new(&cache_config.cache_dir).save_failed_tests(&all_failed_tests)?;
 
     let url_to_block_number = block_number_map.get_url_to_latest_block_number();
     if !url_to_block_number.is_empty() {

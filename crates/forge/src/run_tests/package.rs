@@ -129,7 +129,7 @@ impl RunForPackageArgs {
             args.only_ignored,
             args.include_ignored,
             args.rerun_failed,
-            FailedTestsCache::new(&cache_config.cache_dir.clone()),
+            FailedTestsCache::new(&cache_config.cache_dir),
             partitioning_config,
         );
 
@@ -168,7 +168,7 @@ fn spawn_prepare_test_target(
     tracked_resource: ForgeTrackedResource,
     name_filter: NameFilter,
     partitioning_config: PartitionConfig,
-    casm_cache_dir: Option<Utf8PathBuf>,
+    usc_cache_dir: Option<Utf8PathBuf>,
 ) -> PrepareTargetHandle {
     tokio::task::spawn_blocking(move || {
         prepare_test_target(
@@ -176,7 +176,7 @@ fn spawn_prepare_test_target(
             &tracked_resource,
             &name_filter,
             &partitioning_config,
-            casm_cache_dir.as_deref(),
+            usc_cache_dir.as_deref(),
         )
     })
 }

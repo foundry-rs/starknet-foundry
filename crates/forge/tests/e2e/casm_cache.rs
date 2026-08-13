@@ -1,5 +1,6 @@
 use super::common::runner::{setup_package, test_runner};
-use forge_runner::{DEFAULT_CACHE_DIR, USC_CACHE_DIR};
+use forge::run_tests::cache::USC_CACHE_DIR;
+use forge_runner::DEFAULT_CACHE_DIR;
 use std::fs;
 use std::path::{Path, PathBuf};
 use universal_sierra_compiler_api::supports_cache_dir;
