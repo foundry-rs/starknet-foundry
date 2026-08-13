@@ -42,9 +42,8 @@ fn validate_templates(template: &Template) {
         vec![]
     };
 
-    let mut scarb_add = ScarbCommand::new();
-    scarb_add.envs(envs.iter().copied());
-    let scarb_add = scarb_add
+    let scarb_add = ScarbCommand::new()
+        .envs(envs.iter().copied())
         .current_dir(&package_path)
         .args([
             "add",

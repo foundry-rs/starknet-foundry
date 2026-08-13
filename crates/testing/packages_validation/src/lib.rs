@@ -7,9 +7,8 @@ pub fn check_and_lint(package_path: &Utf8PathBuf) {
 }
 
 pub fn check_and_lint_with_envs(package_path: &Utf8PathBuf, envs: &[(&str, &str)]) {
-    let mut check_command = ScarbCommand::new();
-    check_command.envs(envs.iter().copied());
-    let check_output = check_command
+    let check_output = ScarbCommand::new()
+        .envs(envs.iter().copied())
         .current_dir(package_path)
         .arg("check")
         .command()
@@ -22,9 +21,8 @@ pub fn check_and_lint_with_envs(package_path: &Utf8PathBuf, envs: &[(&str, &str)
         "`scarb check` failed in {package_path}",
     );
 
-    let mut lint_command = ScarbCommand::new();
-    lint_command.envs(envs.iter().copied());
-    let lint_output = lint_command
+    let lint_output = ScarbCommand::new()
+        .envs(envs.iter().copied())
         .current_dir(package_path)
         .arg("lint")
         .command()
