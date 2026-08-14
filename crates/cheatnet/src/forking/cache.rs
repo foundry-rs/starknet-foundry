@@ -280,7 +280,7 @@ fn cache_file_path_from_fork_config(
     ));
 
     prepare_cache_dir(cache_file_path.parent().unwrap())
-        .context("Fork cache directory could not be created")?;
+        .context("Cache directory could not be created")?;
 
     Ok(cache_file_path)
 }
