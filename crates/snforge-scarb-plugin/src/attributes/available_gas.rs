@@ -39,24 +39,23 @@ fn from_resource_bounds(
     let named_args =
         args.named_only::<AvailableGasCollector>(db, &["l1_gas", "l1_data_gas", "l2_gas"])?;
 
-    let max = u64::MAX;
     let l1_gas = named_args
         .as_once_optional("l1_gas")?
         .map(|arg| Number::parse_from_expr::<AvailableGasCollector>(db, arg, "l1_gas"))
         .transpose()?
-        .unwrap_or(Number(max.into()));
+        .unwrap_or(Number::max_gas());
 
     let l1_data_gas = named_args
         .as_once_optional("l1_data_gas")?
         .map(|arg| Number::parse_from_expr::<AvailableGasCollector>(db, arg, "l1_data_gas"))
         .transpose()?
-        .unwrap_or(Number(max.into()));
+        .unwrap_or(Number::max_gas());
 
     let l2_gas = named_args
         .as_once_optional("l2_gas")?
         .map(|arg| Number::parse_from_expr::<AvailableGasCollector>(db, arg, "l2_gas"))
         .transpose()?
-        .unwrap_or(Number(max.into()));
+        .unwrap_or(Number::max_gas());
 
     l1_gas.validate_in_gas_range::<AvailableGasCollector>("l1_gas")?;
     l1_data_gas.validate_in_gas_range::<AvailableGasCollector>("l1_data_gas")?;
