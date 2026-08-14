@@ -7,7 +7,7 @@ use foundry_ui::UI;
 use regex::Regex;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use semver::Version;
-use shared::cache::CACHEDIR_TAG_FILENAME;
+use shared::cache::{CACHEDIR_TAG_FILENAME, SNFOUNDRY_CACHE_TAG_MARKER};
 use std::fs;
 use std::sync::OnceLock;
 
@@ -115,7 +115,8 @@ fn is_snfoundry_cache_file(path: &Utf8Path) -> bool {
     }
 
     if file_name == CACHEDIR_TAG_FILENAME {
-        return true;
+        return fs::read_to_string(path)
+            .is_ok_and(|contents| contents.contains(SNFOUNDRY_CACHE_TAG_MARKER));
     }
 
     let Some(captures) = fork_cache_file_regex().captures(file_name) else {
@@ -130,7 +131,8 @@ fn is_snfoundry_cache_file(path: &Utf8Path) -> bool {
 mod tests {
     use super::is_snfoundry_cache_file;
     use camino::Utf8Path;
-    use shared::cache::CACHEDIR_TAG_FILENAME;
+    use shared::cache::{CACHEDIR_TAG_CONTENTS, CACHEDIR_TAG_FILENAME};
+    use std::fs;
 
     #[test]
     fn recognizes_prev_failed_tests_file() {
@@ -139,9 +141,28 @@ mod tests {
 
     #[test]
     fn recognizes_cachedir_tag() {
-        assert!(is_snfoundry_cache_file(Utf8Path::new(
-            CACHEDIR_TAG_FILENAME
-        )));
+        let temp = tempfile::tempdir().unwrap();
+        let tag_path = temp.path().join(CACHEDIR_TAG_FILENAME);
+        fs::write(&tag_path, CACHEDIR_TAG_CONTENTS).unwrap();
+
+        assert!(is_snfoundry_cache_file(
+            Utf8Path::from_path(&tag_path).unwrap()
+        ));
+    }
+
+    #[test]
+    fn rejects_cachedir_tag_not_created_by_snfoundry() {
+        let temp = tempfile::tempdir().unwrap();
+        let tag_path = temp.path().join(CACHEDIR_TAG_FILENAME);
+        fs::write(
+            &tag_path,
+            "Signature: 8a477f597d28d172789f06886806bc55\n# Created by another tool.\n",
+        )
+        .unwrap();
+
+        assert!(!is_snfoundry_cache_file(
+            Utf8Path::from_path(&tag_path).unwrap()
+        ));
     }
 
     #[test]

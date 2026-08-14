@@ -4,7 +4,8 @@ use std::io::{ErrorKind, Write};
 use std::path::Path;
 
 pub const CACHEDIR_TAG_FILENAME: &str = "CACHEDIR.TAG";
-
+pub const SNFOUNDRY_CACHE_TAG_MARKER: &str =
+    "This file is a cache directory tag created by Starknet Foundry";
 pub const CACHEDIR_TAG_CONTENTS: &str = "\
 Signature: 8a477f597d28d172789f06886806bc55
 # This file is a cache directory tag created by Starknet Foundry.
