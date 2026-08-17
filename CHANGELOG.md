@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Raw Sierra tests now use compiler-inferred function costs as their initial gas budget, allowing correct gas refunds beyond the contract entry-point precharge.
 
+### Cast
+
+#### Added
+
+- Allow resource bounds and tip settings uner `fee-params` field in `snfoundry.toml` for transaction-sending commands.
+
 ## [0.63.0] - 2026-08-05
 
 ### Forge
