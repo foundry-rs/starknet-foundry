@@ -198,6 +198,30 @@ async fn test_show_config_with_network() {
 }
 
 #[tokio::test]
+async fn test_show_config_with_fee() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
+    let args = vec!["--profile", "with_fee", "show-config"];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_eq(formatdoc! {r"
+        Profile:             with_fee
+        Chain ID:            alpha-sepolia
+        RPC URL:             http://127.0.0.1:5055/rpc
+        Account:             user1
+        Accounts File Path:  ../account-file
+        Wait Timeout:        300s
+        Wait Retry Interval: 5s
+        Show Explorer Links: true
+        Block Explorer:      Voyager
+        Scarb Profile:       release
+        Alias Count:         0
+        L2 Gas:              1000000
+        Estimate Tip:        true
+    "});
+}
+
+#[tokio::test]
 async fn test_show_config_cli_url_overrides_config_network() {
     let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let args = vec!["--profile", "profile7", "show-config", "--url", URL];
