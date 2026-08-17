@@ -360,7 +360,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let result = with_account!(&account, |account| {
                 starknet_commands::declare::declare(
                     declare.contract_name.clone(),
-                    declare.common.fee_args,
+                    declare.common.fee_args.resolve(&config.fee_params),
                     declare.common.dry_run_args,
                     declare.common.nonce,
                     declare.no_abi,
@@ -499,6 +499,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 no_abi,
                 ..
             } = deploy;
+
+            let fee_args = fee_args.resolve(&config.fee_params);
 
             let provider = rpc.get_provider(&config, ui).await?;
 
