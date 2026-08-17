@@ -66,6 +66,10 @@ impl Arguments {
         self.named.is_empty() && self.unnamed.is_empty() && self.shorthand.is_empty()
     }
 
+    pub fn has_unnamed(&self) -> bool {
+        !self.unnamed.is_empty()
+    }
+
     #[inline]
     pub fn named_only<T: AttributeInfo>(
         &self,

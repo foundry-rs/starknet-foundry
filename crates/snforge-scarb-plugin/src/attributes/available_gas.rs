@@ -1,6 +1,6 @@
 use crate::{
     args::Arguments,
-    attributes::{AttributeCollector, AttributeInfo, AttributeTypeData},
+    attributes::{AttributeCollector, AttributeInfo, AttributeTypeData, ErrorExt},
     cairo_expression::CairoExpression,
     config_statement::extend_with_config_cheatcodes,
     types::{Number, ParseFromExpr},
@@ -24,6 +24,10 @@ impl AttributeCollector for AvailableGasCollector {
         args: Arguments,
         _warns: &mut Vec<Diagnostic>,
     ) -> Result<TokenStream, Diagnostics> {
+        if args.has_unnamed() {
+            return Ok(from_unnamed_l2_gas(db, &args)?);
+        }
+
         Ok(from_resource_bounds(db, &args)?)
     }
 }
@@ -35,40 +39,72 @@ fn from_resource_bounds(
     let named_args =
         args.named_only::<AvailableGasCollector>(db, &["l1_gas", "l1_data_gas", "l2_gas"])?;
 
-    let max = u64::MAX;
     let l1_gas = named_args
         .as_once_optional("l1_gas")?
         .map(|arg| Number::parse_from_expr::<AvailableGasCollector>(db, arg, "l1_gas"))
         .transpose()?
-        .unwrap_or(Number(max.into()));
+        .unwrap_or(Number::max_gas());
 
     let l1_data_gas = named_args
         .as_once_optional("l1_data_gas")?
         .map(|arg| Number::parse_from_expr::<AvailableGasCollector>(db, arg, "l1_data_gas"))
         .transpose()?
-        .unwrap_or(Number(max.into()));
+        .unwrap_or(Number::max_gas());
 
     let l2_gas = named_args
         .as_once_optional("l2_gas")?
         .map(|arg| Number::parse_from_expr::<AvailableGasCollector>(db, arg, "l2_gas"))
         .transpose()?
-        .unwrap_or(Number(max.into()));
+        .unwrap_or(Number::max_gas());
 
     l1_gas.validate_in_gas_range::<AvailableGasCollector>("l1_gas")?;
     l1_data_gas.validate_in_gas_range::<AvailableGasCollector>("l1_data_gas")?;
     l2_gas.validate_in_gas_range::<AvailableGasCollector>("l2_gas")?;
 
+    Ok(resource_bounds_config_expression(
+        &l1_gas,
+        &l1_data_gas,
+        &l2_gas,
+    ))
+}
+
+fn from_unnamed_l2_gas(
+    db: &SimpleParserDatabase,
+    args: &Arguments,
+) -> Result<TokenStream, Diagnostic> {
+    let &[(_, l2_gas)] = args
+        .unnamed_only::<AvailableGasCollector>()
+        .map_err(|_| {
+            AvailableGasCollector::error(
+                "named and unnamed arguments cannot be mixed. The unnamed argument is a shorthand for l2_gas [possible values: l1_gas, l1_data_gas, l2_gas]",
+            )
+        })?
+        .of_length::<1, AvailableGasCollector>()?;
+
+    let l2_gas = Number::parse_from_expr::<AvailableGasCollector>(db, l2_gas, "l2_gas")?;
+    l2_gas.validate_in_gas_range::<AvailableGasCollector>("l2_gas")?;
+
+    let max = Number::max_gas();
+
+    Ok(resource_bounds_config_expression(&max, &max, &l2_gas))
+}
+
+fn resource_bounds_config_expression(
+    l1_gas: &Number,
+    l1_data_gas: &Number,
+    l2_gas: &Number,
+) -> TokenStream {
     let l1_gas_expr = l1_gas.as_cairo_expression();
     let l1_data_gas_expr = l1_data_gas.as_cairo_expression();
     let l2_gas_expr = l2_gas.as_cairo_expression();
 
-    Ok(quote!(
+    quote!(
         snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
             l1_gas: #l1_gas_expr,
             l1_data_gas: #l1_data_gas_expr,
             l2_gas: #l2_gas_expr,
         }
-    ))
+    )
 }
 
 #[must_use]

@@ -69,6 +69,10 @@ impl Number {
         }
         Ok(())
     }
+
+    pub fn max_gas() -> Self {
+        Self(u64::MAX.into())
+    }
 }
 
 #[derive(Debug, Clone)]
