@@ -27,6 +27,7 @@ use sncast::helpers::config::resolve_global_config_path_or_warn;
 use sncast::helpers::configuration::{
     CastConfig, CliConfigOpts, ConfigScope, MaybeConfig, PartialCastConfig, warn_unknown_keys,
 };
+use sncast::helpers::fee::FeeParams;
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
@@ -330,13 +331,47 @@ fn run(cli: Cli, ui: &UI) -> Result<ExitCode> {
     }
 }
 
+fn resolve_fee_args(command: &mut Commands, config: &FeeParams) {
+    let fee_args = match command {
+        Commands::Declare(declare) => &mut declare.common.fee_args,
+        Commands::DeclareFrom(declare_from) => &mut declare_from.common.fee_args,
+        Commands::Deploy(deploy) => &mut deploy.fee_args,
+        Commands::Invoke(invoke) => &mut invoke.fee_args,
+        Commands::Multicall(multicall) => match &mut multicall.command {
+            multicall::Commands::Run(run) => &mut run.fee_args,
+            multicall::Commands::Execute(execute) => &mut execute.fee_args,
+            multicall::Commands::New(_) => return,
+        },
+        Commands::Account(account_command) => match &mut account_command.command {
+            account::Commands::Deploy(deploy) => &mut deploy.fee_args,
+            account::Commands::Import(_)
+            | account::Commands::Create(_)
+            | account::Commands::Delete(_)
+            | account::Commands::List(_) => return,
+        },
+        Commands::Get(_)
+        | Commands::Call(_)
+        | Commands::Alias(_)
+        | Commands::ShowConfig(_)
+        | Commands::ConfigPath(_)
+        | Commands::Verify(_)
+        | Commands::Completions(_)
+        | Commands::Utils(_)
+        | Commands::Ledger(_) => return,
+    };
+
+    *fee_args = fee_args.resolve(config);
+}
+
 #[expect(clippy::too_many_lines)]
-async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<ExitCode> {
+async fn run_async_command(mut cli: Cli, config: CastConfig, ui: &UI) -> Result<ExitCode> {
     let wait_config = WaitForTx {
         wait: cli.wait,
         wait_params: config.wait_params,
         show_ui_outputs: true,
     };
+
+    resolve_fee_args(&mut cli.command, &config.fee_params);
 
     match cli.command {
         Commands::Declare(declare) => {
@@ -360,7 +395,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let result = with_account!(&account, |account| {
                 starknet_commands::declare::declare(
                     declare.contract_name.clone(),
-                    declare.common.fee_args.resolve(&config.fee_params),
+                    declare.common.fee_args,
                     declare.common.dry_run_args,
                     declare.common.nonce,
                     declare.no_abi,
@@ -501,8 +536,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 no_abi,
                 ..
             } = deploy;
-
-            let fee_args = fee_args.resolve(&config.fee_params);
 
             let provider = rpc.get_provider(&config, ui).await?;
 
@@ -713,20 +746,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 nonce,
                 ..
             } = invoke;
-
-            let fee_args = fee_args.resolve(&config.fee_params);
-
-            let selector = get_selector_from_name(&function)
-                .context("Failed to convert entry point selector to FieldElement")?;
-
-            let contract_address = contract_address.resolve(&config)?;
-            let Arguments {
-                calldata,
-                arguments,
-            } = arguments;
-            let calldata = calldata
-                .map(|raw_calldata| resolve_calldata_to_felts(&raw_calldata, &config))
-                .transpose()?;
 
             let provider = rpc.get_provider(&config, ui).await?;
 
