@@ -433,6 +433,8 @@ async fn deploy_data_transformer_contract() -> (tempfile::TempDir, String) {
         &account_address,
     ];
     let deploy_output = runner(&deploy_args)
+        // Cairo version is ignored on purpose. Without it, the test would fail with pre-release scarb.
+        .env("SCARB_IGNORE_CAIRO_VERSION", "true")
         .current_dir(tempdir.path())
         .assert()
         .success()
@@ -468,6 +470,8 @@ async fn test_happy_case_call_with_option_and_result() {
         "--arguments",
         "Option::Some(42_u32)",
     ])
+    // Cairo version is ignored on purpose. Without it, the test would fail with pre-release scarb.
+    .env("SCARB_IGNORE_CAIRO_VERSION", "true")
     .current_dir(tempdir.path())
     .assert()
     .success()
@@ -490,6 +494,8 @@ async fn test_happy_case_call_with_option_and_result() {
         "--arguments",
         "Result::Ok(99_u32)",
     ])
+    // Cairo version is ignored on purpose. Without it, the test would fail with pre-release scarb.
+    .env("SCARB_IGNORE_CAIRO_VERSION", "true")
     .current_dir(tempdir.path())
     .assert()
     .success()

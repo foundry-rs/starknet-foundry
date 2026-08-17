@@ -3,7 +3,7 @@ use crate::utils::tempdir_with_tool_versions;
 use assert_fs::prelude::PathChild;
 use camino::Utf8PathBuf;
 use forge::Template;
-use packages_validation::check_and_lint;
+use packages_validation::check_and_lint_with_envs;
 use scarb_api::ScarbCommand;
 use std::fs;
 use std::process::Stdio;
@@ -35,7 +35,15 @@ fn validate_templates(template: &Template) {
     let package_path = Utf8PathBuf::from_path_buf(package_path.to_path_buf())
         .expect("Failed to convert to Utf8PathBuf");
 
+    // Cairo version is ignored on purpose. Without it, the test would fail with pre-release scarb.
+    let envs = if matches!(template, Template::Erc20Contract) {
+        vec![("SCARB_IGNORE_CAIRO_VERSION", "true")]
+    } else {
+        vec![]
+    };
+
     let scarb_add = ScarbCommand::new()
+        .envs(envs.iter().copied())
         .current_dir(&package_path)
         .args([
             "add",
@@ -62,5 +70,5 @@ fn validate_templates(template: &Template) {
     scarb_toml["cairo"]["allow-warnings"] = toml_edit::value(false);
     fs::write(&scarb_toml_path, scarb_toml.to_string()).expect("Failed to write to Scarb.toml");
 
-    check_and_lint(&package_path);
+    check_and_lint_with_envs(&package_path, &envs);
 }
