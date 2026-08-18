@@ -1,12 +1,23 @@
 use camino::Utf8PathBuf;
 use starknet_rust::signers::DerivationPath;
 use starknet_types_core::felt::Felt;
+use std::fmt::{Display, Formatter};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum SignerKind {
     PrivateKey,
     Keystore,
     Ledger,
+}
+
+impl Display for SignerKind {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::PrivateKey => formatter.write_str("private_key"),
+            Self::Keystore => formatter.write_str("keystore"),
+            Self::Ledger => formatter.write_str("ledger"),
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
