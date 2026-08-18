@@ -1,4 +1,5 @@
-use crate::{AccountData, SignerType};
+use crate::accounts::AccountRecord;
+use crate::signers::{PrivateKeySpec, SignerSpec};
 use ::serde::{Deserialize, Serialize, de::DeserializeOwned};
 use anyhow::{Context, Error, ensure};
 use reqwest::Client;
@@ -116,7 +117,7 @@ pub struct PredeployedAccount {
     pub public_key: Felt,
 }
 
-impl From<&PredeployedAccount> for AccountData {
+impl From<&PredeployedAccount> for AccountRecord {
     fn from(predeployed_account: &PredeployedAccount) -> Self {
         Self {
             address: Some(predeployed_account.address),
@@ -126,9 +127,7 @@ impl From<&PredeployedAccount> for AccountData {
             deployed: None,
             legacy: None,
             account_type: None,
-            signer_type: SignerType::Local {
-                private_key: predeployed_account.private_key,
-            },
+            signer: SignerSpec::PrivateKey(PrivateKeySpec::new(predeployed_account.private_key)),
         }
     }
 }
