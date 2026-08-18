@@ -481,7 +481,6 @@ fn test_insufficient_account_balance() {
         ACCOUNT_FILE_PATH,
         "--account",
         "user11",
-        "--wait",
         "invoke",
         "--url",
         URL,
