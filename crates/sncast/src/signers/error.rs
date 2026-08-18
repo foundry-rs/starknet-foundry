@@ -17,6 +17,16 @@ pub enum SignerError {
     #[error("failed to decrypt keystore `{path}`: {message}")]
     InvalidKeystore { path: Utf8PathBuf, message: String },
 
+    #[error("Keystore file {path} already exists")]
+    KeystoreAlreadyExists { path: Utf8PathBuf },
+
+    #[error("failed to {operation} keystore `{path}`: {message}")]
+    KeystoreStorage {
+        operation: &'static str,
+        path: Utf8PathBuf,
+        message: String,
+    },
+
     #[error(
         "{kind} signer public key does not match the account: expected {expected:#x}, got {actual:#x}"
     )]

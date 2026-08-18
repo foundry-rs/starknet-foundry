@@ -17,7 +17,8 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::import::AccountImportResponse;
 use sncast::response::ui::UI;
 use sncast::signers::{
-    KeystoreSpec, LedgerSpec, PrivateKeySpec, SignerSpec, keystore_password, resolve_keystore_path,
+    KeystoreFile, KeystoreSpec, LedgerSpec, PrivateKeySpec, SignerSpec, keystore_password,
+    resolve_keystore_path,
 };
 use sncast::{AccountType, check_class_hash_exists, get_chain_id, handle_rpc_error};
 use starknet_rust::core::types::{BlockId, BlockTag, StarknetError};
@@ -112,8 +113,8 @@ pub async fn import(
         } else if let Some(keystore) = &import.keystore {
             let spec = KeystoreSpec::new(keystore.clone(), import.keystore_password_env.clone());
             let password = keystore_password(&spec)?;
-            let signing_key = SigningKey::from_keystore(
-                resolve_keystore_path(repository.path(), keystore),
+            let signing_key = KeystoreFile::decrypt(
+                &resolve_keystore_path(repository.path(), keystore),
                 &password,
             )?;
             let public_key = signing_key.verifying_key().scalar();
