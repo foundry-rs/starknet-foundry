@@ -5,6 +5,8 @@ pub mod error;
 pub mod model;
 pub mod repository;
 pub mod schema;
+pub mod selector;
+pub mod service;
 
 pub use deployment::AccountDeploymentService;
 pub use error::AccountsError;
@@ -13,3 +15,5 @@ pub use model::{
     DeployableAccountRecord, NetworkName,
 };
 pub use repository::{AccountRepository, MutationResult};
+pub use selector::AccountSelector;
+pub use service::AccountService;

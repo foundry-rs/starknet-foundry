@@ -49,4 +49,7 @@ pub enum AccountsError {
 
     #[error("account `{account}` was not found on network `{network}`")]
     AccountNotFound { network: String, account: String },
+
+    #[error("invalid account: {message}")]
+    InvalidAccount { message: String },
 }

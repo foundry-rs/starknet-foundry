@@ -7,9 +7,10 @@ use starknet_rust::{
     signers::{LocalWallet, SigningKey},
 };
 use std::fs;
+use std::num::NonZeroU8;
 use url::Url;
 
-use crate::accounts::{AccountRecord, AccountRepository};
+use crate::accounts::{AccountRecord, AccountRepository, AccountService};
 use crate::signers::{RuntimeSigner, SignerKind};
 use anyhow::Context;
 use serde_json::{Value, json};
@@ -56,16 +57,11 @@ pub fn is_devnet_account(account: &str) -> bool {
     account.starts_with("devnet-")
 }
 
-pub async fn get_account_from_devnet<'a>(
-    account: &str,
+pub(crate) async fn get_account_from_devnet<'a>(
+    account_number: NonZeroU8,
     provider: &'a JsonRpcClient<HttpTransport>,
     url: &Url,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, RuntimeSigner>> {
-    let account_number: u8 = account
-        .strip_prefix("devnet-")
-        .map(|s| s.parse::<u8>().expect("Invalid devnet account number"))
-        .context("Failed to parse devnet account number")?;
-
     let devnet_provider = DevnetProvider::new(url.as_ref());
     devnet_provider.ensure_alive().await?;
 
@@ -78,14 +74,14 @@ pub async fn get_account_from_devnet<'a>(
     };
 
     ensure!(
-        account_number <= devnet_config.total_accounts && account_number != 0,
+        account_number.get() <= devnet_config.total_accounts,
         "Devnet account number must be between 1 and {}",
         devnet_config.total_accounts
     );
 
     let devnet_accounts = devnet_provider.get_predeployed_accounts().await?;
     let predeployed_account = devnet_accounts
-        .get((account_number - 1) as usize)
+        .get((account_number.get() - 1) as usize)
         .expect("Failed to get devnet account");
 
     let account_data = AccountRecord::from(predeployed_account);
@@ -98,5 +94,5 @@ pub async fn get_account_from_devnet<'a>(
         LocalWallet::from_signing_key(SigningKey::from_secret_scalar(private_key)),
         SignerKind::PrivateKey,
     );
-    build_account(account_data, chain_id, provider, signer).await
+    AccountService::build_runtime_account(account_data, chain_id, provider, signer).await
 }
