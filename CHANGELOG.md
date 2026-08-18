@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Allow resource bounds and tip settings uner `fee-params` field in `snfoundry.toml` for transaction-sending commands.
+- Allow resource bounds and tip settings under `fee-params` field in `snfoundry.toml` for transaction-sending commands.
 
 ## [0.63.0] - 2026-08-05
 
