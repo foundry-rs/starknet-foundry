@@ -1,8 +1,8 @@
 use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
-use serde_json::Map;
 use sncast::accounts::{AccountDeploymentService, AccountRecord, AccountRepository};
+use sncast::compat::starkli;
 use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::FeeArgs;
 use sncast::helpers::rpc::RpcArgs;
@@ -98,7 +98,7 @@ async fn deploy_from_keystore(
     keystore_path: Utf8PathBuf,
     ui: &UI,
 ) -> Result<InvokeResponse> {
-    let account_data = get_account_data_from_keystore(account, &keystore_path)?;
+    let account_data = starkli::load_account(account, &keystore_path)?;
 
     let is_deployed = account_data
         .deployed
@@ -108,7 +108,7 @@ async fn deploy_from_keystore(
     }
 
     let private_key_felt = account_data
-        .signer_type
+        .signer
         .private_key()
         .context("Private key not found in keystore account")?;
     let private_key = SigningKey::from_secret_scalar(private_key_felt);
@@ -118,8 +118,7 @@ async fn deploy_from_keystore(
         bail!("Public key and private key from keystore do not match");
     }
 
-    let account_record: AccountRecord = account_data.clone().into();
-    let (account_type, class_hash, salt) = extract_deployment_fields(&account_record)?;
+    let (account_type, class_hash, salt) = extract_deployment_fields(&account_data)?;
 
     let signer = LocalWallet::from_signing_key(private_key);
     let (address, result) = AccountDeploymentService::deploy(
@@ -137,7 +136,7 @@ async fn deploy_from_keystore(
     .await?;
 
     if let InvokeResponse::Transaction(_) = &result {
-        update_keystore_account(account, address)?;
+        starkli::update_deployment(account, address)?;
     }
 
     Ok(result)
@@ -211,28 +210,6 @@ fn update_account_in_accounts_file(
             Ok(())
         })
         .map_err(|error| anyhow!(error))?;
-
-    Ok(())
-}
-
-fn update_keystore_account(account: &str, address: Felt) -> Result<()> {
-    let account_path = Utf8PathBuf::from(account.to_string());
-    let contents =
-        std::fs::read_to_string(account_path.clone()).context("Failed to read account file")?;
-    let mut items: Map<String, serde_json::Value> = serde_json::from_str(&contents)
-        .map_err(|_| anyhow!("Failed to parse account file at {account_path}"))?;
-
-    items["deployment"]["status"] = serde_json::Value::from("deployed");
-    items
-        .get_mut("deployment")
-        .and_then(|deployment| deployment.as_object_mut())
-        .expect("Failed to get deployment as an object")
-        .retain(|key, _| key != "salt" && key != "context");
-
-    items["deployment"]["address"] = format!("{address:#x}").into();
-
-    std::fs::write(&account_path, serde_json::to_string_pretty(&items).unwrap())
-        .context("Failed to write to account file")?;
 
     Ok(())
 }

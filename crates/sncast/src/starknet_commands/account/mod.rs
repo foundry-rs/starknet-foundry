@@ -11,6 +11,7 @@ use clap::{Args, Subcommand};
 use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
 use conversions::string::{TryFromDecStr, TryFromHexStr};
+use foundry_ui::components::warning::WarningMessage;
 use sncast::accounts::{AccountName, AccountRecord, AccountRepository, NetworkName};
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::{
@@ -156,16 +157,24 @@ pub fn save_account(
     repository: &AccountRepository,
     chain_id: Felt,
     account_record: AccountRecord,
-) -> Result<()> {
+) -> Result<bool> {
     let network_name = chain_id_to_network_name(chain_id);
-    repository
+    let result = repository
         .insert(
             NetworkName::new(network_name)?,
             AccountName::new(account)?,
             account_record,
         )
         .map_err(|error| anyhow::anyhow!(error))?;
-    Ok(())
+    Ok(result.migrated_from_v1)
+}
+
+pub fn notify_if_migrated(migrated: bool, ui: &UI) {
+    if migrated {
+        ui.print_warning(WarningMessage::new(
+            "Accounts file was migrated to schema version 2; the original was saved as a .v1.bak file",
+        ));
+    }
 }
 
 pub fn add_created_profile_to_configuration(
@@ -285,9 +294,12 @@ pub async fn account(
             Ok(process_command_result("account import", result, ui, None))
         }
         Commands::Create(create) => {
-            let signer_type = create.ledger_key_locator.resolve(ui);
-
-            let signer_source = SignerSource::new(config.keystore.clone(), signer_type)?;
+            let ledger_path = create.ledger_key_locator.resolve(ui);
+            let signer_source = SignerSource::new(
+                config.keystore.clone(),
+                ledger_path,
+                create.keystore.clone(),
+            )?;
 
             let account = if config.keystore.is_none() {
                 create

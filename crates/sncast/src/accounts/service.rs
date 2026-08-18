@@ -7,6 +7,7 @@ use starknet_types_core::felt::Felt;
 use url::Url;
 
 use crate::accounts::{AccountRecord, AccountRepository, AccountSelector};
+use crate::compat::starkli;
 use crate::helpers::account::get_account_from_devnet;
 use crate::response::ui::UI;
 use crate::signers::{RuntimeSigner, SignerKind, SignerProviderContext, SignerResolver};
@@ -56,9 +57,7 @@ impl AccountService {
                 keystore_file,
             } => {
                 let chain_id = get_chain_id(provider).await?;
-                let account: AccountRecord =
-                    crate::get_account_data_from_keystore(account_file.as_str(), keystore_file)?
-                        .into();
+                let account = starkli::load_account(account_file.as_str(), keystore_file)?;
                 let private_key = account
                     .signer
                     .private_key()

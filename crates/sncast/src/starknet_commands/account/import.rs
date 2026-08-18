@@ -1,13 +1,14 @@
 use std::str::FromStr;
 
 use crate::starknet_commands::account::{
-    PrivateKeyArgs, compute_account_address, generate_add_profile_message, prepare_account_record,
-    save_account, validate_private_key,
+    PrivateKeyArgs, compute_account_address, generate_add_profile_message, notify_if_migrated,
+    prepare_account_record, save_account, validate_private_key,
 };
 use crate::starknet_commands::utils::felt_or_id::{ClassHash, ContractAddress};
 use anyhow::{Result, bail, ensure};
+use camino::Utf8PathBuf;
 use clap::Args;
-use sncast::accounts::AccountRepository;
+use sncast::accounts::{AccountDeploymentService, AccountRepository};
 use sncast::check_if_legacy_contract;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::ledger;
@@ -15,12 +16,14 @@ use sncast::helpers::ledger::LedgerKeyLocatorAccount;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::import::AccountImportResponse;
 use sncast::response::ui::UI;
-use sncast::signers::{LedgerSpec, PrivateKeySpec, SignerSpec};
+use sncast::signers::{
+    KeystoreSpec, LedgerSpec, PrivateKeySpec, SignerSpec, keystore_password, resolve_keystore_path,
+};
 use sncast::{AccountType, check_class_hash_exists, get_chain_id, handle_rpc_error};
 use starknet_rust::core::types::{BlockId, BlockTag, StarknetError};
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet_rust::providers::{Provider, ProviderError};
-use starknet_rust::signers::SigningKey;
+use starknet_rust::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
 
 #[derive(Args, Debug)]
@@ -62,6 +65,18 @@ pub struct Import {
 
     #[command(flatten)]
     pub ledger_key_locator: LedgerKeyLocatorAccount,
+
+    /// Use an existing encrypted keystore as the native account signer
+    #[arg(
+        long,
+        conflicts_with = "ledger_key_locator_account",
+        conflicts_with = "private_key_input"
+    )]
+    pub keystore: Option<Utf8PathBuf>,
+
+    /// Environment variable containing the native keystore password
+    #[arg(long, requires = "keystore")]
+    pub keystore_password_env: Option<String>,
 }
 
 impl Import {
@@ -86,20 +101,35 @@ pub async fn import(
     let address = import.resolved_address(config)?;
     let class_hash = import.resolved_class_hash(config)?;
 
-    let (signer, public_key) = if let Some(ledger_path) = import.ledger_key_locator.resolve(ui) {
-        let public_key = ledger::get_ledger_public_key(&ledger_path, ui).await?;
-        (SignerSpec::Ledger(LedgerSpec::new(ledger_path)), public_key)
-    } else {
-        let key_felt = import.private_key_args.resolve_or_prompt()?;
-        let key_felt = validate_private_key(key_felt)?;
+    let (signer, public_key, local_key) =
+        if let Some(ledger_path) = import.ledger_key_locator.resolve(ui) {
+            let public_key = ledger::get_ledger_public_key(&ledger_path, ui).await?;
+            (
+                SignerSpec::Ledger(LedgerSpec::new(ledger_path)),
+                public_key,
+                None,
+            )
+        } else if let Some(keystore) = &import.keystore {
+            let spec = KeystoreSpec::new(keystore.clone(), import.keystore_password_env.clone());
+            let password = keystore_password(&spec)?;
+            let signing_key = SigningKey::from_keystore(
+                resolve_keystore_path(repository.path(), keystore),
+                &password,
+            )?;
+            let public_key = signing_key.verifying_key().scalar();
+            (SignerSpec::Keystore(spec), public_key, Some(signing_key))
+        } else {
+            let key_felt = import.private_key_args.resolve_or_prompt()?;
+            let key_felt = validate_private_key(key_felt)?;
 
-        let signing_key = SigningKey::from_secret_scalar(key_felt);
-        let public_key = signing_key.verifying_key().scalar();
-        (
-            SignerSpec::PrivateKey(PrivateKeySpec::new(key_felt)),
-            public_key,
-        )
-    };
+            let signing_key = SigningKey::from_secret_scalar(key_felt);
+            let public_key = signing_key.verifying_key().scalar();
+            (
+                SignerSpec::PrivateKey(PrivateKeySpec::new(key_felt)),
+                public_key,
+                Some(signing_key),
+            )
+        };
 
     let account_name = account
         .clone()
@@ -137,16 +167,28 @@ pub async fn import(
     let chain_id = get_chain_id(provider).await?;
 
     if let Some(salt) = import.salt {
-        let computed_address = compute_account_address(
-            salt,
-            class_hash,
-            import.account_type,
-            chain_id,
-            &signer,
-            provider,
-            ui,
-        )
-        .await?;
+        let computed_address = if let Some(signing_key) = local_key {
+            AccountDeploymentService::compute_address(
+                provider,
+                import.account_type,
+                class_hash,
+                LocalWallet::from_signing_key(signing_key),
+                salt,
+                chain_id,
+            )
+            .await?
+        } else {
+            compute_account_address(
+                salt,
+                class_hash,
+                import.account_type,
+                chain_id,
+                &signer,
+                provider,
+                ui,
+            )
+            .await?
+        };
         ensure!(
             computed_address == address,
             "Computed address {computed_address:#x} does not match the provided address {address:#x}. Please ensure that the provided salt, class hash, and account type are correct."
@@ -166,7 +208,8 @@ pub async fn import(
         import.salt,
     );
 
-    save_account(&account_name, repository, chain_id, account)?;
+    let migrated = save_account(&account_name, repository, chain_id, account)?;
+    notify_if_migrated(migrated, ui);
 
     let add_profile_message = generate_add_profile_message(
         import.add_profile.as_ref(),

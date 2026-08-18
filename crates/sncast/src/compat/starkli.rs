@@ -1,0 +1,123 @@
+use anyhow::{Context, Result, anyhow, bail};
+use camino::Utf8PathBuf;
+use serde_json::{Map, Value};
+use starknet_rust::signers::{SigningKey, VerifyingKey};
+use starknet_types_core::felt::Felt;
+
+use crate::accounts::{AccountRecord, AccountType};
+use crate::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
+use crate::signers::{PrivateKeySpec, SignerSpec};
+use crate::{get_keystore_password, read_and_parse_json_file};
+
+pub fn load_account(account: &str, keystore_path: &Utf8PathBuf) -> Result<AccountRecord> {
+    check_files_exist(keystore_path, account)?;
+    let path_to_account = Utf8PathBuf::from(account);
+
+    let private_key = SigningKey::from_keystore(
+        keystore_path,
+        get_keystore_password(KEYSTORE_PASSWORD_ENV_VAR)?.as_str(),
+    )?
+    .secret_scalar();
+
+    let account_info: Value = read_and_parse_json_file(&path_to_account)?;
+
+    let parse_to_felt = |pointer: &str| -> Option<Felt> {
+        string_value(&account_info, pointer).and_then(|value| value.parse().ok())
+    };
+
+    let address = parse_to_felt("/deployment/address");
+    let class_hash = parse_to_felt("/deployment/class_hash");
+    let salt = parse_to_felt("/deployment/salt");
+    let deployed =
+        string_value(&account_info, "/deployment/status").map(|status| status == "deployed");
+    let legacy = account_info
+        .pointer("/variant/legacy")
+        .and_then(Value::as_bool);
+    let account_type = string_value(&account_info, "/variant/type")
+        .map(|account_type| match account_type.as_str() {
+            "argent" => "ready".to_owned(),
+            _ => account_type,
+        })
+        .and_then(|account_type| account_type.parse().ok());
+
+    let public_key = match account_type.context("Failed to get type key")? {
+        AccountType::Ready => parse_to_felt("/variant/owner"),
+        AccountType::OpenZeppelin => parse_to_felt("/variant/public_key"),
+        AccountType::Braavos => braavos_public_key(&account_info)?,
+    }
+    .context("Failed to get public key from account JSON file")?;
+
+    Ok(AccountRecord {
+        public_key,
+        address,
+        salt,
+        deployed,
+        class_hash,
+        legacy,
+        account_type,
+        signer: SignerSpec::PrivateKey(PrivateKeySpec::new(private_key)),
+    })
+}
+
+pub fn update_deployment(account: &str, address: Felt) -> Result<()> {
+    let account_path = Utf8PathBuf::from(account);
+    let contents = std::fs::read_to_string(&account_path).context("Failed to read account file")?;
+    let mut items: Map<String, Value> = serde_json::from_str(&contents)
+        .map_err(|_| anyhow!("Failed to parse account file at {account_path}"))?;
+
+    items["deployment"]["status"] = Value::from("deployed");
+    items
+        .get_mut("deployment")
+        .and_then(Value::as_object_mut)
+        .context("Failed to get deployment as an object")?
+        .retain(|key, _| key != "salt" && key != "context");
+    items["deployment"]["address"] = format!("{address:#x}").into();
+
+    std::fs::write(&account_path, serde_json::to_string_pretty(&items)?)
+        .context("Failed to write to account file")
+}
+
+pub fn verify_private_key(account: &AccountRecord) -> Result<VerifyingKey> {
+    let private_key = account
+        .signer
+        .private_key()
+        .context("Private key not found in starkli account")?;
+    let signing_key = SigningKey::from_secret_scalar(private_key);
+    let verifying_key = signing_key.verifying_key();
+    if verifying_key.scalar() != account.public_key {
+        bail!("Public key and private key from keystore do not match");
+    }
+    Ok(verifying_key)
+}
+
+fn braavos_public_key(account_info: &Value) -> Result<Option<Felt>> {
+    string_value(account_info, "/variant/multisig/status")
+        .filter(|status| status == "off")
+        .context("Braavos accounts cannot be deployed with multisig on")?;
+
+    account_info
+        .pointer("/variant/signers")
+        .and_then(Value::as_array)
+        .filter(|signers| signers.len() == 1)
+        .context("Braavos accounts can only be deployed with one seed signer")?;
+
+    Ok(string_value(account_info, "/variant/signers/0/public_key")
+        .and_then(|value| value.parse().ok()))
+}
+
+fn string_value(json: &Value, pointer: &str) -> Option<String> {
+    json.pointer(pointer)
+        .and_then(Value::as_str)
+        .map(str::to_owned)
+}
+
+fn check_files_exist(keystore_path: &Utf8PathBuf, account: &str) -> Result<()> {
+    if !keystore_path.exists() {
+        bail!("Keystore file = {keystore_path} does not exist");
+    }
+    let account_path = Utf8PathBuf::from(account);
+    if !account_path.exists() {
+        bail!("Account file = {account_path} does not exist");
+    }
+    Ok(())
+}
