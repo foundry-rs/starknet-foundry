@@ -779,7 +779,7 @@ macro_rules! apply_optional_fields {
         {
             let mut value = $initial;
             $(
-                value = ::sncast::apply_optional(value, $option, $setter);
+                value = $crate::apply_optional(value, $option, $setter);
             )*
             value
         }

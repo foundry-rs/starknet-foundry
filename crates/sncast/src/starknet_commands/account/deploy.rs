@@ -1,32 +1,22 @@
 use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
-use conversions::IntoConv;
-use sncast::accounts::{AccountRecord, AccountRepository};
+use sncast::accounts::{AccountDeploymentService, AccountRecord, AccountRepository};
 use sncast::compat::starkli;
-use sncast::helpers::braavos::BraavosAccountFactory;
-use sncast::helpers::constants::BRAAVOS_BASE_ACCOUNT_CLASS_HASH;
 use sncast::helpers::dry_run::DryRunArgs;
-use sncast::helpers::fee::{FeeArgs, FeeSettings};
+use sncast::helpers::fee::FeeArgs;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::deploy::AccountDeployResponse;
-use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
+use sncast::response::invoke::InvokeResponse;
 use sncast::response::ui::UI;
 use sncast::signers::{SignerProviderContext, SignerResolver};
 use sncast::{
-    AccountType, WaitForTx, apply_optional_fields, chain_id_to_network_name,
-    check_account_file_exists, get_account_record_from_accounts_file, handle_rpc_error,
-    handle_wait_for_tx,
+    AccountType, WaitForTx, chain_id_to_network_name, check_account_file_exists,
+    get_account_record_from_accounts_file,
 };
-use starknet_rust::accounts::{AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory};
-use starknet_rust::accounts::{AccountFactoryError, ArgentAccountFactory};
-use starknet_rust::core::types::{
-    ContractExecutionError, StarknetError::ClassHashNotFound,
-    StarknetError::TransactionExecutionError, TransactionExecutionErrorData,
-};
+use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
-use starknet_rust::providers::{JsonRpcClient, ProviderError::StarknetError};
-use starknet_rust::signers::{LocalWallet, Signer, SigningKey};
+use starknet_rust::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
 
 #[derive(Args, Debug)]
@@ -131,7 +121,7 @@ async fn deploy_from_keystore(
     let (account_type, class_hash, salt) = extract_deployment_fields(&account_data)?;
 
     let signer = LocalWallet::from_signing_key(private_key);
-    let (address, result) = create_factory_and_deploy(
+    let (address, result) = AccountDeploymentService::deploy(
         provider,
         account_type,
         class_hash,
@@ -169,7 +159,7 @@ async fn deploy_from_accounts_file(
     let signer = SignerResolver::default()
         .resolve_and_verify(&account_data.signer, account_data.public_key, &context)
         .await?;
-    let (_, result) = create_factory_and_deploy(
+    let (_, result) = AccountDeploymentService::deploy(
         provider,
         account_type,
         class_hash,
@@ -190,79 +180,6 @@ async fn deploy_from_accounts_file(
     Ok(result)
 }
 
-#[expect(clippy::too_many_arguments)]
-async fn create_factory_and_deploy<S>(
-    provider: &JsonRpcClient<HttpTransport>,
-    account_type: AccountType,
-    class_hash: Felt,
-    signer: S,
-    salt: Felt,
-    chain_id: Felt,
-    fee_args: FeeArgs,
-    dry_run_args: DryRunArgs,
-    wait_config: WaitForTx,
-    ui: &UI,
-) -> Result<(Felt, InvokeResponse)>
-where
-    S: Signer + Send + Sync,
-    S::GetPublicKeyError: 'static,
-    S::SignError: 'static,
-{
-    match account_type {
-        AccountType::Ready => {
-            let factory =
-                ArgentAccountFactory::new(class_hash, chain_id, None, signer, provider).await?;
-            deploy_account(
-                factory,
-                provider,
-                salt,
-                fee_args,
-                dry_run_args,
-                wait_config,
-                class_hash,
-                ui,
-            )
-            .await
-        }
-        AccountType::OpenZeppelin => {
-            let factory =
-                OpenZeppelinAccountFactory::new(class_hash, chain_id, signer, provider).await?;
-            deploy_account(
-                factory,
-                provider,
-                salt,
-                fee_args,
-                dry_run_args,
-                wait_config,
-                class_hash,
-                ui,
-            )
-            .await
-        }
-        AccountType::Braavos => {
-            let factory = BraavosAccountFactory::new(
-                class_hash,
-                BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
-                chain_id,
-                signer,
-                provider,
-            )
-            .await?;
-            deploy_account(
-                factory,
-                provider,
-                salt,
-                fee_args,
-                dry_run_args,
-                wait_config,
-                class_hash,
-                ui,
-            )
-            .await
-        }
-    }
-}
-
 fn extract_deployment_fields(account: &AccountRecord) -> Result<(AccountType, Felt, Felt)> {
     let deployable = account.as_deployable()?;
     Ok((
@@ -270,104 +187,6 @@ fn extract_deployment_fields(account: &AccountRecord) -> Result<(AccountType, Fe
         deployable.class_hash(),
         deployable.salt(),
     ))
-}
-
-fn execution_error_message(error: &ContractExecutionError) -> &str {
-    match error {
-        ContractExecutionError::Message(msg) => msg,
-        ContractExecutionError::Nested(inner) => execution_error_message(&inner.error),
-    }
-}
-
-#[expect(clippy::too_many_arguments)]
-async fn deploy_account<T>(
-    account_factory: T,
-    provider: &JsonRpcClient<HttpTransport>,
-    salt: Felt,
-    fee_args: FeeArgs,
-    dry_run_args: DryRunArgs,
-    wait_config: WaitForTx,
-    class_hash: Felt,
-    ui: &UI,
-) -> Result<(Felt, InvokeResponse)>
-where
-    T: AccountFactory + Sync,
-{
-    let deployment = account_factory.deploy_v3(salt);
-    let address = deployment.address();
-
-    if dry_run_args.dry_run {
-        return dry_run_args
-            .estimate(|| deployment.estimate_fee())
-            .await
-            .map(|response| (address, InvokeResponse::DryRun(response)))
-            .map_err(|error| anyhow!("Failed to estimate fee for dry run: {error}"));
-    }
-
-    let fee_settings = if fee_args.max_fee.is_some() {
-        let fee_estimate = deployment
-            .estimate_fee()
-            .await
-            .expect("Failed to estimate fee");
-        fee_args.try_into_fee_settings(Some(&fee_estimate))
-    } else {
-        fee_args.try_into_fee_settings(None)
-    };
-
-    let FeeSettings {
-        l1_gas,
-        l1_gas_price,
-        l2_gas,
-        l2_gas_price,
-        l1_data_gas,
-        l1_data_gas_price,
-        tip,
-    } = fee_settings.expect("Failed to convert to fee settings");
-
-    let deployment = apply_optional_fields!(
-        deployment,
-        l1_gas => AccountDeploymentV3::l1_gas,
-        l1_gas_price => AccountDeploymentV3::l1_gas_price,
-        l2_gas => AccountDeploymentV3::l2_gas,
-        l2_gas_price => AccountDeploymentV3::l2_gas_price,
-        l1_data_gas => AccountDeploymentV3::l1_data_gas,
-        l1_data_gas_price => AccountDeploymentV3::l1_data_gas_price,
-        tip => AccountDeploymentV3::tip
-    );
-
-    let result = deployment.send().await;
-
-    match result {
-        Err(AccountFactoryError::Provider(error)) => match error {
-            StarknetError(ClassHashNotFound) => Err(anyhow!(
-                "Provided class hash {class_hash:#x} does not exist",
-            )),
-            StarknetError(TransactionExecutionError(TransactionExecutionErrorData {
-                ref execution_error,
-                ..
-            })) => Err(anyhow!(execution_error_message(execution_error).to_owned())),
-            _ => Err(handle_rpc_error(error)),
-        },
-        Err(_) => Err(anyhow!("Unknown AccountFactoryError")),
-        Ok(result) => {
-            let return_value = InvokeResponse::Transaction(InvokeTransactionResponse {
-                transaction_hash: result.transaction_hash.into_(),
-            });
-            if let Err(message) = handle_wait_for_tx(
-                provider,
-                result.transaction_hash,
-                return_value.clone(),
-                wait_config,
-                ui,
-            )
-            .await
-            {
-                return Err(anyhow!(message));
-            }
-
-            Ok((address, return_value))
-        }
-    }
 }
 
 fn update_account_in_accounts_file(

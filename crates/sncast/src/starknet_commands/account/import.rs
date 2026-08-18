@@ -8,6 +8,7 @@ use crate::starknet_commands::utils::felt_or_id::{ClassHash, ContractAddress};
 use anyhow::{Result, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::Args;
+use sncast::accounts::AccountDeploymentService;
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
 use sncast::helpers::configuration::CastConfig;
@@ -168,13 +169,13 @@ pub async fn import(
 
     if let Some(salt) = import.salt {
         let computed_address = if let Some(signing_key) = local_key {
-            super::compute_address_with_signer(
-                salt,
-                class_hash,
-                import.account_type,
-                chain_id,
-                LocalWallet::from_signing_key(signing_key),
+            AccountDeploymentService::compute_address(
                 provider,
+                import.account_type,
+                class_hash,
+                LocalWallet::from_signing_key(signing_key),
+                salt,
+                chain_id,
             )
             .await?
         } else {
