@@ -37,7 +37,9 @@ impl<S: AccountsStorage> AccountRepository<S> {
                 path: path.to_owned(),
             });
         }
-        self.codec.decode(&self.storage.read(path)?)
+        self.codec
+            .decode(&self.storage.read(path)?)
+            .map_err(|error| attach_file_path(error, path))
     }
 
     pub fn find(
@@ -111,7 +113,10 @@ impl<S: AccountsStorage> AccountRepository<S> {
             } else {
                 Vec::new()
             };
-            let mut decoded = self.codec.decode(&original)?;
+            let mut decoded = self
+                .codec
+                .decode(&original)
+                .map_err(|error| attach_file_path(error, path))?;
             let value = operation(&mut decoded.registry)?;
             let encoded = self.codec.encode_v2(&decoded.registry)?;
             let migrated_from_v1 = existed && decoded.source_version == SourceVersion::V1;
@@ -127,6 +132,17 @@ impl<S: AccountsStorage> AccountRepository<S> {
                 migrated_from_v1,
             })
         })
+    }
+}
+
+fn attach_file_path(error: AccountsError, file: &Utf8Path) -> AccountsError {
+    match error {
+        AccountsError::Schema { path, message } => AccountsError::SchemaFile {
+            file: file.to_owned(),
+            field: path,
+            message,
+        },
+        error => error,
     }
 }
 
@@ -226,6 +242,24 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(fs::read_to_string(&path).unwrap(), V1_ACCOUNT);
         assert!(!v1_backup_path(&path).exists());
+    }
+
+    #[test]
+    fn schema_errors_include_file_and_field_paths() {
+        let (_directory, path) = path();
+        fs::write(
+            &path,
+            r#"{"alpha-sepolia":{"alice":{"public_key":"not-a-felt","private_key":"0x1"}}}"#,
+        )
+        .unwrap();
+
+        let error = AccountRepository::default().load(&path).unwrap_err();
+
+        assert!(matches!(
+            error,
+            AccountsError::SchemaFile { file, field, .. }
+                if file == path && field.contains("alpha-sepolia.alice.public_key")
+        ));
     }
 
     #[test]
