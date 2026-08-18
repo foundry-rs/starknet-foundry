@@ -1,15 +1,25 @@
+use std::env;
+
 use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use serde::de::DeserializeOwned;
 use serde_json::Deserializer;
-use serde_json::{Map, Value};
+use serde_json::{Map, Value, json};
 use starknet_rust::signers::{SigningKey, VerifyingKey};
 use starknet_types_core::felt::Felt;
 
 use crate::accounts::{AccountRecord, AccountType};
-use crate::get_keystore_password;
-use crate::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
+use crate::helpers::constants::{
+    BRAAVOS_BASE_ACCOUNT_CLASS_HASH, CREATE_KEYSTORE_PASSWORD_ENV_VAR, KEYSTORE_PASSWORD_ENV_VAR,
+};
 use crate::signers::{PrivateKeySpec, SignerSpec};
+
+pub fn get_keystore_password(env_var: &str) -> std::io::Result<String> {
+    match env::var(env_var) {
+        Ok(password) => Ok(password),
+        _ => rpassword::prompt_password("Enter password: "),
+    }
+}
 
 pub fn load_account(account: &str, keystore_path: &Utf8PathBuf) -> Result<AccountRecord> {
     let password = get_keystore_password(KEYSTORE_PASSWORD_ENV_VAR)?;
@@ -63,6 +73,84 @@ pub fn load_account_with_password(
         account_type,
         signer: SignerSpec::PrivateKey(PrivateKeySpec::new(private_key)),
     })
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn create_account_files(
+    private_key: Felt,
+    salt: Felt,
+    class_hash: Felt,
+    account_type: AccountType,
+    keystore_path: &Utf8PathBuf,
+    account_path: &Utf8PathBuf,
+    legacy: bool,
+) -> Result<()> {
+    if keystore_path.exists() {
+        bail!("Keystore file {keystore_path} already exists");
+    }
+    if account_path.exists() {
+        bail!("Account file {account_path} already exists");
+    }
+    let password = get_keystore_password(CREATE_KEYSTORE_PASSWORD_ENV_VAR)?;
+    let private_key = SigningKey::from_secret_scalar(private_key);
+    private_key.save_as_keystore(keystore_path, &password)?;
+    let account_json = match account_type {
+        AccountType::OpenZeppelin => json!({
+            "version": 1,
+            "variant": {
+                "type": AccountType::OpenZeppelin,
+                "version": 1,
+                "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
+                "legacy": legacy,
+            },
+            "deployment": {
+                "status": "undeployed",
+                "class_hash": format!("{class_hash:#x}"),
+                "salt": format!("{salt:#x}"),
+            }
+        }),
+        AccountType::Ready => json!({
+            "version": 1,
+            "variant": {
+                "type": AccountType::Ready,
+                "version": 1,
+                "owner": format!("{:#x}", private_key.verifying_key().scalar()),
+                "guardian": "0x0",
+            },
+            "deployment": {
+                "status": "undeployed",
+                "class_hash": format!("{class_hash:#x}"),
+                "salt": format!("{salt:#x}"),
+            }
+        }),
+        AccountType::Braavos => json!({
+            "version": 1,
+            "variant": {
+                "type": AccountType::Braavos,
+                "version": 1,
+                "multisig": { "status": "off" },
+                "signers": [{
+                    "type": "stark",
+                    "public_key": format!("{:#x}", private_key.verifying_key().scalar())
+                }]
+            },
+            "deployment": {
+                "status": "undeployed",
+                "class_hash": format!("{class_hash:#x}"),
+                "salt": format!("{salt:#x}"),
+                "context": {
+                    "variant": "braavos",
+                    "base_account_class_hash": BRAAVOS_BASE_ACCOUNT_CLASS_HASH
+                }
+            }
+        }),
+    };
+
+    if let Some(parent) = account_path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::write(account_path, serde_json::to_string_pretty(&account_json)?)?;
+    Ok(())
 }
 
 pub fn update_deployment(account: &str, address: Felt) -> Result<()> {

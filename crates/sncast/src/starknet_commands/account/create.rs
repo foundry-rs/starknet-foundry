@@ -9,13 +9,10 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use console::style;
 use conversions::IntoConv;
-use serde_json::json;
 use sncast::accounts::{AccountDeploymentService, AccountRecord};
+use sncast::compat::starkli;
 use sncast::helpers::configuration::CastConfig;
-use sncast::helpers::constants::{
-    BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, CREATE_KEYSTORE_PASSWORD_ENV_VAR,
-    OZ_CLASS_HASH, READY_CLASS_HASH,
-};
+use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
 use sncast::helpers::ledger;
 use sncast::helpers::ledger::LedgerKeyLocatorAccount;
 use sncast::helpers::rpc::{RpcArgs, generate_network_flag};
@@ -27,7 +24,7 @@ use sncast::signers::{
 };
 use sncast::{
     AccountType, SignerSource, check_class_hash_exists, check_if_legacy_contract,
-    extract_or_generate_salt, get_keystore_password,
+    extract_or_generate_salt,
 };
 use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
@@ -142,7 +139,7 @@ pub async fn create(
                 .context("Invalid private key signer")?;
             let legacy = account_record.legacy.context("Invalid legacy entry")?;
 
-            create_to_keystore(
+            starkli::create_account_files(
                 private_key,
                 salt,
                 class_hash,
@@ -326,103 +323,6 @@ where
     );
 
     Ok((account, estimated_fee.overall_fee))
-}
-
-fn create_to_keystore(
-    private_key: Felt,
-    salt: Felt,
-    class_hash: Felt,
-    account_type: AccountType,
-    keystore_path: &Utf8PathBuf,
-    account_path: &Utf8PathBuf,
-    legacy: bool,
-) -> Result<()> {
-    if keystore_path.exists() {
-        bail!("Keystore file {keystore_path} already exists");
-    }
-    if account_path.exists() {
-        bail!("Account file {account_path} already exists");
-    }
-    let password = get_keystore_password(CREATE_KEYSTORE_PASSWORD_ENV_VAR)?;
-    let private_key = SigningKey::from_secret_scalar(private_key);
-    private_key.save_as_keystore(keystore_path, &password)?;
-    let account_json = match account_type {
-        AccountType::OpenZeppelin => {
-            json!({
-                "version": 1,
-                "variant": {
-                    "type": AccountType::OpenZeppelin,
-                    "version": 1,
-                    "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
-                    "legacy": legacy,
-                },
-                "deployment": {
-                    "status": "undeployed",
-                    "class_hash": format!("{class_hash:#x}"),
-                    "salt": format!("{salt:#x}"),
-                }
-            })
-        }
-        AccountType::Ready => {
-            json!({
-                "version": 1,
-                "variant": {
-                    "type": AccountType::Ready,
-                    "version": 1,
-                    "owner": format!("{:#x}", private_key.verifying_key().scalar()),
-                    "guardian": "0x0",
-                },
-                "deployment": {
-                    "status": "undeployed",
-                    "class_hash": format!("{class_hash:#x}"),
-                    "salt": format!("{salt:#x}"),
-                }
-            })
-        }
-        AccountType::Braavos => {
-            json!(
-                {
-                  "version": 1,
-                  "variant": {
-                    "type": AccountType::Braavos,
-                    "version": 1,
-                    "multisig": {
-                      "status": "off"
-                    },
-                    "signers": [
-                      {
-                        "type": "stark",
-                        "public_key": format!("{:#x}", private_key.verifying_key().scalar())
-                      }
-                    ]
-                  },
-                  "deployment": {
-                    "status": "undeployed",
-                    "class_hash": format!("{class_hash:#x}"),
-                    "salt": format!("{salt:#x}"),
-                    "context": {
-                      "variant": "braavos",
-                      "base_account_class_hash": BRAAVOS_BASE_ACCOUNT_CLASS_HASH
-                    }
-                  }
-                }
-            )
-        }
-    };
-
-    write_account_to_file(&account_json, account_path)
-}
-
-fn write_account_to_file(
-    account_json: &serde_json::Value,
-    account_file: &Utf8PathBuf,
-) -> Result<()> {
-    std::fs::create_dir_all(account_file.clone().parent().unwrap())?;
-    std::fs::write(
-        account_file.clone(),
-        serde_json::to_string_pretty(&account_json).unwrap(),
-    )?;
-    Ok(())
 }
 
 fn generate_deploy_command(

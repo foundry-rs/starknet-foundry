@@ -7,6 +7,7 @@ use core::str;
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value, json};
+use sncast::compat::starkli::get_keystore_password;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
@@ -15,7 +16,7 @@ use sncast::helpers::constants::{
 use sncast::helpers::fee::FeeSettings;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::ui::UI;
-use sncast::{AccountType, apply_optional_fields, get_chain_id, get_keystore_password};
+use sncast::{AccountType, apply_optional_fields, get_chain_id};
 use sncast::{get_account, get_provider};
 use starknet_rust::accounts::{
     Account, AccountFactory, ArgentAccountFactory, ExecutionV3, OpenZeppelinAccountFactory,

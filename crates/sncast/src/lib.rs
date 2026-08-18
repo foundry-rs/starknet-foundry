@@ -36,7 +36,6 @@ use starknet_rust::{
 };
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
-use std::env;
 use std::fmt::Display;
 use std::thread::sleep;
 use std::time::Duration;
@@ -212,13 +211,6 @@ pub async fn get_chain_id(provider: &JsonRpcClient<HttpTransport>) -> Result<Fel
         .chain_id()
         .await
         .context("Failed to fetch chain_id")
-}
-
-pub fn get_keystore_password(env_var: &str) -> std::io::Result<String> {
-    match env::var(env_var) {
-        Ok(password) => Ok(password),
-        _ => rpassword::prompt_password("Enter password: "),
-    }
 }
 
 #[must_use]
