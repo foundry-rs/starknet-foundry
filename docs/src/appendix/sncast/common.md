@@ -34,8 +34,9 @@ Path to the accounts file holding accounts information. Defaults to `~/.starknet
 ## `--keystore, -k <PATH_TO_KEYSTORE_FILE>`
 Optional.
 
-Path to [keystore file](https://book.starkli.rs/signers#encrypted-keystores).
-When specified, the --account argument must be a path to [starkli account JSON file](https://book.starkli.rs/accounts#accounts).
+Deprecated starkli compatibility selector. Path to a [keystore file](https://book.starkli.rs/signers#encrypted-keystores).
+When specified, `--account` must be a path to a [starkli account JSON file](https://book.starkli.rs/accounts#accounts).
+Use `sncast account import-starkli` to convert the pair to a native account that no longer needs this flag.
 
 ## `--json, -j`
 Optional.

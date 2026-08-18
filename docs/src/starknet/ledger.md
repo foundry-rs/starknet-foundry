@@ -74,7 +74,7 @@ The most common use case is controlling Starknet accounts with Ledger. Pass `--l
 
 ### Derivation Path Binding
 
-When an account is created or imported using `--ledger-path` or `--ledger-account-id`, its derivation path is stored in the accounts file (`ledger_path` field). As a result, subsequent commands like invoke, declare, or deploy only require `--account my_ledger_account`, there's no need to specify `--ledger-path` again.
+When an account is created or imported using `--ledger-path` or `--ledger-account-id`, its derivation path is stored in the account's tagged `signer` object. As a result, subsequent commands like invoke, declare, or deploy only require `--account my_ledger_account`; there is no need to specify `--ledger-path` again.
 
 ### Creating and Deploying an Account
 

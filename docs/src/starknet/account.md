@@ -100,6 +100,30 @@ If you created an account with `sncast account create` it by default it will be 
 `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` file which we call `default accounts file` in the following
 sections.
 
+Native accounts files use a versioned schema. Version 2 stores networks below the `accounts` field and gives every account exactly one explicitly tagged signer:
+
+```json
+{
+  "version": 2,
+  "accounts": {
+    "alpha-sepolia": {
+      "alice": {
+        "public_key": "0x123",
+        "address": "0x456",
+        "deployed": true,
+        "signer": {
+          "type": "keystore",
+          "path": "keys/alice.json",
+          "password_env": "ALICE_KEYSTORE_PASSWORD"
+        }
+      }
+    }
+  }
+}
+```
+
+Supported signer types are `private_key`, `keystore`, and `ledger`. Relative keystore paths are resolved from the accounts file's directory, not the current working directory.
+
 ### [`account import`](../appendix/sncast/account/import.md)
 
 To import an account to the `default accounts file`, use the `account import` command.
@@ -167,6 +191,16 @@ $ sncast account delete \
     --name new_account \
     --network-name alpha-sepolia
 ```
+
+### [`account migrate`](../appendix/sncast/account/migrate.md)
+
+Legacy unversioned accounts files remain readable. Upgrade one explicitly with:
+
+```shell
+$ sncast --accounts-file accounts.json account migrate
+```
+
+The original V1 document is saved beside it as `accounts.json.v1.bak`. Read-only commands never rewrite a V1 file; the first successful account mutation also upgrades it automatically.
 
 ### Advanced Use Cases
 
@@ -247,39 +281,52 @@ $ sncast \
 
 A signing confirmation will appear on the Ledger device. See [Ledger Hardware Wallet](./ledger.md) for full details.
 
-#### Using Keystore and Starkli Account
+#### Using a Native Keystore Signer
 
-Accounts created and deployed with [starkli](https://book.starkli.rs/accounts#accounts) can be used by specifying the [
-`--keystore` argument](../appendix/sncast/common.md#--keystore--k-path_to_keystore_file).
+`account create` can encrypt the generated key instead of storing it directly in the accounts file:
 
-> 💡 **Info**
-> When passing the `--keystore` argument, `--account` argument must be a path to the starkli account JSON file.
+<!-- { "ignored": true } -->
+```shell
+$ export ALICE_KEYSTORE_PASSWORD="a strong password"
+$ sncast \
+    account create \
+    --network sepolia \
+    --name alice \
+    --keystore keys/alice.json \
+    --keystore-password-env ALICE_KEYSTORE_PASSWORD
+```
 
-<!-- Snippets is ignored, because typing password for keystore uses interactive mode -->
+An existing encrypted key can be attached during `account import` with the same two keystore options. All later commands select `alice` like any private-key or Ledger account; no global `--keystore` flag is needed.
+
+Passwords are looked up from the signer's `password_env` first, then `SNCAST_KEYSTORE_PASSWORD`, then the legacy `KEYSTORE_PASSWORD`; an interactive terminal prompts only if none is set. Password values are never written to the accounts file.
+
+#### Importing a Starkli Account
+
+Convert an existing [starkli](https://book.starkli.rs/accounts#accounts) account/keystore pair into a native account:
+
+<!-- { "ignored": true } -->
+```shell
+$ sncast \
+    account import-starkli \
+    --network sepolia \
+    --name alice \
+    --account-file account.json \
+    --keystore keystore.json \
+    --keystore-password-env ALICE_KEYSTORE_PASSWORD
+```
+
+The conversion preserves the starkli account metadata and references the existing encrypted keystore from a V2 signer. The native account is then used with `--account alice`.
+
+#### Deprecated Direct Starkli Selection
+
+For compatibility, a starkli pair can still be used directly with the global [`--keystore` argument](../appendix/sncast/common.md#--keystore--k-path_to_keystore_file). This overloaded selector is deprecated; prefer `account import-starkli`.
+
 <!-- { "ignored": true } -->
 ```shell
 $ sncast \
     --keystore keystore.json \
-    --account account.json  \
+    --account account.json \
     declare \
-	--network sepolia \
-    --contract-name my_contract \
+    --network sepolia \
+    --contract-name my_contract
 ```
-
-#### Creating an Account With Starkli-Style Keystore
-
-It is possible to create an openzeppelin account with keystore in a similar
-way [starkli](https://book.starkli.rs/accounts#accounts) does.
-
-<!-- Snippets is ignored, because typing password for keystore uses interactive mode -->
-<!-- { "ignored": true } -->
-```shell
-$ sncast \
-    --keystore my_key.json \
-    --account my_account.json \
-    account create \
-    --network sepolia
-```
-
-The command above will generate a keystore file containing the private key, as well as an account file containing the
-openzeppelin account info that can later be used with starkli.

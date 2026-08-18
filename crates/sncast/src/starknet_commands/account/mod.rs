@@ -427,6 +427,7 @@ pub async fn account(
                 &config.accounts_file,
                 &network_name,
                 delete.yes,
+                ui,
             );
 
             Ok(process_command_result("account delete", result, ui, None))
