@@ -6,12 +6,13 @@ use camino::Utf8PathBuf;
 use starknet_rust::{
     accounts::SingleOwnerAccount,
     providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport},
-    signers::LocalWallet,
+    signers::{LocalWallet, SigningKey},
 };
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use url::Url;
 
+use crate::signers::{RuntimeSigner, SignerKind};
 use crate::{AccountData, read_and_parse_json_file};
 use anyhow::Context;
 use serde_json::{Value, json};
@@ -93,7 +94,7 @@ pub async fn get_account_from_devnet<'a>(
     account: &str,
     provider: &'a JsonRpcClient<HttpTransport>,
     url: &Url,
-) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
+) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, RuntimeSigner>> {
     let account_number: u8 = account
         .strip_prefix("devnet-")
         .map(|s| s.parse::<u8>().expect("Invalid devnet account number"))
@@ -124,5 +125,13 @@ pub async fn get_account_from_devnet<'a>(
 
     let account_data = AccountData::from(predeployed_account);
     let chain_id = provider.chain_id().await?;
-    build_account(account_data, chain_id, provider).await
+    let private_key = account_data
+        .signer_type
+        .private_key()
+        .context("Private key not found for devnet account")?;
+    let signer = RuntimeSigner::from_starknet_signer(
+        LocalWallet::from_signing_key(SigningKey::from_secret_scalar(private_key)),
+        SignerKind::PrivateKey,
+    );
+    build_account(account_data, chain_id, provider, signer).await
 }
