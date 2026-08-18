@@ -1,6 +1,6 @@
 use crate::starknet_commands::account::{
-    PrivateKeyArgs, generate_add_profile_message, prepare_account_record, validate_private_key,
-    write_account_to_accounts_file,
+    PrivateKeyArgs, generate_add_profile_message, notify_if_migrated, prepare_account_record,
+    validate_private_key, write_account_to_accounts_file,
 };
 use crate::starknet_commands::utils::felt_or_id::ClassHash;
 use anyhow::{Context, Result, anyhow, bail};
@@ -22,7 +22,10 @@ use sncast::helpers::ledger::LedgerKeyLocatorAccount;
 use sncast::helpers::rpc::{RpcArgs, generate_network_flag};
 use sncast::response::account::create::AccountCreateResponse;
 use sncast::response::ui::UI;
-use sncast::signers::{LedgerSpec, PrivateKeySpec, SignerSpec};
+use sncast::signers::{
+    CredentialProvider, DefaultCredentialProvider, KeystoreSpec, LedgerSpec, PrivateKeySpec,
+    SignerSpec, resolve_keystore_path,
+};
 use sncast::{
     AccountType, SignerSource, check_class_hash_exists, check_if_legacy_contract,
     extract_or_generate_salt, get_keystore_password, handle_account_factory_error,
@@ -68,6 +71,14 @@ pub struct Create {
 
     #[command(flatten)]
     pub ledger_key_locator: LedgerKeyLocatorAccount,
+
+    /// Store the key in an encrypted keystore referenced by the native account
+    #[arg(long, conflicts_with = "ledger_key_locator_account")]
+    pub keystore: Option<Utf8PathBuf>,
+
+    /// Environment variable containing the native keystore password
+    #[arg(long, requires = "keystore")]
+    pub keystore_password_env: Option<String>,
 }
 
 impl Create {
@@ -109,9 +120,10 @@ pub async fn create(
         account_type: create.account_type,
         private_key,
         chain_id,
+        keystore_password_env: create.keystore_password_env.clone(),
     };
 
-    let (account_record, estimated_fee) =
+    let (account_record, estimated_fee, generated_private_key) =
         generate_account(provider, signer_source, ui, generation_params).await?;
 
     let address = account_record.address.context("Invalid address")?;
@@ -149,13 +161,34 @@ pub async fn create(
                 generate_deploy_command_with_keystore(account, keystore, &create.rpc, config);
             message.push_str(&deploy_command);
         }
+        SignerSource::NativeKeystore(keystore) => {
+            let private_key = generated_private_key.context("Generated private key missing")?;
+            create_native_keystore(accounts_file, keystore, private_key, &account_record)?;
+            let migrated = match write_account_to_accounts_file(
+                account,
+                accounts_file,
+                chain_id,
+                account_record.clone(),
+            ) {
+                Ok(migrated) => migrated,
+                Err(error) => {
+                    let _ = std::fs::remove_file(resolve_keystore_path(accounts_file, keystore));
+                    return Err(error);
+                }
+            };
+            notify_if_migrated(migrated, ui);
+            let deploy_command =
+                generate_deploy_command(accounts_file, &create.rpc, config, account);
+            message.push_str(&deploy_command);
+        }
         SignerSource::Ledger(_) | SignerSource::AccountsFile => {
-            write_account_to_accounts_file(
+            let migrated = write_account_to_accounts_file(
                 account,
                 accounts_file,
                 chain_id,
                 account_record.clone(),
             )?;
+            notify_if_migrated(migrated, ui);
             let deploy_command =
                 generate_deploy_command(accounts_file, &create.rpc, config, account);
             message.push_str(&deploy_command);
@@ -192,6 +225,7 @@ struct AccountGenerationParams {
     account_type: AccountType,
     private_key: Option<Felt>,
     chain_id: Felt,
+    keystore_password_env: Option<String>,
 }
 
 async fn generate_account(
@@ -199,12 +233,12 @@ async fn generate_account(
     signer_source: &SignerSource,
     ui: &UI,
     params: AccountGenerationParams,
-) -> Result<(AccountRecord, u128)> {
+) -> Result<(AccountRecord, u128, Option<Felt>)> {
     if let SignerSource::Ledger(ledger_path) = signer_source {
         let signer = ledger::create_ledger_signer(ledger_path, ui, false).await?;
         let signer_spec = SignerSpec::Ledger(LedgerSpec::new(ledger_path.clone()));
 
-        finalize_account_generation(
+        let (account, estimated_fee) = finalize_account_generation(
             provider,
             signer,
             signer_spec,
@@ -213,15 +247,23 @@ async fn generate_account(
             params.account_type,
             params.chain_id,
         )
-        .await
+        .await?;
+        Ok((account, estimated_fee, None))
     } else {
         let private_key = params
             .private_key
             .map_or_else(SigningKey::from_random, SigningKey::from_secret_scalar);
         let signer = LocalWallet::from_signing_key(private_key.clone());
-        let signer_spec = SignerSpec::PrivateKey(PrivateKeySpec::new(private_key.secret_scalar()));
+        let secret = private_key.secret_scalar();
+        let signer_spec = match signer_source {
+            SignerSource::NativeKeystore(path) => SignerSpec::Keystore(KeystoreSpec::new(
+                path.clone(),
+                params.keystore_password_env,
+            )),
+            _ => SignerSpec::PrivateKey(PrivateKeySpec::new(secret)),
+        };
 
-        finalize_account_generation(
+        let (account, estimated_fee) = finalize_account_generation(
             provider,
             signer,
             signer_spec,
@@ -230,8 +272,36 @@ async fn generate_account(
             params.account_type,
             params.chain_id,
         )
-        .await
+        .await?;
+        Ok((account, estimated_fee, Some(secret)))
     }
+}
+
+fn create_native_keystore(
+    accounts_file: &Utf8PathBuf,
+    keystore_path: &Utf8PathBuf,
+    private_key: Felt,
+    account: &AccountRecord,
+) -> Result<()> {
+    let resolved_path = resolve_keystore_path(accounts_file, keystore_path);
+    if resolved_path.exists() {
+        bail!("Keystore file {resolved_path} already exists");
+    }
+    if let Some(parent) = resolved_path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    let SignerSpec::Keystore(spec) = &account.signer else {
+        bail!("native keystore account has an invalid signer")
+    };
+    let password = DefaultCredentialProvider.keystore_password(spec)?;
+    SigningKey::from_secret_scalar(private_key).save_as_keystore(&resolved_path, &password)?;
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&resolved_path, std::fs::Permissions::from_mode(0o600))?;
+    }
+    Ok(())
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -450,4 +520,48 @@ fn generate_deploy_command_with_keystore(
         "\n\nAfter prefunding the account, run:\n\
         sncast --account {account} --keystore {keystore} account deploy {network_flag}"
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use tempfile::tempdir;
+
+    use super::*;
+
+    #[test]
+    fn creates_native_keystore_relative_to_accounts_file() {
+        const PASSWORD_ENV: &str = "SNCAST_TEST_NATIVE_KEYSTORE_PASSWORD";
+        // SAFETY: This test uses a unique variable, writes one fixed value, and never removes it.
+        unsafe { std::env::set_var(PASSWORD_ENV, "secret") };
+
+        let directory = tempdir().unwrap();
+        let directory = Utf8PathBuf::from_path_buf(directory.path().to_owned()).unwrap();
+        let accounts_file = directory.join("config/accounts.json");
+        let keystore_path = Utf8PathBuf::from("keys/alice.json");
+        let account = AccountRecord {
+            public_key: SigningKey::from_secret_scalar(Felt::ONE)
+                .verifying_key()
+                .scalar(),
+            address: None,
+            salt: None,
+            deployed: None,
+            class_hash: None,
+            legacy: None,
+            account_type: None,
+            signer: SignerSpec::Keystore(KeystoreSpec::new(
+                keystore_path.clone(),
+                Some(PASSWORD_ENV.to_owned()),
+            )),
+        };
+
+        create_native_keystore(&accounts_file, &keystore_path, Felt::ONE, &account).unwrap();
+
+        let resolved = resolve_keystore_path(&accounts_file, &keystore_path);
+        assert_eq!(
+            SigningKey::from_keystore(resolved, "secret")
+                .unwrap()
+                .secret_scalar(),
+            Felt::ONE
+        );
+    }
 }

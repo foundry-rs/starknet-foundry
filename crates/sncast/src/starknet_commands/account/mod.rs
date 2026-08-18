@@ -3,6 +3,7 @@ use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
 use crate::starknet_commands::account::import::Import;
 use crate::starknet_commands::account::list::{AccountsListMessage, List};
+use crate::starknet_commands::account::migrate::Migrate;
 use crate::{process_command_result, starknet_commands};
 use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
@@ -10,6 +11,7 @@ use clap::{Args, Subcommand};
 use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
 use conversions::string::{TryFromDecStr, TryFromHexStr};
+use foundry_ui::components::warning::WarningMessage;
 use sncast::accounts::{AccountName, AccountRecord, AccountRepository, NetworkName};
 use sncast::helpers::account::generate_account_name;
 use sncast::helpers::braavos::BraavosAccountFactory;
@@ -41,6 +43,7 @@ pub mod delete;
 pub mod deploy;
 pub mod import;
 pub mod list;
+pub mod migrate;
 
 #[derive(Args)]
 #[command(about = "Creates and deploys an account to the Starknet")]
@@ -56,6 +59,7 @@ pub enum Commands {
     Deploy(Deploy),
     Delete(Delete),
     List(List),
+    Migrate(Migrate),
 }
 
 #[derive(Args, Debug)]
@@ -156,9 +160,9 @@ pub fn write_account_to_accounts_file(
     accounts_file: &Utf8PathBuf,
     chain_id: Felt,
     account_record: AccountRecord,
-) -> Result<()> {
+) -> Result<bool> {
     let network_name = chain_id_to_network_name(chain_id);
-    AccountRepository::default()
+    let result = AccountRepository::default()
         .insert(
             accounts_file,
             NetworkName::new(network_name)?,
@@ -166,7 +170,15 @@ pub fn write_account_to_accounts_file(
             account_record,
         )
         .map_err(|error| anyhow::anyhow!(error))?;
-    Ok(())
+    Ok(result.migrated_from_v1)
+}
+
+pub fn notify_if_migrated(migrated: bool, ui: &UI) {
+    if migrated {
+        ui.print_warning(WarningMessage::new(
+            "Accounts file was migrated to schema version 2; the original was saved as a .v1.bak file",
+        ));
+    }
 }
 
 pub fn add_created_profile_to_configuration(
@@ -290,7 +302,11 @@ pub async fn account(
             let chain_id = get_chain_id(&provider).await?;
 
             let ledger_path = create.ledger_key_locator.resolve(ui);
-            let signer_source = SignerSource::new(config.keystore.clone(), ledger_path)?;
+            let signer_source = SignerSource::new(
+                config.keystore.clone(),
+                ledger_path,
+                create.keystore.clone(),
+            )?;
 
             let account = if config.keystore.is_none() {
                 create
@@ -393,6 +409,10 @@ pub async fn account(
             );
             Ok(ExitCode::SUCCESS)
         }
+        Commands::Migrate(_) => {
+            let result = starknet_commands::account::migrate::migrate(&config.accounts_file);
+            Ok(process_command_result("account migrate", result, ui, None))
+        }
     }
 }
 
@@ -424,7 +444,7 @@ pub async fn compute_account_address(
     Ok(address)
 }
 
-async fn compute_address_with_signer<S>(
+pub(crate) async fn compute_address_with_signer<S>(
     salt: Felt,
     class_hash: Felt,
     account_type: AccountType,

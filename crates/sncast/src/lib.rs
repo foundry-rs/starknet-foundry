@@ -9,7 +9,7 @@ use anyhow::{Context, Error, Result, anyhow, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use configuration::Override;
-use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
+use helpers::constants::UDC_ADDRESS;
 use rand::RngCore;
 use rand::rngs::OsRng;
 use response::errors::SNCastStarknetError;
@@ -46,6 +46,7 @@ use thiserror::Error;
 use url::Url;
 
 pub mod accounts;
+pub mod compat;
 pub mod helpers;
 pub mod response;
 pub mod signers;
@@ -54,13 +55,8 @@ use crate::response::ui::UI;
 pub use accounts::AccountType;
 use conversions::byte_array::ByteArray;
 use foundry_ui::components::warning::WarningMessage;
-pub use helpers::signer::{SignerSource, SignerType};
-use signers::{
-    LedgerSpec, PrivateKeySpec, RuntimeSigner, SignerKind, SignerProviderContext, SignerResolver,
-    SignerSpec,
-};
-
-pub type NestedMap<T> = HashMap<String, HashMap<String, T>>;
+pub use helpers::signer::SignerSource;
+use signers::{RuntimeSigner, SignerKind, SignerProviderContext, SignerResolver};
 pub type RuntimeAccount<'a> = SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, RuntimeSigner>;
 
 pub const MAINNET: Felt =
@@ -97,43 +93,6 @@ impl TryFrom<Felt> for Network {
             Ok(Network::Sepolia)
         } else {
             bail!("Given network is neither Mainnet nor Sepolia")
-        }
-    }
-}
-
-#[derive(Deserialize, Serialize, Clone, Debug)]
-pub struct AccountData {
-    pub public_key: Felt,
-    pub address: Option<Felt>,
-    pub salt: Option<Felt>,
-    pub deployed: Option<bool>,
-    pub class_hash: Option<Felt>,
-    pub legacy: Option<bool>,
-
-    #[serde(default, rename(serialize = "type", deserialize = "type"))]
-    pub account_type: Option<AccountType>,
-
-    #[serde(flatten)]
-    pub signer_type: SignerType,
-}
-
-impl From<AccountData> for accounts::AccountRecord {
-    fn from(account: AccountData) -> Self {
-        let signer = match account.signer_type {
-            SignerType::Local { private_key } => {
-                SignerSpec::PrivateKey(PrivateKeySpec::new(private_key))
-            }
-            SignerType::Ledger { ledger_path } => SignerSpec::Ledger(LedgerSpec::new(ledger_path)),
-        };
-        Self {
-            public_key: account.public_key,
-            address: account.address,
-            salt: account.salt,
-            deployed: account.deployed,
-            class_hash: account.class_hash,
-            legacy: account.legacy,
-            account_type: account.account_type,
-            signer,
         }
     }
 }
@@ -384,8 +343,7 @@ pub async fn get_account_from_accounts_file<'a>(
 ) -> Result<RuntimeAccount<'a>> {
     let chain_id = get_chain_id(provider).await?;
     let (account_data, signer) = if let Some(keystore) = keystore {
-        let account_data: accounts::AccountRecord =
-            get_account_data_from_keystore(account, keystore)?.into();
+        let account_data = compat::starkli::load_account(account, keystore)?;
         let private_key = account_data
             .signer
             .private_key()
@@ -505,109 +463,6 @@ pub async fn check_class_hash_exists(
     }
 }
 
-pub fn get_account_data_from_keystore(
-    account: &str,
-    keystore_path: &Utf8PathBuf,
-) -> Result<AccountData> {
-    check_keystore_and_account_files_exist(keystore_path, account)?;
-    let path_to_account = Utf8PathBuf::from(account);
-
-    let private_key = SigningKey::from_keystore(
-        keystore_path,
-        get_keystore_password(KEYSTORE_PASSWORD_ENV_VAR)?.as_str(),
-    )?
-    .secret_scalar();
-
-    let account_info: Value = read_and_parse_json_file(&path_to_account)?;
-
-    let parse_to_felt = |pointer: &str| -> Option<Felt> {
-        get_string_value_from_json(&account_info, pointer).and_then(|value| value.parse().ok())
-    };
-
-    let address = parse_to_felt("/deployment/address");
-    let class_hash = parse_to_felt("/deployment/class_hash");
-    let salt = parse_to_felt("/deployment/salt");
-    let deployed = get_string_value_from_json(&account_info, "/deployment/status")
-        .map(|status| status == "deployed");
-    let legacy = account_info
-        .pointer("/variant/legacy")
-        .and_then(Value::as_bool);
-    let account_type = get_string_value_from_json(&account_info, "/variant/type")
-        // "argent" was renamed to "ready"; map for backward compat with old account files
-        .map(|t| match t.as_str() {
-            "argent" => "ready".to_string(),
-            _ => t,
-        })
-        .and_then(|account_type| account_type.parse().ok());
-
-    let public_key = match account_type.context("Failed to get type key")? {
-        AccountType::Ready => parse_to_felt("/variant/owner"),
-        AccountType::OpenZeppelin => parse_to_felt("/variant/public_key"),
-        AccountType::Braavos => get_braavos_account_public_key(&account_info)?,
-    }
-    .context("Failed to get public key from account JSON file")?;
-
-    Ok(AccountData {
-        public_key,
-        address,
-        salt,
-        deployed,
-        class_hash,
-        legacy,
-        account_type,
-        signer_type: SignerType::Local { private_key },
-    })
-}
-fn get_braavos_account_public_key(account_info: &Value) -> Result<Option<Felt>> {
-    get_string_value_from_json(account_info, "/variant/multisig/status")
-        .filter(|status| status == "off")
-        .context("Braavos accounts cannot be deployed with multisig on")?;
-
-    account_info
-        .pointer("/variant/signers")
-        .and_then(Value::as_array)
-        .filter(|signers| signers.len() == 1)
-        .context("Braavos accounts can only be deployed with one seed signer")?;
-
-    Ok(
-        get_string_value_from_json(account_info, "/variant/signers/0/public_key")
-            .and_then(|value| value.parse().ok()),
-    )
-}
-fn get_string_value_from_json(json: &Value, pointer: &str) -> Option<String> {
-    json.pointer(pointer)
-        .and_then(Value::as_str)
-        .map(str::to_string)
-}
-pub fn get_account_data_from_accounts_file(
-    name: &str,
-    chain_id: Felt,
-    path: &Utf8PathBuf,
-) -> Result<AccountData> {
-    let account = get_account_record_from_accounts_file(name, chain_id, path)?;
-    let signer_type = match account.signer {
-        SignerSpec::PrivateKey(spec) => SignerType::Local {
-            private_key: spec.private_key(),
-        },
-        SignerSpec::Ledger(spec) => SignerType::Ledger {
-            ledger_path: spec.derivation_path().clone(),
-        },
-        SignerSpec::Keystore(_) => {
-            bail!("keystore-backed native account requires runtime signer resolution")
-        }
-    };
-    Ok(AccountData {
-        public_key: account.public_key,
-        address: account.address,
-        salt: account.salt,
-        deployed: account.deployed,
-        class_hash: account.class_hash,
-        legacy: account.legacy,
-        account_type: account.account_type,
-        signer_type,
-    })
-}
-
 pub fn get_account_record_from_accounts_file(
     name: &str,
     chain_id: Felt,
@@ -627,6 +482,9 @@ pub fn get_account_record_from_accounts_file(
             error => anyhow!(error),
         })
 }
+
+pub use compat::starkli::load_account as get_account_data_from_keystore;
+pub use get_account_record_from_accounts_file as get_account_data_from_accounts_file;
 
 pub fn read_and_parse_json_file<T>(path: &Utf8PathBuf) -> Result<T>
 where
@@ -891,25 +749,6 @@ pub fn check_account_file_exists(accounts_file_path: &Utf8PathBuf) -> Result<()>
     Ok(())
 }
 
-pub fn check_keystore_and_account_files_exist(
-    keystore_path: &Utf8PathBuf,
-    account: &str,
-) -> Result<()> {
-    if !keystore_path.exists() {
-        bail!("Failed to find keystore file");
-    }
-    if account.is_empty() {
-        bail!("Argument `--account` must be passed and be a path when using `--keystore`");
-    }
-    let path_to_account = Utf8PathBuf::from(account);
-    if !path_to_account.exists() {
-        bail!(
-            "File containing the account does not exist: When using `--keystore` argument, the `--account` argument should be a path to the starkli JSON account file"
-        );
-    }
-    Ok(())
-}
-
 #[must_use]
 pub fn extract_or_generate_salt(salt: Option<Felt>) -> Felt {
     salt.unwrap_or(Felt::from(OsRng.next_u64()))
@@ -1114,7 +953,7 @@ mod tests {
         )
         .unwrap();
         let private_key = account
-            .signer_type
+            .signer
             .private_key()
             .expect("Private key should exist");
         assert_eq!(
@@ -1148,7 +987,7 @@ mod tests {
         )
         .unwrap();
         let private_key = account
-            .signer_type
+            .signer
             .private_key()
             .expect("Private key should exist");
         assert_eq!(
