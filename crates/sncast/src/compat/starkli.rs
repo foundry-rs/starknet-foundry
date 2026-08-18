@@ -1,9 +1,9 @@
 use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use serde::de::DeserializeOwned;
-use serde_json::Deserializer;
-use serde_json::Value;
+use serde_json::{Deserializer, Value};
 use starknet_rust::signers::{SigningKey, VerifyingKey};
+use starknet_types_core::felt::Felt;
 
 use crate::accounts::{AccountRecord, AccountType};
 use crate::signers::{PrivateKeySpec, SignerSpec};
@@ -16,7 +16,6 @@ pub fn load_account_with_password(
     check_files_exist(keystore_path, account_path)?;
 
     let private_key = SigningKey::from_keystore(keystore_path, password)?.secret_scalar();
-
     let account_info: Value = read_json_file(account_path)?;
 
     let parse_to_felt = |pointer: &str| -> Option<Felt> {
