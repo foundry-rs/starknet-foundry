@@ -42,7 +42,7 @@ use sncast::response::transformed_call::transform_response;
 use sncast::response::ui::UI;
 use sncast::{
     PartialWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
-    get_contract_class, with_account,
+    get_contract_class,
 };
 use starknet_commands::ledger::{self, Ledger};
 use starknet_commands::verify::Verify;
@@ -357,21 +357,19 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             )
             .context("Failed to build contract")?;
 
-            let result = with_account!(&account, |account| {
-                starknet_commands::declare::declare(
-                    declare.contract_name.clone(),
-                    declare.common.fee_args,
-                    declare.common.dry_run_args,
-                    declare.common.nonce,
-                    declare.no_abi,
-                    account,
-                    &artifacts,
-                    wait_config,
-                    false,
-                    ui,
-                )
-                .await
-            });
+            let result = starknet_commands::declare::declare(
+                declare.contract_name.clone(),
+                declare.common.fee_args,
+                declare.common.dry_run_args,
+                declare.common.nonce,
+                declare.no_abi,
+                &account,
+                &artifacts,
+                wait_config,
+                false,
+                ui,
+            )
+            .await;
 
             let result = match result {
                 Ok(DeclareResponse::DryRun(response)) => {
@@ -443,18 +441,16 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let provider = declare_from.common.rpc.get_provider(&config, ui).await?;
             let account = get_account(&config, &provider, &declare_from.common.rpc, ui).await?;
 
-            let result = with_account!(&account, |account| {
-                starknet_commands::declare_from::declare_from(
-                    contract_source,
-                    declare_from.no_abi,
-                    &declare_from.common,
-                    account,
-                    wait_config,
-                    false,
-                    ui,
-                )
-                .await
-            });
+            let result = starknet_commands::declare_from::declare_from(
+                contract_source,
+                declare_from.no_abi,
+                &declare_from.common,
+                &account,
+                wait_config,
+                false,
+                ui,
+            )
+            .await;
 
             let result = match result {
                 Ok(DeclareResponse::DryRun(response)) => {
@@ -533,25 +529,23 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                         .context("Failed to parse casm artifact")?;
                 let local_abi = contract_definition.abi.clone();
 
-                let declare_result = with_account!(&account, |account| {
-                    declare_with_artifacts(
-                        contract_definition,
-                        casm_contract_definition,
-                        &fee_args,
-                        &dry_run_args,
-                        nonce,
-                        no_abi,
-                        account,
-                        WaitForTx {
-                            wait: true,
-                            wait_params: wait_config.wait_params,
-                            show_ui_outputs: wait_config.wait,
-                        },
-                        true,
-                        ui,
-                    )
-                    .await
-                })
+                let declare_result = declare_with_artifacts(
+                    contract_definition,
+                    casm_contract_definition,
+                    &fee_args,
+                    &dry_run_args,
+                    nonce,
+                    no_abi,
+                    &account,
+                    WaitForTx {
+                        wait: true,
+                        wait_params: wait_config.wait_params,
+                        show_ui_outputs: wait_config.wait,
+                    },
+                    true,
+                    ui,
+                )
+                .await
                 .map_err(handle_starknet_command_error);
 
                 // Increment nonce after successful declare if it was explicitly provided
@@ -598,21 +592,19 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             };
             let calldata = arguments.try_into_calldata(&abi, &selector, &config)?;
 
-            let result = with_account!(&account, |account| {
-                starknet_commands::deploy::deploy(
-                    class_hash,
-                    &calldata,
-                    deploy.common.salt,
-                    deploy.common.unique,
-                    fee_args,
-                    dry_run_args,
-                    nonce,
-                    account,
-                    wait_config,
-                    ui,
-                )
-                .await
-            })
+            let result = starknet_commands::deploy::deploy(
+                class_hash,
+                &calldata,
+                deploy.common.salt,
+                deploy.common.unique,
+                fee_args,
+                dry_run_args,
+                nonce,
+                &account,
+                wait_config,
+                ui,
+            )
+            .await
             .map_err(handle_starknet_command_error);
 
             let result = if let Some(declare_response) = declare_response {
@@ -738,21 +730,19 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 )?
             };
 
-            let result = with_account!(&account, |account| {
-                starknet_commands::invoke::invoke(
-                    contract_address,
-                    calldata,
-                    nonce,
-                    fee_args,
-                    dry_run_args,
-                    proof_args,
-                    selector,
-                    account,
-                    wait_config,
-                    ui,
-                )
-                .await
-            })
+            let result = starknet_commands::invoke::invoke(
+                contract_address,
+                calldata,
+                nonce,
+                fee_args,
+                dry_run_args,
+                proof_args,
+                selector,
+                &account,
+                wait_config,
+                ui,
+            )
+            .await
             .map_err(handle_starknet_command_error);
 
             let block_explorer_link =
