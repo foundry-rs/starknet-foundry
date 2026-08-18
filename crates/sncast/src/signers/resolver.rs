@@ -8,8 +8,8 @@ use starknet_types_core::felt::Felt;
 use crate::helpers::ledger;
 use crate::response::ui::UI;
 use crate::signers::{
-    CredentialProvider, DefaultCredentialProvider, RuntimeSigner, SignerError, SignerKind,
-    SignerSpec,
+    CredentialProvider, DefaultCredentialProvider, KeystoreFile, RuntimeSigner, SignerError,
+    SignerKind, SignerSpec,
 };
 
 pub struct SignerProviderContext<'a> {
@@ -134,12 +134,7 @@ impl SignerProvider for KeystoreSignerProvider {
         };
         let path = resolve_keystore_path(context.accounts_file, spec.path());
         let password = self.credentials.keystore_password(spec)?;
-        let key = SigningKey::from_keystore(&path, &password).map_err(|error| {
-            SignerError::InvalidKeystore {
-                path: path.clone(),
-                message: error.to_string(),
-            }
-        })?;
+        let key = KeystoreFile::decrypt(&path, &password)?;
         Ok(RuntimeSigner::from_starknet_signer(
             LocalWallet::from_signing_key(key),
             self.kind(),

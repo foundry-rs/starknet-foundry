@@ -18,8 +18,8 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::import::AccountImportResponse;
 use sncast::response::ui::UI;
 use sncast::signers::{
-    CredentialProvider, DefaultCredentialProvider, KeystoreSpec, LedgerSpec, PrivateKeySpec,
-    SignerSpec, resolve_keystore_path,
+    CredentialProvider, DefaultCredentialProvider, KeystoreFile, KeystoreSpec, LedgerSpec,
+    PrivateKeySpec, SignerSpec, resolve_keystore_path,
 };
 use sncast::{AccountType, check_class_hash_exists, get_chain_id, handle_rpc_error};
 use starknet_rust::core::types::{BlockId, BlockTag, StarknetError};
@@ -103,34 +103,33 @@ pub async fn import(
     let address = import.resolved_address(config)?;
     let class_hash = import.resolved_class_hash(config)?;
 
-    let (signer, public_key, local_key) = if let Some(ledger_path) =
-        import.ledger_key_locator.resolve(ui)
-    {
-        let public_key = ledger::get_ledger_public_key(&ledger_path, ui).await?;
-        (
-            SignerSpec::Ledger(LedgerSpec::new(ledger_path)),
-            public_key,
-            None,
-        )
-    } else if let Some(keystore) = &import.keystore {
-        let spec = KeystoreSpec::new(keystore.clone(), import.keystore_password_env.clone());
-        let password = DefaultCredentialProvider.keystore_password(&spec)?;
-        let signing_key =
-            SigningKey::from_keystore(resolve_keystore_path(accounts_file, keystore), &password)?;
-        let public_key = signing_key.verifying_key().scalar();
-        (SignerSpec::Keystore(spec), public_key, Some(signing_key))
-    } else {
-        let key_felt = import.private_key_args.resolve_or_prompt()?;
-        let key_felt = validate_private_key(key_felt)?;
+    let (signer, public_key, local_key) =
+        if let Some(ledger_path) = import.ledger_key_locator.resolve(ui) {
+            let public_key = ledger::get_ledger_public_key(&ledger_path, ui).await?;
+            (
+                SignerSpec::Ledger(LedgerSpec::new(ledger_path)),
+                public_key,
+                None,
+            )
+        } else if let Some(keystore) = &import.keystore {
+            let spec = KeystoreSpec::new(keystore.clone(), import.keystore_password_env.clone());
+            let password = DefaultCredentialProvider.keystore_password(&spec)?;
+            let signing_key =
+                KeystoreFile::decrypt(&resolve_keystore_path(accounts_file, keystore), &password)?;
+            let public_key = signing_key.verifying_key().scalar();
+            (SignerSpec::Keystore(spec), public_key, Some(signing_key))
+        } else {
+            let key_felt = import.private_key_args.resolve_or_prompt()?;
+            let key_felt = validate_private_key(key_felt)?;
 
-        let signing_key = SigningKey::from_secret_scalar(key_felt);
-        let public_key = signing_key.verifying_key().scalar();
-        (
-            SignerSpec::PrivateKey(PrivateKeySpec::new(key_felt)),
-            public_key,
-            Some(signing_key),
-        )
-    };
+            let signing_key = SigningKey::from_secret_scalar(key_felt);
+            let public_key = signing_key.verifying_key().scalar();
+            (
+                SignerSpec::PrivateKey(PrivateKeySpec::new(key_felt)),
+                public_key,
+                Some(signing_key),
+            )
+        };
 
     let account_name = account
         .clone()

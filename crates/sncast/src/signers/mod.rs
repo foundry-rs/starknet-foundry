@@ -4,6 +4,7 @@ pub mod backend;
 pub mod credentials;
 pub mod derivation_path;
 pub mod error;
+pub mod keystore;
 pub mod resolver;
 pub mod runtime;
 pub mod spec;
@@ -15,6 +16,7 @@ pub use credentials::{
 };
 pub use derivation_path::{DerivationPathError, parse_derivation_path, validate_derivation_path};
 pub use error::SignerError;
+pub use keystore::KeystoreFile;
 pub use resolver::{
     KeystoreSignerProvider, SignerProvider, SignerProviderContext, SignerResolver,
     resolve_keystore_path,

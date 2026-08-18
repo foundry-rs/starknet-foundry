@@ -22,8 +22,8 @@ use sncast::helpers::rpc::{RpcArgs, generate_network_flag};
 use sncast::response::account::create::AccountCreateResponse;
 use sncast::response::ui::UI;
 use sncast::signers::{
-    CredentialProvider, DefaultCredentialProvider, KeystoreSpec, LedgerSpec, PrivateKeySpec,
-    SignerSpec, resolve_keystore_path,
+    CredentialProvider, DefaultCredentialProvider, KeystoreFile, KeystoreSpec, LedgerSpec,
+    PrivateKeySpec, SignerSpec, resolve_keystore_path,
 };
 use sncast::{
     AccountType, SignerSource, check_class_hash_exists, check_if_legacy_contract,
@@ -167,7 +167,7 @@ pub async fn create(
             ) {
                 Ok(migrated) => migrated,
                 Err(error) => {
-                    let _ = std::fs::remove_file(resolve_keystore_path(accounts_file, keystore));
+                    let _ = KeystoreFile::remove(&resolve_keystore_path(accounts_file, keystore));
                     return Err(error);
                 }
             };
@@ -279,24 +279,11 @@ fn create_native_keystore(
     account: &AccountRecord,
 ) -> Result<()> {
     let resolved_path = resolve_keystore_path(accounts_file, keystore_path);
-    if resolved_path.exists() {
-        bail!("Keystore file {resolved_path} already exists");
-    }
-    if let Some(parent) = resolved_path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
     let SignerSpec::Keystore(spec) = &account.signer else {
         bail!("native keystore account has an invalid signer")
     };
     let password = DefaultCredentialProvider.keystore_password(spec)?;
-    SigningKey::from_secret_scalar(private_key).save_as_keystore(&resolved_path, &password)?;
-
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        std::fs::set_permissions(&resolved_path, std::fs::Permissions::from_mode(0o600))?;
-    }
-    Ok(())
+    KeystoreFile::create(&resolved_path, private_key, &password).map_err(Into::into)
 }
 
 #[allow(clippy::too_many_arguments)]
