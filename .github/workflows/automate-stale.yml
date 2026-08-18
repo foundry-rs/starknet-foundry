@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Run Stale Bot
         id: stale
-        uses: actions/stale@v10
+        uses: actions/stale@v11
         with:
           # General settings
           days-before-stale: ${{ env.DAYS_BEFORE_STALE }}

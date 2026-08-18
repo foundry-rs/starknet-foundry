@@ -12,6 +12,8 @@ fn wasm() {
     );
 
     let output = test_runner(&temp)
+        // Cairo version is ignored on purpose. Without it, the test would fail with pre-release scarb.
+        .env("SCARB_IGNORE_CAIRO_VERSION", "true")
         // Output of oracle is different depending on the env, and Intellij sets it automatically
         .env_remove("RUST_BACKTRACE")
         .assert()

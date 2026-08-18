@@ -1,0 +1,33 @@
+# This workflow monitors whether there are new development branches in the
+# Sequencer repository for the newest Starknet version.
+name: 'Check new development branches in the Sequencer repository'
+
+on:
+  schedule:
+    # Every Monday at 06:00 UTC.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for recent commits
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          since=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          changed=$(gh api \
+            "repos/starkware-libs/sequencer/commits?path=scripts/merge_paths.json&since=$since" \
+            --jq 'length > 0')
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+
+      - name: Notify on Slack
+        if: steps.check.outputs.changed == 'true'
+        uses: slackapi/slack-github-action@v3.0.3
+        with:
+          webhook: ${{ secrets.SLACK_BLOCKIFIER_NOTIFY_WEBHOOK_URL }}
+          webhook-type: webhook-trigger
+          payload: |
+            text: ":fireball: New Starknet development branch detected in the Sequencer repo :fireball:\nscripts/merge_paths.json changed in the last 7 days, which means a new branch was created for an upcoming Starknet version.\nSee the changes: https://github.com/starkware-libs/sequencer/blob/main/scripts/merge_paths.json"
