@@ -7732,6 +7732,7 @@ dependencies = [
  "docs",
  "dtor",
  "foundry-ui",
+ "fs2",
  "fs_extra",
  "indoc",
  "itertools 0.14.0",

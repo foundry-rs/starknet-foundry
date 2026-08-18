@@ -59,6 +59,7 @@ strum_macros.workspace = true
 primitive-types.workspace = true
 coins-ledger.workspace = true
 mimalloc.workspace = true
+fs2.workspace = true
 
 [dev-dependencies]
 ctor.workspace = true
