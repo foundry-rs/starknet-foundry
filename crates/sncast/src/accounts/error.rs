@@ -16,6 +16,13 @@ pub enum AccountsError {
     #[error("invalid accounts file schema at `{path}`: {message}")]
     Schema { path: String, message: String },
 
+    #[error("invalid accounts file schema in `{file}` at `{field}`: {message}")]
+    SchemaFile {
+        file: Utf8PathBuf,
+        field: String,
+        message: String,
+    },
+
     #[error("accounts file schema version {version} is not supported")]
     UnsupportedVersion { version: String },
 
