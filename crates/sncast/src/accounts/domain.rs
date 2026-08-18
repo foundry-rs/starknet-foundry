@@ -1,0 +1,276 @@
+use std::borrow::Borrow;
+use std::collections::BTreeMap;
+use std::fmt::{Display, Formatter};
+use std::str::FromStr;
+
+use anyhow::anyhow;
+use clap::ValueEnum;
+use serde::{Deserialize, Serialize};
+use starknet_types_core::felt::Felt;
+
+use crate::accounts::AccountsError;
+use crate::signers::SignerSpec;
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
+#[serde(rename_all = "lowercase")]
+pub enum AccountType {
+    #[serde(rename = "open_zeppelin")]
+    OpenZeppelin,
+    #[serde(alias = "argent")]
+    Ready,
+    Braavos,
+}
+
+impl FromStr for AccountType {
+    type Err = anyhow::Error;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value {
+            "open_zeppelin" | "open-zeppelin" | "oz" => Ok(Self::OpenZeppelin),
+            "ready" => Ok(Self::Ready),
+            "braavos" => Ok(Self::Braavos),
+            account_type => Err(anyhow!("Invalid account type = {account_type}")),
+        }
+    }
+}
+
+impl Display for AccountType {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "{self:?}")
+    }
+}
+
+macro_rules! identifier {
+    ($name:ident, $kind:literal) => {
+        #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+        pub struct $name(String);
+
+        impl $name {
+            pub fn new(value: impl Into<String>) -> Result<Self, AccountsError> {
+                let value = value.into();
+                if value.is_empty() {
+                    return Err(AccountsError::EmptyIdentifier { kind: $kind });
+                }
+                Ok(Self(value))
+            }
+
+            #[must_use]
+            pub fn as_str(&self) -> &str {
+                &self.0
+            }
+        }
+
+        impl Borrow<str> for $name {
+            fn borrow(&self) -> &str {
+                self.as_str()
+            }
+        }
+
+        impl Display for $name {
+            fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str(self.as_str())
+            }
+        }
+
+        impl TryFrom<String> for $name {
+            type Error = AccountsError;
+
+            fn try_from(value: String) -> Result<Self, Self::Error> {
+                Self::new(value)
+            }
+        }
+
+        impl TryFrom<&str> for $name {
+            type Error = AccountsError;
+
+            fn try_from(value: &str) -> Result<Self, Self::Error> {
+                Self::new(value)
+            }
+        }
+
+        impl From<$name> for String {
+            fn from(value: $name) -> Self {
+                value.0
+            }
+        }
+    };
+}
+
+identifier!(AccountName, "account name");
+identifier!(NetworkName, "network name");
+
+#[derive(Clone, Debug, Default)]
+pub struct AccountRegistry {
+    networks: BTreeMap<NetworkName, BTreeMap<AccountName, AccountRecord>>,
+}
+
+impl AccountRegistry {
+    #[must_use]
+    pub fn new(networks: BTreeMap<NetworkName, BTreeMap<AccountName, AccountRecord>>) -> Self {
+        Self { networks }
+    }
+
+    #[must_use]
+    pub fn networks(&self) -> &BTreeMap<NetworkName, BTreeMap<AccountName, AccountRecord>> {
+        &self.networks
+    }
+
+    pub fn networks_mut(
+        &mut self,
+    ) -> &mut BTreeMap<NetworkName, BTreeMap<AccountName, AccountRecord>> {
+        &mut self.networks
+    }
+
+    #[must_use]
+    pub fn account(&self, network: &str, name: &str) -> Option<&AccountRecord> {
+        self.networks
+            .get(network)
+            .and_then(|accounts| accounts.get(name))
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct AccountRecord {
+    pub public_key: Felt,
+    pub address: Option<Felt>,
+    pub salt: Option<Felt>,
+    pub deployed: Option<bool>,
+    pub class_hash: Option<Felt>,
+    pub legacy: Option<bool>,
+    pub account_type: Option<AccountType>,
+    pub signer: SignerSpec,
+}
+
+impl AccountRecord {
+    pub fn as_connected(&self) -> Result<ConnectedAccountRecord<'_>, AccountsError> {
+        let address = required(self.address, "address", "connected account use")?;
+        Ok(ConnectedAccountRecord {
+            account: self,
+            address,
+        })
+    }
+
+    pub fn as_deployable(&self) -> Result<DeployableAccountRecord<'_>, AccountsError> {
+        Ok(DeployableAccountRecord {
+            account: self,
+            salt: required(self.salt, "salt", "account deployment")?,
+            class_hash: required(self.class_hash, "class_hash", "account deployment")?,
+            account_type: required(self.account_type, "type", "account deployment")?,
+        })
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct ConnectedAccountRecord<'a> {
+    account: &'a AccountRecord,
+    address: Felt,
+}
+
+impl<'a> ConnectedAccountRecord<'a> {
+    #[must_use]
+    pub fn account(self) -> &'a AccountRecord {
+        self.account
+    }
+
+    #[must_use]
+    pub fn address(self) -> Felt {
+        self.address
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct DeployableAccountRecord<'a> {
+    account: &'a AccountRecord,
+    salt: Felt,
+    class_hash: Felt,
+    account_type: AccountType,
+}
+
+impl<'a> DeployableAccountRecord<'a> {
+    #[must_use]
+    pub fn account(self) -> &'a AccountRecord {
+        self.account
+    }
+
+    #[must_use]
+    pub fn salt(self) -> Felt {
+        self.salt
+    }
+
+    #[must_use]
+    pub fn class_hash(self) -> Felt {
+        self.class_hash
+    }
+
+    #[must_use]
+    pub fn account_type(self) -> AccountType {
+        self.account_type
+    }
+}
+
+fn required<T: Copy>(
+    value: Option<T>,
+    field: &'static str,
+    operation: &'static str,
+) -> Result<T, AccountsError> {
+    value.ok_or(AccountsError::MissingField { field, operation })
+}
+
+#[cfg(test)]
+mod tests {
+    use camino::Utf8PathBuf;
+
+    use super::*;
+    use crate::signers::{KeystoreSpec, PrivateKeySpec};
+
+    fn account() -> AccountRecord {
+        AccountRecord {
+            public_key: Felt::ONE,
+            address: Some(Felt::TWO),
+            salt: Some(Felt::THREE),
+            deployed: Some(false),
+            class_hash: Some(Felt::from(4_u8)),
+            legacy: Some(false),
+            account_type: Some(AccountType::OpenZeppelin),
+            signer: SignerSpec::PrivateKey(PrivateKeySpec::new(Felt::from(5_u8))),
+        }
+    }
+
+    #[test]
+    fn identifiers_reject_empty_values() {
+        assert!(AccountName::new("").is_err());
+        assert!(NetworkName::new("").is_err());
+    }
+
+    #[test]
+    fn registry_looks_up_accounts_by_strings() {
+        let mut networks = BTreeMap::new();
+        networks.insert(
+            NetworkName::new("alpha-sepolia").unwrap(),
+            BTreeMap::from([(AccountName::new("alice").unwrap(), account())]),
+        );
+
+        let registry = AccountRegistry::new(networks);
+        assert!(registry.account("alpha-sepolia", "alice").is_some());
+    }
+
+    #[test]
+    fn operation_views_validate_required_fields() {
+        let account = account();
+        assert_eq!(account.as_connected().unwrap().address(), Felt::TWO);
+        assert_eq!(account.as_deployable().unwrap().salt(), Felt::THREE);
+
+        let incomplete = AccountRecord {
+            address: None,
+            signer: SignerSpec::Keystore(KeystoreSpec::new(Utf8PathBuf::from("key.json"), None)),
+            ..account
+        };
+        assert!(matches!(
+            incomplete.as_connected(),
+            Err(AccountsError::MissingField {
+                field: "address",
+                ..
+            })
+        ));
+    }
+}
