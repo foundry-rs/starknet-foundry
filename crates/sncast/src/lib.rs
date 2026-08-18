@@ -50,13 +50,15 @@ pub mod helpers;
 pub mod response;
 pub mod signers;
 
-use crate::helpers::ledger;
 use crate::response::ui::UI;
 pub use accounts::AccountType;
 use conversions::byte_array::ByteArray;
 use foundry_ui::components::warning::WarningMessage;
 pub use helpers::signer::{SignerSource, SignerType};
-use signers::{RuntimeSigner, SignerKind};
+use signers::{
+    LedgerSpec, PrivateKeySpec, RuntimeSigner, SignerKind, SignerProviderContext, SignerResolver,
+    SignerSpec,
+};
 
 pub type NestedMap<T> = HashMap<String, HashMap<String, T>>;
 pub type RuntimeAccount<'a> = SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, RuntimeSigner>;
@@ -113,6 +115,27 @@ pub struct AccountData {
 
     #[serde(flatten)]
     pub signer_type: SignerType,
+}
+
+impl From<AccountData> for accounts::AccountRecord {
+    fn from(account: AccountData) -> Self {
+        let signer = match account.signer_type {
+            SignerType::Local { private_key } => {
+                SignerSpec::PrivateKey(PrivateKeySpec::new(private_key))
+            }
+            SignerType::Ledger { ledger_path } => SignerSpec::Ledger(LedgerSpec::new(ledger_path)),
+        };
+        Self {
+            public_key: account.public_key,
+            address: account.address,
+            salt: account.salt,
+            deployed: account.deployed,
+            class_hash: account.class_hash,
+            legacy: account.legacy,
+            account_type: account.account_type,
+            signer,
+        }
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -360,40 +383,32 @@ pub async fn get_account_from_accounts_file<'a>(
     ui: &UI,
 ) -> Result<RuntimeAccount<'a>> {
     let chain_id = get_chain_id(provider).await?;
-    let account_data = if let Some(keystore) = keystore {
-        get_account_data_from_keystore(account, keystore)?
+    let (account_data, signer) = if let Some(keystore) = keystore {
+        let account_data: accounts::AccountRecord =
+            get_account_data_from_keystore(account, keystore)?.into();
+        let private_key = account_data
+            .signer
+            .private_key()
+            .context("Private key not found")?;
+        let wallet = LocalWallet::from(SigningKey::from_secret_scalar(private_key));
+        (
+            account_data,
+            RuntimeSigner::from_local_wallet(wallet, SignerKind::Keystore),
+        )
     } else {
-        get_account_data_from_accounts_file(account, chain_id, accounts_file)?
-    };
-
-    let signer_source = SignerSource::new(keystore.cloned(), Some(&account_data.signer_type))?;
-    let (signer, kind) = match signer_source {
-        SignerSource::Keystore(_) | SignerSource::AccountsFile => {
-            let private_key = account_data
-                .signer_type
-                .private_key()
-                .context("Private key not found")?;
-            let kind = if keystore.is_some() {
-                SignerKind::Keystore
-            } else {
-                SignerKind::PrivateKey
-            };
-            let wallet = LocalWallet::from(SigningKey::from_secret_scalar(private_key));
-            (RuntimeSigner::from_local_wallet(wallet, kind), kind)
-        }
-        SignerSource::Ledger(ledger_path) => {
-            let signer = ledger::create_ledger_signer(&ledger_path, ui, true).await?;
-            (
-                RuntimeSigner::from_ledger_signer(signer),
-                SignerKind::Ledger,
-            )
-        }
+        let account_data = get_account_record_from_accounts_file(account, chain_id, accounts_file)?;
+        let context = SignerProviderContext { accounts_file, ui };
+        let signer = SignerResolver::default()
+            .resolve(&account_data.signer, &context)
+            .await?;
+        (account_data, signer)
     };
 
     let actual_public_key = signer.get_public_key().await?.scalar();
     ensure!(
         actual_public_key == account_data.public_key,
-        "{kind} signer public key does not match the account: expected {:#x}, got {actual_public_key:#x}",
+        "{} signer public key does not match the account: expected {:#x}, got {actual_public_key:#x}",
+        signer.kind(),
         account_data.public_key
     );
 
@@ -425,7 +440,7 @@ pub async fn get_contract_class(
 }
 
 pub(crate) async fn build_account(
-    account_data: AccountData,
+    account_data: accounts::AccountRecord,
     chain_id: Felt,
     provider: &JsonRpcClient<HttpTransport>,
     signer: RuntimeSigner,
@@ -569,19 +584,48 @@ pub fn get_account_data_from_accounts_file(
     chain_id: Felt,
     path: &Utf8PathBuf,
 ) -> Result<AccountData> {
+    let account = get_account_record_from_accounts_file(name, chain_id, path)?;
+    let signer_type = match account.signer {
+        SignerSpec::PrivateKey(spec) => SignerType::Local {
+            private_key: spec.private_key(),
+        },
+        SignerSpec::Ledger(spec) => SignerType::Ledger {
+            ledger_path: spec.derivation_path().clone(),
+        },
+        SignerSpec::Keystore(_) => {
+            bail!("keystore-backed native account requires runtime signer resolution")
+        }
+    };
+    Ok(AccountData {
+        public_key: account.public_key,
+        address: account.address,
+        salt: account.salt,
+        deployed: account.deployed,
+        class_hash: account.class_hash,
+        legacy: account.legacy,
+        account_type: account.account_type,
+        signer_type,
+    })
+}
+
+pub fn get_account_record_from_accounts_file(
+    name: &str,
+    chain_id: Felt,
+    path: &Utf8PathBuf,
+) -> Result<accounts::AccountRecord> {
     if name.is_empty() {
         bail!("Account name not passed nor found in snfoundry.toml")
     }
     check_account_file_exists(path)?;
-
-    let accounts: HashMap<String, HashMap<String, AccountData>> = read_and_parse_json_file(path)?;
     let network_name = chain_id_to_network_name(chain_id);
-
-    accounts
-        .get(&network_name)
-        .and_then(|accounts_map| accounts_map.get(name))
-        .cloned()
-        .ok_or_else(|| anyhow!("Account = {name} not found under network = {network_name}"))
+    accounts::AccountRepository::default()
+        .find(path, &network_name, name)
+        .map_err(|error| match error {
+            accounts::AccountsError::AccountNotFound { .. } => {
+                anyhow!("Account = {name} not found under network = {network_name}")
+            }
+            error => anyhow!(error),
+        })
 }
 
 pub fn read_and_parse_json_file<T>(path: &Utf8PathBuf) -> Result<T>

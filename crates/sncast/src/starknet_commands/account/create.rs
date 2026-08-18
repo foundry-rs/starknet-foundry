@@ -1,5 +1,5 @@
 use crate::starknet_commands::account::{
-    PrivateKeyArgs, generate_add_profile_message, prepare_account_json, validate_private_key,
+    PrivateKeyArgs, generate_add_profile_message, prepare_account_record, validate_private_key,
     write_account_to_accounts_file,
 };
 use crate::starknet_commands::utils::felt_or_id::ClassHash;
@@ -10,6 +10,7 @@ use clap::Args;
 use console::style;
 use conversions::IntoConv;
 use serde_json::json;
+use sncast::accounts::AccountRecord;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
@@ -21,8 +22,9 @@ use sncast::helpers::ledger::LedgerKeyLocatorAccount;
 use sncast::helpers::rpc::{RpcArgs, generate_network_flag};
 use sncast::response::account::create::AccountCreateResponse;
 use sncast::response::ui::UI;
+use sncast::signers::{LedgerSpec, PrivateKeySpec, SignerSpec};
 use sncast::{
-    AccountType, SignerSource, SignerType, check_class_hash_exists, check_if_legacy_contract,
+    AccountType, SignerSource, check_class_hash_exists, check_if_legacy_contract,
     extract_or_generate_salt, get_keystore_password, handle_account_factory_error,
 };
 use starknet_rust::accounts::{
@@ -109,13 +111,10 @@ pub async fn create(
         chain_id,
     };
 
-    let (account_json, estimated_fee) =
+    let (account_record, estimated_fee) =
         generate_account(provider, signer_source, ui, generation_params).await?;
 
-    let address: Felt = account_json["address"]
-        .as_str()
-        .context("Invalid address")?
-        .parse()?;
+    let address = account_record.address.context("Invalid address")?;
 
     let estimated_fee_strk = BigDecimal::new(estimated_fee.into(), 18.into());
     let mut message = format!(
@@ -130,13 +129,11 @@ pub async fn create(
                 bail!("Argument `--account` must be passed and be a path when using `--keystore`");
             }
 
-            let private_key = account_json["private_key"]
-                .as_str()
-                .context("Invalid private_key")?
-                .parse()?;
-            let legacy = account_json["legacy"]
-                .as_bool()
-                .expect("Invalid legacy entry");
+            let private_key = account_record
+                .signer
+                .private_key()
+                .context("Invalid private key signer")?;
+            let legacy = account_record.legacy.context("Invalid legacy entry")?;
 
             create_to_keystore(
                 private_key,
@@ -153,7 +150,12 @@ pub async fn create(
             message.push_str(&deploy_command);
         }
         SignerSource::Ledger(_) | SignerSource::AccountsFile => {
-            write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
+            write_account_to_accounts_file(
+                account,
+                accounts_file,
+                chain_id,
+                account_record.clone(),
+            )?;
             let deploy_command =
                 generate_deploy_command(accounts_file, &create.rpc, config, account);
             message.push_str(&deploy_command);
@@ -176,7 +178,7 @@ pub async fn create(
         address: address.into_(),
         estimated_fee,
         add_profile: add_profile_message,
-        message: if account_json["deployed"] == json!(false) {
+        message: if account_record.deployed == Some(false) {
             message
         } else {
             "Account already deployed".to_string()
@@ -197,17 +199,15 @@ async fn generate_account(
     signer_source: &SignerSource,
     ui: &UI,
     params: AccountGenerationParams,
-) -> Result<(serde_json::Value, u128)> {
+) -> Result<(AccountRecord, u128)> {
     if let SignerSource::Ledger(ledger_path) = signer_source {
         let signer = ledger::create_ledger_signer(ledger_path, ui, false).await?;
-        let signer_type = SignerType::Ledger {
-            ledger_path: ledger_path.clone(),
-        };
+        let signer_spec = SignerSpec::Ledger(LedgerSpec::new(ledger_path.clone()));
 
         finalize_account_generation(
             provider,
             signer,
-            signer_type,
+            signer_spec,
             params.salt,
             params.class_hash,
             params.account_type,
@@ -219,14 +219,12 @@ async fn generate_account(
             .private_key
             .map_or_else(SigningKey::from_random, SigningKey::from_secret_scalar);
         let signer = LocalWallet::from_signing_key(private_key.clone());
-        let signer_type = SignerType::Local {
-            private_key: private_key.secret_scalar(),
-        };
+        let signer_spec = SignerSpec::PrivateKey(PrivateKeySpec::new(private_key.secret_scalar()));
 
         finalize_account_generation(
             provider,
             signer,
-            signer_type,
+            signer_spec,
             params.salt,
             params.class_hash,
             params.account_type,
@@ -240,12 +238,12 @@ async fn generate_account(
 async fn finalize_account_generation<S>(
     provider: &JsonRpcClient<HttpTransport>,
     signer: S,
-    signer_type: SignerType,
+    signer_spec: SignerSpec,
     salt: Felt,
     class_hash: Felt,
     account_type: AccountType,
     chain_id: Felt,
-) -> Result<(serde_json::Value, u128)>
+) -> Result<(AccountRecord, u128)>
 where
     S: Signer + Send + Sync,
     <S as Signer>::GetPublicKeyError: 'static,
@@ -278,8 +276,8 @@ where
 
     let legacy = check_if_legacy_contract(Some(class_hash), address, provider).await?;
 
-    let account_json = prepare_account_json(
-        &signer_type,
+    let account = prepare_account_record(
+        signer_spec,
         public_key,
         address,
         false,
@@ -289,7 +287,7 @@ where
         Some(salt),
     );
 
-    Ok((account_json, estimated_fee.overall_fee))
+    Ok((account, estimated_fee.overall_fee))
 }
 
 async fn get_address_and_deployment_fee<T>(

@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args};
 use promptly::prompt;
-use sncast::helpers::account::load_accounts;
+use sncast::accounts::AccountRepository;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::delete::AccountDeleteResponse;
@@ -38,14 +38,9 @@ pub fn delete(
     network_name: &str,
     yes: bool,
 ) -> Result<AccountDeleteResponse> {
-    let mut items = load_accounts(path)?;
-
-    if items[&network_name].is_null() {
-        bail!("No accounts defined for network = {network_name}");
-    }
-    if items[&network_name][&name].is_null() {
-        bail!("Account with name {name} does not exist")
-    }
+    AccountRepository::default()
+        .find(path, network_name, name)
+        .map_err(|_| anyhow::anyhow!("Account with name {name} does not exist"))?;
 
     // Let's ask confirmation
     if !yes {
@@ -59,17 +54,9 @@ pub fn delete(
         }
     }
 
-    // get to the nested object "nested"
-    let nested = items
-        .get_mut(network_name)
-        .expect("Failed to find network")
-        .as_object_mut()
-        .expect("Failed to convert network");
-
-    // now remove the child from there
-    nested.remove(name);
-
-    std::fs::write(path.clone(), serde_json::to_string_pretty(&items).unwrap())?;
+    AccountRepository::default()
+        .remove(path, network_name, name)
+        .map_err(|error| anyhow::anyhow!(error))?;
     let result = "Account successfully removed".to_string();
     Ok(AccountDeleteResponse { result })
 }

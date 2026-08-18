@@ -3,20 +3,20 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
 use serde_json::Map;
-use sncast::helpers::account::load_accounts;
+use sncast::accounts::{AccountRecord, AccountRepository};
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::BRAAVOS_BASE_ACCOUNT_CLASS_HASH;
 use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
-use sncast::helpers::ledger;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::deploy::AccountDeployResponse;
 use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
 use sncast::response::ui::UI;
+use sncast::signers::{SignerProviderContext, SignerResolver};
 use sncast::{
-    AccountData, AccountType, SignerType, WaitForTx, apply_optional_fields,
-    chain_id_to_network_name, check_account_file_exists, get_account_data_from_accounts_file,
-    get_account_data_from_keystore, handle_rpc_error, handle_wait_for_tx,
+    AccountType, WaitForTx, apply_optional_fields, chain_id_to_network_name,
+    check_account_file_exists, get_account_data_from_keystore,
+    get_account_record_from_accounts_file, handle_rpc_error, handle_wait_for_tx,
 };
 use starknet_rust::accounts::{AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory};
 use starknet_rust::accounts::{AccountFactoryError, ArgentAccountFactory};
@@ -128,7 +128,8 @@ async fn deploy_from_keystore(
         bail!("Public key and private key from keystore do not match");
     }
 
-    let (account_type, class_hash, salt) = extract_deployment_fields(&account_data)?;
+    let account_record: AccountRecord = account_data.clone().into();
+    let (account_type, class_hash, salt) = extract_deployment_fields(&account_record)?;
 
     let signer = LocalWallet::from_signing_key(private_key);
     let (address, result) = create_factory_and_deploy(
@@ -163,51 +164,25 @@ async fn deploy_from_accounts_file(
     wait_config: WaitForTx,
     ui: &UI,
 ) -> Result<InvokeResponse> {
-    let account_data = get_account_data_from_accounts_file(&name, chain_id, accounts_file)?;
+    let account_data = get_account_record_from_accounts_file(&name, chain_id, accounts_file)?;
     let (account_type, class_hash, salt) = extract_deployment_fields(&account_data)?;
-
-    let (_, result) = match &account_data.signer_type {
-        SignerType::Ledger { ledger_path } => {
-            let signer = ledger::create_ledger_signer(ledger_path, ui, true).await?;
-
-            ledger::verify_ledger_public_key(
-                signer.get_public_key().await?.scalar(),
-                account_data.public_key,
-            )?;
-
-            create_factory_and_deploy(
-                provider,
-                account_type,
-                class_hash,
-                signer,
-                salt,
-                chain_id,
-                fee_args,
-                dry_run_args,
-                wait_config,
-                ui,
-            )
-            .await?
-        }
-        SignerType::Local { private_key } => {
-            let signer =
-                LocalWallet::from_signing_key(SigningKey::from_secret_scalar(*private_key));
-
-            create_factory_and_deploy(
-                provider,
-                account_type,
-                class_hash,
-                signer,
-                salt,
-                chain_id,
-                fee_args,
-                dry_run_args,
-                wait_config,
-                ui,
-            )
-            .await?
-        }
-    };
+    let context = SignerProviderContext { accounts_file, ui };
+    let signer = SignerResolver::default()
+        .resolve_and_verify(&account_data.signer, account_data.public_key, &context)
+        .await?;
+    let (_, result) = create_factory_and_deploy(
+        provider,
+        account_type,
+        class_hash,
+        signer,
+        salt,
+        chain_id,
+        fee_args,
+        dry_run_args,
+        wait_config,
+        ui,
+    )
+    .await?;
 
     if let InvokeResponse::Transaction(_) = &result {
         update_account_in_accounts_file(accounts_file, &name, chain_id)?;
@@ -289,16 +264,13 @@ where
     }
 }
 
-fn extract_deployment_fields(account_data: &AccountData) -> Result<(AccountType, Felt, Felt)> {
-    let account_type = account_data
-        .account_type
-        .context("Failed to get account type from file")?;
-    let class_hash = account_data
-        .class_hash
-        .context("Failed to get class hash from file")?;
-    let salt = account_data.salt.context("Failed to get salt from file")?;
-
-    Ok((account_type, class_hash, salt))
+fn extract_deployment_fields(account: &AccountRecord) -> Result<(AccountType, Felt, Felt)> {
+    let deployable = account.as_deployable()?;
+    Ok((
+        deployable.account_type(),
+        deployable.class_hash(),
+        deployable.salt(),
+    ))
 }
 
 fn execution_error_message(error: &ContractExecutionError) -> &str {
@@ -406,10 +378,20 @@ fn update_account_in_accounts_file(
 ) -> Result<()> {
     let network_name = chain_id_to_network_name(chain_id);
 
-    let mut items = load_accounts(accounts_file)?;
-    items[&network_name][account_name]["deployed"] = serde_json::Value::from(true);
-    std::fs::write(accounts_file, serde_json::to_string_pretty(&items).unwrap())
-        .context("Failed to write to accounts file")?;
+    AccountRepository::default()
+        .mutate(accounts_file, |registry| {
+            let account = registry
+                .networks_mut()
+                .get_mut(network_name.as_str())
+                .and_then(|accounts| accounts.get_mut(account_name))
+                .ok_or_else(|| sncast::accounts::AccountsError::AccountNotFound {
+                    network: network_name.clone(),
+                    account: account_name.to_owned(),
+                })?;
+            account.deployed = Some(true);
+            Ok(())
+        })
+        .map_err(|error| anyhow!(error))?;
 
     Ok(())
 }
