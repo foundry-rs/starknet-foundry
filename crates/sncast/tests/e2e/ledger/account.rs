@@ -5,6 +5,7 @@ use crate::e2e::ledger::{
     TEST_LEDGER_PATH, TEST_LEDGER_PATH_STORED, set_automation, setup_speculos,
 };
 use crate::helpers::constants::URL;
+use crate::helpers::fixtures::load_native_accounts;
 use crate::helpers::fixtures::mint_token;
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
@@ -14,7 +15,6 @@ use indoc::indoc;
 use serde_json::{json, to_string_pretty};
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use snapbox::assert_data_eq;
-use sncast::helpers::account::load_accounts;
 use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
 use speculos_client::AutomationRule;
 use speculos_client::starknet_app::{
@@ -260,7 +260,7 @@ async fn test_deploy_ledger_account(
     );
 
     let path = Utf8PathBuf::from_path_buf(accounts_file.clone()).expect("Path is not valid UTF-8");
-    let items = load_accounts(&path).expect("Failed to load accounts");
+    let items = load_native_accounts(&path).expect("Failed to load accounts");
     assert_eq!(
         items["alpha-sepolia"][LEDGER_ACCOUNT_NAME]["deployed"],
         true

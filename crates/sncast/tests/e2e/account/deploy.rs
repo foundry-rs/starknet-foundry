@@ -2,7 +2,8 @@ use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use crate::helpers::env::set_keystore_password_env;
 use crate::helpers::fixtures::copy_file;
 use crate::helpers::fixtures::{
-    get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
+    get_address_from_keystore, get_transaction_hash, get_transaction_receipt, load_json_file,
+    load_native_accounts, mint_token,
 };
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
@@ -11,7 +12,6 @@ use conversions::string::IntoHexStr;
 use indoc::indoc;
 use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
 use sncast::AccountType;
-use sncast::helpers::account::load_accounts;
 use sncast::helpers::constants::{
     BRAAVOS_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH, READY_CLASS_HASH,
 };
@@ -57,7 +57,13 @@ pub async fn test_happy_case(class_hash: &str, account_type: &str) {
 
     let path = Utf8PathBuf::from_path_buf(tempdir.path().join(accounts_file))
         .expect("Path is not valid UTF-8");
-    let items = load_accounts(&path).expect("Failed to load accounts");
+    let document = load_json_file(&path).expect("Failed to load accounts");
+    assert_eq!(document["version"], 2);
+    assert_eq!(
+        document["accounts"]["alpha-sepolia"]["my_account"]["signer"]["type"],
+        "private_key"
+    );
+    let items = document["accounts"].clone();
     assert_eq!(items["alpha-sepolia"]["my_account"]["deployed"], true);
 }
 
@@ -94,7 +100,7 @@ pub async fn test_happy_case_max_fee() {
 
     let path = Utf8PathBuf::from_path_buf(tempdir.path().join(accounts_file))
         .expect("Path is not valid UTF-8");
-    let items = load_accounts(&path).expect("Failed to load accounts");
+    let items = load_native_accounts(&path).expect("Failed to load accounts");
     assert_eq!(items["alpha-sepolia"]["my_account"]["deployed"], true);
 }
 
@@ -244,7 +250,7 @@ pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &
 
     let path = Utf8PathBuf::from_path_buf(tempdir.path().join(accounts_file))
         .expect("Path is not valid UTF-8");
-    let items = load_accounts(&path).expect("Failed to load accounts");
+    let items = load_native_accounts(&path).expect("Failed to load accounts");
 
     mint_token(
         items["alpha-sepolia"]["my_account"]["address"]
@@ -315,7 +321,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
 
     let path = Utf8PathBuf::from_path_buf(tempdir.path().join(account_file))
         .expect("Path is not valid UTF-8");
-    let items = load_accounts(&path).expect("Failed to load accounts");
+    let items = load_json_file(&path).expect("Failed to load starkli account");
     assert_eq!(items["deployment"]["status"], "deployed");
     assert_eq!(items["deployment"]["address"], address.into_hex_string());
     assert!(items["deployment"]["salt"].is_null());

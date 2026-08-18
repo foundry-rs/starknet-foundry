@@ -1,12 +1,12 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use crate::helpers::runner::runner;
+use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
 use conversions::string::IntoHexStr;
 use core::str;
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value, json};
-use sncast::helpers::account::load_accounts;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
@@ -153,8 +153,8 @@ async fn deploy_account_to_devnet<T: AccountFactory + Sync>(factory: T, address:
 }
 
 fn get_account_deployment_data(account: &str) -> (String, String, SigningKey) {
-    let items =
-        load_accounts(&Utf8PathBuf::from(ACCOUNT_FILE_PATH)).expect("Failed to load accounts");
+    let items = load_native_accounts(&Utf8PathBuf::from(ACCOUNT_FILE_PATH))
+        .expect("Failed to load accounts");
 
     let account_data = items
         .get("alpha-sepolia")
@@ -172,6 +172,18 @@ fn get_account_deployment_data(account: &str) -> (String, String, SigningKey) {
     );
 
     (address.to_string(), salt.to_string(), private_key)
+}
+
+pub fn load_json_file(path: &Utf8Path) -> anyhow::Result<Value> {
+    let contents = fs::read_to_string(path).context("Failed to read JSON file")?;
+    serde_json::from_str(&contents)
+        .with_context(|| format!("Failed to parse JSON file at = {path}"))
+}
+
+/// Load the network map from either a legacy V1 or a versioned V2 accounts file.
+pub fn load_native_accounts(path: &Utf8Path) -> anyhow::Result<Value> {
+    let document = load_json_file(path)?;
+    Ok(document.get("accounts").cloned().unwrap_or(document))
 }
 
 fn get_from_json_as_str<'a>(entry: &'a Value, key: &str) -> &'a str {

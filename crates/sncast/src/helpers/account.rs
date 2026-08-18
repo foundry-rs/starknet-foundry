@@ -7,14 +7,12 @@ use starknet_rust::{
     signers::{LocalWallet, SigningKey},
 };
 use std::collections::HashSet;
-use std::fs;
 use std::num::NonZeroU8;
 use url::Url;
 
 use crate::accounts::{AccountRecord, AccountRepository, AccountService};
 use crate::signers::{RuntimeSigner, SignerKind};
 use anyhow::Context;
-use serde_json::{Value, json};
 
 pub fn generate_account_name(accounts_file: &Utf8PathBuf) -> Result<String> {
     let mut id = 1;
@@ -43,19 +41,6 @@ pub fn generate_account_name(accounts_file: &Utf8PathBuf) -> Result<String> {
     }
 
     Ok(format!("account-{id}"))
-}
-
-pub fn load_accounts(accounts_file: &Utf8PathBuf) -> Result<Value> {
-    let contents = fs::read_to_string(accounts_file).context("Failed to read accounts file")?;
-
-    if contents.trim().is_empty() {
-        return Ok(json!({}));
-    }
-
-    let accounts = serde_json::from_str(&contents)
-        .with_context(|| format!("Failed to parse accounts file at = {accounts_file}"))?;
-
-    Ok(accounts)
 }
 
 /// When `accounts_file_should_exist` is `true`, a missing accounts file or network entry is an error.
