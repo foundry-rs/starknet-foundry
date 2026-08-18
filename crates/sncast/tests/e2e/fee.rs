@@ -113,7 +113,6 @@ async fn test_fee_params_from_config_are_used() {
         .assert()
         .failure();
 
-    println!("{:?}", output.get_output().stderr);
     assert_stderr_contains(
         output,
         indoc! {r"
