@@ -106,7 +106,8 @@ struct Cli {
     #[arg(short = 'f', long = "accounts-file")]
     accounts_file_path: Option<Utf8PathBuf>,
 
-    /// Path to keystore file; if specified, --account should be a path to starkli JSON account file
+    /// Deprecated starkli compatibility: path to a keystore file; use `account import-starkli`
+    /// to convert it into a native account
     #[arg(short, long)]
     keystore: Option<Utf8PathBuf>,
 

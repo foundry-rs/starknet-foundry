@@ -1,25 +1,31 @@
 use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
+use serde::de::DeserializeOwned;
+use serde_json::Deserializer;
 use serde_json::{Map, Value};
 use starknet_rust::signers::{SigningKey, VerifyingKey};
 use starknet_types_core::felt::Felt;
 
 use crate::accounts::{AccountRecord, AccountType};
+use crate::get_keystore_password;
 use crate::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use crate::signers::{PrivateKeySpec, SignerSpec};
-use crate::{get_keystore_password, read_and_parse_json_file};
 
 pub fn load_account(account: &str, keystore_path: &Utf8PathBuf) -> Result<AccountRecord> {
-    check_files_exist(keystore_path, account)?;
-    let path_to_account = Utf8PathBuf::from(account);
+    let password = get_keystore_password(KEYSTORE_PASSWORD_ENV_VAR)?;
+    load_account_with_password(&Utf8PathBuf::from(account), keystore_path, &password)
+}
 
-    let private_key = SigningKey::from_keystore(
-        keystore_path,
-        get_keystore_password(KEYSTORE_PASSWORD_ENV_VAR)?.as_str(),
-    )?
-    .secret_scalar();
+pub fn load_account_with_password(
+    account_path: &Utf8PathBuf,
+    keystore_path: &Utf8PathBuf,
+    password: &str,
+) -> Result<AccountRecord> {
+    check_files_exist(keystore_path, account_path)?;
 
-    let account_info: Value = read_and_parse_json_file(&path_to_account)?;
+    let private_key = SigningKey::from_keystore(keystore_path, password)?.secret_scalar();
+
+    let account_info: Value = read_json_file(account_path)?;
 
     let parse_to_felt = |pointer: &str| -> Option<Felt> {
         string_value(&account_info, pointer).and_then(|value| value.parse().ok())
@@ -111,11 +117,30 @@ fn string_value(json: &Value, pointer: &str) -> Option<String> {
         .map(str::to_owned)
 }
 
-fn check_files_exist(keystore_path: &Utf8PathBuf, account: &str) -> Result<()> {
+fn read_json_file<T>(path: &Utf8PathBuf) -> Result<T>
+where
+    T: DeserializeOwned + Default,
+{
+    let contents =
+        std::fs::read_to_string(path).with_context(|| format!("Failed to read a file = {path}"))?;
+    if contents.trim().is_empty() {
+        return Ok(T::default());
+    }
+
+    let deserializer = &mut Deserializer::from_str(&contents);
+    serde_path_to_error::deserialize(deserializer).map_err(|error| {
+        let field = error.path().to_string();
+        anyhow!(
+            "Failed to parse field `{field}` in file '{path}': {}",
+            error.into_inner()
+        )
+    })
+}
+
+fn check_files_exist(keystore_path: &Utf8PathBuf, account_path: &Utf8PathBuf) -> Result<()> {
     if !keystore_path.exists() {
         bail!("Keystore file = {keystore_path} does not exist");
     }
-    let account_path = Utf8PathBuf::from(account);
     if !account_path.exists() {
         bail!("Account file = {account_path} does not exist");
     }

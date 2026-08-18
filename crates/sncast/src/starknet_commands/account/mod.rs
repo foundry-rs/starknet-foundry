@@ -2,6 +2,7 @@ use crate::starknet_commands::account::create::Create;
 use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
 use crate::starknet_commands::account::import::Import;
+use crate::starknet_commands::account::import_starkli::ImportStarkli;
 use crate::starknet_commands::account::list::{AccountsListMessage, List};
 use crate::starknet_commands::account::migrate::Migrate;
 use crate::{process_command_result, starknet_commands};
@@ -39,6 +40,7 @@ pub mod create;
 pub mod delete;
 pub mod deploy;
 pub mod import;
+pub mod import_starkli;
 pub mod list;
 pub mod migrate;
 
@@ -52,6 +54,7 @@ pub struct Account {
 #[derive(Debug, Subcommand)]
 pub enum Commands {
     Import(Import),
+    ImportStarkli(ImportStarkli),
     Create(Create),
     Deploy(Deploy),
     Delete(Delete),
@@ -292,6 +295,36 @@ pub async fn account(
             }
 
             Ok(process_command_result("account import", result, ui, None))
+        }
+        Commands::ImportStarkli(import) => {
+            let provider = import.rpc.get_provider(&config, ui).await?;
+            let result = starknet_commands::account::import_starkli::import_starkli(
+                &config.accounts_file,
+                &provider,
+                &import,
+                &config,
+                ui,
+            )
+            .await;
+
+            let run_interactive_prompt =
+                !import.silent && result.is_ok() && io::stdout().is_terminal();
+            if run_interactive_prompt
+                && let Some(account_name) = result.as_ref().ok().map(|r| r.account_name.clone())
+                && let Err(err) = prompt_to_add_account_as_default(account_name.as_str(), ui)
+            {
+                ui.print_error(
+                    "account import-starkli",
+                    format!("Error: Failed to launch interactive prompt: {err}"),
+                );
+            }
+
+            Ok(process_command_result(
+                "account import-starkli",
+                result,
+                ui,
+                None,
+            ))
         }
         Commands::Create(create) => {
             let provider = create.rpc.get_provider(&config, ui).await?;

@@ -13,9 +13,8 @@ use helpers::constants::UDC_ADDRESS;
 use rand::RngCore;
 use rand::rngs::OsRng;
 use response::errors::SNCastStarknetError;
-use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use serde_json::{Deserializer, Value};
+use serde_json::Value;
 use shared::rpc::create_rpc_client;
 use starknet_rust::accounts::{AccountFactory, AccountFactoryError};
 use starknet_rust::core::types::{
@@ -37,10 +36,10 @@ use starknet_rust::{
 };
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
+use std::env;
 use std::fmt::Display;
 use std::thread::sleep;
 use std::time::Duration;
-use std::{env, fs};
 use thiserror::Error;
 use url::Url;
 
@@ -420,27 +419,6 @@ pub fn get_account_record_from_accounts_file(
 
 pub use compat::starkli::load_account as get_account_data_from_keystore;
 pub use get_account_record_from_accounts_file as get_account_data_from_accounts_file;
-
-pub fn read_and_parse_json_file<T>(path: &Utf8PathBuf) -> Result<T>
-where
-    T: DeserializeOwned + Default,
-{
-    let file_content =
-        fs::read_to_string(path).with_context(|| format!("Failed to read a file = {path}"))?;
-
-    if file_content.trim().is_empty() {
-        return Ok(T::default());
-    }
-
-    let deserializer = &mut Deserializer::from_str(&file_content);
-    serde_path_to_error::deserialize(deserializer).map_err(|err| {
-        let path_to_field = err.path().to_string();
-        anyhow!(
-            "Failed to parse field `{path_to_field}` in file '{path}': {}",
-            err.into_inner()
-        )
-    })
-}
 
 pub(crate) async fn get_account_encoding(
     legacy: Option<bool>,
