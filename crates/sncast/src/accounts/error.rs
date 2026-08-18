@@ -1,3 +1,4 @@
+use camino::Utf8PathBuf;
 use thiserror::Error;
 
 /// Errors raised while validating and resolving native account data.
@@ -24,4 +25,24 @@ pub enum AccountsError {
         account: String,
         message: String,
     },
+
+    #[error("failed to {operation} `{path}`: {source}")]
+    Storage {
+        operation: &'static str,
+        path: Utf8PathBuf,
+        #[source]
+        source: std::io::Error,
+    },
+
+    #[error("accounts file `{path}` does not exist")]
+    FileNotFound { path: Utf8PathBuf },
+
+    #[error("refusing to access accounts file through symlink `{path}`")]
+    Symlink { path: Utf8PathBuf },
+
+    #[error("account `{account}` already exists on network `{network}`")]
+    DuplicateAccount { network: String, account: String },
+
+    #[error("account `{account}` was not found on network `{network}`")]
+    AccountNotFound { network: String, account: String },
 }
