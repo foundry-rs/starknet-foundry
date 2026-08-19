@@ -33,7 +33,7 @@ Execution Status: Succeeded
 
 ### Inspecting a Transaction Trace
 
-Use `get tx-trace` to display validation, execution or constructor, L1 handler, and fee transfer calls as aligned, nested fields. For Cairo 1 contracts, `sncast` uses the contract ABI to decode selectors, calldata, and call results.
+Use `get tx-trace` to display the execution trace of a transaction.
 
 ```shell
 $ sncast \
@@ -74,8 +74,12 @@ Fee Transfer Invocation
 
 </details>
 
-If a class or ABI cannot be fetched, or a value cannot be decoded, the affected selector and felts are displayed in hexadecimal instead. Cairo 0 selector names are resolved when an ABI is available, while their calldata and results remain raw.
+By default, the trace output omits some fields for brevity. To display the full transaction trace, use the `--full` flag:
 
-Pass the global `--json` flag to return the complete, unmodified `starknet_traceTransaction` result under the `transaction_trace` field. JSON mode does not perform ABI lookups.
-
-Pass `--full` to include every trace field using the same aligned field format as `get tx-receipt`, while preserving the nesting of the Starknet Trace API schema.
+```shell
+$ sncast \
+ get tx-trace \
+ 0x07d2067cd7675f88493a9d773b456c8d941457ecc2f6201d2fe6b0607daadfd1 \
+ --full \
+ --network sepolia
+```
