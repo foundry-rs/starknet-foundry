@@ -7,7 +7,7 @@ use foundry_ui::UI;
 use regex::Regex;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use semver::Version;
-use shared::cache::{CACHEDIR_TAG_FILENAME, SNFOUNDRY_CACHE_TAG_MARKER};
+use shared::cache::{CACHEDIR_TAG_CONTENTS, CACHEDIR_TAG_FILENAME};
 use std::fs;
 use std::sync::OnceLock;
 
@@ -116,7 +116,7 @@ fn is_snfoundry_cache_file(path: &Utf8Path) -> bool {
 
     if file_name == CACHEDIR_TAG_FILENAME {
         return fs::read_to_string(path)
-            .is_ok_and(|contents| contents.contains(SNFOUNDRY_CACHE_TAG_MARKER));
+            .is_ok_and(|contents| contents.contains(CACHEDIR_TAG_CONTENTS));
     }
 
     let Some(captures) = fork_cache_file_regex().captures(file_name) else {
