@@ -75,7 +75,7 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
 
             if abi_decoding_incomplete {
                 ui.print_warning(WarningMessage::new(
-                    "Some trace data could not be decoded with the fetched ABIs; raw felts are shown instead.",
+                    "Some trace data could not be decoded with the fetched ABIs. Raw felts are shown instead.",
                 ));
                 ui.print_blank_line();
             }
