@@ -29,10 +29,4 @@ Overrides network from `snfoundry.toml`.
 ## `--full`
 Optional.
 
-Display every field returned in the transaction trace using the same aligned field format as
-`get tx-receipt`, while preserving the nesting of the Starknet Trace API schema. This includes
-transaction and per-call execution resources, function invocations, events, L1 messages, nested
-calls, and the complete state diff.
-
-Without this flag, the human-readable output is limited to the decoded call tree. JSON output always
-contains the complete, unmodified transaction trace.
+Display full transaction trace. Without this flag, the output will omit some fields for brevity.

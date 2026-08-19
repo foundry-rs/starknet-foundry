@@ -53,9 +53,6 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
         .map_err(handle_starknet_command_error);
 
     let result = match result {
-        Ok(trace) if ui.base_ui().output_format() == OutputFormat::Human && tx_trace.full => Ok(
-            TransactionTraceResponse::full(tx_trace.transaction_hash, trace),
-        ),
         Ok(trace) if ui.base_ui().output_format() == OutputFormat::Human => {
             let class_references =
                 TransactionTraceResponse::contract_addresses_by_class_hash(&trace);
@@ -66,6 +63,7 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
                     tx_trace.transaction_hash,
                     trace,
                     classes,
+                    tx_trace.full,
                 );
 
             if !failures.is_empty() {

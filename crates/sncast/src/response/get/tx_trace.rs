@@ -39,9 +39,14 @@ impl TransactionTraceResponse {
         transaction_hash: Felt,
         transaction_trace: TransactionTrace,
         contract_classes: HashMap<Felt, ContractClass>,
+        full: bool,
     ) -> (Self, bool) {
         let (decoder, invalid_abi) = TraceDecoder::new(contract_classes);
-        let human_trace = render_trace(transaction_hash, &transaction_trace, &decoder);
+        let human_trace = if full {
+            render_full_trace(transaction_hash, &transaction_trace, Some(&decoder))
+        } else {
+            render_trace(transaction_hash, &transaction_trace, &decoder)
+        };
         let decoding_incomplete = invalid_abi || decoder.had_decode_failure.get();
 
         (
@@ -51,15 +56,6 @@ impl TransactionTraceResponse {
             },
             decoding_incomplete,
         )
-    }
-
-    #[must_use]
-    pub fn full(transaction_hash: Felt, transaction_trace: TransactionTrace) -> Self {
-        let human_trace = render_full_trace(transaction_hash, &transaction_trace);
-        Self {
-            transaction_trace,
-            output: TransactionTraceOutput::Human(human_trace),
-        }
     }
 
     #[must_use]
@@ -81,6 +77,7 @@ impl SncastCommandMessage for TransactionTraceResponse {
             TransactionTraceOutput::Json { transaction_hash } => Cow::Owned(render_full_trace(
                 *transaction_hash,
                 &self.transaction_trace,
+                None,
             )),
         };
 
@@ -346,9 +343,16 @@ fn append_compact_invocation(
     builder
 }
 
-fn render_full_trace(transaction_hash: Felt, transaction_trace: &TransactionTrace) -> String {
-    let trace = serde_json::to_value(transaction_trace)
+fn render_full_trace(
+    transaction_hash: Felt,
+    transaction_trace: &TransactionTrace,
+    decoder: Option<&TraceDecoder>,
+) -> String {
+    let mut trace = serde_json::to_value(transaction_trace)
         .expect("transaction trace should serialize to JSON");
+    if let Some(decoder) = decoder {
+        decode_full_trace_invocations(&mut trace, transaction_trace, decoder);
+    }
     let serde_json::Value::Object(mut fields) = trace else {
         unreachable!("transaction trace should serialize as an object");
     };
@@ -359,6 +363,146 @@ fn render_full_trace(transaction_hash: Felt, transaction_trace: &TransactionTrac
     }
     builder = builder.padded_felt_field("Transaction Hash", &transaction_hash);
     append_json_object(builder, &fields, 0).build()
+}
+
+fn decode_full_trace_invocations(
+    value: &mut serde_json::Value,
+    transaction_trace: &TransactionTrace,
+    decoder: &TraceDecoder,
+) {
+    let serde_json::Value::Object(fields) = value else {
+        unreachable!("transaction trace should serialize as an object");
+    };
+
+    match transaction_trace {
+        TransactionTrace::Invoke(trace) => {
+            decode_optional_invocation_field(
+                fields,
+                "validate_invocation",
+                trace.validate_invocation.as_ref(),
+                decoder,
+            );
+            decode_execute_invocation_field(
+                fields,
+                "execute_invocation",
+                &trace.execute_invocation,
+                decoder,
+            );
+            decode_optional_invocation_field(
+                fields,
+                "fee_transfer_invocation",
+                trace.fee_transfer_invocation.as_ref(),
+                decoder,
+            );
+        }
+        TransactionTrace::Declare(trace) => {
+            decode_optional_invocation_field(
+                fields,
+                "validate_invocation",
+                trace.validate_invocation.as_ref(),
+                decoder,
+            );
+            decode_optional_invocation_field(
+                fields,
+                "fee_transfer_invocation",
+                trace.fee_transfer_invocation.as_ref(),
+                decoder,
+            );
+        }
+        TransactionTrace::DeployAccount(trace) => {
+            decode_optional_invocation_field(
+                fields,
+                "validate_invocation",
+                trace.validate_invocation.as_ref(),
+                decoder,
+            );
+            decode_invocation_field(
+                fields,
+                "constructor_invocation",
+                &trace.constructor_invocation,
+                decoder,
+            );
+            decode_optional_invocation_field(
+                fields,
+                "fee_transfer_invocation",
+                trace.fee_transfer_invocation.as_ref(),
+                decoder,
+            );
+        }
+        TransactionTrace::L1Handler(trace) => decode_execute_invocation_field(
+            fields,
+            "function_invocation",
+            &trace.function_invocation,
+            decoder,
+        ),
+    }
+}
+
+fn decode_execute_invocation_field(
+    fields: &mut serde_json::Map<String, serde_json::Value>,
+    name: &str,
+    invocation: &ExecuteInvocation,
+    decoder: &TraceDecoder,
+) {
+    if let ExecuteInvocation::Success(invocation) = invocation {
+        decode_invocation_field(fields, name, invocation, decoder);
+    }
+}
+
+fn decode_optional_invocation_field(
+    fields: &mut serde_json::Map<String, serde_json::Value>,
+    name: &str,
+    invocation: Option<&FunctionInvocation>,
+    decoder: &TraceDecoder,
+) {
+    if let Some(invocation) = invocation {
+        decode_invocation_field(fields, name, invocation, decoder);
+    }
+}
+
+fn decode_invocation_field(
+    fields: &mut serde_json::Map<String, serde_json::Value>,
+    name: &str,
+    invocation: &FunctionInvocation,
+    decoder: &TraceDecoder,
+) {
+    let value = fields
+        .get_mut(name)
+        .expect("serialized transaction trace should contain invocation field");
+    decode_invocation(value, invocation, decoder);
+}
+
+fn decode_invocation(
+    value: &mut serde_json::Value,
+    invocation: &FunctionInvocation,
+    decoder: &TraceDecoder,
+) {
+    let serde_json::Value::Object(fields) = value else {
+        unreachable!("function invocation should serialize as an object");
+    };
+
+    fields.insert(
+        "entry_point_selector".to_string(),
+        serde_json::Value::String(decoder.selector(invocation)),
+    );
+    fields.insert(
+        "calldata".to_string(),
+        serde_json::Value::String(decoder.calldata(invocation)),
+    );
+    fields.insert(
+        "result".to_string(),
+        serde_json::Value::String(decoder.result(invocation)),
+    );
+
+    let serde_json::Value::Array(calls) = fields
+        .get_mut("calls")
+        .expect("serialized function invocation should contain calls")
+    else {
+        unreachable!("function invocation calls should serialize as an array");
+    };
+    for (value, invocation) in calls.iter_mut().zip(&invocation.calls) {
+        decode_invocation(value, invocation, decoder);
+    }
 }
 
 fn append_json_object(
@@ -503,11 +647,14 @@ fn format_raw_felts(felts: &[Felt]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::TransactionTraceResponse;
+    use super::{TraceDecoder, TransactionTraceResponse, render_full_trace};
     use crate::response::cast_message::SncastCommandMessage;
     use serde_json::json;
     use starknet_rust::core::types::TransactionTrace;
+    use starknet_rust::core::types::contract::AbiEntry;
+    use starknet_rust::core::utils::get_selector_from_name;
     use starknet_types_core::felt::Felt;
+    use std::collections::HashMap;
 
     #[test]
     fn json_response_can_be_rendered_as_text() {
@@ -530,5 +677,57 @@ mod tests {
 
         let json = serde_json::to_value(response).unwrap();
         assert_eq!(json["transaction_trace"]["type"], "DECLARE");
+    }
+
+    #[test]
+    fn full_human_response_keeps_invocation_values_decoded() {
+        let selector = get_selector_from_name("unsigned_fn").unwrap();
+        let class_hash = Felt::from(0x456_u16);
+        let invocation = json!({
+            "contract_address": "0x123",
+            "entry_point_selector": selector.to_hex_string(),
+            "calldata": ["0x7"],
+            "caller_address": "0x0",
+            "class_hash": class_hash.to_hex_string(),
+            "entry_point_type": "EXTERNAL",
+            "call_type": "CALL",
+            "result": [],
+            "calls": [],
+            "events": [],
+            "messages": [],
+            "execution_resources": { "l1_gas": 0, "l2_gas": 0 },
+            "is_reverted": false
+        });
+        let transaction_trace = serde_json::from_value::<TransactionTrace>(json!({
+            "type": "INVOKE",
+            "validate_invocation": null,
+            "execute_invocation": invocation,
+            "fee_transfer_invocation": null,
+            "state_diff": null,
+            "execution_resources": { "l1_gas": 1, "l1_data_gas": 2, "l2_gas": 3 }
+        }))
+        .unwrap();
+        let abi = serde_json::from_value::<Vec<AbiEntry>>(json!([{
+            "name": "unsigned_fn",
+            "type": "function",
+            "inputs": [{ "name": "value", "type": "core::integer::u32" }],
+            "outputs": [],
+            "state_mutability": "external"
+        }]))
+        .unwrap();
+        let decoder = TraceDecoder {
+            sierra_abis: HashMap::from([(class_hash, abi)]),
+            ..TraceDecoder::default()
+        };
+
+        let text = render_full_trace(Felt::from(0xabc_u16), &transaction_trace, Some(&decoder));
+
+        assert!(text.contains("Entry Point Selector:"));
+        assert!(text.contains("unsigned_fn"));
+        assert!(text.contains("Calldata:"));
+        assert!(text.contains("7_u32"));
+        assert!(text.contains("Result:"));
+        assert!(text.contains("success"));
+        assert!(text.contains("L1 Data Gas:"));
     }
 }

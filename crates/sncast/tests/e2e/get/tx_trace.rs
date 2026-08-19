@@ -2,6 +2,7 @@ use crate::helpers::constants::URL;
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use serde_json::{Value, json};
+use starknet_rust::core::utils::get_selector_from_name;
 use wiremock::matchers::{body_partial_json, method};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -136,16 +137,16 @@ async fn test_invoke_transaction_trace_full() {
         Transaction Hash:         0x026476da48e56e5e7025543ad0bb9105df00ee08571c6d17c4207462ff7717c4
         Execute Invocation
           Call Type:              CALL
-          Calldata:               [0x1, 0x69b1360564534bf59fa889041a60f2c60ef5b259cfbf87a436867538e2c53e0, 0xc844fd57777b0cd7e75c8ea68deec0adf964a6308da7a58de32364b7131cc8, 0x13, 0x4c141c4019d33c08b1d94a85d54c4e92c2a5b2c5a2889f12ab81ecf220752, 0x4af604, 0x4e8d5ddbe29135d13a7edab22018a8f61cde628b468abfe63597996402ef4d, 0x6693f6f8, 0x2030100000000000000000000000000000000000000000000000000000000, 0x4, 0x5f5e360, 0x5f5f9d1, 0x5f5f9d1, 0x5f6174c, 0x971578a2056f81, 0x3afd28a5c57d, 0x2, 0x2f1f486eae02cc20f7fb08be2f88cbd44deca49bdc0ef031a4edf575f1cabf7, 0x2a539e3eaeadfc5ca897d7cbf38397fd7c6c6f3ccbc4f260d9d23a1e6bc5287, 0x6b72f55e68f1936feea371fab12ec039e8e1173579c03ac5c884ebf1653cce2, 0x4be40b6cab1d8e3acf5a99261cc3e07794b250a8afa04a1f44e2ac926895e6e, 0x167e81f05b6eddbe87180e9c27ba2f684a5d57709bb34c9e06f7d7f82b5c4b7, 0x319f9f7ce6e6c72e179557e79c57a542508867fa05b505cc32d2380ac72e711]
+          Calldata:               array![Call[..]
           Caller Address:         0x0
           Calls
             Call Type:            CALL
-            Calldata:             [0x4c141c4019d33c08b1d94a85d54c4e92c2a5b2c5a2889f12ab81ecf220752, 0x4af604, 0x4e8d5ddbe29135d13a7edab22018a8f61cde628b468abfe63597996402ef4d, 0x6693f6f8, 0x2030100000000000000000000000000000000000000000000000000000000, 0x4, 0x5f5e360, 0x5f5f9d1, 0x5f5f9d1, 0x5f6174c, 0x971578a2056f81, 0x3afd28a5c57d, 0x2, 0x2f1f486eae02cc20f7fb08be2f88cbd44deca49bdc0ef031a4edf575f1cabf7, 0x2a539e3eaeadfc5ca897d7cbf38397fd7c6c6f3ccbc4f260d9d23a1e6bc5287, 0x6b72f55e68f1936feea371fab12ec039e8e1173579c03ac5c884ebf1653cce2, 0x4be40b6cab1d8e3acf5a99261cc3e07794b250a8afa04a1f44e2ac926895e6e, 0x167e81f05b6eddbe87180e9c27ba2f684a5d57709bb34c9e06f7d7f82b5c4b7, 0x319f9f7ce6e6c72e179557e79c57a542508867fa05b505cc32d2380ac72e711]
+            Calldata:             ReportContext[..]
             Caller Address:       0x350461cc881640ebbcebf747107d456ef008ec455cd95d2b76a7d9face671f1
             Calls:                []
             Class Hash:           0x2f6d77cb0bca422706a91858dff62975aef4b8214520aadb1f0b39c51f5fde
             Contract Address:     0x69b1360564534bf59fa889041a60f2c60ef5b259cfbf87a436867538e2c53e0
-            Entry Point Selector: 0xc844fd57777b0cd7e75c8ea68deec0adf964a6308da7a58de32364b7131cc8
+            Entry Point Selector: transmit
             Entry Point Type:     EXTERNAL
             Events
               Data:               [0x5f5f9d1, 0x6693f6f8, 0x2030100000000000000000000000000000000000000000000000000000000, 0x4, 0x5f5e360, 0x5f5f9d1, 0x5f5f9d1, 0x5f6174c, 0x971578a2056f81, 0x3afd28a5c57d, 0x4c141c4019d33c08b1d94a85d54c4e92c2a5b2c5a2889f12ab81ecf220752, 0x4af604, 0x0]
@@ -156,10 +157,10 @@ async fn test_invoke_transaction_trace_full() {
               L2 Gas:             0
             Is Reverted:          false
             Messages:             []
-            Result:               []
+            Result:               success
           Class Hash:             0x5431265f9d2416426da800a23ddd3fe33db8e2b9fe96dbc48588ac3ac70c091
           Contract Address:       0x350461cc881640ebbcebf747107d456ef008ec455cd95d2b76a7d9face671f1
-          Entry Point Selector:   0x15d40a3d6ca2ac30f4031e42be28da9b056fef9bb7357ac5e85627ee876e5ad
+          Entry Point Selector:   __execute__
           Entry Point Type:       EXTERNAL
           Events:                 []
           Execution Resources
@@ -167,19 +168,19 @@ async fn test_invoke_transaction_trace_full() {
             L2 Gas:               0
           Is Reverted:            false
           Messages:               []
-          Result:                 [0x1, 0x0]
+          Result:                 success: array![array![].span()]
         Execution Resources
           L1 Data Gas:            576
           L1 Gas:                 30
           L2 Gas:                 0
         Fee Transfer Invocation
           Call Type:              CALL
-          Calldata:               [0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8, 0x6e9aac6dc0ca6, 0x0]
+          Calldata:               ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 1945769550285990_u256
           Caller Address:         0x350461cc881640ebbcebf747107d456ef008ec455cd95d2b76a7d9face671f1
           Calls:                  []
           Class Hash:             0x4ad3c1dc8413453db314497945b6903e1c766495a1e60492d44da9c2a986e4b
           Contract Address:       0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
-          Entry Point Selector:   0x83afd3f4caedc6eebf44246fe54e38c95e3179a5ec9ea81740eca5b482d12e
+          Entry Point Selector:   transfer
           Entry Point Type:       EXTERNAL
           Events
             Data:                 [0x350461cc881640ebbcebf747107d456ef008ec455cd95d2b76a7d9face671f1, 0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8, 0x6e9aac6dc0ca6, 0x0]
@@ -190,15 +191,15 @@ async fn test_invoke_transaction_trace_full() {
             L2 Gas:               0
           Is Reverted:            false
           Messages:               []
-          Result:                 [0x1]
+          Result:                 success: true
         Validate Invocation
           Call Type:              CALL
-          Calldata:               [0x1, 0x69b1360564534bf59fa889041a60f2c60ef5b259cfbf87a436867538e2c53e0, 0xc844fd57777b0cd7e75c8ea68deec0adf964a6308da7a58de32364b7131cc8, 0x13, 0x4c141c4019d33c08b1d94a85d54c4e92c2a5b2c5a2889f12ab81ecf220752, 0x4af604, 0x4e8d5ddbe29135d13a7edab22018a8f61cde628b468abfe63597996402ef4d, 0x6693f6f8, 0x2030100000000000000000000000000000000000000000000000000000000, 0x4, 0x5f5e360, 0x5f5f9d1, 0x5f5f9d1, 0x5f6174c, 0x971578a2056f81, 0x3afd28a5c57d, 0x2, 0x2f1f486eae02cc20f7fb08be2f88cbd44deca49bdc0ef031a4edf575f1cabf7, 0x2a539e3eaeadfc5ca897d7cbf38397fd7c6c6f3ccbc4f260d9d23a1e6bc5287, 0x6b72f55e68f1936feea371fab12ec039e8e1173579c03ac5c884ebf1653cce2, 0x4be40b6cab1d8e3acf5a99261cc3e07794b250a8afa04a1f44e2ac926895e6e, 0x167e81f05b6eddbe87180e9c27ba2f684a5d57709bb34c9e06f7d7f82b5c4b7, 0x319f9f7ce6e6c72e179557e79c57a542508867fa05b505cc32d2380ac72e711]
+          Calldata:               array![Call[..]
           Caller Address:         0x0
           Calls:                  []
           Class Hash:             0x5431265f9d2416426da800a23ddd3fe33db8e2b9fe96dbc48588ac3ac70c091
           Contract Address:       0x350461cc881640ebbcebf747107d456ef008ec455cd95d2b76a7d9face671f1
-          Entry Point Selector:   0x162da33a4585851fe8d3af3c2a9c60b557814e221e0d4f30ff0b2189d9c7775
+          Entry Point Selector:   __validate__
           Entry Point Type:       EXTERNAL
           Events:                 []
           Execution Resources
@@ -206,7 +207,7 @@ async fn test_invoke_transaction_trace_full() {
             L2 Gas:               0
           Is Reverted:            false
           Messages:               []
-          Result:                 [0x56414c4944]
+          Result:                 success: 0x56414c4944
     "})
         .stderr_eq("");
 }
@@ -251,12 +252,12 @@ async fn test_declare_transaction_trace_full() {
           L2 Gas:               0
         Fee Transfer Invocation
           Call Type:            CALL
-          Calldata:             [0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8, 0x24bf48b9e33714, 0x0]
+          Calldata:             ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 10343418238809876_u256
           Caller Address:       0x6aac79bb6c90e1e41c33cd20c67c0281c4a95f01b4e15ad0c3b53fcc6010cf8
           Calls:                []
           Class Hash:           0x4ad3c1dc8413453db314497945b6903e1c766495a1e60492d44da9c2a986e4b
           Contract Address:     0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
-          Entry Point Selector: 0x83afd3f4caedc6eebf44246fe54e38c95e3179a5ec9ea81740eca5b482d12e
+          Entry Point Selector: transfer
           Entry Point Type:     EXTERNAL
           Events
             Data:               [0x6aac79bb6c90e1e41c33cd20c67c0281c4a95f01b4e15ad0c3b53fcc6010cf8, 0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8, 0x24bf48b9e33714, 0x0]
@@ -267,15 +268,15 @@ async fn test_declare_transaction_trace_full() {
             L2 Gas:             0
           Is Reverted:          false
           Messages:             []
-          Result:               [0x1]
+          Result:               success: true
         Validate Invocation
           Call Type:            CALL
-          Calldata:             [0x58e7b465e6c7651fa8697964a2d1ed93a62c0c00ba9876ddc4480dd0578d343]
+          Calldata:             0x58e7b465e6c7651fa8697964a2d1ed93a62c0c00ba9876ddc4480dd0578d343
           Caller Address:       0x0
           Calls:                []
           Class Hash:           0x450f568a8cb6ea1bcce446355e8a1c2e5852a6b8dc3536f495cdceb62e8a7e2
           Contract Address:     0x6aac79bb6c90e1e41c33cd20c67c0281c4a95f01b4e15ad0c3b53fcc6010cf8
-          Entry Point Selector: 0x289da278a8dc833409cabfdad1581e8e7d40e42dcaed693fa4008dcdb4963b3
+          Entry Point Selector: __validate_declare__
           Entry Point Type:     EXTERNAL
           Events:               []
           Execution Resources
@@ -283,7 +284,7 @@ async fn test_declare_transaction_trace_full() {
             L2 Gas:             0
           Is Reverted:          false
           Messages:             []
-          Result:               [0x56414c4944]
+          Result:               success: 0x56414c4944
     "})
         .stderr_eq("");
 }
@@ -329,12 +330,12 @@ async fn test_deploy_account_transaction_trace_full() {
         Transaction Hash:       0x06718b783a0b888f5421c4eb76a532feb9fd5167b2b09274298f79798c782b32
         Constructor Invocation
           Call Type:            CALL
-          Calldata:             [0x796b0283375b9aa6fc0ac6b9ea1f98584f8464a66f05f29c3deb4c5eeea5263]
+          Calldata:             0x796b0283375b9aa6fc0ac6b9ea1f98584f8464a66f05f29c3deb4c5eeea5263
           Caller Address:       0x0
           Calls:                []
           Class Hash:           0x61dac032f228abef9c6626f995015233097ae253a7f72d68552db02f2971b8f
           Contract Address:     0x563870107a0a2c8cf34d2a42118dc52706a7eae7c1c741d32abec98d3238677
-          Entry Point Selector: 0x28ffe4ff0f226a9107253e17a904099aa4f63a02a5621de0576e5aa71bc5194
+          Entry Point Selector: constructor
           Entry Point Type:     CONSTRUCTOR
           Events
             Data:               [0x796b0283375b9aa6fc0ac6b9ea1f98584f8464a66f05f29c3deb4c5eeea5263]
@@ -345,19 +346,19 @@ async fn test_deploy_account_transaction_trace_full() {
             L2 Gas:             0
           Is Reverted:          false
           Messages:             []
-          Result:               []
+          Result:               success
         Execution Resources
           L1 Data Gas:          0
           L1 Gas:               0
           L2 Gas:               377050
         Fee Transfer Invocation
           Call Type:            CALL
-          Calldata:             [0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8, 0xb747b64c6df320, 0x0]
+          Calldata:             ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 51588769029944096_u256
           Caller Address:       0x563870107a0a2c8cf34d2a42118dc52706a7eae7c1c741d32abec98d3238677
           Calls:                []
           Class Hash:           0x5327164fa21dca89a92e8eae8a5b7ab90f58373e71f0a16d285e5a4abe5a3cf
           Contract Address:     0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
-          Entry Point Selector: 0x83afd3f4caedc6eebf44246fe54e38c95e3179a5ec9ea81740eca5b482d12e
+          Entry Point Selector: transfer
           Entry Point Type:     EXTERNAL
           Events
             Data:               [0x563870107a0a2c8cf34d2a42118dc52706a7eae7c1c741d32abec98d3238677, 0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8, 0xb747b64c6df320, 0x0]
@@ -368,15 +369,15 @@ async fn test_deploy_account_transaction_trace_full() {
             L2 Gas:             0
           Is Reverted:          false
           Messages:             []
-          Result:               [0x1]
+          Result:               success: true
         Validate Invocation
           Call Type:            CALL
-          Calldata:             [0x61dac032f228abef9c6626f995015233097ae253a7f72d68552db02f2971b8f, 0x23141, 0x796b0283375b9aa6fc0ac6b9ea1f98584f8464a66f05f29c3deb4c5eeea5263]
+          Calldata:             0x61dac032f228abef9c6626f995015233097ae253a7f72d68552db02f2971b8f, 0x23141, 0x796b0283375b9aa6fc0ac6b9ea1f98584f8464a66f05f29c3deb4c5eeea5263
           Caller Address:       0x0
           Calls:                []
           Class Hash:           0x61dac032f228abef9c6626f995015233097ae253a7f72d68552db02f2971b8f
           Contract Address:     0x563870107a0a2c8cf34d2a42118dc52706a7eae7c1c741d32abec98d3238677
-          Entry Point Selector: 0x36fcbf06cd96843058359e1a75928beacfac10727dab22a3972f0af8aa92895
+          Entry Point Selector: __validate_deploy__
           Entry Point Type:     EXTERNAL
           Events:               []
           Execution Resources
@@ -384,7 +385,7 @@ async fn test_deploy_account_transaction_trace_full() {
             L2 Gas:             0
           Is Reverted:          false
           Messages:             []
-          Result:               [0x56414c4944]
+          Result:               success: 0x56414c4944
     "})
         .stderr_eq("");
 }
@@ -429,16 +430,16 @@ async fn test_l1_handler_transaction_trace_full() {
           L2 Gas:                 401920
         Function Invocation
           Call Type:              CALL
-          Calldata:               [0x423f7744017600727ce4789933e4648068835e28, 0x43c585509832d6c8e71cc49e0a1b9c1e, 0xdbab5414cf45b42ceac0b391fb86d03b, 0x5ff829, 0x0]
+          Calldata:               0x423f7744017600727ce4789933e4648068835e28, 99359224995532825384289367229767519998085228603184343483478058520072918113310_u256, 6289449_u256
           Caller Address:         0x0
           Calls
             Call Type:            CALL
-            Calldata:             [0x43c585509832d6c8e71cc49e0a1b9c1e, 0xdbab5414cf45b42ceac0b391fb86d03b, 0x5ff829, 0x0]
+            Calldata:             99359224995532825384289367229767519998085228603184343483478058520072918113310_u256, 6289449_u256
             Caller Address:       0x763c1a0ec1d64afe2d8d0a2c0cab6fd494dcb26d08ef1020b27aa5695761e21
             Calls:                []
             Class Hash:           0x48d1f93626722872832416241a30c20bb77403b48249e65bebae67ab7a5329
             Contract Address:     0x20f6d32589a0d57c72faed530354bac49144ca99aff3429cc3284514583b595
-            Entry Point Selector: 0xbef29f825020c5aac1121de2686d2010bd562ce4612350d4668e7812b998d7
+            Entry Point Selector: receive_hash
             Entry Point Type:     EXTERNAL
             Events
               Data:               [0x5ff829, 0x0, 0x43c585509832d6c8e71cc49e0a1b9c1e, 0xdbab5414cf45b42ceac0b391fb86d03b]
@@ -449,10 +450,10 @@ async fn test_l1_handler_transaction_trace_full() {
               L2 Gas:             0
             Is Reverted:          false
             Messages:             []
-            Result:               []
+            Result:               success
           Class Hash:             0x18c9ce7ffa88f15bd1fcda1350cb66cc5c369bc924e5dc108be1c9317298c99
           Contract Address:       0x763c1a0ec1d64afe2d8d0a2c0cab6fd494dcb26d08ef1020b27aa5695761e21
-          Entry Point Selector:   0x3fa70707d0e831418fb142ca8fb7483611b84e89c0c42bf1fc2a7a5c40890ad
+          Entry Point Selector:   receive_commitment
           Entry Point Type:       L1_HANDLER
           Events
             Data:                 [0x43c585509832d6c8e71cc49e0a1b9c1e, 0xdbab5414cf45b42ceac0b391fb86d03b, 0x5ff829, 0x0]
@@ -463,7 +464,7 @@ async fn test_l1_handler_transaction_trace_full() {
             L2 Gas:               0
           Is Reverted:            false
           Messages:               []
-          Result:                 []
+          Result:                 success
     "})
         .stderr_eq("");
 }
@@ -681,6 +682,56 @@ async fn test_human_trace_warns_when_fetched_abi_cannot_decode_trace() {
               Result:               success: 0x9
         "})
     .stderr_eq("");
+}
+
+#[tokio::test]
+async fn test_full_human_trace_keeps_invocation_values_decoded() {
+    let mock_server = MockServer::start().await;
+    let selector = get_selector_from_name("unsigned_fn").unwrap();
+    let mut trace = trace();
+    trace["execute_invocation"]["entry_point_selector"] = json!(selector.to_hex_string());
+    mock_trace(
+        &mock_server,
+        ResponseTemplate::new(200).set_body_json(json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": trace
+        })),
+    )
+    .await;
+    mock_contract_class(
+        &mock_server,
+        json!([{
+            "name": "unsigned_fn",
+            "type": "function",
+            "inputs": [{ "name": "value", "type": "core::integer::u32" }],
+            "outputs": [],
+            "state_mutability": "external"
+        }]),
+    )
+    .await;
+
+    let output = runner(&[
+        "get",
+        "tx-trace",
+        TRANSACTION_HASH,
+        "--full",
+        "--url",
+        &mock_server.uri(),
+    ])
+    .assert()
+    .success()
+    .stderr_eq("");
+    let stdout = String::from_utf8_lossy(&output.get_output().stdout);
+
+    assert!(stdout.contains("Entry Point Selector:"));
+    assert!(stdout.contains("unsigned_fn"));
+    assert!(stdout.contains("Calldata:"));
+    assert!(stdout.contains("7_u32"));
+    assert!(stdout.contains("Result:"));
+    assert!(stdout.contains("success"));
+    assert!(stdout.contains("Call Type:"));
+    assert!(stdout.contains("Execution Resources"));
 }
 
 #[tokio::test]
