@@ -21,5 +21,8 @@ num-traits.workspace = true
 foundry-ui ={ path = "../foundry-ui" }
 thiserror = "2.0.17"
 
+[dev-dependencies]
+tempfile.workspace = true
+
 [features]
 testing = []

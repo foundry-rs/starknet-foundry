@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - Possibility to set an L2 gas limit via unnamed argument `#[available_gas(...)]`, equivalent to `#[available_gas(l2_gas: ...)]`.
+- `CACHEDIR.TAG` file is now created in the cache directory.
 
 ## [0.63.0] - 2026-08-05
 

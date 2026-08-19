@@ -4,7 +4,9 @@ use super::common::runner::{
 };
 use crate::utils::get_snforge_std_entry;
 use assert_fs::fixture::{FileWriteStr, PathChild};
+use forge_runner::DEFAULT_CACHE_DIR;
 use indoc::{formatdoc, indoc};
+use shared::cache::{CACHEDIR_TAG_CONTENTS, CACHEDIR_TAG_FILENAME};
 use shared::test_utils::output_assert::{AsOutput, assert_stdout, assert_stdout_contains};
 use std::fs;
 use toml_edit::{DocumentMut, value};
@@ -763,6 +765,20 @@ fn with_rerun_failed_flag_and_name_filter() {
             simple_package_integrationtest::test_simple::test_another_failing
 
         "},
+    );
+}
+
+#[test]
+fn creates_default_cache_files() {
+    let temp = setup_package("simple_package");
+
+    test_runner(&temp).assert().code(1);
+
+    let cache_dir = temp.path().join(DEFAULT_CACHE_DIR);
+    assert!(cache_dir.join(".prev_tests_failed").is_file());
+    assert_eq!(
+        fs::read_to_string(cache_dir.join(CACHEDIR_TAG_FILENAME)).unwrap(),
+        CACHEDIR_TAG_CONTENTS
     );
 }
 
