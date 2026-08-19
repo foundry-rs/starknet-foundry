@@ -1,10 +1,10 @@
-//! Account domain and persistence boundaries.
+//! Account model and persistence boundaries.
 
-pub mod domain;
 pub mod error;
+pub mod model;
 
-pub use domain::{
+pub use error::AccountsError;
+pub use model::{
     AccountName, AccountRecord, AccountRegistry, AccountType, ConnectedAccountRecord,
     DeployableAccountRecord, NetworkName,
 };
-pub use error::AccountsError;
