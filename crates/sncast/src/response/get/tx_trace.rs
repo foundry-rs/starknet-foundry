@@ -11,20 +11,26 @@ use starknet_rust::core::types::{
 };
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
+use std::borrow::Cow;
 use std::cell::Cell;
 use std::collections::{HashMap, HashSet};
 
 pub struct TransactionTraceResponse {
     transaction_trace: TransactionTrace,
-    human_trace: Option<String>,
+    output: TransactionTraceOutput,
+}
+
+enum TransactionTraceOutput {
+    Human(String),
+    Json { transaction_hash: Felt },
 }
 
 impl TransactionTraceResponse {
     #[must_use]
-    pub fn new(transaction_trace: TransactionTrace) -> Self {
+    pub fn json(transaction_hash: Felt, transaction_trace: TransactionTrace) -> Self {
         Self {
             transaction_trace,
-            human_trace: None,
+            output: TransactionTraceOutput::Json { transaction_hash },
         }
     }
 
@@ -41,18 +47,18 @@ impl TransactionTraceResponse {
         (
             Self {
                 transaction_trace,
-                human_trace: Some(human_trace),
+                output: TransactionTraceOutput::Human(human_trace),
             },
             decoding_incomplete,
         )
     }
 
     #[must_use]
-    pub fn full(transaction_trace: TransactionTrace) -> Self {
-        let human_trace = render_full_trace(&transaction_trace);
+    pub fn full(transaction_hash: Felt, transaction_trace: TransactionTrace) -> Self {
+        let human_trace = render_full_trace(transaction_hash, &transaction_trace);
         Self {
             transaction_trace,
-            human_trace: Some(human_trace),
+            output: TransactionTraceOutput::Human(human_trace),
         }
     }
 
@@ -70,15 +76,18 @@ impl TransactionTraceResponse {
 
 impl SncastCommandMessage for TransactionTraceResponse {
     fn text(&self) -> String {
-        let human_trace = self
-            .human_trace
-            .as_ref()
-            .expect("human trace should be rendered for human output");
+        let human_trace = match &self.output {
+            TransactionTraceOutput::Human(human_trace) => Cow::Borrowed(human_trace.as_str()),
+            TransactionTraceOutput::Json { transaction_hash } => Cow::Owned(render_full_trace(
+                *transaction_hash,
+                &self.transaction_trace,
+            )),
+        };
 
         OutputBuilder::new()
             .success_message("Transaction trace retrieved")
             .blank_line()
-            .text_field(human_trace)
+            .text_field(&human_trace)
             .build()
     }
 }
@@ -300,7 +309,7 @@ fn append_execute_invocation(
         }
         ExecuteInvocation::Reverted(reverted) => append_section(builder, label, 0)
             .with_indent(2)
-            .field("Revert Reason", &reverted.revert_reason),
+            .multiline_field("Revert Reason", &reverted.revert_reason),
     }
 }
 
@@ -337,7 +346,7 @@ fn append_compact_invocation(
     builder
 }
 
-fn render_full_trace(transaction_trace: &TransactionTrace) -> String {
+fn render_full_trace(transaction_hash: Felt, transaction_trace: &TransactionTrace) -> String {
     let trace = serde_json::to_value(transaction_trace)
         .expect("transaction trace should serialize to JSON");
     let serde_json::Value::Object(mut fields) = trace else {
@@ -348,6 +357,7 @@ fn render_full_trace(transaction_trace: &TransactionTrace) -> String {
     if let Some(transaction_type) = fields.remove("type") {
         builder = append_json_field(builder, "type", &transaction_type, 0);
     }
+    builder = builder.padded_felt_field("Transaction Hash", &transaction_hash);
     append_json_object(builder, &fields, 0).build()
 }
 
@@ -489,4 +499,36 @@ fn format_raw_felts(felts: &[Felt]) -> String {
         .map(Felt::to_hex_string)
         .collect::<Vec<_>>()
         .join(", ")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::TransactionTraceResponse;
+    use crate::response::cast_message::SncastCommandMessage;
+    use serde_json::json;
+    use starknet_rust::core::types::TransactionTrace;
+    use starknet_types_core::felt::Felt;
+
+    #[test]
+    fn json_response_can_be_rendered_as_text() {
+        let transaction_trace = serde_json::from_value::<TransactionTrace>(json!({
+            "type": "DECLARE",
+            "validate_invocation": null,
+            "fee_transfer_invocation": null,
+            "state_diff": null,
+            "execution_resources": { "l1_gas": 0, "l1_data_gas": 0, "l2_gas": 0 }
+        }))
+        .unwrap();
+        let response = TransactionTraceResponse::json(Felt::from(0xabc_u16), transaction_trace);
+
+        let text = response.text();
+
+        assert!(text.contains("Transaction trace retrieved"));
+        assert!(text.contains(
+            "Transaction Hash: 0x0000000000000000000000000000000000000000000000000000000000000abc"
+        ));
+
+        let json = serde_json::to_value(response).unwrap();
+        assert_eq!(json["transaction_trace"]["type"], "DECLARE");
+    }
 }

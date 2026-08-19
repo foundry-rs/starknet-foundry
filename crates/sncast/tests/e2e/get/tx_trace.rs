@@ -2,6 +2,7 @@ use crate::helpers::constants::URL;
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use serde_json::{Value, json};
+use shared::test_utils::output_assert::assert_stdout_contains;
 use wiremock::matchers::{body_partial_json, method};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -133,6 +134,7 @@ async fn test_invoke_transaction_trace_full() {
         Success: Transaction trace retrieved
 
         Type:                     INVOKE
+        Transaction Hash:         0x026476da48e56e5e7025543ad0bb9105df00ee08571c6d17c4207462ff7717c4
         Execute Invocation
           Call Type:              CALL
           Calldata:               [0x1, 0x69b1360564534bf59fa889041a60f2c60ef5b259cfbf87a436867538e2c53e0, 0xc844fd57777b0cd7e75c8ea68deec0adf964a6308da7a58de32364b7131cc8, 0x13, 0x4c141c4019d33c08b1d94a85d54c4e92c2a5b2c5a2889f12ab81ecf220752, 0x4af604, 0x4e8d5ddbe29135d13a7edab22018a8f61cde628b468abfe63597996402ef4d, 0x6693f6f8, 0x2030100000000000000000000000000000000000000000000000000000000, 0x4, 0x5f5e360, 0x5f5f9d1, 0x5f5f9d1, 0x5f6174c, 0x971578a2056f81, 0x3afd28a5c57d, 0x2, 0x2f1f486eae02cc20f7fb08be2f88cbd44deca49bdc0ef031a4edf575f1cabf7, 0x2a539e3eaeadfc5ca897d7cbf38397fd7c6c6f3ccbc4f260d9d23a1e6bc5287, 0x6b72f55e68f1936feea371fab12ec039e8e1173579c03ac5c884ebf1653cce2, 0x4be40b6cab1d8e3acf5a99261cc3e07794b250a8afa04a1f44e2ac926895e6e, 0x167e81f05b6eddbe87180e9c27ba2f684a5d57709bb34c9e06f7d7f82b5c4b7, 0x319f9f7ce6e6c72e179557e79c57a542508867fa05b505cc32d2380ac72e711]
@@ -243,6 +245,7 @@ async fn test_declare_transaction_trace_full() {
         Success: Transaction trace retrieved
 
         Type:                   DECLARE
+        Transaction Hash:       0x06054540622d534ffffb162a0e80c21bc106581eafeb3efad29385b78e04983d
         Execution Resources
           L1 Data Gas:          192
           L1 Gas:               1071
@@ -324,6 +327,7 @@ async fn test_deploy_account_transaction_trace_full() {
         Success: Transaction trace retrieved
 
         Type:                   DEPLOY_ACCOUNT
+        Transaction Hash:       0x06718b783a0b888f5421c4eb76a532feb9fd5167b2b09274298f79798c782b32
         Constructor Invocation
           Call Type:            CALL
           Calldata:             [0x796b0283375b9aa6fc0ac6b9ea1f98584f8464a66f05f29c3deb4c5eeea5263]
@@ -419,6 +423,7 @@ async fn test_l1_handler_transaction_trace_full() {
         Success: Transaction trace retrieved
 
         Type:                     L1_HANDLER
+        Transaction Hash:         0x004c8c57b3ab646ef56aef3def69a01bc86d049b98f25ebfe3699334d86c24d5
         Execution Resources
           L1 Data Gas:            192
           L1 Gas:                 18783
@@ -481,17 +486,17 @@ async fn test_reverted_invoke_transaction_trace() {
           Result:               success: 0x56414c4944
         Execute Invocation
           Revert Reason:        Transaction execution has failed:
-        0: Error in the called contract (contract address: 0x04c1d9da136846ab084ae18cf6ce7a652df7793b666a16ce46b1bf5850cc739d, class hash: 0x01a736d6ed154502257f02b1ccdf4d9d1089f80811cd6acad48e6b6a9d1f2003, selector: 0x015d40a3d6ca2ac30f4031e42be28da9b056fef9bb7357ac5e85627ee876e5ad):
-        Error at pc=0:15647:
-        Cairo traceback (most recent call last):
-        Unknown location (pc=0:233)
-        Unknown location (pc=0:5191)
-        Unknown location (pc=0:11307)
+                                0: Error in the called contract (contract address: 0x04c1d9da136846ab084ae18cf6ce7a652df7793b666a16ce46b1bf5850cc739d, class hash: 0x01a736d6ed154502257f02b1ccdf4d9d1089f80811cd6acad48e6b6a9d1f2003, selector: 0x015d40a3d6ca2ac30f4031e42be28da9b056fef9bb7357ac5e85627ee876e5ad):
+                                Error at pc=0:15647:
+                                Cairo traceback (most recent call last):
+                                Unknown location (pc=0:233)
+                                Unknown location (pc=0:5191)
+                                Unknown location (pc=0:11307)
 
-        1: Error in the called contract (contract address: 0x036031daa264c24520b11d93af622c848b2499b66b41d611bac95e13cfca131a, class hash: 0x05e269051bec902aa2bd421d348e023c3893c4ff93de6c5f4b8964cd67cc3fc5, selector: 0x03d0bcca55c118f88a08e0fcc06f43906c0c174feb52ebc83f0fa28a1f59ed67):
-        Execution failed. Failure reason:
-        Error in contract (contract address: 0x036031daa264c24520b11d93af622c848b2499b66b41d611bac95e13cfca131a, class hash: 0x05e269051bec902aa2bd421d348e023c3893c4ff93de6c5f4b8964cd67cc3fc5, selector: 0x03d0bcca55c118f88a08e0fcc06f43906c0c174feb52ebc83f0fa28a1f59ed67):
-        0x4578697374696e6720656e747279206973206d6f726520726563656e74 ('Existing entry is more recent').
+                                1: Error in the called contract (contract address: 0x036031daa264c24520b11d93af622c848b2499b66b41d611bac95e13cfca131a, class hash: 0x05e269051bec902aa2bd421d348e023c3893c4ff93de6c5f4b8964cd67cc3fc5, selector: 0x03d0bcca55c118f88a08e0fcc06f43906c0c174feb52ebc83f0fa28a1f59ed67):
+                                Execution failed. Failure reason:
+                                Error in contract (contract address: 0x036031daa264c24520b11d93af622c848b2499b66b41d611bac95e13cfca131a, class hash: 0x05e269051bec902aa2bd421d348e023c3893c4ff93de6c5f4b8964cd67cc3fc5, selector: 0x03d0bcca55c118f88a08e0fcc06f43906c0c174feb52ebc83f0fa28a1f59ed67):
+                                0x4578697374696e6720656e747279206973206d6f726520726563656e74 ('Existing entry is more recent').
 
         Fee Transfer Invocation
           Entry Point Selector: transfer
@@ -621,7 +626,7 @@ async fn test_human_trace_warns_when_fetched_abi_cannot_decode_trace() {
     .success()
     .stdout_eq(indoc! {r"
             [WARNING] Some trace data could not be decoded with the fetched ABIs; raw felts are shown instead.
-            
+
             Success: Transaction trace retrieved
 
             Type:                   INVOKE

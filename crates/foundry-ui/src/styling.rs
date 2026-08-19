@@ -11,6 +11,7 @@ enum OutputEntry {
         value: String,
         extra: Option<String>,
         indent: usize,
+        indent_continuation: bool,
     },
     BlankLine,
     Text(String),
@@ -72,14 +73,30 @@ impl OutputBuilder {
     }
 
     #[must_use]
-    pub fn field(mut self, label_text: &str, value: &str) -> Self {
+    pub fn field(self, label_text: &str, value: &str) -> Self {
+        self.field_with_continuation(label_text, value, false)
+    }
+
+    fn field_with_continuation(
+        mut self,
+        label_text: &str,
+        value: &str,
+        indent_continuation: bool,
+    ) -> Self {
         self.entries.push(OutputEntry::Field {
             label: label_text.to_string(),
             value: value.to_string(),
             extra: None,
             indent: self.current_indent,
+            indent_continuation,
         });
         self
+    }
+
+    /// Adds a field whose continuation lines are aligned with the first line's value.
+    #[must_use]
+    pub fn multiline_field(self, label_text: &str, value: &str) -> Self {
+        self.field_with_continuation(label_text, value, true)
     }
 
     #[must_use]
@@ -150,8 +167,14 @@ impl OutputBuilder {
                     value,
                     extra,
                     indent,
+                    indent_continuation,
                 } => {
-                    let styled_value = style(&value).yellow();
+                    let mut continuation_lines = indent_continuation.then(|| value.lines());
+                    let first_line = continuation_lines
+                        .as_mut()
+                        .and_then(Iterator::next)
+                        .unwrap_or(value.as_str());
+                    let styled_value = style(first_line).yellow();
                     let field_value = match extra {
                         Some(extra) => format!("{styled_value} {extra}"),
                         None => format!("{styled_value}"),
@@ -163,6 +186,22 @@ impl OutputBuilder {
                         field_value,
                     )
                     .unwrap();
+
+                    if let Some(value_lines) = continuation_lines {
+                        for line in value_lines {
+                            if line.is_empty() {
+                                content.push('\n');
+                            } else {
+                                writeln!(
+                                    content,
+                                    "{}{}",
+                                    " ".repeat(field_width + 1),
+                                    style(line).yellow()
+                                )
+                                .unwrap();
+                            }
+                        }
+                    }
                 }
                 OutputEntry::BlankLine => {
                     content.push('\n');
