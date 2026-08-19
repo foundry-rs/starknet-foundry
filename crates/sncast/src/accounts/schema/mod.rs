@@ -1,7 +1,6 @@
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 
-use crate::accounts::schema::migration::{domain_to_v2, v1_to_domain, v2_to_domain};
 use crate::accounts::{AccountRegistry, AccountsError};
 
 pub mod migration;
@@ -58,19 +57,19 @@ impl AccountsCodec {
     pub fn decode(self, input: &[u8]) -> Result<DecodedRegistry, AccountsError> {
         match VersionedAccountsFile::decode(input)? {
             VersionedAccountsFile::V1(file) => Ok(DecodedRegistry {
-                registry: v1_to_domain(file)?,
+                registry: file.try_into()?,
                 source_version: SourceVersion::V1,
             }),
             VersionedAccountsFile::V2(file) => Ok(DecodedRegistry {
-                registry: v2_to_domain(file)?,
+                registry: file.try_into()?,
                 source_version: SourceVersion::V2,
             }),
         }
     }
 
     pub fn encode_v2(self, registry: &AccountRegistry) -> Result<Vec<u8>, AccountsError> {
-        let mut output =
-            serde_json::to_vec_pretty(&domain_to_v2(registry)).map_err(schema_error)?;
+        let file: v2::AccountsFile = registry.try_into()?;
+        let mut output = serde_json::to_vec_pretty(&file).map_err(schema_error)?;
         output.push(b'\n');
         Ok(output)
     }
