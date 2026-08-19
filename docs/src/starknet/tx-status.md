@@ -48,23 +48,28 @@ $ sncast \
 ```shell
 Success: Transaction trace retrieved
 
-Type:                   INVOKE
-Transaction Hash:       0x07d2067cd7675f88493a9d773b456c8d941457ecc2f6201d2fe6b0607daadfd1
+Type:                     INVOKE
+Transaction Hash:         0x07d2067cd7675f88493a9d773b456c8d941457ecc2f6201d2fe6b0607daadfd1
 Validate Invocation
-  Entry Point Selector: __validate__
-  Contract Address:     0x[..]
-  Calldata:             array![..]
-  Result:               success
+  Entry Point Selector:   __validate__
+  Contract Address:       0x[..]
+  Calldata:               array![..]
+  Result:                 success: 0x56414c4944
 Execute Invocation
-  Entry Point Selector: __execute__
-  Contract Address:     0x[..]
-  Calldata:             array![..]
-  Result:               success
+  Entry Point Selector:   __execute__
+  Contract Address:       0x[..]
+  Calldata:               array![..]
+  Result:                 success: array![array![].span()]
+  Calls
+    Entry Point Selector: transmit
+    Contract Address:     0x[..]
+    Calldata:             ReportContext { config_digest: 0x[..] }, [..]
+    Result:               success
 Fee Transfer Invocation
-  Entry Point Selector: transfer
-  Contract Address:     0x[..]
-  Calldata:             ContractAddress(0x[..]), 0x[..]
-  Result:               success: true
+  Entry Point Selector:   transfer
+  Contract Address:       0x[..]
+  Calldata:               ContractAddress(0x[..]), [..]_u256
+  Result:                 success: true
 ```
 
 </details>
