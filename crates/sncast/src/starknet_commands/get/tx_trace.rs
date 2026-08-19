@@ -53,9 +53,9 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
         .map_err(handle_starknet_command_error);
 
     let result = match result {
-        Ok(trace) if ui.base_ui().output_format() == OutputFormat::Human && tx_trace.full => {
-            Ok(TransactionTraceResponse::full(trace))
-        }
+        Ok(trace) if ui.base_ui().output_format() == OutputFormat::Human && tx_trace.full => Ok(
+            TransactionTraceResponse::full(tx_trace.transaction_hash, trace),
+        ),
         Ok(trace) if ui.base_ui().output_format() == OutputFormat::Human => {
             let class_references =
                 TransactionTraceResponse::contract_addresses_by_class_hash(&trace);
@@ -77,11 +77,15 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
                 ui.print_warning(WarningMessage::new(
                     "Some trace data could not be decoded with the fetched ABIs; raw felts are shown instead.",
                 ));
+                ui.print_blank_line();
             }
 
             Ok(response)
         }
-        Ok(trace) => Ok(TransactionTraceResponse::new(trace)),
+        Ok(trace) => Ok(TransactionTraceResponse::json(
+            tx_trace.transaction_hash,
+            trace,
+        )),
         Err(error) => Err(error),
     };
 
