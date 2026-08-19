@@ -9,6 +9,7 @@ use sncast::response::errors::{StarknetCommandError, handle_starknet_command_err
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::get::class_hash_at::ClassHashAtResponse;
 use sncast::response::ui::UI;
+use starknet_rust::core::types::BlockId;
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, Provider};
 use starknet_types_core::felt::Felt;
@@ -35,11 +36,12 @@ pub async fn class_hash_at(
     config: CastConfig,
     ui: &UI,
 ) -> anyhow::Result<ExitCode> {
+    let contract_address = args.contract_address.resolve(&config)?;
+    let block_id = get_block_id(&args.block_id)?;
+
     let provider = args.rpc.get_provider(&config, ui).await?;
 
-    let contract_address = args.contract_address.resolve(&config)?;
-
-    let result = get_class_hash_at(&provider, contract_address, &args.block_id)
+    let result = get_class_hash_at(&provider, contract_address, block_id)
         .await
         .map_err(handle_starknet_command_error);
 
@@ -57,10 +59,8 @@ pub async fn class_hash_at(
 async fn get_class_hash_at(
     provider: &JsonRpcClient<HttpTransport>,
     contract_address: Felt,
-    block_id: &str,
+    block_id: BlockId,
 ) -> Result<ClassHashAtResponse, StarknetCommandError> {
-    let block_id = get_block_id(block_id)?;
-
     let class_hash = provider
         .get_class_hash_at(block_id, contract_address)
         .await

@@ -342,8 +342,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
         Commands::Declare(declare) => {
             let provider = declare.common.rpc.get_provider(&config, ui).await?;
 
-            let rpc = declare.common.rpc.clone();
-
             let account = get_account(&config, &provider, &declare.common.rpc, ui).await?;
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &declare.package)?;
@@ -399,7 +397,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 let contract_definition: SierraClass =
                     serde_json::from_str(&contract_artifacts.sierra)
                         .context("Failed to parse sierra artifact")?;
-                let network_flag = generate_network_flag(&rpc, &config);
+                let network_flag = generate_network_flag(&declare.common.rpc, &config);
                 Some(DeployCommandMessage::new(
                     &contract_definition.abi,
                     declare.no_abi,
@@ -423,19 +421,17 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
         }
 
         Commands::DeclareFrom(declare_from) => {
-            let provider = declare_from.common.rpc.get_provider(&config, ui).await?;
-
             let contract_source = if let Some(sierra_file) = declare_from.sierra_file {
                 ContractSource::LocalFile {
                     sierra_path: sierra_file,
                 }
             } else {
-                let source_provider = declare_from.source_rpc.get_provider(ui).await?;
                 let block_id = get_block_id(&declare_from.block_id)?;
                 let class_hash = declare_from
                     .class_hash
                     .expect("missing class_hash")
                     .resolve(&config)?;
+                let source_provider = declare_from.source_rpc.get_provider(ui).await?;
 
                 ContractSource::Network {
                     source_provider,
@@ -444,6 +440,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 }
             };
 
+            let provider = declare_from.common.rpc.get_provider(&config, ui).await?;
             let account = get_account(&config, &provider, &declare_from.common.rpc, ui).await?;
 
             let result = with_account!(&account, |account| {
@@ -646,22 +643,32 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             block_id,
             rpc,
         }) => {
+            let selector = get_selector_from_name(&function)
+                .context("Failed to convert entry point selector to FieldElement")?;
+            let block_id = get_block_id(&block_id)?;
+            let contract_address = contract_address.resolve(&config)?;
+            let Arguments {
+                calldata,
+                arguments,
+            } = arguments;
+            let calldata = calldata
+                .map(|raw_calldata| resolve_calldata_to_felts(&raw_calldata, &config))
+                .transpose()?;
+
             let provider = rpc.get_provider(&config, ui).await?;
 
-            let contract_address = contract_address.resolve(&config)?;
-
-            let block_id = get_block_id(&block_id)?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
-            let selector = get_selector_from_name(&function)
-                .context("Failed to convert entry point selector to FieldElement")?;
-
-            let calldata = arguments.try_into_calldata(
-                &abi_from_contract_class(&contract_class)?,
-                &selector,
-                &config,
-            )?;
+            let calldata = if let Some(calldata) = calldata {
+                calldata
+            } else {
+                transform(
+                    &arguments.unwrap_or_default(),
+                    &abi_from_contract_class(&contract_class)?,
+                    &selector,
+                )?
+            };
 
             let result = starknet_commands::call::call(
                 contract_address,
@@ -703,22 +710,33 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 ..
             } = invoke;
 
-            let provider = rpc.get_provider(&config, ui).await?;
-
-            let account = get_account(&config, &provider, &rpc, ui).await?;
-
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
             let contract_address = contract_address.resolve(&config)?;
-            let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
-            let contract_class = get_contract_class(class_hash, &provider).await?;
+            let Arguments {
+                calldata,
+                arguments,
+            } = arguments;
+            let calldata = calldata
+                .map(|raw_calldata| resolve_calldata_to_felts(&raw_calldata, &config))
+                .transpose()?;
 
-            let calldata = arguments.try_into_calldata(
-                &abi_from_contract_class(&contract_class)?,
-                &selector,
-                &config,
-            )?;
+            let provider = rpc.get_provider(&config, ui).await?;
+
+            let account = get_account(&config, &provider, &rpc, ui).await?;
+
+            let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
+            let calldata = if let Some(calldata) = calldata {
+                calldata
+            } else {
+                let contract_class = get_contract_class(class_hash, &provider).await?;
+                transform(
+                    &arguments.unwrap_or_default(),
+                    &abi_from_contract_class(&contract_class)?,
+                    &selector,
+                )?
+            };
 
             let result = with_account!(&account, |account| {
                 starknet_commands::invoke::invoke(

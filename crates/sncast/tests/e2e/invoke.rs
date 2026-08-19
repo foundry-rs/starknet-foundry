@@ -375,6 +375,33 @@ async fn test_contract_does_not_exist() {
     );
 }
 
+#[tokio::test]
+async fn test_contract_does_not_exist_with_calldata() {
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        ACCOUNT,
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        "0x1",
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 0x2",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "Error: An error occurred in the called contract[..]Requested contract address[..]is not deployed[..]",
+    );
+}
+
 #[test]
 fn test_wrong_function_name() {
     let args = vec![
