@@ -379,12 +379,12 @@ pub async fn get_account_from_accounts_file<'a>(
                 SignerKind::PrivateKey
             };
             let wallet = LocalWallet::from(SigningKey::from_secret_scalar(private_key));
-            (RuntimeSigner::from_starknet_signer(wallet, kind), kind)
+            (RuntimeSigner::from_local_wallet(wallet, kind), kind)
         }
         SignerSource::Ledger(ledger_path) => {
             let signer = ledger::create_ledger_signer(&ledger_path, ui, true).await?;
             (
-                RuntimeSigner::from_starknet_signer(signer, SignerKind::Ledger),
+                RuntimeSigner::from_ledger_signer(signer, SignerKind::Ledger),
                 SignerKind::Ledger,
             )
         }

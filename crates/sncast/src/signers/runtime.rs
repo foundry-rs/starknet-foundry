@@ -3,28 +3,37 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use starknet_rust::core::crypto::Signature;
-use starknet_rust::signers::{Signer, SignerInteractivityContext, VerifyingKey};
+use starknet_rust::signers::{
+    LedgerSigner, LocalWallet, Signer, SignerInteractivityContext, VerifyingKey,
+};
 use starknet_types_core::felt::Felt;
 
-use crate::signers::backend::{SignerBackend, StarknetSignerBackend};
+use crate::helpers::ledger::SncastLedgerTransport;
+use crate::signers::backend::SignerBackend;
 use crate::signers::{SignerError, SignerKind};
 
 #[derive(Clone)]
 pub struct RuntimeSigner {
-    backend: Arc<dyn SignerBackend>,
+    backend: Arc<SignerBackend>,
 }
 
 impl RuntimeSigner {
     #[must_use]
-    pub fn new(backend: Arc<dyn SignerBackend>) -> Self {
-        Self { backend }
+    pub(crate) fn new(backend: SignerBackend) -> Self {
+        Self {
+            backend: Arc::new(backend),
+        }
     }
 
-    pub(crate) fn from_starknet_signer<S>(signer: S, kind: SignerKind) -> Self
-    where
-        S: Signer + Send + Sync + 'static,
-    {
-        Self::new(Arc::new(StarknetSignerBackend::new(signer, kind)))
+    pub(crate) fn from_local_wallet(signer: LocalWallet, kind: SignerKind) -> Self {
+        Self::new(SignerBackend::local_wallet(signer, kind))
+    }
+
+    pub(crate) fn from_ledger_signer(
+        signer: LedgerSigner<SncastLedgerTransport>,
+        kind: SignerKind,
+    ) -> Self {
+        Self::new(SignerBackend::ledger(signer, kind))
     }
 
     #[must_use]
@@ -70,7 +79,7 @@ mod tests {
     async fn adapts_starknet_signers_to_one_error_type() {
         let key = SigningKey::from_secret_scalar(Felt::ONE);
         let expected_public_key = key.verifying_key();
-        let signer = RuntimeSigner::from_starknet_signer(
+        let signer = RuntimeSigner::from_local_wallet(
             LocalWallet::from_signing_key(key),
             SignerKind::PrivateKey,
         );

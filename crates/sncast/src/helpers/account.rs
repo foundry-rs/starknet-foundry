@@ -129,7 +129,7 @@ pub async fn get_account_from_devnet<'a>(
         .signer_type
         .private_key()
         .context("Private key not found for devnet account")?;
-    let signer = RuntimeSigner::from_starknet_signer(
+    let signer = RuntimeSigner::from_local_wallet(
         LocalWallet::from_signing_key(SigningKey::from_secret_scalar(private_key)),
         SignerKind::PrivateKey,
     );

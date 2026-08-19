@@ -7,10 +7,7 @@ use starknet_types_core::felt::Felt;
 
 use crate::helpers::ledger;
 use crate::response::ui::UI;
-use crate::signers::{
-    CredentialProvider, DefaultCredentialProvider, RuntimeSigner, SignerError, SignerKind,
-    SignerSpec,
-};
+use crate::signers::{RuntimeSigner, SignerError, SignerKind, SignerSpec, keystore_password};
 
 pub struct SignerProviderContext<'a> {
     pub accounts_file: &'a Utf8Path,
@@ -36,9 +33,7 @@ impl Default for SignerResolver {
     fn default() -> Self {
         Self::new(vec![
             Arc::new(PrivateKeySignerProvider),
-            Arc::new(KeystoreSignerProvider::new(Arc::new(
-                DefaultCredentialProvider,
-            ))),
+            Arc::new(KeystoreSignerProvider),
             Arc::new(LedgerSignerProvider),
         ])
     }
@@ -100,23 +95,14 @@ impl SignerProvider for PrivateKeySignerProvider {
             return Err(SignerError::Unsupported { kind: spec.kind() });
         };
         let key = SigningKey::from_secret_scalar(spec.private_key());
-        Ok(RuntimeSigner::from_starknet_signer(
+        Ok(RuntimeSigner::from_local_wallet(
             LocalWallet::from_signing_key(key),
             self.kind(),
         ))
     }
 }
 
-pub struct KeystoreSignerProvider {
-    credentials: Arc<dyn CredentialProvider>,
-}
-
-impl KeystoreSignerProvider {
-    #[must_use]
-    pub fn new(credentials: Arc<dyn CredentialProvider>) -> Self {
-        Self { credentials }
-    }
-}
+pub struct KeystoreSignerProvider;
 
 #[async_trait]
 impl SignerProvider for KeystoreSignerProvider {
@@ -133,14 +119,14 @@ impl SignerProvider for KeystoreSignerProvider {
             return Err(SignerError::Unsupported { kind: spec.kind() });
         };
         let path = resolve_keystore_path(context.accounts_file, spec.path());
-        let password = self.credentials.keystore_password(spec)?;
+        let password = keystore_password(spec)?;
         let key = SigningKey::from_keystore(&path, &password).map_err(|error| {
             SignerError::InvalidKeystore {
                 path: path.clone(),
                 message: error.to_string(),
             }
         })?;
-        Ok(RuntimeSigner::from_starknet_signer(
+        Ok(RuntimeSigner::from_local_wallet(
             LocalWallet::from_signing_key(key),
             self.kind(),
         ))
@@ -170,7 +156,7 @@ impl SignerProvider for LedgerSignerProvider {
                 operation: "connect to device",
                 message: error.to_string(),
             })?;
-        Ok(RuntimeSigner::from_starknet_signer(signer, self.kind()))
+        Ok(RuntimeSigner::from_ledger_signer(signer, self.kind()))
     }
 }
 
@@ -188,18 +174,8 @@ pub fn resolve_keystore_path(accounts_file: &Utf8Path, path: &Utf8Path) -> Utf8P
 
 #[cfg(test)]
 mod tests {
-    use tempfile::tempdir;
-
     use super::*;
-    use crate::signers::{KeystoreSpec, PrivateKeySpec};
-
-    struct FixedCredentials(String);
-
-    impl CredentialProvider for FixedCredentials {
-        fn keystore_password(&self, _spec: &KeystoreSpec) -> Result<String, SignerError> {
-            Ok(self.0.clone())
-        }
-    }
+    use crate::signers::PrivateKeySpec;
 
     #[test]
     fn resolves_relative_keystore_paths_from_accounts_file() {
@@ -228,32 +204,6 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(signer.kind(), SignerKind::PrivateKey);
-    }
-
-    #[tokio::test]
-    async fn resolves_native_keystore_signer() {
-        let directory = tempdir().unwrap();
-        let directory = Utf8PathBuf::from_path_buf(directory.path().to_owned()).unwrap();
-        let accounts_file = directory.join("accounts.json");
-        let keystore = directory.join("alice.json");
-        let key = SigningKey::from_secret_scalar(Felt::ONE);
-        let expected = key.verifying_key().scalar();
-        key.save_as_keystore(&keystore, "secret").unwrap();
-
-        let provider = KeystoreSignerProvider::new(Arc::new(FixedCredentials("secret".to_owned())));
-        let resolver = SignerResolver::new(vec![Arc::new(provider)]);
-        let spec = SignerSpec::Keystore(KeystoreSpec::new(Utf8PathBuf::from("alice.json"), None));
-        let ui = UI::default();
-        let context = SignerProviderContext {
-            accounts_file: &accounts_file,
-            ui: &ui,
-        };
-
-        let signer = resolver
-            .resolve_and_verify(&spec, expected, &context)
-            .await
-            .unwrap();
-        assert_eq!(signer.kind(), SignerKind::Keystore);
     }
 
     #[tokio::test]
