@@ -36,7 +36,9 @@ data-transformer = { path = "../data-transformer" }
 configuration = { path = "../configuration" }
 shared = { path = "../shared" }
 itertools.workspace = true
+futures.workspace = true
 starknet-types-core.workspace = true
+starknet_api.workspace = true
 starknet-curve.workspace = true
 semver.workspace = true
 sha2.workspace = true

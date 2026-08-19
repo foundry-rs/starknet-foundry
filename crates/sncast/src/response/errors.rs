@@ -7,7 +7,9 @@ use conversions::byte_array::ByteArray;
 
 use foundry_ui::Message;
 use serde_json::{Value, json};
-use starknet_rust::core::types::{ContractErrorData, StarknetError, TransactionExecutionErrorData};
+use starknet_rust::core::types::{
+    ContractErrorData, NoTraceAvailableErrorData, StarknetError, TransactionExecutionErrorData,
+};
 use starknet_rust::providers::ProviderError;
 use thiserror::Error;
 
@@ -162,6 +164,8 @@ pub enum SNCastStarknetError {
     UnsupportedTxVersion,
     #[error("Unsupported contract class version")]
     UnsupportedContractClassVersion,
+    #[error("No trace is available for the transaction (status: {:?})", .0.status)]
+    NoTraceAvailable(NoTraceAvailableErrorData),
     #[error("Unexpected RPC error occurred: {0}")]
     UnexpectedError(anyhow::Error),
 }
@@ -214,6 +218,7 @@ impl From<StarknetError> for SNCastStarknetError {
             StarknetError::UnsupportedContractClassVersion => {
                 SNCastStarknetError::UnsupportedContractClassVersion
             }
+            StarknetError::NoTraceAvailable(data) => SNCastStarknetError::NoTraceAvailable(data),
             StarknetError::UnexpectedError(err) => {
                 SNCastStarknetError::UnexpectedError(anyhow!(err))
             }
