@@ -7829,6 +7829,7 @@ dependencies = [
  "dtor",
  "foundry-ui",
  "fs_extra",
+ "futures",
  "indoc",
  "itertools 0.15.0",
  "mimalloc",
@@ -7855,8 +7856,9 @@ dependencies = [
  "speculos-client",
  "starknet-curve",
  "starknet-rust",
- "starknet-rust-crypto",
+ "starknet-rust-crypto 0.19.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "starknet-types-core 0.2.4",
+ "starknet_api",
  "strum 0.28.0",
  "strum_macros 0.28.0",
  "tempfile",
@@ -8015,8 +8017,7 @@ dependencies = [
 [[package]]
 name = "starknet-rust"
 version = "0.19.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "16c05baf692407c60e926d39ee819b27638abb2ddf69a4a5e378ee67768fee87"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
 dependencies = [
  "starknet-rust-accounts",
  "starknet-rust-contract",
@@ -8030,13 +8031,12 @@ dependencies = [
 [[package]]
 name = "starknet-rust-accounts"
 version = "0.19.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c3344cef9786be62d2e8bbb3d972556e39e6071c354ac814cd877141882592c"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
 dependencies = [
  "async-trait",
  "auto_impl",
  "starknet-rust-core",
- "starknet-rust-crypto",
+ "starknet-rust-crypto 0.19.1 (git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b)",
  "starknet-rust-providers",
  "starknet-rust-signers",
  "thiserror 2.0.20",
@@ -8045,8 +8045,7 @@ dependencies = [
 [[package]]
 name = "starknet-rust-contract"
 version = "0.19.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34b2606be684c227072088759e91dbe7a5e9ba1826df38d5e00d68268b04ccc7"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
 dependencies = [
  "serde_json",
  "starknet-rust-accounts",
@@ -8057,8 +8056,7 @@ dependencies = [
 [[package]]
 name = "starknet-rust-core"
 version = "0.19.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2fcb6482913654fe96c16ec230e06207ae96a176a24b88b89b1c3441d371a395"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
 dependencies = [
  "base64 0.22.1",
  "crypto-bigint 0.7.5",
@@ -8074,15 +8072,14 @@ dependencies = [
  "serde_with",
  "sha3 0.10.9",
  "starknet-rust-core-derive",
- "starknet-rust-crypto",
+ "starknet-rust-crypto 0.19.1 (git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b)",
  "starknet-types-core 0.2.4",
 ]
 
 [[package]]
 name = "starknet-rust-core-derive"
 version = "0.19.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92b44090180b3f7906611423621b0258a0a2458564c9e3d2bc78e7088c61a995"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -8105,7 +8102,27 @@ dependencies = [
  "num-traits",
  "rfc6979",
  "sha2 0.10.9",
- "starknet-rust-curve",
+ "starknet-rust-curve 0.19.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "starknet-types-core 0.2.4",
+ "zeroize",
+]
+
+[[package]]
+name = "starknet-rust-crypto"
+version = "0.19.1"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
+dependencies = [
+ "blake2",
+ "crypto-bigint 0.7.5",
+ "digest 0.10.7",
+ "hex",
+ "hmac",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "rfc6979",
+ "sha2 0.10.9",
+ "starknet-rust-curve 0.19.1 (git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b)",
  "starknet-types-core 0.2.4",
  "zeroize",
 ]
@@ -8120,10 +8137,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "starknet-rust-curve"
+version = "0.19.1"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
+dependencies = [
+ "starknet-types-core 0.2.4",
+]
+
+[[package]]
 name = "starknet-rust-macros"
 version = "0.19.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e4524799870f82bb16ec405409d280fddc97f12e2e4d1e363dea00a30f7ae89"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
 dependencies = [
  "starknet-rust-core",
  "syn 2.0.119",
@@ -8132,8 +8156,7 @@ dependencies = [
 [[package]]
 name = "starknet-rust-providers"
 version = "0.19.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "873f560d4c7a26252ae176096a1d0e41aee10a87b0e75a2f73ae8e84cf35b289"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
 dependencies = [
  "async-trait",
  "auto_impl",
@@ -8153,8 +8176,7 @@ dependencies = [
 [[package]]
 name = "starknet-rust-signers"
 version = "0.19.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6719b268803c79b0ec9024d2bc9fcc4de1b95c06bcbcafa64644f4725d96ccda"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
 dependencies = [
  "async-trait",
  "auto_impl",
