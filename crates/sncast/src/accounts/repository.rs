@@ -155,6 +155,8 @@ pub fn v1_backup_path(path: &Utf8Path) -> Utf8PathBuf {
 #[cfg(test)]
 mod tests {
     use std::fs;
+    use std::sync::{Arc, Barrier};
+    use std::thread;
 
     use tempfile::tempdir;
 
@@ -289,6 +291,56 @@ mod tests {
                 .unwrap()
                 .source_version,
             SourceVersion::V2
+        );
+    }
+
+    #[test]
+    fn concurrent_mutations_do_not_lose_accounts() {
+        const WRITERS: usize = 8;
+        let (_directory, path) = path();
+        let barrier = Arc::new(Barrier::new(WRITERS));
+        let handles = (0..WRITERS)
+            .map(|index| {
+                let barrier = Arc::clone(&barrier);
+                let path = path.clone();
+                thread::spawn(move || {
+                    barrier.wait();
+                    AccountRepository::default()
+                        .insert(
+                            &path,
+                            NetworkName::new("alpha-sepolia").unwrap(),
+                            AccountName::new(format!("account-{index}")).unwrap(),
+                            AccountRecord {
+                                public_key: Felt::from(index + 1),
+                                address: None,
+                                salt: None,
+                                deployed: Some(false),
+                                class_hash: None,
+                                legacy: None,
+                                account_type: None,
+                                signer: SignerSpec::PrivateKey(PrivateKeySpec::new(Felt::from(
+                                    index + 10,
+                                ))),
+                            },
+                        )
+                        .unwrap();
+                })
+            })
+            .collect::<Vec<_>>();
+
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        let decoded = AccountRepository::default().load(&path).unwrap();
+        assert_eq!(
+            decoded
+                .registry
+                .networks()
+                .get("alpha-sepolia")
+                .unwrap()
+                .len(),
+            WRITERS
         );
     }
 }
