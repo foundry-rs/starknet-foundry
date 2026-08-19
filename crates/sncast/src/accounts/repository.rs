@@ -1,6 +1,6 @@
 use camino::{Utf8Path, Utf8PathBuf};
 
-use crate::accounts::schema::{AccountsCodec, DecodedRegistry, SourceVersion};
+use crate::accounts::schema::{DecodedAccountRegistry, SourceVersion};
 use crate::accounts::storage::{AccountsStorage, FileSystemAccountsStorage};
 use crate::accounts::{AccountName, AccountRecord, AccountRegistry, AccountsError, NetworkName};
 
@@ -13,7 +13,6 @@ pub struct MutationResult<T> {
 #[derive(Clone, Debug)]
 pub struct AccountRepository<S = FileSystemAccountsStorage> {
     storage: S,
-    codec: AccountsCodec,
 }
 
 impl Default for AccountRepository<FileSystemAccountsStorage> {
@@ -25,20 +24,16 @@ impl Default for AccountRepository<FileSystemAccountsStorage> {
 impl<S: AccountsStorage> AccountRepository<S> {
     #[must_use]
     pub fn new(storage: S) -> Self {
-        Self {
-            storage,
-            codec: AccountsCodec,
-        }
+        Self { storage }
     }
 
-    pub fn load(&self, path: &Utf8Path) -> Result<DecodedRegistry, AccountsError> {
+    pub fn load(&self, path: &Utf8Path) -> Result<DecodedAccountRegistry, AccountsError> {
         if !self.storage.exists(path)? {
             return Err(AccountsError::FileNotFound {
                 path: path.to_owned(),
             });
         }
-        self.codec
-            .decode(&self.storage.read(path)?)
+        DecodedAccountRegistry::decode(&self.storage.read(path)?)
             .map_err(|error| attach_file_path(error, path))
     }
 
@@ -113,12 +108,10 @@ impl<S: AccountsStorage> AccountRepository<S> {
             } else {
                 Vec::new()
             };
-            let mut decoded = self
-                .codec
-                .decode(&original)
+            let mut decoded = DecodedAccountRegistry::decode(&original)
                 .map_err(|error| attach_file_path(error, path))?;
             let value = operation(&mut decoded.registry)?;
-            let encoded = self.codec.encode_v2(&decoded.registry)?;
+            let encoded = DecodedAccountRegistry::encode_v2(&decoded.registry)?;
             let migrated_from_v1 = existed && decoded.source_version == SourceVersion::V1;
 
             if migrated_from_v1 {
