@@ -45,29 +45,26 @@ impl VersionedAccountsFile {
 }
 
 #[derive(Debug)]
-pub struct DecodedRegistry {
+pub struct DecodedAccountRegistry {
     pub registry: AccountRegistry,
     pub source_version: SourceVersion,
 }
 
-#[derive(Clone, Copy, Debug, Default)]
-pub struct AccountsCodec;
-
-impl AccountsCodec {
-    pub fn decode(self, input: &[u8]) -> Result<DecodedRegistry, AccountsError> {
+impl DecodedAccountRegistry {
+    pub fn decode(input: &[u8]) -> Result<Self, AccountsError> {
         match VersionedAccountsFile::decode(input)? {
-            VersionedAccountsFile::V1(file) => Ok(DecodedRegistry {
+            VersionedAccountsFile::V1(file) => Ok(Self {
                 registry: file.try_into()?,
                 source_version: SourceVersion::V1,
             }),
-            VersionedAccountsFile::V2(file) => Ok(DecodedRegistry {
+            VersionedAccountsFile::V2(file) => Ok(Self {
                 registry: file.try_into()?,
                 source_version: SourceVersion::V2,
             }),
         }
     }
 
-    pub fn encode_v2(self, registry: &AccountRegistry) -> Result<Vec<u8>, AccountsError> {
+    pub fn encode_v2(registry: &AccountRegistry) -> Result<Vec<u8>, AccountsError> {
         let file: v2::AccountsFile = registry.try_into()?;
         let mut output = serde_json::to_vec_pretty(&file).map_err(schema_error)?;
         output.push(b'\n');
@@ -102,9 +99,10 @@ mod tests {
 
     #[test]
     fn decodes_existing_accounts_fixture_as_v1() {
-        let decoded = AccountsCodec
-            .decode(include_bytes!("../../../tests/data/accounts/accounts.json"))
-            .unwrap();
+        let decoded = DecodedAccountRegistry::decode(include_bytes!(
+            "../../../tests/data/accounts/accounts.json"
+        ))
+        .unwrap();
 
         assert_eq!(decoded.source_version, SourceVersion::V1);
         assert!(decoded.registry.account("alpha-sepolia", "user1").is_some());
@@ -122,7 +120,7 @@ mod tests {
             }
         }"#;
 
-        let decoded = AccountsCodec.decode(input).unwrap();
+        let decoded = DecodedAccountRegistry::decode(input).unwrap();
         assert!(matches!(
             &decoded
                 .registry
@@ -151,7 +149,7 @@ mod tests {
             }
         }"#;
 
-        let decoded = AccountsCodec.decode(input).unwrap();
+        let decoded = DecodedAccountRegistry::decode(input).unwrap();
         assert_eq!(decoded.source_version, SourceVersion::V2);
         assert!(matches!(
             &decoded
@@ -167,7 +165,7 @@ mod tests {
     fn rejects_unknown_version_and_untagged_v2_signer() {
         let unknown_version = serde_json::to_vec(&json!({"version": 3, "accounts": {}})).unwrap();
         assert!(matches!(
-            AccountsCodec.decode(&unknown_version),
+            DecodedAccountRegistry::decode(&unknown_version),
             Err(AccountsError::UnsupportedVersion { .. })
         ));
 
@@ -180,7 +178,7 @@ mod tests {
             }
         }"#;
         assert!(matches!(
-            AccountsCodec.decode(untagged),
+            DecodedAccountRegistry::decode(untagged),
             Err(AccountsError::Schema { .. })
         ));
     }
@@ -205,13 +203,16 @@ mod tests {
             std::collections::BTreeMap::from([(AccountName::new("alice").unwrap(), account)]),
         )]));
 
-        let encoded = AccountsCodec.encode_v2(&registry).unwrap();
+        let encoded = DecodedAccountRegistry::encode_v2(&registry).unwrap();
         let value: Value = serde_json::from_slice(&encoded).unwrap();
         assert_eq!(value["version"], 2);
         assert_eq!(
             value["accounts"]["alpha-sepolia"]["alice"]["signer"]["type"],
             "keystore"
         );
-        assert_eq!(encoded, AccountsCodec.encode_v2(&registry).unwrap());
+        assert_eq!(
+            encoded,
+            DecodedAccountRegistry::encode_v2(&registry).unwrap()
+        );
     }
 }
