@@ -4,7 +4,6 @@ pub mod error;
 pub mod model;
 pub mod repository;
 pub mod schema;
-pub mod storage;
 
 pub use error::AccountsError;
 pub use model::{
