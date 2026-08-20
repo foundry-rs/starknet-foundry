@@ -329,7 +329,7 @@ pub async fn get_account<'a>(
     // When the default accounts file is used, we don't enforce its existence.
     // When accounts file is set explicitly, it is still required to exist then.
     let uses_default_accounts_file =
-        accounts_file == &Utf8PathBuf::from(shellexpand::tilde(DEFAULT_ACCOUNTS_FILE).to_string());
+        accounts_file.as_str() == shellexpand::tilde(DEFAULT_ACCOUNTS_FILE).as_ref();
     let accounts_file_required =
         config.keystore.is_none() && !(is_devnet_account && uses_default_accounts_file);
     let exists_in_accounts_file =

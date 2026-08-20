@@ -392,7 +392,7 @@ pub async fn account(
         Commands::List(options) => {
             ui.print_message(
                 "account delete",
-                AccountsListMessage::new(repository, options.display_private_keys)?,
+                AccountsListMessage::new(&repository, options.display_private_keys)?,
             );
             Ok(ExitCode::SUCCESS)
         }

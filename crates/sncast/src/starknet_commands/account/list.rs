@@ -157,7 +157,7 @@ pub struct AccountsListMessage {
 }
 
 impl AccountsListMessage {
-    pub fn new(repository: AccountRepository, display_private_keys: bool) -> Result<Self, Error> {
+    pub fn new(repository: &AccountRepository, display_private_keys: bool) -> Result<Self, Error> {
         anyhow::ensure!(repository.exists()?);
 
         let accounts_file_path = repository
@@ -168,7 +168,7 @@ impl AccountsListMessage {
         let accounts_file_path = accounts_file_path
             .to_str()
             .expect("Failed to resolve an absolute path to the accounts file");
-        let accounts = read_and_flatten(&repository, display_private_keys)?;
+        let accounts = read_and_flatten(repository, display_private_keys)?;
 
         Ok(Self {
             accounts_file_path: accounts_file_path.to_string(),
