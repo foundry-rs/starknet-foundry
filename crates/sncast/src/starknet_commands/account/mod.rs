@@ -6,7 +6,7 @@ use crate::starknet_commands::account::list::{AccountsListMessage, List};
 use crate::starknet_commands::account::migrate::Migrate;
 use crate::{process_command_result, starknet_commands};
 use anyhow::{Context, Result, bail, ensure};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use clap::{Args, Subcommand};
 use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
@@ -154,16 +154,15 @@ fn get_private_key_from_input() -> Result<Felt> {
     parse_input_to_felt(&input)
 }
 
-pub fn write_account_to_accounts_file(
+pub fn save_account(
     account: &str,
-    accounts_file: &Utf8PathBuf,
+    repository: &AccountRepository,
     chain_id: Felt,
     account_record: AccountRecord,
 ) -> Result<()> {
     let network_name = chain_id_to_network_name(chain_id);
-    AccountRepository::default()
+    repository
         .insert(
-            accounts_file,
             NetworkName::new(network_name)?,
             AccountName::new(account)?,
             account_record,
@@ -223,7 +222,7 @@ fn generate_add_profile_message(
     profile_name: Option<&String>,
     rpc_args: &RpcArgs,
     account_name: &str,
-    accounts_file: &Utf8PathBuf,
+    accounts_file: &Utf8Path,
     keystore: Option<Utf8PathBuf>,
     config: &CastConfig,
 ) -> Result<Option<String>> {
@@ -257,13 +256,14 @@ pub async fn account(
     ui: &UI,
     wait_config: WaitForTx,
 ) -> Result<ExitCode> {
+    let repository = AccountRepository::new(config.accounts_file.clone());
     match account.command {
         Commands::Import(import) => {
             let provider = import.rpc.get_provider(&config, ui).await?;
 
             let result = starknet_commands::account::import::import(
                 import.name.clone(),
-                &config.accounts_file,
+                &repository,
                 &provider,
                 &import,
                 &config,
@@ -288,18 +288,15 @@ pub async fn account(
             Ok(process_command_result("account import", result, ui, None))
         }
         Commands::Create(create) => {
-            let signer_type = create
-                .ledger_key_locator
-                .resolve(ui)
-                .map(|ledger_path| SignerType::Ledger { ledger_path });
+            let signer_type = create.ledger_key_locator.resolve(ui);
 
-            let signer_source = SignerSource::new(config.keystore.clone(), signer_type.as_ref())?;
+            let signer_source = SignerSource::new(config.keystore.clone(), signer_type)?;
 
             let account = if config.keystore.is_none() {
                 create
                     .name
                     .clone()
-                    .unwrap_or_else(|| generate_account_name(&config.accounts_file).unwrap())
+                    .unwrap_or_else(|| generate_account_name(&repository).unwrap())
             } else {
                 config.account.clone()
             };
@@ -310,7 +307,7 @@ pub async fn account(
 
             let result = starknet_commands::account::create::create(
                 &account,
-                &config.accounts_file,
+                &repository,
                 &provider,
                 chain_id,
                 &create,
@@ -337,7 +334,7 @@ pub async fn account(
             let chain_id = get_chain_id(&provider).await?;
             let result = starknet_commands::account::deploy::deploy(
                 &provider,
-                &config.accounts_file,
+                &repository,
                 &deploy,
                 chain_id,
                 wait_config,
@@ -385,7 +382,7 @@ pub async fn account(
 
             let result = starknet_commands::account::delete::delete(
                 &delete.name,
-                &config.accounts_file,
+                &repository,
                 &network_name,
                 delete.yes,
             );
@@ -396,12 +393,12 @@ pub async fn account(
         Commands::List(options) => {
             ui.print_message(
                 "account delete",
-                AccountsListMessage::new(config.accounts_file, options.display_private_keys)?,
+                AccountsListMessage::new(repository, options.display_private_keys)?,
             );
             Ok(ExitCode::SUCCESS)
         }
         Commands::Migrate(_) => {
-            let result = starknet_commands::account::migrate::migrate(&config.accounts_file);
+            let result = starknet_commands::account::migrate::migrate(&repository);
             Ok(process_command_result("account migrate", result, ui, None))
         }
     }

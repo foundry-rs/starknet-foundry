@@ -9,7 +9,7 @@ use sncast::helpers::token::Token;
 use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
 use sncast::response::get::balance::BalanceResponse;
 use sncast::response::ui::UI;
-use sncast::{get_account, get_account_record_from_accounts_file, get_block_id, get_chain_id};
+use sncast::{get_account, get_account_record_from_repository, get_block_id, get_chain_id};
 use starknet_rust::{
     accounts::Account,
     core::{types::FunctionCall, utils::get_selector_from_name},
@@ -107,8 +107,8 @@ async fn get_account_address(
     }
 
     let chain_id = get_chain_id(provider).await?;
-    let account_data =
-        get_account_record_from_accounts_file(&config.account, chain_id, &config.accounts_file)?;
+    let repository = sncast::accounts::AccountRepository::new(config.accounts_file.clone());
+    let account_data = get_account_record_from_repository(&config.account, chain_id, &repository)?;
 
     account_data
         .address

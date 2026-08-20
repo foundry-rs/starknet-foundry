@@ -1,5 +1,4 @@
 use anyhow::Result;
-use camino::Utf8PathBuf;
 use clap::Args;
 
 use sncast::accounts::AccountRepository;
@@ -9,8 +8,7 @@ use sncast::response::account::migrate::AccountMigrateResponse;
 #[command(about = "Migrate an accounts file to the latest schema version")]
 pub struct Migrate;
 
-pub fn migrate(accounts_file: &Utf8PathBuf) -> Result<AccountMigrateResponse> {
-    let repository = AccountRepository::new(accounts_file.clone());
+pub fn migrate(repository: &AccountRepository) -> Result<AccountMigrateResponse> {
     repository.load().map_err(|error| anyhow::anyhow!(error))?;
     let result = repository
         .mutate(|_| Ok(()))
@@ -28,6 +26,7 @@ pub fn migrate(accounts_file: &Utf8PathBuf) -> Result<AccountMigrateResponse> {
 mod tests {
     use std::fs;
 
+    use camino::Utf8PathBuf;
     use tempfile::tempdir;
 
     use super::*;
@@ -42,7 +41,7 @@ mod tests {
         )
         .unwrap();
 
-        let response = migrate(&path).unwrap();
+        let response = migrate(&AccountRepository::new(path.clone())).unwrap();
 
         assert!(response.migrated);
         assert!(response.backup.is_some());

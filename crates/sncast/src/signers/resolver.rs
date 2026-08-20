@@ -5,12 +5,13 @@ use camino::{Utf8Path, Utf8PathBuf};
 use starknet_rust::signers::{LocalWallet, Signer, SigningKey};
 use starknet_types_core::felt::Felt;
 
+use crate::accounts::AccountRepository;
 use crate::helpers::ledger;
 use crate::response::ui::UI;
 use crate::signers::{RuntimeSigner, SignerError, SignerKind, SignerSpec, keystore_password};
 
 pub struct SignerProviderContext<'a> {
-    pub accounts_file: &'a Utf8Path,
+    pub repository: &'a AccountRepository,
     pub ui: &'a UI,
 }
 
@@ -118,7 +119,7 @@ impl SignerProvider for KeystoreSignerProvider {
         let SignerSpec::Keystore(spec) = spec else {
             return Err(SignerError::Unsupported { kind: spec.kind() });
         };
-        let path = resolve_keystore_path(context.accounts_file, spec.path());
+        let path = resolve_keystore_path(context.repository.path(), spec.path());
         let password = keystore_password(spec)?;
         let key = SigningKey::from_keystore(&path, &password).map_err(|error| {
             SignerError::InvalidKeystore {
@@ -195,7 +196,7 @@ mod tests {
         let expected = key.verifying_key().scalar();
         let spec = SignerSpec::PrivateKey(PrivateKeySpec::new(Felt::ONE));
         let context = SignerProviderContext {
-            accounts_file: Utf8Path::new("accounts.json"),
+            repository: &AccountRepository::new(Utf8PathBuf::from("accounts.json")),
             ui: &ui,
         };
 
@@ -211,7 +212,7 @@ mod tests {
         let ui = UI::default();
         let spec = SignerSpec::PrivateKey(PrivateKeySpec::new(Felt::ONE));
         let context = SignerProviderContext {
-            accounts_file: Utf8Path::new("accounts.json"),
+            repository: &AccountRepository::new(Utf8PathBuf::from("accounts.json")),
             ui: &ui,
         };
 

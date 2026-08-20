@@ -1,16 +1,16 @@
 use crate::starknet_commands::account::{
-    PrivateKeyArgs, generate_add_profile_message, prepare_account_record, validate_private_key,
-    write_account_to_accounts_file,
+    PrivateKeyArgs, generate_add_profile_message, prepare_account_record, save_account,
+    validate_private_key,
 };
 use crate::starknet_commands::utils::felt_or_id::ClassHash;
 use anyhow::{Context, Result, anyhow, bail};
 use bigdecimal::BigDecimal;
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use clap::Args;
 use console::style;
 use conversions::IntoConv;
 use serde_json::json;
-use sncast::accounts::AccountRecord;
+use sncast::accounts::{AccountRecord, AccountRepository};
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
@@ -79,7 +79,7 @@ impl Create {
 #[allow(clippy::too_many_arguments, clippy::too_many_lines)]
 pub async fn create(
     account: &str,
-    accounts_file: &Utf8PathBuf,
+    repository: &AccountRepository,
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: Felt,
     create: &Create,
@@ -150,14 +150,9 @@ pub async fn create(
             message.push_str(&deploy_command);
         }
         SignerSource::Ledger(_) | SignerSource::AccountsFile => {
-            write_account_to_accounts_file(
-                account,
-                accounts_file,
-                chain_id,
-                account_record.clone(),
-            )?;
+            save_account(account, repository, chain_id, account_record.clone())?;
             let deploy_command =
-                generate_deploy_command(accounts_file, &create.rpc, config, account);
+                generate_deploy_command(repository.path(), &create.rpc, config, account);
             message.push_str(&deploy_command);
         }
     }
@@ -166,7 +161,7 @@ pub async fn create(
         create.add_profile.as_ref(),
         &create.rpc,
         account,
-        accounts_file,
+        repository.path(),
         match signer_source {
             SignerSource::Keystore(path) => Some(path.clone()),
             _ => None,
@@ -416,7 +411,7 @@ fn write_account_to_file(
 }
 
 fn generate_deploy_command(
-    accounts_file: &Utf8PathBuf,
+    accounts_file: &Utf8Path,
     rpc_args: &RpcArgs,
     config: &CastConfig,
     account: &str,

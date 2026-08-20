@@ -1,5 +1,4 @@
 use anyhow::Error;
-use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::string::IntoHexStr;
 use foundry_ui::Message;
@@ -81,10 +80,10 @@ impl AccountDataRepresentationMessage {
 }
 
 fn read_and_flatten(
-    accounts_file: &Utf8PathBuf,
+    repository: &AccountRepository,
     display_private_keys: bool,
 ) -> anyhow::Result<BTreeMap<String, AccountDataRepresentationMessage>> {
-    let registry = AccountRepository::default().load(accounts_file)?.registry;
+    let registry = repository.load()?.registry;
     let mut result = BTreeMap::new();
 
     for (network, accounts) in registry.networks() {
@@ -158,17 +157,18 @@ pub struct AccountsListMessage {
 }
 
 impl AccountsListMessage {
-    pub fn new(accounts_file: Utf8PathBuf, display_private_keys: bool) -> Result<Self, Error> {
-        check_account_file_exists(&accounts_file)?;
+    pub fn new(repository: AccountRepository, display_private_keys: bool) -> Result<Self, Error> {
+        check_account_file_exists(repository.path())?;
 
-        let accounts_file_path = accounts_file
+        let accounts_file_path = repository
+            .path()
             .canonicalize()
             .expect("Failed to resolve the accounts file path");
 
         let accounts_file_path = accounts_file_path
             .to_str()
             .expect("Failed to resolve an absolute path to the accounts file");
-        let accounts = read_and_flatten(&accounts_file, display_private_keys)?;
+        let accounts = read_and_flatten(&repository, display_private_keys)?;
 
         Ok(Self {
             accounts_file_path: accounts_file_path.to_string(),

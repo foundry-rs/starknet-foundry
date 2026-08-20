@@ -2,12 +2,12 @@ use std::str::FromStr;
 
 use crate::starknet_commands::account::{
     PrivateKeyArgs, compute_account_address, generate_add_profile_message, prepare_account_record,
-    validate_private_key, write_account_to_accounts_file,
+    save_account, validate_private_key,
 };
 use crate::starknet_commands::utils::felt_or_id::{ClassHash, ContractAddress};
 use anyhow::{Result, bail, ensure};
-use camino::Utf8PathBuf;
 use clap::Args;
+use sncast::accounts::AccountRepository;
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
 use sncast::helpers::configuration::CastConfig;
@@ -78,7 +78,7 @@ impl Import {
 #[allow(clippy::too_many_lines)]
 pub async fn import(
     account: Option<String>,
-    accounts_file: &Utf8PathBuf,
+    repository: &AccountRepository,
     provider: &JsonRpcClient<HttpTransport>,
     import: &Import,
     config: &CastConfig,
@@ -104,7 +104,7 @@ pub async fn import(
 
     let account_name = account
         .clone()
-        .unwrap_or_else(|| generate_account_name(accounts_file).unwrap());
+        .unwrap_or_else(|| generate_account_name(repository).unwrap());
 
     let fetched_class_hash = match provider
         .get_class_hash_at(BlockId::Tag(BlockTag::PreConfirmed), address)
@@ -167,13 +167,13 @@ pub async fn import(
         import.salt,
     );
 
-    write_account_to_accounts_file(&account_name, accounts_file, chain_id, account)?;
+    save_account(&account_name, repository, chain_id, account)?;
 
     let add_profile_message = generate_add_profile_message(
         import.add_profile.as_ref(),
         &import.rpc,
         &account_name,
-        accounts_file,
+        repository.path(),
         None,
         config,
     )?;

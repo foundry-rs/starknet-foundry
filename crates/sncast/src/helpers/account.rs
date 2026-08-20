@@ -15,16 +15,16 @@ use crate::signers::{RuntimeSigner, SignerKind};
 use anyhow::Context;
 use serde_json::{Value, json};
 
-pub fn generate_account_name(accounts_file: &Utf8PathBuf) -> Result<String> {
+pub fn generate_account_name(repository: &AccountRepository) -> Result<String> {
     let mut id = 1;
 
-    if !accounts_file.exists() {
+    if !repository.path().exists() {
         return Ok(format!("account-{id}"));
     }
 
     let mut result = HashSet::new();
 
-    let registry = AccountRepository::default().load(accounts_file)?.registry;
+    let registry = repository.load()?.registry;
     for accounts in registry.networks().values() {
         for name in accounts.keys() {
             if let Some(id) = name
@@ -62,17 +62,17 @@ pub fn load_accounts(accounts_file: &Utf8PathBuf) -> Result<Value> {
 pub fn check_account_exists(
     account_name: &str,
     network_name: &str,
-    accounts_file: &Utf8PathBuf,
+    repository: &AccountRepository,
     accounts_file_should_exist: bool,
 ) -> Result<bool> {
-    if !accounts_file.exists() {
+    if !repository.path().exists() {
         if accounts_file_should_exist {
-            check_account_file_exists(accounts_file)?;
+            check_account_file_exists(repository.path())?;
         }
         return Ok(false);
     }
 
-    let registry = AccountRepository::default().load(accounts_file)?.registry;
+    let registry = repository.load()?.registry;
     match registry.networks().get(network_name) {
         Some(network_accounts) => Ok(network_accounts.contains_key(account_name)),
         None if accounts_file_should_exist => Err(anyhow::anyhow!(

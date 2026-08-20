@@ -15,8 +15,8 @@ use sncast::response::ui::UI;
 use sncast::signers::{SignerProviderContext, SignerResolver};
 use sncast::{
     AccountType, WaitForTx, apply_optional_fields, chain_id_to_network_name,
-    check_account_file_exists, get_account_data_from_keystore,
-    get_account_record_from_accounts_file, handle_rpc_error, handle_wait_for_tx,
+    check_account_file_exists, get_account_data_from_keystore, get_account_record_from_repository,
+    handle_rpc_error, handle_wait_for_tx,
 };
 use starknet_rust::accounts::{AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory};
 use starknet_rust::accounts::{AccountFactoryError, ArgentAccountFactory};
@@ -53,7 +53,7 @@ pub struct Deploy {
 #[expect(clippy::too_many_arguments)]
 pub async fn deploy(
     provider: &JsonRpcClient<HttpTransport>,
-    accounts_file: &Utf8PathBuf,
+    repository: &AccountRepository,
     deploy_args: &Deploy,
     chain_id: Felt,
     wait_config: WaitForTx,
@@ -81,10 +81,10 @@ pub async fn deploy(
             .name
             .clone()
             .ok_or_else(|| anyhow!("Required argument `--name` not provided"))?;
-        check_account_file_exists(accounts_file)?;
+        check_account_file_exists(repository.path())?;
         deploy_from_accounts_file(
             provider,
-            accounts_file,
+            repository,
             account_name,
             chain_id,
             fee_args,
@@ -156,7 +156,7 @@ async fn deploy_from_keystore(
 #[expect(clippy::too_many_arguments)]
 async fn deploy_from_accounts_file(
     provider: &JsonRpcClient<HttpTransport>,
-    accounts_file: &Utf8PathBuf,
+    repository: &AccountRepository,
     name: String,
     chain_id: Felt,
     fee_args: FeeArgs,
@@ -164,9 +164,9 @@ async fn deploy_from_accounts_file(
     wait_config: WaitForTx,
     ui: &UI,
 ) -> Result<InvokeResponse> {
-    let account_data = get_account_record_from_accounts_file(&name, chain_id, accounts_file)?;
+    let account_data = get_account_record_from_repository(&name, chain_id, repository)?;
     let (account_type, class_hash, salt) = extract_deployment_fields(&account_data)?;
-    let context = SignerProviderContext { accounts_file, ui };
+    let context = SignerProviderContext { repository, ui };
     let signer = SignerResolver::default()
         .resolve_and_verify(&account_data.signer, account_data.public_key, &context)
         .await?;
@@ -185,7 +185,7 @@ async fn deploy_from_accounts_file(
     .await?;
 
     if let InvokeResponse::Transaction(_) = &result {
-        update_account_in_accounts_file(accounts_file, &name, chain_id)?;
+        update_account_in_accounts_file(repository, &name, chain_id)?;
     }
 
     Ok(result)
@@ -372,14 +372,14 @@ where
 }
 
 fn update_account_in_accounts_file(
-    accounts_file: &Utf8PathBuf,
+    repository: &AccountRepository,
     account_name: &str,
     chain_id: Felt,
 ) -> Result<()> {
     let network_name = chain_id_to_network_name(chain_id);
 
-    AccountRepository::default()
-        .mutate(accounts_file, |registry| {
+    repository
+        .mutate(|registry| {
             let account = registry
                 .networks_mut()
                 .get_mut(network_name.as_str())

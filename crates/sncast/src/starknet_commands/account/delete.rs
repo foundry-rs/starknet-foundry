@@ -1,5 +1,4 @@
 use anyhow::{Result, bail};
-use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args};
 use promptly::prompt;
 use sncast::accounts::AccountRepository;
@@ -34,18 +33,19 @@ pub struct Delete {
 
 pub fn delete(
     name: &str,
-    path: &Utf8PathBuf,
+    repository: &AccountRepository,
     network_name: &str,
     yes: bool,
 ) -> Result<AccountDeleteResponse> {
-    AccountRepository::default()
-        .find(path, network_name, name)
+    repository
+        .find(network_name, name)
         .map_err(|_| anyhow::anyhow!("Account with name {name} does not exist"))?;
 
     // Let's ask confirmation
     if !yes {
         let prompt_text = format!(
-            "Do you want to remove the account {name} deployed to network {network_name} from local file {path}? (Y/n)"
+            "Do you want to remove the account {name} deployed to network {network_name} from local file {}? (Y/n)",
+            repository.path()
         );
         let input: String = prompt(prompt_text)?;
 
@@ -54,8 +54,8 @@ pub fn delete(
         }
     }
 
-    AccountRepository::default()
-        .remove(path, network_name, name)
+    repository
+        .remove(network_name, name)
         .map_err(|error| anyhow::anyhow!(error))?;
     let result = "Account successfully removed".to_string();
     Ok(AccountDeleteResponse { result })
