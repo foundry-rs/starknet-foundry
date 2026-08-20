@@ -7,8 +7,7 @@
 
 use crate::command::{USCError, USCInternalCommand};
 use crate::compile::{
-    CompilationError, SierraType, compile_sierra, compile_sierra_at_path,
-    compile_sierra_at_path_with_cache_dir,
+    CompilationError, SierraType, compile_sierra, compile_sierra_at_path_with_options,
 };
 use crate::representation::RawCasmProgram;
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
@@ -20,7 +19,7 @@ mod command;
 mod compile;
 pub mod representation;
 
-pub use crate::command::supports_cache_dir;
+pub use crate::compile::CompileOptions;
 
 /// Compiles Sierra JSON of a contract into [`CasmContractClass`].
 pub fn compile_contract_sierra(sierra_json: &Value) -> Result<CasmContractClass, CompilationError> {
@@ -28,22 +27,17 @@ pub fn compile_contract_sierra(sierra_json: &Value) -> Result<CasmContractClass,
     serde_json::from_str(&json).map_err(CompilationError::Deserialization)
 }
 
-/// Compiles Sierra JSON file at the given path of a contract into [`CasmContractClass`].
+/// Compiles Sierra JSON file at the given path of a contract into [`CasmContractClass`],
+/// with the provided options.
 pub fn compile_contract_sierra_at_path(
     sierra_file_path: &Path,
+    compile_options: &CompileOptions,
 ) -> Result<CasmContractClass, CompilationError> {
-    let json = compile_sierra_at_path(sierra_file_path, SierraType::Contract)?;
-    serde_json::from_str(&json).map_err(CompilationError::Deserialization)
-}
-
-/// Compiles Sierra JSON file at the given path of a contract into [`CasmContractClass`],
-/// reusing the compiler-managed cache when `cache_dir` is provided.
-pub fn compile_contract_sierra_at_path_with_cache_dir(
-    sierra_file_path: &Path,
-    cache_dir: Option<&Path>,
-) -> Result<CasmContractClass, CompilationError> {
-    let json =
-        compile_sierra_at_path_with_cache_dir(sierra_file_path, SierraType::Contract, cache_dir)?;
+    let json = compile_sierra_at_path_with_options(
+        sierra_file_path,
+        SierraType::Contract,
+        compile_options,
+    )?;
     serde_json::from_str(&json).map_err(CompilationError::Deserialization)
 }
 
@@ -53,21 +47,13 @@ pub fn compile_raw_sierra(sierra_json: &Value) -> Result<RawCasmProgram, Compila
     serde_json::from_str(&json).map_err(CompilationError::Deserialization)
 }
 
-/// Compiles Sierra JSON file at the given path of a raw program into [`RawCasmProgram`].
+/// Compiles Sierra JSON file at the given path of a raw program into [`RawCasmProgram`],
+/// with provided options.
 pub fn compile_raw_sierra_at_path(
     sierra_file_path: &Path,
+    options: &CompileOptions,
 ) -> Result<RawCasmProgram, CompilationError> {
-    let json = compile_sierra_at_path(sierra_file_path, SierraType::Raw)?;
-    serde_json::from_str(&json).map_err(CompilationError::Deserialization)
-}
-
-/// Compiles Sierra JSON file at the given path of a raw program into [`RawCasmProgram`],
-/// reusing the compiler-managed cache when `cache_dir` is provided.
-pub fn compile_raw_sierra_at_path_with_cache_dir(
-    sierra_file_path: &Path,
-    cache_dir: Option<&Path>,
-) -> Result<RawCasmProgram, CompilationError> {
-    let json = compile_sierra_at_path_with_cache_dir(sierra_file_path, SierraType::Raw, cache_dir)?;
+    let json = compile_sierra_at_path_with_options(sierra_file_path, SierraType::Raw, options)?;
     serde_json::from_str(&json).map_err(CompilationError::Deserialization)
 }
 

@@ -8,7 +8,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::collections::HashMap;
 use std::fs;
-use universal_sierra_compiler_api::compile_contract_sierra_at_path_with_cache_dir;
+use universal_sierra_compiler_api::{CompileOptions, compile_contract_sierra_at_path};
 
 pub mod deserialized;
 mod representation;
@@ -124,9 +124,11 @@ impl StarknetArtifactsFiles {
     fn compile_artifact_at_path(&self, path: &Utf8Path) -> Result<StarknetContractArtifacts> {
         let sierra = fs::read_to_string(path)?;
 
-        let casm = compile_contract_sierra_at_path_with_cache_dir(
+        let casm = compile_contract_sierra_at_path(
             path.as_std_path(),
-            self.usc_cache_dir.as_deref().map(Utf8Path::as_std_path),
+            &CompileOptions {
+                cache_dir: self.usc_cache_dir.as_deref().map(Utf8Path::as_std_path),
+            },
         )?;
 
         #[cfg(feature = "cairo-native")]

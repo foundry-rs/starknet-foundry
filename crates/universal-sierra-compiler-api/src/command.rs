@@ -1,4 +1,3 @@
-use semver::Version;
 use shared::command::{CommandError, CommandExt};
 use std::process::Output;
 use std::{
@@ -24,9 +23,6 @@ pub enum USCError {
          Contact Starknet Foundry team through Github or Telegram if it doesn't help."
     )]
     RunFailed(#[source] CommandError),
-
-    #[error("Failed to parse universal-sierra-compiler version from output: {0}")]
-    VersionParseFailed(String),
 }
 
 /// An internal builder for `universal-sierra-compiler` command invocation.
@@ -69,56 +65,8 @@ pub fn ensure_available() -> Result<(), USCError> {
         .map_err(USCError::NotFound)
 }
 
-/// Returns whether the current `universal-sierra-compiler` binary supports `--cache-dir`.
-pub fn supports_cache_dir() -> Result<bool, USCError> {
-    let current_version_supports_cache =
-        current_version().map(|version| version_supports_cache(&version))?;
-
-    Ok(current_version_supports_cache)
-}
-
-fn current_version() -> Result<Version, USCError> {
-    let output = USCInternalCommand::new()?.arg("--version").run()?;
-    let raw_version = String::from_utf8_lossy(&output.stdout);
-
-    parse_version(&raw_version)
-}
-
-fn parse_version(raw_version: &str) -> Result<Version, USCError> {
-    raw_version
-        .split_whitespace()
-        .find_map(|part| Version::parse(part).ok())
-        .ok_or_else(|| USCError::VersionParseFailed(raw_version.to_string()))
-}
-
-fn version_supports_cache(version: &Version) -> bool {
-    // TODO: Once USC releases version with cache support, ensure the version here is correct.
-    version >= &Version::new(2, 9, 2)
-}
-
 /// Returns the binary path either from env or fallback to default name.
 fn binary_path() -> String {
     env::var("UNIVERSAL_SIERRA_COMPILER")
         .unwrap_or_else(|_| "universal-sierra-compiler".to_string())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{parse_version, version_supports_cache};
-    use semver::Version;
-
-    #[test]
-    fn parses_version_from_usc_output() {
-        let version =
-            parse_version("universal-sierra-compiler 2.9.2\n").expect("version should parse");
-
-        assert_eq!(version, Version::new(2, 9, 2));
-    }
-
-    #[test]
-    fn cache_dir_support_starts_at_2_9_2() {
-        assert!(!version_supports_cache(&Version::new(2, 9, 1)));
-        assert!(version_supports_cache(&Version::new(2, 9, 2)));
-        assert!(version_supports_cache(&Version::new(2, 10, 0)));
-    }
 }

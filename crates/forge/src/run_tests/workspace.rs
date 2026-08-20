@@ -110,11 +110,7 @@ pub async fn execute_workspace(
     let cache_dir = resolve_cache_dir(&scarb_metadata.workspace.root)?;
     prepare_cache_dir(&cache_dir)?;
     let cache_config = CacheConfig {
-        usc_cache_dir: if universal_sierra_compiler_api::supports_cache_dir()? {
-            Some(cache_dir.join(USC_CACHE_DIR))
-        } else {
-            None
-        },
+        usc_cache_dir: cache_dir.join(USC_CACHE_DIR),
         cache_dir,
     };
     let packages_len = packages.len();

@@ -3,14 +3,9 @@ use forge::run_tests::cache::USC_CACHE_DIR;
 use forge_runner::DEFAULT_CACHE_DIR;
 use std::fs;
 use std::path::{Path, PathBuf};
-use universal_sierra_compiler_api::supports_cache_dir;
 
 #[test]
 fn creates_usc_casm_cache_entries() {
-    if !supports_cache_dir().expect("failed to check universal-sierra-compiler version") {
-        return;
-    }
-
     let temp = setup_package("targets/unit_and_integration");
 
     test_runner(&temp).assert().success();
