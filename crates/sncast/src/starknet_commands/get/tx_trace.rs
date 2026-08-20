@@ -114,7 +114,6 @@ fn format_class_fetch_warning(failures: &[ContractClassFetchFailure]) -> String 
             let contract_addresses = contract_addresses
                 .into_iter()
                 .map(Felt::to_hex_string)
-                .collect::<Vec<_>>()
                 .join(", ");
 
             format!(
@@ -124,7 +123,6 @@ fn format_class_fetch_warning(failures: &[ContractClassFetchFailure]) -> String 
                 provider_error_message(&failure.error)
             )
         })
-        .collect::<Vec<_>>()
         .join("\n");
 
     format!(
