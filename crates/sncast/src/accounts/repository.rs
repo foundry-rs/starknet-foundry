@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs::{self, File, OpenOptions};
 use std::io::Write;
 
@@ -44,6 +45,33 @@ impl AccountRepository {
             );
         }
         Ok(())
+    }
+
+    pub fn generate_account_name(&self) -> anyhow::Result<String> {
+        let mut id = 1;
+
+        if !self.path.exists() {
+            return Ok(format!("account-{id}"));
+        }
+
+        let mut used_ids = HashSet::new();
+        for accounts in self.load()?.registry.networks().values() {
+            for name in accounts.keys() {
+                if let Some(id) = name
+                    .as_str()
+                    .strip_prefix("account-")
+                    .and_then(|id| id.parse::<u32>().ok())
+                {
+                    used_ids.insert(id);
+                }
+            }
+        }
+
+        while used_ids.contains(&id) {
+            id += 1;
+        }
+
+        Ok(format!("account-{id}"))
     }
 
     pub fn load(&self) -> Result<DecodedAccountRegistry, AccountsError> {
@@ -392,6 +420,18 @@ mod tests {
             .unwrap_err();
 
         assert!(error.to_string().contains(&path.to_string()));
+    }
+
+    #[test]
+    fn generates_first_account_name_when_file_is_missing() {
+        let (_directory, path) = path();
+
+        assert_eq!(
+            AccountRepository::new(path)
+                .generate_account_name()
+                .unwrap(),
+            "account-1"
+        );
     }
 
     #[test]
