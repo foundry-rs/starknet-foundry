@@ -140,7 +140,7 @@ impl AccountRepository {
             let migrated_from_v1 = existed && decoded.source_version == SourceVersion::V1;
 
             if migrated_from_v1 {
-                self.write_backup_if_absent(&self.v1_backup_path(), &original)?;
+                Self::write_backup_if_absent(&self.v1_backup_path(), &original)?;
             }
             self.write_atomic(&encoded)?;
 
@@ -225,11 +225,7 @@ impl AccountRepository {
         sync_parent(parent, &self.path)
     }
 
-    fn write_backup_if_absent(
-        &self,
-        path: &Utf8Path,
-        contents: &[u8],
-    ) -> Result<(), AccountsError> {
+    fn write_backup_if_absent(path: &Utf8Path, contents: &[u8]) -> Result<(), AccountsError> {
         reject_symlink(path).map_err(|source| AccountsError::Storage {
             operation: "inspect accounts path",
             path: path.to_owned(),
