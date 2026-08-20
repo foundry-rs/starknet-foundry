@@ -19,7 +19,7 @@ use starknet_types_core::felt::Felt;
 use std::collections::{HashMap, HashSet};
 use std::process::ExitCode;
 
-const MAX_CONCURRENT_CLASS_REQUESTS: usize = 8;
+const MAX_CONCURRENT_CLASS_REQUESTS: usize = 4;
 
 #[derive(Debug, Args)]
 #[command(about = "Get the execution trace of a transaction")]
