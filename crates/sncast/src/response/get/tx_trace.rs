@@ -590,9 +590,10 @@ fn append_optional_state_diff(
     state_diff: Option<&StateDiff>,
     indent: usize,
 ) -> OutputBuilder {
-    match state_diff {
-        Some(state_diff) => append_state_diff(builder, state_diff, indent),
-        None => builder,
+    if let Some(diff) = state_diff {
+        append_state_diff(builder, diff, indent)
+    } else {
+        builder
     }
 }
 
