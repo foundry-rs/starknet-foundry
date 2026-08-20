@@ -4,6 +4,7 @@ use data_transformer::{
     extract_function_from_selector, reverse_transform_input, reverse_transform_output,
 };
 use foundry_ui::{Message, components::warning::WarningMessage, styling::OutputBuilder};
+use itertools::Itertools;
 use serde::{Serialize, Serializer};
 use starknet_api::execution_utils::format_panic_data;
 use starknet_rust::core::types::contract::AbiEntry;
@@ -811,9 +812,5 @@ fn format_result(status: &str, result: &str) -> String {
 }
 
 fn format_raw_felts(felts: &[Felt]) -> String {
-    felts
-        .iter()
-        .map(Felt::to_hex_string)
-        .collect::<Vec<_>>()
-        .join(", ")
+    felts.iter().map(Felt::to_hex_string).join(", ")
 }
