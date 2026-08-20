@@ -36,6 +36,16 @@ impl AccountRepository {
         v1_backup_path(&self.path)
     }
 
+    pub fn file_exists(&self) -> anyhow::Result<()> {
+        if !self.exists()? {
+            anyhow::bail!(
+                "Accounts file = {} does not exist! If you do not have an account create one with `account create` command or if you're using a custom accounts file, make sure to supply correct path to it with `--accounts-file` argument.",
+                self.path
+            );
+        }
+        Ok(())
+    }
+
     pub fn load(&self) -> Result<DecodedAccountRegistry, AccountsError> {
         if !self.exists()? {
             return Err(AccountsError::FileNotFound {
@@ -371,6 +381,17 @@ mod tests {
         assert_eq!(decoded.source_version, SourceVersion::V1);
         assert_eq!(fs::read_to_string(&path).unwrap(), V1_ACCOUNT);
         assert!(!repository.v1_backup_path().exists());
+    }
+
+    #[test]
+    fn file_exists_reports_missing_file() {
+        let (_directory, path) = path();
+
+        let error = AccountRepository::new(path.clone())
+            .file_exists()
+            .unwrap_err();
+
+        assert!(error.to_string().contains(&path.to_string()));
     }
 
     #[test]
