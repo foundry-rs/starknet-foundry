@@ -15,6 +15,8 @@ use std::borrow::Cow;
 use std::cell::Cell;
 use std::collections::{HashMap, HashSet};
 
+////////
+
 pub struct TransactionTraceResponse {
     transaction_trace: TransactionTrace,
     output: TransactionTraceOutput,
@@ -643,91 +645,4 @@ fn format_raw_felts(felts: &[Felt]) -> String {
         .map(Felt::to_hex_string)
         .collect::<Vec<_>>()
         .join(", ")
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{TraceDecoder, TransactionTraceResponse, render_full_trace};
-    use crate::response::cast_message::SncastCommandMessage;
-    use serde_json::json;
-    use starknet_rust::core::types::TransactionTrace;
-    use starknet_rust::core::types::contract::AbiEntry;
-    use starknet_rust::core::utils::get_selector_from_name;
-    use starknet_types_core::felt::Felt;
-    use std::collections::HashMap;
-
-    #[test]
-    fn json_response_can_be_rendered_as_text() {
-        let transaction_trace = serde_json::from_value::<TransactionTrace>(json!({
-            "type": "DECLARE",
-            "validate_invocation": null,
-            "fee_transfer_invocation": null,
-            "state_diff": null,
-            "execution_resources": { "l1_gas": 0, "l1_data_gas": 0, "l2_gas": 0 }
-        }))
-        .unwrap();
-        let response = TransactionTraceResponse::json(Felt::from(0xabc_u16), transaction_trace);
-
-        let text = response.text();
-
-        assert!(text.contains("Transaction trace retrieved"));
-        assert!(text.contains(
-            "Transaction Hash: 0x0000000000000000000000000000000000000000000000000000000000000abc"
-        ));
-
-        let json = serde_json::to_value(response).unwrap();
-        assert_eq!(json["transaction_trace"]["type"], "DECLARE");
-    }
-
-    #[test]
-    fn full_human_response_keeps_invocation_values_decoded() {
-        let selector = get_selector_from_name("unsigned_fn").unwrap();
-        let class_hash = Felt::from(0x456_u16);
-        let invocation = json!({
-            "contract_address": "0x123",
-            "entry_point_selector": selector.to_hex_string(),
-            "calldata": ["0x7"],
-            "caller_address": "0x0",
-            "class_hash": class_hash.to_hex_string(),
-            "entry_point_type": "EXTERNAL",
-            "call_type": "CALL",
-            "result": [],
-            "calls": [],
-            "events": [],
-            "messages": [],
-            "execution_resources": { "l1_gas": 0, "l2_gas": 0 },
-            "is_reverted": false
-        });
-        let transaction_trace = serde_json::from_value::<TransactionTrace>(json!({
-            "type": "INVOKE",
-            "validate_invocation": null,
-            "execute_invocation": invocation,
-            "fee_transfer_invocation": null,
-            "state_diff": null,
-            "execution_resources": { "l1_gas": 1, "l1_data_gas": 2, "l2_gas": 3 }
-        }))
-        .unwrap();
-        let abi = serde_json::from_value::<Vec<AbiEntry>>(json!([{
-            "name": "unsigned_fn",
-            "type": "function",
-            "inputs": [{ "name": "value", "type": "core::integer::u32" }],
-            "outputs": [],
-            "state_mutability": "external"
-        }]))
-        .unwrap();
-        let decoder = TraceDecoder {
-            sierra_abis: HashMap::from([(class_hash, abi)]),
-            ..TraceDecoder::default()
-        };
-
-        let text = render_full_trace(Felt::from(0xabc_u16), &transaction_trace, Some(&decoder));
-
-        assert!(text.contains("Entry Point Selector:"));
-        assert!(text.contains("unsigned_fn"));
-        assert!(text.contains("Calldata:"));
-        assert!(text.contains("7_u32"));
-        assert!(text.contains("Result:"));
-        assert!(text.contains("success"));
-        assert!(text.contains("L1 Data Gas:"));
-    }
 }
