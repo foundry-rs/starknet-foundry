@@ -224,54 +224,45 @@ fn append_invoke(
     full: bool,
 ) -> OutputBuilder {
     let builder = builder.tx_type("INVOKE");
-
-    if full {
-        let builder = append_execute_invocation(
-            builder,
-            "Execute Invocation",
-            &r.execute_invocation,
-            decoder,
-            true,
-        );
-        let builder = append_execution_resources(builder, &r.execution_resources, 0);
-        let builder = append_optional_invocation(
-            builder,
-            "Fee Transfer Invocation",
-            r.fee_transfer_invocation.as_ref(),
-            decoder,
-            true,
-        );
-        let builder = append_optional_state_diff(builder, r.state_diff.as_ref(), 0);
-        return append_optional_invocation(
+    let append_validate = |builder| {
+        append_optional_invocation(
             builder,
             "Validate Invocation",
             r.validate_invocation.as_ref(),
             decoder,
-            true,
-        );
-    }
+            full,
+        )
+    };
+    let append_execute = |builder| {
+        append_execute_invocation(
+            builder,
+            "Execute Invocation",
+            &r.execute_invocation,
+            decoder,
+            full,
+        )
+    };
+    let append_fee_transfer = |builder| {
+        append_optional_invocation(
+            builder,
+            "Fee Transfer Invocation",
+            r.fee_transfer_invocation.as_ref(),
+            decoder,
+            full,
+        )
+    };
 
-    let builder = append_optional_invocation(
-        builder,
-        "Validate Invocation",
-        r.validate_invocation.as_ref(),
-        decoder,
-        false,
-    );
-    let builder = append_execute_invocation(
-        builder,
-        "Execute Invocation",
-        &r.execute_invocation,
-        decoder,
-        false,
-    );
-    append_optional_invocation(
-        builder,
-        "Fee Transfer Invocation",
-        r.fee_transfer_invocation.as_ref(),
-        decoder,
-        false,
-    )
+    if full {
+        let builder = append_execute(builder);
+        let builder = append_execution_resources(builder, &r.execution_resources, 0);
+        let builder = append_fee_transfer(builder);
+        let builder = append_optional_state_diff(builder, r.state_diff.as_ref(), 0);
+        append_validate(builder)
+    } else {
+        let builder = append_validate(builder);
+        let builder = append_execute(builder);
+        append_fee_transfer(builder)
+    }
 }
 
 fn append_declare(
@@ -281,40 +272,34 @@ fn append_declare(
     full: bool,
 ) -> OutputBuilder {
     let builder = builder.tx_type("DECLARE");
-
-    if full {
-        let builder = append_execution_resources(builder, &r.execution_resources, 0);
-        let builder = append_optional_invocation(
-            builder,
-            "Fee Transfer Invocation",
-            r.fee_transfer_invocation.as_ref(),
-            decoder,
-            true,
-        );
-        let builder = append_optional_state_diff(builder, r.state_diff.as_ref(), 0);
-        return append_optional_invocation(
+    let append_validate = |builder| {
+        append_optional_invocation(
             builder,
             "Validate Invocation",
             r.validate_invocation.as_ref(),
             decoder,
-            true,
-        );
-    }
+            full,
+        )
+    };
+    let append_fee_transfer = |builder| {
+        append_optional_invocation(
+            builder,
+            "Fee Transfer Invocation",
+            r.fee_transfer_invocation.as_ref(),
+            decoder,
+            full,
+        )
+    };
 
-    let builder = append_optional_invocation(
-        builder,
-        "Validate Invocation",
-        r.validate_invocation.as_ref(),
-        decoder,
-        false,
-    );
-    append_optional_invocation(
-        builder,
-        "Fee Transfer Invocation",
-        r.fee_transfer_invocation.as_ref(),
-        decoder,
-        false,
-    )
+    if full {
+        let builder = append_execution_resources(builder, &r.execution_resources, 0);
+        let builder = append_fee_transfer(builder);
+        let builder = append_optional_state_diff(builder, r.state_diff.as_ref(), 0);
+        append_validate(builder)
+    } else {
+        let builder = append_validate(builder);
+        append_fee_transfer(builder)
+    }
 }
 
 fn append_deploy_account(
@@ -324,54 +309,45 @@ fn append_deploy_account(
     full: bool,
 ) -> OutputBuilder {
     let builder = builder.tx_type("DEPLOY_ACCOUNT");
-
-    if full {
-        let builder = append_invocation_section(
-            builder,
-            "Constructor Invocation",
-            &r.constructor_invocation,
-            decoder,
-            true,
-        );
-        let builder = append_execution_resources(builder, &r.execution_resources, 0);
-        let builder = append_optional_invocation(
-            builder,
-            "Fee Transfer Invocation",
-            r.fee_transfer_invocation.as_ref(),
-            decoder,
-            true,
-        );
-        let builder = append_optional_state_diff(builder, r.state_diff.as_ref(), 0);
-        return append_optional_invocation(
+    let append_validate = |builder| {
+        append_optional_invocation(
             builder,
             "Validate Invocation",
             r.validate_invocation.as_ref(),
             decoder,
-            true,
-        );
-    }
+            full,
+        )
+    };
+    let append_constructor = |builder| {
+        append_invocation_section(
+            builder,
+            "Constructor Invocation",
+            &r.constructor_invocation,
+            decoder,
+            full,
+        )
+    };
+    let append_fee_transfer = |builder| {
+        append_optional_invocation(
+            builder,
+            "Fee Transfer Invocation",
+            r.fee_transfer_invocation.as_ref(),
+            decoder,
+            full,
+        )
+    };
 
-    let builder = append_optional_invocation(
-        builder,
-        "Validate Invocation",
-        r.validate_invocation.as_ref(),
-        decoder,
-        false,
-    );
-    let builder = append_invocation_section(
-        builder,
-        "Constructor Invocation",
-        &r.constructor_invocation,
-        decoder,
-        false,
-    );
-    append_optional_invocation(
-        builder,
-        "Fee Transfer Invocation",
-        r.fee_transfer_invocation.as_ref(),
-        decoder,
-        false,
-    )
+    if full {
+        let builder = append_constructor(builder);
+        let builder = append_execution_resources(builder, &r.execution_resources, 0);
+        let builder = append_fee_transfer(builder);
+        let builder = append_optional_state_diff(builder, r.state_diff.as_ref(), 0);
+        append_validate(builder)
+    } else {
+        let builder = append_validate(builder);
+        let builder = append_constructor(builder);
+        append_fee_transfer(builder)
+    }
 }
 
 fn append_l1_handler(
@@ -381,26 +357,23 @@ fn append_l1_handler(
     full: bool,
 ) -> OutputBuilder {
     let builder = builder.tx_type("L1_HANDLER");
-
-    if full {
-        let builder = append_execution_resources(builder, &r.execution_resources, 0);
-        let builder = append_execute_invocation(
+    let append_function = |builder| {
+        append_execute_invocation(
             builder,
             "Function Invocation",
             &r.function_invocation,
             decoder,
-            true,
-        );
-        return append_optional_state_diff(builder, r.state_diff.as_ref(), 0);
-    }
+            full,
+        )
+    };
 
-    append_execute_invocation(
-        builder,
-        "Function Invocation",
-        &r.function_invocation,
-        decoder,
-        false,
-    )
+    if full {
+        let builder = append_execution_resources(builder, &r.execution_resources, 0);
+        let builder = append_function(builder);
+        append_optional_state_diff(builder, r.state_diff.as_ref(), 0)
+    } else {
+        append_function(builder)
+    }
 }
 
 fn append_optional_invocation(
