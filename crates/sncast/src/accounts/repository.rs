@@ -15,27 +15,39 @@ pub struct MutationResult<T> {
     pub migrated_from_v1: bool,
 }
 
-#[derive(Clone, Debug, Default)]
-pub struct AccountRepository;
+#[derive(Clone, Debug)]
+pub struct AccountRepository {
+    path: Utf8PathBuf,
+}
 
 impl AccountRepository {
-    pub fn load(&self, path: &Utf8Path) -> Result<DecodedAccountRegistry, AccountsError> {
-        if !self.exists(path)? {
-            return Err(AccountsError::FileNotFound {
-                path: path.to_owned(),
-            });
-        }
-        DecodedAccountRegistry::decode(&self.read(path)?)
-            .map_err(|error| attach_file_path(error, path))
+    #[must_use]
+    pub fn new(path: Utf8PathBuf) -> Self {
+        Self { path }
     }
 
-    pub fn find(
-        &self,
-        path: &Utf8Path,
-        network: &str,
-        account: &str,
-    ) -> Result<AccountRecord, AccountsError> {
-        self.load(path)?
+    #[must_use]
+    pub fn path(&self) -> &Utf8Path {
+        &self.path
+    }
+
+    #[must_use]
+    pub fn v1_backup_path(&self) -> Utf8PathBuf {
+        v1_backup_path(&self.path)
+    }
+
+    pub fn load(&self) -> Result<DecodedAccountRegistry, AccountsError> {
+        if !self.exists()? {
+            return Err(AccountsError::FileNotFound {
+                path: self.path.clone(),
+            });
+        }
+        DecodedAccountRegistry::decode(&self.read()?)
+            .map_err(|error| attach_file_path(error, &self.path))
+    }
+
+    pub fn find(&self, network: &str, account: &str) -> Result<AccountRecord, AccountsError> {
+        self.load()?
             .registry
             .account(network, account)
             .cloned()
@@ -47,12 +59,11 @@ impl AccountRepository {
 
     pub fn insert(
         &self,
-        path: &Utf8Path,
         network: NetworkName,
         name: AccountName,
         account: AccountRecord,
     ) -> Result<MutationResult<()>, AccountsError> {
-        self.mutate(path, move |registry| {
+        self.mutate(move |registry| {
             let network_display = network.to_string();
             let name_display = name.to_string();
             let existing = registry
@@ -72,11 +83,10 @@ impl AccountRepository {
 
     pub fn remove(
         &self,
-        path: &Utf8Path,
         network: &str,
         name: &str,
     ) -> Result<MutationResult<AccountRecord>, AccountsError> {
-        self.mutate(path, |registry| {
+        self.mutate(|registry| {
             registry
                 .networks_mut()
                 .get_mut(network)
@@ -90,26 +100,21 @@ impl AccountRepository {
 
     pub fn mutate<T>(
         &self,
-        path: &Utf8Path,
         operation: impl FnOnce(&mut AccountRegistry) -> Result<T, AccountsError>,
     ) -> Result<MutationResult<T>, AccountsError> {
-        self.with_exclusive_lock(path, || {
-            let existed = self.exists(path)?;
-            let original = if existed {
-                self.read(path)?
-            } else {
-                Vec::new()
-            };
+        self.with_exclusive_lock(|| {
+            let existed = self.exists()?;
+            let original = if existed { self.read()? } else { Vec::new() };
             let mut decoded = DecodedAccountRegistry::decode(&original)
-                .map_err(|error| attach_file_path(error, path))?;
+                .map_err(|error| attach_file_path(error, &self.path))?;
             let value = operation(&mut decoded.registry)?;
             let encoded = DecodedAccountRegistry::encode_v2(&decoded.registry)?;
             let migrated_from_v1 = existed && decoded.source_version == SourceVersion::V1;
 
             if migrated_from_v1 {
-                self.write_backup_if_absent(&v1_backup_path(path), &original)?;
+                self.write_backup_if_absent(&self.v1_backup_path(), &original)?;
             }
-            self.write_atomic(path, &encoded)?;
+            self.write_atomic(&encoded)?;
 
             Ok(MutationResult {
                 value,
@@ -118,59 +123,59 @@ impl AccountRepository {
         })
     }
 
-    fn exists(&self, path: &Utf8Path) -> Result<bool, AccountsError> {
-        reject_symlink(path).map_err(|source| AccountsError::Storage {
+    fn exists(&self) -> Result<bool, AccountsError> {
+        reject_symlink(&self.path).map_err(|source| AccountsError::Storage {
             operation: "inspect accounts path",
-            path: path.to_owned(),
+            path: self.path.clone(),
             source,
         })?;
-        Ok(path.exists())
+        Ok(self.path.exists())
     }
 
-    fn read(&self, path: &Utf8Path) -> Result<Vec<u8>, AccountsError> {
-        reject_symlink(path).map_err(|source| AccountsError::Storage {
+    fn read(&self) -> Result<Vec<u8>, AccountsError> {
+        reject_symlink(&self.path).map_err(|source| AccountsError::Storage {
             operation: "inspect accounts path",
-            path: path.to_owned(),
+            path: self.path.clone(),
             source,
         })?;
-        fs::read(path).map_err(|source| AccountsError::Storage {
+        fs::read(&self.path).map_err(|source| AccountsError::Storage {
             operation: "read accounts file",
-            path: path.to_owned(),
+            path: self.path.clone(),
             source,
         })
     }
 
-    fn write_atomic(&self, path: &Utf8Path, contents: &[u8]) -> Result<(), AccountsError> {
-        reject_symlink(path).map_err(|source| AccountsError::Storage {
+    fn write_atomic(&self, contents: &[u8]) -> Result<(), AccountsError> {
+        reject_symlink(&self.path).map_err(|source| AccountsError::Storage {
             operation: "inspect accounts path",
-            path: path.to_owned(),
+            path: self.path.clone(),
             source,
         })?;
-        let parent = ensure_parent(path)?;
+        let parent = ensure_parent(&self.path)?;
         let mut temporary = Builder::new()
             .prefix(".sncast-accounts-")
             .tempfile_in(parent)
             .map_err(|source| AccountsError::Storage {
                 operation: "create temporary accounts file",
-                path: path.to_owned(),
+                path: self.path.clone(),
                 source,
             })?;
 
         set_secret_permissions(temporary.path()).map_err(|source| AccountsError::Storage {
             operation: "set accounts file permissions",
-            path: path.to_owned(),
+            path: self.path.clone(),
             source,
         })?;
         temporary
             .write_all(contents)
             .map_err(|source| AccountsError::Storage {
                 operation: "write temporary accounts file",
-                path: path.to_owned(),
+                path: self.path.clone(),
                 source,
             })?;
         temporary.flush().map_err(|source| AccountsError::Storage {
             operation: "flush temporary accounts file",
-            path: path.to_owned(),
+            path: self.path.clone(),
             source,
         })?;
         temporary
@@ -178,18 +183,18 @@ impl AccountRepository {
             .sync_all()
             .map_err(|source| AccountsError::Storage {
                 operation: "sync temporary accounts file",
-                path: path.to_owned(),
+                path: self.path.clone(),
                 source,
             })?;
 
         temporary
-            .persist(path)
+            .persist(&self.path)
             .map_err(|error| AccountsError::Storage {
                 operation: "replace accounts file",
-                path: path.to_owned(),
+                path: self.path.clone(),
                 source: error.error,
             })?;
-        sync_parent(parent, path)
+        sync_parent(parent, &self.path)
     }
 
     fn write_backup_if_absent(
@@ -233,11 +238,10 @@ impl AccountRepository {
 
     fn with_exclusive_lock<T>(
         &self,
-        path: &Utf8Path,
         operation: impl FnOnce() -> Result<T, AccountsError>,
     ) -> Result<T, AccountsError> {
-        let parent = ensure_parent(path)?;
-        let lock_path = lock_path(path);
+        let parent = ensure_parent(&self.path)?;
+        let lock_path = lock_path(&self.path);
         reject_symlink(&lock_path).map_err(|source| AccountsError::Storage {
             operation: "inspect accounts path",
             path: lock_path.clone(),
@@ -257,17 +261,17 @@ impl AccountRepository {
         lock.lock_exclusive()
             .map_err(|source| AccountsError::Storage {
                 operation: "lock accounts file",
-                path: path.to_owned(),
+                path: self.path.clone(),
                 source,
             })?;
 
         let result = operation();
         FileExt::unlock(&lock).map_err(|source| AccountsError::Storage {
             operation: "unlock accounts file",
-            path: path.to_owned(),
+            path: self.path.clone(),
             source,
         })?;
-        sync_parent(parent, path)?;
+        sync_parent(parent, &self.path)?;
         result
     }
 }
@@ -283,8 +287,7 @@ fn attach_file_path(error: AccountsError, file: &Utf8Path) -> AccountsError {
     }
 }
 
-#[must_use]
-pub fn v1_backup_path(path: &Utf8Path) -> Utf8PathBuf {
+fn v1_backup_path(path: &Utf8Path) -> Utf8PathBuf {
     let file_name = path.file_name().unwrap_or("accounts.json");
     path.with_file_name(format!("{file_name}.v1.bak"))
 }
@@ -362,11 +365,12 @@ mod tests {
         let (_directory, path) = path();
         fs::write(&path, V1_ACCOUNT).unwrap();
 
-        let decoded = AccountRepository::default().load(&path).unwrap();
+        let repository = AccountRepository::new(path.clone());
+        let decoded = repository.load().unwrap();
 
         assert_eq!(decoded.source_version, SourceVersion::V1);
         assert_eq!(fs::read_to_string(&path).unwrap(), V1_ACCOUNT);
-        assert!(!v1_backup_path(&path).exists());
+        assert!(!repository.v1_backup_path().exists());
     }
 
     #[test]
@@ -374,8 +378,9 @@ mod tests {
         let (_directory, path) = path();
         fs::write(&path, V1_ACCOUNT).unwrap();
 
-        let result = AccountRepository::default()
-            .mutate(&path, |registry| {
+        let repository = AccountRepository::new(path.clone());
+        let result = repository
+            .mutate(|registry| {
                 registry
                     .networks_mut()
                     .get_mut("alpha-sepolia")
@@ -389,10 +394,10 @@ mod tests {
 
         assert!(result.migrated_from_v1);
         assert_eq!(
-            fs::read_to_string(v1_backup_path(&path)).unwrap(),
+            fs::read_to_string(repository.v1_backup_path()).unwrap(),
             V1_ACCOUNT
         );
-        let decoded = AccountRepository::default().load(&path).unwrap();
+        let decoded = repository.load().unwrap();
         assert_eq!(decoded.source_version, SourceVersion::V2);
         assert_eq!(
             decoded
@@ -409,7 +414,8 @@ mod tests {
         let (_directory, path) = path();
         fs::write(&path, V1_ACCOUNT).unwrap();
 
-        let result = AccountRepository::default().mutate(&path, |_| {
+        let repository = AccountRepository::new(path.clone());
+        let result = repository.mutate(|_| {
             Err::<(), _>(AccountsError::MissingField {
                 field: "address",
                 operation: "test",
@@ -418,7 +424,7 @@ mod tests {
 
         assert!(result.is_err());
         assert_eq!(fs::read_to_string(&path).unwrap(), V1_ACCOUNT);
-        assert!(!v1_backup_path(&path).exists());
+        assert!(!repository.v1_backup_path().exists());
     }
 
     #[test]
@@ -430,7 +436,7 @@ mod tests {
         )
         .unwrap();
 
-        let error = AccountRepository::default().load(&path).unwrap_err();
+        let error = AccountRepository::new(path.clone()).load().unwrap_err();
 
         assert!(matches!(
             error,
@@ -453,9 +459,8 @@ mod tests {
             signer: SignerSpec::PrivateKey(PrivateKeySpec::new(Felt::TWO)),
         };
 
-        AccountRepository::default()
+        AccountRepository::new(path.clone())
             .insert(
-                &path,
                 NetworkName::new("alpha-sepolia").unwrap(),
                 AccountName::new("alice").unwrap(),
                 account,
@@ -463,8 +468,8 @@ mod tests {
             .unwrap();
 
         assert_eq!(
-            AccountRepository::default()
-                .load(&path)
+            AccountRepository::new(path.clone())
+                .load()
                 .unwrap()
                 .source_version,
             SourceVersion::V2
@@ -482,9 +487,8 @@ mod tests {
                 let path = path.clone();
                 thread::spawn(move || {
                     barrier.wait();
-                    AccountRepository::default()
+                    AccountRepository::new(path)
                         .insert(
-                            &path,
                             NetworkName::new("alpha-sepolia").unwrap(),
                             AccountName::new(format!("account-{index}")).unwrap(),
                             AccountRecord {
@@ -509,7 +513,7 @@ mod tests {
             handle.join().unwrap();
         }
 
-        let decoded = AccountRepository::default().load(&path).unwrap();
+        let decoded = AccountRepository::new(path.clone()).load().unwrap();
         assert_eq!(
             decoded
                 .registry
@@ -525,8 +529,8 @@ mod tests {
     fn writes_complete_file_with_secret_permissions() {
         let (_directory, path) = path();
 
-        AccountRepository::default()
-            .write_atomic(&path, b"{\"version\":2}")
+        AccountRepository::new(path.clone())
+            .write_atomic(b"{\"version\":2}")
             .unwrap();
 
         assert_eq!(fs::read(&path).unwrap(), b"{\"version\":2}");
@@ -552,7 +556,7 @@ mod tests {
         symlink(&target, &path).unwrap();
 
         assert!(matches!(
-            AccountRepository::default().read(&path),
+            AccountRepository::new(path).read(),
             Err(AccountsError::Storage {
                 operation: "inspect accounts path",
                 source,

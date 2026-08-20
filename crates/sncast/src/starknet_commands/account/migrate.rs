@@ -3,7 +3,6 @@ use camino::Utf8PathBuf;
 use clap::Args;
 
 use sncast::accounts::AccountRepository;
-use sncast::accounts::repository::v1_backup_path;
 use sncast::response::account::migrate::AccountMigrateResponse;
 
 #[derive(Args, Debug)]
@@ -11,19 +10,17 @@ use sncast::response::account::migrate::AccountMigrateResponse;
 pub struct Migrate;
 
 pub fn migrate(accounts_file: &Utf8PathBuf) -> Result<AccountMigrateResponse> {
-    let repository = AccountRepository::default();
-    repository
-        .load(accounts_file)
-        .map_err(|error| anyhow::anyhow!(error))?;
+    let repository = AccountRepository::new(accounts_file.clone());
+    repository.load().map_err(|error| anyhow::anyhow!(error))?;
     let result = repository
-        .mutate(accounts_file, |_| Ok(()))
+        .mutate(|_| Ok(()))
         .map_err(|error| anyhow::anyhow!(error))?;
 
     Ok(AccountMigrateResponse {
         migrated: result.migrated_from_v1,
         backup: result
             .migrated_from_v1
-            .then(|| v1_backup_path(accounts_file).to_string()),
+            .then(|| repository.v1_backup_path().to_string()),
     })
 }
 
