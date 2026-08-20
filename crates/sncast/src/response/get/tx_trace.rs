@@ -204,21 +204,19 @@ impl TraceDecoder {
     #[must_use]
     pub fn new(contract_classes: HashMap<Felt, ContractClass>) -> Self {
         let mut decoder = Self::default();
-        let mut invalid_abi = false;
 
         for (class_hash, contract_class) in contract_classes {
             match contract_class {
                 ContractClass::Sierra(class) => {
-                    match serde_json::from_str::<Vec<AbiEntry>>(&class.abi) {
-                        Ok(abi) => {
-                            decoder.sierra_abis.insert(class_hash, abi);
-                        }
-                        Err(_) => invalid_abi = true,
+                    if let Ok(abi) = serde_json::from_str::<Vec<AbiEntry>>(&class.abi) {
+                        decoder.sierra_abis.insert(class_hash, abi);
+                    } else {
+                        decoder.had_invalid_abis_on_init = true;
                     }
                 }
                 ContractClass::Legacy(class) => {
                     let Some(abi) = class.abi else {
-                        invalid_abi = true;
+                        decoder.had_invalid_abis_on_init = true;
                         continue;
                     };
                     for entry in abi {
@@ -234,7 +232,6 @@ impl TraceDecoder {
             }
         }
 
-        decoder.had_invalid_abis_on_init = invalid_abi;
         decoder
     }
 
