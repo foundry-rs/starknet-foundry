@@ -652,7 +652,7 @@ async fn test_falls_back_when_class_is_unavailable() {
                 Calldata:             0x7
                 Result:               success: 0x9
         "},
-    )
+    );
 }
 
 #[tokio::test]
@@ -691,7 +691,7 @@ async fn test_warns_when_fetched_abi_cannot_decode_trace() {
               Calldata:             0x7
               Result:               success: 0x9
         "},
-    )
+    );
 }
 
 #[tokio::test]

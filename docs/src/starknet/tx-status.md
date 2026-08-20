@@ -49,7 +49,6 @@ $ sncast \
 Success: Transaction trace retrieved
 
 Type:                     INVOKE
-Transaction Hash:         0x07d2067cd7675f88493a9d773b456c8d941457ecc2f6201d2fe6b0607daadfd1
 Validate Invocation
   Entry Point Selector:   __validate__
   Contract Address:       0x[..]
@@ -74,7 +73,9 @@ Fee Transfer Invocation
 
 </details>
 
-By default, the trace output omits some fields for brevity. To display the full transaction trace, use the `--full` flag:
+By default, the command displays a compact trace focused on the invocation flow. For each invocation, it shows the entry point selector, contract address, calldata, result, and any nested calls.
+
+Use the `--full` flag to include the remaining trace data, such as call and entry point types, caller and class information, emitted events, L1 messages, execution resources, revert status, and the transaction state diff.
 
 ```shell
 $ sncast \
