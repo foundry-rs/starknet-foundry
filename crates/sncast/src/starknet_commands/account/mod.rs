@@ -53,6 +53,7 @@ pub struct Account {
 #[derive(Debug, Subcommand)]
 pub enum Commands {
     Import(Import),
+    #[command(name = "starkli-import")]
     ImportStarkli(ImportStarkli),
     Create(Create),
     Deploy(Deploy),
@@ -292,7 +293,7 @@ pub async fn account(
         Commands::ImportStarkli(import) => {
             let provider = import.rpc.get_provider(&config, ui).await?;
             let result = starknet_commands::account::import_starkli::import_starkli(
-                &config.accounts_file,
+                &repository,
                 &provider,
                 &import,
                 &config,
@@ -307,13 +308,13 @@ pub async fn account(
                 && let Err(err) = prompt_to_add_account_as_default(account_name.as_str(), ui)
             {
                 ui.print_error(
-                    "account import-starkli",
+                    "account starkli-import",
                     format!("Error: Failed to launch interactive prompt: {err}"),
                 );
             }
 
             Ok(process_command_result(
-                "account import-starkli",
+                "account starkli-import",
                 result,
                 ui,
                 None,

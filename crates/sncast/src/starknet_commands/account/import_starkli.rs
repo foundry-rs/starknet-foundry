@@ -1,18 +1,17 @@
 use crate::starknet_commands::account::{
-    generate_add_profile_message, notify_if_migrated, write_account_to_accounts_file,
+    generate_add_profile_message, notify_if_migrated, save_account,
 };
 use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
 use clap::Args;
-use sncast::accounts::AccountRecord;
+use sncast::accounts::{AccountRecord, AccountRepository};
 use sncast::compat::starkli;
 use sncast::get_chain_id;
-use sncast::helpers::account::generate_account_name;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::import::AccountImportResponse;
 use sncast::response::ui::UI;
-use sncast::signers::{CredentialProvider, DefaultCredentialProvider, KeystoreSpec, SignerSpec};
+use sncast::signers::{KeystoreSpec, SignerSpec, keystore_password};
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 
 /// Convert a starkli account/keystore pair into a native sncast account.
@@ -47,7 +46,7 @@ pub struct ImportStarkli {
 }
 
 pub async fn import_starkli(
-    accounts_file: &Utf8PathBuf,
+    repository: &AccountRepository,
     provider: &JsonRpcClient<HttpTransport>,
     import: &ImportStarkli,
     config: &CastConfig,
@@ -57,7 +56,7 @@ pub async fn import_starkli(
         import.keystore.clone(),
         import.keystore_password_env.clone(),
     );
-    let password = DefaultCredentialProvider.keystore_password(&credential_spec)?;
+    let password = keystore_password(&credential_spec)?;
     let account = native_account_from_starkli(
         &import.account_file,
         &import.keystore,
@@ -65,19 +64,19 @@ pub async fn import_starkli(
         import.keystore_password_env.clone(),
     )?;
 
-    let account_name = import
-        .name
-        .clone()
-        .unwrap_or(generate_account_name(accounts_file)?);
+    let account_name = match &import.name {
+        Some(name) => name.clone(),
+        None => repository.generate_account_name()?,
+    };
     let chain_id = get_chain_id(provider).await?;
-    let migrated = write_account_to_accounts_file(&account_name, accounts_file, chain_id, account)?;
+    let migrated = save_account(&account_name, repository, chain_id, account)?;
     notify_if_migrated(migrated, ui);
 
     let add_profile = generate_add_profile_message(
         import.add_profile.as_ref(),
         &import.rpc,
         &account_name,
-        accounts_file,
+        repository.path(),
         config,
     )?;
 
