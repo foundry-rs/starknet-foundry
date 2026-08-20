@@ -76,10 +76,11 @@ async fn test_get_account_invalid_file() {
     };
     let account = get_account(&config, &provider, &rpc_args, &UI::default()).await;
     let err = account.unwrap_err();
-    assert!(err
-        .to_string()
-        .contains("Failed to parse field `alpha-sepolia.?` in file 'tests/data/accounts/invalid_format.json': expected `,` or `}` at line 8 column 9")
-    );
+    let message = err.to_string();
+    assert!(message.contains(
+        "invalid accounts file schema in `tests/data/accounts/invalid_format.json` at `alpha-sepolia.?`"
+    ));
+    assert!(message.contains("expected `,` or `}` at line 8 column 9"));
 }
 
 #[tokio::test]
@@ -137,9 +138,11 @@ async fn test_get_account_failed_to_convert_field_elements() {
     let account1 = get_account(&config, &provider, &rpc_args, &UI::default()).await;
     let err = account1.unwrap_err();
 
-    assert!(err.to_string().contains(
-        "Failed to parse field `alpha-sepolia.with_invalid_private_key` in file 'tests/data/accounts/faulty_accounts_invalid_felt.json': data did not match any variant of untagged enum SignerType at line 9 column 9"
+    let message = err.to_string();
+    assert!(message.contains(
+        "invalid accounts file schema in `tests/data/accounts/faulty_accounts_invalid_felt.json` at `alpha-sepolia.with_invalid_private_key`"
     ));
+    assert!(message.contains("data did not match any variant of untagged enum Signer"));
 }
 
 // TODO (#1690): Move this test to the shared crate and execute it for a real node
