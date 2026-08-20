@@ -158,7 +158,7 @@ pub struct AccountsListMessage {
 
 impl AccountsListMessage {
     pub fn new(repository: AccountRepository, display_private_keys: bool) -> Result<Self, Error> {
-        repository.file_exists()?;
+        anyhow::ensure!(repository.exists()?);
 
         let accounts_file_path = repository
             .path()

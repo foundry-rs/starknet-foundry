@@ -35,10 +35,9 @@ pub fn check_account_exists(
     repository: &AccountRepository,
     accounts_file_should_exist: bool,
 ) -> Result<bool> {
-    if !repository.path().exists() {
-        if accounts_file_should_exist {
-            repository.file_exists()?;
-        }
+    let accounts_file_exists = repository.exists()?;
+    if !accounts_file_exists {
+        anyhow::ensure!(!accounts_file_should_exist);
         return Ok(false);
     }
 

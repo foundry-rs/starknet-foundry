@@ -613,7 +613,7 @@ pub fn get_account_record_from_repository(
     if name.is_empty() {
         bail!("Account name not passed nor found in snfoundry.toml")
     }
-    repository.file_exists()?;
+    anyhow::ensure!(repository.exists()?);
     let network_name = chain_id_to_network_name(chain_id);
     repository
         .find(&network_name, name)

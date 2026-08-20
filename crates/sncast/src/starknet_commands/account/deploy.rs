@@ -81,7 +81,7 @@ pub async fn deploy(
             .name
             .clone()
             .ok_or_else(|| anyhow!("Required argument `--name` not provided"))?;
-        repository.file_exists()?;
+        anyhow::ensure!(repository.exists()?);
         deploy_from_accounts_file(
             provider,
             repository,
