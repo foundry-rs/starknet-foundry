@@ -1,0 +1,65 @@
+---
+source: crates/sncast/tests/e2e/get/tx_trace.rs
+expression: output.as_stdout()
+---
+Success: Transaction trace retrieved
+
+Type:                   DEPLOY_ACCOUNT
+Constructor Invocation
+  Call Type:            CALL
+  Calldata:             0x796b0283375b9aa6fc0ac6b9ea1f98584f8464a66f05f29c3deb4c5eeea5263
+  Caller Address:       0x0
+  Calls:                []
+  Class Hash:           0x61dac032f228abef9c6626f995015233097ae253a7f72d68552db02f2971b8f
+  Contract Address:     0x563870107a0a2c8cf34d2a42118dc52706a7eae7c1c741d32abec98d3238677
+  Entry Point Selector: constructor
+  Entry Point Type:     CONSTRUCTOR
+  Events
+    Data:               [0x796b0283375b9aa6fc0ac6b9ea1f98584f8464a66f05f29c3deb4c5eeea5263]
+    Keys:               [0x38f6a5b87c23cee6e7294bcc3302e95019f70f81586ff3cac38581f5ca96381]
+    Order:              0
+  Execution Resources
+    L1 Gas:             0
+    L2 Gas:             0
+  Is Reverted:          false
+  Messages:             []
+  Result:               success
+Execution Resources
+  L1 Data Gas:          0
+  L1 Gas:               0
+  L2 Gas:               377050
+Fee Transfer Invocation
+  Call Type:            CALL
+  Calldata:             ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 51588769029944096_u256
+  Caller Address:       0x563870107a0a2c8cf34d2a42118dc52706a7eae7c1c741d32abec98d3238677
+  Calls:                []
+  Class Hash:           0x5327164fa21dca89a92e8eae8a5b7ab90f58373e71f0a16d285e5a4abe5a3cf
+  Contract Address:     0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
+  Entry Point Selector: transfer
+  Entry Point Type:     EXTERNAL
+  Events
+    Data:               [0x563870107a0a2c8cf34d2a42118dc52706a7eae7c1c741d32abec98d3238677, 0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8, 0xb747b64c6df320, 0x0]
+    Keys:               [0x99cd8bde557814842a3121e8ddfd433a539b8c9f14bf31ebf108d12e6196e9]
+    Order:              0
+  Execution Resources
+    L1 Gas:             0
+    L2 Gas:             0
+  Is Reverted:          false
+  Messages:             []
+  Result:               success: true
+Validate Invocation
+  Call Type:            CALL
+  Calldata:             0x61dac032f228abef9c6626f995015233097ae253a7f72d68552db02f2971b8f, 0x23141, 0x796b0283375b9aa6fc0ac6b9ea1f98584f8464a66f05f29c3deb4c5eeea5263
+  Caller Address:       0x0
+  Calls:                []
+  Class Hash:           0x61dac032f228abef9c6626f995015233097ae253a7f72d68552db02f2971b8f
+  Contract Address:     0x563870107a0a2c8cf34d2a42118dc52706a7eae7c1c741d32abec98d3238677
+  Entry Point Selector: __validate_deploy__
+  Entry Point Type:     EXTERNAL
+  Events:               []
+  Execution Resources
+    L1 Gas:             0
+    L2 Gas:             0
+  Is Reverted:          false
+  Messages:             []
+  Result:               success: 0x56414c4944

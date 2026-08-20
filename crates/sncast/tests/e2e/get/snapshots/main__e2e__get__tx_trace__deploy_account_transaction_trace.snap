@@ -1,0 +1,22 @@
+---
+source: crates/sncast/tests/e2e/get/tx_trace.rs
+expression: output.as_stdout()
+---
+Success: Transaction trace retrieved
+
+Type:                   DEPLOY_ACCOUNT
+Validate Invocation
+  Entry Point Selector: __validate_deploy__
+  Contract Address:     0x0563870107a0a2c8cf34d2a42118dc52706a7eae7c1c741d32abec98d3238677
+  Calldata:             0x61dac032f228abef9c6626f995015233097ae253a7f72d68552db02f2971b8f, 0x23141, 0x796b0283375b9aa6fc0ac6b9ea1f98584f8464a66f05f29c3deb4c5eeea5263
+  Result:               success: 0x56414c4944
+Constructor Invocation
+  Entry Point Selector: constructor
+  Contract Address:     0x0563870107a0a2c8cf34d2a42118dc52706a7eae7c1c741d32abec98d3238677
+  Calldata:             0x796b0283375b9aa6fc0ac6b9ea1f98584f8464a66f05f29c3deb4c5eeea5263
+  Result:               success
+Fee Transfer Invocation
+  Entry Point Selector: transfer
+  Contract Address:     0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
+  Calldata:             ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 51588769029944096_u256
+  Result:               success: true
