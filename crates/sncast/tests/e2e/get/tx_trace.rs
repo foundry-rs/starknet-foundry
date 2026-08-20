@@ -521,7 +521,7 @@ async fn test_reverted_invoke_transaction_trace() {
 }
 
 #[tokio::test]
-async fn test_invoke_transaction_trace_json() {
+async fn test_json() {
     let args = &["--json", "get", "tx-trace", INVOKE_TX_HASH, "--url", URL];
     let output = runner(args).assert().success().stderr_eq("");
 

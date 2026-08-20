@@ -429,7 +429,7 @@ fn append_execute_invocation(
         }
         ExecuteInvocation::Reverted(reverted) => append_section(builder, label, 0)
             .with_indent(2)
-            .multiline_field("Revert Reason", &reverted.revert_reason),
+            .field("Revert Reason", &reverted.revert_reason),
     }
 }
 

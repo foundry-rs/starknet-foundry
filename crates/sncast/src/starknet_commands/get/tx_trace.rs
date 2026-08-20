@@ -56,11 +56,8 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
                 ui.print_blank_line();
             }
 
-            Ok(TransactionTraceResponse::new(
-                trace,
-                TraceDecoder::new(classes),
-                tx_trace.full,
-            ))
+            let decoder = TraceDecoder::new(classes);
+            Ok(TransactionTraceResponse::new(trace, decoder, tx_trace.full))
         }
         Err(error) => Err(error),
     };
