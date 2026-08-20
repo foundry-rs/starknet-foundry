@@ -102,7 +102,7 @@ async fn get_account_address(
     rpc_args: &RpcArgs,
     ui: &UI,
 ) -> anyhow::Result<Felt> {
-    if config.keystore.is_some() || sncast::helpers::account::is_devnet_account(&config.account) {
+    if sncast::helpers::account::is_devnet_account(&config.account) {
         return Ok(get_account(config, provider, rpc_args, ui).await?.address());
     }
 

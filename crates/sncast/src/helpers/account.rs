@@ -1,4 +1,4 @@
-use crate::{build_account, helpers::devnet::provider::DevnetProvider};
+use crate::helpers::devnet::provider::DevnetProvider;
 use anyhow::{Result, ensure};
 use camino::Utf8PathBuf;
 use starknet_rust::{

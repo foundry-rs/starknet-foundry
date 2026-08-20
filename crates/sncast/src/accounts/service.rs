@@ -1,16 +1,14 @@
-use anyhow::{Context, Result, ensure};
+use anyhow::{Context, Result};
 use starknet_rust::accounts::SingleOwnerAccount;
 use starknet_rust::core::types::{BlockId, BlockTag};
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
-use starknet_rust::signers::{LocalWallet, Signer, SigningKey};
 use starknet_types_core::felt::Felt;
 use url::Url;
 
 use crate::accounts::{AccountRecord, AccountRepository, AccountSelector};
-use crate::compat::starkli;
 use crate::helpers::account::get_account_from_devnet;
 use crate::response::ui::UI;
-use crate::signers::{RuntimeSigner, SignerKind, SignerProviderContext, SignerResolver};
+use crate::signers::{RuntimeSigner, SignerProviderContext, SignerResolver};
 use crate::{RuntimeAccount, chain_id_to_network_name, get_chain_id};
 
 pub struct AccountService {
@@ -52,23 +50,6 @@ impl AccountService {
                     .await?;
                 Self::build_runtime_account(account, chain_id, provider, signer).await
             }
-            AccountSelector::LegacyStarkli {
-                account_file,
-                keystore_file,
-            } => {
-                let chain_id = get_chain_id(provider).await?;
-                let account = starkli::load_account(account_file.as_str(), keystore_file)?;
-                let private_key = account
-                    .signer
-                    .private_key()
-                    .context("Private key not found in starkli account")?;
-                let signer = RuntimeSigner::from_local_wallet(
-                    LocalWallet::from_signing_key(SigningKey::from_secret_scalar(private_key)),
-                    SignerKind::Keystore,
-                );
-                verify_public_key(&account, &signer).await?;
-                Self::build_runtime_account(account, chain_id, provider, signer).await
-            }
             AccountSelector::Devnet { index } => {
                 let url = devnet_url.context("Devnet account requires a devnet URL")?;
                 get_account_from_devnet(*index, provider, url).await
@@ -93,15 +74,4 @@ impl AccountService {
         runtime.set_block_id(BlockId::Tag(BlockTag::PreConfirmed));
         Ok(runtime)
     }
-}
-
-async fn verify_public_key(account: &AccountRecord, signer: &RuntimeSigner) -> Result<()> {
-    let actual = signer.get_public_key().await?.scalar();
-    ensure!(
-        actual == account.public_key,
-        "{} signer public key does not match the account: expected {:#x}, got {actual:#x}",
-        signer.kind(),
-        account.public_key
-    );
-    Ok(())
 }

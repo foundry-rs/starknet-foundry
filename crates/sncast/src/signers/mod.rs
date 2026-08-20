@@ -8,9 +8,7 @@ pub mod resolver;
 pub mod runtime;
 pub mod spec;
 
-pub use credentials::{
-    LEGACY_KEYSTORE_PASSWORD_ENV, SNCAST_KEYSTORE_PASSWORD_ENV, keystore_password,
-};
+pub use credentials::{SNCAST_KEYSTORE_PASSWORD_ENV, keystore_password};
 pub use derivation_path::{DerivationPathError, parse_derivation_path, validate_derivation_path};
 pub use error::SignerError;
 pub use keystore::KeystoreFile;

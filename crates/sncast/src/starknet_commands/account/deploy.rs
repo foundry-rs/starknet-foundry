@@ -1,8 +1,6 @@
-use anyhow::{Context, Result, anyhow, bail};
-use camino::Utf8PathBuf;
+use anyhow::{Result, anyhow};
 use clap::Args;
 use sncast::accounts::{AccountDeploymentService, AccountRecord, AccountRepository};
-use sncast::compat::starkli;
 use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::FeeArgs;
 use sncast::helpers::rpc::RpcArgs;
@@ -11,12 +9,10 @@ use sncast::response::invoke::InvokeResponse;
 use sncast::response::ui::UI;
 use sncast::signers::{SignerProviderContext, SignerResolver};
 use sncast::{
-    AccountType, WaitForTx, chain_id_to_network_name, get_account_data_from_keystore,
-    get_account_record_from_repository,
+    AccountType, WaitForTx, chain_id_to_network_name, get_account_record_from_repository,
 };
 use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
-use starknet_rust::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
 
 #[derive(Args, Debug)]
@@ -47,99 +43,27 @@ pub async fn deploy(
     deploy_args: &Deploy,
     chain_id: Felt,
     wait_config: WaitForTx,
-    account: &str,
-    keystore_path: Option<Utf8PathBuf>,
     fee_args: FeeArgs,
     dry_run_args: DryRunArgs,
     ui: &UI,
 ) -> Result<AccountDeployResponse> {
-    if let Some(keystore_path) = keystore_path {
-        deploy_from_keystore(
-            provider,
-            chain_id,
-            fee_args,
-            dry_run_args,
-            wait_config,
-            account,
-            keystore_path,
-            ui,
-        )
-        .await
-        .map(Into::into)
-    } else {
-        let account_name = deploy_args
-            .name
-            .clone()
-            .ok_or_else(|| anyhow!("Required argument `--name` not provided"))?;
-        anyhow::ensure!(repository.exists()?);
-        deploy_from_accounts_file(
-            provider,
-            repository,
-            account_name,
-            chain_id,
-            fee_args,
-            dry_run_args,
-            wait_config,
-            ui,
-        )
-        .await
-        .map(Into::into)
-    }
-}
-
-#[expect(clippy::too_many_arguments)]
-async fn deploy_from_keystore(
-    provider: &JsonRpcClient<HttpTransport>,
-    chain_id: Felt,
-    fee_args: FeeArgs,
-    dry_run_args: DryRunArgs,
-    wait_config: WaitForTx,
-    account: &str,
-    keystore_path: Utf8PathBuf,
-    ui: &UI,
-) -> Result<InvokeResponse> {
-    let account_data = starkli::load_account(account, &keystore_path)?;
-
-    let is_deployed = account_data
-        .deployed
-        .ok_or_else(|| anyhow!("Failed to get status key from account JSON file"))?;
-    if is_deployed {
-        bail!("Account already deployed");
-    }
-
-    let private_key_felt = account_data
-        .signer
-        .private_key()
-        .context("Private key not found in keystore account")?;
-    let private_key = SigningKey::from_secret_scalar(private_key_felt);
-    let public_key = account_data.public_key;
-
-    if public_key != private_key.verifying_key().scalar() {
-        bail!("Public key and private key from keystore do not match");
-    }
-
-    let (account_type, class_hash, salt) = extract_deployment_fields(&account_data)?;
-
-    let signer = LocalWallet::from_signing_key(private_key);
-    let (address, result) = AccountDeploymentService::deploy(
+    let account_name = deploy_args
+        .name
+        .clone()
+        .ok_or_else(|| anyhow!("Required argument `--name` not provided"))?;
+    anyhow::ensure!(repository.exists()?);
+    deploy_from_accounts_file(
         provider,
-        account_type,
-        class_hash,
-        signer,
-        salt,
+        repository,
+        account_name,
         chain_id,
         fee_args,
         dry_run_args,
         wait_config,
         ui,
     )
-    .await?;
-
-    if let InvokeResponse::Transaction(_) = &result {
-        starkli::update_deployment(account, address)?;
-    }
-
-    Ok(result)
+    .await
+    .map(Into::into)
 }
 
 #[expect(clippy::too_many_arguments)]

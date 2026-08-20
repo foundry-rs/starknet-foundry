@@ -15,7 +15,6 @@ pub struct ShowConfigResponse {
     pub network: Option<Network>,
     pub account: Option<String>,
     pub accounts_file_path: Option<Utf8PathBuf>,
-    pub keystore: Option<Utf8PathBuf>,
     pub wait_timeout: Option<u64>,
     pub wait_retry_interval: Option<u64>,
     pub show_explorer_links: bool,
@@ -45,9 +44,6 @@ impl SncastCommandMessage for ShowConfigResponse {
             })
             .if_some(self.accounts_file_path.as_ref(), |b, path| {
                 b.field("Accounts File Path", path.as_ref())
-            })
-            .if_some(self.keystore.as_ref(), |b, keystore| {
-                b.field("Keystore", keystore.as_ref())
             })
             .if_some(self.wait_timeout.as_ref(), |b, timeout| {
                 b.field("Wait Timeout", format!("{timeout}s").as_ref())

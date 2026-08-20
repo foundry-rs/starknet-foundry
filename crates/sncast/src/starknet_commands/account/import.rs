@@ -217,7 +217,6 @@ pub async fn import(
         &import.rpc,
         &account_name,
         repository.path(),
-        None,
         config,
     )?;
 

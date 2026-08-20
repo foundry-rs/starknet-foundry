@@ -33,12 +33,8 @@ pub async fn show_config(
     let network = effective_network_params.network();
 
     let account = Some(cast_config.account).filter(|p| !p.is_empty());
-    let mut accounts_file_path =
+    let accounts_file_path =
         Some(cast_config.accounts_file).filter(|p| p != &Utf8PathBuf::default());
-    let keystore = cast_config.keystore;
-    if keystore.is_some() {
-        accounts_file_path = None;
-    }
     let wait_timeout = Some(cast_config.wait_params.get_timeout());
     let wait_retry_interval = Some(cast_config.wait_params.get_retry_interval());
     let block_explorer = cast_config.block_explorer;
@@ -50,7 +46,6 @@ pub async fn show_config(
         network,
         account,
         accounts_file_path,
-        keystore,
         wait_timeout: wait_timeout.map(|v| u64::from(v.get())),
         wait_retry_interval: wait_retry_interval.map(|v| u64::from(v.get())),
         show_explorer_links: cast_config.show_explorer_links,
