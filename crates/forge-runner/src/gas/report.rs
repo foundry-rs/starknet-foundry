@@ -1,7 +1,7 @@
 use crate::gas::stats::GasStats;
 use crate::gas::utils::shorten_felt;
 use cheatnet::trace_data::{CallTrace, CallTraceNode};
-use comfy_table::modifiers::UTF8_ROUND_CORNERS;
+use comfy_table::presets::ASCII_FULL;
 use comfy_table::{Attribute, Cell, Color, Table};
 use debugging::ContractsDataStore;
 use starknet_api::core::{ClassHash, EntryPointSelector};
@@ -158,7 +158,7 @@ fn get_selector(contracts_data: &ContractsDataStore, selector: EntryPointSelecto
 
 pub fn format_table_output(contract_info: &ContractInfo, contract_id: &ContractId) -> Table {
     let mut table = Table::new();
-    table.apply_modifier(UTF8_ROUND_CORNERS);
+    table.load_style(ASCII_FULL.with_rounded_corners());
 
     table.set_header(vec![Cell::new(contract_id.to_string()).fg(Color::Magenta)]);
     table.add_row(vec![
