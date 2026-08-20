@@ -25,12 +25,12 @@ pub fn keystore_password(spec: &KeystoreSpec) -> Result<String, SignerError> {
 
 fn password_from_environment(
     spec: &KeystoreSpec,
-    mut lookup: impl FnMut(&str) -> Option<String>,
+    lookup: impl FnMut(&str) -> Option<String>,
 ) -> Option<String> {
     spec.password_env()
         .into_iter()
         .chain([SNCAST_KEYSTORE_PASSWORD_ENV])
-        .find_map(|variable| lookup(variable))
+        .find_map(lookup)
 }
 
 #[cfg(test)]

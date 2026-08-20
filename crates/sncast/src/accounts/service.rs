@@ -57,12 +57,12 @@ impl AccountService {
         }
     }
 
-    pub(crate) async fn build_runtime_account<'a>(
+    pub(crate) async fn build_runtime_account(
         account: AccountRecord,
         chain_id: Felt,
-        provider: &'a JsonRpcClient<HttpTransport>,
+        provider: &JsonRpcClient<HttpTransport>,
         signer: RuntimeSigner,
-    ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, RuntimeSigner>> {
+    ) -> Result<SingleOwnerAccount<&JsonRpcClient<HttpTransport>, RuntimeSigner>> {
         let connected = account.as_connected()?;
         let address = connected.address();
         crate::verify_account_address(address, chain_id, provider).await?;

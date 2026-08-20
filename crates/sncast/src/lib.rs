@@ -6,7 +6,6 @@ use crate::helpers::constants::{DEFAULT_ACCOUNTS_FILE, WAIT_RETRY_INTERVAL, WAIT
 use crate::helpers::rpc::RpcArgs;
 use crate::response::errors::SNCastProviderError;
 use anyhow::{Context, Error, Result, anyhow, bail, ensure};
-use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use configuration::Override;
 use helpers::constants::UDC_ADDRESS;
