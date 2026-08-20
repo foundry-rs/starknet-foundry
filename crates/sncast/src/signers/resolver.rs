@@ -156,7 +156,7 @@ impl SignerProvider for LedgerSignerProvider {
                 operation: "connect to device",
                 message: error.to_string(),
             })?;
-        Ok(RuntimeSigner::from_ledger_signer(signer, self.kind()))
+        Ok(RuntimeSigner::from_ledger_signer(signer))
     }
 }
 

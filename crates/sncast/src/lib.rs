@@ -384,7 +384,7 @@ pub async fn get_account_from_accounts_file<'a>(
         SignerSource::Ledger(ledger_path) => {
             let signer = ledger::create_ledger_signer(&ledger_path, ui, true).await?;
             (
-                RuntimeSigner::from_ledger_signer(signer, SignerKind::Ledger),
+                RuntimeSigner::from_ledger_signer(signer),
                 SignerKind::Ledger,
             )
         }

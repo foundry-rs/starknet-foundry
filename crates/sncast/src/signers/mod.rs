@@ -1,6 +1,5 @@
 //! Persistent signer specifications and runtime signer implementations.
 
-pub mod backend;
 pub mod credentials;
 pub mod derivation_path;
 pub mod error;

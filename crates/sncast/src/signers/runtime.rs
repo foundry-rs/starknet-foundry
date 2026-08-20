@@ -1,5 +1,4 @@
 use std::fmt::{Debug, Formatter};
-use std::sync::Arc;
 
 use async_trait::async_trait;
 use starknet_rust::core::crypto::Signature;
@@ -9,36 +8,33 @@ use starknet_rust::signers::{
 use starknet_types_core::felt::Felt;
 
 use crate::helpers::ledger::SncastLedgerTransport;
-use crate::signers::backend::SignerBackend;
 use crate::signers::{SignerError, SignerKind};
 
-#[derive(Clone)]
-pub struct RuntimeSigner {
-    backend: Arc<SignerBackend>,
+pub enum RuntimeSigner {
+    LocalWallet {
+        signer: LocalWallet,
+        kind: SignerKind,
+    },
+    Ledger {
+        signer: LedgerSigner<SncastLedgerTransport>,
+    },
 }
 
 impl RuntimeSigner {
-    #[must_use]
-    pub(crate) fn new(backend: SignerBackend) -> Self {
-        Self {
-            backend: Arc::new(backend),
-        }
-    }
-
     pub(crate) fn from_local_wallet(signer: LocalWallet, kind: SignerKind) -> Self {
-        Self::new(SignerBackend::local_wallet(signer, kind))
+        Self::LocalWallet { signer, kind }
     }
 
-    pub(crate) fn from_ledger_signer(
-        signer: LedgerSigner<SncastLedgerTransport>,
-        kind: SignerKind,
-    ) -> Self {
-        Self::new(SignerBackend::ledger(signer, kind))
+    pub(crate) fn from_ledger_signer(signer: LedgerSigner<SncastLedgerTransport>) -> Self {
+        Self::Ledger { signer }
     }
 
     #[must_use]
     pub fn kind(&self) -> SignerKind {
-        self.backend.kind()
+        match self {
+            Self::LocalWallet { kind, .. } => *kind,
+            Self::Ledger { .. } => SignerKind::Ledger,
+        }
     }
 }
 
@@ -57,16 +53,53 @@ impl Signer for RuntimeSigner {
     type SignError = SignerError;
 
     async fn get_public_key(&self) -> Result<VerifyingKey, Self::GetPublicKeyError> {
-        self.backend.public_key().await
+        match self {
+            Self::LocalWallet { signer, kind } => get_public_key(signer, *kind).await,
+            Self::Ledger { signer } => get_public_key(signer, SignerKind::Ledger).await,
+        }
     }
 
     async fn sign_hash(&self, hash: &Felt) -> Result<Signature, Self::SignError> {
-        self.backend.sign_hash(hash).await
+        match self {
+            Self::LocalWallet { signer, kind } => sign_hash(signer, hash, *kind).await,
+            Self::Ledger { signer } => sign_hash(signer, hash, SignerKind::Ledger).await,
+        }
     }
 
     fn is_interactive(&self, context: SignerInteractivityContext<'_>) -> bool {
-        self.backend.is_interactive(context)
+        match self {
+            Self::LocalWallet { signer, .. } => signer.is_interactive(context),
+            Self::Ledger { signer, .. } => signer.is_interactive(context),
+        }
     }
+}
+
+async fn get_public_key<S>(signer: &S, kind: SignerKind) -> Result<VerifyingKey, SignerError>
+where
+    S: Signer + Send + Sync,
+{
+    signer
+        .get_public_key()
+        .await
+        .map_err(|error| SignerError::Backend {
+            kind,
+            operation: "get public key",
+            message: error.to_string(),
+        })
+}
+
+async fn sign_hash<S>(signer: &S, hash: &Felt, kind: SignerKind) -> Result<Signature, SignerError>
+where
+    S: Signer + Send + Sync,
+{
+    signer
+        .sign_hash(hash)
+        .await
+        .map_err(|error| SignerError::Backend {
+            kind,
+            operation: "sign hash",
+            message: error.to_string(),
+        })
 }
 
 #[cfg(test)]
