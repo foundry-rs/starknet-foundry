@@ -7,7 +7,7 @@ use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
-use sncast::response::get::tx_trace::TransactionTraceResponse;
+use sncast::response::get::tx_trace::{TransactionTraceResponse, contract_addresses_by_class_hash};
 use sncast::response::ui::UI;
 use starknet_rust::core::types::{BlockId, BlockTag, ContractClass};
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
@@ -52,19 +52,13 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
         .map_err(|error| StarknetCommandError::ProviderError(error.into()))
         .map_err(handle_starknet_command_error);
 
-    let result = match result {
-        Ok(trace) if ui.base_ui().output_format() == OutputFormat::Human => {
-            let class_references =
-                TransactionTraceResponse::contract_addresses_by_class_hash(&trace);
+    let result = match (result, ui.base_ui().output_format()) {
+        (Ok(trace), OutputFormat::Human) => {
+            let class_references = contract_addresses_by_class_hash(&trace);
             let ContractClassesFetchResponse { classes, failures } =
                 fetch_contract_classes(&provider, class_references).await;
             let (response, abi_decoding_incomplete) =
-                TransactionTraceResponse::with_contract_classes(
-                    tx_trace.transaction_hash,
-                    trace,
-                    classes,
-                    tx_trace.full,
-                );
+                TransactionTraceResponse::human(trace, classes, tx_trace.full);
 
             if !failures.is_empty() {
                 ui.print_warning(WarningMessage::new(format_class_fetch_warning(&failures)));
@@ -80,11 +74,8 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
 
             Ok(response)
         }
-        Ok(trace) => Ok(TransactionTraceResponse::json(
-            tx_trace.transaction_hash,
-            trace,
-        )),
-        Err(error) => Err(error),
+        (Ok(trace), OutputFormat::Json) => Ok(TransactionTraceResponse::json(trace)),
+        (Err(error), _) => Err(error),
     };
 
     Ok(process_command_result("get tx-trace", result, ui, None))
