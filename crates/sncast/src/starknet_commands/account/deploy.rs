@@ -11,6 +11,7 @@ use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::ledger;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::deploy::AccountDeployResponse;
+use sncast::response::errors::{SNCastProviderError, SNCastStarknetError};
 use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
 use sncast::response::ui::UI;
 use sncast::{
@@ -375,6 +376,10 @@ where
                 ref execution_error,
                 ..
             })) => Err(anyhow!(execution_error_message(execution_error).to_owned())),
+            StarknetError(error) => Err(SNCastProviderError::StarknetError(
+                SNCastStarknetError::from_starknet_error_with_account(error, address.into_()),
+            )
+            .into()),
             _ => Err(handle_rpc_error(error)),
         },
         Err(_) => Err(anyhow!("Unknown AccountFactoryError")),

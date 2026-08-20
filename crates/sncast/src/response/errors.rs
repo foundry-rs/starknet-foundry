@@ -101,6 +101,20 @@ impl From<ProviderError> for SNCastProviderError {
     }
 }
 
+fn format_validation_failure(address: Option<&PaddedFelt>, message: &ByteArray) -> String {
+    match address {
+        Some(addr) => format!("Account {addr:#x} failed the validation = {message}"),
+        None => format!("Contract failed the validation = {message}"),
+    }
+}
+
+fn format_insufficient_account_balance(address: Option<&PaddedFelt>) -> String {
+    match address {
+        Some(addr) => format!("Account {addr:#x} balance is too small to cover transaction fee"),
+        None => "Account balance is too small to cover transaction fee".to_string(),
+    }
+}
+
 #[derive(Debug, Error)]
 pub enum SNCastStarknetError {
     #[error("Node failed to receive transaction")]
@@ -127,10 +141,13 @@ pub enum SNCastStarknetError {
     InvalidTransactionNonce,
     #[error("The transaction's resources don't cover validation or the minimal transaction fee")]
     InsufficientResourcesForValidate,
-    #[error("Account balance is too small to cover transaction fee")]
-    InsufficientAccountBalance,
-    #[error("Contract failed the validation = {0}")]
-    ValidationFailure(ByteArray),
+    #[error("{}", format_insufficient_account_balance(.address.as_ref()))]
+    InsufficientAccountBalance { address: Option<PaddedFelt> },
+    #[error("{}", format_validation_failure(.address.as_ref(), .message))]
+    ValidationFailure {
+        address: Option<PaddedFelt>,
+        message: ByteArray,
+    },
     #[error("Contract failed to compile in starknet")]
     CompilationFailed(ByteArray),
     #[error("Contract class size is too large")]
@@ -176,11 +193,12 @@ impl From<StarknetError> for SNCastStarknetError {
                 SNCastStarknetError::InsufficientResourcesForValidate
             }
             StarknetError::InsufficientAccountBalance => {
-                SNCastStarknetError::InsufficientAccountBalance
+                SNCastStarknetError::InsufficientAccountBalance { address: None }
             }
-            StarknetError::ValidationFailure(err) => {
-                SNCastStarknetError::ValidationFailure(ByteArray::from(err.as_str()))
-            }
+            StarknetError::ValidationFailure(err) => SNCastStarknetError::ValidationFailure {
+                address: None,
+                message: ByteArray::from(err.as_str()),
+            },
             StarknetError::CompilationFailed(msg) => {
                 SNCastStarknetError::CompilationFailed(ByteArray::from(msg.as_str()))
             }
@@ -202,5 +220,103 @@ impl From<StarknetError> for SNCastStarknetError {
             StarknetError::EntrypointNotFound => SNCastStarknetError::EntryPointNotFound,
             other => SNCastStarknetError::UnexpectedError(anyhow!(other)),
         }
+    }
+}
+
+impl SNCastStarknetError {
+    /// Same as [`From<StarknetError>`], but attaches the account address to the errors that are
+    /// caused by a specific account, so the user knows which account needs fixing.
+    #[must_use]
+    pub fn from_starknet_error_with_account(value: StarknetError, address: PaddedFelt) -> Self {
+        match value {
+            StarknetError::ValidationFailure(err) => SNCastStarknetError::ValidationFailure {
+                address: Some(address),
+                message: ByteArray::from(err.as_str()),
+            },
+            StarknetError::InsufficientAccountBalance => {
+                SNCastStarknetError::InsufficientAccountBalance {
+                    address: Some(address),
+                }
+            }
+            other => SNCastStarknetError::from(other),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{PaddedFelt, SNCastStarknetError, StarknetError};
+    use conversions::byte_array::ByteArray;
+    use starknet_types_core::felt::Felt;
+
+    #[test]
+    fn validation_failure_message_includes_account_address() {
+        let error = SNCastStarknetError::ValidationFailure {
+            address: Some(PaddedFelt(Felt::from_hex_unchecked("0x123"))),
+            message: ByteArray::from("insufficient balance"),
+        };
+
+        assert_eq!(
+            error.to_string(),
+            "Account 0x0000000000000000000000000000000000000000000000000000000000000123 failed the validation = insufficient balance"
+        );
+    }
+
+    #[test]
+    fn validation_failure_message_without_address_keeps_legacy_text() {
+        let error = SNCastStarknetError::ValidationFailure {
+            address: None,
+            message: ByteArray::from("insufficient balance"),
+        };
+
+        assert_eq!(
+            error.to_string(),
+            "Contract failed the validation = insufficient balance"
+        );
+    }
+
+    #[test]
+    fn insufficient_account_balance_message_includes_account_address() {
+        let error = SNCastStarknetError::InsufficientAccountBalance {
+            address: Some(PaddedFelt(Felt::from_hex_unchecked("0x123"))),
+        };
+
+        assert_eq!(
+            error.to_string(),
+            "Account 0x0000000000000000000000000000000000000000000000000000000000000123 balance is too small to cover transaction fee"
+        );
+    }
+
+    #[test]
+    fn insufficient_account_balance_message_without_address_keeps_legacy_text() {
+        let error = SNCastStarknetError::InsufficientAccountBalance { address: None };
+
+        assert_eq!(
+            error.to_string(),
+            "Account balance is too small to cover transaction fee"
+        );
+    }
+
+    #[test]
+    fn from_starknet_error_with_account_attaches_address() {
+        let error = SNCastStarknetError::from_starknet_error_with_account(
+            StarknetError::InsufficientAccountBalance,
+            PaddedFelt(Felt::from_hex_unchecked("0x123")),
+        );
+
+        assert!(matches!(
+            error,
+            SNCastStarknetError::InsufficientAccountBalance { address: Some(_) }
+        ));
+    }
+
+    #[test]
+    fn from_starknet_error_with_account_passes_through_unrelated_errors() {
+        let error = SNCastStarknetError::from_starknet_error_with_account(
+            StarknetError::ContractNotFound,
+            PaddedFelt(Felt::from_hex_unchecked("0x123")),
+        );
+
+        assert!(matches!(error, SNCastStarknetError::ContractNotFound));
     }
 }
