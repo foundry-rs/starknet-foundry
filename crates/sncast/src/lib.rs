@@ -6,7 +6,7 @@ use crate::helpers::constants::{DEFAULT_ACCOUNTS_FILE, WAIT_RETRY_INTERVAL, WAIT
 use crate::helpers::rpc::RpcArgs;
 use crate::response::errors::SNCastProviderError;
 use anyhow::{Context, Error, Result, anyhow, bail, ensure};
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use configuration::Override;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
@@ -613,7 +613,7 @@ pub fn get_account_record_from_repository(
     if name.is_empty() {
         bail!("Account name not passed nor found in snfoundry.toml")
     }
-    check_account_file_exists(repository.path())?;
+    repository.file_exists()?;
     let network_name = chain_id_to_network_name(chain_id);
     repository
         .find(&network_name, name)
@@ -878,14 +878,6 @@ pub async fn handle_wait_for_tx<T>(
     }
 
     Ok(return_value)
-}
-
-pub fn check_account_file_exists(accounts_file_path: &Utf8Path) -> Result<()> {
-    if !accounts_file_path.exists() {
-        bail! {"Accounts file = {accounts_file_path} does not exist! If you do not have an account create one with `account create` command \
-        or if you're using a custom accounts file, make sure to supply correct path to it with `--accounts-file` argument." }
-    }
-    Ok(())
 }
 
 pub fn check_keystore_and_account_files_exist(

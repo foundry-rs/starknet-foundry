@@ -6,10 +6,10 @@ use itertools::Itertools;
 use serde::Serialize;
 use serde_json::Value;
 use serde_json::json;
+use sncast::AccountType;
 use sncast::accounts::schema::v2;
 use sncast::accounts::{AccountRecord, AccountRepository};
 use sncast::signers::SignerSpec;
-use sncast::{AccountType, check_account_file_exists};
 use std::collections::BTreeMap;
 use std::fmt::Write;
 
@@ -158,7 +158,7 @@ pub struct AccountsListMessage {
 
 impl AccountsListMessage {
     pub fn new(repository: AccountRepository, display_private_keys: bool) -> Result<Self, Error> {
-        check_account_file_exists(repository.path())?;
+        repository.file_exists()?;
 
         let accounts_file_path = repository
             .path()

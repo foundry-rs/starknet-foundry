@@ -15,8 +15,8 @@ use sncast::response::ui::UI;
 use sncast::signers::{SignerProviderContext, SignerResolver};
 use sncast::{
     AccountType, WaitForTx, apply_optional_fields, chain_id_to_network_name,
-    check_account_file_exists, get_account_data_from_keystore, get_account_record_from_repository,
-    handle_rpc_error, handle_wait_for_tx,
+    get_account_data_from_keystore, get_account_record_from_repository, handle_rpc_error,
+    handle_wait_for_tx,
 };
 use starknet_rust::accounts::{AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory};
 use starknet_rust::accounts::{AccountFactoryError, ArgentAccountFactory};
@@ -81,7 +81,7 @@ pub async fn deploy(
             .name
             .clone()
             .ok_or_else(|| anyhow!("Required argument `--name` not provided"))?;
-        check_account_file_exists(repository.path())?;
+        repository.file_exists()?;
         deploy_from_accounts_file(
             provider,
             repository,

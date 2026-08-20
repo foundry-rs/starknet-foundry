@@ -1,4 +1,4 @@
-use crate::{build_account, check_account_file_exists, helpers::devnet::provider::DevnetProvider};
+use crate::{build_account, helpers::devnet::provider::DevnetProvider};
 use anyhow::{Result, ensure};
 use camino::Utf8PathBuf;
 use starknet_rust::{
@@ -67,7 +67,7 @@ pub fn check_account_exists(
 ) -> Result<bool> {
     if !repository.path().exists() {
         if accounts_file_should_exist {
-            check_account_file_exists(repository.path())?;
+            repository.file_exists()?;
         }
         return Ok(false);
     }
