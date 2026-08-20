@@ -2,6 +2,7 @@ use anyhow::Result;
 use clap::Args;
 use foundry_ui::components::warning::WarningMessage;
 use futures::stream::{self, StreamExt};
+use itertools::Itertools;
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
@@ -87,17 +88,7 @@ async fn fetch_contract_classes(
         .collect::<Vec<_>>()
         .await;
 
-    let mut classes = HashMap::new();
-    let mut failures = Vec::new();
-
-    for result in results {
-        match result {
-            Ok((class_hash, class)) => {
-                classes.insert(class_hash, class);
-            }
-            Err(failure) => failures.push(failure),
-        }
-    }
+    let (classes, failures): (HashMap<_, _>, Vec<_>) = results.into_iter().partition_result();
 
     ContractClassesFetchResponse { classes, failures }
 }
