@@ -1,7 +1,7 @@
 use super::package::RunForPackageArgs;
 use crate::profile_validation::check_compiler_config_compatibility;
 use crate::profile_validation::enable_gas::check_enable_gas;
-use crate::run_tests::cache::{CacheConfig, USC_CACHE_DIR};
+use crate::run_tests::cache::CacheConfig;
 use crate::run_tests::messages::latest_blocks_numbers::LatestBlocksNumbersMessage;
 use crate::run_tests::messages::overall_summary::OverallSummaryMessage;
 use crate::run_tests::messages::partition::{PartitionFinishedMessage, PartitionStartedMessage};
@@ -109,10 +109,8 @@ pub async fn execute_workspace(
 
     let cache_dir = resolve_cache_dir(&scarb_metadata.workspace.root)?;
     prepare_cache_dir(&cache_dir)?;
-    let cache_config = CacheConfig {
-        usc_cache_dir: cache_dir.join(USC_CACHE_DIR),
-        cache_dir,
-    };
+
+    let cache_config = CacheConfig::new(cache_dir);
     let packages_len = packages.len();
 
     let partitioning_config = get_partitioning_config(args, &ui, &packages, &artifacts_dir_path)?;
