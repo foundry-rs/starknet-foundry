@@ -1,15 +1,17 @@
 use anyhow::Result;
 use clap::Args;
-use foundry_ui::OutputFormat;
 use foundry_ui::components::warning::WarningMessage;
 use futures::stream::{self, StreamExt};
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
-use sncast::response::get::tx_trace::{TransactionTraceResponse, contract_addresses_by_class_hash};
+use sncast::response::get::tx_trace::{
+    ContractClassFetchFailure, ContractClassesFetchResponse, TraceDecoder,
+    TransactionTraceResponse, contract_addresses_by_class_hash,
+};
 use sncast::response::ui::UI;
-use starknet_rust::core::types::{BlockId, BlockTag, ContractClass};
+use starknet_rust::core::types::{BlockId, BlockTag};
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet_rust::providers::{Provider, ProviderError};
 use starknet_types_core::felt::Felt;
@@ -17,17 +19,6 @@ use std::collections::{HashMap, HashSet};
 use std::process::ExitCode;
 
 const MAX_CONCURRENT_CLASS_REQUESTS: usize = 8;
-
-struct ContractClassesFetchResponse {
-    classes: HashMap<Felt, ContractClass>,
-    failures: Vec<ContractClassFetchFailure>,
-}
-
-struct ContractClassFetchFailure {
-    class_hash: Felt,
-    contract_addresses: HashSet<Felt>,
-    error: ProviderError,
-}
 
 #[derive(Debug, Args)]
 #[command(about = "Get the execution trace of a transaction")]
@@ -52,30 +43,26 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
         .map_err(|error| StarknetCommandError::ProviderError(error.into()))
         .map_err(handle_starknet_command_error);
 
-    let result = match (result, ui.base_ui().output_format()) {
-        (Ok(trace), OutputFormat::Human) => {
-            let class_references = contract_addresses_by_class_hash(&trace);
+    let result = match result {
+        Ok(trace) => {
+            let contract_classes_fetch_response =
+                fetch_contract_classes(&provider, contract_addresses_by_class_hash(&trace)).await;
+
             let ContractClassesFetchResponse { classes, failures } =
-                fetch_contract_classes(&provider, class_references).await;
-            let (response, abi_decoding_incomplete) =
-                TransactionTraceResponse::human(trace, classes, tx_trace.full);
+                contract_classes_fetch_response;
 
             if !failures.is_empty() {
                 ui.print_warning(WarningMessage::new(format_class_fetch_warning(&failures)));
                 ui.print_blank_line();
             }
 
-            if abi_decoding_incomplete {
-                ui.print_warning(WarningMessage::new(
-                    "Some trace data could not be decoded with the fetched ABIs. Raw felts are shown instead.",
-                ));
-                ui.print_blank_line();
-            }
-
-            Ok(response)
+            Ok(TransactionTraceResponse::new(
+                trace,
+                TraceDecoder::new(classes),
+                tx_trace.full,
+            ))
         }
-        (Ok(trace), OutputFormat::Json) => Ok(TransactionTraceResponse::json(trace)),
-        (Err(error), _) => Err(error),
+        Err(error) => Err(error),
     };
 
     Ok(process_command_result("get tx-trace", result, ui, None))
@@ -105,6 +92,7 @@ async fn fetch_contract_classes(
 
     let mut classes = HashMap::new();
     let mut failures = Vec::new();
+
     for result in results {
         match result {
             Ok((class_hash, class)) => {
