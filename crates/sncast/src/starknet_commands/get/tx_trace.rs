@@ -42,6 +42,10 @@ pub struct TxTrace {
     #[arg(long)]
     pub full: bool,
 
+    /// Display raw felt values without ABI decoding
+    #[arg(long)]
+    pub raw: bool,
+
     #[command(flatten)]
     pub rpc: RpcArgs,
 }
@@ -78,7 +82,11 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
             }
 
             let decoder = TraceDecoder::new(classes);
-            Ok(TransactionTraceResponse::new(trace, decoder, tx_trace.full))
+            Ok(TransactionTraceResponse::new(
+                trace,
+                Some(decoder),
+                tx_trace.full,
+            ))
         }
         Err(error) => Err(error),
     };

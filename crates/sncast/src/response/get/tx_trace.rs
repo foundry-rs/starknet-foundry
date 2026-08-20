@@ -25,12 +25,12 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 
 pub struct TransactionTraceResponse {
     trace: TransactionTrace,
-    decoder: TraceDecoder,
+    decoder: Option<TraceDecoder>,
     full: bool,
 }
 
 impl TransactionTraceResponse {
-    pub fn new(trace: TransactionTrace, decoder: TraceDecoder, full: bool) -> Self {
+    pub fn new(trace: TransactionTrace, decoder: Option<TraceDecoder>, full: bool) -> Self {
         Self {
             trace,
             decoder,
@@ -357,11 +357,38 @@ fn format_decoding_warning(warnings: &[TraceDecodingWarning]) -> String {
     format!("Some trace data is shown as raw felts:\n{details}")
 }
 
+fn invocation_selector(invocation: &FunctionInvocation, decoder: Option<&TraceDecoder>) -> String {
+    decoder.map_or_else(
+        || invocation.entry_point_selector.to_hex_string(),
+        |decoder| decoder.selector(invocation),
+    )
+}
+
+fn invocation_calldata(invocation: &FunctionInvocation, decoder: Option<&TraceDecoder>) -> String {
+    decoder.map_or_else(
+        || format_raw_felts(&invocation.calldata),
+        |decoder| decoder.calldata(invocation),
+    )
+}
+
+fn invocation_result(invocation: &FunctionInvocation, decoder: Option<&TraceDecoder>) -> String {
+    decoder.map_or_else(
+        || {
+            if invocation.is_reverted {
+                format_result("panic", &format_panic_data(&invocation.result))
+            } else {
+                format_result("success", &format_raw_felts(&invocation.result))
+            }
+        },
+        |decoder| decoder.result(invocation),
+    )
+}
+
 #[must_use]
 fn append_trace(
     builder: OutputBuilder,
     transaction_trace: &TransactionTrace,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     full: bool,
 ) -> OutputBuilder {
     match transaction_trace {
@@ -537,7 +564,7 @@ fn append_optional_invocation(
     builder: OutputBuilder,
     label: &str,
     invocation: Option<&FunctionInvocation>,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     full: bool,
 ) -> OutputBuilder {
     if let Some(invocation) = invocation {
@@ -551,7 +578,7 @@ fn append_execute_invocation(
     builder: OutputBuilder,
     label: &str,
     invocation: &ExecuteInvocation,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     full: bool,
 ) -> OutputBuilder {
     match invocation {
@@ -568,7 +595,7 @@ fn append_invocation_section(
     builder: OutputBuilder,
     label: &str,
     invocation: &FunctionInvocation,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     full: bool,
 ) -> OutputBuilder {
     let builder = append_section(builder, label, 0);
@@ -582,15 +609,18 @@ fn append_invocation_section(
 fn append_compact_invocation(
     builder: OutputBuilder,
     invocation: &FunctionInvocation,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     indent: usize,
 ) -> OutputBuilder {
     let mut builder = builder
         .with_indent(indent)
-        .field("Entry Point Selector", &decoder.selector(invocation))
+        .field(
+            "Entry Point Selector",
+            &invocation_selector(invocation, decoder),
+        )
         .contract_address(&invocation.contract_address)
-        .field("Calldata", &decoder.calldata(invocation))
-        .field("Result", &decoder.result(invocation));
+        .field("Calldata", &invocation_calldata(invocation, decoder))
+        .field("Result", &invocation_result(invocation, decoder));
 
     if !invocation.calls.is_empty() {
         builder = append_section(builder, "Calls", indent);
@@ -605,7 +635,7 @@ fn append_compact_invocation(
 fn append_full_invocation(
     builder: OutputBuilder,
     invocation: &FunctionInvocation,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     indent: usize,
 ) -> OutputBuilder {
     let builder = builder
@@ -635,7 +665,7 @@ fn append_full_invocation(
 fn append_calls(
     mut builder: OutputBuilder,
     calls: &[FunctionInvocation],
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     indent: usize,
 ) -> OutputBuilder {
     if calls.is_empty() {
