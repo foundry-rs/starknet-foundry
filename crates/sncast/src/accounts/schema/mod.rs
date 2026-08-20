@@ -66,7 +66,7 @@ impl DecodedAccountRegistry {
 
     pub fn encode_v2(registry: &AccountRegistry) -> Result<Vec<u8>, AccountsError> {
         let file: v2::AccountsFile = registry.try_into()?;
-        let mut output = serde_json::to_vec_pretty(&file).map_err(schema_error)?;
+        let mut output = serde_json::to_vec_pretty(&file).map_err(|error| schema_error(&error))?;
         output.push(b'\n');
         Ok(output)
     }
@@ -80,7 +80,7 @@ fn deserialize<T: DeserializeOwned>(input: &[u8]) -> Result<T, AccountsError> {
     })
 }
 
-fn schema_error(error: serde_json::Error) -> AccountsError {
+fn schema_error(error: &serde_json::Error) -> AccountsError {
     AccountsError::Schema {
         path: String::new(),
         message: error.to_string(),
