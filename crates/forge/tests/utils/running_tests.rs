@@ -4,6 +4,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::Contr
 use forge::shared_cache::FailedTestsCache;
 use forge::{
     block_number_map::BlockNumberMap,
+    run_tests::cache::USC_CACHE_DIR,
     run_tests::package::{RunForPackageArgs, run_for_package},
     run_tests::test_target::ExitFirstChannel,
     test_filter::TestsFilter,
@@ -14,6 +15,7 @@ use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, ForgeTrackedResource, OutputConfig, TestRunnerConfig,
 };
 use forge_runner::partition::PartitionConfig;
+use forge_runner::resolve_cache_dir;
 use forge_runner::running::target::prepare_test_target;
 use forge_runner::scarb::load_test_artifacts;
 use forge_runner::test_target_summary::TestTargetSummary;
@@ -23,14 +25,31 @@ use scarb_api::metadata::metadata_for_dir;
 use shared::cache::DEFAULT_CACHE_DIR;
 use std::num::NonZeroU32;
 use std::sync::Arc;
-use tempfile::tempdir;
 use tokio::runtime::Runtime;
+
+pub struct RunTestCaseOptions {
+    pub cache_dir: Utf8PathBuf,
+}
 
 #[must_use]
 pub fn run_test_case(
     test: &TestCase,
     tracked_resource: ForgeTrackedResource,
 ) -> Vec<TestTargetSummary> {
+    let cache_dir = resolve_cache_dir(&test.path().unwrap()).unwrap();
+
+    run_test_case_with_options(test, tracked_resource, RunTestCaseOptions { cache_dir })
+}
+
+#[must_use]
+pub fn run_test_case_with_options(
+    test: &TestCase,
+    tracked_resource: ForgeTrackedResource,
+    options: RunTestCaseOptions,
+) -> Vec<TestTargetSummary> {
+    let cache_dir = options.cache_dir;
+    let usc_cache_dir = cache_dir.join(USC_CACHE_DIR);
+
     ScarbCommand::new_with_stdio()
         .current_dir(test.path().unwrap())
         .arg("build")
@@ -55,13 +74,14 @@ pub fn run_test_case(
         let target_handles = raw_test_targets
             .into_iter()
             .map(|t| {
+                let usc_cache_dir = usc_cache_dir.clone();
                 tokio::task::spawn_blocking(move || {
                     prepare_test_target(
                         t,
                         &tracked_resource,
                         &NameFilter::All,
                         &PartitionConfig::default(),
-                        None,
+                        &usc_cache_dir,
                     )
                 })
             })
@@ -89,11 +109,9 @@ pub fn run_test_case(
                         fuzzer_seed: 12345,
                         max_n_steps: None,
                         is_vm_trace_needed: false,
-                        cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
-                            .unwrap()
-                            .join(DEFAULT_CACHE_DIR),
+                        cache_dir,
                         contracts_data: ContractsData::try_from(
-                            test.contracts(&ui).unwrap(),
+                            test.contracts(&ui, &usc_cache_dir).unwrap(),
                             cfg!(feature = "cairo-native"),
                         )
                         .unwrap(),

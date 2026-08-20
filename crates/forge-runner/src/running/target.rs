@@ -41,7 +41,7 @@ pub fn prepare_test_target(
     tracked_resource: &ForgeTrackedResource,
     name_filter: &NameFilter,
     partition_config: &PartitionConfig,
-    usc_cache_dir: Option<&Utf8Path>,
+    usc_cache_dir: &Utf8Path,
 ) -> Result<PrepareTestTargetResult> {
     let tests_location = test_target_raw.tests_location;
     let default_executables = vec![];
@@ -82,7 +82,7 @@ pub fn prepare_test_target(
     let casm_program = Arc::new(compile_raw_sierra_at_path(
         test_target_raw.sierra_program_path.as_std_path(),
         &CompileOptions {
-            cache_dir: usc_cache_dir.map(Utf8Path::as_std_path),
+            cache_dir: Some(usc_cache_dir.as_std_path()),
         },
     )?);
 

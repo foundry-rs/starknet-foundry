@@ -176,7 +176,7 @@ fn spawn_prepare_test_target(
             &tracked_resource,
             &name_filter,
             &partitioning_config,
-            Some(usc_cache_dir.as_path()),
+            usc_cache_dir.as_path(),
         )
     })
 }
