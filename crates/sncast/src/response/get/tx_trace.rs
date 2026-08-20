@@ -24,12 +24,12 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 
 pub struct TransactionTraceResponse {
     trace: TransactionTrace,
-    decoder: TraceDecoder,
+    decoder: Option<TraceDecoder>,
     full: bool,
 }
 
 impl TransactionTraceResponse {
-    pub fn new(trace: TransactionTrace, decoder: TraceDecoder, full: bool) -> Self {
+    pub fn new(trace: TransactionTrace, decoder: Option<TraceDecoder>, full: bool) -> Self {
         Self {
             trace,
             decoder,
@@ -44,13 +44,15 @@ impl Serialize for TransactionTraceResponse {
         S: Serializer,
     {
         let mut json = serde_json::to_value(&self.trace).map_err(S::Error::custom)?;
-        let mut context = self.decoder.context();
-        decode_trace_json(&self.trace, &mut json, &mut context).map_err(S::Error::custom)?;
+        if let Some(decoder) = &self.decoder {
+            let mut context = decoder.context();
+            decode_trace_json(&self.trace, &mut json, &mut context).map_err(S::Error::custom)?;
 
-        let decoding_warnings = context.decoding_warnings();
-        if !decoding_warnings.is_empty() {
-            json["decoding_warnings"] =
-                serde_json::to_value(decoding_warnings).map_err(S::Error::custom)?;
+            let decoding_warnings = context.decoding_warnings();
+            if !decoding_warnings.is_empty() {
+                json["decoding_warnings"] =
+                    serde_json::to_value(decoding_warnings).map_err(S::Error::custom)?;
+            }
         }
 
         json.serialize(serializer)
@@ -167,7 +169,9 @@ impl SncastCommandMessage for TransactionTraceResponse {
             decoder,
             full,
         } = self;
-        let mut context = decoder.context();
+        let mut context = decoder
+            .as_ref()
+            .map_or_else(TraceDecodingContext::raw, TraceDecoder::context);
         let human_text = append_trace(OutputBuilder::new(), trace, &mut context, *full).build();
         let decoding_warnings = context.decoding_warnings();
         let builder = if decoding_warnings.is_empty() {
@@ -302,7 +306,7 @@ impl TraceDecoder {
 
     fn context(&self) -> TraceDecodingContext<'_> {
         TraceDecodingContext {
-            decoder: self,
+            decoder: Some(self),
             decoding_warnings: self.decoding_warnings.clone(),
         }
     }
@@ -313,28 +317,38 @@ impl TraceDecoder {
 }
 
 struct TraceDecodingContext<'a> {
-    decoder: &'a TraceDecoder,
+    decoder: Option<&'a TraceDecoder>,
     decoding_warnings: BTreeSet<TraceDecodingWarning>,
 }
 
 impl TraceDecodingContext<'_> {
+    fn raw() -> Self {
+        Self {
+            decoder: None,
+            decoding_warnings: BTreeSet::new(),
+        }
+    }
+
     fn selector(&mut self, invocation: &FunctionInvocation) -> String {
+        let Some(decoder) = self.decoder else {
+            return invocation.entry_point_selector.to_hex_string();
+        };
+
         let class_hash: ClassHash = invocation.class_hash.into_();
-        if let Some(abi) = self.decoder.sierra_abis.get(&class_hash)
+        if let Some(abi) = decoder.sierra_abis.get(&class_hash)
             && let Some(function) =
                 extract_function_from_selector(abi, invocation.entry_point_selector)
         {
             return function.name;
         }
 
-        let selector = self
-            .decoder
+        let selector = decoder
             .legacy_selectors
             .get(&(class_hash, invocation.entry_point_selector))
             .cloned();
         if selector.is_none()
-            && (self.decoder.sierra_abis.contains_key(&class_hash)
-                || self.decoder.legacy_class_hashes.contains(&class_hash))
+            && (decoder.sierra_abis.contains_key(&class_hash)
+                || decoder.legacy_class_hashes.contains(&class_hash))
         {
             self.add_warning(TraceDecodingWarning::SelectorNotFound { class_hash });
         }
@@ -342,8 +356,12 @@ impl TraceDecodingContext<'_> {
     }
 
     fn calldata(&mut self, invocation: &FunctionInvocation) -> String {
+        let Some(decoder) = self.decoder else {
+            return format_raw_felts(&invocation.calldata);
+        };
+
         let class_hash: ClassHash = invocation.class_hash.into_();
-        let Some(abi) = self.decoder.sierra_abis.get(&class_hash) else {
+        let Some(abi) = decoder.sierra_abis.get(&class_hash) else {
             return format_raw_felts(&invocation.calldata);
         };
 
@@ -359,8 +377,12 @@ impl TraceDecodingContext<'_> {
             return format_result("panic", &format_panic_data(&invocation.result));
         }
 
+        let Some(decoder) = self.decoder else {
+            return format_result("success", &format_raw_felts(&invocation.result));
+        };
+
         let class_hash: ClassHash = invocation.class_hash.into_();
-        let result = if let Some(abi) = self.decoder.sierra_abis.get(&class_hash) {
+        let result = if let Some(abi) = decoder.sierra_abis.get(&class_hash) {
             reverse_transform_output(&invocation.result, abi, &invocation.entry_point_selector)
                 .unwrap_or_else(|_| {
                     self.add_warning(TraceDecodingWarning::ResultDecodingFailed { class_hash });
