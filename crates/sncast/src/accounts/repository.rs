@@ -7,6 +7,7 @@ use tempfile::Builder;
 
 use crate::accounts::schema::{DecodedAccountRegistry, SourceVersion};
 use crate::accounts::{AccountName, AccountRecord, AccountRegistry, AccountsError, NetworkName};
+use crate::helpers::filesystem::{reject_symlink, set_secret_permissions};
 
 #[derive(Debug)]
 pub struct MutationResult<T> {
@@ -118,38 +119,76 @@ impl AccountRepository {
     }
 
     fn exists(&self, path: &Utf8Path) -> Result<bool, AccountsError> {
-        reject_symlink(path)?;
+        reject_symlink(path).map_err(|source| AccountsError::Storage {
+            operation: "inspect accounts path",
+            path: path.to_owned(),
+            source,
+        })?;
         Ok(path.exists())
     }
 
     fn read(&self, path: &Utf8Path) -> Result<Vec<u8>, AccountsError> {
-        reject_symlink(path)?;
-        fs::read(path).map_err(|source| storage_error("read accounts file", path, source))
+        reject_symlink(path).map_err(|source| AccountsError::Storage {
+            operation: "inspect accounts path",
+            path: path.to_owned(),
+            source,
+        })?;
+        fs::read(path).map_err(|source| AccountsError::Storage {
+            operation: "read accounts file",
+            path: path.to_owned(),
+            source,
+        })
     }
 
     fn write_atomic(&self, path: &Utf8Path, contents: &[u8]) -> Result<(), AccountsError> {
-        reject_symlink(path)?;
+        reject_symlink(path).map_err(|source| AccountsError::Storage {
+            operation: "inspect accounts path",
+            path: path.to_owned(),
+            source,
+        })?;
         let parent = ensure_parent(path)?;
         let mut temporary = Builder::new()
             .prefix(".sncast-accounts-")
             .tempfile_in(parent)
-            .map_err(|source| storage_error("create temporary accounts file", path, source))?;
+            .map_err(|source| AccountsError::Storage {
+                operation: "create temporary accounts file",
+                path: path.to_owned(),
+                source,
+            })?;
 
-        set_secret_permissions(temporary.path(), path)?;
+        set_secret_permissions(temporary.path()).map_err(|source| AccountsError::Storage {
+            operation: "set accounts file permissions",
+            path: path.to_owned(),
+            source,
+        })?;
         temporary
             .write_all(contents)
-            .map_err(|source| storage_error("write temporary accounts file", path, source))?;
-        temporary
-            .flush()
-            .map_err(|source| storage_error("flush temporary accounts file", path, source))?;
+            .map_err(|source| AccountsError::Storage {
+                operation: "write temporary accounts file",
+                path: path.to_owned(),
+                source,
+            })?;
+        temporary.flush().map_err(|source| AccountsError::Storage {
+            operation: "flush temporary accounts file",
+            path: path.to_owned(),
+            source,
+        })?;
         temporary
             .as_file()
             .sync_all()
-            .map_err(|source| storage_error("sync temporary accounts file", path, source))?;
+            .map_err(|source| AccountsError::Storage {
+                operation: "sync temporary accounts file",
+                path: path.to_owned(),
+                source,
+            })?;
 
         temporary
             .persist(path)
-            .map_err(|error| storage_error("replace accounts file", path, error.error))?;
+            .map_err(|error| AccountsError::Storage {
+                operation: "replace accounts file",
+                path: path.to_owned(),
+                source: error.error,
+            })?;
         sync_parent(parent, path)
     }
 
@@ -158,21 +197,37 @@ impl AccountRepository {
         path: &Utf8Path,
         contents: &[u8],
     ) -> Result<(), AccountsError> {
-        reject_symlink(path)?;
+        reject_symlink(path).map_err(|source| AccountsError::Storage {
+            operation: "inspect accounts path",
+            path: path.to_owned(),
+            source,
+        })?;
         let parent = ensure_parent(path)?;
         let mut options = OpenOptions::new();
         options.write(true).create_new(true);
         set_secret_open_options(&mut options);
 
         let mut file = match options.open(path) {
-            Ok(file) => file,
+            Ok(file) => Ok(file),
             Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => return Ok(()),
-            Err(source) => return Err(storage_error("create V1 backup", path, source)),
-        };
+            Err(source) => Err(source),
+        }
+        .map_err(|source| AccountsError::Storage {
+            operation: "create V1 backup",
+            path: path.to_owned(),
+            source,
+        })?;
         file.write_all(contents)
-            .map_err(|source| storage_error("write V1 backup", path, source))?;
-        file.sync_all()
-            .map_err(|source| storage_error("sync V1 backup", path, source))?;
+            .map_err(|source| AccountsError::Storage {
+                operation: "write V1 backup",
+                path: path.to_owned(),
+                source,
+            })?;
+        file.sync_all().map_err(|source| AccountsError::Storage {
+            operation: "sync V1 backup",
+            path: path.to_owned(),
+            source,
+        })?;
         sync_parent(parent, path)
     }
 
@@ -183,20 +238,35 @@ impl AccountRepository {
     ) -> Result<T, AccountsError> {
         let parent = ensure_parent(path)?;
         let lock_path = lock_path(path);
-        reject_symlink(&lock_path)?;
+        reject_symlink(&lock_path).map_err(|source| AccountsError::Storage {
+            operation: "inspect accounts path",
+            path: lock_path.clone(),
+            source,
+        })?;
 
         let mut options = OpenOptions::new();
         options.read(true).write(true).create(true);
         set_secret_open_options(&mut options);
         let lock = options
             .open(&lock_path)
-            .map_err(|source| storage_error("open accounts lock", &lock_path, source))?;
+            .map_err(|source| AccountsError::Storage {
+                operation: "open accounts lock",
+                path: lock_path,
+                source,
+            })?;
         lock.lock_exclusive()
-            .map_err(|source| storage_error("lock accounts file", path, source))?;
+            .map_err(|source| AccountsError::Storage {
+                operation: "lock accounts file",
+                path: path.to_owned(),
+                source,
+            })?;
 
         let result = operation();
-        FileExt::unlock(&lock)
-            .map_err(|source| storage_error("unlock accounts file", path, source))?;
+        FileExt::unlock(&lock).map_err(|source| AccountsError::Storage {
+            operation: "unlock accounts file",
+            path: path.to_owned(),
+            source,
+        })?;
         sync_parent(parent, path)?;
         result
     }
@@ -221,56 +291,17 @@ pub fn v1_backup_path(path: &Utf8Path) -> Utf8PathBuf {
 
 fn ensure_parent(path: &Utf8Path) -> Result<&Utf8Path, AccountsError> {
     let parent = path.parent().unwrap_or(Utf8Path::new("."));
-    fs::create_dir_all(parent)
-        .map_err(|source| storage_error("create accounts directory", parent, source))?;
+    fs::create_dir_all(parent).map_err(|source| AccountsError::Storage {
+        operation: "create accounts directory",
+        path: parent.to_owned(),
+        source,
+    })?;
     Ok(parent)
 }
 
 fn lock_path(path: &Utf8Path) -> Utf8PathBuf {
     let file_name = path.file_name().unwrap_or("accounts.json");
     path.with_file_name(format!("{file_name}.lock"))
-}
-
-fn reject_symlink(path: &Utf8Path) -> Result<(), AccountsError> {
-    match fs::symlink_metadata(path) {
-        Ok(metadata) if metadata.file_type().is_symlink() => Err(AccountsError::Symlink {
-            path: path.to_owned(),
-        }),
-        Ok(_) => Ok(()),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
-        Err(source) => Err(storage_error("inspect accounts path", path, source)),
-    }
-}
-
-fn storage_error(
-    operation: &'static str,
-    path: &Utf8Path,
-    source: std::io::Error,
-) -> AccountsError {
-    AccountsError::Storage {
-        operation,
-        path: path.to_owned(),
-        source,
-    }
-}
-
-#[cfg(unix)]
-fn set_secret_permissions(
-    temporary_path: &std::path::Path,
-    accounts_path: &Utf8Path,
-) -> Result<(), AccountsError> {
-    use std::os::unix::fs::PermissionsExt;
-
-    fs::set_permissions(temporary_path, fs::Permissions::from_mode(0o600))
-        .map_err(|source| storage_error("set accounts file permissions", accounts_path, source))
-}
-
-#[cfg(not(unix))]
-fn set_secret_permissions(
-    _temporary_path: &std::path::Path,
-    _accounts_path: &Utf8Path,
-) -> Result<(), AccountsError> {
-    Ok(())
 }
 
 #[cfg(unix)]
@@ -286,7 +317,11 @@ fn set_secret_open_options(_options: &mut OpenOptions) {}
 fn sync_parent(parent: &Utf8Path, accounts_path: &Utf8Path) -> Result<(), AccountsError> {
     File::open(parent)
         .and_then(|directory| directory.sync_all())
-        .map_err(|source| storage_error("sync accounts directory", accounts_path, source))
+        .map_err(|source| AccountsError::Storage {
+            operation: "sync accounts directory",
+            path: accounts_path.to_owned(),
+            source,
+        })
 }
 
 #[cfg(not(unix))]
@@ -518,7 +553,11 @@ mod tests {
 
         assert!(matches!(
             AccountRepository::default().read(&path),
-            Err(AccountsError::Symlink { .. })
+            Err(AccountsError::Storage {
+                operation: "inspect accounts path",
+                source,
+                ..
+            }) if source.kind() == std::io::ErrorKind::PermissionDenied
         ));
     }
 }

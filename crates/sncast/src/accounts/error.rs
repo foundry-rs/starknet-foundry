@@ -44,9 +44,6 @@ pub enum AccountsError {
     #[error("accounts file `{path}` does not exist")]
     FileNotFound { path: Utf8PathBuf },
 
-    #[error("refusing to access accounts file through symlink `{path}`")]
-    Symlink { path: Utf8PathBuf },
-
     #[error("account `{account}` already exists on network `{network}`")]
     DuplicateAccount { network: String, account: String },
 
