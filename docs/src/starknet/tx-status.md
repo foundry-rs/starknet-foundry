@@ -84,3 +84,87 @@ $ sncast \
  --full \
  --network sepolia
 ```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Success: Transaction trace retrieved
+
+Type:                     INVOKE
+Execute Invocation
+  Call Type:              CALL
+  Calldata:               array![Call[..]
+  Caller Address:         0x0
+  Calls
+    Call Type:            CALL
+    Calldata:             ReportContext[..]
+    Caller Address:       0x[..]
+    Calls:                []
+    Class Hash:           0x[..]
+    Contract Address:     0x[..]
+    Entry Point Selector: transmit
+    Entry Point Type:     EXTERNAL
+    Events
+      Data:               [[..]]
+      Keys:               [[..]]
+      Order:              0
+    Execution Resources
+      L1 Gas:             18
+      L2 Gas:             0
+    Is Reverted:          false
+    Messages:             []
+    Result:               success
+  Class Hash:             0x[..]
+  Contract Address:       0x[..]
+  Entry Point Selector:   __execute__
+  Entry Point Type:       EXTERNAL
+  Events:                 []
+  Execution Resources
+    L1 Gas:               18
+    L2 Gas:               0
+  Is Reverted:            false
+  Messages:               []
+  Result:                 success: array![array![].span()]
+Execution Resources
+  L1 Data Gas:            640
+  L1 Gas:                 32
+  L2 Gas:                 0
+Fee Transfer Invocation
+  Call Type:              CALL
+  Calldata:               ContractAddress(0x[..]), 4014902418114130240_u256
+  Caller Address:         0x[..]
+  Calls:                  []
+  Class Hash:             0x[..]
+  Contract Address:       0x[..]
+  Entry Point Selector:   transfer
+  Entry Point Type:       EXTERNAL
+  Events
+    Data:                 [[..]]
+    Keys:                 [[..]]
+    Order:                0
+  Execution Resources
+    L1 Gas:               4
+    L2 Gas:               0
+  Is Reverted:            false
+  Messages:               []
+  Result:                 success: true
+Validate Invocation
+  Call Type:              CALL
+  Calldata:               array![Call[..]
+  Caller Address:         0x0
+  Calls:                  []
+  Class Hash:             0x[..]
+  Contract Address:       0x[..]
+  Entry Point Selector:   __validate__
+  Entry Point Type:       EXTERNAL
+  Events:                 []
+  Execution Resources
+    L1 Gas:               8
+    L2 Gas:               0
+  Is Reverted:            false
+  Messages:               []
+  Result:                 success: 0x56414c4944
+```
+
+</details>
