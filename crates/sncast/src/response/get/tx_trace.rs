@@ -3,8 +3,8 @@ use crate::response::get::transaction::TransactionOutputBuilder;
 use data_transformer::{
     extract_function_from_selector, reverse_transform_input, reverse_transform_output,
 };
-use foundry_ui::styling::OutputBuilder;
-use serde::Serialize;
+use foundry_ui::{Message, components::warning::WarningMessage, styling::OutputBuilder};
+use serde::{Serialize, Serializer};
 use starknet_api::execution_utils::format_panic_data;
 use starknet_rust::core::types::contract::AbiEntry;
 use starknet_rust::core::types::{
@@ -15,45 +15,46 @@ use starknet_rust::core::types::{
     OrderedEvent, OrderedMessage, ReplacedClassItem, StateDiff, TransactionTrace,
 };
 use starknet_rust::core::utils::get_selector_from_name;
+use starknet_rust::providers::ProviderError;
 use starknet_types_core::felt::Felt;
 use std::cell::Cell;
 use std::collections::{HashMap, HashSet};
 
-#[derive(Serialize)]
+pub struct ContractClassesFetchResponse {
+    pub classes: HashMap<Felt, ContractClass>,
+    pub failures: Vec<ContractClassFetchFailure>,
+}
+
+pub struct ContractClassFetchFailure {
+    pub class_hash: Felt,
+    pub contract_addresses: HashSet<Felt>,
+    pub error: ProviderError,
+}
+
 pub struct TransactionTraceResponse {
-    #[serde(flatten)]
-    transaction_trace: TransactionTrace,
-    #[serde(skip)]
-    human_text: Option<String>,
+    trace: TransactionTrace,
+    decoder: TraceDecoder,
+    full: bool,
 }
 
 impl TransactionTraceResponse {
-    #[must_use]
-    pub fn json(transaction_trace: TransactionTrace) -> Self {
+    pub fn new(trace: TransactionTrace, decoder: TraceDecoder, full: bool) -> Self {
         Self {
-            transaction_trace,
-            human_text: None,
+            trace,
+            decoder,
+            full,
         }
     }
+}
 
-    #[must_use]
-    pub fn human(
-        transaction_trace: TransactionTrace,
-        contract_classes: HashMap<Felt, ContractClass>,
-        full: bool,
-    ) -> (Self, bool) {
-        let (decoder, invalid_abi) = TraceDecoder::new(contract_classes);
-        let builder = OutputBuilder::new();
-        let human_trace = append_trace(builder, &transaction_trace, &decoder, full).build();
-        let decoding_incomplete = invalid_abi || decoder.had_decode_failure.get();
-
-        (
-            Self {
-                transaction_trace,
-                human_text: Some(human_trace),
-            },
-            decoding_incomplete,
-        )
+impl Serialize for TransactionTraceResponse {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            Self { trace, .. } => trace.serialize(serializer),
+        }
     }
 }
 
@@ -70,28 +71,46 @@ pub fn contract_addresses_by_class_hash(
 
 impl SncastCommandMessage for TransactionTraceResponse {
     fn text(&self) -> String {
-        let human_text = self
-            .human_text
-            .as_ref()
-            .expect("human text should be present for human output format");
+        let TransactionTraceResponse {
+            trace,
+            decoder,
+            full,
+        } = self;
+        {
+            let human_text = append_trace(OutputBuilder::new(), trace, decoder, *full).build();
+            let builder = if decoder.abi_decoding_incomplete() {
+                OutputBuilder::new()
+                    .text_field(
+                        &WarningMessage::new(
+                            "Some trace data could not be decoded with the fetched ABIs. Raw felts are shown instead.",
+                        )
+                        .text(),
+                    )
+                    .blank_line()
+            } else {
+                OutputBuilder::new()
+            };
 
-        OutputBuilder::new()
-            .success_message("Transaction trace retrieved")
-            .blank_line()
-            .text_field(human_text)
-            .build()
+            builder
+                .success_message("Transaction trace retrieved")
+                .blank_line()
+                .text_field(&human_text)
+                .build()
+        }
     }
 }
 
 #[derive(Default)]
-struct TraceDecoder {
+pub struct TraceDecoder {
     sierra_abis: HashMap<Felt, Vec<AbiEntry>>,
     legacy_selectors: HashMap<(Felt, Felt), String>,
     had_decode_failure: Cell<bool>,
+    had_invalid_abis_on_init: bool,
 }
 
 impl TraceDecoder {
-    fn new(contract_classes: HashMap<Felt, ContractClass>) -> (Self, bool) {
+    #[must_use]
+    pub fn new(contract_classes: HashMap<Felt, ContractClass>) -> Self {
         let mut decoder = Self::default();
         let mut invalid_abi = false;
 
@@ -123,7 +142,8 @@ impl TraceDecoder {
             }
         }
 
-        (decoder, invalid_abi)
+        decoder.had_invalid_abis_on_init = invalid_abi;
+        decoder
     }
 
     fn selector(&self, invocation: &FunctionInvocation) -> String {
@@ -172,6 +192,10 @@ impl TraceDecoder {
         };
 
         format_result("success", &result)
+    }
+
+    pub fn abi_decoding_incomplete(&self) -> bool {
+        self.had_invalid_abis_on_init || self.had_decode_failure.get()
     }
 }
 
