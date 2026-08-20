@@ -5,7 +5,8 @@ use data_transformer::{
 };
 use foundry_ui::{Message, components::warning::WarningMessage, styling::OutputBuilder};
 use itertools::Itertools;
-use serde::{Serialize, Serializer};
+use serde::{Serialize, Serializer, ser::Error as _};
+use serde_json::Value;
 use starknet_api::execution_utils::format_panic_data;
 use starknet_rust::core::types::contract::AbiEntry;
 use starknet_rust::core::types::{
@@ -53,8 +54,98 @@ impl Serialize for TransactionTraceResponse {
     where
         S: Serializer,
     {
-        match self {
-            Self { trace, .. } => trace.serialize(serializer),
+        let mut json = serde_json::to_value(&self.trace).map_err(S::Error::custom)?;
+        decode_trace_json(&self.trace, &mut json, &self.decoder);
+        json.serialize(serializer)
+    }
+}
+
+fn decode_trace_json(trace: &TransactionTrace, json: &mut Value, decoder: &TraceDecoder) {
+    match trace {
+        TransactionTrace::Invoke(trace) => {
+            decode_optional_invocation_json(
+                trace.validate_invocation.as_ref(),
+                json.get_mut("validate_invocation"),
+                decoder,
+            );
+            decode_execute_invocation_json(
+                &trace.execute_invocation,
+                json.get_mut("execute_invocation"),
+                decoder,
+            );
+            decode_optional_invocation_json(
+                trace.fee_transfer_invocation.as_ref(),
+                json.get_mut("fee_transfer_invocation"),
+                decoder,
+            );
+        }
+        TransactionTrace::Declare(trace) => {
+            decode_optional_invocation_json(
+                trace.validate_invocation.as_ref(),
+                json.get_mut("validate_invocation"),
+                decoder,
+            );
+            decode_optional_invocation_json(
+                trace.fee_transfer_invocation.as_ref(),
+                json.get_mut("fee_transfer_invocation"),
+                decoder,
+            );
+        }
+        TransactionTrace::DeployAccount(trace) => {
+            decode_optional_invocation_json(
+                trace.validate_invocation.as_ref(),
+                json.get_mut("validate_invocation"),
+                decoder,
+            );
+            if let Some(json) = json.get_mut("constructor_invocation") {
+                decode_invocation_json(&trace.constructor_invocation, json, decoder);
+            }
+            decode_optional_invocation_json(
+                trace.fee_transfer_invocation.as_ref(),
+                json.get_mut("fee_transfer_invocation"),
+                decoder,
+            );
+        }
+        TransactionTrace::L1Handler(trace) => decode_execute_invocation_json(
+            &trace.function_invocation,
+            json.get_mut("function_invocation"),
+            decoder,
+        ),
+    }
+}
+
+fn decode_optional_invocation_json(
+    invocation: Option<&FunctionInvocation>,
+    json: Option<&mut Value>,
+    decoder: &TraceDecoder,
+) {
+    if let (Some(invocation), Some(json)) = (invocation, json) {
+        decode_invocation_json(invocation, json, decoder);
+    }
+}
+
+fn decode_execute_invocation_json(
+    invocation: &ExecuteInvocation,
+    json: Option<&mut Value>,
+    decoder: &TraceDecoder,
+) {
+    if let (ExecuteInvocation::Success(invocation), Some(json)) = (invocation, json) {
+        decode_invocation_json(invocation, json, decoder);
+    }
+}
+
+fn decode_invocation_json(
+    invocation: &FunctionInvocation,
+    json: &mut Value,
+    decoder: &TraceDecoder,
+) {
+    json["entry_point_selector"] = Value::String(decoder.selector(invocation));
+    json["calldata"] = Value::String(decoder.calldata(invocation));
+    json["result"] = Value::String(decoder.result(invocation));
+
+    if let Some(json_calls) = json.get_mut("calls").and_then(Value::as_array_mut) {
+        for (call, json_call) in invocation.calls.iter().zip(json_calls) {
+            decode_invocation_json(call, json_call, decoder);
         }
     }
 }

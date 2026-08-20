@@ -196,13 +196,30 @@ async fn test_json() {
     );
     assert_eq!(
         trace["validate_invocation"]["entry_point_selector"],
-        "0x162da33a4585851fe8d3af3c2a9c60b557814e221e0d4f30ff0b2189d9c7775"
+        "__validate__"
     );
-    assert_eq!(trace["validate_invocation"]["result"][0], "0x56414c4944");
+    assert!(
+        trace["validate_invocation"]["calldata"]
+            .as_str()
+            .unwrap()
+            .starts_with("array![Call {")
+    );
+    assert_eq!(
+        trace["validate_invocation"]["result"],
+        "success: 0x56414c4944"
+    );
 
     assert_eq!(
         trace["execute_invocation"]["contract_address"],
         "0x350461cc881640ebbcebf747107d456ef008ec455cd95d2b76a7d9face671f1"
+    );
+    assert_eq!(
+        trace["execute_invocation"]["entry_point_selector"],
+        "__execute__"
+    );
+    assert_eq!(
+        trace["execute_invocation"]["result"],
+        "success: array![array![].span()]"
     );
     assert_eq!(
         trace["execute_invocation"]["calls"]
@@ -215,6 +232,17 @@ async fn test_json() {
         trace["execute_invocation"]["calls"][0]["contract_address"],
         "0x69b1360564534bf59fa889041a60f2c60ef5b259cfbf87a436867538e2c53e0"
     );
+    assert_eq!(
+        trace["execute_invocation"]["calls"][0]["entry_point_selector"],
+        "transmit"
+    );
+    assert!(
+        trace["execute_invocation"]["calls"][0]["calldata"]
+            .as_str()
+            .unwrap()
+            .starts_with("ReportContext {")
+    );
+    assert_eq!(trace["execute_invocation"]["calls"][0]["result"], "success");
     assert_eq!(
         trace["execute_invocation"]["calls"][0]["events"]
             .as_array()
@@ -230,6 +258,15 @@ async fn test_json() {
         trace["fee_transfer_invocation"]["contract_address"],
         "0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"
     );
+    assert_eq!(
+        trace["fee_transfer_invocation"]["entry_point_selector"],
+        "transfer"
+    );
+    assert_eq!(
+        trace["fee_transfer_invocation"]["calldata"],
+        "ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 1945769550285990_u256"
+    );
+    assert_eq!(trace["fee_transfer_invocation"]["result"], "success: true");
 }
 
 #[tokio::test]
