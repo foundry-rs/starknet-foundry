@@ -21,13 +21,13 @@ use crate::utils::test_case;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::run_tests::package::RunForPackageArgs;
 use forge::shared_cache::FailedTestsCache;
+use forge_runner::DEFAULT_CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
 use forge_runner::filtering::NameFilter;
 use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
-use forge_runner::resolve_cache_dir;
 use forge_runner::running::target::prepare_test_target;
 use forge_runner::scarb::load_test_artifacts;
 use scarb_api::ScarbCommand;
@@ -133,7 +133,7 @@ fn fork_aliased_decorator() {
 
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
-    let cache_dir = resolve_cache_dir(&test.path().unwrap()).unwrap();
+    let cache_dir = test.path().unwrap().join(DEFAULT_CACHE_DIR);
     let usc_cache_dir = cache_dir.join(USC_CACHE_DIR);
 
     let ui = Arc::new(UI::default());
@@ -250,7 +250,7 @@ fn fork_aliased_decorator_overriding() {
 
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
-    let cache_dir = resolve_cache_dir(&test.path().unwrap()).unwrap();
+    let cache_dir = test.path().unwrap().join(DEFAULT_CACHE_DIR);
     let usc_cache_dir = cache_dir.join(USC_CACHE_DIR);
 
     let ui = Arc::new(UI::default());

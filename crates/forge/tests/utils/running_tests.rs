@@ -9,13 +9,13 @@ use forge::{
     run_tests::test_target::ExitFirstChannel,
     test_filter::TestsFilter,
 };
+use forge_runner::DEFAULT_CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
 use forge_runner::filtering::NameFilter;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, ForgeTrackedResource, OutputConfig, TestRunnerConfig,
 };
 use forge_runner::partition::PartitionConfig;
-use forge_runner::resolve_cache_dir;
 use forge_runner::running::target::prepare_test_target;
 use forge_runner::scarb::load_test_artifacts;
 use forge_runner::test_target_summary::TestTargetSummary;
@@ -36,7 +36,7 @@ pub fn run_test_case(
     test: &TestCase,
     tracked_resource: ForgeTrackedResource,
 ) -> Vec<TestTargetSummary> {
-    let cache_dir = resolve_cache_dir(&test.path().unwrap()).unwrap();
+    let cache_dir = test.path().unwrap().join(DEFAULT_CACHE_DIR);
 
     run_test_case_with_options(test, tracked_resource, RunTestCaseOptions { cache_dir })
 }
