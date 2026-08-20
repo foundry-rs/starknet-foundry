@@ -6,7 +6,6 @@ use starknet_rust::{
     providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport},
     signers::{LocalWallet, SigningKey},
 };
-use std::collections::HashSet;
 use std::fs;
 use url::Url;
 
@@ -14,35 +13,6 @@ use crate::accounts::{AccountRecord, AccountRepository};
 use crate::signers::{RuntimeSigner, SignerKind};
 use anyhow::Context;
 use serde_json::{Value, json};
-
-pub fn generate_account_name(repository: &AccountRepository) -> Result<String> {
-    let mut id = 1;
-
-    if !repository.path().exists() {
-        return Ok(format!("account-{id}"));
-    }
-
-    let mut result = HashSet::new();
-
-    let registry = repository.load()?.registry;
-    for accounts in registry.networks().values() {
-        for name in accounts.keys() {
-            if let Some(id) = name
-                .as_str()
-                .strip_prefix("account-")
-                .and_then(|id| id.parse::<u32>().ok())
-            {
-                result.insert(id);
-            }
-        }
-    }
-
-    while result.contains(&id) {
-        id += 1;
-    }
-
-    Ok(format!("account-{id}"))
-}
 
 pub fn load_accounts(accounts_file: &Utf8PathBuf) -> Result<Value> {
     let contents = fs::read_to_string(accounts_file).context("Failed to read accounts file")?;

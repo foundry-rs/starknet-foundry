@@ -9,7 +9,6 @@ use anyhow::{Result, bail, ensure};
 use clap::Args;
 use sncast::accounts::AccountRepository;
 use sncast::check_if_legacy_contract;
-use sncast::helpers::account::generate_account_name;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::ledger;
 use sncast::helpers::ledger::LedgerKeyLocatorAccount;
@@ -104,7 +103,7 @@ pub async fn import(
 
     let account_name = account
         .clone()
-        .unwrap_or_else(|| generate_account_name(repository).unwrap());
+        .unwrap_or_else(|| repository.generate_account_name().unwrap());
 
     let fetched_class_hash = match provider
         .get_class_hash_at(BlockId::Tag(BlockTag::PreConfirmed), address)

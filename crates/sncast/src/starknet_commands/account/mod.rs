@@ -12,7 +12,6 @@ use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
 use conversions::string::{TryFromDecStr, TryFromHexStr};
 use sncast::accounts::{AccountName, AccountRecord, AccountRepository, NetworkName};
-use sncast::helpers::account::generate_account_name;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::{
     CastConfig, NetworkParams, PartialCastConfig, SncastProfileAppend,
@@ -296,7 +295,7 @@ pub async fn account(
                 create
                     .name
                     .clone()
-                    .unwrap_or_else(|| generate_account_name(&repository).unwrap())
+                    .unwrap_or_else(|| repository.generate_account_name().unwrap())
             } else {
                 config.account.clone()
             };
