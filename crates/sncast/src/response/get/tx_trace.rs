@@ -1,110 +1,85 @@
 use crate::response::cast_message::SncastCommandMessage;
+use crate::response::get::transaction::TransactionOutputBuilder;
 use data_transformer::{
     extract_function_from_selector, reverse_transform_input, reverse_transform_output,
 };
 use foundry_ui::styling::OutputBuilder;
-use serde::{Serialize, Serializer};
+use serde::Serialize;
 use starknet_api::execution_utils::format_panic_data;
 use starknet_rust::core::types::contract::AbiEntry;
 use starknet_rust::core::types::{
-    ContractClass, ExecuteInvocation, FunctionInvocation, LegacyContractAbiEntry, TransactionTrace,
+    CallType, ContractClass, ContractStorageDiffItem, DeclareTransactionTrace, DeclaredClassItem,
+    DeployAccountTransactionTrace, DeployedContractItem, EntryPointType, ExecuteInvocation,
+    ExecutionResources, FunctionInvocation, InnerCallExecutionResources, InvokeTransactionTrace,
+    L1HandlerTransactionTrace, LegacyContractAbiEntry, MigratedCompiledClassItem, NonceUpdate,
+    OrderedEvent, OrderedMessage, ReplacedClassItem, StateDiff, TransactionTrace,
 };
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
-use std::borrow::Cow;
 use std::cell::Cell;
 use std::collections::{HashMap, HashSet};
 
-////////
-
+#[derive(Serialize)]
 pub struct TransactionTraceResponse {
+    #[serde(flatten)]
     transaction_trace: TransactionTrace,
-    output: TransactionTraceOutput,
-}
-
-enum TransactionTraceOutput {
-    Human(String),
-    Json { transaction_hash: Felt },
+    #[serde(skip)]
+    human_text: Option<String>,
 }
 
 impl TransactionTraceResponse {
     #[must_use]
-    pub fn json(transaction_hash: Felt, transaction_trace: TransactionTrace) -> Self {
+    pub fn json(transaction_trace: TransactionTrace) -> Self {
         Self {
             transaction_trace,
-            output: TransactionTraceOutput::Json { transaction_hash },
+            human_text: None,
         }
     }
 
     #[must_use]
-    pub fn with_contract_classes(
-        transaction_hash: Felt,
+    pub fn human(
         transaction_trace: TransactionTrace,
         contract_classes: HashMap<Felt, ContractClass>,
         full: bool,
     ) -> (Self, bool) {
         let (decoder, invalid_abi) = TraceDecoder::new(contract_classes);
-        let human_trace = if full {
-            render_full_trace(transaction_hash, &transaction_trace, Some(&decoder))
-        } else {
-            render_trace(transaction_hash, &transaction_trace, &decoder)
-        };
+        let builder = OutputBuilder::new();
+        let human_trace = append_trace(builder, &transaction_trace, &decoder, full).build();
         let decoding_incomplete = invalid_abi || decoder.had_decode_failure.get();
 
         (
             Self {
                 transaction_trace,
-                output: TransactionTraceOutput::Human(human_trace),
+                human_text: Some(human_trace),
             },
             decoding_incomplete,
         )
     }
+}
 
-    #[must_use]
-    pub fn contract_addresses_by_class_hash(
-        transaction_trace: &TransactionTrace,
-    ) -> HashMap<Felt, HashSet<Felt>> {
-        let mut contract_addresses_by_class_hash = HashMap::new();
-        for invocation in root_invocations(transaction_trace) {
-            collect_contract_addresses(invocation, &mut contract_addresses_by_class_hash);
-        }
-        contract_addresses_by_class_hash
+#[must_use]
+pub fn contract_addresses_by_class_hash(
+    transaction_trace: &TransactionTrace,
+) -> HashMap<Felt, HashSet<Felt>> {
+    let mut contract_addresses_by_class_hash = HashMap::new();
+    for invocation in root_invocations(transaction_trace) {
+        collect_contract_addresses(invocation, &mut contract_addresses_by_class_hash);
     }
+    contract_addresses_by_class_hash
 }
 
 impl SncastCommandMessage for TransactionTraceResponse {
     fn text(&self) -> String {
-        let human_trace = match &self.output {
-            TransactionTraceOutput::Human(human_trace) => Cow::Borrowed(human_trace.as_str()),
-            TransactionTraceOutput::Json { transaction_hash } => Cow::Owned(render_full_trace(
-                *transaction_hash,
-                &self.transaction_trace,
-                None,
-            )),
-        };
+        let human_text = self
+            .human_text
+            .as_ref()
+            .expect("human text should be present for human output format");
 
         OutputBuilder::new()
             .success_message("Transaction trace retrieved")
             .blank_line()
-            .text_field(&human_trace)
+            .text_field(human_text)
             .build()
-    }
-}
-
-impl Serialize for TransactionTraceResponse {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        #[derive(Serialize)]
-        struct Wrapper<'a> {
-            transaction_trace: &'a TransactionTrace,
-        }
-
-        Wrapper {
-            transaction_trace: &self.transaction_trace,
-        }
-        .serialize(serializer)
     }
 }
 
@@ -200,87 +175,207 @@ impl TraceDecoder {
     }
 }
 
-fn render_trace(
-    transaction_hash: Felt,
+#[must_use]
+fn append_trace(
+    builder: OutputBuilder,
     transaction_trace: &TransactionTrace,
     decoder: &TraceDecoder,
-) -> String {
-    let transaction_type = match transaction_trace {
-        TransactionTrace::Invoke(_) => "INVOKE",
-        TransactionTrace::Declare(_) => "DECLARE",
-        TransactionTrace::DeployAccount(_) => "DEPLOY_ACCOUNT",
-        TransactionTrace::L1Handler(_) => "L1_HANDLER",
-    };
-    let mut builder = OutputBuilder::new()
-        .field("Type", transaction_type)
-        .padded_felt_field("Transaction Hash", &transaction_hash);
-
+    full: bool,
+) -> OutputBuilder {
     match transaction_trace {
-        TransactionTrace::Invoke(trace) => {
-            builder = append_optional_invocation(
-                builder,
-                "Validate Invocation",
-                trace.validate_invocation.as_ref(),
-                decoder,
-            );
-            builder = append_execute_invocation(
-                builder,
-                "Execute Invocation",
-                &trace.execute_invocation,
-                decoder,
-            );
-            builder = append_optional_invocation(
-                builder,
-                "Fee Transfer Invocation",
-                trace.fee_transfer_invocation.as_ref(),
-                decoder,
-            );
-        }
-        TransactionTrace::Declare(trace) => {
-            builder = append_optional_invocation(
-                builder,
-                "Validate Invocation",
-                trace.validate_invocation.as_ref(),
-                decoder,
-            );
-            builder = append_optional_invocation(
-                builder,
-                "Fee Transfer Invocation",
-                trace.fee_transfer_invocation.as_ref(),
-                decoder,
-            );
-        }
+        TransactionTrace::Invoke(trace) => append_invoke(builder, trace, decoder, full),
+        TransactionTrace::Declare(trace) => append_declare(builder, trace, decoder, full),
         TransactionTrace::DeployAccount(trace) => {
-            builder = append_optional_invocation(
-                builder,
-                "Validate Invocation",
-                trace.validate_invocation.as_ref(),
-                decoder,
-            );
-            builder = append_invocation_section(
-                builder,
-                "Constructor Invocation",
-                &trace.constructor_invocation,
-                decoder,
-            );
-            builder = append_optional_invocation(
-                builder,
-                "Fee Transfer Invocation",
-                trace.fee_transfer_invocation.as_ref(),
-                decoder,
-            );
+            append_deploy_account(builder, trace, decoder, full)
         }
-        TransactionTrace::L1Handler(trace) => {
-            builder = append_execute_invocation(
-                builder,
-                "Function Invocation",
-                &trace.function_invocation,
-                decoder,
-            );
-        }
+        TransactionTrace::L1Handler(trace) => append_l1_handler(builder, trace, decoder, full),
+    }
+}
+
+fn append_invoke(
+    builder: OutputBuilder,
+    r: &InvokeTransactionTrace,
+    decoder: &TraceDecoder,
+    full: bool,
+) -> OutputBuilder {
+    let builder = builder.tx_type("INVOKE");
+
+    if full {
+        let builder = append_execute_invocation(
+            builder,
+            "Execute Invocation",
+            &r.execute_invocation,
+            decoder,
+            true,
+        );
+        let builder = append_execution_resources(builder, &r.execution_resources, 0);
+        let builder = append_optional_invocation(
+            builder,
+            "Fee Transfer Invocation",
+            r.fee_transfer_invocation.as_ref(),
+            decoder,
+            true,
+        );
+        let builder = append_optional_state_diff(builder, r.state_diff.as_ref(), 0);
+        return append_optional_invocation(
+            builder,
+            "Validate Invocation",
+            r.validate_invocation.as_ref(),
+            decoder,
+            true,
+        );
     }
 
-    builder.build()
+    let builder = append_optional_invocation(
+        builder,
+        "Validate Invocation",
+        r.validate_invocation.as_ref(),
+        decoder,
+        false,
+    );
+    let builder = append_execute_invocation(
+        builder,
+        "Execute Invocation",
+        &r.execute_invocation,
+        decoder,
+        false,
+    );
+    append_optional_invocation(
+        builder,
+        "Fee Transfer Invocation",
+        r.fee_transfer_invocation.as_ref(),
+        decoder,
+        false,
+    )
+}
+
+fn append_declare(
+    builder: OutputBuilder,
+    r: &DeclareTransactionTrace,
+    decoder: &TraceDecoder,
+    full: bool,
+) -> OutputBuilder {
+    let builder = builder.tx_type("DECLARE");
+
+    if full {
+        let builder = append_execution_resources(builder, &r.execution_resources, 0);
+        let builder = append_optional_invocation(
+            builder,
+            "Fee Transfer Invocation",
+            r.fee_transfer_invocation.as_ref(),
+            decoder,
+            true,
+        );
+        let builder = append_optional_state_diff(builder, r.state_diff.as_ref(), 0);
+        return append_optional_invocation(
+            builder,
+            "Validate Invocation",
+            r.validate_invocation.as_ref(),
+            decoder,
+            true,
+        );
+    }
+
+    let builder = append_optional_invocation(
+        builder,
+        "Validate Invocation",
+        r.validate_invocation.as_ref(),
+        decoder,
+        false,
+    );
+    append_optional_invocation(
+        builder,
+        "Fee Transfer Invocation",
+        r.fee_transfer_invocation.as_ref(),
+        decoder,
+        false,
+    )
+}
+
+fn append_deploy_account(
+    builder: OutputBuilder,
+    r: &DeployAccountTransactionTrace,
+    decoder: &TraceDecoder,
+    full: bool,
+) -> OutputBuilder {
+    let builder = builder.tx_type("DEPLOY_ACCOUNT");
+
+    if full {
+        let builder = append_invocation_section(
+            builder,
+            "Constructor Invocation",
+            &r.constructor_invocation,
+            decoder,
+            true,
+        );
+        let builder = append_execution_resources(builder, &r.execution_resources, 0);
+        let builder = append_optional_invocation(
+            builder,
+            "Fee Transfer Invocation",
+            r.fee_transfer_invocation.as_ref(),
+            decoder,
+            true,
+        );
+        let builder = append_optional_state_diff(builder, r.state_diff.as_ref(), 0);
+        return append_optional_invocation(
+            builder,
+            "Validate Invocation",
+            r.validate_invocation.as_ref(),
+            decoder,
+            true,
+        );
+    }
+
+    let builder = append_optional_invocation(
+        builder,
+        "Validate Invocation",
+        r.validate_invocation.as_ref(),
+        decoder,
+        false,
+    );
+    let builder = append_invocation_section(
+        builder,
+        "Constructor Invocation",
+        &r.constructor_invocation,
+        decoder,
+        false,
+    );
+    append_optional_invocation(
+        builder,
+        "Fee Transfer Invocation",
+        r.fee_transfer_invocation.as_ref(),
+        decoder,
+        false,
+    )
+}
+
+fn append_l1_handler(
+    builder: OutputBuilder,
+    r: &L1HandlerTransactionTrace,
+    decoder: &TraceDecoder,
+    full: bool,
+) -> OutputBuilder {
+    let builder = builder.tx_type("L1_HANDLER");
+
+    if full {
+        let builder = append_execution_resources(builder, &r.execution_resources, 0);
+        let builder = append_execute_invocation(
+            builder,
+            "Function Invocation",
+            &r.function_invocation,
+            decoder,
+            true,
+        );
+        return append_optional_state_diff(builder, r.state_diff.as_ref(), 0);
+    }
+
+    append_execute_invocation(
+        builder,
+        "Function Invocation",
+        &r.function_invocation,
+        decoder,
+        false,
+    )
 }
 
 fn append_optional_invocation(
@@ -288,9 +383,10 @@ fn append_optional_invocation(
     label: &str,
     invocation: Option<&FunctionInvocation>,
     decoder: &TraceDecoder,
+    full: bool,
 ) -> OutputBuilder {
     if let Some(invocation) = invocation {
-        append_invocation_section(builder, label, invocation, decoder)
+        append_invocation_section(builder, label, invocation, decoder, full)
     } else {
         builder
     }
@@ -301,10 +397,11 @@ fn append_execute_invocation(
     label: &str,
     invocation: &ExecuteInvocation,
     decoder: &TraceDecoder,
+    full: bool,
 ) -> OutputBuilder {
     match invocation {
         ExecuteInvocation::Success(invocation) => {
-            append_invocation_section(builder, label, invocation, decoder)
+            append_invocation_section(builder, label, invocation, decoder, full)
         }
         ExecuteInvocation::Reverted(reverted) => append_section(builder, label, 0)
             .with_indent(2)
@@ -317,9 +414,14 @@ fn append_invocation_section(
     label: &str,
     invocation: &FunctionInvocation,
     decoder: &TraceDecoder,
+    full: bool,
 ) -> OutputBuilder {
     let builder = append_section(builder, label, 0);
-    append_compact_invocation(builder, invocation, decoder, 2)
+    if full {
+        append_full_invocation(builder, invocation, decoder, 2)
+    } else {
+        append_compact_invocation(builder, invocation, decoder, 2)
+    }
 }
 
 fn append_compact_invocation(
@@ -331,7 +433,7 @@ fn append_compact_invocation(
     let mut builder = builder
         .with_indent(indent)
         .field("Entry Point Selector", &decoder.selector(invocation))
-        .padded_felt_field("Contract Address", &invocation.contract_address)
+        .contract_address(&invocation.contract_address)
         .field("Calldata", &decoder.calldata(invocation))
         .field("Result", &decoder.result(invocation));
 
@@ -345,248 +447,293 @@ fn append_compact_invocation(
     builder
 }
 
-fn render_full_trace(
-    transaction_hash: Felt,
-    transaction_trace: &TransactionTrace,
-    decoder: Option<&TraceDecoder>,
-) -> String {
-    let mut trace = serde_json::to_value(transaction_trace)
-        .expect("transaction trace should serialize to JSON");
-    if let Some(decoder) = decoder {
-        decode_full_trace_invocations(&mut trace, transaction_trace, decoder);
-    }
-    let serde_json::Value::Object(mut fields) = trace else {
-        unreachable!("transaction trace should serialize as an object");
-    };
-
-    let mut builder = OutputBuilder::new();
-    if let Some(transaction_type) = fields.remove("type") {
-        builder = append_json_field(builder, "type", &transaction_type, 0);
-    }
-    builder = builder.padded_felt_field("Transaction Hash", &transaction_hash);
-    append_json_object(builder, &fields, 0).build()
-}
-
-fn decode_full_trace_invocations(
-    value: &mut serde_json::Value,
-    transaction_trace: &TransactionTrace,
-    decoder: &TraceDecoder,
-) {
-    let serde_json::Value::Object(fields) = value else {
-        unreachable!("transaction trace should serialize as an object");
-    };
-
-    match transaction_trace {
-        TransactionTrace::Invoke(trace) => {
-            decode_optional_invocation_field(
-                fields,
-                "validate_invocation",
-                trace.validate_invocation.as_ref(),
-                decoder,
-            );
-            decode_execute_invocation_field(
-                fields,
-                "execute_invocation",
-                &trace.execute_invocation,
-                decoder,
-            );
-            decode_optional_invocation_field(
-                fields,
-                "fee_transfer_invocation",
-                trace.fee_transfer_invocation.as_ref(),
-                decoder,
-            );
-        }
-        TransactionTrace::Declare(trace) => {
-            decode_optional_invocation_field(
-                fields,
-                "validate_invocation",
-                trace.validate_invocation.as_ref(),
-                decoder,
-            );
-            decode_optional_invocation_field(
-                fields,
-                "fee_transfer_invocation",
-                trace.fee_transfer_invocation.as_ref(),
-                decoder,
-            );
-        }
-        TransactionTrace::DeployAccount(trace) => {
-            decode_optional_invocation_field(
-                fields,
-                "validate_invocation",
-                trace.validate_invocation.as_ref(),
-                decoder,
-            );
-            decode_invocation_field(
-                fields,
-                "constructor_invocation",
-                &trace.constructor_invocation,
-                decoder,
-            );
-            decode_optional_invocation_field(
-                fields,
-                "fee_transfer_invocation",
-                trace.fee_transfer_invocation.as_ref(),
-                decoder,
-            );
-        }
-        TransactionTrace::L1Handler(trace) => decode_execute_invocation_field(
-            fields,
-            "function_invocation",
-            &trace.function_invocation,
-            decoder,
-        ),
-    }
-}
-
-fn decode_execute_invocation_field(
-    fields: &mut serde_json::Map<String, serde_json::Value>,
-    name: &str,
-    invocation: &ExecuteInvocation,
-    decoder: &TraceDecoder,
-) {
-    if let ExecuteInvocation::Success(invocation) = invocation {
-        decode_invocation_field(fields, name, invocation, decoder);
-    }
-}
-
-fn decode_optional_invocation_field(
-    fields: &mut serde_json::Map<String, serde_json::Value>,
-    name: &str,
-    invocation: Option<&FunctionInvocation>,
-    decoder: &TraceDecoder,
-) {
-    if let Some(invocation) = invocation {
-        decode_invocation_field(fields, name, invocation, decoder);
-    }
-}
-
-fn decode_invocation_field(
-    fields: &mut serde_json::Map<String, serde_json::Value>,
-    name: &str,
+fn append_full_invocation(
+    builder: OutputBuilder,
     invocation: &FunctionInvocation,
     decoder: &TraceDecoder,
-) {
-    let value = fields
-        .get_mut(name)
-        .expect("serialized transaction trace should contain invocation field");
-    decode_invocation(value, invocation, decoder);
-}
-
-fn decode_invocation(
-    value: &mut serde_json::Value,
-    invocation: &FunctionInvocation,
-    decoder: &TraceDecoder,
-) {
-    let serde_json::Value::Object(fields) = value else {
-        unreachable!("function invocation should serialize as an object");
-    };
-
-    fields.insert(
-        "entry_point_selector".to_string(),
-        serde_json::Value::String(decoder.selector(invocation)),
-    );
-    fields.insert(
-        "calldata".to_string(),
-        serde_json::Value::String(decoder.calldata(invocation)),
-    );
-    fields.insert(
-        "result".to_string(),
-        serde_json::Value::String(decoder.result(invocation)),
-    );
-
-    let serde_json::Value::Array(calls) = fields
-        .get_mut("calls")
-        .expect("serialized function invocation should contain calls")
-    else {
-        unreachable!("function invocation calls should serialize as an array");
-    };
-    for (value, invocation) in calls.iter_mut().zip(&invocation.calls) {
-        decode_invocation(value, invocation, decoder);
-    }
-}
-
-fn append_json_object(
-    mut builder: OutputBuilder,
-    fields: &serde_json::Map<String, serde_json::Value>,
     indent: usize,
 ) -> OutputBuilder {
-    for (name, value) in fields {
-        builder = append_json_field(builder, name, value, indent);
+    let builder = builder
+        .with_indent(indent)
+        .field("Call Type", format_call_type(invocation.call_type))
+        .field("Calldata", &decoder.calldata(invocation))
+        .felt_field("Caller Address", &invocation.caller_address);
+    let builder = append_calls(builder, &invocation.calls, decoder, indent);
+    let builder = builder
+        .with_indent(indent)
+        .felt_field("Class Hash", &invocation.class_hash)
+        .felt_field("Contract Address", &invocation.contract_address)
+        .field("Entry Point Selector", &decoder.selector(invocation))
+        .field(
+            "Entry Point Type",
+            format_entry_point_type(invocation.entry_point_type),
+        );
+    let builder = append_events(builder, &invocation.events, indent);
+    let builder =
+        append_inner_execution_resources(builder, &invocation.execution_resources, indent)
+            .with_indent(indent)
+            .field("Is Reverted", &invocation.is_reverted.to_string());
+    let builder = append_messages(builder, &invocation.messages, indent);
+    builder
+        .with_indent(indent)
+        .field("Result", &decoder.result(invocation))
+}
+
+fn append_calls(
+    mut builder: OutputBuilder,
+    calls: &[FunctionInvocation],
+    decoder: &TraceDecoder,
+    indent: usize,
+) -> OutputBuilder {
+    if calls.is_empty() {
+        return builder.with_indent(indent).field("Calls", "[]");
+    }
+
+    builder = append_section(builder, "Calls", indent);
+    for call in calls {
+        builder = append_full_invocation(builder, call, decoder, indent + 2);
     }
     builder
 }
 
-fn append_json_field(
-    builder: OutputBuilder,
-    name: &str,
-    value: &serde_json::Value,
+fn append_events(
+    mut builder: OutputBuilder,
+    events: &[OrderedEvent],
     indent: usize,
 ) -> OutputBuilder {
-    let label = format_field_label(name);
-    match value {
-        serde_json::Value::Object(fields) => {
-            let builder = append_section(builder, &label, indent);
-            append_json_object(builder, fields, indent + 2)
-        }
-        serde_json::Value::Array(values)
-            if values
-                .iter()
-                .all(|value| !value.is_array() && !value.is_object()) =>
-        {
-            builder
-                .with_indent(indent)
-                .field(&label, &format_scalar_array(values))
-        }
-        serde_json::Value::Array(values) => {
-            let mut builder = append_section(builder, &label, indent);
-            for value in values {
-                let serde_json::Value::Object(fields) = value else {
-                    unreachable!("non-scalar trace array items should be objects")
-                };
-                builder = append_json_object(builder, fields, indent + 2);
-            }
-            builder
-        }
-        value => builder
+    if events.is_empty() {
+        return builder.with_indent(indent).field("Events", "[]");
+    }
+
+    builder = append_section(builder, "Events", indent);
+    for event in events {
+        builder = builder
+            .with_indent(indent + 2)
+            .felt_list_field("Data", &event.data)
+            .felt_list_field("Keys", &event.keys)
+            .field("Order", &event.order.to_string());
+    }
+    builder
+}
+
+fn append_messages(
+    mut builder: OutputBuilder,
+    messages: &[OrderedMessage],
+    indent: usize,
+) -> OutputBuilder {
+    if messages.is_empty() {
+        return builder.with_indent(indent).field("Messages", "[]");
+    }
+
+    builder = append_section(builder, "Messages", indent);
+    for message in messages {
+        builder = builder
+            .with_indent(indent + 2)
+            .felt_field("From Address", &message.from_address)
+            .field("Order", &message.order.to_string())
+            .felt_list_field("Payload", &message.payload)
+            .felt_field("To Address", &message.to_address);
+    }
+    builder
+}
+
+fn append_execution_resources(
+    builder: OutputBuilder,
+    resources: &ExecutionResources,
+    indent: usize,
+) -> OutputBuilder {
+    append_section(builder, "Execution Resources", indent)
+        .with_indent(indent + 2)
+        .field("L1 Data Gas", &resources.l1_data_gas.to_string())
+        .field("L1 Gas", &resources.l1_gas.to_string())
+        .field("L2 Gas", &resources.l2_gas.to_string())
+}
+
+fn append_inner_execution_resources(
+    builder: OutputBuilder,
+    resources: &InnerCallExecutionResources,
+    indent: usize,
+) -> OutputBuilder {
+    append_section(builder, "Execution Resources", indent)
+        .with_indent(indent + 2)
+        .field("L1 Gas", &resources.l1_gas.to_string())
+        .field("L2 Gas", &resources.l2_gas.to_string())
+}
+
+fn append_optional_state_diff(
+    builder: OutputBuilder,
+    state_diff: Option<&StateDiff>,
+    indent: usize,
+) -> OutputBuilder {
+    match state_diff {
+        Some(state_diff) => append_state_diff(builder, state_diff, indent),
+        None => builder,
+    }
+}
+
+fn append_state_diff(
+    builder: OutputBuilder,
+    state_diff: &StateDiff,
+    indent: usize,
+) -> OutputBuilder {
+    let builder = append_section(builder, "State Diff", indent);
+    let builder = append_declared_classes(builder, &state_diff.declared_classes, indent + 2);
+    let builder = append_deployed_contracts(builder, &state_diff.deployed_contracts, indent + 2);
+    let builder = builder.with_indent(indent + 2).felt_list_field(
+        "Deprecated Declared Classes",
+        &state_diff.deprecated_declared_classes,
+    );
+    let builder = match state_diff.migrated_compiled_classes.as_deref() {
+        Some(classes) => append_migrated_classes(builder, classes, indent + 2),
+        None => builder,
+    };
+    let builder = append_nonces(builder, &state_diff.nonces, indent + 2);
+    let builder = append_replaced_classes(builder, &state_diff.replaced_classes, indent + 2);
+    append_storage_diffs(builder, &state_diff.storage_diffs, indent + 2)
+}
+
+fn append_declared_classes(
+    mut builder: OutputBuilder,
+    classes: &[DeclaredClassItem],
+    indent: usize,
+) -> OutputBuilder {
+    if classes.is_empty() {
+        return builder.with_indent(indent).field("Declared Classes", "[]");
+    }
+    builder = append_section(builder, "Declared Classes", indent);
+    for class in classes {
+        builder = builder
+            .with_indent(indent + 2)
+            .felt_field("Class Hash", &class.class_hash)
+            .felt_field("Compiled Class Hash", &class.compiled_class_hash);
+    }
+    builder
+}
+
+fn append_deployed_contracts(
+    mut builder: OutputBuilder,
+    contracts: &[DeployedContractItem],
+    indent: usize,
+) -> OutputBuilder {
+    if contracts.is_empty() {
+        return builder
             .with_indent(indent)
-            .field(&label, &format_scalar(value)),
+            .field("Deployed Contracts", "[]");
+    }
+    builder = append_section(builder, "Deployed Contracts", indent);
+    for contract in contracts {
+        builder = builder
+            .with_indent(indent + 2)
+            .felt_field("Address", &contract.address)
+            .felt_field("Class Hash", &contract.class_hash);
+    }
+    builder
+}
+
+fn append_migrated_classes(
+    mut builder: OutputBuilder,
+    classes: &[MigratedCompiledClassItem],
+    indent: usize,
+) -> OutputBuilder {
+    if classes.is_empty() {
+        return builder
+            .with_indent(indent)
+            .field("Migrated Compiled Classes", "[]");
+    }
+    builder = append_section(builder, "Migrated Compiled Classes", indent);
+    for class in classes {
+        builder = builder
+            .with_indent(indent + 2)
+            .felt_field("Class Hash", &class.class_hash)
+            .felt_field("Compiled Class Hash", &class.compiled_class_hash);
+    }
+    builder
+}
+
+fn append_nonces(
+    mut builder: OutputBuilder,
+    nonces: &[NonceUpdate],
+    indent: usize,
+) -> OutputBuilder {
+    if nonces.is_empty() {
+        return builder.with_indent(indent).field("Nonces", "[]");
+    }
+    builder = append_section(builder, "Nonces", indent);
+    for nonce in nonces {
+        builder = builder
+            .with_indent(indent + 2)
+            .felt_field("Contract Address", &nonce.contract_address)
+            .felt_field("Nonce", &nonce.nonce);
+    }
+    builder
+}
+
+fn append_replaced_classes(
+    mut builder: OutputBuilder,
+    classes: &[ReplacedClassItem],
+    indent: usize,
+) -> OutputBuilder {
+    if classes.is_empty() {
+        return builder.with_indent(indent).field("Replaced Classes", "[]");
+    }
+    builder = append_section(builder, "Replaced Classes", indent);
+    for class in classes {
+        builder = builder
+            .with_indent(indent + 2)
+            .felt_field("Class Hash", &class.class_hash)
+            .felt_field("Contract Address", &class.contract_address);
+    }
+    builder
+}
+
+fn append_storage_diffs(
+    mut builder: OutputBuilder,
+    diffs: &[ContractStorageDiffItem],
+    indent: usize,
+) -> OutputBuilder {
+    if diffs.is_empty() {
+        return builder.with_indent(indent).field("Storage Diffs", "[]");
+    }
+    builder = append_section(builder, "Storage Diffs", indent);
+    for diff in diffs {
+        builder = builder
+            .with_indent(indent + 2)
+            .felt_field("Address", &diff.address);
+        if diff.storage_entries.is_empty() {
+            builder = builder
+                .with_indent(indent + 2)
+                .field("Storage Entries", "[]");
+        } else {
+            builder = append_section(builder, "Storage Entries", indent + 2);
+            for entry in &diff.storage_entries {
+                builder = builder
+                    .with_indent(indent + 4)
+                    .felt_field("Key", &entry.key)
+                    .felt_field("Value", &entry.value);
+            }
+        }
+    }
+    builder
+}
+
+fn format_call_type(call_type: CallType) -> &'static str {
+    match call_type {
+        CallType::LibraryCall => "LIBRARY_CALL",
+        CallType::Call => "CALL",
+        CallType::Delegate => "DELEGATE",
+    }
+}
+
+fn format_entry_point_type(entry_point_type: EntryPointType) -> &'static str {
+    match entry_point_type {
+        EntryPointType::External => "EXTERNAL",
+        EntryPointType::L1Handler => "L1_HANDLER",
+        EntryPointType::Constructor => "CONSTRUCTOR",
     }
 }
 
 fn append_section(builder: OutputBuilder, label: &str, indent: usize) -> OutputBuilder {
     builder.text_field(&format!("{}{label}", " ".repeat(indent)))
-}
-
-fn format_scalar_array(values: &[serde_json::Value]) -> String {
-    let values = values.iter().map(format_scalar).collect::<Vec<_>>();
-    format!("[{}]", values.join(", "))
-}
-
-fn format_scalar(value: &serde_json::Value) -> String {
-    match value {
-        serde_json::Value::Null => "null".to_string(),
-        serde_json::Value::Bool(value) => value.to_string(),
-        serde_json::Value::Number(value) => value.to_string(),
-        serde_json::Value::String(value) => value.clone(),
-        serde_json::Value::Array(_) | serde_json::Value::Object(_) => {
-            unreachable!("nested JSON value should not be formatted as a scalar")
-        }
-    }
-}
-
-fn format_field_label(name: &str) -> String {
-    name.split('_')
-        .map(|word| {
-            let mut characters = word.chars();
-            let Some(first) = characters.next() else {
-                return String::new();
-            };
-            first.to_uppercase().chain(characters).collect()
-        })
-        .collect::<Vec<_>>()
-        .join(" ")
 }
 
 fn root_invocations(transaction_trace: &TransactionTrace) -> Vec<&FunctionInvocation> {
