@@ -53,7 +53,6 @@ pub struct Account {
 #[derive(Debug, Subcommand)]
 pub enum Commands {
     Import(Import),
-    #[command(name = "starkli-import")]
     ImportStarkli(ImportStarkli),
     Create(Create),
     Deploy(Deploy),
@@ -308,13 +307,13 @@ pub async fn account(
                 && let Err(err) = prompt_to_add_account_as_default(account_name.as_str(), ui)
             {
                 ui.print_error(
-                    "account starkli-import",
+                    "account import-starkli",
                     format!("Error: Failed to launch interactive prompt: {err}"),
                 );
             }
 
             Ok(process_command_result(
-                "account starkli-import",
+                "account import-starkli",
                 result,
                 ui,
                 None,
