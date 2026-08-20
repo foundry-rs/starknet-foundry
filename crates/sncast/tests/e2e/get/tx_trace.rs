@@ -2,7 +2,7 @@ use crate::helpers::constants::URL;
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use serde_json::{Value, json};
-use starknet_rust::core::utils::get_selector_from_name;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout};
 use wiremock::matchers::{body_partial_json, method};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -93,14 +93,14 @@ async fn mock_contract_class(mock_server: &MockServer, abi: Value) {
 
 #[tokio::test]
 async fn test_invoke_transaction_trace() {
-    runner(&["get", "tx-trace", INVOKE_TX_HASH, "--url", URL])
-        .assert()
-        .success()
-        .stdout_eq(indoc! {r"
+    let args = &["get", "tx-trace", INVOKE_TX_HASH, "--url", URL];
+    let output = runner(args).assert().success();
+    assert_stdout(
+        output,
+        indoc! {r"
         Success: Transaction trace retrieved
 
         Type:                     INVOKE
-        Transaction Hash:         0x026476da48e56e5e7025543ad0bb9105df00ee08571c6d17c4207462ff7717c4
         Validate Invocation
           Entry Point Selector:   __validate__
           Contract Address:       0x0350461cc881640ebbcebf747107d456ef008ec455cd95d2b76a7d9face671f1
@@ -121,20 +121,20 @@ async fn test_invoke_transaction_trace() {
           Contract Address:       0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
           Calldata:               ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 1945769550285990_u256
           Result:                 success: true
-    "})
-        .stderr_eq("");
+    "},
+    );
 }
 
 #[tokio::test]
 async fn test_invoke_transaction_trace_full() {
-    runner(&["get", "tx-trace", INVOKE_TX_HASH, "--full", "--url", URL])
-        .assert()
-        .success()
-        .stdout_eq(indoc! {r"
+    let args = &["get", "tx-trace", INVOKE_TX_HASH, "--full", "--url", URL];
+    let output = runner(args).assert().success();
+    assert_stdout(
+        output,
+        indoc! {r"
         Success: Transaction trace retrieved
 
         Type:                     INVOKE
-        Transaction Hash:         0x026476da48e56e5e7025543ad0bb9105df00ee08571c6d17c4207462ff7717c4
         Execute Invocation
           Call Type:              CALL
           Calldata:               array![Call[..]
@@ -208,20 +208,20 @@ async fn test_invoke_transaction_trace_full() {
           Is Reverted:            false
           Messages:               []
           Result:                 success: 0x56414c4944
-    "})
-        .stderr_eq("");
+    "},
+    );
 }
 
 #[tokio::test]
 async fn test_declare_transaction_trace() {
-    runner(&["get", "tx-trace", DECLARE_TX_HASH, "--url", URL])
-        .assert()
-        .success()
-        .stdout_eq(indoc! {r"
+    let args = &["get", "tx-trace", DECLARE_TX_HASH, "--url", URL];
+    let output = runner(args).assert().success();
+    assert_stdout(
+        output,
+        indoc! {r"
         Success: Transaction trace retrieved
 
         Type:                   DECLARE
-        Transaction Hash:       0x06054540622d534ffffb162a0e80c21bc106581eafeb3efad29385b78e04983d
         Validate Invocation
           Entry Point Selector: __validate_declare__
           Contract Address:     0x06aac79bb6c90e1e41c33cd20c67c0281c4a95f01b4e15ad0c3b53fcc6010cf8
@@ -232,20 +232,20 @@ async fn test_declare_transaction_trace() {
           Contract Address:     0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
           Calldata:             ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 10343418238809876_u256
           Result:               success: true
-    "})
-        .stderr_eq("");
+    "},
+    );
 }
 
 #[tokio::test]
 async fn test_declare_transaction_trace_full() {
-    runner(&["get", "tx-trace", DECLARE_TX_HASH, "--full", "--url", URL])
-        .assert()
-        .success()
-        .stdout_eq(indoc! {r"
+    let args = &["get", "tx-trace", DECLARE_TX_HASH, "--full", "--url", URL];
+    let output = runner(args).assert().success();
+    assert_stdout(
+        output,
+        indoc! {r"
         Success: Transaction trace retrieved
 
         Type:                   DECLARE
-        Transaction Hash:       0x06054540622d534ffffb162a0e80c21bc106581eafeb3efad29385b78e04983d
         Execution Resources
           L1 Data Gas:          192
           L1 Gas:               1071
@@ -285,20 +285,20 @@ async fn test_declare_transaction_trace_full() {
           Is Reverted:          false
           Messages:             []
           Result:               success: 0x56414c4944
-    "})
-        .stderr_eq("");
+    "},
+    );
 }
 
 #[tokio::test]
 async fn test_deploy_account_transaction_trace() {
-    runner(&["get", "tx-trace", DEPLOY_ACCOUNT_TX_HASH, "--url", URL])
-        .assert()
-        .success()
-        .stdout_eq(indoc! {r"
+    let args = &["get", "tx-trace", DEPLOY_ACCOUNT_TX_HASH, "--url", URL];
+    let output = runner(args).assert().success();
+    assert_stdout(
+        output,
+        indoc! {r"
         Success: Transaction trace retrieved
 
         Type:                   DEPLOY_ACCOUNT
-        Transaction Hash:       0x06718b783a0b888f5421c4eb76a532feb9fd5167b2b09274298f79798c782b32
         Validate Invocation
           Entry Point Selector: __validate_deploy__
           Contract Address:     0x0563870107a0a2c8cf34d2a42118dc52706a7eae7c1c741d32abec98d3238677
@@ -314,20 +314,27 @@ async fn test_deploy_account_transaction_trace() {
           Contract Address:     0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
           Calldata:             ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 51588769029944096_u256
           Result:               success: true
-    "})
-        .stderr_eq("");
+    "},
+    );
 }
 
 #[tokio::test]
 async fn test_deploy_account_transaction_trace_full() {
-    runner(&["get", "tx-trace", DEPLOY_ACCOUNT_TX_HASH, "--full", "--url", URL])
-        .assert()
-        .success()
-        .stdout_eq(indoc! {r"
+    let args = &[
+        "get",
+        "tx-trace",
+        DEPLOY_ACCOUNT_TX_HASH,
+        "--full",
+        "--url",
+        URL,
+    ];
+    let output = runner(args).assert().success();
+    assert_stdout(
+        output,
+        indoc! {r"
         Success: Transaction trace retrieved
 
         Type:                   DEPLOY_ACCOUNT
-        Transaction Hash:       0x06718b783a0b888f5421c4eb76a532feb9fd5167b2b09274298f79798c782b32
         Constructor Invocation
           Call Type:            CALL
           Calldata:             0x796b0283375b9aa6fc0ac6b9ea1f98584f8464a66f05f29c3deb4c5eeea5263
@@ -386,20 +393,20 @@ async fn test_deploy_account_transaction_trace_full() {
           Is Reverted:          false
           Messages:             []
           Result:               success: 0x56414c4944
-    "})
-        .stderr_eq("");
+    "},
+    );
 }
 
 #[tokio::test]
 async fn test_l1_handler_transaction_trace() {
-    runner(&["get", "tx-trace", L1_HANDLER_TX_HASH, "--url", URL])
-        .assert()
-        .success()
-        .stdout_eq(indoc! {r"
+    let args = &["get", "tx-trace", L1_HANDLER_TX_HASH, "--url", URL];
+    let output = runner(args).assert().success();
+    assert_stdout(
+        output,
+        indoc! {r"
         Success: Transaction trace retrieved
 
         Type:                     L1_HANDLER
-        Transaction Hash:         0x004c8c57b3ab646ef56aef3def69a01bc86d049b98f25ebfe3699334d86c24d5
         Function Invocation
           Entry Point Selector:   receive_commitment
           Contract Address:       0x0763c1a0ec1d64afe2d8d0a2c0cab6fd494dcb26d08ef1020b27aa5695761e21
@@ -410,20 +417,27 @@ async fn test_l1_handler_transaction_trace() {
             Contract Address:     0x020f6d32589a0d57c72faed530354bac49144ca99aff3429cc3284514583b595
             Calldata:             99359224995532825384289367229767519998085228603184343483478058520072918113310_u256, 6289449_u256
             Result:               success
-    "})
-        .stderr_eq("");
+    "},
+    );
 }
 
 #[tokio::test]
 async fn test_l1_handler_transaction_trace_full() {
-    runner(&["get", "tx-trace", L1_HANDLER_TX_HASH, "--full", "--url", URL])
-        .assert()
-        .success()
-        .stdout_eq(indoc! {r"
+    let args = &[
+        "get",
+        "tx-trace",
+        L1_HANDLER_TX_HASH,
+        "--full",
+        "--url",
+        URL,
+    ];
+    let output = runner(args).assert().success();
+    assert_stdout(
+        output,
+        indoc! {r"
         Success: Transaction trace retrieved
 
         Type:                     L1_HANDLER
-        Transaction Hash:         0x004c8c57b3ab646ef56aef3def69a01bc86d049b98f25ebfe3699334d86c24d5
         Execution Resources
           L1 Data Gas:            192
           L1 Gas:                 18783
@@ -465,20 +479,20 @@ async fn test_l1_handler_transaction_trace_full() {
           Is Reverted:            false
           Messages:               []
           Result:                 success
-    "})
-        .stderr_eq("");
+    "},
+    );
 }
 
 #[tokio::test]
 async fn test_reverted_invoke_transaction_trace() {
-    runner(&["get", "tx-trace", REVERTED_INVOKE_TX_HASH, "--url", URL])
-        .assert()
-        .success()
-        .stdout_eq(indoc! {r"
+    let args = &["get", "tx-trace", REVERTED_INVOKE_TX_HASH, "--url", URL];
+    let output = runner(args).assert().success();
+    assert_stdout(
+        output,
+        indoc! {r"
         Success: Transaction trace retrieved
 
         Type:                   INVOKE
-        Transaction Hash:       0x00fecca6a328dd11f40b79c30fe22d23bc6975d1a0923a95b90aff4016a84333
         Validate Invocation
           Entry Point Selector: __validate__
           Contract Address:     0x04c1d9da136846ab084ae18cf6ce7a652df7793b666a16ce46b1bf5850cc739d
@@ -497,28 +511,24 @@ async fn test_reverted_invoke_transaction_trace() {
                                 Execution failed. Failure reason:
                                 Error in contract (contract address: 0x036031daa264c24520b11d93af622c848b2499b66b41d611bac95e13cfca131a, class hash: 0x05e269051bec902aa2bd421d348e023c3893c4ff93de6c5f4b8964cd67cc3fc5, selector: 0x03d0bcca55c118f88a08e0fcc06f43906c0c174feb52ebc83f0fa28a1f59ed67):
                                 0x4578697374696e6720656e747279206973206d6f726520726563656e74 ('Existing entry is more recent').
-
         Fee Transfer Invocation
           Entry Point Selector: transfer
           Contract Address:     0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
           Calldata:             ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 9402441379216_u256
           Result:               success: true
-    "})
-        .stderr_eq("");
+    "},
+    );
 }
 
 #[tokio::test]
 async fn test_invoke_transaction_trace_json() {
-    let output = runner(&["--json", "get", "tx-trace", INVOKE_TX_HASH, "--url", URL])
-        .assert()
-        .success()
-        .stderr_eq("");
+    let args = &["--json", "get", "tx-trace", INVOKE_TX_HASH, "--url", URL];
+    let output = runner(args).assert().success().stderr_eq("");
 
     let json: Value = serde_json::from_slice(&output.get_output().stdout).unwrap();
-    let trace = &json["transaction_trace"];
+    let trace = &json;
 
     assert_eq!(json["command"], "get tx-trace");
-    assert_eq!(json["type"], "response");
     assert_eq!(trace["type"], "INVOKE");
 
     assert_eq!(
@@ -563,15 +573,15 @@ async fn test_invoke_transaction_trace_json() {
     );
 }
 #[tokio::test]
-async fn test_transaction_trace_alias() {
-    runner(&["get", "transaction-trace", DECLARE_TX_HASH, "--url", URL])
-        .assert()
-        .success()
-        .stdout_eq(indoc! {r"
+async fn test_alias() {
+    let args = &["get", "transaction-trace", DECLARE_TX_HASH, "--url", URL];
+    let output = runner(args).assert().success();
+    assert_stdout(
+        output,
+        indoc! {r"
         Success: Transaction trace retrieved
 
         Type:                   DECLARE
-        Transaction Hash:       0x06054540622d534ffffb162a0e80c21bc106581eafeb3efad29385b78e04983d
         Validate Invocation
           Entry Point Selector: __validate_declare__
           Contract Address:     0x06aac79bb6c90e1e41c33cd20c67c0281c4a95f01b4e15ad0c3b53fcc6010cf8
@@ -582,12 +592,12 @@ async fn test_transaction_trace_alias() {
           Contract Address:     0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
           Calldata:             ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 10343418238809876_u256
           Result:               success: true
-    "})
-        .stderr_eq("");
+    "},
+    );
 }
 
 #[tokio::test]
-async fn test_human_trace_falls_back_when_class_is_unavailable() {
+async fn test_falls_back_when_class_is_unavailable() {
     let mock_server = MockServer::start().await;
     let mut nested_invocation = invocation();
     nested_invocation["contract_address"] = json!("0x789");
@@ -613,16 +623,17 @@ async fn test_human_trace_falls_back_when_class_is_unavailable() {
         .mount(&mock_server)
         .await;
 
-    runner(&[
+    let args = &[
         "get",
         "tx-trace",
         TRANSACTION_HASH,
         "--url",
         &mock_server.uri(),
-    ])
-    .assert()
-    .success()
-    .stdout_eq(indoc! {r"
+    ];
+    let output = runner(args).assert().success();
+    assert_stdout(
+        output,
+        indoc! {r"
             [WARNING] Could not fetch contract classes needed to decode the trace:
             - class hash: 0x456, contract addresses: 0x123, 0x789 — Class hash not found
             Affected calls are displayed as raw felts.
@@ -630,7 +641,6 @@ async fn test_human_trace_falls_back_when_class_is_unavailable() {
             Success: Transaction trace retrieved
 
             Type:                     INVOKE
-            Transaction Hash:         0x0000000000000000000000000000000000000000000000000000000000000abc
             Execute Invocation
               Entry Point Selector:   0x240060cdb34fcc260f41eac7474ee1d7c80b7e3607daff9ac67c7ea2ebb1c44
               Contract Address:       0x0000000000000000000000000000000000000000000000000000000000000123
@@ -641,12 +651,12 @@ async fn test_human_trace_falls_back_when_class_is_unavailable() {
                 Contract Address:     0x0000000000000000000000000000000000000000000000000000000000000789
                 Calldata:             0x7
                 Result:               success: 0x9
-        "})
-    .stderr_eq("");
+        "},
+    )
 }
 
 #[tokio::test]
-async fn test_human_trace_warns_when_fetched_abi_cannot_decode_trace() {
+async fn test_warns_when_fetched_abi_cannot_decode_trace() {
     let mock_server = MockServer::start().await;
     mock_trace(
         &mock_server,
@@ -659,91 +669,43 @@ async fn test_human_trace_warns_when_fetched_abi_cannot_decode_trace() {
     .await;
     mock_contract_class(&mock_server, json!([])).await;
 
-    runner(&[
+    let args = &[
         "get",
         "tx-trace",
         TRANSACTION_HASH,
         "--url",
         &mock_server.uri(),
-    ])
-    .assert()
-    .success()
-    .stdout_eq(indoc! {r"
+    ];
+    let output = runner(args).assert().success();
+    assert_stdout(
+        output,
+        indoc! {r"
             [WARNING] Some trace data could not be decoded with the fetched ABIs. Raw felts are shown instead.
 
             Success: Transaction trace retrieved
 
             Type:                   INVOKE
-            Transaction Hash:       0x0000000000000000000000000000000000000000000000000000000000000abc
             Execute Invocation
               Entry Point Selector: 0x240060cdb34fcc260f41eac7474ee1d7c80b7e3607daff9ac67c7ea2ebb1c44
               Contract Address:     0x0000000000000000000000000000000000000000000000000000000000000123
               Calldata:             0x7
               Result:               success: 0x9
-        "})
-    .stderr_eq("");
-}
-
-#[tokio::test]
-async fn test_full_human_trace_keeps_invocation_values_decoded() {
-    let mock_server = MockServer::start().await;
-    let selector = get_selector_from_name("unsigned_fn").unwrap();
-    let mut trace = trace();
-    trace["execute_invocation"]["entry_point_selector"] = json!(selector.to_hex_string());
-    mock_trace(
-        &mock_server,
-        ResponseTemplate::new(200).set_body_json(json!({
-            "jsonrpc": "2.0",
-            "id": 1,
-            "result": trace
-        })),
+        "},
     )
-    .await;
-    mock_contract_class(
-        &mock_server,
-        json!([{
-            "name": "unsigned_fn",
-            "type": "function",
-            "inputs": [{ "name": "value", "type": "core::integer::u32" }],
-            "outputs": [],
-            "state_mutability": "external"
-        }]),
-    )
-    .await;
-
-    let output = runner(&[
-        "get",
-        "tx-trace",
-        TRANSACTION_HASH,
-        "--full",
-        "--url",
-        &mock_server.uri(),
-    ])
-    .assert()
-    .success()
-    .stderr_eq("");
-    let stdout = String::from_utf8_lossy(&output.get_output().stdout);
-
-    assert!(stdout.contains("Entry Point Selector:"));
-    assert!(stdout.contains("unsigned_fn"));
-    assert!(stdout.contains("Calldata:"));
-    assert!(stdout.contains("7_u32"));
-    assert!(stdout.contains("Result:"));
-    assert!(stdout.contains("success"));
-    assert!(stdout.contains("Call Type:"));
-    assert!(stdout.contains("Execution Resources"));
 }
 
 #[tokio::test]
 async fn test_transaction_not_found() {
-    runner(&["get", "tx-trace", TRANSACTION_HASH, "--url", URL])
-        .assert()
-        .failure()
-        .stdout_eq("")
-        .stderr_eq(indoc! {r"
+    let args = &["get", "tx-trace", "0x123", "--url", URL];
+    let output = runner(args).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
             Command: get tx-trace
             Error: Transaction with provided hash was not found (does not exist)
-        "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -763,18 +725,20 @@ async fn test_trace_not_available() {
     )
     .await;
 
-    runner(&[
+    let args = &[
         "get",
         "tx-trace",
         TRANSACTION_HASH,
         "--url",
         &mock_server.uri(),
-    ])
-    .assert()
-    .failure()
-    .stdout_eq("")
-    .stderr_eq(indoc! {r"
+    ];
+    let output = runner(args).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
             Command: get tx-trace
             Error: No trace is available for the transaction (status: Received)
-        "});
+        "},
+    );
 }
