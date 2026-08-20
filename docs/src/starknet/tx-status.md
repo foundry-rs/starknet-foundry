@@ -2,9 +2,9 @@
 
 ## Overview
 
-Starknet Foundry `sncast` supports inspecting transaction statuses with `sncast get tx-status` and transaction execution traces with `sncast get tx-trace`.
+Starknet Foundry `sncast` supports the inspection of transaction statuses on a given network with the `sncast get tx-status` command.
 
-For detailed CLI descriptions, refer to the [get tx-status](../appendix/sncast/get/tx-status.md) and [get tx-trace](../appendix/sncast/get/tx-trace.md) command references.
+For a detailed CLI description, refer to the [get tx-status command reference](../appendix/sncast/get/tx-status.md).
 
 ## Usage Examples
 
