@@ -280,3 +280,22 @@ $ sncast \
 ```
 
 A signing confirmation will appear on the Ledger device. See [Ledger Hardware Wallet](./ledger.md) for full details.
+
+#### Using a Native Keystore Signer
+
+`account create` can encrypt the generated key instead of storing it directly in the accounts file:
+
+<!-- { "ignored": true } -->
+```shell
+$ export ALICE_KEYSTORE_PASSWORD="a strong password"
+$ sncast \
+    account create \
+    --network sepolia \
+    --name alice \
+    --keystore keys/alice.json \
+    --keystore-password-env ALICE_KEYSTORE_PASSWORD
+```
+
+An existing encrypted key can be attached during `account import` with the same two keystore options. All later commands select `alice` like any private-key or Ledger account; no global `--keystore` flag is needed.
+
+Passwords are looked up from the signer's `password_env` first and then `SNCAST_KEYSTORE_PASSWORD`; an interactive terminal prompts only if neither is set. Password values are never written to the accounts file.

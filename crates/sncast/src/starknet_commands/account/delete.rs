@@ -8,6 +8,8 @@ use sncast::response::account::delete::AccountDeleteResponse;
 use sncast::response::ui::UI;
 use sncast::{chain_id_to_network_name, get_chain_id};
 
+use crate::starknet_commands::account::notify_if_migrated;
+
 #[derive(Args, Debug)]
 #[command(about = "Delete account information from the accounts file")]
 #[command(group(ArgGroup::new("networks")
@@ -36,6 +38,7 @@ pub fn delete(
     repository: &AccountRepository,
     network_name: &str,
     yes: bool,
+    ui: &UI,
 ) -> Result<AccountDeleteResponse> {
     repository
         .find(network_name, name)
@@ -54,9 +57,10 @@ pub fn delete(
         }
     }
 
-    repository
+    let mutation = repository
         .remove(network_name, name)
         .map_err(|error| anyhow::anyhow!(error))?;
+    notify_if_migrated(mutation.migrated_from_v1, ui);
     let result = "Account successfully removed".to_string();
     Ok(AccountDeleteResponse { result })
 }

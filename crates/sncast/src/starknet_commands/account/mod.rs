@@ -376,6 +376,7 @@ pub async fn account(
                 &repository,
                 &network_name,
                 delete.yes,
+                ui,
             );
 
             Ok(process_command_result("account delete", result, ui, None))

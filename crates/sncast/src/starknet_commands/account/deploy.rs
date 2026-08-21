@@ -1,3 +1,4 @@
+use crate::starknet_commands::account::notify_if_migrated;
 use anyhow::{Result, anyhow};
 use clap::Args;
 use sncast::accounts::{AccountDeploymentService, AccountRecord, AccountRepository};
@@ -98,7 +99,8 @@ async fn deploy_from_accounts_file(
     .await?;
 
     if let InvokeResponse::Transaction(_) = &result {
-        update_account_in_accounts_file(repository, &name, chain_id)?;
+        let migrated = update_account_in_accounts_file(repository, &name, chain_id)?;
+        notify_if_migrated(migrated, ui);
     }
 
     Ok(result)
@@ -117,10 +119,10 @@ fn update_account_in_accounts_file(
     repository: &AccountRepository,
     account_name: &str,
     chain_id: Felt,
-) -> Result<()> {
+) -> Result<bool> {
     let network_name = chain_id_to_network_name(chain_id);
 
-    repository
+    let result = repository
         .mutate(|registry| {
             let account = registry
                 .networks_mut()
@@ -135,5 +137,5 @@ fn update_account_in_accounts_file(
         })
         .map_err(|error| anyhow!(error))?;
 
-    Ok(())
+    Ok(result.migrated_from_v1)
 }

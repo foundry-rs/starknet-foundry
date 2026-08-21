@@ -9,9 +9,7 @@ use configuration::test_utils::copy_config_to_tempdir;
 use conversions::string::IntoHexStr;
 use indoc::indoc;
 use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
-use sncast::helpers::constants::{
-    BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH,
-};
+use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
 use starknet_rust::core::types::TransactionReceipt::DeployAccount;
 use std::fs;
 use tempfile::{TempDir, tempdir};
