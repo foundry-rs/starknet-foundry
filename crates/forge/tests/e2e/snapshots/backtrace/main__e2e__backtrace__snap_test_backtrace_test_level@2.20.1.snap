@@ -1,0 +1,25 @@
+---
+source: crates/forge/tests/e2e/backtrace.rs
+expression: stdout
+---
+
+
+[FAIL] backtrace_test_panic::tests::test_panics_in_test_body
+
+Failure data:
+    0x417373657274206661696c6564 ('Assert failed')
+
+stack backtrace:
+   in test 'backtrace_test_panic::tests::test_panics_in_test_body':
+      0: core::panic_with_const_felt252
+         at [..]lib.cairo:360:5
+      1: core::panic_with_const_felt252
+         at [..]lib.cairo:360:5
+      2: (inlined) backtrace_test_panic::tests::test_panics_in_test_body
+         at [..]lib.cairo:13:5
+      3: backtrace_test_panic::tests::test_panics_in_test_body__snforge_internal_test_generated
+         at [..]lib.cairo:13:5
+
+
+Failures:
+    backtrace_test_panic::tests::test_panics_in_test_body
