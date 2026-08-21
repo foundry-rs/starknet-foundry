@@ -15,11 +15,14 @@ pub struct ByteArray {
 
 impl From<&str> for ByteArray {
     fn from(value: &str) -> Self {
-        let chunks = value.as_bytes().chunks_exact(BYTES_IN_WORD);
-        let remainder = chunks.remainder();
+        let (chunks, remainder) = value.as_bytes().as_chunks::<BYTES_IN_WORD>();
         let pending_word_len = remainder.len();
 
-        let words = chunks.map(Felt::from_bytes_be_slice).collect();
+        let words = chunks
+            .iter()
+            .map(|chunk| Felt::from_bytes_be_slice(&chunk[..]))
+            .collect();
+
         let pending_word = Felt::from_bytes_be_slice(remainder);
 
         Self {

@@ -58,6 +58,7 @@ pub struct Invoke {
 }
 
 #[expect(clippy::too_many_arguments)]
+#[expect(clippy::result_large_err)]
 pub async fn invoke<S>(
     contract_address: Felt,
     calldata: Vec<Felt>,
@@ -107,6 +108,7 @@ where
     })
 }
 
+#[expect(clippy::result_large_err)]
 pub async fn execute_calls<S>(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     calls: Vec<Call>,

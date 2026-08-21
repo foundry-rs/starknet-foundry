@@ -38,6 +38,7 @@ pub async fn tx_status(
     Ok(process_command_result("get tx-status", result, ui, None))
 }
 
+#[expect(clippy::result_large_err)]
 pub async fn get_tx_status(
     provider: &JsonRpcClient<HttpTransport>,
     transaction_hash: Felt,

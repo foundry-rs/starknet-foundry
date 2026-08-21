@@ -114,6 +114,7 @@ async fn get_account_address(
         .context("Failed to get account address")
 }
 
+#[expect(clippy::result_large_err)]
 pub async fn get_balance(
     account_address: Felt,
     provider: &JsonRpcClient<HttpTransport>,

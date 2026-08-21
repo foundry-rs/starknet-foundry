@@ -43,6 +43,7 @@ pub async fn nonce(nonce: Nonce, config: CastConfig, ui: &UI) -> Result<ExitCode
     Ok(process_command_result("get nonce", result, ui, None))
 }
 
+#[expect(clippy::result_large_err)]
 pub async fn get_nonce(
     provider: &JsonRpcClient<HttpTransport>,
     contract_address: Felt,

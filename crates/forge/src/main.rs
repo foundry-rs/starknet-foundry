@@ -46,7 +46,7 @@ fn init_logging() -> Option<impl Drop> {
                 .from_env_lossy(),
         );
 
-    let tracing_profile = env::var("SNFORGE_TRACING_PROFILE").ok().is_some_and(|var| {
+    let tracing_profile = env::var("SNFORGE_TRACING_PROFILE").is_ok_and(|var| {
         let s = var.as_str();
         s == "true" || s == "1"
     });
