@@ -16,7 +16,6 @@ use crate::{
 };
 use anyhow::Result;
 use forge_runner::partition::PartitionConfig;
-use forge_runner::resolve_cache_dir;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use forge_runner::test_target_summary::TestTargetSummary;
 use foundry_ui::UI;
@@ -26,7 +25,7 @@ use scarb_api::{
     packages_from_filter, target_dir_for_workspace,
 };
 use scarb_ui::args::PackagesFilter;
-use shared::cache::prepare_cache_dir;
+use shared::cache::{prepare_cache_dir, resolve_cache_dir};
 use shared::consts::SNFORGE_TEST_FILTER;
 use std::env;
 use std::sync::Arc;

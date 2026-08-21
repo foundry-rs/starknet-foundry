@@ -9,7 +9,6 @@ use forge::{
     run_tests::test_target::ExitFirstChannel,
     test_filter::TestsFilter,
 };
-use forge_runner::DEFAULT_CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
 use forge_runner::filtering::NameFilter;
 use forge_runner::forge_config::{

@@ -3,12 +3,11 @@ use crate::shared_cache::FILE_WITH_PREV_TESTS_FAILED;
 use crate::{CleanArgs, CleanComponent};
 use anyhow::{Context, Result, ensure};
 use camino::{Utf8Path, Utf8PathBuf};
-use forge_runner::resolve_cache_dir;
 use foundry_ui::UI;
 use regex::Regex;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use semver::Version;
-use shared::cache::{CACHEDIR_TAG_CONTENTS, CACHEDIR_TAG_FILENAME};
+use shared::cache::{CACHEDIR_TAG_CONTENTS, CACHEDIR_TAG_FILENAME, resolve_cache_dir};
 use std::fs;
 use std::sync::OnceLock;
 

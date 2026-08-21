@@ -21,7 +21,6 @@ use crate::utils::test_case;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::run_tests::package::RunForPackageArgs;
 use forge::shared_cache::FailedTestsCache;
-use forge_runner::DEFAULT_CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
 use forge_runner::filtering::NameFilter;
 use forge_runner::forge_config::ForgeTrackedResource;

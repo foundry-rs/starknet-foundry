@@ -1,6 +1,6 @@
 use camino::Utf8PathBuf;
 
-pub const USC_CACHE_DIR: &str = "universal-sierra-compiler";
+pub use shared::cache::USC_CACHE_DIR;
 
 pub struct CacheConfig {
     pub cache_dir: Utf8PathBuf,

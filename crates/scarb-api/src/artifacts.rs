@@ -51,7 +51,6 @@ pub type ContractsData = HashMap<String, ContractData>;
 pub(crate) struct StarknetArtifactsFiles {
     base: Utf8PathBuf,
     other: Vec<Utf8PathBuf>,
-    usc_cache_dir: Option<Utf8PathBuf>,
     #[cfg(feature = "cairo-native")]
     compile_native: bool,
 }
@@ -61,15 +60,9 @@ impl StarknetArtifactsFiles {
         Self {
             base: base_file,
             other: other_files,
-            usc_cache_dir: None,
             #[cfg(feature = "cairo-native")]
             compile_native: false,
         }
-    }
-
-    pub(crate) fn usc_cache_dir(mut self, usc_cache_dir: Option<Utf8PathBuf>) -> Self {
-        self.usc_cache_dir = usc_cache_dir;
-        self
     }
 
     #[cfg(feature = "cairo-native")]
@@ -79,7 +72,10 @@ impl StarknetArtifactsFiles {
     }
 
     #[tracing::instrument(skip_all, level = "debug")]
-    pub(crate) fn load_contracts_artifacts(self) -> Result<ContractsData> {
+    pub(crate) fn load_contracts_artifacts(
+        self,
+        compile_options: &CompileOptions<'_>,
+    ) -> Result<ContractsData> {
         // Gather contract artifacts across the base and all other representations.
         // The same contract may be emitted into both test targets (unittest and
         // integrationtest) under the same `module_path`, so we collapse identical
@@ -93,11 +89,15 @@ impl StarknetArtifactsFiles {
             all_artifacts.extend(representation.artifacts());
         }
 
-        self.compile_artifacts(deduplicate_by_module_path(all_artifacts))
+        self.compile_artifacts(deduplicate_by_module_path(all_artifacts), compile_options)
     }
 
     #[tracing::instrument(skip_all, level = "debug")]
-    fn compile_artifacts(&self, artifacts: Vec<ContractArtifact>) -> Result<ContractsData> {
+    fn compile_artifacts(
+        &self,
+        artifacts: Vec<ContractArtifact>,
+        compile_options: &CompileOptions<'_>,
+    ) -> Result<ContractsData> {
         artifacts
             .into_par_iter()
             .map(|artifact| {
@@ -106,7 +106,7 @@ impl StarknetArtifactsFiles {
                     module_path,
                     sierra_path,
                 } = artifact;
-                let artifacts = self.compile_artifact_at_path(&sierra_path)?;
+                let artifacts = self.compile_artifact_at_path(&sierra_path, compile_options)?;
                 Ok((
                     module_path,
                     ContractData {
@@ -121,15 +121,14 @@ impl StarknetArtifactsFiles {
 
     #[tracing::instrument(skip_all, level = "debug")]
     #[cfg_attr(not(feature = "cairo-native"), expect(clippy::unused_self))]
-    fn compile_artifact_at_path(&self, path: &Utf8Path) -> Result<StarknetContractArtifacts> {
+    fn compile_artifact_at_path(
+        &self,
+        path: &Utf8Path,
+        compile_options: &CompileOptions<'_>,
+    ) -> Result<StarknetContractArtifacts> {
         let sierra = fs::read_to_string(path)?;
 
-        let casm = compile_contract_sierra_at_path(
-            path.as_std_path(),
-            &CompileOptions {
-                cache_dir: self.usc_cache_dir.as_deref().map(Utf8Path::as_std_path),
-            },
-        )?;
+        let casm = compile_contract_sierra_at_path(path.as_std_path(), compile_options)?;
 
         #[cfg(feature = "cairo-native")]
         let executor = self.compile_to_native(&sierra)?;
@@ -267,7 +266,9 @@ mod tests {
         let (_temp, artifacts_files) = setup();
 
         // Load the contracts
-        let result = artifacts_files.load_contracts_artifacts().unwrap();
+        let result = artifacts_files
+            .load_contracts_artifacts(&CompileOptions::default())
+            .unwrap();
 
         // Both `src` contracts are unambiguous: each name resolves to a single contract, even
         // though they are emitted into both the unittest and integrationtest targets (identical
@@ -297,7 +298,9 @@ mod tests {
             "
         ));
 
-        let result = artifacts_files.load_contracts_artifacts().unwrap();
+        let result = artifacts_files
+            .load_contracts_artifacts(&CompileOptions::default())
+            .unwrap();
 
         // The ambiguous name is kept twice, under two distinct module paths.
         assert_eq!(count_by_name(&result, "HelloStarknet"), 2);
@@ -314,7 +317,9 @@ mod tests {
         let artifacts_files = artifacts_files.compile_native(true);
 
         // Load the contracts
-        let result = artifacts_files.load_contracts_artifacts().unwrap();
+        let result = artifacts_files
+            .load_contracts_artifacts(&CompileOptions::default())
+            .unwrap();
 
         // Assert the Contract Artifacts are loaded.
         assert_eq!(count_by_name(&result, "ERC20"), 1);

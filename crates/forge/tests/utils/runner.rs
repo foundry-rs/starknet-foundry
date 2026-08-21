@@ -113,9 +113,9 @@ impl Contract {
             &artifacts_dir,
             package,
             ui,
+            usc_cache_dir,
             CompilationOpts {
                 use_test_target_contracts: false,
-                usc_cache_dir: Some(usc_cache_dir.to_path_buf()),
                 #[cfg(feature = "cairo-native")]
                 run_native: true,
             },

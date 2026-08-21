@@ -100,9 +100,9 @@ impl RunForPackageArgs {
             artifacts_dir,
             &package,
             ui,
+            &cache_config.usc_cache_dir,
             CompilationOpts {
                 use_test_target_contracts: !args.no_optimization,
-                usc_cache_dir: Some(cache_config.usc_cache_dir.clone()),
                 #[cfg(feature = "cairo-native")]
                 run_native: args.run_native,
             },

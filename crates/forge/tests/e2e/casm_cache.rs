@@ -1,6 +1,6 @@
 use super::common::runner::{setup_package, test_runner};
 use forge::run_tests::cache::USC_CACHE_DIR;
-use forge_runner::DEFAULT_CACHE_DIR;
+use shared::cache::DEFAULT_CACHE_DIR;
 use walkdir::WalkDir;
 
 #[test]

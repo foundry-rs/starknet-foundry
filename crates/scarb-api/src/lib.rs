@@ -9,6 +9,7 @@ use scarb_ui::args::PackagesFilter;
 use semver::{BuildMetadata, Prerelease, Version, VersionReq};
 use std::collections::HashMap;
 use std::str::FromStr;
+use universal_sierra_compiler_api::CompileOptions;
 
 pub mod artifacts;
 mod command;
@@ -100,7 +101,6 @@ fn get_starknet_artifacts_path(
 #[derive(Default)]
 pub struct CompilationOpts {
     pub use_test_target_contracts: bool,
-    pub usc_cache_dir: Option<Utf8PathBuf>,
     #[cfg(feature = "cairo-native")]
     pub run_native: bool,
 }
@@ -111,13 +111,17 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
     artifacts_dir: &Utf8Path,
     package: &PackageMetadata,
     ui: &UI,
+    usc_cache_dir: &Utf8Path,
     CompilationOpts {
         use_test_target_contracts,
-        usc_cache_dir,
         #[cfg(feature = "cairo-native")]
         run_native,
     }: CompilationOpts,
 ) -> Result<ContractsData> {
+    let compile_options = CompileOptions {
+        cache_dir: Some(usc_cache_dir.as_std_path()),
+    };
+
     let starknet_artifact_files = if use_test_target_contracts {
         let test_targets = test_targets_by_name(package);
         get_starknet_artifacts_paths_from_test_targets(artifacts_dir, &test_targets)
@@ -133,10 +137,9 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
     };
 
     if let Some(starknet_artifact_files) = starknet_artifact_files {
-        let starknet_artifact_files = starknet_artifact_files.usc_cache_dir(usc_cache_dir);
         #[cfg(feature = "cairo-native")]
         let starknet_artifact_files = starknet_artifact_files.compile_native(run_native);
-        starknet_artifact_files.load_contracts_artifacts()
+        starknet_artifact_files.load_contracts_artifacts(&compile_options)
     } else {
         Ok(ContractsData::default())
     }
@@ -240,6 +243,7 @@ mod tests {
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use camino::Utf8PathBuf;
     use indoc::{formatdoc, indoc};
+    use shared::cache::{DEFAULT_CACHE_DIR, USC_CACHE_DIR, prepare_cache_dir};
     use std::fs;
     use std::str::FromStr;
 
@@ -585,6 +589,9 @@ mod tests {
         let metadata = metadata_for_dir(temp.path()).unwrap();
 
         let target_dir = target_dir_for_workspace(&metadata).join("dev");
+        let cache_dir = metadata.workspace.root.join(DEFAULT_CACHE_DIR);
+        prepare_cache_dir(&cache_dir).unwrap();
+        let usc_cache_dir = cache_dir.join(USC_CACHE_DIR);
         let package = metadata.packages.first().unwrap();
 
         let ui = UI::default();
@@ -592,9 +599,9 @@ mod tests {
             target_dir.as_path(),
             package,
             &ui,
+            &usc_cache_dir,
             CompilationOpts {
                 use_test_target_contracts: false,
-                usc_cache_dir: None,
                 #[cfg(feature = "cairo-native")]
                 run_native: true,
             },
