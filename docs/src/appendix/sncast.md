@@ -6,6 +6,7 @@
     * [create](./sncast/account/create.md)
     * [deploy](./sncast/account/deploy.md)
     * [delete](./sncast/account/delete.md)
+    * [migrate](./sncast/account/migrate.md)
 * [alias](./sncast/alias/alias.md)
     * [list](./sncast/alias/list.md)
 * [declare](./sncast/declare.md)
