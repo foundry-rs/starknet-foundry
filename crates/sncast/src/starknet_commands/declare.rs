@@ -66,6 +66,7 @@ pub struct Declare {
 
 // TODO(#3785)
 #[expect(clippy::too_many_arguments)]
+#[expect(clippy::result_large_err)]
 pub async fn declare<S>(
     contract_name: String,
     fee_args: FeeArgs,
@@ -123,6 +124,7 @@ pub fn compile_sierra_to_casm(
 
 #[expect(clippy::too_many_lines)]
 #[expect(clippy::too_many_arguments)]
+#[expect(clippy::result_large_err)]
 pub async fn declare_with_artifacts<S>(
     mut sierra_class: SierraClass,
     compiled_casm: CompiledClass,

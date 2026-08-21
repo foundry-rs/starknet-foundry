@@ -90,6 +90,7 @@ pub struct DeployArguments {
 }
 
 #[expect(clippy::ptr_arg, clippy::too_many_arguments)]
+#[expect(clippy::result_large_err)]
 pub async fn deploy<S>(
     class_hash: Felt,
     calldata: &Vec<Felt>,

@@ -42,6 +42,7 @@ pub async fn block(block: Block, config: CastConfig, ui: &UI) -> Result<ExitCode
     Ok(process_command_result("get block", result, ui, None))
 }
 
+#[expect(clippy::result_large_err)]
 async fn get_block(
     provider: &JsonRpcClient<HttpTransport>,
     block_id: &str,

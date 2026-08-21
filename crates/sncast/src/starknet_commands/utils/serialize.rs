@@ -69,6 +69,7 @@ pub struct Serialize {
     pub rpc_args: Option<RpcArgs>,
 }
 
+#[expect(clippy::result_large_err)]
 pub async fn serialize(
     Serialize {
         function,
