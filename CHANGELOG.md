@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Possibility to set an L2 gas limit via unnamed argument `#[available_gas(...)]`, equivalent to `#[available_gas(l2_gas: ...)]`.
 - `CACHEDIR.TAG` file is now created in the cache directory.
-- CASM compilation results are now cached between `snforge test` runs when supported by the installed Universal Sierra Compiler version.
+- CASM compilation results are now cached between `snforge test` runs.
 
 #### Fixed
 
