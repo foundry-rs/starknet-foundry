@@ -1,8 +1,8 @@
 use super::common::runner::{runner, setup_package, test_runner};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
-use forge_runner::DEFAULT_CACHE_DIR;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
+use shared::cache::DEFAULT_CACHE_DIR;
 use shared::cache::{CACHEDIR_TAG_CONTENTS, CACHEDIR_TAG_FILENAME};
 use shared::test_utils::output_assert::assert_stdout_contains;
 use std::fs;

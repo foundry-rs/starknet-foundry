@@ -7547,6 +7547,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "cairo-vm",
+ "camino",
  "clap",
  "clap_complete",
  "console 0.16.4",

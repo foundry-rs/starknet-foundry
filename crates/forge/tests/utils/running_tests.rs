@@ -8,7 +8,6 @@ use forge::{
     run_tests::test_target::ExitFirstChannel,
     test_filter::TestsFilter,
 };
-use forge_runner::DEFAULT_CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
 use forge_runner::filtering::NameFilter;
 use forge_runner::forge_config::{
@@ -21,6 +20,7 @@ use forge_runner::test_target_summary::TestTargetSummary;
 use foundry_ui::UI;
 use scarb_api::ScarbCommand;
 use scarb_api::metadata::metadata_for_dir;
+use shared::cache::DEFAULT_CACHE_DIR;
 use std::num::NonZeroU32;
 use std::sync::Arc;
 use tempfile::tempdir;

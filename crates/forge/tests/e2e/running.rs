@@ -4,8 +4,8 @@ use super::common::runner::{
 };
 use crate::utils::get_snforge_std_entry;
 use assert_fs::fixture::{FileWriteStr, PathChild};
-use forge_runner::DEFAULT_CACHE_DIR;
 use indoc::{formatdoc, indoc};
+use shared::cache::DEFAULT_CACHE_DIR;
 use shared::cache::{CACHEDIR_TAG_CONTENTS, CACHEDIR_TAG_FILENAME};
 use shared::test_utils::output_assert::{AsOutput, assert_stdout, assert_stdout_contains};
 use std::fs;
