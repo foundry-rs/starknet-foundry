@@ -88,7 +88,7 @@ pub fn clean_cache_dir(path: &Utf8Path, ui: &UI) -> Result<()> {
         let entry = entry.with_context(|| format!("Failed to read cache directory: {path}"))?;
         let entry_path = entry.path();
 
-        if entry_path.is_dir() && entry_path.file_name() == Some(USC_CACHE_DIR) {
+        if is_usc_cache_dir(entry_path) {
             fs::remove_dir_all(entry_path)
                 .with_context(|| format!("Failed to remove cache directory: {entry_path}"))?;
             ui.println(&format!("Removed directory: {entry_path}"));
@@ -129,6 +129,10 @@ fn is_snfoundry_cache_file(path: &Utf8Path) -> bool {
 
     let version = captures.name("version").unwrap().as_str();
     Version::parse(&version.replace('_', ".")).is_ok()
+}
+
+fn is_usc_cache_dir(path: &Utf8Path) -> bool {
+    path.is_dir() && path.file_name() == Some(USC_CACHE_DIR)
 }
 
 #[cfg(test)]
