@@ -1,3 +1,4 @@
+use starknet::SyscallResultTrait;
 use starknet::ContractAddress;
 
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
@@ -8,8 +9,8 @@ use {{ PROJECT_NAME }}::IHelloStarknetDispatcher;
 use {{ PROJECT_NAME }}::IHelloStarknetDispatcherTrait;
 
 fn deploy_contract(name: ByteArray) -> ContractAddress {
-    let contract = declare(name).unwrap().contract_class();
-    let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+    let contract = declare(name).unwrap_syscall().contract_class();
+    let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap_syscall();
     contract_address
 }
 
