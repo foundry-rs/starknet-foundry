@@ -4,6 +4,9 @@ description = "sncast - a Starknet Foundry CLI client"
 version.workspace = true
 edition.workspace = true
 
+[lints]
+workspace = true
+
 [dependencies]
 anyhow.workspace = true
 camino.workspace = true

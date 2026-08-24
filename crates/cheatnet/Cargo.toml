@@ -12,6 +12,9 @@ cairo-native = [
     "scarb-api/cairo-native",
 ]
 
+[lints]
+workspace = true
+
 [dependencies]
 anyhow.workspace = true
 blockifier.workspace = true

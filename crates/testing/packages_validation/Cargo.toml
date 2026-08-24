@@ -5,6 +5,9 @@ edition.workspace = true
 
 [lib]
 
+[lints]
+workspace = true
+
 [dependencies]
 camino.workspace = true
 scarb-api = { path = "../../scarb-api" }

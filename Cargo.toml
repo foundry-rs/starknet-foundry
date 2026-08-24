@@ -38,6 +38,13 @@ repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
 license-file = "LICENSE"
 
+[workspace.lints.clippy]
+pedantic = { level = "deny", priority = -1 }
+undocumented_unsafe_blocks = "warn"
+module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+
 [workspace.dependencies]
 blockifier = { version = "0.19.0-rc.2", features = ["testing", "tracing", "node_api"] }
 starknet_api = "0.19.0-rc.2"
