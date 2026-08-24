@@ -12,6 +12,10 @@ crate-type = ["rlib", "cdylib"]
 inherits = "release"
 debug-assertions = true
 
+[lints.clippy]
+pedantic = { level = "deny", priority = -1 }
+missing_errors_doc = "allow"
+
 [dependencies]
 cairo-lang-macro = "0.2.1"
 cairo-lang-parser = "=2.12.3"

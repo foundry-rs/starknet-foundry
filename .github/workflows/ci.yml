@@ -456,10 +456,10 @@ jobs:
         working-directory: crates/snforge-scarb-plugin
 
       - name: Lint
-        run: cargo lint
+        run: cargo clippy --all-targets --all-features --no-deps
 
       - name: Lint snforge-scarb-plugin
-        run: cargo lint
+        run: cargo clippy --all-targets --all-features --no-deps
         working-directory: crates/snforge-scarb-plugin
 
       - name: Check cairo files format

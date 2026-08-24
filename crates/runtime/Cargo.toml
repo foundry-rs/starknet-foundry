@@ -6,6 +6,9 @@ edition.workspace = true
 [features]
 testing = []
 
+[lints]
+workspace = true
+
 [dependencies]
 indoc.workspace = true
 anyhow.workspace = true
