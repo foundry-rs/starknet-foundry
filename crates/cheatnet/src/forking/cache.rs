@@ -4,7 +4,6 @@ use fs2::FileExt;
 use regex::Regex;
 use runtime::starknet::context::SerializableBlockInfo;
 use serde::{Deserialize, Serialize};
-use shared::cache::prepare_cache_dir;
 use starknet_api::block::{BlockInfo, BlockNumber};
 use starknet_api::core::{ClassHash, ContractAddress, Nonce};
 use starknet_api::state::StorageKey;
@@ -121,8 +120,6 @@ impl ForkCache {
         block_number: BlockNumber,
         cache_dir: &Utf8Path,
     ) -> Result<Self> {
-        prepare_cache_dir(cache_dir).context("Cache directory could not be created")?;
-
         let cache_file = cache_file_path_from_fork_config(url, block_number, cache_dir);
         let mut file = OpenOptions::new()
             .write(true)
