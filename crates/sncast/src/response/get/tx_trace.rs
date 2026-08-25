@@ -168,10 +168,9 @@ impl SncastCommandMessage for TransactionTraceResponse {
             decoder,
             full,
         } = self;
-        {
-            let human_text = append_trace(OutputBuilder::new(), trace, decoder, *full).build();
-            let builder = if decoder.abi_decoding_incomplete() {
-                OutputBuilder::new()
+        let human_text = append_trace(OutputBuilder::new(), trace, decoder, *full).build();
+        let builder = if decoder.abi_decoding_incomplete() {
+            OutputBuilder::new()
                     .text_field(
                         &WarningMessage::new(
                             "Some trace data could not be decoded with the fetched ABIs. Raw felts are shown instead.",
@@ -179,16 +178,15 @@ impl SncastCommandMessage for TransactionTraceResponse {
                         .text(),
                     )
                     .blank_line()
-            } else {
-                OutputBuilder::new()
-            };
+        } else {
+            OutputBuilder::new()
+        };
 
-            builder
-                .success_message("Transaction trace retrieved")
-                .blank_line()
-                .text_field(&human_text)
-                .build()
-        }
+        builder
+            .success_message("Transaction trace retrieved")
+            .blank_line()
+            .text_field(&human_text)
+            .build()
     }
 }
 
