@@ -307,7 +307,7 @@ fn append_trace(
 
 fn append_invoke(
     builder: OutputBuilder,
-    r: &InvokeTransactionTrace,
+    trace: &InvokeTransactionTrace,
     decoder: &TraceDecoder,
     full: bool,
 ) -> OutputBuilder {
@@ -316,7 +316,7 @@ fn append_invoke(
         append_optional_invocation(
             builder,
             "Validate Invocation",
-            r.validate_invocation.as_ref(),
+            trace.validate_invocation.as_ref(),
             decoder,
             full,
         )
@@ -325,7 +325,7 @@ fn append_invoke(
         append_execute_invocation(
             builder,
             "Execute Invocation",
-            &r.execute_invocation,
+            &trace.execute_invocation,
             decoder,
             full,
         )
@@ -334,7 +334,7 @@ fn append_invoke(
         append_optional_invocation(
             builder,
             "Fee Transfer Invocation",
-            r.fee_transfer_invocation.as_ref(),
+            trace.fee_transfer_invocation.as_ref(),
             decoder,
             full,
         )
@@ -342,9 +342,9 @@ fn append_invoke(
 
     if full {
         let builder = append_execute(builder);
-        let builder = append_execution_resources(builder, &r.execution_resources, 0);
+        let builder = append_execution_resources(builder, &trace.execution_resources, 0);
         let builder = append_fee_transfer(builder);
-        let builder = append_optional_state_diff(builder, r.state_diff.as_ref(), 0);
+        let builder = append_optional_state_diff(builder, trace.state_diff.as_ref(), 0);
         append_validate(builder)
     } else {
         let builder = append_validate(builder);
@@ -355,7 +355,7 @@ fn append_invoke(
 
 fn append_declare(
     builder: OutputBuilder,
-    r: &DeclareTransactionTrace,
+    trace: &DeclareTransactionTrace,
     decoder: &TraceDecoder,
     full: bool,
 ) -> OutputBuilder {
@@ -364,7 +364,7 @@ fn append_declare(
         append_optional_invocation(
             builder,
             "Validate Invocation",
-            r.validate_invocation.as_ref(),
+            trace.validate_invocation.as_ref(),
             decoder,
             full,
         )
@@ -373,16 +373,16 @@ fn append_declare(
         append_optional_invocation(
             builder,
             "Fee Transfer Invocation",
-            r.fee_transfer_invocation.as_ref(),
+            trace.fee_transfer_invocation.as_ref(),
             decoder,
             full,
         )
     };
 
     if full {
-        let builder = append_execution_resources(builder, &r.execution_resources, 0);
+        let builder = append_execution_resources(builder, &trace.execution_resources, 0);
         let builder = append_fee_transfer(builder);
-        let builder = append_optional_state_diff(builder, r.state_diff.as_ref(), 0);
+        let builder = append_optional_state_diff(builder, trace.state_diff.as_ref(), 0);
         append_validate(builder)
     } else {
         let builder = append_validate(builder);
@@ -392,7 +392,7 @@ fn append_declare(
 
 fn append_deploy_account(
     builder: OutputBuilder,
-    r: &DeployAccountTransactionTrace,
+    trace: &DeployAccountTransactionTrace,
     decoder: &TraceDecoder,
     full: bool,
 ) -> OutputBuilder {
@@ -401,7 +401,7 @@ fn append_deploy_account(
         append_optional_invocation(
             builder,
             "Validate Invocation",
-            r.validate_invocation.as_ref(),
+            trace.validate_invocation.as_ref(),
             decoder,
             full,
         )
@@ -410,7 +410,7 @@ fn append_deploy_account(
         append_invocation_section(
             builder,
             "Constructor Invocation",
-            &r.constructor_invocation,
+            &trace.constructor_invocation,
             decoder,
             full,
         )
@@ -419,7 +419,7 @@ fn append_deploy_account(
         append_optional_invocation(
             builder,
             "Fee Transfer Invocation",
-            r.fee_transfer_invocation.as_ref(),
+            trace.fee_transfer_invocation.as_ref(),
             decoder,
             full,
         )
@@ -427,9 +427,9 @@ fn append_deploy_account(
 
     if full {
         let builder = append_constructor(builder);
-        let builder = append_execution_resources(builder, &r.execution_resources, 0);
+        let builder = append_execution_resources(builder, &trace.execution_resources, 0);
         let builder = append_fee_transfer(builder);
-        let builder = append_optional_state_diff(builder, r.state_diff.as_ref(), 0);
+        let builder = append_optional_state_diff(builder, trace.state_diff.as_ref(), 0);
         append_validate(builder)
     } else {
         let builder = append_validate(builder);
@@ -440,7 +440,7 @@ fn append_deploy_account(
 
 fn append_l1_handler(
     builder: OutputBuilder,
-    r: &L1HandlerTransactionTrace,
+    trace: &L1HandlerTransactionTrace,
     decoder: &TraceDecoder,
     full: bool,
 ) -> OutputBuilder {
@@ -449,16 +449,16 @@ fn append_l1_handler(
         append_execute_invocation(
             builder,
             "Function Invocation",
-            &r.function_invocation,
+            &trace.function_invocation,
             decoder,
             full,
         )
     };
 
     if full {
-        let builder = append_execution_resources(builder, &r.execution_resources, 0);
+        let builder = append_execution_resources(builder, &trace.execution_resources, 0);
         let builder = append_function(builder);
-        append_optional_state_diff(builder, r.state_diff.as_ref(), 0)
+        append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
     } else {
         append_function(builder)
     }
