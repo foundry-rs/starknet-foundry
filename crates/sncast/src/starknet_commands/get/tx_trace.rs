@@ -28,7 +28,7 @@ pub struct TxTrace {
     pub transaction_hash: Felt,
 
     /// Display all transaction trace fields
-    #[arg(long)]
+    #[arg(long, conflicts_with = "json")]
     pub full: bool,
 
     #[command(flatten)]

@@ -28,6 +28,7 @@ Overrides network from `snfoundry.toml`.
 
 ## `--full`
 Optional.
+Conflicts with: [`--json`](../common.md#--json--j)
 
 Display full transaction trace.
 
