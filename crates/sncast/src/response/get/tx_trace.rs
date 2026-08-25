@@ -404,7 +404,7 @@ fn append_trace(
 fn append_invoke(
     builder: OutputBuilder,
     trace: &InvokeTransactionTrace,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     full: bool,
 ) -> OutputBuilder {
     let builder = builder.tx_type("INVOKE");
@@ -452,7 +452,7 @@ fn append_invoke(
 fn append_declare(
     builder: OutputBuilder,
     trace: &DeclareTransactionTrace,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     full: bool,
 ) -> OutputBuilder {
     let builder = builder.tx_type("DECLARE");
@@ -489,7 +489,7 @@ fn append_declare(
 fn append_deploy_account(
     builder: OutputBuilder,
     trace: &DeployAccountTransactionTrace,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     full: bool,
 ) -> OutputBuilder {
     let builder = builder.tx_type("DEPLOY_ACCOUNT");
@@ -537,7 +537,7 @@ fn append_deploy_account(
 fn append_l1_handler(
     builder: OutputBuilder,
     trace: &L1HandlerTransactionTrace,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     full: bool,
 ) -> OutputBuilder {
     let builder = builder.tx_type("L1_HANDLER");
