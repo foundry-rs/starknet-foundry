@@ -176,8 +176,8 @@ pub fn build_and_load_artifacts(
         Ok(get_contracts_artifacts_and_source_sierra_paths(
             &target_dir.join(&config.profile),
             package,
-            ui,
             &usc_cache_dir,
+            ui,
             CompilationOpts::default(),
         )
         .context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")
@@ -190,8 +190,8 @@ pub fn build_and_load_artifacts(
         Ok(get_contracts_artifacts_and_source_sierra_paths(
             &target_dir.join(default_profile),
             package,
-            ui,
             &usc_cache_dir,
+            ui,
             CompilationOpts::default(),
         )
         .context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")

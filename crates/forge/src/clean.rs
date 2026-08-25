@@ -1,4 +1,3 @@
-use crate::run_tests::cache::USC_CACHE_DIR;
 use crate::shared_cache::FILE_WITH_PREV_TESTS_FAILED;
 use crate::{CleanArgs, CleanComponent};
 use anyhow::{Context, Result, ensure};
@@ -7,7 +6,9 @@ use foundry_ui::UI;
 use regex::Regex;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use semver::Version;
-use shared::cache::{CACHEDIR_TAG_CONTENTS, CACHEDIR_TAG_FILENAME, resolve_cache_dir};
+use shared::cache::{
+    CACHEDIR_TAG_CONTENTS, CACHEDIR_TAG_FILENAME, USC_CACHE_DIR, resolve_cache_dir,
+};
 use std::fs;
 use std::sync::OnceLock;
 

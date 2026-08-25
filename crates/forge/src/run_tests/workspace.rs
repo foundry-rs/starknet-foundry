@@ -1,7 +1,6 @@
 use super::package::RunForPackageArgs;
 use crate::profile_validation::check_compiler_config_compatibility;
 use crate::profile_validation::enable_gas::check_enable_gas;
-use crate::run_tests::cache::CacheConfig;
 use crate::run_tests::messages::latest_blocks_numbers::LatestBlocksNumbersMessage;
 use crate::run_tests::messages::overall_summary::OverallSummaryMessage;
 use crate::run_tests::messages::partition::{PartitionFinishedMessage, PartitionStartedMessage};
@@ -109,7 +108,6 @@ pub async fn execute_workspace(
     let cache_dir = resolve_cache_dir(&scarb_metadata.workspace.root)?;
     prepare_cache_dir(&cache_dir)?;
 
-    let cache_config = CacheConfig::new(cache_dir);
     let packages_len = packages.len();
 
     let partitioning_config = get_partitioning_config(args, &ui, &packages, &artifacts_dir_path)?;
@@ -124,7 +122,7 @@ pub async fn execute_workspace(
             pkg,
             scarb_metadata,
             args,
-            &cache_config,
+            &cache_dir,
             &artifacts_dir_path,
             partitioning_config.clone(),
             &ui,
@@ -156,7 +154,7 @@ pub async fn execute_workspace(
         all_failed_tests.sort_by(|a, b| a.name().unwrap_or("").cmp(b.name().unwrap_or("")));
     }
 
-    FailedTestsCache::new(&cache_config.cache_dir).save_failed_tests(&all_failed_tests)?;
+    FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
 
     let url_to_block_number = block_number_map.get_url_to_latest_block_number();
     if !url_to_block_number.is_empty() {

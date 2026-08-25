@@ -109,8 +109,8 @@ pub struct CompilationOpts {
 pub fn get_contracts_artifacts_and_source_sierra_paths(
     artifacts_dir: &Utf8Path,
     package: &PackageMetadata,
-    ui: &UI,
     usc_cache_dir: &Utf8Path,
+    ui: &UI,
     CompilationOpts {
         use_test_target_contracts,
         #[cfg(feature = "cairo-native")]
@@ -593,8 +593,8 @@ mod tests {
         let contracts = get_contracts_artifacts_and_source_sierra_paths(
             target_dir.as_path(),
             package,
-            &ui,
             &usc_cache_dir,
+            &ui,
             CompilationOpts {
                 use_test_target_contracts: false,
                 #[cfg(feature = "cairo-native")]

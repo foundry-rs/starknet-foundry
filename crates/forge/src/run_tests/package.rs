@@ -2,6 +2,10 @@ use super::{
     resolve_config::resolve_config,
     test_target::{ExitFirstChannel, TestTargetRunResult, run_for_test_target},
 };
+use crate::scarb::{
+    config::{ForgeConfigFromScarb, ForkTarget},
+    load_package_config,
+};
 use crate::{
     TestArgs,
     block_number_map::BlockNumberMap,
@@ -13,13 +17,6 @@ use crate::{
     shared_cache::FailedTestsCache,
     test_filter::TestsFilter,
     warn::warn_if_incompatible_rpc_version,
-};
-use crate::{
-    run_tests::cache::CacheConfig,
-    scarb::{
-        config::{ForgeConfigFromScarb, ForkTarget},
-        load_package_config,
-    },
 };
 use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};
@@ -44,6 +41,7 @@ use forge_runner::{
 use foundry_ui::{UI, components::labeled::LabeledMessage};
 use scarb_api::{CompilationOpts, get_contracts_artifacts_and_source_sierra_paths};
 use scarb_metadata::{Metadata, PackageMetadata};
+use shared::cache::usc_cache_dir;
 use std::sync::Arc;
 use tokio::task::JoinHandle;
 
@@ -89,18 +87,19 @@ impl RunForPackageArgs {
         package: PackageMetadata,
         scarb_metadata: &Metadata,
         args: &TestArgs,
-        cache_config: &CacheConfig,
+        cache_dir: &Utf8PathBuf,
         artifacts_dir: &Utf8Path,
         partitioning_config: PartitionConfig,
         ui: &UI,
     ) -> Result<RunForPackageArgs> {
         let mut raw_test_targets = load_test_artifacts(artifacts_dir, &package)?;
 
+        let usc_cache_dir = usc_cache_dir(cache_dir);
         let contracts = get_contracts_artifacts_and_source_sierra_paths(
             artifacts_dir,
             &package,
+            &usc_cache_dir,
             ui,
-            &cache_config.usc_cache_dir,
             CompilationOpts {
                 use_test_target_contracts: !args.no_optimization,
                 #[cfg(feature = "cairo-native")]
@@ -118,7 +117,7 @@ impl RunForPackageArgs {
         let forge_config = Arc::new(combine_configs(
             args,
             contracts_data,
-            cache_config.cache_dir.clone(),
+            cache_dir.clone(),
             &forge_config_from_scarb,
         ));
 
@@ -129,7 +128,7 @@ impl RunForPackageArgs {
             args.only_ignored,
             args.include_ignored,
             args.rerun_failed,
-            FailedTestsCache::new(&cache_config.cache_dir),
+            FailedTestsCache::new(&cache_dir),
             partitioning_config,
         );
 
@@ -147,7 +146,7 @@ impl RunForPackageArgs {
                     tracked_resource,
                     tests_filter.name_filter.clone(),
                     tests_filter.partitioning_config.clone(),
-                    cache_config.usc_cache_dir.clone(),
+                    usc_cache_dir.clone(),
                 )
             })
             .collect();

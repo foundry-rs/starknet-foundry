@@ -68,6 +68,10 @@ pub fn prepare_cache_dir(cache_dir: impl AsRef<Path>) -> Result<()> {
     Ok(())
 }
 
+pub fn usc_cache_dir(cache_dir: &Utf8PathBuf) -> Utf8PathBuf {
+    cache_dir.join(USC_CACHE_DIR)
+}
+
 #[cfg(test)]
 mod tests {
     use super::{

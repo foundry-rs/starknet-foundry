@@ -1,4 +1,3 @@
-pub mod cache;
 pub mod maat;
 pub mod messages;
 pub mod package;
