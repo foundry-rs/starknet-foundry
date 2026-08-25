@@ -360,7 +360,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             let result = with_account!(&account, |account| {
                 starknet_commands::declare::declare(
                     declare.contract_name.clone(),
-                    declare.common.fee_args,
+                    declare.common.fee_args.resolve(&config.fee_params),
                     declare.common.dry_run_args,
                     declare.common.nonce,
                     declare.no_abi,
@@ -420,7 +420,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
             Ok(exit_code)
         }
 
-        Commands::DeclareFrom(declare_from) => {
+        Commands::DeclareFrom(mut declare_from) => {
+            declare_from.common.fee_args = declare_from.common.fee_args.resolve(&config.fee_params);
+
             let contract_source = if let Some(sierra_file) = declare_from.sierra_file {
                 ContractSource::LocalFile {
                     sierra_path: sierra_file,
@@ -499,6 +501,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 no_abi,
                 ..
             } = deploy;
+
+            let fee_args = fee_args.resolve(&config.fee_params);
 
             let provider = rpc.get_provider(&config, ui).await?;
 
@@ -709,6 +713,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<Exit
                 nonce,
                 ..
             } = invoke;
+
+            let fee_args = fee_args.resolve(&config.fee_params);
 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;

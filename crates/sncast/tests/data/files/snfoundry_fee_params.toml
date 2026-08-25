@@ -1,0 +1,10 @@
+[sncast.default]
+url = "http://127.0.0.1:5055/rpc"
+
+[sncast.default.fee-params]
+l1-gas = 1
+l1-gas-price = 1
+l2-gas = 1
+l2-gas-price = 1
+l1-data-gas = 1
+l1-data-gas-price = 1

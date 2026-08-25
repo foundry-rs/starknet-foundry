@@ -1,6 +1,7 @@
 use super::block_explorer;
 use super::felt::felt_from_string;
 use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
+use crate::helpers::fee::FeeParams;
 use crate::response::ui::UI;
 use crate::{Network, PartialWaitParams, ValidatedWaitParams};
 use anyhow::{Context, Result};
@@ -144,12 +145,14 @@ pub struct CastConfig {
     pub networks: NetworksConfig,
     pub scarb_profile: String,
     pub aliases: AliasesConfig,
+    pub fee_params: FeeParams,
 }
 
 impl CastConfig {
     pub fn validate(&self) -> anyhow::Result<()> {
         self.wait_params.validate()?;
         self.network_params.validate()?;
+        self.fee_params.validate()?;
         Ok(())
     }
 }
@@ -167,6 +170,7 @@ impl Default for CastConfig {
             networks: NetworksConfig::default(),
             scarb_profile: "release".to_string(),
             aliases: AliasesConfig::default(),
+            fee_params: FeeParams::default(),
         }
     }
 }
@@ -220,6 +224,10 @@ pub struct PartialCastConfig {
     #[serde(default)]
     pub aliases: Option<AliasesConfig>,
 
+    #[serde(default, rename(serialize = "fee-params", deserialize = "fee-params"))]
+    /// Default fee and tip settings for transaction-sending commands
+    pub fee_params: Option<FeeParams>,
+
     /// Additional data not captured by deserializer.
     #[doc(hidden)]
     #[serde(flatten, default, skip_serializing)]
@@ -255,6 +263,9 @@ impl PartialCastConfig {
         if let Some(ref wp) = self.wait_params {
             wp.validate()?;
         }
+        if let Some(ref fp) = self.fee_params {
+            fp.validate()?;
+        }
         self.network_params.validate()?;
         Ok(())
     }
@@ -267,6 +278,9 @@ impl PartialCastConfig {
         }
         if let Some(wait_params) = &self.wait_params {
             keys.extend(wait_params.unknown_fields.keys().cloned());
+        }
+        if let Some(fee_params) = &self.fee_params {
+            keys.extend(fee_params.unknown_fields.keys().cloned());
         }
         keys.sort();
         keys.dedup();
@@ -321,6 +335,7 @@ impl Override for PartialCastConfig {
             networks: override_optional(self.networks.clone(), other.networks),
             scarb_profile: other.scarb_profile.or_else(|| self.scarb_profile.clone()),
             aliases: override_optional(self.aliases.clone(), other.aliases),
+            fee_params: override_optional(self.fee_params.clone(), other.fee_params),
             unknown_fields: HashMap::default(),
         }
     }
@@ -417,6 +432,7 @@ impl TryFrom<PartialCastConfig> for CastConfig {
             networks,
             scarb_profile: p.scarb_profile.unwrap_or(d.scarb_profile),
             aliases: p.aliases.unwrap_or_default(),
+            fee_params: p.fee_params.unwrap_or_default(),
         };
         config.validate()?;
         Ok(config)
