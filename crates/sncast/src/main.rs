@@ -455,9 +455,7 @@ async fn run_async_command(mut cli: Cli, config: CastConfig, ui: &UI) -> Result<
             Ok(exit_code)
         }
 
-        Commands::DeclareFrom(mut declare_from) => {
-            declare_from.common.fee_args = declare_from.common.fee_args.resolve(&config.fee_params);
-
+        Commands::DeclareFrom(declare_from) => {
             let contract_source = if let Some(sierra_file) = declare_from.sierra_file {
                 ContractSource::LocalFile {
                     sierra_path: sierra_file,
@@ -746,6 +744,17 @@ async fn run_async_command(mut cli: Cli, config: CastConfig, ui: &UI) -> Result<
                 nonce,
                 ..
             } = invoke;
+
+            let selector = get_selector_from_name(&function)
+                .context("Failed to convert entry point selector to FieldElement")?;
+            let contract_address = contract_address.resolve(&config)?;
+            let Arguments {
+                calldata,
+                arguments,
+            } = arguments;
+            let calldata = calldata
+                .map(|raw_calldata| resolve_calldata_to_felts(&raw_calldata, &config))
+                .transpose()?;
 
             let provider = rpc.get_provider(&config, ui).await?;
 
