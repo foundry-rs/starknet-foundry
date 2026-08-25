@@ -8,7 +8,6 @@ use std::sync::Arc;
 
 use camino::Utf8PathBuf;
 use forge::block_number_map::BlockNumberMap;
-use forge::run_tests::cache::USC_CACHE_DIR;
 use forge::run_tests::package::run_for_package;
 use forge::run_tests::test_target::ExitFirstChannel;
 use forge::scarb::config::ForkTarget;
@@ -31,7 +30,7 @@ use forge_runner::running::target::prepare_test_target;
 use forge_runner::scarb::load_test_artifacts;
 use scarb_api::ScarbCommand;
 use scarb_api::metadata::metadata_for_dir;
-use shared::cache::DEFAULT_CACHE_DIR;
+use shared::cache::{DEFAULT_CACHE_DIR, usc_cache_dir};
 use shared::test_utils::node_url::node_rpc_url;
 
 #[test]
@@ -133,7 +132,7 @@ fn fork_aliased_decorator() {
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
     let cache_dir = test.path().unwrap().join(DEFAULT_CACHE_DIR);
-    let usc_cache_dir = cache_dir.join(USC_CACHE_DIR);
+    let usc_cache_dir = usc_cache_dir(&cache_dir);
 
     let ui = Arc::new(UI::default());
     let result = rt
@@ -250,7 +249,7 @@ fn fork_aliased_decorator_overriding() {
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
     let cache_dir = test.path().unwrap().join(DEFAULT_CACHE_DIR);
-    let usc_cache_dir = cache_dir.join(USC_CACHE_DIR);
+    let usc_cache_dir = usc_cache_dir(&cache_dir);
 
     let ui = Arc::new(UI::default());
     let result = rt

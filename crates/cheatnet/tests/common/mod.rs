@@ -33,7 +33,7 @@ use scarb_api::metadata::metadata_for_dir;
 use scarb_api::{
     CompilationOpts, get_contracts_artifacts_and_source_sierra_paths, target_dir_for_workspace,
 };
-use shared::cache::{USC_CACHE_DIR, prepare_cache_dir, resolve_cache_dir};
+use shared::cache::{prepare_cache_dir, resolve_cache_dir, usc_cache_dir};
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::transaction::fields::Calldata;
@@ -88,7 +88,7 @@ pub fn get_contracts() -> ContractsData {
     let target_dir = target_dir_for_workspace(&scarb_metadata).join("dev");
     let cache_dir = resolve_cache_dir(&scarb_metadata.workspace.root).unwrap();
     prepare_cache_dir(&cache_dir).unwrap();
-    let usc_cache_dir = cache_dir.join(USC_CACHE_DIR);
+    let usc_cache_dir = usc_cache_dir(&cache_dir);
 
     let package = scarb_metadata.packages.first().unwrap();
 

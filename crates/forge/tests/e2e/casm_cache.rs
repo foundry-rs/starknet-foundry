@@ -1,6 +1,6 @@
 use super::common::runner::{setup_package, test_runner};
-use forge::run_tests::cache::USC_CACHE_DIR;
-use shared::cache::DEFAULT_CACHE_DIR;
+use camino::Utf8PathBuf;
+use shared::cache::{DEFAULT_CACHE_DIR, usc_cache_dir};
 use walkdir::WalkDir;
 
 #[test]
@@ -9,7 +9,9 @@ fn creates_usc_casm_cache_entries() {
 
     test_runner(&temp).assert().success();
 
-    let usc_cache_dir = temp.path().join(DEFAULT_CACHE_DIR).join(USC_CACHE_DIR);
+    let cache_dir = Utf8PathBuf::from_path_buf(temp.path().join(DEFAULT_CACHE_DIR))
+        .expect("cache path should be valid UTF-8");
+    let usc_cache_dir = usc_cache_dir(&cache_dir);
     assert!(
         WalkDir::new(&usc_cache_dir).into_iter().any(|entry| {
             entry.is_ok_and(|entry| {
@@ -19,7 +21,6 @@ fn creates_usc_casm_cache_entries() {
                     .is_some_and(|extension| extension == "json")
             })
         }),
-        "USC cache should contain at least one JSON entry under {}",
-        usc_cache_dir.display()
+        "USC cache should contain at least one JSON entry under {usc_cache_dir}"
     );
 }

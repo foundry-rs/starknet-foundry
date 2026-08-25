@@ -238,7 +238,7 @@ mod tests {
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use camino::Utf8PathBuf;
     use indoc::{formatdoc, indoc};
-    use shared::cache::{DEFAULT_CACHE_DIR, USC_CACHE_DIR, prepare_cache_dir};
+    use shared::cache::{DEFAULT_CACHE_DIR, prepare_cache_dir, usc_cache_dir};
     use std::fs;
     use std::str::FromStr;
 
@@ -586,7 +586,7 @@ mod tests {
         let target_dir = target_dir_for_workspace(&metadata).join("dev");
         let cache_dir = metadata.workspace.root.join(DEFAULT_CACHE_DIR);
         prepare_cache_dir(&cache_dir).unwrap();
-        let usc_cache_dir = cache_dir.join(USC_CACHE_DIR);
+        let usc_cache_dir = usc_cache_dir(&cache_dir);
         let package = metadata.packages.first().unwrap();
 
         let ui = UI::default();

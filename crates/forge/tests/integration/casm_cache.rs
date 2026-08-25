@@ -1,9 +1,9 @@
 use crate::utils::running_tests::{RunTestCaseOptions, run_test_case_with_options};
 use crate::utils::{runner::assert_passed, test_case};
 use camino::Utf8PathBuf;
-use forge::run_tests::cache::USC_CACHE_DIR;
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
+use shared::cache::usc_cache_dir;
 use tempfile::tempdir;
 use walkdir::WalkDir;
 
@@ -28,7 +28,7 @@ fn uses_custom_cache_dir() {
     );
 
     assert_passed(&result);
-    let usc_cache_dir = custom_cache_dir.join(USC_CACHE_DIR);
+    let usc_cache_dir = usc_cache_dir(&custom_cache_dir);
     assert!(
         WalkDir::new(&usc_cache_dir).into_iter().any(|entry| {
             entry.is_ok_and(|entry| {
