@@ -121,7 +121,9 @@ impl ForkCache {
         block_number: BlockNumber,
         cache_dir: &Utf8Path,
     ) -> Result<Self> {
-        let cache_file = cache_file_path_from_fork_config(url, block_number, cache_dir)?;
+        prepare_cache_dir(cache_dir).context("Cache directory could not be created")?;
+
+        let cache_file = cache_file_path_from_fork_config(url, block_number, cache_dir);
         let mut file = OpenOptions::new()
             .write(true)
             .read(true)
@@ -268,19 +270,14 @@ fn cache_file_path_from_fork_config(
     url: &Url,
     BlockNumber(block_number): BlockNumber,
     cache_dir: &Utf8Path,
-) -> Result<Utf8PathBuf> {
+) -> Utf8PathBuf {
     let re = Regex::new(r"[^a-zA-Z0-9]").unwrap();
 
     // replace non-alphanumeric characters with underscores
     let sanitized_path = re.replace_all(url.as_str(), "_");
 
-    let cache_file_path = cache_dir.join(format!(
+    cache_dir.join(format!(
         "{sanitized_path}_{block_number}_v{}.json",
         cache_version()
-    ));
-
-    prepare_cache_dir(cache_file_path.parent().unwrap())
-        .context("Cache directory could not be created")?;
-
-    Ok(cache_file_path)
+    ))
 }
