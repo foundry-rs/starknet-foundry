@@ -128,7 +128,7 @@ impl RunForPackageArgs {
             args.only_ignored,
             args.include_ignored,
             args.rerun_failed,
-            FailedTestsCache::new(&cache_dir),
+            FailedTestsCache::new(cache_dir),
             partitioning_config,
         );
 
