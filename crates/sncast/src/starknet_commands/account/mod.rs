@@ -368,7 +368,7 @@ pub async fn account(
                 wait_config,
                 &config.account,
                 config.keystore.clone(),
-                deploy.fee_args,
+                deploy.fee_args.resolve(&config.fee_params),
                 deploy.dry_run_args,
                 ui,
             )
