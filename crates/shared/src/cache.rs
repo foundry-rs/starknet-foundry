@@ -68,6 +68,7 @@ pub fn prepare_cache_dir(cache_dir: impl AsRef<Path>) -> Result<()> {
     Ok(())
 }
 
+#[must_use]
 pub fn usc_cache_dir(cache_dir: &Utf8PathBuf) -> Utf8PathBuf {
     cache_dir.join(USC_CACHE_DIR)
 }
