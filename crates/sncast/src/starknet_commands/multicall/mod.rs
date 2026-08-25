@@ -60,7 +60,7 @@ pub async fn multicall(
         }
     }
 
-    match &multicall.command {
+    match multicall.command {
         starknet_commands::multicall::Commands::New(new) => {
             if let Some(output_path) = &new.output_path {
                 let result = starknet_commands::multicall::new::write_empty_template(
@@ -81,13 +81,10 @@ pub async fn multicall(
         starknet_commands::multicall::Commands::Run(run) => {
             let provider = run.rpc.get_provider(&config, ui).await?;
 
-            let mut run = run.clone();
-            run.fee_args = run.fee_args.resolve(&config.fee_params);
-
             let account = get_account(&config, &provider, &run.rpc, ui).await?;
             let result = with_account!(&account, |account| {
                 starknet_commands::multicall::run::run(
-                    run.clone(),
+                    run,
                     account,
                     &provider,
                     &config,
@@ -109,14 +106,11 @@ pub async fn multicall(
         starknet_commands::multicall::Commands::Execute(execute) => {
             let provider = execute.rpc.get_provider(&config, ui).await?;
 
-            let mut execute = execute.clone();
-            execute.fee_args = execute.fee_args.resolve(&config.fee_params);
-
             let account = get_account(&config, &provider, &execute.rpc, ui).await?;
 
             let result = with_account!(&account, |account| {
                 starknet_commands::multicall::execute::execute(
-                    *execute.clone(),
+                    *execute,
                     account,
                     &provider,
                     &config,
