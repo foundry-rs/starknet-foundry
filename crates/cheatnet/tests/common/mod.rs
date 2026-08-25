@@ -96,8 +96,8 @@ pub fn get_contracts() -> ContractsData {
     let contracts = get_contracts_artifacts_and_source_sierra_paths(
         &target_dir,
         package,
-        &ui,
         &usc_cache_dir,
+        &ui,
         CompilationOpts {
             use_test_target_contracts: false,
             #[cfg(feature = "cairo-native")]
