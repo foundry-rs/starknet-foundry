@@ -9,7 +9,6 @@ use scarb_ui::args::PackagesFilter;
 use semver::{BuildMetadata, Prerelease, Version, VersionReq};
 use std::collections::HashMap;
 use std::str::FromStr;
-use universal_sierra_compiler_api::CompileOptions;
 
 pub mod artifacts;
 mod command;
@@ -118,10 +117,6 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
         run_native,
     }: CompilationOpts,
 ) -> Result<ContractsData> {
-    let compile_options = CompileOptions {
-        cache_dir: Some(usc_cache_dir.as_std_path()),
-    };
-
     let starknet_artifact_files = if use_test_target_contracts {
         let test_targets = test_targets_by_name(package);
         get_starknet_artifacts_paths_from_test_targets(artifacts_dir, &test_targets)
@@ -139,7 +134,7 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
     if let Some(starknet_artifact_files) = starknet_artifact_files {
         #[cfg(feature = "cairo-native")]
         let starknet_artifact_files = starknet_artifact_files.compile_native(run_native);
-        starknet_artifact_files.load_contracts_artifacts(&compile_options)
+        starknet_artifact_files.load_contracts_artifacts(usc_cache_dir)
     } else {
         Ok(ContractsData::default())
     }

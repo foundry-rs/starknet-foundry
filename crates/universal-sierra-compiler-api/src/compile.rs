@@ -30,13 +30,6 @@ pub enum SierraType {
     Raw,
 }
 
-/// Options controlling Sierra compilation.
-#[derive(Default)]
-pub struct CompileOptions<'a> {
-    /// Directory used by the compiler-managed CASM cache.
-    pub cache_dir: Option<&'a Path>,
-}
-
 /// Compiles the given Sierra JSON into the specified type using the `universal-sierra-compiler`.
 pub fn compile_sierra(
     sierra_json: &Value,
@@ -47,32 +40,23 @@ pub fn compile_sierra(
     let json_bytes = serde_json::to_vec(sierra_json).map_err(CompilationError::Serialization)?;
     temp_sierra_file.write_all(&json_bytes)?;
 
-    compile_sierra_at_path(temp_sierra_file.path(), sierra_type)
+    compile_sierra_at_path(temp_sierra_file.path(), sierra_type, None)
 }
 
-/// Compiles the Sierra file at the given path into the specified type using the `universal-sierra-compiler`.
+/// Compiles the Sierra file at the given path into the specified type using the
+/// `universal-sierra-compiler` and optionally caches the compiled CASM.
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn compile_sierra_at_path(
     sierra_file_path: &Path,
     sierra_type: SierraType,
-) -> Result<String, CompilationError> {
-    compile_sierra_at_path_with_options(sierra_file_path, sierra_type, &CompileOptions::default())
-}
-
-/// Compiles the Sierra file at the given path into the specified type using the
-/// `universal-sierra-compiler` with the provided options.
-#[tracing::instrument(skip_all, level = "debug")]
-pub fn compile_sierra_at_path_with_options(
-    sierra_file_path: &Path,
-    sierra_type: SierraType,
-    options: &CompileOptions,
+    cache_dir: Option<&Path>,
 ) -> Result<String, CompilationError> {
     let mut command = USCInternalCommand::new()?
         .arg(format!("compile-{sierra_type}"))
         .arg("--sierra-path")
         .arg(sierra_file_path);
 
-    if let Some(cache_dir) = options.cache_dir {
+    if let Some(cache_dir) = cache_dir {
         command = command.arg("--cache-dir").arg(cache_dir);
     }
 

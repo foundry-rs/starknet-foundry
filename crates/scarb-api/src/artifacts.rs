@@ -8,7 +8,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::collections::HashMap;
 use std::fs;
-use universal_sierra_compiler_api::{CompileOptions, compile_contract_sierra_at_path};
+use universal_sierra_compiler_api::compile_contract_sierra_at_path;
 
 pub mod deserialized;
 mod representation;
@@ -74,7 +74,7 @@ impl StarknetArtifactsFiles {
     #[tracing::instrument(skip_all, level = "debug")]
     pub(crate) fn load_contracts_artifacts(
         self,
-        compile_options: &CompileOptions<'_>,
+        usc_cache_dir: &Utf8Path,
     ) -> Result<ContractsData> {
         // Gather contract artifacts across the base and all other representations.
         // The same contract may be emitted into both test targets (unittest and
@@ -89,14 +89,14 @@ impl StarknetArtifactsFiles {
             all_artifacts.extend(representation.artifacts());
         }
 
-        self.compile_artifacts(deduplicate_by_module_path(all_artifacts), compile_options)
+        self.compile_artifacts(deduplicate_by_module_path(all_artifacts), usc_cache_dir)
     }
 
     #[tracing::instrument(skip_all, level = "debug")]
     fn compile_artifacts(
         &self,
         artifacts: Vec<ContractArtifact>,
-        compile_options: &CompileOptions<'_>,
+        usc_cache_dir: &Utf8Path,
     ) -> Result<ContractsData> {
         artifacts
             .into_par_iter()
@@ -106,7 +106,7 @@ impl StarknetArtifactsFiles {
                     module_path,
                     sierra_path,
                 } = artifact;
-                let artifacts = self.compile_artifact_at_path(&sierra_path, compile_options)?;
+                let artifacts = self.compile_artifact_at_path(&sierra_path, usc_cache_dir)?;
                 Ok((
                     module_path,
                     ContractData {
@@ -124,11 +124,12 @@ impl StarknetArtifactsFiles {
     fn compile_artifact_at_path(
         &self,
         path: &Utf8Path,
-        compile_options: &CompileOptions<'_>,
+        usc_cache_dir: &Utf8Path,
     ) -> Result<StarknetContractArtifacts> {
         let sierra = fs::read_to_string(path)?;
 
-        let casm = compile_contract_sierra_at_path(path.as_std_path(), compile_options)?;
+        let casm =
+            compile_contract_sierra_at_path(path.as_std_path(), Some(usc_cache_dir.as_std_path()))?;
 
         #[cfg(feature = "cairo-native")]
         let executor = self.compile_to_native(&sierra)?;
@@ -263,11 +264,11 @@ mod tests {
 
     #[test]
     fn test_load_contracts_artifacts() {
-        let (_temp, artifacts_files) = setup();
+        let (temp, artifacts_files) = setup();
 
         // Load the contracts
         let result = artifacts_files
-            .load_contracts_artifacts(&CompileOptions::default())
+            .load_contracts_artifacts(Utf8Path::from_path(temp.path()).unwrap())
             .unwrap();
 
         // Both `src` contracts are unambiguous: each name resolves to a single contract, even
@@ -281,7 +282,7 @@ mod tests {
     fn test_load_contracts_artifacts_keeps_duplicate_names() {
         // A second `HelloStarknet` defined in `tests/` collides by name with the one in `src/`,
         // but has a distinct fully qualified `module_path`, so both are kept as separate entries.
-        let (_temp, artifacts_files) = setup_with_tests(indoc!(
+        let (temp, artifacts_files) = setup_with_tests(indoc!(
             r"
                 #[starknet::contract]
                 mod HelloStarknet {
@@ -299,7 +300,7 @@ mod tests {
         ));
 
         let result = artifacts_files
-            .load_contracts_artifacts(&CompileOptions::default())
+            .load_contracts_artifacts(Utf8Path::from_path(temp.path()).unwrap())
             .unwrap();
 
         // The ambiguous name is kept twice, under two distinct module paths.
@@ -312,13 +313,13 @@ mod tests {
     #[test]
     #[cfg(feature = "cairo-native")]
     fn test_load_contracts_artifacts_native() {
-        let (_temp, artifacts_files) = setup();
+        let (temp, artifacts_files) = setup();
 
         let artifacts_files = artifacts_files.compile_native(true);
 
         // Load the contracts
         let result = artifacts_files
-            .load_contracts_artifacts(&CompileOptions::default())
+            .load_contracts_artifacts(Utf8Path::from_path(temp.path()).unwrap())
             .unwrap();
 
         // Assert the Contract Artifacts are loaded.

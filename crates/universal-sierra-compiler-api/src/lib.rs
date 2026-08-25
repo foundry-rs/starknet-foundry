@@ -6,9 +6,7 @@
 //! To allow more flexibility when changing internals, please make public as few items as possible.
 
 use crate::command::{USCError, USCInternalCommand};
-use crate::compile::{
-    CompilationError, SierraType, compile_sierra, compile_sierra_at_path_with_options,
-};
+use crate::compile::{CompilationError, SierraType, compile_sierra, compile_sierra_at_path};
 use crate::representation::RawCasmProgram;
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use serde_json::Value;
@@ -19,8 +17,6 @@ mod command;
 mod compile;
 pub mod representation;
 
-pub use crate::compile::CompileOptions;
-
 /// Compiles Sierra JSON of a contract into [`CasmContractClass`].
 pub fn compile_contract_sierra(sierra_json: &Value) -> Result<CasmContractClass, CompilationError> {
     let json = compile_sierra(sierra_json, SierraType::Contract)?;
@@ -28,16 +24,12 @@ pub fn compile_contract_sierra(sierra_json: &Value) -> Result<CasmContractClass,
 }
 
 /// Compiles Sierra JSON file at the given path of a contract into [`CasmContractClass`],
-/// with the provided options.
+/// optionally caching the compiled CASM in `cache_dir`.
 pub fn compile_contract_sierra_at_path(
     sierra_file_path: &Path,
-    compile_options: &CompileOptions,
+    cache_dir: Option<&Path>,
 ) -> Result<CasmContractClass, CompilationError> {
-    let json = compile_sierra_at_path_with_options(
-        sierra_file_path,
-        SierraType::Contract,
-        compile_options,
-    )?;
+    let json = compile_sierra_at_path(sierra_file_path, SierraType::Contract, cache_dir)?;
     serde_json::from_str(&json).map_err(CompilationError::Deserialization)
 }
 
@@ -48,12 +40,12 @@ pub fn compile_raw_sierra(sierra_json: &Value) -> Result<RawCasmProgram, Compila
 }
 
 /// Compiles Sierra JSON file at the given path of a raw program into [`RawCasmProgram`],
-/// with provided options.
+/// optionally caching the compiled CASM in `cache_dir`.
 pub fn compile_raw_sierra_at_path(
     sierra_file_path: &Path,
-    options: &CompileOptions,
+    cache_dir: Option<&Path>,
 ) -> Result<RawCasmProgram, CompilationError> {
-    let json = compile_sierra_at_path_with_options(sierra_file_path, SierraType::Raw, options)?;
+    let json = compile_sierra_at_path(sierra_file_path, SierraType::Raw, cache_dir)?;
     serde_json::from_str(&json).map_err(CompilationError::Deserialization)
 }
 
