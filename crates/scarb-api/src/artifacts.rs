@@ -311,7 +311,7 @@ mod tests {
     #[test]
     #[cfg(feature = "cairo-native")]
     fn test_load_contracts_artifacts_native() {
-        let (temp, artifacts_files) = setup();
+        let (_temp, artifacts_files) = setup();
 
         let artifacts_files = artifacts_files.compile_native(true);
 
