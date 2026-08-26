@@ -29,6 +29,7 @@ const INTEGRATION_TEST_TYPE: &str = "integration";
 fn get_starknet_artifacts_paths_from_test_targets(
     target_dir: &Utf8Path,
     test_targets: &HashMap<String, &TargetMetadata>,
+    usc_cache_dir: &Utf8Path,
 ) -> Option<StarknetArtifactsFiles> {
     let artifact =
         |name: &str, metadata: &TargetMetadata| -> Option<(Utf8PathBuf, Option<String>)> {
@@ -67,6 +68,7 @@ fn get_starknet_artifacts_paths_from_test_targets(
         Some(StarknetArtifactsFiles::new(
             base_artifact_path,
             other_artifacts_paths,
+            usc_cache_dir.to_path_buf(),
         ))
     } else {
         None
@@ -79,6 +81,7 @@ fn get_starknet_artifacts_paths_from_test_targets(
 fn get_starknet_artifacts_path(
     target_dir: &Utf8Path,
     target_name: &str,
+    usc_cache_dir: &Utf8Path,
     ui: &UI,
 ) -> Option<StarknetArtifactsFiles> {
     let path = format!("{target_name}.starknet_artifacts.json");
@@ -94,7 +97,7 @@ fn get_starknet_artifacts_path(
         None
     };
 
-    path.map(|path| StarknetArtifactsFiles::new(path, vec![]))
+    path.map(|path| StarknetArtifactsFiles::new(path, vec![], usc_cache_dir.to_path_buf()))
 }
 
 #[derive(Default)]
@@ -119,7 +122,7 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
 ) -> Result<ContractsData> {
     let starknet_artifact_files = if use_test_target_contracts {
         let test_targets = test_targets_by_name(package);
-        get_starknet_artifacts_paths_from_test_targets(artifacts_dir, &test_targets)
+        get_starknet_artifacts_paths_from_test_targets(artifacts_dir, &test_targets, usc_cache_dir)
     } else {
         let starknet_target_name = package
             .targets
@@ -127,14 +130,19 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
             .find(|target| target.kind == "starknet-contract")
             .map(|target| target.name.clone());
         starknet_target_name.and_then(|starknet_target_name| {
-            get_starknet_artifacts_path(artifacts_dir, starknet_target_name.as_str(), ui)
+            get_starknet_artifacts_path(
+                artifacts_dir,
+                starknet_target_name.as_str(),
+                usc_cache_dir,
+                ui,
+            )
         })
     };
 
     if let Some(starknet_artifact_files) = starknet_artifact_files {
         #[cfg(feature = "cairo-native")]
         let starknet_artifact_files = starknet_artifact_files.compile_native(run_native);
-        starknet_artifact_files.load_contracts_artifacts(usc_cache_dir)
+        starknet_artifact_files.load_contracts_artifacts()
     } else {
         Ok(ContractsData::default())
     }
@@ -294,9 +302,15 @@ mod tests {
         temp
     }
 
+    fn test_usc_cache_dir(temp: &TempDir) -> Utf8PathBuf {
+        let cache_dir = Utf8PathBuf::from_path_buf(temp.path().join(DEFAULT_CACHE_DIR)).unwrap();
+        usc_cache_dir(&cache_dir)
+    }
+
     #[test]
     fn get_starknet_artifacts_path_for_standard_build() {
         let temp = setup_package("basic_package");
+        let usc_cache_dir = test_usc_cache_dir(&temp);
 
         ScarbCommand::new_with_stdio()
             .current_dir(temp.path())
@@ -308,6 +322,7 @@ mod tests {
         let path = get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target").join("dev")).unwrap(),
             "basic_package",
+            &usc_cache_dir,
             &ui,
         )
         .unwrap();
@@ -320,7 +335,8 @@ mod tests {
                         .join("target/dev/basic_package.starknet_artifacts.json")
                 )
                 .unwrap(),
-                vec![]
+                vec![],
+                usc_cache_dir
             )
         );
     }
@@ -328,6 +344,7 @@ mod tests {
     #[test]
     fn get_starknet_artifacts_path_for_test_build() {
         let temp = setup_package("basic_package");
+        let usc_cache_dir = test_usc_cache_dir(&temp);
 
         ScarbCommand::new_with_stdio()
             .current_dir(temp.path())
@@ -347,6 +364,7 @@ mod tests {
         let path = get_starknet_artifacts_paths_from_test_targets(
             &Utf8PathBuf::from_path_buf(temp.join("target").join("dev")).unwrap(),
             &test_targets_by_name(package),
+            &usc_cache_dir,
         )
         .unwrap();
 
@@ -359,6 +377,7 @@ mod tests {
                 )
                 .unwrap(),
                 vec![],
+                usc_cache_dir
             )
         );
     }
@@ -366,6 +385,7 @@ mod tests {
     #[test]
     fn get_starknet_artifacts_path_for_test_build_when_integration_tests_exist() {
         let temp = setup_package("basic_package");
+        let usc_cache_dir = test_usc_cache_dir(&temp);
         let tests_dir = temp.join("tests");
         fs::create_dir(&tests_dir).unwrap();
 
@@ -398,6 +418,7 @@ mod tests {
         let path = get_starknet_artifacts_paths_from_test_targets(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target").join("dev")).unwrap(),
             &test_targets_by_name(package),
+            &usc_cache_dir,
         )
         .unwrap();
 
@@ -416,7 +437,8 @@ mod tests {
                             .join("target/dev/basic_package_unittest.test.starknet_artifacts.json")
                     )
                     .unwrap(),
-                ]
+                ],
+                usc_cache_dir
             ),
         );
     }
@@ -475,6 +497,7 @@ mod tests {
     #[test]
     fn get_starknet_artifacts_path_for_project_with_different_package_and_target_name() {
         let temp = setup_package("basic_package");
+        let usc_cache_dir = test_usc_cache_dir(&temp);
 
         let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
             .unwrap()
@@ -512,6 +535,7 @@ mod tests {
         let path = get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target").join("dev")).unwrap(),
             "essa",
+            &usc_cache_dir,
             &ui,
         )
         .unwrap();
@@ -523,7 +547,8 @@ mod tests {
                     temp.path().join("target/dev/essa.starknet_artifacts.json")
                 )
                 .unwrap(),
-                vec![]
+                vec![],
+                usc_cache_dir
             )
         );
     }
@@ -531,6 +556,7 @@ mod tests {
     #[test]
     fn get_starknet_artifacts_path_for_project_without_starknet_target() {
         let temp = setup_package("empty_lib");
+        let usc_cache_dir = test_usc_cache_dir(&temp);
 
         let manifest_path = temp.child("Scarb.toml");
         manifest_path
@@ -553,6 +579,7 @@ mod tests {
         let path = get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target").join("dev")).unwrap(),
             "empty_lib",
+            &usc_cache_dir,
             &ui,
         );
         assert!(path.is_none());
@@ -561,11 +588,13 @@ mod tests {
     #[test]
     fn get_starknet_artifacts_path_for_project_without_scarb_build() {
         let temp = setup_package("basic_package");
+        let usc_cache_dir = test_usc_cache_dir(&temp);
 
         let ui = UI::default();
         let path = get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target").join("dev")).unwrap(),
             "basic_package",
+            &usc_cache_dir,
             &ui,
         );
         assert!(path.is_none());
