@@ -2,7 +2,8 @@ use crate::response::cast_message::SncastCommandMessage;
 use crate::response::get::transaction::TransactionOutputBuilder;
 use conversions::IntoConv;
 use data_transformer::{
-    extract_function_from_selector, reverse_transform_input, reverse_transform_output,
+    extract_entry_point_from_selector, reverse_transform_entry_point_input,
+    reverse_transform_entry_point_output,
 };
 use foundry_ui::{Message, components::warning::WarningMessage, styling::OutputBuilder};
 use itertools::Itertools;
@@ -15,8 +16,9 @@ use starknet_rust::core::types::{
     CallType, ContractClass, ContractStorageDiffItem, DeclareTransactionTrace, DeclaredClassItem,
     DeployAccountTransactionTrace, DeployedContractItem, EntryPointType, ExecuteInvocation,
     ExecutionResources, FunctionInvocation, InnerCallExecutionResources, InvokeTransactionTrace,
-    L1HandlerTransactionTrace, LegacyContractAbiEntry, MigratedCompiledClassItem, NonceUpdate,
-    OrderedEvent, OrderedMessage, ReplacedClassItem, StateDiff, TransactionTrace,
+    L1HandlerTransactionTrace, LegacyContractAbiEntry, LegacyFunctionAbiType,
+    MigratedCompiledClassItem, NonceUpdate, OrderedEvent, OrderedMessage, ReplacedClassItem,
+    StateDiff, TransactionTrace,
 };
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
@@ -264,9 +266,10 @@ impl TraceDecoder {
                         if let LegacyContractAbiEntry::Function(function) = entry
                             && let Ok(selector) = get_selector_from_name(&function.name)
                         {
-                            decoder
-                                .legacy_selectors
-                                .insert((class_hash, selector), function.name);
+                            decoder.legacy_selectors.insert(
+                                (class_hash, selector, function.r#type.into()),
+                                function.name,
+                            );
                         }
                     }
                 }
@@ -387,6 +390,33 @@ fn invocation_result(invocation: &FunctionInvocation, decoder: Option<&TraceDeco
         },
         |decoder| decoder.result(invocation),
     )
+}
+
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
+enum EntryPointKind {
+    External,
+    L1Handler,
+    Constructor,
+}
+
+impl From<EntryPointType> for EntryPointKind {
+    fn from(value: EntryPointType) -> Self {
+        match value {
+            EntryPointType::External => Self::External,
+            EntryPointType::L1Handler => Self::L1Handler,
+            EntryPointType::Constructor => Self::Constructor,
+        }
+    }
+}
+
+impl From<LegacyFunctionAbiType> for EntryPointKind {
+    fn from(value: LegacyFunctionAbiType) -> Self {
+        match value {
+            LegacyFunctionAbiType::Function => Self::External,
+            LegacyFunctionAbiType::L1Handler => Self::L1Handler,
+            LegacyFunctionAbiType::Constructor => Self::Constructor,
+        }
+    }
 }
 
 #[must_use]

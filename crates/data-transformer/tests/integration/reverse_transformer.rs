@@ -1,9 +1,13 @@
 use crate::integration::{NO_CONSTRUCTOR_CLASS_HASH, get_abi, init_class};
-use data_transformer::{reverse_transform_input, reverse_transform_output};
+use data_transformer::{
+    reverse_transform_entry_point_input, reverse_transform_input, reverse_transform_output,
+};
 use itertools::Itertools;
 use primitive_types::U256;
-use starknet_rust::core::types::ContractClass;
-use starknet_rust::core::types::contract::AbiEntry;
+use starknet_rust::core::types::contract::{
+    AbiEntry, AbiFunction, AbiNamedMember, StateMutability,
+};
+use starknet_rust::core::types::{ContractClass, EntryPointType};
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
 
@@ -363,4 +367,41 @@ async fn test_implicit_contract_constructor() {
     let expected_output = "";
 
     assert_eq!(result, expected_output);
+}
+
+#[test]
+fn test_reverse_transformation_uses_entry_point_type() {
+    let name = "shared_name";
+    let selector = get_selector_from_name(name).unwrap();
+    let entry = |input_type: &str| AbiFunction {
+        name: name.to_string(),
+        inputs: vec![AbiNamedMember {
+            name: "value".to_string(),
+            r#type: input_type.to_string(),
+        }],
+        outputs: vec![],
+        state_mutability: StateMutability::External,
+    };
+    let abi = vec![
+        AbiEntry::L1Handler(entry("core::integer::u16")),
+        AbiEntry::Function(entry("core::integer::u8")),
+    ];
+
+    let external = reverse_transform_entry_point_input(
+        &[Felt::ONE],
+        &abi,
+        &selector,
+        EntryPointType::External,
+    )
+    .unwrap();
+    assert_eq!(external, "1_u8");
+
+    let l1_handler = reverse_transform_entry_point_input(
+        &[Felt::ONE],
+        &abi,
+        &selector,
+        EntryPointType::L1Handler,
+    )
+    .unwrap();
+    assert_eq!(l1_handler, "1_u16");
 }
