@@ -468,16 +468,15 @@ fn append_invoke(
         )
     };
 
+    let builder = append_validate(builder, context);
+    let builder = append_execute(builder, context);
+    let builder = append_fee_transfer(builder, context);
+
     if full {
-        let builder = append_execute(builder, context);
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_fee_transfer(builder, context);
-        let builder = append_optional_state_diff(builder, trace.state_diff.as_ref(), 0);
-        append_validate(builder, context)
+        append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
     } else {
-        let builder = append_validate(builder, context);
-        let builder = append_execute(builder, context);
-        append_fee_transfer(builder, context)
+        builder
     }
 }
 
@@ -507,14 +506,14 @@ fn append_declare(
         )
     };
 
+    let builder = append_validate(builder, context);
+    let builder = append_fee_transfer(builder, context);
+
     if full {
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_fee_transfer(builder, context);
-        let builder = append_optional_state_diff(builder, trace.state_diff.as_ref(), 0);
-        append_validate(builder, context)
+        append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
     } else {
-        let builder = append_validate(builder, context);
-        append_fee_transfer(builder, context)
+        builder
     }
 }
 
@@ -553,16 +552,15 @@ fn append_deploy_account(
         )
     };
 
+    let builder = append_validate(builder, context);
+    let builder = append_constructor(builder, context);
+    let builder = append_fee_transfer(builder, context);
+
     if full {
-        let builder = append_constructor(builder, context);
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_fee_transfer(builder, context);
-        let builder = append_optional_state_diff(builder, trace.state_diff.as_ref(), 0);
-        append_validate(builder, context)
+        append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
     } else {
-        let builder = append_validate(builder, context);
-        let builder = append_constructor(builder, context);
-        append_fee_transfer(builder, context)
+        builder
     }
 }
 
@@ -583,12 +581,13 @@ fn append_l1_handler(
         )
     };
 
+    let builder = append_function(builder, context);
+
     if full {
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_function(builder, context);
         append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
     } else {
-        append_function(builder, context)
+        builder
     }
 }
 
