@@ -436,16 +436,15 @@ fn append_invoke(
         )
     };
 
+    let builder = append_validate(builder);
+    let builder = append_execute(builder);
+    let builder = append_fee_transfer(builder);
+
     if full {
-        let builder = append_execute(builder);
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_fee_transfer(builder);
-        let builder = append_optional_state_diff(builder, trace.state_diff.as_ref(), 0);
-        append_validate(builder)
+        append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
     } else {
-        let builder = append_validate(builder);
-        let builder = append_execute(builder);
-        append_fee_transfer(builder)
+        builder
     }
 }
 
@@ -475,14 +474,14 @@ fn append_declare(
         )
     };
 
+    let builder = append_validate(builder);
+    let builder = append_fee_transfer(builder);
+
     if full {
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_fee_transfer(builder);
-        let builder = append_optional_state_diff(builder, trace.state_diff.as_ref(), 0);
-        append_validate(builder)
+        append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
     } else {
-        let builder = append_validate(builder);
-        append_fee_transfer(builder)
+        builder
     }
 }
 
@@ -521,16 +520,15 @@ fn append_deploy_account(
         )
     };
 
+    let builder = append_validate(builder);
+    let builder = append_constructor(builder);
+    let builder = append_fee_transfer(builder);
+
     if full {
-        let builder = append_constructor(builder);
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_fee_transfer(builder);
-        let builder = append_optional_state_diff(builder, trace.state_diff.as_ref(), 0);
-        append_validate(builder)
+        append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
     } else {
-        let builder = append_validate(builder);
-        let builder = append_constructor(builder);
-        append_fee_transfer(builder)
+        builder
     }
 }
 
@@ -551,12 +549,13 @@ fn append_l1_handler(
         )
     };
 
+    let builder = append_function(builder);
+
     if full {
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_function(builder);
         append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
     } else {
-        append_function(builder)
+        builder
     }
 }
 

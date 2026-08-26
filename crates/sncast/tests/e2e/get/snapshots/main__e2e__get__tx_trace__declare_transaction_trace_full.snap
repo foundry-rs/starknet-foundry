@@ -5,10 +5,22 @@ expression: output.as_stdout()
 Success: Transaction trace retrieved
 
 Type:                   DECLARE
-Execution Resources
-  L1 Data Gas:          192
-  L1 Gas:               1071
-  L2 Gas:               0
+Validate Invocation
+  Call Type:            CALL
+  Calldata:             0x58e7b465e6c7651fa8697964a2d1ed93a62c0c00ba9876ddc4480dd0578d343
+  Caller Address:       0x0
+  Calls:                []
+  Class Hash:           0x450f568a8cb6ea1bcce446355e8a1c2e5852a6b8dc3536f495cdceb62e8a7e2
+  Contract Address:     0x6aac79bb6c90e1e41c33cd20c67c0281c4a95f01b4e15ad0c3b53fcc6010cf8
+  Entry Point Selector: __validate_declare__
+  Entry Point Type:     EXTERNAL
+  Events:               []
+  Execution Resources
+    L1 Gas:             8
+    L2 Gas:             0
+  Is Reverted:          false
+  Messages:             []
+  Result:               success: 0x56414c4944
 Fee Transfer Invocation
   Call Type:            CALL
   Calldata:             ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 10343418238809876_u256

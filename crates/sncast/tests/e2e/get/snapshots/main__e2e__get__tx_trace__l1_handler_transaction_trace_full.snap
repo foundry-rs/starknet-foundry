@@ -5,10 +5,6 @@ expression: output.as_stdout()
 Success: Transaction trace retrieved
 
 Type:                     L1_HANDLER
-Execution Resources
-  L1 Data Gas:            192
-  L1 Gas:                 18783
-  L2 Gas:                 401920
 Function Invocation
   Call Type:              CALL
   Calldata:               0x423f7744017600727ce4789933e4648068835e28, 99359224995532825384289367229767519998085228603184343483478058520072918113310_u256, 6289449_u256
