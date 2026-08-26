@@ -4,8 +4,11 @@ mod types;
 
 pub use self::event::{ReverseTransformEventError, reverse_transform_event};
 use crate::reverse_transformer::transform::{ReverseTransformer, TransformationError};
-use crate::shared::extraction::extract_function_from_selector;
+use crate::shared::extraction::{
+    extract_entry_point_from_selector, extract_function_from_selector,
+};
 use cairo_lang_parser::utils::SimpleParserDatabase;
+use starknet_rust::core::types::EntryPointType;
 use starknet_rust::core::types::contract::AbiEntry;
 use starknet_types_core::felt::Felt;
 
@@ -23,14 +26,31 @@ pub fn reverse_transform_input(
     abi: &[AbiEntry],
     function_selector: &Felt,
 ) -> Result<String, ReverseTransformError> {
-    let input_types: Vec<_> = extract_function_from_selector(abi, *function_selector)
-        .ok_or(ReverseTransformError::FunctionNotFound(*function_selector))?
-        .inputs
-        .into_iter()
-        .map(|input| input.r#type)
-        .collect();
+    let function = extract_function_from_selector(abi, *function_selector)
+        .ok_or(ReverseTransformError::FunctionNotFound(*function_selector))?;
 
-    reverse_transform(input, abi, &input_types)
+    reverse_transform(
+        input,
+        abi,
+        function.inputs.iter().map(|input| input.r#type.as_str()),
+    )
+}
+
+/// Transforms entry point calldata into a Cairo-like representation of its arguments.
+pub fn reverse_transform_entry_point_input(
+    input: &[Felt],
+    abi: &[AbiEntry],
+    function_selector: &Felt,
+    entry_point_type: EntryPointType,
+) -> Result<String, ReverseTransformError> {
+    let function = extract_entry_point_from_selector(abi, *function_selector, entry_point_type)
+        .ok_or(ReverseTransformError::FunctionNotFound(*function_selector))?;
+
+    reverse_transform(
+        input,
+        abi,
+        function.inputs.iter().map(|input| input.r#type.as_str()),
+    )
 }
 
 /// Transforms a call output into a Cairo-like string representation of the return values
@@ -39,26 +59,43 @@ pub fn reverse_transform_output(
     abi: &[AbiEntry],
     function_selector: &Felt,
 ) -> Result<String, ReverseTransformError> {
-    let output_types: Vec<_> = extract_function_from_selector(abi, *function_selector)
-        .ok_or(ReverseTransformError::FunctionNotFound(*function_selector))?
-        .outputs
-        .into_iter()
-        .map(|input| input.r#type)
-        .collect();
+    let function = extract_function_from_selector(abi, *function_selector)
+        .ok_or(ReverseTransformError::FunctionNotFound(*function_selector))?;
 
-    reverse_transform(output, abi, &output_types)
+    reverse_transform(
+        output,
+        abi,
+        function.outputs.iter().map(|output| output.r#type.as_str()),
+    )
 }
 
-fn reverse_transform(
+/// Transforms entry point output into a Cairo-like representation of its return values.
+pub fn reverse_transform_entry_point_output(
+    output: &[Felt],
+    abi: &[AbiEntry],
+    function_selector: &Felt,
+    entry_point_type: EntryPointType,
+) -> Result<String, ReverseTransformError> {
+    let function = extract_entry_point_from_selector(abi, *function_selector, entry_point_type)
+        .ok_or(ReverseTransformError::FunctionNotFound(*function_selector))?;
+
+    reverse_transform(
+        output,
+        abi,
+        function.outputs.iter().map(|output| output.r#type.as_str()),
+    )
+}
+
+fn reverse_transform<'a>(
     felts: &[Felt],
     abi: &[AbiEntry],
-    types: &[String],
+    parameter_types: impl IntoIterator<Item = &'a str>,
 ) -> Result<String, ReverseTransformError> {
     let db = SimpleParserDatabase::default();
     let mut reverse_transformer = ReverseTransformer::new(felts, abi);
 
-    Ok(types
-        .iter()
+    Ok(parameter_types
+        .into_iter()
         .map(|parameter_type| {
             Ok(reverse_transformer
                 .parse_and_transform(parameter_type, &db)?
