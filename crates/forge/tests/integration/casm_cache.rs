@@ -34,8 +34,8 @@ fn uses_custom_cache_dir() {
             entry.is_ok_and(|entry| {
                 entry
                     .path()
-                    .extension()
-                    .is_some_and(|extension| extension == "json")
+                    .file_name()
+                    .is_some_and(|name| name == "casm.json")
             })
         }),
         "USC cache should contain a JSON entry under {usc_cache_dir}"

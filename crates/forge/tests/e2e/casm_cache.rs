@@ -17,10 +17,10 @@ fn creates_usc_casm_cache_entries() {
             entry.is_ok_and(|entry| {
                 entry
                     .path()
-                    .extension()
-                    .is_some_and(|extension| extension == "json")
+                    .file_name()
+                    .is_some_and(|name| name == "casm.json")
             })
         }),
-        "USC cache should contain at least one JSON entry under {usc_cache_dir}"
+        "USC cache should contain at least one casm.json entry under {usc_cache_dir}"
     );
 }
