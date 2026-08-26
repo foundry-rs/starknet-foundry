@@ -19,16 +19,16 @@ fn uses_custom_cache_dir() {
     let temp = tempdir().unwrap();
     let custom_cache_dir = Utf8PathBuf::from_path_buf(temp.path().join("custom_cache")).unwrap();
 
+    let usc_cache_dir = usc_cache_dir(&custom_cache_dir);
     let result = run_test_case_with_options(
         &test,
         ForgeTrackedResource::CairoSteps,
         RunTestCaseOptions {
-            cache_dir: custom_cache_dir.clone(),
+            cache_dir: custom_cache_dir,
         },
     );
-
     assert_passed(&result);
-    let usc_cache_dir = usc_cache_dir(&custom_cache_dir);
+
     assert!(
         WalkDir::new(&usc_cache_dir).into_iter().any(|entry| {
             entry.is_ok_and(|entry| {
@@ -38,6 +38,6 @@ fn uses_custom_cache_dir() {
                     .is_some_and(|name| name == "casm.json")
             })
         }),
-        "USC cache should contain a JSON entry under {usc_cache_dir}"
+        "USC cache should contain a casm.json entry under {usc_cache_dir}"
     );
 }
