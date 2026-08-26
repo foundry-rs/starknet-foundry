@@ -20,7 +20,7 @@ use forge_runner::test_target_summary::TestTargetSummary;
 use foundry_ui::UI;
 use scarb_api::ScarbCommand;
 use scarb_api::metadata::metadata_for_dir;
-use shared::cache::{DEFAULT_CACHE_DIR, usc_cache_dir};
+use shared::cache::{DEFAULT_CACHE_DIR, prepare_cache_dir, usc_cache_dir};
 use std::num::NonZeroU32;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
@@ -47,6 +47,7 @@ pub fn run_test_case_with_options(
 ) -> Vec<TestTargetSummary> {
     let cache_dir = options.cache_dir;
     let usc_cache_dir = usc_cache_dir(&cache_dir);
+    prepare_cache_dir(&cache_dir).unwrap();
 
     ScarbCommand::new_with_stdio()
         .current_dir(test.path().unwrap())
