@@ -316,9 +316,7 @@ mod tests {
         let artifacts_files = artifacts_files.compile_native(true);
 
         // Load the contracts
-        let result = artifacts_files
-            .load_contracts_artifacts(Utf8Path::from_path(temp.path()).unwrap())
-            .unwrap();
+        let result = artifacts_files.load_contracts_artifacts().unwrap();
 
         // Assert the Contract Artifacts are loaded.
         assert_eq!(count_by_name(&result, "ERC20"), 1);
