@@ -46,11 +46,10 @@ pub enum SignerSource {
 }
 
 impl SignerSource {
-    pub fn new(keystore: Option<Utf8PathBuf>, signer_type: Option<&SignerType>) -> Result<Self> {
-        let ledger_path = signer_type.and_then(SignerType::ledger_path);
+    pub fn new(keystore: Option<Utf8PathBuf>, ledger_path: Option<DerivationPath>) -> Result<Self> {
         match (keystore, ledger_path) {
             (Some(path), None) => Ok(SignerSource::Keystore(path)),
-            (None, Some(path)) => Ok(SignerSource::Ledger(path.clone())),
+            (None, Some(path)) => Ok(SignerSource::Ledger(path)),
             (None, None) => Ok(SignerSource::AccountsFile),
             (Some(_), Some(_)) => {
                 bail!("keystore and ledger cannot be used together")
