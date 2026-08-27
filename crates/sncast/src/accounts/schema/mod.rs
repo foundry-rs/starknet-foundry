@@ -347,13 +347,13 @@ mod tests {
             BTreeMap::from([(AccountName::new("alice").unwrap(), account)]),
         )]));
 
-        let encoded = registry.encode_v2().unwrap();
+        let encoded = registry.encode().unwrap();
         let value: Value = serde_json::from_slice(&encoded).unwrap();
         assert_eq!(value["version"], 2);
         assert_eq!(
             value["accounts"]["alpha-sepolia"]["alice"]["signer"]["type"],
             "keystore"
         );
-        assert_eq!(encoded, registry.encode_v2().unwrap());
+        assert_eq!(encoded, registry.encode().unwrap());
     }
 }

@@ -7,3 +7,4 @@ It has the following subcommands:
 * [`deploy`](./deploy.md)
 * [`delete`](./delete.md)
 * [`list`](./list.md)
+* [`migrate`](./migrate.md)
