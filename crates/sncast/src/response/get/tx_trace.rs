@@ -541,12 +541,12 @@ fn append_full_invocation(
         .with_indent(indent)
         .field("Call Type", format_call_type(invocation.call_type))
         .field("Calldata", &decoder.calldata(invocation))
-        .felt_field("Caller Address", &invocation.caller_address);
+        .padded_felt_field("Caller Address", &invocation.caller_address);
     let builder = append_calls(builder, &invocation.calls, decoder, indent);
     let builder = builder
         .with_indent(indent)
-        .felt_field("Class Hash", &invocation.class_hash)
-        .felt_field("Contract Address", &invocation.contract_address)
+        .padded_felt_field("Class Hash", &invocation.class_hash)
+        .padded_felt_field("Contract Address", &invocation.contract_address)
         .field("Entry Point Selector", &decoder.selector(invocation))
         .field(
             "Entry Point Type",
@@ -613,7 +613,7 @@ fn append_messages(
     for message in messages {
         builder = builder
             .with_indent(indent + 2)
-            .felt_field("From Address", &message.from_address)
+            .padded_felt_field("From Address", &message.from_address)
             .field("Order", &message.order.to_string())
             .felt_list_field("Payload", &message.payload)
             .felt_field("To Address", &message.to_address);
@@ -689,8 +689,8 @@ fn append_declared_classes(
     for class in classes {
         builder = builder
             .with_indent(indent + 2)
-            .felt_field("Class Hash", &class.class_hash)
-            .felt_field("Compiled Class Hash", &class.compiled_class_hash);
+            .padded_felt_field("Class Hash", &class.class_hash)
+            .padded_felt_field("Compiled Class Hash", &class.compiled_class_hash);
     }
     builder
 }
@@ -709,8 +709,8 @@ fn append_deployed_contracts(
     for contract in contracts {
         builder = builder
             .with_indent(indent + 2)
-            .felt_field("Address", &contract.address)
-            .felt_field("Class Hash", &contract.class_hash);
+            .padded_felt_field("Address", &contract.address)
+            .padded_felt_field("Class Hash", &contract.class_hash);
     }
     builder
 }
@@ -729,8 +729,8 @@ fn append_migrated_classes(
     for class in classes {
         builder = builder
             .with_indent(indent + 2)
-            .felt_field("Class Hash", &class.class_hash)
-            .felt_field("Compiled Class Hash", &class.compiled_class_hash);
+            .padded_felt_field("Class Hash", &class.class_hash)
+            .padded_felt_field("Compiled Class Hash", &class.compiled_class_hash);
     }
     builder
 }
@@ -747,7 +747,7 @@ fn append_nonces(
     for nonce in nonces {
         builder = builder
             .with_indent(indent + 2)
-            .felt_field("Contract Address", &nonce.contract_address)
+            .padded_felt_field("Contract Address", &nonce.contract_address)
             .felt_field("Nonce", &nonce.nonce);
     }
     builder
@@ -765,8 +765,8 @@ fn append_replaced_classes(
     for class in classes {
         builder = builder
             .with_indent(indent + 2)
-            .felt_field("Class Hash", &class.class_hash)
-            .felt_field("Contract Address", &class.contract_address);
+            .padded_felt_field("Class Hash", &class.class_hash)
+            .padded_felt_field("Contract Address", &class.contract_address);
     }
     builder
 }
@@ -783,7 +783,7 @@ fn append_storage_diffs(
     for diff in diffs {
         builder = builder
             .with_indent(indent + 2)
-            .felt_field("Address", &diff.address);
+            .padded_felt_field("Address", &diff.address);
         if diff.storage_entries.is_empty() {
             builder = builder
                 .with_indent(indent + 2)

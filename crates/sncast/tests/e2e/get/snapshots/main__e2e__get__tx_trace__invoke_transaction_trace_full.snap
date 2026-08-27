@@ -8,14 +8,14 @@ Type:                     INVOKE
 Execute Invocation
   Call Type:              CALL
   Calldata:               array![Call { to: ContractAddress(0x69b1360564534bf59fa889041a60f2c60ef5b259cfbf87a436867538e2c53e0), selector: 0xc844fd57777b0cd7e75c8ea68deec0adf964a6308da7a58de32364b7131cc8, calldata: array![0x4c141c4019d33c08b1d94a85d54c4e92c2a5b2c5a2889f12ab81ecf220752, 0x4af604, 0x4e8d5ddbe29135d13a7edab22018a8f61cde628b468abfe63597996402ef4d, 0x6693f6f8, 0x2030100000000000000000000000000000000000000000000000000000000, 0x4, 0x5f5e360, 0x5f5f9d1, 0x5f5f9d1, 0x5f6174c, 0x971578a2056f81, 0x3afd28a5c57d, 0x2, 0x2f1f486eae02cc20f7fb08be2f88cbd44deca49bdc0ef031a4edf575f1cabf7, 0x2a539e3eaeadfc5ca897d7cbf38397fd7c6c6f3ccbc4f260d9d23a1e6bc5287, 0x6b72f55e68f1936feea371fab12ec039e8e1173579c03ac5c884ebf1653cce2, 0x4be40b6cab1d8e3acf5a99261cc3e07794b250a8afa04a1f44e2ac926895e6e, 0x167e81f05b6eddbe87180e9c27ba2f684a5d57709bb34c9e06f7d7f82b5c4b7, 0x319f9f7ce6e6c72e179557e79c57a542508867fa05b505cc32d2380ac72e711].span() }]
-  Caller Address:         0x0
+  Caller Address:         0x0000000000000000000000000000000000000000000000000000000000000000
   Calls
     Call Type:            CALL
     Calldata:             ReportContext { config_digest: 0x4c141c4019d33c08b1d94a85d54c4e92c2a5b2c5a2889f12ab81ecf220752, epoch_and_round: 4912644_u64, extra_hash: 0x4e8d5ddbe29135d13a7edab22018a8f61cde628b468abfe63597996402ef4d }, 1720973048_u64, 0x2030100000000000000000000000000000000000000000000000000000000, array![100000608_u128, 100006353_u128, 100006353_u128, 100013900_u128], 42526329341833089_u128, 64858983089533_u128, array![Signature { r: 0x2f1f486eae02cc20f7fb08be2f88cbd44deca49bdc0ef031a4edf575f1cabf7, s: 0x2a539e3eaeadfc5ca897d7cbf38397fd7c6c6f3ccbc4f260d9d23a1e6bc5287, public_key: 0x6b72f55e68f1936feea371fab12ec039e8e1173579c03ac5c884ebf1653cce2 }, Signature { r: 0x4be40b6cab1d8e3acf5a99261cc3e07794b250a8afa04a1f44e2ac926895e6e, s: 0x167e81f05b6eddbe87180e9c27ba2f684a5d57709bb34c9e06f7d7f82b5c4b7, public_key: 0x319f9f7ce6e6c72e179557e79c57a542508867fa05b505cc32d2380ac72e711 }]
-    Caller Address:       0x350461cc881640ebbcebf747107d456ef008ec455cd95d2b76a7d9face671f1
+    Caller Address:       0x0350461cc881640ebbcebf747107d456ef008ec455cd95d2b76a7d9face671f1
     Calls:                []
-    Class Hash:           0x2f6d77cb0bca422706a91858dff62975aef4b8214520aadb1f0b39c51f5fde
-    Contract Address:     0x69b1360564534bf59fa889041a60f2c60ef5b259cfbf87a436867538e2c53e0
+    Class Hash:           0x002f6d77cb0bca422706a91858dff62975aef4b8214520aadb1f0b39c51f5fde
+    Contract Address:     0x069b1360564534bf59fa889041a60f2c60ef5b259cfbf87a436867538e2c53e0
     Entry Point Selector: transmit
     Entry Point Type:     EXTERNAL
     Events
@@ -28,8 +28,8 @@ Execute Invocation
     Is Reverted:          false
     Messages:             []
     Result:               success
-  Class Hash:             0x5431265f9d2416426da800a23ddd3fe33db8e2b9fe96dbc48588ac3ac70c091
-  Contract Address:       0x350461cc881640ebbcebf747107d456ef008ec455cd95d2b76a7d9face671f1
+  Class Hash:             0x05431265f9d2416426da800a23ddd3fe33db8e2b9fe96dbc48588ac3ac70c091
+  Contract Address:       0x0350461cc881640ebbcebf747107d456ef008ec455cd95d2b76a7d9face671f1
   Entry Point Selector:   __execute__
   Entry Point Type:       EXTERNAL
   Events:                 []
@@ -46,10 +46,10 @@ Execution Resources
 Fee Transfer Invocation
   Call Type:              CALL
   Calldata:               ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 1945769550285990_u256
-  Caller Address:         0x350461cc881640ebbcebf747107d456ef008ec455cd95d2b76a7d9face671f1
+  Caller Address:         0x0350461cc881640ebbcebf747107d456ef008ec455cd95d2b76a7d9face671f1
   Calls:                  []
-  Class Hash:             0x4ad3c1dc8413453db314497945b6903e1c766495a1e60492d44da9c2a986e4b
-  Contract Address:       0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
+  Class Hash:             0x04ad3c1dc8413453db314497945b6903e1c766495a1e60492d44da9c2a986e4b
+  Contract Address:       0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
   Entry Point Selector:   transfer
   Entry Point Type:       EXTERNAL
   Events
@@ -65,10 +65,10 @@ Fee Transfer Invocation
 Validate Invocation
   Call Type:              CALL
   Calldata:               array![Call { to: ContractAddress(0x69b1360564534bf59fa889041a60f2c60ef5b259cfbf87a436867538e2c53e0), selector: 0xc844fd57777b0cd7e75c8ea68deec0adf964a6308da7a58de32364b7131cc8, calldata: array![0x4c141c4019d33c08b1d94a85d54c4e92c2a5b2c5a2889f12ab81ecf220752, 0x4af604, 0x4e8d5ddbe29135d13a7edab22018a8f61cde628b468abfe63597996402ef4d, 0x6693f6f8, 0x2030100000000000000000000000000000000000000000000000000000000, 0x4, 0x5f5e360, 0x5f5f9d1, 0x5f5f9d1, 0x5f6174c, 0x971578a2056f81, 0x3afd28a5c57d, 0x2, 0x2f1f486eae02cc20f7fb08be2f88cbd44deca49bdc0ef031a4edf575f1cabf7, 0x2a539e3eaeadfc5ca897d7cbf38397fd7c6c6f3ccbc4f260d9d23a1e6bc5287, 0x6b72f55e68f1936feea371fab12ec039e8e1173579c03ac5c884ebf1653cce2, 0x4be40b6cab1d8e3acf5a99261cc3e07794b250a8afa04a1f44e2ac926895e6e, 0x167e81f05b6eddbe87180e9c27ba2f684a5d57709bb34c9e06f7d7f82b5c4b7, 0x319f9f7ce6e6c72e179557e79c57a542508867fa05b505cc32d2380ac72e711].span() }]
-  Caller Address:         0x0
+  Caller Address:         0x0000000000000000000000000000000000000000000000000000000000000000
   Calls:                  []
-  Class Hash:             0x5431265f9d2416426da800a23ddd3fe33db8e2b9fe96dbc48588ac3ac70c091
-  Contract Address:       0x350461cc881640ebbcebf747107d456ef008ec455cd95d2b76a7d9face671f1
+  Class Hash:             0x05431265f9d2416426da800a23ddd3fe33db8e2b9fe96dbc48588ac3ac70c091
+  Contract Address:       0x0350461cc881640ebbcebf747107d456ef008ec455cd95d2b76a7d9face671f1
   Entry Point Selector:   __validate__
   Entry Point Type:       EXTERNAL
   Events:                 []
