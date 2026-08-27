@@ -3,7 +3,7 @@ source: crates/sncast/tests/e2e/get/tx_trace.rs
 expression: output.as_stdout()
 ---
 [WARNING] Could not fetch contract classes needed to decode the trace:
-- class hash: 0x456, contract addresses: 0x123, 0x789 — Class hash not found
+- class hash: 0x456 — Class hash not found
 Affected calls are displayed as raw felts.
 
 Success: Transaction trace retrieved
