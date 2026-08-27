@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use clap::Args;
 use sncast::accounts::AccountRepository;
 use sncast::check_account_file_exists;
-use sncast::response::account::list::{AccountDataRepresentation, AccountListResponse};
+use sncast::response::account::list::{AccountListResponse, AccountRecordRepresentation};
 
 #[derive(Args, Debug)]
 #[command(
@@ -33,7 +33,7 @@ pub fn list(
         .iter()
         .flat_map(|(chain_id, chain_accounts)| {
             chain_accounts.iter().map(move |(name, account)| {
-                AccountDataRepresentation::new(account, chain_id, name, display_private_keys)
+                AccountRecordRepresentation::new(account, chain_id, name, display_private_keys)
             })
         })
         .collect();

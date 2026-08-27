@@ -12,13 +12,13 @@ use serde::Serialize;
 pub struct AccountListResponse {
     pub accounts_file: Utf8PathBuf,
     /// Sorted by `(chain_id, name)`.
-    pub accounts: Vec<AccountDataRepresentation>,
+    pub accounts: Vec<AccountRecordRepresentation>,
     #[serde(skip)]
     pub display_private_keys: bool,
 }
 
 #[derive(Debug, Serialize)]
-pub struct AccountDataRepresentation {
+pub struct AccountRecordRepresentation {
     pub name: String,
     pub chain_id: String,
     pub public_key: String,
@@ -37,7 +37,7 @@ pub struct AccountDataRepresentation {
     pub account_type: Option<AccountType>,
 }
 
-impl AccountDataRepresentation {
+impl AccountRecordRepresentation {
     #[must_use]
     pub fn new(
         account: &AccountRecord,
