@@ -5,11 +5,13 @@ use crate::helpers::configuration::CastConfig;
 use crate::helpers::constants::{DEFAULT_ACCOUNTS_FILE, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::helpers::rpc::RpcArgs;
 use crate::response::errors::SNCastProviderError;
+use crate::signers::LEGACY_KEYSTORE_PASSWORD_ENV;
+use crate::signers::spec::PrivateKeySource;
 use anyhow::{Context, Error, Result, anyhow, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use configuration::Override;
-use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
+use helpers::constants::UDC_ADDRESS;
 use rand::RngCore;
 use rand::rngs::OsRng;
 use response::errors::SNCastStarknetError;
@@ -34,7 +36,7 @@ use starknet_rust::{
         ProviderError::StarknetError,
         jsonrpc::{HttpTransport, JsonRpcClient},
     },
-    signers::{DerivationPath, LocalWallet, SigningKey},
+    signers::{Signer, SigningKey},
 };
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
@@ -55,9 +57,11 @@ use crate::response::ui::UI;
 pub use accounts::AccountType;
 use conversions::byte_array::ByteArray;
 use foundry_ui::components::warning::WarningMessage;
-pub use helpers::signer::{AccountVariant, SignerSource, SignerType};
+pub use helpers::signer::{SignerSource, SignerType};
+use signers::RuntimeSigner;
 
 pub type NestedMap<T> = HashMap<String, HashMap<String, T>>;
+pub type RuntimeAccount<'a> = SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, RuntimeSigner>;
 
 pub const MAINNET: Felt =
     Felt::from_hex_unchecked(const_hex::const_encode::<7, true>(b"SN_MAIN").as_str());
@@ -282,7 +286,7 @@ pub async fn get_account<'a>(
     provider: &'a JsonRpcClient<HttpTransport>,
     rpc_args: &RpcArgs,
     ui: &UI,
-) -> Result<AccountVariant<'a>> {
+) -> Result<RuntimeAccount<'a>> {
     let chain_id = get_chain_id(provider).await?;
 
     let network_name = chain_id_to_network_name(chain_id);
@@ -335,7 +339,7 @@ pub async fn get_account<'a>(
                 .await
                 .context("Failed to get url")?;
             let local_account = get_account_from_devnet(account, provider, &url).await?;
-            Ok(AccountVariant::LocalWallet(local_account))
+            Ok(local_account)
         }
         _ => {
             get_account_from_accounts_file(
@@ -356,7 +360,7 @@ pub async fn get_account_from_accounts_file<'a>(
     provider: &'a JsonRpcClient<HttpTransport>,
     keystore: Option<&Utf8PathBuf>,
     ui: &UI,
-) -> Result<AccountVariant<'a>> {
+) -> Result<RuntimeAccount<'a>> {
     let chain_id = get_chain_id(provider).await?;
     let account_data = if let Some(keystore) = keystore {
         get_account_data_from_keystore(account, keystore)?
@@ -364,14 +368,36 @@ pub async fn get_account_from_accounts_file<'a>(
         get_account_data_from_accounts_file(account, chain_id, accounts_file)?
     };
 
-    if let SignerSource::Ledger(ledger_path) =
-        SignerSource::new(keystore.cloned(), Some(&account_data.signer_type))?
-    {
-        return build_ledger_account(ledger_path, account_data, chain_id, provider, ui).await;
-    }
+    let signer_source = SignerSource::new(keystore.cloned(), Some(&account_data.signer_type))?;
+    let signer = match signer_source {
+        SignerSource::Keystore(_) | SignerSource::AccountsFile => {
+            let private_key = account_data
+                .signer_type
+                .private_key()
+                .context("Private key not found")?;
+            let kind = if keystore.is_some() {
+                PrivateKeySource::Keystore
+            } else {
+                PrivateKeySource::PrivateKey
+            };
+            RuntimeSigner::from_private_key(private_key, kind)
+        }
+        SignerSource::Ledger(ledger_path) => {
+            let signer = ledger::create_ledger_signer(&ledger_path, ui, true).await?;
+            signer.into()
+        }
+    };
 
-    let account = build_account(account_data, chain_id, provider).await?;
-    Ok(AccountVariant::LocalWallet(account))
+    let actual_public_key = signer.get_public_key().await?.scalar();
+    let signer_kind = signer.kind();
+
+    ensure!(
+        actual_public_key == account_data.public_key,
+        "{signer_kind} signer public key does not match the account: expected {:#x}, got {actual_public_key:#x}",
+        account_data.public_key
+    );
+
+    build_account(account_data, chain_id, provider, signer).await
 }
 
 pub async fn get_contract_class(
@@ -398,18 +424,12 @@ pub async fn get_contract_class(
     result.map_err(handle_rpc_error)
 }
 
-async fn build_account(
+pub(crate) async fn build_account(
     account_data: AccountData,
     chain_id: Felt,
     provider: &JsonRpcClient<HttpTransport>,
-) -> Result<SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>> {
-    let private_key = account_data
-        .signer_type
-        .private_key()
-        .context("Private key not found")?;
-
-    let signer = LocalWallet::from(SigningKey::from_secret_scalar(private_key));
-
+    signer: RuntimeSigner,
+) -> Result<RuntimeAccount<'_>> {
     let address = account_data
         .address
         .context("Failed to get account address")?;
@@ -427,33 +447,6 @@ async fn build_account(
     account.set_block_id(BlockId::Tag(PreConfirmed));
 
     Ok(account)
-}
-
-async fn build_ledger_account<'a>(
-    ledger_path: DerivationPath,
-    account_data: AccountData,
-    chain_id: Felt,
-    provider: &'a JsonRpcClient<HttpTransport>,
-    ui: &UI,
-) -> Result<AccountVariant<'a>> {
-    let address = account_data
-        .address
-        .context("Failed to get account address")?;
-
-    verify_account_address(address, chain_id, provider).await?;
-
-    let encoding = get_account_encoding(
-        account_data.legacy,
-        account_data.class_hash,
-        address,
-        provider,
-    )
-    .await?;
-
-    let account =
-        ledger::ledger_account(&ledger_path, address, chain_id, encoding, provider, ui).await?;
-
-    Ok(AccountVariant::Ledger(account))
 }
 
 async fn verify_account_address(
@@ -506,7 +499,7 @@ pub fn get_account_data_from_keystore(
 
     let private_key = SigningKey::from_keystore(
         keystore_path,
-        get_keystore_password(KEYSTORE_PASSWORD_ENV_VAR)?.as_str(),
+        get_keystore_password(LEGACY_KEYSTORE_PASSWORD_ENV)?.as_str(),
     )?
     .secret_scalar();
 
@@ -914,11 +907,10 @@ macro_rules! apply_optional_fields {
 mod tests {
     use std::num::{NonZeroU8, NonZeroU16};
 
-    use crate::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
     use crate::{
         AccountType, PartialWaitParams, chain_id_to_network_name, extract_or_generate_salt,
         get_account_data_from_accounts_file, get_account_data_from_keystore, get_block_id,
-        udc_uniqueness,
+        signers::LEGACY_KEYSTORE_PASSWORD_ENV, udc_uniqueness,
     };
     use camino::Utf8PathBuf;
     use configuration::{Override, override_optional};
@@ -1198,7 +1190,7 @@ mod tests {
         // The only potential issue would be if a test explicitly required this variable to be unset,
         // but to the best of our knowledge, no such test exists.
         unsafe {
-            env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+            env::set_var(LEGACY_KEYSTORE_PASSWORD_ENV, "123");
         };
     }
 }
