@@ -873,3 +873,50 @@ pub async fn test_use_url_from_config() {
 
     snapbox.assert().success();
 }
+
+#[tokio::test]
+async fn native_keystore_import_persists_absolute_invocation_path() {
+    use sncast::signers::KeystoreFile;
+    use starknet_types_core::felt::Felt;
+
+    let directory = tempdir().unwrap();
+    let cwd = Utf8PathBuf::try_from(directory.path().canonicalize().unwrap()).unwrap();
+    let key = cwd.join("keys/alice.json");
+    KeystoreFile::create(&key, Felt::ONE, "secret").unwrap();
+    let original_key = fs::read(&key).unwrap();
+    runner(&[
+        "--accounts-file",
+        "registry/accounts.json",
+        "account",
+        "import",
+        "--url",
+        URL,
+        "--name",
+        "alice",
+        "--address",
+        "0x123",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        "--type",
+        "oz",
+        "--keystore",
+        "keys/alice.json",
+        "--keystore-password-env",
+        "NATIVE_KEY_PASSWORD",
+        "--silent",
+    ])
+    .current_dir(&cwd)
+    .env_remove("SNCAST_KEYSTORE_PASSWORD")
+    .env("NATIVE_KEY_PASSWORD", "secret")
+    .stdin("")
+    .assert()
+    .success();
+
+    let registry: serde_json::Value =
+        serde_json::from_slice(&fs::read(cwd.join("registry/accounts.json")).unwrap()).unwrap();
+    let signer = &registry["accounts"]["SN_SEPOLIA"]["alice"]["signer"];
+    assert_eq!(signer["path"], key.as_str());
+    assert_eq!(signer["password_env"], "NATIVE_KEY_PASSWORD");
+    assert_eq!(signer["type"], "keystore");
+    assert_eq!(fs::read(&key).unwrap(), original_key);
+}

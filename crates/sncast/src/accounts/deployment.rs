@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, ensure};
 use conversions::IntoConv;
 use starknet_rust::accounts::{
     AccountDeploymentV3, AccountFactory, AccountFactoryError, ArgentAccountFactory,
@@ -109,6 +109,7 @@ impl AccountDeploymentService {
         signer: S,
         salt: Felt,
         chain_id: Felt,
+        expected_address: Felt,
         fee_args: FeeArgs,
         dry_run_args: DryRunArgs,
         wait_config: WaitForTx,
@@ -127,6 +128,7 @@ impl AccountDeploymentService {
                     factory,
                     provider,
                     salt,
+                    expected_address,
                     fee_args,
                     dry_run_args,
                     wait_config,
@@ -142,6 +144,7 @@ impl AccountDeploymentService {
                     factory,
                     provider,
                     salt,
+                    expected_address,
                     fee_args,
                     dry_run_args,
                     wait_config,
@@ -163,6 +166,7 @@ impl AccountDeploymentService {
                     factory,
                     provider,
                     salt,
+                    expected_address,
                     fee_args,
                     dry_run_args,
                     wait_config,
@@ -202,6 +206,7 @@ async fn deploy_factory<T>(
     account_factory: T,
     provider: &JsonRpcClient<HttpTransport>,
     salt: Felt,
+    expected_address: Felt,
     fee_args: FeeArgs,
     dry_run_args: DryRunArgs,
     wait_config: WaitForTx,
@@ -214,6 +219,15 @@ where
 {
     let deployment = account_factory.deploy_v3(salt);
     let address = deployment.address();
+    // The native record does not retain deployment settings such as a Ready guardian or a
+    // non-default Braavos base account class, which an imported account may use. Never deploy a
+    // contract at an address other than the one recorded for the account.
+    ensure!(
+        address == expected_address,
+        "Account address {expected_address:#x} does not match address {address:#x} computed for deployment. \
+         sncast deploys Ready accounts without a guardian and Braavos accounts with the default base account class; \
+         deploy accounts with other settings using the tool that created them"
+    );
 
     if dry_run_args.dry_run {
         return dry_run_args

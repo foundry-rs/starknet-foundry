@@ -5,17 +5,14 @@ use crate::helpers::configuration::CastConfig;
 use crate::helpers::constants::{DEFAULT_ACCOUNTS_FILE, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::helpers::rpc::RpcArgs;
 use crate::response::errors::SNCastProviderError;
-use crate::signers::LEGACY_KEYSTORE_PASSWORD_ENV;
 use anyhow::{Context, Error, Result, anyhow, bail, ensure};
-use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use configuration::Override;
 use helpers::constants::UDC_ADDRESS;
 use rand::RngCore;
 use rand::rngs::OsRng;
-use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use serde_json::{Deserializer, Value};
+use serde_json::Value;
 use shared::rpc::create_rpc_client;
 use starknet_rust::accounts::{AccountFactory, AccountFactoryError};
 use starknet_rust::core::types::ExecutionResult;
@@ -34,14 +31,12 @@ use starknet_rust::{
         ProviderError::StarknetError,
         jsonrpc::{HttpTransport, JsonRpcClient},
     },
-    signers::SigningKey,
 };
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::thread::sleep;
 use std::time::Duration;
-use std::{env, fs};
 use thiserror::Error;
 use url::Url;
 
@@ -54,10 +49,8 @@ use crate::response::ui::UIExt;
 pub use accounts::AccountType;
 use conversions::byte_array::ByteArray;
 use foundry_ui::UI;
-pub use helpers::signer::{SignerSource, SignerType};
-use signers::{LedgerSpec, PrivateKeySpec, RuntimeSigner, SignerSpec};
-
-pub type NestedMap<T> = HashMap<String, HashMap<String, T>>;
+pub use helpers::signer::SignerSource;
+use signers::RuntimeSigner;
 pub type RuntimeAccount<'a> = SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, RuntimeSigner>;
 
 pub const MAINNET: Felt =
@@ -95,50 +88,6 @@ impl TryFrom<Felt> for Network {
         } else {
             bail!("Given network is neither Mainnet nor Sepolia")
         }
-    }
-}
-
-#[derive(Deserialize, Serialize, Clone, Debug)]
-pub struct AccountData {
-    pub public_key: Felt,
-    pub address: Option<Felt>,
-    pub salt: Option<Felt>,
-    pub deployed: Option<bool>,
-    pub class_hash: Option<Felt>,
-    pub legacy: Option<bool>,
-
-    #[serde(default, rename(serialize = "type", deserialize = "type"))]
-    pub account_type: Option<AccountType>,
-
-    #[serde(flatten)]
-    pub signer_type: SignerType,
-}
-
-impl TryFrom<AccountData> for accounts::AccountRecord {
-    type Error = accounts::AccountsError;
-
-    fn try_from(account: AccountData) -> Result<Self, Self::Error> {
-        let signer = match account.signer_type {
-            SignerType::Local { private_key } => {
-                SignerSpec::PrivateKey(PrivateKeySpec::new(private_key))
-            }
-            SignerType::Ledger { ledger_path } => SignerSpec::Ledger(LedgerSpec::new(ledger_path)),
-        };
-        Ok(Self {
-            public_key: account.public_key,
-            address: account
-                .address
-                .ok_or(accounts::AccountsError::MissingField {
-                    field: "address",
-                    operation: "connected account use",
-                })?,
-            salt: account.salt,
-            deployed: account.deployed,
-            class_hash: account.class_hash,
-            legacy: account.legacy,
-            account_type: account.account_type,
-            signer,
-        })
     }
 }
 
@@ -261,13 +210,6 @@ pub async fn get_chain_id(provider: &JsonRpcClient<HttpTransport>) -> Result<Fel
         .context("Failed to fetch chain_id")
 }
 
-pub fn get_keystore_password(env_var: &str) -> std::io::Result<String> {
-    match env::var(env_var) {
-        Ok(password) => Ok(password),
-        _ => rpassword::prompt_password("Enter password: "),
-    }
-}
-
 pub async fn get_nonce(
     provider: &JsonRpcClient<HttpTransport>,
     block_id: &str,
@@ -291,9 +233,7 @@ pub async fn get_account<'a>(
     let chain_id = get_chain_id(provider).await?;
 
     let account = &config.account;
-    if let Some(keystore) = &config.keystore {
-        check_keystore_and_account_files_exist(keystore, account)?;
-    } else if account.is_empty() {
+    if account.is_empty() {
         bail!("Account name not passed nor found in snfoundry.toml");
     }
     let is_devnet_account = is_devnet_account(account);
@@ -308,45 +248,36 @@ pub async fn get_account<'a>(
     }
 
     let repository = accounts::AccountRepository::try_new(&config.accounts_file)?;
+    let accounts_file = repository.path();
+    // Devnet accounts don't require an accounts file.
+    // When the default accounts file is used, we don't enforce its existence.
+    // When accounts file is set explicitly, it is still required to exist then.
+    let uses_default_accounts_file =
+        accounts_file.as_str() == shellexpand::tilde(DEFAULT_ACCOUNTS_FILE).as_ref();
+    let accounts_file_required = !(is_devnet_account && uses_default_accounts_file);
+    let account_name = accounts::AccountName::new(account.as_str())?;
+    let exists_in_accounts_file = check_account_exists(
+        &account_name,
+        &accounts::ChainId::from(chain_id),
+        &repository,
+        accounts_file_required,
+    )?;
 
-    // With `--keystore`, `account` is a path to a starkli account file, not an account name.
-    let (selector, devnet_url) = if let Some(keystore) = &config.keystore {
-        (
-            accounts::AccountSelector::legacy_starkli(Utf8PathBuf::from(account), keystore.clone()),
-            None,
-        )
+    let (selector, devnet_url) = if is_devnet_account && !exists_in_accounts_file {
+        let url = rpc_args
+            .get_url(config)
+            .await
+            .context("Failed to get url")?;
+        (accounts::AccountSelector::devnet(account)?, Some(url))
     } else {
-        let accounts_file = repository.path();
-        // Devnet accounts don't require an accounts file.
-        // When the default accounts file is used, we don't enforce its existence.
-        // When accounts file is set explicitly, it is still required to exist then.
-        let uses_default_accounts_file =
-            accounts_file.as_str() == shellexpand::tilde(DEFAULT_ACCOUNTS_FILE).as_ref();
-        let accounts_file_required = !(is_devnet_account && uses_default_accounts_file);
-        let account_name = accounts::AccountName::new(account.as_str())?;
-        let exists_in_accounts_file = check_account_exists(
-            &account_name,
-            &accounts::ChainId::from(chain_id),
-            &repository,
-            accounts_file_required,
-        )?;
-
-        if is_devnet_account && !exists_in_accounts_file {
-            let url = rpc_args
-                .get_url(config)
-                .await
-                .context("Failed to get url")?;
-            (accounts::AccountSelector::devnet(account)?, Some(url))
-        } else {
-            if is_devnet_account {
-                ui.print_warning(format!(
-                    "Using account {account} from accounts file {accounts_file}. \
-                    To use an inbuilt devnet account, please rename your existing account or use an account with a different number."
-                ));
-                ui.print_blank_line();
-            }
-            (accounts::AccountSelector::named(account.clone())?, None)
+        if is_devnet_account {
+            ui.print_warning(format!(
+                "Using account {account} from accounts file {accounts_file}. \
+                To use an inbuilt devnet account, please rename your existing account or use an account with a different number."
+            ));
+            ui.print_blank_line();
         }
+        (accounts::AccountSelector::named(account.clone())?, None)
     };
 
     accounts::AccountService::new(repository)
@@ -406,80 +337,6 @@ pub async fn check_class_hash_exists(
     }
 }
 
-pub fn get_account_data_from_keystore(
-    account: &str,
-    keystore_path: &Utf8PathBuf,
-) -> Result<AccountData> {
-    check_keystore_and_account_files_exist(keystore_path, account)?;
-    let path_to_account = Utf8PathBuf::from(account);
-
-    let private_key = SigningKey::from_keystore(
-        keystore_path,
-        get_keystore_password(LEGACY_KEYSTORE_PASSWORD_ENV)?.as_str(),
-    )?
-    .secret_scalar();
-
-    let account_info: Value = read_and_parse_json_file(&path_to_account)?;
-
-    let parse_to_felt = |pointer: &str| -> Option<Felt> {
-        get_string_value_from_json(&account_info, pointer).and_then(|value| value.parse().ok())
-    };
-
-    let address = parse_to_felt("/deployment/address");
-    let class_hash = parse_to_felt("/deployment/class_hash");
-    let salt = parse_to_felt("/deployment/salt");
-    let deployed = get_string_value_from_json(&account_info, "/deployment/status")
-        .map(|status| status == "deployed");
-    let legacy = account_info
-        .pointer("/variant/legacy")
-        .and_then(Value::as_bool);
-    let account_type = get_string_value_from_json(&account_info, "/variant/type")
-        // "argent" was renamed to "ready"; map for backward compat with old account files
-        .map(|t| match t.as_str() {
-            "argent" => "ready".to_string(),
-            _ => t,
-        })
-        .and_then(|account_type| account_type.parse().ok());
-
-    let public_key = match account_type.context("Failed to get type key")? {
-        AccountType::Ready => parse_to_felt("/variant/owner"),
-        AccountType::OpenZeppelin => parse_to_felt("/variant/public_key"),
-        AccountType::Braavos => get_braavos_account_public_key(&account_info)?,
-    }
-    .context("Failed to get public key from account JSON file")?;
-
-    Ok(AccountData {
-        public_key,
-        address,
-        salt,
-        deployed,
-        class_hash,
-        legacy,
-        account_type,
-        signer_type: SignerType::Local { private_key },
-    })
-}
-fn get_braavos_account_public_key(account_info: &Value) -> Result<Option<Felt>> {
-    get_string_value_from_json(account_info, "/variant/multisig/status")
-        .filter(|status| status == "off")
-        .context("Braavos accounts cannot be deployed with multisig on")?;
-
-    account_info
-        .pointer("/variant/signers")
-        .and_then(Value::as_array)
-        .filter(|signers| signers.len() == 1)
-        .context("Braavos accounts can only be deployed with one seed signer")?;
-
-    Ok(
-        get_string_value_from_json(account_info, "/variant/signers/0/public_key")
-            .and_then(|value| value.parse().ok()),
-    )
-}
-fn get_string_value_from_json(json: &Value, pointer: &str) -> Option<String> {
-    json.pointer(pointer)
-        .and_then(Value::as_str)
-        .map(str::to_string)
-}
 pub fn get_account_record_from_repository(
     name: &str,
     chain_id: Felt,
@@ -490,14 +347,31 @@ pub fn get_account_record_from_repository(
     }
     check_account_file_exists(repository)?;
     let chain_id = accounts::ChainId::from(chain_id);
-    repository
+    let mut account = repository
         .find(&chain_id, &accounts::AccountName::new(name)?)
         .map_err(|error| match error {
             accounts::AccountsError::AccountNotFound { .. } => {
                 anyhow!("Account = {name} not found under chain ID = {chain_id}")
             }
             error => anyhow!(error),
-        })
+        })?;
+
+    // Resolve only the runtime copy. Repository reads and unrelated writes must retain the
+    // original reference, which is relative to the accounts file rather than the invocation CWD.
+    if let signers::SignerSpec::Keystore(spec) = &account.signer
+        && spec.path().is_relative()
+    {
+        let accounts_file = camino::Utf8PathBuf::try_from(std::path::absolute(repository.path())?)?;
+        let directory = accounts_file
+            .parent()
+            .context("Accounts file has no parent directory")?;
+        account.signer = signers::SignerSpec::Keystore(signers::KeystoreSpec::new(
+            directory.join(spec.path()),
+            spec.password_env().map(str::to_owned),
+        ));
+    }
+
+    Ok(account)
 }
 
 pub fn check_account_file_exists(repository: &accounts::AccountRepository) -> Result<()> {
@@ -509,27 +383,6 @@ pub fn check_account_file_exists(repository: &accounts::AccountRepository) -> Re
         )
     }
     Ok(())
-}
-
-pub fn read_and_parse_json_file<T>(path: &Utf8PathBuf) -> Result<T>
-where
-    T: DeserializeOwned + Default,
-{
-    let file_content =
-        fs::read_to_string(path).with_context(|| format!("Failed to read a file = {path}"))?;
-
-    if file_content.trim().is_empty() {
-        return Ok(T::default());
-    }
-
-    let deserializer = &mut Deserializer::from_str(&file_content);
-    serde_path_to_error::deserialize(deserializer).map_err(|err| {
-        let path_to_field = err.path().to_string();
-        anyhow!(
-            "Failed to parse field `{path_to_field}` in file '{path}': {}",
-            err.into_inner()
-        )
-    })
 }
 
 pub(crate) async fn get_account_encoding(
@@ -753,25 +606,6 @@ pub async fn handle_wait_for_tx<T>(
     Ok(return_value)
 }
 
-pub fn check_keystore_and_account_files_exist(
-    keystore_path: &Utf8PathBuf,
-    account: &str,
-) -> Result<()> {
-    if !keystore_path.exists() {
-        bail!("Failed to find keystore file");
-    }
-    if account.is_empty() {
-        bail!("Argument `--account` must be passed and be a path when using `--keystore`");
-    }
-    let path_to_account = Utf8PathBuf::from(account);
-    if !path_to_account.exists() {
-        bail!(
-            "File containing the account does not exist: When using `--keystore` argument, the `--account` argument should be a path to the starkli JSON account file"
-        );
-    }
-    Ok(())
-}
-
 #[must_use]
 pub fn extract_or_generate_salt(salt: Option<Felt>) -> Felt {
     salt.unwrap_or(Felt::from(OsRng.next_u64()))
@@ -814,9 +648,8 @@ mod tests {
     use std::num::{NonZeroU8, NonZeroU16};
 
     use crate::accounts::AccountRepository;
-    use crate::signers::LEGACY_KEYSTORE_PASSWORD_ENV;
     use crate::{
-        AccountType, PartialWaitParams, extract_or_generate_salt, get_account_data_from_keystore,
+        AccountType, PartialWaitParams, extract_or_generate_salt,
         get_account_record_from_repository, get_block_id, udc_uniqueness,
     };
     use camino::Utf8PathBuf;
@@ -829,7 +662,6 @@ mod tests {
     };
     use starknet_rust::core::utils::UdcUniqueSettings;
     use starknet_rust::core::utils::UdcUniqueness::{NotUnique, Unique};
-    use std::env;
 
     #[test]
     fn test_get_block_id() {
@@ -992,78 +824,74 @@ mod tests {
         assert_eq!(account.account_type, Some(AccountType::OpenZeppelin));
     }
 
-    #[test]
-    fn test_get_account_data_from_keystore() {
-        set_keystore_password_env();
-        let account = get_account_data_from_keystore(
-            "tests/data/keystore/my_account.json",
-            &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
-        )
+    #[test_case::test_case(false, false; "relative key and repository")]
+    #[test_case::test_case(false, true; "relative key and absolute repository")]
+    #[test_case::test_case(true, false; "absolute key and relative repository")]
+    #[test_case::test_case(true, true; "absolute key and repository")]
+    fn keystore_references_are_resolved_only_for_runtime(
+        absolute_key: bool,
+        absolute_repository: bool,
+    ) {
+        use crate::accounts::{AccountName, ChainId};
+        use crate::signers::SignerSpec;
+        use serde_json::json;
+
+        let cwd = Utf8PathBuf::try_from(std::env::current_dir().unwrap()).unwrap();
+        let directory = tempfile::tempdir_in(&cwd).unwrap();
+        let directory = camino::Utf8Path::from_path(directory.path()).unwrap();
+        let accounts_path = directory.join("accounts.json");
+        let key_path = if absolute_key {
+            directory.join("keys/../alice.json")
+        } else {
+            Utf8PathBuf::from("keys/alice.json")
+        };
+        let signer = json!({
+            "type": "keystore", "path": key_path, "password_env": "ALICE_PASSWORD"
+        });
+        let mut accounts: serde_json::Value =
+            serde_json::from_str(include_str!("../tests/data/accounts/accounts.json")).unwrap();
+        accounts["accounts"]["SN_SEPOLIA"]["user1"]["signer"] = signer.clone();
+        let original = serde_json::to_vec(&accounts).unwrap();
+        std::fs::write(&accounts_path, &original).unwrap();
+        let repository = AccountRepository::try_new(if absolute_repository {
+            &accounts_path
+        } else {
+            accounts_path.strip_prefix(&cwd).unwrap()
+        })
         .unwrap();
-        let private_key = account
-            .signer_type
-            .private_key()
-            .expect("Private key should exist");
+
+        // Resolving a reference must not require the keystore to exist or normalize absolute paths.
+        let account =
+            get_account_record_from_repository("user1", crate::SEPOLIA, &repository).unwrap();
+        let SignerSpec::Keystore(spec) = account.signer else {
+            panic!("expected keystore signer")
+        };
+        let expected = if absolute_key {
+            key_path.clone()
+        } else {
+            directory.join(&key_path)
+        };
+        assert_eq!(spec.path(), expected);
+        assert_eq!(spec.password_env(), Some("ALICE_PASSWORD"));
+        assert_eq!(std::fs::read(&accounts_path).unwrap(), original);
+
+        let chain = ChainId::from(crate::SEPOLIA);
+        let name = AccountName::new("user1").unwrap();
+        let SignerSpec::Keystore(raw) = repository.find(&chain, &name).unwrap().signer else {
+            panic!("expected keystore signer")
+        };
+        assert_eq!(raw.path(), key_path);
+        repository
+            .update_record(&chain, &AccountName::new("oz").unwrap(), |record| {
+                record.deployed = Some(true);
+                Ok(())
+            })
+            .unwrap();
+        let persisted: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(&accounts_path).unwrap()).unwrap();
         assert_eq!(
-            private_key.into_hex_string(),
-            "0x55ae34c86281fbd19292c7e3bfdfceb4"
-        );
-        assert_eq!(
-            account.public_key.into_hex_string(),
-            "0xe2d3d7080bfc665e0060a06e8e95c3db3ff78a1fec4cc81ddc87e49a12e0a"
-        );
-        assert_eq!(
-            account.address.map(IntoHexStr::into_hex_string),
-            Some("0xcce3217e4aea0ab738b55446b1b378750edfca617db549fda1ede28435206c".to_string())
-        );
-        assert_eq!(account.salt, None);
-        assert_eq!(account.deployed, Some(true));
-        assert_eq!(account.legacy, Some(true));
-        assert_eq!(account.account_type, Some(AccountType::OpenZeppelin));
-    }
-
-    #[test]
-    fn test_get_argent_account_from_keystore_backward_compat() {
-        set_keystore_password_env();
-        let account = get_account_data_from_keystore(
-            "tests/data/keystore/my_account_argent.json",
-            &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
-        )
-        .unwrap();
-        assert_eq!(account.account_type, Some(AccountType::Ready));
-        assert_eq!(
-            account.public_key.into_hex_string(),
-            "0xe2d3d7080bfc665e0060a06e8e95c3db3ff78a1fec4cc81ddc87e49a12e0a"
-        );
-    }
-
-    #[test]
-    fn test_get_braavos_account_from_keystore_with_multisig_on() {
-        set_keystore_password_env();
-        let err = get_account_data_from_keystore(
-            "tests/data/keystore/my_account_braavos_invalid_multisig.json",
-            &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
-        )
-        .unwrap_err();
-
-        assert!(
-            err.to_string()
-                .contains("Braavos accounts cannot be deployed with multisig on")
-        );
-    }
-
-    #[test]
-    fn test_get_braavos_account_from_keystore_multiple_signers() {
-        set_keystore_password_env();
-        let err = get_account_data_from_keystore(
-            "tests/data/keystore/my_account_braavos_multiple_signers.json",
-            &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
-        )
-        .unwrap_err();
-
-        assert!(
-            err.to_string()
-                .contains("Braavos accounts can only be deployed with one seed signer")
+            persisted["accounts"]["SN_SEPOLIA"]["user1"]["signer"],
+            signer
         );
     }
 
@@ -1081,15 +909,5 @@ mod tests {
             err.to_string()
                 .contains("Account = user1 not found under chain ID = CUSTOM_CHAIN_ID")
         );
-    }
-
-    fn set_keystore_password_env() {
-        // SAFETY: Tests run in parallel and share the same environment variables.
-        // However, we only set this variable once to a fixed value and never modify or unset it.
-        // The only potential issue would be if a test explicitly required this variable to be unset,
-        // but to the best of our knowledge, no such test exists.
-        unsafe {
-            env::set_var(LEGACY_KEYSTORE_PASSWORD_ENV, "123");
-        };
     }
 }

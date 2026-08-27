@@ -3,28 +3,26 @@ use crate::starknet_commands::account::{
     save_account, validate_private_key,
 };
 use crate::starknet_commands::utils::felt_or_id::ClassHash;
-use anyhow::{Context, Result, bail, ensure};
+use anyhow::{Context, Result, anyhow, bail, ensure};
 use bigdecimal::BigDecimal;
 use camino::{Utf8Path, Utf8PathBuf};
 use clap::Args;
 use console::style;
 use conversions::IntoConv;
 use foundry_ui::UI;
-use serde_json::json;
 use sncast::accounts::{AccountDeploymentService, AccountRecord, AccountRepository};
 use sncast::helpers::configuration::CastConfig;
-use sncast::helpers::constants::{
-    BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH,
-};
+use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
 use sncast::helpers::ledger;
 use sncast::helpers::ledger::LedgerKeyLocatorAccount;
 use sncast::helpers::rpc::{RpcArgs, generate_network_flag};
 use sncast::response::account::create::AccountCreateResponse;
-use sncast::signers::credentials::LEGACY_CREATE_KEYSTORE_PASSWORD_ENV;
-use sncast::signers::{LedgerSpec, PrivateKeySpec, SignerSpec};
+use sncast::signers::{
+    KeystoreFile, KeystoreSpec, LedgerSpec, PrivateKeySpec, SignerSpec, new_keystore_password,
+};
 use sncast::{
     AccountType, SignerSource, check_class_hash_exists, check_if_legacy_contract,
-    extract_or_generate_salt, get_keystore_password,
+    extract_or_generate_salt,
 };
 use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
@@ -63,6 +61,14 @@ pub struct Create {
 
     #[command(flatten)]
     pub ledger_key_locator: LedgerKeyLocatorAccount,
+
+    /// Store the key in an encrypted keystore referenced by the native account
+    #[arg(long, conflicts_with = "ledger_key_locator_account")]
+    pub keystore: Option<Utf8PathBuf>,
+
+    /// Environment variable containing the native keystore password
+    #[arg(long, requires = "keystore")]
+    pub keystore_password_env: Option<String>,
 }
 
 impl Create {
@@ -111,9 +117,10 @@ pub async fn create(
         account_type: create.account_type,
         private_key,
         chain_id,
+        keystore_password_env: create.keystore_password_env.clone(),
     };
 
-    let (account_record, estimated_fee) =
+    let (account_record, estimated_fee, generated_private_key) =
         generate_account(provider, signer_source, ui, generation_params).await?;
 
     let address = account_record.address;
@@ -125,52 +132,46 @@ pub async fn create(
     );
 
     let account = match signer_source {
-        SignerSource::Keystore(keystore) => {
-            let account = account.unwrap_or_default();
-            let account_path = Utf8PathBuf::from(account);
-            if account_path == Utf8PathBuf::default() {
-                bail!("Argument `--account` must be passed and be a path when using `--keystore`");
-            }
+        SignerSource::Keystore(_) => {
+            let private_key = generated_private_key.context("Generated private key missing")?;
+            let SignerSpec::Keystore(spec) = &account_record.signer else {
+                bail!("native keystore account has an invalid signer")
+            };
+            let keystore = spec.path();
 
-            let private_key = account_record
-                .signer
-                .private_key()
-                .context("Invalid private key signer")?;
-            let legacy = account_record.legacy.context("Invalid legacy entry")?;
+            create_native_keystore(keystore, private_key, &account_record)?;
 
-            create_to_keystore(
-                private_key,
-                salt,
-                class_hash,
-                create.account_type,
-                keystore,
-                &account_path,
-                legacy,
-            )?;
+            let account =
+                match save_account(account, repository, chain_id, account_record.clone(), ui) {
+                    Ok(account) => account,
+                    Err(save_err) => {
+                        return match KeystoreFile::remove(keystore) {
+                            Ok(()) => Err(anyhow!(save_err)),
+                            Err(remove_err) => Err(anyhow!(remove_err).context(save_err)),
+                        };
+                    }
+                };
 
             let deploy_command =
-                generate_deploy_command_with_keystore(account, keystore, &create.rpc, config);
+                generate_deploy_command(repository.path(), &create.rpc, config, account.as_str());
+
             message.push_str(&deploy_command);
-            account.to_owned()
+            account
         }
         SignerSource::Ledger(_) | SignerSource::AccountsFile => {
             let account = save_account(account, repository, chain_id, account_record.clone(), ui)?;
             let deploy_command =
                 generate_deploy_command(repository.path(), &create.rpc, config, account.as_str());
             message.push_str(&deploy_command);
-            account.into()
+            account
         }
     };
 
     let add_profile_message = generate_add_profile_message(
         create.add_profile.as_ref(),
         &create.rpc,
-        &account,
+        account.as_str(),
         repository.path(),
-        match signer_source {
-            SignerSource::Keystore(path) => Some(path.clone()),
-            _ => None,
-        },
         config,
     )?;
 
@@ -192,6 +193,7 @@ struct AccountGenerationParams {
     account_type: AccountType,
     private_key: Option<Felt>,
     chain_id: Felt,
+    keystore_password_env: Option<String>,
 }
 
 async fn generate_account(
@@ -199,12 +201,12 @@ async fn generate_account(
     signer_source: &SignerSource,
     ui: &UI,
     params: AccountGenerationParams,
-) -> Result<(AccountRecord, u128)> {
+) -> Result<(AccountRecord, u128, Option<Felt>)> {
     if let SignerSource::Ledger(ledger_path) = signer_source {
         let signer = ledger::create_ledger_signer(ledger_path, ui, false).await?;
         let signer_spec = SignerSpec::Ledger(LedgerSpec::new(ledger_path.clone()));
 
-        finalize_account_generation(
+        let (account, estimated_fee) = finalize_account_generation(
             provider,
             signer,
             signer_spec,
@@ -213,15 +215,29 @@ async fn generate_account(
             params.account_type,
             params.chain_id,
         )
-        .await
+        .await?;
+        Ok((account, estimated_fee, None))
     } else {
         let private_key = params
             .private_key
             .map_or_else(SigningKey::from_random, SigningKey::from_secret_scalar);
         let signer = LocalWallet::from_signing_key(private_key.clone());
-        let signer_spec = SignerSpec::PrivateKey(PrivateKeySpec::new(private_key.secret_scalar()));
+        let secret = private_key.secret_scalar();
+        let signer_spec = match signer_source {
+            SignerSource::Keystore(path) => {
+                // The CLI path is relative to the invocation directory, not the accounts file.
+                // Do not canonicalize: neither the file nor its parent need to exist yet.
+                let path = if path.is_absolute() {
+                    path.clone()
+                } else {
+                    Utf8PathBuf::try_from(std::env::current_dir()?)?.join(path)
+                };
+                SignerSpec::Keystore(KeystoreSpec::new(path, params.keystore_password_env))
+            }
+            _ => SignerSpec::PrivateKey(PrivateKeySpec::new(secret)),
+        };
 
-        finalize_account_generation(
+        let (account, estimated_fee) = finalize_account_generation(
             provider,
             signer,
             signer_spec,
@@ -230,8 +246,21 @@ async fn generate_account(
             params.account_type,
             params.chain_id,
         )
-        .await
+        .await?;
+        Ok((account, estimated_fee, Some(secret)))
     }
+}
+
+fn create_native_keystore(
+    keystore_path: &Utf8Path,
+    private_key: Felt,
+    account: &AccountRecord,
+) -> Result<()> {
+    let SignerSpec::Keystore(spec) = &account.signer else {
+        bail!("native keystore account has an invalid signer")
+    };
+    let password = new_keystore_password(spec)?;
+    KeystoreFile::create(keystore_path, private_key, &password).map_err(Into::into)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -276,103 +305,6 @@ where
     Ok((account, estimated_fee.overall_fee))
 }
 
-fn create_to_keystore(
-    private_key: Felt,
-    salt: Felt,
-    class_hash: Felt,
-    account_type: AccountType,
-    keystore_path: &Utf8PathBuf,
-    account_path: &Utf8PathBuf,
-    legacy: bool,
-) -> Result<()> {
-    if keystore_path.exists() {
-        bail!("Keystore file {keystore_path} already exists");
-    }
-    if account_path.exists() {
-        bail!("Account file {account_path} already exists");
-    }
-    let password = get_keystore_password(LEGACY_CREATE_KEYSTORE_PASSWORD_ENV)?;
-    let private_key = SigningKey::from_secret_scalar(private_key);
-    private_key.save_as_keystore(keystore_path, &password)?;
-    let account_json = match account_type {
-        AccountType::OpenZeppelin => {
-            json!({
-                "version": 1,
-                "variant": {
-                    "type": AccountType::OpenZeppelin,
-                    "version": 1,
-                    "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
-                    "legacy": legacy,
-                },
-                "deployment": {
-                    "status": "undeployed",
-                    "class_hash": format!("{class_hash:#x}"),
-                    "salt": format!("{salt:#x}"),
-                }
-            })
-        }
-        AccountType::Ready => {
-            json!({
-                "version": 1,
-                "variant": {
-                    "type": AccountType::Ready,
-                    "version": 1,
-                    "owner": format!("{:#x}", private_key.verifying_key().scalar()),
-                    "guardian": "0x0",
-                },
-                "deployment": {
-                    "status": "undeployed",
-                    "class_hash": format!("{class_hash:#x}"),
-                    "salt": format!("{salt:#x}"),
-                }
-            })
-        }
-        AccountType::Braavos => {
-            json!(
-                {
-                  "version": 1,
-                  "variant": {
-                    "type": AccountType::Braavos,
-                    "version": 1,
-                    "multisig": {
-                      "status": "off"
-                    },
-                    "signers": [
-                      {
-                        "type": "stark",
-                        "public_key": format!("{:#x}", private_key.verifying_key().scalar())
-                      }
-                    ]
-                  },
-                  "deployment": {
-                    "status": "undeployed",
-                    "class_hash": format!("{class_hash:#x}"),
-                    "salt": format!("{salt:#x}"),
-                    "context": {
-                      "variant": "braavos",
-                      "base_account_class_hash": BRAAVOS_BASE_ACCOUNT_CLASS_HASH
-                    }
-                  }
-                }
-            )
-        }
-    };
-
-    write_account_to_file(&account_json, account_path)
-}
-
-fn write_account_to_file(
-    account_json: &serde_json::Value,
-    account_file: &Utf8PathBuf,
-) -> Result<()> {
-    std::fs::create_dir_all(account_file.clone().parent().unwrap())?;
-    std::fs::write(
-        account_file.clone(),
-        serde_json::to_string_pretty(&account_json).unwrap(),
-    )?;
-    Ok(())
-}
-
 fn generate_deploy_command(
     accounts_file: &Utf8Path,
     rpc_args: &RpcArgs,
@@ -393,19 +325,5 @@ fn generate_deploy_command(
     format!(
         "\n\nAfter prefunding the account, run:\n\
         sncast{accounts_flag} account deploy {network_flag} --name {account}"
-    )
-}
-
-fn generate_deploy_command_with_keystore(
-    account: &str,
-    keystore: &Utf8PathBuf,
-    rpc_args: &RpcArgs,
-    config: &CastConfig,
-) -> String {
-    let network_flag = generate_network_flag(rpc_args, config);
-
-    format!(
-        "\n\nAfter prefunding the account, run:\n\
-        sncast --account {account} --keystore {keystore} account deploy {network_flag}"
     )
 }
