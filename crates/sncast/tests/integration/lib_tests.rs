@@ -1,17 +1,29 @@
 use crate::helpers::constants::{
     DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, URL,
 };
+use crate::helpers::env::set_keystore_password_env;
 use crate::helpers::fixtures::create_test_provider;
 
+use async_trait::async_trait;
 use camino::Utf8PathBuf;
 use foundry_ui::UI;
+use serde_json::json;
 use shared::rpc::{get_rpc_version, is_expected_version};
+use sncast::accounts::{AccountDeploymentService, AccountType};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
-use sncast::{check_if_legacy_contract, get_account, get_provider};
+use sncast::helpers::{dry_run::DryRunArgs, fee::FeeArgs};
+use sncast::{ValidatedWaitParams, WaitForTx, check_if_legacy_contract, get_account, get_provider};
 use starknet_rust::accounts::Account;
+use starknet_rust::core::crypto::Signature;
 use starknet_rust::macros::felt;
+use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
+use starknet_rust::signers::{Signer, SignerInteractivityContext, VerifyingKey};
+use starknet_types_core::felt::Felt;
+use std::convert::Infallible;
 use url::Url;
+use wiremock::matchers::{body_partial_json, method};
+use wiremock::{Mock, MockServer, ResponseTemplate};
 
 #[tokio::test]
 async fn test_get_provider() {
@@ -79,6 +91,32 @@ async fn test_get_account_invalid_file() {
     let err = format!("{:#}", account.unwrap_err());
 
     insta::assert_snapshot!(err, @"invalid accounts file `tests/data/accounts/invalid_format.json`: not valid JSON: expected `,` or `}` at line 8 column 9");
+}
+
+#[tokio::test]
+async fn test_get_account_keystore_ignores_accounts_file() {
+    set_keystore_password_env();
+    let provider = create_test_provider();
+    let config = CastConfig {
+        account: "tests/data/keystore/predeployed_account.json".to_string(),
+        keystore: Some(Utf8PathBuf::from(
+            "tests/data/keystore/predeployed_key.json",
+        )),
+        accounts_file: Utf8PathBuf::from("tests/data/accounts/invalid_format.json"),
+        ..Default::default()
+    };
+    let rpc_args = RpcArgs {
+        url: Some(Url::parse(URL).expect("Failed to parse URL")),
+        network: None,
+    };
+    let account = get_account(&config, &provider, &rpc_args, &UI::default())
+        .await
+        .unwrap();
+
+    assert_eq!(
+        account.address(),
+        felt!("0x4ee94bdf625820bc562c49c4d1ca4b2ef82bcfc5ed0cf67464770bea333b19a")
+    );
 }
 
 #[tokio::test]
@@ -170,4 +208,78 @@ async fn test_check_if_legacy_contract_by_address() {
         .await
         .unwrap();
     assert!(!is_legacy);
+}
+
+struct FailingSigner;
+
+#[derive(Debug, thiserror::Error)]
+#[error("Account signing rejected")]
+struct SigningError(#[source] std::io::Error);
+
+#[async_trait]
+impl Signer for FailingSigner {
+    type GetPublicKeyError = Infallible;
+    type SignError = SigningError;
+
+    async fn get_public_key(&self) -> Result<VerifyingKey, Self::GetPublicKeyError> {
+        Ok(VerifyingKey::from_scalar(Felt::ONE))
+    }
+
+    async fn sign_hash(&self, _hash: &Felt) -> Result<Signature, Self::SignError> {
+        Err(SigningError(std::io::Error::other("Signer disconnected")))
+    }
+
+    fn is_interactive(&self, _context: SignerInteractivityContext<'_>) -> bool {
+        true
+    }
+}
+
+#[tokio::test]
+async fn test_deploy_preserves_signing_error_and_source() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(body_partial_json(json!({"method": "starknet_getNonce"})))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "id": 1,
+            "jsonrpc": "2.0",
+            "result": "0x0"
+        })))
+        .mount(&server)
+        .await;
+    let provider = JsonRpcClient::new(HttpTransport::new(server.uri().parse::<Url>().unwrap()));
+
+    // Supply all fee bounds so the failure occurs while signing the send request,
+    // not during fee estimation.
+    let fee_args = FeeArgs {
+        l1_gas: Some(1),
+        l1_gas_price: Some(1),
+        l2_gas: Some(1),
+        l2_gas_price: Some(1),
+        l1_data_gas: Some(1),
+        l1_data_gas_price: Some(1),
+        tip: Some(0),
+        ..Default::default()
+    };
+    let error = AccountDeploymentService::deploy(
+        &provider,
+        AccountType::OpenZeppelin,
+        Felt::ONE,
+        FailingSigner,
+        Felt::ONE,
+        Felt::ONE,
+        fee_args,
+        DryRunArgs::default(),
+        WaitForTx {
+            wait: false,
+            wait_params: ValidatedWaitParams::default(),
+            show_ui_outputs: false,
+        },
+        &UI::default(),
+    )
+    .await
+    .unwrap_err();
+
+    assert_eq!(error.to_string(), "Account signing rejected");
+    assert_eq!(error.root_cause().to_string(), "Signer disconnected");
+    assert!(error.root_cause().is::<std::io::Error>());
 }
