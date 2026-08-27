@@ -15,7 +15,7 @@ use sncast::response::errors::{
 };
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::ui::UI;
-use sncast::{Network, WaitForTx, get_account, get_block_id, get_provider, with_account};
+use sncast::{Network, WaitForTx, get_account, get_block_id, get_provider};
 use starknet_rust::core::types::contract::{SierraClass, SierraClassDebugInfo};
 use starknet_rust::core::types::{BlockId, ContractClass, FlattenedSierraClass};
 use starknet_rust::providers::Provider;
@@ -136,17 +136,17 @@ pub async fn declare_from(
         .map_err(handle_starknet_command_error)?;
     let casm = compile_sierra_to_casm(&sierra)?;
 
-    let result = with_account!(&account, |account| declare_with_artifacts(
+    let result = declare_with_artifacts(
         sierra,
         casm,
         args.common,
         args.no_abi,
-        account,
+        &account,
         wait_config,
         false,
-        ui
+        ui,
     )
-    .await)
+    .await
     .map_err(handle_starknet_command_error)?;
 
     let response = match result {

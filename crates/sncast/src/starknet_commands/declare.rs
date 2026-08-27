@@ -22,7 +22,7 @@ use sncast::response::errors::{
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::ui::UI;
 use sncast::response::verify::VerifyResponse;
-use sncast::{WaitForTx, apply_optional_fields, get_account, handle_wait_for_tx, with_account};
+use sncast::{WaitForTx, apply_optional_fields, get_account, handle_wait_for_tx};
 use starknet_rust::accounts::AccountError::Provider;
 use starknet_rust::accounts::{ConnectedAccount, DeclarationV3};
 use starknet_rust::core::types::{
@@ -122,17 +122,17 @@ pub async fn declare(
     let casm_contract_definition: CompiledClass =
         serde_json::from_str(&contract_artifacts.casm).context("Failed to parse casm artifact")?;
 
-    let result = with_account!(&account, |account| declare_with_artifacts(
+    let result = declare_with_artifacts(
         contract_definition.clone(),
         casm_contract_definition,
         args.common,
         args.no_abi,
-        account,
+        &account,
         wait_config,
         false,
         ui,
     )
-    .await)
+    .await
     .map_err(handle_starknet_command_error)?;
 
     let mut response = match result {
