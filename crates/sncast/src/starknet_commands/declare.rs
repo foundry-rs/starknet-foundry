@@ -172,7 +172,6 @@ pub async fn declare(
         &response,
         &config.account,
         &config.accounts_file,
-        config.keystore.as_ref(),
         network_flag,
     );
 
