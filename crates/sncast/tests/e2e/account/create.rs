@@ -2,6 +2,7 @@ use crate::helpers::constants::{
     ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_OZ_CLASS_HASH_CAIRO_1, URL,
 };
 use crate::helpers::fixtures::copy_file;
+use crate::helpers::insta::set_snapshot_suffix;
 use crate::helpers::runner::runner;
 use configuration::test_utils::copy_config_to_tempdir;
 use indoc::{formatdoc, indoc};
@@ -21,9 +22,9 @@ use std::fs;
 use tempfile::tempdir;
 use test_case::test_case;
 
-#[test_case("oz"; "oz_account_type")]
-#[test_case("ready"; "ready_account_type")]
-#[test_case("braavos"; "braavos_account_type")]
+#[test_case("oz"; "open_zeppelin")]
+#[test_case("ready"; "ready")]
+#[test_case("braavos"; "braavos")]
 #[tokio::test]
 pub async fn test_happy_case(account_type: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
@@ -49,13 +50,11 @@ pub async fn test_happy_case(account_type: &str) {
         .current_dir(temp_dir.path());
     let output = snapbox.assert().success();
 
-    assert_stdout_contains(
-        output,
-        indoc! {r"
+    output.stdout_eq(indoc!(r"
         Success: Account created
 
         Address: 0x0[..]
-        
+
         Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
 
         After prefunding the account, run:
@@ -63,30 +62,21 @@ pub async fn test_happy_case(account_type: &str) {
 
         To see account creation details, visit:
         account: [..]
-        "},
-    );
+    "));
 
-    let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
-        .expect("Unable to read created file");
+    let accounts_json_contents = fs::read_to_string(temp_dir.path().join("accounts.json"))
+        .expect("Unable to read accounts.json");
 
-    let expected = json!(
-        {
-            "alpha-sepolia": {
-                "my_account": {
-                    "address": "0x[..]",
-                    "class_hash": "0x[..]",
-                    "deployed": false,
-                    "legacy": false,
-                    "private_key": "0x[..]",
-                    "public_key": "0x[..]",
-                    "salt": "0x1",
-                    "type": get_formatted_account_type(account_type)
-                }
-            }
-        }
-    );
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_json_contents).expect("Failed to parse accounts.json");
 
-    assert_data_eq!(contents, to_string_pretty(&expected).unwrap());
+    set_snapshot_suffix!("{account_type}");
+    insta::assert_json_snapshot!(accounts_json, {
+        ".**.address" => "[value]",
+        ".**.class_hash" => "[value]",
+        ".**.public_key" => "[value]",
+        ".**.private_key" => "[value]",
+    });
 }
 
 #[tokio::test]
@@ -114,32 +104,33 @@ pub async fn test_create_with_private_key() {
         "0x456",
     ];
 
-    runner(&args)
+    let output = runner(&args)
         .current_dir(temp_dir.path())
         .assert()
         .success();
 
-    let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
-        .expect("Unable to read created file");
+    output.stdout_eq(indoc!(r"
+        Success: Account created
 
-    let expected = json!(
-        {
-            "alpha-sepolia": {
-                "my_account": {
-                    "address": "0x[..]",
-                    "class_hash": &class_hash,
-                    "deployed": false,
-                    "legacy": false,
-                    "private_key": "0x456",
-                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
-                    "salt": "0x1",
-                    "type": "open_zeppelin"
-                }
-            }
-        }
-    );
+        Address: 0x0[..]
 
-    assert_data_eq!(contents, to_string_pretty(&expected).unwrap());
+        Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
+
+        After prefunding the account, run:
+        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
+    "));
+
+    let accounts_json_contents = fs::read_to_string(temp_dir.path().join("accounts.json"))
+        .expect("Unable to read accounts.json");
+
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_json_contents).expect("Failed to parse accounts.json");
+
+    insta::assert_json_snapshot!(accounts_json, {
+        ".**.address" => "[value]",
+        ".**.class_hash" => "[value]",
+        ".**.salt" => "[value]",
+    });
 }
 
 #[tokio::test]
@@ -170,32 +161,33 @@ pub async fn test_create_with_private_key_from_file() {
         private_key_file,
     ];
 
-    runner(&args)
+    let output = runner(&args)
         .current_dir(temp_dir.path())
         .assert()
         .success();
 
-    let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
-        .expect("Unable to read created file");
+    output.stdout_eq(indoc!(r"
+        Success: Account created
 
-    let expected = json!(
-        {
-            "alpha-sepolia": {
-                "my_account": {
-                    "address": "0x[..]",
-                    "class_hash": &class_hash,
-                    "deployed": false,
-                    "legacy": false,
-                    "private_key": "0x456",
-                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
-                    "salt": "0x1",
-                    "type": "open_zeppelin"
-                }
-            }
-        }
-    );
+        Address: 0x0[..]
 
-    assert_data_eq!(contents, to_string_pretty(&expected).unwrap());
+        Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
+
+        After prefunding the account, run:
+        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
+    "));
+
+    let accounts_json_contents = fs::read_to_string(temp_dir.path().join("accounts.json"))
+        .expect("Unable to read accounts.json");
+
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_json_contents).expect("Failed to parse accounts.json");
+
+    insta::assert_json_snapshot!(accounts_json, {
+        ".**.address" => "[value]",
+        ".**.class_hash" => "[value]",
+        ".**.salt" => "[value]",
+    });
 }
 
 #[tokio::test]
@@ -319,7 +311,7 @@ pub async fn test_create_with_class_hash_alias() {
         Success: Account created
 
         Address: 0x0[..]
-        
+
         Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
 
         After prefunding the account, run:
@@ -329,10 +321,19 @@ pub async fn test_create_with_class_hash_alias() {
         account: [..]
         "});
 
-    let contents = fs::read_to_string(tempdir.path().join(accounts_file))
-        .expect("Unable to read created file");
-    assert!(contents.contains("my_account"));
-    assert!(contents.contains(DEVNET_OZ_CLASS_HASH_CAIRO_0));
+    let accounts_json_contents = fs::read_to_string(tempdir.path().join("accounts.json"))
+        .expect("Unable to read accounts.json");
+
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_json_contents).expect("Failed to parse accounts.json");
+
+    insta::assert_json_snapshot!(accounts_json, {
+        ".**.address" => "[value]",
+        ".**.class_hash" => "[value]",
+        ".**.public_key" => "[value]",
+        ".**.private_key" => "[value]",
+        ".**.salt" => "[value]",
+    });
 }
 
 #[tokio::test]
@@ -430,7 +431,7 @@ pub async fn test_happy_case_generate_salt() {
         Success: Account created
 
         Address: 0x0[..]
-        
+
         Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
 
         After prefunding the account, run:
@@ -440,23 +441,25 @@ pub async fn test_happy_case_generate_salt() {
         account: [..]
         "});
 
-    let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
-        .expect("Unable to read created file");
-    assert!(contents.contains("my_account"));
-    assert!(contents.contains("alpha-sepolia"));
-    assert!(contents.contains("private_key"));
-    assert!(contents.contains("public_key"));
-    assert!(contents.contains("address"));
-    assert!(contents.contains("salt"));
-    assert!(contents.contains("class_hash"));
-    assert!(contents.contains("legacy"));
-    assert!(contents.contains("type"));
+    let accounts_json_contents = fs::read_to_string(temp_dir.path().join("accounts.json"))
+        .expect("Unable to read accounts.json");
+
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_json_contents).expect("Failed to parse accounts.json");
+
+    insta::assert_json_snapshot!(accounts_json, {
+        ".**.address" => "[value]",
+        ".**.class_hash" => "[value]",
+        ".**.public_key" => "[value]",
+        ".**.private_key" => "[value]",
+        ".**.salt" => "[value]",
+    });
 }
 
-#[test_case("--url", URL; "with_url")]
-#[test_case("--network", "devnet"; "with_network")]
+#[test_case("--url", URL, "with_url"; "with_url")]
+#[test_case("--network", "devnet", "with_network"; "with_network")]
 #[tokio::test]
-pub async fn test_happy_case_add_profile(rpc_flag: &str, rpc_value: &str) {
+pub async fn test_happy_case_add_profile(rpc_flag: &str, rpc_value: &str, case_name: &str) {
     let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let accounts_file = "accounts.json";
 
@@ -484,17 +487,26 @@ pub async fn test_happy_case_add_profile(rpc_flag: &str, rpc_value: &str) {
         format!("Add Profile: Profile my_account successfully added to {config_path}"),
     );
 
-    let contents = fs::read_to_string(tempdir.path().join("snfoundry.toml"))
-        .expect("Unable to read snfoundry.toml");
-    let expected_lines = [
-        "[sncast.my_account]",
-        &format!("{} = \"{}\"", rpc_flag.trim_start_matches("--"), rpc_value),
-        "account = \"my_account\"",
-        "accounts-file = \"accounts.json\"",
-    ];
-    let expected_block = expected_lines.join("\n");
+    let accounts_json_contents = fs::read_to_string(tempdir.path().join("accounts.json"))
+        .expect("Unable to read accounts.json");
 
-    assert!(contents.contains(&expected_block));
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_json_contents).expect("Failed to parse accounts.json");
+
+    set_snapshot_suffix!("{case_name}_accounts.json");
+    insta::assert_json_snapshot!(accounts_json, {
+        ".**.address" => "[value]",
+        ".**.class_hash" => "[value]",
+        ".**.public_key" => "[value]",
+        ".**.private_key" => "[value]",
+        ".**.salt" => "[value]",
+    });
+
+    let snfoundry_toml_contents = fs::read_to_string(tempdir.path().join("snfoundry.toml"))
+        .expect("Unable to read snfoundry.toml");
+
+    set_snapshot_suffix!("{case_name}_snfoundry.toml");
+    insta::assert_snapshot!(snfoundry_toml_contents);
 }
 
 #[tokio::test]
@@ -527,7 +539,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         Success: Account created
 
         Address: 0x0[..]
-        
+
         Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
 
         After prefunding the account, run:
@@ -537,11 +549,19 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         account: [..]
         "});
 
-    let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
-        .expect("Unable to read created file");
-    assert!(contents.contains("my_account"));
-    assert!(contents.contains("deployed"));
-    assert!(contents.contains("legacy"));
+    let accounts_json_contents = fs::read_to_string(temp_dir.path().join("accounts.json"))
+        .expect("Unable to read accounts.json");
+
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_json_contents).expect("Failed to parse accounts.json");
+
+    insta::assert_json_snapshot!(accounts_json, {
+        ".**.address" => "[value]",
+        ".**.class_hash" => "[value]",
+        ".**.public_key" => "[value]",
+        ".**.private_key" => "[value]",
+        ".**.salt" => "[value]",
+    });
 }
 
 #[tokio::test]
@@ -596,7 +616,7 @@ pub async fn test_account_already_exists() {
         output,
         indoc! {r"
         Command: account create
-        Error: Account with name = user1 already exists in network with chain_id = SN_SEPOLIA
+        Error: account `user1` already exists on network `alpha-sepolia`
         "},
     );
 }
@@ -632,7 +652,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         Success: Account created
 
         Address: 0x0[..]
-        
+
         Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
 
         After prefunding the account, run:
@@ -836,7 +856,7 @@ pub async fn test_happy_case_keystore_int_format() {
         Success: Account created
 
         Address: [..]
-        
+
         Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
 
         After prefunding the account, run:
@@ -890,7 +910,7 @@ pub async fn test_happy_case_default_name_generation() {
             Success: Account created
 
             Address: 0x0[..]
-            
+
             Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
 
             After prefunding the account, run:
@@ -898,90 +918,122 @@ pub async fn test_happy_case_default_name_generation() {
 
             To see account creation details, visit:
             account: [..]
-        ", id = id});
+        "});
     };
 
     for i in 0..3 {
         assert_account_created(i + 1);
     }
 
-    let contents = fs::read_to_string(tempdir.path().join(accounts_file))
-        .expect("Unable to read created file");
+    let accounts_json_contents = fs::read_to_string(tempdir.path().join("accounts.json"))
+        .expect("Unable to read accounts.json");
 
-    assert!(
-        ["account-1", "account-2", "account-3"]
-            .iter()
-            .all(|a| contents.contains(a))
-    );
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_json_contents).expect("Failed to parse accounts.json");
 
-    runner(&delete_args)
+    set_snapshot_suffix!("1_create");
+    insta::assert_json_snapshot!(accounts_json, {
+        ".**.address" => "[value]",
+        ".**.class_hash" => "[value]",
+        ".**.public_key" => "[value]",
+        ".**.private_key" => "[value]",
+        ".**.salt" => "[value]",
+    });
+
+    let output = runner(&delete_args)
         .current_dir(tempdir.path())
         .stdin("Y")
         .assert()
-        .success()
-        .stdout_eq(indoc! {r"
+        .success();
+
+    output.stdout_eq(indoc! {r"
         Success: Account deleted
 
         Account successfully removed
     "});
 
-    let contents_after_delete = fs::read_to_string(tempdir.path().join(accounts_file))
-        .expect("Unable to read created file");
+    let accounts_json_contents = fs::read_to_string(tempdir.path().join("accounts.json"))
+        .expect("Unable to read accounts.json");
 
-    assert!(!contents_after_delete.contains("account-2"));
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_json_contents).expect("Failed to parse accounts.json");
+
+    set_snapshot_suffix!("2_delete");
+    insta::assert_json_snapshot!(accounts_json, {
+        ".**.address" => "[value]",
+        ".**.class_hash" => "[value]",
+        ".**.public_key" => "[value]",
+        ".**.private_key" => "[value]",
+        ".**.salt" => "[value]",
+    });
 
     assert_account_created(2);
 
-    let contents = fs::read_to_string(tempdir.path().join(accounts_file))
-        .expect("Unable to read created file");
+    let accounts_json_contents = fs::read_to_string(tempdir.path().join("accounts.json"))
+        .expect("Unable to read accounts.json");
 
-    assert!(contents.contains("account-2"));
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_json_contents).expect("Failed to parse accounts.json");
 
-    let expected = json!(
-        {
-            "alpha-sepolia": {
-                "account-1": {
-                    "address": "0x[..]",
-                    "class_hash": "0x[..]",
-                    "deployed": false,
-                    "legacy": false,
-                    "private_key": "0x[..]",
-                    "public_key": "0x[..]",
-                    "salt": "0x1",
-                    "type": "open_zeppelin"
-                },
-                "account-2": {
-                    "address": "0x[..]",
-                    "class_hash": "0x[..]",
-                    "deployed": false,
-                    "legacy": false,
-                    "private_key": "0x[..]",
-                    "public_key": "0x[..]",
-                    "salt": "0x1",
-                    "type": "open_zeppelin"
-                },
-                "account-3": {
-                    "address": "0x[..]",
-                    "class_hash": "0x[..]",
-                    "deployed": false,
-                    "legacy": false,
-                    "private_key": "0x[..]",
-                    "public_key": "0x[..]",
-                    "salt": "0x1",
-                    "type": "open_zeppelin"
-                },
-            }
-        }
-    );
-
-    assert_data_eq!(contents, to_string_pretty(&expected).unwrap());
+    set_snapshot_suffix!("3_create");
+    insta::assert_json_snapshot!(accounts_json, {
+        ".**.address" => "[value]",
+        ".**.class_hash" => "[value]",
+        ".**.public_key" => "[value]",
+        ".**.private_key" => "[value]",
+        ".**.salt" => "[value]",
+    });
 }
 
-fn get_formatted_account_type(account_type: &str) -> &str {
-    match account_type {
-        "oz" => "open_zeppelin",
-        _ => account_type,
-    }
+#[tokio::test]
+pub async fn test_happy_case_default_name_generation_when_accounts_file_empty() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+    let accounts_path = temp_dir.path().join(accounts_file);
+    std::fs::File::create(&accounts_path).expect("Failed to create empty accounts file");
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        "--type",
+        "oz",
+    ];
+
+    let output = runner(&args)
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    output.stdout_eq(indoc!(r"
+        Success: Account created
+
+        Address: 0x0[..]
+
+        Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
+
+        After prefunding the account, run:
+        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name account-1
+    "));
+
+    let accounts_json_contents =
+        fs::read_to_string(accounts_path).expect("Unable to read accounts.json");
+
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_json_contents).expect("Failed to parse accounts.json");
+
+    insta::assert_json_snapshot!(accounts_json, {
+        ".**.address" => "[value]",
+        ".**.class_hash" => "[value]",
+        ".**.public_key" => "[value]",
+        ".**.private_key" => "[value]",
+        ".**.salt" => "[value]",
+    });
 }
 
 fn get_keystore_account_pattern(account_type: AccountType, class_hash: Option<&str>) -> String {
@@ -1065,41 +1117,36 @@ pub async fn test_happy_case_deployment_fee_message() {
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
-    assert_stdout_contains(
-        output,
-        "Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee",
-    );
-}
+    output.stdout_eq(indoc!("
+        Success: Account created
 
-#[tokio::test]
-pub async fn test_happy_case_default_name_generation_when_accounts_file_empty() {
-    let temp_dir = tempdir().expect("Unable to create a temporary directory");
-    let accounts_file = "test_accounts.json";
-    let accounts_path = temp_dir.path().join(accounts_file);
-    std::fs::File::create(&accounts_path).expect("Failed to create empty accounts file");
+        Address: 0x03cf60d8427f4e36b52dc18d5eefab9781d17887f9a18df49915896b95870922
 
-    let args = vec![
-        "--accounts-file",
-        accounts_file,
-        "account",
-        "create",
-        "--url",
-        URL,
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_0,
-        "--type",
-        "oz",
-    ];
+        Account successfully created but it needs to be deployed. The estimated deployment fee is 0.002242288000000000 STRK. Prefund the account to cover deployment transaction fee
 
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+        After prefunding the account, run:
+        sncast account deploy --url http://127.0.0.1:5055/rpc --name account-9
+    "));
 
-    snapbox.assert().success();
+    let accounts_json_contents = fs::read_to_string(tempdir.path().join("accounts.json"))
+        .expect("Unable to read accounts.json");
+
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_json_contents).expect("Failed to parse accounts.json");
+
+    insta::assert_json_snapshot!(accounts_json, {
+        ".**.address" => "[value]",
+        ".**.class_hash" => "[value]",
+        ".**.public_key" => "[value]",
+        ".**.private_key" => "[value]",
+        ".**.salt" => "[value]",
+    });
 }
 
 #[tokio::test]
 pub async fn test_happy_case_accounts_file_empty() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
-    let accounts_file = "test_accounts.json";
+    let accounts_file = "accounts.json";
     let accounts_path = temp_dir.path().join(accounts_file);
     std::fs::File::create(&accounts_path).expect("Failed to create empty accounts file");
 
@@ -1118,9 +1165,34 @@ pub async fn test_happy_case_accounts_file_empty() {
         "oz",
     ];
 
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = runner(&args)
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
 
-    snapbox.assert().success();
+    output.stdout_eq(indoc!("
+        Success: Account created
+
+        Address: 0x0[..]
+
+        Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
+
+        After prefunding the account, run:
+        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
+    "));
+
+    let accounts_json_contents =
+        fs::read_to_string(accounts_path).expect("Unable to read accounts.json");
+
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_json_contents).expect("Failed to parse accounts.json");
+
+    insta::assert_json_snapshot!(accounts_json, {
+        ".**.address" => "[value]",
+        ".**.public_key" => "[value]",
+        ".**.private_key" => "[value]",
+        ".**.salt" => "[value]",
+    });
 }
 
 #[tokio::test]

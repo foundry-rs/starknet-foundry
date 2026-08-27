@@ -1,15 +1,16 @@
 use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use crate::helpers::env::set_keystore_password_env;
-use crate::helpers::fixtures::copy_file;
+use crate::helpers::fixtures::{copy_file, get_accounts_path};
 use crate::helpers::fixtures::{
     get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
 };
+use crate::helpers::insta::set_snapshot_suffix;
 use crate::helpers::runner::runner;
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use configuration::test_utils::copy_config_to_tempdir;
 use conversions::string::IntoHexStr;
 use indoc::indoc;
-use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::AccountType;
 use sncast::helpers::account::load_accounts;
 use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
@@ -19,12 +20,12 @@ use std::fs;
 use tempfile::{TempDir, tempdir};
 use test_case::test_case;
 
-#[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0, "oz"; "cairo_0_class_hash")]
-#[test_case(&OZ_CLASS_HASH.into_hex_string(), "oz"; "cairo_1_class_hash")]
-#[test_case(&READY_CLASS_HASH.into_hex_string(), "ready"; "ready_class_hash")]
-#[test_case(&BRAAVOS_CLASS_HASH.into_hex_string(), "braavos"; "braavos_class_hash")]
+#[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0, "oz", "oz_cairo_0_class_hash"; "oz_cairo_0_class_hash")]
+#[test_case(&OZ_CLASS_HASH.into_hex_string(), "oz", "oz_cairo_0_class_hash"; "oz_cairo_1_class_hash")]
+#[test_case(&READY_CLASS_HASH.into_hex_string(), "ready", "ready_class_hash"; "ready_class_hash")]
+#[test_case(&BRAAVOS_CLASS_HASH.into_hex_string(), "braavos", "braaavos_class_hash"; "braavos_class_hash")]
 #[tokio::test]
-pub async fn test_happy_case(class_hash: &str, account_type: &str) {
+pub async fn test_happy_case(class_hash: &str, account_type: &str, case_name: &str) {
     let tempdir = create_account(false, class_hash, account_type).await;
     let accounts_file = "accounts.json";
 
@@ -42,22 +43,35 @@ pub async fn test_happy_case(class_hash: &str, account_type: &str) {
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(tempdir.path());
-    let bdg = snapbox.assert();
+        .current_dir(tempdir.path())
+        .assert()
+        .success();
 
-    let hash = get_transaction_hash(&bdg.get_output().stdout);
+    let hash = get_transaction_hash(&snapbox.get_output().stdout);
     let receipt = get_transaction_receipt(hash).await;
 
     assert!(matches!(receipt, DeployAccount(_)));
 
-    let stdout_str = bdg.as_stdout();
-    assert!(stdout_str.contains("account deploy"));
-    assert!(stdout_str.contains("transaction_hash"));
+    snapbox.stdout_eq(indoc!(
+        r#"
+        {"command":"account deploy","transaction_hash":"[..]","type":"response"}
+        {"links":"transaction: [..]","title":"account deployment","type":"notification"}
+    "#
+    ));
 
-    let path = Utf8PathBuf::from_path_buf(tempdir.path().join(accounts_file))
-        .expect("Path is not valid UTF-8");
-    let items = load_accounts(&path).expect("Failed to load accounts");
-    assert_eq!(items["alpha-sepolia"]["my_account"]["deployed"], true);
+    let accounts_json_contents = fs::read_to_string(tempdir.path().join("accounts.json"))
+        .expect("Unable to read accounts.json");
+
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_json_contents).expect("Failed to parse accounts.json");
+
+    set_snapshot_suffix!("{case_name}");
+    insta::assert_json_snapshot!(accounts_json, {
+        ".**.address" => "[value]",
+        ".**.public_key" => "[value]",
+        ".**.private_key" => "[value]",
+        ".**.salt" => "[value]",
+    });
 }
 
 #[tokio::test]
@@ -79,22 +93,35 @@ pub async fn test_happy_case_max_fee() {
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(tempdir.path());
-    let bdg = snapbox.assert();
+        .current_dir(tempdir.path())
+        .assert()
+        .success();
 
-    let hash = get_transaction_hash(&bdg.get_output().stdout);
+    let hash = get_transaction_hash(&snapbox.get_output().stdout);
     let receipt = get_transaction_receipt(hash).await;
 
     assert!(matches!(receipt, DeployAccount(_)));
 
-    let stdout_str = bdg.as_stdout();
-    assert!(stdout_str.contains("account deploy"));
-    assert!(stdout_str.contains("transaction_hash"));
+    snapbox.stdout_eq(indoc!(
+        r#"
+        {"command":"account deploy","transaction_hash":"[..]","type":"response"}
+        {"links":"transaction: [..]","title":"account deployment","type":"notification"}
+    "#
+    ));
 
-    let path = Utf8PathBuf::from_path_buf(tempdir.path().join(accounts_file))
-        .expect("Path is not valid UTF-8");
-    let items = load_accounts(&path).expect("Failed to load accounts");
-    assert_eq!(items["alpha-sepolia"]["my_account"]["deployed"], true);
+    let accounts_json_contents = fs::read_to_string(tempdir.path().join("accounts.json"))
+        .expect("Unable to read accounts.json");
+
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_json_contents).expect("Failed to parse accounts.json");
+
+    insta::assert_json_snapshot!(accounts_json, {
+        ".**.address" => "[value]",
+        ".**.class_hash" => "[value]",
+        ".**.public_key" => "[value]",
+        ".**.private_key" => "[value]",
+        ".**.salt" => "[value]",
+    });
 }
 
 #[tokio::test]
@@ -116,26 +143,85 @@ pub async fn test_happy_case_add_profile() {
 
     let snapbox = runner(&args)
         .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
-        .current_dir(tempdir.path());
-    let output = snapbox.assert();
+        .current_dir(tempdir.path())
+        .assert()
+        .success();
 
-    let hash = get_transaction_hash(&output.get_output().stdout);
+    let hash = get_transaction_hash(&snapbox.get_output().stdout);
     let receipt = get_transaction_receipt(hash).await;
 
     assert!(matches!(receipt, DeployAccount(_)));
 
-    let stdout_str = output.as_stdout();
-    assert!(stdout_str.contains("account deploy"));
-    assert!(stdout_str.contains("transaction_hash"));
+    snapbox.stdout_eq(indoc!(
+        r#"
+        {"command":"account deploy","transaction_hash":"[..]","type":"response"}
+        {"links":"transaction: [..]","title":"account deployment","type":"notification"}
+    "#
+    ));
+
+    let accounts_json_contents = fs::read_to_string(tempdir.path().join("accounts.json"))
+        .expect("Unable to read accounts.json");
+
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_json_contents).expect("Failed to parse accounts.json");
+
+    set_snapshot_suffix!("accounts.json");
+    insta::assert_json_snapshot!(accounts_json, {
+        ".**.address" => "[value]",
+        ".**.class_hash" => "[value]",
+        ".**.public_key" => "[value]",
+        ".**.private_key" => "[value]",
+        ".**.salt" => "[value]",
+    });
+
+    let snfoundry_toml_contents = fs::read_to_string(tempdir.path().join("snfoundry.toml"))
+        .expect("Unable to read accounts.json");
+
+    set_snapshot_suffix!("snfoundry.toml");
+    insta::assert_snapshot!(snfoundry_toml_contents);
 }
 
-#[test_case("{\"alpha-sepolia\": {}}", "Error: Account = my_account not found under network = alpha-sepolia" ; "when account name not present")]
-#[test_case("{\"alpha-sepolia\": {\"my_account\" : {}}}", "Error: Failed to parse field `alpha-sepolia.my_account` in file 'accounts.json': missing field `public_key`[..]" ; "when public key not present")]
-fn test_account_deploy_error(accounts_content: &str, error: &str) {
+#[tokio::test]
+async fn test_account_deploy_error_non_existent_account() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
-
     let accounts_file = "accounts.json";
-    fs::write(temp_dir.path().join(accounts_file), accounts_content).unwrap();
+    let accounts_file_source_path =
+        get_accounts_path(Utf8Path::new("tests/data/accounts").join(accounts_file));
+    let accounts_file_tempdir_path = temp_dir.path().join(accounts_file);
+    fs::copy(accounts_file_source_path, &accounts_file_tempdir_path).unwrap();
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "deploy",
+        "--url",
+        URL,
+        "--name",
+        "non_existent_account",
+    ];
+
+    let snapbox = runner(&args)
+        .current_dir(temp_dir.path())
+        .assert()
+        .failure();
+
+    snapbox.stderr_eq(indoc!(
+        "
+        Command: account deploy
+        Error: Account = non_existent_account not found under network = alpha-sepolia
+        "
+    ));
+}
+
+#[tokio::test]
+async fn test_account_deploy_error_when_public_key_not_present() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts_without_public_key.json";
+    let accounts_file_source_path =
+        get_accounts_path(Utf8Path::new("tests/data/accounts").join(accounts_file));
+    let accounts_file_tempdir_path = temp_dir.path().join(accounts_file);
+    fs::copy(accounts_file_source_path, &accounts_file_tempdir_path).unwrap();
 
     let args = vec![
         "--accounts-file",
@@ -148,10 +234,18 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
         "my_account",
     ];
 
-    let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert();
+    let snapbox = runner(&args)
+        .current_dir(temp_dir.path())
+        .assert()
+        .failure();
 
-    assert_stderr_contains(output, error);
+    snapbox.stderr_eq(indoc!("
+        Command: account deploy
+        Error: invalid schema of field accounts.alpha-sepolia.my_account in the accounts file: missing field `public_key` at line 7 column 7
+
+        Caused by:
+            missing field `public_key` at line 7 column 7
+    "));
 }
 
 #[tokio::test]
@@ -241,17 +335,16 @@ pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &
 
     runner(&args).current_dir(tempdir.path()).assert().success();
 
-    let path = Utf8PathBuf::from_path_buf(tempdir.path().join(accounts_file))
-        .expect("Path is not valid UTF-8");
-    let items = load_accounts(&path).expect("Failed to load accounts");
+    let accounts_json_contents = fs::read_to_string(tempdir.path().join(accounts_file))
+        .expect("Unable to read accounts.json");
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_json_contents).expect("Unable to parse accounts.json");
 
-    mint_token(
-        items["alpha-sepolia"]["my_account"]["address"]
-            .as_str()
-            .unwrap(),
-        9_999_999_999_999_999_999_999_999_999_999,
-    )
-    .await;
+    let account_address = accounts_json["accounts"]["alpha-sepolia"]["my_account"]["address"]
+        .as_str()
+        .expect("Unable to get the address of my_account");
+
+    mint_token(account_address, 9_999_999_999_999_999_999_999_999_999_999).await;
     tempdir
 }
 

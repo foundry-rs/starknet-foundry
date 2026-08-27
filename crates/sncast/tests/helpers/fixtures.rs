@@ -6,7 +6,6 @@ use core::str;
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value, json};
-use sncast::helpers::account::load_accounts;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
@@ -47,7 +46,7 @@ pub async fn deploy_keystore_account() {
     let deployment_info = items
         .get("deployment")
         .expect("Failed to get deployment key");
-    let address = get_from_json_as_str(deployment_info, "address");
+    let address = deployment_info["address"].as_str().unwrap();
 
     deploy_oz_account(
         address,
@@ -154,17 +153,16 @@ async fn deploy_account_to_devnet<T: AccountFactory + Sync>(factory: T, address:
 }
 
 fn get_account_deployment_data(account: &str) -> (String, String, SigningKey) {
-    let items =
-        load_accounts(&Utf8PathBuf::from(ACCOUNT_FILE_PATH)).expect("Failed to load accounts");
+    let accounts_file_contents = fs::read_to_string(&Utf8PathBuf::from(ACCOUNT_FILE_PATH))
+        .expect("Failed to load default accounts file");
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_file_contents).expect("Failed to parse accounts.json");
 
-    let account_data = items
-        .get("alpha-sepolia")
-        .and_then(|accounts| accounts.get(account))
-        .unwrap_or_else(|| panic!("Failed to get {account} account"));
+    let account_data = &accounts_json["accounts"]["alpha-sepolia"][account];
 
-    let address = get_from_json_as_str(account_data, "address");
-    let salt = get_from_json_as_str(account_data, "salt");
-    let private_key = get_from_json_as_str(account_data, "private_key");
+    let address = account_data["address"].as_str().unwrap();
+    let salt = account_data["salt"].as_str().unwrap();
+    let private_key = account_data["signer"]["private_key"].as_str().unwrap();
 
     let private_key = SigningKey::from_secret_scalar(
         private_key
@@ -173,13 +171,6 @@ fn get_account_deployment_data(account: &str) -> (String, String, SigningKey) {
     );
 
     (address.to_string(), salt.to_string(), private_key)
-}
-
-fn get_from_json_as_str<'a>(entry: &'a Value, key: &str) -> &'a str {
-    entry
-        .get(key)
-        .and_then(Value::as_str)
-        .unwrap_or_else(|| panic!("Failed to get {key} key"))
 }
 
 pub async fn invoke_contract(
@@ -516,16 +507,16 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
 
     runner(&args).current_dir(tempdir.path()).assert().success();
 
-    let contents = fs::read_to_string(tempdir.path().join(accounts_file)).unwrap();
-    let items: Value = serde_json::from_str(&contents).unwrap();
+    let accounts_file_contents = fs::read_to_string(tempdir.path().join(accounts_file))
+        .expect("Failed to load default accounts file");
+    let accounts_json: serde_json::Value =
+        serde_json::from_str(&accounts_file_contents).expect("Failed to parse accounts.json");
 
-    mint_token(
-        items["alpha-sepolia"]["my_account"]["address"]
-            .as_str()
-            .unwrap(),
-        u128::MAX,
-    )
-    .await;
+    let account_address = &accounts_json["accounts"]["alpha-sepolia"]["my_account"]["address"]
+        .as_str()
+        .expect("Failed to get the address of my_account");
+
+    mint_token(account_address, u128::MAX).await;
 
     let args = vec![
         "--accounts-file",

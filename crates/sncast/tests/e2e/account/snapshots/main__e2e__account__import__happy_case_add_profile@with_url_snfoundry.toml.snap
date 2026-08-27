@@ -1,0 +1,8 @@
+---
+source: crates/sncast/tests/e2e/account/import.rs
+expression: config_contents
+---
+[sncast.my_account_import]
+url = "http://127.0.0.1:5055/rpc"
+account = "my_account_import"
+accounts-file = "accounts.json"
