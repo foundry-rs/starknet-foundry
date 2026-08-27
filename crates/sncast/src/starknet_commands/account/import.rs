@@ -1,22 +1,22 @@
 use std::str::FromStr;
 
 use crate::starknet_commands::account::{
-    PrivateKeyArgs, compute_account_address, generate_add_profile_message, prepare_account_json,
-    validate_private_key, write_account_to_accounts_file,
+    PrivateKeyArgs, compute_account_address, generate_add_profile_message, prepare_account_record,
+    profile_exists, save_account, validate_private_key,
 };
 use crate::starknet_commands::utils::felt_or_id::{ClassHash, ContractAddress};
 use anyhow::{Result, bail, ensure};
-use camino::Utf8PathBuf;
 use clap::Args;
 use foundry_ui::UI;
+use sncast::accounts::AccountRepository;
 use sncast::check_if_legacy_contract;
-use sncast::helpers::account::generate_account_name;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::ledger;
 use sncast::helpers::ledger::LedgerKeyLocatorAccount;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::import::AccountImportResponse;
-use sncast::{AccountType, SignerType, check_class_hash_exists, get_chain_id, handle_rpc_error};
+use sncast::signers::{LedgerSpec, PrivateKeySpec, SignerSpec};
+use sncast::{AccountType, check_class_hash_exists, get_chain_id, handle_rpc_error};
 use starknet_rust::core::types::{BlockId, BlockTag, StarknetError};
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet_rust::providers::{Provider, ProviderError};
@@ -76,20 +76,26 @@ impl Import {
 
 #[allow(clippy::too_many_lines)]
 pub async fn import(
-    account: Option<String>,
-    accounts_file: &Utf8PathBuf,
+    account_name: Option<String>,
+    repository: &AccountRepository,
     provider: &JsonRpcClient<HttpTransport>,
     import: &Import,
     config: &CastConfig,
     ui: &UI,
 ) -> Result<AccountImportResponse> {
+    if let Some(profile) = import.add_profile.as_deref() {
+        ensure!(
+            !profile_exists(Some(profile), &configuration::resolve_config_file())?,
+            "Failed to add profile = {profile} to the snfoundry.toml. Profile already exists"
+        );
+    }
+
     let address = import.resolved_address(config)?;
     let class_hash = import.resolved_class_hash(config)?;
 
-    let (signer_type, public_key) = if let Some(ledger_path) = import.ledger_key_locator.resolve(ui)
-    {
+    let (signer, public_key) = if let Some(ledger_path) = import.ledger_key_locator.resolve(ui) {
         let public_key = ledger::get_ledger_public_key(&ledger_path, ui).await?;
-        (SignerType::Ledger { ledger_path }, public_key)
+        (SignerSpec::Ledger(LedgerSpec::new(ledger_path)), public_key)
     } else {
         let key_felt = import.private_key_args.resolve_or_prompt()?;
         let key_felt = validate_private_key(key_felt)?;
@@ -97,16 +103,10 @@ pub async fn import(
         let signing_key = SigningKey::from_secret_scalar(key_felt);
         let public_key = signing_key.verifying_key().scalar();
         (
-            SignerType::Local {
-                private_key: key_felt,
-            },
+            SignerSpec::PrivateKey(PrivateKeySpec::new(key_felt)),
             public_key,
         )
     };
-
-    let account_name = account
-        .clone()
-        .unwrap_or_else(|| generate_account_name(accounts_file).unwrap());
 
     let fetched_class_hash = match provider
         .get_class_hash_at(BlockId::Tag(BlockTag::PreConfirmed), address)
@@ -145,7 +145,7 @@ pub async fn import(
             class_hash,
             import.account_type,
             chain_id,
-            &signer_type,
+            &signer,
             provider,
             ui,
         )
@@ -158,8 +158,8 @@ pub async fn import(
 
     let legacy = check_if_legacy_contract(Some(class_hash), address, provider).await?;
 
-    let account_json = prepare_account_json(
-        &signer_type,
+    let account_record = prepare_account_record(
+        signer,
         public_key,
         address,
         deployed,
@@ -169,20 +169,26 @@ pub async fn import(
         import.salt,
     );
 
-    write_account_to_accounts_file(&account_name, accounts_file, chain_id, account_json.clone())?;
+    let account_name = save_account(
+        account_name.as_deref(),
+        repository,
+        chain_id,
+        account_record,
+        ui,
+    )?;
 
     let add_profile_message = generate_add_profile_message(
         import.add_profile.as_ref(),
         &import.rpc,
-        &account_name,
-        accounts_file,
+        account_name.as_str(),
+        repository.path(),
         None,
         config,
     )?;
 
     Ok(AccountImportResponse {
         add_profile: add_profile_message,
-        account_name,
+        account_name: account_name.into(),
     })
 }
 

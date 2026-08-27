@@ -1,11 +1,12 @@
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::Args;
+use sncast::accounts::ChainId;
+use sncast::get_chain_id;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::fee::FeeParams;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::show_config::ShowConfigResponse;
-use sncast::{chain_id_to_network_name, get_chain_id};
 use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
 
@@ -24,7 +25,7 @@ pub async fn show_config(
 ) -> Result<ShowConfigResponse> {
     let chain_id = if let Some(provider) = provider {
         let chain_id_field = get_chain_id(provider).await?;
-        Some(chain_id_to_network_name(chain_id_field))
+        Some(ChainId::from(chain_id_field).to_string())
     } else {
         None
     };

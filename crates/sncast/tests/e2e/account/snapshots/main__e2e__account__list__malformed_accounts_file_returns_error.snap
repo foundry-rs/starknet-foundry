@@ -3,4 +3,7 @@ source: crates/sncast/tests/e2e/account/list.rs
 expression: "output.as_stderr().replace(accounts_file_path.to_str().unwrap(),\n\"[ACCOUNTS_FILE]\")"
 ---
 Command: account list
-Error: Failed to parse field `.` in file '[ACCOUNTS_FILE]': expected ident at line 1 column 2
+Error: invalid accounts file `malformed_accounts.json`
+
+Caused by:
+    not valid JSON: expected ident at line 1 column 2

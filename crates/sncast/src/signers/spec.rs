@@ -52,6 +52,14 @@ impl SignerSpec {
             Self::Ledger(_) => SignerKind::Ledger,
         }
     }
+
+    #[must_use]
+    pub fn private_key(&self) -> Option<Felt> {
+        match self {
+            Self::PrivateKey(spec) => Some(spec.private_key()),
+            Self::Keystore(_) | Self::Ledger(_) => None,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug)]

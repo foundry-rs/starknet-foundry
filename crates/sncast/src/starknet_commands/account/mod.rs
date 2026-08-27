@@ -5,14 +5,14 @@ use crate::starknet_commands::account::import::Import;
 use crate::starknet_commands::account::list::List;
 use crate::{process_command_result, starknet_commands};
 use anyhow::{Context, Result, bail, ensure};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use clap::{Args, Subcommand};
 use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
 use conversions::string::{TryFromDecStr, TryFromHexStr};
 use foundry_ui::UI;
-use serde_json::json;
-use sncast::helpers::account::{generate_account_name, load_accounts};
+use sncast::AccountType;
+use sncast::accounts::{AccountName, AccountRecord, AccountRepository, ChainId};
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::{
     CastConfig, NetworkParams, PartialCastConfig, SncastProfileAppend,
@@ -23,8 +23,8 @@ use sncast::helpers::ledger;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::ui::UIExt;
-use sncast::{AccountType, chain_id_to_network_name, decode_chain_id};
-use sncast::{SignerSource, SignerType, WaitForTx, get_chain_id};
+use sncast::signers::SignerSpec;
+use sncast::{SignerSource, WaitForTx, get_chain_id};
 use starknet_curve::curve_params::EC_ORDER;
 use starknet_rust::accounts::{AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory};
 use starknet_rust::providers::jsonrpc::HttpTransport;
@@ -98,8 +98,8 @@ impl PrivateKeyArgs {
 }
 
 #[allow(clippy::too_many_arguments)]
-pub fn prepare_account_json(
-    signer_type: &SignerType,
+pub fn prepare_account_record(
+    signer: SignerSpec,
     public_key: Felt,
     address: Felt,
     deployed: bool,
@@ -107,33 +107,17 @@ pub fn prepare_account_json(
     account_type: AccountType,
     class_hash: Option<Felt>,
     salt: Option<Felt>,
-) -> serde_json::Value {
-    let mut account_json = json!({
-        "public_key": format!("{public_key:#x}"),
-        "address": format!("{address:#x}"),
-        "type": format!("{account_type}").to_lowercase().replace("openzeppelin", "open_zeppelin"),
-        "deployed": deployed,
-        "legacy": legacy,
-    });
-
-    match signer_type {
-        SignerType::Local { private_key } => {
-            account_json["private_key"] = serde_json::Value::String(format!("{private_key:#x}"));
-        }
-        SignerType::Ledger { ledger_path } => {
-            account_json["ledger_path"] =
-                serde_json::Value::String(ledger_path.derivation_string());
-        }
+) -> AccountRecord {
+    AccountRecord {
+        public_key,
+        address,
+        salt,
+        deployed: Some(deployed),
+        class_hash,
+        legacy: Some(legacy),
+        account_type: Some(account_type),
+        signer,
     }
-
-    if let Some(salt) = salt {
-        account_json["salt"] = serde_json::Value::String(format!("{salt:#x}"));
-    }
-    if let Some(class_hash) = class_hash {
-        account_json["class_hash"] = serde_json::Value::String(format!("{class_hash:#x}"));
-    }
-
-    account_json
 }
 
 fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<Felt> {
@@ -167,35 +151,35 @@ fn get_private_key_from_input() -> Result<Felt> {
     parse_input_to_felt(&input)
 }
 
-pub fn write_account_to_accounts_file(
-    account: &str,
-    accounts_file: &Utf8PathBuf,
+/// Saves the account under `account`, or under a generated name when it is `None`,
+/// and returns the name it was saved under.
+pub fn save_account(
+    account: Option<&str>,
+    repository: &AccountRepository,
     chain_id: Felt,
-    account_json: serde_json::Value,
-) -> Result<()> {
-    if !accounts_file.exists() {
-        std::fs::create_dir_all(accounts_file.clone().parent().unwrap())?;
-        std::fs::write(accounts_file.clone(), "{}")?;
-    }
+    account_record: AccountRecord,
+    ui: &UI,
+) -> Result<AccountName> {
+    let chain_id = ChainId::from(chain_id);
+    let (name, migration_outcome) = if let Some(account) = account {
+        let name = AccountName::new(account)?;
+        let result = repository.insert(chain_id, name.clone(), account_record)?;
+        (name, result.migration_outcome)
+    } else {
+        let result = repository.insert_with_generated_name(chain_id, account_record)?;
+        (result.value, result.migration_outcome)
+    };
+    migration_outcome.notify_if_migrated(ui);
 
-    let mut items = load_accounts(accounts_file)?;
+    Ok(name)
+}
 
-    let network_name = chain_id_to_network_name(chain_id);
-
-    if !items[&network_name][account].is_null() {
-        bail!(
-            "Account with name = {} already exists in network with chain_id = {}",
-            account,
-            decode_chain_id(chain_id)
-        );
-    }
-    items[&network_name][account] = account_json;
-
-    std::fs::write(
-        accounts_file.clone(),
-        serde_json::to_string_pretty(&items).unwrap(),
-    )?;
-    Ok(())
+fn profile_exists(profile: Option<&str>, config_path: &Utf8PathBuf) -> Result<bool> {
+    let existing = load_config::<PartialCastConfig>(config_path, profile)?;
+    Ok(existing
+        .as_ref()
+        .and_then(|c| c.account.as_ref())
+        .is_some_and(|a| !a.is_empty()))
 }
 
 pub fn add_created_profile_to_configuration(
@@ -204,17 +188,11 @@ pub fn add_created_profile_to_configuration(
     path: &Utf8PathBuf,
 ) -> Result<()> {
     let config_path = search_config_upwards_relative_to(path)?;
-    let existing = load_config::<PartialCastConfig>(&config_path, profile)?;
-    if existing
-        .as_ref()
-        .and_then(|c| c.account.as_ref())
-        .is_some_and(|a| !a.is_empty())
-    {
-        bail!(
-            "Failed to add profile = {} to the snfoundry.toml. Profile already exists",
-            profile.unwrap_or("default")
-        );
-    }
+    ensure!(
+        !profile_exists(profile, &config_path)?,
+        "Failed to add profile = {} to the snfoundry.toml. Profile already exists",
+        profile.unwrap_or("default")
+    );
 
     let profile_config = PartialCastConfig {
         network_params: cast_config.network_params.clone(),
@@ -249,7 +227,7 @@ fn generate_add_profile_message(
     profile_name: Option<&String>,
     rpc_args: &RpcArgs,
     account_name: &str,
-    accounts_file: &Utf8PathBuf,
+    accounts_file: &Utf8Path,
     keystore: Option<Utf8PathBuf>,
     config: &CastConfig,
 ) -> Result<Option<String>> {
@@ -283,13 +261,14 @@ pub async fn account(
     ui: &UI,
     wait_config: WaitForTx,
 ) -> Result<ExitCode> {
+    let repository = AccountRepository::try_new(&config.accounts_file)?;
     match account.command {
         Commands::Import(import) => {
             let provider = import.rpc.get_provider(&config, ui).await?;
 
             let result = starknet_commands::account::import::import(
                 import.name.clone(),
-                &config.accounts_file,
+                &repository,
                 &provider,
                 &import,
                 &config,
@@ -314,20 +293,15 @@ pub async fn account(
             Ok(process_command_result("account import", result, ui, None))
         }
         Commands::Create(create) => {
-            let signer_type = create
-                .ledger_key_locator
-                .resolve(ui)
-                .map(|ledger_path| SignerType::Ledger { ledger_path });
+            let signer_type = create.ledger_key_locator.resolve(ui);
 
-            let signer_source = SignerSource::new(config.keystore.clone(), signer_type.as_ref())?;
+            let signer_source = SignerSource::new(config.keystore.clone(), signer_type)?;
 
+            // Without a name, one is generated when the account is saved.
             let account = if config.keystore.is_none() {
-                create
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| generate_account_name(&config.accounts_file).unwrap())
+                create.name.clone()
             } else {
-                config.account.clone()
+                Some(config.account.clone())
             };
 
             let provider = create.rpc.get_provider(&config, ui).await?;
@@ -335,8 +309,8 @@ pub async fn account(
             let chain_id = get_chain_id(&provider).await?;
 
             let result = starknet_commands::account::create::create(
-                &account,
-                &config.accounts_file,
+                account.as_deref(),
+                &repository,
                 &provider,
                 chain_id,
                 &create,
@@ -363,7 +337,7 @@ pub async fn account(
             let chain_id = get_chain_id(&provider).await?;
             let result = starknet_commands::account::deploy::deploy(
                 &provider,
-                &config.accounts_file,
+                &repository,
                 &deploy,
                 chain_id,
                 wait_config,
@@ -406,24 +380,27 @@ pub async fn account(
         }
 
         Commands::Delete(delete) => {
-            let network_name =
-                starknet_commands::account::delete::get_network_name(&delete, &config, ui).await?;
+            let chain_id = starknet_commands::account::delete::get_chain_id_to_delete_from(
+                &delete, &config, ui,
+            )
+            .await?;
+
+            let account_name = AccountName::new(delete.name.as_str())?;
 
             let result = starknet_commands::account::delete::delete(
-                &delete.name,
-                &config.accounts_file,
-                &network_name,
+                &account_name,
+                &repository,
+                &chain_id,
                 delete.yes,
+                ui,
             );
 
             Ok(process_command_result("account delete", result, ui, None))
         }
 
         Commands::List(options) => {
-            let result = starknet_commands::account::list::list(
-                &config.accounts_file,
-                options.display_private_keys,
-            );
+            let result =
+                starknet_commands::account::list::list(&repository, options.display_private_keys);
 
             Ok(process_command_result("account list", result, ui, None))
         }
@@ -435,21 +412,24 @@ pub async fn compute_account_address(
     class_hash: Felt,
     account_type: AccountType,
     chain_id: Felt,
-    signer_type: &SignerType,
+    signer: &SignerSpec,
     provider: &JsonRpcClient<HttpTransport>,
     ui: &UI,
 ) -> Result<Felt> {
-    let address = match signer_type {
-        SignerType::Local { private_key } => {
+    let address = match signer {
+        SignerSpec::PrivateKey(spec) => {
             let signer =
-                LocalWallet::from_signing_key(SigningKey::from_secret_scalar(*private_key));
+                LocalWallet::from_signing_key(SigningKey::from_secret_scalar(spec.private_key()));
             compute_address_with_signer(salt, class_hash, account_type, chain_id, signer, provider)
                 .await?
         }
-        SignerType::Ledger { ledger_path } => {
-            let signer = ledger::create_ledger_signer(ledger_path, ui, false).await?;
+        SignerSpec::Ledger(spec) => {
+            let signer = ledger::create_ledger_signer(spec.derivation_path(), ui, false).await?;
             compute_address_with_signer(salt, class_hash, account_type, chain_id, signer, provider)
                 .await?
+        }
+        SignerSpec::Keystore(_) => {
+            bail!("keystore signer must be resolved before computing an account address")
         }
     };
     Ok(address)

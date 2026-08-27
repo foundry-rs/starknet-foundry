@@ -1,0 +1,26 @@
+---
+source: crates/sncast/tests/e2e/account/create.rs
+expression: accounts_json
+---
+{
+  "accounts": {
+    "SN_SEPOLIA": {
+      "my_account": {
+        "address": "0x8adb64025cee718b984661504ee3c79cd2705aefc9f0852dfb6db65574f9df",
+        "class_hash": "0x5b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564",
+        "deployed": false,
+        "legacy": false,
+        "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
+        "salt": "0x1",
+        "signer": {
+          "private_key": "0x456",
+          "type": "private_key"
+        },
+        "type": "open_zeppelin"
+      }
+    }
+  },
+  "version": {
+    "$serde_json::private::Number": "2"
+  }
+}
