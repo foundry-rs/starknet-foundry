@@ -1,12 +1,11 @@
 use std::num::{NonZeroU8, NonZeroU16};
 
-use crate::helpers::account::{check_account_exists, get_account_from_devnet, is_devnet_account};
+use crate::helpers::account::{check_account_exists, is_devnet_account};
 use crate::helpers::configuration::CastConfig;
 use crate::helpers::constants::{DEFAULT_ACCOUNTS_FILE, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::helpers::rpc::RpcArgs;
 use crate::response::errors::SNCastProviderError;
 use crate::signers::LEGACY_KEYSTORE_PASSWORD_ENV;
-use crate::signers::spec::PrivateKeySource;
 use anyhow::{Context, Error, Result, anyhow, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
@@ -36,7 +35,7 @@ use starknet_rust::{
         ProviderError::StarknetError,
         jsonrpc::{HttpTransport, JsonRpcClient},
     },
-    signers::{Signer, SigningKey},
+    signers::SigningKey,
 };
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
@@ -318,6 +317,9 @@ pub async fn get_account<'a>(
 
     let network_name = chain_id_to_network_name(chain_id);
     let account = &config.account;
+    if account.is_empty() {
+        bail!("Account name not passed nor found in snfoundry.toml");
+    }
     let is_devnet_account = is_devnet_account(account);
 
     if is_devnet_account
@@ -341,78 +343,35 @@ pub async fn get_account<'a>(
     let exists_in_accounts_file =
         check_account_exists(account, &network_name, &repository, accounts_file_required)?;
 
-    match (is_devnet_account, exists_in_accounts_file) {
-        (true, true) => {
-            ui.print_warning(WarningMessage::new(format!(
-                "Using account {account} from accounts file {accounts_file}. \
-                To use an inbuilt devnet account, please rename your existing account or use an account with a different number."
-            )));
-            ui.print_blank_line();
-            get_account_from_repository(
-                account,
-                &repository,
-                provider,
-                config.keystore.as_ref(),
-                ui,
-            )
-            .await
-        }
-        (true, false) => {
-            let url = rpc_args
-                .get_url(config)
-                .await
-                .context("Failed to get url")?;
-            let local_account = get_account_from_devnet(account, provider, &url).await?;
-            Ok(local_account)
-        }
-        _ => {
-            get_account_from_repository(
-                account,
-                &repository,
-                provider,
-                config.keystore.as_ref(),
-                ui,
-            )
-            .await
-        }
-    }
-}
-
-pub async fn get_account_from_repository<'a>(
-    account: &str,
-    repository: &accounts::AccountRepository,
-    provider: &'a JsonRpcClient<HttpTransport>,
-    keystore: Option<&Utf8PathBuf>,
-    ui: &UI,
-) -> Result<RuntimeAccount<'a>> {
-    let chain_id = get_chain_id(provider).await?;
-    let (account_data, signer) = if let Some(keystore) = keystore {
-        let account_data: accounts::AccountRecord =
-            get_account_data_from_keystore(account, keystore)?.try_into()?;
-        let private_key = account_data
-            .signer
-            .private_key()
-            .context("Private key not found")?;
+    let (selector, devnet_url) = if let Some(keystore) = &config.keystore {
         (
-            account_data,
-            RuntimeSigner::from_private_key(private_key, PrivateKeySource::Keystore),
+            accounts::AccountSelector::legacy_starkli(Utf8PathBuf::from(account), keystore.clone()),
+            None,
         )
     } else {
-        let account_data = get_account_record_from_repository(account, chain_id, repository)?;
-        let signer = RuntimeSigner::from_spec(account_data.signer.clone(), ui).await?;
-        (account_data, signer)
+        match (is_devnet_account, exists_in_accounts_file) {
+            (true, true) => {
+                ui.print_warning(WarningMessage::new(format!(
+                    "Using account {account} from accounts file {accounts_file}. \
+                    To use an inbuilt devnet account, please rename your existing account or use an account with a different number."
+                )));
+                ui.print_blank_line();
+                (accounts::AccountSelector::named(account.clone())?, None)
+            }
+            (true, false) => {
+                let url = rpc_args
+                    .get_url(config)
+                    .await
+                    .context("Failed to get url")?;
+                (accounts::AccountSelector::devnet(account)?, Some(url))
+            }
+            _ => (accounts::AccountSelector::named(account.clone())?, None),
+        }
     };
 
-    let actual_public_key = signer.get_public_key().await?.scalar();
-    let signer_kind = signer.kind();
-
-    ensure!(
-        actual_public_key == account_data.public_key,
-        "{signer_kind} signer public key does not match the account: expected {:#x}, got {actual_public_key:#x}",
-        account_data.public_key
-    );
-
-    build_account(account_data, chain_id, provider, signer).await
+    accounts::AccountService::new(repository)
+        .connected_account(&selector, provider, devnet_url.as_ref(), ui)
+        .await
 }
 
 pub async fn get_contract_class(
@@ -439,30 +398,7 @@ pub async fn get_contract_class(
     result.map_err(handle_rpc_error)
 }
 
-pub(crate) async fn build_account(
-    account_data: accounts::AccountRecord,
-    chain_id: Felt,
-    provider: &JsonRpcClient<HttpTransport>,
-    signer: RuntimeSigner,
-) -> Result<RuntimeAccount<'_>> {
-    let address = account_data.address;
-
-    verify_account_address(address, chain_id, provider).await?;
-
-    let class_hash = account_data.class_hash;
-
-    let account_encoding =
-        get_account_encoding(account_data.legacy, class_hash, address, provider).await?;
-
-    let mut account =
-        SingleOwnerAccount::new(provider, signer, address, chain_id, account_encoding);
-
-    account.set_block_id(BlockId::Tag(PreConfirmed));
-
-    Ok(account)
-}
-
-async fn verify_account_address(
+pub(crate) async fn verify_account_address(
     address: Felt,
     chain_id: Felt,
     provider: &JsonRpcClient<HttpTransport>,
@@ -658,7 +594,7 @@ where
     })
 }
 
-async fn get_account_encoding(
+pub(crate) async fn get_account_encoding(
     legacy: Option<bool>,
     class_hash: Option<Felt>,
     address: Felt,
@@ -941,7 +877,7 @@ macro_rules! apply_optional_fields {
         {
             let mut value = $initial;
             $(
-                value = ::sncast::apply_optional(value, $option, $setter);
+                value = $crate::apply_optional(value, $option, $setter);
             )*
             value
         }
