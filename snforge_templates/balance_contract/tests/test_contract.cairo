@@ -1,7 +1,5 @@
-use starknet::SyscallResultTrait;
-use starknet::ContractAddress;
-
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
+use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
+use starknet::{ContractAddress, SyscallResultTrait};
 
 use {{ PROJECT_NAME }}::IHelloStarknetSafeDispatcher;
 use {{ PROJECT_NAME }}::IHelloStarknetSafeDispatcherTrait;
