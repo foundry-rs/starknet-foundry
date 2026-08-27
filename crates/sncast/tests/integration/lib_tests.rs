@@ -1,6 +1,7 @@
 use crate::helpers::constants::{
     DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, URL,
 };
+use crate::helpers::env::set_keystore_password_env;
 use crate::helpers::fixtures::create_test_provider;
 
 use camino::Utf8PathBuf;
@@ -79,6 +80,32 @@ async fn test_get_account_invalid_file() {
     let err = format!("{:#}", account.unwrap_err());
 
     insta::assert_snapshot!(err, @"invalid accounts file `tests/data/accounts/invalid_format.json`: not valid JSON: expected `,` or `}` at line 8 column 9");
+}
+
+#[tokio::test]
+async fn test_get_account_keystore_ignores_accounts_file() {
+    set_keystore_password_env();
+    let provider = create_test_provider();
+    let config = CastConfig {
+        account: "tests/data/keystore/predeployed_account.json".to_string(),
+        keystore: Some(Utf8PathBuf::from(
+            "tests/data/keystore/predeployed_key.json",
+        )),
+        accounts_file: Utf8PathBuf::from("tests/data/accounts/invalid_format.json"),
+        ..Default::default()
+    };
+    let rpc_args = RpcArgs {
+        url: Some(Url::parse(URL).expect("Failed to parse URL")),
+        network: None,
+    };
+    let account = get_account(&config, &provider, &rpc_args, &UI::default())
+        .await
+        .unwrap();
+
+    assert_eq!(
+        account.address(),
+        felt!("0x4ee94bdf625820bc562c49c4d1ca4b2ef82bcfc5ed0cf67464770bea333b19a")
+    );
 }
 
 #[tokio::test]
