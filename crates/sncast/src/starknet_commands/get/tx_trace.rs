@@ -8,8 +8,8 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
 use sncast::response::get::tx_trace::{
-    ContractClassFetchFailure, ContractClassesFetchResponse, TraceDecoder,
-    TransactionTraceResponse, contract_addresses_by_class_hash,
+    ContractClassFetchFailure, FetchedContractClasses, TraceDecoder, TransactionTraceResponse,
+    contract_addresses_by_class_hash,
 };
 use sncast::response::ui::UI;
 use starknet_rust::core::types::{BlockId, BlockTag};
@@ -46,11 +46,8 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
 
     let result = match result {
         Ok(trace) => {
-            let contract_classes_fetch_response =
+            let FetchedContractClasses { classes, failures } =
                 fetch_contract_classes(&provider, contract_addresses_by_class_hash(&trace)).await;
-
-            let ContractClassesFetchResponse { classes, failures } =
-                contract_classes_fetch_response;
 
             if !failures.is_empty() {
                 ui.print_warning(WarningMessage::new(format_class_fetch_warning(&failures)));
@@ -69,7 +66,7 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
 async fn fetch_contract_classes(
     provider: &JsonRpcClient<HttpTransport>,
     contract_addresses_by_class_hash: HashMap<Felt, HashSet<Felt>>,
-) -> ContractClassesFetchResponse {
+) -> FetchedContractClasses {
     let results = stream::iter(contract_addresses_by_class_hash)
         .map(|(class_hash, contract_addresses)| async move {
             match provider
@@ -90,7 +87,7 @@ async fn fetch_contract_classes(
 
     let (classes, failures): (HashMap<_, _>, Vec<_>) = results.into_iter().partition_result();
 
-    ContractClassesFetchResponse { classes, failures }
+    FetchedContractClasses { classes, failures }
 }
 
 fn format_class_fetch_warning(failures: &[ContractClassFetchFailure]) -> String {
