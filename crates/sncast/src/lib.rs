@@ -41,6 +41,7 @@ use thiserror::Error;
 use url::Url;
 
 pub mod accounts;
+pub mod compat;
 pub mod helpers;
 pub mod response;
 pub mod signers;
