@@ -5,25 +5,37 @@ expression: output
 {
   "accounts": [
     {
+      "address": "0x11",
+      "chain_id": "a",
       "legacy": true,
       "name": "shared",
-      "network": "a",
       "public_key": "0x1"
     },
     {
+      "address": "0x33",
+      "chain_id": "a",
       "name": "zed",
-      "network": "a",
-      "public_key": "0x3"
+      "public_key": "0x3",
+      "signer": {
+        "password_env": "ZED_PASSWORD",
+        "path": "keystore.json",
+        "type": "keystore"
+      }
     },
     {
-      "ledger_path": "m/2645'/1195502025'/355113700'/0'/0'/0",
+      "address": "0x44",
+      "chain_id": "b",
       "name": "alice",
-      "network": "b",
-      "public_key": "0x4"
+      "public_key": "0x4",
+      "signer": {
+        "derivation_path": "m/2645'/1195502025'/355113700'/0'/0'/0",
+        "type": "ledger"
+      }
     },
     {
+      "address": "0x22",
+      "chain_id": "b",
       "name": "shared",
-      "network": "b",
       "public_key": "0x2"
     }
   ],
