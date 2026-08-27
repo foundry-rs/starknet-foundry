@@ -27,7 +27,7 @@ pub struct List {
 }
 
 #[derive(Serialize, Clone, Debug)]
-pub struct AccountDataRepresentationMessage {
+pub struct AccountRecordRepresentation {
     pub public_key: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub signer: Option<v2::Signer>,
@@ -48,7 +48,7 @@ pub struct AccountDataRepresentationMessage {
     pub account_type: Option<AccountType>,
 }
 
-impl AccountDataRepresentationMessage {
+impl AccountRecordRepresentation {
     fn new(account: &AccountRecord, display_private_key: bool) -> Self {
         Self {
             signer: match &account.signer {
@@ -83,13 +83,13 @@ impl AccountDataRepresentationMessage {
 fn read_and_flatten(
     repository: &AccountRepository,
     display_private_keys: bool,
-) -> anyhow::Result<BTreeMap<String, AccountDataRepresentationMessage>> {
+) -> anyhow::Result<BTreeMap<String, AccountRecordRepresentation>> {
     let registry = repository.load()?.registry;
     let mut result = BTreeMap::new();
 
     for (network, accounts) in registry.networks() {
         for (name, data) in accounts.iter().sorted_by_key(|(name, _)| *name) {
-            let mut data_repr = AccountDataRepresentationMessage::new(data, display_private_keys);
+            let mut data_repr = AccountRecordRepresentation::new(data, display_private_keys);
 
             data_repr.set_network(network.as_str());
             result.insert(name.to_string(), data_repr);
@@ -99,7 +99,7 @@ fn read_and_flatten(
     Ok(result)
 }
 
-impl Message for AccountDataRepresentationMessage {
+impl Message for AccountRecordRepresentation {
     fn text(&self) -> String {
         let mut result = String::new();
 
@@ -154,7 +154,7 @@ impl Message for AccountDataRepresentationMessage {
 pub struct AccountsListMessage {
     accounts_file_path: String,
     display_private_keys: bool,
-    accounts: BTreeMap<String, AccountDataRepresentationMessage>,
+    accounts: BTreeMap<String, AccountRecordRepresentation>,
 }
 
 impl AccountsListMessage {
