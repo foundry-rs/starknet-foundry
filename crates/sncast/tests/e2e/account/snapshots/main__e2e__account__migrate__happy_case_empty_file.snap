@@ -1,0 +1,10 @@
+---
+source: crates/sncast/tests/e2e/account/migrate.rs
+expression: contents
+---
+{
+  "version": 2,
+  "accounts": {
+    "alpha-sepolia": {}
+  }
+}

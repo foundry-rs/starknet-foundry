@@ -62,12 +62,14 @@ strum_macros.workspace = true
 primitive-types.workspace = true
 coins-ledger.workspace = true
 mimalloc.workspace = true
+fs2.workspace = true
 
 [dev-dependencies]
 ctor.workspace = true
 dtor.workspace = true
 snapbox.workspace = true
 indoc.workspace = true
+insta.workspace = true
 project-root.workspace = true
 tempfile.workspace = true
 test-case.workspace = true
