@@ -1,13 +1,15 @@
-use crate::check_account_file_exists;
-use crate::{RuntimeAccount, build_account, helpers::devnet::provider::DevnetProvider};
+use crate::helpers::devnet::provider::DevnetProvider;
 use anyhow::{Result, anyhow, ensure};
 use camino::Utf8PathBuf;
 use starknet_rust::providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport};
 use std::fs;
 use url::Url;
 
-use crate::accounts::{AccountName, AccountRecord, AccountRepository, AccountsError, ChainId};
+use crate::accounts::{
+    AccountName, AccountRecord, AccountRepository, AccountService, AccountsError, ChainId,
+};
 use crate::signers::{RuntimeSigner, spec::PrivateKeySource};
+use crate::{RuntimeAccount, check_account_file_exists};
 use anyhow::Context;
 use serde_json::{Value, json};
 
@@ -54,16 +56,11 @@ pub fn is_devnet_account(account: &str) -> bool {
     account.starts_with("devnet-")
 }
 
-pub async fn get_account_from_devnet<'a>(
-    account: &str,
+pub(crate) async fn get_account_from_devnet<'a>(
+    account_number: u8,
     provider: &'a JsonRpcClient<HttpTransport>,
     url: &Url,
 ) -> Result<RuntimeAccount<'a>> {
-    let account_number: u8 = account
-        .strip_prefix("devnet-")
-        .map(|s| s.parse::<u8>().expect("Invalid devnet account number"))
-        .context("Failed to parse devnet account number")?;
-
     let devnet_provider = DevnetProvider::new(url.as_ref());
     devnet_provider.ensure_alive().await?;
 
@@ -93,5 +90,5 @@ pub async fn get_account_from_devnet<'a>(
         .private_key()
         .context("Private key not found for devnet account")?;
     let signer = RuntimeSigner::from_private_key(private_key, PrivateKeySource::PrivateKey);
-    build_account(account_data, chain_id, provider, signer).await
+    AccountService::build_runtime_account(account_data, chain_id, provider, signer).await
 }
