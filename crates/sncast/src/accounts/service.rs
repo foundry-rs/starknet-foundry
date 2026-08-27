@@ -2,15 +2,13 @@ use anyhow::Context;
 use starknet_rust::accounts::SingleOwnerAccount;
 use starknet_rust::core::types::{BlockId, BlockTag};
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
-use starknet_rust::signers::Signer;
 use starknet_types_core::felt::Felt;
 use url::Url;
 
 use crate::accounts::{AccountRecord, AccountRepository, AccountSelector};
 use crate::helpers::account::get_account_from_devnet;
 use crate::response::ui::UI;
-use crate::signers::spec::PrivateKeySource;
-use crate::signers::{RuntimeSigner, SignerError};
+use crate::signers::RuntimeSigner;
 use crate::{RuntimeAccount, get_chain_id};
 
 pub struct AccountService {
@@ -41,23 +39,6 @@ impl AccountService {
                 let signer = RuntimeSigner::from_spec(account.signer.clone(), ui).await?;
                 Self::build_runtime_account(account, chain_id, provider, signer).await
             }
-            AccountSelector::LegacyStarkli {
-                account_file,
-                keystore_file,
-            } => {
-                let chain_id = get_chain_id(provider).await?;
-                let account: AccountRecord =
-                    crate::get_account_data_from_keystore(account_file.as_str(), keystore_file)?
-                        .try_into()?;
-                let private_key = account
-                    .signer
-                    .private_key()
-                    .context("Private key not found in starkli account")?;
-                let signer =
-                    RuntimeSigner::from_private_key(private_key, PrivateKeySource::Keystore);
-                verify_public_key(&account, &signer).await?;
-                Self::build_runtime_account(account, chain_id, provider, signer).await
-            }
             AccountSelector::Devnet { index } => {
                 let url = devnet_url.context("Devnet account requires a devnet URL")?;
                 get_account_from_devnet(*index, provider, url).await
@@ -81,20 +62,4 @@ impl AccountService {
         runtime.set_block_id(BlockId::Tag(BlockTag::PreConfirmed));
         Ok(runtime)
     }
-}
-
-async fn verify_public_key(
-    account: &AccountRecord,
-    signer: &RuntimeSigner,
-) -> Result<(), SignerError> {
-    let expected = account.public_key;
-    let actual = signer.get_public_key().await?.scalar();
-    if expected != actual {
-        Err(SignerError::PublicKeyMismatch {
-            kind: signer.kind(),
-            expected,
-            actual,
-        })?;
-    }
-    Ok(())
 }

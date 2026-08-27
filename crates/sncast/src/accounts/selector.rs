@@ -1,19 +1,9 @@
-use camino::Utf8PathBuf;
-
 use crate::accounts::{AccountName, AccountsError};
 
 #[derive(Clone, Debug)]
 pub enum AccountSelector {
-    Named {
-        name: AccountName,
-    },
-    Devnet {
-        index: u8,
-    },
-    LegacyStarkli {
-        account_file: Utf8PathBuf,
-        keystore_file: Utf8PathBuf,
-    },
+    Named { name: AccountName },
+    Devnet { index: u8 },
 }
 
 impl AccountSelector {
@@ -31,14 +21,6 @@ impl AccountSelector {
                 message: format!("invalid devnet account selector `{value}`"),
             })?;
         Ok(Self::Devnet { index })
-    }
-
-    #[must_use]
-    pub fn legacy_starkli(account_file: Utf8PathBuf, keystore_file: Utf8PathBuf) -> Self {
-        Self::LegacyStarkli {
-            account_file,
-            keystore_file,
-        }
     }
 }
 
