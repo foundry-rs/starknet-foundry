@@ -12,9 +12,8 @@ use indoc::indoc;
 use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
 use sncast::AccountType;
 use sncast::helpers::account::load_accounts;
-use sncast::helpers::constants::{
-    BRAAVOS_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH, READY_CLASS_HASH,
-};
+use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
+use sncast::signers::LEGACY_KEYSTORE_PASSWORD_ENV;
 use starknet_rust::core::types::TransactionReceipt::DeployAccount;
 use std::fs;
 use tempfile::{TempDir, tempdir};
@@ -279,7 +278,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     let address = get_address_from_keystore(
         tempdir.path().join(keystore_file).to_str().unwrap(),
         tempdir.path().join(&account_file).to_str().unwrap(),
-        KEYSTORE_PASSWORD_ENV_VAR,
+        LEGACY_KEYSTORE_PASSWORD_ENV,
         &account_type.parse().unwrap(),
     );
 
@@ -609,7 +608,7 @@ pub async fn test_deploy_keystore_other_args() {
     let address = get_address_from_keystore(
         tempdir.path().join(keystore_file),
         tempdir.path().join(account_file),
-        KEYSTORE_PASSWORD_ENV_VAR,
+        LEGACY_KEYSTORE_PASSWORD_ENV,
         &AccountType::OpenZeppelin,
     );
 
