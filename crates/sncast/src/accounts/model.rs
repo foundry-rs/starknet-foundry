@@ -130,7 +130,7 @@ impl AccountRegistry {
             .and_then(|accounts| accounts.get(name))
     }
 
-    pub fn encode_v2(&self) -> Result<Vec<u8>, AccountsError> {
+    pub fn encode(&self) -> Result<Vec<u8>, AccountsError> {
         let file_content = schema::v2::AccountsFile::from(self);
         let mut output = serde_json::to_vec_pretty(&file_content)
             .map_err(|source| AccountsFileError::Serialize { source })?;
