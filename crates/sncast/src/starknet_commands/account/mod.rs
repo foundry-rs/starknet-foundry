@@ -12,11 +12,9 @@ use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
 use conversions::string::{TryFromDecStr, TryFromHexStr};
 use sncast::accounts::{AccountName, AccountRecord, AccountRepository, NetworkName};
-use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::{
     CastConfig, NetworkParams, PartialCastConfig, SncastProfileAppend,
 };
-use sncast::helpers::constants::BRAAVOS_BASE_ACCOUNT_CLASS_HASH;
 use sncast::helpers::interactive::prompt_to_add_account_as_default;
 use sncast::helpers::ledger;
 use sncast::helpers::rpc::RpcArgs;
@@ -26,7 +24,6 @@ use sncast::signers::SignerSpec;
 use sncast::{AccountType, chain_id_to_network_name};
 use sncast::{SignerSource, WaitForTx, get_chain_id};
 use starknet_curve::curve_params::EC_ORDER;
-use starknet_rust::accounts::{AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory};
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, Provider};
 use starknet_rust::signers::{LocalWallet, SigningKey};
@@ -416,54 +413,30 @@ pub async fn compute_account_address(
         SignerSpec::PrivateKey(spec) => {
             let signer =
                 LocalWallet::from_signing_key(SigningKey::from_secret_scalar(spec.private_key()));
-            compute_address_with_signer(salt, class_hash, account_type, chain_id, signer, provider)
-                .await?
+            sncast::accounts::AccountDeploymentService::compute_address(
+                provider,
+                account_type,
+                class_hash,
+                signer,
+                salt,
+                chain_id,
+            )
+            .await?
         }
         SignerSpec::Ledger(spec) => {
             let signer = ledger::create_ledger_signer(spec.derivation_path(), ui, false).await?;
-            compute_address_with_signer(salt, class_hash, account_type, chain_id, signer, provider)
-                .await?
+            sncast::accounts::AccountDeploymentService::compute_address(
+                provider,
+                account_type,
+                class_hash,
+                signer,
+                salt,
+                chain_id,
+            )
+            .await?
         }
         SignerSpec::Keystore(_) => {
             bail!("keystore signer must be resolved before computing an account address")
-        }
-    };
-    Ok(address)
-}
-
-async fn compute_address_with_signer<S>(
-    salt: Felt,
-    class_hash: Felt,
-    account_type: AccountType,
-    chain_id: Felt,
-    signer: S,
-    provider: &JsonRpcClient<HttpTransport>,
-) -> Result<Felt>
-where
-    S: starknet_rust::signers::Signer + Send + Sync,
-    <S as starknet_rust::signers::Signer>::GetPublicKeyError: 'static,
-{
-    let address = match account_type {
-        AccountType::OpenZeppelin => {
-            let factory =
-                OpenZeppelinAccountFactory::new(class_hash, chain_id, signer, provider).await?;
-            factory.deploy_v3(salt).address()
-        }
-        AccountType::Ready => {
-            let factory =
-                ArgentAccountFactory::new(class_hash, chain_id, None, signer, provider).await?;
-            factory.deploy_v3(salt).address()
-        }
-        AccountType::Braavos => {
-            let factory = BraavosAccountFactory::new(
-                class_hash,
-                BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
-                chain_id,
-                signer,
-                provider,
-            )
-            .await?;
-            factory.deploy_v3(salt).address()
         }
     };
     Ok(address)
