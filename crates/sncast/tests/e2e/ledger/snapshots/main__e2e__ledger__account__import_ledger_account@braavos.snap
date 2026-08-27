@@ -1,0 +1,25 @@
+---
+source: crates/sncast/tests/e2e/ledger/account.rs
+expression: contents_json
+---
+{
+  "accounts": {
+    "alpha-sepolia": {
+      "my_ledger": {
+        "address": "[value]",
+        "class_hash": "[value]",
+        "deployed": false,
+        "legacy": false,
+        "public_key": "0x51f3e99d539868d8f45ca705ad6f75e68229a6037a919b15216b4e92a4d6d8",
+        "signer": {
+          "derivation_path": "m/2645'/1195502025'/355113700'/0'/0'/0",
+          "type": "ledger"
+        },
+        "type": "braavos"
+      }
+    }
+  },
+  "version": {
+    "$serde_json::private::Number": "2"
+  }
+}
