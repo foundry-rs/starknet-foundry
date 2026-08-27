@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allow resource bounds and tip settings under `fee-params` field in `snfoundry.toml` for transaction-sending commands.
 - CASM compilation results are now cached between relevant `sncast` commands.
 
+#### Changed
+
+- `--json` flag is now global, and can be passed to any subcommand.
+
 ## [0.63.0] - 2026-08-05
 
 ### Forge

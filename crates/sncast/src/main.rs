@@ -116,7 +116,7 @@ struct Cli {
     scarb_profile: Option<String>,
 
     /// If passed, output will be displayed in json format
-    #[arg(short, long)]
+    #[arg(short, long, global = true)]
     json: bool,
 
     /// If passed, command will wait until transaction is accepted or rejected
