@@ -88,21 +88,21 @@ async fn test_invalid_argument_number() {
 
 #[test_case(
     "",
-    indoc! {r#"
+    indoc! {r"
         Invalid number of arguments: passed 0, expected 2
         Expected remaining positional arguments:
         - [1] a: core::integer::i32
         - [2] b: core::integer::i8
-    "#};
+    "};
     "all arguments missing"
 )]
 #[test_case(
     "1_i32",
-    indoc! {r#"
+    indoc! {r"
         Invalid number of arguments: passed 1, expected 2
         Expected remaining positional arguments:
         - [2] b: core::integer::i8
-    "#};
+    "};
     "one argument missing"
 )]
 #[tokio::test]
@@ -119,7 +119,7 @@ async fn test_multiple_remaining_arguments_with_complex_types() {
     let result = run_transformer("array![]", "complex_fn").await;
 
     result.unwrap_err().assert_contains(
-        indoc! {r#"
+        indoc! {r"
             Invalid number of arguments: passed 1, expected 7
             Expected remaining positional arguments:
             - [2] one: core::integer::u8
@@ -128,7 +128,7 @@ async fn test_multiple_remaining_arguments_with_complex_types() {
             - [5] four: (core::felt252, core::integer::u32)
             - [6] five: core::bool
             - [7] six: core::integer::u256
-        "#}
+        "}
         .trim_end(),
     );
 }
