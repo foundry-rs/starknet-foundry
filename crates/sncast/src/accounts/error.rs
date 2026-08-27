@@ -35,6 +35,9 @@ pub enum AccountsError {
         message: String,
     },
 
+    #[error("invalid account: {message}")]
+    InvalidAccount { message: String },
+
     #[error("failed to {operation} the {file_type} `{path}`")]
     Storage {
         operation: StorageOperation,
