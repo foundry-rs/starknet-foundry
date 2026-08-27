@@ -218,11 +218,6 @@ pub async fn invoke_contract(
         calldata,
     };
 
-    let account = match account {
-        sncast::AccountVariant::LocalWallet(acc) => acc,
-        sncast::AccountVariant::Ledger(_) => panic!("Ledger account not supported in test"),
-    };
-
     let execution = account.execute_v3(vec![call]);
     let execution = apply_optional_fields!(
         execution,
