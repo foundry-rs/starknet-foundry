@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - Invalid tuple lengths in Cairo-like calldata now produce a data transformer error instead of failing during contract execution.
+- Cairo-like calldata errors now list the names and types of missing function arguments.
 
 ## [0.63.0] - 2026-08-05
 

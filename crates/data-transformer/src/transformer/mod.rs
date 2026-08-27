@@ -1,9 +1,11 @@
 mod sierra_abi;
 
+use std::cmp::Ordering;
+
 use crate::shared::extraction::extract_function_from_selector;
 use crate::shared::parsing::parse_expression;
 use crate::transformer::sierra_abi::build_representation;
-use anyhow::{Context, Result, bail, ensure};
+use anyhow::{Context, Result, bail};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::Expr;
 use conversions::serde::serialize::SerializeToFeltVec;
@@ -49,11 +51,30 @@ fn process(
     let n_inputs = function.inputs.len();
     let n_arguments = calldata.len();
 
-    ensure!(
-        n_inputs == n_arguments,
-        "Invalid number of arguments: passed {n_arguments}, expected {n_inputs}",
-    );
+    match n_arguments.cmp(&n_inputs) {
+        Ordering::Less => {
+            let missing_arguments = function.inputs[n_arguments..]
+                .iter()
+                .enumerate()
+                .map(|(i, parameter)| {
+                    format!(
+                        "- [{}] {}: {}",
+                        i + n_arguments + 1,
+                        parameter.name,
+                        parameter.r#type
+                    )
+                })
+                .join("\n");
 
+            bail!(
+                "Invalid number of arguments: passed {n_arguments}, expected {n_inputs}\nExpected remaining positional arguments:\n{missing_arguments}"
+            );
+        }
+        Ordering::Greater => {
+            bail!("Invalid number of arguments: passed {n_arguments}, expected {n_inputs}");
+        }
+        Ordering::Equal => {}
+    }
     function
         .inputs
         .iter()
