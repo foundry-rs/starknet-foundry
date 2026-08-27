@@ -229,7 +229,7 @@ impl Eip2645Path {
 }
 
 impl FromStr for Eip2645Path {
-    type Err = anyhow::Error;
+    type Err = DerivationPathError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Handle m// prefix (omitted 2645')
@@ -240,16 +240,16 @@ impl FromStr for Eip2645Path {
         };
 
         let segments: Vec<&str> = s.split('/').collect();
-        if segments.len() != EIP2645_LENGTH + 1 {
-            bail!("EIP-2645 paths must have {EIP2645_LENGTH} levels");
+        if segments.len() != EIP_2645_LENGTH + 1 {
+            Err(DerivationPathError::InvalidLength)?;
         }
         if segments[0] != "m" {
-            bail!("HD wallet paths must start with \"m/\"");
+            Err(DerivationPathError::InvalidPrefix)?;
         }
 
         let prefix = segments[1].parse()?;
         if u32::from(&prefix) != EIP_2645_PURPOSE {
-            bail!("EIP-2645 paths must start with \"m/2645'/\"");
+            Err(DerivationPathError::InvalidPurpose)?;
         }
 
         let path = Self {
@@ -262,22 +262,28 @@ impl FromStr for Eip2645Path {
 
         // These are not enforced by Ledger (for now) but are nice to have security properties
         if !path.layer.is_hardened() {
-            bail!("the \"layer\" level of an EIP-2645 path must be hardened");
+            Err(DerivationPathError::Unhardened { level: "layer" })?;
         }
         if !path.application.is_hardened() {
-            bail!("the \"application\" level of an EIP-2645 path must be hardened");
+            Err(DerivationPathError::Unhardened {
+                level: "application",
+            })?;
         }
         if !path.eth_address_1.is_hardened() {
-            bail!("the \"eth_address_1\" level of an EIP-2645 path must be hardened");
+            Err(DerivationPathError::Unhardened {
+                level: "eth_address_1",
+            })?;
         }
         if !path.eth_address_2.is_hardened() {
-            bail!("the \"eth_address_2\" level of an EIP-2645 path must be hardened");
+            Err(DerivationPathError::Unhardened {
+                level: "eth_address_2",
+            })?;
         }
 
         // In the future, certain wallets might utilize sequential `index` values for key discovery,
         // so it might be a good idea for us to disallow using hash-based values for `index` here.
         if matches!(path.index, Eip2645Level::Hash(_)) {
-            bail!("the \"index\" level must be a number");
+            Err(DerivationPathError::InvalidIndex)?;
         }
 
         Ok(path)
@@ -294,11 +300,11 @@ impl Eip2645Level {
 }
 
 impl FromStr for Eip2645Level {
-    type Err = anyhow::Error;
+    type Err = DerivationPathError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.trim() != s || s.split_whitespace().count() != 1 {
-            bail!("path must not contain whitespaces");
+            Err(DerivationPathError::Whitespace)?;
         }
 
         let (body, harden_notation) = if s.ends_with('\'') {
@@ -308,13 +314,16 @@ impl FromStr for Eip2645Level {
         };
 
         if body.chars().all(|char| char.is_ascii_digit()) {
-            let raw_node = body
-                .parse::<u32>()
-                .map_err(|err| anyhow!("invalid path level \"{body}\": {err}"))?;
+            let raw_node =
+                body.parse::<u32>()
+                    .map_err(|err| DerivationPathError::InvalidLevel {
+                        body: body.to_string(),
+                        message: err.to_string(),
+                    })?;
 
             if harden_notation {
                 if raw_node & HARDENED_BIT > 0 {
-                    bail!("`'` appended to an already-hardened value of {raw_node}");
+                    Err(DerivationPathError::UnnecessaryHardening { raw_node })?;
                 }
                 Ok(Self::Raw(raw_node | HARDENED_BIT))
             } else {

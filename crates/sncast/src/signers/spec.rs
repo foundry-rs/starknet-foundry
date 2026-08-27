@@ -22,16 +22,16 @@ impl Display for SignerKind {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum LocalWalletKind {
+pub enum PrivateKeySource {
     PrivateKey,
     Keystore,
 }
 
-impl From<LocalWalletKind> for SignerKind {
-    fn from(kind: LocalWalletKind) -> Self {
+impl From<PrivateKeySource> for SignerKind {
+    fn from(kind: PrivateKeySource) -> Self {
         match kind {
-            LocalWalletKind::PrivateKey => SignerKind::PrivateKey,
-            LocalWalletKind::Keystore => SignerKind::Keystore,
+            PrivateKeySource::PrivateKey => SignerKind::PrivateKey,
+            PrivateKeySource::Keystore => SignerKind::Keystore,
         }
     }
 }
