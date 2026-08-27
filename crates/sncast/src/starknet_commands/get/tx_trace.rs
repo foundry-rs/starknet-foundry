@@ -9,7 +9,7 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
 use sncast::response::get::tx_trace::{
     ContractClassFetchFailure, FetchedContractClasses, TraceDecoder, TransactionTraceResponse,
-    contract_addresses_by_class_hash,
+    class_hashes,
 };
 use sncast::response::ui::UI;
 use starknet_rust::core::types::{BlockId, BlockTag};
@@ -47,7 +47,7 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
     let result = match result {
         Ok(trace) => {
             let FetchedContractClasses { classes, failures } =
-                fetch_contract_classes(&provider, contract_addresses_by_class_hash(&trace)).await;
+                fetch_contract_classes(&provider, class_hashes(&trace)).await;
 
             if !failures.is_empty() {
                 ui.print_warning(WarningMessage::new(format_class_fetch_warning(&failures)));
@@ -65,20 +65,16 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
 
 async fn fetch_contract_classes(
     provider: &JsonRpcClient<HttpTransport>,
-    contract_addresses_by_class_hash: HashMap<Felt, HashSet<Felt>>,
+    class_hashes: HashSet<Felt>,
 ) -> FetchedContractClasses {
-    let results = stream::iter(contract_addresses_by_class_hash)
-        .map(|(class_hash, contract_addresses)| async move {
+    let results = stream::iter(class_hashes)
+        .map(|class_hash| async move {
             match provider
                 .get_class(BlockId::Tag(BlockTag::PreConfirmed), class_hash)
                 .await
             {
                 Ok(class) => Ok((class_hash, class)),
-                Err(error) => Err(ContractClassFetchFailure {
-                    class_hash,
-                    contract_addresses,
-                    error,
-                }),
+                Err(error) => Err(ContractClassFetchFailure { class_hash, error }),
             }
         })
         .buffer_unordered(MAX_CONCURRENT_CLASS_REQUESTS)
@@ -97,17 +93,9 @@ fn format_class_fetch_warning(failures: &[ContractClassFetchFailure]) -> String 
     let details = failures
         .into_iter()
         .map(|failure| {
-            let mut contract_addresses = failure.contract_addresses.iter().collect::<Vec<_>>();
-            contract_addresses.sort_unstable();
-            let contract_addresses = contract_addresses
-                .into_iter()
-                .map(Felt::to_hex_string)
-                .join(", ");
-
             format!(
-                "- class hash: {}, contract addresses: {} — {}",
+                "- class hash: {} — {}",
                 failure.class_hash.to_hex_string(),
-                contract_addresses,
                 provider_error_message(&failure.error)
             )
         })
