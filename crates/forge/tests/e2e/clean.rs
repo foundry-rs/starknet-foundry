@@ -2,8 +2,8 @@ use super::common::runner::{runner, setup_package, test_runner};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
-use shared::cache::DEFAULT_CACHE_DIR;
 use shared::cache::{CACHEDIR_TAG_CONTENTS, CACHEDIR_TAG_FILENAME};
+use shared::cache::{DEFAULT_CACHE_DIR, USC_CACHE_DIR};
 use shared::test_utils::output_assert::assert_stdout_contains;
 use std::fs;
 use std::path::Path;
@@ -180,6 +180,12 @@ fn test_clean_cache_with_custom_cache_dir_preserves_unrelated_files() {
         "{}",
     )
     .unwrap();
+    fs::create_dir(custom_cache_dir.join(USC_CACHE_DIR)).unwrap();
+    fs::write(
+        custom_cache_dir.join(USC_CACHE_DIR).join("entry.json"),
+        "{}",
+    )
+    .unwrap();
     fs::write(custom_cache_dir.join("keep.txt"), "keep").unwrap();
 
     runner(&temp_dir)
@@ -197,6 +203,7 @@ fn test_clean_cache_with_custom_cache_dir_preserves_unrelated_files() {
             .join("http___rpc_example_54060_v0_60_0.json")
             .exists()
     );
+    assert!(!custom_cache_dir.join(USC_CACHE_DIR).exists());
     assert!(custom_cache_dir.join("keep.txt").exists());
 }
 

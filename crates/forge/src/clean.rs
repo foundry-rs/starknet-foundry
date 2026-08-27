@@ -2,12 +2,13 @@ use crate::shared_cache::FILE_WITH_PREV_TESTS_FAILED;
 use crate::{CleanArgs, CleanComponent};
 use anyhow::{Context, Result, ensure};
 use camino::{Utf8Path, Utf8PathBuf};
-use forge_runner::resolve_cache_dir;
 use foundry_ui::UI;
 use regex::Regex;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
 use semver::Version;
-use shared::cache::{CACHEDIR_TAG_CONTENTS, CACHEDIR_TAG_FILENAME};
+use shared::cache::{
+    CACHEDIR_TAG_CONTENTS, CACHEDIR_TAG_FILENAME, USC_CACHE_DIR, resolve_cache_dir,
+};
 use std::fs;
 use std::sync::OnceLock;
 
@@ -88,7 +89,11 @@ pub fn clean_cache_dir(path: &Utf8Path, ui: &UI) -> Result<()> {
         let entry = entry.with_context(|| format!("Failed to read cache directory: {path}"))?;
         let entry_path = entry.path();
 
-        if is_snfoundry_cache_file(entry_path) {
+        if is_usc_cache(entry_path) {
+            fs::remove_dir_all(entry_path)
+                .with_context(|| format!("Failed to remove cache directory: {entry_path}"))?;
+            ui.println(&format!("Removed directory: {entry_path}"));
+        } else if is_snfoundry_cache_file(entry_path) {
             fs::remove_file(entry_path)
                 .with_context(|| format!("Failed to remove cache file: {entry_path}"))?;
             ui.println(&format!("Removed file: {entry_path}"));
@@ -125,6 +130,10 @@ fn is_snfoundry_cache_file(path: &Utf8Path) -> bool {
 
     let version = captures.name("version").unwrap().as_str();
     Version::parse(&version.replace('_', ".")).is_ok()
+}
+
+fn is_usc_cache(path: &Utf8Path) -> bool {
+    path.is_dir() && path.file_name() == Some(USC_CACHE_DIR)
 }
 
 #[cfg(test)]

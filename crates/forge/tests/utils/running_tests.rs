@@ -20,17 +20,35 @@ use forge_runner::test_target_summary::TestTargetSummary;
 use foundry_ui::UI;
 use scarb_api::ScarbCommand;
 use scarb_api::metadata::metadata_for_dir;
-use shared::cache::DEFAULT_CACHE_DIR;
+use shared::cache::{DEFAULT_CACHE_DIR, prepare_cache_dir, usc_cache_dir};
 use std::num::NonZeroU32;
 use std::sync::Arc;
-use tempfile::tempdir;
 use tokio::runtime::Runtime;
+
+pub struct RunTestCaseOptions {
+    pub cache_dir: Utf8PathBuf,
+}
 
 #[must_use]
 pub fn run_test_case(
     test: &TestCase,
     tracked_resource: ForgeTrackedResource,
 ) -> Vec<TestTargetSummary> {
+    let cache_dir = test.path().unwrap().join(DEFAULT_CACHE_DIR);
+
+    run_test_case_with_options(test, tracked_resource, RunTestCaseOptions { cache_dir })
+}
+
+#[must_use]
+pub fn run_test_case_with_options(
+    test: &TestCase,
+    tracked_resource: ForgeTrackedResource,
+    options: RunTestCaseOptions,
+) -> Vec<TestTargetSummary> {
+    let cache_dir = options.cache_dir;
+    let usc_cache_dir = usc_cache_dir(&cache_dir);
+    prepare_cache_dir(&cache_dir).unwrap();
+
     ScarbCommand::new_with_stdio()
         .current_dir(test.path().unwrap())
         .arg("build")
@@ -55,12 +73,14 @@ pub fn run_test_case(
         let target_handles = raw_test_targets
             .into_iter()
             .map(|t| {
+                let usc_cache_dir = usc_cache_dir.clone();
                 tokio::task::spawn_blocking(move || {
                     prepare_test_target(
                         t,
                         &tracked_resource,
                         &NameFilter::All,
                         &PartitionConfig::default(),
+                        &usc_cache_dir,
                     )
                 })
             })
@@ -88,11 +108,9 @@ pub fn run_test_case(
                         fuzzer_seed: 12345,
                         max_n_steps: None,
                         is_vm_trace_needed: false,
-                        cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
-                            .unwrap()
-                            .join(DEFAULT_CACHE_DIR),
+                        cache_dir,
                         contracts_data: ContractsData::try_from(
-                            test.contracts(&ui).unwrap(),
+                            test.contracts(&ui, &usc_cache_dir).unwrap(),
                             cfg!(feature = "cairo-native"),
                         )
                         .unwrap(),

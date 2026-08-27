@@ -51,15 +51,21 @@ pub type ContractsData = HashMap<String, ContractData>;
 pub(crate) struct StarknetArtifactsFiles {
     base: Utf8PathBuf,
     other: Vec<Utf8PathBuf>,
+    usc_cache_dir: Utf8PathBuf,
     #[cfg(feature = "cairo-native")]
     compile_native: bool,
 }
 
 impl StarknetArtifactsFiles {
-    pub(crate) fn new(base_file: Utf8PathBuf, other_files: Vec<Utf8PathBuf>) -> Self {
+    pub(crate) fn new(
+        base_file: Utf8PathBuf,
+        other_files: Vec<Utf8PathBuf>,
+        usc_cache_dir: Utf8PathBuf,
+    ) -> Self {
         Self {
             base: base_file,
             other: other_files,
+            usc_cache_dir,
             #[cfg(feature = "cairo-native")]
             compile_native: false,
         }
@@ -117,7 +123,10 @@ impl StarknetArtifactsFiles {
     fn compile_artifact_at_path(&self, path: &Utf8Path) -> Result<StarknetContractArtifacts> {
         let sierra = fs::read_to_string(path)?;
 
-        let casm = compile_contract_sierra_at_path(path.as_std_path())?;
+        let casm = compile_contract_sierra_at_path(
+            path.as_std_path(),
+            Some(self.usc_cache_dir.as_std_path()),
+        )?;
 
         #[cfg(feature = "cairo-native")]
         let executor = self.compile_to_native(&sierra)?;
@@ -159,6 +168,7 @@ mod tests {
     use assert_fs::fixture::{FileWriteStr, PathChild};
     use camino::Utf8PathBuf;
     use indoc::indoc;
+    use shared::cache::{DEFAULT_CACHE_DIR, prepare_cache_dir, usc_cache_dir};
 
     #[test]
     fn test_deduplicate_by_module_path() {
@@ -226,8 +236,12 @@ mod tests {
             .unwrap(),
         ];
 
+        let cache_dir = Utf8PathBuf::from_path_buf(temp.path().join(DEFAULT_CACHE_DIR)).unwrap();
+        prepare_cache_dir(&cache_dir).unwrap();
+        let usc_cache_dir = usc_cache_dir(&cache_dir);
+
         // Create `StarknetArtifactsFiles`
-        let artifacts_files = StarknetArtifactsFiles::new(base_file, other_files);
+        let artifacts_files = StarknetArtifactsFiles::new(base_file, other_files, usc_cache_dir);
 
         (temp, artifacts_files)
     }
