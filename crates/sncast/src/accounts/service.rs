@@ -10,7 +10,6 @@ use crate::RuntimeAccount;
 use crate::accounts::{AccountRecord, AccountRepository, AccountSelector};
 use crate::helpers::account::get_account_from_devnet;
 use crate::response::ui::UI;
-use crate::signers::spec::PrivateKeySource;
 use crate::signers::{RuntimeSigner, SignerError};
 
 pub struct AccountService {
@@ -39,22 +38,6 @@ impl AccountService {
                     &self.repository,
                 )?;
                 let signer = RuntimeSigner::from_spec(account.signer.clone(), ui).await?;
-                verify_public_key(&account, &signer).await?;
-                Self::build_runtime_account(account, chain_id, provider, signer).await
-            }
-            AccountSelector::LegacyStarkli {
-                account_file,
-                keystore_file,
-            } => {
-                let account: AccountRecord =
-                    crate::get_account_data_from_keystore(account_file.as_str(), keystore_file)?
-                        .try_into()?;
-                let private_key = account
-                    .signer
-                    .private_key()
-                    .context("Private key not found in starkli account")?;
-                let signer =
-                    RuntimeSigner::from_private_key(private_key, PrivateKeySource::Keystore);
                 verify_public_key(&account, &signer).await?;
                 Self::build_runtime_account(account, chain_id, provider, signer).await
             }

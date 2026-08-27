@@ -86,6 +86,18 @@ Conflicts with: [`--private-key`](#--private-key-private_key), [`--private-key-f
 
 See [Ledger Hardware Wallet](../../../starknet/ledger.md) for details.
 
+## `--keystore <PATH>`
+Optional.
+
+Store the generated private key in an encrypted keystore and save a keystore signer in the native accounts file. Relative paths are resolved from the directory containing the accounts file.
+
+Conflicts with: [`--ledger-path`](#--ledger-path-hd_path), [`--ledger-account-id`](#--ledger-account-id-account_id)
+
+## `--keystore-password-env <ENVIRONMENT_VARIABLE>`
+Optional. Requires `--keystore`.
+
+Record the environment-variable name from which subsequent commands should read this account's keystore password. The password itself is never stored.
+
 ## `--ledger-account-id <ACCOUNT_ID>`
 Optional.
 
