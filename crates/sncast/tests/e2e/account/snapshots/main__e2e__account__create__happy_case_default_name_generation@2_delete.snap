@@ -1,0 +1,39 @@
+---
+source: crates/sncast/tests/e2e/account/create.rs
+expression: accounts_json
+---
+{
+  "accounts": {
+    "alpha-sepolia": {
+      "account-1": {
+        "address": "[value]",
+        "class_hash": "[value]",
+        "deployed": false,
+        "legacy": false,
+        "public_key": "[value]",
+        "salt": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        },
+        "type": "open_zeppelin"
+      },
+      "account-3": {
+        "address": "[value]",
+        "class_hash": "[value]",
+        "deployed": false,
+        "legacy": false,
+        "public_key": "[value]",
+        "salt": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        },
+        "type": "open_zeppelin"
+      }
+    }
+  },
+  "version": {
+    "$serde_json::private::Number": "2"
+  }
+}
