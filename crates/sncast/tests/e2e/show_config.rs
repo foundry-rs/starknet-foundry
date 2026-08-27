@@ -16,7 +16,7 @@ async fn test_show_config_from_snfoundry_toml() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
-        Chain ID:            alpha-sepolia
+        Chain ID:            SN_SEPOLIA
         RPC URL:             {}
         Account:             user1
         Accounts File Path:  ../account-file
@@ -37,7 +37,7 @@ async fn test_show_config_json() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
-        {"account":"user1","accounts_file_path":"../account-file","alias_count":0,"block_explorer":"Voyager","chain_id":"alpha-sepolia","command":"show-config","fee_params":null,"keystore":null,"network":null,"networks":{"devnet":null,"mainnet":null,"sepolia":null},"profile":null,"rpc_url":"http://127.0.0.1:5055/rpc","scarb_profile":"release","show_explorer_links":true,"type":"response","wait_retry_interval":5,"wait_timeout":300}
+        {"account":"user1","accounts_file_path":"../account-file","alias_count":0,"block_explorer":"Voyager","chain_id":"SN_SEPOLIA","command":"show-config","fee_params":null,"keystore":null,"network":null,"networks":{"devnet":null,"mainnet":null,"sepolia":null},"profile":null,"rpc_url":"http://127.0.0.1:5055/rpc","scarb_profile":"release","show_explorer_links":true,"type":"response","wait_retry_interval":5,"wait_timeout":300}
     "#});
 }
 
@@ -73,7 +73,7 @@ async fn test_show_config_from_cli() {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
-        Chain ID:            alpha-sepolia
+        Chain ID:            SN_SEPOLIA
         RPC URL:             {}
         Account:             /path/to/account.json
         Keystore:            ../keystore
@@ -95,7 +95,7 @@ async fn test_show_config_from_cli_and_snfoundry_toml() {
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
         Profile:             profile2
-        Chain ID:            alpha-sepolia
+        Chain ID:            SN_SEPOLIA
         RPC URL:             {}
         Account:             user2
         Accounts File Path:  ../account-file
@@ -117,7 +117,7 @@ async fn test_show_config_when_no_keystore() {
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
         Profile:             profile4
-        Chain ID:            alpha-sepolia
+        Chain ID:            SN_SEPOLIA
         RPC URL:             {}
         Account:             user3
         Accounts File Path:  ../account-file
@@ -139,7 +139,7 @@ async fn test_show_config_when_keystore() {
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
         Profile:             profile3
-        Chain ID:            alpha-sepolia
+        Chain ID:            SN_SEPOLIA
         RPC URL:             {}
         Account:             /path/to/account.json
         Keystore:            ../keystore
@@ -161,7 +161,7 @@ async fn test_show_config_no_url() {
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
         Profile:             profile6
-        Chain ID:            alpha-sepolia
+        Chain ID:            SN_SEPOLIA
         RPC URL:             {}
         Account:             user1
         Accounts File Path:  /path/to/account.json
@@ -183,7 +183,7 @@ async fn test_show_config_with_network() {
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
         Profile:             profile7
-        Chain ID:            alpha-sepolia
+        Chain ID:            SN_SEPOLIA
         Network:             sepolia
         Account:             user1
         Accounts File Path:  /path/to/account.json
@@ -206,7 +206,7 @@ async fn test_show_config_with_fee() {
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
         Profile:             with_fee
-        Chain ID:            alpha-sepolia
+        Chain ID:            SN_SEPOLIA
         RPC URL:             http://127.0.0.1:5055/rpc
         Account:             user1
         Accounts File Path:  ../account-file
@@ -229,7 +229,7 @@ async fn test_show_config_cli_url_overrides_config_network() {
     let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().success().stdout_eq(formatdoc! {r"
         Profile:             profile7
-        Chain ID:            alpha-sepolia
+        Chain ID:            SN_SEPOLIA
         RPC URL:             {}
         Account:             user1
         Accounts File Path:  /path/to/account.json
@@ -264,7 +264,7 @@ async fn test_show_config_displays_networks() {
     let snapbox = runner(&args).current_dir(t.path());
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
-        Chain ID:            alpha-sepolia
+        Chain ID:            SN_SEPOLIA
         RPC URL:             {}
         Account:             user1
         Accounts File Path:  [..]/.starknet_accounts/starknet_open_zeppelin_accounts.json
@@ -343,7 +343,7 @@ async fn test_stark_scan_as_block_explorer() {
 
     let snapbox = runner(&args).current_dir(t.path());
     snapbox.assert().success().stdout_eq(indoc! {r"
-        Chain ID:            alpha-mainnet
+        Chain ID:            SN_MAIN
         Network:             mainnet
         Account:             user1
         Accounts File Path:  /path/to/account.json
@@ -447,7 +447,7 @@ async fn test_show_config_global_no_local() {
         .current_dir(t.path());
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
-        Chain ID:            alpha-sepolia
+        Chain ID:            SN_SEPOLIA
         RPC URL:             {}
         Account:             global_default_user
         Accounts File Path:  ../global-account-file
@@ -474,7 +474,7 @@ async fn test_show_config_global_only_profile() {
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
         Profile:             global_only_profile
-        Chain ID:            alpha-sepolia
+        Chain ID:            SN_SEPOLIA
         RPC URL:             {}
         Account:             global_profile_user
         Accounts File Path:  ../global-account-file
@@ -521,7 +521,7 @@ async fn test_show_config_global_and_local_default() {
         .current_dir(local_dir.path());
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
-        Chain ID:            alpha-sepolia
+        Chain ID:            SN_SEPOLIA
         RPC URL:             {}
         Account:             user1
         Accounts File Path:  ../account-file
@@ -548,7 +548,7 @@ async fn test_show_config_global_and_local_profile() {
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
         Profile:             profile2
-        Chain ID:            alpha-sepolia
+        Chain ID:            SN_SEPOLIA
         RPC URL:             {}
         Account:             user100
         Accounts File Path:  ../account-file

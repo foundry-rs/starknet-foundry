@@ -1,18 +1,18 @@
 use anyhow::{Result, bail};
-use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args};
+use foundry_ui::components::warning::WarningMessage;
 use promptly::prompt_default;
-use sncast::helpers::account::load_accounts;
+use sncast::accounts::{AccountName, AccountRepository, ChainId};
+use sncast::get_chain_id;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::delete::AccountDeleteResponse;
 use sncast::response::ui::UI;
-use sncast::{chain_id_to_network_name, get_chain_id};
 
 #[derive(Args, Debug)]
 #[command(about = "Delete account information from the accounts file")]
 #[command(group(ArgGroup::new("networks")
-    .args(&["url", "network", "network_name"])
+    .args(&["url", "network", "chain_id", "network_name"])
     .required(true)
     .multiple(false)))]
 pub struct Delete {
@@ -27,30 +27,28 @@ pub struct Delete {
     #[command(flatten)]
     pub rpc: RpcArgs,
 
-    /// Literal name of the network used in accounts file
+    /// Chain ID of the network in accounts file, e.g. `SN_SEPOLIA`
+    #[arg(long)]
+    pub chain_id: Option<ChainId>,
+
+    /// Deprecated, use `--chain-id` instead
     #[arg(long)]
     pub network_name: Option<String>,
 }
 
 pub fn delete(
-    name: &str,
-    path: &Utf8PathBuf,
-    network_name: &str,
+    name: &AccountName,
+    repository: &AccountRepository,
+    chain_id: &ChainId,
     yes: bool,
+    ui: &UI,
 ) -> Result<AccountDeleteResponse> {
-    let mut items = load_accounts(path)?;
+    repository.find(chain_id, name)?;
 
-    if items[&network_name].is_null() {
-        bail!("No accounts defined for network = {network_name}");
-    }
-    if items[&network_name][&name].is_null() {
-        bail!("Account with name {name} does not exist")
-    }
-
-    // Let's ask confirmation
     if !yes {
         let prompt_text = format!(
-            "Do you want to remove the account {name} deployed to network {network_name} from local file {path}?"
+            "Do you want to remove the account {name} for chain ID {chain_id} from local file {}?",
+            repository.path()
         );
 
         if !prompt_default(prompt_text, false)? {
@@ -58,30 +56,36 @@ pub fn delete(
         }
     }
 
-    // get to the nested object "nested"
-    let nested = items
-        .get_mut(network_name)
-        .expect("Failed to find network")
-        .as_object_mut()
-        .expect("Failed to convert network");
+    repository
+        .remove(chain_id, name)
+        .map_err(anyhow::Error::from)?
+        .migration_outcome
+        .notify_if_migrated(ui);
 
-    // now remove the child from there
-    nested.remove(name);
-
-    std::fs::write(path.clone(), serde_json::to_string_pretty(&items).unwrap())?;
     let result = "Account successfully removed".to_string();
+
     Ok(AccountDeleteResponse { result })
 }
 
-pub(crate) async fn get_network_name(
+pub(crate) async fn get_chain_id_to_delete_from(
     delete: &Delete,
     config: &CastConfig,
     ui: &UI,
-) -> Result<String> {
+) -> Result<ChainId> {
+    if let Some(chain_id) = delete.chain_id {
+        return Ok(chain_id);
+    }
+
     if let Some(network_name) = &delete.network_name {
-        return Ok(network_name.clone());
+        if let Some(chain_id) = ChainId::from_legacy_network_name(network_name) {
+            ui.print_warning(WarningMessage::new(format!(
+                "Network name `{network_name}` is deprecated, use `--chain-id {chain_id}` instead"
+            )));
+            return Ok(chain_id);
+        }
+        return Ok(network_name.parse()?);
     }
 
     let provider = delete.rpc.get_provider(config, ui).await?;
-    Ok(chain_id_to_network_name(get_chain_id(&provider).await?))
+    Ok(ChainId::from(get_chain_id(&provider).await?))
 }
