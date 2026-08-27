@@ -29,7 +29,6 @@ pub struct FetchedContractClasses {
 
 pub struct ContractClassFetchFailure {
     pub class_hash: Felt,
-    pub contract_addresses: HashSet<Felt>,
     pub error: ProviderError,
 }
 
@@ -151,14 +150,12 @@ fn decode_invocation_json(
 }
 
 #[must_use]
-pub fn contract_addresses_by_class_hash(
-    transaction_trace: &TransactionTrace,
-) -> HashMap<Felt, HashSet<Felt>> {
-    let mut contract_addresses_by_class_hash = HashMap::new();
+pub fn class_hashes(transaction_trace: &TransactionTrace) -> HashSet<Felt> {
+    let mut class_hashes = HashSet::new();
     for invocation in root_invocations(transaction_trace) {
-        collect_contract_addresses(invocation, &mut contract_addresses_by_class_hash);
+        collect_class_hashes(invocation, &mut class_hashes);
     }
-    contract_addresses_by_class_hash
+    class_hashes
 }
 
 impl SncastCommandMessage for TransactionTraceResponse {
@@ -849,17 +846,11 @@ fn root_invocations(transaction_trace: &TransactionTrace) -> Vec<&FunctionInvoca
     invocations
 }
 
-fn collect_contract_addresses(
-    invocation: &FunctionInvocation,
-    contract_addresses_by_class_hash: &mut HashMap<Felt, HashSet<Felt>>,
-) {
-    contract_addresses_by_class_hash
-        .entry(invocation.class_hash)
-        .or_default()
-        .insert(invocation.contract_address);
+fn collect_class_hashes(invocation: &FunctionInvocation, class_hashes: &mut HashSet<Felt>) {
+    class_hashes.insert(invocation.class_hash);
 
     for nested_call in &invocation.calls {
-        collect_contract_addresses(nested_call, contract_addresses_by_class_hash);
+        collect_class_hashes(nested_call, class_hashes);
     }
 }
 
