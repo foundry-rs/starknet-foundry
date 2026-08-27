@@ -37,7 +37,11 @@ async fn test_show_config_json() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
+<<<<<<< HEAD
         {"account":"user1","accounts_file_path":"../account-file","alias_count":0,"block_explorer":"Voyager","chain_id":"alpha-sepolia","command":"show-config","fee_params":null,"keystore":null,"network":null,"networks":{"devnet":null,"mainnet":null,"sepolia":null},"profile":null,"rpc_url":"http://127.0.0.1:5055/rpc","scarb_profile":"release","show_explorer_links":true,"type":"response","wait_retry_interval":5,"wait_timeout":300}
+=======
+        {"account":"user1","accounts_file_path":"../account-file","alias_count":0,"block_explorer":"Voyager","chain_id":"alpha-sepolia","command":"show-config","network":null,"networks":{"devnet":null,"mainnet":null,"sepolia":null},"profile":null,"rpc_url":"http://127.0.0.1:5055/rpc","scarb_profile":"release","show_explorer_links":true,"type":"response","wait_retry_interval":5,"wait_timeout":300}
+>>>>>>> 91ce28640 (refactor(sncast): remove legacy starkli account support)
     "#});
 }
 
@@ -52,38 +56,6 @@ fn test_show_config_displays_aliases_count() {
         output,
         "Alias Count:         12 (use `sncast alias list` to display)",
     );
-}
-
-#[tokio::test]
-async fn test_show_config_from_cli() {
-    let args = vec![
-        "--account",
-        "/path/to/account.json",
-        "--keystore",
-        "../keystore",
-        "--wait-timeout",
-        "2",
-        "--wait-retry-interval",
-        "1",
-        "show-config",
-        "--url",
-        URL,
-    ];
-
-    let snapbox = runner(&args);
-
-    snapbox.assert().success().stdout_eq(formatdoc! {r"
-        Chain ID:            alpha-sepolia
-        RPC URL:             {}
-        Account:             /path/to/account.json
-        Keystore:            ../keystore
-        Wait Timeout:        2s
-        Wait Retry Interval: 1s
-        Show Explorer Links: true
-        Block Explorer:      Voyager
-        Scarb Profile:       release
-        Alias Count:         0
-    ", URL});
 }
 
 #[tokio::test]
@@ -121,28 +93,6 @@ async fn test_show_config_when_no_keystore() {
         RPC URL:             {}
         Account:             user3
         Accounts File Path:  ../account-file
-        Wait Timeout:        300s
-        Wait Retry Interval: 5s
-        Show Explorer Links: true
-        Block Explorer:      Voyager
-        Scarb Profile:       release
-        Alias Count:         0
-    ", URL});
-}
-
-#[tokio::test]
-async fn test_show_config_when_keystore() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
-    let args = vec!["--profile", "profile3", "show-config"];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-
-    snapbox.assert().success().stdout_eq(formatdoc! {r"
-        Profile:             profile3
-        Chain ID:            alpha-sepolia
-        RPC URL:             {}
-        Account:             /path/to/account.json
-        Keystore:            ../keystore
         Wait Timeout:        300s
         Wait Retry Interval: 5s
         Show Explorer Links: true
