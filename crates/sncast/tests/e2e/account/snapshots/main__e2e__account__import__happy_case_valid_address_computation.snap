@@ -1,0 +1,24 @@
+---
+source: crates/sncast/tests/e2e/account/import.rs
+expression: contents
+---
+{
+  "version": 2,
+  "accounts": {
+    "alpha-sepolia": {
+      "my_account_import": {
+        "public_key": "0x759ca09377679ecd535a81e83039658bf40959283187c654c5416f439403cf5",
+        "address": "0x3d8e70d1cbeca6eed8d4cf58fe812b24e741112730903dc91486afe9a5130cc",
+        "salt": "0x3",
+        "deployed": false,
+        "class_hash": "0x4d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f",
+        "legacy": true,
+        "type": "open_zeppelin",
+        "signer": {
+          "type": "private_key",
+          "private_key": "0x2"
+        }
+      }
+    }
+  }
+}

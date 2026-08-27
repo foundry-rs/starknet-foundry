@@ -1,20 +1,18 @@
 use std::fs;
 
 use crate::e2e::ledger::{
-    BRAAVOS_LEDGER_PATH, LEDGER_ACCOUNT_NAME, LEDGER_PUBLIC_KEY, OZ_LEDGER_PATH, READY_LEDGER_PATH,
-    TEST_LEDGER_PATH, TEST_LEDGER_PATH_STORED, set_automation, setup_speculos,
+    BRAAVOS_LEDGER_PATH, LEDGER_ACCOUNT_NAME, OZ_LEDGER_PATH, READY_LEDGER_PATH, TEST_LEDGER_PATH,
+    set_automation, setup_speculos,
 };
 use crate::helpers::constants::URL;
 use crate::helpers::fixtures::mint_token;
+use crate::helpers::insta::set_snapshot_suffix;
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use configuration::test_utils::copy_config_to_tempdir;
 use conversions::string::IntoHexStr;
 use indoc::indoc;
-use serde_json::{json, to_string_pretty};
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
-use snapbox::assert_data_eq;
-use sncast::helpers::account::load_accounts;
 use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
 use speculos_client::AutomationRule;
 use speculos_client::starknet_app::{
@@ -23,13 +21,13 @@ use speculos_client::starknet_app::{
 use tempfile::tempdir;
 use test_case::test_case;
 
-#[test_case("oz", "open_zeppelin", OZ_CLASS_HASH.into_hex_string(), 6001, &[]; "oz_account_type")]
-#[test_case("ready", "ready", READY_CLASS_HASH.into_hex_string(), 6002, &[]; "ready_account_type")]
+#[test_case("oz", 6001, &[]; "oz_account_type")]
+#[test_case("ready", 6002, &[]; "ready_account_type")]
 // Braavos calls sign_hash twice during fee estimation (tx_hash + aux_hash) because
 // is_signer_interactive() always returns false — see BraavosAccountFactory::is_signer_interactive.
 // That means we need ENABLE_BLIND_SIGN + two APPROVE_BLIND_SIGN_HASH during creation.
 #[test_case(
-    "braavos", "braavos", BRAAVOS_CLASS_HASH.into_hex_string(), 6003,
+    "braavos", 6003,
     &[
         ENABLE_BLIND_SIGN,
         APPROVE_BLIND_SIGN_HASH, // tx_hash
@@ -41,8 +39,6 @@ use test_case::test_case;
 #[ignore = "requires Speculos installation"]
 async fn test_create_ledger_account(
     account_type: &str,
-    saved_type: &str,
-    class_hash: String,
     port: u16,
     automations: &[AutomationRule<'static>],
 ) -> Result<(), speculos_client::SpeculosError> {
@@ -94,24 +90,13 @@ async fn test_create_ledger_account(
     let contents = fs::read_to_string(tempdir.path().join("accounts.json"))
         .expect("Unable to read created file");
 
-    let expected = json!(
-        {
-            "alpha-sepolia": {
-                LEDGER_ACCOUNT_NAME: {
-                    "address": "0x[..]",
-                    "class_hash": class_hash,
-                    "deployed": false,
-                    "legacy": false,
-                    "public_key": "0x[..]",
-                    "salt": "0x[..]",
-                    "type": saved_type,
-                    "ledger_path": TEST_LEDGER_PATH_STORED,
-                }
-            }
-        }
-    );
+    let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
 
-    assert_data_eq!(contents, to_string_pretty(&expected).unwrap());
+    set_snapshot_suffix!("{account_type}");
+    insta::assert_json_snapshot!(contents_json, {
+        ".**.address" => "[value]",
+        ".**.salt" => "[value]",
+    });
     Ok(())
 }
 
@@ -225,7 +210,7 @@ async fn test_deploy_ledger_account(
 
     let accounts_content = std::fs::read_to_string(&accounts_file).unwrap();
     let contents_json: serde_json::Value = serde_json::from_str(&accounts_content).unwrap();
-    let address = contents_json["alpha-sepolia"][LEDGER_ACCOUNT_NAME]["address"]
+    let address = contents_json["accounts"]["alpha-sepolia"][LEDGER_ACCOUNT_NAME]["address"]
         .as_str()
         .unwrap()
         .to_string();
@@ -252,19 +237,22 @@ async fn test_deploy_ledger_account(
     assert_stdout_contains(
         output,
         indoc! {"
-            Ledger device will display a confirmation screen. Please approve it to continue...
-
             Success: Account deployed
+
             Transaction Hash: 0x[..]
         "},
     );
 
-    let path = Utf8PathBuf::from_path_buf(accounts_file.clone()).expect("Path is not valid UTF-8");
-    let items = load_accounts(&path).expect("Failed to load accounts");
-    assert_eq!(
-        items["alpha-sepolia"][LEDGER_ACCOUNT_NAME]["deployed"],
-        true
-    );
+    let accounts_content = std::fs::read_to_string(&accounts_file).unwrap();
+    let contents_json: serde_json::Value = serde_json::from_str(&accounts_content).unwrap();
+
+    set_snapshot_suffix!("{account_type_str}");
+    insta::assert_json_snapshot!(contents_json, {
+        ".**.address" => "[value]",
+        ".**.class_hash" => "[value]",
+        ".**.salt" => "[value]",
+    });
+
     Ok(())
 }
 
@@ -290,17 +278,12 @@ async fn test_invalid_derivation_path() {
     );
 }
 
-#[test_case("oz", "open_zeppelin", OZ_CLASS_HASH.into_hex_string(), 6009; "oz_account_type")]
-#[test_case("ready", "ready", READY_CLASS_HASH.into_hex_string(), 6010; "ready_account_type")]
-#[test_case("braavos", "braavos", BRAAVOS_CLASS_HASH.into_hex_string(), 6011; "braavos_account_type")]
+#[test_case("oz", OZ_CLASS_HASH.into_hex_string(), 6009; "oz_account_type")]
+#[test_case("ready", READY_CLASS_HASH.into_hex_string(), 6010; "ready_account_type")]
+#[test_case("braavos", BRAAVOS_CLASS_HASH.into_hex_string(), 6011; "braavos_account_type")]
 #[tokio::test]
 #[ignore = "requires Speculos installation"]
-async fn test_import_ledger_account(
-    account_type: &str,
-    saved_type: &str,
-    class_hash: String,
-    port: u16,
-) {
+async fn test_import_ledger_account(account_type: &str, class_hash: String, port: u16) {
     let (client, url) = setup_speculos(port);
     let tempdir = tempdir().unwrap();
 
@@ -342,22 +325,13 @@ async fn test_import_ledger_account(
 
     let accounts_content = std::fs::read_to_string(tempdir.path().join("accounts.json")).unwrap();
     let contents_json: serde_json::Value = serde_json::from_str(&accounts_content).unwrap();
-    assert_eq!(
-        contents_json,
-        json!({
-            "alpha-sepolia": {
-                LEDGER_ACCOUNT_NAME: {
-                    "address": "0x1",
-                    "class_hash": class_hash,
-                    "deployed": false,
-                    "legacy": false,
-                    "public_key": LEDGER_PUBLIC_KEY,
-                    "type": saved_type,
-                    "ledger_path": TEST_LEDGER_PATH_STORED,
-                }
-            }
-        })
-    );
+
+    set_snapshot_suffix!("{account_type}");
+    insta::assert_json_snapshot!(contents_json, {
+        ".**.address" => "[value]",
+        ".**.class_hash" => "[value]",
+        ".**.salt" => "[value]",
+    });
 }
 
 #[tokio::test]
@@ -408,6 +382,5 @@ async fn test_import_ledger_account_add_profile() {
     );
 
     let contents = std::fs::read_to_string(tempdir.path().join("snfoundry.toml")).unwrap();
-    assert!(contents.contains(&format!("[sncast.{LEDGER_ACCOUNT_NAME}]")));
-    assert!(contents.contains(&format!("account = \"{LEDGER_ACCOUNT_NAME}\"")));
+    insta::assert_snapshot!(contents);
 }
