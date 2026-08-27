@@ -1,13 +1,13 @@
 use std::str::FromStr;
 
 use crate::response::ui::UI;
-use anyhow::{Result, anyhow, bail};
-use clap::{Arg, Command, Error, builder::TypedValueParser, error::ErrorKind};
+use clap::{self, Arg, Command, builder::TypedValueParser};
 use foundry_ui::components::warning::WarningMessage;
 use sha2::{Digest, Sha256};
 use starknet_rust::signers::DerivationPath;
+use thiserror::Error;
 
-const EIP2645_LENGTH: usize = 6;
+const EIP_2645_LENGTH: usize = 6;
 
 /// BIP-32 encoding of `2645'`
 const EIP_2645_PURPOSE: u32 = 0x8000_0a55;
@@ -17,6 +17,66 @@ const HARDENED_BIT: u32 = 1 << 31;
 
 /// Mask to extract the non-hardened index from a BIP-32 path component.
 const NON_HARDENED_MASK: u32 = 0x7fff_ffff;
+
+#[derive(Debug, Error)]
+pub enum DerivationPathError {
+    #[error("invalid BIP-32 derivation path: {0}")]
+    InvalidBip32(String),
+
+    #[error("EIP-2645 paths must have {EIP_2645_LENGTH} levels")]
+    InvalidLength,
+
+    #[error("HD wallet paths must start with \"m/\"")]
+    InvalidPrefix,
+
+    #[error("EIP-2645 paths must start with \"m/2645'/\"")]
+    InvalidPurpose,
+
+    #[error("the \"{level}\" level of an EIP-2645 path must be hardened")]
+    Unhardened { level: &'static str },
+
+    #[error("the \"index\" level must be a number")]
+    InvalidIndex,
+
+    #[error("path must not contain whitespaces")]
+    Whitespace,
+
+    #[error("invalid path level \"{body}\": {message}")]
+    InvalidLevel { body: String, message: String },
+
+    #[error("`'` appended to an already-hardened value of {raw_node}")]
+    UnnecessaryHardening { raw_node: u32 },
+}
+
+/// Parses the canonical numeric EIP-2645 representation stored in an accounts file.
+pub fn parse_derivation_path(value: &str) -> Result<DerivationPath, DerivationPathError> {
+    let path = DerivationPath::from_str(value)
+        .map_err(|error| DerivationPathError::InvalidBip32(error.to_string()))?;
+    validate_derivation_path(&path)?;
+    Ok(path)
+}
+
+pub fn validate_derivation_path(path: &DerivationPath) -> Result<(), DerivationPathError> {
+    if path.len() != EIP_2645_LENGTH {
+        return Err(DerivationPathError::InvalidLength);
+    }
+
+    let levels = path.iter().copied().collect::<Vec<_>>();
+    if levels[0] != EIP_2645_PURPOSE {
+        return Err(DerivationPathError::InvalidPurpose);
+    }
+
+    for (index, level) in ["layer", "application", "eth_address_1", "eth_address_2"]
+        .into_iter()
+        .enumerate()
+    {
+        if levels[index + 1] & HARDENED_BIT == 0 {
+            return Err(DerivationPathError::Unhardened { level });
+        }
+    }
+
+    Ok(())
+}
 
 #[derive(Clone)]
 pub struct DerivationPathParser;
@@ -74,11 +134,12 @@ impl TypedValueParser for DerivationPathParser {
         cmd: &Command,
         _arg: Option<&Arg>,
         value: &std::ffi::OsStr,
-    ) -> Result<Self::Value, Error> {
+    ) -> Result<Self::Value, clap::Error> {
         if value.is_empty() {
-            return Err(cmd
-                .clone()
-                .error(ErrorKind::InvalidValue, "empty Ledger derivation path"));
+            return Err(cmd.clone().error(
+                clap::error::ErrorKind::InvalidValue,
+                "empty Ledger derivation path",
+            ));
         }
         match value.to_str() {
             Some(value) => match Eip2645Path::from_str_with_warnings(value) {
@@ -87,12 +148,12 @@ impl TypedValueParser for DerivationPathParser {
                     warnings,
                 }),
                 Err(err) => Err(cmd.clone().error(
-                    ErrorKind::InvalidValue,
+                    clap::error::ErrorKind::InvalidValue,
                     format!("invalid Ledger derivation path: {err}"),
                 )),
             },
             None => Err(cmd.clone().error(
-                ErrorKind::InvalidValue,
+                clap::error::ErrorKind::InvalidValue,
                 "invalid Ledger derivation path: not UTF-8",
             )),
         }
@@ -100,7 +161,7 @@ impl TypedValueParser for DerivationPathParser {
 }
 
 impl Eip2645Path {
-    fn from_str_with_warnings(s: &str) -> Result<(Self, Vec<String>)> {
+    fn from_str_with_warnings(s: &str) -> anyhow::Result<(Self, Vec<String>)> {
         let path = s.parse::<Self>()?;
         let mut warnings = Vec::new();
 
@@ -324,6 +385,16 @@ mod tests {
             hardened: false,
         });
         u32::from(&level)
+    }
+
+    #[test]
+    fn accepts_canonical_eip_2645_path() {
+        assert!(parse_derivation_path("m/2645'/1195502025'/355113700'/0'/0'/0").is_ok());
+    }
+
+    #[test]
+    fn rejects_general_bip_32_path() {
+        assert!(parse_derivation_path("m/44'/60'/0'/0/0").is_err());
     }
 
     #[test]
