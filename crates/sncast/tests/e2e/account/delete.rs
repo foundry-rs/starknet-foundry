@@ -77,6 +77,7 @@ pub fn test_happy_case() {
     let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().success().stdout_eq(indoc! {r"
+        [WARNING] Accounts file was migrated to schema version 2; the original was saved as a .v1.bak file
         Success: Account deleted
 
         Account successfully removed
@@ -97,12 +98,41 @@ pub fn test_happy_case_url() {
         URL,
         "--name",
         "user0",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
+
+    snapbox.assert().success().stdout_eq(indoc! {r"
+        [WARNING] Accounts file was migrated to schema version 2; the original was saved as a .v1.bak file
+        Success: Account deleted
+
+        Account successfully removed
+    "});
+}
+
+#[test]
+pub fn test_happy_case_with_yes_flag() {
+    // Creating dummy accounts test file
+    let accounts_file_name = "temp_accounts.json";
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
+
+    // Now delete dummy account
+    let args = vec![
+        "--accounts-file",
+        &accounts_file_name,
+        "account",
+        "delete",
+        "--name",
+        "user3",
+        "--network-name",
+        "custom-network",
         "--yes",
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().success().stdout_eq(indoc! {r"
+        [WARNING] Accounts file was migrated to schema version 2; the original was saved as a .v1.bak file
         Success: Account deleted
 
         Account successfully removed
