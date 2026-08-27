@@ -22,7 +22,7 @@ use starknet_types_core::felt::Felt;
 use std::cell::Cell;
 use std::collections::{HashMap, HashSet};
 
-pub struct ContractClassesFetchResponse {
+pub struct FetchedContractClasses {
     pub classes: HashMap<Felt, ContractClass>,
     pub failures: Vec<ContractClassFetchFailure>,
 }
