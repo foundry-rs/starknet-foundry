@@ -1,5 +1,7 @@
+use crate::accounts::schema::v2;
+use crate::accounts::{AccountName, AccountRecord, AccountType, ChainId};
 use crate::response::cast_message::SncastCommandMessage;
-use crate::{AccountData, AccountType, SignerType};
+use crate::signers::SignerSpec;
 use camino::Utf8PathBuf;
 use conversions::string::IntoHexStr;
 use foundry_ui::styling::OutputBuilder;
@@ -9,7 +11,7 @@ use serde::Serialize;
 #[derive(Debug, Serialize)]
 pub struct AccountListResponse {
     pub accounts_file: Utf8PathBuf,
-    /// Sorted by `(network, name)`.
+    /// Sorted by `(chain_id, name)`.
     pub accounts: Vec<AccountDataRepresentation>,
     #[serde(skip)]
     pub display_private_keys: bool,
@@ -18,12 +20,11 @@ pub struct AccountListResponse {
 #[derive(Debug, Serialize)]
 pub struct AccountDataRepresentation {
     pub name: String,
-    pub network: String,
+    pub chain_id: String,
     pub public_key: String,
-    #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub signer_type: Option<SignerType>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub address: Option<String>,
+    pub signer: Option<v2::Signer>,
+    pub address: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub salt: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -39,46 +40,42 @@ pub struct AccountDataRepresentation {
 impl AccountDataRepresentation {
     #[must_use]
     pub fn new(
-        account: AccountData,
-        network: String,
-        name: String,
+        account: &AccountRecord,
+        chain_id: &ChainId,
+        name: &AccountName,
         display_private_key: bool,
     ) -> Self {
-        let AccountData {
-            public_key,
-            address,
-            salt,
-            deployed,
-            class_hash,
-            legacy,
-            account_type,
-            signer_type,
-        } = account;
-
-        let signer_type = match signer_type {
-            SignerType::Local { .. } if !display_private_key => None,
-            signer_type => Some(signer_type),
+        let signer = match &account.signer {
+            SignerSpec::PrivateKey(_) if !display_private_key => None,
+            SignerSpec::PrivateKey(spec) => Some(v2::Signer::PrivateKey {
+                private_key: spec.private_key(),
+            }),
+            SignerSpec::Keystore(spec) => Some(v2::Signer::Keystore {
+                path: spec.path().to_owned(),
+                password_env: spec.password_env().map(ToOwned::to_owned),
+            }),
+            SignerSpec::Ledger(spec) => Some(v2::Signer::Ledger {
+                derivation_path: spec.derivation_path().derivation_string(),
+            }),
         };
 
         Self {
-            name,
-            network,
-            public_key: public_key.into_hex_string(),
-            signer_type,
-            address: address.map(IntoHexStr::into_hex_string),
-            salt: salt.map(IntoHexStr::into_hex_string),
-            deployed,
-            class_hash: class_hash.map(IntoHexStr::into_hex_string),
-            legacy,
-            account_type,
+            name: name.to_string(),
+            chain_id: chain_id.to_string(),
+            public_key: account.public_key.into_hex_string(),
+            signer,
+            address: account.address.into_hex_string(),
+            salt: account.salt.map(IntoHexStr::into_hex_string),
+            deployed: account.deployed,
+            class_hash: account.class_hash.map(IntoHexStr::into_hex_string),
+            legacy: account.legacy,
+            account_type: account.account_type,
         }
     }
 
     fn append_fields(&self, builder: OutputBuilder) -> OutputBuilder {
         builder
-            .if_some(self.address.as_ref(), |b, address| {
-                b.field("Address", address)
-            })
+            .field("Address", &self.address)
             .if_some(self.account_type.as_ref(), |b, account_type| {
                 b.field("Type", &account_type.to_string())
             })
@@ -93,17 +90,17 @@ impl AccountDataRepresentation {
             .if_some(self.legacy.as_ref(), |b, legacy| {
                 b.field("Legacy", &legacy.to_string())
             })
-            .if_some(
-                self.signer_type.as_ref(),
-                |b, signer_type| match signer_type {
-                    SignerType::Local { private_key } => {
-                        b.field("Private Key", &private_key.into_hex_string())
-                    }
-                    SignerType::Ledger { ledger_path } => {
-                        b.field("Ledger Path", &ledger_path.derivation_string())
-                    }
-                },
-            )
+            .if_some(self.signer.as_ref(), |b, signer| match signer {
+                v2::Signer::PrivateKey { private_key } => {
+                    b.field("Private Key", &private_key.into_hex_string())
+                }
+                v2::Signer::Keystore { path, password_env } => b
+                    .field("Keystore", path.as_str())
+                    .if_some(password_env.as_ref(), |b, password_env| {
+                        b.field("Password Env", password_env)
+                    }),
+                v2::Signer::Ledger { derivation_path } => b.field("Ledger Path", derivation_path),
+            })
     }
 }
 
@@ -119,8 +116,8 @@ impl SncastCommandMessage for AccountListResponse {
 
         let mut builder = OutputBuilder::new().field("Accounts File", self.accounts_file.as_str());
 
-        for (network, accounts) in &self.accounts.iter().chunk_by(|account| &account.network) {
-            builder = builder.blank_line().heading(network);
+        for (chain_id, accounts) in &self.accounts.iter().chunk_by(|account| &account.chain_id) {
+            builder = builder.blank_line().heading(chain_id);
 
             for (index, account) in accounts.enumerate() {
                 if index > 0 {

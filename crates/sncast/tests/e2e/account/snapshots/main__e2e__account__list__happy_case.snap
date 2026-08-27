@@ -4,7 +4,7 @@ expression: "output.as_stdout().replace(accounts_file_path.to_str().unwrap(),\n\
 ---
 Accounts File:  [ACCOUNTS_FILE]
 
-alpha-sepolia
+SN_SEPOLIA
   user0
     Address:    0x4f5f24ceaae64434fa2bc2befd08976b51cf8f6a5d8257f7ec3616f61de263a
     Type:       OpenZeppelin

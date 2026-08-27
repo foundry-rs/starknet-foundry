@@ -156,6 +156,48 @@ pub async fn account_name_already_exists() {
 }
 
 #[tokio::test]
+pub async fn explicit_accounts_file_without_devnet_account() {
+    // An explicit accounts file that doesn't define the devnet account falls back to the built-in one.
+    let accounts_file = "accounts.json";
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+
+    copy_file(
+        "tests/data/accounts/accounts.json",
+        temp_dir.path().join(accounts_file),
+    );
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "--account",
+        "devnet-2",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 0x2",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            Success: Invoke completed
+
+            Transaction Hash: 0x0[..]
+            "
+        },
+    );
+}
+
+#[tokio::test]
 pub async fn use_devnet_account_with_network_not_being_devnet() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 

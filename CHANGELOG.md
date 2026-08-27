@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast account delete` confirmation prompt now defaults to "No".
 - *BREAKING*: `sncast verify` no longer accepts both `--url` and `--network` flags.
 - Cosmetic improvement: section headings in `get state-update`, `get block` and `ledger sign-hash` output are now bold, and `ledger sign-hash` prints `Hash signature` without a trailing colon.
-- *BREAKING*: `sncast account list` text output is now grouped by network, and its JSON output is now `{ "accounts_file", "accounts": [...] }`, where each account entry includes its `network` and `name`.
+- *BREAKING*: `sncast account list` text output is now grouped by chain ID, and its JSON output is now `{ "accounts_file", "accounts": [...] }`, where each account entry includes its `chain_id` and `name`.
 
 #### Fixed
 
