@@ -12,14 +12,14 @@ Execution Resources
 Function Invocation
   Call Type:              CALL
   Calldata:               0x423f7744017600727ce4789933e4648068835e28, 99359224995532825384289367229767519998085228603184343483478058520072918113310_u256, 6289449_u256
-  Caller Address:         0x0
+  Caller Address:         0x0000000000000000000000000000000000000000000000000000000000000000
   Calls
     Call Type:            CALL
     Calldata:             99359224995532825384289367229767519998085228603184343483478058520072918113310_u256, 6289449_u256
-    Caller Address:       0x763c1a0ec1d64afe2d8d0a2c0cab6fd494dcb26d08ef1020b27aa5695761e21
+    Caller Address:       0x0763c1a0ec1d64afe2d8d0a2c0cab6fd494dcb26d08ef1020b27aa5695761e21
     Calls:                []
-    Class Hash:           0x48d1f93626722872832416241a30c20bb77403b48249e65bebae67ab7a5329
-    Contract Address:     0x20f6d32589a0d57c72faed530354bac49144ca99aff3429cc3284514583b595
+    Class Hash:           0x0048d1f93626722872832416241a30c20bb77403b48249e65bebae67ab7a5329
+    Contract Address:     0x020f6d32589a0d57c72faed530354bac49144ca99aff3429cc3284514583b595
     Entry Point Selector: receive_hash
     Entry Point Type:     EXTERNAL
     Events
@@ -32,8 +32,8 @@ Function Invocation
     Is Reverted:          false
     Messages:             []
     Result:               success
-  Class Hash:             0x18c9ce7ffa88f15bd1fcda1350cb66cc5c369bc924e5dc108be1c9317298c99
-  Contract Address:       0x763c1a0ec1d64afe2d8d0a2c0cab6fd494dcb26d08ef1020b27aa5695761e21
+  Class Hash:             0x018c9ce7ffa88f15bd1fcda1350cb66cc5c369bc924e5dc108be1c9317298c99
+  Contract Address:       0x0763c1a0ec1d64afe2d8d0a2c0cab6fd494dcb26d08ef1020b27aa5695761e21
   Entry Point Selector:   receive_commitment
   Entry Point Type:       L1_HANDLER
   Events
