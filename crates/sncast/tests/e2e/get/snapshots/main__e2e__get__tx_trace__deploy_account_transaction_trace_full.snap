@@ -9,7 +9,6 @@ Constructor Invocation
   Call Type:            CALL
   Calldata:             0x796b0283375b9aa6fc0ac6b9ea1f98584f8464a66f05f29c3deb4c5eeea5263
   Caller Address:       0x0000000000000000000000000000000000000000000000000000000000000000
-  Calls:                []
   Class Hash:           0x061dac032f228abef9c6626f995015233097ae253a7f72d68552db02f2971b8f
   Contract Address:     0x0563870107a0a2c8cf34d2a42118dc52706a7eae7c1c741d32abec98d3238677
   Entry Point Selector: constructor
@@ -24,6 +23,7 @@ Constructor Invocation
   Is Reverted:          false
   Messages:             []
   Result:               success
+  Calls:                []
 Execution Resources
   L1 Data Gas:          0
   L1 Gas:               0
@@ -32,7 +32,6 @@ Fee Transfer Invocation
   Call Type:            CALL
   Calldata:             ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 51588769029944096_u256
   Caller Address:       0x0563870107a0a2c8cf34d2a42118dc52706a7eae7c1c741d32abec98d3238677
-  Calls:                []
   Class Hash:           0x05327164fa21dca89a92e8eae8a5b7ab90f58373e71f0a16d285e5a4abe5a3cf
   Contract Address:     0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
   Entry Point Selector: transfer
@@ -47,11 +46,11 @@ Fee Transfer Invocation
   Is Reverted:          false
   Messages:             []
   Result:               success: true
+  Calls:                []
 Validate Invocation
   Call Type:            CALL
   Calldata:             0x61dac032f228abef9c6626f995015233097ae253a7f72d68552db02f2971b8f, 0x23141, 0x796b0283375b9aa6fc0ac6b9ea1f98584f8464a66f05f29c3deb4c5eeea5263
   Caller Address:       0x0000000000000000000000000000000000000000000000000000000000000000
-  Calls:                []
   Class Hash:           0x061dac032f228abef9c6626f995015233097ae253a7f72d68552db02f2971b8f
   Contract Address:     0x0563870107a0a2c8cf34d2a42118dc52706a7eae7c1c741d32abec98d3238677
   Entry Point Selector: __validate_deploy__
@@ -63,3 +62,4 @@ Validate Invocation
   Is Reverted:          false
   Messages:             []
   Result:               success: 0x56414c4944
+  Calls:                []
