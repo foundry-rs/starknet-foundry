@@ -17,20 +17,9 @@ use starknet_rust::core::types::{
     OrderedEvent, OrderedMessage, ReplacedClassItem, StateDiff, TransactionTrace,
 };
 use starknet_rust::core::utils::get_selector_from_name;
-use starknet_rust::providers::ProviderError;
 use starknet_types_core::felt::Felt;
 use std::cell::Cell;
-use std::collections::{HashMap, HashSet};
-
-pub struct FetchedContractClasses {
-    pub classes: HashMap<Felt, ContractClass>,
-    pub failures: Vec<ContractClassFetchFailure>,
-}
-
-pub struct ContractClassFetchFailure {
-    pub class_hash: Felt,
-    pub error: ProviderError,
-}
+use std::collections::HashMap;
 
 pub struct TransactionTraceResponse {
     trace: TransactionTrace,
@@ -160,15 +149,6 @@ fn decode_invocation_json(
             decode_invocation_json(call, json_call, decoder);
         }
     }
-}
-
-#[must_use]
-pub fn class_hashes(transaction_trace: &TransactionTrace) -> HashSet<Felt> {
-    let mut class_hashes = HashSet::new();
-    for invocation in root_invocations(transaction_trace) {
-        collect_class_hashes(invocation, &mut class_hashes);
-    }
-    class_hashes
 }
 
 impl SncastCommandMessage for TransactionTraceResponse {
@@ -829,42 +809,6 @@ fn format_entry_point_type(entry_point_type: EntryPointType) -> &'static str {
 
 fn append_section(builder: OutputBuilder, label: &str, indent: usize) -> OutputBuilder {
     builder.text_field(&format!("{}{label}", " ".repeat(indent)))
-}
-
-fn root_invocations(transaction_trace: &TransactionTrace) -> Vec<&FunctionInvocation> {
-    let mut invocations = Vec::new();
-    match transaction_trace {
-        TransactionTrace::Invoke(trace) => {
-            invocations.extend(trace.validate_invocation.iter());
-            if let ExecuteInvocation::Success(invocation) = &trace.execute_invocation {
-                invocations.push(invocation);
-            }
-            invocations.extend(trace.fee_transfer_invocation.iter());
-        }
-        TransactionTrace::Declare(trace) => {
-            invocations.extend(trace.validate_invocation.iter());
-            invocations.extend(trace.fee_transfer_invocation.iter());
-        }
-        TransactionTrace::DeployAccount(trace) => {
-            invocations.extend(trace.validate_invocation.iter());
-            invocations.push(&trace.constructor_invocation);
-            invocations.extend(trace.fee_transfer_invocation.iter());
-        }
-        TransactionTrace::L1Handler(trace) => {
-            if let ExecuteInvocation::Success(invocation) = &trace.function_invocation {
-                invocations.push(invocation);
-            }
-        }
-    }
-    invocations
-}
-
-fn collect_class_hashes(invocation: &FunctionInvocation, class_hashes: &mut HashSet<Felt>) {
-    class_hashes.insert(invocation.class_hash);
-
-    for nested_call in &invocation.calls {
-        collect_class_hashes(nested_call, class_hashes);
-    }
 }
 
 fn format_result(status: &str, result: &str) -> String {

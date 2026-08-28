@@ -7,12 +7,11 @@ use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
-use sncast::response::get::tx_trace::{
-    ContractClassFetchFailure, FetchedContractClasses, TraceDecoder, TransactionTraceResponse,
-    class_hashes,
-};
+use sncast::response::get::tx_trace::{TraceDecoder, TransactionTraceResponse};
 use sncast::response::ui::UI;
-use starknet_rust::core::types::{BlockId, BlockTag};
+use starknet_rust::core::types::{
+    BlockId, BlockTag, ContractClass, ExecuteInvocation, FunctionInvocation, TransactionTrace,
+};
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet_rust::providers::{Provider, ProviderError};
 use starknet_types_core::felt::Felt;
@@ -20,6 +19,16 @@ use std::collections::{HashMap, HashSet};
 use std::process::ExitCode;
 
 const MAX_CONCURRENT_CLASS_REQUESTS: usize = 4;
+
+struct FetchedContractClasses {
+    classes: HashMap<Felt, ContractClass>,
+    failures: Vec<ContractClassFetchFailure>,
+}
+
+struct ContractClassFetchFailure {
+    class_hash: Felt,
+    error: ProviderError,
+}
 
 #[derive(Debug, Args)]
 #[command(about = "Get the execution trace of a transaction")]
@@ -84,6 +93,50 @@ async fn fetch_contract_classes(
     let (classes, failures): (HashMap<_, _>, Vec<_>) = results.into_iter().partition_result();
 
     FetchedContractClasses { classes, failures }
+}
+
+fn class_hashes(transaction_trace: &TransactionTrace) -> HashSet<Felt> {
+    let mut class_hashes = HashSet::new();
+    for invocation in root_invocations(transaction_trace) {
+        collect_class_hashes(invocation, &mut class_hashes);
+    }
+    class_hashes
+}
+
+fn root_invocations(transaction_trace: &TransactionTrace) -> Vec<&FunctionInvocation> {
+    let mut invocations = Vec::new();
+    match transaction_trace {
+        TransactionTrace::Invoke(trace) => {
+            invocations.extend(trace.validate_invocation.iter());
+            if let ExecuteInvocation::Success(invocation) = &trace.execute_invocation {
+                invocations.push(invocation);
+            }
+            invocations.extend(trace.fee_transfer_invocation.iter());
+        }
+        TransactionTrace::Declare(trace) => {
+            invocations.extend(trace.validate_invocation.iter());
+            invocations.extend(trace.fee_transfer_invocation.iter());
+        }
+        TransactionTrace::DeployAccount(trace) => {
+            invocations.extend(trace.validate_invocation.iter());
+            invocations.push(&trace.constructor_invocation);
+            invocations.extend(trace.fee_transfer_invocation.iter());
+        }
+        TransactionTrace::L1Handler(trace) => {
+            if let ExecuteInvocation::Success(invocation) = &trace.function_invocation {
+                invocations.push(invocation);
+            }
+        }
+    }
+    invocations
+}
+
+fn collect_class_hashes(invocation: &FunctionInvocation, class_hashes: &mut HashSet<Felt>) {
+    class_hashes.insert(invocation.class_hash);
+
+    for nested_call in &invocation.calls {
+        collect_class_hashes(nested_call, class_hashes);
+    }
 }
 
 fn format_class_fetch_warning(failures: &[ContractClassFetchFailure]) -> String {
