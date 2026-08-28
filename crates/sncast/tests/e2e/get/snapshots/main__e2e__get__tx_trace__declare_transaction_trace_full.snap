@@ -13,7 +13,6 @@ Fee Transfer Invocation
   Call Type:            CALL
   Calldata:             ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 10343418238809876_u256
   Caller Address:       0x06aac79bb6c90e1e41c33cd20c67c0281c4a95f01b4e15ad0c3b53fcc6010cf8
-  Calls:                []
   Class Hash:           0x04ad3c1dc8413453db314497945b6903e1c766495a1e60492d44da9c2a986e4b
   Contract Address:     0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
   Entry Point Selector: transfer
@@ -28,11 +27,11 @@ Fee Transfer Invocation
   Is Reverted:          false
   Messages:             []
   Result:               success: true
+  Calls:                []
 Validate Invocation
   Call Type:            CALL
   Calldata:             0x58e7b465e6c7651fa8697964a2d1ed93a62c0c00ba9876ddc4480dd0578d343
   Caller Address:       0x0000000000000000000000000000000000000000000000000000000000000000
-  Calls:                []
   Class Hash:           0x0450f568a8cb6ea1bcce446355e8a1c2e5852a6b8dc3536f495cdceb62e8a7e2
   Contract Address:     0x06aac79bb6c90e1e41c33cd20c67c0281c4a95f01b4e15ad0c3b53fcc6010cf8
   Entry Point Selector: __validate_declare__
@@ -44,3 +43,4 @@ Validate Invocation
   Is Reverted:          false
   Messages:             []
   Result:               success: 0x56414c4944
+  Calls:                []

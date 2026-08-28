@@ -531,10 +531,7 @@ fn append_full_invocation(
         .with_indent(indent)
         .field("Call Type", format_call_type(invocation.call_type))
         .field("Calldata", &decoder.calldata(invocation))
-        .padded_felt_field("Caller Address", &invocation.caller_address);
-    let builder = append_calls(builder, &invocation.calls, decoder, indent);
-    let builder = builder
-        .with_indent(indent)
+        .padded_felt_field("Caller Address", &invocation.caller_address)
         .padded_felt_field("Class Hash", &invocation.class_hash)
         .padded_felt_field("Contract Address", &invocation.contract_address)
         .field("Entry Point Selector", &decoder.selector(invocation))
@@ -548,9 +545,10 @@ fn append_full_invocation(
             .with_indent(indent)
             .field("Is Reverted", &invocation.is_reverted.to_string());
     let builder = append_messages(builder, &invocation.messages, indent);
-    builder
+    let builder = builder
         .with_indent(indent)
-        .field("Result", &decoder.result(invocation))
+        .field("Result", &decoder.result(invocation));
+    append_calls(builder, &invocation.calls, decoder, indent)
 }
 
 fn append_calls(
