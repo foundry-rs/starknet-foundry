@@ -69,7 +69,7 @@ fn decode_trace_json(trace: &TransactionTrace, json: &mut Value, decoder: &Trace
             );
             decode_execute_invocation_json(
                 &trace.execute_invocation,
-                json.get_mut("execute_invocation"),
+                &mut json["execute_invocation"],
                 decoder,
             );
             decode_optional_invocation_json(
@@ -107,7 +107,7 @@ fn decode_trace_json(trace: &TransactionTrace, json: &mut Value, decoder: &Trace
         }
         TransactionTrace::L1Handler(trace) => decode_execute_invocation_json(
             &trace.function_invocation,
-            json.get_mut("function_invocation"),
+            &mut json["function_invocation"],
             decoder,
         ),
     }
@@ -125,10 +125,10 @@ fn decode_optional_invocation_json(
 
 fn decode_execute_invocation_json(
     invocation: &ExecuteInvocation,
-    json: Option<&mut Value>,
+    json: &mut Value,
     decoder: &TraceDecoder,
 ) {
-    if let (ExecuteInvocation::Success(invocation), Some(json)) = (invocation, json) {
+    if let ExecuteInvocation::Success(invocation) = invocation {
         decode_invocation_json(invocation, json, decoder);
     }
 }
