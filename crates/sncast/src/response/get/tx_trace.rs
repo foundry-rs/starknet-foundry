@@ -54,12 +54,16 @@ impl Serialize for TransactionTraceResponse {
         S: Serializer,
     {
         let mut json = serde_json::to_value(&self.trace).map_err(S::Error::custom)?;
-        decode_trace_json(&self.trace, &mut json, &self.decoder);
+        decode_trace_json(&self.trace, &mut json, &self.decoder).map_err(S::Error::custom)?;
         json.serialize(serializer)
     }
 }
 
-fn decode_trace_json(trace: &TransactionTrace, json: &mut Value, decoder: &TraceDecoder) {
+fn decode_trace_json(
+    trace: &TransactionTrace,
+    json: &mut Value,
+    decoder: &TraceDecoder,
+) -> Result<(), String> {
     match trace {
         TransactionTrace::Invoke(trace) => {
             decode_optional_invocation_json(
@@ -69,7 +73,7 @@ fn decode_trace_json(trace: &TransactionTrace, json: &mut Value, decoder: &Trace
             );
             decode_execute_invocation_json(
                 &trace.execute_invocation,
-                &mut json["execute_invocation"],
+                required_json_field(json, "execute_invocation")?,
                 decoder,
             );
             decode_optional_invocation_json(
@@ -96,9 +100,11 @@ fn decode_trace_json(trace: &TransactionTrace, json: &mut Value, decoder: &Trace
                 json.get_mut("validate_invocation"),
                 decoder,
             );
-            if let Some(json) = json.get_mut("constructor_invocation") {
-                decode_invocation_json(&trace.constructor_invocation, json, decoder);
-            }
+            decode_invocation_json(
+                &trace.constructor_invocation,
+                required_json_field(json, "constructor_invocation")?,
+                decoder,
+            );
             decode_optional_invocation_json(
                 trace.fee_transfer_invocation.as_ref(),
                 json.get_mut("fee_transfer_invocation"),
@@ -107,10 +113,17 @@ fn decode_trace_json(trace: &TransactionTrace, json: &mut Value, decoder: &Trace
         }
         TransactionTrace::L1Handler(trace) => decode_execute_invocation_json(
             &trace.function_invocation,
-            &mut json["function_invocation"],
+            required_json_field(json, "function_invocation")?,
             decoder,
         ),
     }
+
+    Ok(())
+}
+
+fn required_json_field<'a>(json: &'a mut Value, field: &str) -> Result<&'a mut Value, String> {
+    json.get_mut(field)
+        .ok_or_else(|| format!("missing required field `{field}` in serialized transaction trace"))
 }
 
 fn decode_optional_invocation_json(
