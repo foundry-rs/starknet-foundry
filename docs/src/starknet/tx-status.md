@@ -95,7 +95,7 @@ Type:                     INVOKE
 Execute Invocation
   Call Type:              CALL
   Calldata:               array![Call[..]
-  Caller Address:         0x0
+  Caller Address:         0x[..]
   Calls
     Call Type:            CALL
     Calldata:             ReportContext[..]
@@ -152,7 +152,7 @@ Fee Transfer Invocation
 Validate Invocation
   Call Type:              CALL
   Calldata:               array![Call[..]
-  Caller Address:         0x0
+  Caller Address:         0x[..]
   Calls:                  []
   Class Hash:             0x[..]
   Contract Address:       0x[..]
