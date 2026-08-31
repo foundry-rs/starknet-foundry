@@ -3,6 +3,7 @@ use crate::helpers::runner::runner;
 use indoc::indoc;
 use serde_json::{Value, json};
 use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
+use starknet_rust::core::utils::get_selector_from_name;
 use wiremock::matchers::{body_partial_json, method};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -350,6 +351,59 @@ async fn test_warns_when_fetched_abi_cannot_decode_trace() {
         "get",
         "tx-trace",
         MOCK_TRANSACTION_HASH,
+        "--url",
+        &mock_server.uri(),
+    ];
+    let output = runner(args).assert().success();
+
+    insta::assert_snapshot!(output.as_stdout());
+}
+
+#[tokio::test]
+async fn test_full_trace_with_state_diff() {
+    let mock_server = MockServer::start().await;
+    let mut trace = trace();
+    trace["execute_invocation"]["entry_point_selector"] =
+        json!(get_selector_from_name("set_value").unwrap().to_hex_string());
+    trace["state_diff"] = json!({
+        "storage_diffs": [{
+            "address": "0x1",
+            "storage_entries": [{ "key": "0x2", "value": "0x3" }]
+        }],
+        "deprecated_declared_classes": ["0x4"],
+        "declared_classes": [{ "class_hash": "0x5", "compiled_class_hash": "0x6" }],
+        "migrated_compiled_classes": [{ "class_hash": "0x7", "compiled_class_hash": "0x8" }],
+        "deployed_contracts": [{ "address": "0x9", "class_hash": "0xa" }],
+        "replaced_classes": [{ "contract_address": "0xb", "class_hash": "0xc" }],
+        "nonces": [{ "contract_address": "0xd", "nonce": "0xe" }]
+    });
+
+    mock_trace(
+        &mock_server,
+        ResponseTemplate::new(200).set_body_json(json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": trace
+        })),
+    )
+    .await;
+    mock_contract_class(
+        &mock_server,
+        json!([{
+            "type": "function",
+            "name": "set_value",
+            "inputs": [{ "name": "value", "type": "core::felt252" }],
+            "outputs": [{ "type": "core::felt252" }],
+            "state_mutability": "external"
+        }]),
+    )
+    .await;
+
+    let args = &[
+        "get",
+        "tx-trace",
+        MOCK_TRANSACTION_HASH,
+        "--full",
         "--url",
         &mock_server.uri(),
     ];
