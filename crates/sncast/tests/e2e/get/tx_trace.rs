@@ -6,7 +6,7 @@ use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
 use wiremock::matchers::{body_partial_json, method};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
-const TRANSACTION_HASH: &str = "0xabc";
+const MOCK_TRANSACTION_HASH: &str = "0xabc";
 const INVOKE_TX_HASH: &str = "0x26476da48e56e5e7025543ad0bb9105df00ee08571c6d17c4207462ff7717c4";
 const DECLARE_TX_HASH: &str = "0x6054540622d534ffffb162a0e80c21bc106581eafeb3efad29385b78e04983d";
 const DEPLOY_ACCOUNT_TX_HASH: &str =
@@ -61,7 +61,7 @@ async fn mock_trace(mock_server: &MockServer, response: ResponseTemplate) {
     Mock::given(method("POST"))
         .and(body_partial_json(json!({
             "method": "starknet_traceTransaction",
-            "params": { "transaction_hash": TRANSACTION_HASH }
+            "params": { "transaction_hash": MOCK_TRANSACTION_HASH }
         })))
         .respond_with(response)
         .expect(1)
@@ -275,7 +275,7 @@ async fn test_full_and_json_conflict() {
         "--json",
         "get",
         "tx-trace",
-        TRANSACTION_HASH,
+        MOCK_TRANSACTION_HASH,
         "--full",
         "--url",
         URL,
@@ -323,7 +323,7 @@ async fn test_falls_back_when_class_is_unavailable() {
     let args = &[
         "get",
         "tx-trace",
-        TRANSACTION_HASH,
+        MOCK_TRANSACTION_HASH,
         "--url",
         &mock_server.uri(),
     ];
@@ -349,7 +349,7 @@ async fn test_warns_when_fetched_abi_cannot_decode_trace() {
     let args = &[
         "get",
         "tx-trace",
-        TRANSACTION_HASH,
+        MOCK_TRANSACTION_HASH,
         "--url",
         &mock_server.uri(),
     ];
@@ -376,7 +376,7 @@ async fn test_json_includes_abi_decoding_warnings() {
         "--json",
         "get",
         "tx-trace",
-        TRANSACTION_HASH,
+        MOCK_TRANSACTION_HASH,
         "--url",
         &mock_server.uri(),
     ];
@@ -436,7 +436,7 @@ async fn test_trace_not_available() {
     let args = &[
         "get",
         "tx-trace",
-        TRANSACTION_HASH,
+        MOCK_TRANSACTION_HASH,
         "--url",
         &mock_server.uri(),
     ];
