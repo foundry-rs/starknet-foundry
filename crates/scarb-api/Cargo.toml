@@ -6,6 +6,9 @@ edition.workspace = true
 [features]
 cairo-native = ["dep:cairo-native", "dep:native-api"]
 
+[lints]
+workspace = true
+
 [dependencies]
 anyhow.workspace = true
 shared.workspace = true

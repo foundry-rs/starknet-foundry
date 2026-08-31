@@ -2,6 +2,7 @@ use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::Args;
 use sncast::helpers::configuration::CastConfig;
+use sncast::helpers::fee::FeeParams;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::show_config::ShowConfigResponse;
 use sncast::{chain_id_to_network_name, get_chain_id};
@@ -42,6 +43,7 @@ pub async fn show_config(
     let wait_timeout = Some(cast_config.wait_params.get_timeout());
     let wait_retry_interval = Some(cast_config.wait_params.get_retry_interval());
     let block_explorer = cast_config.block_explorer;
+    let fee_params = Some(cast_config.fee_params).filter(|p| p != &FeeParams::default());
 
     Ok(ShowConfigResponse {
         profile,
@@ -58,5 +60,6 @@ pub async fn show_config(
         networks: cast_config.networks,
         scarb_profile: cast_config.scarb_profile,
         alias_count: cast_config.aliases.len(),
+        fee_params,
     })
 }

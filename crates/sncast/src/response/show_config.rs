@@ -1,6 +1,7 @@
 use crate::Network;
 use crate::helpers::block_explorer;
 use crate::helpers::configuration::NetworksConfig;
+use crate::helpers::fee::FeeParams;
 use crate::response::cast_message::SncastCommandMessage;
 use camino::Utf8PathBuf;
 use foundry_ui::styling;
@@ -23,6 +24,7 @@ pub struct ShowConfigResponse {
     pub scarb_profile: String,
     pub alias_count: usize,
     pub networks: NetworksConfig,
+    pub fee_params: Option<FeeParams>,
 }
 
 impl SncastCommandMessage for ShowConfigResponse {
@@ -75,6 +77,32 @@ impl SncastCommandMessage for ShowConfigResponse {
         }
         if let Some(url) = &self.networks.devnet {
             builder = builder.field("Devnet URL", url.as_ref());
+        }
+
+        let fee = self.fee_params.clone().unwrap_or_default();
+        builder = builder
+            .if_some(fee.l1_gas.as_ref(), |b, v| {
+                b.field("L1 Gas", &v.to_string())
+            })
+            .if_some(fee.l1_gas_price.as_ref(), |b, v| {
+                b.field("L1 Gas Price", &v.to_string())
+            })
+            .if_some(fee.l2_gas.as_ref(), |b, v| {
+                b.field("L2 Gas", &v.to_string())
+            })
+            .if_some(fee.l2_gas_price.as_ref(), |b, v| {
+                b.field("L2 Gas Price", &v.to_string())
+            })
+            .if_some(fee.l1_data_gas.as_ref(), |b, v| {
+                b.field("L1 Data Gas", &v.to_string())
+            })
+            .if_some(fee.l1_data_gas_price.as_ref(), |b, v| {
+                b.field("L1 Data Gas Price", &v.to_string())
+            })
+            .if_some(fee.tip.as_ref(), |b, v| b.field("Tip", &v.to_string()));
+
+        if fee.estimate_tip {
+            builder = builder.field("Estimate Tip", "true");
         }
 
         builder.build()

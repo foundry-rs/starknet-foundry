@@ -46,6 +46,7 @@ pub async fn transaction(tx: Transaction, config: CastConfig, ui: &UI) -> Result
     ))
 }
 
+#[expect(clippy::result_large_err)]
 async fn get_transaction(
     provider: &JsonRpcClient<HttpTransport>,
     transaction_hash: Felt,

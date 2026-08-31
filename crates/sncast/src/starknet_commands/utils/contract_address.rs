@@ -35,6 +35,7 @@ pub struct ContractAddressArgs {
     pub rpc: Option<RpcArgs>,
 }
 
+#[expect(clippy::result_large_err)]
 pub async fn get_contract_address(
     args: ContractAddressArgs,
     artifacts: Option<ContractArtifactsMap>,

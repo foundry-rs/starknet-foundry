@@ -157,6 +157,7 @@ pub fn create_version_parser<'a>(name: &'a str, pattern: &'a str) -> Box<Version
 mod tests {
     use super::*;
     use crate::MINIMAL_SCARB_VERSION;
+    #[cfg(feature = "no_scarb_installed")]
     use assert_fs::{
         TempDir,
         fixture::{FileWriteStr, PathChild},

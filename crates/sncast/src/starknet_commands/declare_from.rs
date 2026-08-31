@@ -106,6 +106,7 @@ pub enum ContractSource {
     },
 }
 
+#[expect(clippy::result_large_err)]
 pub async fn declare_from<S>(
     contract_source: ContractSource,
     no_abi: bool,

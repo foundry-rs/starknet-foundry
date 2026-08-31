@@ -38,6 +38,7 @@ pub async fn state_update(
     Ok(process_command_result("get state-update", result, ui, None))
 }
 
+#[expect(clippy::result_large_err)]
 async fn get_state_update(
     provider: &JsonRpcClient<HttpTransport>,
     block_id: &str,

@@ -1,8 +1,8 @@
 use super::common::runner::{
     BASE_FILE_PATTERNS, Package, runner, setup_package_with_file_patterns, test_runner,
 };
-use forge_runner::DEFAULT_CACHE_DIR;
 use indoc::{formatdoc, indoc};
+use shared::cache::DEFAULT_CACHE_DIR;
 use shared::test_utils::node_url::node_rpc_url;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use std::fs;

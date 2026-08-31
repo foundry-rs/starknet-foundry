@@ -56,6 +56,7 @@ pub async fn class_hash_at(
     ))
 }
 
+#[expect(clippy::result_large_err)]
 async fn get_class_hash_at(
     provider: &JsonRpcClient<HttpTransport>,
     contract_address: Felt,

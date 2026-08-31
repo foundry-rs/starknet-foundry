@@ -47,3 +47,9 @@ sepolia = "http://127.0.0.1:5055/rpc"
 [sncast.no_url]
 accounts-file = "../account-file"
 account = "user1"
+
+[sncast.with_fee]
+url = "http://127.0.0.1:5055/rpc"
+accounts-file = "../account-file"
+account = "user1"
+fee-params = { l2-gas = 1000000, estimate-tip = true }

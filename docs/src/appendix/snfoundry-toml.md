@@ -86,6 +86,37 @@ This means transactions will be checked every `5 seconds`, with a total of `60 a
 wait-params = { timeout = 300, retry-interval = 5 }
 ```
 
+#### `fee-params`
+
+The `fee-params` field defines default fee settings for the commands that send transactions - `declare`, `declare-from`, `deploy`, `invoke`, `multicall run`, `multicall execute` and `account deploy`.
+All keys are optional, and the ones that are not set are estimated automatically, just as if no flags were passed.
+
+```toml
+[sncast.myprofile.fee-params]
+l1-gas = 1000
+l1-gas-price = 100000000000
+l2-gas = 5000000
+l2-gas-price = 100000000
+l1-data-gas = 1000
+l1-data-gas-price = 100000000
+tip = 100
+# ...or have the tip estimated instead of setting it explicitly:
+# estimate-tip = true
+```
+
+`tip` cannot be used together with `estimate-tip`.
+
+> 📝 **Note**
+> `max-fee` can only be passed as the `--max-fee` flag - it cannot be set in `snfoundry.toml`.
+
+The resource bounds (`l1-gas`, `l1-gas-price`, `l2-gas`, `l2-gas-price`, `l1-data-gas`, `l1-data-gas-price`) are merged bound by bound, so a flag only overrides the bound it names.
+For example, with `l1-gas` set in the config and `--l2-gas` passed on the command line, both are used.
+Passing `--max-fee` is the exception - it is mutually exclusive with the resource bounds, so it discards **all** the configured bounds instead of being combined with them.
+
+The tip (`tip`, `estimate-tip`) is taken as a whole from the highest-precedence source that defines it, because the two keys are mutually exclusive.
+Passing `--tip` or `--estimate-tip` therefore discards the configured tip, and `estimate-tip = true` in a profile discards a `tip` inherited from a less specific one.
+The tip and the resource bounds do not affect each other, so e.g. passing only `--tip` keeps the configured bounds in force.
+
 #### `show-explorer-links`
 Enable printing links pointing to pages with transaction details in the chosen block explorer
 
@@ -169,6 +200,15 @@ scarb-profile = "release"
 mainnet = "https://mainnet.your-node.com"
 sepolia = "https://sepolia.your-node.com"
 devnet = "http://127.0.0.1:5050"
+
+[sncast.myprofile1.fee-params]
+l1-gas = 1000
+l1-gas-price = 100000000000
+l2-gas = 5000000
+l2-gas-price = 100000000
+l1-data-gas = 1000
+l1-data-gas-price = 100000000
+tip = 100
 
 [sncast.dev]
 url = "http://127.0.0.1:5056/rpc"

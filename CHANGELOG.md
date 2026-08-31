@@ -13,6 +13,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Possibility to set an L2 gas limit via unnamed argument `#[available_gas(...)]`, equivalent to `#[available_gas(l2_gas: ...)]`.
 - `CACHEDIR.TAG` file is now created in the cache directory.
+- CASM compilation results are now cached between `snforge test` runs.
+
+#### Fixed
+
+- Raw Sierra tests now use compiler-inferred function costs as their initial gas budget, allowing correct gas refunds beyond the contract entry-point precharge.
+
+### Cast
+
+#### Added
+
+- Allow resource bounds and tip settings under `fee-params` field in `snfoundry.toml` for transaction-sending commands.
+- CASM compilation results are now cached between relevant `sncast` commands.
+
+#### Changed
+
+- `--json` flag is now global, and can be passed to any subcommand.
 
 ## [0.63.0] - 2026-08-05
 

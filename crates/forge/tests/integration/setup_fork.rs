@@ -12,7 +12,6 @@ use forge::run_tests::package::run_for_package;
 use forge::run_tests::test_target::ExitFirstChannel;
 use forge::scarb::config::ForkTarget;
 use forge::test_filter::TestsFilter;
-use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
 use crate::utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
@@ -21,7 +20,6 @@ use crate::utils::test_case;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::run_tests::package::RunForPackageArgs;
 use forge::shared_cache::FailedTestsCache;
-use forge_runner::DEFAULT_CACHE_DIR;
 use forge_runner::debugging::TraceArgs;
 use forge_runner::filtering::NameFilter;
 use forge_runner::forge_config::ForgeTrackedResource;
@@ -32,6 +30,7 @@ use forge_runner::running::target::prepare_test_target;
 use forge_runner::scarb::load_test_artifacts;
 use scarb_api::ScarbCommand;
 use scarb_api::metadata::metadata_for_dir;
+use shared::cache::{DEFAULT_CACHE_DIR, usc_cache_dir};
 use shared::test_utils::node_url::node_rpc_url;
 
 #[test]
@@ -132,6 +131,8 @@ fn fork_aliased_decorator() {
 
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
+    let cache_dir = test.path().unwrap().join(DEFAULT_CACHE_DIR);
+    let usc_cache_dir = usc_cache_dir(&cache_dir);
 
     let ui = Arc::new(UI::default());
     let result = rt
@@ -139,12 +140,14 @@ fn fork_aliased_decorator() {
             let target_handles = raw_test_targets
                 .into_iter()
                 .map(|t| {
+                    let usc_cache_dir = usc_cache_dir.clone();
                     tokio::task::spawn_blocking(move || {
                         prepare_test_target(
                             t,
                             &ForgeTrackedResource::CairoSteps,
                             &NameFilter::All,
                             &PartitionConfig::default(),
+                            &usc_cache_dir,
                         )
                     })
                 })
@@ -172,11 +175,9 @@ fn fork_aliased_decorator() {
                             fuzzer_seed: 12345,
                             max_n_steps: None,
                             is_vm_trace_needed: false,
-                            cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
-                                .unwrap()
-                                .join(DEFAULT_CACHE_DIR),
+                            cache_dir,
                             contracts_data: ContractsData::try_from(
-                                test.contracts(&ui).unwrap(),
+                                test.contracts(&ui, &usc_cache_dir).unwrap(),
                                 cfg!(feature = "cairo-native"),
                             )
                             .unwrap(),
@@ -247,6 +248,8 @@ fn fork_aliased_decorator_overriding() {
 
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
+    let cache_dir = test.path().unwrap().join(DEFAULT_CACHE_DIR);
+    let usc_cache_dir = usc_cache_dir(&cache_dir);
 
     let ui = Arc::new(UI::default());
     let result = rt
@@ -254,12 +257,14 @@ fn fork_aliased_decorator_overriding() {
             let target_handles = raw_test_targets
                 .into_iter()
                 .map(|t| {
+                    let usc_cache_dir = usc_cache_dir.clone();
                     tokio::task::spawn_blocking(move || {
                         prepare_test_target(
                             t,
                             &ForgeTrackedResource::CairoSteps,
                             &NameFilter::All,
                             &PartitionConfig::default(),
+                            &usc_cache_dir,
                         )
                     })
                 })
@@ -287,11 +292,9 @@ fn fork_aliased_decorator_overriding() {
                             fuzzer_seed: 12345,
                             max_n_steps: None,
                             is_vm_trace_needed: false,
-                            cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
-                                .unwrap()
-                                .join(DEFAULT_CACHE_DIR),
+                            cache_dir,
                             contracts_data: ContractsData::try_from(
-                                test.contracts(&ui).unwrap(),
+                                test.contracts(&ui, &usc_cache_dir).unwrap(),
                                 cfg!(feature = "cairo-native"),
                             )
                             .unwrap(),

@@ -32,6 +32,7 @@ pub async fn tx_receipt(tx: TxReceipt, config: CastConfig, ui: &UI) -> Result<Ex
     Ok(process_command_result("get tx-receipt", result, ui, None))
 }
 
+#[expect(clippy::result_large_err)]
 async fn get_tx_receipt(
     provider: &JsonRpcClient<HttpTransport>,
     transaction_hash: Felt,

@@ -34,6 +34,7 @@ pub struct Call {
     pub rpc: RpcArgs,
 }
 
+#[expect(clippy::result_large_err)]
 pub async fn call(
     contract_address: Felt,
     entry_point_selector: Felt,
