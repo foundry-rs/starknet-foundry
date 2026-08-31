@@ -41,7 +41,7 @@ fn setup_redirect_server() {
 fn should_print_warning() {
     let temp = setup_package("empty");
     let mut node_url = node_url();
-    node_url.set_path("rpc/v0_6");
+    node_url.set_path("rpc/v0_9");
 
     temp.child("tests/test.cairo")
         .write_str(
@@ -66,21 +66,10 @@ fn should_print_warning() {
             r"
                 [..]Compiling[..]
                 [..]Finished[..]
-                [WARNING] RPC node with the url {node_url} uses incompatible version 0.6.0. Expected version: {EXPECTED_RPC_VERSION}
+                [WARNING] RPC node with the url {node_url} uses incompatible version 0.9.0. Expected version: {EXPECTED_RPC_VERSION}
 
 
                 Collected 1 test(s) from empty package
-                Running 0 test(s) from src/
-                Running 1 test(s) from tests/
-                [FAIL] empty_integrationtest::test::t1
-
-                Failure[..]
-                Tests: 0 passed, 1 failed, 0 ignored, 0 filtered out
-
-                Latest block number = [..] for url = {node_url}
-
-                Failures:
-                    empty_integrationtest::test::t1
             "
         ),
     );
@@ -90,7 +79,7 @@ fn should_print_warning() {
 fn should_dedup_urls() {
     let temp = setup_package("empty");
     let mut node_url = node_url();
-    node_url.set_path("rpc/v0_6");
+    node_url.set_path("rpc/v0_9");
 
     temp.child("tests/test.cairo")
         .write_str(
@@ -120,25 +109,10 @@ fn should_dedup_urls() {
             r"
                 [..]Compiling[..]
                 [..]Finished[..]
-                [WARNING] RPC node with the url {node_url} uses incompatible version 0.6.0. Expected version: {EXPECTED_RPC_VERSION}
+                [WARNING] RPC node with the url {node_url} uses incompatible version 0.9.0. Expected version: {EXPECTED_RPC_VERSION}
 
 
                 Collected 2 test(s) from empty package
-                Running 0 test(s) from src/
-                Running 2 test(s) from tests/
-                [FAIL] empty_integrationtest::test::t1
-
-                Failure[..]
-                [FAIL] empty_integrationtest::test::t2
-
-                Failure[..]
-                Tests: 0 passed, 2 failed, 0 ignored, 0 filtered out
-
-                Latest block number = [..] for url = {node_url}
-
-                Failures:
-                    empty_integrationtest::test::t1
-                    empty_integrationtest::test::t2
             "
         ),
     );
@@ -150,7 +124,7 @@ fn should_print_foreach() {
 
     let temp = setup_package("empty");
     let mut node_url = node_url();
-    node_url.set_path("rpc/v0_6");
+    node_url.set_path("rpc/v0_9");
 
     temp.child("tests/test.cairo")
         .write_str(
@@ -180,27 +154,11 @@ fn should_print_foreach() {
             r"
                 [..]Compiling[..]
                 [..]Finished[..]
-                [WARNING] RPC node with the url http://127.0.0.1:3030/?url={node_url} uses incompatible version 0.6.0. Expected version: {EXPECTED_RPC_VERSION}
-                [WARNING] RPC node with the url {node_url} uses incompatible version 0.6.0. Expected version: {EXPECTED_RPC_VERSION}
+                [WARNING] RPC node with the url http://127.0.0.1:3030/?url={node_url} uses incompatible version 0.9.0. Expected version: {EXPECTED_RPC_VERSION}
+                [WARNING] RPC node with the url {node_url} uses incompatible version 0.9.0. Expected version: {EXPECTED_RPC_VERSION}
 
 
                 Collected 2 test(s) from empty package
-                Running 0 test(s) from src/
-                Running 2 test(s) from tests/
-                [FAIL] empty_integrationtest::test::t1
-
-                Failure[..]
-                [FAIL] empty_integrationtest::test::t2
-
-                Failure[..]
-                Tests: 0 passed, 2 failed, 0 ignored, 0 filtered out
-
-                Latest block number = [..] for url = http://127.0.0.1:3030/?url={node_url}
-                Latest block number = [..] for url = {node_url}
-
-                Failures:
-                    empty_integrationtest::test::t1
-                    empty_integrationtest::test::t2
             "
         ),
     );
