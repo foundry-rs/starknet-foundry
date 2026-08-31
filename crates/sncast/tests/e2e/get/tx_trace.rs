@@ -270,6 +270,22 @@ async fn test_json() {
 }
 
 #[tokio::test]
+async fn test_full_and_json_conflict() {
+    let args = [
+        "--json",
+        "get",
+        "tx-trace",
+        TRANSACTION_HASH,
+        "--full",
+        "--url",
+        URL,
+    ];
+
+    let output = runner(&args).assert().failure();
+    assert_stderr_contains(output, "[..]`--full` cannot be used with `--json`[..]");
+}
+
+#[tokio::test]
 async fn test_alias() {
     let args = &["get", "transaction-trace", DECLARE_TX_HASH, "--url", URL];
     let output = runner(args).assert().success();
