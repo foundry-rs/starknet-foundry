@@ -359,6 +359,50 @@ async fn test_warns_when_fetched_abi_cannot_decode_trace() {
 }
 
 #[tokio::test]
+async fn test_json_includes_abi_decoding_warnings() {
+    let mock_server = MockServer::start().await;
+    mock_trace(
+        &mock_server,
+        ResponseTemplate::new(200).set_body_json(json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": trace()
+        })),
+    )
+    .await;
+    mock_contract_class(&mock_server, json!([])).await;
+
+    let args = &[
+        "--json",
+        "get",
+        "tx-trace",
+        TRANSACTION_HASH,
+        "--url",
+        &mock_server.uri(),
+    ];
+    let output = runner(args).assert().success().stderr_eq("");
+    let json: Value = serde_json::from_slice(&output.get_output().stdout).unwrap();
+
+    assert_eq!(
+        json["decoding_warnings"],
+        json!([
+            {
+                "reason": "selector_not_found",
+                "class_hash": "0x456"
+            },
+            {
+                "reason": "calldata_decoding_failed",
+                "class_hash": "0x456"
+            },
+            {
+                "reason": "result_decoding_failed",
+                "class_hash": "0x456"
+            }
+        ])
+    );
+}
+
+#[tokio::test]
 async fn test_transaction_not_found() {
     let args = &["get", "tx-trace", "0x123", "--url", URL];
     let output = runner(args).assert().failure();

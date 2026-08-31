@@ -1,5 +1,6 @@
 use anyhow::{Result, bail};
 use clap::Args;
+use conversions::IntoConv;
 use foundry_ui::{OutputFormat, components::warning::WarningMessage};
 use futures::stream::{self, StreamExt};
 use itertools::Itertools;
@@ -9,6 +10,7 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
 use sncast::response::get::tx_trace::{TraceDecoder, TransactionTraceResponse};
 use sncast::response::ui::UI;
+use starknet_api::core::ClassHash;
 use starknet_rust::core::types::{
     BlockId, BlockTag, ContractClass, ExecuteInvocation, FunctionInvocation, TransactionTrace,
 };
@@ -21,12 +23,12 @@ use std::process::ExitCode;
 const MAX_CONCURRENT_CLASS_REQUESTS: usize = 4;
 
 struct FetchedContractClasses {
-    classes: HashMap<Felt, ContractClass>,
+    classes: HashMap<ClassHash, ContractClass>,
     failures: Vec<ContractClassFetchFailure>,
 }
 
 struct ContractClassFetchFailure {
-    class_hash: Felt,
+    class_hash: ClassHash,
     error: ProviderError,
 }
 
@@ -86,12 +88,12 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
 
 async fn fetch_contract_classes(
     provider: &JsonRpcClient<HttpTransport>,
-    class_hashes: HashSet<Felt>,
+    class_hashes: HashSet<ClassHash>,
 ) -> FetchedContractClasses {
     let results = stream::iter(class_hashes)
         .map(|class_hash| async move {
             match provider
-                .get_class(BlockId::Tag(BlockTag::PreConfirmed), class_hash)
+                .get_class(BlockId::Tag(BlockTag::PreConfirmed), *class_hash)
                 .await
             {
                 Ok(class) => Ok((class_hash, class)),
@@ -107,7 +109,7 @@ async fn fetch_contract_classes(
     FetchedContractClasses { classes, failures }
 }
 
-fn class_hashes(transaction_trace: &TransactionTrace) -> HashSet<Felt> {
+fn class_hashes(transaction_trace: &TransactionTrace) -> HashSet<ClassHash> {
     let mut class_hashes = HashSet::new();
     for invocation in root_invocations(transaction_trace) {
         collect_class_hashes(invocation, &mut class_hashes);
@@ -143,8 +145,8 @@ fn root_invocations(transaction_trace: &TransactionTrace) -> Vec<&FunctionInvoca
     invocations
 }
 
-fn collect_class_hashes(invocation: &FunctionInvocation, class_hashes: &mut HashSet<Felt>) {
-    class_hashes.insert(invocation.class_hash);
+fn collect_class_hashes(invocation: &FunctionInvocation, class_hashes: &mut HashSet<ClassHash>) {
+    class_hashes.insert(invocation.class_hash.into_());
 
     for nested_call in &invocation.calls {
         collect_class_hashes(nested_call, class_hashes);

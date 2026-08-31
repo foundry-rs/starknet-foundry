@@ -1,5 +1,6 @@
 use crate::response::cast_message::SncastCommandMessage;
 use crate::response::get::transaction::TransactionOutputBuilder;
+use conversions::IntoConv;
 use data_transformer::{
     extract_function_from_selector, reverse_transform_input, reverse_transform_output,
 };
@@ -7,6 +8,7 @@ use foundry_ui::{Message, components::warning::WarningMessage, styling::OutputBu
 use itertools::Itertools;
 use serde::{Serialize, Serializer, ser::Error as _};
 use serde_json::Value;
+use starknet_api::core::ClassHash;
 use starknet_api::execution_utils::format_panic_data;
 use starknet_rust::core::types::contract::AbiEntry;
 use starknet_rust::core::types::{
@@ -18,8 +20,8 @@ use starknet_rust::core::types::{
 };
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
-use std::cell::Cell;
-use std::collections::HashMap;
+use std::cell::RefCell;
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 pub struct TransactionTraceResponse {
     trace: TransactionTrace,
@@ -44,6 +46,13 @@ impl Serialize for TransactionTraceResponse {
     {
         let mut json = serde_json::to_value(&self.trace).map_err(S::Error::custom)?;
         decode_trace_json(&self.trace, &mut json, &self.decoder).map_err(S::Error::custom)?;
+
+        let decoding_issues = self.decoder.decoding_warnings();
+        if !decoding_issues.is_empty() {
+            json["decoding_warnings"] =
+                serde_json::to_value(decoding_issues).map_err(S::Error::custom)?;
+        }
+
         json.serialize(serializer)
     }
 }
@@ -159,17 +168,13 @@ impl SncastCommandMessage for TransactionTraceResponse {
             full,
         } = self;
         let human_text = append_trace(OutputBuilder::new(), trace, decoder, *full).build();
-        let builder = if decoder.abi_decoding_incomplete() {
+        let builder = if decoder.decoding_warnings().is_empty() {
             OutputBuilder::new()
-                    .text_field(
-                        &WarningMessage::new(
-                            "Some trace data could not be decoded with the fetched ABIs. Raw felts are shown instead.",
-                        )
-                        .text(),
-                    )
-                    .blank_line()
         } else {
+            let warning_message = format_decoding_warning(&decoder.decoding_warnings());
             OutputBuilder::new()
+                .text_field(&WarningMessage::new(warning_message).text())
+                .blank_line()
         };
 
         builder
@@ -180,17 +185,57 @@ impl SncastCommandMessage for TransactionTraceResponse {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[serde(tag = "reason", rename_all = "snake_case")]
+enum TraceDecodingWarning {
+    MalformedAbi { class_hash: ClassHash },
+    MissingAbi { class_hash: ClassHash },
+    UnsupportedCairo0 { class_hash: ClassHash },
+    SelectorNotFound { class_hash: ClassHash },
+    CalldataDecodingFailed { class_hash: ClassHash },
+    ResultDecodingFailed { class_hash: ClassHash },
+}
+
+impl TraceDecodingWarning {
+    fn description(&self) -> String {
+        match self {
+            Self::MalformedAbi { class_hash } => {
+                format!("malformed ABI for class {}", class_hash.to_hex_string())
+            }
+            Self::MissingAbi { class_hash } => {
+                format!("missing ABI for class {}", class_hash.to_hex_string())
+            }
+            Self::UnsupportedCairo0 { class_hash } => format!(
+                "calldata and result decoding is not supported for Cairo 0 class {}",
+                class_hash.to_hex_string()
+            ),
+            Self::SelectorNotFound { class_hash } => format!(
+                "entry point selector was not found in the ABI for class {}",
+                class_hash.to_hex_string()
+            ),
+            Self::CalldataDecodingFailed { class_hash } => format!(
+                "calldata could not be decoded with the ABI for class {}",
+                class_hash.to_hex_string()
+            ),
+            Self::ResultDecodingFailed { class_hash } => format!(
+                "result could not be decoded with the ABI for class {}",
+                class_hash.to_hex_string()
+            ),
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct TraceDecoder {
-    sierra_abis: HashMap<Felt, Vec<AbiEntry>>,
-    legacy_selectors: HashMap<(Felt, Felt), String>,
-    had_decode_failure: Cell<bool>,
-    had_invalid_abis_on_init: bool,
+    sierra_abis: HashMap<ClassHash, Vec<AbiEntry>>,
+    legacy_class_hashes: HashSet<ClassHash>,
+    legacy_selectors: HashMap<(ClassHash, Felt), String>,
+    decoding_warnings: RefCell<BTreeSet<TraceDecodingWarning>>,
 }
 
 impl TraceDecoder {
     #[must_use]
-    pub fn new(contract_classes: HashMap<Felt, ContractClass>) -> Self {
+    pub fn new(contract_classes: HashMap<ClassHash, ContractClass>) -> Self {
         let mut decoder = Self::default();
 
         for (class_hash, contract_class) in contract_classes {
@@ -199,14 +244,17 @@ impl TraceDecoder {
                     if let Ok(abi) = serde_json::from_str::<Vec<AbiEntry>>(&class.abi) {
                         decoder.sierra_abis.insert(class_hash, abi);
                     } else {
-                        decoder.had_invalid_abis_on_init = true;
+                        decoder.add_warning(TraceDecodingWarning::MalformedAbi { class_hash });
                     }
                 }
                 ContractClass::Legacy(class) => {
                     let Some(abi) = class.abi else {
-                        decoder.had_invalid_abis_on_init = true;
+                        decoder.add_warning(TraceDecodingWarning::MissingAbi { class_hash });
                         continue;
                     };
+
+                    decoder.add_warning(TraceDecodingWarning::UnsupportedCairo0 { class_hash });
+                    decoder.legacy_class_hashes.insert(class_hash);
                     for entry in abi {
                         if let LegacyContractAbiEntry::Function(function) = entry
                             && let Ok(selector) = get_selector_from_name(&function.name)
@@ -224,7 +272,7 @@ impl TraceDecoder {
     }
 
     fn selector(&self, invocation: &FunctionInvocation) -> String {
-        if let Some(abi) = self.sierra_abis.get(&invocation.class_hash)
+        if let Some(abi) = self.sierra_abis.get(&invocation.class_hash.into_())
             && let Some(function) =
                 extract_function_from_selector(abi, invocation.entry_point_selector)
         {
@@ -233,22 +281,36 @@ impl TraceDecoder {
 
         let selector = self
             .legacy_selectors
-            .get(&(invocation.class_hash, invocation.entry_point_selector))
+            .get(&(
+                invocation.class_hash.into_(),
+                invocation.entry_point_selector,
+            ))
             .cloned();
-        if selector.is_none() && self.sierra_abis.contains_key(&invocation.class_hash) {
-            self.had_decode_failure.set(true);
+        if selector.is_none()
+            && (self
+                .sierra_abis
+                .contains_key(&invocation.class_hash.into_())
+                || self
+                    .legacy_class_hashes
+                    .contains(&invocation.class_hash.into_()))
+        {
+            self.add_warning(TraceDecodingWarning::SelectorNotFound {
+                class_hash: invocation.class_hash.into_(),
+            });
         }
         selector.unwrap_or_else(|| invocation.entry_point_selector.to_hex_string())
     }
 
     fn calldata(&self, invocation: &FunctionInvocation) -> String {
-        let Some(abi) = self.sierra_abis.get(&invocation.class_hash) else {
+        let Some(abi) = self.sierra_abis.get(&invocation.class_hash.into_()) else {
             return format_raw_felts(&invocation.calldata);
         };
 
         reverse_transform_input(&invocation.calldata, abi, &invocation.entry_point_selector)
             .unwrap_or_else(|_| {
-                self.had_decode_failure.set(true);
+                self.add_warning(TraceDecodingWarning::CalldataDecodingFailed {
+                    class_hash: invocation.class_hash.into_(),
+                });
                 format_raw_felts(&invocation.calldata)
             })
     }
@@ -258,10 +320,12 @@ impl TraceDecoder {
             return format_result("panic", &format_panic_data(&invocation.result));
         }
 
-        let result = if let Some(abi) = self.sierra_abis.get(&invocation.class_hash) {
+        let result = if let Some(abi) = self.sierra_abis.get(&invocation.class_hash.into_()) {
             reverse_transform_output(&invocation.result, abi, &invocation.entry_point_selector)
                 .unwrap_or_else(|_| {
-                    self.had_decode_failure.set(true);
+                    self.add_warning(TraceDecodingWarning::ResultDecodingFailed {
+                        class_hash: invocation.class_hash.into_(),
+                    });
                     format_raw_felts(&invocation.result)
                 })
         } else {
@@ -271,9 +335,26 @@ impl TraceDecoder {
         format_result("success", &result)
     }
 
-    pub fn abi_decoding_incomplete(&self) -> bool {
-        self.had_invalid_abis_on_init || self.had_decode_failure.get()
+    fn add_warning(&self, issue: TraceDecodingWarning) {
+        self.decoding_warnings.borrow_mut().insert(issue);
     }
+
+    fn decoding_warnings(&self) -> Vec<TraceDecodingWarning> {
+        self.decoding_warnings.borrow().iter().cloned().collect()
+    }
+}
+
+fn format_decoding_warning(issues: &[TraceDecodingWarning]) -> String {
+    if issues.is_empty() {
+        return String::new();
+    }
+
+    let details = issues
+        .iter()
+        .map(|issue| format!("- {}", issue.description()))
+        .join("\n");
+
+    format!("Some trace data is shown as raw felts:\n{details}")
 }
 
 #[must_use]
