@@ -2,7 +2,10 @@
 source: crates/sncast/tests/e2e/get/tx_trace.rs
 expression: output.as_stdout()
 ---
-[WARNING] Some trace data could not be decoded with the fetched ABIs. Raw felts are shown instead.
+[WARNING] Some trace data is shown as raw felts:
+- entry point selector was not found in the ABI for class 0x456
+- calldata could not be decoded with the ABI for class 0x456
+- result could not be decoded with the ABI for class 0x456
 
 Success: Transaction trace retrieved
 
