@@ -1,6 +1,6 @@
-use anyhow::Result;
+use anyhow::{Result, bail};
 use clap::Args;
-use foundry_ui::components::warning::WarningMessage;
+use foundry_ui::{OutputFormat, components::warning::WarningMessage};
 use futures::stream::{self, StreamExt};
 use itertools::Itertools;
 use sncast::helpers::command::process_command_result;
@@ -37,14 +37,26 @@ pub struct TxTrace {
     pub transaction_hash: Felt,
 
     /// Display all transaction trace fields
-    #[arg(long, conflicts_with = "json")]
+    #[arg(long)]
     pub full: bool,
 
     #[command(flatten)]
     pub rpc: RpcArgs,
 }
 
+impl TxTrace {
+    fn validate(&self, output_format: OutputFormat) -> Result<()> {
+        if self.full && output_format == OutputFormat::Json {
+            bail!("`--full` cannot be used with `--json`");
+        }
+
+        Ok(())
+    }
+}
+
 pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<ExitCode> {
+    tx_trace.validate(ui.output_format())?;
+
     let provider = tx_trace.rpc.get_provider(&config, ui).await?;
 
     let result = provider
