@@ -1,6 +1,7 @@
 use crate::integration::{NO_CONSTRUCTOR_CLASS_HASH, get_abi, init_class};
 use data_transformer::{
-    reverse_transform_entry_point_input, reverse_transform_input, reverse_transform_output,
+    reverse_transform_entry_point_input, reverse_transform_entry_point_output,
+    reverse_transform_input, reverse_transform_output,
 };
 use itertools::Itertools;
 use primitive_types::U256;
@@ -304,13 +305,21 @@ async fn test_external_type() {
 
 #[tokio::test]
 async fn test_constructor() {
-    assert_reverse_transformation(
+    let abi = get_abi().await;
+    let selector = get_selector_from_name("constructor").unwrap();
+    let input = reverse_transform_entry_point_input(
         &[Felt::from_hex_unchecked("0x123")],
-        "constructor",
-        "ContractAddress(0x123)",
-        Some(""),
+        &abi,
+        &selector,
+        EntryPointType::Constructor,
     )
-    .await;
+    .unwrap();
+    let output =
+        reverse_transform_entry_point_output(&[], &abi, &selector, EntryPointType::Constructor)
+            .unwrap();
+
+    assert_eq!(input, "ContractAddress(0x123)");
+    assert_eq!(output, "");
 }
 
 #[tokio::test]
@@ -360,9 +369,13 @@ async fn test_implicit_contract_constructor() {
 
     let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str()).unwrap();
 
-    let result =
-        reverse_transform_input(&[], &abi, &get_selector_from_name("constructor").unwrap())
-            .unwrap();
+    let result = reverse_transform_entry_point_input(
+        &[],
+        &abi,
+        &get_selector_from_name("constructor").unwrap(),
+        EntryPointType::Constructor,
+    )
+    .unwrap();
 
     let expected_output = "";
 

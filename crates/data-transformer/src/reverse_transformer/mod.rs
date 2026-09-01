@@ -4,9 +4,7 @@ mod types;
 
 pub use self::event::{ReverseTransformEventError, reverse_transform_event};
 use crate::reverse_transformer::transform::{ReverseTransformer, TransformationError};
-use crate::shared::extraction::{
-    extract_entry_point_from_selector, extract_function_from_selector,
-};
+use crate::shared::extraction::extract_entry_point_from_selector;
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use starknet_rust::core::types::EntryPointType;
 use starknet_rust::core::types::contract::AbiEntry;
@@ -26,14 +24,7 @@ pub fn reverse_transform_input(
     abi: &[AbiEntry],
     function_selector: &Felt,
 ) -> Result<String, ReverseTransformError> {
-    let function = extract_function_from_selector(abi, *function_selector)
-        .ok_or(ReverseTransformError::FunctionNotFound(*function_selector))?;
-
-    reverse_transform(
-        input,
-        abi,
-        function.inputs.iter().map(|input| input.r#type.as_str()),
-    )
+    reverse_transform_entry_point_input(input, abi, function_selector, EntryPointType::External)
 }
 
 /// Transforms entry point calldata into a Cairo-like representation of its arguments.
@@ -59,14 +50,7 @@ pub fn reverse_transform_output(
     abi: &[AbiEntry],
     function_selector: &Felt,
 ) -> Result<String, ReverseTransformError> {
-    let function = extract_function_from_selector(abi, *function_selector)
-        .ok_or(ReverseTransformError::FunctionNotFound(*function_selector))?;
-
-    reverse_transform(
-        output,
-        abi,
-        function.outputs.iter().map(|output| output.r#type.as_str()),
-    )
+    reverse_transform_entry_point_output(output, abi, function_selector, EntryPointType::External)
 }
 
 /// Transforms entry point output into a Cairo-like representation of its return values.
