@@ -4,7 +4,7 @@ mod types;
 
 pub use self::event::{ReverseTransformEventError, reverse_transform_event};
 use crate::reverse_transformer::transform::{ReverseTransformer, TransformationError};
-use crate::shared::extraction::extract_entry_point_from_selector;
+use crate::shared::extraction::find_entry_point_by_selector;
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use starknet_rust::core::types::EntryPointType;
 use starknet_rust::core::types::contract::AbiEntry;
@@ -34,7 +34,7 @@ pub fn reverse_transform_entry_point_input(
     function_selector: &Felt,
     entry_point_type: EntryPointType,
 ) -> Result<String, ReverseTransformError> {
-    let function = extract_entry_point_from_selector(abi, *function_selector, entry_point_type)
+    let function = find_entry_point_by_selector(abi, *function_selector, entry_point_type)
         .ok_or(ReverseTransformError::FunctionNotFound(*function_selector))?;
 
     reverse_transform(
@@ -60,7 +60,7 @@ pub fn reverse_transform_entry_point_output(
     function_selector: &Felt,
     entry_point_type: EntryPointType,
 ) -> Result<String, ReverseTransformError> {
-    let function = extract_entry_point_from_selector(abi, *function_selector, entry_point_type)
+    let function = find_entry_point_by_selector(abi, *function_selector, entry_point_type)
         .ok_or(ReverseTransformError::FunctionNotFound(*function_selector))?;
 
     reverse_transform(

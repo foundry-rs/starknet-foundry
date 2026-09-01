@@ -7,19 +7,17 @@ const CONSTRUCTOR_AS_SELECTOR: Felt =
     Felt::from_hex_unchecked("0x28ffe4ff0f226a9107253e17a904099aa4f63a02a5621de0576e5aa71bc5194");
 
 #[must_use]
-pub fn extract_function_from_selector(
+pub(crate) fn find_function_or_constructor_by_selector(
     abi: &[AbiEntry],
     searched_selector: Felt,
 ) -> Option<AbiFunction> {
-    search_for_function(abi, searched_selector)
-        // If the user doesn't explicitly define a constructor in the contract,
-        // it won't be present in the ABI. In such cases, an implicit constructor
-        // with no arguments is assumed.
-        .or_else(|| (searched_selector == CONSTRUCTOR_AS_SELECTOR).then(default_constructor))
+    find_entry_point_by_selector(abi, searched_selector, EntryPointType::External).or_else(|| {
+        find_entry_point_by_selector(abi, searched_selector, EntryPointType::Constructor)
+    })
 }
 
 #[must_use]
-pub fn extract_entry_point_from_selector(
+pub fn find_entry_point_by_selector(
     abi: &[AbiEntry],
     searched_selector: Felt,
     entry_point_type: EntryPointType,
@@ -38,29 +36,6 @@ fn default_constructor() -> AbiFunction {
         outputs: vec![],
         state_mutability: StateMutability::View,
     }
-}
-
-fn search_for_function(abi: &[AbiEntry], searched_selector: Felt) -> Option<AbiFunction> {
-    abi.iter().find_map(|entry| match entry {
-        AbiEntry::Function(func) => {
-            let selector = get_selector_from_name(&func.name).ok()?;
-            (selector == searched_selector).then(|| func.clone())
-        }
-        // We treat constructor like a regular function
-        // because it's searched for using Felt entrypoint selector, identically as functions.
-        // Also, we don't need any constructor-specific properties, just argument types.
-        AbiEntry::Constructor(constructor) => {
-            let selector = get_selector_from_name(&constructor.name).ok()?;
-            (selector == searched_selector).then(|| AbiFunction {
-                name: constructor.name.clone(),
-                inputs: constructor.inputs.clone(),
-                outputs: vec![],
-                state_mutability: StateMutability::View,
-            })
-        }
-        AbiEntry::Interface(interface) => search_for_function(&interface.items, searched_selector),
-        _ => None,
-    })
 }
 
 fn search_for_entry_point(
@@ -93,7 +68,7 @@ fn search_for_entry_point(
 
 #[cfg(test)]
 mod tests {
-    use super::{extract_entry_point_from_selector, extract_function_from_selector};
+    use super::{find_entry_point_by_selector, find_function_or_constructor_by_selector};
     use starknet_rust::core::types::EntryPointType;
     use starknet_rust::core::types::contract::{
         AbiEntry, AbiFunction, AbiNamedMember, StateMutability,
@@ -129,21 +104,19 @@ mod tests {
                 AbiEntry::L1Handler(l1_handler.clone()),
             ],
         ] {
-            let regular_lookup = extract_function_from_selector(&abi, selector).unwrap();
+            let regular_lookup = find_function_or_constructor_by_selector(&abi, selector).unwrap();
             assert_eq!(regular_lookup.inputs[0].r#type, "core::integer::u8");
 
             let external =
-                extract_entry_point_from_selector(&abi, selector, EntryPointType::External)
-                    .unwrap();
+                find_entry_point_by_selector(&abi, selector, EntryPointType::External).unwrap();
             assert_eq!(external.inputs[0].r#type, "core::integer::u8");
 
             let l1_handler =
-                extract_entry_point_from_selector(&abi, selector, EntryPointType::L1Handler)
-                    .unwrap();
+                find_entry_point_by_selector(&abi, selector, EntryPointType::L1Handler).unwrap();
             assert_eq!(l1_handler.inputs[0].r#type, "core::integer::u16");
         }
 
         let l1_handler_only = [AbiEntry::L1Handler(l1_handler)];
-        assert!(extract_function_from_selector(&l1_handler_only, selector).is_none());
+        assert!(find_function_or_constructor_by_selector(&l1_handler_only, selector).is_none());
     }
 }
