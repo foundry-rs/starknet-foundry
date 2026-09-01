@@ -47,10 +47,10 @@ impl Serialize for TransactionTraceResponse {
         let mut json = serde_json::to_value(&self.trace).map_err(S::Error::custom)?;
         decode_trace_json(&self.trace, &mut json, &self.decoder).map_err(S::Error::custom)?;
 
-        let decoding_issues = self.decoder.decoding_warnings();
-        if !decoding_issues.is_empty() {
+        let decoding_warnings = self.decoder.decoding_warnings();
+        if !decoding_warnings.is_empty() {
             json["decoding_warnings"] =
-                serde_json::to_value(decoding_issues).map_err(S::Error::custom)?;
+                serde_json::to_value(decoding_warnings).map_err(S::Error::custom)?;
         }
 
         json.serialize(serializer)
@@ -335,8 +335,8 @@ impl TraceDecoder {
         format_result("success", &result)
     }
 
-    fn add_warning(&self, issue: TraceDecodingWarning) {
-        self.decoding_warnings.borrow_mut().insert(issue);
+    fn add_warning(&self, warning: TraceDecodingWarning) {
+        self.decoding_warnings.borrow_mut().insert(warning);
     }
 
     fn decoding_warnings(&self) -> Vec<TraceDecodingWarning> {
@@ -344,12 +344,12 @@ impl TraceDecoder {
     }
 }
 
-fn format_decoding_warning(issues: &[TraceDecodingWarning]) -> String {
-    if issues.is_empty() {
+fn format_decoding_warning(warnings: &[TraceDecodingWarning]) -> String {
+    if warnings.is_empty() {
         return String::new();
     }
 
-    let details = issues
+    let details = warnings
         .iter()
         .map(|issue| format!("- {}", issue.description()))
         .join("\n");
