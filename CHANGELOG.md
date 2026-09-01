@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `--json` flag is now global, and can be passed to any subcommand.
+- `sncast verify --verifier walnut` has been replaced by `sncast verify --verifier starkloupe`, following Walnut's migration to Starkloupe ([app.starkloupe.co](https://app.starkloupe.co))
 
 ## [0.63.0] - 2026-08-05
 
