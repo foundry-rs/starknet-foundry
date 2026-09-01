@@ -8189,8 +8189,8 @@ dependencies = [
  "rand 0.8.7",
  "semver",
  "starknet-rust-core",
- "starknet-rust-crypto 0.19.1 (git+https://github.com/software-mansion/starknet-rust?rev=6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9)",
- "starknet-rust-curve 0.19.1 (git+https://github.com/software-mansion/starknet-rust?rev=6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9)",
+ "starknet-rust-crypto 0.19.1 (git+https://github.com/software-mansion/starknet-rust?rev=61aab4386db3d8cab8378e23c645ce8beb61fad1)",
+ "starknet-rust-curve 0.19.1 (git+https://github.com/software-mansion/starknet-rust?rev=61aab4386db3d8cab8378e23c645ce8beb61fad1)",
  "thiserror 2.0.20",
  "zeroize",
 ]
