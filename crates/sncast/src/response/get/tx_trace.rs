@@ -45,12 +45,14 @@ impl Serialize for TransactionTraceResponse {
         S: Serializer,
     {
         let mut json = serde_json::to_value(&self.trace).map_err(S::Error::custom)?;
-        decode_trace_json(&self.trace, &mut json, &self.decoder).map_err(S::Error::custom)?;
+        if let Some(decoder) = &self.decoder {
+            decode_trace_json(&self.trace, &mut json, decoder).map_err(S::Error::custom)?;
 
-        let decoding_warnings = self.decoder.decoding_warnings();
-        if !decoding_warnings.is_empty() {
-            json["decoding_warnings"] =
-                serde_json::to_value(decoding_warnings).map_err(S::Error::custom)?;
+            let decoding_warnings = decoder.decoding_warnings();
+            if !decoding_warnings.is_empty() {
+                json["decoding_warnings"] =
+                    serde_json::to_value(decoding_warnings).map_err(S::Error::custom)?;
+            }
         }
 
         json.serialize(serializer)
@@ -167,11 +169,14 @@ impl SncastCommandMessage for TransactionTraceResponse {
             decoder,
             full,
         } = self;
-        let human_text = append_trace(OutputBuilder::new(), trace, decoder, *full).build();
-        let builder = if decoder.decoding_warnings().is_empty() {
+        let human_text = append_trace(OutputBuilder::new(), trace, decoder.as_ref(), *full).build();
+        let decoding_warnings = decoder
+            .as_ref()
+            .map_or_else(Vec::new, TraceDecoder::decoding_warnings);
+        let builder = if decoding_warnings.is_empty() {
             OutputBuilder::new()
         } else {
-            let warning_message = format_decoding_warning(&decoder.decoding_warnings());
+            let warning_message = format_decoding_warning(&decoding_warnings);
             OutputBuilder::new()
                 .text_field(&WarningMessage::new(warning_message).text())
                 .blank_line()
@@ -640,11 +645,14 @@ fn append_full_invocation(
     let builder = builder
         .with_indent(indent)
         .field("Call Type", format_call_type(invocation.call_type))
-        .field("Calldata", &decoder.calldata(invocation))
+        .field("Calldata", &invocation_calldata(invocation, decoder))
         .padded_felt_field("Caller Address", &invocation.caller_address)
         .padded_felt_field("Class Hash", &invocation.class_hash)
         .padded_felt_field("Contract Address", &invocation.contract_address)
-        .field("Entry Point Selector", &decoder.selector(invocation))
+        .field(
+            "Entry Point Selector",
+            &invocation_selector(invocation, decoder),
+        )
         .field(
             "Entry Point Type",
             format_entry_point_type(invocation.entry_point_type),
@@ -657,7 +665,7 @@ fn append_full_invocation(
     let builder = append_messages(builder, &invocation.messages, indent);
     let builder = builder
         .with_indent(indent)
-        .field("Result", &decoder.result(invocation));
+        .field("Result", &invocation_result(invocation, decoder));
     append_calls(builder, &invocation.calls, decoder, indent)
 }
 
