@@ -42,3 +42,7 @@ Function Invocation
     Messages:             []
     Result:               success
     Calls:                []
+Execution Resources
+  L1 Data Gas:            192
+  L1 Gas:                 18783
+  L2 Gas:                 401920
