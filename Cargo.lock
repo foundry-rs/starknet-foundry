@@ -7831,6 +7831,7 @@ dependencies = [
  "fs_extra",
  "futures",
  "indoc",
+ "insta",
  "itertools 0.15.0",
  "mimalloc",
  "num-traits",
@@ -8017,7 +8018,7 @@ dependencies = [
 [[package]]
 name = "starknet-rust"
 version = "0.19.1"
-source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9#6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9"
 dependencies = [
  "starknet-rust-accounts",
  "starknet-rust-contract",
@@ -8031,12 +8032,12 @@ dependencies = [
 [[package]]
 name = "starknet-rust-accounts"
 version = "0.19.1"
-source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9#6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9"
 dependencies = [
  "async-trait",
  "auto_impl",
  "starknet-rust-core",
- "starknet-rust-crypto 0.19.1 (git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b)",
+ "starknet-rust-crypto 0.19.1 (git+https://github.com/software-mansion/starknet-rust?rev=6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9)",
  "starknet-rust-providers",
  "starknet-rust-signers",
  "thiserror 2.0.20",
@@ -8045,7 +8046,7 @@ dependencies = [
 [[package]]
 name = "starknet-rust-contract"
 version = "0.19.1"
-source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9#6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9"
 dependencies = [
  "serde_json",
  "starknet-rust-accounts",
@@ -8056,7 +8057,7 @@ dependencies = [
 [[package]]
 name = "starknet-rust-core"
 version = "0.19.1"
-source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9#6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9"
 dependencies = [
  "base64 0.22.1",
  "crypto-bigint 0.7.5",
@@ -8072,14 +8073,14 @@ dependencies = [
  "serde_with",
  "sha3 0.10.9",
  "starknet-rust-core-derive",
- "starknet-rust-crypto 0.19.1 (git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b)",
+ "starknet-rust-crypto 0.19.1 (git+https://github.com/software-mansion/starknet-rust?rev=6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9)",
  "starknet-types-core 0.2.4",
 ]
 
 [[package]]
 name = "starknet-rust-core-derive"
 version = "0.19.1"
-source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9#6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -8110,7 +8111,7 @@ dependencies = [
 [[package]]
 name = "starknet-rust-crypto"
 version = "0.19.1"
-source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9#6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9"
 dependencies = [
  "blake2",
  "crypto-bigint 0.7.5",
@@ -8122,7 +8123,7 @@ dependencies = [
  "num-traits",
  "rfc6979",
  "sha2 0.10.9",
- "starknet-rust-curve 0.19.1 (git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b)",
+ "starknet-rust-curve 0.19.1 (git+https://github.com/software-mansion/starknet-rust?rev=6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9)",
  "starknet-types-core 0.2.4",
  "zeroize",
 ]
@@ -8139,7 +8140,7 @@ dependencies = [
 [[package]]
 name = "starknet-rust-curve"
 version = "0.19.1"
-source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9#6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9"
 dependencies = [
  "starknet-types-core 0.2.4",
 ]
@@ -8147,7 +8148,7 @@ dependencies = [
 [[package]]
 name = "starknet-rust-macros"
 version = "0.19.1"
-source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9#6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9"
 dependencies = [
  "starknet-rust-core",
  "syn 2.0.119",
@@ -8156,7 +8157,7 @@ dependencies = [
 [[package]]
 name = "starknet-rust-providers"
 version = "0.19.1"
-source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9#6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9"
 dependencies = [
  "async-trait",
  "auto_impl",
@@ -8176,7 +8177,7 @@ dependencies = [
 [[package]]
 name = "starknet-rust-signers"
 version = "0.19.1"
-source = "git+https://github.com/software-mansion/starknet-rust?rev=56efca00feffac6beb39f464eca71afa42c1813b#56efca00feffac6beb39f464eca71afa42c1813b"
+source = "git+https://github.com/software-mansion/starknet-rust?rev=6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9#6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9"
 dependencies = [
  "async-trait",
  "auto_impl",
@@ -8188,8 +8189,8 @@ dependencies = [
  "rand 0.8.7",
  "semver",
  "starknet-rust-core",
- "starknet-rust-crypto",
- "starknet-rust-curve",
+ "starknet-rust-crypto 0.19.1 (git+https://github.com/software-mansion/starknet-rust?rev=6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9)",
+ "starknet-rust-curve 0.19.1 (git+https://github.com/software-mansion/starknet-rust?rev=6a5bbdb46ea32b037f813c9d632e0dd0c1946fa9)",
  "thiserror 2.0.20",
  "zeroize",
 ]

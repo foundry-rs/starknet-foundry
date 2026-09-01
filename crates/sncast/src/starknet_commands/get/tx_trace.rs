@@ -163,7 +163,7 @@ fn format_class_fetch_warning(failures: &[ContractClassFetchFailure]) -> String 
             format!(
                 "- class hash: {} — {}",
                 failure.class_hash.to_hex_string(),
-                provider_error_message(&failure.error)
+                failure.error
             )
         })
         .join("\n");
@@ -171,11 +171,4 @@ fn format_class_fetch_warning(failures: &[ContractClassFetchFailure]) -> String 
     format!(
         "Could not fetch contract classes needed to decode the trace:\n{details}\nAffected calls are displayed as raw felts."
     )
-}
-
-fn provider_error_message(error: &ProviderError) -> String {
-    match error {
-        ProviderError::StarknetError(error) => error.message().to_string(),
-        error => error.to_string(),
-    }
 }
