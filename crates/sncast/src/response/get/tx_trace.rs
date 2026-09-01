@@ -2,7 +2,7 @@ use crate::response::cast_message::SncastCommandMessage;
 use crate::response::get::transaction::TransactionOutputBuilder;
 use conversions::IntoConv;
 use data_transformer::{
-    extract_entry_point_from_selector, reverse_transform_entry_point_input,
+    find_entry_point_by_selector, reverse_transform_entry_point_input,
     reverse_transform_entry_point_output,
 };
 use foundry_ui::{Message, components::warning::WarningMessage, styling::OutputBuilder};
@@ -342,7 +342,7 @@ impl TraceDecodingContext<'_> {
     fn selector(&mut self, invocation: &FunctionInvocation) -> String {
         let class_hash: ClassHash = invocation.class_hash.into_();
         if let Some(abi) = self.decoder.sierra_abis.get(&class_hash)
-            && let Some(function) = extract_entry_point_from_selector(
+            && let Some(function) = find_entry_point_by_selector(
                 abi,
                 invocation.entry_point_selector,
                 invocation.entry_point_type,

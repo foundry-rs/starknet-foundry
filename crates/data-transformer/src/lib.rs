@@ -8,5 +8,5 @@ pub use reverse_transformer::{
     reverse_transform_entry_point_output, reverse_transform_event, reverse_transform_input,
     reverse_transform_output,
 };
-pub use shared::extraction::extract_entry_point_from_selector;
+pub use shared::extraction::find_entry_point_by_selector;
 pub use transformer::transform;
