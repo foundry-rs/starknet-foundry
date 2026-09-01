@@ -236,7 +236,7 @@ impl TraceDecodingWarning {
 pub struct TraceDecoder {
     sierra_abis: HashMap<ClassHash, Vec<AbiEntry>>,
     legacy_class_hashes: HashSet<ClassHash>,
-    legacy_selectors: HashMap<(ClassHash, Felt), String>,
+    legacy_selectors: HashMap<(ClassHash, Felt, EntryPointKind), String>,
     decoding_warnings: RefCell<BTreeSet<TraceDecodingWarning>>,
 }
 
@@ -281,8 +281,11 @@ impl TraceDecoder {
 
     fn selector(&self, invocation: &FunctionInvocation) -> String {
         if let Some(abi) = self.sierra_abis.get(&invocation.class_hash.into_())
-            && let Some(function) =
-                extract_function_from_selector(abi, invocation.entry_point_selector)
+            && let Some(function) = extract_entry_point_from_selector(
+                abi,
+                invocation.entry_point_selector,
+                invocation.entry_point_type,
+            )
         {
             return function.name;
         }
@@ -292,6 +295,7 @@ impl TraceDecoder {
             .get(&(
                 invocation.class_hash.into_(),
                 invocation.entry_point_selector,
+                invocation.entry_point_type.into(),
             ))
             .cloned();
         if selector.is_none()
@@ -314,13 +318,18 @@ impl TraceDecoder {
             return format_raw_felts(&invocation.calldata);
         };
 
-        reverse_transform_input(&invocation.calldata, abi, &invocation.entry_point_selector)
-            .unwrap_or_else(|_| {
-                self.add_warning(TraceDecodingWarning::CalldataDecodingFailed {
-                    class_hash: invocation.class_hash.into_(),
-                });
-                format_raw_felts(&invocation.calldata)
-            })
+        reverse_transform_entry_point_input(
+            &invocation.calldata,
+            abi,
+            &invocation.entry_point_selector,
+            invocation.entry_point_type,
+        )
+        .unwrap_or_else(|_| {
+            self.add_warning(TraceDecodingWarning::CalldataDecodingFailed {
+                class_hash: invocation.class_hash.into_(),
+            });
+            format_raw_felts(&invocation.calldata)
+        })
     }
 
     fn result(&self, invocation: &FunctionInvocation) -> String {
@@ -329,13 +338,18 @@ impl TraceDecoder {
         }
 
         let result = if let Some(abi) = self.sierra_abis.get(&invocation.class_hash.into_()) {
-            reverse_transform_output(&invocation.result, abi, &invocation.entry_point_selector)
-                .unwrap_or_else(|_| {
-                    self.add_warning(TraceDecodingWarning::ResultDecodingFailed {
-                        class_hash: invocation.class_hash.into_(),
-                    });
-                    format_raw_felts(&invocation.result)
-                })
+            reverse_transform_entry_point_output(
+                &invocation.result,
+                abi,
+                &invocation.entry_point_selector,
+                invocation.entry_point_type,
+            )
+            .unwrap_or_else(|_| {
+                self.add_warning(TraceDecodingWarning::ResultDecodingFailed {
+                    class_hash: invocation.class_hash.into_(),
+                });
+                format_raw_felts(&invocation.result)
+            })
         } else {
             format_raw_felts(&invocation.result)
         };
