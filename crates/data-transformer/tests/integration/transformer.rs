@@ -303,6 +303,75 @@ async fn test_happy_case_nested_struct_function_cairo_expression_input() {
 }
 
 #[tokio::test]
+async fn test_struct_function_missing_field() {
+    let result = run_transformer(
+        "NestedStructWithField { a: SimpleStruct { a: 0x24 } }",
+        "nested_struct_fn",
+    )
+    .await;
+
+    result.unwrap_err().assert_contains(indoc! {r"
+        Constructor arguments for `data_transformer_contract::NestedStructWithField` do not match the ABI:
+          expected: { a: data_transformer_contract::SimpleStruct, b: core::felt252 }
+          provided: { a }"});
+}
+
+#[tokio::test]
+async fn test_struct_function_unexpected_field() {
+    let result = run_transformer(
+        "NestedStructWithField { some_other_field: SimpleStruct { a: 0x24 }, b: 96 }",
+        "nested_struct_fn",
+    )
+    .await;
+
+    result.unwrap_err().assert_contains(indoc! {r"
+        Constructor arguments for `data_transformer_contract::NestedStructWithField` do not match the ABI:
+          expected: { a: data_transformer_contract::SimpleStruct, b: core::felt252 }
+          provided: { some_other_field, b }"});
+}
+
+#[tokio::test]
+async fn test_struct_function_renamed_and_missing_fields() {
+    let result = run_transformer(
+        "NestedStructWithField { some_other_field: SimpleStruct { a: 0x24 } }",
+        "nested_struct_fn",
+    )
+    .await;
+
+    result.unwrap_err().assert_contains(indoc! {r"
+        Constructor arguments for `data_transformer_contract::NestedStructWithField` do not match the ABI:
+          expected: { a: data_transformer_contract::SimpleStruct, b: core::felt252 }
+          provided: { some_other_field }"});
+}
+
+#[tokio::test]
+async fn test_struct_function_duplicated_field() {
+    let result = run_transformer(
+        "NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96, a: SimpleStruct { a: 0x25 } }",
+        "nested_struct_fn",
+    )
+    .await;
+
+    result.unwrap_err().assert_contains(
+        r#"Invalid number of struct arguments in struct "NestedStructWithField", expected 2 arguments, found 3"#,
+    );
+}
+
+#[tokio::test]
+async fn test_struct_function_nested_struct_field_mismatch() {
+    let result = run_transformer(
+        "NestedStructWithField { a: SimpleStruct { wrong_field: 0x24 }, b: 96 }",
+        "nested_struct_fn",
+    )
+    .await;
+
+    result.unwrap_err().assert_contains(indoc! {r"
+        Constructor arguments for `data_transformer_contract::SimpleStruct` do not match the ABI:
+          expected: { a: core::felt252 }
+          provided: { wrong_field }"});
+}
+
+#[tokio::test]
 async fn test_happy_case_span_function_cairo_expression_input() {
     let result = run_transformer("array![1, 2, 3].span()", "span_fn")
         .await
