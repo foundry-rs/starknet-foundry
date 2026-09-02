@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- Cairo-like calldata errors now list the names and types of missing function arguments.
+- Error for a wrong number of Cairo-like calldata arguments now shows the expected function signature (argument names and types) next to the provided arguments.
 
 ## [0.63.0] - 2026-08-05
 
