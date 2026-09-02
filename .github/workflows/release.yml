@@ -190,3 +190,30 @@ jobs:
     with:
       plugin_dep_version: ${{ needs.verify-version.outputs.version }}
       prod_registry: true
+
+  trigger-maat-experiment:
+    name: Trigger Maat experiment
+    runs-on: ubuntu-latest
+    needs: [ verify-version, publish-to-registry ]
+    steps:
+      - name: Extract version from tag
+        env:
+          RAW_REF: ${{ github.ref_name }}
+        run: |
+          VERSION=${RAW_REF}
+
+          # Strip 'v' prefix from the version if it exists
+          VERSION=${VERSION#v}
+
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          
+      - name: Trigger Maat experiment
+        env:
+          GH_TOKEN: ${{ secrets.MAAT_EXPERIMENTS_DISPATCH_TOKEN }}
+        run: |
+          gh workflow run experiment.yml \
+            --repo software-mansion/maat \
+            --ref main \
+            -f workspace="release" \
+            -f foundry="$VERSION" \
+            -f notify_team="true"
