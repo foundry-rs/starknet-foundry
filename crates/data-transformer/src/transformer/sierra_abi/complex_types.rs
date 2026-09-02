@@ -300,6 +300,24 @@ fn get_struct_arguments_with_values<'a>(
         .collect()
 }
 
+fn format_struct_arguments_mismatch(
+    expected_type: &str,
+    expected_members: &[AbiNamedMember],
+    provided_names: &[String],
+) -> String {
+    let expected = expected_members
+        .iter()
+        .map(|member| format!("{}: {}", member.name, member.r#type))
+        .join(", ");
+    let provided = provided_names.join(", ");
+
+    format!(
+        "Constructor arguments for `{expected_type}` do not match the ABI:\n  \
+         expected: {{ {expected} }}\n  \
+         provided: {{ {provided} }}"
+    )
+}
+
 // Structs
 impl SupportedCalldataKind for ExprStructCtorCall<'_> {
     fn transform(
@@ -325,29 +343,32 @@ impl SupportedCalldataKind for ExprStructCtorCall<'_> {
         let struct_args_with_values = get_struct_arguments_with_values(&struct_args, db)
             .context("Found invalid expression in struct argument")?;
 
+        let provided_names: Vec<String> = struct_args_with_values
+            .iter()
+            .map(|(arg_name, _)| arg_name.clone())
+            .collect();
+
+        let provided_set: HashSet<&str> = provided_names.iter().map(String::as_str).collect();
+        let expected_set: HashSet<&str> = struct_abi_definition
+            .members
+            .iter()
+            .map(|member| member.name.as_str())
+            .collect();
+
+        if provided_set != expected_set {
+            bail!(format_struct_arguments_mismatch(
+                expected_type,
+                &struct_abi_definition.members,
+                &provided_names,
+            ));
+        }
+
         if struct_args_with_values.len() != struct_abi_definition.members.len() {
             bail!(
                 r#"Invalid number of struct arguments in struct "{}", expected {} arguments, found {}"#,
                 struct_path_joined,
                 struct_abi_definition.members.len(),
                 struct_args.len()
-            )
-        }
-
-        // validate if all arguments' names have corresponding names in abi
-        if struct_args_with_values
-            .iter()
-            .map(|(arg_name, _)| arg_name.clone())
-            .collect::<HashSet<String>>()
-            != struct_abi_definition
-                .members
-                .iter()
-                .map(|x| x.name.clone())
-                .collect::<HashSet<String>>()
-        {
-            // TODO add message which arguments are invalid (Issue #2549)
-            bail!(
-                r"Arguments in constructor invocation for struct {expected_type} do not match struct arguments in ABI",
             )
         }
 
