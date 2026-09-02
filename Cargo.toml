@@ -76,7 +76,7 @@ clap_complete = "4.6.5"
 console = "0.16.1"
 include_dir = "0.7.4"
 indoc = "2"
-itertools = "0.14.0"
+itertools = "0.15.0"
 indexmap = "2.11.4"
 num-traits = "0.2.19"
 rayon = "1.10"
@@ -145,7 +145,7 @@ tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 tracing = "0.1.43"
 tracing-chrome = "0.7.2"
 tracing-log = "0.2.0"
-comfy-table = "7"
+comfy-table = "8"
 create-output-dir = "1.0.0"
 insta = { version = "1.46.0", features = ["filters"] }
 plotters = { version = "0.3", default-features = false, features = ["all_series", "all_elements", "svg_backend", "bitmap_backend", "bitmap_encoder", "full_palette", "colormaps", "ab_glyph"] }

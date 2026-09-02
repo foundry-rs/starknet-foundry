@@ -26,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allow resource bounds and tip settings under `fee-params` field in `snfoundry.toml` for transaction-sending commands.
 - CASM compilation results are now cached between relevant `sncast` commands.
 
+#### Changed
+
+- `--json` flag is now global, and can be passed to any subcommand.
+- `sncast verify --verifier walnut` has been replaced by `sncast verify --verifier starkloupe`, following Walnut's migration to Starkloupe ([app.starkloupe.co](https://app.starkloupe.co))
+
 #### Fixed
 
 - Cairo-like calldata errors now list the names and types of missing function arguments.

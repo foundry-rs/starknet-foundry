@@ -37,7 +37,7 @@ async fn test_happy_case_contract_address() {
         "--contract-name",
         "Map",
         "--verifier",
-        "walnut",
+        "starkloupe",
         "--network",
         "sepolia",
     ];
@@ -89,7 +89,7 @@ async fn test_happy_case_class_hash() {
         "--contract-name",
         "Map",
         "--verifier",
-        "walnut",
+        "starkloupe",
         "--network",
         "sepolia",
     ];
@@ -145,7 +145,7 @@ async fn test_accepts_full_module_path_contract_name() {
         "--contract-name",
         "duplicate_contract_name::first_contract::HelloStarknet",
         "--verifier",
-        "walnut",
+        "starkloupe",
         "--network",
         "sepolia",
         "--confirm-verification",
@@ -197,7 +197,7 @@ async fn test_failed_verification_contract_address() {
         "--contract-name",
         "Map",
         "--verifier",
-        "walnut",
+        "starkloupe",
         "--network",
         "sepolia",
     ];
@@ -248,7 +248,7 @@ async fn test_failed_verification_class_hash() {
         "--contract-name",
         "Map",
         "--verifier",
-        "walnut",
+        "starkloupe",
         "--network",
         "sepolia",
     ];
@@ -285,7 +285,7 @@ async fn test_verification_abort() {
         "--contract-name",
         "Map",
         "--verifier",
-        "walnut",
+        "starkloupe",
         "--network",
         "sepolia",
     ];
@@ -332,7 +332,7 @@ async fn test_happy_case_lowercase_y() {
         "--contract-name",
         "Map",
         "--verifier",
-        "walnut",
+        "starkloupe",
         "--network",
         "sepolia",
     ];
@@ -370,7 +370,7 @@ async fn test_wrong_contract_name_passed() {
         "--contract-name",
         "nonexistent",
         "--verifier",
-        "walnut",
+        "starkloupe",
         "--network",
         "sepolia",
     ];
@@ -404,7 +404,7 @@ async fn test_errors_on_ambiguous_contract_name() {
         "--contract-name",
         "HelloStarknet",
         "--verifier",
-        "walnut",
+        "starkloupe",
         "--network",
         "sepolia",
     ];
@@ -453,7 +453,7 @@ async fn test_happy_case_with_confirm_verification_flag() {
         "--contract-name",
         "Map",
         "--verifier",
-        "walnut",
+        "starkloupe",
         "--network",
         "sepolia",
         "--confirm-verification",
@@ -505,7 +505,7 @@ async fn test_happy_case_specify_package() {
         "--contract-name",
         "supercomplexcode",
         "--verifier",
-        "walnut",
+        "starkloupe",
         "--network",
         "sepolia",
         "--package",
@@ -559,7 +559,7 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         "--contract-name",
         "FibonacciContract",
         "--verifier",
-        "walnut",
+        "starkloupe",
         "--network",
         "sepolia",
         "--package",
@@ -599,7 +599,7 @@ async fn test_worskpaces_package_no_contract() {
         "--contract-name",
         "nonexistent",
         "--verifier",
-        "walnut",
+        "starkloupe",
         "--network",
         "sepolia",
         "--package",
@@ -648,7 +648,7 @@ async fn test_test_files_flag_ignored_with_warning() {
         "--contract-name",
         "Map",
         "--verifier",
-        "walnut",
+        "starkloupe",
         "--network",
         "sepolia",
         "--test-files",
@@ -665,7 +665,7 @@ async fn test_test_files_flag_ignored_with_warning() {
         output,
         formatdoc!(
             r"
-        [WARNING] The `--test-files` option is ignored for Walnut verifier
+        [WARNING] The `--test-files` option is ignored for Starkloupe verifier
         Success: Verification completed
 
         {}
@@ -704,7 +704,7 @@ async fn test_happy_case_contract_address_with_alias() {
         "--contract-name",
         "Map",
         "--verifier",
-        "walnut",
+        "starkloupe",
         "--network",
         "sepolia",
         "--confirm-verification",
@@ -758,7 +758,7 @@ async fn test_happy_case_class_hash_with_alias() {
         "--contract-name",
         "Map",
         "--verifier",
-        "walnut",
+        "starkloupe",
         "--network",
         "sepolia",
         "--confirm-verification",
@@ -798,7 +798,7 @@ async fn test_unknown_alias_contract_address() {
         "--contract-name",
         "Map",
         "--verifier",
-        "walnut",
+        "starkloupe",
         "--network",
         "sepolia",
     ];
@@ -835,7 +835,7 @@ async fn test_unknown_alias_class_hash() {
         "--contract-name",
         "Map",
         "--verifier",
-        "walnut",
+        "starkloupe",
         "--network",
         "sepolia",
     ];
@@ -853,6 +853,37 @@ async fn test_unknown_alias_class_hash() {
 
             Caused by:
                 Alias `unknown` not found in config
+        "},
+    );
+}
+
+#[tokio::test]
+async fn test_walnut_verifier_value_is_rejected() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--contract-name",
+        "Map",
+        "--verifier",
+        "walnut",
+        "--network",
+        "sepolia",
+    ];
+
+    let output = runner(&args)
+        .current_dir(contract_path.path())
+        .assert()
+        .failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+            error: invalid value 'walnut' for '--verifier <VERIFIER>': Walnut has been migrated to Starkloupe; use `--verifier starkloupe` instead. See https://app.starkloupe.co for more information.
         "},
     );
 }
