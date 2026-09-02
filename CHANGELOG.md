@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast verify --verifier walnut` has been replaced by `sncast verify --verifier starkloupe`, following Walnut's migration to Starkloupe ([app.starkloupe.co](https://app.starkloupe.co))
 - Invalid Cairo-like calldata now reports missing and unexpected positional arguments, alongside the provided arguments and expected argument names and types.
 - Error message for a struct constructor invocation whose fields do not match the ABI now lists the expected fields (with their types) along with the provided fields.
+- Invalid tuple lengths in Cairo-like calldata now produce a data transformer error instead of failing during contract execution.
 
 #### Fixed
 
