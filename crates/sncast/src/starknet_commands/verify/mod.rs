@@ -17,14 +17,14 @@ use std::fmt;
 use url::Url;
 
 pub mod explorer;
+pub mod starkloupe;
 pub mod voyager;
-pub mod walnut;
 
 use explorer::ContractIdentifier;
 use explorer::VerificationInterface;
 use foundry_ui::components::warning::WarningMessage;
+use starkloupe::StarkloupeVerificationInterface;
 use voyager::Voyager;
-use walnut::WalnutVerificationInterface;
 
 #[derive(Args)]
 #[command(about = "Verify a contract through a block explorer")]
@@ -36,8 +36,8 @@ pub struct Verify {
     #[arg(short, long)]
     pub contract_name: String,
 
-    /// Block explorer to use for the verification
-    #[arg(short, long, value_enum)]
+    /// Block explorer to use for the verification [possible values: starkloupe, voyager]
+    #[arg(short, long, value_parser = parse_verifier)]
     pub verifier: Verifier,
 
     /// The network on which block explorer will do the verification
@@ -89,17 +89,27 @@ impl ContractIdentifierArgs {
 
 #[derive(ValueEnum, Clone, Debug)]
 pub enum Verifier {
-    Walnut,
+    Starkloupe,
     Voyager,
 }
 
 impl fmt::Display for Verifier {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Verifier::Walnut => write!(f, "walnut"),
+            Verifier::Starkloupe => write!(f, "starkloupe"),
             Verifier::Voyager => write!(f, "voyager"),
         }
     }
+}
+
+fn parse_verifier(value: &str) -> Result<Verifier, String> {
+    if value.eq_ignore_ascii_case("walnut") {
+        return Err(
+            "Walnut has been migrated to Starkloupe; use `--verifier starkloupe` instead. See https://app.starkloupe.co for more information."
+                .to_string(),
+        );
+    }
+    <Verifier as ValueEnum>::from_str(value, true)
 }
 
 async fn resolve_verification_network(
@@ -229,17 +239,17 @@ pub async fn verify(
         ui,
     )?;
 
-    // Handle test_files warning for Walnut
-    if matches!(verifier, Verifier::Walnut) && test_files {
+    // Handle test_files warning for Starkloupe
+    if matches!(verifier, Verifier::Starkloupe) && test_files {
         ui.print_warning(WarningMessage::new(
-            "The `--test-files` option is ignored for Walnut verifier",
+            "The `--test-files` option is ignored for Starkloupe verifier",
         ));
     }
 
     // Create verifier instance, gather files, and perform verification
     match verifier {
-        Verifier::Walnut => {
-            let walnut = WalnutVerificationInterface::new(
+        Verifier::Starkloupe => {
+            let starkloupe = StarkloupeVerificationInterface::new(
                 network,
                 workspace_dir.to_path_buf(),
                 &provider,
@@ -247,7 +257,7 @@ pub async fn verify(
             )?;
 
             // Gather and format files for display
-            let files = walnut.gather_files()?;
+            let files = starkloupe.gather_files()?;
             let files_to_display: Vec<String> =
                 files.iter().map(|(path, _)| format!("  {path}")).collect();
 
@@ -255,7 +265,7 @@ pub async fn verify(
             display_files_and_confirm(&verifier, files_to_display, confirm_verification, ui)?;
 
             // Perform verification
-            walnut
+            starkloupe
                 .verify(
                     contract_identifier,
                     resolved_contract_name,
