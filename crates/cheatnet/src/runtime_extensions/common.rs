@@ -64,8 +64,17 @@ pub fn get_relocated_vm_trace(cairo_runner: &mut CairoRunner) -> Vec<RelocatedTr
             .relocate(true, true)
             .expect("relocation should not fail");
     }
-    cairo_runner
-        .relocated_trace
-        .clone()
-        .expect("relocated trace should be present")
+    // The starkloupe fork also relocates on error paths, where a trace may never
+    // have been produced, so a missing trace is not an invariant violation there.
+    #[cfg(feature = "starkloupe")]
+    {
+        cairo_runner.relocated_trace.clone().unwrap_or_default()
+    }
+    #[cfg(not(feature = "starkloupe"))]
+    {
+        cairo_runner
+            .relocated_trace
+            .clone()
+            .expect("relocated trace should be present")
+    }
 }

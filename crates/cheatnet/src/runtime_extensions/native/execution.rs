@@ -23,6 +23,7 @@ use cairo_vm::types::builtin_name::BuiltinName;
 use std::collections::HashMap;
 use std::default::Default;
 
+#[expect(clippy::result_large_err)]
 pub(crate) fn execute_entry_point_call_native(
     call: &ExecutableCallEntryPoint,
     native_compiled_class_v1: &NativeCompiledClassV1,
@@ -45,6 +46,9 @@ pub(crate) fn execute_entry_point_call_native(
         // If we got to this point, it means tracked resources are SierraGas.
         syscall_usage_vm_resources: HashMap::default(),
         syscall_usage_sierra_gas: syscall_usage.clone(),
+        // Native execution doesn't run the Cairo VM, so there is no trace or memory to collect.
+        vm_trace: None,
+        vm_memory: None,
     })
 }
 

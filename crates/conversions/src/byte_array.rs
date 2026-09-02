@@ -7,6 +7,7 @@ use starknet_types_core::felt::Felt;
 use std::fmt;
 
 #[derive(CairoDeserialize, CairoSerialize, Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "starkloupe", derive(serde::Serialize))]
 pub struct ByteArray {
     words: Vec<Felt>,
     pending_word: Felt,
