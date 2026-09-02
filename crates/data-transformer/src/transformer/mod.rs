@@ -3,8 +3,9 @@ mod sierra_abi;
 use crate::shared::extraction::extract_function_from_selector;
 use crate::shared::parsing::parse_expression;
 use crate::transformer::sierra_abi::build_representation;
-use anyhow::{Context, Result, bail, ensure};
+use anyhow::{Context, Result, bail};
 use cairo_lang_parser::utils::SimpleParserDatabase;
+use cairo_lang_syntax::node::TypedSyntaxNode;
 use cairo_lang_syntax::node::ast::Expr;
 use conversions::serde::serialize::SerializeToFeltVec;
 use itertools::Itertools;
@@ -49,21 +50,54 @@ fn process(
     let n_inputs = function.inputs.len();
     let n_arguments = calldata.len();
 
-    ensure!(
-        n_inputs == n_arguments,
-        "Invalid number of arguments: passed {n_arguments}, expected {n_inputs}",
-    );
+    if n_arguments != n_inputs {
+        bail!(format_invalid_args_number_error(
+            &calldata,
+            function,
+            n_arguments,
+            db
+        ));
+    }
 
     function
         .inputs
         .iter()
-        .zip(calldata)
+        .zip(&calldata)
         .map(|(parameter, expr)| {
-            let representation = build_representation(expr, &parameter.r#type, abi, db)?;
+            let representation = build_representation(expr.clone(), &parameter.r#type, abi, db)?;
             Ok(representation.serialize_to_vec())
         })
         .flatten_ok()
         .collect::<Result<_>>()
+}
+
+fn format_invalid_args_number_error(
+    calldata: &[Expr],
+    function: &AbiFunction,
+    n_arguments: usize,
+    db: &SimpleParserDatabase,
+) -> String {
+    let n_inputs = function.inputs.len();
+    let expected = function
+        .inputs
+        .iter()
+        .map(|parameter| format!("{}: {}", parameter.name, parameter.r#type))
+        .join(", ");
+    let provided = calldata
+        .iter()
+        .map(|expr| {
+            expr.as_syntax_node()
+                .get_text_without_trivia(db)
+                .to_string(db)
+        })
+        .join(", ");
+
+    format!(
+        "Invalid number of arguments for `{}`: expected {n_inputs}, provided {n_arguments}\n  \
+         expected: ({expected})\n  \
+         provided: ({provided})",
+        function.name,
+    )
 }
 
 fn convert_to_tuple(calldata: &str) -> String {
