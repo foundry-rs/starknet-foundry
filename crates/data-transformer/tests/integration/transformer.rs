@@ -81,56 +81,43 @@ async fn test_invalid_cairo_expression() {
 async fn test_invalid_argument_number() {
     let result = run_transformer("0x123, 'some_obsolete_argument', 10", "simple_fn").await;
 
-    result
-        .unwrap_err()
-        .assert_contains("Invalid number of arguments: passed 3, expected 1");
+    result.unwrap_err().assert_contains(indoc! {r"
+        Invalid number of arguments for `simple_fn`: expected 1, provided 3
+          expected: (a: core::felt252)
+          provided: (0x123, 'some_obsolete_argument', 10)"});
 }
 
 #[test_case(
     "",
-    indoc! {r#"
-        Invalid number of arguments: passed 0, expected 2
-        Expected remaining positional arguments:
-        - [1] a: core::integer::i32
-        - [2] b: core::integer::i8
-    "#};
+    indoc! {r"
+        Invalid number of arguments for `multiple_signed_fn`: expected 2, provided 0
+          expected: (a: core::integer::i32, b: core::integer::i8)
+          provided: ()"};
     "all arguments missing"
 )]
 #[test_case(
     "1_i32",
-    indoc! {r#"
-        Invalid number of arguments: passed 1, expected 2
-        Expected remaining positional arguments:
-        - [2] b: core::integer::i8
-    "#};
+    indoc! {r"
+        Invalid number of arguments for `multiple_signed_fn`: expected 2, provided 1
+          expected: (a: core::integer::i32, b: core::integer::i8)
+          provided: (1_i32)"};
     "one argument missing"
 )]
 #[tokio::test]
 async fn test_missing_arguments(input: &str, expected_error: &str) {
     let result = run_transformer(input, "multiple_signed_fn").await;
 
-    result
-        .unwrap_err()
-        .assert_contains(expected_error.trim_end());
+    result.unwrap_err().assert_contains(expected_error);
 }
 
 #[tokio::test]
-async fn test_multiple_remaining_arguments_with_complex_types() {
+async fn test_argument_number_mismatch_with_complex_types() {
     let result = run_transformer("array![]", "complex_fn").await;
 
-    result.unwrap_err().assert_contains(
-        indoc! {r#"
-            Invalid number of arguments: passed 1, expected 7
-            Expected remaining positional arguments:
-            - [2] one: core::integer::u8
-            - [3] two: core::integer::i16
-            - [4] three: core::byte_array::ByteArray
-            - [5] four: (core::felt252, core::integer::u32)
-            - [6] five: core::bool
-            - [7] six: core::integer::u256
-        "#}
-        .trim_end(),
-    );
+    result.unwrap_err().assert_contains(indoc! {r"
+        Invalid number of arguments for `complex_fn`: expected 7, provided 1
+          expected: (arr: core::array::Array::<core::array::Array::<core::felt252>>, one: core::integer::u8, two: core::integer::i16, three: core::byte_array::ByteArray, four: (core::felt252, core::integer::u32), five: core::bool, six: core::integer::u256)
+          provided: (array![])"});
 }
 
 #[tokio::test]
