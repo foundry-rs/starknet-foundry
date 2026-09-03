@@ -416,7 +416,7 @@ async fn test_struct_function_nested_struct_field_mismatch() {
     .await;
 
     result.unwrap_err().assert_contains(indoc! {r"
-        Constructor arguments for `data_transformer_contract::SimpleStruct` are incorrect:
+        Invalid arguments for struct `data_transformer_contract::SimpleStruct` constructor:
           passed: { wrong_field }
           expected: { a: core::felt252 }"});
 }
