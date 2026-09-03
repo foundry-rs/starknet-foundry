@@ -52,7 +52,7 @@ fn process(
 
     if n_arguments != n_inputs {
         bail!(format_invalid_args_number_error(
-            &calldata,
+            calldata,
             function,
             n_arguments,
             db
