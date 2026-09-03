@@ -305,16 +305,16 @@ fn format_struct_arguments_mismatch(
     expected_members: &[AbiNamedMember],
     provided_names: &[String],
 ) -> String {
+    let passed = provided_names.join(", ");
     let expected = expected_members
         .iter()
         .map(|member| format!("{}: {}", member.name, member.r#type))
         .join(", ");
-    let provided = provided_names.join(", ");
 
     format!(
-        "Constructor arguments for `{expected_type}` do not match the ABI:\n  \
-         expected: {{ {expected} }}\n  \
-         provided: {{ {provided} }}"
+        "Constructor arguments for `{expected_type}` are incorrect:\n  \
+         passed: {{ {passed} }}\n  \
+         expected: {{ {expected} }}",
     )
 }
 
