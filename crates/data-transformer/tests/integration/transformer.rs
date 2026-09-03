@@ -82,7 +82,7 @@ async fn test_invalid_argument_number() {
     let result = run_transformer("0x123, 'some_obsolete_argument', 10", "simple_fn").await;
 
     result.unwrap_err().assert_contains(indoc! {r"
-        Invalid number of arguments for `simple_fn`: passed 3, expected 1
+        Invalid number of arguments for `simple_fn`: passed 3, expected 1:
           passed: (0x123, 'some_obsolete_argument', 10)
           expected: (a: core::felt252)"});
 }
@@ -90,7 +90,7 @@ async fn test_invalid_argument_number() {
 #[test_case(
     "",
     indoc! {r"
-        Invalid number of arguments for `multiple_signed_fn`: passed 0, expected 2
+        Invalid number of arguments for `multiple_signed_fn`: passed 0, expected 2:
           passed: ()
           expected: (a: core::integer::i32, b: core::integer::i8)"};
     "all arguments missing"
@@ -98,7 +98,7 @@ async fn test_invalid_argument_number() {
 #[test_case(
     "1_i32",
     indoc! {r"
-        Invalid number of arguments for `multiple_signed_fn`: passed 1, expected 2
+        Invalid number of arguments for `multiple_signed_fn`: passed 1, expected 2:
           passed: (1_i32)
           expected: (a: core::integer::i32, b: core::integer::i8)"
         };
@@ -116,7 +116,7 @@ async fn test_argument_number_mismatch_with_complex_types() {
     let result = run_transformer("array![]", "complex_fn").await;
 
     result.unwrap_err().assert_contains(indoc! {r"
-        Invalid number of arguments for `complex_fn`: passed 1, expected 7
+        Invalid number of arguments for `complex_fn`: passed 1, expected 7:
           passed: (array![])
           expected: (arr: core::array::Array::<core::array::Array::<core::felt252>>, one: core::integer::u8, two: core::integer::i16, three: core::byte_array::ByteArray, four: (core::felt252, core::integer::u32), five: core::bool, six: core::integer::u256)"});
 }
