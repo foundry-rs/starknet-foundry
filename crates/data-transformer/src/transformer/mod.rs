@@ -52,7 +52,7 @@ fn process(
     let n_arguments = calldata.len();
 
     if n_arguments != n_inputs {
-        bail!(format_invalid_args_number_error(
+        bail!(format_invalid_args_error(
             calldata,
             function,
             n_arguments,
@@ -72,7 +72,7 @@ fn process(
         .collect::<Result<_>>()
 }
 
-fn format_invalid_args_number_error(
+fn format_invalid_args_error(
     calldata: &[Expr],
     function: &AbiFunction,
     n_arguments: usize,
