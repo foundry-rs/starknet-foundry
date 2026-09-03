@@ -90,7 +90,7 @@ fn format_invalid_args_error(
 
     format_passed_vs_expected(
         format!(
-            "Invalid number of arguments for {}: passed {n_arguments}, expected {n_inputs}",
+            "Invalid number of arguments for `{}`: passed {n_arguments}, expected {n_inputs}",
             function.name
         ),
         format!("({passed})"),
