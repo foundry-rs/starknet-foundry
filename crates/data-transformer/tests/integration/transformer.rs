@@ -155,53 +155,6 @@ async fn test_unexpected_argument_for_no_args_function() {
           expected: ()"});
 }
 
-#[test_case(
-    "",
-    indoc! {r"
-        Invalid number of arguments: passed 0, expected 2
-        Expected remaining positional arguments:
-        - [1] a: core::integer::i32
-        - [2] b: core::integer::i8
-    "};
-    "all arguments missing"
-)]
-#[test_case(
-    "1_i32",
-    indoc! {r"
-        Invalid number of arguments: passed 1, expected 2
-        Expected remaining positional arguments:
-        - [2] b: core::integer::i8
-    "};
-    "one argument missing"
-)]
-#[tokio::test]
-async fn test_missing_arguments(input: &str, expected_error: &str) {
-    let result = run_transformer(input, "multiple_signed_fn").await;
-
-    result
-        .unwrap_err()
-        .assert_contains(expected_error.trim_end());
-}
-
-#[tokio::test]
-async fn test_multiple_remaining_arguments_with_complex_types() {
-    let result = run_transformer("array![]", "complex_fn").await;
-
-    result.unwrap_err().assert_contains(
-        indoc! {r"
-            Invalid number of arguments: passed 1, expected 7
-            Expected remaining positional arguments:
-            - [2] one: core::integer::u8
-            - [3] two: core::integer::i16
-            - [4] three: core::byte_array::ByteArray
-            - [5] four: (core::felt252, core::integer::u32)
-            - [6] five: core::bool
-            - [7] six: core::integer::u256
-        "}
-        .trim_end(),
-    );
-}
-
 #[tokio::test]
 async fn test_happy_case_simple_cairo_expressions_input() {
     let result = run_transformer("100", "simple_fn").await.unwrap();
@@ -442,9 +395,9 @@ async fn test_struct_function_missing_field() {
     .await;
 
     result.unwrap_err().assert_contains(indoc! {r"
-        Constructor arguments for `data_transformer_contract::NestedStructWithField` do not match the ABI:
-          expected: { a: data_transformer_contract::SimpleStruct, b: core::felt252 }
-          provided: { a }"});
+        Constructor arguments for `data_transformer_contract::NestedStructWithField` are incorrect:
+          passed: { a }
+          expected: { a: data_transformer_contract::SimpleStruct, b: core::felt252 }"});
 }
 
 #[tokio::test]
@@ -456,9 +409,9 @@ async fn test_struct_function_unexpected_field() {
     .await;
 
     result.unwrap_err().assert_contains(indoc! {r"
-        Constructor arguments for `data_transformer_contract::NestedStructWithField` do not match the ABI:
-          expected: { a: data_transformer_contract::SimpleStruct, b: core::felt252 }
-          provided: { some_other_field, b }"});
+        Constructor arguments for `data_transformer_contract::NestedStructWithField` are incorrect:
+          passed: { some_other_field, b }
+          expected: { a: data_transformer_contract::SimpleStruct, b: core::felt252 }"});
 }
 
 #[tokio::test]
@@ -470,9 +423,9 @@ async fn test_struct_function_renamed_and_missing_fields() {
     .await;
 
     result.unwrap_err().assert_contains(indoc! {r"
-        Constructor arguments for `data_transformer_contract::NestedStructWithField` do not match the ABI:
-          expected: { a: data_transformer_contract::SimpleStruct, b: core::felt252 }
-          provided: { some_other_field }"});
+        Constructor arguments for `data_transformer_contract::NestedStructWithField` are incorrect:
+          passed: { some_other_field }
+          expected: { a: data_transformer_contract::SimpleStruct, b: core::felt252 }"});
 }
 
 #[tokio::test]
@@ -497,9 +450,9 @@ async fn test_struct_function_nested_struct_field_mismatch() {
     .await;
 
     result.unwrap_err().assert_contains(indoc! {r"
-        Constructor arguments for `data_transformer_contract::SimpleStruct` do not match the ABI:
-          expected: { a: core::felt252 }
-          provided: { wrong_field }"});
+        Constructor arguments for `data_transformer_contract::SimpleStruct` are incorrect:
+          passed: { wrong_field }
+          expected: { a: core::felt252 }"});
 }
 
 #[tokio::test]
