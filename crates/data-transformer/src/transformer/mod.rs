@@ -25,7 +25,7 @@ pub fn transform(calldata: &str, abi: &[AbiEntry], function_selector: &Felt) -> 
     let input = convert_to_tuple(calldata);
     let calldata = split_expressions(&input, &db)?;
 
-    process(calldata, &function, abi, &db).context("Error while processing Cairo-like calldata")
+    process(&calldata, &function, abi, &db).context("Error while processing Cairo-like calldata")
 }
 
 fn split_expressions<'a>(input: &'a str, db: &'a SimpleParserDatabase) -> Result<Vec<Expr<'a>>> {
@@ -42,7 +42,7 @@ fn split_expressions<'a>(input: &'a str, db: &'a SimpleParserDatabase) -> Result
 }
 
 fn process(
-    calldata: Vec<Expr>,
+    calldata: &[Expr],
     function: &AbiFunction,
     abi: &[AbiEntry],
     db: &SimpleParserDatabase,
@@ -62,7 +62,7 @@ fn process(
     function
         .inputs
         .iter()
-        .zip(&calldata)
+        .zip(calldata)
         .map(|(parameter, expr)| {
             let representation = build_representation(expr.clone(), &parameter.r#type, abi, db)?;
             Ok(representation.serialize_to_vec())
@@ -83,7 +83,7 @@ fn format_invalid_args_number_error(
         .iter()
         .map(|parameter| format!("{}: {}", parameter.name, parameter.r#type))
         .join(", ");
-    let provided = calldata
+    let passed = calldata
         .iter()
         .map(|expr| {
             expr.as_syntax_node()
@@ -93,9 +93,9 @@ fn format_invalid_args_number_error(
         .join(", ");
 
     format!(
-        "Invalid number of arguments for `{}`: expected {n_inputs}, provided {n_arguments}\n  \
-         expected: ({expected})\n  \
-         provided: ({provided})",
+        "Invalid number of arguments for `{}`: passed {n_arguments}, expected {n_inputs}\n  \
+         passed: ({passed})\n  \
+         expected: ({expected})",
         function.name,
     )
 }
