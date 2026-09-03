@@ -309,7 +309,7 @@ fn format_invalid_struct_args_error(
     let passed = provided_names.join(", ");
 
     format_passed_vs_expected(
-        format!("Invalid arguments for struct {expected_type} constructor:"),
+        format!("Invalid arguments for struct `{expected_type}` constructor:"),
         format!("{{ {} }}", passed),
         format!("{{ {} }}", format_abi_members(&expected_members)),
     )
