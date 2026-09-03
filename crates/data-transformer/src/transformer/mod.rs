@@ -1,7 +1,8 @@
 mod sierra_abi;
 
-use crate::shared::extraction::extract_function_from_selector;
+use crate::shared::formatting::format_passed_vs_expected;
 use crate::shared::parsing::parse_expression;
+use crate::shared::{extraction::extract_function_from_selector, formatting::format_abi_members};
 use crate::transformer::sierra_abi::build_representation;
 use anyhow::{Context, Result, bail};
 use cairo_lang_parser::utils::SimpleParserDatabase;
@@ -78,11 +79,6 @@ fn format_invalid_args_number_error(
     db: &SimpleParserDatabase,
 ) -> String {
     let n_inputs = function.inputs.len();
-    let expected = function
-        .inputs
-        .iter()
-        .map(|parameter| format!("{}: {}", parameter.name, parameter.r#type))
-        .join(", ");
     let passed = calldata
         .iter()
         .map(|expr| {
@@ -92,11 +88,13 @@ fn format_invalid_args_number_error(
         })
         .join(", ");
 
-    format!(
-        "Invalid number of arguments for `{}`: passed {n_arguments}, expected {n_inputs}\n  \
-         passed: ({passed})\n  \
-         expected: ({expected})",
-        function.name,
+    format_passed_vs_expected(
+        format!(
+            "Invalid number of arguments for {}: passed {n_arguments}, expected {n_inputs}",
+            function.name
+        ),
+        format!("({passed})"),
+        format!("({})", format_abi_members(&function.inputs)),
     )
 }
 
