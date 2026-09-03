@@ -361,7 +361,7 @@ async fn test_struct_function_missing_field() {
     .await;
 
     result.unwrap_err().assert_contains(indoc! {r"
-        Constructor arguments for `data_transformer_contract::NestedStructWithField` are incorrect:
+        Invalid arguments for struct `data_transformer_contract::NestedStructWithField` constructor:
           passed: { a }
           expected: { a: data_transformer_contract::SimpleStruct, b: core::felt252 }"});
 }
@@ -375,7 +375,7 @@ async fn test_struct_function_unexpected_field() {
     .await;
 
     result.unwrap_err().assert_contains(indoc! {r"
-        Constructor arguments for `data_transformer_contract::NestedStructWithField` are incorrect:
+        Invalid arguments for struct `data_transformer_contract::NestedStructWithField` constructor:
           passed: { some_other_field, b }
           expected: { a: data_transformer_contract::SimpleStruct, b: core::felt252 }"});
 }
@@ -389,7 +389,7 @@ async fn test_struct_function_renamed_and_missing_fields() {
     .await;
 
     result.unwrap_err().assert_contains(indoc! {r"
-        Constructor arguments for `data_transformer_contract::NestedStructWithField` are incorrect:
+        Invalid arguments for struct `data_transformer_contract::NestedStructWithField` constructor:
           passed: { some_other_field }
           expected: { a: data_transformer_contract::SimpleStruct, b: core::felt252 }"});
 }
