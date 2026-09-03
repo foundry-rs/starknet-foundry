@@ -30,10 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `--json` flag is now global, and can be passed to any subcommand.
 - `sncast verify --verifier walnut` has been replaced by `sncast verify --verifier starkloupe`, following Walnut's migration to Starkloupe ([app.starkloupe.co](https://app.starkloupe.co))
+- Passing the wrong number of Cairo-like calldata arguments now reports the expected argument names and types alongside the ones provided.
 
 #### Fixed
 
-- Passing the wrong number of Cairo-like calldata arguments now reports the expected argument names and types alongside the ones provided.
+- Invalid tuple lengths in Cairo-like calldata now produce a data transformer error instead of failing during contract execution.
 
 ## [0.63.0] - 2026-08-05
 

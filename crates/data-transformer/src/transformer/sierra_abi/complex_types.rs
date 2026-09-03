@@ -478,9 +478,16 @@ impl SupportedCalldataKind for ExprListParenthesized<'_> {
             })
             .collect::<Result<Vec<_>>>()?;
 
-        let parsed_exprs = self
-            .expressions(db)
-            .elements(db)
+        let tuple_expressions = self.expressions(db).elements(db);
+
+        ensure!(
+            tuple_expressions.len() == tuple_types.len(),
+            r#"Invalid tuple length for type "{expected_type}": expected {} elements, got {}"#,
+            tuple_types.len(),
+            tuple_expressions.len()
+        );
+
+        let parsed_exprs = tuple_expressions
             .zip(tuple_types)
             .map(|(expr, single_param)| build_representation(expr, single_param, abi, db))
             .collect::<Result<Vec<_>>>()?;
