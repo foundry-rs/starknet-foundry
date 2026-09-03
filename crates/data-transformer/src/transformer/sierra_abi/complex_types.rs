@@ -4,6 +4,7 @@ use super::data_representation::{
 use super::parsing::parse_argument_list;
 use super::{SupportedCalldataKind, build_representation};
 use crate::shared;
+use crate::shared::formatting::{format_abi_members, format_passed_vs_expected};
 use crate::shared::parsing::parse_expression;
 use crate::shared::path::SplitResult;
 use anyhow::{Context, Result, anyhow, bail, ensure};
@@ -300,21 +301,17 @@ fn get_struct_arguments_with_values<'a>(
         .collect()
 }
 
-fn format_struct_arguments_mismatch(
+fn format_invalid_struct_args_error(
     expected_type: &str,
     expected_members: &[AbiNamedMember],
     provided_names: &[String],
 ) -> String {
     let passed = provided_names.join(", ");
-    let expected = expected_members
-        .iter()
-        .map(|member| format!("{}: {}", member.name, member.r#type))
-        .join(", ");
 
-    format!(
-        "Constructor arguments for `{expected_type}` are incorrect:\n  \
-         passed: {{ {passed} }}\n  \
-         expected: {{ {expected} }}",
+    format_passed_vs_expected(
+        format!("Invalid arguments for struct {expected_type} constructor:"),
+        format!("{{ {} }}", passed),
+        format!("{{ {} }}", format_abi_members(&expected_members)),
     )
 }
 
@@ -356,7 +353,7 @@ impl SupportedCalldataKind for ExprStructCtorCall<'_> {
             .collect();
 
         if provided_set != expected_set {
-            bail!(format_struct_arguments_mismatch(
+            bail!(format_invalid_struct_args_error(
                 expected_type,
                 &struct_abi_definition.members,
                 &provided_names,
