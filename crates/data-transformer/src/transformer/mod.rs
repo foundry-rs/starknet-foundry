@@ -83,7 +83,7 @@ fn format_invalid_args_number_error(
         .iter()
         .map(|parameter| format!("{}: {}", parameter.name, parameter.r#type))
         .join(", ");
-    let provided = calldata
+    let passed = calldata
         .iter()
         .map(|expr| {
             expr.as_syntax_node()
@@ -93,9 +93,9 @@ fn format_invalid_args_number_error(
         .join(", ");
 
     format!(
-        "Invalid number of arguments for `{}`: expected {n_inputs}, provided {n_arguments}\n  \
-         expected: ({expected})\n  \
-         provided: ({provided})",
+        "Invalid number of arguments for `{}`: passed {n_arguments}, expected {n_inputs}\n  \
+         passed: ({passed})\n  \
+         expected: ({expected})",
         function.name,
     )
 }
