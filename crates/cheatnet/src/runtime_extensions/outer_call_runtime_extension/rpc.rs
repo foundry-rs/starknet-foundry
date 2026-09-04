@@ -31,7 +31,7 @@ pub struct UsedResources {
 }
 
 #[derive(Debug, CairoSerialize)]
-#[cfg_attr(feature = "starkloupe", derive(Clone, serde::Serialize))]
+#[cfg_attr(feature = "starkloupe", derive(serde::Serialize))]
 pub struct CallSuccess {
     pub ret_data: Vec<Felt>,
 }

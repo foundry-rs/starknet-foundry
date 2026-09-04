@@ -90,10 +90,7 @@ pub(crate) fn update_trace_data(
         }
     }
     #[cfg(not(feature = "starkloupe"))]
-    {
-        // Upstream attaches the VM trace at the call site instead.
-        let _ = (vm_trace, vm_memory);
-    }
+    let _ = (vm_trace, vm_memory);
 }
 
 /// Clears `events` and `l2_to_l1_messages` from a reverted call and all its inner calls that did not fail.
@@ -137,9 +134,6 @@ pub(crate) fn exit_error_call(
         }
     }
     #[cfg(not(feature = "starkloupe"))]
-    {
-        // Upstream does not record VM artifacts for a failed call.
-        let _ = (vm_trace, vm_memory);
-    }
+    let _ = (vm_trace, vm_memory);
     trace_data.exit_nested_call();
 }

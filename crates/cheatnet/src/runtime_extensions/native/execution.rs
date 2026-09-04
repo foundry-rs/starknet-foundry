@@ -47,7 +47,9 @@ pub(crate) fn execute_entry_point_call_native(
         syscall_usage_vm_resources: HashMap::default(),
         syscall_usage_sierra_gas: syscall_usage.clone(),
         // Native execution doesn't run the Cairo VM, so there is no trace or memory to collect.
+        #[cfg(feature = "starkloupe")]
         vm_trace: None,
+        #[cfg(feature = "starkloupe")]
         vm_memory: None,
     })
 }

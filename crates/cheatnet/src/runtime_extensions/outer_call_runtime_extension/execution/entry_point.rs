@@ -53,7 +53,9 @@ pub(crate) struct CallInfoWithExecutionData {
     pub call_info: CallInfo,
     pub syscall_usage_vm_resources: SyscallUsageMap,
     pub syscall_usage_sierra_gas: SyscallUsageMap,
+    #[cfg(feature = "starkloupe")]
     pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
+    #[cfg(feature = "starkloupe")]
     pub vm_memory: Option<Vec<Option<Felt>>>,
 }
 
@@ -61,8 +63,8 @@ pub(crate) struct CallInfoWithExecutionData {
 #[error("{}", source)]
 pub struct EntryPointExecutionErrorWithTraceAndMemory {
     pub source: EntryPointExecutionError,
-    pub trace: Option<Vec<RelocatedTraceEntry>>,
-    pub memory: Option<Vec<Option<Felt>>>,
+    pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
+    pub vm_memory: Option<Vec<Option<Felt>>>,
 }
 
 impl<T> From<T> for EntryPointExecutionErrorWithTraceAndMemory
@@ -72,8 +74,8 @@ where
     fn from(value: T) -> Self {
         Self {
             source: value.into(),
-            trace: None,
-            memory: None,
+            vm_trace: None,
+            vm_memory: None,
         }
     }
 }
@@ -150,8 +152,7 @@ pub fn execute_call_entry_point(
             entry_point.storage_address,
         ))
         .annotated(TrackedResource::CairoSteps, strip_vm_frames);
-        // Record the failed call so the trace shows it when the contract is not
-        // deployed. Upstream returns the error without touching the trace.
+        // Record the failed call so the trace shows it when the contract is not deployed.
         #[cfg(feature = "starkloupe")]
         exit_error_call(&error, cheatnet_state, None, None);
         return Err(error);
@@ -256,6 +257,11 @@ pub fn execute_call_entry_point(
 
     match result {
         Ok(res) => {
+            #[cfg(feature = "starkloupe")]
+            let (vm_trace, vm_memory) = (res.vm_trace, res.vm_memory);
+            #[cfg(not(feature = "starkloupe"))]
+            let (vm_trace, vm_memory) = (None, None);
+
             if res.call_info.execution.failed && !context.versioned_constants().enable_reverts {
                 let err = EntryPointExecutionError::ExecutionFailed {
                     error_trace: extract_trailing_cairo1_revert_trace(
@@ -264,7 +270,7 @@ pub fn execute_call_entry_point(
                     ),
                 }
                 .annotated(res.call_info.tracked_resource, strip_vm_frames);
-                exit_error_call(&err, cheatnet_state, res.vm_trace, res.vm_memory);
+                exit_error_call(&err, cheatnet_state, vm_trace, vm_memory);
                 return Err(err);
             }
             update_remaining_gas(remaining_gas, &res.call_info);
@@ -273,8 +279,8 @@ pub fn execute_call_entry_point(
                 &res.syscall_usage_vm_resources,
                 &res.syscall_usage_sierra_gas,
                 cheatnet_state,
-                res.vm_trace,
-                res.vm_memory,
+                vm_trace,
+                vm_memory,
             );
 
             if !opts.trace_data_handled_by_revert_call {
@@ -285,8 +291,8 @@ pub fn execute_call_entry_point(
         }
         Err(EntryPointExecutionErrorWithTraceAndMemory {
             source,
-            trace,
-            memory,
+            vm_trace,
+            vm_memory,
         }) => {
             if let EntryPointExecutionError::PreExecutionError(err) = &source
                 && context.versioned_constants().enable_reverts
@@ -330,7 +336,7 @@ pub fn execute_call_entry_point(
             }
 
             let err = source.annotated(current_tracked_resource, strip_vm_frames);
-            exit_error_call(&err, cheatnet_state, trace, memory);
+            exit_error_call(&err, cheatnet_state, vm_trace, vm_memory);
             Err(err)
         }
     }
@@ -507,22 +513,16 @@ pub(crate) fn extract_trace_and_memory_and_register_errors(
     {
         EntryPointExecutionErrorWithTraceAndMemory {
             source,
-            trace: Some(trace),
-            memory: Some(runner.relocated_memory.clone()),
+            vm_trace: Some(trace),
+            vm_memory: Some(runner.relocated_memory.clone()),
         }
     }
     #[cfg(not(feature = "starkloupe"))]
     {
-        // Upstream attaches the trace to the current call and carries no artifacts
-        // on the error.
         cheatnet_state
             .trace_data
             .set_vm_trace_for_current_call(trace);
-        EntryPointExecutionErrorWithTraceAndMemory {
-            source,
-            trace: None,
-            memory: None,
-        }
+        source.into()
     }
 }
 

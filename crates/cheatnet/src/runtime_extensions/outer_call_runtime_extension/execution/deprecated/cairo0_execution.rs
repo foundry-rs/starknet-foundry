@@ -20,7 +20,6 @@ use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
 use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner};
 
 // blockifier/src/execution/deprecated_execution.rs:36 (execute_entry_point_call)
-#[expect(clippy::result_large_err)]
 pub(crate) fn execute_entry_point_call_cairo0(
     call: ExecutableCallEntryPoint,
     compiled_class_v0: CompiledClassV0,
@@ -86,7 +85,9 @@ pub(crate) fn execute_entry_point_call_cairo0(
         call_info: execution_result,
         syscall_usage_vm_resources: syscall_usage,
         syscall_usage_sierra_gas: SyscallUsageMap::default(),
+        #[cfg(feature = "starkloupe")]
         vm_trace: None,
+        #[cfg(feature = "starkloupe")]
         vm_memory: None,
     })
     // endregion
