@@ -1,0 +1,267 @@
+---
+source: crates/sncast/tests/e2e/account/create.rs
+expression: accounts_json
+---
+{
+  "accounts": {
+    "alpha-sepolia": {
+      "balance-test": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "braavos": {
+        "address": "[value]",
+        "class_hash": "[value]",
+        "deployed": false,
+        "legacy": false,
+        "public_key": "[value]",
+        "salt": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        },
+        "type": "braavos"
+      },
+      "devnet-1": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "my_account": {
+        "address": "[value]",
+        "class_hash": "[value]",
+        "deployed": false,
+        "legacy": false,
+        "public_key": "[value]",
+        "salt": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        },
+        "type": "open_zeppelin"
+      },
+      "oz": {
+        "address": "[value]",
+        "class_hash": "[value]",
+        "deployed": false,
+        "legacy": false,
+        "public_key": "[value]",
+        "salt": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        },
+        "type": "open_zeppelin"
+      },
+      "oz_cairo_0": {
+        "address": "[value]",
+        "legacy": true,
+        "public_key": "[value]",
+        "salt": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "oz_cairo_1": {
+        "address": "[value]",
+        "legacy": false,
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "ready": {
+        "address": "[value]",
+        "class_hash": "[value]",
+        "legacy": false,
+        "public_key": "[value]",
+        "salt": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        },
+        "type": "ready"
+      },
+      "undeployed": {
+        "address": "[value]",
+        "class_hash": "[value]",
+        "deployed": false,
+        "legacy": false,
+        "public_key": "[value]",
+        "salt": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        },
+        "type": "open_zeppelin"
+      },
+      "user0": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "user1": {
+        "address": "[value]",
+        "deployed": true,
+        "public_key": "[value]",
+        "salt": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        },
+        "type": "open_zeppelin"
+      },
+      "user10": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "user11": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "user12": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "user13": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "user14": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "user15": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "user16": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "user17": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "user18": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "user2": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "user3": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "user4": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "user5": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "user6": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "user7": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "user8": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      },
+      "user9": {
+        "address": "[value]",
+        "public_key": "[value]",
+        "signer": {
+          "private_key": "[value]",
+          "type": "private_key"
+        }
+      }
+    }
+  },
+  "version": {
+    "$serde_json::private::Number": "2"
+  }
+}

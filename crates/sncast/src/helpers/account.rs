@@ -1,46 +1,14 @@
-use crate::{
-    NestedMap, RuntimeAccount, build_account, check_account_file_exists,
-    helpers::devnet::provider::DevnetProvider, signers::spec::PrivateKeySource,
-};
+use crate::{RuntimeAccount, build_account, helpers::devnet::provider::DevnetProvider};
 use anyhow::{Result, ensure};
 use camino::Utf8PathBuf;
 use starknet_rust::providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport};
-use std::collections::{HashMap, HashSet};
 use std::fs;
 use url::Url;
 
-use crate::signers::RuntimeSigner;
-use crate::{AccountData, read_and_parse_json_file};
+use crate::accounts::{AccountRecord, AccountRepository};
+use crate::signers::{RuntimeSigner, spec::PrivateKeySource};
 use anyhow::Context;
 use serde_json::{Value, json};
-
-pub fn generate_account_name(accounts_file: &Utf8PathBuf) -> Result<String> {
-    let mut id = 1;
-
-    if !accounts_file.exists() {
-        return Ok(format!("account-{id}"));
-    }
-
-    let networks: NestedMap<AccountData> = read_and_parse_json_file(accounts_file)?;
-    let mut result = HashSet::new();
-
-    for (_, accounts) in networks {
-        for (name, _) in accounts {
-            if let Some(id) = name
-                .strip_prefix("account-")
-                .and_then(|id| id.parse::<u32>().ok())
-            {
-                result.insert(id);
-            }
-        }
-    }
-
-    while result.contains(&id) {
-        id += 1;
-    }
-
-    Ok(format!("account-{id}"))
-}
 
 pub fn load_accounts(accounts_file: &Utf8PathBuf) -> Result<Value> {
     let contents = fs::read_to_string(accounts_file).context("Failed to read accounts file")?;
@@ -60,20 +28,17 @@ pub fn load_accounts(accounts_file: &Utf8PathBuf) -> Result<Value> {
 pub fn check_account_exists(
     account_name: &str,
     network_name: &str,
-    accounts_file: &Utf8PathBuf,
+    repository: &AccountRepository,
     accounts_file_should_exist: bool,
 ) -> Result<bool> {
-    if !accounts_file.exists() {
-        if accounts_file_should_exist {
-            check_account_file_exists(accounts_file)?;
-        }
+    let accounts_file_exists = repository.exists();
+    if !accounts_file_exists {
+        anyhow::ensure!(!accounts_file_should_exist);
         return Ok(false);
     }
 
-    let accounts: HashMap<String, HashMap<String, AccountData>> =
-        read_and_parse_json_file(accounts_file)?;
-
-    match accounts.get(network_name) {
+    let registry = repository.load()?.registry;
+    match registry.networks().get(network_name) {
         Some(network_accounts) => Ok(network_accounts.contains_key(account_name)),
         None if accounts_file_should_exist => Err(anyhow::anyhow!(
             "Network with name {network_name} does not exist in accounts file"
@@ -117,13 +82,12 @@ pub async fn get_account_from_devnet<'a>(
     let devnet_accounts = devnet_provider.get_predeployed_accounts().await?;
     let predeployed_account = devnet_accounts
         .get((account_number - 1) as usize)
-        .expect("Failed to get devnet account")
-        .to_owned();
+        .expect("Failed to get devnet account");
 
-    let account_data = AccountData::from(predeployed_account);
+    let account_data = AccountRecord::from(predeployed_account);
     let chain_id = provider.chain_id().await?;
     let private_key = account_data
-        .signer_type
+        .signer
         .private_key()
         .context("Private key not found for devnet account")?;
     let signer = RuntimeSigner::from_private_key(private_key, PrivateKeySource::PrivateKey);

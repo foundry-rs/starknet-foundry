@@ -52,13 +52,12 @@ pub mod helpers;
 pub mod response;
 pub mod signers;
 
-use crate::helpers::ledger;
 use crate::response::ui::UI;
 pub use accounts::AccountType;
 use conversions::byte_array::ByteArray;
 use foundry_ui::components::warning::WarningMessage;
 pub use helpers::signer::{SignerSource, SignerType};
-use signers::RuntimeSigner;
+use signers::{LedgerSpec, PrivateKeySpec, RuntimeSigner, SignerSpec};
 
 pub type NestedMap<T> = HashMap<String, HashMap<String, T>>;
 pub type RuntimeAccount<'a> = SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, RuntimeSigner>;
@@ -115,6 +114,34 @@ pub struct AccountData {
 
     #[serde(flatten)]
     pub signer_type: SignerType,
+}
+
+impl TryFrom<AccountData> for accounts::AccountRecord {
+    type Error = accounts::AccountsError;
+
+    fn try_from(account: AccountData) -> Result<Self, Self::Error> {
+        let signer = match account.signer_type {
+            SignerType::Local { private_key } => {
+                SignerSpec::PrivateKey(PrivateKeySpec::new(private_key))
+            }
+            SignerType::Ledger { ledger_path } => SignerSpec::Ledger(LedgerSpec::new(ledger_path)),
+        };
+        Ok(Self {
+            public_key: account.public_key,
+            address: account
+                .address
+                .ok_or(accounts::AccountsError::MissingField {
+                    field: "address",
+                    operation: "connected account use",
+                })?,
+            salt: account.salt,
+            deployed: account.deployed,
+            class_hash: account.class_hash,
+            legacy: account.legacy,
+            account_type: account.account_type,
+            signer,
+        })
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -302,20 +329,17 @@ pub async fn get_account<'a>(
         ));
     }
 
-    let accounts_file = &config.accounts_file;
+    let repository = accounts::AccountRepository::new(config.accounts_file.clone())?;
+    let accounts_file = repository.path();
     // Devnet accounts don't require an accounts file.
     // When the default accounts file is used, we don't enforce its existence.
     // When accounts file is set explicitly, it is still required to exist then.
     let uses_default_accounts_file =
-        accounts_file == &Utf8PathBuf::from(shellexpand::tilde(DEFAULT_ACCOUNTS_FILE).to_string());
+        accounts_file.as_str() == shellexpand::tilde(DEFAULT_ACCOUNTS_FILE).as_ref();
     let accounts_file_required =
         config.keystore.is_none() && !(is_devnet_account && uses_default_accounts_file);
-    let exists_in_accounts_file = check_account_exists(
-        account,
-        &network_name,
-        accounts_file,
-        accounts_file_required,
-    )?;
+    let exists_in_accounts_file =
+        check_account_exists(account, &network_name, &repository, accounts_file_required)?;
 
     match (is_devnet_account, exists_in_accounts_file) {
         (true, true) => {
@@ -324,9 +348,9 @@ pub async fn get_account<'a>(
                 To use an inbuilt devnet account, please rename your existing account or use an account with a different number."
             )));
             ui.print_blank_line();
-            get_account_from_accounts_file(
+            get_account_from_repository(
                 account,
-                accounts_file,
+                &repository,
                 provider,
                 config.keystore.as_ref(),
                 ui,
@@ -342,9 +366,9 @@ pub async fn get_account<'a>(
             Ok(local_account)
         }
         _ => {
-            get_account_from_accounts_file(
+            get_account_from_repository(
                 account,
-                accounts_file,
+                &repository,
                 provider,
                 config.keystore.as_ref(),
                 ui,
@@ -354,38 +378,29 @@ pub async fn get_account<'a>(
     }
 }
 
-pub async fn get_account_from_accounts_file<'a>(
+pub async fn get_account_from_repository<'a>(
     account: &str,
-    accounts_file: &Utf8PathBuf,
+    repository: &accounts::AccountRepository,
     provider: &'a JsonRpcClient<HttpTransport>,
     keystore: Option<&Utf8PathBuf>,
     ui: &UI,
 ) -> Result<RuntimeAccount<'a>> {
     let chain_id = get_chain_id(provider).await?;
-    let account_data = if let Some(keystore) = keystore {
-        get_account_data_from_keystore(account, keystore)?
+    let (account_data, signer) = if let Some(keystore) = keystore {
+        let account_data: accounts::AccountRecord =
+            get_account_data_from_keystore(account, keystore)?.try_into()?;
+        let private_key = account_data
+            .signer
+            .private_key()
+            .context("Private key not found")?;
+        (
+            account_data,
+            RuntimeSigner::from_private_key(private_key, PrivateKeySource::Keystore),
+        )
     } else {
-        get_account_data_from_accounts_file(account, chain_id, accounts_file)?
-    };
-
-    let signer_source = SignerSource::new(keystore.cloned(), Some(&account_data.signer_type))?;
-    let signer = match signer_source {
-        SignerSource::Keystore(_) | SignerSource::AccountsFile => {
-            let private_key = account_data
-                .signer_type
-                .private_key()
-                .context("Private key not found")?;
-            let kind = if keystore.is_some() {
-                PrivateKeySource::Keystore
-            } else {
-                PrivateKeySource::PrivateKey
-            };
-            RuntimeSigner::from_private_key(private_key, kind)
-        }
-        SignerSource::Ledger(ledger_path) => {
-            let signer = ledger::create_ledger_signer(&ledger_path, ui, true).await?;
-            signer.into()
-        }
+        let account_data = get_account_record_from_repository(account, chain_id, repository)?;
+        let signer = RuntimeSigner::from_spec(account_data.signer.clone(), ui).await?;
+        (account_data, signer)
     };
 
     let actual_public_key = signer.get_public_key().await?.scalar();
@@ -425,14 +440,12 @@ pub async fn get_contract_class(
 }
 
 pub(crate) async fn build_account(
-    account_data: AccountData,
+    account_data: accounts::AccountRecord,
     chain_id: Felt,
     provider: &JsonRpcClient<HttpTransport>,
     signer: RuntimeSigner,
 ) -> Result<RuntimeAccount<'_>> {
-    let address = account_data
-        .address
-        .context("Failed to get account address")?;
+    let address = account_data.address;
 
     verify_account_address(address, chain_id, provider).await?;
 
@@ -564,24 +577,64 @@ fn get_string_value_from_json(json: &Value, pointer: &str) -> Option<String> {
         .and_then(Value::as_str)
         .map(str::to_string)
 }
-pub fn get_account_data_from_accounts_file(
+pub fn get_account_data_from_repository(
     name: &str,
     chain_id: Felt,
-    path: &Utf8PathBuf,
+    repository: &accounts::AccountRepository,
 ) -> Result<AccountData> {
+    let account = get_account_record_from_repository(name, chain_id, repository)?;
+    let signer_type = match account.signer {
+        SignerSpec::PrivateKey(spec) => SignerType::Local {
+            private_key: spec.private_key(),
+        },
+        SignerSpec::Ledger(spec) => SignerType::Ledger {
+            ledger_path: spec.derivation_path().clone(),
+        },
+        SignerSpec::Keystore(_) => {
+            bail!("keystore-backed native account requires runtime signer resolution")
+        }
+    };
+    Ok(AccountData {
+        public_key: account.public_key,
+        address: Some(account.address),
+        salt: account.salt,
+        deployed: account.deployed,
+        class_hash: account.class_hash,
+        legacy: account.legacy,
+        account_type: account.account_type,
+        signer_type,
+    })
+}
+
+pub fn get_account_record_from_repository(
+    name: &str,
+    chain_id: Felt,
+    repository: &accounts::AccountRepository,
+) -> Result<accounts::AccountRecord> {
     if name.is_empty() {
         bail!("Account name not passed nor found in snfoundry.toml")
     }
-    check_account_file_exists(path)?;
-
-    let accounts: HashMap<String, HashMap<String, AccountData>> = read_and_parse_json_file(path)?;
+    check_account_file_exists(repository)?;
     let network_name = chain_id_to_network_name(chain_id);
+    repository
+        .find(&network_name, name)
+        .map_err(|error| match error {
+            accounts::AccountsError::AccountNotFound { .. } => {
+                anyhow!("Account = {name} not found under network = {network_name}")
+            }
+            error => anyhow!(error),
+        })
+}
 
-    accounts
-        .get(&network_name)
-        .and_then(|accounts_map| accounts_map.get(name))
-        .cloned()
-        .ok_or_else(|| anyhow!("Account = {name} not found under network = {network_name}"))
+pub fn check_account_file_exists(repository: &accounts::AccountRepository) -> Result<()> {
+    if !repository.exists() {
+        let path = repository.path();
+        bail!(
+            "Accounts file = {path} does not exist! If you do not have an account create one with `account create` command \
+             or if you're using a custom accounts file, make sure to supply correct path to it with `--accounts-file` argument."
+        )
+    }
+    Ok(())
 }
 
 pub fn read_and_parse_json_file<T>(path: &Utf8PathBuf) -> Result<T>
@@ -839,14 +892,6 @@ pub async fn handle_wait_for_tx<T>(
     Ok(return_value)
 }
 
-pub fn check_account_file_exists(accounts_file_path: &Utf8PathBuf) -> Result<()> {
-    if !accounts_file_path.exists() {
-        bail! {"Accounts file = {accounts_file_path} does not exist! If you do not have an account create one with `account create` command \
-        or if you're using a custom accounts file, make sure to supply correct path to it with `--accounts-file` argument." }
-    }
-    Ok(())
-}
-
 pub fn check_keystore_and_account_files_exist(
     keystore_path: &Utf8PathBuf,
     account: &str,
@@ -907,10 +952,12 @@ macro_rules! apply_optional_fields {
 mod tests {
     use std::num::{NonZeroU8, NonZeroU16};
 
+    use crate::accounts::AccountRepository;
+    use crate::signers::LEGACY_KEYSTORE_PASSWORD_ENV;
     use crate::{
         AccountType, PartialWaitParams, chain_id_to_network_name, extract_or_generate_salt,
-        get_account_data_from_accounts_file, get_account_data_from_keystore, get_block_id,
-        signers::LEGACY_KEYSTORE_PASSWORD_ENV, udc_uniqueness,
+        get_account_data_from_keystore, get_account_data_from_repository, get_block_id,
+        udc_uniqueness,
     };
     use camino::Utf8PathBuf;
     use configuration::{Override, override_optional};
@@ -1061,11 +1108,12 @@ mod tests {
     }
 
     #[test]
-    fn test_get_account_data_from_accounts_file() {
-        let account = get_account_data_from_accounts_file(
+    fn test_get_account_data_from_repository() {
+        let account = get_account_data_from_repository(
             "user1",
             Felt::from_bytes_be_slice("SN_SEPOLIA".as_bytes()),
-            &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
+            &AccountRepository::new(Utf8PathBuf::from("tests/data/accounts/accounts.json"))
+                .unwrap(),
         )
         .unwrap();
         let private_key = account
@@ -1171,11 +1219,12 @@ mod tests {
 
     #[test]
     fn test_get_account_data_wrong_chain_id() {
-        let account = get_account_data_from_accounts_file(
+        let account = get_account_data_from_repository(
             "user1",
             Felt::from_hex("0x435553544f4d5f434841494e5f4944")
                 .expect("Failed to convert chain id from hex"),
-            &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
+            &AccountRepository::new(Utf8PathBuf::from("tests/data/accounts/accounts.json"))
+                .unwrap(),
         );
         let err = account.unwrap_err();
         assert!(

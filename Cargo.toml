@@ -147,6 +147,6 @@ tracing-chrome = "0.7.2"
 tracing-log = "0.2.0"
 comfy-table = "8"
 create-output-dir = "1.0.0"
-insta = { version = "1.46.0", features = ["json", "filters"] }
+insta = { version = "1.46.0", features = ["json", "filters", "redactions"] }
 plotters = { version = "0.3", default-features = false, features = ["all_series", "all_elements", "svg_backend", "bitmap_backend", "bitmap_encoder", "full_palette", "colormaps", "ab_glyph"] }
 mimalloc = "0.1"
