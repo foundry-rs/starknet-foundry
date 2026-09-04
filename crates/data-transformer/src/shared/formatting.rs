@@ -8,12 +8,14 @@ const MAX_INLINE_ARGUMENTS_WIDTH: usize = 100;
 #[derive(Clone, Copy)]
 pub enum ArgumentListKind {
     Positional,
+    Named,
 }
 
 impl ArgumentListKind {
     const fn delimiters(self) -> (char, char) {
         match self {
             Self::Positional => ('(', ')'),
+            Self::Named => ('{', '}'),
         }
     }
 }
@@ -69,7 +71,14 @@ fn format_argument_list<T: AsRef<str>>(
     }
 
     let inline_arguments = arguments.iter().map(AsRef::as_ref).join(", ");
-    let inline = format!("  {label}: {opening}{inline_arguments}{closing}");
+    let inline = match list_kind {
+        ArgumentListKind::Positional => {
+            format!("  {label}: {opening}{inline_arguments}{closing}")
+        }
+        ArgumentListKind::Named => {
+            format!("  {label}: {opening} {inline_arguments} {closing}")
+        }
+    };
 
     if !inline.contains('\n') && inline.chars().count() <= MAX_INLINE_ARGUMENTS_WIDTH {
         return inline;
@@ -102,6 +111,16 @@ mod tests {
             ),
             "Invalid arguments\n  passed: ()\n  expected: ()"
         );
+        assert_eq!(
+            format_passed_vs_expected(
+                "Invalid arguments",
+                &[] as &[&str],
+                &arguments,
+                &arguments,
+                ArgumentListKind::Named,
+            ),
+            "Invalid arguments\n  passed: {}\n  expected: {}"
+        );
     }
 
     #[test]
@@ -129,9 +148,9 @@ mod tests {
                     "first: core::array::Array::<core::array::Array::<core::felt252>>",
                     "second: core::array::Array::<core::array::Array::<core::felt252>>",
                 ],
-                ArgumentListKind::Positional,
+                ArgumentListKind::Named,
             ),
-            "Invalid arguments\n  passed: (foo, bar)\n  expected: (\n    first: core::array::Array::<core::array::Array::<core::felt252>>,\n    second: core::array::Array::<core::array::Array::<core::felt252>>\n  )"
+            "Invalid arguments\n  passed: { foo, bar }\n  expected: {\n    first: core::array::Array::<core::array::Array::<core::felt252>>,\n    second: core::array::Array::<core::array::Array::<core::felt252>>\n  }"
         );
     }
 }
