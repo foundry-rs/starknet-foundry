@@ -2,7 +2,8 @@ use crate::response::cast_message::SncastCommandMessage;
 use crate::response::get::transaction::TransactionOutputBuilder;
 use conversions::IntoConv;
 use data_transformer::{
-    extract_function_from_selector, reverse_transform_input, reverse_transform_output,
+    find_entry_point_by_selector, reverse_transform_entry_point_input,
+    reverse_transform_entry_point_output,
 };
 use foundry_ui::{Message, components::warning::WarningMessage, styling::OutputBuilder};
 use itertools::Itertools;
@@ -15,8 +16,9 @@ use starknet_rust::core::types::{
     CallType, ContractClass, ContractStorageDiffItem, DeclareTransactionTrace, DeclaredClassItem,
     DeployAccountTransactionTrace, DeployedContractItem, EntryPointType, ExecuteInvocation,
     ExecutionResources, FunctionInvocation, InnerCallExecutionResources, InvokeTransactionTrace,
-    L1HandlerTransactionTrace, LegacyContractAbiEntry, MigratedCompiledClassItem, NonceUpdate,
-    OrderedEvent, OrderedMessage, ReplacedClassItem, StateDiff, TransactionTrace,
+    L1HandlerTransactionTrace, LegacyContractAbiEntry, LegacyFunctionAbiType,
+    MigratedCompiledClassItem, NonceUpdate, OrderedEvent, OrderedMessage, ReplacedClassItem,
+    StateDiff, TransactionTrace,
 };
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
@@ -234,7 +236,7 @@ impl TraceDecodingWarning {
 pub struct TraceDecoder {
     sierra_abis: HashMap<ClassHash, Vec<AbiEntry>>,
     legacy_class_hashes: HashSet<ClassHash>,
-    legacy_selectors: HashMap<(ClassHash, Felt), String>,
+    legacy_selectors: HashMap<(ClassHash, Felt, EntryPointKind), String>,
     decoding_warnings: RefCell<BTreeSet<TraceDecodingWarning>>,
 }
 
@@ -264,9 +266,10 @@ impl TraceDecoder {
                         if let LegacyContractAbiEntry::Function(function) = entry
                             && let Ok(selector) = get_selector_from_name(&function.name)
                         {
-                            decoder
-                                .legacy_selectors
-                                .insert((class_hash, selector), function.name);
+                            decoder.legacy_selectors.insert(
+                                (class_hash, selector, function.r#type.into()),
+                                function.name,
+                            );
                         }
                     }
                 }
@@ -278,8 +281,11 @@ impl TraceDecoder {
 
     fn selector(&self, invocation: &FunctionInvocation) -> String {
         if let Some(abi) = self.sierra_abis.get(&invocation.class_hash.into_())
-            && let Some(function) =
-                extract_function_from_selector(abi, invocation.entry_point_selector)
+            && let Some(function) = find_entry_point_by_selector(
+                abi,
+                invocation.entry_point_selector,
+                invocation.entry_point_type,
+            )
         {
             return function.name;
         }
@@ -289,6 +295,7 @@ impl TraceDecoder {
             .get(&(
                 invocation.class_hash.into_(),
                 invocation.entry_point_selector,
+                invocation.entry_point_type.into(),
             ))
             .cloned();
         if selector.is_none()
@@ -311,13 +318,18 @@ impl TraceDecoder {
             return format_raw_felts(&invocation.calldata);
         };
 
-        reverse_transform_input(&invocation.calldata, abi, &invocation.entry_point_selector)
-            .unwrap_or_else(|_| {
-                self.add_warning(TraceDecodingWarning::CalldataDecodingFailed {
-                    class_hash: invocation.class_hash.into_(),
-                });
-                format_raw_felts(&invocation.calldata)
-            })
+        reverse_transform_entry_point_input(
+            &invocation.calldata,
+            abi,
+            &invocation.entry_point_selector,
+            invocation.entry_point_type,
+        )
+        .unwrap_or_else(|_| {
+            self.add_warning(TraceDecodingWarning::CalldataDecodingFailed {
+                class_hash: invocation.class_hash.into_(),
+            });
+            format_raw_felts(&invocation.calldata)
+        })
     }
 
     fn result(&self, invocation: &FunctionInvocation) -> String {
@@ -326,13 +338,18 @@ impl TraceDecoder {
         }
 
         let result = if let Some(abi) = self.sierra_abis.get(&invocation.class_hash.into_()) {
-            reverse_transform_output(&invocation.result, abi, &invocation.entry_point_selector)
-                .unwrap_or_else(|_| {
-                    self.add_warning(TraceDecodingWarning::ResultDecodingFailed {
-                        class_hash: invocation.class_hash.into_(),
-                    });
-                    format_raw_felts(&invocation.result)
-                })
+            reverse_transform_entry_point_output(
+                &invocation.result,
+                abi,
+                &invocation.entry_point_selector,
+                invocation.entry_point_type,
+            )
+            .unwrap_or_else(|_| {
+                self.add_warning(TraceDecodingWarning::ResultDecodingFailed {
+                    class_hash: invocation.class_hash.into_(),
+                });
+                format_raw_felts(&invocation.result)
+            })
         } else {
             format_raw_felts(&invocation.result)
         };
@@ -387,6 +404,33 @@ fn invocation_result(invocation: &FunctionInvocation, decoder: Option<&TraceDeco
         },
         |decoder| decoder.result(invocation),
     )
+}
+
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
+enum EntryPointKind {
+    External,
+    L1Handler,
+    Constructor,
+}
+
+impl From<EntryPointType> for EntryPointKind {
+    fn from(value: EntryPointType) -> Self {
+        match value {
+            EntryPointType::External => Self::External,
+            EntryPointType::L1Handler => Self::L1Handler,
+            EntryPointType::Constructor => Self::Constructor,
+        }
+    }
+}
+
+impl From<LegacyFunctionAbiType> for EntryPointKind {
+    fn from(value: LegacyFunctionAbiType) -> Self {
+        match value {
+            LegacyFunctionAbiType::Function => Self::External,
+            LegacyFunctionAbiType::L1Handler => Self::L1Handler,
+            LegacyFunctionAbiType::Constructor => Self::Constructor,
+        }
+    }
 }
 
 #[must_use]

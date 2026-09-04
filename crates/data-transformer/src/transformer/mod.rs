@@ -1,6 +1,6 @@
 mod sierra_abi;
 
-use crate::shared::extraction::extract_function_from_selector;
+use crate::shared::extraction::find_function_or_constructor_by_selector;
 use crate::shared::parsing::parse_expression;
 use crate::transformer::sierra_abi::build_representation;
 use anyhow::{Context, Result, bail, ensure};
@@ -13,7 +13,7 @@ use starknet_types_core::felt::Felt;
 
 /// Interpret `calldata` as a comma-separated series of expressions in Cairo syntax and serialize it
 pub fn transform(calldata: &str, abi: &[AbiEntry], function_selector: &Felt) -> Result<Vec<Felt>> {
-    let function = extract_function_from_selector(abi, *function_selector).with_context(|| {
+    let function = find_function_or_constructor_by_selector(abi, *function_selector).with_context(|| {
         format!(
             r#"Function with selector "{function_selector:#x}" not found in ABI of the contract"#
         )
