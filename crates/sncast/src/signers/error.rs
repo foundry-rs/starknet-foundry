@@ -46,6 +46,46 @@ pub enum KeystoreError {
         #[source]
         source: StarknetKeystoreError,
     },
+
+    #[error("failed to create keystore at {path}: {source}")]
+    Create {
+        path: Utf8PathBuf,
+        #[source]
+        source: StarknetKeystoreError,
+    },
+
+    #[error(
+        "failed to create the keystore file's parent directory at {keystore_file_parent_path}: {source}"
+    )]
+    CreateDirectory {
+        keystore_file_parent_path: Utf8PathBuf,
+        #[source]
+        source: io::Error,
+    },
+
+    #[error("failed to remove the keystore from {path}: {source}")]
+    Remove {
+        path: Utf8PathBuf,
+        #[source]
+        source: io::Error,
+    },
+
+    #[error("failed to inspect the keystore at {path}: {source}")]
+    Inspect {
+        path: Utf8PathBuf,
+        #[source]
+        source: io::Error,
+    },
+
+    #[error("failed to set secret permissions for the keystore at {path}: {source}")]
+    SetSecretPermissions {
+        path: Utf8PathBuf,
+        #[source]
+        source: io::Error,
+    },
+
+    #[error("keystore at {path} already exists")]
+    AlreadyExists { path: Utf8PathBuf },
 }
 
 #[derive(Debug, Error)]

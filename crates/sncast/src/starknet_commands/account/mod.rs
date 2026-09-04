@@ -11,7 +11,10 @@ use clap::{Args, Subcommand};
 use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
 use conversions::string::{TryFromDecStr, TryFromHexStr};
-use sncast::accounts::{AccountName, AccountRecord, AccountRepository, NetworkName};
+use foundry_ui::components::warning::WarningMessage;
+use sncast::accounts::{
+    AccountName, AccountRecord, AccountRepository, MigrationOutcome, NetworkName,
+};
 use sncast::helpers::configuration::{
     CastConfig, NetworkParams, PartialCastConfig, SncastProfileAppend,
 };
@@ -155,16 +158,29 @@ pub fn save_account(
     repository: &AccountRepository,
     chain_id: Felt,
     account_record: AccountRecord,
-) -> Result<()> {
+) -> Result<MigrationOutcome> {
     let network_name = chain_id_to_network_name(chain_id);
-    repository
+    let result = repository
         .insert(
             NetworkName::new(network_name)?,
             AccountName::new(account)?,
             account_record,
         )
         .map_err(|error| anyhow::anyhow!(error))?;
-    Ok(())
+    Ok(result.migration_outcome)
+}
+
+pub fn notify_if_migrated(migration_outcome: MigrationOutcome, ui: &UI) {
+    if let MigrationOutcome::Performed {
+        from,
+        to,
+        backup_path,
+    } = migration_outcome
+    {
+        ui.print_warning(WarningMessage::new(
+            format!("Accounts file was migrated from schema version {:?} to {:?}; a backup of the original was saved as at {}", from, to, backup_path),
+        ));
+    }
 }
 
 pub fn add_created_profile_to_configuration(
@@ -188,11 +204,7 @@ pub fn add_created_profile_to_configuration(
     let profile_config = PartialCastConfig {
         network_params: cast_config.network_params.clone(),
         account: Some(cast_config.account.clone()),
-        keystore: cast_config.keystore.clone(),
-        accounts_file: cast_config
-            .keystore
-            .is_none()
-            .then(|| cast_config.accounts_file.clone()),
+        accounts_file: Some(cast_config.accounts_file.clone()),
         ..Default::default()
     };
 
@@ -219,7 +231,6 @@ fn generate_add_profile_message(
     rpc_args: &RpcArgs,
     account_name: &str,
     accounts_file: &Utf8Path,
-    keystore: Option<Utf8PathBuf>,
     config: &CastConfig,
 ) -> Result<Option<String>> {
     if let Some(profile_name) = profile_name {
@@ -232,7 +243,6 @@ fn generate_add_profile_message(
             network_params,
             account: account_name.into(),
             accounts_file: accounts_file.into(),
-            keystore,
             ..Default::default()
         };
         let config_path = resolve_config_file();
@@ -284,18 +294,13 @@ pub async fn account(
             Ok(process_command_result("account import", result, ui, None))
         }
         Commands::Create(create) => {
-            let signer_type = create.ledger_key_locator.resolve(ui);
+            let ledger_path = create.ledger_key_locator.resolve(ui);
+            let signer_source = SignerSource::new(ledger_path, create.keystore.clone())?;
 
-            let signer_source = SignerSource::new(config.keystore.clone(), signer_type)?;
-
-            let account = if config.keystore.is_none() {
-                create
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| repository.generate_account_name().unwrap())
-            } else {
-                config.account.clone()
-            };
+            let account = create
+                .name
+                .clone()
+                .unwrap_or_else(|| repository.generate_account_name().unwrap());
 
             let provider = create.rpc.get_provider(&config, ui).await?;
 
@@ -334,8 +339,6 @@ pub async fn account(
                 &deploy,
                 chain_id,
                 wait_config,
-                &config.account,
-                config.keystore.clone(),
                 deploy.fee_args,
                 deploy.dry_run_args,
                 ui,
@@ -345,8 +348,7 @@ pub async fn account(
             let run_interactive_prompt =
                 !deploy.silent && result.is_ok() && io::stdout().is_terminal();
 
-            if config.keystore.is_none()
-                && run_interactive_prompt
+            if run_interactive_prompt
                 && let Err(err) = prompt_to_add_account_as_default(
                     deploy
                         .name
@@ -381,6 +383,7 @@ pub async fn account(
                 &repository,
                 &network_name,
                 delete.yes,
+                ui,
             );
 
             Ok(process_command_result("account delete", result, ui, None))

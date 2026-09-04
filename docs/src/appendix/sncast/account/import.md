@@ -97,3 +97,15 @@ If passed, a profile with corresponding name will be added to the local snfoundr
 Optional.
 
 If passed, the command will not trigger an interactive prompt to add an account as a default
+
+## `--keystore <PATH>`
+Optional.
+
+Use an existing encrypted keystore as this native account's signer. Relative paths are resolved from the directory containing the accounts file.
+
+Conflicts with: `--private-key`, `--private-key-file`, `--ledger-path`, `--ledger-account-id`.
+
+## `--keystore-password-env <ENVIRONMENT_VARIABLE>`
+Optional. Requires `--keystore`.
+
+Record the environment-variable name used to obtain the keystore password. The password itself is never stored.
