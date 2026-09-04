@@ -1,8 +1,8 @@
 mod sierra_abi;
 
-use crate::shared::formatting::format_passed_vs_expected;
+use crate::shared::extraction::extract_function_from_selector;
+use crate::shared::formatting::{ArgumentListKind, format_abi_members, format_passed_vs_expected};
 use crate::shared::parsing::parse_expression;
-use crate::shared::{extraction::extract_function_from_selector, formatting::format_abi_members};
 use crate::transformer::sierra_abi::build_representation;
 use anyhow::{Context, Result, bail};
 use cairo_lang_parser::utils::SimpleParserDatabase;
@@ -86,16 +86,45 @@ fn format_invalid_args_error(
                 .get_text_without_trivia(db)
                 .to_string(db)
         })
-        .join(", ");
+        .collect::<Vec<_>>();
+    let expected = format_abi_members(&function.inputs);
+    let diagnostics = format_positional_argument_diagnostics(function, n_arguments);
 
     format_passed_vs_expected(
         format!(
-            "Invalid number of arguments for `{}`: passed {n_arguments}, expected {n_inputs}:",
+            "Invalid arguments for function `{}`: passed {n_arguments}, expected {n_inputs}",
             function.name
         ),
-        format!("({passed})"),
-        format!("({})", format_abi_members(&function.inputs)),
+        &diagnostics,
+        &passed,
+        &expected,
+        ArgumentListKind::Positional,
     )
+}
+
+fn format_positional_argument_diagnostics(
+    function: &AbiFunction,
+    n_arguments: usize,
+) -> Vec<String> {
+    if n_arguments < function.inputs.len() {
+        function
+            .inputs
+            .iter()
+            .enumerate()
+            .skip(n_arguments)
+            .map(|(position, argument)| {
+                format!(
+                    "missing argument `{}` at position {}",
+                    argument.name,
+                    position + 1
+                )
+            })
+            .collect()
+    } else {
+        (function.inputs.len()..n_arguments)
+            .map(|position| format!("unexpected argument at position {}", position + 1))
+            .collect()
+    }
 }
 
 fn convert_to_tuple(calldata: &str) -> String {
