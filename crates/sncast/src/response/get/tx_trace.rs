@@ -25,12 +25,12 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 
 pub struct TransactionTraceResponse {
     trace: TransactionTrace,
-    decoder: TraceDecoder,
+    decoder: Option<TraceDecoder>,
     full: bool,
 }
 
 impl TransactionTraceResponse {
-    pub fn new(trace: TransactionTrace, decoder: TraceDecoder, full: bool) -> Self {
+    pub fn new(trace: TransactionTrace, decoder: Option<TraceDecoder>, full: bool) -> Self {
         Self {
             trace,
             decoder,
@@ -45,12 +45,14 @@ impl Serialize for TransactionTraceResponse {
         S: Serializer,
     {
         let mut json = serde_json::to_value(&self.trace).map_err(S::Error::custom)?;
-        decode_trace_json(&self.trace, &mut json, &self.decoder).map_err(S::Error::custom)?;
+        if let Some(decoder) = &self.decoder {
+            decode_trace_json(&self.trace, &mut json, decoder).map_err(S::Error::custom)?;
 
-        let decoding_warnings = self.decoder.decoding_warnings();
-        if !decoding_warnings.is_empty() {
-            json["decoding_warnings"] =
-                serde_json::to_value(decoding_warnings).map_err(S::Error::custom)?;
+            let decoding_warnings = decoder.decoding_warnings();
+            if !decoding_warnings.is_empty() {
+                json["decoding_warnings"] =
+                    serde_json::to_value(decoding_warnings).map_err(S::Error::custom)?;
+            }
         }
 
         json.serialize(serializer)
@@ -167,11 +169,14 @@ impl SncastCommandMessage for TransactionTraceResponse {
             decoder,
             full,
         } = self;
-        let human_text = append_trace(OutputBuilder::new(), trace, decoder, *full).build();
-        let builder = if decoder.decoding_warnings().is_empty() {
+        let human_text = append_trace(OutputBuilder::new(), trace, decoder.as_ref(), *full).build();
+        let decoding_warnings = decoder
+            .as_ref()
+            .map_or_else(Vec::new, TraceDecoder::decoding_warnings);
+        let builder = if decoding_warnings.is_empty() {
             OutputBuilder::new()
         } else {
-            let warning_message = format_decoding_warning(&decoder.decoding_warnings());
+            let warning_message = format_decoding_warning(&decoding_warnings);
             OutputBuilder::new()
                 .text_field(&WarningMessage::new(warning_message).text())
                 .blank_line()
@@ -357,11 +362,38 @@ fn format_decoding_warning(warnings: &[TraceDecodingWarning]) -> String {
     format!("Some trace data is shown as raw felts:\n{details}")
 }
 
+fn invocation_selector(invocation: &FunctionInvocation, decoder: Option<&TraceDecoder>) -> String {
+    decoder.map_or_else(
+        || invocation.entry_point_selector.to_hex_string(),
+        |decoder| decoder.selector(invocation),
+    )
+}
+
+fn invocation_calldata(invocation: &FunctionInvocation, decoder: Option<&TraceDecoder>) -> String {
+    decoder.map_or_else(
+        || format_raw_felts(&invocation.calldata),
+        |decoder| decoder.calldata(invocation),
+    )
+}
+
+fn invocation_result(invocation: &FunctionInvocation, decoder: Option<&TraceDecoder>) -> String {
+    decoder.map_or_else(
+        || {
+            if invocation.is_reverted {
+                format_result("panic", &format_panic_data(&invocation.result))
+            } else {
+                format_result("success", &format_raw_felts(&invocation.result))
+            }
+        },
+        |decoder| decoder.result(invocation),
+    )
+}
+
 #[must_use]
 fn append_trace(
     builder: OutputBuilder,
     transaction_trace: &TransactionTrace,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     full: bool,
 ) -> OutputBuilder {
     match transaction_trace {
@@ -377,7 +409,7 @@ fn append_trace(
 fn append_invoke(
     builder: OutputBuilder,
     trace: &InvokeTransactionTrace,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     full: bool,
 ) -> OutputBuilder {
     let builder = builder.tx_type("INVOKE");
@@ -409,23 +441,22 @@ fn append_invoke(
         )
     };
 
+    let builder = append_validate(builder);
+    let builder = append_execute(builder);
+    let builder = append_fee_transfer(builder);
+
     if full {
-        let builder = append_execute(builder);
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_fee_transfer(builder);
-        let builder = append_optional_state_diff(builder, trace.state_diff.as_ref(), 0);
-        append_validate(builder)
+        append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
     } else {
-        let builder = append_validate(builder);
-        let builder = append_execute(builder);
-        append_fee_transfer(builder)
+        builder
     }
 }
 
 fn append_declare(
     builder: OutputBuilder,
     trace: &DeclareTransactionTrace,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     full: bool,
 ) -> OutputBuilder {
     let builder = builder.tx_type("DECLARE");
@@ -448,21 +479,21 @@ fn append_declare(
         )
     };
 
+    let builder = append_validate(builder);
+    let builder = append_fee_transfer(builder);
+
     if full {
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_fee_transfer(builder);
-        let builder = append_optional_state_diff(builder, trace.state_diff.as_ref(), 0);
-        append_validate(builder)
+        append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
     } else {
-        let builder = append_validate(builder);
-        append_fee_transfer(builder)
+        builder
     }
 }
 
 fn append_deploy_account(
     builder: OutputBuilder,
     trace: &DeployAccountTransactionTrace,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     full: bool,
 ) -> OutputBuilder {
     let builder = builder.tx_type("DEPLOY_ACCOUNT");
@@ -494,23 +525,22 @@ fn append_deploy_account(
         )
     };
 
+    let builder = append_validate(builder);
+    let builder = append_constructor(builder);
+    let builder = append_fee_transfer(builder);
+
     if full {
-        let builder = append_constructor(builder);
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_fee_transfer(builder);
-        let builder = append_optional_state_diff(builder, trace.state_diff.as_ref(), 0);
-        append_validate(builder)
+        append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
     } else {
-        let builder = append_validate(builder);
-        let builder = append_constructor(builder);
-        append_fee_transfer(builder)
+        builder
     }
 }
 
 fn append_l1_handler(
     builder: OutputBuilder,
     trace: &L1HandlerTransactionTrace,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     full: bool,
 ) -> OutputBuilder {
     let builder = builder.tx_type("L1_HANDLER");
@@ -524,12 +554,13 @@ fn append_l1_handler(
         )
     };
 
+    let builder = append_function(builder);
+
     if full {
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_function(builder);
         append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
     } else {
-        append_function(builder)
+        builder
     }
 }
 
@@ -537,7 +568,7 @@ fn append_optional_invocation(
     builder: OutputBuilder,
     label: &str,
     invocation: Option<&FunctionInvocation>,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     full: bool,
 ) -> OutputBuilder {
     if let Some(invocation) = invocation {
@@ -551,7 +582,7 @@ fn append_execute_invocation(
     builder: OutputBuilder,
     label: &str,
     invocation: &ExecuteInvocation,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     full: bool,
 ) -> OutputBuilder {
     match invocation {
@@ -568,7 +599,7 @@ fn append_invocation_section(
     builder: OutputBuilder,
     label: &str,
     invocation: &FunctionInvocation,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     full: bool,
 ) -> OutputBuilder {
     let builder = append_section(builder, label, 0);
@@ -582,15 +613,18 @@ fn append_invocation_section(
 fn append_compact_invocation(
     builder: OutputBuilder,
     invocation: &FunctionInvocation,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     indent: usize,
 ) -> OutputBuilder {
     let mut builder = builder
         .with_indent(indent)
-        .field("Entry Point Selector", &decoder.selector(invocation))
+        .field(
+            "Entry Point Selector",
+            &invocation_selector(invocation, decoder),
+        )
         .contract_address(&invocation.contract_address)
-        .field("Calldata", &decoder.calldata(invocation))
-        .field("Result", &decoder.result(invocation));
+        .field("Calldata", &invocation_calldata(invocation, decoder))
+        .field("Result", &invocation_result(invocation, decoder));
 
     if !invocation.calls.is_empty() {
         builder = append_section(builder, "Calls", indent);
@@ -605,17 +639,20 @@ fn append_compact_invocation(
 fn append_full_invocation(
     builder: OutputBuilder,
     invocation: &FunctionInvocation,
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     indent: usize,
 ) -> OutputBuilder {
     let builder = builder
         .with_indent(indent)
         .field("Call Type", format_call_type(invocation.call_type))
-        .field("Calldata", &decoder.calldata(invocation))
+        .field("Calldata", &invocation_calldata(invocation, decoder))
         .padded_felt_field("Caller Address", &invocation.caller_address)
         .padded_felt_field("Class Hash", &invocation.class_hash)
         .padded_felt_field("Contract Address", &invocation.contract_address)
-        .field("Entry Point Selector", &decoder.selector(invocation))
+        .field(
+            "Entry Point Selector",
+            &invocation_selector(invocation, decoder),
+        )
         .field(
             "Entry Point Type",
             format_entry_point_type(invocation.entry_point_type),
@@ -628,14 +665,14 @@ fn append_full_invocation(
     let builder = append_messages(builder, &invocation.messages, indent);
     let builder = builder
         .with_indent(indent)
-        .field("Result", &decoder.result(invocation));
+        .field("Result", &invocation_result(invocation, decoder));
     append_calls(builder, &invocation.calls, decoder, indent)
 }
 
 fn append_calls(
     mut builder: OutputBuilder,
     calls: &[FunctionInvocation],
-    decoder: &TraceDecoder,
+    decoder: Option<&TraceDecoder>,
     indent: usize,
 ) -> OutputBuilder {
     if calls.is_empty() {
