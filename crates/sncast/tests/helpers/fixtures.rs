@@ -30,6 +30,7 @@ use starknet_types_core::felt::Felt;
 use std::env;
 use std::fs;
 use std::io::BufRead;
+use std::path::Path;
 use tempfile::{TempDir, tempdir};
 use url::Url;
 
@@ -470,7 +471,7 @@ pub fn get_address_from_keystore(
     get_contract_address(salt, class_hash, &calldata, Felt::ZERO)
 }
 #[must_use]
-pub fn get_accounts_path(relative_path_from_cargo_toml: &str) -> String {
+pub fn get_accounts_path(relative_path_from_cargo_toml: impl AsRef<Path>) -> String {
     use std::path::PathBuf;
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
     let binding = PathBuf::from(manifest_dir).join(relative_path_from_cargo_toml);
