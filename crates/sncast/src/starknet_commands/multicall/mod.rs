@@ -17,7 +17,6 @@ use foundry_ui::Message;
 use new::New;
 use run::Run;
 use sncast::response::ui::UI;
-use sncast::with_account;
 use sncast::{
     WaitForTx, get_account,
     helpers::{configuration::CastConfig, constants::DEFAULT_MULTICALL_CONTENTS},
@@ -82,17 +81,15 @@ pub async fn multicall(
             let provider = run.rpc.get_provider(&config, ui).await?;
 
             let account = get_account(&config, &provider, &run.rpc, ui).await?;
-            let result = with_account!(&account, |account| {
-                starknet_commands::multicall::run::run(
-                    run,
-                    account,
-                    &provider,
-                    &config,
-                    wait_config,
-                    ui,
-                )
-                .await
-            });
+            let result = starknet_commands::multicall::run::run(
+                run,
+                &account,
+                &provider,
+                &config,
+                wait_config,
+                ui,
+            )
+            .await;
 
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
@@ -108,17 +105,15 @@ pub async fn multicall(
 
             let account = get_account(&config, &provider, &execute.rpc, ui).await?;
 
-            let result = with_account!(&account, |account| {
-                starknet_commands::multicall::execute::execute(
-                    *execute,
-                    account,
-                    &provider,
-                    &config,
-                    wait_config,
-                    ui,
-                )
-                .await
-            });
+            let result = starknet_commands::multicall::execute::execute(
+                *execute,
+                &account,
+                &provider,
+                &config,
+                wait_config,
+                ui,
+            )
+            .await;
             let block_explorer_link =
                 block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
             Ok(process_command_result(
