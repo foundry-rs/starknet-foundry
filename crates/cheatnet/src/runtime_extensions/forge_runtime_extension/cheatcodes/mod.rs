@@ -9,6 +9,7 @@ pub mod cheat_caller_address;
 pub mod cheat_execution_info;
 pub mod cheat_sequencer_address;
 pub mod declare;
+pub mod event_formatter;
 pub mod generate_random_felt;
 pub mod get_class_hash;
 pub mod l1_handler_execute;
