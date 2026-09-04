@@ -308,15 +308,19 @@ fn format_invalid_struct_args_error(
     diagnostics: &[String],
 ) -> String {
     let expected = format_abi_members(expected_members);
+    let passed_names = passed_names
+        .iter()
+        .map(|name| (*name).to_owned())
+        .collect::<Vec<_>>();
 
     format_passed_vs_expected(
-        format!(
+        &format!(
             "Invalid arguments for struct `{expected_type}` constructor: passed {}, expected {}",
             passed_names.len(),
             expected_members.len()
         ),
         diagnostics,
-        passed_names,
+        &passed_names,
         &expected,
         ArgumentListKind::Named,
     )
