@@ -4,6 +4,7 @@ use super::data_representation::{
 use super::parsing::parse_argument_list;
 use super::{SupportedCalldataKind, build_representation};
 use crate::shared;
+use crate::shared::formatting::{ArgumentListKind, format_abi_members, format_passed_vs_expected};
 use crate::shared::parsing::parse_expression;
 use crate::shared::path::SplitResult;
 use anyhow::{Context, Result, anyhow, bail, ensure};
@@ -300,6 +301,75 @@ fn get_struct_arguments_with_values<'a>(
         .collect()
 }
 
+fn format_invalid_struct_args_error(
+    expected_type: &str,
+    expected_members: &[AbiNamedMember],
+    passed_names: &[&str],
+    diagnostics: &[String],
+) -> String {
+    let expected = format_abi_members(expected_members);
+    let passed_names = passed_names
+        .iter()
+        .map(|name| (*name).to_owned())
+        .collect::<Vec<_>>();
+
+    format_passed_vs_expected(
+        &format!(
+            "Invalid arguments for struct `{expected_type}` constructor: passed {}, expected {}",
+            passed_names.len(),
+            expected_members.len()
+        ),
+        diagnostics,
+        &passed_names,
+        &expected,
+        ArgumentListKind::Named,
+    )
+}
+
+fn format_struct_field_diagnostics(
+    expected_members: &[AbiNamedMember],
+    passed_names: &[&str],
+) -> Vec<String> {
+    let passed_set: HashSet<&str> = passed_names.iter().copied().collect();
+    let expected_set: HashSet<&str> = expected_members
+        .iter()
+        .map(|member| member.name.as_str())
+        .collect();
+
+    let missing = expected_members
+        .iter()
+        .map(|member| member.name.as_str())
+        .filter(|name| !passed_set.contains(name))
+        .collect::<Vec<_>>();
+    let unexpected = passed_names
+        .iter()
+        .copied()
+        .filter(|name| !expected_set.contains(name))
+        .unique()
+        .collect::<Vec<_>>();
+
+    [
+        format_field_diagnostic("missing", &missing),
+        format_field_diagnostic("unexpected", &unexpected),
+    ]
+    .into_iter()
+    .flatten()
+    .collect()
+}
+
+fn format_field_diagnostic(kind: &str, fields: &[&str]) -> Option<String> {
+    match fields {
+        [] => None,
+        [field] => Some(format!("{kind} field: `{field}`")),
+        fields => Some(format!(
+            "{kind} fields: {}",
+            fields
+                .iter()
+                .format_with(", ", |field, f| f(&format_args!("`{field}`")))
+        )),
+    }
+}
+
 // Structs
 impl SupportedCalldataKind for ExprStructCtorCall<'_> {
     fn transform(
@@ -325,29 +395,28 @@ impl SupportedCalldataKind for ExprStructCtorCall<'_> {
         let struct_args_with_values = get_struct_arguments_with_values(&struct_args, db)
             .context("Found invalid expression in struct argument")?;
 
+        let passed_names = struct_args_with_values
+            .iter()
+            .map(|(name, _)| name.as_str())
+            .collect::<Vec<_>>();
+        let diagnostics =
+            format_struct_field_diagnostics(&struct_abi_definition.members, &passed_names);
+
+        if !diagnostics.is_empty() {
+            bail!(format_invalid_struct_args_error(
+                expected_type,
+                &struct_abi_definition.members,
+                &passed_names,
+                &diagnostics,
+            ));
+        }
+
         if struct_args_with_values.len() != struct_abi_definition.members.len() {
             bail!(
                 r#"Invalid number of struct arguments in struct "{}", expected {} arguments, found {}"#,
                 struct_path_joined,
                 struct_abi_definition.members.len(),
                 struct_args.len()
-            )
-        }
-
-        // validate if all arguments' names have corresponding names in abi
-        if struct_args_with_values
-            .iter()
-            .map(|(arg_name, _)| arg_name.clone())
-            .collect::<HashSet<String>>()
-            != struct_abi_definition
-                .members
-                .iter()
-                .map(|x| x.name.clone())
-                .collect::<HashSet<String>>()
-        {
-            // TODO add message which arguments are invalid (Issue #2549)
-            bail!(
-                r"Arguments in constructor invocation for struct {expected_type} do not match struct arguments in ABI",
             )
         }
 
