@@ -46,7 +46,6 @@ pub(crate) fn execute_entry_point_call_native(
         // If we got to this point, it means tracked resources are SierraGas.
         syscall_usage_vm_resources: HashMap::default(),
         syscall_usage_sierra_gas: syscall_usage.clone(),
-        // Native execution doesn't run the Cairo VM, so there is no trace or memory to collect.
         #[cfg(feature = "starkloupe")]
         vm_trace: None,
         #[cfg(feature = "starkloupe")]
