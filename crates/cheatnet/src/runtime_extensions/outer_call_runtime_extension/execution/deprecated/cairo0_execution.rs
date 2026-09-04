@@ -5,7 +5,7 @@ use crate::runtime_extensions::deprecated_cheatable_starknet_extension::runtime:
 use crate::runtime_extensions::outer_call_runtime_extension::CheatnetState;
 use crate::runtime_extensions::outer_call_runtime_extension::execution::entry_point::{
     CallInfoWithExecutionData, ContractClassEntryPointExecutionResult,
-    extract_trace_and_register_errors,
+    extract_trace_and_memory_and_register_errors,
 };
 use blockifier::execution::contract_class::CompiledClassV0;
 use blockifier::execution::deprecated_entry_point_execution::{
@@ -58,12 +58,13 @@ pub(crate) fn execute_entry_point_call_cairo0(
         entry_point_pc,
         &args,
     )
-    .inspect_err(|_| {
-        extract_trace_and_register_errors(
+    .map_err(|source| {
+        extract_trace_and_memory_and_register_errors(
+            source,
             call.class_hash,
             &mut runner,
             cheatable_syscall_handler.extension.cheatnet_state,
-        );
+        )
     })?;
 
     let syscall_usage = cheatable_syscall_handler
@@ -84,6 +85,10 @@ pub(crate) fn execute_entry_point_call_cairo0(
         call_info: execution_result,
         syscall_usage_vm_resources: syscall_usage,
         syscall_usage_sierra_gas: SyscallUsageMap::default(),
+        #[cfg(feature = "starkloupe")]
+        vm_trace: None,
+        #[cfg(feature = "starkloupe")]
+        vm_memory: None,
     })
     // endregion
 }
