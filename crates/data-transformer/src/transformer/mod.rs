@@ -26,7 +26,7 @@ pub fn transform(calldata: &str, abi: &[AbiEntry], function_selector: &Felt) -> 
     let input = convert_to_tuple(calldata);
     let calldata = split_expressions(&input, &db)?;
 
-    process(&calldata, &function, abi, &db).context("Error while processing Cairo-like calldata")
+    process(calldata, &function, abi, &db).context("Error while processing Cairo-like calldata")
 }
 
 fn split_expressions<'a>(input: &'a str, db: &'a SimpleParserDatabase) -> Result<Vec<Expr<'a>>> {
@@ -43,7 +43,7 @@ fn split_expressions<'a>(input: &'a str, db: &'a SimpleParserDatabase) -> Result
 }
 
 fn process(
-    calldata: &[Expr],
+    calldata: Vec<Expr>,
     function: &AbiFunction,
     abi: &[AbiEntry],
     db: &SimpleParserDatabase,
@@ -53,7 +53,7 @@ fn process(
 
     if n_arguments != n_inputs {
         bail!(format_invalid_args_error(
-            calldata,
+            &calldata,
             function,
             n_arguments,
             db
@@ -65,7 +65,7 @@ fn process(
         .iter()
         .zip(calldata)
         .map(|(parameter, expr)| {
-            let representation = build_representation(expr.clone(), &parameter.r#type, abi, db)?;
+            let representation = build_representation(expr, &parameter.r#type, abi, db)?;
             Ok(representation.serialize_to_vec())
         })
         .flatten_ok()
@@ -89,12 +89,13 @@ fn format_invalid_args_error(
         .collect::<Vec<_>>();
     let expected = format_abi_members(&function.inputs);
     let diagnostics = format_positional_argument_diagnostics(function, n_arguments);
+    let headline = format!(
+        "Invalid arguments for function `{}`: passed {n_arguments}, expected {n_inputs}",
+        function.name
+    );
 
     format_passed_vs_expected(
-        format!(
-            "Invalid arguments for function `{}`: passed {n_arguments}, expected {n_inputs}",
-            function.name
-        ),
+        &headline,
         &diagnostics,
         &passed,
         &expected,
