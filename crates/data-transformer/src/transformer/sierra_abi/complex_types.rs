@@ -14,7 +14,7 @@ use cairo_lang_syntax::node::ast::{
     OptionStructArgExpr, StructArg,
 };
 use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode};
-use itertools::Itertools;
+use itertools::{Itertools, chain};
 use starknet_rust::core::types::contract::{AbiEntry, AbiEnum, AbiNamedMember, AbiStruct};
 use std::collections::HashSet;
 
@@ -344,12 +344,10 @@ fn format_struct_field_diagnostics(
         .unique()
         .collect::<Vec<_>>();
 
-    [
-        format_field_diagnostic("missing", &missing),
-        format_field_diagnostic("unexpected", &unexpected),
-    ]
-    .into_iter()
-    .flatten()
+    chain!(
+        format_field_diagnostic("missing", &missing).into_iter(),
+        format_field_diagnostic("unexpected", &unexpected).into_iter(),
+    )
     .collect()
 }
 
