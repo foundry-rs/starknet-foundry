@@ -14,6 +14,7 @@ use conversions::byte_array::ByteArray;
 use conversions::string::TryFromHexStr;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use serde_json::Value;
+use shared::cache::prepare_cache_dir;
 use starknet_api::block::BlockNumber;
 use starknet_api::core::ContractAddress;
 use starknet_types_core::felt::Felt;
@@ -441,6 +442,7 @@ fn using_specified_block_nb_is_cached() {
 #[test]
 fn test_cache_merging() {
     fn run_test(cache_dir: &str, contract_address: &str, balance: u64) {
+        prepare_cache_dir(cache_dir).unwrap();
         let mut cached_state = create_fork_cached_state_at(53_680, cache_dir);
         let _ = cached_state.state.get_block_info().unwrap();
 

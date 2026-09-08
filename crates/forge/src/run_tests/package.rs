@@ -41,6 +41,7 @@ use forge_runner::{
 use foundry_ui::{UI, components::labeled::LabeledMessage};
 use scarb_api::{CompilationOpts, get_contracts_artifacts_and_source_sierra_paths};
 use scarb_metadata::{Metadata, PackageMetadata};
+use shared::cache::usc_cache_dir;
 use std::sync::Arc;
 use tokio::task::JoinHandle;
 
@@ -93,9 +94,11 @@ impl RunForPackageArgs {
     ) -> Result<RunForPackageArgs> {
         let mut raw_test_targets = load_test_artifacts(artifacts_dir, &package)?;
 
+        let usc_cache_dir = usc_cache_dir(cache_dir);
         let contracts = get_contracts_artifacts_and_source_sierra_paths(
             artifacts_dir,
             &package,
+            &usc_cache_dir,
             ui,
             CompilationOpts {
                 use_test_target_contracts: !args.no_optimization,
@@ -143,6 +146,7 @@ impl RunForPackageArgs {
                     tracked_resource,
                     tests_filter.name_filter.clone(),
                     tests_filter.partitioning_config.clone(),
+                    usc_cache_dir.clone(),
                 )
             })
             .collect();
@@ -163,6 +167,7 @@ fn spawn_prepare_test_target(
     tracked_resource: ForgeTrackedResource,
     name_filter: NameFilter,
     partitioning_config: PartitionConfig,
+    usc_cache_dir: Utf8PathBuf,
 ) -> PrepareTargetHandle {
     tokio::task::spawn_blocking(move || {
         prepare_test_target(
@@ -170,6 +175,7 @@ fn spawn_prepare_test_target(
             &tracked_resource,
             &name_filter,
             &partitioning_config,
+            usc_cache_dir.as_path(),
         )
     })
 }

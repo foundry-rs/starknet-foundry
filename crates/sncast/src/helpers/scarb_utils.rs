@@ -10,6 +10,7 @@ use scarb_api::{
     target_dir_for_workspace,
 };
 use scarb_ui::args::PackagesFilter;
+use shared::cache::{prepare_cache_dir, resolve_cache_dir, usc_cache_dir};
 use shared::command::CommandExt;
 use std::str::FromStr;
 
@@ -167,11 +168,15 @@ pub fn build_and_load_artifacts(
 
     let metadata = get_scarb_metadata_with_deps(&config.scarb_toml_path)?;
     let target_dir = target_dir_for_workspace(&metadata);
+    let cache_dir = resolve_cache_dir(&metadata.workspace.root)?;
+    prepare_cache_dir(&cache_dir)?;
+    let usc_cache_dir = usc_cache_dir(&cache_dir);
 
     if metadata.profiles.contains(&config.profile) {
         Ok(get_contracts_artifacts_and_source_sierra_paths(
             &target_dir.join(&config.profile),
             package,
+            &usc_cache_dir,
             ui,
             CompilationOpts::default(),
         )
@@ -185,6 +190,7 @@ pub fn build_and_load_artifacts(
         Ok(get_contracts_artifacts_and_source_sierra_paths(
             &target_dir.join(default_profile),
             package,
+            &usc_cache_dir,
             ui,
             CompilationOpts::default(),
         )

@@ -40,20 +40,27 @@ pub fn compile_sierra(
     let json_bytes = serde_json::to_vec(sierra_json).map_err(CompilationError::Serialization)?;
     temp_sierra_file.write_all(&json_bytes)?;
 
-    compile_sierra_at_path(temp_sierra_file.path(), sierra_type)
+    compile_sierra_at_path(temp_sierra_file.path(), sierra_type, None)
 }
 
-/// Compiles the Sierra file at the given path into the specified type using the `universal-sierra-compiler`.
+/// Compiles the Sierra file at the given path into the specified type using the
+/// `universal-sierra-compiler` and optionally caches the compiled CASM.
 #[tracing::instrument(skip_all, level = "debug")]
 pub fn compile_sierra_at_path(
     sierra_file_path: &Path,
     sierra_type: SierraType,
+    cache_dir: Option<&Path>,
 ) -> Result<String, CompilationError> {
-    let usc_output = USCInternalCommand::new()?
+    let mut command = USCInternalCommand::new()?
         .arg(format!("compile-{sierra_type}"))
         .arg("--sierra-path")
-        .arg(sierra_file_path)
-        .run()?;
+        .arg(sierra_file_path);
+
+    if let Some(cache_dir) = cache_dir {
+        command = command.arg("--cache-dir").arg(cache_dir);
+    }
+
+    let usc_output = command.run()?;
 
     Ok(String::from_utf8(usc_output.stdout).expect("valid UTF-8 from universal-sierra-compiler"))
 }

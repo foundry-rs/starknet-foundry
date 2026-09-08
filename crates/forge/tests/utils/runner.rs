@@ -8,7 +8,7 @@ use assert_fs::{
 };
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallSelector;
 use cairo_vm::types::builtin_name::BuiltinName;
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use forge_runner::test_case_summary::Single;
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_target_summary::TestTargetSummary;
@@ -65,7 +65,11 @@ impl Contract {
         })
     }
 
-    fn generate_contract_artifacts(self, ui: &UI) -> Result<StarknetContractArtifacts> {
+    fn generate_contract_artifacts(
+        self,
+        ui: &UI,
+        usc_cache_dir: &Utf8Path,
+    ) -> Result<StarknetContractArtifacts> {
         let dir = tempdir_with_tool_versions()?;
 
         let contract_path = dir.child("src/lib.cairo");
@@ -108,6 +112,7 @@ impl Contract {
         let mut artifacts = get_contracts_artifacts_and_source_sierra_paths(
             &artifacts_dir,
             package,
+            usc_cache_dir,
             ui,
             CompilationOpts {
                 use_test_target_contracts: false,
@@ -205,14 +210,14 @@ impl<'a> TestCase {
         ]
     }
 
-    pub fn contracts(&self, ui: &UI) -> Result<ContractsData> {
+    pub fn contracts(&self, ui: &UI, usc_cache_dir: &Utf8Path) -> Result<ContractsData> {
         self.contracts
             .clone()
             .into_iter()
             .map(|contract| {
                 let module_path = contract.module_path.clone();
                 let name = contract_name_from_module_path(&module_path).to_string();
-                let artifacts = contract.generate_contract_artifacts(ui)?;
+                let artifacts = contract.generate_contract_artifacts(ui, usc_cache_dir)?;
 
                 Ok((
                     module_path,

@@ -4,7 +4,6 @@ use crate::optimize_inlining::runner::{
 };
 use anyhow::{Result, anyhow};
 use camino::Utf8Path;
-use comfy_table::modifiers::UTF8_ROUND_CORNERS;
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::{Cell, ContentArrangement, Table};
 use foundry_ui::UI;
@@ -94,8 +93,7 @@ impl Optimizer {
         sorted_results.sort_by_key(|r| r.threshold);
 
         let mut table = Table::new();
-        table.load_preset(UTF8_FULL);
-        table.apply_modifier(UTF8_ROUND_CORNERS);
+        table.load_style(UTF8_FULL.with_rounded_corners());
         table.set_content_arrangement(ContentArrangement::Dynamic);
         table.set_header(vec![
             Cell::new("Threshold"),

@@ -4,7 +4,7 @@ use snforge_std::{
     CheatSpan, ContractClassTrait, DeclareResultTrait, EventSpyAssertionsTrait,
     cheat_caller_address, declare, spy_events,
 };
-use starknet::ContractAddress;
+use starknet::{ContractAddress, SyscallResultTrait};
 
 const STRK_TOKEN_ADDRESS: ContractAddress =
     0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
@@ -17,13 +17,13 @@ const target_account: ContractAddress = 2.try_into().unwrap();
 const INITIAL_SUPPLY: u256 = 10_000_000_000;
 
 fn setup() -> ContractAddress {
-    let erc20_class_hash = declare("MockERC20").unwrap().contract_class();
+    let erc20_class_hash = declare("MockERC20").unwrap_syscall().contract_class();
 
     let mut calldata = ArrayTrait::new();
     INITIAL_SUPPLY.serialize(ref calldata);
     sender_account.serialize(ref calldata);
 
-    let (contract_address, _) = erc20_class_hash.deploy(@calldata).unwrap();
+    let (contract_address, _) = erc20_class_hash.deploy(@calldata).unwrap_syscall();
 
     contract_address
 }

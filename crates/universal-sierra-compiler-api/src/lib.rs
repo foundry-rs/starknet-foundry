@@ -23,11 +23,13 @@ pub fn compile_contract_sierra(sierra_json: &Value) -> Result<CasmContractClass,
     serde_json::from_str(&json).map_err(CompilationError::Deserialization)
 }
 
-/// Compiles Sierra JSON file at the given path of a contract into [`CasmContractClass`].
+/// Compiles Sierra JSON file at the given path of a contract into [`CasmContractClass`],
+/// optionally caching the compiled CASM in `cache_dir`.
 pub fn compile_contract_sierra_at_path(
     sierra_file_path: &Path,
+    cache_dir: Option<&Path>,
 ) -> Result<CasmContractClass, CompilationError> {
-    let json = compile_sierra_at_path(sierra_file_path, SierraType::Contract)?;
+    let json = compile_sierra_at_path(sierra_file_path, SierraType::Contract, cache_dir)?;
     serde_json::from_str(&json).map_err(CompilationError::Deserialization)
 }
 
@@ -37,11 +39,13 @@ pub fn compile_raw_sierra(sierra_json: &Value) -> Result<RawCasmProgram, Compila
     serde_json::from_str(&json).map_err(CompilationError::Deserialization)
 }
 
-/// Compiles Sierra JSON file at the given path of a raw program into [`RawCasmProgram`].
+/// Compiles Sierra JSON file at the given path of a raw program into [`RawCasmProgram`],
+/// optionally caching the compiled CASM in `cache_dir`.
 pub fn compile_raw_sierra_at_path(
     sierra_file_path: &Path,
+    cache_dir: Option<&Path>,
 ) -> Result<RawCasmProgram, CompilationError> {
-    let json = compile_sierra_at_path(sierra_file_path, SierraType::Raw)?;
+    let json = compile_sierra_at_path(sierra_file_path, SierraType::Raw, cache_dir)?;
     serde_json::from_str(&json).map_err(CompilationError::Deserialization)
 }
 
