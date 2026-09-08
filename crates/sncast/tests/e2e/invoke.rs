@@ -351,6 +351,38 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
 }
 
 #[tokio::test]
+async fn test_max_fee_lower_than_estimated_fee_displays_error() {
+    let tempdir = create_and_deploy_oz_account().await;
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 0x2",
+        "--max-fee",
+        "1",
+    ];
+
+    let output = runner(&args).current_dir(tempdir.path()).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+            Command: invoke
+            Error: Estimated fee ([..]) is higher than provided max fee ([..])
+        "},
+    );
+}
+
+#[tokio::test]
 async fn test_contract_does_not_exist() {
     let args = vec![
         "--accounts-file",
