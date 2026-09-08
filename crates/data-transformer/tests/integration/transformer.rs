@@ -81,9 +81,78 @@ async fn test_invalid_cairo_expression() {
 async fn test_invalid_argument_number() {
     let result = run_transformer("0x123, 'some_obsolete_argument', 10", "simple_fn").await;
 
-    result
-        .unwrap_err()
-        .assert_contains("Invalid number of arguments: passed 3, expected 1");
+    result.unwrap_err().assert_contains(indoc! {r"
+        Invalid arguments for function `simple_fn`: passed 3, expected 1
+          unexpected argument at position 2
+          unexpected argument at position 3
+
+          passed: (0x123, 'some_obsolete_argument', 10)
+          expected: (a: core::felt252)"});
+}
+
+#[test_case(
+    "",
+    indoc! {r"
+        Invalid arguments for function `multiple_signed_fn`: passed 0, expected 2
+          missing argument `a` at position 1
+          missing argument `b` at position 2
+
+          passed: ()
+          expected: (a: core::integer::i32, b: core::integer::i8)"};
+    "all arguments missing"
+)]
+#[test_case(
+    "1_i32",
+    indoc! {r"
+        Invalid arguments for function `multiple_signed_fn`: passed 1, expected 2
+          missing argument `b` at position 2
+
+          passed: (1_i32)
+          expected: (a: core::integer::i32, b: core::integer::i8)"};
+    "one argument missing"
+)]
+#[tokio::test]
+async fn test_missing_arguments(input: &str, expected_error: &str) {
+    let result = run_transformer(input, "multiple_signed_fn").await;
+
+    result.unwrap_err().assert_contains(expected_error);
+}
+
+#[tokio::test]
+async fn test_argument_number_mismatch_with_complex_types() {
+    let result = run_transformer("array![]", "complex_fn").await;
+
+    result.unwrap_err().assert_contains(indoc! {r"
+        Invalid arguments for function `complex_fn`: passed 1, expected 7
+          missing argument `one` at position 2
+          missing argument `two` at position 3
+          missing argument `three` at position 4
+          missing argument `four` at position 5
+          missing argument `five` at position 6
+          missing argument `six` at position 7
+
+          passed: (array![])
+          expected: (
+            arr: core::array::Array::<core::array::Array::<core::felt252>>,
+            one: core::integer::u8,
+            two: core::integer::i16,
+            three: core::byte_array::ByteArray,
+            four: (core::felt252, core::integer::u32),
+            five: core::bool,
+            six: core::integer::u256
+          )"});
+}
+
+#[tokio::test]
+async fn test_unexpected_argument_for_no_args_function() {
+    let result = run_transformer("1", "no_args_fn").await;
+
+    result.unwrap_err().assert_contains(indoc! {r"
+        Invalid arguments for function `no_args_fn`: passed 1, expected 0
+          unexpected argument at position 1
+
+          passed: (1)
+          expected: ()"});
 }
 
 #[tokio::test]
