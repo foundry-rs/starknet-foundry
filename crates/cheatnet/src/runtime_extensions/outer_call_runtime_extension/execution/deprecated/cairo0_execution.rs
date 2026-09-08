@@ -20,6 +20,7 @@ use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
 use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner};
 
 // blockifier/src/execution/deprecated_execution.rs:36 (execute_entry_point_call)
+#[allow(clippy::result_large_err)]
 pub(crate) fn execute_entry_point_call_cairo0(
     call: ExecutableCallEntryPoint,
     compiled_class_v0: CompiledClassV0,
