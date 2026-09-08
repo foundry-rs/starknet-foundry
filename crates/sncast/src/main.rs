@@ -341,7 +341,8 @@ fn resolve_fee_args(command: &mut Commands, config: &FeeParams) {
             | account::Commands::Create(_)
             | account::Commands::Delete(_)
             | account::Commands::List(_)
-            | account::Commands::Migrate(_) => return,
+            | account::Commands::Migrate(_)
+            | account::Commands::ImportStarkli(_) => return,
         },
         Commands::Get(_)
         | Commands::Call(_)
