@@ -24,6 +24,11 @@ tuples we expect that were emitted.
 > 📝 **Note**
 > We can pass events defined in the contract and construct them like in the `self.emit` method!
 
+If an assertion fails, Forge displays the expected event decoded with the emitting contract's ABI,
+along with the contract's full module path and address. For events that cannot be decoded, such as
+custom events emitted with `emit_event_syscall`, the error instead identifies a raw event with
+matching keys and data.
+
 
 ## Asserting lack of event emission with `assert_not_emitted`
 

@@ -127,7 +127,7 @@ where
         let fee_estimate = execution_calls
             .estimate_fee()
             .await
-            .expect("Failed to estimate fee");
+            .map_err(|error| anyhow!("Failed to estimate fee: {error}"))?;
         fee_args.try_into_fee_settings(Some(&fee_estimate))
     } else {
         fee_args.try_into_fee_settings(None)
@@ -141,7 +141,7 @@ where
         l1_data_gas,
         l1_data_gas_price,
         tip,
-    } = fee_settings.expect("Failed to convert to fee settings");
+    } = fee_settings?;
 
     let proof = proof_args
         .resolve_proof()
