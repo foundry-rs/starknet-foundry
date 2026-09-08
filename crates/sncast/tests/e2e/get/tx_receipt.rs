@@ -54,18 +54,17 @@ async fn test_get_tx_receipt_reverted() {
         Finality Status:      Accepted on L1
         Execution Status:     Reverted
         Revert Reason:        Error in the called contract (0x0143fe26927dd6a302522ea1cd6a821ab06b3753194acee38d88a85c93b3cbc6):
-        Error at pc=0:4271:
-        Got an exception while executing a hint: Execution failed. Failure reason: 0x7374616c65207265706f7274 ('stale report').
-        Cairo traceback (most recent call last):
-        Unknown location (pc=0:65)
-        Unknown location (pc=0:1787)
-        Unknown location (pc=0:2271)
-        Unknown location (pc=0:2984)
-        Unknown location (pc=0:3611)
+                              Error at pc=0:4271:
+                              Got an exception while executing a hint: Execution failed. Failure reason: 0x7374616c65207265706f7274 ('stale report').
+                              Cairo traceback (most recent call last):
+                              Unknown location (pc=0:65)
+                              Unknown location (pc=0:1787)
+                              Unknown location (pc=0:2271)
+                              Unknown location (pc=0:2984)
+                              Unknown location (pc=0:3611)
 
-        Error in the called contract (0x00132303a40ae2f271f4e1b707596a63f6f2921c4d400b38822548ed1bb0cbe0):
-        Execution failed. Failure reason: 0x7374616c65207265706f7274 ('stale report').
-
+                              Error in the called contract (0x00132303a40ae2f271f4e1b707596a63f6f2921c4d400b38822548ed1bb0cbe0):
+                              Execution failed. Failure reason: 0x7374616c65207265706f7274 ('stale report').
         Actual Fee:           804581591951018246 FRI
         L1 Gas Consumed:      0
         L1 Data Gas Consumed: 0

@@ -83,7 +83,8 @@ rayon = "1.10"
 regex = "1.11.3"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.149"
-starknet-rust = "0.19.0"
+# TODO: Restore version once starknet-rust releases new version
+starknet-rust = { git = "https://github.com/software-mansion/starknet-rust", rev = "61aab4386db3d8cab8378e23c645ce8beb61fad1" }
 starknet-rust-crypto = "0.19.0"
 tempfile = "3.24.0"
 thiserror = "2.0.17"

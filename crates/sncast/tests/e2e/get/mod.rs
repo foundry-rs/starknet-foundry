@@ -7,3 +7,4 @@ mod state_update;
 mod transaction;
 mod tx_receipt;
 mod tx_status;
+mod tx_trace;

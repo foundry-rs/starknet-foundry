@@ -7,4 +7,5 @@ pub use reverse_transformer::{
     ReverseTransformError, ReverseTransformEventError, reverse_transform_event,
     reverse_transform_input, reverse_transform_output,
 };
+pub use shared::extraction::extract_function_from_selector;
 pub use transformer::transform;

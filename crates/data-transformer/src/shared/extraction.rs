@@ -2,6 +2,7 @@ use starknet_rust::core::types::contract::{AbiEntry, AbiFunction, StateMutabilit
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
 
+#[must_use]
 pub fn extract_function_from_selector(
     abi: &[AbiEntry],
     searched_selector: Felt,
@@ -28,7 +29,7 @@ fn default_constructor() -> AbiFunction {
 
 fn search_for_function(abi: &[AbiEntry], searched_selector: Felt) -> Option<AbiFunction> {
     abi.iter().find_map(|entry| match entry {
-        AbiEntry::Function(func) => {
+        AbiEntry::Function(func) | AbiEntry::L1Handler(func) => {
             let selector = get_selector_from_name(&func.name).ok()?;
             (selector == searched_selector).then(|| func.clone())
         }

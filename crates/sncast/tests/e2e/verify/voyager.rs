@@ -512,7 +512,7 @@ async fn test_failed_class_hash_lookup() {
         output,
         formatdoc! {"
         Command: verify
-        Error: ContractNotFound
+        Error: Contract not found
         ",
         },
     );
