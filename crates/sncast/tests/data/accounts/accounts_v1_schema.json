@@ -1,0 +1,44 @@
+{
+    "alpha-sepolia": {
+        "user0": {
+          "private_key": "0x56c12e097e49ea382ca8eadec0839401",
+          "public_key": "0x48234b9bc6c1e749f4b908d310d8c53dae6564110b05ccf79016dca8ce7dfac",
+          "address": "0x6f4621e7ad43707b3f69f9df49425c3d94fdc5ab2e444bfa0e7e4edeff7992d"
+        },
+        "braavos": {
+          "address": "0x2235bf96ef3f88915e3537f9a692977f5caf10b728dd95b0a3ccca2282fbb9b",
+          "class_hash": "0x3957f9f5a1cbfe918cedc2015c85200ca51a5f7506ecb6de98a5207b759bf8a",
+          "deployed": false,
+          "legacy": false,
+          "private_key": "0x18201c12f4742c34655c5e41dba442afbe95fdeb018f8581d1b39b06824affe",
+          "public_key": "0x222c9fa27a71f007fc04da4dad684fa6a2b7328c002788089920b53c16ea374",
+          "salt": "0x76210f283afb4f88",
+          "type": "braavos"
+        },
+        "oz": {
+          "address": "0x1173129651d1853fe9a15f8e8ef29e4806c5a9469b0a6b9622ee90f392bc26d",
+          "class_hash": "0x5b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564",
+          "deployed": false,
+          "legacy": false,
+          "private_key": "0x4a31141908e08ec6d82d324303d97405ad2196def8a13ea320e2117166809d2",
+          "public_key": "0x36a64f9d432cce317c3e50bc467d48f2797463babe8f29c83c2e6125ddd1947",
+          "salt": "0x25e7144fce03d200",
+          "type": "open_zeppelin"
+        },
+        "devnet-1": {
+          "private_key": "0x0000000000000000000000000000000056c12e097e49ea382ca8eadec0839401",
+          "public_key": "0x048234b9bc6c1e749f4b908d310d8c53dae6564110b05ccf79016dca8ce7dfac",
+          "address": "0x06f4621e7ad43707b3f69f9df49425c3d94fdc5ab2e444bfa0e7e4edeff7992d"
+        },
+        "undeployed": {
+          "address": "0x1cd60b396882122646ff81250569ed3f068c8096d08f0fd700069f678587091",
+          "class_hash": "0x5b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564",
+          "deployed": false,
+          "legacy": false,
+          "private_key": "0x348939956e36219cc10dd4695596d78c222747d5d312133446eb831b92a1864",
+          "public_key": "0x2a5308372ea6517547dc539183c9eaa8fb502dbbb66693a82779a38acc3174f",
+          "salt": "0x9a713850ade02bc2",
+          "type": "open_zeppelin"
+        }
+    }
+}
