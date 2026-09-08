@@ -9,6 +9,7 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::ui::UI;
 use sncast::{check_if_legacy_contract, get_account, get_provider};
+use starknet_rust::accounts::Account;
 use starknet_rust::macros::felt;
 use url::Url;
 

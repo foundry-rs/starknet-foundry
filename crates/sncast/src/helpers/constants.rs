@@ -44,6 +44,3 @@ pub const WAIT_TIMEOUT: NonZeroU16 = NonZeroU16::new(300).unwrap();
 pub const WAIT_RETRY_INTERVAL: NonZeroU8 = NonZeroU8::new(5).unwrap();
 
 pub const DEFAULT_ACCOUNTS_FILE: &str = "~/.starknet_accounts/starknet_open_zeppelin_accounts.json";
-
-pub const KEYSTORE_PASSWORD_ENV_VAR: &str = "KEYSTORE_PASSWORD";
-pub const CREATE_KEYSTORE_PASSWORD_ENV_VAR: &str = "CREATE_KEYSTORE_PASSWORD";

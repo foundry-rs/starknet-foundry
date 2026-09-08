@@ -1,12 +1,7 @@
-use crate::helpers::ledger;
 use anyhow::{Result, bail};
 use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
-use starknet_rust::{
-    accounts::SingleOwnerAccount,
-    providers::jsonrpc::{HttpTransport, JsonRpcClient},
-    signers::{DerivationPath, LedgerSigner, LocalWallet},
-};
+use starknet_rust::signers::DerivationPath;
 use starknet_types_core::felt::Felt;
 
 /// Represents the type of signer stored in the accounts file
@@ -36,48 +31,6 @@ impl SignerType {
             SignerType::Local { .. } => None,
         }
     }
-}
-
-#[derive(Debug)]
-/// Represents the `SingleOwnerAccount` variant with either `LocalWallet` or `LedgerSigner` as signer
-pub enum AccountVariant<'a> {
-    LocalWallet(SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>),
-    Ledger(
-        SingleOwnerAccount<
-            &'a JsonRpcClient<HttpTransport>,
-            LedgerSigner<ledger::SncastLedgerTransport>,
-        >,
-    ),
-}
-
-impl AccountVariant<'_> {
-    #[must_use]
-    pub fn address(&self) -> Felt {
-        use starknet_rust::accounts::Account;
-        match self {
-            AccountVariant::LocalWallet(account) => account.address(),
-            AccountVariant::Ledger(account) => account.address(),
-        }
-    }
-
-    #[must_use]
-    pub fn chain_id(&self) -> Felt {
-        use starknet_rust::accounts::Account;
-        match self {
-            AccountVariant::LocalWallet(account) => account.chain_id(),
-            AccountVariant::Ledger(account) => account.chain_id(),
-        }
-    }
-}
-
-#[macro_export]
-macro_rules! with_account {
-    ($variant:expr, |$account:ident| $body:expr) => {
-        match $variant {
-            &$crate::AccountVariant::LocalWallet(ref $account) => $body,
-            &$crate::AccountVariant::Ledger(ref $account) => $body,
-        }
-    };
 }
 
 /// Represents the source of the signer for account operations
