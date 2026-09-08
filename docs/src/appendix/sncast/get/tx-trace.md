@@ -35,3 +35,8 @@ Display full transaction trace.
 By default, the command displays a compact trace focused on the invocation flow. For each invocation, it shows the entry point selector, contract address, calldata, result, and any nested calls.
 
 Use the `--full` flag to include the remaining trace data, such as call and entry point types, caller and class information, emitted events, L1 messages, execution resources, revert status, and the transaction state diff.
+
+## `--raw`
+Optional.
+
+Display raw felt values without ABI decoding.
