@@ -4,6 +4,7 @@ pub mod devnet_detection;
 pub mod devnet_provider;
 pub mod env;
 pub mod fixtures;
+pub mod insta;
 pub mod output;
 pub mod runner;
 pub mod shell;

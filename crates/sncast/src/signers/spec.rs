@@ -52,6 +52,22 @@ impl SignerSpec {
             Self::Ledger(_) => SignerKind::Ledger,
         }
     }
+
+    #[must_use]
+    pub fn private_key(&self) -> Option<Felt> {
+        match self {
+            Self::PrivateKey(spec) => Some(spec.private_key()),
+            Self::Keystore(_) | Self::Ledger(_) => None,
+        }
+    }
+
+    #[must_use]
+    pub fn derivation_path(&self) -> Option<&DerivationPath> {
+        match self {
+            Self::Ledger(spec) => Some(spec.derivation_path()),
+            Self::PrivateKey(_) | Self::Keystore(_) => None,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
