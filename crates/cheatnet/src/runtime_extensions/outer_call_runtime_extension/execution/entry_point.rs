@@ -33,6 +33,7 @@ use blockifier::{
     state::state_api::State,
 };
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
+use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use conversions::FromConv;
 use shared::vm::VirtualMachineExt;
 use starknet_api::execution_resources::GasAmount;
@@ -43,14 +44,40 @@ use starknet_api::{
 };
 use starknet_types_core::felt::Felt;
 use std::collections::HashSet;
+use thiserror::Error;
 
 pub(crate) type ContractClassEntryPointExecutionResult =
-    Result<CallInfoWithExecutionData, EntryPointExecutionError>;
+    Result<CallInfoWithExecutionData, EntryPointExecutionErrorWithTraceAndMemory>;
 
 pub(crate) struct CallInfoWithExecutionData {
     pub call_info: CallInfo,
     pub syscall_usage_vm_resources: SyscallUsageMap,
     pub syscall_usage_sierra_gas: SyscallUsageMap,
+    #[cfg(feature = "starkloupe")]
+    pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
+    #[cfg(feature = "starkloupe")]
+    pub vm_memory: Option<Vec<Option<Felt>>>,
+}
+
+#[derive(Debug, Error)]
+#[error("{}", source)]
+pub struct EntryPointExecutionErrorWithTraceAndMemory {
+    pub source: EntryPointExecutionError,
+    pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
+    pub vm_memory: Option<Vec<Option<Felt>>>,
+}
+
+impl<T> From<T> for EntryPointExecutionErrorWithTraceAndMemory
+where
+    T: Into<EntryPointExecutionError>,
+{
+    fn from(value: T) -> Self {
+        Self {
+            source: value.into(),
+            vm_trace: None,
+            vm_memory: None,
+        }
+    }
 }
 
 #[derive(Default)]
@@ -121,10 +148,14 @@ pub fn execute_call_entry_point(
                 .annotated(TrackedResource::CairoSteps, strip_vm_frames)
         })?;
     if storage_class_hash == ClassHash::default() {
-        return Err(EntryPointExecutionError::from(
-            PreExecutionError::UninitializedStorageAddress(entry_point.storage_address),
-        )
-        .annotated(TrackedResource::CairoSteps, strip_vm_frames));
+        let error = EntryPointExecutionError::from(PreExecutionError::UninitializedStorageAddress(
+            entry_point.storage_address,
+        ))
+        .annotated(TrackedResource::CairoSteps, strip_vm_frames);
+        // Record the failed call so the trace shows it when the contract is not deployed.
+        #[cfg(feature = "starkloupe")]
+        exit_error_call(&error, cheatnet_state, None, None);
+        return Err(error);
     }
 
     // region: Modified blockifier code
@@ -170,6 +201,12 @@ pub fn execute_call_entry_point(
         context.n_emitted_events,
         context.n_sent_messages_to_l1,
     ));
+
+    #[cfg(feature = "starkloupe")]
+    if current_tracked_resource == TrackedResource::CairoSteps {
+        // Override the initial gas with a high value so it won't limit the run.
+        entry_point.initial_gas = context.versioned_constants().infinite_gas_for_vm_mode();
+    }
 
     context
         .tracked_resource_stack
@@ -220,6 +257,11 @@ pub fn execute_call_entry_point(
 
     match result {
         Ok(res) => {
+            #[cfg(feature = "starkloupe")]
+            let (vm_trace, vm_memory) = (res.vm_trace, res.vm_memory);
+            #[cfg(not(feature = "starkloupe"))]
+            let (vm_trace, vm_memory) = (None, None);
+
             if res.call_info.execution.failed && !context.versioned_constants().enable_reverts {
                 let err = EntryPointExecutionError::ExecutionFailed {
                     error_trace: extract_trailing_cairo1_revert_trace(
@@ -228,7 +270,7 @@ pub fn execute_call_entry_point(
                     ),
                 }
                 .annotated(res.call_info.tracked_resource, strip_vm_frames);
-                exit_error_call(&err, cheatnet_state);
+                exit_error_call(&err, cheatnet_state, vm_trace, vm_memory);
                 return Err(err);
             }
             update_remaining_gas(remaining_gas, &res.call_info);
@@ -237,6 +279,8 @@ pub fn execute_call_entry_point(
                 &res.syscall_usage_vm_resources,
                 &res.syscall_usage_sierra_gas,
                 cheatnet_state,
+                vm_trace,
+                vm_memory,
             );
 
             if !opts.trace_data_handled_by_revert_call {
@@ -245,43 +289,54 @@ pub fn execute_call_entry_point(
 
             Ok(res.call_info)
         }
-        Err(EntryPointExecutionError::PreExecutionError(err))
-            if context.versioned_constants().enable_reverts =>
-        {
-            let error_code = match err {
-                PreExecutionError::EntryPointNotFound(_)
-                | PreExecutionError::NoEntryPointOfTypeFound(_) => ENTRYPOINT_NOT_FOUND_ERROR,
-                PreExecutionError::InsufficientEntryPointGas => OUT_OF_GAS_ERROR,
-                _ => {
-                    return Err(EntryPointExecutionError::from(err)
-                        .annotated(current_tracked_resource, strip_vm_frames));
+        Err(EntryPointExecutionErrorWithTraceAndMemory {
+            source,
+            vm_trace,
+            vm_memory,
+        }) => {
+            if let EntryPointExecutionError::PreExecutionError(err) = &source
+                && context.versioned_constants().enable_reverts
+            {
+                let error_code = match err {
+                    PreExecutionError::EntryPointNotFound(_)
+                    | PreExecutionError::NoEntryPointOfTypeFound(_) => {
+                        Some(ENTRYPOINT_NOT_FOUND_ERROR)
+                    }
+                    PreExecutionError::InsufficientEntryPointGas => Some(OUT_OF_GAS_ERROR),
+                    _ => None,
+                };
+
+                if let Some(error_code) = error_code {
+                    let call_info = CallInfo {
+                        call: entry_point.into(),
+                        execution: CallExecution {
+                            retdata: Retdata(vec![Felt::from_hex(error_code).unwrap()]),
+                            failed: true,
+                            gas_consumed: 0,
+                            ..CallExecution::default()
+                        },
+                        tracked_resource: current_tracked_resource,
+                        ..CallInfo::default()
+                    };
+                    if !opts.trace_data_handled_by_revert_call {
+                        update_trace_data(
+                            &call_info,
+                            &SyscallUsageMap::default(),
+                            &SyscallUsageMap::default(),
+                            cheatnet_state,
+                            None,
+                            None,
+                        );
+                        cheatnet_state.trace_data.exit_nested_call();
+                    }
+                    return Ok(call_info);
                 }
-            };
-            let call_info = CallInfo {
-                call: entry_point.into(),
-                execution: CallExecution {
-                    retdata: Retdata(vec![Felt::from_hex(error_code).unwrap()]),
-                    failed: true,
-                    gas_consumed: 0,
-                    ..CallExecution::default()
-                },
-                tracked_resource: current_tracked_resource,
-                ..CallInfo::default()
-            };
-            if !opts.trace_data_handled_by_revert_call {
-                update_trace_data(
-                    &call_info,
-                    &SyscallUsageMap::default(),
-                    &SyscallUsageMap::default(),
-                    cheatnet_state,
-                );
-                cheatnet_state.trace_data.exit_nested_call();
+
+                return Err(source.annotated(current_tracked_resource, strip_vm_frames));
             }
-            Ok(call_info)
-        }
-        Err(err) => {
-            let err = err.annotated(current_tracked_resource, strip_vm_frames);
-            exit_error_call(&err, cheatnet_state);
+
+            let err = source.annotated(current_tracked_resource, strip_vm_frames);
+            exit_error_call(&err, cheatnet_state, vm_trace, vm_memory);
             Err(err)
         }
     }
@@ -332,7 +387,7 @@ pub fn non_reverting_execute_call_entry_point(
                 ),
             }
             .annotated(call_info.tracked_resource, strip_vm_frames);
-            exit_error_call(&err, cheatnet_state);
+            exit_error_call(&err, cheatnet_state, None, None);
             return Err(err);
         }
         cheatnet_state.trace_data.exit_nested_call();
@@ -444,18 +499,31 @@ fn mocked_call_info(
     }
 }
 
-pub(crate) fn extract_trace_and_register_errors(
+pub(crate) fn extract_trace_and_memory_and_register_errors(
+    source: EntryPointExecutionError,
     class_hash: ClassHash,
     runner: &mut CairoRunner,
     cheatnet_state: &mut CheatnetState,
-) {
+) -> EntryPointExecutionErrorWithTraceAndMemory {
     let trace = get_relocated_vm_trace(runner);
-    cheatnet_state
-        .trace_data
-        .set_vm_trace_for_current_call(trace);
-
     let pcs = runner.vm.get_reversed_pc_traceback();
     cheatnet_state.register_error(class_hash, pcs);
+
+    #[cfg(feature = "starkloupe")]
+    {
+        EntryPointExecutionErrorWithTraceAndMemory {
+            source,
+            vm_trace: Some(trace),
+            vm_memory: Some(runner.relocated_memory.clone()),
+        }
+    }
+    #[cfg(not(feature = "starkloupe"))]
+    {
+        cheatnet_state
+            .trace_data
+            .set_vm_trace_for_current_call(trace);
+        source.into()
+    }
 }
 
 /// This helper function is used for backtrace to avoid displaying errors that were already handled
