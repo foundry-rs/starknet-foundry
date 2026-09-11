@@ -1,3 +1,5 @@
+[workspace]
+
 [package]
 name = "snforge_scarb_plugin"
 version = "0.63.0"

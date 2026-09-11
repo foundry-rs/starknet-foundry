@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - Raw Sierra tests now use compiler-inferred function costs as their initial gas budget, allowing correct gas refunds beyond the contract entry-point precharge.
+- `assert_emitted` and `assert_not_emitted` now display decoded expected events and their emitting contract in failure messages.
 
 ### Cast
 

@@ -138,6 +138,14 @@ impl ContractsData {
         self.contracts.get(module_path)
     }
 
+    /// Returns the full module path for a contract class.
+    #[must_use]
+    pub fn get_contract_module_path(&self, class_hash: &ClassHash) -> Option<&str> {
+        self.class_hashes
+            .get_by_right(class_hash)
+            .map(String::as_str)
+    }
+
     #[must_use]
     pub fn get_contract_name(&self, class_hash: &ClassHash) -> Option<ContractName> {
         let module_path = self.class_hashes.get_by_right(class_hash)?;

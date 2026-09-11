@@ -3,7 +3,7 @@ use crate::runtime_extensions::common::get_relocated_vm_trace;
 use crate::runtime_extensions::outer_call_runtime_extension::CheatnetState;
 use crate::runtime_extensions::outer_call_runtime_extension::execution::entry_point::{
     CallInfoWithExecutionData, ContractClassEntryPointExecutionResult,
-    extract_trace_and_register_errors,
+    extract_trace_and_memory_and_register_errors,
 };
 use blockifier::execution::contract_class::{CompiledClassV1, TrackedResource};
 use blockifier::execution::entry_point::ExecutableCallEntryPoint;
@@ -27,6 +27,7 @@ use cairo_vm::{
 use runtime::{ExtendedRuntime, StarknetRuntime};
 
 // blockifier/src/execution/cairo1_execution.rs:48 (execute_entry_point_call)
+#[cfg_attr(feature = "cairo-native", expect(clippy::result_large_err))]
 pub(crate) fn execute_entry_point_call_cairo1(
     call: ExecutableCallEntryPoint,
     compiled_class_v1: &CompiledClassV1,
@@ -84,15 +85,19 @@ pub(crate) fn execute_entry_point_call_cairo1(
         &args,
         program_extra_data_length,
     )
-    .inspect_err(|_| {
-        extract_trace_and_register_errors(
+    .map_err(|source| {
+        extract_trace_and_memory_and_register_errors(
+            source,
             class_hash,
             &mut runner,
             cheatable_runtime.extension.cheatnet_state,
-        );
+        )
     })?;
 
     let trace = get_relocated_vm_trace(&mut runner);
+    // Captured before `runner` is consumed by `finalize_execution` below.
+    #[cfg(feature = "starkloupe")]
+    let vm_memory = Some(runner.relocated_memory.clone());
 
     // Syscall usage here is flat, meaning it only includes syscalls from current call
     let syscall_usage = cheatable_runtime
@@ -126,6 +131,12 @@ pub(crate) fn execute_entry_point_call_cairo1(
             .cheatnet_state
             .register_error(class_hash, pcs);
     }
+
+    // With `starkloupe` the artifacts are carried out on `CallInfoWithExecutionData`,
+    // so the caller can attach them to failed calls too.
+    #[cfg(feature = "starkloupe")]
+    let vm_trace = Some(trace);
+    #[cfg(not(feature = "starkloupe"))]
     cheatnet_state
         .trace_data
         .set_vm_trace_for_current_call(trace);
@@ -140,6 +151,10 @@ pub(crate) fn execute_entry_point_call_cairo1(
         call_info,
         syscall_usage_vm_resources,
         syscall_usage_sierra_gas,
+        #[cfg(feature = "starkloupe")]
+        vm_trace,
+        #[cfg(feature = "starkloupe")]
+        vm_memory,
     })
     // endregion
 }
@@ -158,7 +173,8 @@ pub fn cheatable_run_entry_point(
     // endregion
     let args: Vec<&CairoArg> = args.iter().collect();
 
-    runner
+    // region: Modified blockifier code
+    let result = runner
         .run_from_entrypoint(
             entry_point.pc(),
             &args,
@@ -166,14 +182,24 @@ pub fn cheatable_run_entry_point(
             Some(program_segment_size),
             hint_processor,
         )
-        .map_err(Box::new)?;
+        .map_err(Box::new);
 
-    // region: Modified blockifier code
+    // With `starkloupe` a failed run is not propagated yet, so that relocation
+    // still happens and a VM trace is available for the failing call. The run
+    // failure keeps precedence over any relocation error.
+    #[cfg(not(feature = "starkloupe"))]
+    result?;
+
     // Relocate trace to then collect it
-    runner
+    let relocation_result = runner
         .relocate(true, true)
         .map_err(CairoRunError::from)
-        .map_err(Box::new)?;
+        .map_err(Box::new);
+
+    #[cfg(feature = "starkloupe")]
+    result?;
+
+    relocation_result?;
     // endregion
 
     Ok(())
