@@ -1572,26 +1572,27 @@ fn l1_message_cost_sierra_gas() {
     //      -> 5 * 256 = 1280 data array cost (payload length + 2 required solidity params for array)
     //      -> 20_000 l1 storage write cost
     // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
-    // 91_560 = cost of 1 call_contract syscall (because 1 * 903 * 100 + 18 * 70)
-    //      -> 1 call contract syscall costs 903 cairo steps and 18 range check builtins
+    // 91_360 = cost of 1 call_contract syscall (because 1 * 901 * 100 + 18 * 70)
+    //      -> 1 call contract syscall costs 901 cairo steps and 18 range check builtins
     //      -> 1 range check costs 70
-    // 14_470 = cost of 1 SendMessageToL1 syscall (because 1 * 144 * 100 + 1 * 70)
-    //      -> 1 SendMessageToL1 syscall costs 144 cairo steps and 1 range check builtin
+    // 14_570 = cost of 1 SendMessageToL1 syscall with a 3-felt payload (because 1 * 127 * 100 + 1 * 70 + 3 * 6 * 100)
+    //      -> constant part: 127 cairo steps and 1 range check builtin = 12_770
+    //      -> calldata factor: 6 cairo steps per payload felt = 3 * 6 * 100 = 1800
     //      -> SendMessageToL1 os_resources:
-    //         (blockifier 0.19.0-rc.2) https://github.com/starkware-libs/sequencer/blob/773c57afc7c450a1122a57c914b10f74df2492ea/crates/blockifier/resources/blockifier_versioned_constants_0_14_3.json#L458-L463
+    //         (blockifier 0.20.0-rc.0) https://github.com/starkware-libs/sequencer/blob/0ee373ac5f50d475ab0efd59edbda4a9215c12cf/crates/blockifier/resources/blockifier_versioned_constants_0_14_4.json#L459-L472
     //      -> 1 range check costs 70
-    // 186_380 = snforge_std declare+deploy bundle (292_410 − 91_560 − 14_470)
+    // 178_850 = snforge_std declare+deploy bundle (284_780 − 91_360 − 14_570)
     //
     // 29_524 l1_gas
     // 96 l1_data_gas
-    // l2 gas > 292_410 (= 186_380 + 91_560 + 14_470)
+    // l2 gas = 284_780 (= 178_850 + 91_360 + 14_570)
     assert_gas(
         &result,
         "l1_message_cost",
         GasVector {
             l1_gas: GasAmount(29_524),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(284_880),
+            l2_gas: GasAmount(284_780),
         },
     );
 }
@@ -1641,21 +1642,21 @@ fn l1_message_cost_for_proxy_sierra_gas() {
     // 64 = l(2) * 32
     //      -> l = number of class hash updates
     //      -> n = unique contracts updated
-    // 183_120 = 2 * 91_560 call_contract (test → proxy → gas_checker)
-    // 14_470 = cost of 1 SendMessageToL1 syscall (see `l1_message_cost_sierra_gas` test)
-    // 358_130 = 2 * 179_065 snforge_std declare+deploy per contract
-    //      -> 179_065 = (555_720 − 183_120 − 14_470) / 2
+    // 182_720 = 2 * 91_360 call_contract (test → proxy → gas_checker)
+    // 14_570 = cost of 1 SendMessageToL1 syscall (see `l1_message_cost_sierra_gas` test)
+    // 350_600 = 2 * 175_300 snforge_std declare+deploy per contract
+    //      -> 175_300 = (547_890 − 182_720 − 14_570) / 2
     //
     // 29_524 l1_gas
     // (128 + 64 =) 192 l1_data_gas
-    // l2 gas > 555_720 (= 358_130 + 183_120 + 14_470)
+    // l2 gas = 547_890 (= 350_600 + 182_720 + 14_570)
     assert_gas(
         &result,
         "l1_message_cost_for_proxy",
         GasVector {
             l1_gas: GasAmount(29_524),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(548_190),
+            l2_gas: GasAmount(547_890),
         },
     );
 }
