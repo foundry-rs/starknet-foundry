@@ -144,6 +144,7 @@
     * [common flags](appendix/sncast/common.md)
     * [account](appendix/sncast/account/account.md)
         * [import](appendix/sncast/account/import.md)
+        * [import-starkli](appendix/sncast/account/import-starkli.md)
         * [create](appendix/sncast/account/create.md)
         * [deploy](appendix/sncast/account/deploy.md)
         * [delete](appendix/sncast/account/delete.md)
