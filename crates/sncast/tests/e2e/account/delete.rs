@@ -107,6 +107,7 @@ pub fn test_happy_case() {
     let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
 
     snapbox.assert().success().stdout_eq(indoc! {r"
+        [WARNING] Accounts file was migrated to schema version 2; the original was saved as a .v1.bak file
         Success: Account deleted
 
         Account successfully removed
@@ -132,6 +133,7 @@ pub fn test_happy_case_url() {
     let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
 
     snapbox.assert().success().stdout_eq(indoc! {r"
+        [WARNING] Accounts file was migrated to schema version 2; the original was saved as a .v1.bak file
         Success: Account deleted
 
         Account successfully removed
@@ -163,6 +165,7 @@ pub fn test_happy_case_with_yes_flag() {
 
     assert!(output.as_stderr().is_empty());
     output.stdout_eq(indoc! {r"
+        [WARNING] Accounts file was migrated to schema version 2; the original was saved as a .v1.bak file
         Success: Account deleted
 
         Account successfully removed
