@@ -10,6 +10,7 @@ pub mod devnet;
 pub mod dry_run;
 pub mod fee;
 pub mod felt;
+pub mod filesystem;
 pub mod interactive;
 pub mod ledger;
 pub mod output_format;

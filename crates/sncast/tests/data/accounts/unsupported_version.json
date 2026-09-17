@@ -1,0 +1,20 @@
+{
+  "version": 5,
+  "accounts": {
+    "alpha-sepolia": {
+      "braavos": {
+        "public_key": "0x222c9fa27a71f007fc04da4dad684fa6a2b7328c002788089920b53c16ea374",
+        "address": "0x2235bf96ef3f88915e3537f9a692977f5caf10b728dd95b0a3ccca2282fbb9b",
+        "salt": "0x76210f283afb4f88",
+        "deployed": false,
+        "class_hash": "0x3957f9f5a1cbfe918cedc2015c85200ca51a5f7506ecb6de98a5207b759bf8a",
+        "legacy": false,
+        "type": "braavos",
+        "signer": {
+          "type": "private_key",
+          "private_key": "0x18201c12f4742c34655c5e41dba442afbe95fdeb018f8581d1b39b06824affe"
+        }
+      }
+    }
+  }
+}
