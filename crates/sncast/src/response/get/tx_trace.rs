@@ -20,7 +20,6 @@ use starknet_rust::core::types::{
 };
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
-use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap, HashSet};
 
 pub struct TransactionTraceResponse {
@@ -45,9 +44,10 @@ impl Serialize for TransactionTraceResponse {
         S: Serializer,
     {
         let mut json = serde_json::to_value(&self.trace).map_err(S::Error::custom)?;
-        decode_trace_json(&self.trace, &mut json, &self.decoder).map_err(S::Error::custom)?;
+        let mut context = self.decoder.context();
+        decode_trace_json(&self.trace, &mut json, &mut context).map_err(S::Error::custom)?;
 
-        let decoding_warnings = self.decoder.decoding_warnings();
+        let decoding_warnings = context.decoding_warnings();
         if !decoding_warnings.is_empty() {
             json["decoding_warnings"] =
                 serde_json::to_value(decoding_warnings).map_err(S::Error::custom)?;
@@ -60,59 +60,59 @@ impl Serialize for TransactionTraceResponse {
 fn decode_trace_json(
     trace: &TransactionTrace,
     json: &mut Value,
-    decoder: &TraceDecoder,
+    context: &mut TraceDecodingContext<'_>,
 ) -> Result<(), String> {
     match trace {
         TransactionTrace::Invoke(trace) => {
             decode_optional_invocation_json(
                 trace.validate_invocation.as_ref(),
                 json.get_mut("validate_invocation"),
-                decoder,
+                context,
             );
             decode_execute_invocation_json(
                 &trace.execute_invocation,
                 required_json_field(json, "execute_invocation")?,
-                decoder,
+                context,
             );
             decode_optional_invocation_json(
                 trace.fee_transfer_invocation.as_ref(),
                 json.get_mut("fee_transfer_invocation"),
-                decoder,
+                context,
             );
         }
         TransactionTrace::Declare(trace) => {
             decode_optional_invocation_json(
                 trace.validate_invocation.as_ref(),
                 json.get_mut("validate_invocation"),
-                decoder,
+                context,
             );
             decode_optional_invocation_json(
                 trace.fee_transfer_invocation.as_ref(),
                 json.get_mut("fee_transfer_invocation"),
-                decoder,
+                context,
             );
         }
         TransactionTrace::DeployAccount(trace) => {
             decode_optional_invocation_json(
                 trace.validate_invocation.as_ref(),
                 json.get_mut("validate_invocation"),
-                decoder,
+                context,
             );
             decode_invocation_json(
                 &trace.constructor_invocation,
                 required_json_field(json, "constructor_invocation")?,
-                decoder,
+                context,
             );
             decode_optional_invocation_json(
                 trace.fee_transfer_invocation.as_ref(),
                 json.get_mut("fee_transfer_invocation"),
-                decoder,
+                context,
             );
         }
         TransactionTrace::L1Handler(trace) => decode_execute_invocation_json(
             &trace.function_invocation,
             required_json_field(json, "function_invocation")?,
-            decoder,
+            context,
         ),
     }
 
@@ -127,35 +127,35 @@ fn required_json_field<'a>(json: &'a mut Value, field: &str) -> Result<&'a mut V
 fn decode_optional_invocation_json(
     invocation: Option<&FunctionInvocation>,
     json: Option<&mut Value>,
-    decoder: &TraceDecoder,
+    context: &mut TraceDecodingContext<'_>,
 ) {
     if let (Some(invocation), Some(json)) = (invocation, json) {
-        decode_invocation_json(invocation, json, decoder);
+        decode_invocation_json(invocation, json, context);
     }
 }
 
 fn decode_execute_invocation_json(
     invocation: &ExecuteInvocation,
     json: &mut Value,
-    decoder: &TraceDecoder,
+    context: &mut TraceDecodingContext<'_>,
 ) {
     if let ExecuteInvocation::Success(invocation) = invocation {
-        decode_invocation_json(invocation, json, decoder);
+        decode_invocation_json(invocation, json, context);
     }
 }
 
 fn decode_invocation_json(
     invocation: &FunctionInvocation,
     json: &mut Value,
-    decoder: &TraceDecoder,
+    context: &mut TraceDecodingContext<'_>,
 ) {
-    json["entry_point_selector"] = Value::String(decoder.selector(invocation));
-    json["calldata"] = Value::String(decoder.calldata(invocation));
-    json["result"] = Value::String(decoder.result(invocation));
+    json["entry_point_selector"] = Value::String(context.selector(invocation));
+    json["calldata"] = Value::String(context.calldata(invocation));
+    json["result"] = Value::String(context.result(invocation));
 
     if let Some(json_calls) = json.get_mut("calls").and_then(Value::as_array_mut) {
         for (call, json_call) in invocation.calls.iter().zip(json_calls) {
-            decode_invocation_json(call, json_call, decoder);
+            decode_invocation_json(call, json_call, context);
         }
     }
 }
@@ -167,8 +167,9 @@ impl SncastCommandMessage for TransactionTraceResponse {
             decoder,
             full,
         } = self;
-        let human_text = append_trace(OutputBuilder::new(), trace, decoder, *full).build();
-        let decoding_warnings = decoder.decoding_warnings();
+        let mut context = decoder.context();
+        let human_text = append_trace(OutputBuilder::new(), trace, &mut context, *full).build();
+        let decoding_warnings = context.decoding_warnings();
         let builder = if decoding_warnings.is_empty() {
             OutputBuilder::new()
         } else {
@@ -231,7 +232,7 @@ pub struct TraceDecoder {
     sierra_abis: HashMap<ClassHash, Vec<AbiEntry>>,
     legacy_class_hashes: HashSet<ClassHash>,
     legacy_selectors: HashMap<(ClassHash, Felt), String>,
-    decoding_warnings: RefCell<BTreeSet<TraceDecodingWarning>>,
+    decoding_warnings: BTreeSet<TraceDecodingWarning>,
 }
 
 impl TraceDecoder {
@@ -272,9 +273,27 @@ impl TraceDecoder {
         decoder
     }
 
-    fn selector(&self, invocation: &FunctionInvocation) -> String {
+    fn context(&self) -> TraceDecodingContext<'_> {
+        TraceDecodingContext {
+            decoder: self,
+            decoding_warnings: self.decoding_warnings.clone(),
+        }
+    }
+
+    fn add_warning(&mut self, warning: TraceDecodingWarning) {
+        self.decoding_warnings.insert(warning);
+    }
+}
+
+struct TraceDecodingContext<'a> {
+    decoder: &'a TraceDecoder,
+    decoding_warnings: BTreeSet<TraceDecodingWarning>,
+}
+
+impl TraceDecodingContext<'_> {
+    fn selector(&mut self, invocation: &FunctionInvocation) -> String {
         let class_hash: ClassHash = invocation.class_hash.into_();
-        if let Some(abi) = self.sierra_abis.get(&class_hash)
+        if let Some(abi) = self.decoder.sierra_abis.get(&class_hash)
             && let Some(function) =
                 extract_function_from_selector(abi, invocation.entry_point_selector)
         {
@@ -282,21 +301,22 @@ impl TraceDecoder {
         }
 
         let selector = self
+            .decoder
             .legacy_selectors
             .get(&(class_hash, invocation.entry_point_selector))
             .cloned();
         if selector.is_none()
-            && (self.sierra_abis.contains_key(&class_hash)
-                || self.legacy_class_hashes.contains(&class_hash))
+            && (self.decoder.sierra_abis.contains_key(&class_hash)
+                || self.decoder.legacy_class_hashes.contains(&class_hash))
         {
             self.add_warning(TraceDecodingWarning::SelectorNotFound { class_hash });
         }
         selector.unwrap_or_else(|| invocation.entry_point_selector.to_hex_string())
     }
 
-    fn calldata(&self, invocation: &FunctionInvocation) -> String {
+    fn calldata(&mut self, invocation: &FunctionInvocation) -> String {
         let class_hash: ClassHash = invocation.class_hash.into_();
-        let Some(abi) = self.sierra_abis.get(&class_hash) else {
+        let Some(abi) = self.decoder.sierra_abis.get(&class_hash) else {
             return format_raw_felts(&invocation.calldata);
         };
 
@@ -307,13 +327,13 @@ impl TraceDecoder {
             })
     }
 
-    fn result(&self, invocation: &FunctionInvocation) -> String {
+    fn result(&mut self, invocation: &FunctionInvocation) -> String {
         if invocation.is_reverted {
             return format_result("panic", &format_panic_data(&invocation.result));
         }
 
         let class_hash: ClassHash = invocation.class_hash.into_();
-        let result = if let Some(abi) = self.sierra_abis.get(&class_hash) {
+        let result = if let Some(abi) = self.decoder.sierra_abis.get(&class_hash) {
             reverse_transform_output(&invocation.result, abi, &invocation.entry_point_selector)
                 .unwrap_or_else(|_| {
                     self.add_warning(TraceDecodingWarning::ResultDecodingFailed { class_hash });
@@ -326,12 +346,12 @@ impl TraceDecoder {
         format_result("success", &result)
     }
 
-    fn add_warning(&self, warning: TraceDecodingWarning) {
-        self.decoding_warnings.borrow_mut().insert(warning);
+    fn add_warning(&mut self, warning: TraceDecodingWarning) {
+        self.decoding_warnings.insert(warning);
     }
 
     fn decoding_warnings(&self) -> Vec<TraceDecodingWarning> {
-        self.decoding_warnings.borrow().iter().cloned().collect()
+        self.decoding_warnings.iter().cloned().collect()
     }
 }
 
@@ -351,175 +371,175 @@ fn format_decoding_warning(warnings: &[TraceDecodingWarning]) -> String {
 fn append_trace(
     builder: OutputBuilder,
     transaction_trace: &TransactionTrace,
-    decoder: &TraceDecoder,
+    context: &mut TraceDecodingContext<'_>,
     full: bool,
 ) -> OutputBuilder {
     match transaction_trace {
-        TransactionTrace::Invoke(trace) => append_invoke(builder, trace, decoder, full),
-        TransactionTrace::Declare(trace) => append_declare(builder, trace, decoder, full),
+        TransactionTrace::Invoke(trace) => append_invoke(builder, trace, context, full),
+        TransactionTrace::Declare(trace) => append_declare(builder, trace, context, full),
         TransactionTrace::DeployAccount(trace) => {
-            append_deploy_account(builder, trace, decoder, full)
+            append_deploy_account(builder, trace, context, full)
         }
-        TransactionTrace::L1Handler(trace) => append_l1_handler(builder, trace, decoder, full),
+        TransactionTrace::L1Handler(trace) => append_l1_handler(builder, trace, context, full),
     }
 }
 
 fn append_invoke(
     builder: OutputBuilder,
     trace: &InvokeTransactionTrace,
-    decoder: &TraceDecoder,
+    context: &mut TraceDecodingContext<'_>,
     full: bool,
 ) -> OutputBuilder {
     let builder = builder.tx_type("INVOKE");
-    let append_validate = |builder| {
+    let append_validate = |builder, context: &mut TraceDecodingContext<'_>| {
         append_optional_invocation(
             builder,
             "Validate Invocation",
             trace.validate_invocation.as_ref(),
-            decoder,
+            context,
             full,
         )
     };
-    let append_execute = |builder| {
+    let append_execute = |builder, context: &mut TraceDecodingContext<'_>| {
         append_execute_invocation(
             builder,
             "Execute Invocation",
             &trace.execute_invocation,
-            decoder,
+            context,
             full,
         )
     };
-    let append_fee_transfer = |builder| {
+    let append_fee_transfer = |builder, context: &mut TraceDecodingContext<'_>| {
         append_optional_invocation(
             builder,
             "Fee Transfer Invocation",
             trace.fee_transfer_invocation.as_ref(),
-            decoder,
+            context,
             full,
         )
     };
 
     if full {
-        let builder = append_execute(builder);
+        let builder = append_execute(builder, context);
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_fee_transfer(builder);
+        let builder = append_fee_transfer(builder, context);
         let builder = append_optional_state_diff(builder, trace.state_diff.as_ref(), 0);
-        append_validate(builder)
+        append_validate(builder, context)
     } else {
-        let builder = append_validate(builder);
-        let builder = append_execute(builder);
-        append_fee_transfer(builder)
+        let builder = append_validate(builder, context);
+        let builder = append_execute(builder, context);
+        append_fee_transfer(builder, context)
     }
 }
 
 fn append_declare(
     builder: OutputBuilder,
     trace: &DeclareTransactionTrace,
-    decoder: &TraceDecoder,
+    context: &mut TraceDecodingContext<'_>,
     full: bool,
 ) -> OutputBuilder {
     let builder = builder.tx_type("DECLARE");
-    let append_validate = |builder| {
+    let append_validate = |builder, context: &mut TraceDecodingContext<'_>| {
         append_optional_invocation(
             builder,
             "Validate Invocation",
             trace.validate_invocation.as_ref(),
-            decoder,
+            context,
             full,
         )
     };
-    let append_fee_transfer = |builder| {
+    let append_fee_transfer = |builder, context: &mut TraceDecodingContext<'_>| {
         append_optional_invocation(
             builder,
             "Fee Transfer Invocation",
             trace.fee_transfer_invocation.as_ref(),
-            decoder,
+            context,
             full,
         )
     };
 
     if full {
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_fee_transfer(builder);
+        let builder = append_fee_transfer(builder, context);
         let builder = append_optional_state_diff(builder, trace.state_diff.as_ref(), 0);
-        append_validate(builder)
+        append_validate(builder, context)
     } else {
-        let builder = append_validate(builder);
-        append_fee_transfer(builder)
+        let builder = append_validate(builder, context);
+        append_fee_transfer(builder, context)
     }
 }
 
 fn append_deploy_account(
     builder: OutputBuilder,
     trace: &DeployAccountTransactionTrace,
-    decoder: &TraceDecoder,
+    context: &mut TraceDecodingContext<'_>,
     full: bool,
 ) -> OutputBuilder {
     let builder = builder.tx_type("DEPLOY_ACCOUNT");
-    let append_validate = |builder| {
+    let append_validate = |builder, context: &mut TraceDecodingContext<'_>| {
         append_optional_invocation(
             builder,
             "Validate Invocation",
             trace.validate_invocation.as_ref(),
-            decoder,
+            context,
             full,
         )
     };
-    let append_constructor = |builder| {
+    let append_constructor = |builder, context: &mut TraceDecodingContext<'_>| {
         append_invocation_section(
             builder,
             "Constructor Invocation",
             &trace.constructor_invocation,
-            decoder,
+            context,
             full,
         )
     };
-    let append_fee_transfer = |builder| {
+    let append_fee_transfer = |builder, context: &mut TraceDecodingContext<'_>| {
         append_optional_invocation(
             builder,
             "Fee Transfer Invocation",
             trace.fee_transfer_invocation.as_ref(),
-            decoder,
+            context,
             full,
         )
     };
 
     if full {
-        let builder = append_constructor(builder);
+        let builder = append_constructor(builder, context);
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_fee_transfer(builder);
+        let builder = append_fee_transfer(builder, context);
         let builder = append_optional_state_diff(builder, trace.state_diff.as_ref(), 0);
-        append_validate(builder)
+        append_validate(builder, context)
     } else {
-        let builder = append_validate(builder);
-        let builder = append_constructor(builder);
-        append_fee_transfer(builder)
+        let builder = append_validate(builder, context);
+        let builder = append_constructor(builder, context);
+        append_fee_transfer(builder, context)
     }
 }
 
 fn append_l1_handler(
     builder: OutputBuilder,
     trace: &L1HandlerTransactionTrace,
-    decoder: &TraceDecoder,
+    context: &mut TraceDecodingContext<'_>,
     full: bool,
 ) -> OutputBuilder {
     let builder = builder.tx_type("L1_HANDLER");
-    let append_function = |builder| {
+    let append_function = |builder, context: &mut TraceDecodingContext<'_>| {
         append_execute_invocation(
             builder,
             "Function Invocation",
             &trace.function_invocation,
-            decoder,
+            context,
             full,
         )
     };
 
     if full {
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_function(builder);
+        let builder = append_function(builder, context);
         append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
     } else {
-        append_function(builder)
+        append_function(builder, context)
     }
 }
 
@@ -527,11 +547,11 @@ fn append_optional_invocation(
     builder: OutputBuilder,
     label: &str,
     invocation: Option<&FunctionInvocation>,
-    decoder: &TraceDecoder,
+    context: &mut TraceDecodingContext<'_>,
     full: bool,
 ) -> OutputBuilder {
     builder.if_some(invocation, |builder, invocation| {
-        append_invocation_section(builder, label, invocation, decoder, full)
+        append_invocation_section(builder, label, invocation, context, full)
     })
 }
 
@@ -539,12 +559,12 @@ fn append_execute_invocation(
     builder: OutputBuilder,
     label: &str,
     invocation: &ExecuteInvocation,
-    decoder: &TraceDecoder,
+    context: &mut TraceDecodingContext<'_>,
     full: bool,
 ) -> OutputBuilder {
     match invocation {
         ExecuteInvocation::Success(invocation) => {
-            append_invocation_section(builder, label, invocation, decoder, full)
+            append_invocation_section(builder, label, invocation, context, full)
         }
         ExecuteInvocation::Reverted(reverted) => append_section(builder, label, 0)
             .with_indent(2)
@@ -556,34 +576,34 @@ fn append_invocation_section(
     builder: OutputBuilder,
     label: &str,
     invocation: &FunctionInvocation,
-    decoder: &TraceDecoder,
+    context: &mut TraceDecodingContext<'_>,
     full: bool,
 ) -> OutputBuilder {
     let builder = append_section(builder, label, 0);
     if full {
-        append_full_invocation(builder, invocation, decoder, 2)
+        append_full_invocation(builder, invocation, context, 2)
     } else {
-        append_compact_invocation(builder, invocation, decoder, 2)
+        append_compact_invocation(builder, invocation, context, 2)
     }
 }
 
 fn append_compact_invocation(
     builder: OutputBuilder,
     invocation: &FunctionInvocation,
-    decoder: &TraceDecoder,
+    context: &mut TraceDecodingContext<'_>,
     indent: usize,
 ) -> OutputBuilder {
     let mut builder = builder
         .with_indent(indent)
-        .field("Entry Point Selector", &decoder.selector(invocation))
+        .field("Entry Point Selector", &context.selector(invocation))
         .contract_address(&invocation.contract_address)
-        .field("Calldata", &decoder.calldata(invocation))
-        .field("Result", &decoder.result(invocation));
+        .field("Calldata", &context.calldata(invocation))
+        .field("Result", &context.result(invocation));
 
     if !invocation.calls.is_empty() {
         builder = append_section(builder, "Calls", indent);
         for nested_call in &invocation.calls {
-            builder = append_compact_invocation(builder, nested_call, decoder, indent + 2);
+            builder = append_compact_invocation(builder, nested_call, context, indent + 2);
         }
     }
 
@@ -593,17 +613,17 @@ fn append_compact_invocation(
 fn append_full_invocation(
     builder: OutputBuilder,
     invocation: &FunctionInvocation,
-    decoder: &TraceDecoder,
+    context: &mut TraceDecodingContext<'_>,
     indent: usize,
 ) -> OutputBuilder {
     let builder = builder
         .with_indent(indent)
         .field("Call Type", format_call_type(invocation.call_type))
-        .field("Calldata", &decoder.calldata(invocation))
+        .field("Calldata", &context.calldata(invocation))
         .padded_felt_field("Caller Address", &invocation.caller_address)
         .padded_felt_field("Class Hash", &invocation.class_hash)
         .contract_address(&invocation.contract_address)
-        .field("Entry Point Selector", &decoder.selector(invocation))
+        .field("Entry Point Selector", &context.selector(invocation))
         .field(
             "Entry Point Type",
             format_entry_point_type(invocation.entry_point_type),
@@ -616,14 +636,14 @@ fn append_full_invocation(
     let builder = append_messages(builder, &invocation.messages, indent);
     let builder = builder
         .with_indent(indent)
-        .field("Result", &decoder.result(invocation));
-    append_calls(builder, &invocation.calls, decoder, indent)
+        .field("Result", &context.result(invocation));
+    append_calls(builder, &invocation.calls, context, indent)
 }
 
 fn append_calls(
     mut builder: OutputBuilder,
     calls: &[FunctionInvocation],
-    decoder: &TraceDecoder,
+    context: &mut TraceDecodingContext<'_>,
     indent: usize,
 ) -> OutputBuilder {
     if calls.is_empty() {
@@ -632,7 +652,7 @@ fn append_calls(
 
     builder = append_section(builder, "Calls", indent);
     for call in calls {
-        builder = append_full_invocation(builder, call, decoder, indent + 2);
+        builder = append_full_invocation(builder, call, context, indent + 2);
     }
     builder
 }
