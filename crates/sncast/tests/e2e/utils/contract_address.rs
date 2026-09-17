@@ -381,7 +381,7 @@ async fn test_precalculated_address_matches_deployed_address() {
     // Read deployer address from accounts.json
     let accounts_content = std::fs::read_to_string(tempdir.path().join("accounts.json")).unwrap();
     let accounts: Value = serde_json::from_str(&accounts_content).unwrap();
-    let account_address = accounts["alpha-sepolia"]["my_account"]["address"]
+    let account_address = accounts["accounts"]["alpha-sepolia"]["my_account"]["address"]
         .as_str()
         .expect("Failed to get account address");
 

@@ -1,18 +1,17 @@
 use anyhow::Error;
-use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::string::IntoHexStr;
 use foundry_ui::Message;
 use itertools::Itertools;
-use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
 use serde_json::json;
 use sncast::AccountType;
-use sncast::{
-    AccountData, NestedMap, SignerType, check_account_file_exists, read_and_parse_json_file,
-};
-use std::collections::HashMap;
+use sncast::accounts::schema::v2;
+use sncast::accounts::{AccountRecord, AccountRepository};
+use sncast::check_account_file_exists;
+use sncast::signers::SignerSpec;
+use std::collections::BTreeMap;
 use std::fmt::Write;
 
 #[derive(Args, Debug)]
@@ -27,11 +26,11 @@ pub struct List {
     pub display_private_keys: bool,
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug)]
+#[derive(Serialize, Clone, Debug)]
 pub struct AccountDataRepresentationMessage {
     pub public_key: String,
-    #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub signer_type: Option<SignerType>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub signer: Option<v2::Signer>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub network: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -50,15 +49,24 @@ pub struct AccountDataRepresentationMessage {
 }
 
 impl AccountDataRepresentationMessage {
-    fn new(account: &AccountData, display_private_key: bool) -> Self {
+    fn new(account: &AccountRecord, display_private_key: bool) -> Self {
         Self {
-            signer_type: match &account.signer_type {
-                SignerType::Local { .. } if !display_private_key => None,
-                other => Some(other.clone()),
+            signer: match &account.signer {
+                SignerSpec::PrivateKey(_) if !display_private_key => None,
+                SignerSpec::PrivateKey(spec) => Some(v2::Signer::PrivateKey {
+                    private_key: spec.private_key(),
+                }),
+                SignerSpec::Keystore(spec) => Some(v2::Signer::Keystore {
+                    path: spec.path().to_owned(),
+                    password_env: spec.password_env().map(ToOwned::to_owned),
+                }),
+                SignerSpec::Ledger(spec) => Some(v2::Signer::Ledger {
+                    derivation_path: spec.derivation_path().derivation_string(),
+                }),
             },
             public_key: account.public_key.into_hex_string(),
             network: None,
-            address: account.address.map(IntoHexStr::into_hex_string),
+            address: Some(account.address.into_hex_string()),
             salt: account.salt.map(IntoHexStr::into_hex_string),
             deployed: account.deployed,
             class_hash: account.class_hash.map(IntoHexStr::into_hex_string),
@@ -73,18 +81,18 @@ impl AccountDataRepresentationMessage {
 }
 
 fn read_and_flatten(
-    accounts_file: &Utf8PathBuf,
+    repository: &AccountRepository,
     display_private_keys: bool,
-) -> anyhow::Result<HashMap<String, AccountDataRepresentationMessage>> {
-    let networks: NestedMap<AccountData> = read_and_parse_json_file(accounts_file)?;
-    let mut result = HashMap::new();
+) -> anyhow::Result<BTreeMap<String, AccountDataRepresentationMessage>> {
+    let registry = repository.load()?.registry;
+    let mut result = BTreeMap::new();
 
-    for (network, accounts) in networks.iter().sorted_by_key(|(name, _)| *name) {
+    for (network, accounts) in registry.networks() {
         for (name, data) in accounts.iter().sorted_by_key(|(name, _)| *name) {
             let mut data_repr = AccountDataRepresentationMessage::new(data, display_private_keys);
 
-            data_repr.set_network(network);
-            result.insert(name.to_owned(), data_repr);
+            data_repr.set_network(network.as_str());
+            result.insert(name.to_string(), data_repr);
         }
     }
 
@@ -101,12 +109,18 @@ impl Message for AccountDataRepresentationMessage {
 
         let _ = writeln!(result, "  public key: {}", self.public_key);
 
-        match &self.signer_type {
-            Some(SignerType::Local { private_key }) => {
+        match &self.signer {
+            Some(v2::Signer::PrivateKey { private_key }) => {
                 let _ = writeln!(result, "  private key: {}", private_key.into_hex_string());
             }
-            Some(SignerType::Ledger { ledger_path }) => {
-                let _ = writeln!(result, "  ledger path: {}", ledger_path.derivation_string());
+            Some(v2::Signer::Ledger { derivation_path }) => {
+                let _ = writeln!(result, "  ledger path: {derivation_path}");
+            }
+            Some(v2::Signer::Keystore { path, password_env }) => {
+                let _ = writeln!(result, "  keystore: {path}");
+                if let Some(password_env) = password_env {
+                    let _ = writeln!(result, "  password env: {password_env}");
+                }
             }
             None => {}
         }
@@ -138,41 +152,40 @@ impl Message for AccountDataRepresentationMessage {
 }
 
 pub struct AccountsListMessage {
-    accounts_file: Utf8PathBuf,
     accounts_file_path: String,
     display_private_keys: bool,
+    accounts: BTreeMap<String, AccountDataRepresentationMessage>,
 }
 
 impl AccountsListMessage {
-    pub fn new(accounts_file: Utf8PathBuf, display_private_keys: bool) -> Result<Self, Error> {
-        check_account_file_exists(&accounts_file)?;
+    pub fn new(repository: &AccountRepository, display_private_keys: bool) -> Result<Self, Error> {
+        check_account_file_exists(repository)?;
 
-        let accounts_file_path = accounts_file
+        let accounts_file_path = repository
+            .path()
             .canonicalize()
             .expect("Failed to resolve the accounts file path");
 
         let accounts_file_path = accounts_file_path
             .to_str()
             .expect("Failed to resolve an absolute path to the accounts file");
+        let accounts = read_and_flatten(repository, display_private_keys)?;
 
         Ok(Self {
-            accounts_file,
             accounts_file_path: accounts_file_path.to_string(),
             display_private_keys,
+            accounts,
         })
     }
 }
 
 impl Message for AccountsListMessage {
     fn text(&self) -> String {
-        let accounts =
-            read_and_flatten(&self.accounts_file, self.display_private_keys).unwrap_or_default();
-
-        if accounts.is_empty() {
+        if self.accounts.is_empty() {
             format!("No accounts available at {}", self.accounts_file_path)
         } else {
             let mut result = format!("Available accounts (at {}):", self.accounts_file_path);
-            for (name, data) in accounts.iter().sorted_by_key(|(name, _)| *name) {
+            for (name, data) in &self.accounts {
                 let _ = writeln!(result, "\n- {}:\n{}", name, data.text());
             }
             if !self.display_private_keys {
@@ -186,14 +199,6 @@ impl Message for AccountsListMessage {
     }
 
     fn json(&self) -> Value {
-        let accounts =
-            read_and_flatten(&self.accounts_file, self.display_private_keys).unwrap_or_default();
-
-        let mut accounts_map: HashMap<String, AccountDataRepresentationMessage> = HashMap::new();
-        for (name, data) in &accounts {
-            accounts_map.insert(name.clone(), data.clone());
-        }
-
-        json!(&accounts_map)
+        json!(&self.accounts)
     }
 }
