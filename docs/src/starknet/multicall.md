@@ -154,18 +154,17 @@ Success: Multicall template created successfully
 
 Path:    ./template.toml
 Content: [[call]]
+         call_type = "deploy"
+         class_hash = ""
+         inputs = []
+         id = ""
+         unique = false
 
-call_type = "deploy"
-class_hash = ""
-inputs = []
-id = ""
-unique = false
-
-[[call]]
-call_type = "invoke"
-contract_address = ""
-function = ""
-inputs = []
+         [[call]]
+         call_type = "invoke"
+         contract_address = ""
+         function = ""
+         inputs = []
 ```
 </details>
 <br>
