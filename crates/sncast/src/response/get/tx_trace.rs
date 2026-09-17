@@ -530,11 +530,9 @@ fn append_optional_invocation(
     decoder: &TraceDecoder,
     full: bool,
 ) -> OutputBuilder {
-    if let Some(invocation) = invocation {
+    builder.if_some(invocation, |builder, invocation| {
         append_invocation_section(builder, label, invocation, decoder, full)
-    } else {
-        builder
-    }
+    })
 }
 
 fn append_execute_invocation(
@@ -604,7 +602,7 @@ fn append_full_invocation(
         .field("Calldata", &decoder.calldata(invocation))
         .padded_felt_field("Caller Address", &invocation.caller_address)
         .padded_felt_field("Class Hash", &invocation.class_hash)
-        .padded_felt_field("Contract Address", &invocation.contract_address)
+        .contract_address(&invocation.contract_address)
         .field("Entry Point Selector", &decoder.selector(invocation))
         .field(
             "Entry Point Type",
@@ -708,11 +706,9 @@ fn append_optional_state_diff(
     state_diff: Option<&StateDiff>,
     indent: usize,
 ) -> OutputBuilder {
-    if let Some(diff) = state_diff {
-        append_state_diff(builder, diff, indent)
-    } else {
-        builder
-    }
+    builder.if_some(state_diff, |builder, state_diff| {
+        append_state_diff(builder, state_diff, indent)
+    })
 }
 
 fn append_state_diff(
