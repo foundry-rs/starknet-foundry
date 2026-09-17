@@ -357,7 +357,6 @@ fn format_decoding_warning(warnings: &[TraceDecodingWarning]) -> String {
     format!("Some trace data is shown as raw felts:\n{details}")
 }
 
-#[must_use]
 fn append_trace(
     builder: OutputBuilder,
     transaction_trace: &TransactionTrace,
