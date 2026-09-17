@@ -168,10 +168,11 @@ impl SncastCommandMessage for TransactionTraceResponse {
             full,
         } = self;
         let human_text = append_trace(OutputBuilder::new(), trace, decoder, *full).build();
-        let builder = if decoder.decoding_warnings().is_empty() {
+        let decoding_warnings = decoder.decoding_warnings();
+        let builder = if decoding_warnings.is_empty() {
             OutputBuilder::new()
         } else {
-            let warning_message = format_decoding_warning(&decoder.decoding_warnings());
+            let warning_message = format_decoding_warning(&decoding_warnings);
             OutputBuilder::new()
                 .text_field(&WarningMessage::new(warning_message).text())
                 .blank_line()
