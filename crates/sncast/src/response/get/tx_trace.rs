@@ -272,7 +272,8 @@ impl TraceDecoder {
     }
 
     fn selector(&self, invocation: &FunctionInvocation) -> String {
-        if let Some(abi) = self.sierra_abis.get(&invocation.class_hash.into_())
+        let class_hash: ClassHash = invocation.class_hash.into_();
+        if let Some(abi) = self.sierra_abis.get(&class_hash)
             && let Some(function) =
                 extract_function_from_selector(abi, invocation.entry_point_selector)
         {
@@ -281,36 +282,26 @@ impl TraceDecoder {
 
         let selector = self
             .legacy_selectors
-            .get(&(
-                invocation.class_hash.into_(),
-                invocation.entry_point_selector,
-            ))
+            .get(&(class_hash, invocation.entry_point_selector))
             .cloned();
         if selector.is_none()
-            && (self
-                .sierra_abis
-                .contains_key(&invocation.class_hash.into_())
-                || self
-                    .legacy_class_hashes
-                    .contains(&invocation.class_hash.into_()))
+            && (self.sierra_abis.contains_key(&class_hash)
+                || self.legacy_class_hashes.contains(&class_hash))
         {
-            self.add_warning(TraceDecodingWarning::SelectorNotFound {
-                class_hash: invocation.class_hash.into_(),
-            });
+            self.add_warning(TraceDecodingWarning::SelectorNotFound { class_hash });
         }
         selector.unwrap_or_else(|| invocation.entry_point_selector.to_hex_string())
     }
 
     fn calldata(&self, invocation: &FunctionInvocation) -> String {
-        let Some(abi) = self.sierra_abis.get(&invocation.class_hash.into_()) else {
+        let class_hash: ClassHash = invocation.class_hash.into_();
+        let Some(abi) = self.sierra_abis.get(&class_hash) else {
             return format_raw_felts(&invocation.calldata);
         };
 
         reverse_transform_input(&invocation.calldata, abi, &invocation.entry_point_selector)
             .unwrap_or_else(|_| {
-                self.add_warning(TraceDecodingWarning::CalldataDecodingFailed {
-                    class_hash: invocation.class_hash.into_(),
-                });
+                self.add_warning(TraceDecodingWarning::CalldataDecodingFailed { class_hash });
                 format_raw_felts(&invocation.calldata)
             })
     }
@@ -320,12 +311,11 @@ impl TraceDecoder {
             return format_result("panic", &format_panic_data(&invocation.result));
         }
 
-        let result = if let Some(abi) = self.sierra_abis.get(&invocation.class_hash.into_()) {
+        let class_hash: ClassHash = invocation.class_hash.into_();
+        let result = if let Some(abi) = self.sierra_abis.get(&class_hash) {
             reverse_transform_output(&invocation.result, abi, &invocation.entry_point_selector)
                 .unwrap_or_else(|_| {
-                    self.add_warning(TraceDecodingWarning::ResultDecodingFailed {
-                        class_hash: invocation.class_hash.into_(),
-                    });
+                    self.add_warning(TraceDecodingWarning::ResultDecodingFailed { class_hash });
                     format_raw_felts(&invocation.result)
                 })
         } else {
