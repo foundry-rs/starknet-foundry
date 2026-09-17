@@ -7,7 +7,7 @@ use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use starknet_types_core::felt::Felt;
 
-use crate::accounts::AccountsError;
+use crate::accounts::{AccountsError, AccountsFileError, schema};
 use crate::signers::SignerSpec;
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
@@ -128,6 +128,14 @@ impl AccountRegistry {
         self.networks
             .get(network)
             .and_then(|accounts| accounts.get(name))
+    }
+
+    pub fn encode_v2(&self) -> Result<Vec<u8>, AccountsError> {
+        let file_content = schema::v2::AccountsFile::from(self);
+        let mut output = serde_json::to_vec_pretty(&file_content)
+            .map_err(|source| AccountsFileError::Serialize { source })?;
+        output.push(b'\n');
+        Ok(output)
     }
 }
 
