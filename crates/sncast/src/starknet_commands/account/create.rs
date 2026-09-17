@@ -13,14 +13,14 @@ use serde_json::json;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
-    BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, CREATE_KEYSTORE_PASSWORD_ENV_VAR,
-    OZ_CLASS_HASH, READY_CLASS_HASH,
+    BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH,
 };
 use sncast::helpers::ledger;
 use sncast::helpers::ledger::LedgerKeyLocatorAccount;
 use sncast::helpers::rpc::{RpcArgs, generate_network_flag};
 use sncast::response::account::create::AccountCreateResponse;
 use sncast::response::ui::UI;
+use sncast::signers::credentials::LEGACY_CREATE_KEYSTORE_PASSWORD_ENV;
 use sncast::{
     AccountType, SignerSource, SignerType, check_class_hash_exists, check_if_legacy_contract,
     extract_or_generate_salt, get_keystore_password, handle_account_factory_error,
@@ -335,7 +335,7 @@ fn create_to_keystore(
     if account_path.exists() {
         bail!("Account file {account_path} already exists");
     }
-    let password = get_keystore_password(CREATE_KEYSTORE_PASSWORD_ENV_VAR)?;
+    let password = get_keystore_password(LEGACY_CREATE_KEYSTORE_PASSWORD_ENV)?;
     let private_key = SigningKey::from_secret_scalar(private_key);
     private_key.save_as_keystore(keystore_path, &password)?;
     let account_json = match account_type {

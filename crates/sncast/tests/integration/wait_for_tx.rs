@@ -53,11 +53,6 @@ async fn test_rejected_transaction() {
         .await
         .expect("Could not get the account");
 
-    let account = match account {
-        sncast::AccountVariant::LocalWallet(acc) => acc,
-        sncast::AccountVariant::Ledger(_) => panic!("Ledger account not supported in tests"),
-    };
-
     let factory = ContractFactory::new_with_udc(
         MAP_CONTRACT_CLASS_HASH_SEPOLIA.parse().unwrap(),
         account,
