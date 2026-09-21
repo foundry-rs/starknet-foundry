@@ -302,3 +302,20 @@ $ sncast \
 An existing encrypted key can be attached during `account import` with the same two keystore options. All later commands select `alice` like any private-key or Ledger account; no global `--keystore` flag is needed.
 
 Passwords are looked up from the signer's `password_env` first and then `SNCAST_KEYSTORE_PASSWORD`; an interactive terminal prompts only if neither is set. Password values are never written to the accounts file.
+
+#### Importing a Starkli Account
+
+Convert an existing [starkli](https://book.starkli.rs/accounts#accounts) account/keystore pair into a native account:
+
+<!-- { "ignored": true } -->
+```shell
+$ sncast \
+    account import-starkli \
+    --network sepolia \
+    --name alice \
+    --account-file account.json \
+    --keystore keystore.json \
+    --keystore-password-env ALICE_KEYSTORE_PASSWORD
+```
+
+The conversion preserves the starkli account metadata and references the existing encrypted keystore from a V2 signer. The native account is then used with `--account alice`.
