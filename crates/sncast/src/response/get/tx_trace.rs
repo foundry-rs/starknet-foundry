@@ -190,17 +190,37 @@ impl SncastCommandMessage for TransactionTraceResponse {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 #[serde(tag = "reason", rename_all = "snake_case")]
 enum TraceDecodingWarning {
-    MalformedAbi { class_hash: ClassHash },
-    MissingAbi { class_hash: ClassHash },
-    UnsupportedCairo0 { class_hash: ClassHash },
-    SelectorNotFound { class_hash: ClassHash },
-    CalldataDecodingFailed { class_hash: ClassHash },
-    ResultDecodingFailed { class_hash: ClassHash },
+    ClassFetchFailed {
+        class_hash: ClassHash,
+        error: String,
+    },
+    MalformedAbi {
+        class_hash: ClassHash,
+    },
+    MissingAbi {
+        class_hash: ClassHash,
+    },
+    UnsupportedCairo0 {
+        class_hash: ClassHash,
+    },
+    SelectorNotFound {
+        class_hash: ClassHash,
+    },
+    CalldataDecodingFailed {
+        class_hash: ClassHash,
+    },
+    ResultDecodingFailed {
+        class_hash: ClassHash,
+    },
 }
 
 impl TraceDecodingWarning {
     fn description(&self) -> String {
         match self {
+            Self::ClassFetchFailed { class_hash, error } => format!(
+                "could not fetch contract class {}: {error}",
+                class_hash.to_hex_string()
+            ),
             Self::MalformedAbi { class_hash } => {
                 format!("malformed ABI for class {}", class_hash.to_hex_string())
             }
@@ -237,8 +257,15 @@ pub struct TraceDecoder {
 
 impl TraceDecoder {
     #[must_use]
-    pub fn new(contract_classes: HashMap<ClassHash, ContractClass>) -> Self {
+    pub fn new(
+        contract_classes: HashMap<ClassHash, ContractClass>,
+        class_fetch_failures: impl IntoIterator<Item = (ClassHash, String)>,
+    ) -> Self {
         let mut decoder = Self::default();
+
+        for (class_hash, error) in class_fetch_failures {
+            decoder.add_warning(TraceDecodingWarning::ClassFetchFailed { class_hash, error });
+        }
 
         for (class_hash, contract_class) in contract_classes {
             match contract_class {

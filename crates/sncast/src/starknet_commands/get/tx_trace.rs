@@ -1,7 +1,7 @@
 use anyhow::{Result, bail};
 use clap::Args;
 use conversions::IntoConv;
-use foundry_ui::{OutputFormat, components::warning::WarningMessage};
+use foundry_ui::OutputFormat;
 use futures::stream::{self, StreamExt};
 use itertools::Itertools;
 use sncast::helpers::command::process_command_result;
@@ -72,12 +72,11 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
             let FetchedContractClasses { classes, failures } =
                 fetch_contract_classes(&provider, class_hashes(&trace)).await;
 
-            if !failures.is_empty() {
-                ui.print_warning(WarningMessage::new(format_class_fetch_warning(&failures)));
-                ui.print_blank_line();
-            }
+            let class_fetch_failures = failures
+                .into_iter()
+                .map(|failure| (failure.class_hash, failure.error.to_string()));
+            let decoder = TraceDecoder::new(classes, class_fetch_failures);
 
-            let decoder = TraceDecoder::new(classes);
             Ok(TransactionTraceResponse::new(trace, decoder, tx_trace.full))
         }
         Err(error) => Err(error),
@@ -151,24 +150,4 @@ fn collect_class_hashes(invocation: &FunctionInvocation, class_hashes: &mut Hash
     for nested_call in &invocation.calls {
         collect_class_hashes(nested_call, class_hashes);
     }
-}
-
-fn format_class_fetch_warning(failures: &[ContractClassFetchFailure]) -> String {
-    let mut failures = failures.iter().collect::<Vec<_>>();
-    failures.sort_unstable_by_key(|failure| failure.class_hash);
-
-    let details = failures
-        .into_iter()
-        .map(|failure| {
-            format!(
-                "- class hash: {} — {}",
-                failure.class_hash.to_hex_string(),
-                failure.error
-            )
-        })
-        .join("\n");
-
-    format!(
-        "Could not fetch contract classes needed to decode the trace:\n{details}\nAffected calls are displayed as raw felts."
-    )
 }
