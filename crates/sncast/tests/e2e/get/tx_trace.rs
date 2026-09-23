@@ -457,6 +457,50 @@ async fn test_json_includes_abi_decoding_warnings() {
 }
 
 #[tokio::test]
+async fn test_json_includes_class_fetch_failures_decoding_warnings() {
+    let mock_server = MockServer::start().await;
+    mock_trace(
+        &mock_server,
+        ResponseTemplate::new(200).set_body_json(json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": trace()
+        })),
+    )
+    .await;
+    Mock::given(method("POST"))
+        .and(body_partial_json(json!({ "method": "starknet_getClass" })))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "error": { "code": 28, "message": "Class hash not found" }
+        })))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    let args = &[
+        "--json",
+        "get",
+        "tx-trace",
+        MOCK_TRANSACTION_HASH,
+        "--url",
+        &mock_server.uri(),
+    ];
+    let output = runner(args).assert().success().stderr_eq("");
+    let json: Value = serde_json::from_slice(&output.get_output().stdout).unwrap();
+
+    assert_eq!(
+        json["decoding_warnings"],
+        json!([{
+            "reason": "class_fetch_failed",
+            "class_hash": "0x456",
+            "error": "Class hash not found"
+        }])
+    );
+}
+
+#[tokio::test]
 async fn test_transaction_not_found() {
     let args = &["get", "tx-trace", "0x123", "--url", URL];
     let output = runner(args).assert().failure();
