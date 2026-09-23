@@ -197,7 +197,7 @@ pub fn execute_call_entry_point(
 
     context.revert_infos.0.push(EntryPointRevertInfo::new(
         entry_point.storage_address,
-        class_hash,
+        storage_class_hash,
         context.n_emitted_events,
         context.n_sent_messages_to_l1,
     ));
