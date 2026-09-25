@@ -27,6 +27,7 @@ pub async fn chain_id(chain_id: ChainId, config: CastConfig, ui: &UI) -> Result<
     Ok(process_command_result("get chain-id", result, ui, None))
 }
 
+#[expect(clippy::result_large_err)]
 async fn get_chain_id(
     provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<ChainIdResponse, StarknetCommandError> {
@@ -37,6 +38,6 @@ async fn get_chain_id(
 
     Ok(ChainIdResponse {
         chain_name: parse_cairo_short_string(&chain_id).ok(),
-        chain_id: chain_id,
+        chain_id,
     })
 }
