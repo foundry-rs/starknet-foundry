@@ -151,7 +151,9 @@ impl OutputBuilder {
                     extra,
                     indent,
                 } => {
-                    let styled_value = style(&value).yellow();
+                    let mut value_lines = value.lines();
+                    let first_line = value_lines.next().unwrap_or_default();
+                    let styled_value = style(first_line).yellow();
                     let field_value = match extra {
                         Some(extra) => format!("{styled_value} {extra}"),
                         None => format!("{styled_value}"),
@@ -163,6 +165,20 @@ impl OutputBuilder {
                         field_value,
                     )
                     .unwrap();
+
+                    for line in value_lines {
+                        if line.is_empty() {
+                            content.push('\n');
+                        } else {
+                            writeln!(
+                                content,
+                                "{}{}",
+                                " ".repeat(field_width + 1),
+                                style(line).yellow()
+                            )
+                            .unwrap();
+                        }
+                    }
                 }
                 OutputEntry::BlankLine => {
                     content.push('\n');
