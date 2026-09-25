@@ -4,6 +4,7 @@ mod class_hash_at;
 mod nonce;
 mod spec_version;
 mod state_update;
+mod syncing;
 mod transaction;
 mod tx_receipt;
 mod tx_status;
