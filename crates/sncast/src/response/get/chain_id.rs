@@ -16,7 +16,7 @@ impl SncastCommandMessage for ChainIdResponse {
         let builder = OutputBuilder::new()
             .success_message("Chain ID retrieved")
             .blank_line()
-            .field("Chain ID", &self.chain_id.to_hex_string());
+            .felt_field("Chain ID", &self.chain_id);
 
         let builder = if let Some(name) = &self.chain_name {
             builder.field("Chain Name", name)
