@@ -4,6 +4,7 @@ Commands for querying Starknet state.
 It has the following subcommands:
 * [`balance`](./balance.md)
 * [`block`](./block.md)
+* [`chain-id`](./chain_id.md)
 * [`class-hash-at`](./class_hash_at.md)
 * [`nonce`](./nonce.md)
 * [`spec-version`](./spec-version.md)
