@@ -179,6 +179,21 @@ async fn test_happy_case_tuple_function_cairo_expression_input() {
     assert_eq!(result, expected_output);
 }
 
+#[test_case("()", 0; "empty tuple")]
+#[test_case("(1234_felt252, 1_u8)", 2; "too few elements")]
+#[test_case("(1234_felt252, 1_u8, Enum::One, 0x420)", 4; "too many elements")]
+#[tokio::test]
+async fn test_tuple_function_invalid_number_of_elements(input: &str, found: usize) {
+    let result = run_transformer(input, "tuple_fn").await;
+
+    result.unwrap_err().assert_contains(
+        format!(
+            "Invalid tuple length for type \"(core::felt252, core::integer::u8, data_transformer_contract::Enum)\": expected 3 elements, got {found}"
+        )
+        .as_str(),
+    );
+}
+
 #[tokio::test]
 async fn test_happy_case_tuple_function_with_nested_struct_cairo_expression_input() {
     let result = run_transformer(
