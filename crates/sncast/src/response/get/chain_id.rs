@@ -19,7 +19,7 @@ impl SncastCommandMessage for ChainIdResponse {
             .field("Chain ID", &self.chain_id.to_hex_string());
 
         let builder = if let Some(name) = &self.chain_name {
-            builder.field("Chain Name", &name)
+            builder.field("Chain Name", name)
         } else {
             builder
         };
