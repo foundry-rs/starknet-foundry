@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- `sncast get syncing` command for fetching node's syncing status.
+
 ## [0.64.0] - 2026-09-16
 
 ### Forge
@@ -102,7 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - Support for structs, enums, tuples, arrays and spans in [live debugging]((https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#live-debugging))
-⚠️ These features work best with Scarb >= 2.19.0 and `[cairo] add-types-debug-info = true` config (or equivalent) in Scarb.toml. 
+⚠️ These features work best with Scarb >= 2.19.0 and `[cairo] add-types-debug-info = true` config (or equivalent) in Scarb.toml.
 You may still use other Scarb versions but names of structs, enums, their fields and variants will not be available.
 
 - Backtrace support for panics that originate directly in a test function body, not only inside called contracts. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#backtrace).
@@ -117,7 +123,7 @@ You may still use other Scarb versions but names of structs, enums, their fields
 - `snforge_std::declare` now fails with a clear, deterministic error when a contract name resolves to multiple contracts, instead of non-deterministically selecting one of them. The module tree path (e.g. `my_package::module::MyContract` or `module::MyContract`) can now be passed to `declare` to disambiguate contracts that share a name.
 - Fixed `#[should_panic(expected: (...))]` matching for panic data containing byte array values inside tuples.
 
-### Cast 
+### Cast
 
 #### Added
 
