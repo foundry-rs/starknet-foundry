@@ -26,6 +26,7 @@
     * [balance](./sncast/get/balance.md)
     * [block](./sncast/get/block.md)
     * [class-hash-at](./sncast/get/class_hash_at.md)
+    * [chain-id](./sncast/get/chain_id.md)
     * [nonce](./sncast/get/nonce.md)
     * [spec-version](./sncast/get/spec-version.md)
     * [state-update](./sncast/get/state-update.md)
