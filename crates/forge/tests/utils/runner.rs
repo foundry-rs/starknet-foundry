@@ -14,6 +14,7 @@ use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_target_summary::TestTargetSummary;
 use foundry_ui::UI;
 use indoc::formatdoc;
+use regex::Regex;
 use scarb_api::metadata::metadata_for_dir;
 use scarb_api::{
     CompilationOpts, ContractData, ContractsData, StarknetContractArtifacts,
@@ -324,8 +325,14 @@ pub fn assert_case_output_contains(
     let actual_msg = any_case.msg().unwrap_or_default();
     let name = matched_test_case_name(any_case);
 
+    let asserted_msg = {
+        let escaped = regex::escape(asserted_msg);
+        let replaced = escaped.replace("\\[\\.\\.\\]", ".*");
+        Regex::new(&replaced).unwrap()
+    };
+
     assert!(
-        actual_msg.contains(asserted_msg),
+        asserted_msg.is_match(actual_msg),
         "Output assertion failed for test case `{name}`.\nexpected output to contain: {asserted_msg}\nactual:                     {actual_msg}"
     );
 }
@@ -556,7 +563,8 @@ fn format_available_test_cases(summaries: &[AnyTestCaseSummary]) -> String {
 mod tests {
     use crate::utils::{
         runner::{
-            assert_builtin, assert_gas, assert_passed, assert_syscall, capture_assertion_panic,
+            assert_builtin, assert_case_output_contains, assert_gas, assert_passed, assert_syscall,
+            capture_assertion_panic,
         },
         running_tests::run_test_case,
     };
@@ -824,5 +832,34 @@ mod tests {
         actual:   1
         "},
         );
+    }
+
+    #[test]
+    fn assert_case_output_contains_handles_wildcards() {
+        let test = test_case!(indoc!(
+            r"
+            #[test]
+            fn foo() {
+                assert(1 == 2, 'error: bar');
+            }
+        "
+        ));
+        let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+        assert_case_output_contains(&result, "foo", "error: [..]");
+    }
+
+    #[test]
+    fn assert_case_output_contains_allows_empty_capture() {
+        let test = test_case!(indoc!(
+            r"
+            #[test]
+            fn foo() {
+                assert(1 == 2, 'error');
+            }
+        "
+        ));
+        let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+        // Real output contains `('error')` string
+        assert_case_output_contains(&result, "foo", "('error[..]')");
     }
 }
