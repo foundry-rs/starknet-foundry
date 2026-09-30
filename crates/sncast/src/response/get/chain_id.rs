@@ -13,17 +13,13 @@ pub struct ChainIdResponse {
 
 impl SncastCommandMessage for ChainIdResponse {
     fn text(&self) -> String {
-        let builder = OutputBuilder::new()
+        OutputBuilder::new()
             .success_message("Chain ID retrieved")
             .blank_line()
-            .felt_field("Chain ID", &self.chain_id);
-
-        let builder = if let Some(name) = &self.chain_name {
-            builder.field("Chain Name", name)
-        } else {
-            builder
-        };
-
-        builder.build()
+            .felt_field("Chain ID", &self.chain_id)
+            .if_some(self.chain_name.as_ref(), |builder, name| {
+                builder.field("Chain Name", name)
+            })
+            .build()
     }
 }
