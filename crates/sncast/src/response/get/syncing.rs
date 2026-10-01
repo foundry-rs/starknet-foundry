@@ -4,38 +4,58 @@ use starknet_rust::core::types::SyncStatus;
 
 use crate::response::cast_message::SncastCommandMessage;
 
-#[derive(Debug, Serialize)]
-pub struct SyncingResponse {
-    pub syncing: bool,
-    #[serde(flatten)]
-    pub status: Option<SyncStatus>,
-}
+#[derive(Debug)]
+pub struct SyncingResponse(pub Option<SyncStatus>);
 
 impl SncastCommandMessage for SyncingResponse {
     fn text(&self) -> String {
-        let status = if self.syncing {
+        let status = if self.0.is_some() {
             "Syncing"
         } else {
-            "Not Syncing"
+            "Not syncing"
         };
 
-        let builder = OutputBuilder::new()
+        OutputBuilder::new()
             .success_message("Syncing status retrieved")
             .blank_line()
-            .field("Status", status);
+            .field("Status", status)
+            .if_some(self.0.as_ref(), |b, status| {
+                b.padded_felt_field("Starting Block Hash", &status.starting_block_hash)
+                    .field(
+                        "Starting Block Number",
+                        &status.starting_block_num.to_string(),
+                    )
+                    .padded_felt_field("Current Block Hash", &status.current_block_hash)
+                    .field(
+                        "Current Block Number",
+                        &status.current_block_num.to_string(),
+                    )
+                    .padded_felt_field("Highest Block Hash", &status.highest_block_hash)
+                    .field(
+                        "Highest Block Number",
+                        &status.highest_block_num.to_string(),
+                    )
+            })
+            .build()
+    }
+}
 
-        let builder = if let Some(status) = self.status.as_ref() {
-            builder
-                .felt_field("Starting Block Hash", &status.starting_block_hash)
-                .field("Starting Block Num", &status.starting_block_num.to_string())
-                .felt_field("Current Block Hash", &status.current_block_hash)
-                .field("Current Block Num", &status.current_block_num.to_string())
-                .felt_field("Highest Block Hash", &status.highest_block_hash)
-                .field("Highest Block Num", &status.highest_block_num.to_string())
-        } else {
-            builder
-        };
+impl Serialize for SyncingResponse {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        #[derive(Serialize)]
+        struct SyncingResponseSerialize<'a> {
+            syncing: bool,
+            #[serde(flatten)]
+            status: &'a Option<SyncStatus>,
+        }
 
-        builder.build()
+        SyncingResponseSerialize {
+            syncing: self.0.is_some(),
+            status: &self.0,
+        }
+        .serialize(serializer)
     }
 }

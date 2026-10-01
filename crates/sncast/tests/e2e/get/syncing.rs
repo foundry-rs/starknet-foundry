@@ -12,7 +12,7 @@ async fn test_pretty_output_not_syncing() {
     snapbox.assert().success().stdout_eq(indoc! {"
         Success: Syncing status retrieved
 
-        Status: Not Syncing
+        Status: Not syncing
     "});
 }
 
@@ -23,11 +23,16 @@ async fn test_json_output_not_syncing() {
 
     let output = snapbox.assert().success();
     let stdout = output.get_output().stdout.clone();
-    let json: serde_json::Value = serde_json::from_slice(&stdout).unwrap();
+    let res: serde_json::Value = serde_json::from_slice(&stdout).unwrap();
 
-    assert_eq!(json["command"], "get syncing");
-    assert_eq!(json["type"], "response");
-    assert_eq!(json["syncing"], false);
+    assert_eq!(
+        res,
+        json!({
+            "command": "get syncing",
+            "type": "response",
+            "syncing": false
+        })
+    );
 }
 
 async fn mock_syncing_server() -> MockServer {
@@ -75,13 +80,13 @@ async fn test_pretty_output_syncing() {
     snapbox.assert().success().stdout_eq(indoc! {"
         Success: Syncing status retrieved
 
-        Status:              Syncing
-        Starting Block Hash: 0x1
-        Starting Block Num:  1
-        Current Block Hash:  0x2
-        Current Block Num:   2
-        Highest Block Hash:  0x3
-        Highest Block Num:   3
+        Status:                Syncing
+        Starting Block Hash:   0x0000000000000000000000000000000000000000000000000000000000000001
+        Starting Block Number: 1
+        Current Block Hash:    0x0000000000000000000000000000000000000000000000000000000000000002
+        Current Block Number:  2
+        Highest Block Hash:    0x0000000000000000000000000000000000000000000000000000000000000003
+        Highest Block Number:  3
     "});
 }
 
@@ -95,15 +100,20 @@ async fn test_json_output_syncing() {
 
     let output = snapbox.assert().success();
     let stdout = output.get_output().stdout.clone();
-    let json: serde_json::Value = serde_json::from_slice(&stdout).unwrap();
+    let res: serde_json::Value = serde_json::from_slice(&stdout).unwrap();
 
-    assert_eq!(json["command"], "get syncing");
-    assert_eq!(json["type"], "response");
-    assert_eq!(json["syncing"], true);
-    assert_eq!(json["starting_block_hash"], "0x1");
-    assert_eq!(json["starting_block_num"], 1);
-    assert_eq!(json["current_block_hash"], "0x2");
-    assert_eq!(json["current_block_num"], 2);
-    assert_eq!(json["highest_block_hash"], "0x3");
-    assert_eq!(json["highest_block_num"], 3);
+    assert_eq!(
+        res,
+        json!({
+            "command": "get syncing",
+            "type": "response",
+            "syncing": true,
+            "starting_block_hash": "0x1",
+            "starting_block_num": 1,
+            "current_block_hash": "0x2",
+            "current_block_num": 2,
+            "highest_block_hash": "0x3",
+            "highest_block_num": 3,
+        })
+    );
 }

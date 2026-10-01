@@ -8,7 +8,10 @@ use sncast::{
         ui::UI,
     },
 };
-use starknet_rust::providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport};
+use starknet_rust::{
+    core::types::SyncStatusType,
+    providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport},
+};
 use std::process::ExitCode;
 
 #[derive(Debug, Args)]
@@ -37,12 +40,9 @@ async fn get_syncing_status(
         .map_err(|err| StarknetCommandError::ProviderError(err.into()))?;
 
     let status = match sync_status {
-        starknet_rust::core::types::SyncStatusType::Syncing(sync_status) => Some(sync_status),
-        starknet_rust::core::types::SyncStatusType::NotSyncing => None,
+        SyncStatusType::Syncing(sync_status) => Some(sync_status),
+        SyncStatusType::NotSyncing => None,
     };
 
-    Ok(SyncingResponse {
-        syncing: status.is_some(),
-        status,
-    })
+    Ok(SyncingResponse(status))
 }

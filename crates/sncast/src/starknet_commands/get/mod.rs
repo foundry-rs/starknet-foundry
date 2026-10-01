@@ -77,6 +77,6 @@ pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCo
 
         GetCommands::StateUpdate(args) => state_update::state_update(args, config, ui).await,
 
-        GetCommands::Syncing(syncing) => syncing::syncing(syncing, config, ui).await,
+        GetCommands::Syncing(args) => syncing::syncing(args, config, ui).await,
     }
 }
