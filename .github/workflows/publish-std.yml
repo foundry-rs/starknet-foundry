@@ -66,7 +66,9 @@ jobs:
           toolchain: stable
 
       - uses: software-mansion/setup-scarb@v1
-
+        with:
+          cache: false
+        
       - name: Publish snforge_std
         if: needs.check-uploaded.outputs.snforge_std_uploaded == 'false'
         working-directory: snforge_std

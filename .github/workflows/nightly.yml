@@ -51,6 +51,8 @@ jobs:
           echo "nightly_branch=$NIGHTLY_BRANCH" >> $GITHUB_OUTPUT
 
       - uses: software-mansion/setup-scarb@v1
+        with:
+          cache: false
 
       - name: Update metadata before release
         run: ./scripts/release.sh ${{ env.NIGHTLY_VERSION }}

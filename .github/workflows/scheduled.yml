@@ -47,6 +47,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
+          cache: false
       - uses: software-mansion/setup-universal-sierra-compiler@v1
 
       - run: cargo test --profile ci --lib -p forge
@@ -92,6 +93,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
+          cache: false
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Install cairo-profiler
         run: |
@@ -133,6 +135,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
+          cache: false
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Get Devnet version from .tool-versions
         id: get-devnet-version
