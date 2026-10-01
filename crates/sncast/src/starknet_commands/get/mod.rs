@@ -83,6 +83,6 @@ pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCo
 
         GetCommands::ChainId(chain_id) => chain_id::chain_id(chain_id, config, ui).await,
 
-        GetCommands::Syncing(syncing) => syncing::syncing(syncing, config, ui).await,
+        GetCommands::Syncing(args) => syncing::syncing(args, config, ui).await,
     }
 }
