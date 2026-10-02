@@ -92,7 +92,7 @@ async fn fetch_contract_classes(
     let results = stream::iter(class_hashes)
         .map(|class_hash| async move {
             match provider
-                .get_class(BlockId::Tag(BlockTag::PreConfirmed), *class_hash)
+                .get_class(BlockId::Tag(BlockTag::Latest), *class_hash)
                 .await
             {
                 Ok(class) => Ok((class_hash, class)),
