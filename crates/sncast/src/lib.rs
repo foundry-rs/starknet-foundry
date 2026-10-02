@@ -39,52 +39,25 @@ use starknet_rust::{
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::fmt::Display;
-use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
 use std::{env, fs};
 use thiserror::Error;
 use url::Url;
 
+pub mod accounts;
 pub mod helpers;
 pub mod response;
+pub mod signers;
 
 use crate::helpers::ledger;
 use crate::response::ui::UI;
+pub use accounts::AccountType;
 use conversions::byte_array::ByteArray;
 use foundry_ui::components::warning::WarningMessage;
 pub use helpers::signer::{AccountVariant, SignerSource, SignerType};
 
 pub type NestedMap<T> = HashMap<String, HashMap<String, T>>;
-
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
-#[serde(rename_all = "lowercase")]
-pub enum AccountType {
-    #[serde(rename = "open_zeppelin")]
-    OpenZeppelin,
-    #[serde(alias = "argent")] // backward compatibility with pre-rebranding account files
-    Ready,
-    Braavos,
-}
-
-impl FromStr for AccountType {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "open_zeppelin" | "open-zeppelin" | "oz" => Ok(AccountType::OpenZeppelin),
-            "ready" => Ok(AccountType::Ready),
-            "braavos" => Ok(AccountType::Braavos),
-            account_type => Err(anyhow!("Invalid account type = {account_type}")),
-        }
-    }
-}
-
-impl Display for AccountType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{self:?}")
-    }
-}
 
 pub const MAINNET: Felt =
     Felt::from_hex_unchecked(const_hex::const_encode::<7, true>(b"SN_MAIN").as_str());
