@@ -17,6 +17,7 @@ debug-assertions = true
 [lints.clippy]
 pedantic = { level = "deny", priority = -1 }
 missing_errors_doc = "allow"
+assert_is_empty = "allow"
 
 [dependencies]
 cairo-lang-macro = "0.2.1"
