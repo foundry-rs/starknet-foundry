@@ -325,14 +325,14 @@ pub fn assert_case_output_contains(
     let actual_msg = any_case.msg().unwrap_or_default();
     let name = matched_test_case_name(any_case);
 
-    let asserted_msg = {
+    let asserted_regex = {
         let escaped = regex::escape(asserted_msg);
-        let replaced = escaped.replace("\\[\\.\\.\\]", ".*");
+        let replaced = escaped.replace(r"\[\.\.\]", ".*");
         Regex::new(&replaced).unwrap()
     };
 
     assert!(
-        asserted_msg.is_match(actual_msg),
+        asserted_regex.is_match(actual_msg),
         "Output assertion failed for test case `{name}`.\nexpected output to contain: {asserted_msg}\nactual:                     {actual_msg}"
     );
 }
@@ -861,5 +861,33 @@ mod tests {
         let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
         // Real output contains `('error')` string
         assert_case_output_contains(&result, "foo", "('error[..]')");
+    }
+
+    #[test]
+    fn assert_case_output_contains_fails() {
+        let test = test_case!(indoc!(
+            r"
+                #[test]
+                fn foo() {
+                    assert(1 == 2, 'error');
+                }
+            "
+        ));
+        let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+        let panic_message = capture_assertion_panic(|| {
+            assert_case_output_contains(&result, "foo", "('foo[..]')");
+        });
+
+        assert_stdout_contains(
+            panic_message,
+            indoc! {r"
+            Output assertion failed for test case `test_package_integrationtest::test_case::foo`.
+            expected output to contain: ('foo[..]')
+
+            actual:                     
+                0x6572726f72 ('error')
+            note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace
+        "},
+        );
     }
 }
