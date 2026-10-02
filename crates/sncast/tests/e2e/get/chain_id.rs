@@ -24,12 +24,16 @@ async fn test_json_output() {
     let snapbox = runner(&args);
 
     let output = snapbox.assert().success();
-    let json: serde_json::Value = serde_json::from_slice(&output.get_output().stdout).unwrap();
+    let res: serde_json::Value = serde_json::from_slice(&output.get_output().stdout).unwrap();
 
-    assert_eq!(json["command"], "get chain-id");
-    assert_eq!(json["type"], "response");
-    assert_eq!(json["chain_id"], "0x534e5f5345504f4c4941");
-    assert_eq!(json["chain_name"], "SN_SEPOLIA");
+    let expected = json!({
+        "command": "get chain-id",
+        "type": "response",
+        "chain_id": "0x534e5f5345504f4c4941",
+        "chain_name": "SN_SEPOLIA",
+    });
+
+    assert_eq!(res, expected);
 }
 
 async fn mock_server(chain_id: &str) -> MockServer {
@@ -81,12 +85,15 @@ async fn test_malformed_chain_id_json() {
     let snapbox = runner(&args);
 
     let output = snapbox.assert().success();
-    let json: serde_json::Value = serde_json::from_slice(&output.get_output().stdout).unwrap();
+    let res: serde_json::Value = serde_json::from_slice(&output.get_output().stdout).unwrap();
 
-    assert_eq!(json["command"], "get chain-id");
-    assert_eq!(json["type"], "response");
-    assert_eq!(json["chain_id"], "0x610062");
-    assert!(json.get("chain_name").is_none());
+    let expected = json!({
+        "command": "get chain-id",
+        "type": "response",
+        "chain_id": "0x610062",
+    });
+
+    assert_eq!(res, expected);
 }
 
 #[tokio::test]
@@ -112,10 +119,47 @@ async fn test_0x0_json() {
     let snapbox = runner(&args);
 
     let output = snapbox.assert().success();
-    let json: serde_json::Value = serde_json::from_slice(&output.get_output().stdout).unwrap();
+    let res: serde_json::Value = serde_json::from_slice(&output.get_output().stdout).unwrap();
 
-    assert_eq!(json["command"], "get chain-id");
-    assert_eq!(json["type"], "response");
-    assert_eq!(json["chain_id"], "0x0");
-    assert!(json.get("chain_name").is_none());
+    let expected = json!({
+        "command": "get chain-id",
+        "type": "response",
+        "chain_id": "0x0",
+    });
+
+    assert_eq!(res, expected);
+}
+
+#[tokio::test]
+async fn test_non_ascii() {
+    let mock_server = mock_server("0xa41").await;
+    let url = mock_server.uri();
+    let args = vec!["get", "chain-id", "--url", &url];
+    let snapbox = runner(&args);
+
+    snapbox.assert().success().stdout_eq(indoc! {"
+        Success: Chain ID retrieved
+
+        Chain ID: 0xa41
+    "});
+}
+
+#[tokio::test]
+async fn test_non_ascii_json() {
+    let mock_server = mock_server("0xa41").await;
+
+    let url = mock_server.uri();
+    let args = vec!["get", "chain-id", "--url", &url, "--json"];
+    let snapbox = runner(&args);
+
+    let output = snapbox.assert().success();
+    let res: serde_json::Value = serde_json::from_slice(&output.get_output().stdout).unwrap();
+
+    let expected = json!({
+        "command": "get chain-id",
+        "type": "response",
+        "chain_id": "0xa41",
+    });
+
+    assert_eq!(res, expected);
 }
