@@ -74,7 +74,7 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
     let result = match result {
         Ok(trace) => {
             let decoder = if tx_trace.raw {
-                None
+                TraceDecoder::default()
             } else {
                 let FetchedContractClasses { classes, failures } =
                     fetch_contract_classes(&provider, class_hashes(&trace)).await;
@@ -83,7 +83,7 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
                     .into_iter()
                     .map(|failure| (failure.class_hash, failure.error.to_string()));
 
-                Some(TraceDecoder::new(classes, class_fetch_failures))
+                TraceDecoder::new(classes, class_fetch_failures)
             };
 
             Ok(TransactionTraceResponse::new(trace, decoder, tx_trace.full))
