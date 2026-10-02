@@ -131,7 +131,7 @@ async fn test_0x0_json() {
 }
 
 #[tokio::test]
-async fn test_non_ascii() {
+async fn test_non_graphic() {
     let mock_server = mock_server("0xa41").await;
     let url = mock_server.uri();
     let args = vec!["get", "chain-id", "--url", &url];
@@ -145,7 +145,7 @@ async fn test_non_ascii() {
 }
 
 #[tokio::test]
-async fn test_non_ascii_json() {
+async fn test_non_graphic_json() {
     let mock_server = mock_server("0xa41").await;
 
     let url = mock_server.uri();
