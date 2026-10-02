@@ -179,6 +179,7 @@
         * [tx](appendix/sncast/get/tx.md)
         * [tx-receipt](appendix/sncast/get/tx-receipt.md)
         * [tx-status](appendix/sncast/get/tx-status.md)
+        * [tx-trace](appendix/sncast/get/tx-trace.md)
     * [utils](appendix/sncast/utils/utils.md)
         * [serialize](appendix/sncast/utils/serialize.md)
         * [class-hash](appendix/sncast/utils/class_hash.md)
