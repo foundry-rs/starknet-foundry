@@ -1,5 +1,6 @@
 pub mod balance;
 pub mod block;
+pub mod chain_id;
 pub mod class_hash_at;
 pub mod nonce;
 pub mod spec_version;
