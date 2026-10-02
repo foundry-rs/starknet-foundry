@@ -18,14 +18,21 @@ pub struct ChainId {
 pub async fn chain_id(chain_id: ChainId, config: CastConfig, ui: &UI) -> Result<ExitCode> {
     let provider = chain_id.rpc.get_provider(&config, ui).await?;
 
-    let result = get_chain_id(&provider)
-        .await
-        .map(|chain_id| ChainIdResponse {
-            chain_name: (chain_id != Felt::ZERO)
-                .then(|| parse_cairo_short_string(&chain_id).ok())
-                .flatten(),
-            chain_id,
-        });
+    let chain_id = get_chain_id(&provider).await?;
 
-    Ok(process_command_result("get chain-id", result, ui, None))
+    let chain_name = if chain_id != Felt::ZERO
+        && let Ok(chain_name) = parse_cairo_short_string(&chain_id)
+        && chain_name.chars().all(|c| c.is_ascii_graphic())
+    {
+        Some(chain_name)
+    } else {
+        None
+    };
+
+    let result = ChainIdResponse {
+        chain_name,
+        chain_id,
+    };
+
+    Ok(process_command_result("get chain-id", Ok(result), ui, None))
 }
