@@ -81,9 +81,78 @@ async fn test_invalid_cairo_expression() {
 async fn test_invalid_argument_number() {
     let result = run_transformer("0x123, 'some_obsolete_argument', 10", "simple_fn").await;
 
-    result
-        .unwrap_err()
-        .assert_contains("Invalid number of arguments: passed 3, expected 1");
+    result.unwrap_err().assert_contains(indoc! {r"
+        Invalid arguments for function `simple_fn`: passed 3, expected 1
+          unexpected argument at position 2
+          unexpected argument at position 3
+
+          passed: (0x123, 'some_obsolete_argument', 10)
+          expected: (a: core::felt252)"});
+}
+
+#[test_case(
+    "",
+    indoc! {r"
+        Invalid arguments for function `multiple_signed_fn`: passed 0, expected 2
+          missing argument `a` at position 1
+          missing argument `b` at position 2
+
+          passed: ()
+          expected: (a: core::integer::i32, b: core::integer::i8)"};
+    "all arguments missing"
+)]
+#[test_case(
+    "1_i32",
+    indoc! {r"
+        Invalid arguments for function `multiple_signed_fn`: passed 1, expected 2
+          missing argument `b` at position 2
+
+          passed: (1_i32)
+          expected: (a: core::integer::i32, b: core::integer::i8)"};
+    "one argument missing"
+)]
+#[tokio::test]
+async fn test_missing_arguments(input: &str, expected_error: &str) {
+    let result = run_transformer(input, "multiple_signed_fn").await;
+
+    result.unwrap_err().assert_contains(expected_error);
+}
+
+#[tokio::test]
+async fn test_argument_number_mismatch_with_complex_types() {
+    let result = run_transformer("array![]", "complex_fn").await;
+
+    result.unwrap_err().assert_contains(indoc! {r"
+        Invalid arguments for function `complex_fn`: passed 1, expected 7
+          missing argument `one` at position 2
+          missing argument `two` at position 3
+          missing argument `three` at position 4
+          missing argument `four` at position 5
+          missing argument `five` at position 6
+          missing argument `six` at position 7
+
+          passed: (array![])
+          expected: (
+            arr: core::array::Array::<core::array::Array::<core::felt252>>,
+            one: core::integer::u8,
+            two: core::integer::i16,
+            three: core::byte_array::ByteArray,
+            four: (core::felt252, core::integer::u32),
+            five: core::bool,
+            six: core::integer::u256
+          )"});
+}
+
+#[tokio::test]
+async fn test_unexpected_argument_for_no_args_function() {
+    let result = run_transformer("1", "no_args_fn").await;
+
+    result.unwrap_err().assert_contains(indoc! {r"
+        Invalid arguments for function `no_args_fn`: passed 1, expected 0
+          unexpected argument at position 1
+
+          passed: (1)
+          expected: ()"});
 }
 
 #[tokio::test]
@@ -315,6 +384,102 @@ async fn test_happy_case_nested_struct_function_cairo_expression_input() {
     ];
 
     assert_eq!(result, expected_output);
+}
+
+#[tokio::test]
+async fn test_struct_function_missing_field() {
+    let result = run_transformer(
+        "NestedStructWithField { a: SimpleStruct { a: 0x24 } }",
+        "nested_struct_fn",
+    )
+    .await;
+
+    result.unwrap_err().assert_contains(indoc! {r"
+        Invalid arguments for struct `data_transformer_contract::NestedStructWithField` constructor: passed 1, expected 2
+          missing field: `b`
+
+          passed: { a }
+          expected: { a: data_transformer_contract::SimpleStruct, b: core::felt252 }"});
+}
+
+#[tokio::test]
+async fn test_struct_function_unexpected_field() {
+    let result = run_transformer(
+        "NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96, other: 1 }",
+        "nested_struct_fn",
+    )
+    .await;
+
+    result.unwrap_err().assert_contains(indoc! {r"
+        Invalid arguments for struct `data_transformer_contract::NestedStructWithField` constructor: passed 3, expected 2
+          unexpected field: `other`
+
+          passed: { a, b, other }
+          expected: { a: data_transformer_contract::SimpleStruct, b: core::felt252 }"});
+}
+
+#[tokio::test]
+async fn test_struct_function_renamed_field() {
+    let result = run_transformer(
+        "NestedStructWithField { some_other_field: SimpleStruct { a: 0x24 }, b: 96 }",
+        "nested_struct_fn",
+    )
+    .await;
+
+    result.unwrap_err().assert_contains(indoc! {r"
+        Invalid arguments for struct `data_transformer_contract::NestedStructWithField` constructor: passed 2, expected 2
+          missing field: `a`
+          unexpected field: `some_other_field`
+
+          passed: { some_other_field, b }
+          expected: { a: data_transformer_contract::SimpleStruct, b: core::felt252 }"});
+}
+
+#[tokio::test]
+async fn test_struct_function_renamed_and_missing_fields() {
+    let result = run_transformer(
+        "NestedStructWithField { some_other_field: SimpleStruct { a: 0x24 } }",
+        "nested_struct_fn",
+    )
+    .await;
+
+    result.unwrap_err().assert_contains(indoc! {r"
+        Invalid arguments for struct `data_transformer_contract::NestedStructWithField` constructor: passed 1, expected 2
+          missing fields: `a`, `b`
+          unexpected field: `some_other_field`
+
+          passed: { some_other_field }
+          expected: { a: data_transformer_contract::SimpleStruct, b: core::felt252 }"});
+}
+
+#[tokio::test]
+async fn test_struct_function_duplicated_field() {
+    let result = run_transformer(
+        "NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96, a: SimpleStruct { a: 0x25 } }",
+        "nested_struct_fn",
+    )
+    .await;
+
+    result.unwrap_err().assert_contains(
+        r#"Invalid number of struct arguments in struct "NestedStructWithField", expected 2 arguments, found 3"#,
+    );
+}
+
+#[tokio::test]
+async fn test_struct_function_nested_struct_field_mismatch() {
+    let result = run_transformer(
+        "NestedStructWithField { a: SimpleStruct { wrong_field: 0x24 }, b: 96 }",
+        "nested_struct_fn",
+    )
+    .await;
+
+    result.unwrap_err().assert_contains(indoc! {r"
+        Invalid arguments for struct `data_transformer_contract::SimpleStruct` constructor: passed 1, expected 1
+          missing field: `a`
+          unexpected field: `wrong_field`
+
+          passed: { wrong_field }
+          expected: { a: core::felt252 }"});
 }
 
 #[tokio::test]

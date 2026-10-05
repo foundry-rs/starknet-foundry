@@ -14,6 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast get chain-id` command for fetching network's chain id.
 - `sncast get syncing` command for fetching node's syncing status.
 
+#### Changed
+
+- Invalid Cairo-like calldata now reports missing and unexpected positional arguments, alongside the provided arguments and expected argument names and types.
+- Error message for a struct constructor invocation whose fields do not match the ABI now lists the expected fields (with their types) along with the provided fields.
+
+#### Fixed
+
+- Invalid tuple lengths in Cairo-like calldata now produce a data transformer error instead of failing during contract execution.
+
 ## [0.64.0] - 2026-09-16
 
 ### Forge
@@ -41,10 +50,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `--json` flag is now global, and can be passed to any subcommand.
 - `sncast verify --verifier walnut` has been replaced by `sncast verify --verifier starkloupe`, following Walnut's migration to Starkloupe ([app.starkloupe.co](https://app.starkloupe.co))
-
-#### Fixed
-
-- Invalid tuple lengths in Cairo-like calldata now produce a data transformer error instead of failing during contract execution.
 
 ## [0.63.0] - 2026-08-05
 
