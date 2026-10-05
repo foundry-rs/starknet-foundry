@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `sncast get chain-id` command for fetching network's chain id.
+- `sncast get syncing` command for fetching node's syncing status.
 
 ## [0.64.0] - 2026-09-16
 
