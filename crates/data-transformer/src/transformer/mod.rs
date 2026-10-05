@@ -52,12 +52,7 @@ fn process(
     let n_arguments = calldata.len();
 
     if n_arguments != n_inputs {
-        bail!(format_invalid_args_error(
-            &calldata,
-            function,
-            n_arguments,
-            db
-        ));
+        bail!(format_invalid_args_error(&calldata, function, db));
     }
 
     function
@@ -75,10 +70,10 @@ fn process(
 fn format_invalid_args_error(
     calldata: &[Expr],
     function: &AbiFunction,
-    n_arguments: usize,
     db: &SimpleParserDatabase,
 ) -> String {
     let n_inputs = function.inputs.len();
+    let n_arguments = calldata.len();
     let passed = calldata
         .iter()
         .map(|expr| {
