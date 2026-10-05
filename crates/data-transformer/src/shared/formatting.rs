@@ -16,6 +16,15 @@ impl ArgumentListKind {
             Self::Named => ('{', '}'),
         }
     }
+
+    fn format_inline(self, label: &str, arguments: &str) -> String {
+        let (opening, closing) = self.delimiters();
+
+        match self {
+            Self::Positional => format!("  {label}: {opening}{arguments}{closing}"),
+            Self::Named => format!("  {label}: {opening} {arguments} {closing}"),
+        }
+    }
 }
 
 /// Formats ABI members as individual `name: type` entries.
@@ -60,14 +69,7 @@ fn format_argument_list(label: &str, arguments: &[String], list_kind: ArgumentLi
     }
 
     let inline_arguments = arguments.iter().join(", ");
-    let inline = match list_kind {
-        ArgumentListKind::Positional => {
-            format!("  {label}: {opening}{inline_arguments}{closing}")
-        }
-        ArgumentListKind::Named => {
-            format!("  {label}: {opening} {inline_arguments} {closing}")
-        }
-    };
+    let inline = list_kind.format_inline(label, &inline_arguments);
 
     if !inline.contains('\n') && inline.chars().count() <= MAX_INLINE_ARGUMENTS_WIDTH {
         return inline;
