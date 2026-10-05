@@ -6,12 +6,23 @@ const MAX_INLINE_ARGUMENTS_WIDTH: usize = 100;
 #[derive(Clone, Copy)]
 pub enum ArgumentListKind {
     Positional,
+    Named,
 }
 
 impl ArgumentListKind {
     const fn delimiters(self) -> (char, char) {
         match self {
             Self::Positional => ('(', ')'),
+            Self::Named => ('{', '}'),
+        }
+    }
+
+    fn format_inline(self, label: &str, arguments: &str) -> String {
+        let (opening, closing) = self.delimiters();
+
+        match self {
+            Self::Positional => format!("  {label}: {opening}{arguments}{closing}"),
+            Self::Named => format!("  {label}: {opening} {arguments} {closing}"),
         }
     }
 }
@@ -58,7 +69,7 @@ fn format_argument_list(label: &str, arguments: &[String], list_kind: ArgumentLi
     }
 
     let inline_arguments = arguments.iter().join(", ");
-    let inline = format!("  {label}: {opening}{inline_arguments}{closing}");
+    let inline = list_kind.format_inline(label, &inline_arguments);
 
     if !inline.contains('\n') && inline.chars().count() <= MAX_INLINE_ARGUMENTS_WIDTH {
         return inline;
