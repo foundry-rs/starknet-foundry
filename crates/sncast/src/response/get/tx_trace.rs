@@ -29,6 +29,7 @@ pub struct TransactionTraceResponse {
 }
 
 impl TransactionTraceResponse {
+    #[must_use]
     pub fn new(trace: TransactionTrace, decoder: TraceDecoder, full: bool) -> Self {
         Self {
             trace,
